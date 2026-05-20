@@ -328,32 +328,25 @@ export const ExecutionSiteSection: React.FC<Props> = ({
           )}
 
           {selectedSite && selectedSite.site_ref && !adding && (
-            <ClientSiteQrCard
-              siteId={selectedSite.id}
-              siteRef={selectedSite.site_ref}
-              siteName={selectedSite.site_name ?? selectedSite.label}
-              siteType={selectedSite.site_type ?? null}
-              cityName={selectedSite.city_name}
-              visibility={(selectedSite.visibility ?? 'private') as 'private' | 'shared_by_qr' | 'public_limited'}
-              qrEnabled={!!selectedSite.qr_enabled}
-              onChanged={() => refetch()}
-            />
-          )}
-
-          {selectedSite && selectedSite.site_ref && !adding && (
-            <ClientSiteVisibilitySettingsCard
-              isRTL={isRTL}
-              siteId={selectedSite.id}
-              siteRef={selectedSite.site_ref}
-            />
-          )}
-
-          {selectedSite && selectedSite.site_ref && !adding && (
-            <ClientSiteAccessRequestsPanel isRTL={isRTL} siteId={selectedSite.id} />
-          )}
-
-          {selectedSite && selectedSite.site_ref && !adding && (
-            <ClientSiteNotificationPreferencesCard isRTL={isRTL} siteId={selectedSite.id} />
+            <div className="space-y-3">
+              <ClientSiteQrCard
+                siteId={selectedSite.id}
+                siteRef={selectedSite.site_ref}
+                siteName={selectedSite.site_name ?? selectedSite.label}
+                siteType={selectedSite.site_type ?? null}
+                cityName={selectedSite.city_name}
+                visibility={(selectedSite.visibility ?? 'private') as 'private' | 'shared_by_qr' | 'public_limited'}
+                qrEnabled={!!selectedSite.qr_enabled}
+                onChanged={() => refetch()}
+              />
+              <ClientSiteVisibilitySettingsCard
+                isRTL={isRTL}
+                siteId={selectedSite.id}
+                siteRef={selectedSite.site_ref}
+              />
+              <ClientSiteAccessRequestsPanel isRTL={isRTL} siteId={selectedSite.id} />
+              <ClientSiteNotificationPreferencesCard isRTL={isRTL} siteId={selectedSite.id} />
+            </div>
           )}
 
           {adding && (
