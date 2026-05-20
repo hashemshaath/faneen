@@ -10819,6 +10819,10 @@ export type Database = {
           unique_messages: number
         }[]
       }
+      get_entity_barcode_code: {
+        Args: { _entity_id: string; _entity_type: string }
+        Returns: string
+      }
       get_home_stats: { Args: never; Returns: Json }
       get_membership_usage: {
         Args: { _business_id?: string; _user_id?: string }
