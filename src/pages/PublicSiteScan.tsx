@@ -24,6 +24,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { toast } from 'sonner';
+import {
+  SITE_SECTIONS,
+  PUBLIC_LOCKED_SECTION_KEYS,
+  pickLabel,
+} from '@/lib/client-sites/client-site-labels';
 
 interface PublicSiteSummary {
   site_ref: string | null;
@@ -39,17 +44,9 @@ interface ProviderBusinessRow {
   name: string | null;
 }
 
-const LOCKED_SECTIONS: { key: string; ar: string; en: string }[] = [
-  { key: 'project_description', ar: 'وصف المشروع', en: 'Project description' },
-  { key: 'required_services', ar: 'الخدمات المطلوبة', en: 'Required services' },
-  { key: 'specifications', ar: 'المواصفات', en: 'Specifications' },
-  { key: 'measurements', ar: 'القياسات', en: 'Measurements' },
-  { key: 'photos', ar: 'الصور', en: 'Photos' },
-  { key: 'full_address', ar: 'العنوان الكامل', en: 'Full address' },
-  { key: 'map_location', ar: 'الموقع على الخريطة', en: 'Map location' },
-  { key: 'contact_person', ar: 'جهة التواصل', en: 'Contact person' },
-  { key: 'contact_phone', ar: 'هاتف التواصل', en: 'Contact phone' },
-];
+const LOCKED_SECTIONS = PUBLIC_LOCKED_SECTION_KEYS
+  .map((key) => SITE_SECTIONS.find((s) => s.key === key))
+  .filter((s): s is (typeof SITE_SECTIONS)[number] => !!s);
 
 const PublicSiteScan: React.FC = () => {
   useNoIndex();
@@ -169,15 +166,6 @@ const PublicSiteScan: React.FC = () => {
       toast.error(isRTL ? `تعذر إرسال الاهتمام: ${e.message}` : `Could not submit interest: ${e.message}`),
   });
 
-  // --- Locked section log (best-effort) ---
-  const logLocked = async (section_key: string) => {
-    try {
-      // We don't know site_id (intentionally hidden), so cannot call log_site_visit
-      // without breaking the privacy model. Skip — qr_scan was already logged server-side.
-      void section_key;
-    } catch { /* noop */ }
-  };
-
   const unavailable = !isLoading && !data;
   const summary = data;
 
@@ -264,12 +252,11 @@ const PublicSiteScan: React.FC = () => {
                   <li key={s.key}>
                     <button
                       type="button"
-                      onClick={() => logLocked(s.key)}
                       className="w-full text-start p-3 rounded-lg border border-border/40 bg-muted/10 hover-lift min-h-[44px] flex items-center gap-2"
                     >
                       <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                       <div className="min-w-0">
-                        <div className="text-xs font-medium truncate">{isRTL ? s.ar : s.en}</div>
+                        <div className="text-xs font-medium truncate">{pickLabel(s, isRTL)}</div>
                         <div className="text-[10px] text-muted-foreground truncate">
                           {isRTL ? 'مغلق — اطلب الوصول' : 'Locked — request access'}
                         </div>

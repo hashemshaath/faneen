@@ -8,9 +8,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-
-type Status = 'requested' | 'approved' | 'rejected' | 'revoked' | 'ignored';
-type Level = 'limited' | 'quote' | 'service' | 'contract' | 'admin';
+import {
+  ACCESS_LEVEL_LABELS,
+  ACCESS_LEVELS_ORDER,
+  GRANT_STATUS_VARIANT,
+  pickLabel,
+  type AccessLevel as Level,
+  type GrantStatus as Status,
+} from '@/lib/client-sites/client-site-labels';
 
 interface GrantRow {
   grant_id: string;
@@ -34,22 +39,6 @@ interface Props {
   isRTL: boolean;
   siteId: string;
 }
-
-const LEVEL_LABELS: Record<Level, { ar: string; en: string }> = {
-  limited: { ar: 'محدود', en: 'Limited' },
-  quote: { ar: 'تسعير', en: 'Quote' },
-  service: { ar: 'تنفيذ', en: 'Service' },
-  contract: { ar: 'عقد', en: 'Contract' },
-  admin: { ar: 'إدارة', en: 'Admin' },
-};
-
-const STATUS_VARIANT: Record<Status, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  requested: 'default',
-  approved: 'secondary',
-  rejected: 'destructive',
-  revoked: 'outline',
-  ignored: 'outline',
-};
 
 export const ClientSiteAccessRequestsPanel: React.FC<Props> = ({ isRTL, siteId }) => {
   const qc = useQueryClient();
@@ -135,11 +124,11 @@ export const ClientSiteAccessRequestsPanel: React.FC<Props> = ({ isRTL, siteId }
                     <div className="text-xs font-semibold flex items-center gap-1.5">
                       <Building2 className="w-3 h-3 text-muted-foreground shrink-0" />
                       <span className="truncate">{g.provider_business_name ?? (isRTL ? 'مزود' : 'Provider')}</span>
-                      <Badge variant={STATUS_VARIANT[g.status]} size="sm" className="text-[9px]">
+                      <Badge variant={GRANT_STATUS_VARIANT[g.status]} size="sm" className="text-[9px]">
                         {g.status}
                       </Badge>
                       <Badge variant="outline" size="sm" className="text-[9px]">
-                        {isRTL ? LEVEL_LABELS[g.access_level].ar : LEVEL_LABELS[g.access_level].en}
+                        {pickLabel(ACCESS_LEVEL_LABELS[g.access_level], isRTL)}
                       </Badge>
                     </div>
                     {g.reason && (
@@ -164,9 +153,9 @@ export const ClientSiteAccessRequestsPanel: React.FC<Props> = ({ isRTL, siteId }
                         aria-label={isRTL ? 'مستوى الوصول' : 'Access level'}
                         className="h-8 text-[11px] rounded-md border border-border/40 bg-background px-2"
                       >
-                        {(['limited', 'quote', 'service', 'contract', 'admin'] as Level[]).map((l) => (
+                        {ACCESS_LEVELS_ORDER.map((l) => (
                           <option key={l} value={l}>
-                            {isRTL ? LEVEL_LABELS[l].ar : LEVEL_LABELS[l].en}
+                            {pickLabel(ACCESS_LEVEL_LABELS[l], isRTL)}
                           </option>
                         ))}
                       </select>

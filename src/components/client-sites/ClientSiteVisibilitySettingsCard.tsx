@@ -13,14 +13,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-
-type VisibilityLevel =
-  | 'hidden'
-  | 'public_limited'
-  | 'visible_after_request'
-  | 'visible_after_approval'
-  | 'visible_to_approved_provider'
-  | 'admin_only';
+import {
+  SITE_SECTIONS,
+  SECTION_VISIBILITY_LEVELS,
+  pickLabel,
+  visibilityErrorMessage,
+  type SectionVisibilityLevel as VisibilityLevel,
+} from '@/lib/client-sites/client-site-labels';
 
 interface VisibilityRow {
   section_key: string;
@@ -33,38 +32,6 @@ interface Props {
   siteRef: string;
   /** Sections that the DB forbids from public_limited. */
 }
-
-const SECTIONS: { key: string; ar: string; en: string; sensitive?: boolean }[] = [
-  { key: 'basic_summary', ar: 'الملخص الأساسي', en: 'Basic summary' },
-  { key: 'site_ref', ar: 'معرف الموقع', en: 'Site reference' },
-  { key: 'site_type', ar: 'نوع الموقع', en: 'Site type' },
-  { key: 'city', ar: 'المدينة', en: 'City' },
-  { key: 'district', ar: 'الحي', en: 'District' },
-  { key: 'full_address', ar: 'العنوان الكامل', en: 'Full address', sensitive: true },
-  { key: 'map_location', ar: 'الموقع على الخريطة', en: 'Map location', sensitive: true },
-  { key: 'contact_person', ar: 'جهة الاتصال', en: 'Contact person', sensitive: true },
-  { key: 'contact_phone', ar: 'هاتف التواصل', en: 'Contact phone', sensitive: true },
-  { key: 'project_description', ar: 'وصف المشروع', en: 'Project description' },
-  { key: 'required_services', ar: 'الخدمات المطلوبة', en: 'Required services' },
-  { key: 'specifications', ar: 'المواصفات', en: 'Specifications' },
-  { key: 'measurements', ar: 'القياسات', en: 'Measurements' },
-  { key: 'photos', ar: 'الصور', en: 'Photos' },
-  { key: 'attachments', ar: 'المرفقات', en: 'Attachments', sensitive: true },
-  { key: 'budget_range', ar: 'نطاق الميزانية', en: 'Budget range' },
-  { key: 'preferred_timeline', ar: 'الجدول الزمني', en: 'Preferred timeline' },
-  { key: 'contracts', ar: 'العقود', en: 'Contracts', sensitive: true },
-  { key: 'previous_visits', ar: 'الزيارات السابقة', en: 'Previous visits', sensitive: true },
-  { key: 'notes', ar: 'ملاحظات', en: 'Notes', sensitive: true },
-];
-
-const LEVELS: { v: VisibilityLevel; ar: string; en: string }[] = [
-  { v: 'hidden', ar: 'مخفي', en: 'Hidden' },
-  { v: 'public_limited', ar: 'عام محدود', en: 'Public (limited)' },
-  { v: 'visible_after_request', ar: 'بعد الطلب', en: 'After request' },
-  { v: 'visible_after_approval', ar: 'بعد الموافقة', en: 'After approval' },
-  { v: 'visible_to_approved_provider', ar: 'لمزود معتمد', en: 'Approved provider only' },
-  { v: 'admin_only', ar: 'للإدارة فقط', en: 'Admin only' },
-];
 
 export const ClientSiteVisibilitySettingsCard: React.FC<Props> = ({ isRTL, siteId, siteRef }) => {
   const qc = useQueryClient();
@@ -97,10 +64,7 @@ export const ClientSiteVisibilitySettingsCard: React.FC<Props> = ({ isRTL, siteI
       toast.success(isRTL ? 'تم تحديث الخصوصية' : 'Visibility updated');
     },
     onError: (e: Error) => {
-      const msg = e.message || '';
-      const friendly = /sensitive_chk|public_limited/i.test(msg)
-        ? (isRTL ? 'لا يمكن جعل هذا القسم عاماً' : 'This section cannot be made public')
-        : msg;
+      const friendly = visibilityErrorMessage(e.message || '', isRTL);
       toast.error(isRTL ? `تعذر التحديث: ${friendly}` : `Update failed: ${friendly}`);
     },
     onSettled: () => setSavingKey(null),
@@ -139,10 +103,11 @@ export const ClientSiteVisibilitySettingsCard: React.FC<Props> = ({ isRTL, siteI
         </div>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {SECTIONS.map((s) => {
+          {SITE_SECTIONS.map((s) => {
             const current = levelOf(s.key);
             const isPublic = current === 'public_limited';
             const Icon = current === 'hidden' || current === 'admin_only' ? EyeOff : Eye;
+            const sectionLabel = pickLabel(s, isRTL);
             return (
               <li
                 key={s.key}
@@ -151,7 +116,7 @@ export const ClientSiteVisibilitySettingsCard: React.FC<Props> = ({ isRTL, siteI
                 <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                 <div className="min-w-0 flex-1">
                   <Label htmlFor={`vis-${s.key}`} className="text-[11px] font-semibold truncate flex items-center gap-1">
-                    {isRTL ? s.ar : s.en}
+                    {sectionLabel}
                     {s.sensitive && (
                       <AlertTriangle className="w-3 h-3 text-amber-500" aria-label={isRTL ? 'حساس' : 'sensitive'} />
                     )}
@@ -166,15 +131,15 @@ export const ClientSiteVisibilitySettingsCard: React.FC<Props> = ({ isRTL, siteI
                       update.mutate({ section_key: s.key, visibility_level: v });
                     }}
                     className="mt-1 w-full h-8 text-[11px] rounded-md border border-border/40 bg-background px-2"
-                    aria-label={isRTL ? `مستوى الظهور: ${s.ar}` : `Visibility: ${s.en}`}
+                    aria-label={isRTL ? `مستوى الظهور: ${sectionLabel}` : `Visibility: ${sectionLabel}`}
                   >
-                    {LEVELS.map((l) => (
+                    {SECTION_VISIBILITY_LEVELS.map((l) => (
                       <option
                         key={l.v}
                         value={l.v}
                         disabled={s.sensitive && l.v === 'public_limited'}
                       >
-                        {isRTL ? l.ar : l.en}
+                        {pickLabel(l, isRTL)}
                       </option>
                     ))}
                   </select>
