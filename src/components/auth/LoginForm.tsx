@@ -20,7 +20,8 @@ import { TemporaryCodeForm } from './TemporaryCodeForm';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 import { trackLoginSuccess, trackLoginFailed, categorizeReason } from '@/lib/analytics-events';
 
-const BETA_TEMP_CODE_ENABLED = import.meta.env.VITE_ENABLE_BETA_TEMP_CODE === 'true';
+// Beta gate: visible by default during beta. To hide, set VITE_ENABLE_BETA_TEMP_CODE="false".
+const BETA_TEMP_CODE_ENABLED = import.meta.env.VITE_ENABLE_BETA_TEMP_CODE !== 'false';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
