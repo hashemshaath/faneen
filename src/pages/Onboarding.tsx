@@ -144,7 +144,8 @@ const Onboarding = () => {
       setDraftLoaded(true);
     })();
     return () => { cancelled = true; };
-  }, [user, profile, isAdmin, isSuperAdmin, getTargetRoute, navigate, step]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, profile, isAdmin, isSuperAdmin, getTargetRoute, navigate]);
 
   // Completion percentage for the header progress bar
   const completionPct = useMemo(() => {
