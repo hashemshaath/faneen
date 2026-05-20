@@ -1,9 +1,23 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { normalizeDigits } from "@/lib/normalize-digits";
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, onChange, ...props }, ref) => {
+    const handleChange = React.useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (type !== "password" && type !== "file") {
+          const original = e.target.value;
+          const normalized = normalizeDigits(original);
+          if (normalized !== original) {
+            e.target.value = normalized;
+          }
+        }
+        onChange?.(e);
+      },
+      [onChange, type],
+    );
     return (
       <input
         type={type}
@@ -12,6 +26,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className,
         )}
         ref={ref}
+        onChange={handleChange}
         {...props}
       />
     );
