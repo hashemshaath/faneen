@@ -332,6 +332,15 @@ export const ExecutionSiteSection: React.FC<Props> = ({
 
           {selectedSite && selectedSite.site_ref && !adding && (
             <div className="space-y-3">
+              {selectedSiteBarcode && (
+                <BarcodeWidget
+                  barcodeCode={selectedSiteBarcode}
+                  entityType="client_site"
+                  title={isRTL ? 'كود المشروع' : 'Project Code'}
+                  subtitle={selectedSite.site_name ?? selectedSite.label ?? selectedSite.site_ref}
+                  size="sm"
+                />
+              )}
               <ClientSiteQrCard
                 siteId={selectedSite.id}
                 siteRef={selectedSite.site_ref}
