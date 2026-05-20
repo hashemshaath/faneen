@@ -15,6 +15,7 @@ import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Activity, MapPin, QrCode, RefreshCw, Search, AlertTriangle, ExternalLink, Eye } from 'lucide-react';
 import AdminSiteSensitivePanel from '@/components/admin/client-sites/AdminSiteSensitivePanel';
+import AdminSiteQrManager from '@/components/admin/client-sites/AdminSiteQrManager';
 import AdminSiteSensitiveInline from '@/components/admin/client-sites/AdminSiteSensitiveInline';
 
 /* ------------------------------------------------------------------ */
@@ -561,6 +562,13 @@ const AdminClientSitesMonitoring: React.FC = () => {
                 </section>
 
                 <AdminSiteSensitiveInline siteId={detailQ.data.site.id} />
+
+                <AdminSiteQrManager
+                  siteId={detailQ.data.site.id}
+                  siteRef={detailQ.data.site.site_ref}
+                  visibility={detailQ.data.site.visibility}
+                  qrEnabled={detailQ.data.site.qr_enabled}
+                />
 
                 <AdminSiteSensitivePanel siteId={detailQ.data.site.id} />
               </div>

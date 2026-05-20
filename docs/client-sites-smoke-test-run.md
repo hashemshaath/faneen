@@ -226,3 +226,18 @@ Manual real-account end-to-end test remains as a follow-up.
 ---
 
 *Document generated automatically from Phase 3B smoke test results.*
+
+## Admin QR Manager (Audited Rotate)
+
+QA-seeded sites only store `qr_token_hash` — the raw QR token cannot be
+reconstructed. To get a visible/printable QR from `/admin/client-sites`:
+
+1. Open the site detail drawer.
+2. Expand "Site QR management".
+3. Enter a reason (≥ 5 chars) and click "Generate new QR".
+4. The new token is shown **once** — copy URL, download PNG, or print sticker.
+5. The previous token is invalidated. An `admin_client_site_access_audit` row
+   with `action = 'qr_token_rotated'` is written.
+
+If the site `visibility` is `private`, the new QR is generated but `/s/:token`
+will not resolve until visibility is changed to `shared_by_qr`.
