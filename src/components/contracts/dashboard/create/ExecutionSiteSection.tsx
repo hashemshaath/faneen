@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import ClientSiteQrCard from '@/components/client-sites/ClientSiteQrCard';
 
 export interface ExecutionSiteRow {
   id: string;
@@ -37,6 +38,11 @@ export interface ExecutionSiteRow {
   longitude: number | null;
   access_notes: string | null;
   is_default: boolean;
+  site_ref?: string | null;
+  site_name?: string | null;
+  site_type?: string | null;
+  visibility?: string | null;
+  qr_enabled?: boolean | null;
 }
 
 export interface ExecutionAddressSnapshot {
@@ -316,6 +322,19 @@ export const ExecutionSiteSection: React.FC<Props> = ({
                 {isRTL ? 'إزالة' : 'Clear'}
               </Button>
             </div>
+          )}
+
+          {selectedSite && selectedSite.site_ref && !adding && (
+            <ClientSiteQrCard
+              siteId={selectedSite.id}
+              siteRef={selectedSite.site_ref}
+              siteName={selectedSite.site_name ?? selectedSite.label}
+              siteType={selectedSite.site_type ?? null}
+              cityName={selectedSite.city_name}
+              visibility={(selectedSite.visibility ?? 'private') as 'private' | 'shared_by_qr' | 'public_limited'}
+              qrEnabled={!!selectedSite.qr_enabled}
+              onChanged={() => refetch()}
+            />
           )}
 
           {adding && (
