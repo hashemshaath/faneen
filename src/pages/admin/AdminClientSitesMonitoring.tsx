@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,7 @@ import {
   Activity, MapPin, QrCode, RefreshCw, Search, AlertTriangle, Eye,
   X, Download, Building2, Home, Warehouse, Briefcase, Store, HardHat, Layers,
   ShieldCheck, FileText, Users, TrendingUp, Filter, ChevronDown,
+  ChevronLeft, ChevronRight, ArrowUpDown, Zap, Sparkles, Rows3, Rows2,
 } from 'lucide-react';
 import AdminSiteSensitivePanel from '@/components/admin/client-sites/AdminSiteSensitivePanel';
 import AdminSiteQrManager from '@/components/admin/client-sites/AdminSiteQrManager';
