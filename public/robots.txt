@@ -46,6 +46,7 @@ Disallow: /reset-password
 Disallow: /onboarding
 Disallow: /forbidden
 Disallow: /unsubscribe
+Disallow: /s/
 Disallow: /profile/settings
 Disallow: /add-business/success
 
