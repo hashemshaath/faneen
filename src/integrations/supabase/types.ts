@@ -601,6 +601,169 @@ export type Database = {
           },
         ]
       }
+      barcode_entity_links: {
+        Row: {
+          barcode_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          linked_entity_id: string
+          linked_entity_type: string
+          relationship_type: string
+        }
+        Insert: {
+          barcode_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          linked_entity_id: string
+          linked_entity_type: string
+          relationship_type: string
+        }
+        Update: {
+          barcode_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          linked_entity_id?: string
+          linked_entity_type?: string
+          relationship_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barcode_entity_links_barcode_id_fkey"
+            columns: ["barcode_id"]
+            isOneToOne: false
+            referencedRelation: "barcode_registry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      barcode_events: {
+        Row: {
+          actor_business_id: string | null
+          actor_role: string | null
+          actor_user_id: string | null
+          barcode_id: string
+          created_at: string
+          event_type: string
+          id: string
+          ip_hash: string | null
+          metadata: Json | null
+          user_agent_hash: string | null
+        }
+        Insert: {
+          actor_business_id?: string | null
+          actor_role?: string | null
+          actor_user_id?: string | null
+          barcode_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json | null
+          user_agent_hash?: string | null
+        }
+        Update: {
+          actor_business_id?: string | null
+          actor_role?: string | null
+          actor_user_id?: string | null
+          barcode_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json | null
+          user_agent_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barcode_events_barcode_id_fkey"
+            columns: ["barcode_id"]
+            isOneToOne: false
+            referencedRelation: "barcode_registry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      barcode_registry: {
+        Row: {
+          archived_at: string | null
+          barcode_code: string
+          created_at: string
+          created_by: string | null
+          current_scan_token_hash: string | null
+          entity_id: string
+          entity_type: string
+          frozen_at: string | null
+          id: string
+          last_scanned_at: string | null
+          metadata: Json | null
+          owner_business_id: string | null
+          owner_user_id: string | null
+          permanent_public_code: boolean
+          scan_count: number
+          scan_url_path: string | null
+          source: string
+          status: string
+          transfer_from_user_id: string | null
+          transfer_to_user_id: string | null
+          transferred_at: string | null
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          archived_at?: string | null
+          barcode_code: string
+          created_at?: string
+          created_by?: string | null
+          current_scan_token_hash?: string | null
+          entity_id: string
+          entity_type: string
+          frozen_at?: string | null
+          id?: string
+          last_scanned_at?: string | null
+          metadata?: Json | null
+          owner_business_id?: string | null
+          owner_user_id?: string | null
+          permanent_public_code?: boolean
+          scan_count?: number
+          scan_url_path?: string | null
+          source?: string
+          status?: string
+          transfer_from_user_id?: string | null
+          transfer_to_user_id?: string | null
+          transferred_at?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          archived_at?: string | null
+          barcode_code?: string
+          created_at?: string
+          created_by?: string | null
+          current_scan_token_hash?: string | null
+          entity_id?: string
+          entity_type?: string
+          frozen_at?: string | null
+          id?: string
+          last_scanned_at?: string | null
+          metadata?: Json | null
+          owner_business_id?: string | null
+          owner_user_id?: string | null
+          permanent_public_code?: boolean
+          scan_count?: number
+          scan_url_path?: string | null
+          source?: string
+          status?: string
+          transfer_from_user_id?: string | null
+          transfer_to_user_id?: string | null
+          transferred_at?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       blog_bookmarks: {
         Row: {
           created_at: string
@@ -10160,6 +10323,7 @@ export type Database = {
       }
       archive_client_site: { Args: { _site_id: string }; Returns: Json }
       archive_expired_contract_pdf_exports: { Args: never; Returns: number }
+      barcode_entity_prefix: { Args: { _entity_type: string }; Returns: string }
       build_execution_address_snapshot: {
         Args: { _site_id: string }
         Returns: Json
@@ -10406,6 +10570,19 @@ export type Database = {
           raw_key: string
         }[]
       }
+      create_barcode_for_entity: {
+        Args: {
+          _barcode_code?: string
+          _entity_id: string
+          _entity_type: string
+          _metadata?: Json
+          _owner_business_id?: string
+          _owner_user_id?: string
+          _source?: string
+          _visibility?: string
+        }
+        Returns: Json
+      }
       create_client_invitation: {
         Args: {
           _business_id?: string
@@ -10474,6 +10651,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      generate_barcode_code: { Args: { _entity_type: string }; Returns: string }
       generate_client_site_ref: { Args: never; Returns: string }
       generate_invite_key: {
         Args: {
@@ -11067,6 +11245,7 @@ export type Database = {
         }
         Returns: number
       }
+      normalize_barcode_code: { Args: { _code: string }; Returns: string }
       notify_expiring_memberships: { Args: never; Returns: number }
       prepare_contract_prefill_from_lead: {
         Args: { _lead_id: string }
