@@ -478,6 +478,15 @@ const AdminClientSitesMonitoring: React.FC = () => {
               )}
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant={autoRefresh ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setAutoRefresh(v => !v)}
+                title={bi('تحديث تلقائي كل 30 ثانية', 'Auto-refresh every 30s')}
+              >
+                <Zap className={`h-4 w-4 me-2 ${autoRefresh ? 'fill-current' : ''}`} />
+                {bi('تحديث تلقائي', 'Auto')}
+              </Button>
               <Button variant="outline" size="sm" onClick={exportCsv} disabled={!rows.length}>
                 <Download className="h-4 w-4 me-2" />
                 {bi('تصدير CSV', 'Export CSV')}
