@@ -372,6 +372,11 @@ const ContractDetail = () => {
     enabled: !!contract?.business_id,
   });
 
+  // Phase 7: project (client_site) barcode for the PDF identifiers block.
+  // Defaults to siteRefFallback rendering when not provisioned.
+  const _executionSiteId = (contract as unknown as { execution_site_id?: string | null } | null)?.execution_site_id ?? null;
+  const { data: projectBarcodeCode } = useEntityBarcode('client_site', _executionSiteId || undefined);
+
   const { data: milestones } = useQuery({
     queryKey: ['milestones', id],
     queryFn: async () => {
