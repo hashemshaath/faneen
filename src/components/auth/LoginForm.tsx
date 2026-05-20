@@ -16,8 +16,11 @@ import { GoogleAuthButton } from './GoogleAuthButton';
 import { AuthDivider } from './AuthDivider';
 import { FieldError } from './FieldError';
 import { AuthErrorHelpLinks } from './AuthErrorHelpLinks';
+import { TemporaryCodeForm } from './TemporaryCodeForm';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 import { trackLoginSuccess, trackLoginFailed, categorizeReason } from '@/lib/analytics-events';
+
+const BETA_TEMP_CODE_ENABLED = import.meta.env.VITE_ENABLE_BETA_TEMP_CODE === 'true';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -27,7 +30,7 @@ interface LoginFormProps {
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForgotPassword }) => {
   const { t, isRTL } = useLanguage();
 
-  const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>('phone');
+  const [loginMethod, setLoginMethod] = useState<'phone' | 'email' | 'temp'>('phone');
   const [phone, setPhone] = useState('');
   const [countryCode, setCountryCode] = useState('+966');
   const [email, setEmail] = useState('');
@@ -150,7 +153,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
           <Mail className="w-4 h-4" />
           {isRTL ? 'البريد الإلكتروني' : 'Email'}
         </button>
+        {BETA_TEMP_CODE_ENABLED && (
+          <button
+            onClick={() => { setLoginMethod('temp'); otp.resetOtp(); }}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+              loginMethod === 'temp' ? 'bg-card text-foreground shadow-sm ring-1 ring-border/30' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {isRTL ? 'رمز مؤقت' : 'Temp code'}
+          </button>
+        )}
       </div>
+
+      {loginMethod === 'temp' && BETA_TEMP_CODE_ENABLED && (
+        <TemporaryCodeForm isRTL={isRTL} />
+      )}
 
       {loginMethod === 'phone' && !otp.otpStep && (
         <div className="space-y-4 animate-fade-in">

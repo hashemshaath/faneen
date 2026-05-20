@@ -333,6 +333,57 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_temporary_login_codes: {
+        Row: {
+          attempt_count: number
+          code_hash: string
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          identifier: string
+          max_attempts: number
+          metadata: Json | null
+          purpose: string
+          revoked_at: string | null
+          role_hint: string | null
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attempt_count?: number
+          code_hash: string
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          identifier: string
+          max_attempts?: number
+          metadata?: Json | null
+          purpose?: string
+          revoked_at?: string | null
+          role_hint?: string | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attempt_count?: number
+          code_hash?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          identifier?: string
+          max_attempts?: number
+          metadata?: Json | null
+          purpose?: string
+          revoked_at?: string | null
+          role_hint?: string | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       badge_clicks: {
         Row: {
           business_id: string
@@ -9241,6 +9292,12 @@ export type Database = {
       }
     }
     Functions: {
+      _atlc_hash: { Args: { _code: string; _row_id: string }; Returns: string }
+      _atlc_mask_identifier: { Args: { _identifier: string }; Returns: string }
+      _atlc_normalize_identifier: {
+        Args: { _identifier: string }
+        Returns: string
+      }
       _build_template_snapshot_payload: {
         Args: { _version_id: string }
         Returns: Json
@@ -9833,6 +9890,10 @@ export type Database = {
       create_or_get_lead_conversation: {
         Args: { _lead_id: string }
         Returns: string
+      }
+      create_temporary_login_code: {
+        Args: { _identifier: string; _purpose?: string; _user_id?: string }
+        Returns: Json
       }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -10906,6 +10967,10 @@ export type Database = {
       }
       verify_contract_public: {
         Args: { _contract_number: string; _hash: string }
+        Returns: Json
+      }
+      verify_temporary_login_code: {
+        Args: { _code: string; _identifier: string }
         Returns: Json
       }
     }
