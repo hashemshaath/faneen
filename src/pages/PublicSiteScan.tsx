@@ -7,7 +7,7 @@
  *  - Never reveals whether the token exists, is revoked, or is private.
  *  - noindex; no sitemap entry; no JSON-LD.
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
