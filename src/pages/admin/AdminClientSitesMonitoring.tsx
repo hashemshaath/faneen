@@ -213,13 +213,47 @@ const AdminClientSitesMonitoring: React.FC = () => {
   const bi = useBi();
   const { isRTL } = useLanguage();
 
-  const [status, setStatus] = useState<'active' | 'archived' | 'all'>('active');
-  const [visibility, setVisibility] = useState<string>('all');
-  const [qrStatus, setQrStatus] = useState<string>('all');
-  const [siteType, setSiteType] = useState<string>('all');
-  const [search, setSearch] = useState<string>('');
-  const [city, setCity] = useState<string>('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Persisted filters
+  type Persisted = {
+    status: 'active' | 'archived' | 'all'; visibility: string; qrStatus: string;
+    siteType: string; search: string; city: string;
+    sortBy: SortKey; density: 'comfortable' | 'compact'; autoRefresh: boolean;
+    pageSize: number;
+  };
+  const STORAGE_KEY = 'qitaat_admin_client_sites_filters_v1';
+  const initial: Persisted = (() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return { ...defaults, ...(JSON.parse(raw) as Partial<Persisted>) } as Persisted;
+    } catch { /* noop */ }
+    return defaults;
+  })();
+
+  const [status, setStatus] = useState<'active' | 'archived' | 'all'>(initial.status);
+  const [visibility, setVisibility] = useState<string>(initial.visibility);
+  const [qrStatus, setQrStatus] = useState<string>(initial.qrStatus);
+  const [siteType, setSiteType] = useState<string>(initial.siteType);
+  const [search, setSearch] = useState<string>(initial.search);
+  const [city, setCity] = useState<string>(initial.city);
+  const [sortBy, setSortBy] = useState<SortKey>(initial.sortBy);
+  const [density, setDensity] = useState<'comfortable' | 'compact'>(initial.density);
+  const [autoRefresh, setAutoRefresh] = useState<boolean>(initial.autoRefresh);
+  const [pageSize, setPageSize] = useState<number>(initial.pageSize);
+  const [page, setPage] = useState<number>(0);
+  const [selectedId, setSelectedId] = useState<string | null>(() => {
+    const h = window.location.hash.match(/^#site=([0-9a-f-]+)$/i);
+    return h ? h[1] : null;
+  });
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Persist
+  useEffect(() => {
+    const data: Persisted = { status, visibility, qrStatus, siteType, search, city, sortBy, density, autoRefresh, pageSize };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch { /* noop */ }
+  }, [status, visibility, qrStatus, siteType, search, city, sortBy, density, autoRefresh, pageSize]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(0); }, [status, visibility, qrStatus, siteType, search, city]);
 
   const summaryQ = useQuery({
     queryKey: ['admin-client-sites-monitoring-summary'],
@@ -228,10 +262,11 @@ const AdminClientSitesMonitoring: React.FC = () => {
       if (error) throw error;
       return data as unknown as MonitoringSummary;
     },
+    refetchInterval: autoRefresh ? 30_000 : false,
   });
 
   const listQ = useQuery({
-    queryKey: ['admin-client-sites-monitoring-list', status, visibility, qrStatus, siteType, search, city],
+    queryKey: ['admin-client-sites-monitoring-list', status, visibility, qrStatus, siteType, search, city, page, pageSize],
     queryFn: async (): Promise<MonitoringList> => {
       const { data, error } = await supabase.rpc('admin_list_client_sites_monitoring', {
         _status: status,
@@ -240,12 +275,13 @@ const AdminClientSitesMonitoring: React.FC = () => {
         _qr_status: qrStatus === 'all' ? null : qrStatus,
         _search: search || null,
         _site_type: siteType === 'all' ? null : siteType,
-        _limit: 50,
-        _offset: 0,
+        _limit: pageSize,
+        _offset: page * pageSize,
       });
       if (error) throw error;
       return data as unknown as MonitoringList;
     },
+    refetchInterval: autoRefresh ? 30_000 : false,
   });
 
   const detailQ = useQuery({
