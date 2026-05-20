@@ -2022,10 +2022,20 @@ export type Database = {
           is_default: boolean
           is_demo: boolean
           label: string
+          last_scanned_at: string | null
           latitude: number | null
           longitude: number | null
           map_url: string | null
+          owner_user_id: string | null
+          qr_enabled: boolean
+          qr_revoked_at: string | null
+          qr_token_hash: string | null
+          scan_count: number
+          site_name: string | null
+          site_ref: string
+          site_type: string
           updated_at: string
+          visibility: string
         }
         Insert: {
           access_notes?: string | null
@@ -2045,10 +2055,20 @@ export type Database = {
           is_default?: boolean
           is_demo?: boolean
           label: string
+          last_scanned_at?: string | null
           latitude?: number | null
           longitude?: number | null
           map_url?: string | null
+          owner_user_id?: string | null
+          qr_enabled?: boolean
+          qr_revoked_at?: string | null
+          qr_token_hash?: string | null
+          scan_count?: number
+          site_name?: string | null
+          site_ref: string
+          site_type?: string
           updated_at?: string
+          visibility?: string
         }
         Update: {
           access_notes?: string | null
@@ -2068,10 +2088,20 @@ export type Database = {
           is_default?: boolean
           is_demo?: boolean
           label?: string
+          last_scanned_at?: string | null
           latitude?: number | null
           longitude?: number | null
           map_url?: string | null
+          owner_user_id?: string | null
+          qr_enabled?: boolean
+          qr_revoked_at?: string | null
+          qr_token_hash?: string | null
+          scan_count?: number
+          site_name?: string | null
+          site_ref?: string
+          site_type?: string
           updated_at?: string
+          visibility?: string
         }
         Relationships: [
           {
@@ -9964,6 +9994,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      generate_client_site_ref: { Args: never; Returns: string }
       generate_invite_key: {
         Args: {
           _business_id: string
@@ -10361,6 +10392,9 @@ export type Database = {
           latitude: number
           longitude: number
           map_url: string
+          site_name: string
+          site_ref: string
+          site_type: string
         }[]
       }
       list_contact_audit_events: {
