@@ -649,18 +649,71 @@ const AdminClientSitesMonitoring: React.FC = () => {
           )}
         </Card>
 
+        {/* Quick presets */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Sparkles className="h-3.5 w-3.5" />
+            {bi('عروض سريعة:', 'Quick views:')}
+          </span>
+          {presets.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={p.apply}
+              className={`inline-flex items-center gap-1 h-8 px-3 rounded-full border text-xs font-medium transition-colors ${p.active ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted border-border'}`}
+            >
+              {p.icon}
+              {bi(p.ar, p.en)}
+            </button>
+          ))}
+        </div>
+
         {/* List */}
         <Card className="border-border/60">
-          <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+          <CardHeader className="pb-3 flex flex-wrap items-center justify-between gap-2 space-y-0">
             <CardTitle className="text-base flex items-center gap-2">
               {bi('المواقع', 'Sites')}
               {listQ.data && (
                 <Badge variant="secondary" className="tech-content">{listQ.data.total}</Badge>
               )}
             </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              {bi('يعرض أول 50 نتيجة', 'Showing first 50 results')}
-            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
+                <SelectTrigger className="h-9 w-[180px] text-xs">
+                  <ArrowUpDown className="h-3.5 w-3.5 me-1" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map(o => (
+                    <SelectItem key={o.key} value={o.key} className="text-xs">{bi(o.ar, o.en)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
+                <SelectTrigger className="h-9 w-[90px] text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[10, 25, 50, 100].map(n => <SelectItem key={n} value={String(n)} className="text-xs">{n} / {bi('صفحة', 'page')}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <div className="inline-flex rounded-md border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setDensity('comfortable')}
+                  className={`h-9 px-2 ${density === 'comfortable' ? 'bg-muted' : 'bg-background hover:bg-muted/50'}`}
+                  title={bi('عرض مريح', 'Comfortable')}
+                >
+                  <Rows3 className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDensity('compact')}
+                  className={`h-9 px-2 border-s ${density === 'compact' ? 'bg-muted' : 'bg-background hover:bg-muted/50'}`}
+                  title={bi('عرض مدمج', 'Compact')}
+                >
+                  <Rows2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             {listQ.isLoading ? (
