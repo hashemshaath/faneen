@@ -95,6 +95,7 @@ const AdminLocationsHub = lazyRetry(() => import("./pages/admin/locations/AdminL
 const AdminLocationsCatalog = lazyRetry(() => import("./pages/admin/locations/AdminLocationsCatalog"));
 const AdminBusinessServiceAreas = lazyRetry(() => import("./pages/admin/locations/AdminBusinessServiceAreas"));
 const AdminBusinessCoordinates = lazyRetry(() => import("./pages/admin/locations/AdminBusinessCoordinates"));
+const AdminClientSitesMonitoring = lazyRetry(() => import("./pages/admin/AdminClientSitesMonitoring"));
 const AdminMemberships = lazyRetry(() => import("./pages/admin/AdminMemberships"));
 const AdminMembershipRejections = lazyRetry(() => import("./pages/admin/AdminMembershipRejections"));
 const AdminMembershipEvents = lazyRetry(() => import("./pages/admin/AdminMembershipEvents"));
