@@ -1711,6 +1711,18 @@ const ContractDetail = () => {
       </div>
 
       <div className="container py-5 sm:py-8 px-4 sm:px-6 max-w-5xl mx-auto">
+        {/* Phase 6 — Permanent Contract Code (barcode_code → /q/:code). Renders only when active barcode exists. */}
+        {contractBarcodeCode && (
+          <div className="mb-5 sm:mb-6">
+            <BarcodeWidget
+              barcodeCode={contractBarcodeCode}
+              entityType="contract"
+              title={isRTL ? 'كود العقد' : 'Contract Code'}
+              subtitle={contract.contract_number}
+              size="sm"
+            />
+          </div>
+        )}
         {/* ─── Phase 5E.1 — Status Guidance (read-only) ─── */}
         {(() => {
           const guidance = getStatusGuidance(contract.status);
