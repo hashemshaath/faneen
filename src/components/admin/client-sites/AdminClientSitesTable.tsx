@@ -1,4 +1,5 @@
 import React from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Activity, AlertTriangle, ArrowUpDown, ChevronDown, ChevronLeft, ChevronRight,
-  FileText, MapPin, Rows2, Rows3, Users,
+  Building2, FileText, MapPin, Rows2, Rows3, Users,
 } from 'lucide-react';
 import AdminClientSiteInlineDetail from './AdminClientSiteInlineDetail';
 import {
