@@ -7,8 +7,9 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 
 type VerifyResult =
   | { valid: true; contract_number: string; status: string; locked_at: string | null;
+      contract_barcode_code: string | null; provider_name: string | null; created_at: string | null;
       start_date: string | null; end_date: string | null; currency: string;
-      hash_prefix: string; amendment_count: number }
+      hash_prefix: string | null; amendment_count: number; resolved_via?: string }
   | { valid: false; reason: 'invalid_input' | 'not_found' | 'hash_mismatch';
       contract_number?: string; status?: string };
 
@@ -16,6 +17,7 @@ const VerifyContract = () => {
   const { number } = useParams<{ number: string }>();
   const [params] = useSearchParams();
   const hash = params.get('h') || '';
+  const code = params.get('code') || '';
   const { isRTL } = useLanguage();
   const [state, setState] = useState<{ loading: boolean; data: VerifyResult | null; error: string | null }>({
     loading: true, data: null, error: null,
@@ -28,7 +30,7 @@ const VerifyContract = () => {
     (async () => {
       try {
         const { data, error } = await supabase.rpc('verify_contract_public', {
-          _contract_number: number || '', _hash: hash,
+          _contract_number: number || '', _hash: hash, _barcode_code: code || null,
         });
         if (cancelled) return;
         if (error) {
@@ -53,7 +55,8 @@ const VerifyContract = () => {
     hashMismatch: 'بصمة المستند لا تطابق السجل الرسمي',
     notFound: 'العقد غير موجود أو ليس مفعّلاً',
     invalidInput: 'رابط التحقق غير صالح',
-    contractNumber: 'رقم العقد', status: 'الحالة', lockedAt: 'مفعّل في',
+    contractCode: 'كود العقد', contractNumber: 'رقم العقد', status: 'الحالة', lockedAt: 'مفعّل في',
+    provider: 'مزود الخدمة', createdAt: 'تاريخ الإصدار',
     period: 'الفترة', hashPrefix: 'بصمة المستند', amendments: 'التعديلات المطبقة',
     currency: 'العملة', loading: 'جارٍ التحقق…',
     privacyNote: 'لا يتم عرض أي بيانات شخصية أو مالية. التحقق يستند إلى بصمة المستند فقط.',
@@ -63,7 +66,8 @@ const VerifyContract = () => {
     hashMismatch: 'Document hash does not match the official record',
     notFound: 'Contract not found or not active',
     invalidInput: 'Invalid verification link',
-    contractNumber: 'Contract Number', status: 'Status', lockedAt: 'Activated',
+    contractCode: 'Contract Code', contractNumber: 'Contract Number', status: 'Status', lockedAt: 'Activated',
+    provider: 'Provider', createdAt: 'Issued',
     period: 'Period', hashPrefix: 'Document Hash', amendments: 'Applied Amendments',
     currency: 'Currency', loading: 'Verifying…',
     privacyNote: 'No personal or financial data is shown. Verification relies solely on the document hash.',
@@ -106,15 +110,20 @@ const VerifyContract = () => {
           {data && (
             <div className="p-6 space-y-3 text-sm">
               <Row label={t.contractNumber} value={data.contract_number || '—'} mono />
+              {isValid && data.contract_barcode_code && (
+                <Row label={t.contractCode} value={data.contract_barcode_code} mono />
+              )}
               {'status' in data && data.status && (
                 <Row label={t.status} value={data.status} />
               )}
               {isValid && (
                 <>
+                  {data.provider_name && <Row label={t.provider} value={data.provider_name} />}
+                  {data.created_at && <Row label={t.createdAt} value={fmtDate(data.created_at)} />}
                   <Row label={t.lockedAt} value={fmtDate(data.locked_at)} />
                   <Row label={t.period} value={`${fmtDate(data.start_date)} → ${fmtDate(data.end_date)}`} />
                   <Row label={t.currency} value={data.currency} mono />
-                  <Row label={t.hashPrefix} value={data.hash_prefix} mono />
+                  {data.hash_prefix && <Row label={t.hashPrefix} value={data.hash_prefix} mono />}
                   <Row label={t.amendments} value={String(data.amendment_count)} />
                 </>
               )}
