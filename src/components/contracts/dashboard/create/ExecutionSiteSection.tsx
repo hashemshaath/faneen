@@ -184,6 +184,7 @@ export const ExecutionSiteSection: React.FC<Props> = ({
   };
 
   const selectedSite = sites.find((s) => s.id === selectedSiteId) || null;
+  const { data: selectedSiteBarcode } = useEntityBarcode('client_site', selectedSite?.id);
   const showLockedSnapshot = locked && !!snapshot;
 
   return (
