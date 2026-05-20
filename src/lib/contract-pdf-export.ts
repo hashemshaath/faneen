@@ -345,6 +345,31 @@ export const buildContractPDF = async (data: ContractExportData) => {
   });
   y = lastTableY(doc, y) + 12;
 
+  // ── Barcode Phase 7: Identifiers (Contract Code / Project Code) ──
+  // Public-safe codes only. Contract code falls back to contract_number,
+  // project code falls back to site_ref. No PII, no tokens, no hashes.
+  {
+    const contractCode = (data.contractBarcodeCode || '').trim() || data.contractNumber;
+    const projectCode = (data.projectBarcodeCode || '').trim() || (data.siteRefFallback || '').trim();
+    const idRows: string[][] = [];
+    if (contractCode) idRows.push([data.isRTL ? 'كود العقد' : 'Contract Code', contractCode]);
+    if (projectCode) idRows.push([data.isRTL ? 'كود المشروع' : 'Project Code', projectCode]);
+    if (idRows.length > 0) {
+      sectionTitle(data.isRTL ? 'المعرّفات' : 'Identifiers');
+      autoTable(doc, {
+        startY: y, body: idRows, theme: 'plain',
+        styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
+        columnStyles: {
+          0: { fontStyle: 'bold', cellWidth: 45, textColor: MUTED_RGB },
+          1: { font: 'courier', fontStyle: 'normal' },
+        },
+        margin: PDF_TABLE_MARGIN,
+        alternateRowStyles: { fillColor: SURFACE2_RGB },
+      });
+      y = lastTableY(doc, y) + 12;
+    }
+  }
+
   // ── Phase 5C.4: Execution Site (rendered from frozen snapshot only) ──
   {
     const snap = data.executionAddressSnapshot;
