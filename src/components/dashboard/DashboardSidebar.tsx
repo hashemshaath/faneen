@@ -31,6 +31,7 @@ import {
   Settings2,
   MapPin,
   Beaker,
+  QrCode,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -166,6 +167,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'مركز التواصل', en: 'Contact Center' }, url: '/admin/contact-messages', icon: MessageSquare },
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
       { label: { ar: 'مراقبة المواقع', en: 'Site Monitoring' }, url: '/admin/client-sites', icon: MapPin },
+      { label: { ar: 'سجل الأكواد', en: 'Barcode Registry' }, url: '/admin/barcode-registry', icon: QrCode },
       { label: { ar: 'مراجعة المزودين', en: 'Provider Review' }, url: '/admin/provider-review', icon: ShieldCheck },
     ],
   },
