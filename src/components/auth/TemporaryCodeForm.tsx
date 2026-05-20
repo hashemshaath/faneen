@@ -120,7 +120,12 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
       setUiState('success');
     } catch (err: unknown) {
       setAttemptsUsed((n) => n + 1);
-      const msg = err instanceof Error ? err.message : String(err);
+      // Supabase PostgrestError is a plain object — extract message/code/details safely.
+      const e = err as { message?: string; details?: string; hint?: string; code?: string } | null;
+      const msg = [e?.message, e?.details, e?.hint, e?.code]
+        .filter((s): s is string => typeof s === 'string' && s.length > 0)
+        .join(' | ') || (err instanceof Error ? err.message : String(err));
+      if (import.meta.env.DEV) console.warn('[temp-code] verify error:', err, '->', msg);
       mapAndSetError(msg);
       setUiState('idle');
     }
