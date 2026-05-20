@@ -386,6 +386,94 @@ const PublicSiteScan: React.FC = () => {
                 </>
               )}
             </section>
+
+            {/* Submit interest / offer (providers only) */}
+            {user && isProvider && businesses.length > 0 && (
+              <section className="p-5 rounded-xl border border-border/40 bg-card space-y-3">
+                <h2 className="text-sm font-semibold flex items-center gap-1.5">
+                  <Briefcase className="w-4 h-4 text-primary" />
+                  {isRTL ? 'سجل اهتمامك أو اذكر الخدمة' : 'Register interest or describe service'}
+                </h2>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {isRTL
+                    ? 'سيصل اهتمامك لصاحب الموقع. لن نُفصح عن بيانات الاتصال الخاصة بك إلا بعد قبوله.'
+                    : 'Your interest goes to the site owner. Private contact details are not shared until they accept.'}
+                </p>
+
+                <div className="space-y-1">
+                  <Label htmlFor="int-cat" className="text-[10px]">
+                    {isRTL ? 'الخدمة / الفئة (اختياري)' : 'Service / category (optional)'}
+                  </Label>
+                  <Input
+                    id="int-cat" dir="auto" maxLength={120}
+                    value={interestCategory}
+                    onChange={(e) => setInterestCategory(e.target.value)}
+                    className="h-10 text-xs"
+                    placeholder={isRTL ? 'مثال: ألمنيوم، زجاج، خشب' : 'e.g. Aluminum, Glass, Wood'}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="int-bmin" className="text-[10px]">
+                      {isRTL ? 'ميزانية تقديرية من (اختياري)' : 'Est. budget from (optional)'}
+                    </Label>
+                    <Input
+                      id="int-bmin" type="number" inputMode="numeric" min={0}
+                      value={budgetMin}
+                      onChange={(e) => setBudgetMin(e.target.value)}
+                      className="h-10 text-xs tech-content" dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="int-bmax" className="text-[10px]">
+                      {isRTL ? 'إلى (اختياري)' : 'To (optional)'}
+                    </Label>
+                    <Input
+                      id="int-bmax" type="number" inputMode="numeric" min={0}
+                      value={budgetMax}
+                      onChange={(e) => setBudgetMax(e.target.value)}
+                      className="h-10 text-xs tech-content" dir="ltr"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="int-msg" className="text-[10px]">
+                    {isRTL ? 'رسالتك *' : 'Your message *'}
+                  </Label>
+                  <Textarea
+                    id="int-msg" dir="auto" rows={4}
+                    minLength={5} maxLength={2000}
+                    value={interestMsg}
+                    onChange={(e) => setInterestMsg(e.target.value)}
+                    className="text-xs"
+                    placeholder={isRTL
+                      ? 'وضّح الخدمة التي يمكنك تقديمها لهذا الموقع'
+                      : 'Describe the service you can offer for this site'}
+                  />
+                </div>
+
+                <Button
+                  type="button" variant="default" size="sm" className="h-10 w-full text-xs gap-1.5"
+                  disabled={
+                    interestMut.isPending ||
+                    !providerBusinessId ||
+                    interestMsg.trim().length < 5
+                  }
+                  onClick={() => interestMut.mutate()}
+                >
+                  {interestMut.isPending ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : interestMut.isSuccess ? (
+                    <Check className="w-3.5 h-3.5" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
+                  {isRTL ? 'إرسال الاهتمام' : 'Submit interest'}
+                </Button>
+              </section>
+            )}
           </>
         )}
 
