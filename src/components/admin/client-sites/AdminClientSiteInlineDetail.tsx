@@ -72,7 +72,7 @@ const AdminClientSiteInlineDetail: React.FC<Props> = ({ data, bi, isRTL, onClose
               <p className="text-2xl font-bold tech-content">{data.recent_interests.length}</p>
             </div>
             <div className="rounded-lg border p-3 text-center">
-              <p className="text-[xs] uppercase text-muted-foreground text-[10px]">{bi('وصول', 'Grants')}</p>
+              <p className="text-[10px] uppercase text-muted-foreground">{bi('وصول', 'Grants')}</p>
               <p className="text-2xl font-bold tech-content">{data.recent_grants.length}</p>
             </div>
           </div>
