@@ -8,6 +8,11 @@ interface UseOtpFlowOptions {
   isRTL: boolean;
 }
 
+export interface SendOtpResult {
+  ok: boolean;
+  error?: string | null;
+}
+
 export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions) {
   const [otpStep, setOtpStep] = useState(false);
   const [otpCode, setOtpCode] = useState('');
@@ -22,7 +27,7 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
     return () => clearTimeout(timer);
   }, [cooldown]);
 
-  const sendOtp = useCallback(async () => {
+  const sendOtp = useCallback(async (): Promise<SendOtpResult> => {
     setLoading(true);
     setError(null);
     try {
@@ -40,18 +45,28 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
           });
         } catch { /* analytics never breaks otp */ }
         setError(msg);
-        return false;
+        return { ok: false, error: msg };
       }
       setDemoOtp(data.demo_otp ?? null);
       setOtpCode('');
       setOtpStep(true);
       setCooldown(OTP_COOLDOWN_SECONDS);
       track.otpSent({ method: 'otp' });
-      return true;
+      return { ok: true };
     } catch (err) {
       try { trackOtpFailed({ method: 'otp', flow: 'send', source_page: 'auth_otp', reason_category: categorizeReason(err) }); } catch { /* noop */ }
-      setError(isRTL ? 'حدث خطأ، حاول مرة أخرى' : 'An error occurred, try again');
-      return false;
+      const rawMsg = err instanceof Error ? err.message : String(err);
+      // Detect missing-messaging / edge-function-not-deployed style errors so the user gets actionable copy
+      // instead of a generic toast (root cause of "no response" reports).
+      const looksLikeMessagingMissing =
+        /Edge Function|not found|404|503|Failed to send a request|FunctionsFetchError|messaging|twilio/i.test(rawMsg);
+      const msg = looksLikeMessagingMissing
+        ? (isRTL
+            ? 'خدمة الرسائل قيد الإعداد حاليًا. يمكنك استخدام البريد الإلكتروني أو طلب رمز مؤقت من فريق قطاعات.'
+            : 'Messaging is currently being configured. You can use email login or request a temporary code from Qitaat team.')
+        : (isRTL ? 'حدث خطأ، حاول مرة أخرى' : 'An error occurred, try again');
+      setError(msg);
+      return { ok: false, error: msg };
     } finally {
       setLoading(false);
     }

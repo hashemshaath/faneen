@@ -23,6 +23,12 @@ import { trackLoginSuccess, trackLoginFailed, categorizeReason } from '@/lib/ana
 // Beta gate: visible by default during beta. To hide, set VITE_ENABLE_BETA_TEMP_CODE="false".
 const BETA_TEMP_CODE_ENABLED = import.meta.env.VITE_ENABLE_BETA_TEMP_CODE !== 'false';
 
+// Dev-only hint: surface when the flag is missing entirely so devs notice silent fallbacks.
+if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_BETA_TEMP_CODE === undefined) {
+  // eslint-disable-next-line no-console
+  console.info('[auth] VITE_ENABLE_BETA_TEMP_CODE is not set — temp code tab is visible by default (beta).');
+}
+
 interface LoginFormProps {
   onSwitchToRegister: () => void;
   onForgotPassword: () => void;
@@ -102,9 +108,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
       if (!phone) toast.error(isRTL ? 'أدخل رقم جوال صحيح' : 'Enter a valid phone number');
       return;
     }
-    const ok = await otp.sendOtp();
-    if (ok) toast.success(isRTL ? 'تم إرسال رمز التحقق' : 'Verification code sent');
-    else if (otp.error) toast.error(otp.error);
+    const result = await otp.sendOtp();
+    if (result.ok) {
+      toast.success(isRTL ? 'تم إرسال رمز التحقق' : 'Verification code sent');
+    } else {
+      // Always surface feedback — never leave the user with no response.
+      toast.error(
+        result.error ||
+          (isRTL
+            ? 'خدمة الرسائل قيد الإعداد حاليًا. يمكنك استخدام البريد الإلكتروني أو طلب رمز مؤقت من فريق قطاعات.'
+            : 'Messaging is currently being configured. You can use email login or request a temporary code from Qitaat team.'),
+      );
+    }
   };
 
   const handlePhoneVerify = async () => {
