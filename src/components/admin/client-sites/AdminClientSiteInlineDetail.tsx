@@ -14,6 +14,24 @@ import {
 
 type Bi = (ar: string, en: string) => string;
 
+const MetricTile: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  hint?: string;
+  tone?: string;
+  valueClass?: string;
+}> = ({ icon, label, value, hint, tone = 'text-primary', valueClass = 'text-base font-bold tech-content' }) => (
+  <div className="rounded-lg border p-2.5 bg-card hover:bg-muted/30 transition-colors">
+    <div className={`flex items-center gap-1.5 text-[10px] uppercase tracking-wide ${tone}`}>
+      <span aria-hidden>{icon}</span>
+      <span className="text-muted-foreground font-medium">{label}</span>
+    </div>
+    <p className={`mt-0.5 ${valueClass}`}>{value}</p>
+    {hint && <p className="text-[10px] text-muted-foreground truncate mt-0.5" title={hint}>{hint}</p>}
+  </div>
+);
+
 interface Props {
   data: SiteDetail;
   bi: Bi;
