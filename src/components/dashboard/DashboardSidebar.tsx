@@ -165,6 +165,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'تشغيل عروض الأسعار', en: 'Quote Operations' }, url: '/admin/quote-operations', icon: Activity },
       { label: { ar: 'مركز التواصل', en: 'Contact Center' }, url: '/admin/contact-messages', icon: MessageSquare },
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
+      { label: { ar: 'مراقبة المواقع', en: 'Site Monitoring' }, url: '/admin/client-sites', icon: MapPin },
       { label: { ar: 'مراجعة المزودين', en: 'Provider Review' }, url: '/admin/provider-review', icon: ShieldCheck },
     ],
   },
