@@ -204,6 +204,37 @@ const SITE_TYPE_ICONS: Record<string, React.ReactNode> = {
 };
 const iconForType = (t: string) => SITE_TYPE_ICONS[t] ?? <MapPin className="h-4 w-4" />;
 
+type SortKey =
+  | 'activity_desc' | 'activity_asc'
+  | 'scans_desc' | 'scans_asc'
+  | 'pending_desc' | 'contracts_desc' | 'interests_desc'
+  | 'created_desc' | 'created_asc';
+
+const SORT_OPTIONS: Array<{ key: SortKey; ar: string; en: string }> = [
+  { key: 'activity_desc', ar: 'الأحدث نشاطاً', en: 'Latest activity' },
+  { key: 'activity_asc', ar: 'الأقدم نشاطاً', en: 'Oldest activity' },
+  { key: 'scans_desc', ar: 'الأكثر مسحاً', en: 'Most scans' },
+  { key: 'scans_asc', ar: 'الأقل مسحاً', en: 'Least scans' },
+  { key: 'pending_desc', ar: 'طلبات معلّقة', en: 'Pending requests' },
+  { key: 'contracts_desc', ar: 'الأكثر عقوداً', en: 'Most contracts' },
+  { key: 'interests_desc', ar: 'الأكثر اهتماماً', en: 'Most interests' },
+  { key: 'created_desc', ar: 'الأحدث إنشاءً', en: 'Newest created' },
+  { key: 'created_asc', ar: 'الأقدم إنشاءً', en: 'Oldest created' },
+];
+
+const defaults = {
+  status: 'active' as const,
+  visibility: 'all',
+  qrStatus: 'all',
+  siteType: 'all',
+  search: '',
+  city: '',
+  sortBy: 'activity_desc' as SortKey,
+  density: 'comfortable' as 'comfortable' | 'compact',
+  autoRefresh: false,
+  pageSize: 25,
+};
+
 /* ------------------------------------------------------------------ */
 /* Page                                                               */
 /* ------------------------------------------------------------------ */
