@@ -19,6 +19,35 @@ interface Props {
  */
 type ErrorKind = 'invalid' | 'expired' | 'used' | 'too_many' | 'rate_limited' | 'invalid_id' | 'generic';
 
+/**
+ * Normalize identifier for verification. Email is lowercased & trimmed.
+ * Saudi phone formats (05X…, 5X…, 9665X…, +9665X…) are normalized to E.164 (+9665XXXXXXXX).
+ * Anything else is returned trimmed as-is so the RPC can decide.
+ */
+function normalizeIdentifier(raw: string): string {
+  const v = raw.trim();
+  if (!v) return '';
+  if (v.includes('@')) return v.toLowerCase();
+  const digits = v.replace(/[^\d+]/g, '');
+  // +9665XXXXXXXX
+  if (/^\+9665\d{8}$/.test(digits)) return digits;
+  // 9665XXXXXXXX
+  if (/^9665\d{8}$/.test(digits)) return `+${digits}`;
+  // 05XXXXXXXX
+  if (/^05\d{8}$/.test(digits)) return `+966${digits.slice(1)}`;
+  // 5XXXXXXXX
+  if (/^5\d{8}$/.test(digits)) return `+966${digits}`;
+  return digits || v;
+}
+
+function isLikelyValidIdentifier(raw: string): boolean {
+  const v = raw.trim();
+  if (!v) return false;
+  if (v.includes('@')) return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  const n = normalizeIdentifier(v);
+  return /^\+9665\d{8}$/.test(n) || /^\+?\d{7,15}$/.test(n);
+}
+
 export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
   const [identifier, setIdentifier] = useState('');
   const [code, setCode] = useState('');
@@ -54,19 +83,29 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
   const handleVerify = async () => {
     setErrorKind(null);
     setErrorText('');
-    if (!identifier.trim()) {
+    if (!identifier.trim() || !isLikelyValidIdentifier(identifier)) {
       setKnownError('invalid_id');
       return;
     }
-    if (code.trim().length < 4) {
+    if (!code.trim()) {
+      setErrorKind('invalid');
+      setErrorText(
+        isRTL
+          ? 'أدخل الرمز المؤقت الذي حصلت عليه من فريق قطاعات.'
+          : 'Enter the temporary code provided by the Qitaat team.',
+      );
+      return;
+    }
+    if (code.trim().length < 6) {
       setErrorKind('invalid');
       setErrorText(isRTL ? 'أدخل الرمز كاملاً (6 أرقام).' : 'Enter the full code (6 digits).');
       return;
     }
     setUiState('verifying');
     try {
+      const normalized = normalizeIdentifier(identifier);
       const { data, error: rpcError } = await supabase.rpc('verify_temporary_login_code', {
-        _identifier: identifier.trim(),
+        _identifier: normalized,
         _code: code.trim(),
       });
       if (rpcError) throw rpcError;
@@ -104,6 +143,7 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
   }
 
   const loading = uiState === 'verifying';
+  const canSubmit = !loading && !!identifier.trim() && code.trim().length >= 6;
 
   const ErrorIcon =
     errorKind === 'expired' ? Clock :
@@ -115,8 +155,8 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
     <div className="space-y-4 animate-fade-in">
       <div className="rounded-xl border border-amber-300/40 bg-amber-50 dark:bg-amber-950/20 px-4 py-3 text-xs leading-relaxed text-amber-900 dark:text-amber-200">
         {isRTL
-          ? 'هذه طريقة دخول مؤقتة لمستخدمي النسخة التجريبية إلى حين اكتمال إعدادات الرسائل.'
-          : 'Temporary beta access until messaging setup is complete.'}
+          ? 'دخول تجريبي مؤقت. لا يُولَّد الرمز تلقائياً — اطلبه من فريق قطاعات ثم أدخله هنا للتحقق.'
+          : 'Temporary beta access. The code is not auto-generated — request it from the Qitaat team, then enter it here to verify.'}
       </div>
 
       <div className="space-y-2">
@@ -165,7 +205,7 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
 
       <Button
         onClick={handleVerify}
-        disabled={loading}
+        disabled={!canSubmit}
         variant="hero"
         className="w-full h-12 rounded-xl text-sm font-semibold"
       >
@@ -176,7 +216,9 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
       </Button>
 
       <p className="text-[11px] text-muted-foreground text-center">
-        {isRTL ? 'اطلب الرمز من فريق قطاعات.' : 'Request a code from the Qitaat team.'}
+        {isRTL
+          ? 'لم تستلم رمزاً؟ تواصل مع فريق قطاعات للحصول عليه — لا يُرسَل تلقائياً.'
+          : "Don't have a code? Contact the Qitaat team to receive one — it is not sent automatically."}
       </p>
     </div>
   );
