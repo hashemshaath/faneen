@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleRedirect } from '@/hooks/useRoleRedirect';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -144,8 +144,7 @@ const Onboarding = () => {
       setDraftLoaded(true);
     })();
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, profile]);
+  }, [user, profile, isAdmin, isSuperAdmin, getTargetRoute, navigate, step]);
 
   // Completion percentage for the header progress bar
   const completionPct = useMemo(() => {
@@ -226,6 +225,10 @@ const Onboarding = () => {
     const ok = await otp.verifyOtp();
     if (!ok && otp.error) toast.error(otp.error);
   };
+
+  if (isAdmin || isSuperAdmin) {
+    return <Navigate to={getTargetRoute()} replace />;
+  }
 
   if (step === 'account-type') {
     return (
