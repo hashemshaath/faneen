@@ -19,12 +19,20 @@ import type { UseQueryResult } from '@tanstack/react-query';
 
 type Bi = (ar: string, en: string) => string;
 
+export interface BusinessLogoLite {
+  logo_url: string | null;
+  name_ar: string | null;
+  name_en: string | null;
+  username: string | null;
+}
+
 interface Props {
   bi: Bi;
   isRTL: boolean;
   rows: MonitoringRow[];
   listQ: UseQueryResult<MonitoringList, Error>;
   detailQ: UseQueryResult<SiteDetail, Error>;
+  businessLogos: Map<string, BusinessLogoLite>;
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
   sortBy: SortKey;
@@ -40,7 +48,7 @@ interface Props {
 }
 
 const AdminClientSitesTable: React.FC<Props> = ({
-  bi, isRTL, rows, listQ, detailQ, selectedId, setSelectedId,
+  bi, isRTL, rows, listQ, detailQ, businessLogos, selectedId, setSelectedId,
   sortBy, setSortBy, pageSize, setPageSize, page, setPage,
   density, setDensity, hasActiveFilters, onResetAll,
 }) => {
