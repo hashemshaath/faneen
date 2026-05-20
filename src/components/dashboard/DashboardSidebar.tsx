@@ -173,6 +173,7 @@ const adminBaseGroups: MenuGroup[] = [
     icon: Building2,
     items: [
       { label: { ar: 'المنشآت', en: 'Businesses' }, url: '/admin/businesses', icon: Building2 },
+      { label: { ar: 'مركز المواقع', en: 'Locations Hub' }, url: '/admin/locations', icon: MapPin },
       { label: { ar: 'تحليلات المزودين', en: 'Provider Analytics' }, url: '/admin/provider-analytics', icon: TrendingUp },
       { label: { ar: 'العضويات', en: 'Memberships' }, url: '/admin/memberships', icon: Crown },
       { label: { ar: 'عضويات المزودين', en: 'Provider Subscriptions' }, url: '/admin/provider-subscriptions', icon: Crown },
