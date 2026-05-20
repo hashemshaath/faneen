@@ -228,6 +228,15 @@ export interface ContractExportData {
   /** Origin used for the verification URL (defaults to https://qitaat.com). */
   verifyOrigin?: string;
   /**
+   * Barcode Phase 7: unified barcode codes. Caller resolves these via
+   * `get_entity_barcode_code(entity_type, entity_id)`. Public-safe — never
+   * include token hashes, raw QR tokens, or PII. Format: PREFIX-YYYY-NNNNNN.
+   */
+  contractBarcodeCode?: string | null;
+  projectBarcodeCode?: string | null;
+  /** Fallback display for project code when no client_site barcode exists. */
+  siteRefFallback?: string | null;
+  /**
    * Phase 5C.4 — Execution site (frozen address snapshot). Caller MUST pass
    * only the safe whitelisted fields below. Never include site_id, city_id,
    * created_by, archived_at, is_default, is_demo, client_user_id,
