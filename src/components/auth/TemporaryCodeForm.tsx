@@ -122,7 +122,6 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
 
       // 2) Exchange the token_hash for a real Supabase session.
       const { error: otpErr } = await supabase.auth.verifyOtp({
-        email: resp.email,
         token_hash: resp.token_hash,
         type: 'magiclink',
       });
