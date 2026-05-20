@@ -2151,6 +2151,56 @@ export type Database = {
         }
         Relationships: []
       }
+      client_site_notification_preferences: {
+        Row: {
+          auto_ignore_anonymous_visits: boolean
+          auto_ignore_repeated_visits: boolean
+          created_at: string
+          id: string
+          notify_on_access_request: boolean
+          notify_on_locked_section_attempt: boolean
+          notify_on_provider_interest: boolean
+          notify_on_qr_scan: boolean
+          site_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          auto_ignore_anonymous_visits?: boolean
+          auto_ignore_repeated_visits?: boolean
+          created_at?: string
+          id?: string
+          notify_on_access_request?: boolean
+          notify_on_locked_section_attempt?: boolean
+          notify_on_provider_interest?: boolean
+          notify_on_qr_scan?: boolean
+          site_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          auto_ignore_anonymous_visits?: boolean
+          auto_ignore_repeated_visits?: boolean
+          created_at?: string
+          id?: string
+          notify_on_access_request?: boolean
+          notify_on_locked_section_attempt?: boolean
+          notify_on_provider_interest?: boolean
+          notify_on_qr_scan?: boolean
+          site_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_site_notification_preferences_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: true
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_site_visibility_settings: {
         Row: {
           id: string
@@ -9671,6 +9721,11 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      _csnp_can_manage: {
+        Args: { _site_id: string; _uid: string }
+        Returns: boolean
+      }
+      _csnp_recipient: { Args: { _site_id: string }; Returns: string }
       _ct_assert_admin: { Args: never; Returns: undefined }
       _ct_assert_version_editable: {
         Args: { p_version_id: string }
@@ -10346,6 +10401,10 @@ export type Database = {
           role: Database["public"]["Enums"]["business_staff_role"]
           user_id: string
         }[]
+      }
+      get_client_site_notification_preferences: {
+        Args: { _site_id: string }
+        Returns: Json
       }
       get_contact_inbox_settings: {
         Args: never
@@ -11372,6 +11431,10 @@ export type Database = {
       }
       unsubscribe_newsletter: { Args: { p_email: string }; Returns: boolean }
       update_client_site: {
+        Args: { _patch: Json; _site_id: string }
+        Returns: Json
+      }
+      update_client_site_notification_preferences: {
         Args: { _patch: Json; _site_id: string }
         Returns: Json
       }

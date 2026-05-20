@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import ClientSiteQrCard from '@/components/client-sites/ClientSiteQrCard';
 import ClientSiteVisibilitySettingsCard from '@/components/client-sites/ClientSiteVisibilitySettingsCard';
 import ClientSiteAccessRequestsPanel from '@/components/client-sites/ClientSiteAccessRequestsPanel';
+import ClientSiteNotificationPreferencesCard from '@/components/client-sites/ClientSiteNotificationPreferencesCard';
 
 export interface ExecutionSiteRow {
   id: string;
@@ -349,6 +350,10 @@ export const ExecutionSiteSection: React.FC<Props> = ({
 
           {selectedSite && selectedSite.site_ref && !adding && (
             <ClientSiteAccessRequestsPanel isRTL={isRTL} siteId={selectedSite.id} />
+          )}
+
+          {selectedSite && selectedSite.site_ref && !adding && (
+            <ClientSiteNotificationPreferencesCard isRTL={isRTL} siteId={selectedSite.id} />
           )}
 
           {adding && (
