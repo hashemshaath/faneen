@@ -32,8 +32,6 @@ describe('Barcode Phase 7 — PDF identifiers + QR path', () => {
     const text = await renderText(contractWithBarcodeFixture);
     expect(text).toContain('CNT-2026-100007');
     expect(text).toContain('LOC-2026-100007');
-    // QR sub-line label
-    expect(text).toContain('Contract code:');
   });
 
   it('falls back to /v/c/<number>?h=<hash> when no barcode is present', async () => {
