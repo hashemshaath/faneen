@@ -9840,6 +9840,7 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_client_sites_monitoring_summary: { Args: never; Returns: Json }
       admin_contract_pdf_exports_summary: {
         Args: never
         Returns: {
@@ -9853,6 +9854,23 @@ export type Database = {
       admin_convert_lead_to_contract: {
         Args: { _lead_id: string }
         Returns: string
+      }
+      admin_get_client_site_monitoring_detail: {
+        Args: { _site_id: string }
+        Returns: Json
+      }
+      admin_list_client_sites_monitoring: {
+        Args: {
+          _city?: string
+          _limit?: number
+          _offset?: number
+          _qr_status?: string
+          _search?: string
+          _site_type?: string
+          _status?: string
+          _visibility?: string
+        }
+        Returns: Json
       }
       admin_list_contract_pdf_exports: {
         Args: {
