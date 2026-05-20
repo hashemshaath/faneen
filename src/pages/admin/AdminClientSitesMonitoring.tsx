@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,7 @@ import {
   Activity, MapPin, QrCode, RefreshCw, Search, AlertTriangle, Eye,
   X, Download, Building2, Home, Warehouse, Briefcase, Store, HardHat, Layers,
   ShieldCheck, FileText, Users, TrendingUp, Filter, ChevronDown,
+  ChevronLeft, ChevronRight, ArrowUpDown, Zap, Sparkles, Rows3, Rows2,
 } from 'lucide-react';
 import AdminSiteSensitivePanel from '@/components/admin/client-sites/AdminSiteSensitivePanel';
 import AdminSiteQrManager from '@/components/admin/client-sites/AdminSiteQrManager';
@@ -203,6 +204,37 @@ const SITE_TYPE_ICONS: Record<string, React.ReactNode> = {
 };
 const iconForType = (t: string) => SITE_TYPE_ICONS[t] ?? <MapPin className="h-4 w-4" />;
 
+type SortKey =
+  | 'activity_desc' | 'activity_asc'
+  | 'scans_desc' | 'scans_asc'
+  | 'pending_desc' | 'contracts_desc' | 'interests_desc'
+  | 'created_desc' | 'created_asc';
+
+const SORT_OPTIONS: Array<{ key: SortKey; ar: string; en: string }> = [
+  { key: 'activity_desc', ar: 'الأحدث نشاطاً', en: 'Latest activity' },
+  { key: 'activity_asc', ar: 'الأقدم نشاطاً', en: 'Oldest activity' },
+  { key: 'scans_desc', ar: 'الأكثر مسحاً', en: 'Most scans' },
+  { key: 'scans_asc', ar: 'الأقل مسحاً', en: 'Least scans' },
+  { key: 'pending_desc', ar: 'طلبات معلّقة', en: 'Pending requests' },
+  { key: 'contracts_desc', ar: 'الأكثر عقوداً', en: 'Most contracts' },
+  { key: 'interests_desc', ar: 'الأكثر اهتماماً', en: 'Most interests' },
+  { key: 'created_desc', ar: 'الأحدث إنشاءً', en: 'Newest created' },
+  { key: 'created_asc', ar: 'الأقدم إنشاءً', en: 'Oldest created' },
+];
+
+const defaults = {
+  status: 'active' as const,
+  visibility: 'all',
+  qrStatus: 'all',
+  siteType: 'all',
+  search: '',
+  city: '',
+  sortBy: 'activity_desc' as SortKey,
+  density: 'comfortable' as 'comfortable' | 'compact',
+  autoRefresh: false,
+  pageSize: 25,
+};
+
 /* ------------------------------------------------------------------ */
 /* Page                                                               */
 /* ------------------------------------------------------------------ */
@@ -212,13 +244,47 @@ const AdminClientSitesMonitoring: React.FC = () => {
   const bi = useBi();
   const { isRTL } = useLanguage();
 
-  const [status, setStatus] = useState<'active' | 'archived' | 'all'>('active');
-  const [visibility, setVisibility] = useState<string>('all');
-  const [qrStatus, setQrStatus] = useState<string>('all');
-  const [siteType, setSiteType] = useState<string>('all');
-  const [search, setSearch] = useState<string>('');
-  const [city, setCity] = useState<string>('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Persisted filters
+  type Persisted = {
+    status: 'active' | 'archived' | 'all'; visibility: string; qrStatus: string;
+    siteType: string; search: string; city: string;
+    sortBy: SortKey; density: 'comfortable' | 'compact'; autoRefresh: boolean;
+    pageSize: number;
+  };
+  const STORAGE_KEY = 'qitaat_admin_client_sites_filters_v1';
+  const initial: Persisted = (() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return { ...defaults, ...(JSON.parse(raw) as Partial<Persisted>) } as Persisted;
+    } catch { /* noop */ }
+    return defaults;
+  })();
+
+  const [status, setStatus] = useState<'active' | 'archived' | 'all'>(initial.status);
+  const [visibility, setVisibility] = useState<string>(initial.visibility);
+  const [qrStatus, setQrStatus] = useState<string>(initial.qrStatus);
+  const [siteType, setSiteType] = useState<string>(initial.siteType);
+  const [search, setSearch] = useState<string>(initial.search);
+  const [city, setCity] = useState<string>(initial.city);
+  const [sortBy, setSortBy] = useState<SortKey>(initial.sortBy);
+  const [density, setDensity] = useState<'comfortable' | 'compact'>(initial.density);
+  const [autoRefresh, setAutoRefresh] = useState<boolean>(initial.autoRefresh);
+  const [pageSize, setPageSize] = useState<number>(initial.pageSize);
+  const [page, setPage] = useState<number>(0);
+  const [selectedId, setSelectedId] = useState<string | null>(() => {
+    const h = window.location.hash.match(/^#site=([0-9a-f-]+)$/i);
+    return h ? h[1] : null;
+  });
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Persist
+  useEffect(() => {
+    const data: Persisted = { status, visibility, qrStatus, siteType, search, city, sortBy, density, autoRefresh, pageSize };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch { /* noop */ }
+  }, [status, visibility, qrStatus, siteType, search, city, sortBy, density, autoRefresh, pageSize]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(0); }, [status, visibility, qrStatus, siteType, search, city]);
 
   const summaryQ = useQuery({
     queryKey: ['admin-client-sites-monitoring-summary'],
@@ -227,10 +293,11 @@ const AdminClientSitesMonitoring: React.FC = () => {
       if (error) throw error;
       return data as unknown as MonitoringSummary;
     },
+    refetchInterval: autoRefresh ? 30_000 : false,
   });
 
   const listQ = useQuery({
-    queryKey: ['admin-client-sites-monitoring-list', status, visibility, qrStatus, siteType, search, city],
+    queryKey: ['admin-client-sites-monitoring-list', status, visibility, qrStatus, siteType, search, city, page, pageSize],
     queryFn: async (): Promise<MonitoringList> => {
       const { data, error } = await supabase.rpc('admin_list_client_sites_monitoring', {
         _status: status,
@@ -239,12 +306,13 @@ const AdminClientSitesMonitoring: React.FC = () => {
         _qr_status: qrStatus === 'all' ? null : qrStatus,
         _search: search || null,
         _site_type: siteType === 'all' ? null : siteType,
-        _limit: 50,
-        _offset: 0,
+        _limit: pageSize,
+        _offset: page * pageSize,
       });
       if (error) throw error;
       return data as unknown as MonitoringList;
     },
+    refetchInterval: autoRefresh ? 30_000 : false,
   });
 
   const detailQ = useQuery({
@@ -260,7 +328,78 @@ const AdminClientSitesMonitoring: React.FC = () => {
   });
 
   const s = summaryQ.data;
-  const rows = listQ.data?.rows ?? [];
+  const rawRows = listQ.data?.rows ?? [];
+  const rows = useMemo(() => {
+    const arr = [...rawRows];
+    const ts = (v: string | null | undefined) => (v ? new Date(v).getTime() : 0);
+    switch (sortBy) {
+      case 'activity_asc': arr.sort((a, b) => ts(a.latest_activity_at) - ts(b.latest_activity_at)); break;
+      case 'activity_desc': arr.sort((a, b) => ts(b.latest_activity_at) - ts(a.latest_activity_at)); break;
+      case 'scans_desc': arr.sort((a, b) => b.scan_count - a.scan_count); break;
+      case 'scans_asc': arr.sort((a, b) => a.scan_count - b.scan_count); break;
+      case 'pending_desc': arr.sort((a, b) => b.pending_requests_count - a.pending_requests_count); break;
+      case 'contracts_desc': arr.sort((a, b) => b.contracts_count - a.contracts_count); break;
+      case 'interests_desc': arr.sort((a, b) => b.provider_interests_count - a.provider_interests_count); break;
+      case 'created_desc': arr.sort((a, b) => ts(b.created_at) - ts(a.created_at)); break;
+      case 'created_asc': arr.sort((a, b) => ts(a.created_at) - ts(b.created_at)); break;
+    }
+    return arr;
+  }, [rawRows, sortBy]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      const inField = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+      if (e.key === '/' && !inField) { e.preventDefault(); searchInputRef.current?.focus(); }
+      else if (e.key === 'Escape' && selectedId) setSelectedId(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedId]);
+
+  // Hash deep-link
+  useEffect(() => {
+    const target = selectedId ? `#site=${selectedId}` : '';
+    if (window.location.hash !== target) {
+      history.replaceState(null, '', `${window.location.pathname}${window.location.search}${target}`);
+    }
+  }, [selectedId]);
+
+  // Quick presets
+  type Preset = { id: string; ar: string; en: string; icon: React.ReactNode; apply: () => void; active: boolean };
+  const presets: Preset[] = [
+    {
+      id: 'pending', ar: 'طلبات معلّقة', en: 'Pending requests', icon: <AlertTriangle className="h-3.5 w-3.5" />,
+      apply: () => { setStatus('active'); setVisibility('all'); setQrStatus('all'); setSiteType('all'); setSortBy('pending_desc'); },
+      active: sortBy === 'pending_desc',
+    },
+    {
+      id: 'qr-on', ar: 'QR نشط', en: 'QR enabled', icon: <QrCode className="h-3.5 w-3.5" />,
+      apply: () => { setQrStatus('enabled'); setStatus('active'); },
+      active: qrStatus === 'enabled',
+    },
+    {
+      id: 'qr-revoked', ar: 'QR ملغى', en: 'QR revoked', icon: <X className="h-3.5 w-3.5" />,
+      apply: () => { setQrStatus('revoked'); setStatus('all'); },
+      active: qrStatus === 'revoked',
+    },
+    {
+      id: 'contracts', ar: 'لها عقود', en: 'In contracts', icon: <FileText className="h-3.5 w-3.5" />,
+      apply: () => { setSortBy('contracts_desc'); setStatus('active'); },
+      active: sortBy === 'contracts_desc',
+    },
+    {
+      id: 'hot', ar: 'الأكثر مسحاً', en: 'Hottest scans', icon: <TrendingUp className="h-3.5 w-3.5" />,
+      apply: () => { setSortBy('scans_desc'); setStatus('active'); },
+      active: sortBy === 'scans_desc',
+    },
+    {
+      id: 'archived', ar: 'المؤرشفة', en: 'Archived', icon: <Layers className="h-3.5 w-3.5" />,
+      apply: () => { setStatus('archived'); },
+      active: status === 'archived',
+    },
+  ];
 
   const activeFilters = useMemo(() => {
     const f: Array<{ key: string; label: string; clear: () => void }> = [];
@@ -339,6 +478,15 @@ const AdminClientSitesMonitoring: React.FC = () => {
               )}
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant={autoRefresh ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setAutoRefresh(v => !v)}
+                title={bi('تحديث تلقائي كل 30 ثانية', 'Auto-refresh every 30s')}
+              >
+                <Zap className={`h-4 w-4 me-2 ${autoRefresh ? 'fill-current' : ''}`} />
+                {bi('تحديث تلقائي', 'Auto')}
+              </Button>
               <Button variant="outline" size="sm" onClick={exportCsv} disabled={!rows.length}>
                 <Download className="h-4 w-4 me-2" />
                 {bi('تصدير CSV', 'Export CSV')}
@@ -437,7 +585,9 @@ const AdminClientSitesMonitoring: React.FC = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="ps-9 h-11"
+                ref={searchInputRef}
               />
+              <kbd className="hidden md:flex absolute top-1/2 -translate-y-1/2 end-2 h-5 items-center px-1.5 rounded border bg-muted text-[10px] text-muted-foreground tech-content">/</kbd>
             </div>
             <Input
               dir="auto"
@@ -499,18 +649,71 @@ const AdminClientSitesMonitoring: React.FC = () => {
           )}
         </Card>
 
+        {/* Quick presets */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Sparkles className="h-3.5 w-3.5" />
+            {bi('عروض سريعة:', 'Quick views:')}
+          </span>
+          {presets.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={p.apply}
+              className={`inline-flex items-center gap-1 h-8 px-3 rounded-full border text-xs font-medium transition-colors ${p.active ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted border-border'}`}
+            >
+              {p.icon}
+              {bi(p.ar, p.en)}
+            </button>
+          ))}
+        </div>
+
         {/* List */}
         <Card className="border-border/60">
-          <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+          <CardHeader className="pb-3 flex flex-wrap items-center justify-between gap-2 space-y-0">
             <CardTitle className="text-base flex items-center gap-2">
               {bi('المواقع', 'Sites')}
               {listQ.data && (
                 <Badge variant="secondary" className="tech-content">{listQ.data.total}</Badge>
               )}
             </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              {bi('يعرض أول 50 نتيجة', 'Showing first 50 results')}
-            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
+                <SelectTrigger className="h-9 w-[180px] text-xs">
+                  <ArrowUpDown className="h-3.5 w-3.5 me-1" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map(o => (
+                    <SelectItem key={o.key} value={o.key} className="text-xs">{bi(o.ar, o.en)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
+                <SelectTrigger className="h-9 w-[90px] text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[10, 25, 50, 100].map(n => <SelectItem key={n} value={String(n)} className="text-xs">{n} / {bi('صفحة', 'page')}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <div className="inline-flex rounded-md border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setDensity('comfortable')}
+                  className={`h-9 px-2 ${density === 'comfortable' ? 'bg-muted' : 'bg-background hover:bg-muted/50'}`}
+                  title={bi('عرض مريح', 'Comfortable')}
+                >
+                  <Rows3 className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDensity('compact')}
+                  className={`h-9 px-2 border-s ${density === 'compact' ? 'bg-muted' : 'bg-background hover:bg-muted/50'}`}
+                  title={bi('عرض مدمج', 'Compact')}
+                >
+                  <Rows2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             {listQ.isLoading ? (
@@ -545,7 +748,7 @@ const AdminClientSitesMonitoring: React.FC = () => {
                         type="button"
                         onClick={() => setSelectedId(isOpen ? null : r.id)}
                         aria-expanded={isOpen}
-                        className="w-full text-start p-4 flex flex-wrap items-center gap-3 hover:bg-muted/40 transition-colors focus:outline-none focus-visible:bg-muted/60"
+                        className={`w-full text-start ${density === 'compact' ? 'p-2.5' : 'p-4'} flex flex-wrap items-center gap-3 hover:bg-muted/40 transition-colors focus:outline-none focus-visible:bg-muted/60`}
                       >
                         <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${qr === 'enabled' ? 'bg-primary/10 text-primary' : qr === 'revoked' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
                           {iconForType(r.site_type)}
@@ -623,6 +826,34 @@ const AdminClientSitesMonitoring: React.FC = () => {
               </div>
             )}
           </CardContent>
+          {listQ.data && listQ.data.total > pageSize && (
+            <div className="flex items-center justify-between gap-2 p-3 border-t bg-muted/20">
+              <p className="text-xs text-muted-foreground tech-content">
+                {bi('عرض', 'Showing')} {page * pageSize + 1}–{Math.min((page + 1) * pageSize, listQ.data.total)} {bi('من', 'of')} {listQ.data.total}
+              </p>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline" size="sm"
+                  disabled={page === 0 || listQ.isFetching}
+                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                >
+                  {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                  <span className="ms-1">{bi('السابق', 'Prev')}</span>
+                </Button>
+                <span className="text-xs px-2 tech-content">
+                  {page + 1} / {Math.max(1, Math.ceil(listQ.data.total / pageSize))}
+                </span>
+                <Button
+                  variant="outline" size="sm"
+                  disabled={(page + 1) * pageSize >= listQ.data.total || listQ.isFetching}
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  <span className="me-1">{bi('التالي', 'Next')}</span>
+                  {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
       </div>
     </DashboardLayout>
