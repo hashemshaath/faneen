@@ -11814,10 +11814,16 @@ export type Database = {
         Args: { _payload: Json }
         Returns: Json
       }
-      verify_contract_public: {
-        Args: { _contract_number: string; _hash: string }
-        Returns: Json
-      }
+      verify_contract_public:
+        | {
+            Args: {
+              _barcode_code?: string
+              _contract_number?: string
+              _hash?: string
+            }
+            Returns: Json
+          }
+        | { Args: { _contract_number: string; _hash: string }; Returns: Json }
       verify_temporary_login_code: {
         Args: { _code: string; _identifier: string }
         Returns: Json
