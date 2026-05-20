@@ -10,7 +10,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Helmet } from 'react-helmet-async';
 import {
   Loader2, MapPin, ShieldCheck, Lock, LogIn, Building2, Send, Check, AlertCircle,
 } from 'lucide-react';
@@ -68,7 +67,7 @@ const PublicSiteScan: React.FC = () => {
       if (!token) return null;
       const { data, error } = await supabase.rpc('get_public_site_by_token', { _token: token });
       if (error) throw error;
-      return (data as PublicSiteSummary | null) ?? null;
+      return ((data as unknown) as PublicSiteSummary | null) ?? null;
     },
     enabled: !!token,
     retry: false,
@@ -80,15 +79,20 @@ const PublicSiteScan: React.FC = () => {
     enabled: !!user?.id && isProvider,
     queryFn: async (): Promise<ProviderBusinessRow[]> => {
       const [owned, staff] = await Promise.all([
-        supabase.from('businesses').select('id, name').eq('user_id', user!.id),
-        supabase.from('business_staff').select('business_id, businesses(id, name)').eq('user_id', user!.id).eq('is_active', true),
+        supabase.from('businesses').select('id, name_ar, name_en').eq('user_id', user!.id),
+        supabase.from('business_staff')
+          .select('business_id, businesses(id, name_ar, name_en)')
+          .eq('user_id', user!.id).eq('is_active', true),
       ]);
+      const pickName = (ar: string | null, en: string | null) =>
+        (isRTL ? ar : en) ?? en ?? ar ?? null;
       const out: ProviderBusinessRow[] = [];
-      (owned.data ?? []).forEach((b) => out.push({ id: b.id, name: b.name ?? null }));
-      type StaffRow = { businesses: { id: string; name: string | null } | null };
+      (owned.data ?? []).forEach((b) => out.push({ id: b.id, name: pickName(b.name_ar, b.name_en) }));
+      type StaffBiz = { id: string; name_ar: string | null; name_en: string | null };
+      type StaffRow = { businesses: StaffBiz | null };
       ((staff.data ?? []) as unknown as StaffRow[]).forEach((s) => {
         if (s.businesses?.id && !out.find((x) => x.id === s.businesses!.id)) {
-          out.push({ id: s.businesses.id, name: s.businesses.name ?? null });
+          out.push({ id: s.businesses.id, name: pickName(s.businesses.name_ar, s.businesses.name_en) });
         }
       });
       return out;
@@ -152,7 +156,7 @@ const PublicSiteScan: React.FC = () => {
       <header className="border-b border-border/40 bg-background/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-2 hover-lift">
-            <BrandLogo size="sm" />
+            <BrandLogo size={28} />
           </Link>
           <Badge variant="outline" size="sm" className="text-[10px]">
             <ShieldCheck className="w-3 h-3 me-1" />
