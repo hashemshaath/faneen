@@ -35,6 +35,7 @@ function lazyRetry<T extends ComponentType<any>>(
 }
 
 const Auth = lazyRetry(() => import("./pages/Auth"));
+const PublicSiteScan = lazyRetry(() => import("./pages/PublicSiteScan"));
 const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
 const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
 const Search = lazyRetry(() => import("./pages/Search"));
