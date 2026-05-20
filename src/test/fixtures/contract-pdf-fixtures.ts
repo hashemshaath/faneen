@@ -185,6 +185,17 @@ export const contractWithQrFixture: ContractExportData = {
   verifyOrigin: 'https://qitaat.com',
 };
 
+// Phase 7/8: contract that owns a unified barcode_code. The QR target must
+// switch to /q/<code> and the identifiers section must render both codes.
+export const contractWithBarcodeFixture: ContractExportData = {
+  ...templatedContractFixture,
+  contractNumber: 'CT-BC-0007',
+  contractBarcodeCode: 'CNT-2026-100007',
+  projectBarcodeCode: 'LOC-2026-100007',
+  verifyOrigin: 'https://qitaat.com',
+  isRTL: true,
+};
+
 export const ALL_FIXTURES: Record<string, ContractExportData> = {
   legacy: legacyContractFixture,
   templated: templatedContractFixture,
@@ -192,4 +203,5 @@ export const ALL_FIXTURES: Record<string, ContractExportData> = {
   longArabic: longArabicContractFixture,
   amendments: contractWithAmendmentsFixture,
   qr: contractWithQrFixture,
+  barcode: contractWithBarcodeFixture,
 };
