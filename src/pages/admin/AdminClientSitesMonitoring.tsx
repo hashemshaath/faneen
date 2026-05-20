@@ -826,6 +826,34 @@ const AdminClientSitesMonitoring: React.FC = () => {
               </div>
             )}
           </CardContent>
+          {listQ.data && listQ.data.total > pageSize && (
+            <div className="flex items-center justify-between gap-2 p-3 border-t bg-muted/20">
+              <p className="text-xs text-muted-foreground tech-content">
+                {bi('عرض', 'Showing')} {page * pageSize + 1}–{Math.min((page + 1) * pageSize, listQ.data.total)} {bi('من', 'of')} {listQ.data.total}
+              </p>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline" size="sm"
+                  disabled={page === 0 || listQ.isFetching}
+                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                >
+                  {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                  <span className="ms-1">{bi('السابق', 'Prev')}</span>
+                </Button>
+                <span className="text-xs px-2 tech-content">
+                  {page + 1} / {Math.max(1, Math.ceil(listQ.data.total / pageSize))}
+                </span>
+                <Button
+                  variant="outline" size="sm"
+                  disabled={(page + 1) * pageSize >= listQ.data.total || listQ.isFetching}
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  <span className="me-1">{bi('التالي', 'Next')}</span>
+                  {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
       </div>
     </DashboardLayout>
