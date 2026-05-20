@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import ClientSiteQrCard from '@/components/client-sites/ClientSiteQrCard';
+import ClientSiteVisibilitySettingsCard from '@/components/client-sites/ClientSiteVisibilitySettingsCard';
 
 export interface ExecutionSiteRow {
   id: string;
@@ -334,6 +335,14 @@ export const ExecutionSiteSection: React.FC<Props> = ({
               visibility={(selectedSite.visibility ?? 'private') as 'private' | 'shared_by_qr' | 'public_limited'}
               qrEnabled={!!selectedSite.qr_enabled}
               onChanged={() => refetch()}
+            />
+          )}
+
+          {selectedSite && selectedSite.site_ref && !adding && (
+            <ClientSiteVisibilitySettingsCard
+              isRTL={isRTL}
+              siteId={selectedSite.id}
+              siteRef={selectedSite.site_ref}
             />
           )}
 
