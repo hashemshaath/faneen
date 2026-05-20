@@ -4803,6 +4803,51 @@ export type Database = {
         }
         Relationships: []
       }
+      location_catalog: {
+        Row: {
+          city_ar: string
+          city_en: string
+          created_at: string
+          district_ar: string | null
+          district_en: string | null
+          id: string
+          is_active: boolean
+          region_ar: string | null
+          region_en: string | null
+          slug: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          city_ar: string
+          city_en: string
+          created_at?: string
+          district_ar?: string | null
+          district_en?: string | null
+          id?: string
+          is_active?: boolean
+          region_ar?: string | null
+          region_en?: string | null
+          slug?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          city_ar?: string
+          city_en?: string
+          created_at?: string
+          district_ar?: string | null
+          district_en?: string | null
+          id?: string
+          is_active?: boolean
+          region_ar?: string | null
+          region_en?: string | null
+          slug?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       maintenance_requests: {
         Row: {
           client_id: string
