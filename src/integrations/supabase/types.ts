@@ -213,6 +213,82 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_client_site_access_audit: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          reason: string
+          site_id: string
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          reason: string
+          site_id: string
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string
+          site_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_client_site_access_audit_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_client_site_operations_notes: {
+        Row: {
+          admin_user_id: string
+          archived_at: string | null
+          category: string
+          created_at: string
+          id: string
+          note: string
+          site_id: string
+        }
+        Insert: {
+          admin_user_id: string
+          archived_at?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          note: string
+          site_id: string
+        }
+        Update: {
+          admin_user_id?: string
+          archived_at?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          note?: string
+          site_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_client_site_operations_notes_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_assistant_settings: {
         Row: {
           content_instructions: string
@@ -9829,6 +9905,10 @@ export type Database = {
         }[]
       }
       accept_staff_invitation: { Args: { _token: string }; Returns: Json }
+      admin_add_client_site_operations_note: {
+        Args: { _category: string; _note: string; _site_id: string }
+        Returns: Json
+      }
       admin_adjust_provider_credits: {
         Args: {
           p_action: string
@@ -9856,6 +9936,14 @@ export type Database = {
         Returns: string
       }
       admin_get_client_site_monitoring_detail: {
+        Args: { _site_id: string }
+        Returns: Json
+      }
+      admin_get_client_site_sensitive_detail: {
+        Args: { _reason: string; _site_id: string }
+        Returns: Json
+      }
+      admin_list_client_site_operations_notes: {
         Args: { _site_id: string }
         Returns: Json
       }
@@ -9935,6 +10023,15 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      admin_log_client_site_contact_action: {
+        Args: {
+          _channel: string
+          _notes?: string
+          _purpose: string
+          _site_id: string
+        }
+        Returns: Json
       }
       admin_update_business_approval: {
         Args: {
