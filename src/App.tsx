@@ -90,6 +90,10 @@ const AdminActivityLog = lazyRetry(() => import("./pages/admin/AdminActivityLog"
 const AdminCategories = lazyRetry(() => import("./pages/admin/AdminCategories"));
 const AdminTags = lazyRetry(() => import("./pages/admin/AdminTags"));
 const AdminBusinesses = lazyRetry(() => import("./pages/admin/AdminBusinesses"));
+const AdminLocationsHub = lazyRetry(() => import("./pages/admin/locations/AdminLocationsHub"));
+const AdminLocationsCatalog = lazyRetry(() => import("./pages/admin/locations/AdminLocationsCatalog"));
+const AdminBusinessServiceAreas = lazyRetry(() => import("./pages/admin/locations/AdminBusinessServiceAreas"));
+const AdminBusinessCoordinates = lazyRetry(() => import("./pages/admin/locations/AdminBusinessCoordinates"));
 const AdminMemberships = lazyRetry(() => import("./pages/admin/AdminMemberships"));
 const AdminMembershipRejections = lazyRetry(() => import("./pages/admin/AdminMembershipRejections"));
 const AdminMembershipEvents = lazyRetry(() => import("./pages/admin/AdminMembershipEvents"));
