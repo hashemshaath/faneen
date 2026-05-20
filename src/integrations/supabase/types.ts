@@ -4895,6 +4895,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          initiated_by: string
           internal_notes: string | null
           is_demo: boolean
           message: string
@@ -4913,7 +4914,9 @@ export type Database = {
           rejected_at: string | null
           responded_at: string | null
           responded_by: string | null
+          site_access_grant_id: string | null
           source: string | null
+          source_site_id: string | null
           status: string
           subject: string | null
           updated_at: string
@@ -4934,6 +4937,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          initiated_by?: string
           internal_notes?: string | null
           is_demo?: boolean
           message: string
@@ -4952,7 +4956,9 @@ export type Database = {
           rejected_at?: string | null
           responded_at?: string | null
           responded_by?: string | null
+          site_access_grant_id?: string | null
           source?: string | null
+          source_site_id?: string | null
           status?: string
           subject?: string | null
           updated_at?: string
@@ -4973,6 +4979,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          initiated_by?: string
           internal_notes?: string | null
           is_demo?: boolean
           message?: string
@@ -4991,7 +4998,9 @@ export type Database = {
           rejected_at?: string | null
           responded_at?: string | null
           responded_by?: string | null
+          site_access_grant_id?: string | null
           source?: string | null
+          source_site_id?: string | null
           status?: string
           subject?: string | null
           updated_at?: string
@@ -5025,6 +5034,20 @@ export type Database = {
             columns: ["converted_contract_id"]
             isOneToOne: false
             referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_requests_site_access_grant_id_fkey"
+            columns: ["site_access_grant_id"]
+            isOneToOne: false
+            referencedRelation: "client_site_access_grants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_requests_source_site_id_fkey"
+            columns: ["source_site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
             referencedColumns: ["id"]
           },
         ]
@@ -11282,6 +11305,17 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      submit_site_interest: {
+        Args: {
+          _estimated_budget_max?: number
+          _estimated_budget_min?: number
+          _message: string
+          _provider_business_id: string
+          _service_category?: string
+          _site_ref: string
+        }
+        Returns: Json
       }
       subscribe_to_plan: {
         Args: {

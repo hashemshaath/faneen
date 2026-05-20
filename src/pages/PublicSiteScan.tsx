@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
-  Loader2, MapPin, ShieldCheck, Lock, LogIn, Building2, Send, Check, AlertCircle,
+  Loader2, MapPin, ShieldCheck, Lock, LogIn, Building2, Send, Check, AlertCircle, Briefcase,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { toast } from 'sonner';
 
@@ -59,6 +60,10 @@ const PublicSiteScan: React.FC = () => {
 
   const [reason, setReason] = useState('');
   const [providerBusinessId, setProviderBusinessId] = useState<string>('');
+  const [interestMsg, setInterestMsg] = useState('');
+  const [interestCategory, setInterestCategory] = useState('');
+  const [budgetMin, setBudgetMin] = useState('');
+  const [budgetMax, setBudgetMax] = useState('');
 
   // --- Public summary (anon-safe) ---
   const { data, isLoading, error } = useQuery({
@@ -130,6 +135,38 @@ const PublicSiteScan: React.FC = () => {
     },
     onError: (e: Error) =>
       toast.error(isRTL ? `تعذر إرسال الطلب: ${e.message}` : `Could not send request: ${e.message}`),
+  });
+
+  // --- Submit interest / offer ---
+  const interestMut = useMutation({
+    mutationFn: async () => {
+      if (!data?.site_ref) throw new Error(isRTL ? 'الموقع غير متاح' : 'Site unavailable');
+      if (!providerBusinessId) throw new Error(isRTL ? 'اختر منشأتك' : 'Select your business');
+      const min = budgetMin.trim() ? Number(budgetMin) : null;
+      const max = budgetMax.trim() ? Number(budgetMax) : null;
+      if ((min !== null && Number.isNaN(min)) || (max !== null && Number.isNaN(max))) {
+        throw new Error(isRTL ? 'قيمة الميزانية غير صحيحة' : 'Invalid budget value');
+      }
+      const { data: res, error } = await supabase.rpc('submit_site_interest', {
+        _site_ref: data.site_ref,
+        _provider_business_id: providerBusinessId,
+        _message: interestMsg.trim(),
+        _service_category: interestCategory.trim() || null,
+        _estimated_budget_min: min,
+        _estimated_budget_max: max,
+      });
+      if (error) throw error;
+      return res as { submitted?: boolean; interest_ref?: string; grant_status?: string; grant_created?: boolean };
+    },
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم إرسال اهتمامك لصاحب الموقع.' : 'Your interest has been sent to the site owner.');
+      setInterestMsg('');
+      setInterestCategory('');
+      setBudgetMin('');
+      setBudgetMax('');
+    },
+    onError: (e: Error) =>
+      toast.error(isRTL ? `تعذر إرسال الاهتمام: ${e.message}` : `Could not submit interest: ${e.message}`),
   });
 
   // --- Locked section log (best-effort) ---
@@ -349,6 +386,94 @@ const PublicSiteScan: React.FC = () => {
                 </>
               )}
             </section>
+
+            {/* Submit interest / offer (providers only) */}
+            {user && isProvider && businesses.length > 0 && (
+              <section className="p-5 rounded-xl border border-border/40 bg-card space-y-3">
+                <h2 className="text-sm font-semibold flex items-center gap-1.5">
+                  <Briefcase className="w-4 h-4 text-primary" />
+                  {isRTL ? 'سجل اهتمامك أو اذكر الخدمة' : 'Register interest or describe service'}
+                </h2>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {isRTL
+                    ? 'سيصل اهتمامك لصاحب الموقع. لن نُفصح عن بيانات الاتصال الخاصة بك إلا بعد قبوله.'
+                    : 'Your interest goes to the site owner. Private contact details are not shared until they accept.'}
+                </p>
+
+                <div className="space-y-1">
+                  <Label htmlFor="int-cat" className="text-[10px]">
+                    {isRTL ? 'الخدمة / الفئة (اختياري)' : 'Service / category (optional)'}
+                  </Label>
+                  <Input
+                    id="int-cat" dir="auto" maxLength={120}
+                    value={interestCategory}
+                    onChange={(e) => setInterestCategory(e.target.value)}
+                    className="h-10 text-xs"
+                    placeholder={isRTL ? 'مثال: ألمنيوم، زجاج، خشب' : 'e.g. Aluminum, Glass, Wood'}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="int-bmin" className="text-[10px]">
+                      {isRTL ? 'ميزانية تقديرية من (اختياري)' : 'Est. budget from (optional)'}
+                    </Label>
+                    <Input
+                      id="int-bmin" type="number" inputMode="numeric" min={0}
+                      value={budgetMin}
+                      onChange={(e) => setBudgetMin(e.target.value)}
+                      className="h-10 text-xs tech-content" dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="int-bmax" className="text-[10px]">
+                      {isRTL ? 'إلى (اختياري)' : 'To (optional)'}
+                    </Label>
+                    <Input
+                      id="int-bmax" type="number" inputMode="numeric" min={0}
+                      value={budgetMax}
+                      onChange={(e) => setBudgetMax(e.target.value)}
+                      className="h-10 text-xs tech-content" dir="ltr"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="int-msg" className="text-[10px]">
+                    {isRTL ? 'رسالتك *' : 'Your message *'}
+                  </Label>
+                  <Textarea
+                    id="int-msg" dir="auto" rows={4}
+                    minLength={5} maxLength={2000}
+                    value={interestMsg}
+                    onChange={(e) => setInterestMsg(e.target.value)}
+                    className="text-xs"
+                    placeholder={isRTL
+                      ? 'وضّح الخدمة التي يمكنك تقديمها لهذا الموقع'
+                      : 'Describe the service you can offer for this site'}
+                  />
+                </div>
+
+                <Button
+                  type="button" variant="default" size="sm" className="h-10 w-full text-xs gap-1.5"
+                  disabled={
+                    interestMut.isPending ||
+                    !providerBusinessId ||
+                    interestMsg.trim().length < 5
+                  }
+                  onClick={() => interestMut.mutate()}
+                >
+                  {interestMut.isPending ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : interestMut.isSuccess ? (
+                    <Check className="w-3.5 h-3.5" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
+                  {isRTL ? 'إرسال الاهتمام' : 'Submit interest'}
+                </Button>
+              </section>
+            )}
           </>
         )}
 
