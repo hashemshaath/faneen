@@ -1524,6 +1524,22 @@ const DashboardContracts = () => {
           status: m.status,
         })),
         documentHash: c.document_hash || undefined,
+        ...(await (async () => {
+          // Phase 7: fetch unified barcodes for the contract + execution site.
+          const cAny2 = c as unknown as { execution_site_id?: string | null };
+          const [bc, bp] = await Promise.all([
+            supabase.rpc('get_entity_barcode_code', { _entity_type: 'contract', _entity_id: c.id }),
+            cAny2.execution_site_id
+              ? supabase.rpc('get_entity_barcode_code', { _entity_type: 'client_site', _entity_id: cAny2.execution_site_id })
+              : Promise.resolve({ data: null as string | null, error: null }),
+          ]);
+          const snap = (c as unknown as { execution_address_snapshot?: { label?: string | null } | null }).execution_address_snapshot;
+          return {
+            contractBarcodeCode: (bc.data as string | null) ?? null,
+            projectBarcodeCode: (bp.data as string | null) ?? null,
+            siteRefFallback: snap?.label ?? null,
+          };
+        })()),
         executionAddressSnapshot: (() => {
           const raw = (c as unknown as { execution_address_snapshot?: Record<string, unknown> | null }).execution_address_snapshot;
           if (!raw || typeof raw !== 'object') return null;
