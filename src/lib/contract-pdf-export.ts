@@ -997,10 +997,16 @@ export const buildContractPDF = async (data: ContractExportData) => {
   // Public-safe: encodes only contract_number + document_hash. The RPC behind
   // the URL returns no PII, no totals, no party names — only status, dates,
   // currency, hash prefix, and applied amendment count.
-  if (data.documentHash && data.documentHash.length >= 8) {
+  // Phase 7: prefer /q/<barcode_code> when the contract has a unified barcode.
+  // Falls back to /v/c/<contract_number>?h=<hash> for legacy/unbacked contracts.
+  const _qrContractBarcode = (data.contractBarcodeCode || '').trim();
+  const _qrHasHash = !!(data.documentHash && data.documentHash.length >= 8);
+  if (_qrContractBarcode || _qrHasHash) {
     try {
       const origin = (data.verifyOrigin || 'https://qitaat.com').replace(/\/+$/, '');
-      const verifyUrl = `${origin}/v/c/${encodeURIComponent(data.contractNumber)}?h=${encodeURIComponent(data.documentHash)}`;
+      const verifyUrl = _qrContractBarcode
+        ? `${origin}/q/${encodeURIComponent(_qrContractBarcode)}`
+        : `${origin}/v/c/${encodeURIComponent(data.contractNumber)}?h=${encodeURIComponent(data.documentHash as string)}`;
       const QR = await import('qrcode');
       const qrDataUrl = await QR.toDataURL(verifyUrl, {
         errorCorrectionLevel: 'M',
@@ -1028,8 +1034,10 @@ export const buildContractPDF = async (data: ContractExportData) => {
       doc.text(data.isRTL ? 'تحقق من العقد الرسمي' : 'Verify Official Contract', textAnchor, y + 6, { align: textAlign });
       doc.setFontSize(7);
       doc.setTextColor(mutedR, mutedG, mutedB);
-      const hashLine = (data.isRTL ? 'بصمة المستند: ' : 'Document hash: ') + data.documentHash.slice(0, 16) + '…';
-      doc.text(hashLine, textAnchor, y + 12, { align: textAlign });
+      const subLine = _qrContractBarcode
+        ? ((data.isRTL ? 'كود العقد: ' : 'Contract code: ') + _qrContractBarcode)
+        : ((data.isRTL ? 'بصمة المستند: ' : 'Document hash: ') + (data.documentHash as string).slice(0, 16) + '…');
+      doc.text(subLine, textAnchor, y + 12, { align: textAlign });
       const urlShort = verifyUrl.length > 60 ? verifyUrl.slice(0, 57) + '…' : verifyUrl;
       doc.text(urlShort, textAnchor, y + 18, { align: textAlign });
       doc.text(
