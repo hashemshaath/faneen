@@ -563,6 +563,13 @@ const AdminClientSitesMonitoring: React.FC = () => {
 
                 <AdminSiteSensitiveInline siteId={detailQ.data.site.id} />
 
+                <AdminSiteQrManager
+                  siteId={detailQ.data.site.id}
+                  siteRef={detailQ.data.site.site_ref}
+                  visibility={detailQ.data.site.visibility}
+                  qrEnabled={detailQ.data.site.qr_enabled}
+                />
+
                 <AdminSiteSensitivePanel siteId={detailQ.data.site.id} />
               </div>
             ) : detailQ.error ? (
