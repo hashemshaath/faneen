@@ -17,7 +17,7 @@ interface Props {
  * Verifies a code issued out-of-band by an operator. Does NOT create a session.
  * Hidden unless VITE_ENABLE_BETA_TEMP_CODE === 'true'.
  */
-type ErrorKind = 'invalid' | 'expired' | 'used' | 'too_many' | 'rate_limited' | 'invalid_id' | 'generic';
+type ErrorKind = 'invalid' | 'expired' | 'used' | 'too_many' | 'rate_limited' | 'invalid_id' | 'no_account' | 'generic';
 
 /**
  * Normalize identifier for verification. Email is lowercased & trimmed.
@@ -63,6 +63,7 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
     too_many:      { ar: 'تجاوزت الحد الأقصى للمحاولات. اطلب رمزاً جديداً.',               en: 'Maximum attempts reached. Request a new code.' },
     rate_limited:  { ar: 'محاولات كثيرة خلال فترة قصيرة. انتظر دقائق ثم أعد المحاولة.',    en: 'Too many requests in a short time. Wait a few minutes and retry.' },
     invalid_id:    { ar: 'يرجى إدخال بريد إلكتروني أو رقم جوال صحيح.',                     en: 'Please enter a valid email or phone number.' },
+    no_account:    { ar: 'لا يوجد حساب مرتبط بهذا المعرّف. تواصل مع فريق قطاعات.',          en: 'No account is linked to this identifier. Contact the Qitaat team.' },
     generic:       { ar: 'تعذر التحقق من الرمز حالياً. حاول مرة أخرى.',                    en: 'Could not verify the code right now. Please try again.' },
   };
 
@@ -71,13 +72,14 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
     setErrorText(isRTL ? messages[kind].ar : messages[kind].en);
   };
 
-  // Map sentinel errors. INVALID_OR_EXPIRED is intentionally generic from the DB,
-  // but we can refine the user-facing copy based on context (attempts used).
-  const mapAndSetError = (msg: string) => {
-    if (msg.includes('TOO_MANY_ATTEMPTS')) { setKnownError(attemptsUsed >= 3 ? 'too_many' : 'rate_limited'); return; }
-    if (msg.includes('INVALID_IDENTIFIER')) { setKnownError('invalid_id'); return; }
-    if (msg.includes('INVALID_OR_EXPIRED'))  { setKnownError('invalid'); return; }
-    setKnownError('generic');
+  const mapEdgeError = (err: string | undefined) => {
+    switch (err) {
+      case 'rate_limited': setKnownError(attemptsUsed >= 3 ? 'too_many' : 'rate_limited'); break;
+      case 'invalid_id':   setKnownError('invalid_id'); break;
+      case 'invalid':      setKnownError('invalid'); break;
+      case 'no_account':   setKnownError('no_account'); break;
+      default:             setKnownError('generic');
+    }
   };
 
   const handleVerify = async () => {
@@ -104,29 +106,41 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
     setUiState('verifying');
     try {
       const normalized = normalizeIdentifier(identifier);
-      const { data, error: rpcError } = await supabase.rpc('verify_temporary_login_code', {
-        _identifier: normalized,
-        _code: code.trim(),
+
+      // 1) Verify code + obtain a magic-link token_hash from the edge function.
+      const { data, error: fnErr } = await supabase.functions.invoke('temp-code-session', {
+        body: { identifier: normalized, code: code.trim() },
       });
-      if (rpcError) throw rpcError;
-      const ok = (data as { verified?: boolean } | null)?.verified === true;
-      if (!ok) {
+      if (fnErr) throw fnErr;
+      const resp = data as { ok?: boolean; error?: string; email?: string; token_hash?: string } | null;
+      if (!resp?.ok || !resp.email || !resp.token_hash) {
         setAttemptsUsed((n) => n + 1);
-        setKnownError('invalid');
+        mapEdgeError(resp?.error);
         setUiState('idle');
         return;
       }
+
+      // 2) Exchange the token_hash for a real Supabase session.
+      const { error: otpErr } = await supabase.auth.verifyOtp({
+        email: resp.email,
+        token_hash: resp.token_hash,
+        type: 'magiclink',
+      });
+      if (otpErr) {
+        if (import.meta.env.DEV) console.warn('[temp-code] verifyOtp error:', otpErr);
+        setKnownError('generic');
+        setUiState('idle');
+        return;
+      }
+
       try { localStorage.setItem('qitaat_beta_verified', String(Date.now())); } catch { /* storage blocked */ }
       setUiState('success');
+      // The Auth page's useRoleRedirect picks up the new session and routes
+      // the user to the correct dashboard. No manual navigation needed.
     } catch (err: unknown) {
       setAttemptsUsed((n) => n + 1);
-      // Supabase PostgrestError is a plain object — extract message/code/details safely.
-      const e = err as { message?: string; details?: string; hint?: string; code?: string } | null;
-      const msg = [e?.message, e?.details, e?.hint, e?.code]
-        .filter((s): s is string => typeof s === 'string' && s.length > 0)
-        .join(' | ') || (err instanceof Error ? err.message : String(err));
-      if (import.meta.env.DEV) console.warn('[temp-code] verify error:', err, '->', msg);
-      mapAndSetError(msg);
+      if (import.meta.env.DEV) console.warn('[temp-code] verify error:', err);
+      setKnownError('generic');
       setUiState('idle');
     }
   };
@@ -136,13 +150,14 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
       <div className="space-y-4 animate-fade-in text-center py-6">
         <CheckCircle2 className="w-12 h-12 mx-auto text-emerald-500" />
         <h3 className="font-heading font-bold text-lg">
-          {isRTL ? 'تم التحقق من الرمز' : 'Code verified'}
+          {isRTL ? 'تم تسجيل الدخول' : 'Signed in'}
         </h3>
         <p className="text-sm text-muted-foreground">
           {isRTL
-            ? 'سيتولى فريق قطاعات استكمال تسجيل دخولك. شكراً لمشاركتك في النسخة التجريبية.'
-            : 'The Qitaat team will complete your sign-in. Thanks for joining the beta.'}
+            ? 'جارٍ تحويلك إلى لوحة التحكم…'
+            : 'Redirecting you to your dashboard…'}
         </p>
+        <Loader2 className="w-4 h-4 animate-spin mx-auto text-muted-foreground" />
       </div>
     );
   }
