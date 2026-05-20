@@ -19,6 +19,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import BarcodeWidget from '@/components/barcodes/BarcodeWidget';
 
 // ──────────────────────────────────────────────
 // Types (safe payloads only — no PII, no token hash)
@@ -219,6 +220,14 @@ const DetailPanel: React.FC<{ barcodeId: string; onClose: () => void }> = ({ bar
         </div>
         <Button size="sm" variant="ghost" onClick={onClose}>{bi('إغلاق', 'Close')}</Button>
       </div>
+
+      {/* Reusable barcode widget — QR + copy/download/print */}
+      <BarcodeWidget
+        barcodeCode={b.barcode_code}
+        entityType={b.entity_type}
+        subtitle={b.entity_label || undefined}
+        size="md"
+      />
 
       {/* Stats strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
