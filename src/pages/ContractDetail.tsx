@@ -372,6 +372,11 @@ const ContractDetail = () => {
     enabled: !!contract?.business_id,
   });
 
+  // Phase 7: project (client_site) barcode for the PDF identifiers block.
+  // Defaults to siteRefFallback rendering when not provisioned.
+  const _executionSiteId = (contract as unknown as { execution_site_id?: string | null } | null)?.execution_site_id ?? null;
+  const { data: projectBarcodeCode } = useEntityBarcode('client_site', _executionSiteId || undefined);
+
   const { data: milestones } = useQuery({
     queryKey: ['milestones', id],
     queryFn: async () => {
@@ -1047,6 +1052,12 @@ const ContractDetail = () => {
       vatInclusive,
       businessName: bizName || undefined,
       documentHash: contract.document_hash || undefined,
+      contractBarcodeCode: contractBarcodeCode || null,
+      projectBarcodeCode: projectBarcodeCode || null,
+      siteRefFallback: (() => {
+        const raw = (contract as unknown as { execution_address_snapshot?: { label?: string | null } | null }).execution_address_snapshot;
+        return raw?.label || null;
+      })(),
       executionAddressSnapshot: (() => {
         const raw = (contract as unknown as { execution_address_snapshot?: Record<string, unknown> | null }).execution_address_snapshot;
         if (!raw || typeof raw !== 'object') return null;

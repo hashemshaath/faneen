@@ -228,6 +228,15 @@ export interface ContractExportData {
   /** Origin used for the verification URL (defaults to https://qitaat.com). */
   verifyOrigin?: string;
   /**
+   * Barcode Phase 7: unified barcode codes. Caller resolves these via
+   * `get_entity_barcode_code(entity_type, entity_id)`. Public-safe — never
+   * include token hashes, raw QR tokens, or PII. Format: PREFIX-YYYY-NNNNNN.
+   */
+  contractBarcodeCode?: string | null;
+  projectBarcodeCode?: string | null;
+  /** Fallback display for project code when no client_site barcode exists. */
+  siteRefFallback?: string | null;
+  /**
    * Phase 5C.4 — Execution site (frozen address snapshot). Caller MUST pass
    * only the safe whitelisted fields below. Never include site_id, city_id,
    * created_by, archived_at, is_default, is_demo, client_user_id,
@@ -335,6 +344,31 @@ export const buildContractPDF = async (data: ContractExportData) => {
     alternateRowStyles: { fillColor: SURFACE2_RGB },
   });
   y = lastTableY(doc, y) + 12;
+
+  // ── Barcode Phase 7: Identifiers (Contract Code / Project Code) ──
+  // Public-safe codes only. Contract code falls back to contract_number,
+  // project code falls back to site_ref. No PII, no tokens, no hashes.
+  {
+    const contractCode = (data.contractBarcodeCode || '').trim() || data.contractNumber;
+    const projectCode = (data.projectBarcodeCode || '').trim() || (data.siteRefFallback || '').trim();
+    const idRows: string[][] = [];
+    if (contractCode) idRows.push([data.isRTL ? 'كود العقد' : 'Contract Code', contractCode]);
+    if (projectCode) idRows.push([data.isRTL ? 'كود المشروع' : 'Project Code', projectCode]);
+    if (idRows.length > 0) {
+      sectionTitle(data.isRTL ? 'المعرّفات' : 'Identifiers');
+      autoTable(doc, {
+        startY: y, body: idRows, theme: 'plain',
+        styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
+        columnStyles: {
+          0: { fontStyle: 'bold', cellWidth: 45, textColor: MUTED_RGB },
+          1: { font: 'courier', fontStyle: 'normal' },
+        },
+        margin: PDF_TABLE_MARGIN,
+        alternateRowStyles: { fillColor: SURFACE2_RGB },
+      });
+      y = lastTableY(doc, y) + 12;
+    }
+  }
 
   // ── Phase 5C.4: Execution Site (rendered from frozen snapshot only) ──
   {
@@ -963,10 +997,16 @@ export const buildContractPDF = async (data: ContractExportData) => {
   // Public-safe: encodes only contract_number + document_hash. The RPC behind
   // the URL returns no PII, no totals, no party names — only status, dates,
   // currency, hash prefix, and applied amendment count.
-  if (data.documentHash && data.documentHash.length >= 8) {
+  // Phase 7: prefer /q/<barcode_code> when the contract has a unified barcode.
+  // Falls back to /v/c/<contract_number>?h=<hash> for legacy/unbacked contracts.
+  const _qrContractBarcode = (data.contractBarcodeCode || '').trim();
+  const _qrHasHash = !!(data.documentHash && data.documentHash.length >= 8);
+  if (_qrContractBarcode || _qrHasHash) {
     try {
       const origin = (data.verifyOrigin || 'https://qitaat.com').replace(/\/+$/, '');
-      const verifyUrl = `${origin}/v/c/${encodeURIComponent(data.contractNumber)}?h=${encodeURIComponent(data.documentHash)}`;
+      const verifyUrl = _qrContractBarcode
+        ? `${origin}/q/${encodeURIComponent(_qrContractBarcode)}`
+        : `${origin}/v/c/${encodeURIComponent(data.contractNumber)}?h=${encodeURIComponent(data.documentHash as string)}`;
       const QR = await import('qrcode');
       const qrDataUrl = await QR.toDataURL(verifyUrl, {
         errorCorrectionLevel: 'M',
@@ -994,8 +1034,10 @@ export const buildContractPDF = async (data: ContractExportData) => {
       doc.text(data.isRTL ? 'تحقق من العقد الرسمي' : 'Verify Official Contract', textAnchor, y + 6, { align: textAlign });
       doc.setFontSize(7);
       doc.setTextColor(mutedR, mutedG, mutedB);
-      const hashLine = (data.isRTL ? 'بصمة المستند: ' : 'Document hash: ') + data.documentHash.slice(0, 16) + '…';
-      doc.text(hashLine, textAnchor, y + 12, { align: textAlign });
+      const subLine = _qrContractBarcode
+        ? ((data.isRTL ? 'كود العقد: ' : 'Contract code: ') + _qrContractBarcode)
+        : ((data.isRTL ? 'بصمة المستند: ' : 'Document hash: ') + (data.documentHash as string).slice(0, 16) + '…');
+      doc.text(subLine, textAnchor, y + 12, { align: textAlign });
       const urlShort = verifyUrl.length > 60 ? verifyUrl.slice(0, 57) + '…' : verifyUrl;
       doc.text(urlShort, textAnchor, y + 18, { align: textAlign });
       doc.text(
