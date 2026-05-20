@@ -17,6 +17,7 @@ import AdminClientSitesFilters, {
   type ActiveFilter,
 } from '@/components/admin/client-sites/AdminClientSitesFilters';
 import AdminClientSitesTable from '@/components/admin/client-sites/AdminClientSitesTable';
+import type { BusinessLogoLite } from '@/components/admin/client-sites/AdminClientSitesTable';
 import {
   buildMonitoringCsv, DEFAULT_FILTERS, loadPersistedFilters, savePersistedFilters,
   sortRows, type MonitoringList, type MonitoringSummary, type PersistedFilters,
@@ -133,6 +134,39 @@ const AdminClientSitesMonitoring: React.FC = () => {
   const s = summaryQ.data;
   const rawRows = listQ.data?.rows ?? [];
   const rows = useMemo(() => sortRows(rawRows, sortBy), [rawRows, sortBy]);
+
+  // Batch-fetch client business logos for the current page's rows. Stable
+  // sorted list of distinct ids keeps the React Query cache reuseable
+  // across re-renders and across pages.
+  const businessIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of rawRows) if (r.business_id) set.add(r.business_id);
+    return [...set].sort();
+  }, [rawRows]);
+
+  const logosQ = useQuery({
+    queryKey: ['admin-client-sites-business-logos', businessIds],
+    enabled: businessIds.length > 0,
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<Map<string, BusinessLogoLite>> => {
+      const { data, error } = await supabase
+        .from('businesses')
+        .select('id, logo_url, name_ar, name_en, username')
+        .in('id', businessIds);
+      if (error) throw error;
+      const map = new Map<string, BusinessLogoLite>();
+      for (const b of (data ?? [])) {
+        map.set(b.id, {
+          logo_url: b.logo_url ?? null,
+          name_ar: b.name_ar ?? null,
+          name_en: b.name_en ?? null,
+          username: b.username ?? null,
+        });
+      }
+      return map;
+    },
+  });
+  const businessLogos = logosQ.data ?? new Map<string, BusinessLogoLite>();
 
   // -------- Keyboard & deep-link ----------------------------------------
   useEffect(() => {
@@ -365,6 +399,7 @@ const AdminClientSitesMonitoring: React.FC = () => {
           rows={rows}
           listQ={listQ}
           detailQ={detailQ}
+          businessLogos={businessLogos}
           selectedId={selectedId}
           setSelectedId={setSelectedId}
           sortBy={sortBy}
