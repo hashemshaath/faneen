@@ -295,10 +295,6 @@ const ContractDetail = () => {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const { data: contractBarcodeCode } = useEntityBarcode('contract', id);
-  // Phase 7: also fetch project (client_site) barcode for the PDF identifiers
-  // block. Falls back to siteRefFallback rendering when not provisioned.
-  const _executionSiteId = (contract as unknown as { execution_site_id?: string | null })?.execution_site_id ?? null;
-  const { data: projectBarcodeCode } = useEntityBarcode('client_site', _executionSiteId || undefined);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   // PDF-UX1: inline fullscreen preview state.
   const [previewOpen, setPreviewOpen] = useState(false);
