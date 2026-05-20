@@ -263,68 +263,173 @@ const AdminClientSitesMonitoring: React.FC = () => {
   const s = summaryQ.data;
   const rows = listQ.data?.rows ?? [];
 
+  const activeFilters = useMemo(() => {
+    const f: Array<{ key: string; label: string; clear: () => void }> = [];
+    if (status !== 'active') f.push({ key: 'status', label: `${bi('الحالة', 'Status')}: ${status}`, clear: () => setStatus('active') });
+    if (visibility !== 'all') f.push({ key: 'visibility', label: `${bi('الرؤية', 'Visibility')}: ${visibility}`, clear: () => setVisibility('all') });
+    if (qrStatus !== 'all') f.push({ key: 'qr', label: `QR: ${qrStatus}`, clear: () => setQrStatus('all') });
+    if (siteType !== 'all') f.push({ key: 'type', label: `${bi('النوع', 'Type')}: ${siteType}`, clear: () => setSiteType('all') });
+    if (search) f.push({ key: 'search', label: `"${search}"`, clear: () => setSearch('') });
+    if (city) f.push({ key: 'city', label: `${bi('مدينة', 'City')}: ${city}`, clear: () => setCity('') });
+    return f;
+  }, [status, visibility, qrStatus, siteType, search, city, bi]);
+
+  const resetAll = () => {
+    setStatus('active'); setVisibility('all'); setQrStatus('all');
+    setSiteType('all'); setSearch(''); setCity('');
+  };
+
+  const exportCsv = () => {
+    if (!rows.length) return;
+    const header = ['site_ref','site_name','site_type','city','visibility','qr_status','scans','pending_requests','interests','contracts','latest_activity'];
+    const lines = rows.map(r => [
+      r.site_ref, (r.site_name || r.label || '').replace(/[",\n]/g, ' '), r.site_type,
+      r.city_name || '', r.visibility, qrStatusOf(r), r.scan_count,
+      r.pending_requests_count, r.provider_interests_count, r.contracts_count, r.latest_activity_at,
+    ].join(','));
+    const csv = '\uFEFF' + [header.join(','), ...lines].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `client-sites-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
-              <MapPin className="h-6 w-6 text-primary" />
-              {bi('مراقبة المواقع', 'Site Monitoring')}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {bi(
-                'لوحة مراقبة إدارية فقط للمواقع، رموز QR، الزيارات، طلبات الوصول، اهتمامات المزودين والعقود.',
-                'Admin-only monitoring for sites, QR usage, visits, access requests, provider interests and contracts.',
+        {/* Hero header */}
+        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 sm:p-6">
+          <div className="absolute inset-0 pointer-events-none opacity-50 [background-image:radial-gradient(circle_at_top_right,hsl(var(--primary)/0.15),transparent_60%)]" />
+          <div className="relative flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <MapPin className="h-5 w-5" />
+                </span>
+                <h1 className="text-2xl sm:text-3xl font-heading font-bold">
+                  {bi('مراقبة مواقع العملاء', 'Client Sites Monitoring')}
+                </h1>
+                <Badge variant="outline" className="ms-1 text-[10px] uppercase tracking-wider">
+                  {bi('إداري', 'Admin')}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
+                {bi(
+                  'لوحة احترافية لمراقبة المواقع، رموز QR، الزيارات، طلبات الوصول، اهتمامات المزودين والعقود — مع تدقيق كامل لكل كشف بيانات حساسة.',
+                  'Professional monitoring for sites, QR usage, visits, access requests, provider interests and contracts — with full audit on every sensitive reveal.',
+                )}
+              </p>
+              {s && (
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                  <Badge variant="secondary" className="tech-content">
+                    {s.active_sites} {bi('نشط', 'active')} / {s.total_sites} {bi('إجمالي', 'total')}
+                  </Badge>
+                  <Badge variant="secondary" className="tech-content">
+                    <QrCode className="h-3 w-3 me-1" /> {s.qr_enabled_sites} {bi('QR مفعّل', 'QR on')}
+                  </Badge>
+                  <Badge variant="secondary" className="tech-content">
+                    <Activity className="h-3 w-3 me-1" /> {s.visits_last_7d} {bi('مسحة/٧ أيام', 'scans/7d')}
+                  </Badge>
+                  {s.pending_access_requests > 0 && (
+                    <Badge variant="default" className="bg-warning text-warning-foreground tech-content">
+                      {s.pending_access_requests} {bi('طلب معلّق', 'pending')}
+                    </Badge>
+                  )}
+                </div>
               )}
-            </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={exportCsv} disabled={!rows.length}>
+                <Download className="h-4 w-4 me-2" />
+                {bi('تصدير CSV', 'Export CSV')}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { summaryQ.refetch(); listQ.refetch(); }}>
+                <RefreshCw className={`h-4 w-4 me-2 ${listQ.isFetching ? 'animate-spin' : ''}`} />
+                {bi('تحديث', 'Refresh')}
+              </Button>
+            </div>
           </div>
-          <Button variant="outline" size="sm" onClick={() => { summaryQ.refetch(); listQ.refetch(); }}>
-            <RefreshCw className="h-4 w-4 me-2" />
-            {bi('تحديث', 'Refresh')}
-          </Button>
         </div>
 
         {/* Privacy note */}
         <Card className="border-warning/40 bg-warning/5">
           <CardContent className="p-3 text-xs text-muted-foreground flex items-start gap-2">
-            <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+            <ShieldCheck className="h-4 w-4 text-warning mt-0.5 shrink-0" />
             <p>
               {bi(
-                'تُعرض البيانات الحساسة (العنوان الكامل، الهاتف، الإحداثيات) داخل بطاقة كل موقع لأغراض المتابعة الإدارية، ويُسجَّل كل كشف في سجل التدقيق. رموز QR الخام لا يمكن استرجاعها بعد الإصدار — استخدم زر «تدوير» في لوحة المالك للحصول على رمز جديد.',
-                'Sensitive data (full address, phone, coordinates) is shown inline per site for operational monitoring; every reveal is written to the audit log. Raw QR tokens cannot be retrieved after issuance — use Rotate in the owner panel to obtain a new one.',
+                'يُسجَّل كل كشف لبيانات حساسة (العنوان، الهاتف، الإحداثيات) في سجل التدقيق. رموز QR الخام لا يمكن استرجاعها بعد الإصدار — استخدم زر «تدوير» للحصول على رمز جديد.',
+                'Every sensitive reveal (address, phone, coordinates) is recorded in the audit log. Raw QR tokens cannot be retrieved after issuance — use Rotate to obtain a new one.',
               )}
             </p>
           </CardContent>
         </Card>
 
-        {/* KPIs */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {/* KPIs in tabbed groups */}
+        <Tabs defaultValue="sites" className="w-full">
+          <TabsList className="h-auto flex-wrap justify-start">
+            <TabsTrigger value="sites" className="gap-1.5"><MapPin className="h-4 w-4" />{bi('المواقع', 'Sites')}</TabsTrigger>
+            <TabsTrigger value="qr" className="gap-1.5"><QrCode className="h-4 w-4" />QR</TabsTrigger>
+            <TabsTrigger value="access" className="gap-1.5"><Eye className="h-4 w-4" />{bi('الوصول', 'Access')}</TabsTrigger>
+            <TabsTrigger value="engagement" className="gap-1.5"><TrendingUp className="h-4 w-4" />{bi('التفاعل', 'Engagement')}</TabsTrigger>
+          </TabsList>
+
           {summaryQ.isLoading ? (
-            Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+            </div>
           ) : s ? (
             <>
-              <StatCard label={bi('إجمالي المواقع', 'Total sites')} value={s.total_sites} icon={<MapPin className="h-4 w-4" />} />
-              <StatCard label={bi('مواقع نشطة', 'Active sites')} value={s.active_sites} icon={<Activity className="h-4 w-4" />} tone="text-success" />
-              <StatCard label={bi('مواقع مؤرشفة', 'Archived')} value={s.archived_sites} icon={<MapPin className="h-4 w-4" />} tone="text-muted-foreground" />
-              <StatCard label={bi('QR مفعّل', 'QR enabled')} value={s.qr_enabled_sites} icon={<QrCode className="h-4 w-4" />} tone="text-primary" />
-              <StatCard label={bi('QR ملغى/معطّل', 'QR revoked/disabled')} value={s.qr_revoked_sites + s.qr_disabled_sites} icon={<QrCode className="h-4 w-4" />} tone="text-destructive" />
-              <StatCard label={bi('مشاركة عبر QR', 'Shared by QR')} value={s.shared_by_qr_sites} icon={<QrCode className="h-4 w-4" />} />
-              <StatCard label={bi('إجمالي المسحات', 'Total scans')} value={s.total_scans} icon={<Activity className="h-4 w-4" />} />
-              <StatCard label={bi('مسحات 7 أيام', 'Visits 7d')} value={s.visits_last_7d} icon={<Activity className="h-4 w-4" />} />
-              <StatCard label={bi('مواقع بطلبات وصول', 'Sites w/ requests')} value={s.sites_with_access_requests} icon={<Eye className="h-4 w-4" />} />
-              <StatCard label={bi('طلبات معلّقة', 'Pending requests')} value={s.pending_access_requests} icon={<Eye className="h-4 w-4" />} tone="text-warning" />
-              <StatCard label={bi('موافقات وصول', 'Approved grants')} value={s.approved_access_grants} icon={<Eye className="h-4 w-4" />} tone="text-success" />
-              <StatCard label={bi('اهتمامات مزودين', 'Provider interests')} value={s.provider_interests} icon={<Activity className="h-4 w-4" />} />
-              <StatCard label={bi('مواقع مرتبطة بعقود', 'Sites in contracts')} value={s.sites_linked_to_contracts} icon={<Activity className="h-4 w-4" />} />
+              <TabsContent value="sites" className="mt-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <StatCard label={bi('إجمالي المواقع', 'Total sites')} value={s.total_sites} icon={<MapPin className="h-5 w-5" />} />
+                  <StatCard label={bi('مواقع نشطة', 'Active')} value={s.active_sites} icon={<Activity className="h-5 w-5" />} tone="text-success" />
+                  <StatCard label={bi('مؤرشفة', 'Archived')} value={s.archived_sites} icon={<MapPin className="h-5 w-5" />} tone="text-muted-foreground" />
+                  <StatCard label={bi('مرتبطة بعقود', 'In contracts')} value={s.sites_linked_to_contracts} icon={<FileText className="h-5 w-5" />} tone="text-info" hint={`${s.total_contracts_with_site} ${bi('عقد', 'contracts')}`} />
+                </div>
+              </TabsContent>
+              <TabsContent value="qr" className="mt-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <StatCard label={bi('QR مفعّل', 'QR enabled')} value={s.qr_enabled_sites} icon={<QrCode className="h-5 w-5" />} tone="text-primary" />
+                  <StatCard label={bi('ملغى/معطّل', 'Revoked/Off')} value={s.qr_revoked_sites + s.qr_disabled_sites} icon={<QrCode className="h-5 w-5" />} tone="text-destructive" />
+                  <StatCard label={bi('مشاركة عبر QR', 'Shared by QR')} value={s.shared_by_qr_sites} icon={<QrCode className="h-5 w-5" />} />
+                  <StatCard label={bi('عام محدود', 'Public limited')} value={s.public_limited_sites} icon={<Eye className="h-5 w-5" />} />
+                </div>
+              </TabsContent>
+              <TabsContent value="access" className="mt-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <StatCard label={bi('مواقع بطلبات', 'Sites w/ requests')} value={s.sites_with_access_requests} icon={<Eye className="h-5 w-5" />} />
+                  <StatCard label={bi('معلّقة', 'Pending')} value={s.pending_access_requests} icon={<AlertTriangle className="h-5 w-5" />} tone="text-warning" />
+                  <StatCard label={bi('موافق عليها', 'Approved')} value={s.approved_access_grants} icon={<ShieldCheck className="h-5 w-5" />} tone="text-success" />
+                  <StatCard label={bi('مرفوضة/ملغاة', 'Rejected/Revoked')} value={s.rejected_access_grants + s.revoked_access_grants} icon={<X className="h-5 w-5" />} tone="text-destructive" />
+                </div>
+              </TabsContent>
+              <TabsContent value="engagement" className="mt-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <StatCard label={bi('إجمالي المسحات', 'Total scans')} value={s.total_scans} icon={<Activity className="h-5 w-5" />} />
+                  <StatCard label={bi('مسحات ٧ أيام', 'Visits 7d')} value={s.visits_last_7d} icon={<TrendingUp className="h-5 w-5" />} tone="text-info" />
+                  <StatCard label={bi('اهتمامات مزودين', 'Provider interests')} value={s.provider_interests} icon={<Users className="h-5 w-5" />} />
+                  <StatCard label={bi('إجمالي العقود', 'Contracts total')} value={s.total_contracts_with_site} icon={<FileText className="h-5 w-5" />} />
+                </div>
+              </TabsContent>
             </>
           ) : null}
-        </div>
+        </Tabs>
 
         {/* Filters */}
-        <Card>
-          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card className="border-border/60">
+          <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              {bi('عوامل التصفية', 'Filters')}
+            </CardTitle>
+            {activeFilters.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={resetAll} className="h-8">
+                <X className="h-3.5 w-3.5 me-1" /> {bi('إعادة ضبط', 'Reset all')}
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="p-4 pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="relative">
               <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
@@ -379,14 +484,34 @@ const AdminClientSitesMonitoring: React.FC = () => {
               </SelectContent>
             </Select>
           </CardContent>
+          {activeFilters.length > 0 && (
+            <>
+              <Separator />
+              <div className="p-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs text-muted-foreground">{bi('نشطة:', 'Active:')}</span>
+                {activeFilters.map(f => (
+                  <Badge key={f.key} variant="secondary" className="gap-1 cursor-pointer hover:bg-muted" onClick={f.clear}>
+                    {f.label}
+                    <X className="h-3 w-3" />
+                  </Badge>
+                ))}
+              </div>
+            </>
+          )}
         </Card>
 
         {/* List */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">
-              {bi('المواقع', 'Sites')} {listQ.data ? `(${listQ.data.total})` : ''}
+        <Card className="border-border/60">
+          <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-base flex items-center gap-2">
+              {bi('المواقع', 'Sites')}
+              {listQ.data && (
+                <Badge variant="secondary" className="tech-content">{listQ.data.total}</Badge>
+              )}
             </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {bi('يعرض أول 50 نتيجة', 'Showing first 50 results')}
+            </p>
           </CardHeader>
           <CardContent className="p-0">
             {listQ.isLoading ? (
@@ -396,74 +521,85 @@ const AdminClientSitesMonitoring: React.FC = () => {
             ) : listQ.error ? (
               <p className="p-6 text-sm text-destructive">{(listQ.error as Error).message}</p>
             ) : rows.length === 0 ? (
-              <p className="p-8 text-center text-sm text-muted-foreground">
-                {bi('لا توجد مواقع مطابقة لعوامل التصفية.', 'No sites match the current filters.')}
-              </p>
+              <div className="p-10 text-center">
+                <div className="mx-auto h-14 w-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mb-3">
+                  <MapPin className="h-7 w-7" />
+                </div>
+                <p className="text-sm font-medium">{bi('لا توجد نتائج', 'No results')}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {bi('لا توجد مواقع مطابقة لعوامل التصفية.', 'No sites match the current filters.')}
+                </p>
+                {activeFilters.length > 0 && (
+                  <Button variant="outline" size="sm" className="mt-3" onClick={resetAll}>
+                    {bi('إعادة ضبط', 'Reset filters')}
+                  </Button>
+                )}
+              </div>
             ) : (
-              <div className="divide-y">
+              <div className="divide-y divide-border/60">
                 {rows.map((r) => {
                   const qr = qrStatusOf(r);
                   return (
-                    <div key={r.id} className="p-4 flex flex-wrap items-center gap-3 hover:bg-muted/30 transition-colors">
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setSelectedId(r.id)}
+                      className="w-full text-start p-4 flex flex-wrap items-center gap-3 hover:bg-muted/40 transition-colors focus:outline-none focus-visible:bg-muted/60"
+                    >
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${qr === 'enabled' ? 'bg-primary/10 text-primary' : qr === 'revoked' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
+                        {iconForType(r.site_type)}
+                      </div>
+
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono text-xs px-2 py-0.5 rounded bg-muted tech-content">{r.site_ref}</span>
-                          <CopyButton value={r.site_ref} label={bi('معرّف الموقع', 'Site ref')} />
-                          <span className="font-medium truncate">{r.site_name || r.label}</span>
+                          <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-muted tech-content">{r.site_ref}</span>
+                          <span className="font-semibold truncate">{r.site_name || r.label}</span>
                           {r.archived_at && (
-                            <Badge variant="outline" className="text-xs">{bi('مؤرشف', 'Archived')}</Badge>
+                            <Badge variant="outline" className="text-[10px]">{bi('مؤرشف', 'Archived')}</Badge>
                           )}
                         </div>
                         <div className="mt-1 text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
-                          <span>{r.site_type}</span>
-                          {r.city_name && <span>{r.city_name}</span>}
+                          <span className="capitalize">{r.site_type}</span>
+                          {r.city_name && <span>· {r.city_name}</span>}
                           {(r.business_name_ar || r.business_name_en) && (
                             <span>· {isRTL ? (r.business_name_ar || r.business_name_en) : (r.business_name_en || r.business_name_ar)}</span>
                           )}
+                          <span className="ms-auto tech-content hidden sm:inline">{fmtDate(r.latest_activity_at, isRTL)}</span>
                         </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <Badge variant="secondary" className="text-xs">{r.visibility}</Badge>
+                        <Badge variant="secondary" className="text-[10px]">{r.visibility}</Badge>
                         <Badge
                           variant={qr === 'enabled' ? 'default' : qr === 'revoked' ? 'destructive' : 'outline'}
-                          className="text-xs"
+                          className="text-[10px]"
                         >
-                          QR: {qr === 'enabled' ? bi('مفعّل', 'on') : qr === 'revoked' ? bi('ملغى', 'revoked') : bi('معطّل', 'off')}
+                          QR · {qr === 'enabled' ? bi('مفعّل', 'on') : qr === 'revoked' ? bi('ملغى', 'revoked') : bi('معطّل', 'off')}
                         </Badge>
-                        <Badge variant="outline" className="text-xs tech-content">
-                          {bi('مسحات', 'scans')}: {r.scan_count}
+                        <Badge variant="outline" className="text-[10px] tech-content gap-1">
+                          <Activity className="h-3 w-3" /> {r.scan_count}
                         </Badge>
                         {r.pending_requests_count > 0 && (
-                          <Badge variant="default" className="text-xs tech-content">
-                            {bi('معلّقة', 'pending')}: {r.pending_requests_count}
+                          <Badge className="text-[10px] tech-content gap-1 bg-warning text-warning-foreground">
+                            <AlertTriangle className="h-3 w-3" /> {r.pending_requests_count}
                           </Badge>
                         )}
-                        <Badge variant="outline" className="text-xs tech-content">
-                          {bi('اهتمامات', 'interests')}: {r.provider_interests_count}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs tech-content">
-                          {bi('عقود', 'contracts')}: {r.contracts_count}
-                        </Badge>
-                      </div>
-
-                      <div className="text-xs text-muted-foreground tech-content min-w-[120px] text-end">
-                        {fmtDate(r.latest_activity_at, isRTL)}
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        <Button size="sm" variant="outline" onClick={() => setSelectedId(r.id)}>
-                          <Eye className="h-4 w-4 me-1" /> {bi('تفاصيل', 'Detail')}
-                        </Button>
-                        {qr === 'enabled' && r.visibility === 'public_limited' && (
-                          <Button size="sm" variant="ghost" asChild>
-                            <a href={`/s/scan-from-admin`} onClick={(e) => e.preventDefault()} title={bi('صفحة عامة تتطلب الرمز', 'Public page requires token')}>
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </Button>
+                        {r.provider_interests_count > 0 && (
+                          <Badge variant="outline" className="text-[10px] tech-content gap-1">
+                            <Users className="h-3 w-3" /> {r.provider_interests_count}
+                          </Badge>
+                        )}
+                        {r.contracts_count > 0 && (
+                          <Badge variant="outline" className="text-[10px] tech-content gap-1">
+                            <FileText className="h-3 w-3" /> {r.contracts_count}
+                          </Badge>
                         )}
                       </div>
-                    </div>
+
+                      <span onClick={(e) => e.stopPropagation()} className="hidden md:flex items-center">
+                        <CopyButton value={r.site_ref} label={bi('معرّف الموقع', 'Site ref')} />
+                      </span>
+                    </button>
                   );
                 })}
               </div>
@@ -473,132 +609,180 @@ const AdminClientSitesMonitoring: React.FC = () => {
 
         {/* Detail drawer */}
         <Sheet open={!!selectedId} onOpenChange={(o) => !o && setSelectedId(null)}>
-          <SheetContent side={isRTL ? 'left' : 'right'} className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetContent side={isRTL ? 'left' : 'right'} className="w-full sm:max-w-2xl overflow-y-auto p-0">
             <SheetHeader>
-              <SheetTitle>{bi('تفاصيل الموقع', 'Site detail')}</SheetTitle>
+              <SheetTitle className="sr-only">{bi('تفاصيل الموقع', 'Site detail')}</SheetTitle>
             </SheetHeader>
             {detailQ.isLoading ? (
-              <div className="space-y-2 mt-4">
+              <div className="space-y-2 p-6">
                 <Skeleton className="h-24 rounded-lg" />
+                <Skeleton className="h-32 rounded-lg" />
                 <Skeleton className="h-32 rounded-lg" />
               </div>
             ) : detailQ.data?.site ? (
-              <div className="mt-4 space-y-5 text-sm">
-                <div className="rounded-lg border p-3 space-y-1.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs px-2 py-0.5 rounded bg-muted tech-content">{detailQ.data.site.site_ref}</span>
-                    <span className="font-semibold">{detailQ.data.site.site_name || detailQ.data.site.label}</span>
+              <div className="text-sm">
+                {/* Sticky drawer header */}
+                <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b p-5 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      {iconForType(detailQ.data.site.site_type)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs px-2 py-0.5 rounded bg-muted tech-content">{detailQ.data.site.site_ref}</span>
+                        <CopyButton value={detailQ.data.site.site_ref} label={bi('معرّف', 'Ref')} />
+                      </div>
+                      <h2 className="text-lg font-bold mt-1 truncate">{detailQ.data.site.site_name || detailQ.data.site.label}</h2>
+                      <p className="text-xs text-muted-foreground">
+                        <span className="capitalize">{detailQ.data.site.site_type}</span>
+                        {detailQ.data.site.city_name ? ` · ${detailQ.data.site.city_name}` : ''}
+                        {detailQ.data.site.district ? ` · ${detailQ.data.site.district}` : ''}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {detailQ.data.site.site_type}
-                    {detailQ.data.site.city_name ? ` · ${detailQ.data.site.city_name}` : ''}
-                    {detailQ.data.site.district ? ` · ${detailQ.data.site.district}` : ''}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    <Badge variant="secondary" className="text-xs">{detailQ.data.site.visibility}</Badge>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="secondary" className="text-[10px]">{detailQ.data.site.visibility}</Badge>
                     <Badge
                       variant={detailQ.data.site.qr_revoked ? 'destructive' : detailQ.data.site.qr_enabled ? 'default' : 'outline'}
-                      className="text-xs"
+                      className="text-[10px]"
                     >
-                      QR: {detailQ.data.site.qr_revoked ? bi('ملغى', 'revoked') : detailQ.data.site.qr_enabled ? bi('مفعّل', 'on') : bi('معطّل', 'off')}
+                      QR · {detailQ.data.site.qr_revoked ? bi('ملغى', 'revoked') : detailQ.data.site.qr_enabled ? bi('مفعّل', 'on') : bi('معطّل', 'off')}
                     </Badge>
-                    <Badge variant="outline" className="text-xs tech-content">{bi('مسحات', 'scans')}: {detailQ.data.site.scan_count}</Badge>
+                    <Badge variant="outline" className="text-[10px] tech-content gap-1">
+                      <Activity className="h-3 w-3" /> {detailQ.data.site.scan_count} {bi('مسحة', 'scans')}
+                    </Badge>
+                    <Badge variant="outline" className="text-[10px] tech-content">
+                      {bi('آخر مسح', 'Last')}: {fmtDate(detailQ.data.site.last_scanned_at, isRTL)}
+                    </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground tech-content">
-                    {bi('آخر مسح', 'Last scan')}: {fmtDate(detailQ.data.site.last_scanned_at, isRTL)}
-                  </p>
                 </div>
 
-                <section>
-                  <h3 className="text-sm font-semibold mb-2">{bi('سجل الزيارات', 'Recent visits')}</h3>
-                  {detailQ.data.recent_visits.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">{bi('لا توجد زيارات', 'No visits')}</p>
-                  ) : (
-                    <ul className="space-y-1.5">
-                      {detailQ.data.recent_visits.map((v, i) => (
-                        <li key={i} className="rounded border p-2 text-xs flex flex-wrap gap-2">
-                          <span className="tech-content text-muted-foreground">{fmtDate(v.created_at, isRTL)}</span>
-                          <Badge variant="outline" className="text-xs">{v.visit_source}</Badge>
-                          <Badge variant="secondary" className="text-xs">{v.action}</Badge>
-                          {v.attempted_section && <span className="text-muted-foreground">→ {v.attempted_section}</span>}
-                          {(v.provider_name_ar || v.provider_name_en) && (
-                            <span className="ms-auto">{isRTL ? (v.provider_name_ar || v.provider_name_en) : (v.provider_name_en || v.provider_name_ar)}</span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
+                <Tabs defaultValue="overview" className="p-5">
+                  <TabsList className="grid grid-cols-5 h-auto">
+                    <TabsTrigger value="overview" className="text-xs">{bi('نظرة', 'Overview')}</TabsTrigger>
+                    <TabsTrigger value="visits" className="text-xs gap-1">
+                      {bi('زيارات', 'Visits')}
+                      <span className="tech-content text-[10px] opacity-70">{detailQ.data.recent_visits.length}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="grants" className="text-xs gap-1">
+                      {bi('وصول', 'Grants')}
+                      <span className="tech-content text-[10px] opacity-70">{detailQ.data.recent_grants.length}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="interests" className="text-xs gap-1">
+                      {bi('اهتمام', 'Interests')}
+                      <span className="tech-content text-[10px] opacity-70">{detailQ.data.recent_interests.length}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="qr" className="text-xs">QR</TabsTrigger>
+                  </TabsList>
 
-                <section>
-                  <h3 className="text-sm font-semibold mb-2">{bi('طلبات الوصول', 'Access grants')}</h3>
-                  {detailQ.data.recent_grants.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">{bi('لا توجد طلبات', 'No grants')}</p>
-                  ) : (
-                    <ul className="space-y-1.5">
-                      {detailQ.data.recent_grants.map((g) => (
-                        <li key={g.id} className="rounded border p-2 text-xs space-y-1">
-                          <div className="flex flex-wrap gap-2 items-center">
-                            <Badge variant="outline" className="text-xs">{g.status}</Badge>
-                            <Badge variant="secondary" className="text-xs">{g.access_level}</Badge>
-                            <span className="ms-auto tech-content text-muted-foreground">{fmtDate(g.requested_at, isRTL)}</span>
-                          </div>
-                          {(g.provider_name_ar || g.provider_name_en) && (
-                            <p className="text-foreground">{isRTL ? (g.provider_name_ar || g.provider_name_en) : (g.provider_name_en || g.provider_name_ar)}</p>
-                          )}
-                          {g.reason && <p className="text-muted-foreground line-clamp-2">{g.reason}</p>}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
+                  <TabsContent value="overview" className="mt-4 space-y-4">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="rounded-lg border p-3 text-center">
+                        <p className="text-[10px] uppercase text-muted-foreground">{bi('عقود', 'Contracts')}</p>
+                        <p className="text-2xl font-bold tech-content">{detailQ.data.related_contracts.total}</p>
+                        <p className="text-[10px] text-success">{detailQ.data.related_contracts.active} {bi('نشطة', 'active')}</p>
+                      </div>
+                      <div className="rounded-lg border p-3 text-center">
+                        <p className="text-[10px] uppercase text-muted-foreground">{bi('اهتمامات', 'Interests')}</p>
+                        <p className="text-2xl font-bold tech-content">{detailQ.data.recent_interests.length}</p>
+                      </div>
+                      <div className="rounded-lg border p-3 text-center">
+                        <p className="text-[10px] uppercase text-muted-foreground">{bi('وصول', 'Grants')}</p>
+                        <p className="text-2xl font-bold tech-content">{detailQ.data.recent_grants.length}</p>
+                      </div>
+                    </div>
+                    {(detailQ.data.site.business_name_ar || detailQ.data.site.business_name_en) && (
+                      <div className="rounded-lg border p-3 text-xs">
+                        <p className="text-[10px] uppercase text-muted-foreground mb-1">{bi('العميل', 'Owner')}</p>
+                        <p className="font-medium">{isRTL ? (detailQ.data.site.business_name_ar || detailQ.data.site.business_name_en) : (detailQ.data.site.business_name_en || detailQ.data.site.business_name_ar)}</p>
+                      </div>
+                    )}
+                    <AdminSiteSensitiveInline siteId={detailQ.data.site.id} />
+                    <AdminSiteSensitivePanel siteId={detailQ.data.site.id} />
+                  </TabsContent>
 
-                <section>
-                  <h3 className="text-sm font-semibold mb-2">{bi('اهتمامات المزودين', 'Provider interests')}</h3>
-                  {detailQ.data.recent_interests.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">{bi('لا توجد', 'None')}</p>
-                  ) : (
-                    <ul className="space-y-1.5">
-                      {detailQ.data.recent_interests.map((i) => (
-                        <li key={i.id} className="rounded border p-2 text-xs space-y-1">
-                          <div className="flex flex-wrap gap-2 items-center">
-                            {i.lead_ref_id && <span className="font-mono tech-content">{i.lead_ref_id}</span>}
-                            <Badge variant="outline" className="text-xs">{i.status}</Badge>
-                            {i.converted && <Badge variant="default" className="text-xs">{bi('تحوّل إلى عقد', 'Converted')}</Badge>}
-                            <span className="ms-auto tech-content text-muted-foreground">{fmtDate(i.created_at, isRTL)}</span>
-                          </div>
-                          {i.subject && <p className="text-muted-foreground line-clamp-2">{i.subject}</p>}
-                          {(i.provider_name_ar || i.provider_name_en) && (
-                            <p className="text-foreground">{isRTL ? (i.provider_name_ar || i.provider_name_en) : (i.provider_name_en || i.provider_name_ar)}</p>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
+                  <TabsContent value="visits" className="mt-4">
+                    {detailQ.data.recent_visits.length === 0 ? (
+                      <p className="p-6 text-xs text-center text-muted-foreground">{bi('لا توجد زيارات', 'No visits')}</p>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {detailQ.data.recent_visits.map((v, i) => (
+                          <li key={i} className="rounded-lg border p-2.5 text-xs flex flex-wrap gap-2 items-center hover:bg-muted/30 transition-colors">
+                            <span className="tech-content text-muted-foreground">{fmtDate(v.created_at, isRTL)}</span>
+                            <Badge variant="outline" className="text-[10px]">{v.visit_source}</Badge>
+                            <Badge variant="secondary" className="text-[10px]">{v.action}</Badge>
+                            {v.attempted_section && <span className="text-muted-foreground">→ {v.attempted_section}</span>}
+                            {(v.provider_name_ar || v.provider_name_en) && (
+                              <span className="ms-auto font-medium">{isRTL ? (v.provider_name_ar || v.provider_name_en) : (v.provider_name_en || v.provider_name_ar)}</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </TabsContent>
 
-                <section>
-                  <h3 className="text-sm font-semibold mb-2">{bi('العقود المرتبطة', 'Related contracts')}</h3>
-                  <div className="rounded border p-3 text-xs space-y-1 tech-content">
-                    <p>{bi('الإجمالي', 'Total')}: {detailQ.data.related_contracts.total}</p>
-                    <p>{bi('نشطة', 'Active')}: {detailQ.data.related_contracts.active}</p>
-                    <p>{bi('آخر إنشاء', 'Last created')}: {fmtDate(detailQ.data.related_contracts.last_created_at, isRTL)}</p>
-                  </div>
-                </section>
+                  <TabsContent value="grants" className="mt-4">
+                    {detailQ.data.recent_grants.length === 0 ? (
+                      <p className="p-6 text-xs text-center text-muted-foreground">{bi('لا توجد طلبات', 'No grants')}</p>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {detailQ.data.recent_grants.map((g) => (
+                          <li key={g.id} className="rounded-lg border p-2.5 text-xs space-y-1 hover:bg-muted/30 transition-colors">
+                            <div className="flex flex-wrap gap-2 items-center">
+                              <Badge
+                                variant={g.status === 'approved' ? 'default' : g.status === 'rejected' || g.status === 'revoked' ? 'destructive' : 'outline'}
+                                className="text-[10px]"
+                              >
+                                {g.status}
+                              </Badge>
+                              <Badge variant="secondary" className="text-[10px]">{g.access_level}</Badge>
+                              <span className="ms-auto tech-content text-muted-foreground">{fmtDate(g.requested_at, isRTL)}</span>
+                            </div>
+                            {(g.provider_name_ar || g.provider_name_en) && (
+                              <p className="font-medium">{isRTL ? (g.provider_name_ar || g.provider_name_en) : (g.provider_name_en || g.provider_name_ar)}</p>
+                            )}
+                            {g.reason && <p className="text-muted-foreground line-clamp-2">{g.reason}</p>}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </TabsContent>
 
-                <AdminSiteSensitiveInline siteId={detailQ.data.site.id} />
+                  <TabsContent value="interests" className="mt-4">
+                    {detailQ.data.recent_interests.length === 0 ? (
+                      <p className="p-6 text-xs text-center text-muted-foreground">{bi('لا توجد', 'None')}</p>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {detailQ.data.recent_interests.map((i) => (
+                          <li key={i.id} className="rounded-lg border p-2.5 text-xs space-y-1 hover:bg-muted/30 transition-colors">
+                            <div className="flex flex-wrap gap-2 items-center">
+                              {i.lead_ref_id && <span className="font-mono tech-content text-[10px] px-1.5 py-0.5 rounded bg-muted">{i.lead_ref_id}</span>}
+                              <Badge variant="outline" className="text-[10px]">{i.status}</Badge>
+                              {i.converted && <Badge className="text-[10px] bg-success text-success-foreground">{bi('تحوّل لعقد', 'Converted')}</Badge>}
+                              <span className="ms-auto tech-content text-muted-foreground">{fmtDate(i.created_at, isRTL)}</span>
+                            </div>
+                            {i.subject && <p className="text-muted-foreground line-clamp-2">{i.subject}</p>}
+                            {(i.provider_name_ar || i.provider_name_en) && (
+                              <p className="font-medium">{isRTL ? (i.provider_name_ar || i.provider_name_en) : (i.provider_name_en || i.provider_name_ar)}</p>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </TabsContent>
 
-                <AdminSiteQrManager
-                  siteId={detailQ.data.site.id}
-                  siteRef={detailQ.data.site.site_ref}
-                  visibility={detailQ.data.site.visibility}
-                  qrEnabled={detailQ.data.site.qr_enabled}
-                />
-
-                <AdminSiteSensitivePanel siteId={detailQ.data.site.id} />
+                  <TabsContent value="qr" className="mt-4">
+                    <AdminSiteQrManager
+                      siteId={detailQ.data.site.id}
+                      siteRef={detailQ.data.site.site_ref}
+                      visibility={detailQ.data.site.visibility}
+                      qrEnabled={detailQ.data.site.qr_enabled}
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
             ) : detailQ.error ? (
-              <p className="mt-4 text-sm text-destructive">{(detailQ.error as Error).message}</p>
+              <p className="m-6 text-sm text-destructive">{(detailQ.error as Error).message}</p>
             ) : null}
           </SheetContent>
         </Sheet>
