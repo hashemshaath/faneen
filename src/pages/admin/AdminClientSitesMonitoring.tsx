@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CopyButton } from '@/components/ui/copy-button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -18,7 +17,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import {
   Activity, MapPin, QrCode, RefreshCw, Search, AlertTriangle, Eye,
   X, Download, Building2, Home, Warehouse, Briefcase, Store, HardHat, Layers,
-  ShieldCheck, FileText, Users, TrendingUp, Filter,
+  ShieldCheck, FileText, Users, TrendingUp, Filter, ChevronDown,
 } from 'lucide-react';
 import AdminSiteSensitivePanel from '@/components/admin/client-sites/AdminSiteSensitivePanel';
 import AdminSiteQrManager from '@/components/admin/client-sites/AdminSiteQrManager';
