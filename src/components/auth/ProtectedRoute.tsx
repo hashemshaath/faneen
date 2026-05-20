@@ -107,8 +107,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
-  // Redirect to onboarding if profile is not complete
-  if (user && profile && !profile.is_onboarded && !skipOnboarding && location.pathname !== '/onboarding') {
+  // Redirect to onboarding if profile is not complete (admins bypass onboarding)
+  if (user && profile && !profile.is_onboarded && !skipOnboarding && !isAdmin && !isSuperAdmin && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 
