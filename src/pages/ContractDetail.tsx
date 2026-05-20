@@ -294,6 +294,7 @@ const ContractDetail = () => {
   const { t, language, isRTL } = useLanguage();
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
+  const { data: contractBarcodeCode } = useEntityBarcode('contract', id);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   // PDF-UX1: inline fullscreen preview state.
   const [previewOpen, setPreviewOpen] = useState(false);
