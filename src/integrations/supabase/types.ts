@@ -9926,6 +9926,10 @@ export type Database = {
         Args: { _identifier: string }
         Returns: string
       }
+      _barcode_entity_label: {
+        Args: { _entity_id: string; _entity_type: string }
+        Returns: Json
+      }
       _build_template_snapshot_payload: {
         Args: { _version_id: string }
         Returns: Json
@@ -10083,6 +10087,7 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_barcode_registry_summary: { Args: never; Returns: Json }
       admin_client_sites_monitoring_summary: { Args: never; Returns: Json }
       admin_contract_pdf_exports_summary: {
         Args: never
@@ -10098,12 +10103,24 @@ export type Database = {
         Args: { _lead_id: string }
         Returns: string
       }
+      admin_get_barcode_detail: { Args: { _barcode_id: string }; Returns: Json }
       admin_get_client_site_monitoring_detail: {
         Args: { _site_id: string }
         Returns: Json
       }
       admin_get_client_site_sensitive_detail: {
         Args: { _reason: string; _site_id: string }
+        Returns: Json
+      }
+      admin_list_barcodes: {
+        Args: {
+          _entity_type?: string
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _status?: string
+          _visibility?: string
+        }
         Returns: Json
       }
       admin_list_client_site_operations_notes: {
