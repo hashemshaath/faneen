@@ -61,7 +61,7 @@ export const ClientSiteAccessRequestsPanel: React.FC<Props> = ({ isRTL, siteId }
     queryFn: async () => {
       const { data, error } = await supabase.rpc('list_site_access_requests_for_owner', { _site_id: siteId });
       if (error) throw error;
-      return (data ?? []) as GrantRow[];
+      return ((data ?? []) as unknown) as GrantRow[];
     },
   });
 
