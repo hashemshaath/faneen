@@ -585,7 +585,9 @@ const AdminClientSitesMonitoring: React.FC = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="ps-9 h-11"
+                ref={searchInputRef}
               />
+              <kbd className="hidden md:flex absolute top-1/2 -translate-y-1/2 end-2 h-5 items-center px-1.5 rounded border bg-muted text-[10px] text-muted-foreground tech-content">/</kbd>
             </div>
             <Input
               dir="auto"
