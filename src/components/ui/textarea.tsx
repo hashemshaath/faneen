@@ -1,10 +1,22 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { normalizeDigits } from "@/lib/normalize-digits";
 
 export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
 
-const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, ...props }, ref) => {
+const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, onChange, ...props }, ref) => {
+  const handleChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const original = e.target.value;
+      const normalized = normalizeDigits(original);
+      if (normalized !== original) {
+        e.target.value = normalized;
+      }
+      onChange?.(e);
+    },
+    [onChange],
+  );
   return (
     <textarea
       className={cn(
@@ -13,6 +25,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ classNa
       )}
       ref={ref}
       {...props}
+      onChange={handleChange}
     />
   );
 });
