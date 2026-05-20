@@ -28,6 +28,8 @@ import { ContractPdfPreviewOverlay } from '@/components/contract/ContractPdfPrev
 import { ContractPdfAnalysisLog } from '@/components/contract/ContractPdfAnalysisLog';
 import { PdfAnalysisReport } from '@/components/contract/PdfAnalysisReport';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
+import BarcodeWidget from '@/components/barcodes/BarcodeWidget';
+import { useEntityBarcode } from '@/lib/barcodes/useEntityBarcode';
 
 // ─── Phase 5E.2 — Safe source-lead summary card ───
 type SourceLeadSummary = {
