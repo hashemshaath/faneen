@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
-  Loader2, MapPin, ShieldCheck, Lock, LogIn, Building2, Send, Check, AlertCircle,
+  Loader2, MapPin, ShieldCheck, Lock, LogIn, Building2, Send, Check, AlertCircle, Briefcase,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { toast } from 'sonner';
 
@@ -59,6 +60,10 @@ const PublicSiteScan: React.FC = () => {
 
   const [reason, setReason] = useState('');
   const [providerBusinessId, setProviderBusinessId] = useState<string>('');
+  const [interestMsg, setInterestMsg] = useState('');
+  const [interestCategory, setInterestCategory] = useState('');
+  const [budgetMin, setBudgetMin] = useState('');
+  const [budgetMax, setBudgetMax] = useState('');
 
   // --- Public summary (anon-safe) ---
   const { data, isLoading, error } = useQuery({
@@ -130,6 +135,38 @@ const PublicSiteScan: React.FC = () => {
     },
     onError: (e: Error) =>
       toast.error(isRTL ? `تعذر إرسال الطلب: ${e.message}` : `Could not send request: ${e.message}`),
+  });
+
+  // --- Submit interest / offer ---
+  const interestMut = useMutation({
+    mutationFn: async () => {
+      if (!data?.site_ref) throw new Error(isRTL ? 'الموقع غير متاح' : 'Site unavailable');
+      if (!providerBusinessId) throw new Error(isRTL ? 'اختر منشأتك' : 'Select your business');
+      const min = budgetMin.trim() ? Number(budgetMin) : null;
+      const max = budgetMax.trim() ? Number(budgetMax) : null;
+      if ((min !== null && Number.isNaN(min)) || (max !== null && Number.isNaN(max))) {
+        throw new Error(isRTL ? 'قيمة الميزانية غير صحيحة' : 'Invalid budget value');
+      }
+      const { data: res, error } = await supabase.rpc('submit_site_interest', {
+        _site_ref: data.site_ref,
+        _provider_business_id: providerBusinessId,
+        _message: interestMsg.trim(),
+        _service_category: interestCategory.trim() || null,
+        _estimated_budget_min: min,
+        _estimated_budget_max: max,
+      });
+      if (error) throw error;
+      return res as { submitted?: boolean; interest_ref?: string; grant_status?: string; grant_created?: boolean };
+    },
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم إرسال اهتمامك لصاحب الموقع.' : 'Your interest has been sent to the site owner.');
+      setInterestMsg('');
+      setInterestCategory('');
+      setBudgetMin('');
+      setBudgetMax('');
+    },
+    onError: (e: Error) =>
+      toast.error(isRTL ? `تعذر إرسال الاهتمام: ${e.message}` : `Could not submit interest: ${e.message}`),
   });
 
   // --- Locked section log (best-effort) ---
