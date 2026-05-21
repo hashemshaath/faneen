@@ -282,6 +282,35 @@ const ResolvedCard: React.FC<ResolvedCardProps> = ({ data, isRTL }) => {
         {biz.username && (
           <p className="text-xs text-muted-foreground tech-content" dir="ltr">@{biz.username}</p>
         )}
+        {leadCounts.total > 0 && (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Inbox className="w-3.5 h-3.5 text-primary" />
+                <p className="text-xs font-semibold">
+                  {bi('طلبات العقود المفتوحة', 'Open contract requests')}
+                </p>
+              </div>
+              <Badge variant="outline" size="sm" className="text-[10px]">
+                {leadCounts.total}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(['aluminum','blacksmith','kitchens'] as const).map((sec) => {
+                const meta = sectorMeta(sec);
+                const Icon = meta.icon;
+                const n = leadCounts[sec] || 0;
+                if (n === 0) return null;
+                return (
+                  <Badge key={sec} variant="outline" size="sm" className={`text-[10px] gap-1 ${meta.tone}`}>
+                    <Icon className="w-3 h-3" />
+                    {meta.label}: {n}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {biz.approved && biz.public_profile_path ? (
           <Button asChild variant="hero" size="sm" className="h-10 w-full text-xs gap-1.5">
             <Link to={biz.public_profile_path}>
