@@ -1581,6 +1581,7 @@ export type Database = {
       business_services: {
         Row: {
           business_id: string
+          category_id: string | null
           created_at: string
           currency_code: string
           description_ar: string | null
@@ -1596,6 +1597,7 @@ export type Database = {
         }
         Insert: {
           business_id: string
+          category_id?: string | null
           created_at?: string
           currency_code?: string
           description_ar?: string | null
@@ -1611,6 +1613,7 @@ export type Database = {
         }
         Update: {
           business_id?: string
+          category_id?: string | null
           created_at?: string
           currency_code?: string
           description_ar?: string | null
@@ -1637,6 +1640,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
