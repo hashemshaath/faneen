@@ -102,6 +102,97 @@ describe('BusinessCard badges & service tags', () => {
 });
 
 /**
+ * Primary category badge — replaces the bare category text. Must render when
+ * `business.categories` is present, and must render nothing otherwise.
+ */
+describe('BusinessCard primary category badge', () => {
+  it('renders the category name when business.categories is set (Arabic)', () => {
+    renderCard(baseBiz);
+    expect(screen.getAllByText('ألمنيوم').length).toBeGreaterThan(0);
+  });
+
+  it('renders the English category name when language is English', () => {
+    setLanguage('en');
+    renderCard(baseBiz);
+    expect(screen.getAllByText('Aluminum').length).toBeGreaterThan(0);
+  });
+
+  it('renders no category text when business.categories is missing', () => {
+    const { categories: _omit, ...without } = baseBiz;
+    renderCard(without);
+    expect(screen.queryByText('ألمنيوم')).toBeNull();
+    expect(screen.queryByText('Aluminum')).toBeNull();
+  });
+});
+
+/**
+ * Service-category diversity pill — visible only when distinct non-null
+ * `business_services.category_id` count among active services is > 1.
+ */
+describe('BusinessCard service-category diversity pill', () => {
+  const arMatcher = /\+\d+\s*تخصصات/;
+  const enMatcher = /\+\d+\s+service categories/i;
+
+  it('does not render when all active services share a single category_id', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'تركيب', is_active: true, category_id: 'cat-1' },
+        { name_ar: 'صيانة', is_active: true, category_id: 'cat-1' },
+        { name_ar: 'تصميم', is_active: true, category_id: 'cat-1' },
+      ],
+    });
+    expect(screen.queryByText(arMatcher)).toBeNull();
+  });
+
+  it('does not render when only one active service has a non-null category_id', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'تركيب', is_active: true, category_id: 'cat-1' },
+        { name_ar: 'صيانة', is_active: true, category_id: null },
+      ],
+    });
+    expect(screen.queryByText(arMatcher)).toBeNull();
+  });
+
+  it('renders +2 تخصصات when active services span 2 distinct category_ids', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'تركيب', is_active: true, category_id: 'cat-a' },
+        { name_ar: 'صيانة', is_active: true, category_id: 'cat-b' },
+      ],
+    });
+    expect(screen.getAllByText(arMatcher).length).toBeGreaterThan(0);
+  });
+
+  it('ignores inactive services when computing distinct category_id count', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'تركيب', is_active: true, category_id: 'cat-a' },
+        { name_ar: 'معطلة', is_active: false, category_id: 'cat-b' },
+      ],
+    });
+    expect(screen.queryByText(arMatcher)).toBeNull();
+  });
+
+  it('renders English label when language is English', () => {
+    setLanguage('en');
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'A', name_en: 'A', is_active: true, category_id: 'cat-a' },
+        { name_ar: 'B', name_en: 'B', is_active: true, category_id: 'cat-b' },
+        { name_ar: 'C', name_en: 'C', is_active: true, category_id: 'cat-c' },
+      ],
+    });
+    expect(screen.getAllByText(enMatcher).length).toBeGreaterThan(0);
+  });
+});
+
+/**
  * Coupon "end_date" boundary tests.
  *
  * The component compares promotion `end_date` (a YYYY-MM-DD string from
