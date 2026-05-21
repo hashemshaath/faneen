@@ -19,6 +19,7 @@ import {
   getSectorMeta,
 } from '@/lib/sector-keywords';
 import { track } from '@/lib/analytics-events';
+import { useCategoryCounts } from '@/services/categories/useCategoryCounts';
 
 const Categories = () => {
   const { slug } = useParams<{ slug?: string }>();
@@ -32,8 +33,11 @@ const Categories = () => {
     },
   });
 
+  const { byId: countsById, bySlug: countsBySlug } = useCategoryCounts();
+
   const selectedCategory = slug ? categories.find(c => c.slug === slug) : null;
   const catName = selectedCategory ? (language === 'ar' ? selectedCategory.name_ar : selectedCategory.name_en) : '';
+  const selectedCounts = selectedCategory ? countsById.get(selectedCategory.id) : undefined;
 
   // Detect sector from the category slug (or the loaded category's slug) so we
   // can hydrate the page with industry-specific title/description/keywords.
@@ -182,7 +186,11 @@ const Categories = () => {
             </div>
             <h1 className="font-heading text-2xl sm:text-3xl font-bold text-primary-foreground">{catName}</h1>
             {selectedCategory.description_ar && <p className="mt-2 text-primary-foreground/70 text-sm max-w-2xl">{language === 'ar' ? selectedCategory.description_ar : (selectedCategory.description_en || selectedCategory.description_ar)}</p>}
-            <p className="mt-2 text-primary-foreground/50 text-xs">{businesses.length} {isRTL ? 'مزود خدمة' : 'providers'}</p>
+            <p className="mt-2 text-primary-foreground/50 text-xs tech-content">
+              {isRTL
+                ? `${selectedCounts?.providers_count ?? businesses.length} مزود · ${selectedCounts?.active_services_count ?? 0} خدمة نشطة`
+                : `${selectedCounts?.providers_count ?? businesses.length} providers · ${selectedCounts?.active_services_count ?? 0} active services`}
+            </p>
           </div>
         </div>
         <div className="container-app page-shell">
@@ -245,9 +253,20 @@ const Categories = () => {
                     <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center shrink-0 group-hover:bg-gold/20 transition-colors">
                       <Layers className="ic-lg text-gold" />
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <h2 className="font-heading font-bold text-foreground group-hover:text-gold transition-colors">{language === 'ar' ? cat.name_ar : cat.name_en}</h2>
                       {cat.description_ar && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{language === 'ar' ? cat.description_ar : (cat.description_en || cat.description_ar)}</p>}
+                      {(() => {
+                        const counts = countsBySlug.get(cat.slug);
+                        if (!counts) return null;
+                        return (
+                          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground tech-content">
+                            <span>{isRTL ? `${counts.providers_count} مزود` : `${counts.providers_count} providers`}</span>
+                            <span className="opacity-40">·</span>
+                            <span>{isRTL ? `${counts.active_services_count} خدمة نشطة` : `${counts.active_services_count} active services`}</span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </CardContent>
                 </Card>
