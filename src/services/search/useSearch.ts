@@ -190,7 +190,7 @@ export const useBusinesses = () =>
       const today = new Date().toISOString().slice(0, 10);
       const { data } = await supabase
         .from('businesses_public')
-        .select('*, categories(id, name_ar, name_en, slug, icon), cities(id, name_ar, name_en), business_services(name_ar, name_en, price_from, price_to, is_active), promotions(id, end_date)')
+        .select('*, categories(id, name_ar, name_en, slug, icon, parent_id), cities(id, name_ar, name_en), business_services(name_ar, name_en, price_from, price_to, is_active, category_id), promotions(id, end_date)')
         .eq('is_active', true)
         // Only return active + non-expired service rows for tag chips & price filter
         .eq('business_services.is_active', true)
@@ -225,6 +225,8 @@ export interface SearchFilterValues {
   sortBy: 'rating' | 'newest' | 'name' | 'relevance';
   priceMin: number;
   priceMax: number;
+  /** Filter providers having at least one active service in this category. Accepts UUID or slug; resolved via the categories tree passed to filterAndSort. */
+  serviceCategoryId: string;
 }
 
 export const defaultFilters: SearchFilterValues = {
@@ -235,6 +237,44 @@ export const defaultFilters: SearchFilterValues = {
   sortBy: 'rating',
   priceMin: 0,
   priceMax: 0,
+  serviceCategoryId: 'all',
+};
+
+/** Minimal category shape used for slug/UUID resolution and parent rollup. */
+export interface CategoryLite {
+  id: string;
+  slug: string;
+  parent_id: string | null;
+}
+
+/**
+ * Resolve a filter value that may be either a category UUID or a slug into a
+ * concrete category row. Returns null if unknown or 'all'.
+ */
+export const resolveCategory = (
+  value: string | undefined,
+  categories: CategoryLite[] | undefined,
+): CategoryLite | null => {
+  if (!value || value === 'all' || !categories || categories.length === 0) return null;
+  return categories.find((c) => c.id === value) || categories.find((c) => c.slug === value) || null;
+};
+
+/**
+ * Given a resolved category, return the set of category ids it should match:
+ * - parent (no parent_id) → itself + all direct children
+ * - child → itself only
+ */
+export const expandCategoryIds = (
+  cat: CategoryLite,
+  categories: CategoryLite[],
+): Set<string> => {
+  const ids = new Set<string>([cat.id]);
+  if (cat.parent_id === null) {
+    for (const c of categories) {
+      if (c.parent_id === cat.id) ids.add(c.id);
+    }
+  }
+  return ids;
 };
 
 export const filterAndSort = (
@@ -244,6 +284,7 @@ export const filterAndSort = (
   selectedTags: string[],
   entityTags: any[] | undefined,
   language: string,
+  categories?: CategoryLite[],
 ) => {
   let results = [...businesses];
 
@@ -266,11 +307,35 @@ export const filterAndSort = (
     });
   }
 
-  // Category filter — accept either UUID id or slug (home page links pass slug)
+  // Provider category filter — accept either UUID id or slug, and roll parents
+  // down to include all child categories.
   if (filters.categoryId !== 'all') {
-    const v = filters.categoryId;
-    results = results.filter(b => b.category_id === v || (b as any).categories?.slug === v);
+    const resolved = resolveCategory(filters.categoryId, categories);
+    if (resolved && categories) {
+      const allowed = expandCategoryIds(resolved, categories);
+      results = results.filter((b) => allowed.has(b.category_id));
+    } else {
+      // Legacy fallback: categories tree not loaded yet — match by id or
+      // embedded slug so legacy URLs still work during hydration.
+      const v = filters.categoryId;
+      results = results.filter((b) => b.category_id === v || (b as any).categories?.slug === v);
+    }
   }
+
+  // Service-category facet — provider has ≥1 active service whose
+  // business_services.category_id matches (rollup to children when parent).
+  if (filters.serviceCategoryId && filters.serviceCategoryId !== 'all') {
+    const resolved = resolveCategory(filters.serviceCategoryId, categories);
+    const allowed = resolved && categories ? expandCategoryIds(resolved, categories) : new Set<string>([filters.serviceCategoryId]);
+    results = results.filter((b) => {
+      const services = (b as any).business_services;
+      if (!Array.isArray(services) || services.length === 0) return false;
+      return services.some((s: { is_active?: boolean; category_id?: string | null }) =>
+        s.is_active && s.category_id && allowed.has(s.category_id),
+      );
+    });
+  }
+
   // City filter
   if (filters.cityId !== 'all') results = results.filter(b => b.city_id === filters.cityId);
   // Rating filter

@@ -76,6 +76,7 @@ const SearchPage = () => {
     sortBy: (searchParams.get('sort') as SearchFilterValues['sortBy']) || 'rating',
     priceMin: Number(searchParams.get('price_min')) || 0,
     priceMax: Number(searchParams.get('price_max')) || 0,
+    serviceCategoryId: searchParams.get('serviceCategory') || 'all',
   });
 
   // Resolve the selected city (from filter or URL) into a localized name and
@@ -169,11 +170,13 @@ const SearchPage = () => {
     const paramMap: Record<string, string> = {
       categoryId: 'category', cityId: 'city', minRating: 'rating',
       verifiedOnly: 'verified', sortBy: 'sort', priceMin: 'price_min', priceMax: 'price_max',
+      serviceCategoryId: 'serviceCategory',
     };
     const paramKey = paramMap[key];
     const defaultVals: Record<string, any> = {
       categoryId: 'all', cityId: 'all', minRating: 0,
       verifiedOnly: false, sortBy: 'rating', priceMin: 0, priceMax: 0,
+      serviceCategoryId: 'all',
     };
     if (value === defaultVals[key]) params.delete(paramKey); else params.set(paramKey, String(value));
     setSearchParams(params, { replace: true });
@@ -183,7 +186,7 @@ const SearchPage = () => {
     handleFilterChange('categoryId', filters.categoryId === id ? 'all' : id);
   }, [filters.categoryId, handleFilterChange]);
 
-  const hasActiveFilters = filters.categoryId !== 'all' || filters.cityId !== 'all' || filters.minRating > 0 || filters.verifiedOnly || filters.priceMin > 0 || filters.priceMax > 0;
+  const hasActiveFilters = filters.categoryId !== 'all' || filters.cityId !== 'all' || filters.minRating > 0 || filters.verifiedOnly || filters.priceMin > 0 || filters.priceMax > 0 || filters.serviceCategoryId !== 'all';
 
   const clearFilters = useCallback(() => {
     setFilters({ ...defaultFilters });
@@ -195,7 +198,7 @@ const SearchPage = () => {
 
   const filtered = useMemo(() => {
     if (!businesses) return [];
-    let res = filterAndSort(businesses, debouncedQuery, filters, selectedTags, entityTags, language);
+    let res = filterAndSort(businesses, debouncedQuery, filters, selectedTags, entityTags, language, categories);
     if (favoritesOnly) {
       try {
         const raw = localStorage.getItem('qitaat_fav_businesses_v1');
@@ -207,7 +210,7 @@ const SearchPage = () => {
       }
     }
     return res;
-  }, [businesses, debouncedQuery, filters, language, selectedTags, entityTags, favoritesOnly]);
+  }, [businesses, debouncedQuery, filters, language, selectedTags, entityTags, favoritesOnly, categories]);
 
   // Defer the heavy filtered list so typing/filter clicks stay responsive.
   const deferredFiltered = useDeferredValue(filtered);
