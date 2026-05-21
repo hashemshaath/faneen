@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -7,20 +7,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Star, ShieldCheck, SlidersHorizontal, RotateCcw, ChevronRight, ChevronLeft, MapPin, ArrowUpDown, Tag, Wallet, ChevronDown,
+  Star, ShieldCheck, SlidersHorizontal, RotateCcw, ChevronRight, ChevronLeft, MapPin, ArrowUpDown, Tag, Wallet, ChevronDown, Layers,
 } from 'lucide-react';
 import { CategoryTree } from './CategoryTree';
 import { TagsFilter } from './TagsFilter';
-
-export interface SearchFilterValues {
-  categoryId: string;
-  cityId: string;
-  minRating: number;
-  verifiedOnly: boolean;
-  sortBy: 'rating' | 'newest' | 'name' | 'relevance';
-  priceMin: number;
-  priceMax: number;
-}
+import type { SearchFilterValues } from '@/services/search/useSearch';
+import { useCategoryCounts } from '@/services/categories/useCategoryCounts';
+export type { SearchFilterValues };
 
 interface SearchFiltersProps {
   filters: SearchFilterValues;
@@ -50,10 +43,12 @@ export const SearchFilters = ({
     filters.verifiedOnly,
     filters.priceMin > 0,
     filters.priceMax > 0,
+    filters.serviceCategoryId !== 'all',
   ].filter(Boolean).length + selectedTags.length;
 
   const selectedCategory = categories?.find(c => c.id === filters.categoryId);
   const selectedCity = cities?.find(c => c.id === filters.cityId);
+  const selectedServiceCategory = categories?.find(c => c.id === filters.serviceCategoryId || c.slug === filters.serviceCategoryId);
   const sortLabels: Record<SearchFilterValues['sortBy'], { ar: string; en: string }> = {
     relevance: { ar: 'الأكثر صلة', en: 'Relevance' },
     rating: { ar: 'الأعلى تقييماً', en: 'Top rated' },
@@ -124,6 +119,20 @@ export const SearchFilters = ({
                 categories={(categories || []) as any}
                 selectedId={filters.categoryId}
                 onSelect={v => onFilterChange('categoryId', v)}
+              />
+            </FilterCard>
+
+            {/* Service Category — facet driven by business_services.category_id */}
+            <FilterCard
+              icon={Layers}
+              label={isRTL ? 'نوع الخدمة' : 'Service category'}
+              summary={selectedServiceCategory ? (language === 'ar' ? selectedServiceCategory.name_ar : selectedServiceCategory.name_en) : ''}
+              defaultOpen={false}
+            >
+              <ServiceCategoryFacet
+                categories={categories || []}
+                value={filters.serviceCategoryId}
+                onChange={(v) => onFilterChange('serviceCategoryId', v)}
               />
             </FilterCard>
 
