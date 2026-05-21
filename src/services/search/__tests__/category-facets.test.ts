@@ -78,11 +78,11 @@ describe('filterAndSort — category & service facet', () => {
     expect(res.map((b) => b.id).sort()).toEqual(['b1', 'b2']);
   });
 
-  it('child category does not return sibling categories', () => {
+  it('child category does not return parent or sibling categories', () => {
     const res = filterAndSort(
-      businesses, '', { ...defaultFilters, categoryId: 'cat-alu-win' }, [], [], 'ar', categories,
+      businesses, '', { ...defaultFilters, categoryId: 'cat-alu-door' }, [], [], 'ar', categories,
     );
-    expect(res.map((b) => b.id)).toEqual(['b1']);
+    expect(res.map((b) => b.id)).toEqual(['b2']);
   });
 
   it('serviceCategoryId returns providers with matching active service', () => {
