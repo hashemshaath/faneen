@@ -82,14 +82,46 @@ Deno.serve(async (req) => {
     return json(200, { ok: false, error: 'generic' });
   }
   const email = (emailData as string | null) ?? null;
-  if (!email) {
-    return json(200, { ok: false, error: 'no_account' });
+  let resolvedEmail = email;
+
+  // Beta unblock: if no account exists for this identifier, auto-create one
+  // so the verified code can mint a session. This path is only reachable when
+  // verify_temporary_login_code returned verified=true (admin-minted code or
+  // the 000000 beta bypass), so it is gated by the same trust boundary.
+  if (!resolvedEmail) {
+    const isEmail = identifier.includes('@');
+    const normalizedPhone = identifier.replace(/^\+/, '').replace(/\D/g, '');
+    const createPayload: Record<string, unknown> = isEmail
+      ? { email: identifier, email_confirm: true }
+      : { phone: normalizedPhone, phone_confirm: true };
+
+    const { data: created, error: createErr } = await admin.auth.admin.createUser(createPayload);
+    if (createErr || !created?.user) {
+      console.error('[temp-code-session] auto-create user error', createErr);
+      return json(200, { ok: false, error: 'no_account' });
+    }
+
+    // For phone-only users Supabase generates no email; synthesize one so
+    // generateLink (magiclink) has something to target.
+    resolvedEmail = created.user.email ?? null;
+    if (!resolvedEmail) {
+      const synthetic = `${normalizedPhone}@phone.qitaat.local`;
+      const { data: updated, error: updErr } = await admin.auth.admin.updateUserById(
+        created.user.id,
+        { email: synthetic, email_confirm: true },
+      );
+      if (updErr || !updated?.user?.email) {
+        console.error('[temp-code-session] attach synthetic email error', updErr);
+        return json(200, { ok: false, error: 'generic' });
+      }
+      resolvedEmail = updated.user.email;
+    }
   }
 
   // 3) Generate magic link to extract the hashed_token (do NOT email it).
   const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
     type: 'magiclink',
-    email,
+    email: resolvedEmail,
   });
   if (linkErr || !linkData?.properties?.hashed_token) {
     console.error('[temp-code-session] generateLink error', linkErr);
@@ -98,7 +130,7 @@ Deno.serve(async (req) => {
 
   return json(200, {
     ok: true,
-    email,
+    email: resolvedEmail,
     token_hash: linkData.properties.hashed_token,
   });
 });
