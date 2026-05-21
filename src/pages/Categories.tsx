@@ -62,7 +62,8 @@ const Categories = () => {
   const { data: businesses = [], isLoading: bizLoading } = useQuery({
     queryKey: ['businesses-by-category', selectedCategory?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, cities(name_ar, name_en)').eq('is_active', true).eq('category_id', selectedCategory!.id).order('rating_avg', { ascending: false }).limit(50);
+      // Use businesses_public to enforce is_active=true, approval_status='published', is_demo=false
+      const { data } = await supabase.from('businesses_public').select('id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, cities(name_ar, name_en)').eq('category_id', selectedCategory!.id).order('rating_avg', { ascending: false }).limit(50);
       return data ?? [];
     },
     enabled: !!selectedCategory?.id,
