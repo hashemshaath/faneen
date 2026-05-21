@@ -1000,23 +1000,6 @@ export const HeroV2 = () => {
           </div>
         </div>
 
-      {/* Sector chips below the hero (full-width container with side padding) */}
-      <div id="hero-sector-chips" className="container-app mt-8 sm:mt-10 scroll-mt-20">
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-          {HERO_CHIPS.map(({ ar, en, slug, icon: Icon }) => (
-            <Link
-              key={slug}
-              to={`/search?category=${slug}`}
-              className="inline-flex items-center gap-2 px-4 min-h-11 rounded-full border border-border/70 bg-card hover:bg-secondary/5 hover:border-secondary/40 transition-colors text-sm font-medium text-foreground hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2"
-              aria-label={bi(`تصفح قطاع ${ar}`, `Browse ${en} sector`)}
-            >
-              <Icon className="w-4 h-4 text-secondary" />
-              {bi(ar, en)}
-            </Link>
-          ))}
-        </div>
-      </div>
-
       <style>{`
         @keyframes qitaat-hero-progress { from { width: 0% } to { width: 100% } }
         @keyframes qitaat-hero-kenburns {
