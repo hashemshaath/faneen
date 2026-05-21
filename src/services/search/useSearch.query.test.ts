@@ -67,8 +67,9 @@ describe('useBusinesses Supabase query', () => {
 
     // Selected projection includes only the columns the badges need
     const selectArg = (calls.find((c) => c.fn === 'select')!.args[0] as string);
-    expect(selectArg).toContain('business_services(name_ar, name_en, price_from, price_to, is_active)');
+    expect(selectArg).toContain('business_services(name_ar, name_en, price_from, price_to, is_active, category_id)');
     expect(selectArg).toContain('promotions(id, end_date)');
+    expect(selectArg).toContain('categories(id, name_ar, name_en, slug, icon, parent_id)');
     // No greedy "promotions(*)" or "business_services(*)" patterns
     expect(selectArg).not.toMatch(/promotions\(\*\)/);
     expect(selectArg).not.toMatch(/business_services\(\*\)/);
