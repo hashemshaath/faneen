@@ -1,0 +1,1 @@
+UPDATE public.profiles SET is_onboarded = true, full_name = COALESCE(NULLIF(full_name,''),'هاشم شعث'), updated_at = now() WHERE ref_id = 'USR-1000022';
