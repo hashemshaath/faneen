@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.resolve_barcode(text) TO anon, authenticated;
