@@ -4,7 +4,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import {
   Star, MapPin, Phone, Crown, Globe, ChevronRight, ChevronLeft,
-  Briefcase, CreditCard, Heart, TicketPercent, ShieldCheck,
+  Briefcase, CreditCard, Heart, TicketPercent, ShieldCheck, Layers,
 } from 'lucide-react';
 import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
 import { useRecentlyViewedBusinesses } from '@/hooks/useRecentlyViewedBusinesses';
@@ -85,6 +85,47 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
   const visibleTags = serviceTags.slice(0, 3);
   const remainingTags = Math.max(0, serviceTags.length - visibleTags.length);
 
+  // Service-category diversity — count distinct non-null category_id values
+  // among active services. Only meaningful when > 1 (provider spans multiple
+  // service categories).
+  const distinctServiceCategoryCount = (() => {
+    const set = new Set<string>();
+    for (const s of services) {
+      const cid = (s as { category_id?: string | null }).category_id;
+      if (typeof cid === 'string' && cid.length > 0) set.add(cid);
+    }
+    return set.size;
+  })();
+  const diversityCount = distinctServiceCategoryCount > 1 ? distinctServiceCategoryCount : 0;
+
+  // Reusable compact category badge (icon + name). Renders nothing when the
+  // provider has no linked category (e.g. the 5 QA-NULL services).
+  const CategoryBadge = ({ size = 'md' }: { size?: 'sm' | 'md' }) =>
+    catName ? (
+      <span
+        className={`inline-flex items-center gap-1 rounded-md bg-accent/10 text-accent border border-accent/20 font-body ${
+          size === 'sm' ? 'px-1.5 py-0 text-[10px]' : 'px-2 py-0.5 text-[10px] sm:text-[11px]'
+        }`}
+        title={catName}
+      >
+        <Layers className="w-2.5 h-2.5 shrink-0" />
+        <span className="truncate max-w-[120px]">{catName}</span>
+      </span>
+    ) : null;
+
+  // Reusable "+N service categories" diversity pill.
+  const DiversityPill = ({ hideOnXs = false }: { hideOnXs?: boolean }) =>
+    diversityCount > 0 ? (
+      <span
+        className={`inline-flex items-center px-2 py-0.5 rounded-md bg-muted/70 text-muted-foreground border border-border/50 text-[10px] sm:text-[11px] font-body tech-content ${
+          hideOnXs ? 'hidden xs:inline-flex' : ''
+        }`}
+        title={isRTL ? `${diversityCount} تخصصات` : `${diversityCount} service categories`}
+      >
+        {isRTL ? `+${diversityCount} تخصصات` : `+${diversityCount} service categories`}
+      </span>
+    ) : null;
+
   // Active promotion (coupon/offer) badge.
   const today = new Date().toISOString().slice(0, 10);
   const hasOffer = Array.isArray((b as any).promotions)
@@ -140,7 +181,11 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
               </Badge>
             )}
           </div>
-          {catName && <p className="text-[10px] sm:text-xs text-accent/70 font-body">{catName}</p>}
+          {catName && (
+            <div className="mt-0.5">
+              <CategoryBadge size="sm" />
+            </div>
+          )}
           {desc && <p className="text-xs text-muted-foreground font-body mt-0.5 line-clamp-1">{desc}</p>}
           {visibleTags.length > 0 && (
             <div className="flex flex-wrap items-center gap-1 mt-1.5">
@@ -152,6 +197,12 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
               {remainingTags > 0 && (
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground text-[9px] sm:text-[10px] font-body tech-content">+{remainingTags}</span>
               )}
+              <DiversityPill hideOnXs />
+            </div>
+          )}
+          {visibleTags.length === 0 && diversityCount > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mt-1.5">
+              <DiversityPill hideOnXs />
             </div>
           )}
           <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
@@ -223,7 +274,11 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
           <h3 className="font-heading font-bold text-sm sm:text-[15px] text-foreground group-hover:text-accent transition-colors truncate">{name}</h3>
           {b.is_verified && <VerifiedBadge size="sm" iconOnly />}
         </div>
-        {catName && <span className="text-[10px] sm:text-xs text-accent/70 font-body">{catName}</span>}
+        {catName && (
+          <div className="mt-0.5">
+            <CategoryBadge />
+          </div>
+        )}
 
         {/* saqf-style status badges */}
         {(b.is_verified || hasOffer) && (
@@ -256,6 +311,12 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
                 +{remainingTags}
               </span>
             )}
+            <DiversityPill hideOnXs />
+          </div>
+        )}
+        {visibleTags.length === 0 && diversityCount > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 mt-3">
+            <DiversityPill hideOnXs />
           </div>
         )}
 
