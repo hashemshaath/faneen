@@ -142,8 +142,8 @@ export function renderBarcodeLargeSticker(opts: BarcodeLargeStickerOptions): voi
   .qr-card::before,.qr-card::after{
     content:"";position:absolute;width:8mm;height:8mm;border:1.2mm solid #10b981;border-radius:2mm;
   }
-  .qr-card::before{top:-2mm;${isRTL ? 'right' : 'left'}:-2mm;border-right:${isRTL ? '1.2mm solid #10b981' : '0'};border-bottom:0;${!isRTL ? 'border-right:0' : ''}}
-  .qr-card::after{bottom:-2mm;${isRTL ? 'left' : 'right'}:-2mm;border-left:${isRTL ? '1.2mm solid #10b981' : '0'};border-top:0;${!isRTL ? 'border-left:0' : ''}}
+  .qr-card::before{top:-2mm;left:-2mm;border-right:0;border-bottom:0}
+  .qr-card::after{bottom:-2mm;right:-2mm;border-left:0;border-top:0}
   .seal{
     position:absolute;top:-6mm;${isRTL ? 'left' : 'right'}:-6mm;width:24mm;height:24mm;
     background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:50%;
@@ -153,7 +153,6 @@ export function renderBarcodeLargeSticker(opts: BarcodeLargeStickerOptions): voi
   }
   .seal .seal-mark{font-size:8mm;font-weight:800;line-height:1}
   .seal .seal-text{font-size:2.4mm;letter-spacing:.1em;text-transform:uppercase;margin-top:0.5mm}
-  }
   .qr-label{
     font-size:4mm;letter-spacing:.2em;text-transform:uppercase;color:#10b981;font-weight:700;
   }
