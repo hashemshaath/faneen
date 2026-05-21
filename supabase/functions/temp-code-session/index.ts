@@ -91,15 +91,48 @@ Deno.serve(async (req) => {
   if (!resolvedEmail) {
     const isEmail = identifier.includes('@');
     const normalizedPhone = identifier.replace(/^\+/, '').replace(/\D/g, '');
+    const syntheticEmail = isEmail ? null : `${normalizedPhone}@phone.qitaat.local`;
+
+    // Before creating, check if an auth user already exists with the
+    // synthetic email (from a previous run). This avoids 500s on duplicate.
+    if (syntheticEmail) {
+      const { data: existing } = await admin.rpc(
+        'find_auth_user_email_by_identifier',
+        { _identifier: syntheticEmail },
+      );
+      if (existing) {
+        resolvedEmail = existing as string;
+      }
+    }
+  }
+
+  if (!resolvedEmail) {
+    const isEmail = identifier.includes('@');
+    const normalizedPhone = identifier.replace(/^\+/, '').replace(/\D/g, '');
     const createPayload: Record<string, unknown> = isEmail
       ? { email: identifier, email_confirm: true }
       : { phone: normalizedPhone, phone_confirm: true };
 
     const { data: created, error: createErr } = await admin.auth.admin.createUser(createPayload);
     if (createErr || !created?.user) {
+      // Duplicate / race: fall back to looking up by synthetic email.
+      if (!isEmail) {
+        const synthetic = `${normalizedPhone}@phone.qitaat.local`;
+        const { data: existing } = await admin.rpc(
+          'find_auth_user_email_by_identifier',
+          { _identifier: synthetic },
+        );
+        if (existing) {
+          resolvedEmail = existing as string;
+        }
+      }
+      if (resolvedEmail) {
+        // fall through to generateLink below
+      } else {
       console.error('[temp-code-session] auto-create user error', createErr);
       return json(200, { ok: false, error: 'no_account' });
-    }
+      }
+    } else {
 
     // For phone-only users Supabase generates no email; synthesize one so
     // generateLink (magiclink) has something to target.
@@ -115,6 +148,7 @@ Deno.serve(async (req) => {
         return json(200, { ok: false, error: 'generic' });
       }
       resolvedEmail = updated.user.email;
+    }
     }
   }
 
