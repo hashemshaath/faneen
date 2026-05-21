@@ -9,7 +9,7 @@
 import React, { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, Building2, ExternalLink, FileCheck2, Loader2, MapPin, ShieldCheck } from 'lucide-react';
+import { AlertCircle, Building2, ExternalLink, FileCheck2, Loader2, MapPin, ShieldCheck, ListChecks, CheckCircle2, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -189,9 +189,50 @@ const ResolvedCard: React.FC<ResolvedCardProps> = ({ data, isRTL }) => {
   }
 
   if (data.entity_type === 'business') {
-    const biz = data.data as { username?: string | null; public_profile_path?: string | null; approved?: boolean };
+    const biz = data.data as {
+      username?: string | null;
+      public_profile_path?: string | null;
+      approved?: boolean;
+      contracts?: Array<{
+        contract_number: string;
+        title: string | null;
+        status: string;
+        start_date: string | null;
+        end_date: string | null;
+        is_closed: boolean;
+      }>;
+      contracts_counts?: { open: number; closed: number; total: number };
+    };
+    const contracts = Array.isArray(biz.contracts) ? biz.contracts : [];
+    const counts = biz.contracts_counts || { open: 0, closed: 0, total: contracts.length };
+    const fmtDate = (d: string | null) => {
+      if (!d) return '—';
+      try {
+        return new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-GB', {
+          year: 'numeric', month: 'short', day: 'numeric',
+        });
+      } catch { return d; }
+    };
+    const statusLabel = (s: string) => {
+      const map: Record<string, [string, string]> = {
+        active: ['نشط', 'Active'],
+        completed: ['مكتمل', 'Completed'],
+        pending_approval: ['قيد الموافقة', 'Pending'],
+        cancelled: ['ملغي', 'Cancelled'],
+        disputed: ['متنازع عليه', 'Disputed'],
+      };
+      const [ar, en] = map[s] || [s, s];
+      return bi(ar, en);
+    };
+    const statusTone = (s: string) =>
+      s === 'active' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
+      : s === 'completed' ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30'
+      : s === 'pending_approval' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30'
+      : s === 'disputed' ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30'
+      : 'bg-muted text-muted-foreground border-border/50';
     // Show explicit redirect card (avoid surprise navigation in QA)
     return (
+      <>
       <section className="p-5 rounded-xl border border-border/40 bg-card space-y-3">
         <div className="flex items-center gap-2">
           <Building2 className="w-4 h-4 text-primary" />
@@ -219,6 +260,65 @@ const ResolvedCard: React.FC<ResolvedCardProps> = ({ data, isRTL }) => {
           </p>
         )}
       </section>
+
+      {counts.total > 0 && (
+        <section className="p-5 rounded-xl border border-border/40 bg-card space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <ListChecks className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-semibold">
+                {bi('عقود المنشأة', 'Business contracts')}
+              </h2>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Badge variant="outline" size="sm" className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30">
+                <Clock className="w-3 h-3" />
+                {bi('مفتوحة', 'Open')}: {counts.open}
+              </Badge>
+              <Badge variant="outline" size="sm" className="text-[10px] gap-1 bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30">
+                <CheckCircle2 className="w-3 h-3" />
+                {bi('مغلقة', 'Closed')}: {counts.closed}
+              </Badge>
+            </div>
+          </div>
+
+          <ul className="space-y-2">
+            {contracts.map((c) => (
+              <li
+                key={c.contract_number}
+                className="p-3 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/30 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-2 flex-wrap">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold truncate" title={c.title || ''}>
+                      {c.title || bi('عقد', 'Contract')}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground tech-content mt-0.5" dir="ltr">
+                      {c.contract_number}
+                    </p>
+                  </div>
+                  <Badge variant="outline" size="sm" className={`text-[10px] ${statusTone(c.status)}`}>
+                    {statusLabel(c.status)}
+                  </Badge>
+                </div>
+                <div className="mt-2 flex items-center gap-3 text-[10px] text-muted-foreground flex-wrap">
+                  <span>{bi('البدء', 'Start')}: <span className="tech-content">{fmtDate(c.start_date)}</span></span>
+                  <span>·</span>
+                  <span>{bi('الانتهاء', 'End')}: <span className="tech-content">{fmtDate(c.end_date)}</span></span>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <p className="text-[10px] text-muted-foreground bg-info/5 border border-info/20 rounded-md p-2 leading-relaxed">
+            {bi(
+              'صفحة تحقق عامة — لا تُعرض المبالغ أو بيانات العملاء أو بنود العقود.',
+              'Public verification page — amounts, client data, and contract terms are not shown.',
+            )}
+          </p>
+        </section>
+      )}
+      </>
     );
   }
 
