@@ -1649,6 +1649,13 @@ export type Database = {
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "business_services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
         ]
       }
       business_staff: {
@@ -2035,6 +2042,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "businesses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
             foreignKeyName: "businesses_city_id_fkey"
             columns: ["city_id"]
             isOneToOne: false
@@ -2100,6 +2114,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
           },
         ]
       }
@@ -4366,6 +4387,13 @@ export type Database = {
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contract_templates_service_category_id_fkey"
+            columns: ["service_category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
         ]
       }
       contract_versions: {
@@ -4619,6 +4647,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_service_category_id_fkey"
+            columns: ["service_category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "contracts_source_lead_id_fkey"
@@ -7285,6 +7320,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "private_sectors_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
             foreignKeyName: "private_sectors_city_id_fkey"
             columns: ["city_id"]
             isOneToOne: false
@@ -7816,6 +7858,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "projects_city_id_fkey"
@@ -9556,6 +9605,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "businesses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
             foreignKeyName: "businesses_city_id_fkey"
             columns: ["city_id"]
             isOneToOne: false
@@ -9568,6 +9624,34 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "countries"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      category_public_counts: {
+        Row: {
+          active_services_count: number | null
+          category_id: string | null
+          name_ar: string | null
+          name_en: string | null
+          parent_id: string | null
+          providers_count: number | null
+          services_count: number | null
+          slug: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
           },
         ]
       }
@@ -9791,6 +9875,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_sectors_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "private_sectors_city_id_fkey"
