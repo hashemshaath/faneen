@@ -126,11 +126,13 @@ const Onboarding = () => {
       if (profile?.full_name) setFullName(profile.full_name);
       else if (d.fullName) setFullName(d.fullName);
       else if (user?.user_metadata?.full_name) setFullName(user.user_metadata.full_name);
-      if (profile?.account_type && profile.account_type !== 'individual') {
-        setAccountType(profile.account_type as 'individual' | 'business');
-      } else if (d.accountType) {
-        setAccountType(d.accountType);
-      }
+      // Profile is the source of truth for account_type. Only fall back to
+      // the local/remote draft when the profile has no value yet.
+      const effectiveAccountType: 'individual' | 'business' =
+        (profile?.account_type as 'individual' | 'business' | undefined) ??
+        (d.accountType as 'individual' | 'business' | undefined) ??
+        'individual';
+      setAccountType(effectiveAccountType);
       if (d.phone) setPhone(d.phone);
       if (d.countryCode) setCountryCode(d.countryCode);
       if (d.businessName) setBusinessName(d.businessName);
@@ -139,7 +141,16 @@ const Onboarding = () => {
       if (d.sectors?.length) setSectors(d.sectors as SectorId[]);
       if (d.subServices?.length) setSubServices(d.subServices);
       if (d.step && STEP_ORDER.includes(d.step as OnboardingStep)) {
-        setStep(d.step as OnboardingStep);
+        const draftStep = d.step as OnboardingStep;
+        // Never resume on business-only steps when the account is individual —
+        // prevents a stale draft from a previous session forcing the provider flow.
+        const isBusinessOnlyStep =
+          draftStep === 'business-details' || draftStep === 'business-sectors';
+        if (effectiveAccountType === 'individual' && isBusinessOnlyStep) {
+          setStep('details');
+        } else {
+          setStep(draftStep);
+        }
       }
       setDraftLoaded(true);
     })();
