@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
-import { Copy, Check, Download, Printer, QrCode as QrCodeIcon } from 'lucide-react';
+import { Copy, Check, Download, Printer, QrCode as QrCodeIcon, Sticker } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import {
   normalizeBarcodeCode,
 } from '@/lib/barcodes/barcode-url';
 import { renderBarcodePrintCard } from './BarcodePrintCard';
+import { renderBarcodeLargeSticker } from './BarcodeLargeSticker';
 
 export interface BarcodeWidgetProps {
   barcodeCode: string;
@@ -118,6 +119,27 @@ const BarcodeWidget: React.FC<BarcodeWidgetProps> = ({
     }
   };
 
+  const handlePrintLarge = async () => {
+    try {
+      const qrDataUrl = await QRCode.toDataURL(url, {
+        width: 1024,
+        margin: 2,
+        errorCorrectionLevel: 'H',
+        color: { dark: '#0f172a', light: '#ffffff' },
+      });
+      renderBarcodeLargeSticker({
+        barcodeCode: code,
+        entityType,
+        qrDataUrl,
+        url,
+        isRTL,
+        title,
+      });
+    } catch {
+      toast.error(bi('تعذر الطباعة', 'Print failed'));
+    }
+  };
+
   if (!code) return null;
 
   return (
@@ -183,6 +205,18 @@ const BarcodeWidget: React.FC<BarcodeWidgetProps> = ({
             >
               <Printer className="h-3.5 w-3.5 me-1.5" />
               {bi('طباعة', 'Print')}
+            </Button>
+          )}
+          {printable && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handlePrintLarge}
+              aria-label={bi('طباعة ملصق 30×20 سم', 'Print 30x20 cm sticker')}
+              className="h-8"
+            >
+              <Sticker className="h-3.5 w-3.5 me-1.5" />
+              {bi('ملصق 30×20 سم', 'Sticker 30×20 cm')}
             </Button>
           )}
         </div>
