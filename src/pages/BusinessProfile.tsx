@@ -44,6 +44,7 @@ import {
 } from "@/components/business-profile/business-profile.data";
 import { useReviews } from "@/components/business-profile/business-profile.data";
 import { BnplBadges } from "@/components/bnpl/BnplBadges";
+import { BusinessBarcodeCard } from "@/components/business-profile/BusinessBarcodeCard";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { ContactSupplierSheet } from "@/components/business-profile/ContactSupplierSheet";
 import { buildBreadcrumbList, buildService, ogImageFor } from "@/lib/seo/structured-data";
@@ -489,6 +490,10 @@ const BusinessProfile = () => {
                   {/* BNPL section */}
                   <div className="mt-6">
                     <BnplBadges businessId={business.id} />
+                  </div>
+                  {/* Business barcode + printable 30x20 cm sticker */}
+                  <div className="mt-6">
+                    <BusinessBarcodeCard businessId={business.id} businessName={businessName} />
                   </div>
                 </TabsContent>
               </div>

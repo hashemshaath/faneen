@@ -31,6 +31,7 @@ import { AuditLogPanel } from '@/components/dashboard/business-edit/AuditLogPane
 import { validateBusinessForm, issuesByKey, errorCount } from '@/components/dashboard/business-edit/validation';
 import { ValidationBanner, FieldError } from '@/components/dashboard/business-edit/ValidationBanner';
 import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
+import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 
 interface RefRow { id: string; name_ar: string; name_en: string }
 interface CityRow extends RefRow { country_id: string }
@@ -499,6 +500,12 @@ const DashboardBusinessEdit: React.FC = () => {
 
         {/* Audit log */}
         <AuditLogPanel businessId={form.id} isRTL={isRTL} />
+
+        {/* Business barcode + 30x20 cm printable sticker */}
+        <BusinessBarcodeCard
+          businessId={form.id}
+          businessName={isRTL ? form.name_ar : (form.name_en || form.name_ar)}
+        />
 
         {/* System metadata */}
         <Card className="bg-muted/30">

@@ -21,6 +21,7 @@ import { ProviderReadinessCard } from '@/components/dashboard/ProviderReadinessC
 import { ProviderMembershipCard } from '@/components/dashboard/ProviderMembershipCard';
 import { ProviderCompletionSummary } from '@/components/dashboard/ProviderCompletionSummary';
 import { ProviderEngagementPreviews } from '@/components/dashboard/ProviderEngagementPreviews';
+import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import {
   ChartTooltipStyle, getStatusLabel, getStatusColor, getMonths,
   StatCard, QuickAction, OverdueAlerts, TodaySummary,
@@ -203,6 +204,13 @@ export default function ProviderDashboardView({
       </div>
 
       <ProviderEngagementPreviews businessId={businessId ?? null} />
+
+      {businessId && (
+        <BusinessBarcodeCard
+          businessId={businessId}
+          businessName={isRTL ? business?.name_ar : (business?.name_en || business?.name_ar)}
+        />
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
