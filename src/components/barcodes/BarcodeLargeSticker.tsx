@@ -81,12 +81,20 @@ export function renderBarcodeLargeSticker(opts: BarcodeLargeStickerOptions): voi
     background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.07) 1px, transparent 0);
     background-size:6mm 6mm;opacity:.5;pointer-events:none;
   }
+  .brand-panel::after{
+    content:"";position:absolute;top:-30mm;${isRTL ? 'left' : 'right'}:-30mm;width:90mm;height:90mm;border-radius:50%;
+    background:radial-gradient(circle,rgba(16,185,129,.18) 0%,transparent 70%);pointer-events:none;
+  }
   .brand-row{display:flex;align-items:center;gap:10mm;position:relative}
   .logo-mark{
     width:22mm;height:22mm;border-radius:6mm;
     background:linear-gradient(135deg,#10b981,#059669);
     display:flex;align-items:center;justify-content:center;
     font-size:14mm;font-weight:800;color:#fff;box-shadow:0 4mm 10mm rgba(16,185,129,.35);
+    position:relative;
+  }
+  .logo-mark::after{
+    content:"";position:absolute;inset:-2mm;border:0.6mm solid rgba(16,185,129,.4);border-radius:8mm;
   }
   .brand-text .name{font-size:11mm;font-weight:800;letter-spacing:.02em;line-height:1}
   .brand-text .tag{font-size:4.2mm;color:#94a3b8;margin-top:2mm;letter-spacing:.06em;text-transform:uppercase}
@@ -118,13 +126,33 @@ export function renderBarcodeLargeSticker(opts: BarcodeLargeStickerOptions): voi
     padding:18mm 16mm;display:flex;flex-direction:column;align-items:center;justify-content:center;
     background:#f8fafc;position:relative;
   }
+  .qr-panel::before{
+    content:"";position:absolute;inset:0;
+    background-image:linear-gradient(45deg,transparent 49%,rgba(15,23,42,.025) 50%,transparent 51%);
+    background-size:8mm 8mm;pointer-events:none;
+  }
   .qr-panel::after{
     content:"";position:absolute;inset:6mm;border:1.5mm dashed #cbd5e1;border-radius:10mm;pointer-events:none;opacity:.5;
   }
   .qr-card{
     background:#fff;border-radius:8mm;padding:10mm;box-shadow:0 6mm 18mm rgba(15,23,42,.08);
     display:flex;flex-direction:column;align-items:center;gap:6mm;position:relative;z-index:1;
+    border:0.5mm solid #e2e8f0;
   }
+  .qr-card::before,.qr-card::after{
+    content:"";position:absolute;width:8mm;height:8mm;border:1.2mm solid #10b981;border-radius:2mm;
+  }
+  .qr-card::before{top:-2mm;left:-2mm;border-right:0;border-bottom:0}
+  .qr-card::after{bottom:-2mm;right:-2mm;border-left:0;border-top:0}
+  .seal{
+    position:absolute;top:-6mm;${isRTL ? 'left' : 'right'}:-6mm;width:24mm;height:24mm;
+    background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:50%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    box-shadow:0 4mm 10mm rgba(16,185,129,.4);transform:rotate(${isRTL ? '-' : ''}12deg);
+    border:1mm solid #fff;z-index:3;
+  }
+  .seal .seal-mark{font-size:8mm;font-weight:800;line-height:1}
+  .seal .seal-text{font-size:2.4mm;letter-spacing:.1em;text-transform:uppercase;margin-top:0.5mm}
   .qr-label{
     font-size:4mm;letter-spacing:.2em;text-transform:uppercase;color:#10b981;font-weight:700;
   }
@@ -203,6 +231,10 @@ export function renderBarcodeLargeSticker(opts: BarcodeLargeStickerOptions): voi
 
       <div class="qr-panel">
         <div class="qr-card">
+          <div class="seal" aria-hidden="true">
+            <div class="seal-mark">✓</div>
+            <div class="seal-text">${isRTL ? 'موثّق' : 'Verified'}</div>
+          </div>
           <div class="qr-label">${isRTL ? 'امسح الكود' : 'Scan Code'}</div>
           <img class="qr-img" alt="QR ${safeCode}" src="${qrDataUrl}" />
           <div class="code-pill">${safeCode}</div>
