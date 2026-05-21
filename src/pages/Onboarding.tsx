@@ -113,6 +113,8 @@ const Onboarding = () => {
     if (!user) { navigate('/auth'); return; }
     // Admins bypass onboarding entirely.
     if (isAdmin || isSuperAdmin) { navigate(getTargetRoute(), { replace: true }); return; }
+    // Existing individual accounts do not need business onboarding.
+    if (profile?.account_type === 'individual') { navigate('/dashboard', { replace: true }); return; }
     // Allow the user to stay on the post-completion summary screen even
     // after `is_onboarded` flips true (refreshProfile fires before redirect).
     if (profile?.is_onboarded && step !== 'summary') { navigate(getTargetRoute()); return; }
@@ -146,7 +148,8 @@ const Onboarding = () => {
         // prevents a stale draft from a previous session forcing the provider flow.
         const isBusinessOnlyStep =
           draftStep === 'business-details' || draftStep === 'business-sectors';
-        if (effectiveAccountType === 'individual' && isBusinessOnlyStep) {
+      if (effectiveAccountType === 'individual' && isBusinessOnlyStep) {
+          clearDraft();
           setStep('details');
         } else {
           setStep(draftStep);
