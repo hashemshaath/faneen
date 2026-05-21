@@ -358,3 +358,165 @@ const PriceRangeInputs = ({
     </div>
   );
 };
+
+/* Service-category facet — shows categories that have ≥1 active service,
+   grouped by parent → children. Clicking the active row clears the filter. */
+interface ServiceCategoryFacetCategory {
+  id: string;
+  name_ar: string;
+  name_en: string;
+  parent_id?: string | null;
+  slug?: string;
+}
+const ServiceCategoryFacet = ({
+  categories, value, onChange,
+}: {
+  categories: ServiceCategoryFacetCategory[];
+  value: string;
+  onChange: (v: string) => void;
+}) => {
+  const { language, isRTL } = useLanguage();
+  const { byId, bySlug, isLoading } = useCategoryCounts();
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const getCount = (cat: ServiceCategoryFacetCategory): number => {
+    const row = byId.get(cat.id) || (cat.slug ? bySlug.get(cat.slug) : undefined);
+    return row?.active_services_count ?? 0;
+  };
+
+  const { roots, childrenByParent } = useMemo(() => {
+    const r: ServiceCategoryFacetCategory[] = [];
+    const map = new Map<string, ServiceCategoryFacetCategory[]>();
+    for (const c of categories) {
+      if (!c.parent_id) r.push(c);
+      else {
+        const arr = map.get(c.parent_id) || [];
+        arr.push(c);
+        map.set(c.parent_id, arr);
+      }
+    }
+    return { roots: r, childrenByParent: map };
+  }, [categories]);
+
+  // Hide parents whose rollup count is 0 AND have no children with counts
+  const visibleRoots = useMemo(() => {
+    if (isLoading || byId.size === 0) return roots;
+    return roots.filter((p) => {
+      if (getCount(p) > 0) return true;
+      const kids = childrenByParent.get(p.id) || [];
+      return kids.some((k) => getCount(k) > 0);
+    });
+  }, [roots, childrenByParent, isLoading, byId]);
+
+  const getName = (c: ServiceCategoryFacetCategory) =>
+    language === 'ar' ? c.name_ar : (c.name_en || c.name_ar);
+
+  const isSelected = (c: ServiceCategoryFacetCategory) =>
+    value === c.id || (c.slug && value === c.slug);
+
+  const toggleSelect = (c: ServiceCategoryFacetCategory) => {
+    onChange(isSelected(c) ? 'all' : c.id);
+  };
+
+  const toggleExpand = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  if (visibleRoots.length === 0) {
+    return (
+      <p className="text-[11px] text-muted-foreground py-2 text-center">
+        {isRTL ? 'لا توجد خدمات متاحة' : 'No services available'}
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-0.5 -m-1 max-h-[280px] overflow-y-auto pe-1 no-scrollbar">
+      <button
+        type="button"
+        onClick={() => onChange('all')}
+        className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm transition-colors min-h-[36px] ${
+          value === 'all'
+            ? 'bg-accent/12 text-accent font-heading font-bold ring-1 ring-accent/30'
+            : 'text-foreground/80 hover:bg-muted/60 hover:text-foreground'
+        }`}
+      >
+        <Layers className="w-3.5 h-3.5 shrink-0" />
+        <span className="truncate text-start flex-1">{isRTL ? 'كل الخدمات' : 'All services'}</span>
+      </button>
+
+      {visibleRoots.map((parent) => {
+        const kids = (childrenByParent.get(parent.id) || []).filter((k) => getCount(k) > 0);
+        const hasKids = kids.length > 0;
+        const count = getCount(parent);
+        const selected = isSelected(parent);
+        const childSelected = kids.some((k) => isSelected(k));
+        const open = expanded.has(parent.id);
+
+        return (
+          <div key={parent.id}>
+            <div className="flex items-stretch">
+              <button
+                type="button"
+                onClick={() => toggleSelect(parent)}
+                className={`flex-1 min-w-0 flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm transition-colors min-h-[36px] ${
+                  selected || childSelected
+                    ? 'bg-accent/12 text-accent font-heading font-bold ring-1 ring-accent/30'
+                    : 'text-foreground/80 hover:bg-muted/60 hover:text-foreground'
+                }`}
+                aria-pressed={selected}
+              >
+                <span className="truncate flex-1 text-start">{getName(parent)}</span>
+                {count > 0 && (
+                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 min-w-[18px] h-[18px] tech-content bg-muted text-muted-foreground border-0">
+                    {count}
+                  </Badge>
+                )}
+              </button>
+              {hasKids && (
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(parent.id)}
+                  aria-label={open ? (isRTL ? 'طي' : 'Collapse') : (isRTL ? 'توسيع' : 'Expand')}
+                  className="px-1.5 text-muted-foreground hover:text-foreground"
+                >
+                  {open ? <ChevronDown className="w-3.5 h-3.5" /> : (isRTL ? <ChevronLeft className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />)}
+                </button>
+              )}
+            </div>
+
+            {hasKids && open && (
+              <div className="ms-3 ps-2 space-y-0.5 mt-0.5 border-s border-border/50">
+                {kids.map((child) => {
+                  const cCount = getCount(child);
+                  const cSel = isSelected(child);
+                  return (
+                    <button
+                      key={child.id}
+                      type="button"
+                      onClick={() => toggleSelect(child)}
+                      className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors min-h-[32px] ${
+                        cSel
+                          ? 'bg-accent/12 text-accent font-semibold'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                      }`}
+                      aria-pressed={cSel}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0 opacity-50" />
+                      <span className="truncate text-start flex-1">{getName(child)}</span>
+                      <span className="text-[10px] tech-content opacity-70">{cCount}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
