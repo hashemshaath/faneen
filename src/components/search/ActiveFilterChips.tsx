@@ -40,6 +40,16 @@ export const ActiveFilterChips = ({
     });
   }
 
+  if (filters.serviceCategoryId !== 'all') {
+    const cat = categories?.find(c => c.id === filters.serviceCategoryId);
+    const label = cat ? (language === 'ar' ? cat.name_ar : cat.name_en) : filters.serviceCategoryId;
+    chips.push({
+      key: 'service-cat',
+      label: `${isRTL ? 'تخصص خدمة' : 'Service'}: ${label}`,
+      onRemove: () => onFilterChange('serviceCategoryId', 'all'),
+    });
+  }
+
   if (filters.cityId !== 'all') {
     const city = cities?.find(c => c.id === filters.cityId);
     chips.push({
