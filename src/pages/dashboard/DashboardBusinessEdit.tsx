@@ -500,6 +500,12 @@ const DashboardBusinessEdit: React.FC = () => {
         {/* Audit log */}
         <AuditLogPanel businessId={form.id} isRTL={isRTL} />
 
+        {/* Business barcode + 30x20 cm printable sticker */}
+        <BusinessBarcodeCard
+          businessId={form.id}
+          businessName={isRTL ? form.name_ar : (form.name_en || form.name_ar)}
+        />
+
         {/* System metadata */}
         <Card className="bg-muted/30">
           <CardHeader className="pb-2"><CardTitle className="text-sm">{t(isRTL, 'بيانات النظام', 'System metadata')}</CardTitle></CardHeader>
