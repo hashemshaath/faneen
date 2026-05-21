@@ -2,6 +2,8 @@ import { Layers, Shield, Building2, Wrench, Users, ArrowRight, ArrowLeft, Zap, P
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Link } from "react-router-dom";
+import { useCategoryCounts } from '@/services/categories/useCategoryCounts';
+
 
 import catAluminum from "@/assets/cat-aluminum.webp";
 import catIron from "@/assets/cat-iron.webp";
@@ -29,6 +31,7 @@ export const CategoriesSection = () => {
   const { t, isRTL } = useLanguage();
   const { ref: visRef, isVisible } = useScrollAnimation();
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
+  const { byId } = useCategoryCounts();
 
   return (
     <section id="categories" className="relative py-14 sm:py-24 bg-background overflow-hidden">
@@ -58,7 +61,9 @@ export const CategoriesSection = () => {
 
         {/* Grid */}
         <div ref={visRef} className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
-          {categories.map((cat, i) => (
+          {categories.map((cat, i) => {
+            const count = byId.get(cat.categoryId)?.providers_count;
+            return (
             <Link
               to={`/search?category=${cat.categoryId}`}
               key={cat.titleKey}
@@ -90,6 +95,11 @@ export const CategoriesSection = () => {
                   <h3 className="font-heading font-bold text-[13.5px] text-white leading-tight line-clamp-1 drop-shadow">
                     {t(cat.titleKey)}
                   </h3>
+                  {typeof count === 'number' && count > 0 && (
+                    <p className="font-body text-[11px] text-white/80 drop-shadow mt-0.5">
+                      {isRTL ? `${count} مزود` : `${count} providers`}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -101,6 +111,11 @@ export const CategoriesSection = () => {
                 <p className="font-body text-muted-foreground text-[13px] lg:text-sm leading-relaxed mt-1.5 line-clamp-2">
                   {t(cat.descKey)}
                 </p>
+                {typeof count === 'number' && count > 0 && (
+                  <span className="font-body text-[11px] text-muted-foreground/60 mt-1">
+                    {isRTL ? `${count} مزود` : `${count} providers`}
+                  </span>
+                )}
                 <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
                   <span className="font-body text-[12.5px] font-semibold text-primary tracking-wide">
                     {isRTL ? 'استكشف القسم' : 'Explore'}
@@ -119,7 +134,8 @@ export const CategoriesSection = () => {
                 <ArrowIcon className="w-3.5 h-3.5 text-primary shrink-0 ms-2" />
               </div>
             </Link>
-          ))}
+          );
+        })}
         </div>
       </div>
     </section>
