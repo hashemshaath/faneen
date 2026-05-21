@@ -9,7 +9,7 @@
 import React, { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, Building2, ExternalLink, FileCheck2, Loader2, MapPin, ShieldCheck, ListChecks, CheckCircle2, Clock } from 'lucide-react';
+import { AlertCircle, Building2, ExternalLink, FileCheck2, Loader2, MapPin, ShieldCheck, ListChecks, CheckCircle2, Clock, Inbox, Hammer, ChefHat, Frame } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -202,9 +202,19 @@ const ResolvedCard: React.FC<ResolvedCardProps> = ({ data, isRTL }) => {
         is_closed: boolean;
       }>;
       contracts_counts?: { open: number; closed: number; total: number };
+      lead_requests?: Array<{
+        ref_id: string | null;
+        subject: string | null;
+        sector: 'aluminum' | 'blacksmith' | 'kitchens' | string;
+        status: string;
+        created_at: string;
+      }>;
+      lead_counts?: { aluminum: number; blacksmith: number; kitchens: number; total: number };
     };
     const contracts = Array.isArray(biz.contracts) ? biz.contracts : [];
     const counts = biz.contracts_counts || { open: 0, closed: 0, total: contracts.length };
+    const leadRequests = Array.isArray(biz.lead_requests) ? biz.lead_requests : [];
+    const leadCounts = biz.lead_counts || { aluminum: 0, blacksmith: 0, kitchens: 0, total: leadRequests.length };
     const fmtDate = (d: string | null) => {
       if (!d) return '—';
       try {
@@ -230,6 +240,31 @@ const ResolvedCard: React.FC<ResolvedCardProps> = ({ data, isRTL }) => {
       : s === 'pending_approval' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30'
       : s === 'disputed' ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30'
       : 'bg-muted text-muted-foreground border-border/50';
+    const sectorMeta = (s: string): { label: string; icon: React.ElementType; tone: string } => {
+      switch (s) {
+        case 'aluminum':
+          return { label: bi('ألمنيوم', 'Aluminum'), icon: Frame, tone: 'bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/30' };
+        case 'blacksmith':
+          return { label: bi('حدادة', 'Blacksmith'), icon: Hammer, tone: 'bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/30' };
+        case 'kitchens':
+          return { label: bi('مطابخ', 'Kitchens'), icon: ChefHat, tone: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30' };
+        default:
+          return { label: s, icon: Inbox, tone: 'bg-muted text-muted-foreground border-border/50' };
+      }
+    };
+    const leadStatusLabel = (s: string) => {
+      const map: Record<string, [string, string]> = {
+        new: ['جديد', 'New'],
+        viewed: ['تمت المشاهدة', 'Viewed'],
+        contacted: ['تم التواصل', 'Contacted'],
+        quoted: ['تم التسعير', 'Quoted'],
+        needs_info: ['بانتظار معلومات', 'Needs info'],
+        qualified: ['مؤهل', 'Qualified'],
+        accepted: ['مقبول', 'Accepted'],
+      };
+      const [ar, en] = map[s] || [s, s];
+      return bi(ar, en);
+    };
     // Show explicit redirect card (avoid surprise navigation in QA)
     return (
       <>
@@ -314,6 +349,78 @@ const ResolvedCard: React.FC<ResolvedCardProps> = ({ data, isRTL }) => {
             {bi(
               'صفحة تحقق عامة — لا تُعرض المبالغ أو بيانات العملاء أو بنود العقود.',
               'Public verification page — amounts, client data, and contract terms are not shown.',
+            )}
+          </p>
+        </section>
+      )}
+
+      {leadCounts.total > 0 && (
+        <section className="p-5 rounded-xl border border-border/40 bg-card space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Inbox className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-semibold">
+                {bi('طلبات العقود المفتوحة', 'Open contract requests')}
+              </h2>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(['aluminum','blacksmith','kitchens'] as const).map((sec) => {
+                const meta = sectorMeta(sec);
+                const Icon = meta.icon;
+                const n = leadCounts[sec] || 0;
+                if (n === 0) return null;
+                return (
+                  <Badge key={sec} variant="outline" size="sm" className={`text-[10px] gap-1 ${meta.tone}`}>
+                    <Icon className="w-3 h-3" />
+                    {meta.label}: {n}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+
+          <ul className="space-y-2">
+            {leadRequests.map((lr, idx) => {
+              const meta = sectorMeta(lr.sector);
+              const Icon = meta.icon;
+              return (
+                <li
+                  key={lr.ref_id || idx}
+                  className="p-3 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge variant="outline" size="sm" className={`text-[10px] gap-1 ${meta.tone}`}>
+                          <Icon className="w-3 h-3" />
+                          {meta.label}
+                        </Badge>
+                        {lr.ref_id && (
+                          <span className="text-[10px] text-muted-foreground tech-content" dir="ltr">
+                            {lr.ref_id}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-semibold truncate mt-1.5" title={lr.subject || ''}>
+                        {lr.subject || bi('طلب عقد', 'Contract request')}
+                      </p>
+                    </div>
+                    <Badge variant="outline" size="sm" className="text-[10px]">
+                      {leadStatusLabel(lr.status)}
+                    </Badge>
+                  </div>
+                  <div className="mt-2 flex items-center gap-3 text-[10px] text-muted-foreground flex-wrap">
+                    <span>{bi('التاريخ', 'Date')}: <span className="tech-content">{fmtDate(lr.created_at)}</span></span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="text-[10px] text-muted-foreground bg-info/5 border border-info/20 rounded-md p-2 leading-relaxed">
+            {bi(
+              'بيانات العملاء وأرقام التواصل ومحتوى الطلب لا تُعرض في الصفحة العامة.',
+              'Customer details, contact numbers, and request content are not shown on this public page.',
             )}
           </p>
         </section>
