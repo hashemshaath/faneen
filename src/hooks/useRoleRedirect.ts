@@ -21,8 +21,8 @@ export const useRoleRedirect = () => {
     // Provider → provider dashboard
     if (isProvider) return '/dashboard';
 
-    // Individual → home
-    return '/';
+    // Individual → user dashboard
+    return '/dashboard';
   }, [profile, isAdmin, isSuperAdmin, isProvider]);
 
   const redirectByRole = useCallback(() => {
