@@ -31,6 +31,7 @@ import { AuditLogPanel } from '@/components/dashboard/business-edit/AuditLogPane
 import { validateBusinessForm, issuesByKey, errorCount } from '@/components/dashboard/business-edit/validation';
 import { ValidationBanner, FieldError } from '@/components/dashboard/business-edit/ValidationBanner';
 import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
+import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 
 interface RefRow { id: string; name_ar: string; name_en: string }
 interface CityRow extends RefRow { country_id: string }
