@@ -67,14 +67,18 @@ describe('callRpc / safeRpc', () => {
   });
 
   it('safeRpc returns ok:false with normalized error', async () => {
-    const r = await safeRpc(Promise.resolve({ data: null, error: { code: 'PGRST116', message: 'no rows' } }));
-    if (r.ok) throw new Error('expected error');
-    expect(r.error.code).toBe('NOT_FOUND');
+    const r = await safeRpc<string>(Promise.resolve({ data: null, error: { code: 'PGRST116', message: 'no rows' } }));
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error.code).toBe('NOT_FOUND');
+    }
   });
 
   it('safeRpc catches thrown rejection', async () => {
-    const r = await safeRpc(Promise.reject(new TypeError('Failed to fetch')));
-    if (r.ok) throw new Error('expected error');
-    expect(r.error.code).toBe('NETWORK_ERROR');
+    const r = await safeRpc<string>(Promise.reject(new TypeError('Failed to fetch')));
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error.code).toBe('NETWORK_ERROR');
+    }
   });
 });
