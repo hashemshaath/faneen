@@ -4,7 +4,6 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { getMyQuoteRequestDetail, listQuoteRequestFiles } from '@/modules/leads/services/detail';
 import { updateMyQuoteRequest } from '@/modules/leads/services/mutations';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,8 +25,10 @@ import {
   QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_LABEL_EN, QUOTE_STATUS_DESC_AR, QUOTE_STATUS_TONE,
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
   TIMELINE_LABEL_AR, SECTOR_LABEL_AR,
-  QUOTE_BUCKET, createSignedQuoteFileUrl, formatFileSize, type QuoteStatus,
+  createSignedQuoteFileUrl, formatFileSize, type QuoteStatus,
 } from '@/lib/quoteRequests';
+import { uploadQuoteRequestFile } from '@/modules/quotes/services/uploadQuoteRequestFile';
+import { createQuoteRequestFileRecord } from '@/modules/quotes/services/createQuoteRequestFileRecord';
 
 interface QuoteRow {
   id: string;
@@ -185,19 +186,26 @@ const QuoteRequestDetails: React.FC = () => {
     for (let i = 0; i < toUpload.length; i++) {
       const f = toUpload[i];
       const path = `${quote.id}/${Date.now()}-${i}-${safeFileName(f.name)}`;
-      const { error: upErr } = await supabase.storage
-        .from(QUOTE_BUCKET)
-        .upload(path, f, { upsert: false, contentType: f.type || undefined });
-      if (upErr) { failed++; }
-      else {
-        await supabase.from('quote_request_files').insert({
-          quote_request_id: quote.id,
-          user_id: user?.id ?? null,
-          file_name: f.name,
-          file_path: path,
-          file_size: f.size,
-          file_type: f.type || null,
-        });
+      let uploaded = true;
+      try {
+        await uploadQuoteRequestFile({ path, file: f });
+      } catch {
+        uploaded = false;
+        failed++;
+      }
+      if (uploaded) {
+        try {
+          await createQuoteRequestFileRecord({
+            quote_request_id: quote.id,
+            user_id: user?.id ?? null,
+            file_name: f.name,
+            file_path: path,
+            file_size: f.size,
+            file_type: f.type || null,
+          });
+        } catch {
+          // preserve prior fire-and-forget semantics — insert errors were not checked
+        }
       }
       setUploading({ done: i + 1, total: toUpload.length });
     }
