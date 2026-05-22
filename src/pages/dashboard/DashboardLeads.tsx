@@ -16,6 +16,7 @@ import { LeadDetailPanel, type LeadRow } from '@/components/leads/LeadDetailPane
 import { trackEvent } from '@/lib/analytics-events';
 import { listProviderLeadRequests } from '@/modules/leads/services/detail';
 import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
+import { notifyCustomerLeadUpdate } from '@/modules/leads/services/notifyCustomerLeadUpdate';
 
 const FILTERS: Array<{ key: 'all' | LeadStatus; ar: string; en: string }> = [
   { key: 'all',        ar: 'الكل',           en: 'All' },
@@ -93,9 +94,7 @@ const DashboardLeads: React.FC = () => {
       await updateLeadRequestStatus(id, next);
       // Fire-and-forget lifecycle notifier — must not block the optimistic UX.
       try {
-        await supabase.functions.invoke('notify-customer-lead-update', {
-          body: { lead_id: id, status: next },
-        });
+        await notifyCustomerLeadUpdate({ lead_id: id, status: next });
       } catch { /* fail-soft */ }
       // SR-3A: when provider engages, ensure a conversation exists so both
       // sides can chat. Fail-soft — never block status update.
@@ -182,9 +181,7 @@ const DashboardLeads: React.FC = () => {
       });
       // Lifecycle email + in-app notification (fail-soft).
       try {
-        await supabase.functions.invoke('notify-customer-lead-update', {
-          body: { lead_id: input.id, status: 'quoted' },
-        });
+        await notifyCustomerLeadUpdate({ lead_id: input.id, status: 'quoted' });
       } catch { /* fail-soft */ }
       // Ensure conversation exists for registered customer (fail-soft).
       const lead = leads?.find((l) => l.id === input.id);
