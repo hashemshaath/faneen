@@ -28,6 +28,8 @@ import {
   TIMELINE_LABEL_AR, SECTOR_LABEL_AR,
   QUOTE_BUCKET, createSignedQuoteFileUrl, formatFileSize, type QuoteStatus,
 } from '@/lib/quoteRequests';
+import { uploadQuoteRequestFile } from '@/modules/quotes/services/uploadQuoteRequestFile';
+import { createQuoteRequestFileRecord } from '@/modules/quotes/services/createQuoteRequestFileRecord';
 
 interface QuoteRow {
   id: string;
