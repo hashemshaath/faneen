@@ -21,7 +21,8 @@
     "test:contracts-prelaunch": "bash scripts/contracts-prelaunch-smoke.sh",
     "verify:pdf-arabic": "node scripts/verify-pdf-arabic.mjs",
     "broken-links-audit": "node scripts/broken-links-audit.mjs",
-    "sitemap-integrity-audit": "node scripts/sitemap-integrity-audit.mjs"
+    "sitemap-integrity-audit": "node scripts/sitemap-integrity-audit.mjs",
+    "transactional-email-isolation-audit": "node scripts/transactional-email-isolation-audit.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
