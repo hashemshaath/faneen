@@ -135,12 +135,15 @@ const DashboardSettings = () => {
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
-      const { error } = await supabase.from('profiles').update({
-        full_name: profileForm.full_name.trim(),
-        phone: profileForm.phone.trim(),
-        email: profileForm.email.trim(),
-        avatar_url: profileForm.avatar_url,
-      }).eq('user_id', user.id);
+      const { error } = await updateProfile({
+        userId: user.id,
+        values: {
+          full_name: profileForm.full_name.trim(),
+          phone: profileForm.phone.trim(),
+          email: profileForm.email.trim(),
+          avatar_url: profileForm.avatar_url,
+        },
+      });
       if (error) throw error;
     },
     onSuccess: async () => {

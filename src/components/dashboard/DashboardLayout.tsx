@@ -115,7 +115,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       const { error: uploadError } = await supabase.storage.from('business-assets').upload(path, compressed, { upsert: true, contentType: compressed.type });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('business-assets').getPublicUrl(path);
-      const { error: updateError } = await supabase.from('profiles').update({ avatar_url: urlData.publicUrl }).eq('user_id', user.id);
+      const { error: updateError } = await updateProfile({ userId: user.id, values: { avatar_url: urlData.publicUrl } });
       if (updateError) throw updateError;
       await refreshProfile();
       toast.success(isRTL ? 'تم تحديث الصورة الشخصية' : 'Avatar updated');
