@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ImageUpload } from '@/components/ui/image-upload';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
+import { updateProfile } from '@/modules/users';
 import { toast } from 'sonner';
 import {
   User, Lock, Bell, Palette, Sun, Moon, Monitor, Check, CreditCard,

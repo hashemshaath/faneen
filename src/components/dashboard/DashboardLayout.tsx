@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
+import { updateProfile } from '@/modules/users';
 import { toast } from 'sonner';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { ActiveBusinessSwitcher } from './ActiveBusinessSwitcher';
