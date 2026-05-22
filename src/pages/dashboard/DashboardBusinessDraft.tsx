@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { updateBusinessById } from '@/modules/businesses';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -99,11 +100,7 @@ const DashboardBusinessDraft: React.FC = () => {
         acc[k] = v.length > 0 ? v : null;
         return acc;
       }, {});
-      const { error } = await supabase
-        .from('businesses')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .update(payload as any)
-        .eq('id', business.id);
+      const { error } = await updateBusinessById({ id: business.id, values: payload });
       if (error) throw error;
       toast.success(isRTL ? 'تم حفظ بيانات المنشأة' : 'Business details saved');
       await refetch();

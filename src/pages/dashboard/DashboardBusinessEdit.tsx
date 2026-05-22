@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
+import { updateBusinessById } from '@/modules/businesses';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -168,7 +169,7 @@ const DashboardBusinessEdit: React.FC = () => {
         toast.error(t(isRTL, 'اسم المنشأة (عربي) مطلوب', 'Business name (Arabic) is required'));
         setSaving(false); return;
       }
-      const { error: updateError } = await supabase.from('businesses').update(payload).eq('id', form.id);
+      const { error: updateError } = await updateBusinessById({ id: form.id, values: payload });
       if (updateError) throw updateError;
       toast.success(t(isRTL, 'تم حفظ التعديلات بنجاح', 'Changes saved successfully'));
       setDirty(false);
