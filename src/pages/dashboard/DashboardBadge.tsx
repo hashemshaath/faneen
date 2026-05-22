@@ -114,10 +114,10 @@ const DashboardBadge: React.FC = () => {
     enabled: !!user?.id,
     queryFn: async () => {
       // Owned
-      const ownedReq = supabase
-        .from('businesses')
-        .select('id, username, name_ar, name_en, is_verified')
-        .eq('user_id', user!.id);
+      const ownedReq = listOwnerBusinesses<BusinessRow>({
+        userId: user!.id,
+        select: 'id, username, name_ar, name_en, is_verified',
+      });
       // Staff-linked → fetch business ids first, then their rows
       const staffReq = supabase
         .from('business_staff')
@@ -129,10 +129,10 @@ const DashboardBadge: React.FC = () => {
       const staffIds = (staffRows ?? []).map((r) => r.business_id);
       let staffBusinesses: BusinessRow[] = [];
       if (staffIds.length > 0) {
-        const { data } = await supabase
-          .from('businesses')
-          .select('id, username, name_ar, name_en, is_verified')
-          .in('id', staffIds);
+        const { data } = await listBusinessesByIds<BusinessRow>({
+          ids: staffIds,
+          select: 'id, username, name_ar, name_en, is_verified',
+        });
         staffBusinesses = (data ?? []) as BusinessRow[];
       }
       const merged = [...((owned ?? []) as BusinessRow[]), ...staffBusinesses];
