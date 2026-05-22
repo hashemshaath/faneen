@@ -101,17 +101,15 @@ const Contact = () => {
       });
 
       // 3. Send notification email to admin
-      await supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'contact-admin-notification',
-          recipientEmail: 'info@qitaat.com', // fallback; template.to overrides
-          idempotencyKey: `contact-admin-${id}`,
-          templateData: {
-            name: form.name.trim(),
-            email: form.email.trim().toLowerCase(),
-            subject: form.subject.trim(),
-            message: form.message.trim(),
-          },
+      await sendTransactionalEmail({
+        templateName: 'contact-admin-notification',
+        recipientEmail: 'info@qitaat.com', // fallback; template.to overrides
+        idempotencyKey: `contact-admin-${id}`,
+        templateData: {
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
+          subject: form.subject.trim(),
+          message: form.message.trim(),
         },
       });
 
