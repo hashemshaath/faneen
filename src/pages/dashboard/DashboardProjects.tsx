@@ -5,6 +5,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getOwnerBusiness } from '@/modules/businesses';
 import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -207,7 +208,10 @@ const DashboardProjects = () => {
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id').eq('user_id', user!.id).maybeSingle();
+      const { data } = await getOwnerBusiness<{ id: string }>({
+        userId: user!.id,
+        select: 'id',
+      });
       return data;
     },
     enabled: !!user,

@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { supabase } from '@/integrations/supabase/client';
+import { getOwnerBusiness } from '@/modules/businesses';
 import { toast } from 'sonner';
 import {
   User, Lock, Bell, Palette, Sun, Moon, Monitor, Check, CreditCard,
@@ -85,7 +86,10 @@ const DashboardSettings = () => {
     queryKey: ['my-business-for-settings'],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await supabase.from('businesses').select('id, name_ar, name_en').eq('user_id', user.id).maybeSingle();
+      const { data } = await getOwnerBusiness<{ id: string; name_ar: string; name_en: string }>({
+        userId: user.id,
+        select: 'id, name_ar, name_en',
+      });
       return data;
     },
     enabled: !!user,

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getOwnerBusiness } from '@/modules/businesses';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -59,7 +60,11 @@ const DashboardBookings = () => {
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id, name_ar, name_en').eq('user_id', user!.id).eq('is_active', true).maybeSingle();
+      const { data } = await getOwnerBusiness<{ id: string; name_ar: string; name_en: string }>({
+        userId: user!.id,
+        select: 'id, name_ar, name_en',
+        activeOnly: true,
+      });
       return data;
     },
     enabled: !!user,

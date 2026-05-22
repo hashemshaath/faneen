@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { getOwnerBusiness } from '@/modules/businesses';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +45,19 @@ export default function ProviderDashboardView({
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('*').eq('user_id', user.id).limit(1).maybeSingle();
+      const { data } = await getOwnerBusiness<{
+        id: string;
+        logo_url: string | null;
+        name_ar: string | null;
+        name_en: string | null;
+        is_verified: boolean | null;
+        membership_tier: string | null;
+        [key: string]: unknown;
+      }>({
+        userId: user.id,
+        select: '*',
+        limit: 1,
+      });
       return data;
     },
     enabled: !!user,

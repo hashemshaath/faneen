@@ -4,6 +4,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getOwnerBusiness } from '@/modules/businesses';
 import { createNotification, createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -498,7 +499,12 @@ const DashboardContracts = () => {
   const { data: businessId } = useQuery({
     queryKey: ['my-business-id-contracts', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id').eq('user_id', user!.id).order('created_at', { ascending: true }).limit(1).maybeSingle();
+      const { data } = await getOwnerBusiness<{ id: string }>({
+        userId: user!.id,
+        select: 'id',
+        orderBy: { column: 'created_at', ascending: true },
+        limit: 1,
+      });
       return data?.id ?? null;
     },
     enabled: !!user,
