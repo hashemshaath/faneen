@@ -18,3 +18,7 @@ export { updateProfileById } from './services/updateProfileById';
 export type { UpdateProfileByIdOptions } from './services/updateProfileById';
 export { updateProfilesByIds } from './services/updateProfilesByIds';
 export type { UpdateProfilesByIdsOptions } from './services/updateProfilesByIds';
+export { insertProfile } from './services/insertProfile';
+export type { InsertProfileOptions } from './services/insertProfile';
+export { updateOnboardingProgress } from './services/updateOnboardingProgress';
+export type { UpdateOnboardingProgressOptions } from './services/updateOnboardingProgress';
