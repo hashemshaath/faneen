@@ -5,6 +5,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useEffect, useRef, useState, useCallback, memo, useMemo, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { listActiveCategories } from "@/modules/categories";
+import { listActiveCities } from "@/modules/locations";
 import {
   getSearchHistory,
   addToSearchHistory,
@@ -381,7 +383,7 @@ export const HeroSection = () => {
   const { data: categories = [] } = useQuery({
     queryKey: ['nav-categories'],
     queryFn: async () => {
-      const { data } = await supabase.from('categories').select('id, name_ar, name_en, slug').eq('is_active', true).order('sort_order').limit(6);
+      const { data } = await listActiveCategories({ select: 'id, name_ar, name_en, slug', limit: 6 });
       return data || [];
     },
   });
@@ -389,7 +391,7 @@ export const HeroSection = () => {
   const { data: cities = [] } = useQuery({
     queryKey: ['nav-cities'],
     queryFn: async () => {
-      const { data } = await supabase.from('cities').select('id, name_ar, name_en').eq('is_active', true).limit(10);
+      const { data } = await listActiveCities({ order: null, limit: 10 });
       return data || [];
     },
   });
