@@ -1984,11 +1984,7 @@ const DashboardContracts = () => {
                   onSelect={(siteId) => setSelectedSiteId(siteId)}
                   onPersistSelect={async (siteId) => {
                     if (!editingId) return;
-                    const { error } = await supabase.rpc('set_contract_execution_site', {
-                      _contract_id: editingId,
-                      _site_id: siteId ?? undefined,
-                    });
-                    if (error) throw error;
+                    await setContractExecutionSite(editingId, siteId ?? undefined);
                     queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
                   }}
                 />
