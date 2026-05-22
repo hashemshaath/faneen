@@ -15,6 +15,8 @@ import {
   type CreateNotificationPayload,
 } from '../createNotification';
 
+const flush = () => new Promise((r) => setTimeout(r, 0));
+
 const basePayload: CreateNotificationPayload = {
   user_id: 'u-1',
   title_ar: 'عنوان',
@@ -103,8 +105,7 @@ describe('createNotificationFireAndForget', () => {
   it('delegates to createNotification with the exact payload', async () => {
     insertMock.mockResolvedValue({ data: null, error: null });
     createNotificationFireAndForget(basePayload, '[test]');
-    // Wait a microtask for the internal promise to flush.
-    await Promise.resolve();
+    await flush();
     expect(fromMock).toHaveBeenCalledWith('notifications');
     expect(insertMock).toHaveBeenCalledWith(basePayload);
   });
@@ -114,8 +115,7 @@ describe('createNotificationFireAndForget', () => {
     const err = { message: 'denied' };
     insertMock.mockResolvedValue({ data: null, error: err });
     createNotificationFireAndForget(basePayload, '[ContractMilestone]');
-    await Promise.resolve();
-    await Promise.resolve();
+    await flush();
     expect(warn).toHaveBeenCalledWith('[ContractMilestone]', err);
     warn.mockRestore();
   });
@@ -125,8 +125,7 @@ describe('createNotificationFireAndForget', () => {
     const boom = new Error('boom');
     insertMock.mockRejectedValue(boom);
     createNotificationFireAndForget(basePayload, '[ContractPayment]');
-    await Promise.resolve();
-    await Promise.resolve();
+    await flush();
     expect(warn).toHaveBeenCalledWith('[ContractPayment]', boom);
     warn.mockRestore();
   });
@@ -135,8 +134,7 @@ describe('createNotificationFireAndForget', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     insertMock.mockResolvedValue({ data: [{ id: 'n-1' }], error: null });
     createNotificationFireAndForget(basePayload, '[ok]');
-    await Promise.resolve();
-    await Promise.resolve();
+    await flush();
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
