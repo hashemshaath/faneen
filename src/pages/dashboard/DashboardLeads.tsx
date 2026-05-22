@@ -17,6 +17,7 @@ import { trackEvent } from '@/lib/analytics-events';
 import { listProviderLeadRequests } from '@/modules/leads/services/detail';
 import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
 import { notifyCustomerLeadUpdate } from '@/modules/leads/services/notifyCustomerLeadUpdate';
+import { createOrGetLeadConversation } from '@/modules/leads/services/createOrGetLeadConversation';
 
 const FILTERS: Array<{ key: 'all' | LeadStatus; ar: string; en: string }> = [
   { key: 'all',        ar: 'الكل',           en: 'All' },
@@ -102,7 +103,7 @@ const DashboardLeads: React.FC = () => {
         try {
           const lead = leads?.find((l) => l.id === id);
           if (lead?.user_id) {
-            const { data: convId } = await supabase.rpc('create_or_get_lead_conversation', { _lead_id: id });
+            const { data: convId } = await createOrGetLeadConversation({ _lead_id: id });
             if (convId) {
               safeTrack('service_request_conversation_created', {
                 source_page: 'dashboard_leads',
@@ -148,7 +149,7 @@ const DashboardLeads: React.FC = () => {
 
   const ensureConversation = useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase.rpc('create_or_get_lead_conversation', { _lead_id: id });
+      const { data, error } = await createOrGetLeadConversation({ _lead_id: id });
       if (error) throw error;
       return data as string;
     },
@@ -186,7 +187,7 @@ const DashboardLeads: React.FC = () => {
       // Ensure conversation exists for registered customer (fail-soft).
       const lead = leads?.find((l) => l.id === input.id);
       if (lead?.user_id) {
-        try { await supabase.rpc('create_or_get_lead_conversation', { _lead_id: input.id }); } catch { /* fail-soft */ }
+        try { await createOrGetLeadConversation({ _lead_id: input.id }); } catch { /* fail-soft */ }
       }
       return input;
     },

@@ -73,8 +73,9 @@ describe('DashboardLeads.tsx regression (E1)', () => {
     expect(src).toMatch(/supabase\.from\(\s*['"]business_staff['"]\s*\)/);
   });
 
-  it('leaves create_or_get_lead_conversation RPC untouched (deferred E3)', () => {
-    expect(src).toMatch(/supabase\.rpc\(\s*['"]create_or_get_lead_conversation['"]/);
+  it('no longer directly calls create_or_get_lead_conversation RPC (E3 complete)', () => {
+    expect(src).not.toMatch(/supabase\.rpc\(\s*['"]create_or_get_lead_conversation['"]/);
+    expect(src).toMatch(/createOrGetLeadConversation\(/);
   });
 });
 
