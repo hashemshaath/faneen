@@ -24,6 +24,7 @@ import { getSectorById, type SectorId } from '@/data/onboarding-sectors';
 import { trackProviderApproved, trackProviderRejected, trackProviderNeedsChanges } from '@/lib/analytics-events';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
+import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 
 type ApprovalStatus =
   | 'draft' | 'submitted' | 'under_review'
@@ -212,17 +213,15 @@ export default function AdminProviderReview() {
           // Only the rejection / revision templates show notes; the
           // approved template never displays them.
           const includeNotes = vars.status === 'rejected' || vars.status === 'needs_changes';
-          await supabase.functions.invoke('send-transactional-email', {
-            body: {
-              templateName: copy.template,
-              recipientEmail: target.email,
-              idempotencyKey: `provider-${vars.status}-${target.id}`,
-              templateData: {
-                recipientName: target.name_ar ?? target.name_en ?? undefined,
-                businessName: target.name_ar ?? target.name_en ?? undefined,
-                username: target.username ?? undefined,
-                notes: includeNotes ? (vars.notes ?? undefined) : undefined,
-              },
+          await sendTransactionalEmail({
+            templateName: copy.template,
+            recipientEmail: target.email,
+            idempotencyKey: `provider-${vars.status}-${target.id}`,
+            templateData: {
+              recipientName: target.name_ar ?? target.name_en ?? undefined,
+              businessName: target.name_ar ?? target.name_en ?? undefined,
+              username: target.username ?? undefined,
+              notes: includeNotes ? (vars.notes ?? undefined) : undefined,
             },
           });
         } catch (err) {
