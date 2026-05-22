@@ -4,6 +4,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listAdminBusinesses } from '@/modules/businesses';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -316,9 +317,11 @@ const AdminCategories = () => {
   const { data: businessCounts = [] } = useQuery({
     queryKey: ['admin-category-business-counts'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('businesses').select('category_id');
+      const { data, error } = await listAdminBusinesses<{ category_id: string | null }>({
+        select: 'category_id',
+      });
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
   });
 
