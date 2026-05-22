@@ -9,6 +9,8 @@ export { getBusinessForContract } from './services/getBusinessForContract';
 export type { GetBusinessForContractOptions } from './services/getBusinessForContract';
 export { getOwnerBusiness, getOwnerBusinessId } from './services/getOwnerBusiness';
 export type { GetOwnerBusinessOptions } from './services/getOwnerBusiness';
+export { listOwnerBusinesses } from './services/listOwnerBusinesses';
+export type { ListOwnerBusinessesOptions } from './services/listOwnerBusinesses';
 export { getActiveBusinessStaffMembership } from './services/getActiveBusinessStaffMembership';
 export type { GetActiveBusinessStaffMembershipOptions } from './services/getActiveBusinessStaffMembership';
 export { updateBusinessById } from './services/updateBusinessById';
