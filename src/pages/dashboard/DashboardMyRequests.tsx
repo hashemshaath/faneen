@@ -5,6 +5,11 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  listMyLeadRequests,
+  listMyQuoteRequests,
+  countQuoteRequestFiles,
+} from '@/modules/leads/services/list';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -98,49 +103,20 @@ const DashboardMyRequests: React.FC = () => {
   const { data: leads, isLoading } = useQuery({
     queryKey: ['my-service-requests', user?.id],
     enabled: !!user?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('lead_requests')
-        .select('id, ref_id, business_id, user_id, subject, status, contact_preference, budget_range, project_scope, created_at, updated_at, viewed_at, needs_info_at, accepted_at, rejected_at, closed_at, cancelled_at, conversation_id, quoted_at, quote_amount, quote_currency, quote_note, quote_valid_until')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: false })
-        .limit(200);
-      if (error) throw error;
-      return (data ?? []) as MyLeadRow[];
-    },
+    queryFn: () => listMyLeadRequests(user!.id) as unknown as Promise<MyLeadRow[]>,
   });
 
   const { data: quoteRequests, isLoading: loadingQuotes } = useQuery({
     queryKey: ['my-quote-requests', user?.id],
     enabled: !!user?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_requests')
-        .select('id, sector, city, district, project_description, status, preferred_contact_method, created_at, updated_at')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: false })
-        .limit(100);
-      if (error) throw error;
-      return (data ?? []) as QuoteRequestRow[];
-    },
+    queryFn: () => listMyQuoteRequests(user!.id) as unknown as Promise<QuoteRequestRow[]>,
   });
 
   const quoteIds = useMemo(() => (quoteRequests ?? []).map((q) => q.id), [quoteRequests]);
   const { data: quoteFileCounts } = useQuery({
     queryKey: ['my-quote-file-counts', quoteIds.join(',')],
     enabled: quoteIds.length > 0,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_request_files')
-        .select('quote_request_id')
-        .in('quote_request_id', quoteIds);
-      if (error) throw error;
-      const counts = new Map<string, number>();
-      (data ?? []).forEach((r: { quote_request_id: string }) => {
-        counts.set(r.quote_request_id, (counts.get(r.quote_request_id) ?? 0) + 1);
-      });
-      return counts;
-    },
+    queryFn: () => countQuoteRequestFiles(quoteIds),
   });
 
   const businessIds = useMemo(
