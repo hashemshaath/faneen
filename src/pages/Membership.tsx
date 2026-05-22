@@ -3,6 +3,7 @@ import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
+import { createNotification } from '@/modules/notifications/services/createNotification';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
@@ -339,7 +340,7 @@ const Membership = () => {
       if (!requestId || !user) return;
       const businessName = myBusiness?.name_ar || myBusiness?.name_en || undefined;
       try {
-        await supabase.from('notifications').insert({
+        await createNotification({
           user_id: user.id,
           title_ar: 'تم استلام طلب ترقية الباقة',
           title_en: 'Upgrade request received',
@@ -460,7 +461,7 @@ const Membership = () => {
       if (!user || !subId) return;
       const businessName = myBusiness?.name_ar || myBusiness?.name_en || undefined;
       try {
-        await supabase.from('notifications').insert({
+        await createNotification({
           user_id: user.id,
           title_ar: 'تم إيقاف التجديد التلقائي',
           title_en: 'Auto-renewal cancelled',

@@ -25,6 +25,7 @@ import { trackProviderApproved, trackProviderRejected, trackProviderNeedsChanges
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
+import { createNotification } from '@/modules/notifications/services/createNotification';
 
 type ApprovalStatus =
   | 'draft' | 'submitted' | 'under_review'
@@ -190,7 +191,7 @@ export default function AdminProviderReview() {
       // 1) In-app notification (requires user_id).
       if (target.user_id) {
         try {
-          await supabase.from('notifications').insert({
+          await createNotification({
             user_id: target.user_id,
             title_ar: copy.titleAr,
             title_en: copy.titleEn,
