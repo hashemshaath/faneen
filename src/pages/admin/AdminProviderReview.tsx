@@ -6,6 +6,7 @@ import {
   AlertCircle, Loader2, Send, Globe, Tag, Lock,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { listAdminBusinesses, type ListAdminBusinessesFilter } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { maskEmail, maskPhone } from '@/lib/masking';
@@ -135,14 +136,17 @@ export default function AdminProviderReview() {
   const { data: rows, isLoading } = useQuery({
     queryKey: ['admin-provider-review', statusFilter],
     queryFn: async () => {
-      let q = supabase
-        .from('businesses')
-        .select('id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,sectors,sub_services,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date')
-        .order('submitted_at', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false })
-        .limit(200);
-      if (statusFilter !== 'all') q = q.eq('approval_status', statusFilter);
-      const { data, error } = await q;
+      const filters: ListAdminBusinessesFilter[] = [];
+      if (statusFilter !== 'all') filters.push({ column: 'approval_status', op: 'eq', value: statusFilter });
+      const { data, error } = await listAdminBusinesses({
+        select: 'id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,sectors,sub_services,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date',
+        orderBy: [
+          { column: 'submitted_at', ascending: false, nullsFirst: false },
+          { column: 'created_at', ascending: false },
+        ],
+        limit: 200,
+        filters,
+      });
       if (error) throw error;
       return (data ?? []) as unknown as ProviderRow[];
     },
