@@ -220,7 +220,7 @@ const AdminBusinesses = () => {
   const { data: businesses = [], isLoading, refetch: refetchBusinesses } = useQuery({
     queryKey: ['admin-businesses'],
     queryFn: async () => {
-      const { data, error } = await listAdminBusinesses({
+      const { data, error } = await listAdminBusinesses<Database['public']['Tables']['businesses']['Row']>({
         select: '*',
         orderBy: { column: 'created_at', ascending: false },
       });
