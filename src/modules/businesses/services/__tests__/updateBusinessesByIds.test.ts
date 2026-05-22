@@ -126,9 +126,19 @@ describe('migration regression: AdminBusinessCoordinates', () => {
   });
 });
 
+describe('migration regression: CrDocumentScanner', () => {
+  const src = readFileSync(resolve(__dirname, '../../../../components/admin/CrDocumentScanner.tsx'), 'utf8');
+  it('no longer directly updates businesses via supabase.from', () => {
+    expect(src).not.toMatch(/supabase\.from\(['"]businesses['"]\)\s*\.update/);
+  });
+  it('imports updateBusinessById from @/modules/businesses', () => {
+    expect(src).toMatch(/updateBusinessById/);
+    expect(src).toMatch(/from '@\/modules\/businesses'/);
+  });
+});
+
 describe('non-migration guard: deferred callsites untouched', () => {
   const files = [
-    'src/components/admin/CrDocumentScanner.tsx',
     'src/services/auth/authService.ts',
     'src/lib/ensure-business.ts',
   ];
