@@ -93,27 +93,8 @@ describe('P-17 owner single-row read migration', () => {
   }
 });
 
-describe('P-17 intentionally-deferred callsites remain direct', () => {
-  it('DashboardBadge owned + staff-in list reads stay direct (list shape)', () => {
-    const src = read('src/pages/dashboard/DashboardBadge.tsx');
-    expect(src).toMatch(/supabase[\s\S]*\.from\(['"]businesses['"]\)[\s\S]*select\(['"]id, username, name_ar, name_en, is_verified['"]\)/);
-    expect(src).toMatch(/\.in\(['"]id['"]/);
-  });
-  it('DashboardPrivateSectors owner list read stays direct', () => {
-    const src = read('src/pages/dashboard/DashboardPrivateSectors.tsx');
-    expect(src).toMatch(/supabase[\s\S]*\.from\(['"]businesses['"]\)[\s\S]*eq\(['"]user_id['"]/);
-    expect(src).not.toMatch(/maybeSingle/);
-  });
-  it('ProviderServiceAreas owner list read stays direct', () => {
-    const src = read('src/pages/dashboard/ProviderServiceAreas.tsx');
-    expect(src).toMatch(/supabase[\s\S]*\.from\(['"]businesses['"]\)[\s\S]*eq\(['"]user_id['"]/);
-  });
-  it('Membership owner list-style read stays direct (uses owned.data[0])', () => {
-    const src = read('src/pages/Membership.tsx');
-    expect(src).toMatch(/supabase[\s\S]*\.from\(['"]businesses['"]\)/);
-    expect(src).toContain('owned.data[0]');
-  });
-  it('ProviderMembershipCard businesses count stays direct', () => {
+describe('P-17 intentionally-deferred callsites (post-P-18)', () => {
+  it('ProviderMembershipCard businesses count stays direct (counts phase)', () => {
     const src = read('src/components/dashboard/ProviderMembershipCard.tsx');
     expect(src).toMatch(/from\(['"]businesses['"]\)[\s\S]*count: 'exact', head: true/);
   });
