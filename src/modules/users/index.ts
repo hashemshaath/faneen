@@ -8,3 +8,7 @@ export { getProfileForContractParty } from './services/getProfileForContractPart
 export type { GetProfileForContractPartyOptions } from './services/getProfileForContractParty';
 export { getProfileByEmail } from './services/getProfileByEmail';
 export type { GetProfileByEmailOptions } from './services/getProfileByEmail';
+export { countProfiles } from './services/countProfiles';
+export type { CountProfilesOptions, CountProfilesFilter } from './services/countProfiles';
+export { listProfiles } from './services/listProfiles';
+export type { ListProfilesOptions } from './services/listProfiles';
