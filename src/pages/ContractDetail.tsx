@@ -296,6 +296,8 @@ const ContractDetail = () => {
     queryKey: ['contract-business', contract?.business_id],
     queryFn: async () => {
       const { data } = await getBusinessForContract<{
+        name_ar: string;
+        name_en: string | null;
         logo_url: string | null;
         username: string | null;
         address: string | null;
