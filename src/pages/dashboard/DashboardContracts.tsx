@@ -24,6 +24,17 @@ import {
   getContractParticipantProfiles,
 } from '@/modules/contracts/services/list';
 import {
+  listMilestonesForContracts,
+  listNotesForContracts,
+  listAttachmentsForContracts,
+  listInstallmentPaymentsForContracts,
+  listMeasurementsForContracts,
+  listWarrantiesForContracts,
+  listMaintenanceRequestsForContracts,
+  listAmendmentsForContracts,
+  listLineItemsForContracts,
+} from '@/modules/contracts/services/aggregates';
+import {
   FileText, Eye, Plus, CheckCircle2, Clock, XCircle, AlertTriangle,
   Shield, DollarSign, Calendar, Users, ListChecks, StickyNote,
   Send, Phone, Mail, ChevronDown, ChevronUp, Activity,
@@ -294,94 +305,55 @@ const DashboardContracts = () => {
 
   const { data: allMilestones = [] } = useQuery({
     queryKey: ['dashboard-milestones', contractIds],
-    queryFn: async () => {
-      if (contractIds.length === 0) return [];
-      const { data } = await supabase.from('contract_milestones').select('*').in('contract_id', contractIds).order('sort_order');
-      return data ?? [];
-    },
+    queryFn: () => listMilestonesForContracts(contractIds),
     enabled: contractIds.length > 0,
   });
 
   const { data: allNotes = [] } = useQuery({
     queryKey: ['dashboard-contract-notes', contractIds],
-    queryFn: async () => {
-      if (contractIds.length === 0) return [];
-      const { data } = await supabase.from('contract_notes').select('*').in('contract_id', contractIds).order('created_at', { ascending: false }).limit(200);
-      return data ?? [];
-    },
+    queryFn: () => listNotesForContracts(contractIds),
     enabled: contractIds.length > 0,
   });
 
   const { data: allAttachments = [] } = useQuery({
     queryKey: ['dashboard-contract-attachments', contractIds],
-    queryFn: async () => {
-      if (contractIds.length === 0) return [];
-      const { data } = await supabase.from('contract_attachments').select('*').in('contract_id', contractIds).order('created_at', { ascending: false });
-      return data ?? [];
-    },
+    queryFn: () => listAttachmentsForContracts(contractIds),
     enabled: contractIds.length > 0,
   });
 
   const { data: allPayments = [] } = useQuery({
     queryKey: ['dashboard-contract-payments', contractIds],
-    queryFn: async () => {
-      if (contractIds.length === 0) return [];
-      const { data: plans } = await supabase.from('installment_plans').select('id, contract_id').in('contract_id', contractIds);
-      if (!plans || plans.length === 0) return [];
-      const planIds = plans.map(p => p.id);
-      const { data: payments } = await supabase.from('installment_payments').select('*').in('plan_id', planIds);
-      return (payments ?? []).map(p => ({ ...p, contract_id: plans.find(pl => pl.id === p.plan_id)?.contract_id }));
-    },
+    queryFn: () => listInstallmentPaymentsForContracts(contractIds),
     enabled: contractIds.length > 0,
   });
 
   const { data: allMeasurements = [] } = useQuery({
     queryKey: ['dashboard-contract-measurements', contractIds],
-    queryFn: async () => {
-      if (contractIds.length === 0) return [];
-      const { data } = await supabase.from('contract_measurements').select('*').in('contract_id', contractIds);
-      return data ?? [];
-    },
+    queryFn: () => listMeasurementsForContracts(contractIds),
     enabled: contractIds.length > 0,
   });
 
   const { data: allWarranties = [] } = useQuery({
     queryKey: ['dashboard-contract-warranties', contractIds],
-    queryFn: async () => {
-      if (contractIds.length === 0) return [];
-      const { data } = await supabase.from('warranties').select('*').in('contract_id', contractIds);
-      return data ?? [];
-    },
+    queryFn: () => listWarrantiesForContracts(contractIds),
     enabled: contractIds.length > 0,
   });
 
   const { data: allMaintenanceRequests = [] } = useQuery({
     queryKey: ['dashboard-contract-maintenance', contractIds],
-    queryFn: async () => {
-      if (contractIds.length === 0) return [];
-      const { data } = await supabase.from('maintenance_requests').select('*').in('contract_id', contractIds).order('created_at', { ascending: false });
-      return data ?? [];
-    },
+    queryFn: () => listMaintenanceRequestsForContracts(contractIds),
     enabled: contractIds.length > 0,
   });
 
   const { data: allAmendments = [] } = useQuery({
     queryKey: ['dashboard-contract-amendments', contractIds],
-    queryFn: async () => {
-      if (contractIds.length === 0) return [];
-      const { data } = await supabase.from('contract_amendments').select('*').in('contract_id', contractIds).order('created_at', { ascending: false });
-      return data ?? [];
-    },
+    queryFn: () => listAmendmentsForContracts(contractIds),
     enabled: contractIds.length > 0,
   });
 
   const { data: allLineItems = [] } = useQuery({
     queryKey: ['dashboard-contract-line-items', contractIds],
-    queryFn: async () => {
-      if (contractIds.length === 0) return [];
-      const { data } = await supabase.from('contract_line_items').select('*').in('contract_id', contractIds).order('sort_order');
-      return data ?? [];
-    },
+    queryFn: () => listLineItemsForContracts(contractIds),
     enabled: contractIds.length > 0,
   });
 
