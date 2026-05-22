@@ -12,6 +12,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { listBusinessesByIds } from '@/modules/businesses';
 import AdminClientSitesKpiGrid from '@/components/admin/client-sites/AdminClientSitesKpiGrid';
 import AdminClientSitesFilters, {
   type ActiveFilter,
@@ -149,10 +150,16 @@ const AdminClientSitesMonitoring: React.FC = () => {
     enabled: businessIds.length > 0,
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<Map<string, BusinessLogoLite>> => {
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('id, logo_url, name_ar, name_en, username')
-        .in('id', businessIds);
+      const { data, error } = await listBusinessesByIds<{
+        id: string;
+        logo_url: string | null;
+        name_ar: string | null;
+        name_en: string | null;
+        username: string | null;
+      }>({
+        ids: businessIds,
+        select: 'id, logo_url, name_ar, name_en, username',
+      });
       if (error) throw error;
       const map = new Map<string, BusinessLogoLite>();
       for (const b of (data ?? [])) {
