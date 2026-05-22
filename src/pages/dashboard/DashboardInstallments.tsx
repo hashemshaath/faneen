@@ -5,6 +5,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { hasAdminAccess } from '@/services/userRoles';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -638,8 +639,7 @@ const DashboardInstallments = () => {
   const { data: hasAdminRole } = useQuery({
     queryKey: ['user-admin-role', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('user_roles').select('role').eq('user_id', user!.id).in('role', ['admin', 'super_admin']);
-      return (data?.length || 0) > 0;
+      return await hasAdminAccess(user!.id);
     },
     enabled: !!user,
   });
