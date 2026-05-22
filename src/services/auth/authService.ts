@@ -211,7 +211,11 @@ export const authService = {
       },
       terminal: 'none',
     });
-    if (error && !error.message.includes('duplicate')) throw error;
+    const errMessage =
+      error && typeof error === 'object' && 'message' in error
+        ? String((error as { message?: unknown }).message ?? '')
+        : '';
+    if (error && !errMessage.includes('duplicate')) throw error;
 
     // Welcome-business email — fire-and-forget; idempotency key bound to
     // userId so the queue de-dupes if onboarding runs twice. Failures must
