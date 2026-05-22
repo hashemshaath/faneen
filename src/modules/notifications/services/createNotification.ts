@@ -26,13 +26,7 @@ export interface CreateNotificationPayload {
  * - Performs no payload validation, transformation, RPC, storage, or
  *   edge-function access.
  */
-type NotificationsInsertResult = ReturnType<
-  ReturnType<typeof supabase.from<'notifications'>>['insert']
->;
-
-export async function createNotification(
-  payload: CreateNotificationPayload,
-): Promise<Awaited<NotificationsInsertResult>> {
+export async function createNotification(payload: CreateNotificationPayload) {
   return supabase.from('notifications').insert(payload);
 }
 
