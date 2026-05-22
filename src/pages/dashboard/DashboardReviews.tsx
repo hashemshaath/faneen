@@ -205,7 +205,11 @@ const DashboardReviews = () => {
     queryKey: ['my-business-for-reviews', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await supabase.from('businesses').select('id').eq('user_id', user.id).limit(1).maybeSingle();
+      const { data } = await getOwnerBusiness<{ id: string }>({
+        userId: user.id,
+        select: 'id',
+        limit: 1,
+      });
       return data;
     },
     enabled: !!user,

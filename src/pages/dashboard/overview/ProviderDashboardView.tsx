@@ -45,7 +45,11 @@ export default function ProviderDashboardView({
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('*').eq('user_id', user.id).limit(1).maybeSingle();
+      const { data } = await getOwnerBusiness({
+        userId: user.id,
+        select: '*',
+        limit: 1,
+      });
       return data;
     },
     enabled: !!user,

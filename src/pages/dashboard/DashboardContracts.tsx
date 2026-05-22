@@ -499,7 +499,12 @@ const DashboardContracts = () => {
   const { data: businessId } = useQuery({
     queryKey: ['my-business-id-contracts', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id').eq('user_id', user!.id).order('created_at', { ascending: true }).limit(1).maybeSingle();
+      const { data } = await getOwnerBusiness<{ id: string }>({
+        userId: user!.id,
+        select: 'id',
+        orderBy: { column: 'created_at', ascending: true },
+        limit: 1,
+      });
       return data?.id ?? null;
     },
     enabled: !!user,

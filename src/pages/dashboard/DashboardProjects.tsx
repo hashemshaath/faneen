@@ -208,7 +208,10 @@ const DashboardProjects = () => {
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id').eq('user_id', user!.id).maybeSingle();
+      const { data } = await getOwnerBusiness<{ id: string }>({
+        userId: user!.id,
+        select: 'id',
+      });
       return data;
     },
     enabled: !!user,

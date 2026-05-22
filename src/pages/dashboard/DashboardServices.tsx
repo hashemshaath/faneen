@@ -234,7 +234,10 @@ const DashboardServices = () => {
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await supabase.from('businesses').select('id, category_id, username').eq('user_id', user.id).maybeSingle();
+      const { data } = await getOwnerBusiness<{ id: string; category_id: string | null; username: string | null }>({
+        userId: user.id,
+        select: 'id, category_id, username',
+      });
       return data;
     },
     enabled: !!user,
