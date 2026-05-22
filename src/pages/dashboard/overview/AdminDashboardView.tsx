@@ -39,7 +39,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
       const todayIso = startOfToday.toISOString();
       const fresh48hIso = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
       const [
-        users, businesses, contracts, categories, messages, subscriptions, roles,
+        users, businesses, contracts, categories, messages, subscriptions, roleCounts,
         recentUsers, recentActivity, blogPosts, contactMessages, userGrowth,
         leadsTodayQ, contractsTodayQ, providersTodayQ,
         leadsPendingQ, providersPendingQ, dlqActiveQ, contractsPendingQ,
@@ -50,7 +50,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         supabase.from('categories').select('id', { count: 'exact', head: true }),
         supabase.from('conversations').select('id', { count: 'exact', head: true }),
         supabase.from('membership_subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('user_roles').select('role'),
+        countByRole(),
         supabase.from('profiles').select('id, full_name, avatar_url, email, account_type, created_at').order('created_at', { ascending: false }).limit(5),
         supabase.from('admin_activity_log').select('id, action, entity_type, created_at, details').order('created_at', { ascending: false }).limit(6),
         supabase.from('blog_posts').select('id', { count: 'exact', head: true }),
@@ -71,8 +71,6 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
 
       const statusCounts: Record<string, number> = {};
       allContracts.forEach((c) => { statusCounts[c.status] = (statusCounts[c.status] || 0) + 1; });
-      const roleCounts: Record<string, number> = {};
-      (roles.data || []).forEach((r) => { roleCounts[r.role] = (roleCounts[r.role] || 0) + 1; });
 
       const cnt = (x: unknown) => ((x as { count?: number }).count) ?? 0;
       return {
