@@ -10863,10 +10863,12 @@ export type Database = {
         Returns: Json
       }
       get_contract_counterpart_profile: {
-        Args: { _target_user_id: string; _viewer_id: string }
+        Args: { _contract_id: string; _user_id: string }
         Returns: {
+          account_type: string
           avatar_url: string
           full_name: string
+          ref_id: string
           user_id: string
         }[]
       }
