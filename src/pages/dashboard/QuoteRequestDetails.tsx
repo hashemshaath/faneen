@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getMyQuoteRequestDetail, listQuoteRequestFiles } from '@/modules/leads/services/detail';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,30 +86,13 @@ const QuoteRequestDetails: React.FC = () => {
   const { data: quote, isLoading, error } = useQuery({
     queryKey: ['quote-request', id, user?.id],
     enabled: !!id && !!user?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_requests')
-        .select('*')
-        .eq('id', id!)
-        .eq('user_id', user!.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data as QuoteRow | null;
-    },
+    queryFn: () => getMyQuoteRequestDetail(id!, user!.id) as Promise<QuoteRow | null>,
   });
 
   const { data: files, refetch: refetchFiles } = useQuery({
     queryKey: ['quote-request-files', id],
     enabled: !!id && !!quote,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_request_files')
-        .select('id, file_name, file_path, file_size, file_type, created_at')
-        .eq('quote_request_id', id!)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as FileRow[];
-    },
+    queryFn: () => listQuoteRequestFiles(id!) as Promise<FileRow[]>,
   });
 
   const canEdit = useMemo(
