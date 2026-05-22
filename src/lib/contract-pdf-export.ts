@@ -13,6 +13,7 @@ import { BRAND_DOCUMENTS } from '@/config/brandTheme';
 import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
 import { calculateVatBreakdown, calculateContractCoverage } from '@/lib/contract-financials';
 import { groupLineItemsByBoqGroup, hasMixedPricing, listPricingMethodsUsed } from './contract-boq';
+import { buildContractVerificationUrl } from '@/modules/contracts/services/pdf/barcode/contractQr';
 
 // ── CT6: Pricing method labels (display only — no formula execution) ──
 const PRICING_METHOD_LABEL: Record<string, { ar: string; en: string }> = {
@@ -1004,9 +1005,12 @@ export const buildContractPDF = async (data: ContractExportData) => {
   if (_qrContractBarcode || _qrHasHash) {
     try {
       const origin = (data.verifyOrigin || 'https://qitaat.com').replace(/\/+$/, '');
-      const verifyUrl = _qrContractBarcode
-        ? `${origin}/q/${encodeURIComponent(_qrContractBarcode)}`
-        : `${origin}/v/c/${encodeURIComponent(data.contractNumber)}?h=${encodeURIComponent(data.documentHash as string)}`;
+      const verifyUrl = buildContractVerificationUrl({
+        origin,
+        contractBarcodeCode: _qrContractBarcode,
+        contractNumber: data.contractNumber,
+        documentHash: (data.documentHash as string) ?? '',
+      });
       const QR = await import('qrcode');
       const qrDataUrl = await QR.toDataURL(verifyUrl, {
         errorCorrectionLevel: 'M',
