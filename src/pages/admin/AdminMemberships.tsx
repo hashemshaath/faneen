@@ -511,7 +511,15 @@ const AdminMemberships = () => {
     queryKey: ['admin-sub-businesses', businessIds],
     queryFn: async () => {
       if (!businessIds.length) return [];
-      const { data } = await listBusinessesByIds({
+      const { data } = await listBusinessesByIds<{
+        id: string;
+        name_ar: string | null;
+        name_en: string | null;
+        membership_tier: string | null;
+        logo_url: string | null;
+        is_verified: boolean | null;
+        is_active: boolean | null;
+      }>({
         ids: businessIds,
         select: 'id, name_ar, name_en, membership_tier, logo_url, is_verified, is_active',
       });
@@ -523,7 +531,19 @@ const AdminMemberships = () => {
   const { data: allBusinesses = [], isLoading: loadingBiz } = useQuery({
     queryKey: ['admin-all-businesses-tiers'],
     queryFn: async () => {
-      const { data } = await listAdminBusinesses({
+      const { data } = await listAdminBusinesses<{
+        id: string;
+        name_ar: string | null;
+        name_en: string | null;
+        membership_tier: string | null;
+        logo_url: string | null;
+        is_verified: boolean | null;
+        is_active: boolean | null;
+        username: string | null;
+        rating_avg: number | null;
+        rating_count: number | null;
+        created_at: string;
+      }>({
         select: 'id, name_ar, name_en, membership_tier, logo_url, is_verified, is_active, username, rating_avg, rating_count, created_at',
         orderBy: { column: 'membership_tier', ascending: false },
       });
