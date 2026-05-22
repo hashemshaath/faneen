@@ -143,7 +143,7 @@ const fixtures = [
 
 const renderResults = () =>
   render(
-    <MemoryRouter>
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ul data-testid="results-grid" className="grid grid-cols-2 gap-4">
         {fixtures.map((b) => (
           <li key={b.id} data-testid={`card-${b.id}`}>

@@ -11,7 +11,7 @@ const renderHero = () => {
   return render(
     <QueryClientProvider client={qc}>
         <LanguageProvider>
-          <MemoryRouter>
+          <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <HeroV2 />
           </MemoryRouter>
         </LanguageProvider>
@@ -145,7 +145,7 @@ describe('HeroV2 — accessibility', () => {
       rerender(
         <QueryClientProvider client={qc}>
           <LanguageProvider>
-            <MemoryRouter>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <HeroV2 />
             </MemoryRouter>
           </LanguageProvider>

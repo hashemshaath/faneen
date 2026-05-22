@@ -46,7 +46,7 @@ const baseBiz = {
 
 const renderCard = (b: Record<string, unknown>, viewMode: 'grid' | 'list' = 'grid') =>
   render(
-    <MemoryRouter>
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <BusinessCard business={b} viewMode={viewMode} />
     </MemoryRouter>,
   );
@@ -675,7 +675,7 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
       renders.push({ phase, actualDuration });
     };
     const utils = render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Profiler id="card" onRender={onRender}>
           <BusinessCard business={b} viewMode="grid" />
         </Profiler>
@@ -703,7 +703,7 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
       renders.push({ phase, actualDuration });
     };
     rerender(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Profiler id="card" onRender={onRender}>
           <BusinessCard business={business} viewMode="grid" />
         </Profiler>
@@ -733,7 +733,7 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
       renders.push({ phase, actualDuration });
     };
     rerender(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Profiler id="card" onRender={onRender}>
           <BusinessCard business={next} viewMode="grid" />
         </Profiler>
@@ -757,7 +757,7 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
         renders.push({ phase, actualDuration });
       };
       rerender(
-        <MemoryRouter>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Profiler id="card" onRender={onRender}>
             <BusinessCard business={business} viewMode="grid" />
           </Profiler>
