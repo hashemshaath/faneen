@@ -88,7 +88,6 @@ jobs:
 
       - name: TypeScript Check
         run: npx tsc --noEmit
-        continue-on-error: true
 
       - name: ESLint Check
         run: npx eslint src --ext .ts,.tsx --max-warnings 50
