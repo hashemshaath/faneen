@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
 import { getContractAfterConvert } from '@/modules/leads/services/conversion';
 import { adminConvertLeadToContract }  from '@/modules/leads/services/adminConvertLeadToContract';
 import { sendLeadTransactionalEmail } from '@/modules/leads/services/sendLeadTransactionalEmail';
+import { getLeadProviderContactForEmail } from '@/modules/leads/services/getLeadProviderContactForEmail';
 
 // SR-4A: Service Request lifecycle statuses (new vocabulary).
 type Status =
@@ -166,19 +166,12 @@ const AdminLeadRequests: React.FC = () => {
       // but never roll back the conversion (contract + in-app notifications already
       // committed). converted_contract_id guard in RPC prevents duplicate sends.
       try {
-        const [contract, { data: business }] = await Promise.all([
-          getContractAfterConvert(contractId),
-          supabase.from('businesses').select('name_ar, name_en, user_id, email').eq('id', lead.business_id).maybeSingle(),
-        ]);
-        const businessName = business?.name_ar || business?.name_en || undefined;
+        const contract = await getContractAfterConvert(contractId);
+        const { businessName, providerEmail } = await getLeadProviderContactForEmail({
+          businessId: lead.business_id,
+          contractProviderUserId: contract?.provider_id,
+        });
         const contractNumber = contract?.contract_number || undefined;
-        const providerUserId = contract?.provider_id || business?.user_id;
-        let providerEmail: string | undefined = business?.email || undefined;
-        if (!providerEmail && providerUserId) {
-          const { data: prof } = await supabase
-            .from('profiles').select('email').eq('user_id', providerUserId).maybeSingle();
-          providerEmail = prof?.email || undefined;
-        }
         const sends: Promise<unknown>[] = [];
         if (lead.email) {
           sends.push(sendLeadTransactionalEmail({
