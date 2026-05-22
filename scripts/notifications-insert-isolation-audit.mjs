@@ -8,11 +8,9 @@
  *
  * Exit 1 if any unauthorized direct insert is found.
  *
- * NOTE: This script is intentionally NOT wired into CI yet. As of N-2 the
- * 9 known legacy callsites have not been migrated. Running this audit
- * against the current tree is EXPECTED to FAIL until N-3 through N-5
- * migrations are complete (see audit phase report). CI wiring lands in
- * the final migration phase (N-6) once violations reach zero.
+ * This is a required passing guardrail. It is wired into CI and must
+ * remain green. All notification inserts route through the canonical
+ * createNotification wrapper (and createNotificationFireAndForget helper).
  */
 
 import fs from "fs";

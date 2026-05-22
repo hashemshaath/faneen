@@ -83,6 +83,9 @@ jobs:
       - name: Transactional Email Isolation Audit
         run: node scripts/transactional-email-isolation-audit.mjs
 
+      - name: Notifications Insert Isolation Audit
+        run: node scripts/notifications-insert-isolation-audit.mjs
+
       - name: Contracts Pre-launch Smoke (typecheck + targeted vitest + privacy grep)
         run: bash scripts/contracts-prelaunch-smoke.sh
 
