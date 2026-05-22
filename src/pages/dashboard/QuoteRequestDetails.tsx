@@ -6,6 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getMyQuoteRequestDetail, listQuoteRequestFiles } from '@/modules/leads/services/detail';
+import { updateMyQuoteRequest } from '@/modules/leads/services/mutations';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -113,12 +114,7 @@ const QuoteRequestDetails: React.FC = () => {
   };
   const updateMutation = useMutation({
     mutationFn: async (patch: UpdatePatch) => {
-      const { error } = await supabase
-        .from('quote_requests')
-        .update(patch)
-        .eq('id', id!)
-        .eq('user_id', user!.id);
-      if (error) throw error;
+      await updateMyQuoteRequest(id!, user!.id, patch);
     },
     onSuccess: () => {
       toast.success('تم تحديث الطلب بنجاح');

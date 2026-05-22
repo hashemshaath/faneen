@@ -15,6 +15,7 @@ import { LeadStatusBadge, type LeadStatus } from '@/components/leads/LeadStatusB
 import { LeadDetailPanel, type LeadRow } from '@/components/leads/LeadDetailPanel';
 import { trackEvent } from '@/lib/analytics-events';
 import { listProviderLeadRequests } from '@/modules/leads/services/detail';
+import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
 
 const FILTERS: Array<{ key: 'all' | LeadStatus; ar: string; en: string }> = [
   { key: 'all',        ar: 'الكل',           en: 'All' },
@@ -89,8 +90,7 @@ const DashboardLeads: React.FC = () => {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, next }: { id: string; next: LeadStatus }) => {
-      const { error } = await supabase.from('lead_requests').update({ status: next }).eq('id', id);
-      if (error) throw error;
+      await updateLeadRequestStatus(id, next);
       // Fire-and-forget lifecycle notifier — must not block the optimistic UX.
       try {
         await supabase.functions.invoke('notify-customer-lead-update', {
@@ -174,17 +174,12 @@ const DashboardLeads: React.FC = () => {
   // SR-3B: Send a quote — updates lead_requests with quote fields and status=quoted.
   const sendQuote = useMutation({
     mutationFn: async (input: { id: string; amount: number; currency: 'SAR'; note: string | null; valid_until: string | null }) => {
-      const { error } = await supabase
-        .from('lead_requests')
-        .update({
-          status: 'quoted',
-          quote_amount: input.amount,
-          quote_currency: input.currency,
-          quote_note: input.note,
-          quote_valid_until: input.valid_until,
-        })
-        .eq('id', input.id);
-      if (error) throw error;
+      await updateLeadRequestStatus(input.id, 'quoted', {
+        quote_amount: input.amount,
+        quote_currency: input.currency,
+        quote_note: input.note,
+        quote_valid_until: input.valid_until,
+      });
       // Lifecycle email + in-app notification (fail-soft).
       try {
         await supabase.functions.invoke('notify-customer-lead-update', {
