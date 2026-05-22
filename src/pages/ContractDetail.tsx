@@ -295,7 +295,7 @@ const ContractDetail = () => {
   const { data: business } = useQuery({
     queryKey: ['contract-business', contract?.business_id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('*, categories(name_ar, name_en)').eq('id', contract!.business_id!).maybeSingle();
+      const { data } = await getBusinessForContract(contract!.business_id!);
       return data;
     },
     enabled: !!contract?.business_id,
