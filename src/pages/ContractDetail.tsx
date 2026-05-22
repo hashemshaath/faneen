@@ -44,6 +44,7 @@ import {
   noteTypeConfig,
 } from '@/modules/contracts/constants/statusConfigs';
 import { sendTransactionalEmail }  from '@/modules/notifications/services/sendTransactionalEmail';
+import { getBusinessForContract } from '@/modules/businesses';
 
 // ─── Phase 5E.2 — Safe source-lead summary card ───
 type SourceLeadSummary = {
@@ -294,7 +295,20 @@ const ContractDetail = () => {
   const { data: business } = useQuery({
     queryKey: ['contract-business', contract?.business_id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('*, categories(name_ar, name_en)').eq('id', contract!.business_id!).maybeSingle();
+      const { data } = await getBusinessForContract<{
+        name_ar: string;
+        name_en: string | null;
+        logo_url: string | null;
+        username: string | null;
+        address: string | null;
+        district: string | null;
+        street_name: string | null;
+        building_number: string | null;
+        additional_number: string | null;
+        region: string | null;
+        categories: { name_ar: string | null; name_en: string | null } | null;
+        [key: string]: unknown;
+      }>(contract!.business_id!);
       return data;
     },
     enabled: !!contract?.business_id,

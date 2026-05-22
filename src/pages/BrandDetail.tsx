@@ -11,8 +11,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Layers, MapPin, Tag, Building2, Globe2, Mail, Phone, ChevronLeft } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
 import { getPublicSectorBySlug, listSpecializations, listDistributors } from '@/features/private-sectors/service';
+import { listBusinessesByIds } from '@/modules/businesses';
 import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
 import { PS_DIST_ROLE_META } from '@/features/private-sectors/types';
 
@@ -39,11 +39,12 @@ const BrandDetail: React.FC = () => {
   });
 
   const distBizIds = Array.from(new Set(dists.map((d) => d.business_id)));
-  const { data: distBizs = [] } = useQuery({
+  type DistBiz = { id: string; name_ar: string; name_en: string; username: string };
+  const { data: distBizs = [] } = useQuery<DistBiz[]>({
     queryKey: ['public-brand-dist-bizs', brand?.id, distBizIds.join(',')],
     enabled: distBizIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id, name_ar, name_en, username').in('id', distBizIds);
+      const { data } = await listBusinessesByIds<DistBiz>({ ids: distBizIds });
       return data ?? [];
     },
   });
