@@ -29,12 +29,10 @@ const FIRE_AND_FORGET_FILES = [
   'src/pages/ContractDetail.tsx',
 ] as const;
 
-const DEFERRED_FILES = {
-  blocking: [
-    'src/pages/dashboard/DashboardContracts.tsx',
-    'src/pages/admin/AdminQuoteRequestDetails.tsx',
-  ],
-} as const;
+const BLOCKING_AWAIT_FILES = [
+  'src/pages/dashboard/DashboardContracts.tsx',
+  'src/pages/admin/AdminQuoteRequestDetails.tsx',
+] as const;
 
 describe('N-3 — fail-soft notification insert migration', () => {
   it.each(FAIL_SOFT_FILES)('%s no longer contains direct notifications.insert', (rel) => {
@@ -130,9 +128,8 @@ describe('N-4 — fire-and-forget notification insert migration', () => {
 
   it.each(FIRE_AND_FORGET_FILES)('%s imports createNotificationFireAndForget', (rel) => {
     const src = read(rel);
-    expect(src).toContain(
-      "import { createNotificationFireAndForget } from '@/modules/notifications/services/createNotification'",
-    );
+    expect(src).toContain("from '@/modules/notifications/services/createNotification'");
+    expect(src).toMatch(/\bcreateNotificationFireAndForget\b/);
     expect(src).toContain('createNotificationFireAndForget({');
   });
 
@@ -198,10 +195,65 @@ describe('N-4 — fire-and-forget notification insert migration', () => {
 });
 
 describe('N-4 — deferred blocking-await group remains untouched', () => {
-  it('blocking-await callsites still use direct `await supabase.from(...).insert`', () => {
-    for (const rel of DEFERRED_FILES.blocking) {
+  it('blocking-await callsites no longer use direct insert (migrated in N-5)', () => {
+    for (const rel of BLOCKING_AWAIT_FILES) {
       const src = read(rel);
-      expect(src).toMatch(/await supabase\.from\('notifications'\)\.insert/);
+      expect(src).not.toMatch(/await supabase\.from\('notifications'\)\.insert/);
     }
+  });
+});
+
+describe('N-5 — blocking-await notification insert migration', () => {
+  it.each(BLOCKING_AWAIT_FILES)('%s contains no direct notifications.insert', (rel) => {
+    expect(read(rel)).not.toMatch(DIRECT_INSERT);
+  });
+
+  it.each(BLOCKING_AWAIT_FILES)('%s imports createNotification', (rel) => {
+    const src = read(rel);
+    expect(src).toContain("from '@/modules/notifications/services/createNotification'");
+    expect(src).toMatch(/\bcreateNotification\b/);
+  });
+
+  describe('DashboardContracts — send-for-approval blocking insert', () => {
+    const src = read('src/pages/dashboard/DashboardContracts.tsx');
+
+    it('uses awaited createNotification (blocking)', () => {
+      expect(src).toContain('await createNotification({');
+    });
+
+    it('payload fields preserved verbatim', () => {
+      expect(src).toContain('user_id: contract.client_id');
+      expect(src).toContain('title_ar: `عقد جديد بانتظار مراجعتك: ${contract.title_ar}`');
+      expect(src).toContain("title_en: `New contract pending review: ${contract.title_en || contract.title_ar}`");
+      expect(src).toContain("notification_type: 'contract', reference_id: contract.id, reference_type: 'contract'");
+      expect(src).toContain('action_url: `/contracts/${contract.id}`');
+    });
+
+    it('ordering: send-for-approval RPC precedes notification insert', () => {
+      const rpcIdx = src.indexOf('await sendContractForApproval(contract.id);');
+      const notifyIdx = src.indexOf('await createNotification({', rpcIdx);
+      expect(rpcIdx).toBeGreaterThan(-1);
+      expect(notifyIdx).toBeGreaterThan(rpcIdx);
+    });
+  });
+
+  describe('AdminQuoteRequestDetails — quote status update blocking insert', () => {
+    const src = read('src/pages/admin/AdminQuoteRequestDetails.tsx');
+
+    it('uses awaited createNotification (blocking)', () => {
+      expect(src).toContain('await createNotification({');
+    });
+
+    it('payload fields preserved verbatim', () => {
+      expect(src).toContain('user_id: quote.user_id');
+      expect(src).toContain("notification_type: 'quote_request_status_updated'");
+      expect(src).toContain('title_ar: titleMap[vars.newStatus]');
+      expect(src).toContain("title_en: 'Quote request updated'");
+      expect(src).toContain("body_ar: 'تم تحديث حالة طلب عرض السعر الخاص بك في قطاعات.'");
+      expect(src).toContain("body_en: 'Your quote request status has been updated.'");
+      expect(src).toContain('reference_id: quote.id');
+      expect(src).toContain("reference_type: 'quote_request'");
+      expect(src).toContain('action_url: `/dashboard/my-requests/${quote.id}`');
+    });
   });
 });
