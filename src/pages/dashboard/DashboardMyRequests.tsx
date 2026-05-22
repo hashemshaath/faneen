@@ -10,6 +10,7 @@ import {
   listMyQuoteRequests,
   countQuoteRequestFiles,
 } from '@/modules/leads/services/list';
+import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -148,7 +149,6 @@ const DashboardMyRequests: React.FC = () => {
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { updateLeadRequestStatus } = await import('@/modules/leads/services/mutations');
       await updateLeadRequestStatus(id, 'cancelled');
       try {
         await supabase.functions.invoke('notify-customer-lead-update', {

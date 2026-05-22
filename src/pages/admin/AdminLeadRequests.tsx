@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
 import { listAdminLeadRequests } from '@/modules/leads/services/detail';
+import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
 
 // SR-4A: Service Request lifecycle statuses (new vocabulary).
 type Status =
@@ -144,7 +145,6 @@ const AdminLeadRequests: React.FC = () => {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Status }) => {
-      const { updateLeadRequestStatus } = await import('@/modules/leads/services/mutations');
       await updateLeadRequestStatus(id, status);
     },
     onSuccess: () => {
