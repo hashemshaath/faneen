@@ -13,6 +13,16 @@ export type {
 } from './services/listAdminBusinesses';
 export { getAdminBusinessById } from './services/getAdminBusinessById';
 export type { GetAdminBusinessByIdOptions } from './services/getAdminBusinessById';
+export { getPublicBusinessByUsername } from './services/getPublicBusinessByUsername';
+export type { GetPublicBusinessByUsernameOptions } from './services/getPublicBusinessByUsername';
+export { listPublicBusinessesForSector } from './services/listPublicBusinessesForSector';
+export type {
+  ListPublicBusinessesForSectorOptions,
+  ListPublicBusinessesForSectorFilter,
+  ListPublicBusinessesForSectorOrder,
+} from './services/listPublicBusinessesForSector';
+export { getBusinessByRefId } from './services/getBusinessByRefId';
+export type { GetBusinessByRefIdOptions } from './services/getBusinessByRefId';
 export { listCompareBusinesses } from './services/listCompareBusinesses';
 export type { ListCompareBusinessesOptions } from './services/listCompareBusinesses';
 export { getBusinessForContract } from './services/getBusinessForContract';
