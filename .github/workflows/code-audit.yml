@@ -80,6 +80,9 @@ jobs:
       - name: Sitemap XML Validation Audit
         run: node scripts/sitemap-xml-validation-audit.mjs
 
+      - name: Transactional Email Isolation Audit
+        run: node scripts/transactional-email-isolation-audit.mjs
+
       - name: Contracts Pre-launch Smoke (typecheck + targeted vitest + privacy grep)
         run: bash scripts/contracts-prelaunch-smoke.sh
 
