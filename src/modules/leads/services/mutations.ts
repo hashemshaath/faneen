@@ -47,7 +47,9 @@ export async function updateMyQuoteRequest(
 ): Promise<void> {
   const { error } = await supabase
     .from('quote_requests')
-    .update(patch)
+    // Supabase generated update type is too narrow for an arbitrary patch;
+    // callers (QuoteRequestDetails) own the shape and RLS enforces ownership.
+    .update(patch as never)
     .eq('id', id)
     .eq('user_id', userId);
   if (error) throw error;
@@ -101,7 +103,7 @@ export async function insertProviderLeadEvent(
 ): Promise<{ ok: boolean }> {
   const { error } = await supabase
     .from('quote_request_lead_events')
-    .insert(payload);
+    .insert(payload as never);
   if (error) throw error;
   return { ok: true };
 }
