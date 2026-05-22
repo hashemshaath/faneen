@@ -1537,6 +1537,7 @@ export type Database = {
         Row: {
           business_id: string
           city: string
+          country_id: string | null
           created_at: string
           district: string | null
           id: string
@@ -1546,6 +1547,7 @@ export type Database = {
         Insert: {
           business_id: string
           city: string
+          country_id?: string | null
           created_at?: string
           district?: string | null
           id?: string
@@ -1555,6 +1557,7 @@ export type Database = {
         Update: {
           business_id?: string
           city?: string
+          country_id?: string | null
           created_at?: string
           district?: string | null
           id?: string
@@ -1574,6 +1577,62 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_areas_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_service_countries: {
+        Row: {
+          business_id: string
+          country_id: string
+          coverage_note: string | null
+          created_at: string
+          id: string
+          is_primary: boolean
+        }
+        Insert: {
+          business_id: string
+          country_id: string
+          coverage_note?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+        }
+        Update: {
+          business_id?: string
+          country_id?: string
+          coverage_note?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_service_countries_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_countries_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_countries_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
             referencedColumns: ["id"]
           },
         ]
@@ -1806,6 +1865,76 @@ export type Database = {
             columns: ["business_staff_id"]
             isOneToOne: false
             referencedRelation: "business_staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_tax_profiles: {
+        Row: {
+          business_id: string
+          certificate_path: string | null
+          country_id: string
+          created_at: string
+          id: string
+          inclusive_default: boolean
+          scheme: string
+          status: string
+          tax_number: string | null
+          tax_rate: number | null
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          business_id: string
+          certificate_path?: string | null
+          country_id: string
+          created_at?: string
+          id?: string
+          inclusive_default?: boolean
+          scheme: string
+          status: string
+          tax_number?: string | null
+          tax_rate?: number | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          business_id?: string
+          certificate_path?: string | null
+          country_id?: string
+          created_at?: string
+          id?: string
+          inclusive_default?: boolean
+          scheme?: string
+          status?: string
+          tax_number?: string | null
+          tax_rate?: number | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_tax_profiles_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_tax_profiles_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_tax_profiles_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
             referencedColumns: ["id"]
           },
         ]
@@ -2576,6 +2705,7 @@ export type Database = {
           client_user_id: string | null
           contact_name: string | null
           contact_phone: string | null
+          country_id: string | null
           created_at: string
           created_by: string
           district: string | null
@@ -2609,6 +2739,7 @@ export type Database = {
           client_user_id?: string | null
           contact_name?: string | null
           contact_phone?: string | null
+          country_id?: string | null
           created_at?: string
           created_by?: string
           district?: string | null
@@ -2642,6 +2773,7 @@ export type Database = {
           client_user_id?: string | null
           contact_name?: string | null
           contact_phone?: string | null
+          country_id?: string | null
           created_at?: string
           created_by?: string
           district?: string | null
@@ -2684,6 +2816,13 @@ export type Database = {
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sites_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
             referencedColumns: ["id"]
           },
         ]
@@ -4473,6 +4612,7 @@ export type Database = {
           completed_at: string | null
           contract_number: string
           contract_version: number
+          country_id: string | null
           created_at: string
           currency_code: string
           description_ar: string | null
@@ -4520,6 +4660,7 @@ export type Database = {
           completed_at?: string | null
           contract_number?: string
           contract_version?: number
+          country_id?: string | null
           created_at?: string
           currency_code?: string
           description_ar?: string | null
@@ -4567,6 +4708,7 @@ export type Database = {
           completed_at?: string | null
           contract_number?: string
           contract_version?: number
+          country_id?: string | null
           created_at?: string
           currency_code?: string
           description_ar?: string | null
@@ -4618,6 +4760,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
             referencedColumns: ["id"]
           },
           {
@@ -4835,6 +4984,95 @@ export type Database = {
           tax_rate?: number
         }
         Relationships: []
+      }
+      country_admin_assignments: {
+        Row: {
+          country_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          country_id: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          country_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_admin_assignments_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "country_admin_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      country_settings: {
+        Row: {
+          address_format: Json | null
+          beta_enabled: boolean
+          country_id: string
+          created_at: string
+          default_currency: string | null
+          default_locale: string | null
+          default_tax_rate: number | null
+          default_timezone: string | null
+          is_launched: boolean
+          phone_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_format?: Json | null
+          beta_enabled?: boolean
+          country_id: string
+          created_at?: string
+          default_currency?: string | null
+          default_locale?: string | null
+          default_tax_rate?: number | null
+          default_timezone?: string | null
+          is_launched?: boolean
+          phone_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_format?: Json | null
+          beta_enabled?: boolean
+          country_id?: string
+          created_at?: string
+          default_currency?: string | null
+          default_locale?: string | null
+          default_tax_rate?: number | null
+          default_timezone?: string | null
+          is_launched?: boolean
+          phone_code?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_settings_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: true
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_deliverability_alerts: {
         Row: {
@@ -5226,6 +5464,7 @@ export type Database = {
           converted_at: string | null
           converted_by: string | null
           converted_contract_id: string | null
+          country_id: string | null
           created_at: string
           email: string
           id: string
@@ -5268,6 +5507,7 @@ export type Database = {
           converted_at?: string | null
           converted_by?: string | null
           converted_contract_id?: string | null
+          country_id?: string | null
           created_at?: string
           email: string
           id?: string
@@ -5310,6 +5550,7 @@ export type Database = {
           converted_at?: string | null
           converted_by?: string | null
           converted_contract_id?: string | null
+          country_id?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -5368,6 +5609,13 @@ export type Database = {
             columns: ["converted_contract_id"]
             isOneToOne: false
             referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_requests_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
             referencedColumns: ["id"]
           },
           {
@@ -9311,6 +9559,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_locale_settings: {
+        Row: {
+          created_at: string
+          currency_display: string | null
+          date_format: string | null
+          language: string
+          number_format: string | null
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency_display?: string | null
+          date_format?: string | null
+          language?: string
+          number_format?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency_display?: string | null
+          date_format?: string | null
+          language?: string
+          number_format?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_locale_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -10120,6 +10409,7 @@ export type Database = {
           completed_at: string | null
           contract_number: string
           contract_version: number
+          country_id: string | null
           created_at: string
           currency_code: string
           description_ar: string | null
@@ -10468,6 +10758,7 @@ export type Database = {
           completed_at: string | null
           contract_number: string
           contract_version: number
+          country_id: string | null
           created_at: string
           currency_code: string
           description_ar: string | null
@@ -10613,6 +10904,7 @@ export type Database = {
           completed_at: string | null
           contract_number: string
           contract_version: number
+          country_id: string | null
           created_at: string
           currency_code: string
           description_ar: string | null
@@ -11668,6 +11960,7 @@ export type Database = {
           completed_at: string | null
           contract_number: string
           contract_version: number
+          country_id: string | null
           created_at: string
           currency_code: string
           description_ar: string | null
