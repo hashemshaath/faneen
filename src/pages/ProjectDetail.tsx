@@ -3,6 +3,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getCategoryById } from '@/modules/categories';
+import { getCityById } from '@/modules/locations';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useContentTracking } from '@/hooks/useContentTracking';
 import { Navbar } from '@/components/layout/Navbar';
@@ -64,10 +66,10 @@ const ProjectDetail = () => {
     });
   }, [project?.id, project?.businesses?.username]);
 
-  const { data: category } = useQuery({
+  const { data: category } = useQuery<{ name_ar: string; name_en: string } | null>({
     queryKey: ['category', project?.category_id],
     queryFn: async () => {
-      const { data } = await supabase.from('categories').select('name_ar, name_en').eq('id', project!.category_id!).single();
+      const { data } = await getCategoryById<{ name_ar: string; name_en: string }>(project!.category_id!);
       return data;
     },
     enabled: !!project?.category_id,
@@ -120,10 +122,10 @@ const ProjectDetail = () => {
   }, [project, projectTitle, projectDesc, id]);
   useMultiJsonLd(projectJsonLd);
 
-  const { data: city } = useQuery({
+  const { data: city } = useQuery<{ name_ar: string; name_en: string } | null>({
     queryKey: ['city', project?.city_id],
     queryFn: async () => {
-      const { data } = await supabase.from('cities').select('name_ar, name_en').eq('id', project!.city_id!).single();
+      const { data } = await getCityById<{ name_ar: string; name_en: string }>(project!.city_id!);
       return data;
     },
     enabled: !!project?.city_id,
