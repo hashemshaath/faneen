@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
+import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { toast } from 'sonner';
 import { track } from '@/lib/analytics-events';
 import { getAttributionPayload } from '@/lib/analytics-attribution';
@@ -89,30 +90,26 @@ const Contact = () => {
       });
 
       // 2. Send confirmation email to user
-      await supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'contact-confirmation',
-          recipientEmail: form.email.trim().toLowerCase(),
-          idempotencyKey: `contact-confirm-${id}`,
-          templateData: {
-            name: form.name.trim(),
-            subject: form.subject.trim(),
-          },
+      await sendTransactionalEmail({
+        templateName: 'contact-confirmation',
+        recipientEmail: form.email.trim().toLowerCase(),
+        idempotencyKey: `contact-confirm-${id}`,
+        templateData: {
+          name: form.name.trim(),
+          subject: form.subject.trim(),
         },
       });
 
       // 3. Send notification email to admin
-      await supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'contact-admin-notification',
-          recipientEmail: 'info@qitaat.com', // fallback; template.to overrides
-          idempotencyKey: `contact-admin-${id}`,
-          templateData: {
-            name: form.name.trim(),
-            email: form.email.trim().toLowerCase(),
-            subject: form.subject.trim(),
-            message: form.message.trim(),
-          },
+      await sendTransactionalEmail({
+        templateName: 'contact-admin-notification',
+        recipientEmail: 'info@qitaat.com', // fallback; template.to overrides
+        idempotencyKey: `contact-admin-${id}`,
+        templateData: {
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
+          subject: form.subject.trim(),
+          message: form.message.trim(),
         },
       });
 
