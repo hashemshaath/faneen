@@ -134,7 +134,8 @@ export async function listMyLeadRequests(
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return (data ?? []) as MyLeadRow[];
+  // Wide select string exceeds Supabase generic inference — cast via unknown.
+  return (data ?? []) as unknown as MyLeadRow[];
 }
 
 export async function listMyQuoteRequests(
