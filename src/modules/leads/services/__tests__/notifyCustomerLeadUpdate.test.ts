@@ -65,12 +65,9 @@ describe('DashboardLeads.tsx regression (E1)', () => {
     expect(src).toMatch(/try \{\s*await notifyCustomerLeadUpdate\([^)]*\);\s*\} catch \{ \/\* fail-soft \*\/ \}/);
   });
 
-  it('leaves businesses lookup untouched (deferred D4)', () => {
-    expect(src).toMatch(/supabase\.from\(\s*['"]businesses['"]\s*\)/);
-  });
-
-  it('leaves business_staff lookup untouched (deferred D4)', () => {
-    expect(src).toMatch(/supabase\.from\(\s*['"]business_staff['"]\s*\)/);
+  it('businesses/business_staff lookups removed (D4 complete)', () => {
+    expect(src).not.toMatch(/supabase\.from\(\s*['"]businesses['"]\s*\)/);
+    expect(src).not.toMatch(/supabase\.from\(\s*['"]business_staff['"]\s*\)/);
   });
 
   it('no longer directly calls create_or_get_lead_conversation RPC (E3 complete)', () => {
@@ -101,7 +98,7 @@ describe('DashboardMyRequests.tsx regression (E2)', () => {
     expect(src).toMatch(/try \{\s*await notifyCustomerLeadUpdate\([^)]*\);\s*\} catch \{ \/\* fail-soft \*\/ \}/);
   });
 
-  it('still imports supabase for deferred direct usages', () => {
-    expect(src).toMatch(/from '@\/integrations\/supabase\/client'/);
+  it('no longer imports supabase client directly (D4 complete)', () => {
+    expect(src).not.toMatch(/from '@\/integrations\/supabase\/client'/);
   });
 });
