@@ -132,8 +132,7 @@ describe('P-3 out-of-scope guardrail (must remain direct in this phase)', () => 
     const src = read('src/pages/admin/AdminBusinesses.tsx');
     expect(src).toMatch(/supabase\.from\(['"]businesses['"]\)\.update/);
   });
-  it('ContractDetail profiles joins remain direct (deferred)', () => {
-    const src = read('src/pages/ContractDetail.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)/);
-  });
+  // NOTE: ContractDetail profiles joins were migrated in P-5
+  // (getProfileForContractParty). Lock lives in
+  // src/modules/users/services/__tests__/profileReads.test.ts.
 });
