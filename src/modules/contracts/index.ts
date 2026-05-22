@@ -21,6 +21,7 @@ export * from './services/mutations';
 export * from './services/amendments';
 export * from './services/invitations';
 export * from './services/pdfHistory';
+export * from './services/pdf';
 // types.ts is available at '@/modules/contracts/types' for consumers that
 // want type-only imports. Not re-exported here to avoid duplicate type
 // re-exports (all types are already reachable via the value exports above).
