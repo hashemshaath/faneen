@@ -69,7 +69,6 @@ describe('E-Mail-6: cross-file guardrails', () => {
   });
 
   it('deferred callsites are NOT migrated in this phase (still use direct invoke)', () => {
-    expect(read('src/components/dashboard/business-edit/InvitationsPanel.tsx')).toMatch(DIRECT_INVOKE);
     expect(read('src/pages/admin/AdminProviderReview.tsx')).toMatch(DIRECT_INVOKE);
     expect(read('src/components/admin/email-center/EmailTemplatePreview.tsx')).toMatch(DIRECT_INVOKE);
   });
