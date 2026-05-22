@@ -5,6 +5,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listProfilesByUserIds } from '@/modules/users';
 import { getOwnerBusiness } from '@/modules/businesses';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
