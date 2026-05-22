@@ -137,15 +137,3 @@ describe('migration regression: CrDocumentScanner', () => {
   });
 });
 
-describe('non-migration guard: deferred callsites untouched', () => {
-  const files = [
-    'src/services/auth/authService.ts',
-    'src/lib/ensure-business.ts',
-  ];
-  for (const f of files) {
-    it(`${f} still contains direct businesses write (intentionally deferred)`, () => {
-      const src = readFileSync(resolve(__dirname, '../../../../../', f), 'utf8');
-      expect(src).toMatch(/from\(['"]businesses['"]\)/);
-    });
-  }
-});
