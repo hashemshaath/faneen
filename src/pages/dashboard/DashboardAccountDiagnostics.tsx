@@ -91,8 +91,8 @@ const DashboardAccountDiagnostics: React.FC = () => {
     if (user?.id) {
       const [rolesRes, bizRes, staffRes] = await Promise.allSettled([
         getUserRoles(user.id),
-        supabase.from('businesses').select('id').eq('user_id', user.id).limit(1).maybeSingle(),
-        supabase.from('business_staff').select('id').eq('user_id', user.id).eq('is_active', true).limit(1).maybeSingle(),
+        getOwnerBusiness<{ id: string }>({ userId: user.id, select: 'id', limit: 1 }),
+        getActiveBusinessStaffMembership<{ id: string }>({ userId: user.id, select: 'id' }),
       ]);
       const rolesRows = rolesRes.status === 'fulfilled' ? rolesRes.value : [];
       const rolesErr = rolesRes.status === 'fulfilled' ? null : (rolesRes.reason instanceof Error ? rolesRes.reason.message : 'failed');
