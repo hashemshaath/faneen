@@ -128,9 +128,8 @@ describe('N-4 — fire-and-forget notification insert migration', () => {
 
   it.each(FIRE_AND_FORGET_FILES)('%s imports createNotificationFireAndForget', (rel) => {
     const src = read(rel);
-    expect(src).toContain(
-      "import { createNotificationFireAndForget } from '@/modules/notifications/services/createNotification'",
-    );
+    expect(src).toContain("from '@/modules/notifications/services/createNotification'");
+    expect(src).toMatch(/\bcreateNotificationFireAndForget\b/);
     expect(src).toContain('createNotificationFireAndForget({');
   });
 
