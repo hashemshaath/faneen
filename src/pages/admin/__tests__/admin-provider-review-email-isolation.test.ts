@@ -108,7 +108,7 @@ describe('AdminProviderReview email isolation (E-Mail-9)', () => {
     expect(emailBlock).not.toMatch(/\berror\b/);
   });
 
-  it('EmailTemplatePreview remains deferred and untouched', () => {
-    expect(read('src/components/admin/email-center/EmailTemplatePreview.tsx')).toMatch(DIRECT_INVOKE);
+  it('EmailTemplatePreview is now migrated (E-Mail-10)', () => {
+    expect(read('src/components/admin/email-center/EmailTemplatePreview.tsx')).not.toMatch(DIRECT_INVOKE);
   });
 });
