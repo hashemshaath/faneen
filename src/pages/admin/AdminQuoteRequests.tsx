@@ -2,7 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  listAdminQuoteRequests,
+  countQuoteRequestFiles,
+  type AdminQuoteRow,
+} from '@/modules/leads/services/list';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,17 +21,6 @@ import {
   CUSTOMER_TYPE_LABEL_AR, SECTOR_LABEL_AR, type QuoteStatus,
 } from '@/lib/quoteRequests';
 
-interface AdminQuoteRow {
-  id: string;
-  customer_name: string;
-  customer_phone: string;
-  customer_type: string;
-  sector: string;
-  city: string;
-  status: string;
-  created_at: string;
-}
-
 const AdminQuoteRequests: React.FC = () => {
   useNoIndex();
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -38,33 +31,14 @@ const AdminQuoteRequests: React.FC = () => {
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ['admin-quote-requests'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_requests')
-        .select('id, customer_name, customer_phone, customer_type, sector, city, status, created_at')
-        .order('created_at', { ascending: false })
-        .limit(500);
-      if (error) throw error;
-      return (data ?? []) as AdminQuoteRow[];
-    },
+    queryFn: () => listAdminQuoteRequests(),
   });
 
   const ids = useMemo(() => (rows ?? []).map((r) => r.id), [rows]);
   const { data: fileCounts } = useQuery({
     queryKey: ['admin-quote-file-counts', ids.length],
     enabled: ids.length > 0,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_request_files')
-        .select('quote_request_id')
-        .in('quote_request_id', ids);
-      if (error) throw error;
-      const m = new Map<string, number>();
-      (data ?? []).forEach((r: { quote_request_id: string }) => {
-        m.set(r.quote_request_id, (m.get(r.quote_request_id) ?? 0) + 1);
-      });
-      return m;
-    },
+    queryFn: () => countQuoteRequestFiles(ids),
   });
 
   const stats = useMemo(() => {
