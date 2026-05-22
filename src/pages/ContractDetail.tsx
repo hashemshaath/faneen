@@ -36,6 +36,7 @@ import { InfoRow } from '@/modules/contracts/components/InfoRow';
 import { StatCard } from '@/modules/contracts/components/StatCard';
 import { ClauseSection } from '@/modules/contracts/components/ClauseSection';
 import { ContractLockBanner } from '@/modules/contracts/components/ContractLockBanner';
+import { ContractTabsHeader } from '@/modules/contracts/components/ContractTabsHeader';
 import {
   statusConfig,
   priorityConfig,
