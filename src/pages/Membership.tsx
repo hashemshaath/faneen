@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
@@ -355,13 +356,11 @@ const Membership = () => {
       }
       if (user.email) {
         try {
-          await supabase.functions.invoke('send-transactional-email', {
-            body: {
-              templateName: 'membership-upgrade-request-submitted',
-              recipientEmail: user.email,
-              idempotencyKey: `membership-upgrade-submitted-${requestId}`,
-              templateData: { businessName, requestedTier: res?.tier },
-            },
+          await sendTransactionalEmail({
+            templateName: 'membership-upgrade-request-submitted',
+            recipientEmail: user.email,
+            idempotencyKey: `membership-upgrade-submitted-${requestId}`,
+            templateData: { businessName, requestedTier: res?.tier },
           });
         } catch (err) {
           // eslint-disable-next-line no-console
@@ -478,13 +477,11 @@ const Membership = () => {
       }
       if (user.email) {
         try {
-          await supabase.functions.invoke('send-transactional-email', {
-            body: {
-              templateName: 'membership-subscription-cancelled',
-              recipientEmail: user.email,
-              idempotencyKey: `membership-cancelled-${subId}`,
-              templateData: { businessName },
-            },
+          await sendTransactionalEmail({
+            templateName: 'membership-subscription-cancelled',
+            recipientEmail: user.email,
+            idempotencyKey: `membership-cancelled-${subId}`,
+            templateData: { businessName },
           });
         } catch (err) {
           // eslint-disable-next-line no-console
