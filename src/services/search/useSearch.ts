@@ -1,6 +1,8 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listActiveCategories } from '@/modules/categories';
+import { listActiveCities } from '@/modules/locations';
 
 const HISTORY_KEY = 'qitaat_search_history';
 const MAX_HISTORY = 10;
