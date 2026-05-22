@@ -11,8 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
-import { supabase } from '@/integrations/supabase/client';
 import { submitQuoteRequest } from '@/modules/quotes/services/submitQuoteRequest';
+import { uploadQuoteRequestFile } from '@/modules/quotes/services/uploadQuoteRequestFile';
+import { createQuoteRequestFileRecord } from '@/modules/quotes/services/createQuoteRequestFileRecord';
 import { useAuth } from '@/contexts/AuthContext';
 import { resolveQuoteSectorFromUrl } from '@/lib/sectors-seo';
 import {
@@ -371,20 +372,26 @@ const Quote: React.FC = () => {
         for (let i = 0; i < fileObjects.length; i++) {
           const f = fileObjects[i];
           const path = `${quoteId}/${Date.now()}-${i}-${safeFileName(f.name)}`;
-          const { error: upErr } = await supabase.storage
-            .from('quote-request-files')
-            .upload(path, f, { upsert: false, contentType: f.type || undefined });
-          if (!upErr) {
-            await supabase.from('quote_request_files').insert({
-              quote_request_id: quoteId,
-              user_id: user?.id ?? null,
-              file_name: f.name,
-              file_path: path,
-              file_size: f.size,
-              file_type: f.type || null,
-            });
-          } else {
+          let uploaded = true;
+          try {
+            await uploadQuoteRequestFile({ path, file: f });
+          } catch (upErr) {
+            uploaded = false;
             console.warn('quote file upload failed', upErr);
+          }
+          if (uploaded) {
+            try {
+              await createQuoteRequestFileRecord({
+                quote_request_id: quoteId,
+                user_id: user?.id ?? null,
+                file_name: f.name,
+                file_path: path,
+                file_size: f.size,
+                file_type: f.type || null,
+              });
+            } catch {
+              // preserve previous fire-and-forget semantics — insert errors were not checked
+            }
           }
           setUploadProgress({ done: i + 1, total: fileObjects.length });
         }
