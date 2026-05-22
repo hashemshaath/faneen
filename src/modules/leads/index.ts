@@ -12,3 +12,4 @@ export * from './services/detail';
 export * from './services/mutations';
 export * from './services/notifications';
 export * from './services/conversion';
+export * from './services/submit';

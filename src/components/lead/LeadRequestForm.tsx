@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { z } from 'zod';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import { Send, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { track, trackLeadFailed, categorizeReason } from '@/lib/analytics-events';
 import { notifySupplierLead } from '@/modules/leads/services/notifications';
+import { insertLeadRequest } from '@/modules/leads/services/submit';
 import { getAttributionPayload } from '@/lib/analytics-attribution';
 
 /**
@@ -109,10 +109,7 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
         contact_preference: parsed.data.contact_preference,
         source: source ?? 'business-profile',
       };
-      const { error } = await supabase
-        .from('lead_requests')
-        .insert(payload);
-      if (error) throw error;
+      await insertLeadRequest(payload);
 
       // Fire-and-forget owner email notification. Failure must NOT break lead capture.
       notifySupplierLead(leadId);

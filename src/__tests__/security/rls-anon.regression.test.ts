@@ -108,4 +108,19 @@ d('RLS anonymous regression', () => {
       expect(error).not.toBeNull();
     }
   });
+
+  // ---------- lead_requests anti-spoof (R3H) ----------
+  it('lead_requests: anon INSERT with spoofed user_id is rejected by RLS', async () => {
+    const { error } = await anon.from('lead_requests').insert({
+      id: crypto.randomUUID(),
+      business_id: '00000000-0000-0000-0000-000000000000',
+      user_id: crypto.randomUUID(), // spoof attempt — anon must send null
+      name: 'spoof',
+      email: 'spoof@example.com',
+      message: 'anti-spoof regression test',
+      contact_preference: 'any',
+      source: 'rls-regression',
+    } as never);
+    expect(error).not.toBeNull();
+  });
 });
