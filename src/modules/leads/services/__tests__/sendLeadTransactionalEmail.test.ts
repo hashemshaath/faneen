@@ -106,11 +106,7 @@ describe('AdminLeadRequests.tsx regression (C5)', () => {
     expect(src).toMatch(/await Promise\.allSettled\(sends\)/);
   });
 
-  it('leaves businesses lookup direct Supabase usage untouched for D4', () => {
-    expect(src).toMatch(/\.from\(\s*['"]businesses['"]\s*\)/);
-  });
-
-  it('still imports supabase for remaining deferred usages', () => {
-    expect(src).toMatch(/from '@\/integrations\/supabase\/client'/);
+  it('no longer contains direct businesses lookup (handled by D4 service)', () => {
+    expect(src).not.toMatch(/\.from\(\s*['"]businesses['"]\s*\)/);
   });
 });

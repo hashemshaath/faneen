@@ -46,7 +46,4 @@ describe('AdminLeadRequests.tsx regression (C1)', () => {
     expect(src).toMatch(/adminConvertLeadToContract\(/);
   });
 
-  it('leaves direct businesses lookup untouched for D4', () => {
-    expect(src).toMatch(/\.from\(\s*['"]businesses['"]\s*\)/);
-  });
 });
