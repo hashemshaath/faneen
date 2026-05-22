@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -2269,7 +2270,7 @@ const ContractDetail = () => {
                                                 const refId = (contract as any).ref_id || contract.id;
                                                 const titleAr = (contract as any).title_ar || (contract as any).title || '';
                                                 const titleEn = (contract as any).title_en || (contract as any).title || titleAr;
-                                                void supabase.from('notifications').insert({
+                                                createNotificationFireAndForget({
                                                   user_id: contract.client_id,
                                                   title_ar: 'تم تسجيل دفعة على عقدك',
                                                   title_en: 'A payment was recorded on your contract',
@@ -2279,7 +2280,7 @@ const ContractDetail = () => {
                                                   reference_id: contract.id,
                                                   reference_type: 'contract',
                                                   action_url: `/contracts/${contract.id}`,
-                                                });
+                                                }, '[ContractDetail] payment-recorded notification failed');
                                                 const clientEmail = (clientProfile as any)?.email;
                                                 const clientName = (clientProfile as any)?.full_name;
                                                 if (clientEmail) {

@@ -4,6 +4,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -914,7 +915,7 @@ const DashboardContracts = () => {
               const titleAr = (contract as any).title_ar || '';
               const titleEn = (contract as any).title_en || titleAr;
               const msTitle = isRTL ? ((ms as any).title_ar || (ms as any).title_en || '') : ((ms as any).title_en || (ms as any).title_ar || '');
-              void supabase.from('notifications').insert({
+              createNotificationFireAndForget({
                 user_id: contract.client_id,
                 title_ar: 'تم تحديث مرحلة في عقدك',
                 title_en: 'A milestone in your contract was updated',
@@ -924,7 +925,7 @@ const DashboardContracts = () => {
                 reference_id: contract.id,
                 reference_type: 'contract',
                 action_url: `/contracts/${contract.id}`,
-              });
+              }, '[DashboardContracts] milestone-completed notification failed');
               const clientProfile = profiles.find((p: any) => p.user_id === contract.client_id) as any;
               const clientEmail = clientProfile?.email;
               const clientName = clientProfile?.full_name;
