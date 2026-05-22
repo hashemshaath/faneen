@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { PasswordResetLogPanel } from '@/components/admin/PasswordResetLogPanel';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { listAllUserRoles } from '@/services/userRoles';
 
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
@@ -79,13 +80,7 @@ const AdminAccessManagement = () => {
   // Fetch all role assignments
   const { data: rolesData = [], isLoading: loadingRoles } = useQuery({
     queryKey: ['access-mgmt-roles'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('id, user_id, role');
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () => listAllUserRoles(),
     enabled: !!user,
   });
 
