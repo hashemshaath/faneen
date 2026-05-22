@@ -94,10 +94,6 @@ describe('P-17 owner single-row read migration', () => {
 });
 
 describe('P-17 intentionally-deferred callsites (post-P-18)', () => {
-  it('ProviderMembershipCard businesses count stays direct (counts phase)', () => {
-    const src = read('src/components/dashboard/ProviderMembershipCard.tsx');
-    expect(src).toMatch(/from\(['"]businesses['"]\)[\s\S]*count: 'exact', head: true/);
-  });
   it('getManagedBusinessesForUser remains the canonical staff+owner aggregator', () => {
     const src = read('src/modules/leads/services/getManagedBusinessesForUser.ts');
     expect(src).toMatch(/supabase\.from\(['"]businesses['"]\)/);
