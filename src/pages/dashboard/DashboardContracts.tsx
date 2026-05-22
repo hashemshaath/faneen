@@ -20,6 +20,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { mapContractLockError, mapContractCreateError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import {
+  listContractsForRole,
+  getContractParticipantProfiles,
+} from '@/modules/contracts/services/list';
+import {
   FileText, Eye, Plus, CheckCircle2, Clock, XCircle, AlertTriangle,
   Shield, DollarSign, Calendar, Users, ListChecks, StickyNote,
   Send, Phone, Mail, ChevronDown, ChevronUp, Activity,
@@ -266,21 +270,13 @@ const DashboardContracts = () => {
   /* ── Data Queries ── */
   const { data: providerContracts = [], isLoading: loadingProvider } = useQuery({
     queryKey: ['dashboard-contracts', 'provider', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('contracts').select('*').eq('provider_id', user!.id).order('created_at', { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () => listContractsForRole({ userId: user!.id, role: 'provider' }),
     enabled: !!user,
   });
 
   const { data: clientContracts = [], isLoading: loadingClient } = useQuery({
     queryKey: ['dashboard-contracts', 'client', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('contracts').select('*').eq('client_id', user!.id).order('created_at', { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () => listContractsForRole({ userId: user!.id, role: 'client' }),
     enabled: !!user,
   });
 
@@ -443,9 +439,7 @@ const DashboardContracts = () => {
     queryFn: async () => {
       const userIds = new Set<string>();
       contracts.forEach((c) => { userIds.add(c.client_id); userIds.add(c.provider_id); });
-      if (userIds.size === 0) return [];
-      const { data } = await supabase.from('profiles').select('user_id, full_name, avatar_url, phone, email').in('user_id', Array.from(userIds));
-      return data ?? [];
+      return getContractParticipantProfiles(Array.from(userIds));
     },
     enabled: contracts.length > 0,
   });
