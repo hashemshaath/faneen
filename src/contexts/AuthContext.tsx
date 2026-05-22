@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { getUserRoles } from '@/services/userRoles';
 
 interface UserProfile {
   id: string;
@@ -47,11 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchRoles = useCallback(async (userId: string) => {
     try {
-      const { data } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
-      const fetchedRoles = data?.map(r => r.role) || [];
+      const fetchedRoles = await getUserRoles(userId);
       setRoles(fetchedRoles);
       return fetchedRoles;
     } catch {
