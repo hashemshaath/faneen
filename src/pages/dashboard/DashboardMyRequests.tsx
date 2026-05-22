@@ -11,6 +11,7 @@ import {
   countQuoteRequestFiles,
 } from '@/modules/leads/services/list';
 import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
+import { notifyCustomerLeadUpdate } from '@/modules/leads/services/notifyCustomerLeadUpdate';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -151,9 +152,7 @@ const DashboardMyRequests: React.FC = () => {
     mutationFn: async (id: string) => {
       await updateLeadRequestStatus(id, 'cancelled');
       try {
-        await supabase.functions.invoke('notify-customer-lead-update', {
-          body: { lead_id: id, status: 'cancelled' },
-        });
+        await notifyCustomerLeadUpdate({ lead_id: id, status: 'cancelled' });
       } catch { /* fail-soft */ }
     },
     onMutate: (id) => setPendingId(id),
