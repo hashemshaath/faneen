@@ -1,0 +1,1 @@
+DELETE FROM public.barcode_registry WHERE barcode_code = 'LED-2026-100038' AND entity_id = '948254db-e906-40ec-b6a2-fc9c331d7399';
