@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
+import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { toast } from 'sonner';
 import { track } from '@/lib/analytics-events';
 import { getAttributionPayload } from '@/lib/analytics-attribution';
