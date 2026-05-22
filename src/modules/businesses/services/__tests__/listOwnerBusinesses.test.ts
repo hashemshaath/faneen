@@ -149,3 +149,56 @@ describe('P-18 deferred guardrails', () => {
     expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
   });
 });
+
+// ─── P-23 allowlist burn-down regression locks ─────────
+describe('P-23 allowlist burn-down', () => {
+  it('ActiveBusinessSwitcher owner read goes through listOwnerBusinesses', () => {
+    const src = read('src/components/dashboard/ActiveBusinessSwitcher.tsx');
+    expect(src).toContain('listOwnerBusinesses');
+    expect(src).not.toMatch(/supabase[\s\S]{0,40}\.from\(['"]businesses['"]\)[\s\S]{0,80}select/);
+    expect(src).toContain("'id, name_ar, name_en'");
+    expect(src).toContain("['my-businesses-switcher', user?.id]");
+    // business_staff direct read intentionally deferred.
+    expect(src).toMatch(/from\(['"]business_staff['"]\)/);
+  });
+
+  it('PublicSiteScan owner read goes through listOwnerBusinesses', () => {
+    const src = read('src/pages/PublicSiteScan.tsx');
+    expect(src).toContain('listOwnerBusinesses');
+    expect(src).not.toMatch(/supabase[\s\S]{0,40}\.from\(['"]businesses['"]\)[\s\S]{0,80}select/);
+    expect(src).toContain("'id, name_ar, name_en'");
+    expect(src).toContain("['my-managed-businesses', user?.id]");
+    expect(src).toMatch(/from\(['"]business_staff['"]\)/);
+  });
+
+  it('DashboardAnalytics owner business read goes through getOwnerBusiness with activeOnly', () => {
+    const src = read('src/pages/dashboard/DashboardAnalytics.tsx');
+    expect(src).toContain('getOwnerBusiness');
+    expect(src).not.toMatch(/supabase[\s\S]{0,40}\.from\(['"]businesses['"]\)[\s\S]{0,80}select/);
+    expect(src).toContain("'id, name_ar, name_en, created_at, rating_avg, rating_count'");
+    expect(src).toContain('activeOnly: true');
+    expect(src).toContain("['my-business', user?.id]");
+  });
+
+  it('DashboardContractAnalytics owner read goes through listOwnerBusinesses', () => {
+    const src = read('src/pages/dashboard/DashboardContractAnalytics.tsx');
+    expect(src).toContain('listOwnerBusinesses');
+    expect(src).not.toMatch(/supabase[\s\S]{0,40}\.from\(['"]businesses['"]\)[\s\S]{0,80}select/);
+    expect(src).toContain("'id, name_ar, name_en'");
+    expect(src).toContain("['my-managed-businesses', user?.id]");
+    expect(src).toMatch(/from\(['"]business_staff['"]\)/);
+  });
+
+  it('audit allowlist no longer includes the four migrated files', () => {
+    const src = read('scripts/businesses-reads-isolation-audit.mjs');
+    expect(src).not.toContain('DashboardAnalytics.tsx');
+    expect(src).not.toContain('DashboardContractAnalytics.tsx');
+    expect(src).not.toContain('PublicSiteScan.tsx');
+    expect(src).not.toContain('ActiveBusinessSwitcher.tsx');
+    // ensure-business and lead services remain allowlisted.
+    expect(src).toContain('src/lib/ensure-business.ts');
+    expect(src).toContain('getManagedBusinessesForUser.ts');
+    expect(src).toContain('getBusinessesForMyRequests.ts');
+    expect(src).toContain('getLeadProviderContactForEmail.ts');
+  });
+});
