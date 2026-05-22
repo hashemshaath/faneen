@@ -1,4 +1,9 @@
-// Module: leads
-// Public API for this module will be added in R1/R2.
-// Scaffold only — intentionally empty.
-export {};
+// Module: leads — public API (R3A)
+export * from './constants/quoteStatuses';
+export * from './constants/labels';
+export * from './constants/storage';
+export * from './utils/phone';
+export * from './utils/fileSize';
+export * from './components/LeadStatusBadge';
+export * from './components/LeadActionsBar';
+export * from './components/LeadDetailPanel';
