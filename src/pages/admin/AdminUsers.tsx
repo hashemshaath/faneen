@@ -5,6 +5,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listAdminBusinesses } from '@/modules/businesses';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -596,10 +597,11 @@ const AdminUsers = () => {
   const { data: businesses = [] } = useQuery({
     queryKey: ['admin-businesses-map'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('businesses')
-        .select('id, user_id, name_ar, name_en, ref_id, username, is_active, is_verified, membership_tier, business_number');
+      const { data, error } = await listAdminBusinesses<BusinessInfo>({
+        select: 'id, user_id, name_ar, name_en, ref_id, username, is_active, is_verified, membership_tier, business_number',
+      });
       if (error) throw error;
-      return data as BusinessInfo[];
+      return (data ?? []) as BusinessInfo[];
     },
     enabled: !!user,
   });

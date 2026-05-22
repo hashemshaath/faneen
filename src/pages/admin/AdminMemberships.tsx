@@ -4,6 +4,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listAdminBusinesses, listBusinessesByIds } from '@/modules/businesses';
 import { listProfilesByUserIds } from '@/modules/users';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -510,7 +511,18 @@ const AdminMemberships = () => {
     queryKey: ['admin-sub-businesses', businessIds],
     queryFn: async () => {
       if (!businessIds.length) return [];
-      const { data } = await supabase.from('businesses').select('id, name_ar, name_en, membership_tier, logo_url, is_verified, is_active').in('id', businessIds);
+      const { data } = await listBusinessesByIds<{
+        id: string;
+        name_ar: string | null;
+        name_en: string | null;
+        membership_tier: string | null;
+        logo_url: string | null;
+        is_verified: boolean | null;
+        is_active: boolean | null;
+      }>({
+        ids: businessIds,
+        select: 'id, name_ar, name_en, membership_tier, logo_url, is_verified, is_active',
+      });
       return data ?? [];
     },
     enabled: businessIds.length > 0,
@@ -519,10 +531,22 @@ const AdminMemberships = () => {
   const { data: allBusinesses = [], isLoading: loadingBiz } = useQuery({
     queryKey: ['admin-all-businesses-tiers'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('businesses')
-        .select('id, name_ar, name_en, membership_tier, logo_url, is_verified, is_active, username, rating_avg, rating_count, created_at')
-        .order('membership_tier', { ascending: false });
+      const { data } = await listAdminBusinesses<{
+        id: string;
+        name_ar: string | null;
+        name_en: string | null;
+        membership_tier: string | null;
+        logo_url: string | null;
+        is_verified: boolean | null;
+        is_active: boolean | null;
+        username: string | null;
+        rating_avg: number | null;
+        rating_count: number | null;
+        created_at: string;
+      }>({
+        select: 'id, name_ar, name_en, membership_tier, logo_url, is_verified, is_active, username, rating_avg, rating_count, created_at',
+        orderBy: { column: 'membership_tier', ascending: false },
+      });
       return data ?? [];
     },
     enabled: activeTab === 'businesses',

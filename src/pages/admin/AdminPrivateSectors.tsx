@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { supabase } from '@/integrations/supabase/client';
+import { listBusinessesByIds } from '@/modules/businesses';
 import { toast } from 'sonner';
 import { ShieldCheck, Search, CheckCircle2, XCircle, Pause, RotateCcw, Pencil, FileClock, Layers, Trash2, Users } from 'lucide-react';
 import {
@@ -65,7 +65,15 @@ const AdminPrivateSectors: React.FC = () => {
     queryKey: ['admin-ps-businesses', businessIds.sort().join(',')],
     enabled: businessIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id, name_ar, name_en, ref_id').in('id', businessIds);
+      const { data } = await listBusinessesByIds<{
+        id: string;
+        name_ar: string | null;
+        name_en: string | null;
+        ref_id: string | null;
+      }>({
+        ids: businessIds,
+        select: 'id, name_ar, name_en, ref_id',
+      });
       return data ?? [];
     },
   });

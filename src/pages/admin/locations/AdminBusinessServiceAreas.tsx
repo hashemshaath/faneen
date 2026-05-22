@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
+import { listAdminBusinesses } from '@/modules/businesses';
 import { toast } from 'sonner';
 import { Plus, Trash2, Star, Loader2, MapPin, ExternalLink } from 'lucide-react';
 
@@ -33,13 +34,13 @@ const AdminBusinessServiceAreas: React.FC = () => {
   const { data: businesses } = useQuery({
     queryKey: ['admin-businesses-light'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('id, name_ar, ref_id')
-        .order('name_ar')
-        .limit(1000);
+      const { data, error } = await listAdminBusinesses<{ id: string; name_ar: string; ref_id: string }>({
+        select: 'id, name_ar, ref_id',
+        orderBy: { column: 'name_ar' },
+        limit: 1000,
+      });
       if (error) throw error;
-      return data as { id: string; name_ar: string; ref_id: string }[];
+      return (data ?? []) as { id: string; name_ar: string; ref_id: string }[];
     },
   });
 

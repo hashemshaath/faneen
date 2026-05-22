@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
-import { updateBusinessById, updateBusinessesByIds } from '@/modules/businesses';
+import { updateBusinessById, updateBusinessesByIds, listAdminBusinesses } from '@/modules/businesses';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -220,7 +220,10 @@ const AdminBusinesses = () => {
   const { data: businesses = [], isLoading, refetch: refetchBusinesses } = useQuery({
     queryKey: ['admin-businesses'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('businesses').select('*').order('created_at', { ascending: false });
+      const { data, error } = await listAdminBusinesses<Database['public']['Tables']['businesses']['Row']>({
+        select: '*',
+        orderBy: { column: 'created_at', ascending: false },
+      });
       if (error) throw error;
       return data;
     },

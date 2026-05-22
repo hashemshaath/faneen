@@ -154,11 +154,6 @@ describe('P-19 intentionally-deferred businesses reads', () => {
     expect(src).toMatch(/\.from\(['"]businesses['"]\)/);
   });
 
-  it('admin full-list reads remain direct (AdminBusinesses)', () => {
-    const src = read('src/pages/admin/AdminBusinesses.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]businesses['"]\)\.select\(['"]\*['"]\)/);
-  });
-
   it('countActiveBusinesses wrapper remains intact and is not removed', () => {
     const src = read('src/modules/businesses/services/countActiveBusinesses.ts');
     expect(src).toMatch(/countActiveBusinesses/);

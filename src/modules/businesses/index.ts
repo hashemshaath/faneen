@@ -5,6 +5,14 @@ export type { ListBusinessesByIdsOptions } from './services/listBusinessesByIds'
 export { countActiveBusinesses } from './services/countActiveBusinesses';
 export { countBusinesses } from './services/countBusinesses';
 export type { CountBusinessesOptions, CountBusinessesFilter } from './services/countBusinesses';
+export { listAdminBusinesses } from './services/listAdminBusinesses';
+export type {
+  ListAdminBusinessesOptions,
+  ListAdminBusinessesFilter,
+  ListAdminBusinessesOrder,
+} from './services/listAdminBusinesses';
+export { getAdminBusinessById } from './services/getAdminBusinessById';
+export type { GetAdminBusinessByIdOptions } from './services/getAdminBusinessById';
 export { listCompareBusinesses } from './services/listCompareBusinesses';
 export type { ListCompareBusinessesOptions } from './services/listCompareBusinesses';
 export { getBusinessForContract } from './services/getBusinessForContract';
