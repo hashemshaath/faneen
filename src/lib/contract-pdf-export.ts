@@ -129,8 +129,8 @@ export interface ContractExportData {
   measurements?: { pieceNumber: string; name: string; location: string; floor: string; lengthMm: number; widthMm: number; areaSqm: number; unitPrice: number; quantity: number; totalCost: number; status: string }[];
   /**
    * Attachment index entries — metadata only. Never include signed URLs,
-   * storage paths, or `file_url` here. Visibility filtering happens in the
-   * caller (RLS already gates the underlying query).
+   * storage paths, or the direct file link field here. Visibility filtering
+   * happens in the caller (RLS already gates the underlying query).
    */
   attachments?: {
     fileName: string;
@@ -178,7 +178,7 @@ export interface ContractExportData {
   /**
    * CT6: Frozen template snapshot payload. Only `sections[].clauses[]` and
    * `attachments[]` (precedence_order, kind, title_ar/en, is_mandatory) are
-   * read here. file_url and storage paths are NEVER rendered.
+   * read here. Direct file URLs and storage paths are NEVER rendered.
    */
   templateSnapshot?: {
     sections?: Array<{
