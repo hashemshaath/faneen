@@ -8,8 +8,8 @@ const DIRECT_INVOKE = /supabase\.functions\.invoke\(\s*['"]send-transactional-em
 const WRAPPER_IMPORT = /from\s+['"]@\/modules\/notifications\/services\/sendTransactionalEmail['"]/;
 const WRAPPER_CALL = /sendTransactionalEmail\(/;
 
-describe('E-Mail-6: BookingWidget email isolation', () => {
-  const src = read('src/components/booking/BookingWidget.tsx');
+describe('E-Mail-7: Contact.tsx email isolation', () => {
+  const src = read('src/pages/Contact.tsx');
 
   it('no longer directly calls supabase.functions.invoke for send-transactional-email', () => {
     expect(src).not.toMatch(DIRECT_INVOKE);
@@ -20,33 +20,51 @@ describe('E-Mail-6: BookingWidget email isolation', () => {
     expect(src).toMatch(WRAPPER_CALL);
   });
 
-  it('preserves exact booking-confirmation template name', () => {
-    expect(src).toContain("templateName: 'booking-confirmation'");
+  it('preserves exact contact-confirmation template name', () => {
+    expect(src).toContain("templateName: 'contact-confirmation'");
   });
 
-  it('preserves idempotencyKey pattern with bookingId', () => {
-    expect(src).toContain('idempotencyKey: `booking-confirm-${bookingId}`');
+  it('preserves exact contact-admin-notification template name', () => {
+    expect(src).toContain("templateName: 'contact-admin-notification'");
   });
 
-  it('preserves templateData shape (clientName, businessName, bookingDate, startTime, refId)', () => {
-    expect(src).toContain('clientName: user.user_metadata?.full_name || \'\'');
-    expect(src).toContain('businessName,');
-    expect(src).toContain('bookingDate: dateStr');
-    expect(src).toContain('startTime: slot.time');
-    expect(src).toContain('refId: inserted?.ref_id || \'\'');
+  it('preserves idempotencyKey pattern for customer confirmation', () => {
+    expect(src).toContain('idempotencyKey: `contact-confirm-${id}`');
   });
 
-  it('preserves fire-and-forget non-awaited behavior with .catch(console.error)', () => {
-    const emailBlock = src.slice(src.indexOf('sendTransactionalEmail({'));
-    expect(emailBlock).toMatch(/\.catch\(console\.error\)/);
+  it('preserves idempotencyKey pattern for admin notification', () => {
+    expect(src).toContain('idempotencyKey: `contact-admin-${id}`');
   });
 
-  it('keeps supabase import for DB queries and booking insert', () => {
+  it('preserves templateData shape for contact-confirmation (name, subject)', () => {
+    expect(src).toContain('name: form.name.trim(),');
+    expect(src).toContain('subject: form.subject.trim(),');
+  });
+
+  it('preserves templateData shape for contact-admin-notification (name, email, subject, message)', () => {
+    expect(src).toContain('email: form.email.trim().toLowerCase(),');
+    expect(src).toContain('message: form.message.trim(),');
+  });
+
+  it('preserves sequential awaited behavior for both emails', () => {
+    expect(src).toMatch(/await sendTransactionalEmail\(/g);
+    const firstIndex = src.indexOf('await sendTransactionalEmail({');
+    const secondIndex = src.indexOf('await sendTransactionalEmail({', firstIndex + 1);
+    expect(secondIndex).toBeGreaterThan(firstIndex);
+  });
+
+  it('preserves outer try/catch so email errors bubble to toast', () => {
+    expect(src).toMatch(/try \{/);
+    expect(src).toMatch(/await sendTransactionalEmail\(/);
+    expect(src).toMatch(/toast\.error\(/);
+  });
+
+  it('keeps supabase import for contact_messages insert', () => {
     expect(src).toMatch(/import\s*\{[^}]*supabase[^}]*\}\s*from\s+['"]@\/integrations\/supabase\/client['"]/);
   });
 });
 
-describe('E-Mail-6: cross-file guardrails', () => {
+describe('E-Mail-7: cross-file guardrails', () => {
   it('lead/quote pages remain clean', () => {
     expect(read('src/components/lead/LeadRequestForm.tsx')).not.toMatch(DIRECT_INVOKE);
     expect(read('src/pages/Quote.tsx')).not.toMatch(DIRECT_INVOKE);
@@ -66,6 +84,10 @@ describe('E-Mail-6: cross-file guardrails', () => {
   it('Membership and AdminUpgradeRequestsPanel remain clean', () => {
     expect(read('src/pages/Membership.tsx')).not.toMatch(DIRECT_INVOKE);
     expect(read('src/components/membership/AdminUpgradeRequestsPanel.tsx')).not.toMatch(DIRECT_INVOKE);
+  });
+
+  it('BookingWidget remains clean', () => {
+    expect(read('src/components/booking/BookingWidget.tsx')).not.toMatch(DIRECT_INVOKE);
   });
 
   it('deferred callsites are NOT migrated in this phase (still use direct invoke)', () => {
