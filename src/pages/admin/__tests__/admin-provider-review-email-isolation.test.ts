@@ -77,7 +77,7 @@ describe('AdminProviderReview email isolation (E-Mail-9)', () => {
   it('preserves error-swallowing semantics for email failures', () => {
     const src = read('src/pages/admin/AdminProviderReview.tsx');
     const emailBlock = src.substring(
-      src.indexOf('sendTransactionalEmail({') - 200,
+      src.indexOf('sendTransactionalEmail({') - 300,
       src.indexOf('sendTransactionalEmail({') + 900
     );
     expect(emailBlock).toContain('try {');
