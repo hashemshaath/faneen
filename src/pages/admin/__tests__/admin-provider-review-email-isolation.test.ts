@@ -48,7 +48,7 @@ describe('AdminProviderReview email isolation (E-Mail-9)', () => {
     const callIndex = src.indexOf('sendTransactionalEmail({');
     expect(callIndex).toBeGreaterThan(-1);
 
-    const before = src.slice( clinically(callIndex - 200, callIndex));
+    const before = src.slice(Math.max(0, callIndex - 200), callIndex);
     expect(before).toContain('try {');
 
     const after = src.slice(callIndex, callIndex + 600);
