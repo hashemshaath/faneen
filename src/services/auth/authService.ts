@@ -218,15 +218,13 @@ export const authService = {
     // never break onboarding. Recipient preferences are honored server-side
     // by `send-transactional-email` via the TEMPLATE_CATEGORY map.
     if (!error && extras?.recipientEmail) {
-      void supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'welcome-business',
-          recipientEmail: extras.recipientEmail,
-          idempotencyKey: `welcome-business-${userId}`,
-          templateData: {
-            businessName: sanitizedName || undefined,
-            dashboardUrl: `${window.location.origin}/dashboard`,
-          },
+      void sendTransactionalEmail({
+        templateName: 'welcome-business',
+        recipientEmail: extras.recipientEmail,
+        idempotencyKey: `welcome-business-${userId}`,
+        templateData: {
+          businessName: sanitizedName || undefined,
+          dashboardUrl: `${window.location.origin}/dashboard`,
         },
       }).catch(() => { /* swallow — handled by queue retries */ });
     }
