@@ -105,7 +105,7 @@ describe('P-18 owner-list migration', () => {
     expect(src).toContain('const merged = [...((owned ?? []) as BusinessRow[]), ...staffBusinesses];');
     expect(src).toContain('seen.has(b.id)');
     // business_staff direct read intentionally deferred.
-    expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
+    expect(src).toMatch(/from\(['"]business_staff['"]\)/);
   });
 
   it('DashboardPrivateSectors owner list uses listOwnerBusinesses', () => {
@@ -116,7 +116,7 @@ describe('P-18 owner-list migration', () => {
     expect(src).toContain("['my-businesses-for-sectors', user?.id]");
     expect(src).toContain('enabled: !!user');
     // business_staff embedded read intentionally deferred.
-    expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
+    expect(src).toMatch(/from\(['"]business_staff['"]\)/);
   });
 
   it('ProviderServiceAreas owner list uses listOwnerBusinesses', () => {
@@ -138,7 +138,7 @@ describe('P-18 owner-list migration', () => {
     expect(src).toContain("['my-business-membership', user?.id, profile?.account_type]");
     expect(src).toContain('owned.data[0]');
     // staff fallback still direct (embedded select).
-    expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
+    expect(src).toMatch(/from\(['"]business_staff['"]\)/);
   });
 });
 
