@@ -4,7 +4,6 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { getMyQuoteRequestDetail, listQuoteRequestFiles } from '@/modules/leads/services/detail';
 import { updateMyQuoteRequest } from '@/modules/leads/services/mutations';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,7 +25,7 @@ import {
   QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_LABEL_EN, QUOTE_STATUS_DESC_AR, QUOTE_STATUS_TONE,
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
   TIMELINE_LABEL_AR, SECTOR_LABEL_AR,
-  QUOTE_BUCKET, createSignedQuoteFileUrl, formatFileSize, type QuoteStatus,
+  createSignedQuoteFileUrl, formatFileSize, type QuoteStatus,
 } from '@/lib/quoteRequests';
 import { uploadQuoteRequestFile } from '@/modules/quotes/services/uploadQuoteRequestFile';
 import { createQuoteRequestFileRecord } from '@/modules/quotes/services/createQuoteRequestFileRecord';
