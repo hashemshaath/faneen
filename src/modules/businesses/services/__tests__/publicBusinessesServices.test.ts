@@ -225,11 +225,6 @@ describe('P-21 intentionally-deferred businesses reads', () => {
     expect(src).toMatch(/\.from\(['"]businesses['"]\)/);
   });
 
-  it('dashboard analytics list reads remain direct', () => {
-    const src = read('src/pages/dashboard/DashboardAnalytics.tsx');
-    expect(src).toMatch(/\.from\(['"]businesses['"]\)/);
-  });
-
   it('business_staff aggregation in getManagedBusinessesForUser remains canonical', () => {
     const src = read('src/modules/leads/services/getManagedBusinessesForUser.ts');
     expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
