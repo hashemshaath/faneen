@@ -295,7 +295,18 @@ const ContractDetail = () => {
   const { data: business } = useQuery({
     queryKey: ['contract-business', contract?.business_id],
     queryFn: async () => {
-      const { data } = await getBusinessForContract(contract!.business_id!);
+      const { data } = await getBusinessForContract<{
+        logo_url: string | null;
+        username: string | null;
+        address: string | null;
+        district: string | null;
+        street_name: string | null;
+        building_number: string | null;
+        additional_number: string | null;
+        region: string | null;
+        categories: { name_ar: string | null; name_en: string | null } | null;
+        [key: string]: unknown;
+      }>(contract!.business_id!);
       return data;
     },
     enabled: !!contract?.business_id,
