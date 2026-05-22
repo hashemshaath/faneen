@@ -653,6 +653,16 @@ describe('BusinessCard +N counter with null/non-boolean is_active', () => {
  * card MUST re-render exactly once.
  */
 describe('BusinessCard render cost (React.memo behavior)', () => {
+  // NOTE: We intentionally do NOT assert on React Profiler `actualDuration`
+  // thresholds or ratios (e.g. `< mountDuration * 0.25`). Wall-clock
+  // measurements are non-deterministic in CI (bunx/vitest scheduling, GC,
+  // shared runners) and produced intermittent failures unrelated to the
+  // component. Instead we use a binary signal that is deterministic:
+  //   - When React.memo fully bails out, no component in the Profiler's
+  //     subtree renders, so `actualDuration === 0` for that commit.
+  //   - When the memo'd component actually re-renders, `actualDuration > 0`.
+  // This preserves the original intent (regression protection for
+  // unnecessary re-renders / memoization) without any timing budget.
   const mountWithProfiler = (b: Record<string, unknown>) => {
     const renders: Array<{ phase: string; actualDuration: number }> = [];
     const onRender: ProfilerOnRenderCallback = (_id, phase, actualDuration) => {
@@ -677,7 +687,7 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
       ],
     };
     const { rerender, renders } = mountWithProfiler(business);
-    const mountDuration = renders.find((r) => r.phase === 'mount')!.actualDuration;
+    expect(renders.find((r) => r.phase === 'mount')).toBeDefined();
     expect(renders.filter((r) => r.phase === 'update').length).toBe(0);
 
     // Re-render parent with the SAME `business` reference.
@@ -691,12 +701,12 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
         </Profiler>
       </MemoryRouter>,
     );
-    // memo() must short-circuit: every update commit must be drastically
-    // cheaper than the initial mount (we use < 25% as a generous bail-out
-    // signal that BusinessCard's body did not run again).
+    // memo() must short-circuit: every update commit must report zero
+    // render work in the Profiler's subtree (deterministic bail-out
+    // signal — no timing threshold).
     const updates = renders.filter((r) => r.phase === 'update');
     expect(updates.length).toBeGreaterThan(0);
-    expect(updates.every((r) => r.actualDuration < mountDuration * 0.25)).toBe(true);
+    expect(updates.every((r) => r.actualDuration === 0)).toBe(true);
   });
 
   it('re-renders exactly once when business_services changes (new reference)', () => {
@@ -724,11 +734,12 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
         </Profiler>
       </MemoryRouter>,
     );
-    // The real prop change MUST cause an update commit roughly comparable
-    // to a normal render (not a memo bail-out).
-    const mountDuration = renders.find((r) => r.phase === 'mount')!.actualDuration;
+    // The real prop change MUST cause an update commit that actually does
+    // render work (i.e. NOT a memo bail-out). We assert work was performed
+    // via actualDuration > 0 rather than comparing against the mount
+    // duration, which is timing-sensitive.
     const updates = renders.filter((r) => r.phase === 'update');
-    expect(updates.some((r) => r.actualDuration >= mountDuration * 0.25)).toBe(true);
+    expect(updates.some((r) => r.actualDuration > 0)).toBe(true);
     expect(screen.getByText('خدمة-2')).toBeInTheDocument();
   });
 
@@ -752,10 +763,10 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
       );
     }
     // Across 5 stable re-renders, every update commit must be a memo
-    // bail-out (much cheaper than the initial mount).
-    const mountDuration = renders.find((r) => r.phase === 'mount')!.actualDuration;
+    // bail-out (zero render work in subtree — deterministic, no timing
+    // threshold).
     const updates = renders.filter((r) => r.phase === 'update');
     expect(updates.length).toBeGreaterThan(0);
-    expect(updates.every((r) => r.actualDuration < mountDuration * 0.25)).toBe(true);
+    expect(updates.every((r) => r.actualDuration === 0)).toBe(true);
   });
 });
