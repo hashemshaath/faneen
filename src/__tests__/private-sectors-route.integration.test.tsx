@@ -69,7 +69,7 @@ const NotFoundSentinel = () => <div data-testid="not-found">NOT_FOUND_404</div>;
 
 const renderAt = (path: string) =>
   render(
-    <MemoryRouter initialEntries={[path]}>
+    <MemoryRouter initialEntries={[path]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         {/* Mirrors App.tsx — protected route declared BEFORE the catch-all */}
         <Route
