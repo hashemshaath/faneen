@@ -168,7 +168,7 @@ const DashboardBusinessEdit: React.FC = () => {
         toast.error(t(isRTL, 'اسم المنشأة (عربي) مطلوب', 'Business name (Arabic) is required'));
         setSaving(false); return;
       }
-      const { error: updateError } = await supabase.from('businesses').update(payload).eq('id', form.id);
+      const { error: updateError } = await updateBusinessById({ id: form.id, values: payload });
       if (updateError) throw updateError;
       toast.success(t(isRTL, 'تم حفظ التعديلات بنجاح', 'Changes saved successfully'));
       setDirty(false);

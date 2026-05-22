@@ -11,3 +11,5 @@ export { getOwnerBusiness, getOwnerBusinessId } from './services/getOwnerBusines
 export type { GetOwnerBusinessOptions } from './services/getOwnerBusiness';
 export { getActiveBusinessStaffMembership } from './services/getActiveBusinessStaffMembership';
 export type { GetActiveBusinessStaffMembershipOptions } from './services/getActiveBusinessStaffMembership';
+export { updateBusinessById } from './services/updateBusinessById';
+export type { UpdateBusinessByIdOptions } from './services/updateBusinessById';
