@@ -126,20 +126,6 @@ describe('P-5B out-of-scope guardrail (must remain direct in this phase)', () =>
     const src = read('src/components/dashboard/DashboardLayout.tsx');
     expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)\.update/);
   });
-  it('AdminDashboardView head-count/list reads remain direct (deferred)', () => {
-    const src = read('src/pages/dashboard/overview/AdminDashboardView.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)/);
-  });
-  it('AdminActivityLog full-table profile read remains direct (deferred admin list)', () => {
-    const src = read('src/pages/admin/AdminActivityLog.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)/);
-  });
-  it('AdminAccessManagement full-table profile read remains direct (deferred admin list)', () => {
-    const src = read('src/pages/admin/AdminAccessManagement.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)/);
-  });
-  it('About.tsx public head-count remains direct (deferred)', () => {
-    const src = read('src/pages/About.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)/);
-  });
+  // AdminDashboardView / AdminActivityLog / AdminAccessManagement / About migrated in P-6
+  // (regression locks live in countAndListProfiles.test.ts).
 });
