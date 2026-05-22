@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
+import { createNotification } from '@/modules/notifications/services/createNotification';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -87,7 +88,7 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
       // Best-effort: in-app notification + provider email. Never blocks approval.
       const businessName = req.business?.name_ar || req.business?.name_en || undefined;
       try {
-        await supabase.from('notifications').insert({
+        await createNotification({
           user_id: req.user_id,
           title_ar: 'تمت الموافقة على ترقية باقتك',
           title_en: 'Your upgrade has been approved',
@@ -136,7 +137,7 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
       if (error) throw error;
       const businessName = req.business?.name_ar || req.business?.name_en || undefined;
       try {
-        await supabase.from('notifications').insert({
+        await createNotification({
           user_id: req.user_id,
           title_ar: 'تحديث بخصوص طلب ترقية الباقة',
           title_en: 'Update on your upgrade request',
