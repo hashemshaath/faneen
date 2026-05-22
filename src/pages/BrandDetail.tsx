@@ -43,7 +43,7 @@ const BrandDetail: React.FC = () => {
     queryKey: ['public-brand-dist-bizs', brand?.id, distBizIds.join(',')],
     enabled: distBizIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id, name_ar, name_en, username').in('id', distBizIds);
+      const { data } = await listBusinessesByIds<{ id: string; name_ar: string; name_en: string; username: string }>({ ids: distBizIds });
       return data ?? [];
     },
   });
