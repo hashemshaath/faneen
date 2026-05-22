@@ -7,27 +7,27 @@ type Builder = {
   order: ReturnType<typeof vi.fn>;
   limit: ReturnType<typeof vi.fn>;
   maybeSingle: ReturnType<typeof vi.fn>;
-  _result: { data: unknown; error: unknown };
+  then: (resolve: (v: unknown) => unknown) => Promise<unknown>;
 };
 
 const calls: { table: string; builder: Builder }[] = [];
 let nextResult: { data: unknown; error: unknown } = { data: [], error: null };
 
-function makeBuilder(result: { data: unknown; error: unknown }): Builder {
-  const b: Builder = {
-    _result: result,
-    select: vi.fn(() => b),
-    eq: vi.fn(() => b),
-    in: vi.fn(() => b),
-    order: vi.fn(() => b),
-    limit: vi.fn(() => Promise.resolve(b._result)),
-    maybeSingle: vi.fn(() => Promise.resolve(b._result)),
-  };
+function makeBuilder(): Builder {
+  const b = {} as Builder;
+  b.select = vi.fn(() => b);
+  b.eq = vi.fn(() => b);
+  b.in = vi.fn(() => b);
+  b.order = vi.fn(() => b);
+  b.limit = vi.fn(() => b);
+  b.maybeSingle = vi.fn(() => Promise.resolve(nextResult));
+  // Thenable so `await builder` resolves to the current nextResult.
+  b.then = (resolve) => Promise.resolve(nextResult).then(resolve);
   return b;
 }
 
 const fromMock = vi.fn((table: string) => {
-  const builder = makeBuilder(nextResult);
+  const builder = makeBuilder();
   calls.push({ table, builder });
   return builder;
 });
