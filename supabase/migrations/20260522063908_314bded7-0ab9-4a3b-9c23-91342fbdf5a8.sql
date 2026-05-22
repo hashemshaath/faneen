@@ -1,0 +1,1 @@
+DELETE FROM public.lead_requests WHERE id = '948254db-e906-40ec-b6a2-fc9c331d7399' AND name = 'TEST_ANON_MIN';
