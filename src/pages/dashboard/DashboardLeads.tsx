@@ -3,7 +3,6 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ import { listProviderLeadRequests } from '@/modules/leads/services/detail';
 import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
 import { notifyCustomerLeadUpdate } from '@/modules/leads/services/notifyCustomerLeadUpdate';
 import { createOrGetLeadConversation } from '@/modules/leads/services/createOrGetLeadConversation';
+import { getManagedBusinessesForUser } from '@/modules/leads/services/getManagedBusinessesForUser';
 
 const FILTERS: Array<{ key: 'all' | LeadStatus; ar: string; en: string }> = [
   { key: 'all',        ar: 'الكل',           en: 'All' },
@@ -48,21 +48,7 @@ const DashboardLeads: React.FC = () => {
   const { data: bizIds } = useQuery({
     queryKey: ['my-managed-businesses', user?.id],
     enabled: !!user?.id,
-    queryFn: async () => {
-      const [owned, staff] = await Promise.all([
-        supabase.from('businesses').select('id, name_ar, name_en').eq('user_id', user!.id),
-        supabase.from('business_staff')
-          .select('business_id, role, businesses:business_id(id, name_ar, name_en)')
-          .eq('user_id', user!.id).eq('is_active', true).in('role', ['owner','manager']),
-      ]);
-      const map = new Map<string, { id: string; name_ar: string | null; name_en: string | null }>();
-      (owned.data ?? []).forEach((b) => map.set(b.id, b));
-      (staff.data ?? []).forEach((s) => {
-        const b = (s as unknown as { businesses?: { id: string; name_ar: string | null; name_en: string | null } }).businesses;
-        if (b) map.set(b.id, b);
-      });
-      return Array.from(map.values());
-    },
+    queryFn: () => getManagedBusinessesForUser(user!.id),
   });
 
   const businessNameMap = useMemo(() => {
