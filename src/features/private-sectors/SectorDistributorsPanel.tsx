@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { listBusinessesByIds, getBusinessByRefId } from '@/modules/businesses';
 import { toast } from 'sonner';
 import { Building2, Plus, CheckCircle2, XCircle, Trash2, Ban, Search } from 'lucide-react';
 import {
@@ -49,7 +50,17 @@ export const SectorDistributorsPanel: React.FC<Props> = ({ sectorId, canManage }
     queryKey: ['ps-distributors-bizs', sectorId, businessIds.join(',')],
     enabled: businessIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id, ref_id, name_ar, name_en, username, city_id').in('id', businessIds);
+      const { data } = await listBusinessesByIds<{
+        id: string;
+        ref_id: string | null;
+        name_ar: string | null;
+        name_en: string | null;
+        username: string | null;
+        city_id: string | null;
+      }>({
+        ids: businessIds,
+        select: 'id, ref_id, name_ar, name_en, username, city_id',
+      });
       return data ?? [];
     },
   });
@@ -61,7 +72,10 @@ export const SectorDistributorsPanel: React.FC<Props> = ({ sectorId, canManage }
     mutationFn: async () => {
       const ref = businessRef.trim();
       if (!ref) throw new Error(isRTL ? 'أدخل معرف المنشأة (BIZ-…)' : 'Enter business ref (BIZ-…)');
-      const { data: biz, error: e1 } = await supabase.from('businesses').select('id').eq('ref_id', ref).maybeSingle();
+      const { data: biz, error: e1 } = await getBusinessByRefId<{ id: string }>({
+        refId: ref,
+        select: 'id',
+      });
       if (e1) throw e1;
       if (!biz) throw new Error(isRTL ? 'لم يتم العثور على المنشأة' : 'Business not found');
       return addDistributor({
