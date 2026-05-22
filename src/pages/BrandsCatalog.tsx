@@ -14,8 +14,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Building2, MapPin, Tag, Layers } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
 import { listPublicSectors } from '@/features/private-sectors/service';
+import { listActiveCategories } from '@/modules/categories';
+import { listActiveCities } from '@/modules/locations';
 import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
 
 const ALL = '__all__';
@@ -35,17 +36,17 @@ const BrandsCatalog: React.FC = () => {
       : 'Explore approved exclusive brands, agencies and specialized sub-sectors from Qitaat verified providers.');
   }, [isRTL]);
 
-  const { data: cities = [] } = useQuery({
+  const { data: cities = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string }>>({
     queryKey: ['brands-cities'],
     queryFn: async () => {
-      const { data } = await supabase.from('cities').select('id, name_ar, name_en').eq('is_active', true).order('name_ar');
+      const { data } = await listActiveCities<{ id: string; name_ar: string; name_en: string }>();
       return data ?? [];
     },
   });
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string; slug: string }>>({
     queryKey: ['brands-categories'],
     queryFn: async () => {
-      const { data } = await supabase.from('categories').select('id, name_ar, name_en, slug').eq('is_active', true).order('sort_order');
+      const { data } = await listActiveCategories<{ id: string; name_ar: string; name_en: string; slug: string }>({ select: 'id, name_ar, name_en, slug' });
       return data ?? [];
     },
   });

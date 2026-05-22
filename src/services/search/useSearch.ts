@@ -1,6 +1,9 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+import { listActiveCategories } from '@/modules/categories';
+import { listActiveCities } from '@/modules/locations';
 
 const HISTORY_KEY = 'qitaat_search_history';
 const MAX_HISTORY = 10;
@@ -165,7 +168,7 @@ export const useCategories = () =>
   useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      const { data } = await supabase.from('categories').select('*').eq('is_active', true).order('sort_order');
+      const { data } = await listActiveCategories<Database['public']['Tables']['categories']['Row']>({ select: '*' });
       return data ?? [];
     },
     staleTime: 5 * 60 * 1000,
@@ -176,7 +179,7 @@ export const useCities = () =>
   useQuery({
     queryKey: ['cities'],
     queryFn: async () => {
-      const { data } = await supabase.from('cities').select('*').eq('is_active', true).order('name_ar');
+      const { data } = await listActiveCities<Database['public']['Tables']['cities']['Row']>({ select: '*' });
       return data ?? [];
     },
     staleTime: 5 * 60 * 1000,

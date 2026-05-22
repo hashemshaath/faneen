@@ -5,6 +5,8 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listActiveCategories } from '@/modules/categories';
+import { listActiveCities } from '@/modules/locations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -212,19 +214,19 @@ const DashboardProjects = () => {
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string; parent_id: string | null }>>({
     queryKey: ['categories-list'],
     queryFn: async () => {
-      const { data } = await supabase.from('categories').select('id, name_ar, name_en, parent_id').eq('is_active', true).order('sort_order');
+      const { data } = await listActiveCategories<{ id: string; name_ar: string; name_en: string; parent_id: string | null }>({ select: 'id, name_ar, name_en, parent_id' });
       return data ?? [];
     },
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: cities = [] } = useQuery({
+  const { data: cities = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string }>>({
     queryKey: ['cities-list'],
     queryFn: async () => {
-      const { data } = await supabase.from('cities').select('id, name_ar, name_en').eq('is_active', true).order('name_ar');
+      const { data } = await listActiveCities<{ id: string; name_ar: string; name_en: string }>();
       return data ?? [];
     },
     staleTime: 10 * 60 * 1000,

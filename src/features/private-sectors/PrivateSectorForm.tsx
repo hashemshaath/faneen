@@ -13,7 +13,8 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
 import { PS_BRAND_TYPE_META, PrivateSector, PrivateSectorBrandType } from './types';
 import { Save, X, Search as SearchIcon, Globe2, MapPin, Tag } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { listActiveCategories } from '@/modules/categories';
+import { listActiveCities } from '@/modules/locations';
 import { useQuery } from '@tanstack/react-query';
 
 interface Props {
@@ -42,17 +43,17 @@ export const PrivateSectorForm: React.FC<Props> = ({ initial, onCancel, onSubmit
 
   useEffect(() => { setKeywordInput((form.seo_keywords ?? []).join(', ')); /* on initial load */ /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
-  const { data: cities = [] } = useQuery({
+  const { data: cities = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string }>>({
     queryKey: ['cities-active'],
     queryFn: async () => {
-      const { data } = await supabase.from('cities').select('id, name_ar, name_en').eq('is_active', true).order('name_ar');
+      const { data } = await listActiveCities<{ id: string; name_ar: string; name_en: string }>();
       return data ?? [];
     },
   });
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string; slug: string }>>({
     queryKey: ['categories-active'],
     queryFn: async () => {
-      const { data } = await supabase.from('categories').select('id, name_ar, name_en, slug').eq('is_active', true).order('sort_order');
+      const { data } = await listActiveCategories<{ id: string; name_ar: string; name_en: string; slug: string }>({ select: 'id, name_ar, name_en, slug' });
       return data ?? [];
     },
   });

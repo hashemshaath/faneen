@@ -5,6 +5,9 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+import { listActiveCategories } from '@/modules/categories';
+import { listActiveCities } from '@/modules/locations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -225,7 +228,7 @@ const AdminBusinesses = () => {
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      const { data } = await supabase.from('categories').select('*').eq('is_active', true).order('sort_order');
+      const { data } = await listActiveCategories<Database['public']['Tables']['categories']['Row']>({ select: '*' });
       return data || [];
     },
   });
@@ -241,7 +244,7 @@ const AdminBusinesses = () => {
   const { data: cities = [] } = useQuery({
     queryKey: ['cities'],
     queryFn: async () => {
-      const { data } = await supabase.from('cities').select('*').eq('is_active', true);
+      const { data } = await listActiveCities<Database['public']['Tables']['cities']['Row']>({ select: '*', order: null });
       return data || [];
     },
   });

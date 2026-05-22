@@ -20,15 +20,25 @@ import {
 } from '@/lib/sector-keywords';
 import { track } from '@/lib/analytics-events';
 import { useCategoryCounts } from '@/services/categories/useCategoryCounts';
+import { listActiveCategories } from '@/modules/categories';
+
+type CategoryRow = {
+  id: string;
+  slug: string;
+  name_ar: string;
+  name_en: string;
+  description_ar?: string | null;
+  description_en?: string | null;
+};
 
 const Categories = () => {
   const { slug } = useParams<{ slug?: string }>();
   const { isRTL, language } = useLanguage();
 
-  const { data: categories = [], isLoading } = useQuery({
+  const { data: categories = [], isLoading } = useQuery<CategoryRow[]>({
     queryKey: ['categories-page'],
     queryFn: async () => {
-      const { data } = await supabase.from('categories').select('*').eq('is_active', true).order('sort_order');
+      const { data } = await listActiveCategories<CategoryRow>({ select: '*' });
       return data ?? [];
     },
   });

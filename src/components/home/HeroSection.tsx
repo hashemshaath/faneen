@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useEffect, useRef, useState, useCallback, memo, useMemo, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { listActiveCategories } from "@/modules/categories";
+import { listActiveCities } from "@/modules/locations";
 import {
   getSearchHistory,
   addToSearchHistory,
@@ -378,18 +379,18 @@ export const HeroSection = () => {
     return () => { if (timer) clearTimeout(timer); };
   }, []);
 
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string; slug: string }>>({
     queryKey: ['nav-categories'],
     queryFn: async () => {
-      const { data } = await supabase.from('categories').select('id, name_ar, name_en, slug').eq('is_active', true).order('sort_order').limit(6);
+      const { data } = await listActiveCategories<{ id: string; name_ar: string; name_en: string; slug: string }>({ select: 'id, name_ar, name_en, slug', limit: 6 });
       return data || [];
     },
   });
 
-  const { data: cities = [] } = useQuery({
+  const { data: cities = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string }>>({
     queryKey: ['nav-cities'],
     queryFn: async () => {
-      const { data } = await supabase.from('cities').select('id, name_ar, name_en').eq('is_active', true).limit(10);
+      const { data } = await listActiveCities<{ id: string; name_ar: string; name_en: string }>({ order: null, limit: 10 });
       return data || [];
     },
   });
