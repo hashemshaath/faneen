@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageSquare, Reply, Trash2, Send, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import { listProfilesByUserIds } from '@/modules/users';
 
 interface Comment {
   id: string;
@@ -51,7 +52,7 @@ export const BlogComments = ({ postId }: BlogCommentsProps) => {
         avatar_url: string | null;
       }>({ userIds, select: 'user_id, full_name, avatar_url' });
 
-      const profileMap = new Map(
+      const profileMap = new Map<string, { full_name: string; avatar_url: string }>(
         (profiles || []).map(p => [p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }])
       );
 
