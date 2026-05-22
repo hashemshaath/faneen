@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Link, useParams, Navigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listPublicBusinessesForSector } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, buildFaqPage, ogImageFor } from '@/lib/seo/structured-data';
@@ -122,15 +123,16 @@ const SectorLanding: React.FC = () => {
     queryKey: ['sector-businesses', sectorSlug, categoryIds],
     enabled: categoryIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('businesses')
-        .select(
+      const { data } = await listPublicBusinessesForSector({
+        select:
           'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, category_id, cities(id, name_ar, name_en)',
-        )
-        .in('category_id', categoryIds)
-        .eq('is_active', true)
-        .order('rating_avg', { ascending: false })
-        .limit(500);
+        filters: [
+          { column: 'category_id', op: 'in', value: categoryIds },
+          { column: 'is_active', op: 'eq', value: true },
+        ],
+        orderBy: { column: 'rating_avg', ascending: false },
+        limit: 500,
+      });
       return (data ?? []) as unknown as BizRow[];
     },
   });

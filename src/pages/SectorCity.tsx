@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listPublicBusinessesForSector } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import {
@@ -103,16 +104,17 @@ const SectorCity: React.FC = () => {
     queryKey: ['sector-city-biz', sectorSlug, cityRow?.id, categoryIds],
     enabled: categoryIds.length > 0 && !!cityRow?.id,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('businesses')
-        .select(
+      const { data } = await listPublicBusinessesForSector({
+        select:
           'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, category_id, short_description_ar, short_description_en, membership_tier, mobile, phone, cities(id, name_ar, name_en)',
-        )
-        .in('category_id', categoryIds)
-        .eq('city_id', cityRow!.id)
-        .eq('is_active', true)
-        .order('rating_avg', { ascending: false })
-        .limit(200);
+        filters: [
+          { column: 'category_id', op: 'in', value: categoryIds },
+          { column: 'city_id', op: 'eq', value: cityRow!.id },
+          { column: 'is_active', op: 'eq', value: true },
+        ],
+        orderBy: { column: 'rating_avg', ascending: false },
+        limit: 200,
+      });
       return (data ?? []) as unknown as BizRow[];
     },
   });

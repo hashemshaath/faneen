@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listPublicBusinessesForSector } from '@/modules/businesses';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -123,16 +124,17 @@ const SectorBrief: React.FC = () => {
     queryKey: ['sector-brief-providers', categoryIds, cityIds],
     enabled: categoryIds.length > 0 && cityIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('businesses')
-        .select(
+      const { data } = await listPublicBusinessesForSector({
+        select:
           'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, membership_tier, cities(id, name_ar, name_en)',
-        )
-        .in('category_id', categoryIds)
-        .in('city_id', cityIds)
-        .eq('is_active', true)
-        .order('rating_avg', { ascending: false })
-        .limit(300);
+        filters: [
+          { column: 'category_id', op: 'in', value: categoryIds },
+          { column: 'city_id', op: 'in', value: cityIds },
+          { column: 'is_active', op: 'eq', value: true },
+        ],
+        orderBy: { column: 'rating_avg', ascending: false },
+        limit: 300,
+      });
       return (data ?? []) as unknown as ProviderRow[];
     },
   });

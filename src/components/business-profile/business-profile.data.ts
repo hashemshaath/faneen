@@ -1,5 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getPublicBusinessByUsername } from "@/modules/businesses";
+import type { Database } from "@/integrations/supabase/types";
+
+type BusinessRow = Database["public"]["Tables"]["businesses"]["Row"];
+type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
+type CityRow = Database["public"]["Tables"]["cities"]["Row"];
+type CountryRow = Database["public"]["Tables"]["countries"]["Row"];
+
+export type BusinessWithJoins = BusinessRow & {
+  categories: CategoryRow | null;
+  cities: CityRow | null;
+  countries: CountryRow | null;
+};
 
 export const tierConfig: Record<string, { label: string; labelAr: string; color: string }> = {
   enterprise: { label: "Enterprise", labelAr: "مؤسسي", color: "bg-accent text-accent-foreground" },
@@ -10,12 +23,10 @@ export const useBusinessByUsername = (username: string) =>
   useQuery({
     queryKey: ["business", username],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("businesses")
-        .select("*, categories(*), cities(*), countries(*)")
-        .eq("username", username)
-        .eq("is_active", true)
-        .maybeSingle();
+      const { data, error } = await getPublicBusinessByUsername<BusinessWithJoins>({
+        username,
+        select: "*, categories(*), cities(*), countries(*)",
+      });
 
       if (error) throw error;
       return data;
