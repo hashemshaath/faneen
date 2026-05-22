@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness, getActiveBusinessStaffMembership } from '@/modules/businesses';
+import { getProfileByUserId } from '@/modules/users';
 import { getUserRoles } from '@/services/userRoles';
 
 interface UserProfile {
@@ -60,11 +61,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, user_id, full_name, phone, email, account_type, is_onboarded, phone_verified, country_code, avatar_url, account_number, ref_id, membership_tier')
-        .eq('user_id', userId)
-        .single();
+      const { data } = await getProfileByUserId<UserProfile>({
+        userId,
+        select: 'id, user_id, full_name, phone, email, account_type, is_onboarded, phone_verified, country_code, avatar_url, account_number, ref_id, membership_tier',
+        terminal: 'single',
+      });
       setProfile(data as UserProfile | null);
       return data;
     } catch {
