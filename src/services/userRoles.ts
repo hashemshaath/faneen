@@ -1,12 +1,45 @@
 /**
- * User roles service.
+ * User roles service wrappers (R1A foundation).
  *
- * Status: Scaffold only (R0). No callsite changes.
- * In R1, this module will expose typed `hasRole`, `grantRole`, `revokeRole`
- * helpers that wrap the `has_role` SQL function and the `user_roles` table,
- * so that pages/components stop reading `user_roles` directly.
- *
- * SECURITY: roles must never be derived from client state. All checks must
- * go through the `has_role` security-definer function or RLS-gated queries.
+ * SECURITY:
+ *  - Authoritative role checks live in the `has_role` SQL function
+ *    (security definer). These wrappers call it; they do not invent
+ *    new client-side role logic.
+ *  - No callsites are migrated in R1A. AuthContext and AdminUsers
+ *    continue to use their existing direct queries until R1B.
  */
-export {};
+import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+import { safeRpc } from './rpc';
+
+export type AppRole = Database['public']['Enums']['app_role'];
+
+export async function getUserRoles(userId: string): Promise<AppRole[]> {
+  if (!userId) return [];
+  const res = await safeRpc<Array<{ role: AppRole }>>(
+    supabase.from('user_roles').select('role').eq('user_id', userId)
+  );
+  if (!res.ok || !res.data) return [];
+  return res.data.map((r) => r.role);
+}
+
+export async function hasRole(userId: string, role: AppRole): Promise<boolean> {
+  if (!userId) return false;
+  const res = await safeRpc<boolean>(
+    supabase.rpc('has_role', { _user_id: userId, _role: role })
+  );
+  return res.ok ? Boolean(res.data) : false;
+}
+
+export async function hasAdminAccess(userId: string): Promise<boolean> {
+  if (!userId) return false;
+  const [admin, superAdmin] = await Promise.all([
+    hasRole(userId, 'admin'),
+    hasRole(userId, 'super_admin'),
+  ]);
+  return admin || superAdmin;
+}
+
+export async function hasSuperAdminAccess(userId: string): Promise<boolean> {
+  return hasRole(userId, 'super_admin');
+}
