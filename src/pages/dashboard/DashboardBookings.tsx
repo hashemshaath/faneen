@@ -98,7 +98,10 @@ const DashboardBookings = () => {
     queryKey: ['booking-client-profiles', clientIds],
     queryFn: async () => {
       if (clientIds.length === 0) return {};
-      const { data } = await supabase.from('profiles').select('user_id, full_name, phone, avatar_url').in('user_id', clientIds);
+      const { data } = await listProfilesByUserIds<{ user_id: string; full_name: string | null; phone: string | null; avatar_url: string | null }>({
+        userIds: clientIds,
+        select: 'user_id, full_name, phone, avatar_url',
+      });
       const map: Record<string, any> = {};
       data?.forEach((p) => { map[p.user_id] = p; });
       return map;

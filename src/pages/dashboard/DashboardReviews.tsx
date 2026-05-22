@@ -234,7 +234,7 @@ const DashboardReviews = () => {
 
       // Fetch profiles and projects in parallel
       const [profilesRes, projectsRes] = await Promise.all([
-        supabase.from('profiles').select('user_id, full_name, avatar_url').in('user_id', userIds),
+        listProfilesByUserIds<{ user_id: string; full_name: string | null; avatar_url: string | null }>({ userIds, select: 'user_id, full_name, avatar_url' }),
         projectIds.length > 0
           ? supabase.from('projects').select('id, title_ar, title_en').in('id', projectIds)
           : Promise.resolve({ data: [] }),
