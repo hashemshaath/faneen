@@ -156,6 +156,7 @@ interface PublishedTemplateOption {
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 
 
 type ViewSection = 'list' | 'create' | 'templates' | 'template-preview';
@@ -928,19 +929,17 @@ const DashboardContracts = () => {
               const clientEmail = clientProfile?.email;
               const clientName = clientProfile?.full_name;
               if (clientEmail) {
-                void supabase.functions.invoke('send-transactional-email', {
-                  body: {
-                    templateName: 'contract-milestone-completed',
-                    recipientEmail: clientEmail,
-                    idempotencyKey: `contract-milestone-completed-${id}`,
-                    templateData: {
-                      recipientName: clientName,
-                      contractRefId: refId,
-                      contractTitle: isRTL ? titleAr : titleEn,
-                      milestoneTitle: msTitle || undefined,
-                      contractId: contract.id,
-                      contractUrl: `${window.location.origin}/contracts/${contract.id}`,
-                    },
+                void sendTransactionalEmail({
+                  templateName: 'contract-milestone-completed',
+                  recipientEmail: clientEmail,
+                  idempotencyKey: `contract-milestone-completed-${id}`,
+                  templateData: {
+                    recipientName: clientName,
+                    contractRefId: refId,
+                    contractTitle: isRTL ? titleAr : titleEn,
+                    milestoneTitle: msTitle || undefined,
+                    contractId: contract.id,
+                    contractUrl: `${window.location.origin}/contracts/${contract.id}`,
                   },
                 }).catch(() => { /* queue retries */ });
               }
