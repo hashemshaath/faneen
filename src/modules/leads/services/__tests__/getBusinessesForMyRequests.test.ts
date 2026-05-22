@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 const inMock = vi.fn();
 const selectMock = vi.fn(() => ({ in: inMock }));
-const fromMock = vi.fn(() => ({ select: selectMock }));
+const fromMock = vi.fn((_table: string) => ({ select: selectMock }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { from: (t: string) => fromMock(t) },

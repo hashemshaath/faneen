@@ -10,15 +10,15 @@ type Builder = {
 };
 
 function makeBuilder(result: { data: unknown[] | null; error: unknown }): Builder {
-  const b: Partial<Builder> = { _result: result };
-  const chain = () => b as Builder;
+  const b: Record<string, unknown> = { _result: result };
+  const chain = () => b as unknown as Builder;
   b.select = vi.fn(chain);
   b.eq = vi.fn(chain);
   b.in = vi.fn(chain);
   // Thenable so `await builder` resolves to the result
-  (b as unknown as PromiseLike<unknown>).then = (onFulfilled: (v: unknown) => unknown) =>
+  b.then = (onFulfilled: (v: unknown) => unknown) =>
     Promise.resolve(result).then(onFulfilled);
-  return b as Builder;
+  return b as unknown as Builder;
 }
 
 const builders: Record<string, Builder> = {};
