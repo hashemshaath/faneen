@@ -5,6 +5,30 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listCompareBusinesses, listBusinessesByIds } from '@/modules/businesses';
+
+// Loose row shapes for the Compare picker + detail view. These mirror the
+// fields previously inferred from the Supabase typed `from('businesses')`
+// queries; we type them locally so the catalog service wrappers can stay
+// generic. New fields used by the template must be added here.
+type CompareJoinedName = { name_ar: string | null; name_en: string | null } | null;
+type CompareBizRow = {
+  id: string;
+  name_ar: string | null;
+  name_en: string | null;
+  username: string | null;
+  logo_url: string | null;
+  rating_avg: number | null;
+  rating_count: number | null;
+  categories: CompareJoinedName;
+  cities: CompareJoinedName;
+};
+type CompareBizDetailRow = CompareBizRow & {
+  is_verified?: boolean | null;
+  membership_tier?: string | null;
+  business_services?: Array<Record<string, unknown>> | null;
+  provider_installment_settings?: Array<Record<string, unknown>> | null;
+  [key: string]: unknown;
+};
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -56,19 +80,19 @@ const Compare = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: allBusinesses = [] } = useQuery({
+  const { data: allBusinesses = [] } = useQuery<CompareBizRow[]>({
     queryKey: ['businesses-for-compare'],
     queryFn: async () => {
-      const { data } = await listCompareBusinesses();
+      const { data } = await listCompareBusinesses<CompareBizRow>();
       return data ?? [];
     },
   });
 
-  const { data: selectedBusinesses = [], isLoading: isLoadingSelected } = useQuery({
+  const { data: selectedBusinesses = [], isLoading: isLoadingSelected } = useQuery<CompareBizDetailRow[]>({
     queryKey: ['compare-businesses', selectedIds],
     queryFn: async () => {
       if (!selectedIds.length) return [];
-      const { data } = await listBusinessesByIds({
+      const { data } = await listBusinessesByIds<CompareBizDetailRow>({
         ids: selectedIds,
         select: '*, categories(name_ar, name_en), cities(name_ar, name_en), business_services(*), provider_installment_settings(*)',
       });
