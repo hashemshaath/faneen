@@ -380,18 +380,18 @@ export const HeroSection = () => {
     return () => { if (timer) clearTimeout(timer); };
   }, []);
 
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string; slug: string }>>({
     queryKey: ['nav-categories'],
     queryFn: async () => {
-      const { data } = await listActiveCategories({ select: 'id, name_ar, name_en, slug', limit: 6 });
+      const { data } = await listActiveCategories<{ id: string; name_ar: string; name_en: string; slug: string }>({ select: 'id, name_ar, name_en, slug', limit: 6 });
       return data || [];
     },
   });
 
-  const { data: cities = [] } = useQuery({
+  const { data: cities = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string }>>({
     queryKey: ['nav-cities'],
     queryFn: async () => {
-      const { data } = await listActiveCities({ order: null, limit: 10 });
+      const { data } = await listActiveCities<{ id: string; name_ar: string; name_en: string }>({ order: null, limit: 10 });
       return data || [];
     },
   });
