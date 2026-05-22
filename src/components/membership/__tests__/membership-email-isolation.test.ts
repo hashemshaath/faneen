@@ -76,7 +76,7 @@ describe('E-Mail-5: cross-file guardrails', () => {
     expect(read('src/pages/admin/AdminProviderReview.tsx')).not.toMatch(DIRECT_INVOKE);
   });
 
-  it('deferred callsite remains (EmailTemplatePreview)', () => {
-    expect(read('src/components/admin/email-center/EmailTemplatePreview.tsx')).toMatch(DIRECT_INVOKE);
+  it('EmailTemplatePreview is now migrated (E-Mail-10)', () => {
+    expect(read('src/components/admin/email-center/EmailTemplatePreview.tsx')).not.toMatch(DIRECT_INVOKE);
   });
 });
