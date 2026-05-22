@@ -80,6 +80,12 @@ jobs:
       - name: Sitemap XML Validation Audit
         run: node scripts/sitemap-xml-validation-audit.mjs
 
+      - name: Contracts Pre-launch Smoke (typecheck + targeted vitest + privacy grep)
+        run: bash scripts/contracts-prelaunch-smoke.sh
+
+      - name: Vitest Full Suite
+        run: npx vitest run
+
       - name: TypeScript Check
         run: npx tsc --noEmit
         continue-on-error: true
