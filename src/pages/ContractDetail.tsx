@@ -44,6 +44,7 @@ import {
   noteTypeConfig,
 } from '@/modules/contracts/constants/statusConfigs';
 import { sendTransactionalEmail }  from '@/modules/notifications/services/sendTransactionalEmail';
+import { getBusinessForContract } from '@/modules/businesses';
 
 // ─── Phase 5E.2 — Safe source-lead summary card ───
 type SourceLeadSummary = {
