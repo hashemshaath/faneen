@@ -8,6 +8,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
+import { listProfilesByUserIds } from '@/modules/users';
 
 export type ContractRow = Tables<'contracts'>;
 export type ContractRole = 'provider' | 'client';
@@ -47,11 +48,10 @@ export async function listContractsForRole(
 export async function getContractParticipantProfiles(
   userIds: string[],
 ): Promise<ContractListProfile[]> {
-  if (userIds.length === 0) return [];
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('user_id, full_name, avatar_url, phone, email')
-    .in('user_id', userIds);
+  const { data, error } = await listProfilesByUserIds<ContractListProfile>({
+    userIds,
+    select: 'user_id, full_name, avatar_url, phone, email',
+  });
   if (error) throw error;
   return data ?? [];
 }
