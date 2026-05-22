@@ -36,6 +36,7 @@ import { InfoRow } from '@/modules/contracts/components/InfoRow';
 import { StatCard } from '@/modules/contracts/components/StatCard';
 import { ClauseSection } from '@/modules/contracts/components/ClauseSection';
 import { ContractLockBanner } from '@/modules/contracts/components/ContractLockBanner';
+import { ContractTabsHeader } from '@/modules/contracts/components/ContractTabsHeader';
 import {
   statusConfig,
   priorityConfig,
@@ -2406,23 +2407,20 @@ const ContractDetail = () => {
 
         {/* ─── Tabs ─── */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full justify-start bg-muted/50 rounded-xl p-1 h-auto flex-wrap mb-4 sm:mb-6 gap-1">
-            {[
-              { value: 'milestones', icon: ListChecks, label: isRTL ? 'المراحل' : 'Milestones', count: totalMilestones },
-              { value: 'measurements', icon: Ruler, label: isRTL ? 'المقاسات' : 'Measurements', count: measurements?.length || 0 },
-              { value: 'warranty', icon: Shield, label: isRTL ? 'الضمان' : 'Warranty', count: warranties?.length || 0 },
-              { value: 'maintenance', icon: Wrench, label: isRTL ? 'الصيانة' : 'Maintenance', count: maintenanceReqs?.length || 0 },
-              { value: 'notes', icon: StickyNote, label: isRTL ? 'الملاحظات' : 'Notes', count: notes?.length || 0 },
-              { value: 'attachments', icon: Paperclip, label: isRTL ? 'المرفقات' : 'Attachments', count: attachments?.length || 0 },
-              { value: 'amendments', icon: FileText, label: isRTL ? 'الملاحق' : 'Amendments', count: amendments?.length || 0 },
-              { value: 'exports', icon: Download, label: isRTL ? 'سجل التصدير' : 'Export History', count: 0 },
-              { value: 'pdf-analysis', icon: ShieldCheck, label: isRTL ? 'تحليل التصدير' : 'Analysis Log', count: 0 },
-            ].map(tab => (
-              <TabsTrigger key={tab.value} value={tab.value} className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-4 py-2 gap-1.5 text-xs sm:text-sm">
-                <tab.icon className="w-3.5 h-3.5" />{tab.label} ({tab.count})
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <ContractTabsHeader
+            isRTL={isRTL}
+            counts={{
+              milestones: totalMilestones,
+              measurements: measurements?.length || 0,
+              warranty: warranties?.length || 0,
+              maintenance: maintenanceReqs?.length || 0,
+              notes: notes?.length || 0,
+              attachments: attachments?.length || 0,
+              amendments: amendments?.length || 0,
+              exports: 0,
+              pdfAnalysis: 0,
+            }}
+          />
 
           {/* ── Milestones ── */}
           <TabsContent value="milestones">
