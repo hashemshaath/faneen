@@ -16,6 +16,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { listOwnerBusinesses } from '@/modules/businesses';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -81,7 +82,10 @@ const PublicSiteScan: React.FC = () => {
     enabled: !!user?.id && isProvider,
     queryFn: async (): Promise<ProviderBusinessRow[]> => {
       const [owned, staff] = await Promise.all([
-        supabase.from('businesses').select('id, name_ar, name_en').eq('user_id', user!.id),
+        listOwnerBusinesses<{ id: string; name_ar: string | null; name_en: string | null }>({
+          userId: user!.id,
+          select: 'id, name_ar, name_en',
+        }),
         supabase.from('business_staff')
           .select('business_id, businesses(id, name_ar, name_en)')
           .eq('user_id', user!.id).eq('is_active', true),

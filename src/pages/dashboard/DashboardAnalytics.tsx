@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getOwnerBusiness } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -62,8 +63,18 @@ const DashboardAnalytics = () => {
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id, name_ar, name_en, created_at, rating_avg, rating_count')
-        .eq('user_id', user!.id).eq('is_active', true).maybeSingle();
+      const { data } = await getOwnerBusiness<{
+        id: string;
+        name_ar: string | null;
+        name_en: string | null;
+        created_at: string;
+        rating_avg: number | null;
+        rating_count: number | null;
+      }>({
+        userId: user!.id,
+        select: 'id, name_ar, name_en, created_at, rating_avg, rating_count',
+        activeOnly: true,
+      });
       return data;
     },
     enabled: !!user,
