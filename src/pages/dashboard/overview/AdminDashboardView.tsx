@@ -21,6 +21,7 @@ import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
 import { cn } from '@/lib/utils';
 import { maskEmail } from '@/lib/masking';
+import { countByRole } from '@/services/userRoles';
 import {
   CHART_COLORS, ChartTooltipStyle, getStatusLabel, buildMonthlyData,
   StatCard, QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
