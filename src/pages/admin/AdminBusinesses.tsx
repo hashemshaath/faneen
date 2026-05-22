@@ -227,7 +227,7 @@ const AdminBusinesses = () => {
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      const { data } = await supabase.from('categories').select('*').eq('is_active', true).order('sort_order');
+      const { data } = await listActiveCategories({ select: '*' });
       return data || [];
     },
   });
@@ -243,7 +243,7 @@ const AdminBusinesses = () => {
   const { data: cities = [] } = useQuery({
     queryKey: ['cities'],
     queryFn: async () => {
-      const { data } = await supabase.from('cities').select('*').eq('is_active', true);
+      const { data } = await listActiveCities({ select: '*', order: null });
       return data || [];
     },
   });
