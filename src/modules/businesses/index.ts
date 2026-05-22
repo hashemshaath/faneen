@@ -13,3 +13,5 @@ export { getActiveBusinessStaffMembership } from './services/getActiveBusinessSt
 export type { GetActiveBusinessStaffMembershipOptions } from './services/getActiveBusinessStaffMembership';
 export { updateBusinessById } from './services/updateBusinessById';
 export type { UpdateBusinessByIdOptions } from './services/updateBusinessById';
+export { updateBusinessesByIds } from './services/updateBusinessesByIds';
+export type { UpdateBusinessesByIdsOptions } from './services/updateBusinessesByIds';
