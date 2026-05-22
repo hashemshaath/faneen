@@ -129,6 +129,7 @@ import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { serializeDraftPayload, maskEmail as maskInviteEmail, type PendingInvite } from '@/lib/contract-invitations';
 import type { Json } from '@/integrations/supabase/types';
 import { templateCategoryConfig } from '@/modules/contracts/constants/templateCategories';
+import { TemplateCard } from '@/modules/contracts/components/TemplateCard';
 import { emptyForm } from '@/modules/contracts/constants/contractForm';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
@@ -1654,29 +1655,17 @@ const DashboardContracts = () => {
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {templates.map((tmpl) => {
-                  const cfg = templateCategoryConfig[tmpl.category];
-                  const Icon = cfg?.icon || FileText;
-                  return (
-                    <Card key={tmpl.id} className="border-border/40 hover:border-accent/30 hover:shadow-lg transition-all cursor-pointer group" onClick={() => { setTemplatePreview(tmpl); setViewSection('template-preview'); }}>
-                      <CardContent className="p-3.5">
-                        <div className="flex items-start gap-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cfg?.color || 'bg-muted text-muted-foreground'}`}><Icon className="w-5 h-5" /></div>
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-heading font-semibold text-xs truncate group-hover:text-accent transition-colors">{isRTL ? tmpl.name_ar : (tmpl.name_en || tmpl.name_ar)}</h4>
-                            <p className="text-[9px] text-muted-foreground mt-0.5">{cfg?.[isRTL ? 'ar' : 'en'] || tmpl.category}</p>
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {[tmpl.scope_of_work_ar && (isRTL ? 'نطاق' : 'Scope'), tmpl.warranty_terms_ar && (isRTL ? 'ضمان' : 'Warranty'), tmpl.payment_terms_ar && (isRTL ? 'دفع' : 'Payment')].filter(Boolean).map((tag, i) => (
-                                <Badge key={i} variant="secondary" className="text-[7px] px-1.5 py-0 h-4">{tag}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                          <ArrowRight className={`w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0 mt-1 ${isRTL ? 'rotate-180' : ''}`} />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                {templates.map((tmpl: any) => (
+                  <TemplateCard
+                    key={tmpl.id}
+                    template={tmpl}
+                    isRTL={isRTL}
+                    onSelect={(template) => {
+                      setTemplatePreview(template);
+                      setViewSection('template-preview');
+                    }}
+                  />
+                ))}
               </div>
               {templates.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
