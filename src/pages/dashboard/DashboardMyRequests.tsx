@@ -148,11 +148,8 @@ const DashboardMyRequests: React.FC = () => {
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('lead_requests')
-        .update({ status: 'cancelled' })
-        .eq('id', id);
-      if (error) throw error;
+      const { updateLeadRequestStatus } = await import('@/modules/leads/services/mutations');
+      await updateLeadRequestStatus(id, 'cancelled');
       try {
         await supabase.functions.invoke('notify-customer-lead-update', {
           body: { lead_id: id, status: 'cancelled' },

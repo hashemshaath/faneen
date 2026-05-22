@@ -113,12 +113,8 @@ const QuoteRequestDetails: React.FC = () => {
   };
   const updateMutation = useMutation({
     mutationFn: async (patch: UpdatePatch) => {
-      const { error } = await supabase
-        .from('quote_requests')
-        .update(patch)
-        .eq('id', id!)
-        .eq('user_id', user!.id);
-      if (error) throw error;
+      const { updateMyQuoteRequest } = await import('@/modules/leads/services/mutations');
+      await updateMyQuoteRequest(id!, user!.id, patch);
     },
     onSuccess: () => {
       toast.success('تم تحديث الطلب بنجاح');

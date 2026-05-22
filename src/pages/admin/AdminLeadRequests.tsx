@@ -144,8 +144,8 @@ const AdminLeadRequests: React.FC = () => {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Status }) => {
-      const { error } = await supabase.from('lead_requests').update({ status }).eq('id', id);
-      if (error) throw error;
+      const { updateLeadRequestStatus } = await import('@/modules/leads/services/mutations');
+      await updateLeadRequestStatus(id, status);
     },
     onSuccess: () => {
       toast.success(isRTL ? 'تم التحديث' : 'Updated');
