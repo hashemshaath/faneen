@@ -90,7 +90,7 @@ const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
     queryKey: ['about-stats'],
     queryFn: async () => {
       const [biz, rev, proj, users] = await Promise.all([
-        supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        countActiveBusinesses(),
         supabase.from('reviews').select('id', { count: 'exact', head: true }),
         supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'published'),
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
