@@ -58,16 +58,13 @@ describe('P-2 cities reference migration', () => {
 });
 
 describe('P-2 out-of-scope guardrail (must NOT be touched)', () => {
-  // Compare.tsx business joins, BrandDetail businesses, ContractDetail joins,
-  // owner-business dashboard reads, profiles, business_staff, projects CRUD,
-  // and admin CRUD beyond simple dropdowns must remain as-is.
-  it('Compare.tsx still contains its direct businesses reads (untouched)', () => {
-    const src = read('src/pages/Compare.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]businesses['"]\)/);
-  });
-  it('ContractDetail.tsx still contains its direct businesses/profiles reads (untouched)', () => {
+  // Owner-business dashboard reads, profiles, business_staff, projects CRUD,
+  // and admin CRUD beyond simple dropdowns must remain as-is for P-2.
+  // NOTE: Compare.tsx and ContractDetail.tsx business reads were intentionally
+  // migrated in P-3 (public business reads). Their P-3 regression locks live in
+  // src/modules/businesses/services/__tests__/businessReads.test.ts.
+  it('ContractDetail.tsx still contains its direct profiles reads (deferred to P-5)', () => {
     const src = read('src/pages/ContractDetail.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]businesses['"]\)/);
     expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)/);
   });
   it('DashboardBusinessEdit cities read (country_id-scoped) remains direct in this phase', () => {
