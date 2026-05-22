@@ -105,13 +105,41 @@ describe('migration regression: DashboardBusinessDraft', () => {
   });
 });
 
+describe('migration regression: CrDocumentScanner', () => {
+  const src = readFileSync(resolve(__dirname, '../../../../components/admin/CrDocumentScanner.tsx'), 'utf8');
+  it('no longer directly updates businesses via supabase.from', () => {
+    expect(src).not.toMatch(/supabase\.from\(['"]businesses['"]\)\s*\.update/);
+  });
+  it('imports updateBusinessById from @/modules/businesses', () => {
+    expect(src).toMatch(/updateBusinessById/);
+    expect(src).toMatch(/from '@\/modules\/businesses'/);
+  });
+  it('preserves businessId as the update id source', () => {
+    expect(src).toMatch(/updateBusinessById\(\{\s*id:\s*businessId,\s*values:\s*update\s*\}\)/);
+  });
+  it('preserves CR-scan payload fields exactly', () => {
+    expect(src).toMatch(/cr_scan_raw/);
+    expect(src).toMatch(/cr_scan_data/);
+    expect(src).toMatch(/cr_scan_at/);
+    expect(src).toMatch(/cr_document_url/);
+    expect(src).toMatch(/cr_document_path/);
+    expect(src).toMatch(/cr_document_mime/);
+    expect(src).toMatch(/cr_document_size/);
+    expect(src).toMatch(/cr_document_uploaded_at/);
+    expect(src).toMatch(/cr_document_uploaded_by/);
+  });
+  it('preserves error throw path', () => {
+    expect(src).toMatch(/if\s*\(\s*error\s*\)\s*throw\s+error/);
+  });
+  it('preserves admin-provider-review query invalidation', () => {
+    expect(src).toMatch(/qc\.invalidateQueries\(\{\s*queryKey:\s*\['admin-provider-review'\]/);
+  });
+});
+
 describe('non-migration guard: untouched callsites', () => {
   const files = [
-    'src/pages/admin/AdminBusinesses.tsx',
-    'src/pages/admin/locations/AdminBusinessCoordinates.tsx',
-    'src/components/admin/CrDocumentScanner.tsx',
     'src/services/auth/authService.ts',
-    'supabase/functions/ensure-business/index.ts',
+    'src/lib/ensure-business.ts',
   ];
   for (const f of files) {
     it(`${f} still contains its direct businesses write (intentionally deferred)`, () => {

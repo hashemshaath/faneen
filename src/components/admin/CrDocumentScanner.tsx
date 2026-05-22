@@ -6,6 +6,7 @@ import {
   RefreshCw, Save, AlertCircle, Download, Lightbulb,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { updateBusinessById } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -516,7 +517,7 @@ export const CrDocumentScanner: React.FC<Props> = ({ businessId, defaults, onSav
         update.cr_scan_at = new Date().toISOString();
       }
 
-      const { error } = await supabase.from('businesses').update(update as never).eq('id', businessId);
+      const { error } = await updateBusinessById({ id: businessId, values: update });
       if (error) throw error;
     },
     onSuccess: () => {
