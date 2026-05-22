@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { countBusinesses } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -100,10 +101,10 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
   const { data: businessCount } = useQuery({
     queryKey: ['provider-business-count', userId],
     queryFn: async () => {
-      const { count } = await supabase
-        .from('businesses')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId);
+      const { count } = await countBusinesses({
+        select: 'id',
+        filters: [{ column: 'user_id', op: 'eq', value: userId }],
+      });
       return count ?? 0;
     },
     enabled: !!userId,

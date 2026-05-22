@@ -3,6 +3,8 @@
 export { listBusinessesByIds } from './services/listBusinessesByIds';
 export type { ListBusinessesByIdsOptions } from './services/listBusinessesByIds';
 export { countActiveBusinesses } from './services/countActiveBusinesses';
+export { countBusinesses } from './services/countBusinesses';
+export type { CountBusinessesOptions, CountBusinessesFilter } from './services/countBusinesses';
 export { listCompareBusinesses } from './services/listCompareBusinesses';
 export type { ListCompareBusinessesOptions } from './services/listCompareBusinesses';
 export { getBusinessForContract } from './services/getBusinessForContract';

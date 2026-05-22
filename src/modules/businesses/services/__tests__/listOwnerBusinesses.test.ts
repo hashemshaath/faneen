@@ -143,10 +143,6 @@ describe('P-18 owner-list migration', () => {
 });
 
 describe('P-18 deferred guardrails', () => {
-  it('ProviderMembershipCard businesses count remains direct (counts phase)', () => {
-    const src = read('src/components/dashboard/ProviderMembershipCard.tsx');
-    expect(src).toMatch(/from\(['"]businesses['"]\)[\s\S]*count: 'exact', head: true/);
-  });
   it('getManagedBusinessesForUser remains the canonical staff+owner aggregator', () => {
     const src = read('src/modules/leads/services/getManagedBusinessesForUser.ts');
     expect(src).toMatch(/supabase\.from\(['"]businesses['"]\)/);

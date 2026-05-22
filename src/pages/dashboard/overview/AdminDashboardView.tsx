@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { maskEmail } from '@/lib/masking';
 import { countByRole } from '@/services/userRoles';
 import { countProfiles, listProfiles } from '@/modules/users';
+import { countBusinesses } from '@/modules/businesses';
 import {
   CHART_COLORS, ChartTooltipStyle, getStatusLabel, buildMonthlyData,
   StatCard, QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
@@ -46,7 +47,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         leadsPendingQ, providersPendingQ, dlqActiveQ, contractsPendingQ,
       ] = await Promise.all([
         countProfiles(),
-        supabase.from('businesses').select('id', { count: 'exact', head: true }),
+        countBusinesses({ select: 'id' }),
         supabase.from('contracts').select('id, status, total_amount, created_at', { count: 'exact' }),
         supabase.from('categories').select('id', { count: 'exact', head: true }),
         supabase.from('conversations').select('id', { count: 'exact', head: true }),
@@ -59,9 +60,9 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         listProfiles<{ created_at: string }>({ select: 'created_at', orderBy: { column: 'created_at', ascending: true } }),
         supabase.from('lead_requests').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
         supabase.from('contracts').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
-        supabase.from('businesses').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
+        countBusinesses({ select: 'id', filters: [{ column: 'created_at', op: 'gte', value: todayIso }] }),
         supabase.from('lead_requests').select('id', { count: 'exact', head: true }).eq('status', 'new'),
-        supabase.from('businesses').select('id', { count: 'exact', head: true }).in('approval_status', ['submitted', 'under_review']),
+        countBusinesses({ select: 'id', filters: [{ column: 'approval_status', op: 'in', value: ['submitted', 'under_review'] }] }),
         supabase.from('email_send_log').select('id', { count: 'exact', head: true }).eq('status', 'dlq').gte('created_at', fresh48hIso),
         supabase.from('contracts').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
       ]);
