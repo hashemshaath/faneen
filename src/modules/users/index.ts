@@ -1,4 +1,8 @@
 // Module: users
-// Public API for this module will be added in R1/R2.
-// Scaffold only — intentionally empty.
-export {};
+// Canonical wrappers for profile reads.
+export { listProfilesByUserIds } from './services/listProfilesByUserIds';
+export type { ListProfilesByUserIdsOptions } from './services/listProfilesByUserIds';
+export { getProfileByUserId } from './services/getProfileByUserId';
+export type { GetProfileByUserIdOptions } from './services/getProfileByUserId';
+export { getProfileForContractParty } from './services/getProfileForContractParty';
+export type { GetProfileForContractPartyOptions } from './services/getProfileForContractParty';
