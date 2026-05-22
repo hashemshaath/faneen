@@ -45,7 +45,7 @@ describe('P-20 admin businesses read migration', () => {
 
   it('AdminMemberships migrates both businesses reads (by ids + all tiers)', () => {
     const src = read('src/pages/admin/AdminMemberships.tsx');
-    expect(src).toContain("queryKey: ['admin-businesses-by-ids']") || expect(src).toContain("ids: businessIds");
+    expect(src).toContain('ids: businessIds');
     expect(src).toMatch(/listBusinessesByIds<\{/);
     expect(src).toContain("select: 'id, name_ar, name_en, membership_tier, logo_url, is_verified, is_active'");
     expect(src).toContain("queryKey: ['admin-all-businesses-tiers']");
