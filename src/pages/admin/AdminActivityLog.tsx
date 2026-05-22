@@ -347,7 +347,9 @@ const AdminActivityLog = () => {
   const { data: profiles } = useQuery({
     queryKey: ['admin-profiles'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('profiles').select('user_id, full_name, email');
+      const { data, error } = await listProfiles<{ user_id: string; full_name: string | null; email: string | null }>({
+        select: 'user_id, full_name, email',
+      });
       if (error) throw error;
       return data;
     },

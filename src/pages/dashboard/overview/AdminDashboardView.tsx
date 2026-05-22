@@ -22,6 +22,7 @@ import { useCountUp } from '@/hooks/useCountUp';
 import { cn } from '@/lib/utils';
 import { maskEmail } from '@/lib/masking';
 import { countByRole } from '@/services/userRoles';
+import { countProfiles, listProfiles } from '@/modules/users';
 import {
   CHART_COLORS, ChartTooltipStyle, getStatusLabel, buildMonthlyData,
   StatCard, QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
@@ -44,18 +45,18 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         leadsTodayQ, contractsTodayQ, providersTodayQ,
         leadsPendingQ, providersPendingQ, dlqActiveQ, contractsPendingQ,
       ] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        countProfiles(),
         supabase.from('businesses').select('id', { count: 'exact', head: true }),
         supabase.from('contracts').select('id, status, total_amount, created_at', { count: 'exact' }),
         supabase.from('categories').select('id', { count: 'exact', head: true }),
         supabase.from('conversations').select('id', { count: 'exact', head: true }),
         supabase.from('membership_subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active'),
         countByRole(),
-        supabase.from('profiles').select('id, full_name, avatar_url, email, account_type, created_at').order('created_at', { ascending: false }).limit(5),
+        listProfiles({ select: 'id, full_name, avatar_url, email, account_type, created_at', orderBy: { column: 'created_at', ascending: false }, limit: 5 }),
         supabase.from('admin_activity_log').select('id, action, entity_type, created_at, details').order('created_at', { ascending: false }).limit(6),
         supabase.from('blog_posts').select('id', { count: 'exact', head: true }),
         supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('status', 'new'),
-        supabase.from('profiles').select('created_at').order('created_at', { ascending: true }),
+        listProfiles({ select: 'created_at', orderBy: { column: 'created_at', ascending: true } }),
         supabase.from('lead_requests').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
         supabase.from('contracts').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
         supabase.from('businesses').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),

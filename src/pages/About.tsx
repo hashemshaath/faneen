@@ -94,7 +94,7 @@ const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
         countActiveBusinesses(),
         supabase.from('reviews').select('id', { count: 'exact', head: true }),
         supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'published'),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        countProfiles(),
       ]);
       return { biz: biz.count ?? 0, rev: rev.count ?? 0, proj: proj.count ?? 0, users: users.count ?? 0 };
     },
