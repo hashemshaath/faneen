@@ -124,14 +124,7 @@ describe('P-3 public business migration', () => {
   });
 });
 
-describe('P-3 out-of-scope guardrail (must remain direct in this phase)', () => {
-  // NOTE: AuthContext owner-business + business_staff probes were migrated in
-  // P-4 (owner-business + staff membership wrappers). Their regression locks
-  // live in ownerBusinessReads.test.ts.
-  // NOTE: AdminBusinesses update callsites migrated in P-12 to
-  // updateBusinessById / updateBusinessesByIds. Regression lock lives in
-  // updateBusinessesByIds.test.ts.
-  // NOTE: ContractDetail profiles joins were migrated in P-5
-  // (getProfileForContractParty). Lock lives in
-  // src/modules/users/services/__tests__/profileReads.test.ts.
-});
+// NOTE: P-3 out-of-scope guardrails were migrated in later phases:
+//  - AuthContext owner-business + business_staff probes → P-4
+//  - AdminBusinesses update callsites → P-12 (lock: updateBusinessesByIds.test.ts)
+//  - ContractDetail profile joins → P-5 (lock: profileReads.test.ts)
