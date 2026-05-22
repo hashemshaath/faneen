@@ -22,11 +22,19 @@ type CompareBizRow = {
   categories: CompareJoinedName;
   cities: CompareJoinedName;
 };
+type CompareService = {
+  name_ar: string;
+  name_en: string | null;
+  price_from: number | string | null;
+  price_to: number | string | null;
+  currency_code: string | null;
+};
+type CompareInstallment = Record<string, unknown>;
 type CompareBizDetailRow = CompareBizRow & {
   is_verified?: boolean | null;
   membership_tier?: string | null;
-  business_services?: Array<Record<string, unknown>> | null;
-  provider_installment_settings?: Array<Record<string, unknown>> | null;
+  business_services?: CompareService[] | null;
+  provider_installment_settings?: CompareInstallment[] | null;
   [key: string]: unknown;
 };
 import { useLanguage } from '@/i18n/LanguageContext';
