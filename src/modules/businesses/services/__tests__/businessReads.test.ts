@@ -125,10 +125,9 @@ describe('P-3 public business migration', () => {
 });
 
 describe('P-3 out-of-scope guardrail (must remain direct in this phase)', () => {
-  it('AuthContext owner business probe remains direct', () => {
-    const src = read('src/contexts/AuthContext.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]businesses['"]\).*eq\(['"]user_id['"]/);
-  });
+  // NOTE: AuthContext owner-business + business_staff probes were migrated in
+  // P-4 (owner-business + staff membership wrappers). Their regression locks
+  // live in ownerBusinessReads.test.ts.
   it('AdminBusinesses CRUD remains direct', () => {
     const src = read('src/pages/admin/AdminBusinesses.tsx');
     expect(src).toMatch(/supabase\.from\(['"]businesses['"]\)\.update/);
