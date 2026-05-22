@@ -1,7 +1,7 @@
 /**
  * Empty/default contract form state.
  */
-import type { ContractForm }<parameter name="filepath">@/components/contracts/dashboard/create/contract-form-types</parameter>;
+import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
 
 export const emptyForm: ContractForm = {
   title_ar: '', title_en: '', description_ar: '', description_en: '',
