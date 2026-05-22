@@ -14,4 +14,5 @@ export * from './services/notifications';
 export * from './services/conversion';
 export * from './services/adminConvertLeadToContract';
 export * from './services/sendLeadTransactionalEmail';
+export * from './services/getLeadProviderContactForEmail';
 export * from './services/submit';
