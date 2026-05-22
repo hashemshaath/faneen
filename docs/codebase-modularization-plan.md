@@ -20,6 +20,23 @@ No files moved. No callsites changed. No tests changed.
   (start with `DashboardContracts` and `ContractDetail`).
 - Add `services/errorMap.ts` and `services/audit.ts`.
 
+#### R1A — Service wrapper foundation (applied)
+- `src/services/rpc.ts`: typed `callRpc`, `safeRpc`, `mapRpcError`,
+  `normalizeSupabaseError` + `RpcErrorCode` / `NormalizedRpcError` types.
+- `src/services/userRoles.ts`: typed `getUserRoles`, `hasRole`,
+  `hasAdminAccess`, `hasSuperAdminAccess` (wraps `has_role` RPC).
+- `src/modules/shared/constants/{country,routes}.ts`:
+  `SA_COUNTRY_ID`, `SA_COUNTRY_CODE`, `SA_CURRENCY`, `SA_LOCALE`,
+  `SA_TIMEZONE`, `PUBLIC_BARCODE_ROUTE_PREFIX`, `PUBLIC_SITE_TOKEN_ROUTE_PREFIX`.
+- `src/modules/shared/errors/README.md`: error mapping contract.
+- Unit tests added for rpc helpers and constants. **No callsites changed.**
+
+#### R1B — Gradual callsite adoption (next)
+- Migrate `AuthContext` role lookups onto `services/userRoles.ts`.
+- Migrate `AdminUsers` and similar admin pages onto the role wrappers.
+- Begin migrating contract pages onto `services/contracts/*` (still TBD).
+- Replace hardcoded SA UUID/currency literals with `shared/constants` as files are touched.
+
 ### R2 — Domain modules
 - Move files into `src/modules/<domain>/` per the scaffolds.
 - Add per-module unit + privacy tests.
