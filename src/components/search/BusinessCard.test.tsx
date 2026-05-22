@@ -13,8 +13,15 @@ const setLanguage = (lang: 'ar' | 'en') => {
   langState.isRTL = lang === 'ar';
 };
 afterEach(() => setLanguage('ar'));
+// Spy-able mock: BusinessCard calls `useBusinessFavorites()` exactly once
+// per render. We use it as a deterministic render counter for the memo
+// behavior tests below (no wall-clock timing required).
+const favoritesHookSpy = vi.hoisted(() => vi.fn());
 vi.mock('@/hooks/useBusinessFavorites', () => ({
-  useBusinessFavorites: () => ({ isFavorite: () => false, toggleFavorite: () => false }),
+  useBusinessFavorites: (...args: unknown[]) => {
+    favoritesHookSpy(...args);
+    return { isFavorite: () => false, toggleFavorite: () => false };
+  },
 }));
 vi.mock('@/hooks/useRecentlyViewedBusinesses', () => ({
   useRecentlyViewedBusinesses: () => ({ track: () => {} }),
