@@ -22,6 +22,7 @@ import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { mapContractLockError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
+import { approveAmendment, rejectAmendment, cancelAmendment, applyAmendment } from '@/modules/contracts/services/amendments';
 import { recordContractPdfExport } from '@/lib/contract-pdf-history';
 import { ContractPdfExportHistory } from '@/components/contract/ContractPdfExportHistory';
 import { ContractPdfPreviewOverlay } from '@/components/contract/ContractPdfPreviewOverlay';
@@ -815,9 +816,7 @@ const ContractDetail = () => {
 
   const approveAmendmentMutation = useMutation({
     mutationFn: async (amendment: { id: string }) => {
-      const { error } = await supabase.rpc('approve_contract_amendment', { _amendment_id: amendment.id });
-      if (error) throw error;
-      return amendment.id;
+      return await approveAmendment(amendment.id);
     },
     onSuccess: (amId) => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
@@ -831,9 +830,7 @@ const ContractDetail = () => {
 
   const rejectAmendmentMutation = useMutation({
     mutationFn: async ({ id: amId, reason }: { id: string; reason: string }) => {
-      const { error } = await supabase.rpc('reject_contract_amendment', { _amendment_id: amId, _reason: reason });
-      if (error) throw error;
-      return amId;
+      return await rejectAmendment(amId, reason);
     },
     onSuccess: (amId) => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
@@ -846,9 +843,7 @@ const ContractDetail = () => {
 
   const cancelAmendmentMutation = useMutation({
     mutationFn: async (amId: string) => {
-      const { error } = await supabase.rpc('cancel_contract_amendment', { _amendment_id: amId });
-      if (error) throw error;
-      return amId;
+      return await cancelAmendment(amId);
     },
     onSuccess: (amId) => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
@@ -861,8 +856,7 @@ const ContractDetail = () => {
 
   const applyAmendmentMutation = useMutation({
     mutationFn: async (args: { amId: string; scheduleAdjustedHint?: boolean }) => {
-      const { error } = await supabase.rpc('apply_contract_amendment', { _amendment_id: args.amId });
-      if (error) throw error;
+      await applyAmendment(args.amId);
       return args;
     },
     onSuccess: (args) => {
