@@ -112,7 +112,3 @@ describe('AdminProviderReview email isolation (E-Mail-9)', () => {
     expect(read('src/components/admin/email-center/EmailTemplatePreview.tsx')).toMatch(DIRECT_INVOKE);
   });
 });
-
-function clinically(start: number, end: number): number {
-  return Math.max(0, start);
-}
