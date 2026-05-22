@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { LeadStatus } from '../constants/quoteStatuses';
+import type { LeadStatus } from '../types';
 
 // Read-only lead detail wrappers (R3C). All queries run under the caller's
 // JWT and rely on existing RLS policies — no service_role, no RLS bypass.
