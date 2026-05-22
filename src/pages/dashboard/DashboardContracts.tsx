@@ -1228,9 +1228,7 @@ const DashboardContracts = () => {
 
   const completeFromInviteMutation = useMutation({
     mutationFn: async (inviteId: string) => {
-      const { data, error } = await supabase.rpc('complete_contract_from_invitation', { _invite_id: inviteId });
-      if (error) throw error;
-      return data as string;
+      return await completeContractFromInvitation(inviteId);
     },
     onSuccess: (contractId) => {
       toast.success(isRTL ? 'تم إنشاء العقد من الدعوة' : 'Contract created from invitation');
@@ -1255,8 +1253,7 @@ const DashboardContracts = () => {
   const approveMutation = useMutation({
     mutationFn: async (contract: ContractWithRole) => {
       // C6.4a — go through SECURITY DEFINER RPC.
-      const { error } = await supabase.rpc('accept_contract', { _contract_id: contract.id });
-      if (error) throw error;
+      await acceptContract(contract.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
@@ -1268,8 +1265,7 @@ const DashboardContracts = () => {
   const sendForApprovalMutation = useMutation({
     mutationFn: async (contract: ContractWithRole) => {
       // C6.4a — go through SECURITY DEFINER RPC.
-      const { error } = await supabase.rpc('send_contract_for_approval', { _contract_id: contract.id });
-      if (error) throw error;
+      await sendContractForApproval(contract.id);
       await supabase.from('notifications').insert({
         user_id: contract.client_id,
         title_ar: `عقد جديد بانتظار مراجعتك: ${contract.title_ar}`,
