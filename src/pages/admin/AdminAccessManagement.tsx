@@ -4,6 +4,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listProfiles } from '@/modules/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -54,9 +55,10 @@ const AdminAccessManagement = () => {
   const { data: profiles = [], isLoading: loadingProfiles } = useQuery({
     queryKey: ['access-mgmt-profiles'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('profiles')
-        .select('id, user_id, full_name, email, phone, avatar_url, ref_id, account_type, is_onboarded, phone_verified, membership_tier, created_at, is_banned')
-        .order('created_at', { ascending: false });
+      const { data, error } = await listProfiles({
+        select: 'id, user_id, full_name, email, phone, avatar_url, ref_id, account_type, is_onboarded, phone_verified, membership_tier, created_at, is_banned',
+        orderBy: { column: 'created_at', ascending: false },
+      });
       if (error) throw error;
       return data as any[];
     },

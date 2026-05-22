@@ -7,6 +7,7 @@ import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
 import { supabase } from '@/integrations/supabase/client';
 import { countActiveBusinesses } from '@/modules/businesses';
+import { countProfiles } from '@/modules/users';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -94,7 +95,7 @@ const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
         countActiveBusinesses(),
         supabase.from('reviews').select('id', { count: 'exact', head: true }),
         supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'published'),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        countProfiles(),
       ]);
       return { biz: biz.count ?? 0, rev: rev.count ?? 0, proj: proj.count ?? 0, users: users.count ?? 0 };
     },

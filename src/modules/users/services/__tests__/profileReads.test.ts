@@ -166,13 +166,7 @@ describe('P-5 out-of-scope guardrail (must remain direct in this phase)', () => 
     const src = read('src/components/dashboard/DashboardLayout.tsx');
     expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)\.update/);
   });
-  it('AdminDashboardView head-count / list reads remain direct (deferred)', () => {
-    const src = read('src/pages/dashboard/overview/AdminDashboardView.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)/);
-  });
+  // AdminDashboardView reads migrated in P-6 (see countAndListProfiles.test.ts).
   // DashboardContracts email→user_id lookup migrated in P-5B via getProfileByEmail.
-  it('About.tsx public head-count remains direct (deferred)', () => {
-    const src = read('src/pages/About.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)/);
-  });
+  // About.tsx public head-count migrated in P-6 (see countAndListProfiles.test.ts).
 });
