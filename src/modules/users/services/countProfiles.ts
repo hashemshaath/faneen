@@ -21,14 +21,20 @@ export async function countProfiles(
   options: CountProfilesOptions = {},
 ): Promise<{ data: unknown; error: unknown; count: number | null }> {
   const { select = 'id', filters = [] } = options;
+  type AnyFilterable = {
+    eq: (c: string, v: unknown) => AnyFilterable;
+    gte: (c: string, v: unknown) => AnyFilterable;
+    lte: (c: string, v: unknown) => AnyFilterable;
+    then: <R>(onFulfilled: (v: { data: unknown; error: unknown; count: number | null }) => R) => Promise<R>;
+  };
   let query = supabase
     .from('profiles')
-    .select(select, { count: 'exact', head: true });
+    .select(select, { count: 'exact', head: true }) as unknown as AnyFilterable;
   for (const f of filters) {
-    if (f.op === 'eq') query = query.eq(f.column, f.value as never);
-    else if (f.op === 'gte') query = query.gte(f.column, f.value as never);
-    else if (f.op === 'lte') query = query.lte(f.column, f.value as never);
+    if (f.op === 'eq') query = query.eq(f.column, f.value);
+    else if (f.op === 'gte') query = query.gte(f.column, f.value);
+    else if (f.op === 'lte') query = query.lte(f.column, f.value);
   }
-  const { data, error, count } = await query;
+  const { data, error, count } = await (query as unknown as Promise<{ data: unknown; error: unknown; count: number | null }>);
   return { data, error, count };
 }
