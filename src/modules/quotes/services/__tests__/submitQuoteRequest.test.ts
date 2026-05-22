@@ -84,3 +84,27 @@ describe('Quote.tsx regression (A1)', () => {
     expect(src).toMatch(/submitQuoteRequest\(/);
   });
 });
+
+describe('Quote.tsx regression (A2/A3)', () => {
+  const src = readFileSync(resolve(__dirname, '../../../../pages/Quote.tsx'), 'utf8');
+
+  it('does not directly access supabase.storage for quote-request-files', () => {
+    expect(src).not.toMatch(/supabase\.storage\s*\.\s*from\(\s*['"]quote-request-files['"]/);
+  });
+
+  it('does not directly insert into quote_request_files', () => {
+    expect(src).not.toMatch(/\.from\(\s*['"]quote_request_files['"]\s*\)\s*\.insert/);
+  });
+
+  it('uses uploadQuoteRequestFile and createQuoteRequestFileRecord service wrappers', () => {
+    expect(src).toMatch(/uploadQuoteRequestFile\(/);
+    expect(src).toMatch(/createQuoteRequestFileRecord\(/);
+  });
+
+  it('keeps the upload loop after quoteId is created', () => {
+    const idx = src.indexOf('result.quote_request_id');
+    const loopIdx = src.indexOf('uploadQuoteRequestFile(');
+    expect(idx).toBeGreaterThan(-1);
+    expect(loopIdx).toBeGreaterThan(idx);
+  });
+});
