@@ -4,7 +4,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
+import { createNotification, createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -1248,7 +1248,7 @@ const DashboardContracts = () => {
     mutationFn: async (contract: ContractWithRole) => {
       // C6.4a — go through SECURITY DEFINER RPC.
       await sendContractForApproval(contract.id);
-      await supabase.from('notifications').insert({
+      await createNotification({
         user_id: contract.client_id,
         title_ar: `عقد جديد بانتظار مراجعتك: ${contract.title_ar}`,
         title_en: `New contract pending review: ${contract.title_en || contract.title_ar}`,
