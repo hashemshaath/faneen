@@ -61,7 +61,7 @@ describe('AdminProviderReview email isolation (E-Mail-9)', () => {
 
     const dbIndex = src.indexOf("await supabase.rpc('admin_update_business_approval'");
     const analyticsIndex = src.indexOf('trackProviderApproved(payload)');
-    const notifyIndex = src.indexOf("await supabase.from('notifications').insert");
+    const notifyIndex = src.indexOf('await createNotification({');
     const emailIndex = src.indexOf('sendTransactionalEmail({');
 
     expect(dbIndex).toBeGreaterThan(-1);
