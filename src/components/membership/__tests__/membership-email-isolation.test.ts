@@ -73,7 +73,6 @@ describe('E-Mail-5: cross-file guardrails', () => {
     expect(read('src/pages/admin/AdminLeadRequests.tsx')).not.toMatch(DIRECT_INVOKE);
   });
   it('deferred callsites are NOT migrated in this phase (still use direct invoke)', () => {
-    expect(read('src/components/booking/BookingWidget.tsx')).toMatch(DIRECT_INVOKE);
     expect(read('src/pages/Contact.tsx')).toMatch(DIRECT_INVOKE);
     expect(read('src/components/dashboard/business-edit/InvitationsPanel.tsx')).toMatch(DIRECT_INVOKE);
     expect(read('src/pages/admin/AdminProviderReview.tsx')).toMatch(DIRECT_INVOKE);
