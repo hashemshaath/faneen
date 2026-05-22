@@ -3,8 +3,8 @@
  * Local first (instant), remote sync best-effort to profiles.onboarding_draft.
  * Per memory: use `qitaat_*` localStorage keys, plain JSON, never `any`.
  */
-import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
+import { updateProfile, getProfileByUserId } from '@/modules/users';
 
 const LOCAL_KEY = 'qitaat_onboarding_draft_v1';
 
@@ -66,10 +66,10 @@ export async function syncDraftToServer(userId: string): Promise<void> {
   const draft = safeRead();
   if (!Object.keys(draft).length) return;
   try {
-    await supabase
-      .from('profiles')
-      .update({ onboarding_draft: draft as unknown as Json })
-      .eq('user_id', userId);
+    await updateProfile({
+      userId,
+      values: { onboarding_draft: draft as unknown as Json },
+    });
   } catch {
     /* swallow — local copy is the source of truth */
   }
@@ -78,11 +78,10 @@ export async function syncDraftToServer(userId: string): Promise<void> {
 /** Pull remote draft on resume; merges with local if both exist. */
 export async function pullRemoteDraft(userId: string): Promise<OnboardingDraft> {
   try {
-    const { data } = await supabase
-      .from('profiles')
-      .select('onboarding_draft')
-      .eq('user_id', userId)
-      .maybeSingle();
+    const { data } = await getProfileByUserId<{ onboarding_draft: OnboardingDraft | null }>({
+      userId,
+      select: 'onboarding_draft',
+    });
     const remote = (data?.onboarding_draft ?? {}) as OnboardingDraft;
     const local = safeRead();
     // Prefer the most recently updated source

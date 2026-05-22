@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
+import { updateProfile as updateProfileService } from '@/modules/users';
 import type { OtpResponse, OtpVerifyResponse } from './types';
 import { sanitizeInput } from '@/lib/password-strength';
 
@@ -181,10 +182,7 @@ export const authService = {
       ...(profileData.full_name ? { full_name: sanitizeInput(profileData.full_name) } : {}),
     };
 
-    const { error } = await supabase
-      .from('profiles')
-      .update(sanitized)
-      .eq('user_id', userId);
+    const { error } = await updateProfileService({ userId, values: sanitized });
     if (error) throw error;
   },
 
