@@ -97,9 +97,9 @@ const DashboardAccountDiagnostics: React.FC = () => {
       const rolesRows = rolesRes.status === 'fulfilled' ? rolesRes.value : [];
       const rolesErr = rolesRes.status === 'fulfilled' ? null : (rolesRes.reason instanceof Error ? rolesRes.reason.message : 'failed');
       const bizData = bizRes.status === 'fulfilled' ? bizRes.value.data : null;
-      const bizErr = bizRes.status === 'fulfilled' ? bizRes.value.error?.message ?? null : (bizRes.reason instanceof Error ? bizRes.reason.message : 'failed');
+      const bizErr = bizRes.status === 'fulfilled' ? (bizRes.value.error as { message?: string } | null)?.message ?? null : (bizRes.reason instanceof Error ? bizRes.reason.message : 'failed');
       const staffData = staffRes.status === 'fulfilled' ? staffRes.value.data : null;
-      const staffErr = staffRes.status === 'fulfilled' ? staffRes.value.error?.message ?? null : (staffRes.reason instanceof Error ? staffRes.reason.message : 'failed');
+      const staffErr = staffRes.status === 'fulfilled' ? (staffRes.value.error as { message?: string } | null)?.message ?? null : (staffRes.reason instanceof Error ? staffRes.reason.message : 'failed');
       setProbe({
         rolesRows: rolesRows.map((r) => r as string),
         rolesError: rolesErr,
