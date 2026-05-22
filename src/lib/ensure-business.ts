@@ -11,6 +11,7 @@
  * so this client-side path is a safety-net only and should rarely fire.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { insertBusiness } from '@/modules/businesses';
 
 export interface EnsuredBusiness {
   id: string;
@@ -68,17 +69,17 @@ export function ensureDraftBusiness(
     const placeholderUsername = 'biz-' + userId.replace(/-/g, '').slice(0, 12);
     const placeholderName =
       (fullName && fullName.trim()) || (isRTL ? 'منشأة' : 'Business');
-    const { data, error } = await supabase
-      .from('businesses')
-      .insert({
+    const { data, error } = await insertBusiness({
+      payload: {
         user_id: userId,
         name_ar: placeholderName,
         username: placeholderUsername,
         approval_status: 'draft',
         username_status: 'pending',
-      })
-      .select(SELECT_COLS)
-      .maybeSingle();
+      },
+      select: SELECT_COLS,
+      terminal: 'maybeSingle',
+    });
     if (data) return data as EnsuredBusiness;
 
     // 2) Concurrent insert lost the race against the unique index — fetch the winner.
