@@ -16,10 +16,6 @@
  *   - src/modules/leads/services/getBusinessesForMyRequests.ts
  *   - src/modules/leads/services/getLeadProviderContactForEmail.ts
  *   - src/lib/ensure-business.ts
- *   - src/pages/dashboard/DashboardAnalytics.tsx
- *   - src/pages/dashboard/DashboardContractAnalytics.tsx
- *   - src/pages/PublicSiteScan.tsx
- *   - src/components/dashboard/ActiveBusinessSwitcher.tsx
  *
  * Writes (`.insert/.update/.delete/.upsert`) are NOT enforced here — they
  * are covered by `businesses-writes-isolation-audit.mjs`.
@@ -43,10 +39,6 @@ const ALLOWED_FILES = new Set([
   "src/modules/leads/services/getBusinessesForMyRequests.ts",
   "src/modules/leads/services/getLeadProviderContactForEmail.ts",
   "src/lib/ensure-business.ts",
-  "src/pages/dashboard/DashboardAnalytics.tsx",
-  "src/pages/dashboard/DashboardContractAnalytics.tsx",
-  "src/pages/PublicSiteScan.tsx",
-  "src/components/dashboard/ActiveBusinessSwitcher.tsx",
 ]);
 
 // Whitespace/newline tolerant: `.from('businesses')` ... `.select(`

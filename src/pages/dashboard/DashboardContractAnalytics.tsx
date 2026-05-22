@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { listOwnerBusinesses } from '@/modules/businesses';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -138,7 +139,10 @@ const DashboardContractAnalytics: React.FC = () => {
     staleTime: 5 * 60_000,
     queryFn: async () => {
       const [owned, staff] = await Promise.all([
-        supabase.from('businesses').select('id, name_ar, name_en').eq('user_id', user!.id),
+        listOwnerBusinesses<{ id: string; name_ar: string | null; name_en: string | null }>({
+          userId: user!.id,
+          select: 'id, name_ar, name_en',
+        }),
         supabase
           .from('business_staff')
           .select('business_id, role, businesses:business_id(id, name_ar, name_en)')
