@@ -32,7 +32,8 @@ import {
 } from 'recharts';
 import type { Tables } from '@/integrations/supabase/types';
 import { maskEmail, maskPhone } from '@/lib/masking';
-import { listAllUserRoles } from '@/services/userRoles';
+import { listAllUserRoles, grantRole, revokeRoleById } from '@/services/userRoles';
+import type { NormalizedRpcError } from '@/services/rpc';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 type Profile = Tables<'profiles'>;
@@ -667,19 +668,21 @@ const AdminUsers = () => {
 
   // ─── Mutations ───
   const addRoleMutation = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      const { error } = await supabase.from('user_roles').insert({ user_id: userId, role: role as Tables<'user_roles'>['role'] });
-      if (error) throw error;
-    },
+    mutationFn: ({ userId, role }: { userId: string; role: string }) =>
+      grantRole(userId, role as Tables<'user_roles'>['role']),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] }); toast.success(isRTL ? 'تم إضافة الصلاحية' : 'Role added'); },
     onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : '';
-      toast.error(msg.includes('duplicate') ? (isRTL ? 'الصلاحية موجودة' : 'Role exists') : (isRTL ? 'فشل إضافة الصلاحية' : 'Failed to add role'));
+      const code = (err as { normalized?: NormalizedRpcError })?.normalized?.code;
+      toast.error(
+        code === 'DUPLICATE_KEY'
+          ? (isRTL ? 'الصلاحية موجودة' : 'Role exists')
+          : (isRTL ? 'فشل إضافة الصلاحية' : 'Failed to add role')
+      );
     },
   });
 
   const removeRoleMutation = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from('user_roles').delete().eq('id', id); if (error) throw error; },
+    mutationFn: (id: string) => revokeRoleById(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] }); toast.success(isRTL ? 'تم إزالة الصلاحية' : 'Role removed'); },
     onError: () => toast.error(isRTL ? 'فشل الإزالة' : 'Failed to remove'),
   });
