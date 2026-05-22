@@ -9,6 +9,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
+import { listOwnerBusinesses } from '@/modules/businesses';
 import { toast } from 'sonner';
 import { Layers, Plus, Pencil, Trash2, Send, Search, FileClock, Building2, CheckCircle2, Clock, ShieldCheck, Sparkles, Users, AlertCircle, Mail, UserCheck, HelpCircle, RefreshCw, WifiOff, Loader2 } from 'lucide-react';
 import {

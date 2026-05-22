@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listOwnerBusinesses } from '@/modules/businesses';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
 import { useLanguage } from '@/i18n/LanguageContext';
