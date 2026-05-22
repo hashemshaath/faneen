@@ -81,15 +81,8 @@ describe('DashboardLeads.tsx regression (E3)', () => {
     expect(src).toMatch(/notifyCustomerLeadUpdate\(/);
   });
 
-  it('leaves businesses lookup untouched (deferred D4)', () => {
-    expect(src).toMatch(/supabase\.from\(\s*['"]businesses['"]\s*\)/);
-  });
-
-  it('leaves business_staff lookup untouched (deferred D4)', () => {
-    expect(src).toMatch(/supabase\.from\(\s*['"]business_staff['"]\s*\)/);
-  });
-
-  it('keeps supabase import for deferred D4 usages', () => {
-    expect(src).toMatch(/from '@\/integrations\/supabase\/client'/);
+  it('businesses/business_staff lookups removed (D4 complete)', () => {
+    expect(src).not.toMatch(/supabase\.from\(\s*['"]businesses['"]\s*\)/);
+    expect(src).not.toMatch(/supabase\.from\(\s*['"]business_staff['"]\s*\)/);
   });
 });
