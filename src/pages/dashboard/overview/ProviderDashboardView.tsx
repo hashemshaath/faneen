@@ -45,7 +45,15 @@ export default function ProviderDashboardView({
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
-      const { data } = await getOwnerBusiness({
+      const { data } = await getOwnerBusiness<{
+        id: string;
+        logo_url: string | null;
+        name_ar: string | null;
+        name_en: string | null;
+        is_verified: boolean | null;
+        membership_tier: string | null;
+        [key: string]: unknown;
+      }>({
         userId: user.id,
         select: '*',
         limit: 1,
