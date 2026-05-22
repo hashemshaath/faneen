@@ -156,10 +156,9 @@ describe('P-4 auth + diagnostics migration', () => {
 });
 
 describe('P-4 out-of-scope guardrail (must remain direct)', () => {
-  it('AdminBusinesses CRUD remains direct', () => {
-    const src = read('src/pages/admin/AdminBusinesses.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]businesses['"]\)\.update/);
-  });
+  // NOTE: AdminBusinesses update callsites migrated in P-12 to
+  // updateBusinessById / updateBusinessesByIds. Regression lock lives in
+  // updateBusinessesByIds.test.ts.
   it('RepresentativesSection staff CRUD remains direct', () => {
     const src = read('src/components/dashboard/business-edit/RepresentativesSection.tsx');
     expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)\.update/);
