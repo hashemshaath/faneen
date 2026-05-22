@@ -835,7 +835,7 @@ const DashboardContracts = () => {
       });
       if (error) throw error;
       // C6.4a — recompute via RPC.
-      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
+      await recalcContractTotal(contractId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
@@ -857,7 +857,7 @@ const DashboardContracts = () => {
       const { error } = await supabase.from('contract_line_items').delete().eq('id', id);
       if (error) throw error;
       // C6.4a — recompute via RPC.
-      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
+      await recalcContractTotal(contractId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
@@ -897,7 +897,7 @@ const DashboardContracts = () => {
       }));
       const { error } = await supabase.from('contract_line_items').insert(rows);
       if (error) throw error;
-      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
+      await recalcContractTotal(contractId);
       return { inserted: toInsert.length };
     },
     onSuccess: (res) => {
