@@ -18,7 +18,6 @@ export interface UserRoleRow {
   id: string;
   user_id: string;
   role: AppRole;
-  created_at: string;
 }
 
 export async function getUserRoles(userId: string): Promise<AppRole[]> {
@@ -60,7 +59,7 @@ export async function hasSuperAdminAccess(userId: string): Promise<boolean> {
 
 export async function listAllUserRoles(): Promise<UserRoleRow[]> {
   const res = await safeRpc<UserRoleRow[]>(
-    supabase.from('user_roles').select('id, user_id, role, created_at')
+    supabase.from('user_roles').select('id, user_id, role')
   );
   return res.ok && res.data ? res.data : [];
 }
@@ -68,7 +67,7 @@ export async function listAllUserRoles(): Promise<UserRoleRow[]> {
 export async function listUserRolesFor(userId: string): Promise<UserRoleRow[]> {
   if (!userId) return [];
   const res = await safeRpc<UserRoleRow[]>(
-    supabase.from('user_roles').select('id, user_id, role, created_at').eq('user_id', userId)
+    supabase.from('user_roles').select('id, user_id, role').eq('user_id', userId)
   );
   return res.ok && res.data ? res.data : [];
 }
