@@ -15,3 +15,5 @@ export { updateBusinessById } from './services/updateBusinessById';
 export type { UpdateBusinessByIdOptions } from './services/updateBusinessById';
 export { updateBusinessesByIds } from './services/updateBusinessesByIds';
 export type { UpdateBusinessesByIdsOptions } from './services/updateBusinessesByIds';
+export { insertBusiness } from './services/insertBusiness';
+export type { InsertBusinessOptions } from './services/insertBusiness';

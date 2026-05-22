@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { updateProfile as updateProfileService } from '@/modules/users';
+import { insertBusiness } from '@/modules/businesses';
 import type { OtpResponse, OtpVerifyResponse } from './types';
 import { sanitizeInput } from '@/lib/password-strength';
 
@@ -197,9 +198,8 @@ export const authService = {
 
     if (sanitizedUsername.length < 3) throw new Error('Username must be at least 3 characters');
 
-    const { error } = await supabase
-      .from('businesses')
-      .insert({
+    const { error } = await insertBusiness({
+      payload: {
         user_id: userId,
         name_ar: sanitizedName,
         username: sanitizedUsername,
@@ -208,8 +208,14 @@ export const authService = {
         description_ar: extras?.description_ar ? sanitizeInput(extras.description_ar) : null,
         approval_status: 'draft',
         username_status: 'pending',
-      });
-    if (error && !error.message.includes('duplicate')) throw error;
+      },
+      terminal: 'none',
+    });
+    const errMessage =
+      error && typeof error === 'object' && 'message' in error
+        ? String((error as { message?: unknown }).message ?? '')
+        : '';
+    if (error && !errMessage.includes('duplicate')) throw error;
 
     // Welcome-business email — fire-and-forget; idempotency key bound to
     // userId so the queue de-dupes if onboarding runs twice. Failures must

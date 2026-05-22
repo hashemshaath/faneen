@@ -135,20 +135,3 @@ describe('migration regression: CrDocumentScanner', () => {
     expect(src).toMatch(/qc\.invalidateQueries\(\{\s*queryKey:\s*\['admin-provider-review'\]/);
   });
 });
-
-describe('non-migration guard: untouched callsites', () => {
-  const files = [
-    'src/services/auth/authService.ts',
-    'src/lib/ensure-business.ts',
-  ];
-  for (const f of files) {
-    it(`${f} still contains its direct businesses write (intentionally deferred)`, () => {
-      try {
-        const src = readFileSync(resolve(__dirname, '../../../../../', f), 'utf8');
-        expect(src).toMatch(/from\(['"]businesses['"]\)/);
-      } catch {
-        // file may live at a different relative depth; soft-skip
-      }
-    });
-  }
-});
