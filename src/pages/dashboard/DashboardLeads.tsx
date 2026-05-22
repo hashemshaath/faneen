@@ -73,7 +73,8 @@ const DashboardLeads: React.FC = () => {
   const { data: leads, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['provider-leads', ids.join(','), filter],
     enabled: ids.length > 0,
-    queryFn: () => listProviderLeadRequests(ids, filter) as Promise<LeadRow[]>,
+    queryFn: () =>
+      listProviderLeadRequests(ids, filter) as unknown as Promise<LeadRow[]>,
   });
 
   const filtered = useMemo(() => {
