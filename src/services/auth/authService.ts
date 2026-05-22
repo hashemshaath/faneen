@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
+import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import type { OtpResponse, OtpVerifyResponse } from './types';
 import { sanitizeInput } from '@/lib/password-strength';
 
