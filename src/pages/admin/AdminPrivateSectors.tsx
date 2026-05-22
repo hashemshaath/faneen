@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { supabase } from '@/integrations/supabase/client';
 import { listBusinessesByIds } from '@/modules/businesses';
 import { toast } from 'sonner';
 import { ShieldCheck, Search, CheckCircle2, XCircle, Pause, RotateCcw, Pencil, FileClock, Layers, Trash2, Users } from 'lucide-react';

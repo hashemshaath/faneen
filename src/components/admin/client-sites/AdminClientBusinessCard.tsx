@@ -9,7 +9,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Building2, ExternalLink, FileText, Globe, IdCard, User,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { getAdminBusinessById } from '@/modules/businesses';
 
 type Bi = (ar: string, en: string) => string;

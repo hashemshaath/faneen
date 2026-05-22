@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { supabase } from '@/integrations/supabase/client';
 import { updateBusinessById, listAdminBusinesses } from '@/modules/businesses';
 import { toast } from 'sonner';
 import { Save, Loader2, Map as MapIcon, AlertCircle } from 'lucide-react';
