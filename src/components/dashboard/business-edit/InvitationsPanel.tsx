@@ -111,20 +111,18 @@ export const InvitationsPanel: React.FC<Props> = ({
         .maybeSingle();
       if (profile?.full_name) inviterName = profile.full_name;
 
-      const { error: emailError } = await supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'business-staff-invitation',
+      const { error: emailError } = await sendTransactionalEmail({
+        templateName: 'business-staff-invitation',
+        recipientEmail: trimmed,
+        idempotencyKey: `staff-invite-${inserted?.id ?? token}`,
+        templateData: {
           recipientEmail: trimmed,
-          idempotencyKey: `staff-invite-${inserted?.id ?? token}`,
-          templateData: {
-            recipientEmail: trimmed,
-            businessName: isRTL ? (businessNameAr ?? businessNameEn ?? '') : (businessNameEn ?? businessNameAr ?? ''),
-            inviterName,
-            roleAr: STAFF_ROLE_META[role].ar,
-            roleEn: STAFF_ROLE_META[role].en,
-            acceptUrl: acceptUrlFor(token),
-            expiryDate: expiresAt.slice(0, 10),
-          },
+          businessName: isRTL ? (businessNameAr ?? businessNameEn ?? '') : (businessNameEn ?? businessNameAr ?? ''),
+          inviterName,
+          roleAr: STAFF_ROLE_META[role].ar,
+          roleEn: STAFF_ROLE_META[role].en,
+          acceptUrl: acceptUrlFor(token),
+          expiryDate: expiresAt.slice(0, 10),
         },
       });
       if (emailError) throw emailError;
