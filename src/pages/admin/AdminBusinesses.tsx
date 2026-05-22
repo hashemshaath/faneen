@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
+import { updateBusinessById, updateBusinessesByIds } from '@/modules/businesses';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -304,7 +305,7 @@ const AdminBusinesses = () => {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
-      const { error } = await supabase.from('businesses').update({ [field]: value } as any).eq('id', id);
+      const { error } = await updateBusinessById({ id, values: { [field]: value } });
       if (error) throw error;
       await logAction(`business_${field}_${value}`, id, { field, value });
     },
@@ -317,7 +318,7 @@ const AdminBusinesses = () => {
 
   const tierMutation = useMutation({
     mutationFn: async ({ id, tier }: { id: string; tier: string }) => {
-      const { error } = await supabase.from('businesses').update({ membership_tier: tier } as any).eq('id', id);
+      const { error } = await updateBusinessById({ id, values: { membership_tier: tier } });
       if (error) throw error;
       await logAction('business_tier_change', id, { new_tier: tier });
     },
@@ -346,7 +347,7 @@ const AdminBusinesses = () => {
         mobile: editForm.mobile || null, customer_service_phone: editForm.customer_service_phone || null,
         is_active: editForm.is_active, is_verified: editForm.is_verified, membership_tier: editForm.membership_tier,
       };
-      const { error } = await supabase.from('businesses').update(payload).eq('id', id);
+      const { error } = await updateBusinessById({ id, values: payload });
       if (error) throw error;
       await logAction('business_updated', id, { fields: Object.keys(payload) });
     },
@@ -498,7 +499,7 @@ const AdminBusinesses = () => {
   /* ─── Bulk mutation ─── */
   const bulkMutation = useMutation({
     mutationFn: async ({ ids, patch }: { ids: string[]; patch: Record<string, unknown> }) => {
-      const { error } = await supabase.from('businesses').update(patch as any).in('id', ids);
+      const { error } = await updateBusinessesByIds({ ids, values: patch });
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
