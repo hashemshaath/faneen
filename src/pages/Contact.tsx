@@ -90,15 +90,13 @@ const Contact = () => {
       });
 
       // 2. Send confirmation email to user
-      await supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'contact-confirmation',
-          recipientEmail: form.email.trim().toLowerCase(),
-          idempotencyKey: `contact-confirm-${id}`,
-          templateData: {
-            name: form.name.trim(),
-            subject: form.subject.trim(),
-          },
+      await sendTransactionalEmail({
+        templateName: 'contact-confirmation',
+        recipientEmail: form.email.trim().toLowerCase(),
+        idempotencyKey: `contact-confirm-${id}`,
+        templateData: {
+          name: form.name.trim(),
+          subject: form.subject.trim(),
         },
       });
 
