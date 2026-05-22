@@ -1156,8 +1156,7 @@ const DashboardContracts = () => {
   const resendInviteMutation = useMutation({
     mutationFn: async () => {
       if (!pendingInvite) throw new Error('No pending invite');
-      const { data, error } = await supabase.rpc('resend_client_invitation', { _id: pendingInvite.id });
-      if (error) throw error;
+      const data = await resendClientInvitation(pendingInvite.id);
       const result = data as { invite_id: string; ref_id: string; token: string; reminder_count: number; expires_at: string };
       const { error: notifyErr } = await supabase.functions.invoke('notify-client-invitation', {
         body: { invite_id: result.invite_id, token: result.token, kind: 'reminder' },
@@ -1180,8 +1179,7 @@ const DashboardContracts = () => {
   const cancelInviteMutation = useMutation({
     mutationFn: async () => {
       if (!pendingInvite) throw new Error('No pending invite');
-      const { error } = await supabase.rpc('cancel_client_invitation', { _id: pendingInvite.id });
-      if (error) throw error;
+      await cancelClientInvitation(pendingInvite.id);
     },
     onSuccess: () => {
       toast.success(isRTL ? 'تم إلغاء الدعوة' : 'Invitation cancelled');
