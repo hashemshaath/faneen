@@ -16,6 +16,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
 import { listAdminLeadRequests } from '@/modules/leads/services/detail';
 import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
+import { getContractAfterConvert } from '@/modules/leads/services/conversion';
 
 // SR-4A: Service Request lifecycle statuses (new vocabulary).
 type Status =
