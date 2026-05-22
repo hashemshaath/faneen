@@ -185,19 +185,26 @@ const QuoteRequestDetails: React.FC = () => {
     for (let i = 0; i < toUpload.length; i++) {
       const f = toUpload[i];
       const path = `${quote.id}/${Date.now()}-${i}-${safeFileName(f.name)}`;
-      const { error: upErr } = await supabase.storage
-        .from(QUOTE_BUCKET)
-        .upload(path, f, { upsert: false, contentType: f.type || undefined });
-      if (upErr) { failed++; }
-      else {
-        await supabase.from('quote_request_files').insert({
-          quote_request_id: quote.id,
-          user_id: user?.id ?? null,
-          file_name: f.name,
-          file_path: path,
-          file_size: f.size,
-          file_type: f.type || null,
-        });
+      let uploaded = true;
+      try {
+        await uploadQuoteRequestFile({ path, file: f });
+      } catch {
+        uploaded = false;
+        failed++;
+      }
+      if (uploaded) {
+        try {
+          await createQuoteRequestFileRecord({
+            quote_request_id: quote.id,
+            user_id: user?.id ?? null,
+            file_name: f.name,
+            file_path: path,
+            file_size: f.size,
+            file_type: f.type || null,
+          });
+        } catch {
+          // preserve prior fire-and-forget semantics — insert errors were not checked
+        }
       }
       setUploading({ done: i + 1, total: toUpload.length });
     }
