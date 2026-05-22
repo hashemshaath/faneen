@@ -42,6 +42,7 @@ import {
   priorityConfig,
   noteTypeConfig,
 } from '@/modules/contracts/constants/statusConfigs';
+import { sendTransactionalEmail }  from '@/modules/notifications/services/sendTransactionalEmail';
 
 // ─── Phase 5E.2 — Safe source-lead summary card ───
 type SourceLeadSummary = {
@@ -477,20 +478,18 @@ const ContractDetail = () => {
 
         const sendTo = (to?: string, name?: string, counterparty?: string) => {
           if (!to) return;
-          void supabase.functions.invoke('send-transactional-email', {
-            body: {
-              templateName: 'contract-signed',
-              recipientEmail: to,
-              idempotencyKey: `contract-signed-${id}-${to}`,
-              templateData: {
-                recipientName: name,
-                contractRefId: refId,
-                contractTitle: title,
-                counterpartyName: counterparty,
-                totalAmount: total ? Number(total).toLocaleString('en-US', { minimumFractionDigits: 2 }) : undefined,
-                currency,
-                contractUrl: url,
-              },
+          void sendTransactionalEmail({
+            templateName: 'contract-signed',
+            recipientEmail: to,
+            idempotencyKey: `contract-signed-${id}-${to}`,
+            templateData: {
+              recipientName: name,
+              contractRefId: refId,
+              contractTitle: title,
+              counterpartyName: counterparty,
+              totalAmount: total ? Number(total).toLocaleString('en-US', { minimumFractionDigits: 2 }) : undefined,
+              currency,
+              contractUrl: url,
             },
           }).catch(() => { /* queue retries */ });
         };
@@ -2284,21 +2283,19 @@ const ContractDetail = () => {
                                                 const clientEmail = (clientProfile as any)?.email;
                                                 const clientName = (clientProfile as any)?.full_name;
                                                 if (clientEmail) {
-                                                  void supabase.functions.invoke('send-transactional-email', {
-                                                    body: {
-                                                      templateName: 'contract-payment-recorded',
-                                                      recipientEmail: clientEmail,
-                                                      idempotencyKey: `contract-payment-recorded-${pay.id}`,
-                                                      templateData: {
-                                                        recipientName: clientName,
-                                                        contractRefId: refId,
-                                                        contractTitle: isRTL ? titleAr : titleEn,
-                                                        installmentNumber: pay.installment_number,
-                                                        amount: Number(pay.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }),
-                                                        currency: plan.currency_code,
-                                                        contractId: contract.id,
-                                                        contractUrl: `${window.location.origin}/contracts/${contract.id}`,
-                                                      },
+                                                  void sendTransactionalEmail({
+                                                    templateName: 'contract-payment-recorded',
+                                                    recipientEmail: clientEmail,
+                                                    idempotencyKey: `contract-payment-recorded-${pay.id}`,
+                                                    templateData: {
+                                                      recipientName: clientName,
+                                                      contractRefId: refId,
+                                                      contractTitle: isRTL ? titleAr : titleEn,
+                                                      installmentNumber: pay.installment_number,
+                                                      amount: Number(pay.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                                                      currency: plan.currency_code,
+                                                      contractId: contract.id,
+                                                      contractUrl: `${window.location.origin}/contracts/${contract.id}`,
                                                     },
                                                   }).catch(() => { /* queue retries */ });
                                                 }
