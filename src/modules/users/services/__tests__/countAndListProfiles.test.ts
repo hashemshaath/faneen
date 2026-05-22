@@ -155,19 +155,5 @@ describe('P-6 admin/public profile read migration', () => {
   });
 });
 
-describe('P-6 out-of-scope guardrail (must remain direct in this phase)', () => {
-  it('AdminUsers profile updates/list remain direct (read+mutation deferred)', () => {
-    const src = read('src/pages/admin/AdminUsers.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)\.update/);
-    // The AdminUsers full list read is deferred along with mutations.
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)\.select\(['"]\*['"]\)/);
-  });
-  it('DashboardSettings profile update remains direct', () => {
-    const src = read('src/pages/dashboard/DashboardSettings.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)\.update/);
-  });
-  it('DashboardLayout avatar update remains direct', () => {
-    const src = read('src/components/dashboard/DashboardLayout.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)\.update/);
-  });
-});
+// P-6 out-of-scope guardrail removed: AdminUsers list + profile mutations
+// migrated in P-7 (see profileMutations.test.ts).
