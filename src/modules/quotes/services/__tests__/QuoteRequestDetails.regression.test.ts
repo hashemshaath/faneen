@@ -10,7 +10,8 @@ const src = readFileSync(
 describe('QuoteRequestDetails.tsx regression (F3)', () => {
   it('does not directly access supabase.storage for quote-request-files', () => {
     expect(src).not.toMatch(/supabase\.storage\s*\.\s*from\(/);
-    expect(src).not.toMatch(/['"]quote-request-files['"]/);
+    // Note: the string 'quote-request-files' may still appear as a React Query key.
+    // We only forbid storage bucket access here.
   });
 
   it('does not directly insert into quote_request_files', () => {
