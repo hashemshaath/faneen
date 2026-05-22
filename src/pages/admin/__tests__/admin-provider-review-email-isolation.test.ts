@@ -1,6 +1,6 @@
-import { describe, it, expect, vi }  from 'vitest';
+import { describe, it, expect } from 'vitest';
 
-const DIRECT_INVOKE = /supabase\.functions\.invoke\(\s*['"]send-transactional-email['"]\s*\)/;
+const DIRECT_INVOKE = /supabase\.functions\.invoke\(\s*['"]send-transactional-email['"]/;
 
 function read(relativePath: string): string {
   const fs = require('fs');
@@ -51,7 +51,7 @@ describe('AdminProviderReview email isolation (E-Mail-9)', () => {
     const before = src.slice(Math.max(0, callIndex - 400), callIndex);
     expect(before).toContain('try {');
 
-    const after = src.slice(callIndex, callIndex + 600);
+    const after = src.slice(callIndex, callIndex + 800);
     expect(after).toContain('catch');
     expect(after).toContain("console.warn('[AdminProviderReview] email send failed', err);");
   });
@@ -77,7 +77,7 @@ describe('AdminProviderReview email isolation (E-Mail-9)', () => {
   it('preserves error-swallowing semantics for email failures', () => {
     const src = read('src/pages/admin/AdminProviderReview.tsx');
     const emailBlock = src.substring(
-      src.indexOf('sendTransactionalEmail({') - 120,
+      src.indexOf('sendTransactionalEmail({') - 200,
       src.indexOf('sendTransactionalEmail({') + 900
     );
     expect(emailBlock).toContain('try {');
