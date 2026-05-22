@@ -92,6 +92,9 @@ jobs:
       - name: Businesses Writes Isolation Audit
         run: node scripts/businesses-writes-isolation-audit.mjs
 
+      - name: Businesses Reads Isolation Audit
+        run: node scripts/businesses-reads-isolation-audit.mjs
+
       - name: Contracts Pre-launch Smoke (typecheck + targeted vitest + privacy grep)
         run: bash scripts/contracts-prelaunch-smoke.sh
 
