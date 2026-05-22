@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import {
   listAdminQuoteRequests,
   countQuoteRequestFiles,
-  type AdminQuoteRow,
 } from '@/modules/leads/services/list';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
