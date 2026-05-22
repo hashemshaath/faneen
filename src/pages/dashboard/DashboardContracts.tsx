@@ -1103,16 +1103,15 @@ const DashboardContracts = () => {
         workType: selectedWorkType || null,
         pricingMethod: selectedPricingMethod,
       });
-      const { data, error } = await supabase.rpc('create_client_invitation', {
-        _email: email,
-        _name: inviteForm.name.trim() || null,
-        _phone: inviteForm.phone.trim() || null,
-        _business_id: businessId || null,
-        _draft_payload: Object.keys(draft).length > 0 ? (JSON.parse(JSON.stringify(draft)) as Json) : null,
-        _template_version_id: effectiveVersion?.version_id ?? null,
-        _work_type: selectedWorkType || null,
+      const data = await createClientInvitation({
+        email,
+        name: inviteForm.name.trim() || null,
+        phone: inviteForm.phone.trim() || null,
+        businessId: businessId || null,
+        draftPayload: Object.keys(draft).length > 0 ? (JSON.parse(JSON.stringify(draft)) as Json) : null,
+        templateVersionId: effectiveVersion?.version_id ?? null,
+        workType: selectedWorkType || null,
       });
-      if (error) throw error;
       const result = data as {
         already_registered: boolean;
         user_id?: string | null;
