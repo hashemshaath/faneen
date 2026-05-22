@@ -5,6 +5,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
+import { countBusinesses } from '@/modules/businesses';
 import { MapPin, Building2, Map, ListTree, ArrowLeft } from 'lucide-react';
 
 const StatCard: React.FC<{ label: string; value: number | string; icon: React.ReactNode; tone?: string }> = ({ label, value, icon, tone = 'text-primary' }) => (
@@ -43,8 +44,14 @@ const AdminLocationsHub: React.FC = () => {
       const [catalog, areas, withCoords, total] = await Promise.all([
         supabase.from('location_catalog').select('id', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('business_service_areas').select('id', { count: 'exact', head: true }),
-        supabase.from('businesses').select('id', { count: 'exact', head: true }).not('latitude', 'is', null).not('longitude', 'is', null),
-        supabase.from('businesses').select('id', { count: 'exact', head: true }),
+        countBusinesses({
+          select: 'id',
+          filters: [
+            { column: 'latitude', op: 'not', operator: 'is', value: null },
+            { column: 'longitude', op: 'not', operator: 'is', value: null },
+          ],
+        }),
+        countBusinesses({ select: 'id' }),
       ]);
       return {
         cities: catalog.count ?? 0,
