@@ -32,6 +32,15 @@ import { PdfAnalysisReport } from '@/components/contract/PdfAnalysisReport';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
 import BarcodeWidget from '@/components/barcodes/BarcodeWidget';
 import { useEntityBarcode } from '@/lib/barcodes/useEntityBarcode';
+import { InfoRow } from '@/modules/contracts/components/InfoRow';
+import { StatCard } from '@/modules/contracts/components/StatCard';
+import { ClauseSection } from '@/modules/contracts/components/ClauseSection';
+import { ContractLockBanner } from '@/modules/contracts/components/ContractLockBanner';
+import {
+  statusConfig,
+  priorityConfig,
+  noteTypeConfig,
+} from '@/modules/contracts/constants/statusConfigs';
 
 // ─── Phase 5E.2 — Safe source-lead summary card ───
 type SourceLeadSummary = {
