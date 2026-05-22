@@ -116,15 +116,15 @@ describe('E-Mail-4: Contract transactional email isolation', () => {
 
   describe('Lead/quote/auth cleanliness — re-check', () => {
     const leadSrc = readFileSync(
-      resolve(__dirname, '../../modules/leads/components/LeadRequestForm.tsx'),
+      resolve(__dirname, '../../components/lead/LeadRequestForm.tsx'),
       'utf8',
     );
     const quoteSrc = readFileSync(
-      resolve(__dirname, '../../modules/quotes/components/Quote.tsx'),
+      resolve(__dirname, '../Quote.tsx'),
       'utf8',
     );
     const quoteDetailSrc = readFileSync(
-      resolve(__dirname, '../../modules/quotes/components/QuoteRequestDetails.tsx'),
+      resolve(__dirname, '../dashboard/QuoteRequestDetails.tsx'),
       'utf8',
     );
     const adminLeadSrc = readFileSync(
