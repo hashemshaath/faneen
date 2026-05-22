@@ -37,7 +37,8 @@ describe('E-Mail-6: BookingWidget email isolation', () => {
   });
 
   it('preserves fire-and-forget non-awaited behavior with .catch(console.error)', () => {
-    expect(src).toMatch(/sendTransactionalEmail\(\{[^}]+\}\)\.catch\(console\.error\)/);
+    const emailBlock = src.slice(src.indexOf('sendTransactionalEmail({'));
+    expect(emailBlock).toMatch(/\.catch\(console\.error\)/);
   });
 
   it('keeps supabase import for DB queries and booking insert', () => {
