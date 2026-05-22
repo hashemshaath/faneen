@@ -86,6 +86,9 @@ jobs:
       - name: Notifications Insert Isolation Audit
         run: node scripts/notifications-insert-isolation-audit.mjs
 
+      - name: Profiles Isolation Audit
+        run: node scripts/profiles-isolation-audit.mjs
+
       - name: Contracts Pre-launch Smoke (typecheck + targeted vitest + privacy grep)
         run: bash scripts/contracts-prelaunch-smoke.sh
 

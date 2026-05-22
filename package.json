@@ -23,7 +23,8 @@
     "broken-links-audit": "node scripts/broken-links-audit.mjs",
     "sitemap-integrity-audit": "node scripts/sitemap-integrity-audit.mjs",
     "transactional-email-isolation-audit": "node scripts/transactional-email-isolation-audit.mjs",
-    "notifications-insert-isolation-audit": "node scripts/notifications-insert-isolation-audit.mjs"
+    "notifications-insert-isolation-audit": "node scripts/notifications-insert-isolation-audit.mjs",
+    "profiles-isolation-audit": "node scripts/profiles-isolation-audit.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
