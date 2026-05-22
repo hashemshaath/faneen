@@ -4,6 +4,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getOwnerBusiness } from '@/modules/businesses';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -229,11 +230,10 @@ const DashboardPromotions = () => {
   const { data: businessInfo } = useQuery({
     queryKey: ['my-business-info', user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('businesses')
-        .select('id, username, name_ar, name_en')
-        .eq('user_id', user!.id)
-        .maybeSingle();
+      const { data } = await getOwnerBusiness<{ id: string; username: string | null; name_ar: string | null; name_en: string | null }>({
+        userId: user!.id,
+        select: 'id, username, name_ar, name_en',
+      });
       return data ?? null;
     },
     enabled: !!user,

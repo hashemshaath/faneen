@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getOwnerBusiness } from '@/modules/businesses';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -134,13 +135,12 @@ const DashboardBusinessCompletion: React.FC = () => {
     enabled: !!user,
     queryFn: async (): Promise<BusinessRow | null> => {
       if (!user) return null;
-      const { data } = await supabase
-        .from('businesses')
-        .select('id, ref_id, approval_status, onboarding_completion, approval_notes, name_ar, name_en, logo_url, description_ar, short_description_ar, phone, mobile, email, city_id, region, address, latitude, longitude, sectors, sub_services, national_id, unified_number')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data } = await getOwnerBusiness<BusinessRow>({
+        userId: user.id,
+        select: 'id, ref_id, approval_status, onboarding_completion, approval_notes, name_ar, name_en, logo_url, description_ar, short_description_ar, phone, mobile, email, city_id, region, address, latitude, longitude, sectors, sub_services, national_id, unified_number',
+        orderBy: { column: 'created_at', ascending: false },
+        limit: 1,
+      });
       return (data as BusinessRow | null) ?? null;
     },
     staleTime: 30_000,

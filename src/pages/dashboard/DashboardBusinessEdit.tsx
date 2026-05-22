@@ -74,13 +74,12 @@ const DashboardBusinessEdit: React.FC = () => {
     enabled: !!user,
     queryFn: async (): Promise<BusinessRow | null> => {
       if (!user) return null;
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await getOwnerBusiness<BusinessRow>({
+        userId: user.id,
+        select: '*',
+        orderBy: { column: 'created_at', ascending: false },
+        limit: 1,
+      });
       if (error) throw error;
       return (data as BusinessRow | null) ?? null;
     },

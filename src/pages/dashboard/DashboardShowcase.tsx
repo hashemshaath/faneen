@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { getOwnerBusiness } from "@/modules/businesses";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { toast } from "sonner";
@@ -86,13 +87,12 @@ const DashboardShowcase: React.FC = () => {
     queryKey: ["showcase-business", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("businesses")
-        .select("id, name_ar, name_en, is_verified, is_active")
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await getOwnerBusiness<Business>({
+        userId: user!.id,
+        select: "id, name_ar, name_en, is_verified, is_active",
+        orderBy: { column: "created_at", ascending: true },
+        limit: 1,
+      });
       if (error) throw error;
       return data as Business | null;
     },
