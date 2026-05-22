@@ -14,6 +14,7 @@ import { ar } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
+import { listAdminLeadRequests } from '@/modules/leads/services/detail';
 
 // SR-4A: Service Request lifecycle statuses (new vocabulary).
 type Status =
@@ -87,18 +88,8 @@ const AdminLeadRequests: React.FC = () => {
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['admin-lead-requests', statusFilter],
-    queryFn: async () => {
-      let q = supabase
-        .from('lead_requests')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(200);
-      if (statusFilter !== 'all' && statusFilter !== 'legacy') q = q.eq('status', statusFilter);
-      if (statusFilter === 'legacy') q = q.in('status', LEGACY_STATUSES);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []) as LeadRow[];
-    },
+    queryFn: () =>
+      listAdminLeadRequests(statusFilter, LEGACY_STATUSES) as Promise<LeadRow[]>,
   });
 
   const filtered = useMemo(() => {

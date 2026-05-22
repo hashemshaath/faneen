@@ -14,6 +14,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge, type LeadStatus } from '@/components/leads/LeadStatusBadge';
 import { LeadDetailPanel, type LeadRow } from '@/components/leads/LeadDetailPanel';
 import { trackEvent } from '@/lib/analytics-events';
+import { listProviderLeadRequests } from '@/modules/leads/services/detail';
 
 const FILTERS: Array<{ key: 'all' | LeadStatus; ar: string; en: string }> = [
   { key: 'all',        ar: 'الكل',           en: 'All' },
@@ -72,18 +73,8 @@ const DashboardLeads: React.FC = () => {
   const { data: leads, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['provider-leads', ids.join(','), filter],
     enabled: ids.length > 0,
-    queryFn: async () => {
-      let q = supabase
-        .from('lead_requests')
-        .select('*')
-        .in('business_id', ids)
-        .order('created_at', { ascending: false })
-        .limit(200);
-      if (filter !== 'all') q = q.eq('status', filter);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []) as LeadRow[];
-    },
+    queryFn: () =>
+      listProviderLeadRequests(ids, filter) as unknown as Promise<LeadRow[]>,
   });
 
   const filtered = useMemo(() => {

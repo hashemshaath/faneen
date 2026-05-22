@@ -25,6 +25,7 @@ import {
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, normalizePhoneForWhatsApp,
 } from '@/lib/quoteRequests';
 import { supabase as sb } from '@/integrations/supabase/client';
+import { getProviderLeadDetail } from '@/modules/leads/services/detail';
 
 interface LeadDetailRow {
   id: string;
@@ -78,23 +79,7 @@ const ProviderLeadDetails: React.FC = () => {
   const { data: lead, isLoading, error } = useQuery({
     queryKey: ['provider-lead', id],
     enabled: !!id && !!user,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_request_leads')
-        .select(`
-          id, status, match_score, match_reasons, viewed_at, responded_at, created_at,
-          contact_revealed, contact_revealed_at, contact_view_count,
-          provider_id, provider_user_id,
-          quote_request:quote_requests(
-            id, sector, city, district, project_description, approx_dimensions, quantity,
-            execution_timeline, service_location_type, has_budget, budget_amount, budget_note
-          )
-        `)
-        .eq('id', id!)
-        .maybeSingle();
-      if (error) throw error;
-      return data as unknown as LeadDetailRow | null;
-    },
+    queryFn: () => getProviderLeadDetail(id!) as Promise<LeadDetailRow | null>,
   });
 
   // Auto-mark as viewed
