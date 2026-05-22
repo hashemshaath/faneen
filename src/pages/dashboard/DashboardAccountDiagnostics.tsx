@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
+import { getUserRoles } from '@/services/userRoles';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -88,18 +89,18 @@ const DashboardAccountDiagnostics: React.FC = () => {
     // Stage 1: permissions — run live source-of-truth probes
     if (user?.id) {
       const [rolesRes, bizRes, staffRes] = await Promise.allSettled([
-        supabase.from('user_roles').select('role').eq('user_id', user.id),
+        getUserRoles(user.id),
         supabase.from('businesses').select('id').eq('user_id', user.id).limit(1).maybeSingle(),
         supabase.from('business_staff').select('id').eq('user_id', user.id).eq('is_active', true).limit(1).maybeSingle(),
       ]);
-      const rolesData = rolesRes.status === 'fulfilled' ? rolesRes.value.data : null;
-      const rolesErr = rolesRes.status === 'fulfilled' ? rolesRes.value.error?.message ?? null : (rolesRes.reason instanceof Error ? rolesRes.reason.message : 'failed');
+      const rolesRows = rolesRes.status === 'fulfilled' ? rolesRes.value : [];
+      const rolesErr = rolesRes.status === 'fulfilled' ? null : (rolesRes.reason instanceof Error ? rolesRes.reason.message : 'failed');
       const bizData = bizRes.status === 'fulfilled' ? bizRes.value.data : null;
       const bizErr = bizRes.status === 'fulfilled' ? bizRes.value.error?.message ?? null : (bizRes.reason instanceof Error ? bizRes.reason.message : 'failed');
       const staffData = staffRes.status === 'fulfilled' ? staffRes.value.data : null;
       const staffErr = staffRes.status === 'fulfilled' ? staffRes.value.error?.message ?? null : (staffRes.reason instanceof Error ? staffRes.reason.message : 'failed');
       setProbe({
-        rolesRows: (rolesData ?? []).map(r => r.role as string),
+        rolesRows: rolesRows.map((r) => r as string),
         rolesError: rolesErr,
         ownsBusiness: !!bizData?.id,
         businessId: bizData?.id ?? null,
