@@ -17,6 +17,7 @@ import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
 import { listAdminLeadRequests } from '@/modules/leads/services/detail';
 import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
 import { getContractAfterConvert } from '@/modules/leads/services/conversion';
+import { adminConvertLeadToContract }  from '@/modules/leads/services/adminConvertLeadToContract';
 
 // SR-4A: Service Request lifecycle statuses (new vocabulary).
 type Status =
@@ -159,9 +160,7 @@ const AdminLeadRequests: React.FC = () => {
 
   const convertLead = useMutation({
     mutationFn: async (lead: LeadRow) => {
-      const { data, error } = await supabase.rpc('admin_convert_lead_to_contract', { _lead_id: lead.id });
-      if (error) throw error;
-      const contractId = data as string;
+      const contractId = await adminConvertLeadToContract(lead.id);
       // Fail-soft: send draft-contract emails to client + provider. Errors are logged
       // but never roll back the conversion (contract + in-app notifications already
       // committed). converted_contract_id guard in RPC prevents duplicate sends.
