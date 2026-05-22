@@ -181,23 +181,19 @@ const AdminLeadRequests: React.FC = () => {
         }
         const sends: Promise<unknown>[] = [];
         if (lead.email) {
-          sends.push(supabase.functions.invoke('send-transactional-email', {
-            body: {
-              templateName: 'contract-draft-created-client',
-              recipientEmail: lead.email,
-              idempotencyKey: `contract-draft-client-${contractId}`,
-              templateData: { name: lead.name, businessName, contractNumber, contractId },
-            },
+          sends.push(sendLeadTransactionalEmail({
+            templateName: 'contract-draft-created-client',
+            recipientEmail: lead.email,
+            idempotencyKey: `contract-draft-client-${contractId}`,
+            templateData: { name: lead.name, businessName, contractNumber, contractId },
           }));
         }
         if (providerEmail) {
-          sends.push(supabase.functions.invoke('send-transactional-email', {
-            body: {
-              templateName: 'contract-draft-created-provider',
-              recipientEmail: providerEmail,
-              idempotencyKey: `contract-draft-provider-${contractId}`,
-              templateData: { businessName, contractNumber, contractId },
-            },
+          sends.push(sendLeadTransactionalEmail({
+            templateName: 'contract-draft-created-provider',
+            recipientEmail: providerEmail,
+            idempotencyKey: `contract-draft-provider-${contractId}`,
+            templateData: { businessName, contractNumber, contractId },
           }));
         }
         await Promise.allSettled(sends);
