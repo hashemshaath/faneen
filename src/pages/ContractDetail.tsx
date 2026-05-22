@@ -23,6 +23,7 @@ import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { mapContractLockError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { approveAmendment, rejectAmendment, cancelAmendment, applyAmendment } from '@/modules/contracts/services/amendments';
+import { acceptContract } from '@/modules/contracts/services/mutations';
 import { recordContractPdfExport } from '@/lib/contract-pdf-history';
 import { ContractPdfExportHistory } from '@/components/contract/ContractPdfExportHistory';
 import { ContractPdfPreviewOverlay } from '@/components/contract/ContractPdfPreviewOverlay';
@@ -533,8 +534,7 @@ const ContractDetail = () => {
   const acceptMutation = useMutation({
     mutationFn: async () => {
       // C6.4a — go through SECURITY DEFINER RPC instead of direct table update.
-      const { data: updated, error } = await supabase.rpc('accept_contract', { _contract_id: id! });
-      if (error) throw error;
+      const updated = await acceptContract(id!);
       const update = (updated ?? {}) as { status?: string };
 
       // When both parties have accepted → contract becomes active = signed.
