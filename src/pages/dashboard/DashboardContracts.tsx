@@ -35,6 +35,21 @@ import {
   listLineItemsForContracts,
 } from '@/modules/contracts/services/aggregates';
 import {
+  acceptContract,
+  sendContractForApproval,
+  cloneContractAsDraft,
+  recalcContractTotal,
+  setContractExecutionSite,
+  linkLeadToContract,
+  completeContractFromInvitation,
+} from '@/modules/contracts/services/mutations';
+import { approveAmendment } from '@/modules/contracts/services/amendments';
+import {
+  createClientInvitation,
+  resendClientInvitation,
+  cancelClientInvitation,
+} from '@/modules/contracts/services/invitations';
+import {
   FileText, Eye, Plus, CheckCircle2, Clock, XCircle, AlertTriangle,
   Shield, DollarSign, Calendar, Users, ListChecks, StickyNote,
   Send, Phone, Mail, ChevronDown, ChevronUp, Activity,
