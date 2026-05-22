@@ -34,7 +34,8 @@ const MIGRATED: Migrated[] = [
   {
     path: 'src/pages/dashboard/DashboardCommunicationPreferences.tsx',
     select: '"id, name_ar, name_en"',
-    queryKey: '["biz-prefs", user?.id]',
+    queryKey: '["my-primary-business", user?.id]',
+    enabled: '!!user',
   },
   {
     path: 'src/pages/dashboard/DashboardBusinessEdit.tsx',
