@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
+import { updateBusinessById } from '@/modules/businesses';
 import { toast } from 'sonner';
 import { Save, Loader2, Map as MapIcon, AlertCircle } from 'lucide-react';
 import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
@@ -59,16 +60,16 @@ const AdminBusinessCoordinates: React.FC = () => {
   const save = useMutation({
     mutationFn: async () => {
       if (!editor) return;
-      const { error } = await supabase
-        .from('businesses')
-        .update({
+      const { error } = await updateBusinessById({
+        id: editor.id,
+        values: {
           latitude: editor.latitude,
           longitude: editor.longitude,
           region: editor.region,
           district: editor.district,
           address: editor.address,
-        })
-        .eq('id', editor.id);
+        },
+      });
       if (error) throw error;
     },
     onSuccess: () => {
