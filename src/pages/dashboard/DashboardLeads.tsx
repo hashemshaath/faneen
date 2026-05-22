@@ -17,6 +17,7 @@ import { trackEvent } from '@/lib/analytics-events';
 import { listProviderLeadRequests } from '@/modules/leads/services/detail';
 import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
 import { notifyCustomerLeadUpdate } from '@/modules/leads/services/notifyCustomerLeadUpdate';
+import { createOrGetLeadConversation } from '@/modules/leads/services/createOrGetLeadConversation';
 
 const FILTERS: Array<{ key: 'all' | LeadStatus; ar: string; en: string }> = [
   { key: 'all',        ar: 'الكل',           en: 'All' },
