@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { updateBusinessById } from '@/modules/businesses';
+import { getOwnerBusiness, updateBusinessById } from '@/modules/businesses';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -51,13 +51,12 @@ const DashboardBusinessDraft: React.FC = () => {
     enabled: !!user,
     queryFn: async (): Promise<DraftRow | null> => {
       if (!user) return null;
-      const { data } = await supabase
-        .from('businesses')
-        .select('id, ref_id, approval_status, name_ar, name_en, short_description_ar, description_ar, phone, mobile, email, address, region, national_id, unified_number')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data } = await getOwnerBusiness<DraftRow>({
+        userId: user.id,
+        select: 'id, ref_id, approval_status, name_ar, name_en, short_description_ar, description_ar, phone, mobile, email, address, region, national_id, unified_number',
+        orderBy: { column: 'created_at', ascending: false },
+        limit: 1,
+      });
       return (data as DraftRow | null) ?? null;
     },
     staleTime: 15_000,

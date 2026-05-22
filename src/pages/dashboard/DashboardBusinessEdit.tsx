@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
-import { updateBusinessById } from '@/modules/businesses';
+import { getOwnerBusiness, updateBusinessById } from '@/modules/businesses';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,13 +74,12 @@ const DashboardBusinessEdit: React.FC = () => {
     enabled: !!user,
     queryFn: async (): Promise<BusinessRow | null> => {
       if (!user) return null;
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await getOwnerBusiness<BusinessRow>({
+        userId: user.id,
+        select: '*',
+        orderBy: { column: 'created_at', ascending: false },
+        limit: 1,
+      });
       if (error) throw error;
       return (data as BusinessRow | null) ?? null;
     },

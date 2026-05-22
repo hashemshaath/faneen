@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { getOwnerBusiness } from "@/modules/businesses";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -98,12 +99,11 @@ const DashboardCommunicationPreferences: React.FC = () => {
     queryKey: ["my-primary-business", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data: biz } = await supabase
-        .from("businesses")
-        .select("id, name_ar, name_en")
-        .eq("user_id", user!.id)
-        .limit(1)
-        .maybeSingle();
+      const { data: biz } = await getOwnerBusiness<{ id: string; name_ar: string | null; name_en: string | null }>({
+        userId: user!.id,
+        select: "id, name_ar, name_en",
+        limit: 1,
+      });
       if (biz) {
         setBizId(biz.id);
         setBizName(isRTL ? biz.name_ar : (biz.name_en ?? biz.name_ar));
