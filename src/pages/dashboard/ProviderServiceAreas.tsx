@@ -34,11 +34,11 @@ const ProviderServiceAreas: React.FC = () => {
     queryKey: ['my-businesses', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('id, name_ar')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: true });
+      const { data, error } = await listOwnerBusinesses<BusinessOpt>({
+        userId: user!.id,
+        select: 'id, name_ar',
+        orderBy: { column: 'created_at', ascending: true },
+      });
       if (error) throw error;
       const list = (data ?? []) as BusinessOpt[];
       if (list.length && !activeBiz) setActiveBiz(list[0].id);
