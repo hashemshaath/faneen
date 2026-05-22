@@ -165,8 +165,8 @@ const AdminLeadRequests: React.FC = () => {
       // but never roll back the conversion (contract + in-app notifications already
       // committed). converted_contract_id guard in RPC prevents duplicate sends.
       try {
-        const [{ data: contract }, { data: business }] = await Promise.all([
-          supabase.from('contracts').select('contract_number, provider_id').eq('id', contractId).maybeSingle(),
+        const [contract, { data: business }] = await Promise.all([
+          getContractAfterConvert(contractId),
           supabase.from('businesses').select('name_ar, name_en, user_id, email').eq('id', lead.business_id).maybeSingle(),
         ]);
         const businessName = business?.name_ar || business?.name_en || undefined;
