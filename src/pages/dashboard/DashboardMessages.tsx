@@ -5,6 +5,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listProfilesByUserIds } from '@/modules/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -698,7 +699,7 @@ const DashboardMessages = () => {
           userIds: Array.from(allIds),
           select: 'user_id, full_name, avatar_url, email',
         });
-        const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+        const profileMap = new Map((profiles || []).map((p) => [p.user_id, p] as const));
 
         if (isSuperAdmin) {
           const { data: allProfiles } = await listProfilesByUserIds<{ user_id: string; full_name: string | null; avatar_url: string | null; email: string | null }>({
