@@ -13,4 +13,5 @@ export * from './services/mutations';
 export * from './services/notifications';
 export * from './services/conversion';
 export * from './services/adminConvertLeadToContract';
+export * from './services/sendLeadTransactionalEmail';
 export * from './services/submit';
