@@ -165,7 +165,7 @@ export const useCategories = () =>
   useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      const { data } = await supabase.from('categories').select('*').eq('is_active', true).order('sort_order');
+      const { data } = await listActiveCategories({ select: '*' });
       return data ?? [];
     },
     staleTime: 5 * 60 * 1000,
@@ -176,7 +176,7 @@ export const useCities = () =>
   useQuery({
     queryKey: ['cities'],
     queryFn: async () => {
-      const { data } = await supabase.from('cities').select('*').eq('is_active', true).order('name_ar');
+      const { data } = await listActiveCities({ select: '*' });
       return data ?? [];
     },
     staleTime: 5 * 60 * 1000,
