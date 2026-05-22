@@ -15,4 +15,6 @@ export * from './services/pricing';
 export * from './services/completeness';
 export * from './services/timeline';
 export * from './services/errors';
-export type * from './types';
+// types.ts is available at '@/modules/contracts/types' for consumers that
+// want type-only imports. Not re-exported here to avoid duplicate type
+// re-exports (all types are already reachable via the value exports above).
