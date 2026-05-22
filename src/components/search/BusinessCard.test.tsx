@@ -664,12 +664,11 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
   // thresholds or ratios (e.g. `< mountDuration * 0.25`). Wall-clock
   // measurements are non-deterministic in CI (bunx/vitest scheduling, GC,
   // shared runners) and produced intermittent failures unrelated to the
-  // component. Instead we use a binary signal that is deterministic:
-  //   - When React.memo fully bails out, no component in the Profiler's
-  //     subtree renders, so `actualDuration === 0` for that commit.
-  //   - When the memo'd component actually re-renders, `actualDuration > 0`.
-  // This preserves the original intent (regression protection for
-  // unnecessary re-renders / memoization) without any timing budget.
+  // component. Instead we count BusinessCard's render-body executions via
+  // `favoritesHookSpy` (the `useBusinessFavorites` hook is called exactly
+  // once per render). The Profiler is kept only as a secondary signal that
+  // a commit phase occurred, never as a duration budget.
+  beforeEach(() => favoritesHookSpy.mockClear());
   const mountWithProfiler = (b: Record<string, unknown>) => {
     const renders: Array<{ phase: string; actualDuration: number }> = [];
     const onRender: ProfilerOnRenderCallback = (_id, phase, actualDuration) => {
@@ -695,6 +694,8 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
     };
     const { rerender, renders } = mountWithProfiler(business);
     expect(renders.find((r) => r.phase === 'mount')).toBeDefined();
+    // Mount = exactly one BusinessCard render.
+    expect(favoritesHookSpy).toHaveBeenCalledTimes(1);
     expect(renders.filter((r) => r.phase === 'update').length).toBe(0);
 
     // Re-render parent with the SAME `business` reference.
@@ -708,12 +709,9 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
         </Profiler>
       </MemoryRouter>,
     );
-    // memo() must short-circuit: every update commit must report zero
-    // render work in the Profiler's subtree (deterministic bail-out
-    // signal — no timing threshold).
-    const updates = renders.filter((r) => r.phase === 'update');
-    expect(updates.length).toBeGreaterThan(0);
-    expect(updates.every((r) => r.actualDuration === 0)).toBe(true);
+    // memo() must short-circuit: the BusinessCard render body must NOT
+    // run again, so the favorites hook is still only called once total.
+    expect(favoritesHookSpy).toHaveBeenCalledTimes(1);
   });
 
   it('re-renders exactly once when business_services changes (new reference)', () => {
@@ -741,12 +739,9 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
         </Profiler>
       </MemoryRouter>,
     );
-    // The real prop change MUST cause an update commit that actually does
-    // render work (i.e. NOT a memo bail-out). We assert work was performed
-    // via actualDuration > 0 rather than comparing against the mount
-    // duration, which is timing-sensitive.
-    const updates = renders.filter((r) => r.phase === 'update');
-    expect(updates.some((r) => r.actualDuration > 0)).toBe(true);
+    // The real prop change MUST cause exactly one additional BusinessCard
+    // render (mount + 1 update = 2 hook calls total). No timing involved.
+    expect(favoritesHookSpy).toHaveBeenCalledTimes(2);
     expect(screen.getByText('خدمة-2')).toBeInTheDocument();
   });
 
@@ -769,11 +764,9 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
         </MemoryRouter>,
       );
     }
-    // Across 5 stable re-renders, every update commit must be a memo
-    // bail-out (zero render work in subtree — deterministic, no timing
-    // threshold).
-    const updates = renders.filter((r) => r.phase === 'update');
-    expect(updates.length).toBeGreaterThan(0);
-    expect(updates.every((r) => r.actualDuration === 0)).toBe(true);
+    // Across 5 stable re-renders, BusinessCard's render body must run
+    // exactly once (the initial mount); every subsequent parent re-render
+    // must be fully short-circuited by React.memo.
+    expect(favoritesHookSpy).toHaveBeenCalledTimes(1);
   });
 });
