@@ -1566,13 +1566,12 @@ const DashboardContracts = () => {
       : 'A new draft will be created from this contract\'s data, without copying approvals or the official record. Continue?';
     if (!window.confirm(confirmMsg)) return;
     try {
-      const { data, error } = await supabase.rpc('clone_contract_as_draft', {
-        _source_contract_id: c.id,
-        _include_line_items: true,
-        _include_terms: true,
-        _include_supervisor: true,
+      const data = await cloneContractAsDraft({
+        sourceContractId: c.id,
+        includeLineItems: true,
+        includeTerms: true,
+        includeSupervisor: true,
       });
-      if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       queryClient.invalidateQueries({ queryKey: ['provider-contracts'] });
       toast.success(isRTL ? 'تم إنشاء مسودة جديدة' : 'New draft created');
