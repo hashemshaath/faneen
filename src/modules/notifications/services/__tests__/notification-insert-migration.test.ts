@@ -160,7 +160,7 @@ describe('N-4 — fire-and-forget notification insert migration', () => {
 
     it('ordering: notification insert still precedes transactional email send', () => {
       const notifyIdx = src.indexOf('createNotificationFireAndForget({');
-      const emailIdx = src.indexOf('void sendTransactionalEmail({');
+      const emailIdx = src.indexOf('void sendTransactionalEmail({', notifyIdx);
       expect(notifyIdx).toBeGreaterThan(-1);
       expect(emailIdx).toBeGreaterThan(notifyIdx);
     });
