@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const insertMock = vi.fn();
-const fromMock = vi.fn(() => ({ insert: insertMock }));
+const fromMock = vi.fn((..._args: unknown[]) => ({ insert: insertMock }));
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { from: (...args: unknown[]) => fromMock(...args) },
+  supabase: { from: (table: string) => fromMock(table) },
 }));
 
 import { insertLeadRequest, type InsertLeadRequestPayload } from '../submit';
