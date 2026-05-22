@@ -35,6 +35,21 @@ import {
   listLineItemsForContracts,
 } from '@/modules/contracts/services/aggregates';
 import {
+  acceptContract,
+  sendContractForApproval,
+  cloneContractAsDraft,
+  recalcContractTotal,
+  setContractExecutionSite,
+  linkLeadToContract,
+  completeContractFromInvitation,
+} from '@/modules/contracts/services/mutations';
+import { approveAmendment } from '@/modules/contracts/services/amendments';
+import {
+  createClientInvitation,
+  resendClientInvitation,
+  cancelClientInvitation,
+} from '@/modules/contracts/services/invitations';
+import {
   FileText, Eye, Plus, CheckCircle2, Clock, XCircle, AlertTriangle,
   Shield, DollarSign, Calendar, Users, ListChecks, StickyNote,
   Send, Phone, Mail, ChevronDown, ChevronUp, Activity,
@@ -640,7 +655,7 @@ const DashboardContracts = () => {
       if (error) throw error;
       // Update contract total from measurements + line items
       // C6.4a — recompute via RPC.
-      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
+      await recalcContractTotal(contractId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-measurements'] });
@@ -694,9 +709,7 @@ const DashboardContracts = () => {
 
   const approveAmendmentMutation = useMutation({
     mutationFn: async ({ amendmentId }: { amendmentId: string; contract: ContractWithRole }) => {
-      const { error } = await supabase.rpc('approve_contract_amendment', { _amendment_id: amendmentId });
-      if (error) throw error;
-      return amendmentId;
+      return await approveAmendment(amendmentId);
     },
     onSuccess: (amId) => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-amendments'] });
@@ -822,7 +835,7 @@ const DashboardContracts = () => {
       });
       if (error) throw error;
       // C6.4a — recompute via RPC.
-      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
+      await recalcContractTotal(contractId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
@@ -844,7 +857,7 @@ const DashboardContracts = () => {
       const { error } = await supabase.from('contract_line_items').delete().eq('id', id);
       if (error) throw error;
       // C6.4a — recompute via RPC.
-      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
+      await recalcContractTotal(contractId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
@@ -884,7 +897,7 @@ const DashboardContracts = () => {
       }));
       const { error } = await supabase.from('contract_line_items').insert(rows);
       if (error) throw error;
-      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
+      await recalcContractTotal(contractId);
       return { inserted: toInsert.length };
     },
     onSuccess: (res) => {
@@ -1034,11 +1047,7 @@ const DashboardContracts = () => {
       // Phase 5C.3 — chain execution-site linking after the row exists.
       if (result?.contractId && selectedSiteId) {
         try {
-          const { error } = await supabase.rpc('set_contract_execution_site', {
-            _contract_id: result.contractId,
-            _site_id: selectedSiteId,
-          });
-          if (error) throw error;
+          await setContractExecutionSite(result.contractId, selectedSiteId);
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
           toast.warning(isRTL
@@ -1049,11 +1058,7 @@ const DashboardContracts = () => {
       // Phase 5B.5 — link lead to the freshly created contract (manual save only).
       if (result?.contractId && result.isNew && leadPrefill?.lead_id && !leadPrefill.existing_contract_id) {
         try {
-          const { data: linkData, error: linkErr } = await supabase.rpc('link_lead_to_contract', {
-            _lead_id: leadPrefill.lead_id,
-            _contract_id: result.contractId,
-          });
-          if (linkErr) throw linkErr;
+          const linkData = await linkLeadToContract(result.contractId, leadPrefill.lead_id);
           void linkData;
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
@@ -1098,16 +1103,15 @@ const DashboardContracts = () => {
         workType: selectedWorkType || null,
         pricingMethod: selectedPricingMethod,
       });
-      const { data, error } = await supabase.rpc('create_client_invitation', {
-        _email: email,
-        _name: inviteForm.name.trim() || null,
-        _phone: inviteForm.phone.trim() || null,
-        _business_id: businessId || null,
-        _draft_payload: Object.keys(draft).length > 0 ? (JSON.parse(JSON.stringify(draft)) as Json) : null,
-        _template_version_id: effectiveVersion?.version_id ?? null,
-        _work_type: selectedWorkType || null,
+      const data = await createClientInvitation({
+        email,
+        name: inviteForm.name.trim() || null,
+        phone: inviteForm.phone.trim() || null,
+        businessId: businessId || null,
+        draftPayload: Object.keys(draft).length > 0 ? (JSON.parse(JSON.stringify(draft)) as Json) : null,
+        templateVersionId: effectiveVersion?.version_id ?? null,
+        workType: selectedWorkType || null,
       });
-      if (error) throw error;
       const result = data as {
         already_registered: boolean;
         user_id?: string | null;
@@ -1152,8 +1156,7 @@ const DashboardContracts = () => {
   const resendInviteMutation = useMutation({
     mutationFn: async () => {
       if (!pendingInvite) throw new Error('No pending invite');
-      const { data, error } = await supabase.rpc('resend_client_invitation', { _id: pendingInvite.id });
-      if (error) throw error;
+      const data = await resendClientInvitation(pendingInvite.id);
       const result = data as { invite_id: string; ref_id: string; token: string; reminder_count: number; expires_at: string };
       const { error: notifyErr } = await supabase.functions.invoke('notify-client-invitation', {
         body: { invite_id: result.invite_id, token: result.token, kind: 'reminder' },
@@ -1176,8 +1179,7 @@ const DashboardContracts = () => {
   const cancelInviteMutation = useMutation({
     mutationFn: async () => {
       if (!pendingInvite) throw new Error('No pending invite');
-      const { error } = await supabase.rpc('cancel_client_invitation', { _id: pendingInvite.id });
-      if (error) throw error;
+      await cancelClientInvitation(pendingInvite.id);
     },
     onSuccess: () => {
       toast.success(isRTL ? 'تم إلغاء الدعوة' : 'Invitation cancelled');
@@ -1226,9 +1228,7 @@ const DashboardContracts = () => {
 
   const completeFromInviteMutation = useMutation({
     mutationFn: async (inviteId: string) => {
-      const { data, error } = await supabase.rpc('complete_contract_from_invitation', { _invite_id: inviteId });
-      if (error) throw error;
-      return data as string;
+      return await completeContractFromInvitation(inviteId);
     },
     onSuccess: (contractId) => {
       toast.success(isRTL ? 'تم إنشاء العقد من الدعوة' : 'Contract created from invitation');
@@ -1253,8 +1253,7 @@ const DashboardContracts = () => {
   const approveMutation = useMutation({
     mutationFn: async (contract: ContractWithRole) => {
       // C6.4a — go through SECURITY DEFINER RPC.
-      const { error } = await supabase.rpc('accept_contract', { _contract_id: contract.id });
-      if (error) throw error;
+      await acceptContract(contract.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
@@ -1266,8 +1265,7 @@ const DashboardContracts = () => {
   const sendForApprovalMutation = useMutation({
     mutationFn: async (contract: ContractWithRole) => {
       // C6.4a — go through SECURITY DEFINER RPC.
-      const { error } = await supabase.rpc('send_contract_for_approval', { _contract_id: contract.id });
-      if (error) throw error;
+      await sendContractForApproval(contract.id);
       await supabase.from('notifications').insert({
         user_id: contract.client_id,
         title_ar: `عقد جديد بانتظار مراجعتك: ${contract.title_ar}`,
@@ -1568,13 +1566,12 @@ const DashboardContracts = () => {
       : 'A new draft will be created from this contract\'s data, without copying approvals or the official record. Continue?';
     if (!window.confirm(confirmMsg)) return;
     try {
-      const { data, error } = await supabase.rpc('clone_contract_as_draft', {
-        _source_contract_id: c.id,
-        _include_line_items: true,
-        _include_terms: true,
-        _include_supervisor: true,
+      const data = await cloneContractAsDraft({
+        sourceContractId: c.id,
+        includeLineItems: true,
+        includeTerms: true,
+        includeSupervisor: true,
       });
-      if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       queryClient.invalidateQueries({ queryKey: ['provider-contracts'] });
       toast.success(isRTL ? 'تم إنشاء مسودة جديدة' : 'New draft created');
@@ -1987,11 +1984,7 @@ const DashboardContracts = () => {
                   onSelect={(siteId) => setSelectedSiteId(siteId)}
                   onPersistSelect={async (siteId) => {
                     if (!editingId) return;
-                    const { error } = await supabase.rpc('set_contract_execution_site', {
-                      _contract_id: editingId,
-                      _site_id: siteId ?? undefined,
-                    });
-                    if (error) throw error;
+                    await setContractExecutionSite(editingId, siteId ?? undefined);
                     queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
                   }}
                 />
