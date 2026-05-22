@@ -110,3 +110,19 @@ describe('AdminLeadRequests.tsx regression (C5)', () => {
     expect(src).not.toMatch(/\.from\(\s*['"]businesses['"]\s*\)/);
   });
 });
+
+describe('sendLeadTransactionalEmail delegation (E-Mail-2)', () => {
+  const src = readFileSync(
+    resolve(__dirname, '../sendLeadTransactionalEmail.ts'),
+    'utf8',
+  );
+
+  it('no longer directly imports the supabase client', () => {
+    expect(src).not.toMatch(/@\/integrations\/supabase\/client/);
+  });
+
+  it('delegates to the shared sendTransactionalEmail wrapper', () => {
+    expect(src).toMatch(/from ['"]@\/modules\/notifications\/services\/sendTransactionalEmail['"]/);
+    expect(src).toMatch(/sendTransactionalEmail\(payload\)/);
+  });
+});
