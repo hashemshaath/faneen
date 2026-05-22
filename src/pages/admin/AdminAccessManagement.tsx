@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { PasswordResetLogPanel } from '@/components/admin/PasswordResetLogPanel';
 import { useNoIndex } from "@/hooks/useNoIndex";
-import { listAllUserRoles } from '@/services/userRoles';
+import { listAllUserRoles, grantRole, revokeRoleByUserAndRole } from '@/services/userRoles';
 
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
@@ -95,10 +95,7 @@ const AdminAccessManagement = () => {
   }, [rolesData]);
 
   const grantAdminMutation = useMutation({
-    mutationFn: async (targetUserId: string) => {
-      const { error } = await supabase.from('user_roles').insert({ user_id: targetUserId, role: 'admin' });
-      if (error) throw error;
-    },
+    mutationFn: (targetUserId: string) => grantRole(targetUserId, 'admin'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['access-mgmt-roles'] });
       toast.success(isRTL ? 'تم منح صلاحية الأدمن' : 'Admin role granted');
@@ -108,14 +105,7 @@ const AdminAccessManagement = () => {
   });
 
   const revokeAdminMutation = useMutation({
-    mutationFn: async (targetUserId: string) => {
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', targetUserId)
-        .eq('role', 'admin');
-      if (error) throw error;
-    },
+    mutationFn: (targetUserId: string) => revokeRoleByUserAndRole(targetUserId, 'admin'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['access-mgmt-roles'] });
       toast.success(isRTL ? 'تم إزالة صلاحية الأدمن' : 'Admin role revoked');
