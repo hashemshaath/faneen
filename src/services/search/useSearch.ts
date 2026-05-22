@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
 
@@ -167,7 +168,7 @@ export const useCategories = () =>
   useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      const { data } = await listActiveCategories({ select: '*' });
+      const { data } = await listActiveCategories<Database['public']['Tables']['categories']['Row']>({ select: '*' });
       return data ?? [];
     },
     staleTime: 5 * 60 * 1000,
@@ -178,7 +179,7 @@ export const useCities = () =>
   useQuery({
     queryKey: ['cities'],
     queryFn: async () => {
-      const { data } = await listActiveCities({ select: '*' });
+      const { data } = await listActiveCities<Database['public']['Tables']['cities']['Row']>({ select: '*' });
       return data ?? [];
     },
     staleTime: 5 * 60 * 1000,
