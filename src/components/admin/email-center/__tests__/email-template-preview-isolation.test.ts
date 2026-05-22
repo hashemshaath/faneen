@@ -83,7 +83,7 @@ describe('Global send-transactional-email cleanliness (post E-Mail-10)', () => {
   it('shared wrapper is the only direct caller in src/', () => {
     const { execSync } = require('child_process');
     const out = execSync(
-      `grep -rln "supabase.functions.invoke('send-transactional-email'" src/ || true`,
+      `grep -rln --exclude-dir=__tests__ "supabase.functions.invoke('send-transactional-email'" src/ || true`,
       { encoding: 'utf-8' },
     ).trim();
     const files = out ? out.split('\n').filter(Boolean) : [];
