@@ -13,6 +13,7 @@ import { BRAND_DOCUMENTS } from '@/config/brandTheme';
 import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
 import { calculateVatBreakdown, calculateContractCoverage } from '@/lib/contract-financials';
 import { groupLineItemsByBoqGroup, hasMixedPricing, listPricingMethodsUsed } from './contract-boq';
+import { buildContractVerificationUrl } from '@/modules/contracts/services/pdf/barcode/contractQr';
 
 // ── CT6: Pricing method labels (display only — no formula execution) ──
 const PRICING_METHOD_LABEL: Record<string, { ar: string; en: string }> = {
