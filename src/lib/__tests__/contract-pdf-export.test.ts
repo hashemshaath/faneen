@@ -46,40 +46,11 @@ import {
   longArabicContractFixture,
   legacyContractFixture,
 } from '@/test/fixtures/contract-pdf-fixtures';
+import { CONTRACT_PDF_FORBIDDEN_RUNTIME_TOKENS } from '@/modules/contracts/services/pdf/privacy/forbiddenTokens';
 
 // Forbidden tokens that must NEVER appear in any generated PDF text payload.
-// If any of these surface, the export is leaking private data.
-const FORBIDDEN_TOKENS = [
-  'file_url',
-  'storage_path',
-  'getSignedUrl',
-  'sign=',                       // common in signed URLs
-  'internal_note',
-  'actor_id',
-  'approver_id',
-  'token_hash',
-  'formula_inputs',              // raw key should never leak
-  'draft_template',
-  'audit_metadata',
-  'audit_log',
-  '/storage/v1/object/sign',     // Supabase signed URL path
-  'X-Amz-Signature',             // S3 signed URL marker
-  // PDF-QA2: export-history fields must never appear in the PDF body.
-  'contract_pdf_exports',
-  'exported_by',
-  'ip_hash',
-  'user_agent_hash',
-  'document_hash_prefix',
-  // Phase 5C.4 — execution site internal/audit fields must never appear.
-  'created_by',
-  'archived_at',
-  'is_demo',
-  'is_default',
-  'client_user_id',
-  'updated_at',
-  'site_id',
-  'city_id',
-] as const;
+// Sourced from the shared runtime constants module (R2A.5c) to avoid drift.
+const FORBIDDEN_TOKENS = CONTRACT_PDF_FORBIDDEN_RUNTIME_TOKENS;
 
 // Raw UUID pattern. We allow none in the rendered output.
 const UUID_RX = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i;
@@ -94,6 +65,21 @@ const buildText = async (data: Parameters<typeof buildContractPDF>[0]): Promise<
 };
 
 describe('PDF-QA1 — buildContractPDF: smoke + regression', () => {
+  it('baseline: shared forbidden-token list still covers required keys', () => {
+    expect(CONTRACT_PDF_FORBIDDEN_RUNTIME_TOKENS).toEqual(
+      expect.arrayContaining([
+        'file_url',
+        'storage_path',
+        'token_hash',
+        'contract_pdf_exports',
+        'exported_by',
+        'ip_hash',
+        'user_agent_hash',
+        'site_id',
+      ]),
+    );
+  });
+
   it.each(Object.entries(ALL_FIXTURES))('builds without throwing: %s', async (_name, fx) => {
     const doc = await buildContractPDF(fx);
     expect(doc).toBeTruthy();

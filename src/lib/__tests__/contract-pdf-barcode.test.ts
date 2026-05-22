@@ -15,6 +15,10 @@ vi.mock('@/lib/pdf-arabic-font', () => ({
 
 import { buildContractPDF } from '@/lib/contract-pdf-export';
 import { contractWithBarcodeFixture, contractWithQrFixture } from '@/test/fixtures/contract-pdf-fixtures';
+import {
+  CONTRACT_PDF_FORBIDDEN_URL_TOKENS,
+  CONTRACT_PDF_FORBIDDEN_URL_PATTERN,
+} from '@/modules/contracts/services/pdf/privacy/forbiddenTokens';
 
 const renderText = async (fx: Parameters<typeof buildContractPDF>[0]) => {
   const doc = await buildContractPDF(fx);
@@ -42,8 +46,9 @@ describe('Barcode Phase 7 — PDF identifiers + QR path', () => {
 
   it('does not leak token hashes, raw tokens, or signed URLs', async () => {
     const text = await renderText(contractWithBarcodeFixture);
-    for (const tok of ['qr_token_hash', 'current_scan_token_hash', 'token=', '/s/', 'X-Amz-Signature']) {
+    for (const tok of CONTRACT_PDF_FORBIDDEN_URL_TOKENS) {
       expect(text, `must not contain "${tok}"`).not.toContain(tok);
     }
+    expect(text).not.toMatch(CONTRACT_PDF_FORBIDDEN_URL_PATTERN);
   });
 });
