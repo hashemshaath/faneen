@@ -177,92 +177,6 @@ import {
  * from this same file. They live here for now and will move to
  * `getSecondaryStatusMeta()` in a future cleanup pass.
  */
-const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string; label_ar: string; label_en: string }> = {
-  // ── Contract statuses (mirrored from contract-statuses.ts) ──
-  ...(Object.fromEntries(
-    ['draft', 'pending_approval', 'active', 'completed', 'cancelled', 'disputed'].map((k) => {
-      const m = getContractStatusMeta(k);
-      return [k, { icon: m.icon, color: m.text, bg: m.badge, label_ar: m.label_ar, label_en: m.label_en }];
-    }),
-  ) as Record<string, { icon: React.ElementType; color: string; bg: string; label_ar: string; label_en: string }>),
-  // ── Secondary statuses (milestones / payments / measurements / amendments) ──
-  pending: { icon: Clock, color: 'text-warning', bg: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', label_ar: 'معلق', label_en: 'Pending' },
-  in_progress: { icon: Timer, color: 'text-info', bg: 'bg-info text-info dark:bg-info/30 dark:text-info', label_ar: 'قيد التنفيذ', label_en: 'In Progress' },
-  paid: { icon: CheckCircle2, color: 'text-success', bg: 'bg-success text-success dark:bg-success/30 dark:text-success', label_ar: 'مسدد', label_en: 'Paid' },
-  overdue: { icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', label_ar: 'متأخر', label_en: 'Overdue' },
-  submitted: { icon: Send, color: 'text-warning', bg: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', label_ar: 'مرسل', label_en: 'Submitted' },
-  expired: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', label_ar: 'منتهي', label_en: 'Expired' },
-  installed: { icon: CheckCircle2, color: 'text-success', bg: 'bg-success text-success dark:bg-success/30 dark:text-success', label_ar: 'مركّب', label_en: 'Installed' },
-};
-
-const priorityConfig: Record<string, { bg: string; label_ar: string; label_en: string }> = {
-  low: { bg: 'bg-muted text-muted-foreground', label_ar: 'منخفض', label_en: 'Low' },
-  medium: { bg: 'bg-info text-info dark:bg-info/30 dark:text-info', label_ar: 'متوسط', label_en: 'Medium' },
-  high: { bg: 'bg-urgent text-urgent dark:bg-urgent/30 dark:text-urgent', label_ar: 'عالي', label_en: 'High' },
-  urgent: { bg: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', label_ar: 'عاجل', label_en: 'Urgent' },
-};
-
-const noteTypeConfig: Record<string, { label_ar: string; label_en: string; color: string; icon: React.ElementType }> = {
-  general: { label_ar: 'ملاحظة عامة', label_en: 'General', color: 'border-border', icon: StickyNote },
-  note: { label_ar: 'ملاحظة', label_en: 'Note', color: 'border-border', icon: StickyNote },
-  amendment: { label_ar: 'طلب تعديل', label_en: 'Amendment', color: 'border-warning dark:border-warning/30', icon: PenTool },
-  technical_issue: { label_ar: 'ملاحظة فنية', label_en: 'Technical Issue', color: 'border-destructive dark:border-destructive/30', icon: AlertTriangle },
-  issue: { label_ar: 'مشكلة', label_en: 'Issue', color: 'border-destructive dark:border-destructive/30', icon: AlertTriangle },
-  delivery_report: { label_ar: 'محضر تسليم', label_en: 'Delivery Report', color: 'border-success dark:border-success/30', icon: ListChecks },
-  delivery: { label_ar: 'تسليم', label_en: 'Delivery', color: 'border-success dark:border-success/30', icon: ListChecks },
-};
-
-/* ─── InfoRow helper ─── */
-const InfoRow = ({ icon: Icon, label, value, dir, href }: { icon: React.ElementType; label: string; value?: string | null; dir?: string; href?: string }) => {
-  if (!value) return null;
-  const content = (
-    <div className="flex items-start gap-2 py-1.5">
-      <Icon className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
-      <div className="min-w-0">
-        <span className="text-[10px] text-muted-foreground font-body block">{label}</span>
-        <span className={`text-xs font-heading font-medium ${href ? 'text-accent hover:underline' : 'text-foreground'}`} dir={dir}>{value}</span>
-      </div>
-    </div>
-  );
-  if (href) return <a href={href} target="_blank" rel="noopener noreferrer">{content}</a>;
-  return content;
-};
-
-/* ─── Collapsible Clause ─── */
-const ClauseSection = ({ icon: Icon, number, title, children, defaultOpen = false }: { icon: React.ElementType; number: number; title: string; children: React.ReactNode; defaultOpen?: boolean }) => {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="border border-border rounded-xl overflow-hidden">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors text-start">
-        <div className="w-8 h-8 rounded-lg bg-accent/10 dark:bg-accent/15 flex items-center justify-center shrink-0">
-          <Icon className="w-4 h-4 text-accent" />
-        </div>
-        <span className="text-xs text-muted-foreground font-body shrink-0">({number})</span>
-        <span className="font-heading font-bold text-sm flex-1">{title}</span>
-        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-      </button>
-      {open && (
-        <div className="px-4 pb-4 pt-0">
-          <Separator className="mb-3" />
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
-
-/* ─── Stat Card ─── */
-const StatCard = ({ icon: Icon, label, value, sub, accent }: { icon: React.ElementType; label: string; value: string | number; sub?: string; accent?: boolean }) => (
-  <div className="rounded-xl border border-border bg-card p-3 sm:p-4">
-    <div className="flex items-center gap-2 mb-2">
-      <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0"><Icon className="w-4 h-4 text-accent" /></div>
-      <span className="text-[10px] text-muted-foreground font-body">{label}</span>
-    </div>
-    <p className={`font-heading font-bold text-lg sm:text-xl ${accent ? 'text-accent' : 'text-foreground'}`}>{value}</p>
-    {sub && <p className="text-[10px] text-muted-foreground font-body mt-0.5">{sub}</p>}
-  </div>
-);
-
 const mapAmendmentError = (err: unknown, isRTL: boolean): string => {
   const msg = err instanceof Error ? err.message : String(err ?? '');
   const arMap: Record<string, string> = {
@@ -2488,15 +2402,7 @@ const ContractDetail = () => {
         )}
 
         {/* ─── Lock Banner ─── */}
-        {isContractLocked && (
-          <div className="flex items-center gap-2 p-3 mb-4 rounded-xl bg-warning dark:bg-warning/20 border border-warning dark:border-warning/30 text-warning dark:text-warning">
-            <Shield className="w-5 h-5 shrink-0" />
-            <div>
-              <p className="font-heading font-bold text-xs">{isRTL ? 'العقد معتمد ومقفل' : 'Contract Approved & Locked'}</p>
-              <p className="text-[10px] font-body">{isRTL ? 'أي تعديل يتطلب ملحق عقد وموافقة الطرفين' : 'Any changes require an amendment approved by both parties'}</p>
-            </div>
-          </div>
-        )}
+        {isContractLocked && <ContractLockBanner isRTL={isRTL} />}
 
         {/* ─── Tabs ─── */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
