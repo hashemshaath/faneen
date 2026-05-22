@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { sendTransactionalEmail } from '@/modules/notifications';
 import { toast } from 'sonner';
 import { Send, Smartphone, Monitor, AlertTriangle, X, RefreshCw, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -89,16 +90,14 @@ export const EmailTemplatePreview: React.FC<Props> = ({ template, onClose }) => 
     setSending(true);
     try {
       const idempotencyKey = `email-center-test-${template.name}-${Date.now()}`;
-      const { error } = await supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: template.name,
-          recipientEmail: testEmail,
-          idempotencyKey,
-          templateData: {
-            ...(preview.data?.sampleData ?? {}),
-            __test_send: true,
-            __prefix: '[اختبار قِطاعات]',
-          },
+      const { error } = await sendTransactionalEmail({
+        templateName: template.name,
+        recipientEmail: testEmail,
+        idempotencyKey,
+        templateData: {
+          ...(preview.data?.sampleData ?? {}),
+          __test_send: true,
+          __prefix: '[اختبار قِطاعات]',
         },
       });
       if (error) throw error;
