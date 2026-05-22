@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { listProviderLeads, type ProviderLeadRow } from '@/modules/leads/services/list';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,22 +15,7 @@ import {
   SECTOR_LABEL_AR, TIMELINE_LABEL_AR,
 } from '@/lib/quoteRequests';
 
-interface LeadRow {
-  id: string;
-  status: string;
-  match_score: number;
-  match_reasons: string[];
-  created_at: string;
-  contact_revealed: boolean;
-  quote_request: {
-    id: string;
-    sector: string;
-    city: string;
-    district: string | null;
-    project_description: string;
-    execution_timeline: string;
-  } | null;
-}
+type LeadRow = ProviderLeadRow;
 
 const ProviderLeads: React.FC = () => {
   useNoIndex();
@@ -40,18 +25,7 @@ const ProviderLeads: React.FC = () => {
   const { data: leads, isLoading } = useQuery({
     queryKey: ['provider-leads', user?.id],
     enabled: !!user,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_request_leads')
-        .select(`
-          id, status, match_score, match_reasons, created_at, contact_revealed,
-          quote_request:quote_requests(id, sector, city, district, project_description, execution_timeline)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(100);
-      if (error) throw error;
-      return (data ?? []) as unknown as LeadRow[];
-    },
+    queryFn: () => listProviderLeads(),
   });
 
   return (
