@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Send, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { track, trackLeadFailed, categorizeReason } from '@/lib/analytics-events';
+import { notifySupplierLead } from '@/modules/leads/services/notifications';
 import { getAttributionPayload } from '@/lib/analytics-attribution';
 
 /**
@@ -114,14 +115,7 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
       if (error) throw error;
 
       // Fire-and-forget owner email notification. Failure must NOT break lead capture.
-      try {
-        void supabase.functions.invoke('notify-supplier-lead', {
-          body: { lead_id: leadId },
-        });
-      } catch (notifyErr) {
-        // swallow — DB trigger already creates the in-app notification
-        console.warn('notify-supplier-lead invoke failed', notifyErr);
-      }
+      notifySupplierLead(leadId);
 
       // Canonical lead conversion event (Phase 6). `lead_request_submitted` deprecated.
       // PII-safe — no name/email/phone in dataLayer.
