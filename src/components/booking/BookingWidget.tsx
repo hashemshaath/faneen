@@ -13,6 +13,7 @@ import { CalendarClock, Clock, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, addDays, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 
 interface BookingWidgetProps {
   businessId: string;
@@ -126,18 +127,16 @@ export const BookingWidget = ({ businessId, businessName, open, onOpenChange }: 
 
       // Send booking confirmation email (fire-and-forget)
       if (user.email) {
-        supabase.functions.invoke('send-transactional-email', {
-          body: {
-            templateName: 'booking-confirmation',
-            recipientEmail: user.email,
-            idempotencyKey: `booking-confirm-${bookingId}`,
-            templateData: {
-              clientName: user.user_metadata?.full_name || '',
-              businessName,
-              bookingDate: dateStr,
-              startTime: slot.time,
-              refId: inserted?.ref_id || '',
-            },
+        sendTransactionalEmail({
+          templateName: 'booking-confirmation',
+          recipientEmail: user.email,
+          idempotencyKey: `booking-confirm-${bookingId}`,
+          templateData: {
+            clientName: user.user_metadata?.full_name || '',
+            businessName,
+            bookingDate: dateStr,
+            startTime: slot.time,
+            refId: inserted?.ref_id || '',
           },
         }).catch(console.error);
       }
