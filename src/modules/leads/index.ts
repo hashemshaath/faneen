@@ -7,3 +7,4 @@ export * from './utils/fileSize';
 export * from './components/LeadStatusBadge';
 export * from './components/LeadActionsBar';
 export * from './components/LeadDetailPanel';
+export * from './services/list';
