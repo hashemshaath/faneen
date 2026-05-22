@@ -45,10 +45,11 @@ export const BlogComments = ({ postId }: BlogCommentsProps) => {
 
       // Fetch profiles for all unique user_ids
       const userIds = [...new Set((data || []).map(c => c.user_id))];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, avatar_url')
-        .in('user_id', userIds);
+      const { data: profiles } = await listProfilesByUserIds<{
+        user_id: string;
+        full_name: string | null;
+        avatar_url: string | null;
+      }>({ userIds, select: 'user_id, full_name, avatar_url' });
 
       const profileMap = new Map(
         (profiles || []).map(p => [p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }])
