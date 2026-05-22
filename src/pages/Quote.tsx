@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
-import { supabase } from '@/integrations/supabase/client';
 import { submitQuoteRequest } from '@/modules/quotes/services/submitQuoteRequest';
 import { uploadQuoteRequestFile } from '@/modules/quotes/services/uploadQuoteRequestFile';
 import { createQuoteRequestFileRecord } from '@/modules/quotes/services/createQuoteRequestFileRecord';
