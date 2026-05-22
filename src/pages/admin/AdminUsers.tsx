@@ -33,6 +33,7 @@ import {
 import type { Tables } from '@/integrations/supabase/types';
 import { maskEmail, maskPhone } from '@/lib/masking';
 import { listAllUserRoles, grantRole, revokeRoleById } from '@/services/userRoles';
+import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
 import type { NormalizedRpcError } from '@/services/rpc';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
@@ -576,7 +577,10 @@ const AdminUsers = () => {
   const { data: profiles = [], isLoading: loadingProfiles, refetch: refetchProfiles } = useQuery({
     queryKey: ['admin-profiles'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      const { data, error } = await listProfiles<Profile>({
+        select: '*',
+        orderBy: { column: 'created_at', ascending: false },
+      });
       if (error) throw error;
       return data as Profile[];
     },
@@ -713,7 +717,7 @@ const AdminUsers = () => {
 
   const updateProfileMutation = useMutation({
     mutationFn: async ({ profileId, data }: { profileId: string; data: Partial<Profile> }) => {
-      const { error } = await supabase.from('profiles').update(data).eq('id', profileId);
+      const { error } = await updateProfileById({ id: profileId, values: data });
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-profiles'] }); closePanel(); toast.success(isRTL ? 'تم التحديث' : 'Updated'); },
@@ -722,7 +726,7 @@ const AdminUsers = () => {
 
   const toggleBanMutation = useMutation({
     mutationFn: async ({ profileId, isBanned }: { profileId: string; isBanned: boolean }) => {
-      const { error } = await supabase.from('profiles').update({ is_banned: isBanned }).eq('id', profileId);
+      const { error } = await updateProfileById({ id: profileId, values: { is_banned: isBanned } });
       if (error) throw error;
     },
     onSuccess: (_, v) => { queryClient.invalidateQueries({ queryKey: ['admin-profiles'] }); toast.success(v.isBanned ? (isRTL ? 'تم التعطيل' : 'Disabled') : (isRTL ? 'تم التفعيل' : 'Enabled')); },
@@ -731,7 +735,7 @@ const AdminUsers = () => {
 
   const bulkBanMutation = useMutation({
     mutationFn: async ({ ids, isBanned }: { ids: string[]; isBanned: boolean }) => {
-      const { error } = await supabase.from('profiles').update({ is_banned: isBanned }).in('id', ids);
+      const { error } = await updateProfilesByIds({ ids, values: { is_banned: isBanned } });
       if (error) throw error;
     },
     onSuccess: (_, v) => {

@@ -153,20 +153,5 @@ describe('P-5 profile read migration', () => {
   });
 });
 
-describe('P-5 out-of-scope guardrail (must remain direct in this phase)', () => {
-  it('AdminUsers profile updates remain direct', () => {
-    const src = read('src/pages/admin/AdminUsers.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)\.update/);
-  });
-  it('DashboardSettings profile update remains direct', () => {
-    const src = read('src/pages/dashboard/DashboardSettings.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)\.update/);
-  });
-  it('DashboardLayout avatar update remains direct', () => {
-    const src = read('src/components/dashboard/DashboardLayout.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)\.update/);
-  });
-  // AdminDashboardView reads migrated in P-6 (see countAndListProfiles.test.ts).
-  // DashboardContracts email→user_id lookup migrated in P-5B via getProfileByEmail.
-  // About.tsx public head-count migrated in P-6 (see countAndListProfiles.test.ts).
-});
+// P-5 out-of-scope guardrail removed: AdminUsers/DashboardSettings/DashboardLayout
+// profile mutations are now migrated in P-7 (see profileMutations.test.ts).

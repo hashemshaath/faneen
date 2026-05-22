@@ -113,19 +113,5 @@ describe('P-5B secondary profile read migration', () => {
   });
 });
 
-describe('P-5B out-of-scope guardrail (must remain direct in this phase)', () => {
-  it('AdminUsers profile updates remain direct', () => {
-    const src = read('src/pages/admin/AdminUsers.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)\.update/);
-  });
-  it('DashboardSettings profile update remains direct', () => {
-    const src = read('src/pages/dashboard/DashboardSettings.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)\.update/);
-  });
-  it('DashboardLayout avatar update remains direct', () => {
-    const src = read('src/components/dashboard/DashboardLayout.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)\.update/);
-  });
-  // AdminDashboardView / AdminActivityLog / AdminAccessManagement / About migrated in P-6
-  // (regression locks live in countAndListProfiles.test.ts).
-});
+// P-5B out-of-scope guardrail removed: profile mutations migrated in P-7
+// (see profileMutations.test.ts).
