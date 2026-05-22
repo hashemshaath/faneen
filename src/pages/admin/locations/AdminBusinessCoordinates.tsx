@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
-import { updateBusinessById } from '@/modules/businesses';
+import { updateBusinessById, listAdminBusinesses } from '@/modules/businesses';
 import { toast } from 'sonner';
 import { Save, Loader2, Map as MapIcon, AlertCircle } from 'lucide-react';
 import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
@@ -35,11 +35,11 @@ const AdminBusinessCoordinates: React.FC = () => {
   const { data: list, isLoading } = useQuery({
     queryKey: ['admin-biz-coords'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('id, name_ar, ref_id, latitude, longitude, region, district, address')
-        .order('name_ar')
-        .limit(1000);
+      const { data, error } = await listAdminBusinesses<BizRow>({
+        select: 'id, name_ar, ref_id, latitude, longitude, region, district, address',
+        orderBy: { column: 'name_ar' },
+        limit: 1000,
+      });
       if (error) throw error;
       return (data ?? []) as BizRow[];
     },
