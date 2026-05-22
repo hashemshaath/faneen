@@ -159,19 +159,17 @@ export const InvitationsPanel: React.FC<Props> = ({
   const resendInvitation = async (row: InvitationRow) => {
     setBusyId(row.id);
     try {
-      const { error: emailError } = await supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'business-staff-invitation',
+      const { error: emailError } = await sendTransactionalEmail({
+        templateName: 'business-staff-invitation',
+        recipientEmail: row.email,
+        idempotencyKey: `staff-invite-resend-${row.id}-${Date.now()}`,
+        templateData: {
           recipientEmail: row.email,
-          idempotencyKey: `staff-invite-resend-${row.id}-${Date.now()}`,
-          templateData: {
-            recipientEmail: row.email,
-            businessName: isRTL ? (businessNameAr ?? businessNameEn ?? '') : (businessNameEn ?? businessNameAr ?? ''),
-            roleAr: STAFF_ROLE_META[row.role].ar,
-            roleEn: STAFF_ROLE_META[row.role].en,
-            acceptUrl: acceptUrlFor(row.token),
-            expiryDate: row.expires_at.slice(0, 10),
-          },
+          businessName: isRTL ? (businessNameAr ?? businessNameEn ?? '') : (businessNameEn ?? businessNameAr ?? ''),
+          roleAr: STAFF_ROLE_META[row.role].ar,
+          roleEn: STAFF_ROLE_META[row.role].en,
+          acceptUrl: acceptUrlFor(row.token),
+          expiryDate: row.expires_at.slice(0, 10),
         },
       });
       if (emailError) throw emailError;
