@@ -32,6 +32,7 @@ import {
 } from 'recharts';
 import type { Tables } from '@/integrations/supabase/types';
 import { maskEmail, maskPhone } from '@/lib/masking';
+import { listAllUserRoles } from '@/services/userRoles';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 type Profile = Tables<'profiles'>;
@@ -583,11 +584,7 @@ const AdminUsers = () => {
 
   const { data: userRoles = [], isLoading: loadingRoles } = useQuery({
     queryKey: ['admin-user-roles'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('user_roles').select('*');
-      if (error) throw error;
-      return data as UserRole[];
-    },
+    queryFn: () => listAllUserRoles() as Promise<UserRole[]>,
     enabled: !!user,
   });
 
