@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listOwnerBusinesses } from '@/modules/businesses';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -170,12 +171,12 @@ const Membership = () => {
     queryFn: async () => {
       if (!user) return null;
       // 1. Owner: pick the most recently created business they own
-      const owned = await supabase
-        .from('businesses')
-        .select('id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion, approval_notes')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1);
+      const owned = await listOwnerBusinesses<{ id: string; ref_id: string | null; membership_tier: string; name_ar: string | null; name_en: string | null; approval_status: string | null; onboarding_completion: number | null; approval_notes: string | null }>({
+        userId: user.id,
+        select: 'id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion, approval_notes',
+        orderBy: { column: 'created_at', ascending: false },
+        limit: 1,
+      });
       if (owned.data && owned.data.length > 0) return owned.data[0];
 
       // 2. Staff fallback: business they manage (owner/manager role)

@@ -9,6 +9,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
+import { listOwnerBusinesses } from '@/modules/businesses';
 import { toast } from 'sonner';
 import { Layers, Plus, Pencil, Trash2, Send, Search, FileClock, Building2, CheckCircle2, Clock, ShieldCheck, Sparkles, Users, AlertCircle, Mail, UserCheck, HelpCircle, RefreshCw, WifiOff, Loader2 } from 'lucide-react';
 import {
@@ -51,11 +52,11 @@ const DashboardPrivateSectors: React.FC = () => {
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
     queryFn: async () => {
-      const owned = await supabase
-        .from('businesses')
-        .select('id, name_ar, name_en')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: true });
+      const owned = await listOwnerBusinesses<{ id: string; name_ar: string; name_en: string | null }>({
+        userId: user!.id,
+        select: 'id, name_ar, name_en',
+        orderBy: { column: 'created_at', ascending: true },
+      });
       if (owned.error) throw owned.error;
       const ownedRows = owned.data ?? [];
       const staff = await supabase
