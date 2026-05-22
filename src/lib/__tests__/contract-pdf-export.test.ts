@@ -65,6 +65,21 @@ const buildText = async (data: Parameters<typeof buildContractPDF>[0]): Promise<
 };
 
 describe('PDF-QA1 — buildContractPDF: smoke + regression', () => {
+  it('baseline: shared forbidden-token list still covers required keys', () => {
+    expect(CONTRACT_PDF_FORBIDDEN_RUNTIME_TOKENS).toEqual(
+      expect.arrayContaining([
+        'file_url',
+        'storage_path',
+        'token_hash',
+        'contract_pdf_exports',
+        'exported_by',
+        'ip_hash',
+        'user_agent_hash',
+        'site_id',
+      ]),
+    );
+  });
+
   it.each(Object.entries(ALL_FIXTURES))('builds without throwing: %s', async (_name, fx) => {
     const doc = await buildContractPDF(fx);
     expect(doc).toBeTruthy();
