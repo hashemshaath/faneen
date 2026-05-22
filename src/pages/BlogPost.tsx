@@ -34,6 +34,7 @@ import python from 'highlight.js/lib/languages/python';
 import sql from 'highlight.js/lib/languages/sql';
 import 'highlight.js/styles/github-dark.css';
 import { BlogComments } from '@/components/blog/BlogComments';
+import { getProfileByUserId } from '@/modules/users';
 
 hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('js', javascript);
@@ -218,11 +219,10 @@ const BlogPost = () => {
     queryKey: ['blog-post-author', post?.author_id],
     queryFn: async () => {
       if (!post?.author_id) return null;
-      const { data } = await supabase
-        .from('profiles')
-        .select('full_name, ref_id')
-        .eq('user_id', post.author_id)
-        .maybeSingle();
+      const { data } = await getProfileByUserId<{
+        full_name: string | null;
+        ref_id: string | null;
+      }>({ userId: post.author_id, select: 'full_name, ref_id' });
       return data;
     },
     enabled: !!post?.author_id,

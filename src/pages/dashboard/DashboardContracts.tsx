@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
+import { getProfileByEmail } from '@/modules/users';
 import { createNotification, createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -990,7 +991,10 @@ const DashboardContracts = () => {
       if (!clientUserId && !editingId && !guestClient) {
         const email = form.client_email.trim();
         if (!email) throw new Error(isRTL ? 'يرجى اختيار العميل أولاً' : 'Please select a client first');
-        const { data: cp, error: cpe } = await supabase.from('profiles').select('user_id').eq('email', email).maybeSingle();
+        const { data: cp, error: cpe } = await getProfileByEmail<{ user_id: string }>({
+          email,
+          select: 'user_id',
+        });
         if (cpe) throw cpe;
         if (cp) clientUserId = cp.user_id;
       }

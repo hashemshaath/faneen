@@ -6,3 +6,5 @@ export { getProfileByUserId } from './services/getProfileByUserId';
 export type { GetProfileByUserIdOptions } from './services/getProfileByUserId';
 export { getProfileForContractParty } from './services/getProfileForContractParty';
 export type { GetProfileForContractPartyOptions } from './services/getProfileForContractParty';
+export { getProfileByEmail } from './services/getProfileByEmail';
+export type { GetProfileByEmailOptions } from './services/getProfileByEmail';

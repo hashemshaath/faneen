@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
+import { listProfilesByUserIds } from '@/modules/users';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -77,10 +78,12 @@ export const AuditLogPanel: React.FC<Props> = ({ businessId, isRTL }) => {
     queryKey: ['audit-actors', actorIds.join('|')],
     enabled: actorIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, email, ref_id')
-        .in('user_id', actorIds);
+      const { data } = await listProfilesByUserIds<{
+        user_id: string;
+        full_name: string | null;
+        email: string | null;
+        ref_id: string | null;
+      }>({ userIds: actorIds, select: 'user_id, full_name, email, ref_id' });
       return data ?? [];
     },
   });
