@@ -1,20 +1,20 @@
-import { supabase } from '@/integrations/supabase/client';
+import {
+  sendTransactionalEmail,
+  type SendTransactionalEmailPayload,
+} from '@/modules/notifications/services/sendTransactionalEmail';
 
-export interface SendLeadTransactionalEmailPayload {
-  templateName: string;
-  recipientEmail: string;
-  idempotencyKey: string;
-  templateData?: Record<string, unknown>;
-}
+export type SendLeadTransactionalEmailPayload = SendTransactionalEmailPayload;
 
 /**
- * Fail-soft wrapper for the send-transactional-email edge function.
- * Swallows errors so callers can treat email as fire-and-forget.
+ * Lead-specific transactional email entry point.
+ *
+ * Delegates to the shared `sendTransactionalEmail` wrapper without
+ * altering payload, return shape, or error behavior. Maintained as a
+ * named export so existing lead callsites (e.g. AdminLeadRequests) and
+ * regression tests keep working unchanged.
  */
 export async function sendLeadTransactionalEmail(
   payload: SendLeadTransactionalEmailPayload,
-): Promise<ReturnType<typeof supabase.functions.invoke>> {
-  return supabase.functions.invoke('send-transactional-email', {
-    body: payload,
-  });
+): ReturnType<typeof sendTransactionalEmail> {
+  return sendTransactionalEmail(payload);
 }
