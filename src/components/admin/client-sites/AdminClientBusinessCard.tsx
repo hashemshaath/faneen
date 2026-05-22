@@ -10,6 +10,7 @@ import {
   Building2, ExternalLink, FileText, Globe, IdCard, User,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getAdminBusinessById } from '@/modules/businesses';
 
 type Bi = (ar: string, en: string) => string;
 
@@ -50,11 +51,10 @@ const AdminClientBusinessCard: React.FC<Props> = ({
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<BusinessLite | null> => {
       if (!businessId) return null;
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('id, ref_id, username, name_ar, name_en, logo_url, website')
-        .eq('id', businessId)
-        .maybeSingle();
+      const { data, error } = await getAdminBusinessById<BusinessLite>({
+        id: businessId,
+        select: 'id, ref_id, username, name_ar, name_en, logo_url, website',
+      });
       if (error) throw error;
       return (data as BusinessLite | null) ?? null;
     },
