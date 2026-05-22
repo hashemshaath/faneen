@@ -4,6 +4,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listProfilesByUserIds } from '@/modules/users';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -496,7 +497,10 @@ const AdminMemberships = () => {
     queryKey: ['admin-sub-profiles', userIds],
     queryFn: async () => {
       if (!userIds.length) return [];
-      const { data } = await supabase.from('profiles').select('user_id, full_name, email, avatar_url, membership_tier').in('user_id', userIds);
+      const { data } = await listProfilesByUserIds<{ user_id: string; full_name: string | null; email: string | null; avatar_url: string | null; membership_tier: string | null }>({
+        userIds,
+        select: 'user_id, full_name, email, avatar_url, membership_tier',
+      });
       return data ?? [];
     },
     enabled: userIds.length > 0,

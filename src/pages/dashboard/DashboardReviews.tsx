@@ -5,6 +5,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listProfilesByUserIds } from '@/modules/users';
 import { getOwnerBusiness } from '@/modules/businesses';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -234,7 +235,7 @@ const DashboardReviews = () => {
 
       // Fetch profiles and projects in parallel
       const [profilesRes, projectsRes] = await Promise.all([
-        supabase.from('profiles').select('user_id, full_name, avatar_url').in('user_id', userIds),
+        listProfilesByUserIds<{ user_id: string; full_name: string | null; avatar_url: string | null }>({ userIds, select: 'user_id, full_name, avatar_url' }),
         projectIds.length > 0
           ? supabase.from('projects').select('id, title_ar, title_en').in('id', projectIds)
           : Promise.resolve({ data: [] }),

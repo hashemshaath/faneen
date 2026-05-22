@@ -5,6 +5,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listProfilesByUserIds } from '@/modules/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -694,11 +695,17 @@ const DashboardMessages = () => {
       allIds.delete(user!.id);
 
       if (allIds.size > 0) {
-        const { data: profiles } = await supabase.from('profiles').select('user_id, full_name, avatar_url, email').in('user_id', Array.from(allIds));
-        const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+        const { data: profiles } = await listProfilesByUserIds<{ user_id: string; full_name: string | null; avatar_url: string | null; email: string | null }>({
+          userIds: Array.from(allIds),
+          select: 'user_id, full_name, avatar_url, email',
+        });
+        const profileMap = new Map((profiles || []).map((p) => [p.user_id, p] as const));
 
         if (isSuperAdmin) {
-          const { data: allProfiles } = await supabase.from('profiles').select('user_id, full_name, avatar_url, email').in('user_id', Array.from(new Set(data.flatMap((c) => [c.participant_1, c.participant_2]))));
+          const { data: allProfiles } = await listProfilesByUserIds<{ user_id: string; full_name: string | null; avatar_url: string | null; email: string | null }>({
+            userIds: Array.from(new Set(data.flatMap((c) => [c.participant_1, c.participant_2]))),
+            select: 'user_id, full_name, avatar_url, email',
+          });
           (allProfiles || []).forEach((p) => { if (!profileMap.has(p.user_id)) profileMap.set(p.user_id, p); });
         }
 

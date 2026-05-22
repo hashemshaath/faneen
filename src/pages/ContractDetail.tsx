@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getProfileForContractParty } from '@/modules/users';
 import { createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -349,7 +350,7 @@ const ContractDetail = () => {
   const { data: clientProfile } = useQuery({
     queryKey: ['profile', contract?.client_id],
     queryFn: async () => {
-      const { data } = await supabase.from('profiles').select('*, countries(name_ar, name_en, currency_code), cities(name_ar, name_en)').eq('user_id', contract!.client_id).maybeSingle();
+      const { data } = await getProfileForContractParty({ userId: contract!.client_id });
       return data;
     },
     enabled: !!contract,
@@ -358,7 +359,7 @@ const ContractDetail = () => {
   const { data: providerProfile } = useQuery({
     queryKey: ['profile', contract?.provider_id],
     queryFn: async () => {
-      const { data } = await supabase.from('profiles').select('*, countries(name_ar, name_en, currency_code), cities(name_ar, name_en)').eq('user_id', contract!.provider_id).maybeSingle();
+      const { data } = await getProfileForContractParty({ userId: contract!.provider_id });
       return data;
     },
     enabled: !!contract,

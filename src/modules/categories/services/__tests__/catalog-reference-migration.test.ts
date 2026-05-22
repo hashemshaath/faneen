@@ -63,10 +63,9 @@ describe('P-2 out-of-scope guardrail (must NOT be touched)', () => {
   // NOTE: Compare.tsx and ContractDetail.tsx business reads were intentionally
   // migrated in P-3 (public business reads). Their P-3 regression locks live in
   // src/modules/businesses/services/__tests__/businessReads.test.ts.
-  it('ContractDetail.tsx still contains its direct profiles reads (deferred to P-5)', () => {
-    const src = read('src/pages/ContractDetail.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]profiles['"]\)/);
-  });
+  // NOTE: ContractDetail.tsx profiles reads were migrated in P-5
+  // (getProfileForContractParty). Their regression lock lives in
+  // src/modules/users/services/__tests__/profileReads.test.ts.
   it('DashboardBusinessEdit cities read (country_id-scoped) remains direct in this phase', () => {
     const src = read('src/pages/dashboard/DashboardBusinessEdit.tsx');
     expect(src).toMatch(/supabase\.from\(['"]cities['"]\)/);
