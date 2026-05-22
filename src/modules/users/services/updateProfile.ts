@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 
 /**
  * Canonical wrapper for `supabase.from('profiles').update(values).eq('user_id', userId)`.
@@ -10,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export interface UpdateProfileOptions {
   userId: string;
-  values: Record<string, unknown>;
+  values: TablesUpdate<'profiles'>;
 }
 
 export async function updateProfile(
