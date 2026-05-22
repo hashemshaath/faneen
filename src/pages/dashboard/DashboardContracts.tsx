@@ -655,7 +655,7 @@ const DashboardContracts = () => {
       if (error) throw error;
       // Update contract total from measurements + line items
       // C6.4a — recompute via RPC.
-      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
+      await recalcContractTotal(contractId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-measurements'] });
@@ -709,9 +709,7 @@ const DashboardContracts = () => {
 
   const approveAmendmentMutation = useMutation({
     mutationFn: async ({ amendmentId }: { amendmentId: string; contract: ContractWithRole }) => {
-      const { error } = await supabase.rpc('approve_contract_amendment', { _amendment_id: amendmentId });
-      if (error) throw error;
-      return amendmentId;
+      return await approveAmendment(amendmentId);
     },
     onSuccess: (amId) => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-amendments'] });
