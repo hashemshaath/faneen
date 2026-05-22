@@ -12,6 +12,7 @@ import { Bi, useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
+import { submitQuoteRequest } from '@/modules/quotes/services/submitQuoteRequest';
 import { useAuth } from '@/contexts/AuthContext';
 import { resolveQuoteSectorFromUrl } from '@/lib/sectors-seo';
 import {
@@ -361,14 +362,7 @@ const Quote: React.FC = () => {
     };
 
     try {
-      const { data, error } = await supabase.functions.invoke('submit-quote-request', {
-        body: payload,
-      });
-      if (error) throw new Error(error.message);
-      const result = data as { success: boolean; quote_request_id?: string; message?: string };
-      if (!result?.success || !result.quote_request_id) {
-        throw new Error(result?.message || 'submit_failed');
-      }
+      const result = await submitQuoteRequest(payload);
       const quoteId = result.quote_request_id;
 
       // Upload files (best-effort: the request is already saved)
