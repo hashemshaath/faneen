@@ -1047,11 +1047,7 @@ const DashboardContracts = () => {
       // Phase 5C.3 — chain execution-site linking after the row exists.
       if (result?.contractId && selectedSiteId) {
         try {
-          const { error } = await supabase.rpc('set_contract_execution_site', {
-            _contract_id: result.contractId,
-            _site_id: selectedSiteId,
-          });
-          if (error) throw error;
+          await setContractExecutionSite(result.contractId, selectedSiteId);
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
           toast.warning(isRTL
@@ -1062,11 +1058,7 @@ const DashboardContracts = () => {
       // Phase 5B.5 — link lead to the freshly created contract (manual save only).
       if (result?.contractId && result.isNew && leadPrefill?.lead_id && !leadPrefill.existing_contract_id) {
         try {
-          const { data: linkData, error: linkErr } = await supabase.rpc('link_lead_to_contract', {
-            _lead_id: leadPrefill.lead_id,
-            _contract_id: result.contractId,
-          });
-          if (linkErr) throw linkErr;
+          const linkData = await linkLeadToContract(result.contractId, leadPrefill.lead_id);
           void linkData;
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
