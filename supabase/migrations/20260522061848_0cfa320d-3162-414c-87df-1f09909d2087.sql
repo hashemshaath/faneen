@@ -1,0 +1,1 @@
+SELECT setval('public.seq_cnt', 1, false);
