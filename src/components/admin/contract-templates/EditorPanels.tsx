@@ -686,10 +686,9 @@ export const PreviewPanel: React.FC<{
   const sectionsQ = useQuery({
     queryKey: ['ct-sections', versionId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('contract_template_sections')
-        .select('*').eq('version_id', versionId).order('sort_order');
+      const { data, error } = await listContractTemplateSections(versionId);
       if (error) throw error;
-      return (data || []) as CTSection[];
+      return ((data || []) as unknown) as CTSection[];
     },
   });
   const clausesQ = useQuery({
@@ -697,10 +696,9 @@ export const PreviewPanel: React.FC<{
     queryFn: async () => {
       const ids = (sectionsQ.data || []).map((s) => s.id);
       if (!ids.length) return [] as CTClause[];
-      const { data, error } = await supabase.from('contract_template_clauses')
-        .select('*').in('section_id', ids).order('sort_order');
+      const { data, error } = await listContractTemplateClausesBySectionIds(ids);
       if (error) throw error;
-      return (data || []) as CTClause[];
+      return ((data || []) as unknown) as CTClause[];
     },
     enabled: !!sectionsQ.data,
   });
