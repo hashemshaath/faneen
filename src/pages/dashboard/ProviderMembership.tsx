@@ -5,8 +5,8 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { supabase } from '@/integrations/supabase/client';
 import { listProviderSubscriptionsForCurrentUser } from '@/modules/memberships';
+import { listProviderCreditTransactionsForBusinesses } from '@/modules/credits';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Crown, Wallet, Calendar, Activity, Sparkles } from 'lucide-react';
@@ -90,12 +90,9 @@ const ProviderMembership: React.FC = () => {
     queryKey: ['provider-credit-tx', businessIds],
     enabled: businessIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('provider_lead_credit_transactions')
-        .select('id, type, amount, balance_after, reason, quote_request_lead_id, created_at')
-        .in('business_id', businessIds)
-        .order('created_at', { ascending: false })
-        .limit(100);
+      const { data, error } = await listProviderCreditTransactionsForBusinesses<TxRow>({
+        businessIds,
+      });
       if (error) throw error;
       return (data ?? []) as TxRow[];
     },
