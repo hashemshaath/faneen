@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  listAccessKeyUsageLog,
+  listMembershipInviteRedemptions,
+} from '@/modules/memberships';
 import { Button } from '@/components/ui/button';
 import { Download, Activity, Loader2 } from 'lucide-react';
 
@@ -51,12 +54,7 @@ export const MembershipKeyUsageLog: React.FC<Props> = ({ isRTL, businessId }) =>
   const { data: accessUsage = [], isLoading: l1 } = useQuery({
     queryKey: ['access-key-usage', businessId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('membership_access_key_usage_log')
-        .select('id, access_key_id, endpoint, method, status_code, ip, user_agent, created_at, membership_access_keys(name, key_prefix)')
-        .eq('business_id', businessId)
-        .order('created_at', { ascending: false })
-        .limit(500);
+      const { data } = await listAccessKeyUsageLog<AccessUsageRow>({ businessId, limit: 500 });
       return (data ?? []) as unknown as AccessUsageRow[];
     },
   });
@@ -64,12 +62,7 @@ export const MembershipKeyUsageLog: React.FC<Props> = ({ isRTL, businessId }) =>
   const { data: inviteRedemptions = [], isLoading: l2 } = useQuery({
     queryKey: ['invite-redemptions', businessId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('membership_invite_redemptions')
-        .select('id, invite_key_id, redeemed_by_user_id, business_staff_id, created_at, membership_invite_keys!inner(code, role, business_id)')
-        .eq('membership_invite_keys.business_id', businessId)
-        .order('created_at', { ascending: false })
-        .limit(500);
+      const { data } = await listMembershipInviteRedemptions<InviteRedemptionRow>({ businessId, limit: 500 });
       return (data ?? []) as unknown as InviteRedemptionRow[];
     },
   });
