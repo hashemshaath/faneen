@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { grantMonthlyProviderCredit } from '../_shared/credits/index.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -75,48 +76,35 @@ Deno.serve(async (req) => {
       const due = !s.current_period_end || new Date(s.current_period_end) <= now;
       if (!due) { skipped++; continue; }
 
-      // Idempotency: skip if a monthly_grant already exists in current/last 25 days
-      const sinceIso = new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000).toISOString();
-      const { data: recent } = await admin
-        .from('provider_lead_credit_transactions')
-        .select('id')
-        .eq('business_id', s.business_id)
-        .eq('reason', 'monthly_grant')
-        .gte('created_at', sinceIso)
-        .limit(1);
-      if (recent && recent.length > 0) { skipped++; continue; }
-
-      const amt = s.plan.lead_credits_per_month;
-      const newBal = s.lead_credits_balance + amt;
+      // EDGE-4: atomic grant via SECURITY DEFINER RPC. Idempotency key
+      // (`monthly:<sub>:YYYY-MM`, UTC) is built and enforced inside the RPC,
+      // so the 25-day client probe is no longer needed.
       const newPeriodEndIso = periodEnd.toISOString();
-
-      const { error: e1 } = await admin
-        .from('provider_subscriptions')
-        .update({
-          lead_credits_balance: newBal,
-          current_period_start: nowIso,
-          current_period_end: newPeriodEndIso,
-        })
-        .eq('id', s.id);
-      if (e1) throw new Error(e1.message);
-
-      const { error: e2 } = await admin
-        .from('provider_lead_credit_transactions')
-        .insert({
-          business_id: s.business_id,
-          provider_user_id: s.provider_user_id,
-          type: 'grant',
-          amount: amt,
-          balance_after: newBal,
-          reason: 'monthly_grant',
-          metadata: {
-            plan_code: s.plan.code,
-            period_start: nowIso,
-            period_end: newPeriodEndIso,
-          },
-        });
-      if (e2) throw new Error(e2.message);
-      granted++;
+      const { data: grantData, error: grantErr } = await grantMonthlyProviderCredit(admin, {
+        subscriptionId: s.id,
+        amount: s.plan.lead_credits_per_month,
+        periodStart: nowIso,
+        periodEnd: newPeriodEndIso,
+        planCode: s.plan.code,
+      });
+      if (grantErr) {
+        throw new Error((grantErr as { message?: string }).message ?? String(grantErr));
+      }
+      const g = (grantData ?? {}) as {
+        ok?: boolean;
+        granted?: boolean;
+        idempotent?: boolean;
+        code?: string;
+      };
+      if (g.ok === false) {
+        throw new Error(g.code ?? 'grant_failed');
+      }
+      if (g.granted === true) {
+        granted++;
+      } else {
+        // ok:true with granted:false → idempotent replay
+        skipped++;
+      }
     } catch (err) {
       errors.push({ subscription_id: s.id, error: err instanceof Error ? err.message : String(err) });
     }
