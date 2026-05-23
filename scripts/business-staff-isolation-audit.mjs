@@ -41,6 +41,14 @@ const ALLOWED_FILES = new Set();
 const PATTERN =
   /\.from\(\s*['"]business_staff['"]\s*\)\s*\.\s*(select\s*\(|insert|update|delete|upsert)\b/;
 
+// R4E-3: forbid direct use of the canonical low-level staff wrappers
+// (updateBusinessStaffById / deleteBusinessStaffById) outside the guarded
+// staff mutation module. insertBusinessStaff remains allowed everywhere.
+const WRAPPER_PATTERN = /\b(updateBusinessStaffById|deleteBusinessStaffById)\s*\(/;
+const WRAPPER_ALLOWED_FILES = new Set([
+  "src/modules/businesses/services/guardedStaffMutations.ts",
+]);
+
 const SKIP_DIRS = new Set([
   "node_modules", "dist", "build", "coverage", ".git", "__tests__",
 ]);
@@ -69,28 +77,50 @@ function isAllowed(rel) {
   return ALLOWED_DIRS.some((dir) => rel.startsWith(dir));
 }
 
+function isWrapperAllowed(rel) {
+  if (WRAPPER_ALLOWED_FILES.has(rel)) return true;
+  // Service files that define / re-export the wrappers themselves.
+  return rel.startsWith("src/modules/businesses/services/");
+}
+
 const violations = [];
 const allowedHits = [];
 
 for (const file of walk(SRC)) {
   const rel = path.relative(ROOT, file).replace(/\\/g, "/");
   const source = fs.readFileSync(file, "utf-8");
-  if (!PATTERN.test(source)) continue;
+  if (PATTERN.test(source)) {
+    const globalRe = new RegExp(PATTERN.source, "g");
+    let m;
+    while ((m = globalRe.exec(source)) !== null) {
+      const upto = source.slice(0, m.index);
+      const line = upto.split("\n").length;
+      const op = m[1].startsWith("select") ? "select" : m[1];
+      const snippet = source
+        .slice(m.index, m.index + 160)
+        .replace(/\s+/g, " ")
+        .trim();
+      const record = { file: rel, line, op, snippet };
+      if (isAllowed(rel)) allowedHits.push(record);
+      else violations.push(record);
+    }
+  }
 
-  // Find every match (multi-line tolerant): scan with a global regex on full source.
-  const globalRe = new RegExp(PATTERN.source, "g");
-  let m;
-  while ((m = globalRe.exec(source)) !== null) {
-    const upto = source.slice(0, m.index);
-    const line = upto.split("\n").length;
-    const op = m[1].startsWith("select") ? "select" : m[1];
-    const snippet = source
-      .slice(m.index, m.index + 160)
-      .replace(/\s+/g, " ")
-      .trim();
-    const record = { file: rel, line, op, snippet };
-    if (isAllowed(rel)) allowedHits.push(record);
-    else violations.push(record);
+  // R4E-3: wrapper isolation — forbid updateBusinessStaffById /
+  // deleteBusinessStaffById outside guardedStaffMutations.ts (and the
+  // service module itself). insertBusinessStaff is intentionally unrestricted.
+  if (WRAPPER_PATTERN.test(source) && !isWrapperAllowed(rel)) {
+    const globalRe = new RegExp(WRAPPER_PATTERN.source, "g");
+    let m;
+    while ((m = globalRe.exec(source)) !== null) {
+      const upto = source.slice(0, m.index);
+      const line = upto.split("\n").length;
+      const snippet = source
+        .slice(m.index, m.index + 160)
+        .replace(/\s+/g, " ")
+        .trim();
+      violations.push({ file: rel, line, op: `wrapper:${m[1]}`, snippet });
+    }
   }
 }
 

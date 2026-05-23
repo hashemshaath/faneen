@@ -163,14 +163,17 @@ describe('P-4 out-of-scope guardrail (must remain direct)', () => {
     const src = read('src/components/dashboard/business-edit/RepresentativesSection.tsx');
     expect(src).not.toMatch(/\.from\(['"]business_staff['"]\)/);
     expect(src).toContain('insertBusinessStaff');
-    expect(src).toContain('updateBusinessStaffById');
-    expect(src).toContain('deleteBusinessStaffById');
+    // R4E-3: now routed through guarded staff wrappers.
+    expect(src).toContain('updateBusinessStaffRole');
+    expect(src).toContain('setBusinessStaffActive');
+    expect(src).toContain('removeBusinessStaff');
   });
   it('AdminUsers staff CRUD migrated to canonical services (BS-3)', () => {
     const src = read('src/pages/admin/AdminUsers.tsx');
     expect(src).not.toMatch(/supabase\s*\.\s*from\(['"]business_staff['"]\)/);
-    expect(src).toContain('updateBusinessStaffById');
-    expect(src).toContain('deleteBusinessStaffById');
+    // R4E-3: now routed through guarded staff wrappers.
+    expect(src).toContain('updateBusinessStaffRole');
+    expect(src).toContain('removeBusinessStaff');
   });
   it('listManagedBusinessesForUser remains the canonical staff+owner aggregator (P-24)', () => {
     const src = read('src/modules/businesses/services/listManagedBusinessesForUser.ts');

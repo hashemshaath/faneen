@@ -9,8 +9,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   insertBusinessStaff,
-  updateBusinessStaffById,
-  deleteBusinessStaffById,
+  updateBusinessStaffRole,
+  setBusinessStaffActive,
+  removeBusinessStaff,
 } from '@/modules/businesses';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -129,8 +130,12 @@ export const RepresentativesSection: React.FC<Props> = ({
   const updateRow = async (id: string, patch: Partial<Pick<StaffMember, 'role' | 'is_active'>>) => {
     setBusyRowId(id);
     try {
-      const { error } = await updateBusinessStaffById({ id, values: patch });
-      if (error) throw error;
+      if (typeof patch.role !== 'undefined') {
+        await updateBusinessStaffRole(id, patch.role);
+      }
+      if (typeof patch.is_active !== 'undefined') {
+        await setBusinessStaffActive(id, patch.is_active);
+      }
       toast.success(isRTL ? 'تم التحديث' : 'Updated');
       qc.invalidateQueries({ queryKey: ['business-staff', businessId] });
     } catch (err) {
@@ -148,8 +153,7 @@ export const RepresentativesSection: React.FC<Props> = ({
     }
     setBusyRowId(row.id);
     try {
-      const { error } = await deleteBusinessStaffById({ id: row.id });
-      if (error) throw error;
+      await removeBusinessStaff(row.id);
       toast.success(isRTL ? 'تمت الإزالة' : 'Removed');
       qc.invalidateQueries({ queryKey: ['business-staff', businessId] });
     } catch (err) {

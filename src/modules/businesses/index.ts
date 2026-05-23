@@ -61,6 +61,19 @@ export type { UpdateBusinessesByIdsOptions } from './services/updateBusinessesBy
 export { insertBusiness } from './services/insertBusiness';
 export type { InsertBusinessOptions } from './services/insertBusiness';
 
+// R4E-3 — Guarded sensitive mutation wrappers
+export {
+  setBusinessActive,
+  setBusinessVerified,
+  bulkSetBusinessesActive,
+  bulkSetBusinessesVerified,
+} from './services/guardedMutations';
+export {
+  updateBusinessStaffRole,
+  setBusinessStaffActive,
+  removeBusinessStaff,
+} from './services/guardedStaffMutations';
+
 // R4B — Public read wrappers (businesses_public view)
 export { listTopPublicProviders } from './services/public/listTopPublicProviders';
 export type { ListTopPublicProvidersOptions } from './services/public/listTopPublicProviders';
