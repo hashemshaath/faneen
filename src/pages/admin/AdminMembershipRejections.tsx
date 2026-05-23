@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { queryMembershipUpgradeRejections } from '@/modules/memberships';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -160,13 +160,13 @@ const AdminMembershipRejections: React.FC = () => {
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['admin-membership-rejections', page, filters, sortBy, sortDir],
     queryFn: async () => {
-      let q = supabase
-        .from('membership_upgrade_rejections')
-        .select('*', { count: 'exact' })
-        .order(sortBy, { ascending: sortDir === 'asc', nullsFirst: false })
-        .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
-      q = applyFilters(q, filters);
-      const { data: rows, count, error } = await q;
+      const { data: rows, count, error } = await queryMembershipUpgradeRejections<Row>({
+        select: '*',
+        count: 'exact',
+        orderBy: { column: sortBy, ascending: sortDir === 'asc', nullsFirst: false },
+        range: { from: page * PAGE_SIZE, to: page * PAGE_SIZE + PAGE_SIZE - 1 },
+        applyFilters: (q) => applyFilters(q, filters),
+      });
       if (error) throw error;
       return { rows: (rows ?? []) as Row[], count: count ?? 0 };
     },
@@ -186,13 +186,12 @@ const AdminMembershipRejections: React.FC = () => {
   const exportCsv = async () => {
     setExporting(true);
     try {
-      let q = supabase
-        .from('membership_upgrade_rejections')
-        .select('*')
-        .order(sortBy, { ascending: sortDir === 'asc', nullsFirst: false })
-        .limit(EXPORT_LIMIT);
-      q = applyFilters(q, filters);
-      const { data: all, error } = await q;
+      const { data: all, error } = await queryMembershipUpgradeRejections<Row>({
+        select: '*',
+        orderBy: { column: sortBy, ascending: sortDir === 'asc', nullsFirst: false },
+        limit: EXPORT_LIMIT,
+        applyFilters: (q) => applyFilters(q, filters),
+      });
       if (error) throw error;
       const list = (all ?? []) as Row[];
       const headers = [
