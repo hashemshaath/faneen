@@ -19,10 +19,13 @@ function makeBuilder(result: Builder['_result']): Builder {
   b.select = vi.fn(() => b);
   b.eq = vi.fn(() => b);
   b.gte = vi.fn(() => b);
-  b.in = vi.fn(() => term());
-  b.order = vi.fn(() => term());
+  b.in = vi.fn(() => b);
+  b.order = vi.fn(() => b);
   b.limit = vi.fn(() => term());
   b.maybeSingle = vi.fn(() => term());
+  // For chains that end at .eq().order() without .limit (files, leads, events list)
+  // and at .in() alone, make the builder thenable too.
+  (b as unknown as { then: (r: (v: unknown) => void) => Promise<void> }).then = (r) => term().then(r);
   return b;
 }
 
