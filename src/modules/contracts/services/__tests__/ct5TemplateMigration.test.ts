@@ -67,10 +67,10 @@ describe('CT-5 deferred surfaces remain untouched', () => {
     expect(s).toMatch(/\.from\(['"]contract_templates['"]\)/);
   });
 
-  it('EditorPanels still directly accesses out-of-scope template child tables (pricing/required/attachments deferred)', () => {
+  it('EditorPanels no longer accesses CT-6 child tables directly (migrated)', () => {
     const s = read('components/admin/contract-templates/EditorPanels.tsx');
-    expect(s).toMatch(/\.from\(['"]contract_template_pricing_rules['"]\)/);
-    expect(s).toMatch(/\.from\(['"]contract_template_required_fields['"]\)/);
-    expect(s).toMatch(/\.from\(['"]contract_template_attachments['"]\)/);
+    expect(s).not.toMatch(/\.from\(['"]contract_template_pricing_rules['"]\)/);
+    expect(s).not.toMatch(/\.from\(['"]contract_template_required_fields['"]\)/);
+    expect(s).not.toMatch(/\.from\(['"]contract_template_attachments['"]\)/);
   });
 });
