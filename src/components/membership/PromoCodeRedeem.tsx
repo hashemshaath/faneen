@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { redeemPromoCode } from '@/modules/memberships';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Gift, Loader2, Check } from 'lucide-react';
@@ -14,7 +14,7 @@ export const PromoCodeRedeem: React.FC<Props> = ({ isRTL, businessId }) => {
 
   const m = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc('redeem_promo_code', {
+      const { data, error } = await redeemPromoCode({
         _code: code.trim().toUpperCase(),
         _business_id: businessId ?? null,
       });
