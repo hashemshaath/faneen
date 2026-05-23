@@ -18,6 +18,4 @@ export interface ListPasswordResetLogsOptions {
   /** Inclusive lower bound on created_at (ISO string). */
   sinceIso?: string | null;
   limit?: number;
-  /** Defaults to '*' to preserve existing callsite behavior. */
-  selectColumns?: string;
 }
