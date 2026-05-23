@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { listOwnerBusinesses } from '@/modules/businesses';
+import { listOwnerBusinesses, listManagedStaffMembershipForUser } from '@/modules/businesses';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -143,12 +143,10 @@ const DashboardContractAnalytics: React.FC = () => {
           userId: user!.id,
           select: 'id, name_ar, name_en',
         }),
-        supabase
-          .from('business_staff')
-          .select('business_id, role, businesses:business_id(id, name_ar, name_en)')
-          .eq('user_id', user!.id)
-          .eq('is_active', true)
-          .in('role', ['owner', 'manager']),
+        listManagedStaffMembershipForUser({
+          userId: user!.id,
+          select: 'business_id, role, businesses:business_id(id, name_ar, name_en)',
+        }),
       ]);
       const map = new Map<string, { id: string; name_ar: string | null; name_en: string | null }>();
       (owned.data ?? []).forEach((b) => map.set(b.id, b));
