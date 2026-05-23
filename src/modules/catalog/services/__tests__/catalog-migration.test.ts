@@ -42,9 +42,10 @@ describe('CAT-2 mixed read+write files: reads migrated, writes intentionally def
     // Direct list reads must be gone.
     expect(src).not.toMatch(/supabase\.from\(['"]bnpl_providers['"]\)\.select/);
     expect(src).not.toMatch(/supabase\.from\(['"]business_bnpl_providers['"]\)\.select/);
-    // Writes deferred to CAT-5.
-    expect(src).toMatch(/supabase\.from\(['"]business_bnpl_providers['"]\)\.upsert/);
-    expect(src).toMatch(/supabase\.from\(['"]business_bnpl_providers['"]\)\.update/);
+    // Writes migrated in CAT-5.
+    expect(src).toContain('upsertBusinessBnplProvider');
+    expect(src).toContain('updateBusinessBnplProviderForBusiness');
+    expect(src).not.toMatch(/supabase\.from\(['"]business_bnpl_providers['"]\)/);
   });
 
   it('ProviderServiceAreas: read + writes fully migrated (CAT-2 read, CAT-3 writes)', () => {
@@ -71,9 +72,12 @@ describe('CAT-2 out-of-scope guardrail (must NOT be touched in this phase)', () 
     const src = read('src/pages/dashboard/DashboardServices.tsx');
     expect(src).toMatch(/supabase\.from\(['"]business_services['"]\)/);
   });
-  it('DashboardInstallments BNPL admin remains direct (deferred to CAT-5)', () => {
+  it('DashboardInstallments BNPL admin writes migrated in CAT-5 (read remains direct)', () => {
     const src = read('src/pages/dashboard/DashboardInstallments.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]bnpl_providers['"]\)/);
+    // Read intentionally left direct (per CAT-5 scope).
+    expect(src).toMatch(/supabase\.from\(['"]bnpl_providers['"]\)\.select/);
+    // Writes migrated.
+    expect(src).not.toMatch(/supabase\.from\(['"]bnpl_providers['"]\)\.(insert|update|delete)/);
   });
   it('contracts aggregate warranties read remains owned by contracts module', () => {
     const src = read('src/modules/contracts/services/aggregates.ts');
