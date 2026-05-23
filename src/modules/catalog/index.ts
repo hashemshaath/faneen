@@ -21,3 +21,27 @@ export {
   listWarrantiesByContractIds,
   listWarrantiesForContract,
 } from './services/warranties/reads';
+
+// ── CAT-3 mutation wrappers (provider dashboard) ──
+export {
+  insertBusinessService,
+  insertBusinessServices,
+  updateBusinessServiceById,
+  deleteBusinessServiceById,
+  deleteDemoBusinessServicesForBusiness,
+} from './services/services/mutations';
+export {
+  insertServiceArea,
+  deleteServiceAreaById,
+  clearPrimaryServiceAreasForBusiness,
+  setServiceAreaPrimaryById,
+} from './services/serviceAreas/mutations';
+export {
+  deleteAvailabilityForBusiness,
+  insertAvailabilityRows,
+} from './services/availability/mutations';
+export {
+  insertWarranty,
+  updateWarrantyById,
+  deleteWarrantyById,
+} from './services/warranties/mutations';

@@ -3,7 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listProfilesByUserIds } from '@/modules/users';
 import { getOwnerBusiness } from '@/modules/businesses';
-import { listAvailabilityByBusiness } from '@/modules/catalog';
+import {
+  listAvailabilityByBusiness,
+  deleteAvailabilityForBusiness,
+  insertAvailabilityRows,
+} from '@/modules/catalog';
 import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -153,9 +157,9 @@ const DashboardBookings = () => {
     mutationFn: async (slots: { day_of_week: number; is_active: boolean; start_time: string; end_time: string; slot_duration_minutes: number; max_bookings_per_slot: number }[]) => {
       if (!business) return;
       // Delete existing then insert
-      await supabase.from('business_availability').delete().eq('business_id', business.id);
+      await deleteAvailabilityForBusiness(business.id);
       if (slots.length > 0) {
-        const { error } = await supabase.from('business_availability').insert(
+        const { error } = await insertAvailabilityRows(
           slots.map(s => ({ ...s, business_id: business.id }))
         );
         if (error) throw error;
