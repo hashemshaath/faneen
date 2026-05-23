@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Mail, Clock, CheckCircle2, XCircle, AlertTriangle, ExternalLink, Copy, Loader2, Building2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { supabase } from '@/integrations/supabase/client';
+import { listMyStaffInvitations } from '@/modules/identity';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,7 +55,7 @@ export const MyInvitationsStatus: React.FC<Props> = ({ hideWhenEmpty = true, cla
     queryKey: ['my-staff-invitations', user?.id],
     enabled: !!user,
     queryFn: async (): Promise<MyInvitationRow[]> => {
-      const { data, error } = await supabase.rpc('get_my_staff_invitations');
+      const { data, error } = await listMyStaffInvitations();
       if (error) throw error;
       return (data ?? []) as MyInvitationRow[];
     },

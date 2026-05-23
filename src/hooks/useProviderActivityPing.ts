@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity';
 import { trackEvent } from '@/lib/analytics';
 
 const STORAGE_KEY = 'qitaat_provider_last_active_ping';
@@ -11,7 +12,7 @@ export async function pingProviderActive(force = false): Promise<void> {
       const last = Number(localStorage.getItem(STORAGE_KEY) ?? 0);
       if (last && Date.now() - last < THROTTLE_MS) return;
     }
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getCurrentUser();
     if (!user) return;
     const { error } = await supabase.rpc('touch_business_last_active');
     if (error) {

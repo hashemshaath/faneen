@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Loader2, ShieldCheck, AlertTriangle, Mail, Building2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { supabase } from '@/integrations/supabase/client';
+import { acceptStaffInvitation, getStaffInvitationPreview } from '@/modules/identity';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -43,8 +43,7 @@ const StaffInviteAccept: React.FC = () => {
     let active = true;
     (async () => {
       setLoading(true);
-      const { data, error: rpcError } = await supabase
-        .rpc('get_staff_invitation_preview', { _token: token });
+      const { data, error: rpcError } = await getStaffInvitationPreview({ _token: token });
       if (!active) return;
       if (rpcError) {
         setError(rpcError.message);
@@ -74,7 +73,7 @@ const StaffInviteAccept: React.FC = () => {
       return;
     }
     setAccepting(true);
-    const { data, error: rpcError } = await supabase.rpc('accept_staff_invitation', { _token: token });
+    const { data, error: rpcError } = await acceptStaffInvitation({ _token: token });
     setAccepting(false);
 
     if (rpcError) {

@@ -11,8 +11,8 @@ import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
-import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
+import { getCurrentSession, signOutCurrentUser, updateUserPassword } from '@/modules/identity';
 import { updateProfile } from '@/modules/users';
 import { toast } from 'sonner';
 import {
@@ -101,7 +101,7 @@ const DashboardSettings = () => {
     queryKey: ['user-sessions', user?.id],
     queryFn: async () => {
       // Return basic session info from current auth
-      const { data } = await supabase.auth.getSession();
+      const { data } = await getCurrentSession();
       return data.session ? [{
         created_at: data.session.expires_at ? new Date((data.session.expires_at - 3600) * 1000).toISOString() : new Date().toISOString(),
         expires_at: data.session.expires_at ? new Date(data.session.expires_at * 1000).toISOString() : null,
@@ -125,7 +125,7 @@ const DashboardSettings = () => {
     if (newPassword !== confirmPassword) { toast.error(isRTL ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'); return; }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { error } = await updateUserPassword(newPassword);
       if (error) throw error;
       toast.success(isRTL ? 'تم تحديث كلمة المرور بنجاح' : 'Password updated successfully');
       setNewPassword(''); setConfirmPassword('');
@@ -157,7 +157,7 @@ const DashboardSettings = () => {
   });
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOutCurrentUser();
     window.location.href = '/';
   };
 

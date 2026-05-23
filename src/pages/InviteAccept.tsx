@@ -12,7 +12,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Loader2, CheckCircle2, AlertCircle, ShieldCheck, LogIn, UserPlus } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { acceptClientInvitation, signOutCurrentUser } from '@/modules/identity';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
@@ -82,7 +82,7 @@ export default function InviteAccept() {
     attemptedRef.current = true;
     setStatus('accepting');
     (async () => {
-      const { data, error } = await supabase.rpc('accept_client_invitation', { _token: token });
+      const { data, error } = await acceptClientInvitation({ _token: token });
       if (error) {
         setErrorKey(classifyError(error.message));
         setStatus('error');
@@ -265,7 +265,7 @@ export default function InviteAccept() {
             variant="outline"
             className="w-full h-12"
             onClick={async () => {
-              await supabase.auth.signOut();
+              await signOutCurrentUser();
               try { if (token) sessionStorage.setItem(PENDING_KEY, token); } catch { /* ignore */ }
               navigate('/auth?mode=login');
             }}

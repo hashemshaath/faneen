@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity';
 import { compressImage } from '@/lib/image-compress';
 import {
   ALLOWED_PUBLIC_IMAGE_MIMES,
@@ -355,7 +356,7 @@ const BlogImageLibrary: React.FC<{ isRTL: boolean; onSelect: (url: string) => vo
     setLoading(true);
     setErrorMsg(null);
     try {
-      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      const { data: userData, error: userErr } = await getCurrentUser();
       if (userErr || !userData.user) {
         setErrorMsg(isRTL ? 'يجب تسجيل الدخول لعرض مكتبة الصور' : 'Sign in to view your image library');
         setLoaded(true);
