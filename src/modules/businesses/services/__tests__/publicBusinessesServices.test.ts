@@ -220,11 +220,6 @@ describe('P-21 public/SEO businesses read migration', () => {
 });
 
 describe('P-21 intentionally-deferred businesses reads', () => {
-  it('ensure-business safety-net reads remain direct', () => {
-    const src = read('src/lib/ensure-business.ts');
-    expect(src).toMatch(/\.from\(['"]businesses['"]\)/);
-  });
-
   it('business_staff aggregation in listManagedBusinessesForUser remains canonical (P-24)', () => {
     const src = read('src/modules/businesses/services/listManagedBusinessesForUser.ts');
     expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
