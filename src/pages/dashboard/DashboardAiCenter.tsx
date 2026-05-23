@@ -118,7 +118,7 @@ const wordCount = (t: string) => t.split(/\s+/).filter(Boolean).length;
 const charEstimate = (t: string) => Math.ceil(t.length / 4); // rough token estimate
 
 async function callAiCenter(params: Record<string, string | number | boolean>): Promise<string> {
-  const { data, error } = await supabase.functions.invoke('ai-center', { body: params });
+  const { data, error } = await invokeAiCenter(params);
   if (error) {
     const msg = error.message || '';
     if (msg.includes('429')) toast.error('تم تجاوز الحد، حاول لاحقاً');
@@ -126,7 +126,7 @@ async function callAiCenter(params: Record<string, string | number | boolean>): 
     else toast.error(msg || 'AI Error');
     throw error;
   }
-  return data?.result || '';
+  return (data as { result?: string } | null)?.result || '';
 }
 
 const StatPill: React.FC<{ icon: React.ElementType; value: string | number; label: string; highlight?: boolean }> = ({ icon: Icon, value, label, highlight }) => (
