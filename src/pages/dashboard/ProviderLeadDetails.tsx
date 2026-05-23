@@ -138,9 +138,7 @@ const ProviderLeadDetails: React.FC = () => {
     setLoadingContact(true);
     trackEvent('provider_contact_viewed', { lead_id: lead.id });
     try {
-      const { data, error } = await sb.functions.invoke('get-revealed-contact', {
-        body: { lead_id: lead.id },
-      });
+      const { data, error } = await getRevealedContact({ lead_id: lead.id });
       if (error) throw error;
       const res = data as { success: boolean; contact?: RevealedContact; message?: string };
       if (!res?.success || !res.contact) {
