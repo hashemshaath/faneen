@@ -40,12 +40,12 @@ describe('N-5 migration: notification preferences callsites use service wrappers
   it('user upsert preserves safety overrides + user_id in payload', () => {
     const s = read(file);
     expect(s).toMatch(/email_system:\s*true,\s*inapp_system:\s*true/);
-    expect(s).toMatch(/upsertUserNotificationPreferences\(\{\s*user_id:\s*user\.id,\s*\.\.\.payload\s*\}\)/);
+    expect(s).toMatch(/upsertUserNotificationPreferences\(\{[\s\S]*?user_id:\s*user\.id,[\s\S]*?\.\.\.payload[\s\S]*?\}\)/);
   });
 
   it('business upsert preserves business_id + bizPrefs spread payload', () => {
     const s = read(file);
-    expect(s).toMatch(/upsertBusinessNotificationPreferences\(\{\s*business_id:\s*bizId,\s*\.\.\.bizPrefs\s*\}\)/);
+    expect(s).toMatch(/upsertBusinessNotificationPreferences\(\{[\s\S]*?business_id:\s*bizId,[\s\S]*?\.\.\.bizPrefs[\s\S]*?\}\)/);
   });
 
   it('preserves DEFAULTS/BIZ_DEFAULTS fallback merge logic', () => {

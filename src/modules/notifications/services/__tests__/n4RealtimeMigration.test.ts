@@ -47,9 +47,10 @@ describe('N-4 migration: notification realtime callsites use subscribeUserNotifi
     expect(s).not.toMatch(/table:\s*'notifications'/);
   });
 
-  it('preferences remain deferred (N-5)', () => {
+  it('preferences migrated in N-5 to preference services', () => {
     const s = read('pages/dashboard/DashboardCommunicationPreferences.tsx');
-    expect(s).toMatch(/notification_preferences|business_notification_preferences/);
+    expect(s).toMatch(/getUserNotificationPreferences/);
+    expect(s).toMatch(/getBusinessNotificationPreferences/);
   });
 
   it('insert/read/mutation services remain unchanged', () => {
