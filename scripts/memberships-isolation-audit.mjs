@@ -57,6 +57,7 @@ const GUARDED_RPCS = [
   "revoke_invite_key",
   "create_access_key",
   "revoke_access_key",
+  "admin_set_business_membership_tier",
 ];
 
 const TABLE_PATTERN = new RegExp(
