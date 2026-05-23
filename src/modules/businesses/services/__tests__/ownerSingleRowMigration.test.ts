@@ -94,8 +94,8 @@ describe('P-17 owner single-row read migration', () => {
 });
 
 describe('P-17 intentionally-deferred callsites (post-P-18)', () => {
-  it('getManagedBusinessesForUser remains the canonical staff+owner aggregator', () => {
-    const src = read('src/modules/leads/services/getManagedBusinessesForUser.ts');
+  it('listManagedBusinessesForUser remains the canonical staff+owner aggregator (P-24)', () => {
+    const src = read('src/modules/businesses/services/listManagedBusinessesForUser.ts');
     expect(src).toMatch(/supabase\.from\(['"]businesses['"]\)/);
     expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
   });

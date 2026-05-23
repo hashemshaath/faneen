@@ -167,8 +167,8 @@ describe('P-4 out-of-scope guardrail (must remain direct)', () => {
     const src = read('src/pages/admin/AdminUsers.tsx');
     expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
   });
-  it('getManagedBusinessesForUser remains the canonical staff+owner aggregator', () => {
-    const src = read('src/modules/leads/services/getManagedBusinessesForUser.ts');
+  it('listManagedBusinessesForUser remains the canonical staff+owner aggregator (P-24)', () => {
+    const src = read('src/modules/businesses/services/listManagedBusinessesForUser.ts');
     expect(src).toMatch(/supabase\.from\(['"]businesses['"]\)/);
     expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
   });
