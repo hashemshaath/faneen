@@ -99,3 +99,46 @@ export type {
 } from './services/promoCodes/reads';
 export { redeemPromoCode } from './services/promoCodes/mutations';
 export type { RedeemPromoCodeArgs } from './services/promoCodes/mutations';
+
+// MEMB-7: admin plan/subscription reads + provider legacy
+export {
+  listAdminMembershipPlans,
+} from './services/plans/reads';
+export type { ListAdminMembershipPlansOptions } from './services/plans/reads';
+export {
+  insertMembershipPlan,
+  updateMembershipPlanById,
+} from './services/plans/mutations';
+export type {
+  MembershipPlanInsert,
+  MembershipPlanUpdate,
+} from './services/plans/mutations';
+export {
+  listAdminMembershipSubscriptions,
+  countActiveMembershipSubscriptions,
+  adminListMembershipUsage,
+} from './services/subscriptions/reads';
+export type {
+  ListAdminMembershipSubscriptionsOptions,
+  AdminListMembershipUsageArgs,
+} from './services/subscriptions/reads';
+export {
+  listProviderPlans,
+  listProviderSubscriptions,
+  listProviderSubscriptionsForCurrentUser,
+  getProviderSubscriptionForBusiness,
+} from './services/providerSubscriptions/reads';
+export type {
+  ListProviderPlansOptions,
+  ListProviderSubscriptionsOptions,
+  ListProviderSubscriptionsForUserOptions,
+  GetProviderSubscriptionForBusinessOptions,
+} from './services/providerSubscriptions/reads';
+export {
+  updateProviderSubscriptionById,
+  adminAdjustProviderCredits,
+} from './services/providerSubscriptions/mutations';
+export type {
+  ProviderSubscriptionUpdate,
+  AdminAdjustProviderCreditsArgs,
+} from './services/providerSubscriptions/mutations';
