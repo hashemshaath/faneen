@@ -41,7 +41,7 @@ export async function recordContractPdfExport(
       console.warn('[pdf-export-log] failed', error.message);
       return null;
     }
-    const row = Array.isArray(data) ? data[0] : data ?? null;
+    const row = Array.isArray(data) ? (data as unknown[])[0] : data;
     return (row ?? null) as PdfExportLogResult | null;
   } catch (e) {
     // eslint-disable-next-line no-console
