@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  listMembershipInviteKeys,
+  listMembershipAccessKeys,
+  generateInviteKey,
+  revokeInviteKey,
+  createAccessKey,
+  revokeAccessKey,
+} from '@/modules/memberships';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -35,11 +42,7 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
   const { data: inviteKeys = [] } = useQuery({
     queryKey: ['invite-keys', businessId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('membership_invite_keys')
-        .select('id, code, role, max_uses, used_count, expires_at, status, created_at')
-        .eq('business_id', businessId)
-        .order('created_at', { ascending: false });
+      const { data } = await listMembershipInviteKeys<InviteKey>({ businessId });
       return (data ?? []) as InviteKey[];
     },
   });
@@ -47,11 +50,7 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
   const { data: accessKeys = [] } = useQuery({
     queryKey: ['access-keys', businessId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('membership_access_keys')
-        .select('id, name, key_prefix, scopes, tier_at_creation, expires_at, revoked_at, last_used_at, created_at')
-        .eq('business_id', businessId)
-        .order('created_at', { ascending: false });
+      const { data } = await listMembershipAccessKeys<AccessKey>({ businessId });
       return (data ?? []) as AccessKey[];
     },
   });
@@ -59,7 +58,7 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
   // ---- Mutations ----
   const generateInvite = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc('generate_invite_key', {
+      const { data, error } = await generateInviteKey({
         _business_id: businessId,
         _role: inviteRole,
         _max_uses: inviteMaxUses,
@@ -81,7 +80,7 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
 
   const revokeInvite = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc('revoke_invite_key', { _key_id: id, _reason: 'manual_revoke' });
+      const { error } = await revokeInviteKey({ _key_id: id, _reason: 'manual_revoke' });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -92,7 +91,7 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
 
   const createAccess = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc('create_access_key', {
+      const { data, error } = await createAccessKey({
         _name: accessName.trim(),
         _scopes: ['read'],
         _business_id: businessId,
@@ -114,7 +113,7 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
 
   const revokeAccess = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc('revoke_access_key', { _key_id: id, _reason: 'manual_revoke' });
+      const { error } = await revokeAccessKey({ _key_id: id, _reason: 'manual_revoke' });
       if (error) throw error;
     },
     onSuccess: () => {
