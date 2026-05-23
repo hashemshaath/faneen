@@ -56,9 +56,9 @@ describe('N-3 migration: notification mutation callsites use service wrappers', 
     expect(read('components/notifications/NotificationBell.tsx')).toMatch(/subscribeUserNotifications/);
   });
 
-  it('preferences remain deferred (no preference services yet)', () => {
-    // N-5 will migrate notification_preferences / business_notification_preferences.
+  it('preferences migrated in N-5 to preference services', () => {
     const s = read('pages/dashboard/DashboardCommunicationPreferences.tsx');
-    expect(s).toMatch(/notification_preferences|business_notification_preferences/);
+    expect(s).toMatch(/upsertUserNotificationPreferences/);
+    expect(s).toMatch(/upsertBusinessNotificationPreferences/);
   });
 });

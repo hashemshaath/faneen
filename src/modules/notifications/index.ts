@@ -30,3 +30,8 @@ export {
   type NotificationRealtimeListener,
   type SubscribeUserNotificationsArgs,
 } from './services/realtime/subscribeUserNotifications';
+// N-5 preferences services.
+export { getUserNotificationPreferences } from './services/preferences/getUserNotificationPreferences';
+export { upsertUserNotificationPreferences } from './services/preferences/upsertUserNotificationPreferences';
+export { getBusinessNotificationPreferences } from './services/preferences/getBusinessNotificationPreferences';
+export { upsertBusinessNotificationPreferences } from './services/preferences/upsertBusinessNotificationPreferences';

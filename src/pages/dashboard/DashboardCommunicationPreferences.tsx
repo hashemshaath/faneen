@@ -7,8 +7,13 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
 import { getOwnerBusiness } from "@/modules/businesses";
+import {
+  getUserNotificationPreferences,
+  upsertUserNotificationPreferences,
+  getBusinessNotificationPreferences,
+  upsertBusinessNotificationPreferences,
+} from "@/modules/notifications";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -78,11 +83,7 @@ const DashboardCommunicationPreferences: React.FC = () => {
     queryKey: ["notification-prefs", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("notification_preferences")
-        .select("*")
-        .eq("user_id", user!.id)
-        .maybeSingle();
+      const { data, error } = await getUserNotificationPreferences(user!.id);
       if (error) throw error;
       if (data) {
         const { id: _id, user_id: _u, created_at: _c, updated_at: _up, ...rest } = data as Record<string, unknown>;
@@ -107,11 +108,7 @@ const DashboardCommunicationPreferences: React.FC = () => {
       if (biz) {
         setBizId(biz.id);
         setBizName(isRTL ? biz.name_ar : (biz.name_en ?? biz.name_ar));
-        const { data: bp } = await supabase
-          .from("business_notification_preferences")
-          .select("*")
-          .eq("business_id", biz.id)
-          .maybeSingle();
+        const { data: bp } = await getBusinessNotificationPreferences(biz.id);
         if (bp) {
           const { id: _id, business_id: _b, created_at: _c, updated_at: _u, ...rest } = bp as Record<string, unknown>;
           const merged = { ...BIZ_DEFAULTS, ...(rest as Partial<BizPrefs>) };
@@ -131,9 +128,10 @@ const DashboardCommunicationPreferences: React.FC = () => {
       if (!user?.id) throw new Error("not authenticated");
       // Force essential system alerts ON for safety
       const payload = { ...prefs, email_system: true, inapp_system: true };
-      const { error } = await supabase
-        .from("notification_preferences")
-        .upsert({ user_id: user.id, ...payload }, { onConflict: "user_id" });
+      const { error } = await upsertUserNotificationPreferences({
+        user_id: user.id,
+        ...payload,
+      });
       if (error) throw error;
       return payload;
     },
@@ -148,9 +146,10 @@ const DashboardCommunicationPreferences: React.FC = () => {
   const saveBiz = useMutation({
     mutationFn: async () => {
       if (!bizId || !bizPrefs) throw new Error("no business");
-      const { error } = await supabase
-        .from("business_notification_preferences")
-        .upsert({ business_id: bizId, ...bizPrefs }, { onConflict: "business_id" });
+      const { error } = await upsertBusinessNotificationPreferences({
+        business_id: bizId,
+        ...bizPrefs,
+      });
       if (error) throw error;
       return bizPrefs;
     },
