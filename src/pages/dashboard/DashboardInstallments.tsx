@@ -15,6 +15,7 @@ import {
   insertBnplProvider,
   updateBnplProviderById,
   deleteBnplProviderById,
+  listGlobalBnplProviders,
 } from '@/modules/catalog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -675,7 +676,7 @@ const DashboardInstallments = () => {
   const { data: allProviders = [], isLoading: loadingProviders } = useQuery({
     queryKey: ['bnpl-providers-all'],
     queryFn: async () => {
-      const { data } = await supabase.from('bnpl_providers').select('*').order('sort_order');
+      const { data } = await listGlobalBnplProviders({ order: 'sort_order' });
       return data ?? [];
     },
   });
