@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listPublicProvidersForAnalytics } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -81,11 +82,8 @@ const AdminProviderAnalytics = () => {
 
       // Fetch business details for top providers
       const ids = sorted.map(p => p.id);
-      const { data: businesses } = await supabase
-        .from('businesses_public')
-        .select('id, name_ar, name_en, username, logo_url, rating_avg, rating_count, membership_tier, is_verified')
-        .in('id', ids);
-      const bizMap = new Map((businesses || []).map((b: any) => [b.id, b]));
+      const businesses = await listPublicProvidersForAnalytics<{ id: string }>(ids);
+      const bizMap = new Map(businesses.map((b: any) => [b.id, b]));
 
       return sorted.map(p => ({
         ...p,

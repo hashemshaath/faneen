@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
@@ -21,6 +20,7 @@ import {
 import { track } from '@/lib/analytics-events';
 import { useCategoryCounts } from '@/services/categories/useCategoryCounts';
 import { listActiveCategories } from '@/modules/categories';
+import { listPublicBusinessesByCategory } from '@/modules/businesses';
 
 type CategoryRow = {
   id: string;
@@ -29,6 +29,19 @@ type CategoryRow = {
   name_en: string;
   description_ar?: string | null;
   description_en?: string | null;
+};
+
+type CategoryBusinessRow = {
+  id: string;
+  username: string;
+  name_ar: string;
+  name_en: string | null;
+  logo_url: string | null;
+  rating_avg: number;
+  rating_count: number;
+  is_verified: boolean;
+  city_id: string | null;
+  cities: { name_ar: string; name_en: string } | null;
 };
 
 const Categories = () => {
@@ -73,13 +86,10 @@ const Categories = () => {
     [isRTL],
   );
 
-  const { data: businesses = [], isLoading: bizLoading } = useQuery({
+  const { data: businesses = [], isLoading: bizLoading } = useQuery<CategoryBusinessRow[]>({
     queryKey: ['businesses-by-category', selectedCategory?.id],
-    queryFn: async () => {
-      // Use businesses_public to enforce is_active=true, approval_status='published', is_demo=false
-      const { data } = await supabase.from('businesses_public').select('id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, cities(name_ar, name_en)').eq('category_id', selectedCategory!.id).order('rating_avg', { ascending: false }).limit(50);
-      return data ?? [];
-    },
+    // Use businesses_public to enforce is_active=true, approval_status='published', is_demo=false
+    queryFn: () => listPublicBusinessesByCategory<CategoryBusinessRow>(selectedCategory!.id, { limit: 50 }),
     enabled: !!selectedCategory?.id,
   });
 

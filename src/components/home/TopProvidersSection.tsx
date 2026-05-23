@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { listTopPublicProviders } from "@/modules/businesses";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { useEffect, useMemo } from "react";
@@ -45,18 +45,7 @@ export const TopProvidersSection = () => {
 
   const { data: providers = [], isLoading } = useQuery({
     queryKey: ["top-providers-home"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("businesses_public")
-        .select(
-          "id, username, name_ar, name_en, logo_url, rating_avg, rating_count, membership_tier, is_verified, category_id, categories(name_ar, name_en), cities(name_ar, name_en)"
-        )
-        .eq("is_active", true)
-        .gt("rating_count", 0)
-        .order("rating_avg", { ascending: false })
-        .limit(8);
-      return (data || []) as unknown as Biz[];
-    },
+    queryFn: () => listTopPublicProviders<Biz>({ limit: 8 }),
   });
 
   const jsonLdArray = useMemo(() => {

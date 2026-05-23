@@ -4,7 +4,7 @@ import {
   ShieldCheck, ShieldX, ShieldAlert, Loader2, ExternalLink, MapPin, Star, BadgeCheck,
   Copy, Check, Share2, QrCode, Code2, AlertTriangle,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { getPublicBusinessForVerify } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { buildBadgeHtml, type BadgeBuildOptions } from '@/lib/badge/snippets';
@@ -86,17 +86,13 @@ const VerifyBusiness = () => {
         return;
       }
       try {
-        const { data, error } = await supabase
-          .from('businesses_public')
-          .select('id, username, name_ar, name_en, short_description_ar, short_description_en, logo_url, is_verified, is_active, ref_id, business_number, membership_tier, city_id, region, rating_avg, rating_count, created_at')
-          .eq('username', handle)
-          .maybeSingle();
+        const { data, error } = await getPublicBusinessForVerify<PublicBusiness>(handle);
         if (cancelled) return;
         if (error || !data) {
           setState({ loading: false, data: null, error: 'not_found' });
           return;
         }
-        setState({ loading: false, data: data as PublicBusiness, error: null });
+        setState({ loading: false, data, error: null });
       } catch (e: unknown) {
         if (cancelled) return;
         setState({ loading: false, data: null, error: 'unknown' });
