@@ -1,19 +1,22 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 const repoRoot = path.resolve(__dirname, '../../../../..');
 
 function rg(pattern: string, extra: string[] = []): string[] {
   try {
-    const out = execSync(
-      ['rg', '-n', '--no-heading', pattern, 'src/', ...extra].join(' '),
+    const out = execFileSync(
+      'rg',
+      ['-n', '--no-heading', pattern, 'src/', ...extra],
       { cwd: repoRoot, encoding: 'utf8' },
     );
     return out.trim().split('\n').filter(Boolean);
-  } catch {
-    return [];
+  } catch (e: unknown) {
+    const err = e as { status?: number; stderr?: Buffer };
+    if (err.status === 1) return [];
+    throw new Error(`rg failed: ${err.stderr?.toString() ?? String(e)}`);
   }
 }
 
@@ -29,7 +32,7 @@ describe('CT-12 PDF export RPC migration guard', () => {
 
   it('no app/lib code calls record_contract_pdf_export via supabase.rpc outside services', () => {
     const hits = rg(
-      "supabase\\.rpc\\(['\\\"]record_contract_pdf_export['\\\"]",
+      `supabase\\.rpc\\(['"]record_contract_pdf_export['"]`,
       ['--glob', '!**/__tests__/**', '--glob', '!src/modules/contracts/services/**'],
     );
     expect(hits).toEqual([]);
@@ -43,7 +46,7 @@ describe('CT-12 PDF export RPC migration guard', () => {
     ];
     for (const n of names) {
       const hits = rg(
-        `supabase\\.rpc\\(['\\\"]${n}['\\\"]`,
+        `supabase\\.rpc\\(['"]${n}['"]`,
         ['--glob', '!**/__tests__/**', '--glob', '!src/modules/contracts/services/**'],
       );
       expect(hits, `${n} should only be invoked from services`).toEqual([]);
