@@ -8,3 +8,5 @@
  */
 export * from './services/roles';
 export * from './services/adminSecurity';
+export * from './services/passwordResetLog';
+export * from './services/tempCode';
