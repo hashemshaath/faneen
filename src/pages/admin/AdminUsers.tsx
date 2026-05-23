@@ -5,7 +5,12 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { listAdminBusinesses, listAllBusinessStaffForAdmin } from '@/modules/businesses';
+import {
+  listAdminBusinesses,
+  listAllBusinessStaffForAdmin,
+  updateBusinessStaffById,
+  deleteBusinessStaffById,
+} from '@/modules/businesses';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -700,7 +705,7 @@ const AdminUsers = () => {
 
   const updateStaffRoleMutation = useMutation({
     mutationFn: async ({ staffId, role }: { staffId: string; role: StaffRole }) => {
-      const { error } = await supabase.from('business_staff').update({ role }).eq('id', staffId);
+      const { error } = await updateBusinessStaffById({ id: staffId, values: { role } });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -712,7 +717,7 @@ const AdminUsers = () => {
 
   const removeStaffMutation = useMutation({
     mutationFn: async (staffId: string) => {
-      const { error } = await supabase.from('business_staff').delete().eq('id', staffId);
+      const { error } = await deleteBusinessStaffById({ id: staffId });
       if (error) throw error;
     },
     onSuccess: () => {

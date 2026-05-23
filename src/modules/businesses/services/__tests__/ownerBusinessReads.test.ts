@@ -159,13 +159,18 @@ describe('P-4 out-of-scope guardrail (must remain direct)', () => {
   // NOTE: AdminBusinesses update callsites migrated in P-12 to
   // updateBusinessById / updateBusinessesByIds. Regression lock lives in
   // updateBusinessesByIds.test.ts.
-  it('RepresentativesSection staff CRUD remains direct', () => {
+  it('RepresentativesSection staff CRUD migrated to canonical services (BS-3)', () => {
     const src = read('src/components/dashboard/business-edit/RepresentativesSection.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)\.update/);
+    expect(src).not.toMatch(/\.from\(['"]business_staff['"]\)/);
+    expect(src).toContain('insertBusinessStaff');
+    expect(src).toContain('updateBusinessStaffById');
+    expect(src).toContain('deleteBusinessStaffById');
   });
-  it('AdminUsers staff CRUD remains direct', () => {
+  it('AdminUsers staff CRUD migrated to canonical services (BS-3)', () => {
     const src = read('src/pages/admin/AdminUsers.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
+    expect(src).not.toMatch(/supabase\s*\.\s*from\(['"]business_staff['"]\)/);
+    expect(src).toContain('updateBusinessStaffById');
+    expect(src).toContain('deleteBusinessStaffById');
   });
   it('listManagedBusinessesForUser remains the canonical staff+owner aggregator (P-24)', () => {
     const src = read('src/modules/businesses/services/listManagedBusinessesForUser.ts');

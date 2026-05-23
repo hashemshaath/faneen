@@ -61,27 +61,16 @@ describe('BS-2: business_staff read migration', () => {
     expect(src).not.toMatch(/supabase\s*\.\s*from\(['"]business_staff['"]\)/);
   });
 
-  it('AdminUsers.tsx admin read uses listAllBusinessStaffForAdmin; CRUD remains deferred (BS-3)', () => {
+  it('AdminUsers.tsx admin read uses listAllBusinessStaffForAdmin (CRUD migrated in BS-3)', () => {
     const src = read('src/pages/admin/AdminUsers.tsx');
     expect(src).toContain('listAllBusinessStaffForAdmin');
     expect(src).toContain("select: 'id, business_id, user_id, role, is_active'");
-    // Reads no longer go direct.
-    expect(src).not.toMatch(
-      /supabase\.from\(['"]business_staff['"]\)\s*\n?\s*\.select/,
-    );
-    // CRUD (update/delete) intentionally deferred to BS-3.
-    expect(src).toMatch(
-      /supabase\.from\(['"]business_staff['"]\)\.update\(\{\s*role\s*\}\)/,
-    );
-    expect(src).toMatch(
-      /supabase\.from\(['"]business_staff['"]\)\.delete\(\)/,
-    );
+    // No direct business_staff access anywhere post-BS-3.
+    expect(src).not.toMatch(/supabase\s*\.\s*from\(['"]business_staff['"]\)/);
   });
 
-  it('RepresentativesSection BS-3 CRUD callsites remain direct/deferred', () => {
+  it('RepresentativesSection no longer accesses business_staff table directly (BS-3 migrated)', () => {
     const src = read('src/components/dashboard/business-edit/RepresentativesSection.tsx');
-    expect(src).toMatch(/\.from\(['"]business_staff['"]\)\s*\n?\s*\.insert/);
-    expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)\.update\(patch\)/);
-    expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)\.delete\(\)/);
+    expect(src).not.toMatch(/\.from\(['"]business_staff['"]\)/);
   });
 });
