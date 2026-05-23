@@ -5,8 +5,8 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
   deleteNotification as deleteNotificationSvc,
+  subscribeUserNotifications,
 } from '@/modules/notifications';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -161,13 +161,19 @@ const DashboardNotifications = () => {
 
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`dashboard-notifications-${user.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
-        queryClient.invalidateQueries({ queryKey: ['all-notifications', user.id] });
-        queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
-      }).subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return subscribeUserNotifications({
+      userId: user.id,
+      channelName: `dashboard-notifications-${user.id}`,
+      listeners: [
+        {
+          event: '*',
+          onChange: () => {
+            queryClient.invalidateQueries({ queryKey: ['all-notifications', user.id] });
+            queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+          },
+        },
+      ],
+    });
   }, [queryClient, user]);
 
   const filtered = useMemo(() => {

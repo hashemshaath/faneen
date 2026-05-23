@@ -5,8 +5,8 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
   deleteNotification as deleteNotificationSvc,
+  subscribeUserNotifications,
 } from '@/modules/notifications';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -74,24 +74,19 @@ export const NotificationBell = () => {
 
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel('user-notifications')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`,
-      }, handleRealtimeNotification)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`,
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return subscribeUserNotifications({
+      userId: user.id,
+      channelName: 'user-notifications',
+      listeners: [
+        { event: 'INSERT', onChange: handleRealtimeNotification },
+        {
+          event: 'UPDATE',
+          onChange: () => {
+            queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+          },
+        },
+      ],
+    });
   }, [user, queryClient, handleRealtimeNotification]);
 
   const unreadCount = notifications.filter((n: any) => !n.is_read).length;

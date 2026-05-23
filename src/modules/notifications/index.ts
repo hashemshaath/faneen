@@ -23,3 +23,10 @@ export { listLiveActivityNotifications } from './services/listLiveActivityNotifi
 export { markNotificationRead } from './services/markNotificationRead';
 export { markAllNotificationsRead } from './services/markAllNotificationsRead';
 export { deleteNotification } from './services/deleteNotification';
+// N-4 realtime helper.
+export {
+  subscribeUserNotifications,
+  type NotificationRealtimeEvent,
+  type NotificationRealtimeListener,
+  type SubscribeUserNotificationsArgs,
+} from './services/realtime/subscribeUserNotifications';
