@@ -12,14 +12,15 @@ export interface ListBranchesByBusinessOptions {
   order?: Array<{ column: string; ascending?: boolean }>;
 }
 
-export async function listBranchesByBusiness({
+export async function listBranchesByBusiness<T = unknown>({
   businessId,
   select = '*',
   activeOnly = false,
   order = [],
-}: ListBranchesByBusinessOptions) {
+}: ListBranchesByBusinessOptions): Promise<{ data: T[] | null; error: unknown }> {
   let q = supabase.from('business_branches').select(select).eq('business_id', businessId);
   if (activeOnly) q = q.eq('is_active', true);
   for (const o of order) q = q.order(o.column, { ascending: o.ascending ?? true });
-  return await q;
+  const { data, error } = await q;
+  return { data: data as unknown as T[] | null, error };
 }
