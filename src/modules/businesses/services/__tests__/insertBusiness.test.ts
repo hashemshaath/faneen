@@ -177,8 +177,8 @@ describe('migration regression: ensureDraftBusiness', () => {
     expect(src).toMatch(/approval_status:\s*'draft'/);
     expect(src).toMatch(/username_status:\s*'pending'/);
   });
-  it('preserves race recovery re-query on error', () => {
-    expect(src).toMatch(/if\s*\(\s*error\s*\)\s*\{[\s\S]*?\.from\('businesses'\)[\s\S]*?\.select\(SELECT_COLS\)/);
+  it('preserves race recovery re-query on error via getOwnerBusiness', () => {
+    expect(src).toMatch(/if\s*\(\s*error\s*\)\s*\{[\s\S]*?getOwnerBusiness[\s\S]*?select:\s*SELECT_COLS/);
     expect(src).toMatch(/raced/);
   });
 });
