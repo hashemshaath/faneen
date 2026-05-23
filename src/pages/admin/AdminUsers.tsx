@@ -40,8 +40,7 @@ import {
 } from 'recharts';
 import type { Tables } from '@/integrations/supabase/types';
 import { maskEmail, maskPhone } from '@/lib/masking';
-import { listAllUserRoles } from '@/modules/identity';
-import { grantRole, revokeRoleById } from '@/services/userRoles';
+import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminDeleteUser } from '@/modules/identity';
 import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
 import type { NormalizedRpcError } from '@/services/rpc';
 
@@ -763,7 +762,7 @@ const AdminUsers = () => {
 
   const changePasswordMutation = useMutation({
     mutationFn: async ({ targetUserId, password }: { targetUserId: string; password: string }) => {
-      const res = await supabase.functions.invoke('admin-reset-password', { body: { target_user_id: targetUserId, action: 'change_password', new_password: password } });
+      const res = await adminResetPassword({ target_user_id: targetUserId, action: 'change_password', new_password: password });
       if (res.error) throw res.error;
       if (res.data?.error) throw new Error(res.data.error);
     },
@@ -773,7 +772,7 @@ const AdminUsers = () => {
 
   const sendResetLinkMutation = useMutation({
     mutationFn: async (targetUserId: string) => {
-      const res = await supabase.functions.invoke('admin-reset-password', { body: { target_user_id: targetUserId, action: 'send_reset_link' } });
+      const res = await adminResetPassword({ target_user_id: targetUserId, action: 'send_reset_link' });
       if (res.error) throw res.error;
       if (res.data?.error) throw new Error(res.data.error);
     },
@@ -783,7 +782,7 @@ const AdminUsers = () => {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (targetUserId: string) => {
-      const res = await supabase.functions.invoke('admin-delete-user', { body: { target_user_id: targetUserId } });
+      const res = await adminDeleteUser({ target_user_id: targetUserId });
       if (res.error) throw res.error;
       if (res.data?.error) throw new Error(res.data.error);
     },
