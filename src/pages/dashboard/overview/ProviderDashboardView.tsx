@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
 import { countConversationsForUser } from '@/modules/messaging';
 import { listContractsForOwner } from '@/modules/contracts';
+import { countServicesByBusiness } from '@/modules/catalog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -72,7 +73,7 @@ export default function ProviderDashboardView({
     queryKey: ['provider-overview-stats', user?.id, businessId],
     queryFn: async () => {
       const [services, portfolio, reviews, allContracts, projects, operations, messages, promotions] = await Promise.all([
-        businessId ? supabase.from('business_services').select('id', { count: 'exact', head: true }).eq('business_id', businessId) : { count: 0 },
+        businessId ? countServicesByBusiness({ businessId }) : { count: 0 },
         businessId ? supabase.from('portfolio_items').select('id', { count: 'exact', head: true }).eq('business_id', businessId) : { count: 0 },
         businessId ? supabase.from('reviews').select('id, rating', { count: 'exact' }).eq('business_id', businessId) : { count: 0, data: [] },
         listContractsForOwner<{ id: string; total_amount: number | null; status: string; created_at: string }>({
