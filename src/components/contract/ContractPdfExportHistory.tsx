@@ -82,7 +82,7 @@ export const ContractPdfExportHistory: React.FC<Props> = ({ contractId, isRTL })
     queryKey: ['contract-pdf-exports', contractId, page, filters],
     placeholderData: keepPreviousData,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('list_contract_pdf_exports', {
+      const { data, error } = await listContractPdfExports({
         _contract_id: contractId,
         _search: filters.search,
         _source: filters.source,
