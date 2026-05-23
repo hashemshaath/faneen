@@ -24,10 +24,10 @@ function makeChain() {
 }
 
 const chain = makeChain();
-const fromMock = vi.fn(() => chain);
+const fromMock = vi.fn((..._args: unknown[]) => chain);
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { from: (...args: unknown[]) => fromMock(...args) },
+  supabase: { from: (...args: unknown[]) => fromMock(...(args as [unknown])) },
 }));
 
 import {
