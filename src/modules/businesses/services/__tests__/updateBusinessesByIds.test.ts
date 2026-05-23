@@ -86,14 +86,32 @@ describe('migration regression: AdminBusinesses', () => {
     expect(src).toMatch(/updateBusinessesByIds/);
     expect(src).toMatch(/from '@\/modules\/businesses'/);
   });
-  it('preserves toggle payload pattern { [field]: value }', () => {
-    expect(src).toMatch(/updateBusinessById\(\{\s*id,\s*values:\s*\{\s*\[field\]:\s*value\s*\}\s*\}\)/);
+  // R4E-3: toggle no longer uses generic `{[field]: value}` bag — it routes
+  // through guarded wrappers setBusinessActive / setBusinessVerified.
+  it('toggle routes through guarded wrappers (no generic [field]:value bag)', () => {
+    expect(src).not.toMatch(/updateBusinessById\(\{\s*id,\s*values:\s*\{\s*\[field\]:\s*value\s*\}\s*\}\)/);
+    expect(src).toMatch(/setBusinessActive\(id,\s*value\)/);
+    expect(src).toMatch(/setBusinessVerified\(id,\s*value\)/);
   });
   it('preserves full admin edit using payload variable', () => {
     expect(src).toMatch(/updateBusinessById\(\{\s*id,\s*values:\s*payload\s*\}\)/);
   });
-  it('preserves bulk patch using ids/patch', () => {
-    expect(src).toMatch(/updateBusinessesByIds\(\{\s*ids,\s*values:\s*patch\s*\}\)/);
+  // R4E-3: bulk sensitive toggles route through guarded wrappers only.
+  it('bulk sensitive toggles route through guarded bulk wrappers', () => {
+    expect(src).not.toMatch(/updateBusinessesByIds\(/);
+    expect(src).toMatch(/bulkSetBusinessesActive\(/);
+    expect(src).toMatch(/bulkSetBusinessesVerified\(/);
+  });
+  // R4E-3: edit form no longer bags is_active / is_verified into the generic
+  // profile payload — they are applied separately through guarded wrappers.
+  it('edit form does NOT pass is_active or is_verified through generic payload', () => {
+    // The profile payload object literal must not include these keys.
+    const payloadMatch = src.match(/const\s+payload\s*:\s*any\s*=\s*\{[\s\S]*?\};/);
+    expect(payloadMatch).toBeTruthy();
+    expect(payloadMatch?.[0]).not.toMatch(/\bis_active:\s*editForm/);
+    expect(payloadMatch?.[0]).not.toMatch(/\bis_verified:\s*editForm/);
+    expect(src).toMatch(/setBusinessActive\(id,\s*editForm\.is_active\)/);
+    expect(src).toMatch(/setBusinessVerified\(id,\s*editForm\.is_verified\)/);
   });
   // R4E-2C-4-PHASE-3: tier changes go through membership-owned RPC.
   it('does NOT pass membership_tier in updateBusinessById values', () => {
