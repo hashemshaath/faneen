@@ -12,6 +12,8 @@ import {
   listMessagesForConversation,
   insertMessage,
   markConversationMessagesRead,
+  subscribeConversationMessages,
+  subscribeUserConversations,
 } from '@/modules/messaging';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -763,27 +765,24 @@ const DashboardMessages = () => {
   /* ─── Realtime ─── */
   useEffect(() => {
     if (!selectedConversation) return;
-    const channel = supabase
-      .channel(`messages-${selectedConversation}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${selectedConversation}` }, () => {
+    return subscribeConversationMessages({
+      conversationId: selectedConversation,
+      onInsert: () => {
         queryClient.invalidateQueries({ queryKey: ['messages', selectedConversation] });
         queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
         queryClient.invalidateQueries({ queryKey: ['unread-counts', user?.id] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+      },
+    });
   }, [selectedConversation, user?.id, queryClient]);
 
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel('conversations-list')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => {
+    return subscribeUserConversations({
+      onChange: () => {
         queryClient.invalidateQueries({ queryKey: ['conversations', user.id] });
         queryClient.invalidateQueries({ queryKey: ['unread-counts', user.id] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+      },
+    });
   }, [user, queryClient]);
 
   /* ─── Mark as read ─── */
