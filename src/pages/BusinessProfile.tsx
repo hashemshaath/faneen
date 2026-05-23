@@ -23,6 +23,7 @@ import { recordBadgeConversion } from "@/lib/badge-attribution";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getLocalizedValue, useDirection } from "@/lib/direction";
+import { findConversationBetweenUsers } from "@/modules/messaging";
 import {
   BusinessProfileHeader,
   BusinessProfileTopBar,
@@ -266,11 +267,10 @@ const BusinessProfile = () => {
       const providerId = business.user_id;
       if (providerId === user.id) throw new Error("self_contact");
 
-      const { data: existing } = await supabase
-        .from("conversations")
-        .select("id")
-        .or(`and(participant_1.eq.${user.id},participant_2.eq.${providerId}),and(participant_1.eq.${providerId},participant_2.eq.${user.id})`)
-        .maybeSingle();
+      const { data: existing } = await findConversationBetweenUsers({
+        userIdA: user.id,
+        userIdB: providerId,
+      });
 
       if (existing) return { id: existing.id, isNew: false };
 
