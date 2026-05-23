@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -12,6 +11,13 @@ import {
   validateImageFile,
   getImageRejectionMessage,
 } from '@/lib/image-validate';
+import {
+  IMAGE_BUCKET_CONSTRAINTS,
+  uploadPublicImage,
+  getPublicImageUrl,
+  removePublicImage,
+  extractPublicStoragePath,
+} from '@/modules/files';
 
 interface ImageUploadProps {
   bucket: string;
@@ -27,17 +33,8 @@ interface ImageUploadProps {
   compact?: boolean;
 }
 
-// Per-bucket upload constraints (mirrors storage.buckets server-side limits).
-// Phase 5: GIF removed across all public/business image buckets — none of these
-// flows need animation, and dropping GIF reduces XSS-via-tracking-pixel risk
-// and saves bandwidth. SVG remains blocked everywhere except admin-only
-// brand-assets (handled in AdminBranding).
-const BUCKET_CONSTRAINTS: Record<string, { maxMB: number; mimes: string[] }> = {
-  'business-assets':  { maxMB: 2, mimes: [...ALLOWED_PUBLIC_IMAGE_MIMES] },
-  'portfolio-images': { maxMB: 5, mimes: [...ALLOWED_PUBLIC_IMAGE_MIMES] },
-  'project-images':   { maxMB: 5, mimes: [...ALLOWED_PUBLIC_IMAGE_MIMES] },
-  'blog-images':      { maxMB: 5, mimes: [...ALLOWED_PUBLIC_IMAGE_MIMES] },
-};
+// Per-bucket upload constraints now canonical in @/modules/files
+// (IMAGE_BUCKET_CONSTRAINTS). Behavior preserved verbatim.
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
   bucket,
@@ -54,7 +51,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 }) => {
   const { user } = useAuth();
   const { isRTL } = useLanguage();
-  const constraints = BUCKET_CONSTRAINTS[bucket];
+  const constraints = IMAGE_BUCKET_CONSTRAINTS[bucket];
   const effectiveMaxMB = constraints?.maxMB ?? maxSizeMB;
   const allowedMimes = constraints?.mimes;
   const tx = {
@@ -95,15 +92,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         ? `${user.id}/${folder}/${fileName}`
         : `${user.id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(path, compressed, { cacheControl: '3600', upsert: false });
+      const { error: uploadError } = await uploadPublicImage({
+        bucket,
+        path,
+        file: compressed,
+        options: { cacheControl: '3600', upsert: false },
+      });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(path);
+      const { data: { publicUrl } } = getPublicImageUrl({ bucket, path });
 
       onChange(publicUrl);
       toast.success(tx.uploadOk);
@@ -133,10 +131,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     if (value && onRemove) {
       // Try to extract path from URL and delete from storage
       try {
-        const url = new URL(value);
-        const pathParts = url.pathname.split(`/storage/v1/object/public/${bucket}/`);
-        if (pathParts[1]) {
-          await supabase.storage.from(bucket).remove([decodeURIComponent(pathParts[1])]);
+        const extractedPath = extractPublicStoragePath({ bucket, publicUrl: value });
+        if (extractedPath) {
+          await removePublicImage({ bucket, path: extractedPath });
         }
       } catch {
         // Ignore deletion errors for external URLs
@@ -315,18 +312,19 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
           ? `${user.id}/${folder}/${fileName}`
           : `${user.id}/${fileName}`;
 
-        const { error } = await supabase.storage
-          .from(bucket)
-          .upload(path, compressed, { cacheControl: '3600', upsert: false });
+        const { error } = await uploadPublicImage({
+          bucket,
+          path,
+          file: compressed,
+          options: { cacheControl: '3600', upsert: false },
+        });
 
         if (error) {
           if (import.meta.env.DEV) console.warn('Upload error');
           continue;
         }
 
-        const { data: { publicUrl } } = supabase.storage
-          .from(bucket)
-          .getPublicUrl(path);
+        const { data: { publicUrl } } = getPublicImageUrl({ bucket, path });
 
         newUrls.push(publicUrl);
       }
@@ -345,10 +343,9 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
   const removeImage = async (index: number) => {
     const url = images[index];
     try {
-      const urlObj = new URL(url);
-      const pathParts = urlObj.pathname.split(`/storage/v1/object/public/${bucket}/`);
-      if (pathParts[1]) {
-        await supabase.storage.from(bucket).remove([decodeURIComponent(pathParts[1])]);
+      const extractedPath = extractPublicStoragePath({ bucket, publicUrl: url });
+      if (extractedPath) {
+        await removePublicImage({ bucket, path: extractedPath });
       }
     } catch {
       // Ignore
