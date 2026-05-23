@@ -5,8 +5,8 @@ import {
   Upload, FileText, ScanLine, CheckCircle2, Loader2, X, ExternalLink,
   RefreshCw, Save, AlertCircle, Download, Lightbulb,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { updateBusinessById } from '@/modules/businesses';
+import { uploadCrDocument, createCrDocumentSignedUrl } from '@/modules/files';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,8 +60,6 @@ interface Props {
 /* ------------------------------------------------------------------ */
 /* Helpers                                                            */
 /* ------------------------------------------------------------------ */
-
-const BUCKET = 'business-documents';
 
 /** Accepted MIME types & extensions for CR upload. */
 const ACCEPTED_MIME = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
@@ -475,15 +473,9 @@ export const CrDocumentScanner: React.FC<Props> = ({ businessId, defaults, onSav
 
       if (file) {
         setBusy('uploading');
-        const ext = file.name.includes('.') ? file.name.split('.').pop() : 'bin';
-        const path = `cr/${businessId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from(BUCKET)
-          .upload(path, file, { upsert: false, contentType: file.type || undefined });
+        const { path, error: upErr } = await uploadCrDocument({ businessId, file });
         if (upErr) throw upErr;
-        const { data: signed } = await supabase.storage
-          .from(BUCKET)
-          .createSignedUrl(path, 60 * 60 * 24 * 365); // 1y signed link
+        const { data: signed } = await createCrDocumentSignedUrl(path);
         documentUrl = signed?.signedUrl ?? null;
         documentPath = path;
         mime = file.type || null;
