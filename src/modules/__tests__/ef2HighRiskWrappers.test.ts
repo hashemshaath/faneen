@@ -86,10 +86,8 @@ describe('EF-2 callsite migration', () => {
     expect(src).toContain('getRevealedContact({ lead_id: lead.id })');
   });
 
-  it('does not migrate EF-4/5 deferred edge functions', () => {
-    // Spot-check: weekly-sla-report and ping-search-engines remain direct.
-    const adminContact = read('src/pages/admin/AdminContactMessages.tsx');
-    expect(adminContact).toContain("functions.invoke('weekly-sla-report'");
+  it('does not migrate EF-5 deferred edge functions', () => {
+    // Spot-check: ping-search-engines remains direct (EF-5 SEO scope).
     const sitemap = read('src/components/admin/SitemapSubmissionsCard.tsx');
     expect(sitemap).toContain("functions.invoke('ping-search-engines'");
   });

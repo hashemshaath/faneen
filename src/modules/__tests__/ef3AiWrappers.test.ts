@@ -100,13 +100,8 @@ describe('EF-3 callsite migration', () => {
     expect(src).toContain('invokeAiCenter(');
   });
 
-  it('does not migrate EF-4/5 deferred edge functions', () => {
-    const adminContact = read('src/pages/admin/AdminContactMessages.tsx');
-    expect(adminContact).toContain("functions.invoke('weekly-sla-report'");
-    expect(adminContact).toContain("functions.invoke('triage-contact-message'");
+  it('does not migrate EF-5 deferred edge functions', () => {
     const sitemap = read('src/components/admin/SitemapSubmissionsCard.tsx');
     expect(sitemap).toContain("functions.invoke('ping-search-engines'");
-    const unsub = read('src/pages/Unsubscribe.tsx');
-    expect(unsub).toContain('handle-email-unsubscribe');
   });
 });
