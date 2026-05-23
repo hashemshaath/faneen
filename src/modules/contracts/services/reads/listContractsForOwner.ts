@@ -4,6 +4,8 @@
  * select / order / limit / count to preserve exact callsite behavior.
  */
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
+import type { ContractReadResult } from './listContractsForCustomer';
 
 export interface ListContractsForOwnerArgs {
   providerId: string;
@@ -16,7 +18,9 @@ export interface ListContractsForOwnerArgs {
   count?: { mode: 'exact' | 'planned' | 'estimated'; head?: boolean };
 }
 
-export async function listContractsForOwner(args: ListContractsForOwnerArgs) {
+export async function listContractsForOwner<TRow = Tables<'contracts'>>(
+  args: ListContractsForOwnerArgs,
+): Promise<ContractReadResult<TRow>> {
   const { providerId, select = '*', orderBy, limit, count } = args;
   const selectOpts = count ? { count: count.mode, head: count.head } : undefined;
   let q = supabase
@@ -25,5 +29,5 @@ export async function listContractsForOwner(args: ListContractsForOwnerArgs) {
     .eq('provider_id', providerId);
   if (orderBy) q = q.order(orderBy.column, { ascending: orderBy.ascending ?? true });
   if (typeof limit === 'number') q = q.limit(limit);
-  return q;
+  return q as unknown as Promise<ContractReadResult<TRow>>;
 }
