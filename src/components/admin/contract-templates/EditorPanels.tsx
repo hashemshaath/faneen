@@ -465,10 +465,9 @@ export const RequiredFieldsPanel: React.FC<{
   const q = useQuery({
     queryKey: ['ct-required', versionId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('contract_template_required_fields')
-        .select('*').eq('version_id', versionId).order('sort_order');
+      const { data, error } = await listContractTemplateRequiredFields(versionId);
       if (error) throw error;
-      return (data || []) as CTRequiredField[];
+      return ((data || []) as unknown) as CTRequiredField[];
     },
   });
   const inv = () => qc.invalidateQueries({ queryKey: ['ct-required', versionId] });
@@ -476,7 +475,7 @@ export const RequiredFieldsPanel: React.FC<{
   const add = useMutation({
     mutationFn: async () => {
       const next = q.data?.length || 0;
-      const { error } = await supabase.from('contract_template_required_fields').insert({
+      const { error } = await createContractTemplateRequiredField({
         version_id: versionId, field_key: `field_${next + 1}`, field_type: 'text',
         label_ar: 'حقل جديد', label_en: 'New field', is_required: false,
         applies_to: 'contract', enum_values: [], validation: {}, sort_order: next,
@@ -488,13 +487,13 @@ export const RequiredFieldsPanel: React.FC<{
   });
   const upd = useMutation({
     mutationFn: async (f: CTRequiredField) => {
-      const { error } = await supabase.from('contract_template_required_fields').update({
+      const { error } = await updateContractTemplateRequiredField(f.id, {
         field_key: f.field_key, field_type: f.field_type,
         label_ar: f.label_ar, label_en: f.label_en,
         help_ar: f.help_ar, help_en: f.help_en,
         enum_values: f.enum_values as never, validation: f.validation as never,
         is_required: f.is_required, applies_to: f.applies_to, sort_order: f.sort_order,
-      }).eq('id', f.id);
+      });
       if (error) throw error;
     },
     onSuccess: () => { inv(); },
@@ -502,7 +501,7 @@ export const RequiredFieldsPanel: React.FC<{
   });
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('contract_template_required_fields').delete().eq('id', id);
+      const { error } = await deleteContractTemplateRequiredField(id);
       if (error) throw error;
     },
     onSuccess: () => { inv(); toast.success(isRTL ? 'تم الحذف' : 'Deleted'); },
@@ -598,10 +597,9 @@ export const AttachmentsPanel: React.FC<{
   const q = useQuery({
     queryKey: ['ct-attach', versionId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('contract_template_attachments')
-        .select('*').eq('version_id', versionId).order('precedence_order');
+      const { data, error } = await listContractTemplateAttachments(versionId);
       if (error) throw error;
-      return (data || []) as CTAttachment[];
+      return ((data || []) as unknown) as CTAttachment[];
     },
   });
   const inv = () => qc.invalidateQueries({ queryKey: ['ct-attach', versionId] });
@@ -609,7 +607,7 @@ export const AttachmentsPanel: React.FC<{
   const add = useMutation({
     mutationFn: async () => {
       const next = q.data?.length || 0;
-      const { error } = await supabase.from('contract_template_attachments').insert({
+      const { error } = await createContractTemplateAttachment({
         version_id: versionId, kind: 'reference', title_ar: 'مرفق جديد', title_en: 'New attachment',
         file_url: null, is_mandatory: false, precedence_order: next,
       });
@@ -620,10 +618,10 @@ export const AttachmentsPanel: React.FC<{
   });
   const upd = useMutation({
     mutationFn: async (a: CTAttachment) => {
-      const { error } = await supabase.from('contract_template_attachments').update({
+      const { error } = await updateContractTemplateAttachment(a.id, {
         kind: a.kind, title_ar: a.title_ar, title_en: a.title_en,
         file_url: a.file_url, is_mandatory: a.is_mandatory, precedence_order: a.precedence_order,
-      }).eq('id', a.id);
+      });
       if (error) throw error;
     },
     onSuccess: () => { inv(); },
@@ -631,7 +629,7 @@ export const AttachmentsPanel: React.FC<{
   });
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('contract_template_attachments').delete().eq('id', id);
+      const { error } = await deleteContractTemplateAttachment(id);
       if (error) throw error;
     },
     onSuccess: () => { inv(); toast.success(isRTL ? 'تم الحذف' : 'Deleted'); },
@@ -715,28 +713,25 @@ export const PreviewPanel: React.FC<{
   const pricingQ = useQuery({
     queryKey: ['ct-pricing', versionId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('contract_template_pricing_rules')
-        .select('*').eq('version_id', versionId);
+      const { data, error } = await listContractTemplatePricingRules(versionId);
       if (error) throw error;
-      return (data || []) as CTPricingRule[];
+      return ((data || []) as unknown) as CTPricingRule[];
     },
   });
   const fieldsQ = useQuery({
     queryKey: ['ct-required', versionId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('contract_template_required_fields')
-        .select('*').eq('version_id', versionId).order('sort_order');
+      const { data, error } = await listContractTemplateRequiredFields(versionId);
       if (error) throw error;
-      return (data || []) as CTRequiredField[];
+      return ((data || []) as unknown) as CTRequiredField[];
     },
   });
   const attachQ = useQuery({
     queryKey: ['ct-attach', versionId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('contract_template_attachments')
-        .select('*').eq('version_id', versionId).order('precedence_order');
+      const { data, error } = await listContractTemplateAttachments(versionId);
       if (error) throw error;
-      return (data || []) as CTAttachment[];
+      return ((data || []) as unknown) as CTAttachment[];
     },
   });
 
