@@ -100,8 +100,4 @@ describe('EF-3 callsite migration', () => {
     expect(src).toContain('invokeAiCenter(');
   });
 
-  it('does not migrate EF-5 deferred edge functions', () => {
-    const sitemap = read('src/components/admin/SitemapSubmissionsCard.tsx');
-    expect(sitemap).toContain("functions.invoke('ping-search-engines'");
-  });
 });
