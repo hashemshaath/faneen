@@ -37,8 +37,15 @@ describe('adminResetPassword', () => {
   });
 
   it('bubbles thrown errors', async () => {
-    invokeMock.mockRejectedValue(new Error('boom'));
-    await expect(adminResetPassword({ target_user_id: 'u', action: 'send_reset_link' })).rejects.toThrow('boom');
+    invokeMock.mockImplementation(() => Promise.reject(new Error('boom')));
+    let caught: unknown;
+    try {
+      await adminResetPassword({ target_user_id: 'u', action: 'send_reset_link' });
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).message).toBe('boom');
   });
 });
 
