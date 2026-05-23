@@ -37,6 +37,8 @@ export * from './services/verifyContractPublic';
 export * from './services/pdfExports';
 // CT-4 child-table wrappers (milestones, notes, measurements, attachments, installments)
 export * from './services/childTables';
+// CT-5 contract template admin/editor wrappers
+export * from './services/templates';
 // types.ts is available at '@/modules/contracts/types' for consumers that
 // want type-only imports. Not re-exported here to avoid duplicate type
 // re-exports (all types are already reachable via the value exports above).
