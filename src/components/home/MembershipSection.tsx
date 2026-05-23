@@ -4,7 +4,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Check, Sparkles, Crown, Building2, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { listActiveMembershipPlans } from "@/modules/memberships";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const tierIcons: Record<string, React.ElementType> = {
@@ -19,12 +19,11 @@ export const MembershipSection = () => {
   const { data: plans = [], isLoading } = useQuery({
     queryKey: ['home-membership-plans'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('membership_plans')
-        .select('id, name_ar, name_en, description_ar, description_en, tier, features, price_monthly, sort_order')
-        .eq('is_active', true)
-        .order('sort_order')
-        .limit(3);
+      const { data } = await listActiveMembershipPlans({
+        select:
+          'id, name_ar, name_en, description_ar, description_en, tier, features, price_monthly, sort_order',
+        limit: 3,
+      });
       return data ?? [];
     },
     staleTime: 10 * 60 * 1000,

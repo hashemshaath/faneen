@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { listActiveMembershipPlans } from '@/modules/memberships';
 import {
   LIMIT_FIELDS,
   LIMIT_CATEGORIES,
@@ -31,11 +31,13 @@ export function useMembershipLimits(tierOrPlan: TierKey | string | null | undefi
   const { data: plans = [] } = useQuery({
     queryKey: ['membership-plans-active'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('membership_plans')
-        .select('id, tier, name_ar, name_en, limits')
-        .eq('is_active', true)
-        .order('sort_order');
+      const { data } = await listActiveMembershipPlans<{
+        id: string;
+        tier: string;
+        name_ar: string;
+        name_en: string;
+        limits: unknown;
+      }>({ select: 'id, tier, name_ar, name_en, limits' });
       return data ?? [];
     },
     staleTime: 5 * 60 * 1000,

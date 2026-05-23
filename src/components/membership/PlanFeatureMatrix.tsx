@@ -45,11 +45,10 @@ export const PlanFeatureMatrix: React.FC<PlanFeatureMatrixProps> = ({
   const { data: plans = [] } = useQuery({
     queryKey: ['membership-plans-comparison'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('membership_plans')
-        .select('tier, limits')
-        .eq('is_active', true)
-        .order('sort_order');
+      const { data } = await listActiveMembershipPlans<{
+        tier: string;
+        limits: unknown;
+      }>({ select: 'tier, limits' });
       return data ?? [];
     },
   });
