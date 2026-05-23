@@ -30,6 +30,7 @@ import {
 } from '@/modules/leads';
 import { countConversationsTotal } from '@/modules/messaging';
 import { listAllContracts } from '@/modules/contracts';
+import { countActiveMembershipSubscriptions } from '@/modules/memberships';
 import {
   CHART_COLORS, ChartTooltipStyle, getStatusLabel, buildMonthlyData,
   StatCard, QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
@@ -60,7 +61,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         }),
         supabase.from('categories').select('id', { count: 'exact', head: true }),
         countConversationsTotal(),
-        supabase.from('membership_subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+        countActiveMembershipSubscriptions(),
         countByRole(),
         listProfiles<{ id: string; full_name: string | null; avatar_url: string | null; email: string | null; account_type: string | null; created_at: string }>({ select: 'id, full_name, avatar_url, email, account_type, created_at', orderBy: { column: 'created_at', ascending: false }, limit: 5 }),
         supabase.from('admin_activity_log').select('id, action, entity_type, created_at, details').order('created_at', { ascending: false }).limit(6),
