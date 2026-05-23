@@ -1,14 +1,13 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 /**
  * Thin write wrappers for `membership_upgrade_requests` (MEMB-4).
  * Returns raw Supabase `{ data, error }`.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type MembershipUpgradeRequestInsert = Record<string, any>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type MembershipUpgradeRequestUpdate = Record<string, any>;
+export type MembershipUpgradeRequestInsert = TablesInsert<'membership_upgrade_requests'>;
+export type MembershipUpgradeRequestUpdate = TablesUpdate<'membership_upgrade_requests'>;
 
 export async function insertMembershipUpgradeRequest<T = unknown>(
   payload: MembershipUpgradeRequestInsert,
