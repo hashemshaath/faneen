@@ -1,7 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { listOwnerBusinesses, listBusinessesByIds } from '@/modules/businesses';
+import {
+  listOwnerBusinesses,
+  listBusinessesByIds,
+  listActiveStaffBusinessesForUser,
+} from '@/modules/businesses';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -120,11 +124,10 @@ const DashboardBadge: React.FC = () => {
         select: 'id, username, name_ar, name_en, is_verified',
       });
       // Staff-linked → fetch business ids first, then their rows
-      const staffReq = supabase
-        .from('business_staff')
-        .select('business_id')
-        .eq('user_id', user!.id)
-        .eq('is_active', true);
+      const staffReq = listActiveStaffBusinessesForUser<{ business_id: string }>({
+        userId: user!.id,
+        select: 'business_id',
+      });
 
       const [{ data: owned }, { data: staffRows }] = await Promise.all([ownedReq, staffReq]);
       const staffIds = (staffRows ?? []).map((r) => r.business_id);

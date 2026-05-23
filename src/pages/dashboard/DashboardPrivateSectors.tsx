@@ -9,7 +9,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
-import { listOwnerBusinesses } from '@/modules/businesses';
+import { listOwnerBusinesses, listActiveStaffBusinessesForUser } from '@/modules/businesses';
 import { toast } from 'sonner';
 import { Layers, Plus, Pencil, Trash2, Send, Search, FileClock, Building2, CheckCircle2, Clock, ShieldCheck, Sparkles, Users, AlertCircle, Mail, UserCheck, HelpCircle, RefreshCw, WifiOff, Loader2 } from 'lucide-react';
 import {
@@ -59,11 +59,10 @@ const DashboardPrivateSectors: React.FC = () => {
       });
       if (owned.error) throw owned.error;
       const ownedRows = owned.data ?? [];
-      const staff = await supabase
-        .from('business_staff')
-        .select('business_id, businesses:business_id(id, name_ar, name_en)')
-        .eq('user_id', user!.id)
-        .eq('is_active', true);
+      const staff = await listActiveStaffBusinessesForUser({
+        userId: user!.id,
+        select: 'business_id, businesses:business_id(id, name_ar, name_en)',
+      });
       if (staff.error) throw staff.error;
       const staffRows = (staff.data ?? [])
         .map((r: { businesses: { id: string; name_ar: string; name_en: string | null } | null }) => r.businesses)

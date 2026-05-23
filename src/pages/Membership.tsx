@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { listOwnerBusinesses } from '@/modules/businesses';
+import { listOwnerBusinesses, listManagedStaffMembershipForUser } from '@/modules/businesses';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -180,13 +180,11 @@ const Membership = () => {
       if (owned.data && owned.data.length > 0) return owned.data[0];
 
       // 2. Staff fallback: business they manage (owner/manager role)
-      const staff = await supabase
-        .from('business_staff')
-        .select('business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion, approval_notes)')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .in('role', ['owner', 'manager'])
-        .limit(1);
+      const staff = await listManagedStaffMembershipForUser({
+        userId: user.id,
+        select: 'business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion, approval_notes)',
+        limit: 1,
+      });
       const row = staff.data?.[0] as { businesses?: { id: string; ref_id: string | null; membership_tier: string; name_ar: string | null; name_en: string | null; approval_status: string | null; onboarding_completion: number | null } } | undefined;
       if (row?.businesses) return row.businesses;
 

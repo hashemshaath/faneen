@@ -5,7 +5,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { listAdminBusinesses } from '@/modules/businesses';
+import { listAdminBusinesses, listAllBusinessStaffForAdmin } from '@/modules/businesses';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -609,10 +609,15 @@ const AdminUsers = () => {
   const { data: businessStaff = [] } = useQuery({
     queryKey: ['admin-business-staff'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('business_staff')
-        .select('id, business_id, user_id, role, is_active');
+      const { data, error } = await listAllBusinessStaffForAdmin<{
+        id: string;
+        business_id: string;
+        user_id: string;
+        role: StaffRole;
+        is_active: boolean;
+      }>({ select: 'id, business_id, user_id, role, is_active' });
       if (error) throw error;
-      return data as Array<{ id: string; business_id: string; user_id: string; role: StaffRole; is_active: boolean }>;
+      return data ?? [];
     },
     enabled: !!user,
   });

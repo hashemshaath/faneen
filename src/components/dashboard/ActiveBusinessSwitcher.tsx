@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
-import { listOwnerBusinesses } from '@/modules/businesses';
+import { listOwnerBusinesses, listActiveStaffBusinessesForUser } from '@/modules/businesses';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -35,11 +35,10 @@ export const ActiveBusinessSwitcher: React.FC = () => {
         select: 'id, name_ar, name_en',
         orderBy: { column: 'created_at', ascending: true },
       });
-      const staff = await supabase
-        .from('business_staff')
-        .select('business_id, businesses:business_id(id, name_ar, name_en)')
-        .eq('user_id', user!.id)
-        .eq('is_active', true);
+      const staff = await listActiveStaffBusinessesForUser({
+        userId: user!.id,
+        select: 'business_id, businesses:business_id(id, name_ar, name_en)',
+      });
       const out = new Map<string, BusinessOption>();
       (owned.data ?? []).forEach((b) => out.set(b.id, { ...b, source: 'owner' }));
       (staff.data ?? []).forEach((r: { businesses: { id: string; name_ar: string; name_en: string | null } | null }) => {
