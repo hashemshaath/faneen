@@ -35,7 +35,7 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-import { subscribeUserNotifications } from '../index';
+import { subscribeUserNotifications } from '../../index';
 
 beforeEach(() => {
   chain = makeChain();
