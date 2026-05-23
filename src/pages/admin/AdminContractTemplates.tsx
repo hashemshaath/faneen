@@ -184,7 +184,7 @@ const AdminContractTemplates: React.FC = () => {
         const { data: pr } = await supabase.from('contract_template_pricing_rules').select('*').eq('version_id', source.id);
         for (const r of pr || []) {
           await supabase.from('contract_template_pricing_rules').insert({
-            version_id: created.id, method: r.method, is_default: r.is_default,
+            version_id: created!.id, method: r.method, is_default: r.is_default,
             required_fields: r.required_fields, formula: r.formula, rounding: r.rounding,
             vat_handling: r.vat_handling, display_in_pdf: r.display_in_pdf,
           });
@@ -192,7 +192,7 @@ const AdminContractTemplates: React.FC = () => {
         const { data: rf } = await supabase.from('contract_template_required_fields').select('*').eq('version_id', source.id);
         for (const f of rf || []) {
           await supabase.from('contract_template_required_fields').insert({
-            version_id: created.id, field_key: f.field_key, field_type: f.field_type,
+            version_id: created!.id, field_key: f.field_key, field_type: f.field_type,
             label_ar: f.label_ar, label_en: f.label_en, help_ar: f.help_ar, help_en: f.help_en,
             enum_values: f.enum_values, is_required: f.is_required, applies_to: f.applies_to,
             validation: f.validation, sort_order: f.sort_order,
@@ -201,7 +201,7 @@ const AdminContractTemplates: React.FC = () => {
         const { data: at } = await supabase.from('contract_template_attachments').select('*').eq('version_id', source.id);
         for (const a of at || []) {
           await supabase.from('contract_template_attachments').insert({
-            version_id: created.id, kind: a.kind, title_ar: a.title_ar, title_en: a.title_en,
+            version_id: created!.id, kind: a.kind, title_ar: a.title_ar, title_en: a.title_en,
             file_url: a.file_url, is_mandatory: a.is_mandatory, precedence_order: a.precedence_order,
           });
         }
