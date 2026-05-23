@@ -37,7 +37,9 @@ describe('adminResetPassword', () => {
   });
 
   it('bubbles thrown errors', async () => {
-    invokeMock.mockImplementation(() => Promise.reject(new Error('boom')));
+    invokeMock.mockImplementation(async () => {
+      throw new Error('boom');
+    });
     let caught: unknown;
     try {
       await adminResetPassword({ target_user_id: 'u', action: 'send_reset_link' });
