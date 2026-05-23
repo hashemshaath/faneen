@@ -22,4 +22,21 @@ Import from the module barrel (`@/modules/contracts`) once exports are added in 
 Do not deep-import internal files from other modules.
 
 ## Current status
-Scaffold only. See `docs/codebase-modularization-plan.md`.
+CT-1 → CT-13 complete. All contract-domain backend access (tables, storage,
+RPCs) is centralized under `src/modules/contracts/services/**` and enforced
+by `scripts/contracts-isolation-audit.mjs` (CI step *Contracts Isolation
+Audit*; meta-test `src/__tests__/contractsIsolationAudit.test.ts`).
+
+### Adding a new wrapper safely
+1. Add the function under `src/modules/contracts/services/<area>/`.
+2. Re-export it from `src/modules/contracts/index.ts` (the barrel).
+3. Update callers to import from `@/modules/contracts` — never from
+   `@/integrations/supabase/client` directly.
+4. Run `npm run contracts-isolation-audit` locally before pushing.
+
+### Documented exceptions
+- `src/modules/leads/services/conversion.ts` — read-only post-conversion
+  `contracts.select` belonging to the leads service layer (already governed
+  by `leads-quotes-isolation-audit`).
+
+See `docs/codebase-modularization-plan.md`.
