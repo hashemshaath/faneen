@@ -40,7 +40,8 @@ import {
 } from 'recharts';
 import type { Tables } from '@/integrations/supabase/types';
 import { maskEmail, maskPhone } from '@/lib/masking';
-import { listAllUserRoles, grantRole, revokeRoleById } from '@/services/userRoles';
+import { listAllUserRoles } from '@/modules/identity';
+import { grantRole, revokeRoleById } from '@/services/userRoles';
 import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
 import type { NormalizedRpcError } from '@/services/rpc';
 

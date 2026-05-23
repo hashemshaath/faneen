@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import { PasswordResetLogPanel } from '@/components/admin/PasswordResetLogPanel';
 import { useNoIndex } from "@/hooks/useNoIndex";
-import { listAllUserRoles, grantRole, revokeRoleByUserAndRole } from '@/services/userRoles';
+import { listAllUserRoles } from '@/modules/identity';
+import { grantRole, revokeRoleByUserAndRole } from '@/services/userRoles';
 
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
