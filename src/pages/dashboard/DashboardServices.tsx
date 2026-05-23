@@ -4,7 +4,6 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
 import {
   insertBusinessService,
@@ -12,6 +11,7 @@ import {
   updateBusinessServiceById,
   deleteBusinessServiceById,
   deleteDemoBusinessServicesForBusiness,
+  listServicesByBusiness,
 } from '@/modules/catalog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -257,7 +257,12 @@ const DashboardServices = () => {
     queryKey: ['dashboard-services', businessId],
     queryFn: async () => {
       if (!businessId) return [];
-      const { data } = await supabase.from('business_services').select('*').eq('business_id', businessId).order('sort_order');
+      const { data } = await listServicesByBusiness<Tables<'business_services'>>({
+        businessId,
+        select: '*',
+        activeOnly: false,
+        order: 'sort_order',
+      });
       return data ?? [];
     },
     enabled: !!businessId,
