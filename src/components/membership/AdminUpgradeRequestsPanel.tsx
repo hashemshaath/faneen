@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  listMembershipUpgradeRequests,
+  updateMembershipUpgradeRequestById,
+  subscribeToPlan,
+} from '@/modules/memberships';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
 import { Card, CardContent } from '@/components/ui/card';
@@ -45,20 +49,19 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
   const { data: requests = [], isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['admin-upgrade-requests', filter],
     queryFn: async () => {
-      let q = supabase
-        .from('membership_upgrade_requests')
-        .select('*, business:businesses(name_ar, name_en), profile:profiles!membership_upgrade_requests_user_id_fkey(full_name, ref_id, email)')
-        .order('created_at', { ascending: false })
-        .limit(200);
-      if (filter === 'pending') q = q.eq('status', 'pending');
-      const { data, error } = await q;
+      const { data, error } = await listMembershipUpgradeRequests<UpgradeRequest>({
+        select: '*, business:businesses(name_ar, name_en), profile:profiles!membership_upgrade_requests_user_id_fkey(full_name, ref_id, email)',
+        orderBy: { column: 'created_at', ascending: false },
+        limit: 200,
+        status: filter === 'pending' ? 'pending' : undefined,
+      });
       if (error) {
         // Fallback if FK alias name fails — fetch without profile join.
-        const { data: d2, error: e2 } = await supabase
-          .from('membership_upgrade_requests')
-          .select('*, business:businesses(name_ar, name_en)')
-          .order('created_at', { ascending: false })
-          .limit(200);
+        const { data: d2, error: e2 } = await listMembershipUpgradeRequests<UpgradeRequest>({
+          select: '*, business:businesses(name_ar, name_en)',
+          orderBy: { column: 'created_at', ascending: false },
+          limit: 200,
+        });
         if (e2) throw e2;
         return (d2 ?? []) as unknown as UpgradeRequest[];
       }
@@ -69,21 +72,21 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
   const approveMutation = useMutation({
     mutationFn: async (req: UpgradeRequest) => {
       if (!req.requested_plan_id) throw new Error('Missing plan id');
-      const { error: rpcErr } = await supabase.rpc('subscribe_to_plan', {
+      const { error: rpcErr } = await subscribeToPlan({
         _user_id: req.user_id,
         _plan_id: req.requested_plan_id,
         _business_id: req.business_id,
         _billing_cycle: (req.billing_cycle === 'yearly' ? 'yearly' : 'monthly'),
       });
       if (rpcErr) throw rpcErr;
-      const { error: updErr } = await supabase
-        .from('membership_upgrade_requests')
-        .update({
+      const { error: updErr } = await updateMembershipUpgradeRequestById({
+        id: req.id,
+        values: {
           status: 'approved',
           admin_note: adminNote || null,
           reviewed_at: new Date().toISOString(),
-        })
-        .eq('id', req.id);
+        },
+      });
       if (updErr) throw updErr;
       // Best-effort: in-app notification + provider email. Never blocks approval.
       const businessName = req.business?.name_ar || req.business?.name_en || undefined;
@@ -126,14 +129,14 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
 
   const rejectMutation = useMutation({
     mutationFn: async (req: UpgradeRequest) => {
-      const { error } = await supabase
-        .from('membership_upgrade_requests')
-        .update({
+      const { error } = await updateMembershipUpgradeRequestById({
+        id: req.id,
+        values: {
           status: 'rejected',
           admin_note: adminNote || null,
           reviewed_at: new Date().toISOString(),
-        })
-        .eq('id', req.id);
+        },
+      });
       if (error) throw error;
       const businessName = req.business?.name_ar || req.business?.name_en || undefined;
       try {
