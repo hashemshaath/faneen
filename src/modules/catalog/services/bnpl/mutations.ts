@@ -1,4 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+
+type BnplProviderInsert = Database['public']['Tables']['bnpl_providers']['Insert'];
+type BnplProviderUpdate = Database['public']['Tables']['bnpl_providers']['Update'];
+type BusinessBnplInsert = Database['public']['Tables']['business_bnpl_providers']['Insert'];
+type BusinessBnplUpdate = Database['public']['Tables']['business_bnpl_providers']['Update'];
 
 /**
  * Thin write wrappers for BNPL catalog tables (CAT-5).
@@ -13,7 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 // ── bnpl_providers (global) ──────────────────────────────────────
 
-export async function insertBnplProvider(payload: Record<string, unknown>) {
+export async function insertBnplProvider(payload: BnplProviderInsert) {
   return await supabase.from('bnpl_providers').insert(payload);
 }
 
@@ -22,7 +28,7 @@ export async function updateBnplProviderById({
   values,
 }: {
   id: string;
-  values: Record<string, unknown>;
+  values: BnplProviderUpdate;
 }) {
   return await supabase.from('bnpl_providers').update(values).eq('id', id);
 }
@@ -34,7 +40,7 @@ export async function deleteBnplProviderById(id: string) {
 // ── business_bnpl_providers (per-business) ───────────────────────
 
 export async function upsertBusinessBnplProvider(
-  payload: Record<string, unknown>,
+  payload: BusinessBnplInsert,
   options?: { onConflict?: string; ignoreDuplicates?: boolean },
 ) {
   return await supabase.from('business_bnpl_providers').upsert(payload, options);
@@ -47,7 +53,7 @@ export async function updateBusinessBnplProviderForBusiness({
 }: {
   businessId: string;
   providerId: string;
-  values: Record<string, unknown>;
+  values: BusinessBnplUpdate;
 }) {
   return await supabase
     .from('business_bnpl_providers')
