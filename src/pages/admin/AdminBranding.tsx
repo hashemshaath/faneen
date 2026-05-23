@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Loader2, Save, RotateCcw, Upload, Image as ImageIcon, Palette, Eye, Sparkles } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { BrandLogo } from '@/components/common/BrandLogo';
+import { uploadBrandAsset } from '@/modules/files';
 import { DEFAULT_BRANDING, BRANDING_KEYS, type BrandingConfig } from '@/hooks/useBranding';
 import { BRAND_THEME_KEY_BY_FIELD, BRAND_THEME_FIELD_BY_KEY } from '@/hooks/useThemeColors';
 import { BRAND_COLORS, type BrandColorTokens } from '@/config/brandTheme';
@@ -342,15 +343,10 @@ const AdminBranding: React.FC = () => {
       return;
     }
     const toUpload: File = await compressImage(file);
-    const ext = toUpload.name.split('.').pop() || 'png';
-    const path = `${uploadingFor}-${Date.now()}.${ext}`;
     try {
-      const { error: upErr } = await supabase.storage
-        .from('brand-assets')
-        .upload(path, toUpload, { upsert: true, contentType: toUpload.type, cacheControl: '3600' });
+      const { publicUrl, error: upErr } = await uploadBrandAsset({ slot: uploadingFor, file: toUpload });
       if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from('brand-assets').getPublicUrl(path);
-      update(uploadingFor, pub.publicUrl);
+      update(uploadingFor, publicUrl);
       toast.success(isRTL ? 'تم الرفع — اضغط حفظ للتطبيق' : 'Uploaded — click Save to apply');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'unknown';
