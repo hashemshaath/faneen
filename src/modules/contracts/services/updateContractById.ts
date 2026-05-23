@@ -11,5 +11,7 @@ export async function updateContractById(
   contractId: string,
   payload: Record<string, unknown>,
 ) {
-  return await supabase.from('contracts').update(payload).eq('id', contractId);
+  // Cast at the boundary: callsites build payloads dynamically and the
+  // existing direct-update code did not constrain to the generated Update type.
+  return await supabase.from('contracts').update(payload as never).eq('id', contractId);
 }
