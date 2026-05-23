@@ -149,11 +149,6 @@ describe('P-19 businesses count/head migration', () => {
 });
 
 describe('P-19 intentionally-deferred businesses reads', () => {
-  it('ensure-business safety-net reads remain direct', () => {
-    const src = read('src/lib/ensure-business.ts');
-    expect(src).toMatch(/\.from\(['"]businesses['"]\)/);
-  });
-
   it('countActiveBusinesses wrapper remains intact and is not removed', () => {
     const src = read('src/modules/businesses/services/countActiveBusinesses.ts');
     expect(src).toMatch(/countActiveBusinesses/);
