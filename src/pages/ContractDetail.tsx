@@ -352,7 +352,9 @@ const ContractDetail = () => {
   const { data: warranties } = useQuery({
     queryKey: ['warranties', id],
     queryFn: async () => {
-      const { data } = await listWarrantiesForContract({ contractId: id!, select: '*' });
+      const { data } = await listWarrantiesForContract<
+        Database['public']['Tables']['warranties']['Row']
+      >({ contractId: id!, select: '*' });
       return data ?? [];
     },
     enabled: !!id && !!user,
