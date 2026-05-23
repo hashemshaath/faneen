@@ -68,9 +68,10 @@ describe('CAT-2 mixed read+write files: reads migrated, writes intentionally def
 });
 
 describe('CAT-2 out-of-scope guardrail (must NOT be touched in this phase)', () => {
-  it('DashboardServices CRUD remains direct (deferred to CAT-3)', () => {
+  it('DashboardServices business_services access fully migrated (CAT-6 residual cleanup)', () => {
     const src = read('src/pages/dashboard/DashboardServices.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]business_services['"]\)/);
+    expect(src).not.toMatch(/supabase\.from\(['"]business_services['"]\)/);
+    expect(src).toContain('listServicesByBusiness');
   });
   it('DashboardInstallments BNPL admin reads + writes fully migrated (CAT-5B)', () => {
     const src = read('src/pages/dashboard/DashboardInstallments.tsx');

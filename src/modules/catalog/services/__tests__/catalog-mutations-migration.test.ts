@@ -28,8 +28,9 @@ describe('CAT-3 DashboardServices migrated provider writes', () => {
     expect(src).not.toMatch(/supabase\.from\(['"]business_services['"]\)\s*\.delete/);
   });
 
-  it('keeps the existing direct read until CAT-3+ (deferred)', () => {
-    expect(src).toMatch(/supabase\.from\(['"]business_services['"]\)\.select\(/);
+  it('read is now also migrated through listServicesByBusiness (CAT-6)', () => {
+    expect(src).not.toMatch(/supabase\.from\(['"]business_services['"]\)\.select\(/);
+    expect(src).toContain('listServicesByBusiness');
   });
 });
 
