@@ -47,6 +47,7 @@ import {
   completeContractFromInvitation,
 } from '@/modules/contracts/services/mutations';
 import { approveAmendment } from '@/modules/contracts/services/amendments';
+import { prepareContractPrefillFromLead } from '@/modules/contracts/services/leadRpcs';
 import {
   createClientInvitation,
   resendClientInvitation,

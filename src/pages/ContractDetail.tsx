@@ -26,6 +26,7 @@ import { mapContractLockError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { approveAmendment, rejectAmendment, cancelAmendment, applyAmendment } from '@/modules/contracts/services/amendments';
 import { acceptContract } from '@/modules/contracts/services/mutations';
+import { getContractSourceLeadSummary } from '@/modules/contracts/services/leadRpcs';
 import { recordContractPdfExport } from '@/lib/contract-pdf-history';
 import { ContractPdfExportHistory } from '@/components/contract/ContractPdfExportHistory';
 import { ContractPdfPreviewOverlay } from '@/components/contract/ContractPdfPreviewOverlay';
