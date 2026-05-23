@@ -14,7 +14,7 @@
  *  - No toasts. Status is reported via the returned `state` for inline UI.
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { updateContractDraftAutosave } from '@/modules/contracts/services/updateContractDraftAutosave';
 import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
 
 export type AutosaveState =

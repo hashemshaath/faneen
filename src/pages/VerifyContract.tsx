@@ -29,7 +29,7 @@ const VerifyContract = () => {
     let cancelled = false;
     (async () => {
       try {
-        const { data, error } = await supabase.rpc('verify_contract_public', {
+        const { data, error } = await verifyContractPublic({
           _contract_number: number || '', _hash: hash, _barcode_code: code || null,
         });
         if (cancelled) return;
