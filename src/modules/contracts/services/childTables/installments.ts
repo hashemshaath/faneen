@@ -37,15 +37,16 @@ export async function listInstallmentPaymentsByPlanIds(planIds: string[]) {
  * (some need just the id, others the full row), so the caller passes
  * an explicit `select` string.
  */
-export async function createInstallmentPlan(
+export async function createInstallmentPlan<TRow = Record<string, unknown>>(
   payload: Record<string, unknown>,
   select = '*',
 ) {
-  return await supabase
+  const res = await supabase
     .from('installment_plans')
     .insert(payload as never)
     .select(select)
     .single();
+  return res as unknown as { data: TRow | null; error: typeof res.error };
 }
 
 export async function createInstallmentPayments(

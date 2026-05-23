@@ -770,7 +770,7 @@ const DashboardContracts = () => {
       let { data: plan } = await getInstallmentPlanIdForContract(contractId);
       if (!plan) {
         const contract = contracts.find((c) => c.id === contractId);
-        const { data: newPlan, error: planErr } = await createInstallmentPlan({
+        const { data: newPlan, error: planErr } = await createInstallmentPlan<{ id: string }>({
           contract_id: contractId, total_amount: Number(contract?.total_amount || 0),
           installment_amount: Number(paymentForm.amount), number_of_installments: 1,
           start_date: paymentForm.due_date || new Date().toISOString().split('T')[0],
