@@ -31,7 +31,8 @@
     "leads-quotes-isolation-audit": "node scripts/leads-quotes-isolation-audit.mjs",
     "messaging-isolation-audit": "node scripts/messaging-isolation-audit.mjs",
     "notifications-isolation-audit": "node scripts/notifications-isolation-audit.mjs",
-    "contracts-isolation-audit": "node scripts/contracts-isolation-audit.mjs"
+    "contracts-isolation-audit": "node scripts/contracts-isolation-audit.mjs",
+    "identity-isolation-audit": "node scripts/identity-isolation-audit.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
