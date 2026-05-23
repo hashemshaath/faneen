@@ -34,6 +34,13 @@ import { template as membershipUpgradeRequestSubmitted } from './membership-upgr
 import { template as membershipUpgradeRequestApproved } from './membership-upgrade-request-approved.tsx'
 import { template as membershipUpgradeRequestRejected } from './membership-upgrade-request-rejected.tsx'
 import { template as membershipSubscriptionCancelled } from './membership-subscription-cancelled.tsx'
+import { template as membershipSubscriptionActivated } from './membership-subscription-activated.tsx'
+import { template as membershipTierChangedByAdmin } from './membership-tier-changed-by-admin.tsx'
+import { template as membershipSubscriptionExpired } from './membership-subscription-expired.tsx'
+import { template as membershipRenewalReminder } from './membership-renewal-reminder.tsx'
+import { template as membershipRenewalFailed } from './membership-renewal-failed.tsx'
+import { template as membershipPromoRedeemed } from './membership-promo-redeemed.tsx'
+import { template as membershipCancelledImmediately } from './membership-cancelled-immediately.tsx'
 import { template as contractPaymentRecorded } from './contract-payment-recorded.tsx'
 import { template as contractPaymentDue } from './contract-payment-due.tsx'
 import { template as contractMilestoneCompleted } from './contract-milestone-completed.tsx'
@@ -74,6 +81,13 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'membership-upgrade-request-approved': membershipUpgradeRequestApproved,
   'membership-upgrade-request-rejected': membershipUpgradeRequestRejected,
   'membership-subscription-cancelled': membershipSubscriptionCancelled,
+  'membership-subscription-activated': membershipSubscriptionActivated,
+  'membership-tier-changed-by-admin': membershipTierChangedByAdmin,
+  'membership-subscription-expired': membershipSubscriptionExpired,
+  'membership-renewal-reminder': membershipRenewalReminder,
+  'membership-renewal-failed': membershipRenewalFailed,
+  'membership-promo-redeemed': membershipPromoRedeemed,
+  'membership-cancelled-immediately': membershipCancelledImmediately,
   'contract-payment-recorded': contractPaymentRecorded,
   'contract-payment-due': contractPaymentDue,
   'contract-milestone-completed': contractMilestoneCompleted,

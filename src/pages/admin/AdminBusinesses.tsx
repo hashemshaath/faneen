@@ -19,6 +19,7 @@ import {
   bulkSetBusinessesVerified,
 } from '@/modules/businesses';
 import { setBusinessMembershipTier, type MembershipTier } from '@/modules/memberships';
+import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import {
   listServicesByBusiness,
   listAllBusinessServicesLite,
@@ -357,7 +358,37 @@ const AdminBusinesses = () => {
     mutationFn: async ({ id, tier }: { id: string; tier: MembershipTier }) => {
       // R4E-2C-4-PHASE-3: route through membership-owned RPC. RPC writes
       // admin_activity_log itself, so no frontend logAction here.
-      await setBusinessMembershipTier(id, tier, 'AdminBusinesses single tier change');
+      const result = await setBusinessMembershipTier(id, tier, 'AdminBusinesses single tier change');
+      // R4F-4-APPLY: fail-soft admin-override email to business owner.
+      try {
+        const biz = businesses.find((b: { id: string }) => b.id === id) as
+          | { id: string; user_id?: string | null; name_ar?: string | null; name_en?: string | null; membership_tier?: string | null }
+          | undefined;
+        const ownerUserId = biz?.user_id ?? null;
+        if (ownerUserId && result?.subscription_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('user_id', ownerUserId)
+            .maybeSingle();
+          if (profile?.email) {
+            await sendTransactionalEmail({
+              templateName: 'membership-tier-changed-by-admin',
+              recipientEmail: profile.email as string,
+              idempotencyKey: `membership-tier-admin-override-${result.subscription_id}-${tier}`,
+              templateData: {
+                recipientName: (profile.full_name as string | null) ?? undefined,
+                businessName: biz?.name_ar || biz?.name_en || undefined,
+                oldTier: biz?.membership_tier ?? undefined,
+                newTier: tier,
+              },
+            });
+          }
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[AdminBusinesses] tier-change email failed', err);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });

@@ -72,13 +72,14 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
   const approveMutation = useMutation({
     mutationFn: async (req: UpgradeRequest) => {
       if (!req.requested_plan_id) throw new Error('Missing plan id');
-      const { error: rpcErr } = await subscribeToPlan({
+      const { data: rpcData, error: rpcErr } = await subscribeToPlan({
         _user_id: req.user_id,
         _plan_id: req.requested_plan_id,
         _business_id: req.business_id,
         _billing_cycle: (req.billing_cycle === 'yearly' ? 'yearly' : 'monthly'),
       });
       if (rpcErr) throw rpcErr;
+      const subscriptionId = (rpcData as unknown as string | null) ?? null;
       const { error: updErr } = await updateMembershipUpgradeRequestById({
         id: req.id,
         values: {
@@ -116,6 +117,20 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
             },
           });
         } catch (err) { console.warn('[AdminUpgrade] approve email failed', err); }
+        if (subscriptionId) {
+          try {
+            await sendTransactionalEmail({
+              templateName: 'membership-subscription-activated',
+              recipientEmail: req.profile.email,
+              idempotencyKey: `membership-activated-${subscriptionId}`,
+              templateData: {
+                recipientName: req.profile.full_name ?? undefined,
+                businessName,
+                tierName: req.requested_tier,
+              },
+            });
+          } catch (err) { console.warn('[AdminUpgrade] activated email failed', err); }
+        }
       }
     },
     onSuccess: () => {

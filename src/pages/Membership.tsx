@@ -285,20 +285,38 @@ const Membership = () => {
   const subscribeMutation = useMutation({
     mutationFn: async (planId: string) => {
       if (!user || !myBusiness) throw new Error(isRTL ? 'يجب تسجيل الدخول وإنشاء نشاط تجاري أولاً' : 'Login and create a business first');
-      const { error } = await subscribeToPlan({
+      const { data, error } = await subscribeToPlan({
         _user_id: user.id,
         _plan_id: planId,
         _business_id: myBusiness.id,
         _billing_cycle: billingCycle,
       });
       if (error) throw error;
+      // subscribe_to_plan RETURNS uuid (new subscription id).
+      return { subscriptionId: (data as unknown as string | null) ?? null, planId };
     },
-    onSuccess: () => {
+    onSuccess: async (res) => {
       queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
       queryClient.invalidateQueries({ queryKey: ['my-business-membership'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       setSubscribingPlanId(null);
       toast.success(isRTL ? 'تم تفعيل الاشتراك بنجاح! 🎉' : 'Subscription activated! 🎉');
+      const subId = res?.subscriptionId;
+      if (!user?.email || !subId) return;
+      const plan = plans.find((p) => p.id === res.planId);
+      const tierName = plan ? (isRTL ? plan.name_ar : plan.name_en) || plan.tier : undefined;
+      const businessName = myBusiness?.name_ar || myBusiness?.name_en || undefined;
+      try {
+        await sendTransactionalEmail({
+          templateName: 'membership-subscription-activated',
+          recipientEmail: user.email,
+          idempotencyKey: `membership-activated-${subId}`,
+          templateData: { recipientName: user.user_metadata?.full_name as string | undefined, businessName, tierName },
+        });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[Membership] activated email failed', err);
+      }
     },
     onError: (e: Error) => { setSubscribingPlanId(null); toast.error(e.message); },
   });
