@@ -12,3 +12,7 @@ export * from './services/listAdminOpsQuoteRequests';
 export * from './services/listAdminOpsQuoteRequestLeads';
 export * from './services/listAdminOpsQuoteRequestEvents';
 export * from './services/listAdminOpsQuoteRequestLeadEvents';
+
+// L-3 mutations
+export * from './services/updateQuoteRequestById';
+export * from './services/insertQuoteRequestEvent';

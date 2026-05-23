@@ -12,6 +12,8 @@ import {
   listAdminQuoteRequestLeads,
   listAdminQuoteRequestEvents,
   listAdminQuoteRequestLeadEvents,
+  updateQuoteRequestById,
+  insertQuoteRequestEvent,
 } from '@/modules/quotes';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -267,19 +269,19 @@ const AdminQuoteRequestDetails: React.FC = () => {
           { status: vars.newStatus, changed_at: new Date().toISOString(), changed_by: user?.id ?? null },
         ];
       }
-      const { error } = await supabase
-        .from('quote_requests')
-        .update({
+      const { error } = await updateQuoteRequestById({
+        id: quote.id,
+        values: {
           status: vars.newStatus,
-          metadata: newMd as never,
-        })
-        .eq('id', quote.id);
+          metadata: newMd,
+        },
+      });
       if (error) throw error;
 
       // Audit: quote_status_changed (+ specific event for key transitions)
       if (vars.statusChanged) {
         const previousStatus = quote.status;
-        await supabase.from('quote_request_events').insert({
+        await insertQuoteRequestEvent({
           quote_request_id: quote.id,
           event_type: 'quote_status_changed',
           actor_user_id: user?.id ?? null,
@@ -296,7 +298,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
         };
         const specificType = specific[vars.newStatus];
         if (specificType) {
-          await supabase.from('quote_request_events').insert({
+          await insertQuoteRequestEvent({
             quote_request_id: quote.id,
             event_type: specificType,
             actor_user_id: user?.id ?? null,
