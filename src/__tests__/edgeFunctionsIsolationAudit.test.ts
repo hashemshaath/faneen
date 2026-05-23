@@ -20,7 +20,7 @@ describe('EF-6 Edge Functions Isolation Audit', () => {
 
   it('allowed paths cover modules services and authService', () => {
     const src = readFileSync(SCRIPT, 'utf8');
-    expect(src).toMatch(/src\/modules\/\[\^\/\]\+\/services\//);
+    expect(src).toContain('src/modules/[^/]+/services/');
     expect(src).toContain('src/services/auth/authService.ts');
     expect(src).toContain('src/integrations/supabase/');
   });
