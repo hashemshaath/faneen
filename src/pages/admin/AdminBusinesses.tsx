@@ -366,11 +366,10 @@ const AdminBusinesses = () => {
           | undefined;
         const ownerUserId = biz?.user_id ?? null;
         if (ownerUserId && result?.subscription_id) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('email, full_name')
-            .eq('user_id', ownerUserId)
-            .maybeSingle();
+          const { data: profile } = await getProfileByUserId<{ email: string | null; full_name: string | null }>({
+            userId: ownerUserId,
+            select: 'email, full_name',
+          });
           if (profile?.email) {
             await sendTransactionalEmail({
               templateName: 'membership-tier-changed-by-admin',
