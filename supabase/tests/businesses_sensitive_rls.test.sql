@@ -277,6 +277,60 @@ SELECT results_eq(
 );
 SELECT todo_end();
 
+-- T12a — bulk admin update writes exactly one admin_activity_log row per row,
+-- carrying the changed field in details->'changed_fields'.
+WITH bulk AS (
+  UPDATE public.businesses SET is_verified = true
+   WHERE id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')
+   RETURNING id
+)
+SELECT count(*) FROM bulk;
+
+SELECT results_eq(
+  $$ SELECT count(*)::bigint FROM public.admin_activity_log
+      WHERE action = 'business_sensitive_update'
+        AND entity_type = 'business'
+        AND entity_id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                          'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')
+        AND details -> 'changed_fields' ? 'is_verified' $$,
+  $$ VALUES (2::bigint) $$,
+  'T12a bulk admin update writes one audit row per business with is_verified change'
+);
+
+-- T12b — UPDATE on a non-tracked field does NOT write an audit row.
+UPDATE public.businesses SET name_ar = COALESCE(name_ar, 'biz-a') || ' '
+ WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+SELECT results_eq(
+  $$ SELECT count(*)::bigint FROM public.admin_activity_log
+      WHERE action = 'business_sensitive_update'
+        AND entity_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+        AND details -> 'changed_fields' ? 'name_ar' $$,
+  $$ VALUES (0::bigint) $$,
+  'T12b non-tracked field update writes no admin_activity_log row'
+);
+
+-- T12c — NULL auth.uid() (service-role / migration context) skips the audit
+-- insert because admin_activity_log.user_id is NOT NULL and no sentinel is
+-- invented.
+SELECT tests_helpers.become_service();
+
+UPDATE public.businesses SET is_demo = true
+ WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+SELECT results_eq(
+  $$ SELECT count(*)::bigint FROM public.admin_activity_log
+      WHERE action = 'business_sensitive_update'
+        AND entity_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+        AND details -> 'changed_fields' ? 'is_demo' $$,
+  $$ VALUES (0::bigint) $$,
+  'T12c service-role / NULL auth.uid() does not insert admin_activity_log'
+);
+
+-- Restore admin context for any downstream tests in this file.
+SELECT tests_helpers.become('33333333-3333-3333-3333-333333333333');
+
 -- ---------------------------------------------------------------------------
 -- T13 — membership_tier write without active provider_subscriptions  [G3]
 -- ---------------------------------------------------------------------------
