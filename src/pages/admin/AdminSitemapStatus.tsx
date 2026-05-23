@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, FileText, Play, History, Shield, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { auditSitemapStatus } from '@/modules/seo';
 import { toast } from '@/hooks/use-toast';
 import { useState } from 'react';
 
@@ -78,9 +79,10 @@ export default function AdminSitemapStatus() {
       const anyFailed = results.some((r) => r.result.status === 0);
       if (anyFailed) {
         try {
-          const { data: serverData } = await supabase.functions.invoke('audit-sitemap-status', {
-            body: { triggeredBy: 'dashboard-fallback', dryRun: true },
-          });
+          const { data: serverData } = await auditSitemapStatus({
+            triggeredBy: 'dashboard-fallback',
+            dryRun: true,
+          }) as { data: { results?: unknown[] } | null };
           const serverResults = (serverData?.results ?? []) as Array<{ url: string; status: number; ok: boolean; isXml: boolean; isSpaFallback: boolean; urlCount: number; lastmod: string | null; contentType: string; error?: string }>;
           return results.map((row) => {
             if (row.result.status !== 0) return row;
@@ -134,9 +136,7 @@ export default function AdminSitemapStatus() {
 
   const runAndSave = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('audit-sitemap-status', {
-        body: { triggeredBy: 'manual' },
-      });
+      const { data, error } = await auditSitemapStatus({ triggeredBy: 'manual' });
       if (error) throw error;
       return data;
     },
