@@ -5,7 +5,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { listActiveContractTemplates } from '@/modules/contracts';
+import {
+  listActiveContractTemplates,
+  listContractMeasurementMethods,
+  listContractTemplateVersions,
+  listContractTemplateSectionsByVersionIds,
+  listContractTemplateClausesBySectionIds,
+  listContractTemplateSections,
+  createContractTemplateVersion,
+  createContractTemplateSection,
+  createContractTemplateClause,
+  updateContractTemplateById,
+} from '@/modules/contracts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,12 +62,9 @@ const AdminContractTemplates: React.FC = () => {
   const methodsQ = useQuery({
     queryKey: ['ct-methods'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contract_measurement_methods')
-        .select('id,label_ar,label_en,symbol,decimals,is_active')
-        .order('id');
+      const { data, error } = await listContractMeasurementMethods();
       if (error) throw error;
-      return (data || []) as CTMeasurementMethod[];
+      return ((data || []) as unknown) as CTMeasurementMethod[];
     },
   });
 
@@ -64,13 +72,9 @@ const AdminContractTemplates: React.FC = () => {
     queryKey: ['ct-versions', selectedTemplateId],
     queryFn: async () => {
       if (!selectedTemplateId) return [] as CTVersion[];
-      const { data, error } = await supabase
-        .from('contract_template_versions')
-        .select('*')
-        .eq('template_id', selectedTemplateId)
-        .order('version_number', { ascending: false });
+      const { data, error } = await listContractTemplateVersions(selectedTemplateId);
       if (error) throw error;
-      return (data || []) as CTVersion[];
+      return ((data || []) as unknown) as CTVersion[];
     },
     enabled: !!selectedTemplateId,
   });
@@ -80,23 +84,24 @@ const AdminContractTemplates: React.FC = () => {
     queryFn: async () => {
       const ids = (templatesQ.data || []).map((t) => t.current_version_id).filter(Boolean) as string[];
       if (!ids.length) return { sections: {}, clauses: {} } as { sections: Record<string, number>; clauses: Record<string, number> };
-      const { data: secs, error: e1 } = await supabase
-        .from('contract_template_sections').select('id,version_id').in('version_id', ids);
+      const { data: secs, error: e1 } = await listContractTemplateSectionsByVersionIds(ids);
       if (e1) throw e1;
       const sectionsByVersion: Record<string, number> = {};
       const sectionIds: string[] = [];
       const sectionToVersion: Record<string, string> = {};
-      (secs || []).forEach((s) => {
+      ((secs as unknown as { id: string; version_id: string }[]) || []).forEach((s) => {
         sectionsByVersion[s.version_id] = (sectionsByVersion[s.version_id] || 0) + 1;
         sectionIds.push(s.id);
         sectionToVersion[s.id] = s.version_id;
       });
       const clausesByVersion: Record<string, number> = {};
       if (sectionIds.length) {
-        const { data: cls, error: e2 } = await supabase
-          .from('contract_template_clauses').select('id,section_id').in('section_id', sectionIds);
+        const { data: cls, error: e2 } = await listContractTemplateClausesBySectionIds(
+          sectionIds,
+          { select: 'id,section_id', orderBy: null },
+        );
         if (e2) throw e2;
-        (cls || []).forEach((c) => {
+        ((cls as unknown as { id: string; section_id: string }[]) || []).forEach((c) => {
           const v = sectionToVersion[c.section_id];
           if (v) clausesByVersion[v] = (clausesByVersion[v] || 0) + 1;
         });
@@ -137,38 +142,38 @@ const AdminContractTemplates: React.FC = () => {
       const source =
         versions.find((v) => v.id === selectedTemplate.current_version_id) ||
         versions[0] || null;
-      const { data: created, error } = await supabase
-        .from('contract_template_versions')
-        .insert({
+      const { data: created, error } = await createContractTemplateVersion<{ id: string }>(
+        {
           template_id: selectedTemplate.id,
           version_number: maxVer + 1,
           status: 'draft',
           language_precedence: source?.language_precedence || 'ar',
-        })
-        .select('*')
-        .single();
+        },
+        '*',
+      );
       if (error) throw error;
       // Clone sections + clauses + pricing + required + attachments
       if (source) {
-        const { data: secs } = await supabase.from('contract_template_sections')
-          .select('*').eq('version_id', source.id).order('sort_order');
+        const { data: secs } = await listContractTemplateSections(source.id);
         const oldToNewSection: Record<string, string> = {};
-        for (const s of secs || []) {
-          const { data: ns, error: se } = await supabase.from('contract_template_sections').insert({
-            version_id: created.id, section_key: s.section_key, title_ar: s.title_ar,
+        for (const s of (secs as unknown as Array<Record<string, unknown> & { id: string }>) || []) {
+          const { data: ns, error: se } = await createContractTemplateSection<{ id: string }>({
+            version_id: created!.id, section_key: s.section_key, title_ar: s.title_ar,
             title_en: s.title_en, is_required: s.is_required, sort_order: s.sort_order,
-          }).select('id').single();
+          }, 'id');
           if (se) throw se;
-          oldToNewSection[s.id] = ns.id;
+          oldToNewSection[s.id] = ns!.id;
         }
         const oldSectionIds = Object.keys(oldToNewSection);
         if (oldSectionIds.length) {
-          const { data: cls } = await supabase.from('contract_template_clauses')
-            .select('*').in('section_id', oldSectionIds);
-          for (const c of cls || []) {
+          const { data: cls } = await listContractTemplateClausesBySectionIds(
+            oldSectionIds,
+            { orderBy: null },
+          );
+          for (const c of (cls as unknown as Array<Record<string, unknown> & { section_id: string }>) || []) {
             const newSec = oldToNewSection[c.section_id];
             if (!newSec) continue;
-            await supabase.from('contract_template_clauses').insert({
+            await createContractTemplateClause({
               section_id: newSec, body_ar: c.body_ar, body_en: c.body_en,
               is_mandatory: c.is_mandatory, is_editable_by_provider: c.is_editable_by_provider,
               is_editable_by_client: c.is_editable_by_client, legal_reference: c.legal_reference,
@@ -201,7 +206,7 @@ const AdminContractTemplates: React.FC = () => {
           });
         }
       }
-      return created.id as string;
+      return created!.id as string;
     },
     onSuccess: (newId) => {
       qc.invalidateQueries({ queryKey: ['ct-versions', selectedTemplateId] });
@@ -213,8 +218,10 @@ const AdminContractTemplates: React.FC = () => {
 
   const archiveTemplate = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('contract_templates')
-        .update({ archived_at: new Date().toISOString(), is_active: false }).eq('id', id);
+      const { error } = await updateContractTemplateById(id, {
+        archived_at: new Date().toISOString(),
+        is_active: false,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
