@@ -72,12 +72,10 @@ describe('CAT-2 out-of-scope guardrail (must NOT be touched in this phase)', () 
     const src = read('src/pages/dashboard/DashboardServices.tsx');
     expect(src).toMatch(/supabase\.from\(['"]business_services['"]\)/);
   });
-  it('DashboardInstallments BNPL admin writes migrated in CAT-5 (read remains direct)', () => {
+  it('DashboardInstallments BNPL admin reads + writes fully migrated (CAT-5B)', () => {
     const src = read('src/pages/dashboard/DashboardInstallments.tsx');
-    // Read intentionally left direct (per CAT-5 scope).
-    expect(src).toMatch(/supabase\.from\(['"]bnpl_providers['"]\)\.select/);
-    // Writes migrated.
-    expect(src).not.toMatch(/supabase\.from\(['"]bnpl_providers['"]\)\.(insert|update|delete)/);
+    expect(src).not.toMatch(/supabase\.from\(['"]bnpl_providers['"]\)/);
+    expect(src).toContain('listGlobalBnplProviders');
   });
   it('contracts aggregate warranties read remains owned by contracts module', () => {
     const src = read('src/modules/contracts/services/aggregates.ts');
