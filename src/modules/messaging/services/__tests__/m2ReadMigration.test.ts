@@ -39,8 +39,8 @@ describe('M-2 migration: read callsites no longer touch conversations/messages d
     expect(src).toMatch(/listMessagesForConversation\(/);
     // No remaining .from('conversations').select
     expect(src).not.toMatch(/\.from\(\s*['"]conversations['"]\s*\)\s*\.\s*select/);
-    // Storage stays direct for M-5
-    expect(src).toMatch(/supabase\.storage\.from\(\s*'chat-attachments'\s*\)/);
+    // Storage migrated in M-5: no direct chat-attachments access remains
+    expect(src).not.toMatch(/supabase\.storage\.from\(\s*['"]chat-attachments['"]\s*\)/);
   });
 
   it('useTypingPresence remains untouched (still uses supabase.channel directly)', () => {
