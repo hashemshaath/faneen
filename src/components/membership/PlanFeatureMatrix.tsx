@@ -1,7 +1,7 @@
 import React from 'react';
 import { Check, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { listActiveMembershipPlans } from '@/modules/memberships';
 import { cn } from '@/lib/utils';
 import {
   LIMIT_FIELDS,

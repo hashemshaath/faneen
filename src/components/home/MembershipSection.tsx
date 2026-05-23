@@ -19,7 +19,18 @@ export const MembershipSection = () => {
   const { data: plans = [], isLoading } = useQuery({
     queryKey: ['home-membership-plans'],
     queryFn: async () => {
-      const { data } = await listActiveMembershipPlans({
+      type HomePlan = {
+        id: string;
+        name_ar: string;
+        name_en: string;
+        description_ar: string | null;
+        description_en: string | null;
+        tier: string;
+        features: unknown;
+        price_monthly: number | null;
+        sort_order: number | null;
+      };
+      const { data } = await listActiveMembershipPlans<HomePlan>({
         select:
           'id, name_ar, name_en, description_ar, description_en, tier, features, price_monthly, sort_order',
         limit: 3,
