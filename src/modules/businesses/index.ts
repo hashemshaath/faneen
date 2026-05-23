@@ -42,6 +42,18 @@ export type {
 } from './services/getBusinessProviderContactForEmail';
 export { getActiveBusinessStaffMembership } from './services/getActiveBusinessStaffMembership';
 export type { GetActiveBusinessStaffMembershipOptions } from './services/getActiveBusinessStaffMembership';
+export { listActiveStaffBusinessesForUser } from './services/listActiveStaffBusinessesForUser';
+export type { ListActiveStaffBusinessesForUserOptions } from './services/listActiveStaffBusinessesForUser';
+export { listManagedStaffMembershipForUser } from './services/listManagedStaffMembershipForUser';
+export type { ListManagedStaffMembershipForUserOptions } from './services/listManagedStaffMembershipForUser';
+export { listAllBusinessStaffForAdmin } from './services/listAllBusinessStaffForAdmin';
+export type { ListAllBusinessStaffForAdminOptions } from './services/listAllBusinessStaffForAdmin';
+export { insertBusinessStaff } from './services/insertBusinessStaff';
+export type { InsertBusinessStaffOptions } from './services/insertBusinessStaff';
+export { updateBusinessStaffById } from './services/updateBusinessStaffById';
+export type { UpdateBusinessStaffByIdOptions } from './services/updateBusinessStaffById';
+export { deleteBusinessStaffById } from './services/deleteBusinessStaffById';
+export type { DeleteBusinessStaffByIdOptions } from './services/deleteBusinessStaffById';
 export { updateBusinessById } from './services/updateBusinessById';
 export type { UpdateBusinessByIdOptions } from './services/updateBusinessById';
 export { updateBusinessesByIds } from './services/updateBusinessesByIds';
