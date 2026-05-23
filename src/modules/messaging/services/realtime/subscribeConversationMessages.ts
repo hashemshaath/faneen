@@ -35,9 +35,8 @@ export function subscribeConversationMessages({
       () => {
         onInsert();
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ) as any;
-  channel.subscribe();
+    )
+    .subscribe();
 
   return () => {
     supabase.removeChannel(channel);
