@@ -50,6 +50,10 @@ import {
 import { updateContractById } from '@/modules/contracts/services/updateContractById';
 import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
 import {
+  uploadContractAttachmentFile,
+  getContractAttachmentPublicUrl,
+} from '@/modules/contracts/services/attachments';
+import {
   createContractNote,
   createContractMeasurement,
   createContractMilestone,
@@ -742,9 +746,9 @@ const DashboardContracts = () => {
       for (const file of maintenanceImages) {
         const ext = file.name.split('.').pop();
         const path = `maintenance/${mainReq.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error: upErr } = await supabase.storage.from('contract-attachments').upload(path, file);
+        const { error: upErr } = await uploadContractAttachmentFile(path, file);
         if (!upErr) {
-          const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
+          const { data: urlData } = getContractAttachmentPublicUrl(path);
           await createContractAttachment({
             contract_id: contractId, user_id: user!.id, file_name: file.name,
             file_url: urlData.publicUrl, file_type: 'image',
@@ -981,9 +985,9 @@ const DashboardContracts = () => {
     mutationFn: async ({ contractId, file }: { contractId: string; file: File }) => {
       const ext = file.name.split('.').pop();
       const path = `${contractId}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('contract-attachments').upload(path, file);
+      const { error: uploadError } = await uploadContractAttachmentFile(path, file);
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
+      const { data: urlData } = getContractAttachmentPublicUrl(path);
       const fileType = file.type.startsWith('image/') ? 'image' : 'document';
       const { error } = await createContractAttachment({
         contract_id: contractId, user_id: user!.id, file_name: file.name,
