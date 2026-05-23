@@ -16,7 +16,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { listOwnerBusinesses } from '@/modules/businesses';
+import { listOwnerBusinesses, listActiveStaffBusinessesForUser } from '@/modules/businesses';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -86,9 +86,10 @@ const PublicSiteScan: React.FC = () => {
           userId: user!.id,
           select: 'id, name_ar, name_en',
         }),
-        supabase.from('business_staff')
-          .select('business_id, businesses(id, name_ar, name_en)')
-          .eq('user_id', user!.id).eq('is_active', true),
+        listActiveStaffBusinessesForUser({
+          userId: user!.id,
+          select: 'business_id, businesses(id, name_ar, name_en)',
+        }),
       ]);
       const pickName = (ar: string | null, en: string | null) =>
         (isRTL ? ar : en) ?? en ?? ar ?? null;
