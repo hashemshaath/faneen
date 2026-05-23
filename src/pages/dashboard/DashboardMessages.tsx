@@ -10,6 +10,8 @@ import {
   listConversationsForUser,
   listUnreadMessageConversationIds,
   listMessagesForConversation,
+  insertMessage,
+  markConversationMessagesRead,
 } from '@/modules/messaging';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -789,7 +791,10 @@ const DashboardMessages = () => {
     if (!selectedConversation || !user) return;
     const unread = messages.filter((m) => !m.is_read && m.sender_id !== user.id);
     if (unread.length > 0) {
-      supabase.from('messages').update({ is_read: true }).eq('conversation_id', selectedConversation).neq('sender_id', user.id).eq('is_read', false).then(() => {
+      markConversationMessagesRead({
+        conversationId: selectedConversation,
+        viewerUserId: user.id,
+      }).then(() => {
         queryClient.invalidateQueries({ queryKey: ['conversations', user.id] });
         queryClient.invalidateQueries({ queryKey: ['unread-counts', user.id] });
       });
@@ -850,7 +855,7 @@ const DashboardMessages = () => {
       if (replyTo) content = `↩️ ${replyTo.content?.substring(0, 50)}${replyTo.content?.length > 50 ? '...' : ''}\n\n${content}`;
       if (!content && !attachmentUrl) return;
 
-      const { error } = await supabase.from('messages').insert({
+      const { error } = await insertMessage({
         conversation_id: selectedConversation!,
         sender_id: user!.id,
         content,

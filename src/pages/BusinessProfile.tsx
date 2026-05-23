@@ -23,7 +23,11 @@ import { recordBadgeConversion } from "@/lib/badge-attribution";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getLocalizedValue, useDirection } from "@/lib/direction";
-import { findConversationBetweenUsers } from "@/modules/messaging";
+import {
+  findConversationBetweenUsers,
+  createConversation,
+  insertMessage,
+} from "@/modules/messaging";
 import {
   BusinessProfileHeader,
   BusinessProfileTopBar,
@@ -274,11 +278,10 @@ const BusinessProfile = () => {
 
       if (existing) return { id: existing.id, isNew: false };
 
-      const { data: created, error: createError } = await supabase
-        .from("conversations")
-        .insert({ participant_1: user.id, participant_2: providerId })
-        .select("id")
-        .single();
+      const { data: created, error: createError } = await createConversation({
+        participant_1: user.id,
+        participant_2: providerId,
+      });
 
       if (createError) throw createError;
 
@@ -288,7 +291,7 @@ const BusinessProfile = () => {
           ? `مرحباً، أود الاستفسار عن خدماتكم في ${bName}`
           : `Hello, I'd like to inquire about your services at ${bName}`;
 
-      await supabase.from("messages").insert({
+      await insertMessage({
         conversation_id: created.id,
         sender_id: user.id,
         content: greeting,

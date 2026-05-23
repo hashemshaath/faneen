@@ -11,3 +11,7 @@ export * from './services/listRecentConversationsForUser';
 export * from './services/findConversationBetweenUsers';
 export * from './services/listConversationsForUser';
 export * from './services/listMessagesForConversation';
+// M-3 mutation services.
+export * from './services/createConversation';
+export * from './services/insertMessage';
+export * from './services/markConversationMessagesRead';
