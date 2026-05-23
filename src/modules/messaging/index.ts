@@ -15,3 +15,6 @@ export * from './services/listMessagesForConversation';
 export * from './services/createConversation';
 export * from './services/insertMessage';
 export * from './services/markConversationMessagesRead';
+// M-4 realtime helpers.
+export * from './services/realtime/subscribeConversationMessages';
+export * from './services/realtime/subscribeUserConversations';
