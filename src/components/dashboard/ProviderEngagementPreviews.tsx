@@ -7,6 +7,10 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { listRecentLeadsForBusiness } from '@/modules/leads';
+import {
+  listUnreadMessageConversationIds,
+  listRecentConversationsForUser,
+} from '@/modules/messaging';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -95,17 +99,8 @@ export function ProviderEngagementPreviews({ businessId }: { businessId: string 
     staleTime: 30_000,
     queryFn: async () => {
       const [{ data: unread }, { data: convs }] = await Promise.all([
-        supabase
-          .from('messages')
-          .select('conversation_id')
-          .eq('is_read', false)
-          .neq('sender_id', user!.id),
-        supabase
-          .from('conversations')
-          .select('id, participant_1, participant_2, last_message_at, updated_at')
-          .or(`participant_1.eq.${user!.id},participant_2.eq.${user!.id}`)
-          .order('last_message_at', { ascending: false, nullsFirst: false })
-          .limit(10),
+        listUnreadMessageConversationIds({ userId: user!.id }),
+        listRecentConversationsForUser({ userId: user!.id, limit: 10 }),
       ]);
       const conversationsList = (convs ?? []) as ConversationRow[];
       const myConvIds = new Set(conversationsList.map((c) => c.id));
