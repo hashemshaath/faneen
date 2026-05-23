@@ -19,3 +19,7 @@ export { countUnreadNotificationsForUser } from './services/countUnreadNotificat
 export { countNotificationsForUserSince } from './services/countNotificationsForUserSince';
 export { listNotificationCreatedAtSeries } from './services/listNotificationCreatedAtSeries';
 export { listLiveActivityNotifications } from './services/listLiveActivityNotifications';
+// N-3 mutation services.
+export { markNotificationRead } from './services/markNotificationRead';
+export { markAllNotificationsRead } from './services/markAllNotificationsRead';
+export { deleteNotification } from './services/deleteNotification';

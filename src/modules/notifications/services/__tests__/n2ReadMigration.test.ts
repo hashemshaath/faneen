@@ -11,19 +11,20 @@ describe('N-2 migration: notification read callsites use service wrappers', () =
     expect(s).toMatch(/listNotificationsForUser\(/);
     expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*select/);
     expect(s).toMatch(/queryKey:\s*\['all-notifications',\s*user\?\.id\]/);
-    // Mutations remain direct (deferred to N-3)
-    expect(s).toMatch(/\.from\(\s*'notifications'\s*\)\s*\.update/);
-    expect(s).toMatch(/\.from\(\s*'notifications'\s*\)\s*\.delete/);
+    // N-3: mutations migrated to services
+    expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*update/);
+    expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*delete/);
   });
 
   it('DashboardNotifications.tsx: uses listNotificationsForUser with limit 500; realtime + mutations remain direct', () => {
     const s = read('pages/dashboard/DashboardNotifications.tsx');
     expect(s).toMatch(/listNotificationsForUser\(\{\s*userId:\s*user!\.id,\s*limit:\s*500\s*\}\)/);
     expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*select/);
-    // Deferred direct usages
+    // Realtime remains deferred to N-4
     expect(s).toMatch(/postgres_changes/);
-    expect(s).toMatch(/\.from\(\s*'notifications'\s*\)\s*\.update/);
-    expect(s).toMatch(/\.from\(\s*'notifications'\s*\)\s*\.delete/);
+    // N-3: mutations migrated to services
+    expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*update/);
+    expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*delete/);
   });
 
   it('NotificationBell.tsx: uses listNotificationsForUser with limit 50; realtime + mutations remain direct', () => {
@@ -31,8 +32,9 @@ describe('N-2 migration: notification read callsites use service wrappers', () =
     expect(s).toMatch(/listNotificationsForUser\(\{\s*userId:\s*user!\.id,\s*limit:\s*50\s*\}\)/);
     expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*select/);
     expect(s).toMatch(/postgres_changes/);
-    expect(s).toMatch(/\.from\(\s*'notifications'\s*\)\s*\.update/);
-    expect(s).toMatch(/\.from\(\s*'notifications'\s*\)\s*\.delete/);
+    // N-3: mutations migrated to services
+    expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*update/);
+    expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*delete/);
   });
 
   it('UserDashboardView.tsx: uses countUnreadNotificationsForUser + listRecentNotificationsForUser', () => {
