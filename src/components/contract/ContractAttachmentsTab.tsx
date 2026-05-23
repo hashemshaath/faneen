@@ -126,7 +126,7 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
         payment_id:     linkType === 'payment'     ? linkId : null,
       };
 
-      const { error } = await supabase.from('contract_attachments').insert(insertPayload);
+      const { error } = await createContractAttachment(insertPayload);
       if (error) {
         // Best-effort cleanup of orphaned storage object
         await supabase.storage.from('contract-attachments').remove([path]).catch(() => {});

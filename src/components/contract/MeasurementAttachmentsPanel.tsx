@@ -71,7 +71,7 @@ export const MeasurementAttachmentsPanel: React.FC<Props> = ({
       if (upErr) throw upErr;
       setProgress(70);
       const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
-      const { error } = await supabase.from('contract_attachments').insert({
+      const { error } = await createContractAttachment({
         contract_id: contractId,
         user_id: userId,
         file_name: pending.name,
