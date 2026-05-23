@@ -355,7 +355,7 @@ const BlogImageLibrary: React.FC<{ isRTL: boolean; onSelect: (url: string) => vo
     setLoading(true);
     setErrorMsg(null);
     try {
-      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      const { data: userData, error: userErr } = await getCurrentUser();
       if (userErr || !userData.user) {
         setErrorMsg(isRTL ? 'يجب تسجيل الدخول لعرض مكتبة الصور' : 'Sign in to view your image library');
         setLoaded(true);
