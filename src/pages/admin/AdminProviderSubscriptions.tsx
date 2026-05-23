@@ -15,6 +15,17 @@ import {
   adminAdjustProviderCredits,
 } from '@/modules/memberships';
 import { listProviderCreditTransactionsForBusiness } from '@/modules/credits';
+
+interface AdminTxRow {
+  id: string;
+  type: 'grant' | 'consume' | 'refund' | 'adjustment';
+  amount: number;
+  balance_after: number;
+  reason: string;
+  created_at: string;
+  created_by: string | null;
+  quote_request_lead_id: string | null;
+}
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Crown, Wallet, RefreshCw, Search, ChevronRight, Undo2 } from 'lucide-react';
@@ -179,7 +190,7 @@ const ManageSub: React.FC<{ sub: Sub; plans: Plan[]; onDone: () => void; adminId
   const recentTxQ = useQuery({
     queryKey: ['admin-sub-tx', sub.business_id],
     queryFn: async () => {
-      const { data, error } = await listProviderCreditTransactionsForBusiness({
+      const { data, error } = await listProviderCreditTransactionsForBusiness<AdminTxRow>({
         businessId: sub.business_id,
       });
       if (error) throw error;
