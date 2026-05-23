@@ -39,6 +39,8 @@ export * from './services/pdfExports';
 export * from './services/childTables';
 // CT-5 contract template admin/editor wrappers
 export * from './services/templates';
+// CT-7 contract runtime attachment storage wrappers + bucket constant
+export * from './services/attachments';
 // types.ts is available at '@/modules/contracts/types' for consumers that
 // want type-only imports. Not re-exported here to avoid duplicate type
 // re-exports (all types are already reachable via the value exports above).
