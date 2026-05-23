@@ -59,7 +59,7 @@ beforeEach(() => {
 describe('CT-2 read services — exact query shape', () => {
   it('getContractById defaults to maybeSingle with select=*', async () => {
     const { getContractById } = await import('../reads/getContractById');
-    builderState._result = { data: { id: 'c1' }, error: null, count: null };
+    builderState._result = { data: { id: 'c1' } as unknown as unknown[], error: null, count: null };
     const res = await getContractById({ id: 'c1' });
     expect(fromMock).toHaveBeenCalledWith('contracts');
     expect(builderState.select).toHaveBeenCalledWith('*');
