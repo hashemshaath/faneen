@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { createContractAttachment } from '@/modules/contracts/services/childTables';
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
 import {
   validateAttachmentFile,

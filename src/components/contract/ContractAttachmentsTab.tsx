@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { createContractAttachment } from '@/modules/contracts/services/childTables';
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
 import {
   validateAttachmentFile,
