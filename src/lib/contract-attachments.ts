@@ -1,6 +1,15 @@
-import { supabase } from '@/integrations/supabase/client';
+import {
+  CONTRACT_ATTACHMENTS_BUCKET,
+  createSignedContractAttachmentUrl,
+  removeContractAttachmentFiles,
+} from '@/modules/contracts/services/attachments';
+import { deleteContractAttachmentById } from '@/modules/contracts/services/childTables';
 
-export const ATTACHMENT_BUCKET = 'contract-attachments';
+/**
+ * Re-exported for backward compatibility. Prefer
+ * `CONTRACT_ATTACHMENTS_BUCKET` from `@/modules/contracts` going forward.
+ */
+export const ATTACHMENT_BUCKET = CONTRACT_ATTACHMENTS_BUCKET;
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB
 
 export const ALLOWED_ATTACHMENT_MIME = [
@@ -63,7 +72,7 @@ export function extractStoragePath(url: string, bucket = ATTACHMENT_BUCKET): str
 export async function getAttachmentSignedUrl(att: AttachmentRow, expiresInSec = 3600): Promise<string | null> {
   const path = resolveAttachmentPath(att);
   if (!path) return att.file_url || null;
-  const { data, error } = await supabase.storage.from(ATTACHMENT_BUCKET).createSignedUrl(path, expiresInSec);
+  const { data, error } = await createSignedContractAttachmentUrl(path, expiresInSec);
   if (error || !data?.signedUrl) return null;
   return data.signedUrl;
 }
@@ -96,10 +105,10 @@ export async function deleteAttachmentWithStorage(att: AttachmentRow): Promise<{
   const path = resolveAttachmentPath(att);
   let storageRemoved = false;
   if (path) {
-    const { error: storageErr } = await supabase.storage.from(ATTACHMENT_BUCKET).remove([path]);
+    const { error: storageErr } = await removeContractAttachmentFiles([path]);
     storageRemoved = !storageErr;
   }
-  const { error } = await supabase.from('contract_attachments').delete().eq('id', att.id);
+  const { error } = await deleteContractAttachmentById(att.id);
   if (error) return { ok: false, storageRemoved, error: error.message };
   return { ok: true, storageRemoved };
 }
