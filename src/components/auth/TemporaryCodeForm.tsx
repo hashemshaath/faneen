@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { createTempCodeSession, verifyTemporaryCodeOtp } from '@/modules/identity';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -108,8 +108,9 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
       const normalized = normalizeIdentifier(identifier);
 
       // 1) Verify code + obtain a magic-link token_hash from the edge function.
-      const { data, error: fnErr } = await supabase.functions.invoke('temp-code-session', {
-        body: { identifier: normalized, code: code.trim() },
+      const { data, error: fnErr } = await createTempCodeSession({
+        identifier: normalized,
+        code: code.trim(),
       });
       if (fnErr) throw fnErr;
       const resp = data as { ok?: boolean; error?: string; email?: string; token_hash?: string } | null;
@@ -121,7 +122,7 @@ export const TemporaryCodeForm: React.FC<Props> = ({ isRTL }) => {
       }
 
       // 2) Exchange the token_hash for a real Supabase session.
-      const { error: otpErr } = await supabase.auth.verifyOtp({
+      const { error: otpErr } = await verifyTemporaryCodeOtp({
         token_hash: resp.token_hash,
         type: 'magiclink',
       });
