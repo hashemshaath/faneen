@@ -904,7 +904,31 @@ const AdminBusinesses = () => {
               onClick={() => bulkMutation.mutate({ ids: [...selected], patch: { is_verified: false } })}>
               <XCircle className="w-3.5 h-3.5" />{isRTL ? 'إلغاء التوثيق' : 'Unverify'}
             </Button>
-            <Select onValueChange={(v) => bulkMutation.mutate({ ids: [...selected], patch: { membership_tier: v } })}>
+            <Select
+              onValueChange={async (v) => {
+                // R4E-2C-4-PHASE-3: bulk tier change goes per-business through
+                // membership-owned RPC. No batch RPC yet; use Promise.allSettled.
+                const ids = [...selected];
+                const results = await Promise.allSettled(
+                  ids.map((id) =>
+                    setBusinessMembershipTier(
+                      id,
+                      v as MembershipTier,
+                      'AdminBusinesses bulk tier change',
+                    ),
+                  ),
+                );
+                const ok = results.filter((r) => r.status === 'fulfilled').length;
+                const fail = results.length - ok;
+                queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+                if (fail === 0) {
+                  toast.success(isRTL ? `تم تحديث ${ok}` : `Updated ${ok}`);
+                } else {
+                  toast.error(isRTL ? `نجح ${ok}، فشل ${fail}` : `Succeeded ${ok}, failed ${fail}`);
+                }
+                clearSelected();
+              }}
+            >
               <SelectTrigger className="h-8 w-36 text-xs rounded-xl"><Crown className="w-3.5 h-3.5 me-1" />
                 <SelectValue placeholder={isRTL ? 'تغيير العضوية' : 'Change tier'} />
               </SelectTrigger>
