@@ -15,8 +15,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { supabase } from '@/integrations/supabase/client';
 import { updateProfile } from '@/modules/users';
+import { uploadAvatar } from '@/modules/files';
 import { toast } from 'sonner';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { ActiveBusinessSwitcher } from './ActiveBusinessSwitcher';
@@ -111,12 +111,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     setAvatarUploading(true);
     try {
       const compressed = await compressImage(file);
-      const ext = compressed.name.split('.').pop() || 'webp';
-      const path = `${user.id}/avatar.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('business-assets').upload(path, compressed, { upsert: true, contentType: compressed.type });
+      const { publicUrl, error: uploadError } = await uploadAvatar({ userId: user.id, file: compressed });
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from('business-assets').getPublicUrl(path);
-      const { error: updateError } = await updateProfile({ userId: user.id, values: { avatar_url: urlData.publicUrl } });
+      const { error: updateError } = await updateProfile({ userId: user.id, values: { avatar_url: publicUrl } });
       if (updateError) throw updateError;
       await refreshProfile();
       toast.success(isRTL ? 'تم تحديث الصورة الشخصية' : 'Avatar updated');
