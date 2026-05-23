@@ -19,8 +19,7 @@ import {
 } from 'lucide-react';
 import { PasswordResetLogPanel } from '@/components/admin/PasswordResetLogPanel';
 import { useNoIndex } from "@/hooks/useNoIndex";
-import { listAllUserRoles } from '@/modules/identity';
-import { grantRole, revokeRoleByUserAndRole } from '@/services/userRoles';
+import { listAllUserRoles, grantRole, revokeRoleByUserAndRole, adminResetPassword } from '@/modules/identity';
 
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
@@ -120,9 +119,7 @@ const AdminAccessManagement = () => {
   // Send reset link mutation
   const sendResetMutation = useMutation({
     mutationFn: async (targetUserId: string) => {
-      const res = await supabase.functions.invoke('admin-reset-password', {
-        body: { target_user_id: targetUserId, action: 'send_reset_link' },
-      });
+      const res = await adminResetPassword({ target_user_id: targetUserId, action: 'send_reset_link' });
       if (res.error) throw res.error;
       if (res.data?.error) throw new Error(res.data.error);
     },
