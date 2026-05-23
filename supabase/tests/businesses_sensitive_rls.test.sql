@@ -32,7 +32,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET search_path = public, extensions;
 
-SELECT plan(34);
+SELECT plan(33);
 
 -- ---------------------------------------------------------------------------
 -- SEED (as superuser; RLS bypassed for table owners)
@@ -256,26 +256,6 @@ SELECT isnt_empty(
 UPDATE public.businesses SET is_active = true
  WHERE id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
               'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
-
-SELECT todo_start('TODO_GAP_G1: no DB trigger writes admin_activity_log on bulk flips');
-WITH bulk AS (
-  UPDATE public.businesses SET is_active = false
-   WHERE id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')
-   RETURNING id
-)
-SELECT count(*) FROM bulk;  -- materialise
-
-SELECT results_eq(
-  $$ SELECT count(*)::bigint FROM public.admin_activity_log
-     WHERE entity_type = 'business'
-       AND entity_id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                         'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')
-       AND created_at > now() - interval '1 minute' $$,
-  $$ VALUES (2::bigint) $$,
-  'T12 one admin_activity_log row per affected business'
-);
-SELECT todo_end();
 
 -- T12a — bulk admin update writes exactly one admin_activity_log row per row,
 -- carrying the changed field in details->'changed_fields'.
