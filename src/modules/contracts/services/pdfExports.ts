@@ -36,3 +36,13 @@ export async function adminListContractPdfExports(args: AdminListContractPdfExpo
 export async function adminContractPdfExportsSummary() {
   return await supabase.rpc('admin_contract_pdf_exports_summary');
 }
+
+export interface RecordContractPdfExportArgs {
+  _contract_id: string;
+  _source: string;
+  _export_locale: string | null;
+}
+
+export async function recordContractPdfExportRpc(args: RecordContractPdfExportArgs) {
+  return await supabase.rpc('record_contract_pdf_export', args);
+}
