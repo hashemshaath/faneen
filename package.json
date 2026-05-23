@@ -37,7 +37,8 @@
     "storage-isolation-audit": "node scripts/storage-isolation-audit.mjs",
     "edge-functions-isolation-audit": "node scripts/edge-functions-isolation-audit.mjs",
     "memberships-isolation-audit": "node scripts/memberships-isolation-audit.mjs",
-    "credits-isolation-audit": "node scripts/credits-isolation-audit.mjs"
+    "credits-isolation-audit": "node scripts/credits-isolation-audit.mjs",
+    "edge-credits-isolation-audit": "node scripts/edge-credits-isolation-audit.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
