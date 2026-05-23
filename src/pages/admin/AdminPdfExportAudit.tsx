@@ -92,7 +92,7 @@ const AdminPdfExportAudit: React.FC = () => {
     queryKey: ['admin-pdf-exports', page, filters],
     placeholderData: keepPreviousData,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('admin_list_contract_pdf_exports', {
+      const { data, error } = await adminListContractPdfExports({
         _search: filters.search,
         _source: filters.source,
         _contract_status: filters.status,
@@ -110,7 +110,7 @@ const AdminPdfExportAudit: React.FC = () => {
   const summary = useQuery({
     queryKey: ['admin-pdf-exports-summary'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('admin_contract_pdf_exports_summary');
+      const { data, error } = await adminContractPdfExportsSummary();
       if (error) throw error;
       return (data?.[0] || null) as Summary | null;
     },

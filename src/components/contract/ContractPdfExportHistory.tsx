@@ -10,7 +10,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { listContractPdfExports } from '@/modules/contracts/services/pdfExports';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
