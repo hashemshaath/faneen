@@ -19,8 +19,8 @@ describe('M-4 migration: messaging realtime callsites use helper wrappers', () =
     expect(src).toMatch(/listMessagesForConversation\(/);
     expect(src).toMatch(/insertMessage\(/);
     expect(src).toMatch(/markConversationMessagesRead\(/);
-    // Storage still deferred to M-5
-    expect(src).toMatch(/supabase\.storage\.from\(\s*'chat-attachments'\s*\)/);
+    // Storage migrated in M-5: no direct chat-attachments storage access remains
+    expect(src).not.toMatch(/supabase\.storage\.from\(\s*['"]chat-attachments['"]\s*\)/);
     // Invalidation keys preserved
     expect(src).toMatch(/queryKey:\s*\['messages',\s*selectedConversation\]/);
     expect(src).toMatch(/queryKey:\s*\['conversations',\s*user\.id\]/);
