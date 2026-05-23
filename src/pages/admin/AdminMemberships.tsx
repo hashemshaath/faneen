@@ -17,6 +17,7 @@ import {
   insertMembershipPlan,
   updateMembershipPlanById,
 } from '@/modules/memberships';
+import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -685,9 +686,27 @@ const AdminMemberships = () => {
   });
 
   const cancelSubMutation = useMutation({
-    mutationFn: async (subId: string) => {
-      const { error } = await cancelSubscription({ _subscription_id: subId });
+    mutationFn: async (sub: { id: string; profile?: { email?: string | null; full_name?: string | null } | null; business?: { name_ar?: string | null; name_en?: string | null } | null }) => {
+      const { error } = await cancelSubscription({ _subscription_id: sub.id });
       if (error) throw error;
+      // R4F-4-APPLY: fail-soft immediate-cancel email.
+      const email = sub.profile?.email ?? undefined;
+      if (email) {
+        try {
+          await sendTransactionalEmail({
+            templateName: 'membership-cancelled-immediately',
+            recipientEmail: email,
+            idempotencyKey: `membership-cancelled-immediate-${sub.id}`,
+            templateData: {
+              recipientName: sub.profile?.full_name ?? undefined,
+              businessName: sub.business?.name_ar || sub.business?.name_en || undefined,
+            },
+          });
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('[AdminMemberships] immediate-cancel email failed', err);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
