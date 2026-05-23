@@ -11,6 +11,7 @@ import {
   updateBusinessStaffById,
   deleteBusinessStaffById,
 } from '@/modules/businesses';
+import { countMessagesBySender } from '@/modules/messaging';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -170,7 +171,7 @@ const UserDetailPanel = React.memo(({
       const [contracts, projects, messages, reviews, lastActivity] = await Promise.all([
         supabase.from('contracts').select('id', { count: 'exact', head: true }).or(`client_id.eq.${userId},provider_id.eq.${userId}`),
         supabase.from('projects').select('id', { count: 'exact', head: true }),
-        supabase.from('messages').select('id', { count: 'exact', head: true }).eq('sender_id', userId),
+        countMessagesBySender({ userId }),
         supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('admin_activity_log').select('action, created_at, details').or(`user_id.eq.${userId},entity_id.eq.${userId}`).order('created_at', { ascending: false }).limit(5),
       ]);
