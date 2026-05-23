@@ -312,18 +312,19 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
           ? `${user.id}/${folder}/${fileName}`
           : `${user.id}/${fileName}`;
 
-        const { error } = await supabase.storage
-          .from(bucket)
-          .upload(path, compressed, { cacheControl: '3600', upsert: false });
+        const { error } = await uploadPublicImage({
+          bucket,
+          path,
+          file: compressed,
+          options: { cacheControl: '3600', upsert: false },
+        });
 
         if (error) {
           if (import.meta.env.DEV) console.warn('Upload error');
           continue;
         }
 
-        const { data: { publicUrl } } = supabase.storage
-          .from(bucket)
-          .getPublicUrl(path);
+        const { data: { publicUrl } } = getPublicImageUrl({ bucket, path });
 
         newUrls.push(publicUrl);
       }
@@ -342,10 +343,9 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
   const removeImage = async (index: number) => {
     const url = images[index];
     try {
-      const urlObj = new URL(url);
-      const pathParts = urlObj.pathname.split(`/storage/v1/object/public/${bucket}/`);
-      if (pathParts[1]) {
-        await supabase.storage.from(bucket).remove([decodeURIComponent(pathParts[1])]);
+      const extractedPath = extractPublicStoragePath({ bucket, publicUrl: url });
+      if (extractedPath) {
+        await removePublicImage({ bucket, path: extractedPath });
       }
     } catch {
       // Ignore
