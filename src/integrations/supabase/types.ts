@@ -10611,6 +10611,14 @@ export type Database = {
         Args: { _reason: string; _site_id: string }
         Returns: Json
       }
+      admin_set_business_membership_tier: {
+        Args: {
+          _business_id: string
+          _reason?: string
+          _tier: Database["public"]["Enums"]["membership_tier"]
+        }
+        Returns: Json
+      }
       admin_update_business_approval: {
         Args: {
           _business_id: string
