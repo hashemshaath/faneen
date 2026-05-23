@@ -6,6 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listProfilesByUserIds } from '@/modules/users';
+import {
+  listConversationsForUser,
+  listUnreadMessageConversationIds,
+  listMessagesForConversation,
+} from '@/modules/messaging';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -685,9 +690,10 @@ const DashboardMessages = () => {
   const { data: conversations = [], isLoading: loadingConvs } = useQuery({
     queryKey: ['conversations', user?.id, isSuperAdmin],
     queryFn: async () => {
-      let query = supabase.from('conversations').select('*');
-      if (!isSuperAdmin) query = query.or(`participant_1.eq.${user!.id},participant_2.eq.${user!.id}`);
-      const { data, error } = await query.order('last_message_at', { ascending: false });
+      const { data, error } = await listConversationsForUser({
+        userId: user!.id,
+        includeAll: isSuperAdmin,
+      });
       if (error) throw error;
 
       const allIds = new Set<string>();
@@ -729,7 +735,7 @@ const DashboardMessages = () => {
   const { data: unreadCounts = {} } = useQuery({
     queryKey: ['unread-counts', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('messages').select('conversation_id').eq('is_read', false).neq('sender_id', user!.id);
+      const { data } = await listUnreadMessageConversationIds({ userId: user!.id });
       const counts: Record<string, number> = {};
       (data || []).forEach((m) => { counts[m.conversation_id] = (counts[m.conversation_id] || 0) + 1; });
       return counts;
@@ -743,7 +749,9 @@ const DashboardMessages = () => {
   const { data: messages = [], isLoading: loadingMsgs } = useQuery({
     queryKey: ['messages', selectedConversation],
     queryFn: async () => {
-      const { data, error } = await supabase.from('messages').select('*').eq('conversation_id', selectedConversation!).order('created_at', { ascending: true });
+      const { data, error } = await listMessagesForConversation({
+        conversationId: selectedConversation!,
+      });
       if (error) throw error;
       return data;
     },
