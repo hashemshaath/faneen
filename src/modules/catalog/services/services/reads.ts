@@ -38,11 +38,12 @@ export interface CountServicesByBusinessOptions {
 export async function countServicesByBusiness({
   businessId,
   activeOnly = false,
-}: CountServicesByBusinessOptions) {
+}: CountServicesByBusinessOptions): Promise<{ count: number | null; error: unknown }> {
   let q = supabase
     .from('business_services')
     .select('id', { count: 'exact', head: true })
     .eq('business_id', businessId);
   if (activeOnly) q = q.eq('is_active', true);
-  return await q;
+  const { count, error } = await q;
+  return { count, error };
 }
