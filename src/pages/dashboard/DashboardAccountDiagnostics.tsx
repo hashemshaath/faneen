@@ -4,9 +4,8 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness, getActiveBusinessStaffMembership } from '@/modules/businesses';
-import { getUserRoles } from '@/modules/identity';
+import { getUserRoles, getCurrentSession } from '@/modules/identity';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -115,7 +114,7 @@ const DashboardAccountDiagnostics: React.FC = () => {
     }
     setLoading(s => ({ ...s, permissions: false }));
     // Stage 2: session (network)
-    const { data } = await supabase.auth.getSession();
+    const { data } = await getCurrentSession();
     setSession(data.session ?? null);
     setLoading(s => ({ ...s, session: false }));
     // Stage 3: build identity
