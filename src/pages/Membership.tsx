@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listOwnerBusinesses, listManagedStaffMembershipForUser } from '@/modules/businesses';
 import { listActiveMembershipPlans, getCurrentMembershipSubscription } from '@/modules/memberships';
+import type { Tables } from '@/integrations/supabase/types';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -84,7 +85,7 @@ const Membership = () => {
   const { data: plans = [] } = useQuery({
     queryKey: ['membership-plans'],
     queryFn: async () => {
-      const { data } = await listActiveMembershipPlans();
+      const { data } = await listActiveMembershipPlans<Tables<'membership_plans'>>();
       return data ?? [];
     },
   });
