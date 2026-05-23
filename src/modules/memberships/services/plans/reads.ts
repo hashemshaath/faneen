@@ -26,3 +26,22 @@ export async function listActiveMembershipPlans<T = unknown>({
   const { data, error } = await q;
   return { data: data as unknown as T[] | null, error };
 }
+
+/**
+ * MEMB-7: Admin reads ALL membership plans (active + inactive).
+ * Preserves exact select/order used by `AdminMemberships.tsx`.
+ */
+export interface ListAdminMembershipPlansOptions {
+  select?: string;
+  orderBy?: string | null;
+}
+
+export async function listAdminMembershipPlans<T = unknown>({
+  select = '*',
+  orderBy = 'sort_order',
+}: ListAdminMembershipPlansOptions = {}): Promise<{ data: T[] | null; error: unknown }> {
+  let q = supabase.from('membership_plans').select(select);
+  if (orderBy) q = q.order(orderBy);
+  const { data, error } = await q;
+  return { data: data as unknown as T[] | null, error };
+}
