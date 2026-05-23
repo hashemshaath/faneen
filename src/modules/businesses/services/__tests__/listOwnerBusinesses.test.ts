@@ -143,10 +143,15 @@ describe('P-18 owner-list migration', () => {
 });
 
 describe('P-18 deferred guardrails', () => {
-  it('getManagedBusinessesForUser remains the canonical staff+owner aggregator', () => {
-    const src = read('src/modules/leads/services/getManagedBusinessesForUser.ts');
+  it('listManagedBusinessesForUser remains the canonical staff+owner aggregator (P-24 moved)', () => {
+    const src = read('src/modules/businesses/services/listManagedBusinessesForUser.ts');
     expect(src).toMatch(/supabase\.from\(['"]businesses['"]\)/);
     expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
+  });
+  it('leads getManagedBusinessesForUser delegates to canonical service', () => {
+    const src = read('src/modules/leads/services/getManagedBusinessesForUser.ts');
+    expect(src).toContain('listManagedBusinessesForUser');
+    expect(src).not.toMatch(/supabase\.from\(/);
   });
 });
 
@@ -189,16 +194,17 @@ describe('P-23 allowlist burn-down', () => {
     expect(src).toMatch(/from\(['"]business_staff['"]\)/);
   });
 
-  it('audit allowlist no longer includes the four migrated files', () => {
+  it('audit allowlist no longer includes the four P-23 migrated files nor the P-24 lead delegators', () => {
     const src = read('scripts/businesses-reads-isolation-audit.mjs');
     expect(src).not.toContain('DashboardAnalytics.tsx');
     expect(src).not.toContain('DashboardContractAnalytics.tsx');
     expect(src).not.toContain('PublicSiteScan.tsx');
     expect(src).not.toContain('ActiveBusinessSwitcher.tsx');
-    // ensure-business and lead services remain allowlisted.
+    // P-24: lead service delegators are removed from the allowlist.
+    expect(src).not.toContain('getManagedBusinessesForUser.ts');
+    expect(src).not.toContain('getBusinessesForMyRequests.ts');
+    expect(src).not.toContain('getLeadProviderContactForEmail.ts');
+    // ensure-business remains allowlisted.
     expect(src).toContain('src/lib/ensure-business.ts');
-    expect(src).toContain('getManagedBusinessesForUser.ts');
-    expect(src).toContain('getBusinessesForMyRequests.ts');
-    expect(src).toContain('getLeadProviderContactForEmail.ts');
   });
 });
