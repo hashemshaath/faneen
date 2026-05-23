@@ -28,7 +28,7 @@ export async function listAllContracts<TRow = Tables<'contracts'>>(
   const { select = '*', orderBy, limit, count, eqStatus, gteCreatedAt } = args;
   const selectOpts = count ? { count: count.mode, head: count.head } : undefined;
   let q = supabase.from('contracts').select(select, selectOpts);
-  if (eqStatus) q = q.eq('status', eqStatus);
+  if (eqStatus) q = q.eq('status', eqStatus as Tables<'contracts'>['status']);
   if (gteCreatedAt) q = q.gte('created_at', gteCreatedAt);
   if (orderBy) q = q.order(orderBy.column, { ascending: orderBy.ascending ?? true });
   if (typeof limit === 'number') q = q.limit(limit);
