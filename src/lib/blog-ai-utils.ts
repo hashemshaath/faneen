@@ -21,7 +21,7 @@ export async function callBlogAi(params: AiRequest): Promise<string> {
     else toast.error(error.message || 'AI error');
     throw error;
   }
-  return data?.result || '';
+  return (data as { result?: string } | null)?.result || '';
 }
 
 export function parseJsonResponse(raw: string): any {
