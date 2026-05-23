@@ -115,14 +115,17 @@ describe('CT-4 deferred surfaces remain untouched', () => {
     expect(s).not.toMatch(/\.from\(['"]contract_attachments['"]\)\.delete\(/);
   });
 
-  it('DashboardInstallments page is deferred (standalone installments dashboard)', () => {
+  it('DashboardInstallments page migrated to CT-9 installment services', () => {
     const s = read('pages/dashboard/DashboardInstallments.tsx');
-    expect(s).toMatch(NO_INSTALL_PLANS);
-    expect(s).toMatch(NO_INSTALL_PAYMENTS);
+    expect(s).not.toMatch(NO_INSTALL_PLANS);
+    expect(s).not.toMatch(NO_INSTALL_PAYMENTS);
+    expect(s).toMatch(/listInstallmentPlansWithPaymentsForContracts\(/);
+    expect(s).toMatch(/markInstallmentPaymentPaid\(/);
   });
 
-  it('overview widget shared.tsx remains deferred (dashboard overview widget)', () => {
+  it('overview widget shared.tsx migrated to CT-9 installment services', () => {
     const s = read('components/dashboard/overview/shared.tsx');
-    expect(s).toMatch(NO_INSTALL_PAYMENTS);
+    expect(s).not.toMatch(NO_INSTALL_PAYMENTS);
+    expect(s).toMatch(/listOverdueInstallmentPayments\(/);
   });
 });

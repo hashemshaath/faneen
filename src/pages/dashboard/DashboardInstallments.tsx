@@ -5,7 +5,11 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { listContractsForUserParticipant } from '@/modules/contracts';
+import {
+  listContractsForUserParticipant,
+  listInstallmentPlansWithPaymentsForContracts,
+  markInstallmentPaymentPaid,
+} from '@/modules/contracts';
 import { hasAdminAccess } from '@/services/userRoles';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -654,10 +658,9 @@ const DashboardInstallments = () => {
         select: 'id, title_ar, title_en, contract_number, client_id, provider_id',
       });
       if (!contracts?.length) return [];
-      const { data } = await supabase.from('installment_plans')
-        .select('*, installment_payments(*)')
-        .in('contract_id', contracts.map(c => c.id))
-        .order('created_at', { ascending: false });
+      const { data } = await listInstallmentPlansWithPaymentsForContracts(
+        contracts.map(c => c.id),
+      );
       return (data ?? []).map(plan => ({ ...plan, contract: contracts.find(c => c.id === plan.contract_id) }));
     },
     enabled: !!user,
@@ -706,7 +709,7 @@ const DashboardInstallments = () => {
 
   const markPaidMutation = useMutation({
     mutationFn: async (paymentId: string) => {
-      const { error } = await supabase.from('installment_payments').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', paymentId);
+      const { error } = await markInstallmentPaymentPaid(paymentId);
       if (error) throw error;
     },
     onSuccess: () => {

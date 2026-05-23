@@ -2,7 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { listEndingSoonContractsForUser } from '@/modules/contracts';
+import {
+  listEndingSoonContractsForUser,
+  listOverdueInstallmentPayments,
+} from '@/modules/contracts';
 import { countMessagesSentByUserSince } from '@/modules/messaging';
 import { countNotificationsForUserSince } from '@/modules/notifications';
 import { Card, CardContent } from '@/components/ui/card';
@@ -207,12 +210,7 @@ export const OverdueAlerts = React.memo(function OverdueAlerts({
     queryKey: ['overdue-alerts', userId],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
-      const { data: overduePayments } = await supabase
-        .from('installment_payments')
-        .select('id, plan_id')
-        .eq('status', 'pending')
-        .lt('due_date', today)
-        .limit(10);
+      const { data: overduePayments } = await listOverdueInstallmentPayments(today, 10);
 
       const { data: expiringContracts } = await listEndingSoonContractsForUser({
         userId,
