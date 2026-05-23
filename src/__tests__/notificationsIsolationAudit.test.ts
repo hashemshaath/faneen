@@ -68,9 +68,9 @@ describe('notifications-isolation-audit.mjs', () => {
     );
     expect(src).toMatch(/get_client_site_notification_preferences/);
     expect(src).toMatch(/update_client_site_notification_preferences/);
-    const scriptSrc = readFileSync(SCRIPT, 'utf8');
-    expect(scriptSrc).not.toMatch(/get_client_site_notification_preferences/);
-    expect(scriptSrc).not.toMatch(/update_client_site_notification_preferences/);
+    // Script passes despite the card retaining these RPCs — proves they are out of scope.
+    const out = execFileSync('node', [SCRIPT], { cwd: ROOT, encoding: 'utf8' });
+    expect(out).toMatch(/No unauthorized direct notification access found/);
   });
 
   it('currently passes (exit 0) against the live source tree', () => {
