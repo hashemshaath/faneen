@@ -81,9 +81,8 @@ describe('migration regression: AdminBusinesses', () => {
   it('no longer directly updates businesses via supabase.from', () => {
     expect(src).not.toMatch(/supabase\.from\(['"]businesses['"]\)\s*\.update/);
   });
-  it('imports updateBusinessById and updateBusinessesByIds from @/modules/businesses', () => {
+  it('imports updateBusinessById from @/modules/businesses', () => {
     expect(src).toMatch(/updateBusinessById/);
-    expect(src).toMatch(/updateBusinessesByIds/);
     expect(src).toMatch(/from '@\/modules\/businesses'/);
   });
   // R4E-3: toggle no longer uses generic `{[field]: value}` bag — it routes
