@@ -19,6 +19,7 @@ import {
   bulkSetBusinessesVerified,
 } from '@/modules/businesses';
 import { setBusinessMembershipTier, type MembershipTier } from '@/modules/memberships';
+import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import {
   listServicesByBusiness,
   listAllBusinessServicesLite,
