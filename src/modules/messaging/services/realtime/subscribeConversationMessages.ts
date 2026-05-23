@@ -25,8 +25,7 @@ export function subscribeConversationMessages({
   const channel = supabase
     .channel(`messages-${conversationId}`)
     .on(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      'postgres_changes' as any,
+      'postgres_changes',
       {
         event: 'INSERT',
         schema: 'public',
@@ -36,8 +35,9 @@ export function subscribeConversationMessages({
       () => {
         onInsert();
       },
-    )
-    .subscribe();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ) as any;
+  channel.subscribe();
 
   return () => {
     supabase.removeChannel(channel);
