@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listContractsForProviderOrBusiness } from '@/modules/contracts';
+import { listServicesByBusiness } from '@/modules/catalog';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOwnerBusiness } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -113,8 +114,12 @@ const DashboardAnalytics = () => {
         supabase.from('reviews').select('id, rating, created_at')
           .eq('business_id', business.id)
           .gte('created_at', start),
-        supabase.from('business_services').select('id')
-          .eq('business_id', business.id).eq('is_active', true),
+        listServicesByBusiness({
+          businessId: business.id,
+          select: 'id',
+          activeOnly: true,
+          order: null,
+        }),
         supabase.from('projects').select('id, status, created_at')
           .eq('business_id', business.id),
         supabase.from('portfolio_items').select('id')
