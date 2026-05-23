@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   listGlobalBnplProviders,
   listBusinessBnplProviders,
+  upsertBusinessBnplProvider,
+  updateBusinessBnplProviderForBusiness,
 } from '@/modules/catalog';
 import type { Database } from '@/integrations/supabase/types';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -63,17 +65,18 @@ export const BnplProvidersManager = ({ businessId }: Props) => {
   const toggleMutation = useMutation({
     mutationFn: async ({ providerId, enable }: { providerId: string; enable: boolean }) => {
       if (enable) {
-        const { error } = await supabase.from('business_bnpl_providers').upsert({
+        const { error } = await upsertBusinessBnplProvider({
           business_id: businessId,
           bnpl_provider_id: providerId,
           is_active: true,
         }, { onConflict: 'business_id,bnpl_provider_id' });
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('business_bnpl_providers')
-          .update({ is_active: false })
-          .eq('business_id', businessId)
-          .eq('bnpl_provider_id', providerId);
+        const { error } = await updateBusinessBnplProviderForBusiness({
+          businessId,
+          providerId,
+          values: { is_active: false },
+        });
         if (error) throw error;
       }
     },
@@ -88,11 +91,15 @@ export const BnplProvidersManager = ({ businessId }: Props) => {
     mutationFn: async ({ providerId }: { providerId: string }) => {
       const d = editData[providerId];
       if (!d) return;
-      const { error } = await supabase.from('business_bnpl_providers').update({
-        merchant_code: d.merchant_code || null,
-        credit_limit: Number(d.credit_limit) || 0,
-        notes: d.notes || null,
-      }).eq('business_id', businessId).eq('bnpl_provider_id', providerId);
+      const { error } = await updateBusinessBnplProviderForBusiness({
+        businessId,
+        providerId,
+        values: {
+          merchant_code: d.merchant_code || null,
+          credit_limit: Number(d.credit_limit) || 0,
+          notes: d.notes || null,
+        },
+      });
       if (error) throw error;
     },
     onSuccess: () => {
