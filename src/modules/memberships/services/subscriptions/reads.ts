@@ -31,3 +31,49 @@ export async function getCurrentMembershipSubscription<T = unknown>({
     .maybeSingle();
   return { data: data as unknown as T | null, error };
 }
+
+/**
+ * MEMB-7: Admin list of all membership subscriptions. Preserves
+ * exact join select / order / limit used by `AdminMemberships.tsx`.
+ */
+export interface ListAdminMembershipSubscriptionsOptions {
+  select?: string;
+  limit?: number;
+}
+
+export async function listAdminMembershipSubscriptions<T = unknown>({
+  select = '*, plan:membership_plans!plan_id(name_ar, name_en, tier)',
+  limit = 500,
+}: ListAdminMembershipSubscriptionsOptions = {}): Promise<{ data: T[] | null; error: unknown }> {
+  const { data, error } = await supabase
+    .from('membership_subscriptions')
+    .select(select)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  return { data: data as unknown as T[] | null, error };
+}
+
+/**
+ * MEMB-7: Count active membership subscriptions (head-only).
+ * Preserves the exact `{ count: 'exact', head: true }.eq('status','active')`
+ * shape used by `AdminDashboardView.tsx`. Returns the raw response.
+ */
+export async function countActiveMembershipSubscriptions() {
+  return await supabase
+    .from('membership_subscriptions')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'active');
+}
+
+/**
+ * MEMB-7: Admin usage report RPC wrapper.
+ */
+export interface AdminListMembershipUsageArgs {
+  _only_over_or_near: boolean;
+  _limit: number;
+}
+
+export async function adminListMembershipUsage(args: AdminListMembershipUsageArgs) {
+  const { data, error } = await supabase.rpc('admin_list_membership_usage', args);
+  return { data, error };
+}
