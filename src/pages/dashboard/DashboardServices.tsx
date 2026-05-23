@@ -6,6 +6,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
+import {
+  insertBusinessService,
+  insertBusinessServices,
+  updateBusinessServiceById,
+  deleteBusinessServiceById,
+  deleteDemoBusinessServicesForBusiness,
+} from '@/modules/catalog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -297,7 +304,7 @@ const DashboardServices = () => {
   /* ─── Mutations ─── */
   const reorderMut = useMutation({
     mutationFn: async (items: { id: string; sort_order: number }[]) => {
-      await Promise.all(items.map(item => supabase.from('business_services').update({ sort_order: item.sort_order }).eq('id', item.id)));
+      await Promise.all(items.map(item => updateBusinessServiceById(item.id, { sort_order: item.sort_order })));
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['dashboard-services'] }),
   });
@@ -312,10 +319,10 @@ const DashboardServices = () => {
         is_active: form.is_active, currency_code: form.currency_code,
       };
       if (editing) {
-        const { error } = await supabase.from('business_services').update(payload).eq('id', editing.id);
+        const { error } = await updateBusinessServiceById(editing.id, payload);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('business_services').insert({ ...payload, sort_order: services.length });
+        const { error } = await insertBusinessService({ ...payload, sort_order: services.length });
         if (error) throw error;
       }
     },
@@ -324,22 +331,22 @@ const DashboardServices = () => {
   });
 
   const deleteMut = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from('business_services').delete().eq('id', id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await deleteBusinessServiceById(id); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-services'] }); setDeleteConfirm(null); toast.success(rtl ? 'تم الحذف' : 'Deleted'); },
   });
 
   const toggleMut = useMutation({
-    mutationFn: async (s: Tables<'business_services'>) => { const { error } = await supabase.from('business_services').update({ is_active: !s.is_active }).eq('id', s.id); if (error) throw error; },
+    mutationFn: async (s: Tables<'business_services'>) => { const { error } = await updateBusinessServiceById(s.id, { is_active: !s.is_active }); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-services'] }); toast.success(rtl ? 'تم التحديث' : 'Updated'); },
   });
 
   const bulkToggleMut = useMutation({
-    mutationFn: async (activate: boolean) => { await Promise.all(Array.from(selectedIds).map(id => supabase.from('business_services').update({ is_active: activate }).eq('id', id))); },
+    mutationFn: async (activate: boolean) => { await Promise.all(Array.from(selectedIds).map(id => updateBusinessServiceById(id, { is_active: activate }))); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-services'] }); setSelectedIds(new Set()); toast.success(rtl ? 'تم التحديث' : 'Updated'); },
   });
 
   const bulkDeleteMut = useMutation({
-    mutationFn: async () => { await Promise.all(Array.from(selectedIds).map(id => supabase.from('business_services').delete().eq('id', id))); },
+    mutationFn: async () => { await Promise.all(Array.from(selectedIds).map(id => deleteBusinessServiceById(id))); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-services'] }); setSelectedIds(new Set()); toast.success(rtl ? 'تم الحذف' : 'Deleted'); },
   });
 
@@ -355,7 +362,7 @@ const DashboardServices = () => {
         currency_code: 'SAR', is_active: true, sort_order: baseOrder + i,
         is_demo: !!it.is_demo,
       }));
-      const { error } = await supabase.from('business_services').insert(rows);
+      const { error } = await insertBusinessServices(rows);
       if (error) throw error;
       return rows.length;
     },
@@ -370,7 +377,7 @@ const DashboardServices = () => {
   const clearDemoMut = useMutation({
     mutationFn: async () => {
       if (!businessId) throw new Error('No business');
-      const { error } = await supabase.from('business_services').delete().eq('business_id', businessId).eq('is_demo', true);
+      const { error } = await deleteDemoBusinessServicesForBusiness(businessId);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-services'] }); toast.success(rtl ? 'تم حذف الخدمات التجريبية' : 'Demo services removed'); },
