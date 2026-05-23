@@ -1772,7 +1772,7 @@ const AdminBusinesses = () => {
                       </div>
 
                       <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
-                        <Select value={biz.membership_tier} onValueChange={tier => tierMutation.mutate({ id: biz.id, tier })}>
+                        <Select value={biz.membership_tier} onValueChange={tier => tierMutation.mutate({ id: biz.id, tier: tier as MembershipTier })}>
                           <SelectTrigger className="h-8 text-xs w-28 border-dashed rounded-xl"><SelectValue /></SelectTrigger>
                           <SelectContent className="rounded-xl">
                             {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
