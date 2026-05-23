@@ -27,6 +27,7 @@
     "profiles-isolation-audit": "node scripts/profiles-isolation-audit.mjs",
     "businesses-writes-isolation-audit": "node scripts/businesses-writes-isolation-audit.mjs",
     "businesses-reads-isolation-audit": "node scripts/businesses-reads-isolation-audit.mjs",
+    "catalog-isolation-audit": "node scripts/catalog-isolation-audit.mjs",
     "business-staff-isolation-audit": "node scripts/business-staff-isolation-audit.mjs",
     "leads-quotes-isolation-audit": "node scripts/leads-quotes-isolation-audit.mjs",
     "messaging-isolation-audit": "node scripts/messaging-isolation-audit.mjs",
