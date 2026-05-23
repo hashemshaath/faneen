@@ -41,7 +41,7 @@ describe('M-3 migration: messaging mutation callsites use service wrappers', () 
     expect(src).toMatch(/viewerUserId:\s*user\.id/);
     // Fail-soft .then chain preserved on mark-read
     expect(src).toMatch(/markConversationMessagesRead\(\{[\s\S]*?\}\)\.then\(/);
-    // Storage intentionally deferred to M-5
-    expect(src).toMatch(/supabase\.storage\.from\(\s*'chat-attachments'\s*\)/);
+    // Storage migrated in M-5: no direct chat-attachments access remains
+    expect(src).not.toMatch(/supabase\.storage\.from\(\s*['"]chat-attachments['"]\s*\)/);
   });
 });
