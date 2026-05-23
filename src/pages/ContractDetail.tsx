@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getContractById } from '@/modules/contracts';
 import { listWarrantiesForContract } from '@/modules/catalog';
+import type { Database } from '@/integrations/supabase/types';
 import { verifyPdfArabic } from '@/modules/contracts/services/pdf/verifyPdfArabic';
 import { getProfileForContractParty } from '@/modules/users';
 import { createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
