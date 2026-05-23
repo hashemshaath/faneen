@@ -28,6 +28,22 @@ import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { approveAmendment, rejectAmendment, cancelAmendment, applyAmendment } from '@/modules/contracts/services/amendments';
 import { acceptContract, recalcContractTotal as recalcContractTotalService } from '@/modules/contracts/services/mutations';
 import { getContractSourceLeadSummary } from '@/modules/contracts/services/leadRpcs';
+import {
+  listContractMilestones,
+  createContractMilestone,
+  listContractNotes,
+  createContractNote,
+  deleteContractNote,
+  listContractMeasurements,
+  createContractMeasurement,
+  updateContractMeasurement,
+  deleteContractMeasurement,
+  listContractAttachments,
+  listInstallmentPlansForContract,
+  listInstallmentPaymentsByPlanIds,
+  updateInstallmentPayment,
+  updateInstallmentPaymentIfStatus,
+} from '@/modules/contracts/services/childTables';
 import { recordContractPdfExport } from '@/lib/contract-pdf-history';
 import { ContractPdfExportHistory } from '@/components/contract/ContractPdfExportHistory';
 import { ContractPdfPreviewOverlay } from '@/components/contract/ContractPdfPreviewOverlay';
@@ -325,7 +341,7 @@ const ContractDetail = () => {
   const { data: milestones } = useQuery({
     queryKey: ['milestones', id],
     queryFn: async () => {
-      const { data } = await supabase.from('contract_milestones').select('*').eq('contract_id', id!).order('sort_order');
+      const { data } = await listContractMilestones(id!);
       return data ?? [];
     },
     enabled: !!id && !!user,
@@ -370,7 +386,7 @@ const ContractDetail = () => {
   const { data: notes } = useQuery({
     queryKey: ['contract-notes', id],
     queryFn: async () => {
-      const { data } = await supabase.from('contract_notes').select('*').eq('contract_id', id!).order('created_at', { ascending: false });
+      const { data } = await listContractNotes(id!);
       return data ?? [];
     },
     enabled: !!id && !!user,
@@ -379,7 +395,7 @@ const ContractDetail = () => {
   const { data: attachments } = useQuery({
     queryKey: ['contract-attachments', id],
     queryFn: async () => {
-      const { data } = await supabase.from('contract_attachments').select('*').eq('contract_id', id!).order('created_at', { ascending: false });
+      const { data } = await listContractAttachments(id!);
       return data ?? [];
     },
     enabled: !!id && !!user,
@@ -388,7 +404,7 @@ const ContractDetail = () => {
   const { data: installmentPlans } = useQuery({
     queryKey: ['installment-plans', id],
     queryFn: async () => {
-      const { data } = await supabase.from('installment_plans').select('*').eq('contract_id', id!).order('created_at', { ascending: false });
+      const { data } = await listInstallmentPlansForContract(id!);
       return data ?? [];
     },
     enabled: !!id && !!user,
@@ -398,7 +414,7 @@ const ContractDetail = () => {
     queryKey: ['installment-payments', installmentPlans?.[0]?.id],
     queryFn: async () => {
       const planIds = installmentPlans!.map(p => p.id);
-      const { data } = await supabase.from('installment_payments').select('*').in('plan_id', planIds).order('installment_number');
+      const { data } = await listInstallmentPaymentsByPlanIds(planIds);
       return data ?? [];
     },
     enabled: !!installmentPlans && installmentPlans.length > 0,
@@ -407,7 +423,7 @@ const ContractDetail = () => {
   const { data: measurements } = useQuery({
     queryKey: ['contract-measurements', id],
     queryFn: async () => {
-      const { data } = await supabase.from('contract_measurements').select('*').eq('contract_id', id!).order('sort_order');
+      const { data } = await listContractMeasurements(id!);
       return data ?? [];
     },
     enabled: !!id && !!user,
@@ -547,7 +563,7 @@ const ContractDetail = () => {
 
   const submitNote = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('contract_notes').insert({
+      const { error } = await createContractNote({
         contract_id: id!,
         user_id: user!.id,
         content: noteContent,
@@ -565,7 +581,7 @@ const ContractDetail = () => {
 
   const deleteNote = useMutation({
     mutationFn: async (noteId: string) => {
-      await supabase.from('contract_notes').delete().eq('id', noteId);
+      await deleteContractNote(noteId);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['contract-notes', id] }),
   });
@@ -640,10 +656,10 @@ const ContractDetail = () => {
         sort_order: (measurements?.length || 0) + 1,
       };
       if (editingMeasurement) {
-        const { error } = await supabase.from('contract_measurements').update(payload).eq('id', editingMeasurement.id);
+        const { error } = await updateContractMeasurement(editingMeasurement.id, payload);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('contract_measurements').insert(payload);
+        const { error } = await createContractMeasurement(payload);
         if (error) throw error;
       }
     },
@@ -659,7 +675,7 @@ const ContractDetail = () => {
   const deleteMeasurementMutation = useMutation({
     mutationFn: async (measurementId: string) => {
       if (isContractLocked) throw new Error(lockedMsg());
-      const { error } = await supabase.from('contract_measurements').delete().eq('id', measurementId);
+      const { error } = await deleteContractMeasurement(measurementId);
       if (error) throw error;
     },
     onSuccess: async () => {
@@ -691,7 +707,7 @@ const ContractDetail = () => {
   /* ─── Milestone Add ─── */
   const addMilestoneMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('contract_milestones').insert({
+      const { error } = await createContractMilestone({
         contract_id: id!, title_ar: msForm.title_ar,
         amount: Number(msForm.amount), due_date: msForm.due_date || null,
         description_ar: msForm.description_ar || null,
@@ -1453,7 +1469,7 @@ const ContractDetail = () => {
         notes: m.notes || null, sort_order: startOrder + i,
       });
     }
-    const { error } = await supabase.from('contract_measurements').insert(records);
+    const { error } = await createContractMeasurement(records);
     if (error) {
       toast({ title: error.message, variant: 'destructive' });
       return;
@@ -2086,10 +2102,7 @@ const ContractDetail = () => {
                                     value={pay.milestone_id || '__none__'}
                                     onValueChange={async (v) => {
                                       const newVal = v === '__none__' ? null : v;
-                                      const { error } = await supabase
-                                        .from('installment_payments')
-                                        .update({ milestone_id: newVal })
-                                        .eq('id', pay.id);
+                                      const { error } = await updateInstallmentPayment(pay.id, { milestone_id: newVal });
                                       if (error) {
                                         toast({ title: isRTL ? 'تعذّر الحفظ' : 'Could not save', description: error.message, variant: 'destructive' });
                                       } else {
@@ -2255,13 +2268,7 @@ const ContractDetail = () => {
                                             updates.notes = `${prior}${trimmedNote}`.slice(0, 1000);
                                           }
                                           // Guard against double-confirm with eq('status','pending')
-                                          const { data: updated, error } = await supabase
-                                            .from('installment_payments')
-                                            .update(updates)
-                                            .eq('id', pay.id)
-                                            .eq('status', 'pending')
-                                            .select('id')
-                                            .maybeSingle();
+                                          const { data: updated, error } = await updateInstallmentPaymentIfStatus(pay.id, updates, 'pending');
                                           if (error) throw error;
                                           if (!updated) {
                                             toast({ title: isRTL ? 'تعذّر تسجيل الدفعة' : 'Could not record payment', description: isRTL ? 'قد تكون قد سُجلت من جهة أخرى' : 'May have been recorded elsewhere', variant: 'destructive' });
@@ -2269,7 +2276,7 @@ const ContractDetail = () => {
                                             // Best-effort audit note (non-fatal if RLS blocks)
                                             try {
                                               if (user?.id && contract?.id) {
-                                                await supabase.from('contract_notes').insert({
+                                                await createContractNote({
                                                   contract_id: contract.id,
                                                   user_id: user.id,
                                                   note_type: 'note',

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { createContractAttachment } from '@/modules/contracts/services/childTables';
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
 import {
   validateAttachmentFile,
@@ -126,7 +127,7 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
         payment_id:     linkType === 'payment'     ? linkId : null,
       };
 
-      const { error } = await supabase.from('contract_attachments').insert(insertPayload);
+      const { error } = await createContractAttachment(insertPayload);
       if (error) {
         // Best-effort cleanup of orphaned storage object
         await supabase.storage.from('contract-attachments').remove([path]).catch(() => {});

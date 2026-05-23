@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { createContractAttachment } from '@/modules/contracts/services/childTables';
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
 import {
   validateAttachmentFile,
@@ -71,7 +72,7 @@ export const MeasurementAttachmentsPanel: React.FC<Props> = ({
       if (upErr) throw upErr;
       setProgress(70);
       const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
-      const { error } = await supabase.from('contract_attachments').insert({
+      const { error } = await createContractAttachment({
         contract_id: contractId,
         user_id: userId,
         file_name: pending.name,

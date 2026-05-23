@@ -12,7 +12,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { createInstallmentPlan, createInstallmentPayments } from '@/modules/contracts/services/childTables';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -159,19 +159,15 @@ export const PaymentScheduleGenerator: React.FC<Props> = ({
   const createMutation = useMutation({
     mutationFn: async () => {
       // 1) plan
-      const { data: plan, error: planErr } = await supabase
-        .from('installment_plans')
-        .insert({
-          contract_id: contractId,
-          total_amount: totalAmount,
-          number_of_installments: generated.length,
-          installment_amount: generated[0]?.amount ?? 0,
-          currency_code: safeCurrency,
-          start_date: generated[0]?.due_date ?? today,
-          status: 'active',
-        })
-        .select()
-        .single();
+      const { data: plan, error: planErr } = await createInstallmentPlan<{ id: string }>({
+        contract_id: contractId,
+        total_amount: totalAmount,
+        number_of_installments: generated.length,
+        installment_amount: generated[0]?.amount ?? 0,
+        currency_code: safeCurrency,
+        start_date: generated[0]?.due_date ?? today,
+        status: 'active',
+      });
       if (planErr) throw planErr;
 
       // 2) payments (status='pending' — never auto-mark paid)
@@ -184,7 +180,7 @@ export const PaymentScheduleGenerator: React.FC<Props> = ({
         milestone_id: g.milestone_id,
         notes: isRTL ? g.title_ar : g.title_en,
       }));
-      const { error: payErr } = await supabase.from('installment_payments').insert(payload);
+      const { error: payErr } = await createInstallmentPayments(payload);
       if (payErr) throw payErr;
     },
     onSuccess: () => {

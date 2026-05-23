@@ -49,6 +49,17 @@ import {
 } from '@/modules/contracts/services/mutations';
 import { updateContractById } from '@/modules/contracts/services/updateContractById';
 import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
+import {
+  createContractNote,
+  createContractMeasurement,
+  createContractMilestone,
+  updateContractMilestone,
+  createContractAttachment,
+  getInstallmentPlanIdForContract,
+  createInstallmentPlan,
+  createInstallmentPayments,
+  updateInstallmentPayment,
+} from '@/modules/contracts/services/childTables';
 import { approveAmendment } from '@/modules/contracts/services/amendments';
 import { prepareContractPrefillFromLead } from '@/modules/contracts/services/leadRpcs';
 import {
@@ -630,7 +641,7 @@ const DashboardContracts = () => {
   /* ── Mutations ── */
   const addNoteMutation = useMutation({
     mutationFn: async ({ contractId, content, noteType }: { contractId: string; content: string; noteType?: string }) => {
-      const { error } = await supabase.from('contract_notes').insert({ contract_id: contractId, user_id: user!.id, content, note_type: noteType || 'note' });
+      const { error } = await createContractNote({ contract_id: contractId, user_id: user!.id, content, note_type: noteType || 'note' });
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-contract-notes'] }); setNoteText(''); toast.success(isRTL ? 'تمت إضافة الملاحظة' : 'Note added'); },
@@ -640,7 +651,7 @@ const DashboardContracts = () => {
     mutationFn: async ({ contractId }: { contractId: string }) => {
       const area = (Number(measurementForm.length_mm) * Number(measurementForm.width_mm)) / 1000000;
       const totalCost = Number(measurementForm.unit_price) * Number(measurementForm.quantity);
-      const { error } = await supabase.from('contract_measurements').insert({
+      const { error } = await createContractMeasurement({
         contract_id: contractId, name_ar: measurementForm.name_ar, piece_number: measurementForm.piece_number,
         floor_label: measurementForm.floor_label, location_ar: measurementForm.location_ar,
         length_mm: Number(measurementForm.length_mm), width_mm: Number(measurementForm.width_mm),
@@ -665,7 +676,7 @@ const DashboardContracts = () => {
   const addMilestoneMutation = useMutation({
     mutationFn: async ({ contractId }: { contractId: string }) => {
       const existing = allMilestones.filter(m => m.contract_id === contractId);
-      const { error } = await supabase.from('contract_milestones').insert({
+      const { error } = await createContractMilestone({
         contract_id: contractId, title_ar: milestoneForm.title_ar,
         amount: Number(milestoneForm.amount), due_date: milestoneForm.due_date || null,
         sort_order: existing.length + 1,
@@ -734,7 +745,7 @@ const DashboardContracts = () => {
         const { error: upErr } = await supabase.storage.from('contract-attachments').upload(path, file);
         if (!upErr) {
           const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
-          await supabase.from('contract_attachments').insert({
+          await createContractAttachment({
             contract_id: contractId, user_id: user!.id, file_name: file.name,
             file_url: urlData.publicUrl, file_type: 'image',
           });
@@ -756,19 +767,19 @@ const DashboardContracts = () => {
   const addPaymentMutation = useMutation({
     mutationFn: async ({ contractId }: { contractId: string }) => {
       // Find or create installment plan
-      let { data: plan } = await supabase.from('installment_plans').select('id').eq('contract_id', contractId).maybeSingle();
+      let { data: plan } = await getInstallmentPlanIdForContract(contractId);
       if (!plan) {
         const contract = contracts.find((c) => c.id === contractId);
-        const { data: newPlan, error: planErr } = await supabase.from('installment_plans').insert({
+        const { data: newPlan, error: planErr } = await createInstallmentPlan<{ id: string }>({
           contract_id: contractId, total_amount: Number(contract?.total_amount || 0),
           installment_amount: Number(paymentForm.amount), number_of_installments: 1,
           start_date: paymentForm.due_date || new Date().toISOString().split('T')[0],
-        }).select('id').single();
+        }, 'id');
         if (planErr) throw planErr;
         plan = newPlan;
       }
       const existing = allPayments.filter((p) => p.contract_id === contractId);
-      const { error } = await supabase.from('installment_payments').insert({
+      const { error } = await createInstallmentPayments({
         plan_id: plan!.id, installment_number: existing.length + 1,
         amount: Number(paymentForm.amount), due_date: paymentForm.due_date,
         notes: paymentForm.notes || null,
@@ -787,7 +798,7 @@ const DashboardContracts = () => {
   /* ── Mark Payment as Paid ── */
   const markPaidMutation = useMutation({
     mutationFn: async ({ paymentId }: { paymentId: string }) => {
-      const { error } = await supabase.from('installment_payments').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', paymentId);
+      const { error } = await updateInstallmentPayment(paymentId, { status: 'paid', paid_at: new Date().toISOString() });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -913,7 +924,7 @@ const DashboardContracts = () => {
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const update: any = { status };
       if (status === 'completed') update.completed_at = new Date().toISOString();
-      const { error } = await supabase.from('contract_milestones').update(update).eq('id', id);
+      const { error } = await updateContractMilestone(id, update);
       if (error) throw error;
       // Best-effort: notify client + email when a milestone is updated by provider.
       if (status === 'completed') {
@@ -974,7 +985,7 @@ const DashboardContracts = () => {
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
       const fileType = file.type.startsWith('image/') ? 'image' : 'document';
-      const { error } = await supabase.from('contract_attachments').insert({
+      const { error } = await createContractAttachment({
         contract_id: contractId, user_id: user!.id, file_name: file.name,
         file_url: urlData.publicUrl, file_type: fileType,
       });
