@@ -108,9 +108,11 @@ describe('CT-4 migration: contract components use child-table services', () => {
 });
 
 describe('CT-4 deferred surfaces remain untouched', () => {
-  it('lib/contract-attachments.ts still owns the delete+storage helper (CT-6 storage track)', () => {
+  it('lib/contract-attachments.ts delete+storage helper now routes through CT-4 + CT-7 services', () => {
     const s = read('lib/contract-attachments.ts');
-    expect(s).toMatch(/\.from\(['"]contract_attachments['"]\)\.delete\(\)\.eq\('id'/);
+    expect(s).toMatch(/deleteContractAttachmentById\(/);
+    expect(s).toMatch(/removeContractAttachmentFiles\(/);
+    expect(s).not.toMatch(/\.from\(['"]contract_attachments['"]\)\.delete\(/);
   });
 
   it('DashboardInstallments page is deferred (standalone installments dashboard)', () => {
