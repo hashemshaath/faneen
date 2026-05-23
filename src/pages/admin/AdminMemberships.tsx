@@ -672,7 +672,7 @@ const AdminMemberships = () => {
 
   const cancelSubMutation = useMutation({
     mutationFn: async (subId: string) => {
-      const { error } = await supabase.rpc('cancel_subscription' , { _subscription_id: subId });
+      const { error } = await cancelSubscription({ _subscription_id: subId });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -686,7 +686,7 @@ const AdminMemberships = () => {
   const upgradeMutation = useMutation({
     mutationFn: async () => {
       if (!upgradeSub || !upgradeTargetPlan) return;
-      const { error } = await supabase.rpc('admin_upgrade_subscription' , {
+      const { error } = await adminUpgradeSubscription({
         _subscription_id: upgradeSub.id,
         _new_plan_id: upgradeTargetPlan,
         _billing_cycle: upgradeCycle,
@@ -706,7 +706,7 @@ const AdminMemberships = () => {
   const handleRenew = useCallback(async (sub: any) => {
     if (!sub.plan_id || !sub.user_id) return;
     try {
-      const { error } = await supabase.rpc('subscribe_to_plan' , {
+      const { error } = await subscribeToPlan({
         _user_id: sub.user_id,
         _plan_id: sub.plan_id,
         _business_id: sub.business_id || null,
