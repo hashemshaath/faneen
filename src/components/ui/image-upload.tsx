@@ -92,15 +92,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         ? `${user.id}/${folder}/${fileName}`
         : `${user.id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(path, compressed, { cacheControl: '3600', upsert: false });
+      const { error: uploadError } = await uploadPublicImage({
+        bucket,
+        path,
+        file: compressed,
+        options: { cacheControl: '3600', upsert: false },
+      });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(path);
+      const { data: { publicUrl } } = getPublicImageUrl({ bucket, path });
 
       onChange(publicUrl);
       toast.success(tx.uploadOk);
@@ -130,10 +131,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     if (value && onRemove) {
       // Try to extract path from URL and delete from storage
       try {
-        const url = new URL(value);
-        const pathParts = url.pathname.split(`/storage/v1/object/public/${bucket}/`);
-        if (pathParts[1]) {
-          await supabase.storage.from(bucket).remove([decodeURIComponent(pathParts[1])]);
+        const extractedPath = extractPublicStoragePath({ bucket, publicUrl: value });
+        if (extractedPath) {
+          await removePublicImage({ bucket, path: extractedPath });
         }
       } catch {
         // Ignore deletion errors for external URLs
