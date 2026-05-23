@@ -24,8 +24,8 @@ import {
   SECTOR_LABEL_AR, TIMELINE_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, normalizePhoneForWhatsApp,
 } from '@/lib/quoteRequests';
-import { supabase as sb } from '@/integrations/supabase/client';
 import { getProviderLeadDetail } from '@/modules/leads/services/detail';
+import { getRevealedContact } from '@/modules/leads/services/getRevealedContact';
 import {
   markProviderLeadViewed,
   updateProviderLeadResponse,
