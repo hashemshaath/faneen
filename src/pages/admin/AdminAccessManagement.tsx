@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { PasswordResetLogPanel } from '@/components/admin/PasswordResetLogPanel';
 import { useNoIndex } from "@/hooks/useNoIndex";
-import { listAllUserRoles, grantRole, revokeRoleByUserAndRole, adminResetPassword } from '@/modules/identity';
+import { listAllUserRoles, grantRole, revokeRoleByUserAndRole, adminResetPassword, listPasswordResetLogs } from '@/modules/identity';
 
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
@@ -69,10 +69,7 @@ const AdminAccessManagement = () => {
   const { data: resetLogs = [], isLoading: loadingLogs } = useQuery({
     queryKey: ['password-reset-logs'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('password_reset_log')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(200);
+      const { data, error } = await listPasswordResetLogs({ limit: 200 });
       if (error) throw error;
       return data;
     },
