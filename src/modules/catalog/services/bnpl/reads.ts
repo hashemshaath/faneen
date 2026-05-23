@@ -12,17 +12,18 @@ export interface ListGlobalBnplProvidersOptions {
   order?: string | null;
 }
 
-export async function listGlobalBnplProviders({
+export async function listGlobalBnplProviders<T = unknown>({
   select = '*',
   activeOnly = false,
   ids,
   order = null,
-}: ListGlobalBnplProvidersOptions = {}) {
+}: ListGlobalBnplProvidersOptions = {}): Promise<{ data: T[] | null; error: unknown }> {
   let q = supabase.from('bnpl_providers').select(select);
   if (ids) q = q.in('id', ids);
   if (activeOnly) q = q.eq('is_active', true);
   if (order) q = q.order(order);
-  return await q;
+  const { data, error } = await q;
+  return { data: data as unknown as T[] | null, error };
 }
 
 export interface ListBusinessBnplProvidersOptions {
@@ -30,12 +31,13 @@ export interface ListBusinessBnplProvidersOptions {
   select?: string;
 }
 
-export async function listBusinessBnplProviders({
+export async function listBusinessBnplProviders<T = unknown>({
   businessId,
   select = '*',
-}: ListBusinessBnplProvidersOptions) {
-  return await supabase
+}: ListBusinessBnplProvidersOptions): Promise<{ data: T[] | null; error: unknown }> {
+  const { data, error } = await supabase
     .from('business_bnpl_providers')
     .select(select)
     .eq('business_id', businessId);
+  return { data: data as unknown as T[] | null, error };
 }
