@@ -4,7 +4,6 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { listProfilesByUserIds } from '@/modules/users';
 import {
   listConversationsForUser,
@@ -14,6 +13,8 @@ import {
   markConversationMessagesRead,
   subscribeConversationMessages,
   subscribeUserConversations,
+  uploadChatAttachment,
+  getChatAttachmentPublicUrl,
 } from '@/modules/messaging';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -834,9 +835,9 @@ const DashboardMessages = () => {
     }
     const ext = toUpload.name.split('.').pop() || 'bin';
     const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error } = await supabase.storage.from('chat-attachments').upload(fileName, toUpload, { contentType: toUpload.type });
+    const { error } = await uploadChatAttachment(fileName, toUpload, { contentType: toUpload.type });
     if (error) throw error;
-    const { data: urlData } = supabase.storage.from('chat-attachments').getPublicUrl(fileName);
+    const { data: urlData } = getChatAttachmentPublicUrl(fileName);
     return urlData.publicUrl;
   }, [user, isRTL]);
 
