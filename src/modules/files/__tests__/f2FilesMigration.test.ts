@@ -53,9 +53,9 @@ describe('F-2 storage migration', () => {
     expect(src).toContain('contentType: file.type');
   });
 
-  it('out-of-scope storage callsites remain direct (deferred to F-4)', () => {
-    // F-3 migrated blog-images + showcase; assertion narrowed accordingly.
-    expect(read('src/pages/admin/AdminBranding.tsx')).toMatch(/supabase\.storage\.from\('brand-assets'\)/);
-    expect(read('src/components/admin/CrDocumentScanner.tsx')).toMatch(/supabase\.storage/);
+  it('out-of-scope storage callsites: F-4 has now migrated them', () => {
+    // F-4 migrated business-documents + brand-assets; both targets are clean.
+    expect(read('src/pages/admin/AdminBranding.tsx')).not.toMatch(/supabase\.storage/);
+    expect(read('src/components/admin/CrDocumentScanner.tsx')).not.toMatch(/supabase\.storage/);
   });
 });
