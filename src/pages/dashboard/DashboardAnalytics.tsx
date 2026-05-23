@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listContractsForProviderOrBusiness } from '@/modules/contracts';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOwnerBusiness } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';

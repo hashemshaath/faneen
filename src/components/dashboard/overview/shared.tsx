@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listEndingSoonContractsForUser } from '@/modules/contracts';
 import { countMessagesSentByUserSince } from '@/modules/messaging';
 import { countNotificationsForUserSince } from '@/modules/notifications';
 import { Card, CardContent } from '@/components/ui/card';
