@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -12,6 +11,13 @@ import {
   validateImageFile,
   getImageRejectionMessage,
 } from '@/lib/image-validate';
+import {
+  IMAGE_BUCKET_CONSTRAINTS,
+  uploadPublicImage,
+  getPublicImageUrl,
+  removePublicImage,
+  extractPublicStoragePath,
+} from '@/modules/files';
 
 interface ImageUploadProps {
   bucket: string;
@@ -27,17 +33,8 @@ interface ImageUploadProps {
   compact?: boolean;
 }
 
-// Per-bucket upload constraints (mirrors storage.buckets server-side limits).
-// Phase 5: GIF removed across all public/business image buckets — none of these
-// flows need animation, and dropping GIF reduces XSS-via-tracking-pixel risk
-// and saves bandwidth. SVG remains blocked everywhere except admin-only
-// brand-assets (handled in AdminBranding).
-const BUCKET_CONSTRAINTS: Record<string, { maxMB: number; mimes: string[] }> = {
-  'business-assets':  { maxMB: 2, mimes: [...ALLOWED_PUBLIC_IMAGE_MIMES] },
-  'portfolio-images': { maxMB: 5, mimes: [...ALLOWED_PUBLIC_IMAGE_MIMES] },
-  'project-images':   { maxMB: 5, mimes: [...ALLOWED_PUBLIC_IMAGE_MIMES] },
-  'blog-images':      { maxMB: 5, mimes: [...ALLOWED_PUBLIC_IMAGE_MIMES] },
-};
+// Per-bucket upload constraints now canonical in @/modules/files
+// (IMAGE_BUCKET_CONSTRAINTS). Behavior preserved verbatim.
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
   bucket,
@@ -54,7 +51,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 }) => {
   const { user } = useAuth();
   const { isRTL } = useLanguage();
-  const constraints = BUCKET_CONSTRAINTS[bucket];
+  const constraints = IMAGE_BUCKET_CONSTRAINTS[bucket];
   const effectiveMaxMB = constraints?.maxMB ?? maxSizeMB;
   const allowedMimes = constraints?.mimes;
   const tx = {
