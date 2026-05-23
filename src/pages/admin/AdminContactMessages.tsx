@@ -608,7 +608,7 @@ const AdminContactMessages = () => {
               variant="outline" size="sm" className="gap-2"
               onClick={async () => {
                 const t = toast.loading(isRTL ? 'جارٍ توليد التقرير...' : 'Generating report...');
-                const { data, error } = await runWeeklySlaReport();
+                const { data, error } = await runWeeklySlaReport() as { data: { ok?: boolean } | null; error: unknown };
                 toast.dismiss(t);
                 if (error || !data?.ok) {
                   toast.error(isRTL ? 'فشل توليد التقرير' : 'Report failed');
@@ -624,7 +624,7 @@ const AdminContactMessages = () => {
                 variant="default" size="sm" className="gap-2"
                 onClick={async () => {
                   const t = toast.loading(isRTL ? 'يحلّل الذكاء الاصطناعي الرسالة...' : 'AI analysing...');
-                  const { data, error } = await triageContactMessage({ message_id: focused.id });
+                  const { data, error } = await triageContactMessage({ message_id: focused.id }) as { data: { error?: string; priority?: string; category?: string } | null; error: unknown };
                   toast.dismiss(t);
                   if (error || data?.error) {
                     toast.error(data?.error || (isRTL ? 'فشل الفرز الذكي' : 'Triage failed'));
