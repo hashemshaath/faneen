@@ -2,6 +2,10 @@ import React, { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  countUnreadNotificationsForUser,
+  listRecentNotificationsForUser,
+} from '@/modules/notifications';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +49,7 @@ export default function UserDashboardView({
         supabase.from('contracts').select('id, contract_number, title_ar, title_en, status, total_amount, currency_code, created_at', { count: 'exact' }).eq('client_id', user.id).order('created_at', { ascending: false }).limit(5),
         countConversationsForUser({ userId: user.id }),
         supabase.from('blog_bookmarks').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
-        supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false),
+        countUnreadNotificationsForUser({ userId: user.id }),
       ]);
 
       const allContracts = contracts.data || [];
@@ -72,8 +76,11 @@ export default function UserDashboardView({
   const { data: recentNotifications } = useQuery({
     queryKey: ['user-recent-notifications', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('notifications').select('id, title_ar, title_en, body_ar, body_en, notification_type, is_read, created_at, action_url')
-        .eq('user_id', user.id).order('created_at', { ascending: false }).limit(5);
+      const { data } = await listRecentNotificationsForUser({
+        userId: user.id,
+        select: 'id, title_ar, title_en, body_ar, body_en, notification_type, is_read, created_at, action_url',
+        limit: 5,
+      });
       return data || [];
     },
     enabled: !!user,
