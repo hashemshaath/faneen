@@ -105,7 +105,7 @@ export const ExecutionSiteSection: React.FC<Props> = ({
   const { data: sites = [], isLoading, refetch } = useQuery({
     queryKey: ['client-sites', businessId, clientUserId ?? null],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('list_client_sites_for_contract', {
+      const { data, error } = await listClientSitesForContract({
         _business_id: businessId!,
         _client_user_id: clientUserId ?? undefined,
       });
