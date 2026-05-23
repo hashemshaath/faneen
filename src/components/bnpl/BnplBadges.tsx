@@ -31,11 +31,11 @@ export const BnplBadges = ({ businessId, compact = false }: Props) => {
   const { data: providers = [] } = useQuery({
     queryKey: ['bnpl-providers', providerIds],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('bnpl_providers')
-        .select('*')
-        .in('id', providerIds)
-        .eq('is_active', true);
+      const { data } = await listGlobalBnplProviders({
+        select: '*',
+        ids: providerIds,
+        activeOnly: true,
+      });
       return data ?? [];
     },
     enabled: providerIds.length > 0,
