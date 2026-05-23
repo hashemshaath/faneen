@@ -1278,8 +1278,16 @@ const ContractDetail = () => {
           binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + chunk, bytes.length)));
         }
         const pdfBase64 = btoa(binary);
-        const { data: backend, error } = await verifyPdfArabic({ pdfBase64, fileName });
+        const { data, error } = await verifyPdfArabic({ pdfBase64, fileName });
         if (error) throw error;
+        const backend = data as {
+          status?: string;
+          mojibakeDetected?: boolean;
+          mojibakeCount?: number;
+          sample?: string;
+          verifiedAt?: string;
+          report?: string;
+        } | null;
         backendStatus = backend?.status === 'PASS' ? 'PASS' : 'FAIL';
         mojibakeDetected = !!backend?.mojibakeDetected;
         mojibakeCount = Number(backend?.mojibakeCount ?? 0);
