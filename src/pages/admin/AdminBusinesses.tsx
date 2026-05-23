@@ -10,7 +10,14 @@ import { listDistinctContractBusinessIds } from '@/modules/contracts';
 import type { Database } from '@/integrations/supabase/types';
 import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
-import { updateBusinessById, updateBusinessesByIds, listAdminBusinesses } from '@/modules/businesses';
+import {
+  updateBusinessById,
+  listAdminBusinesses,
+  setBusinessActive,
+  setBusinessVerified,
+  bulkSetBusinessesActive,
+  bulkSetBusinessesVerified,
+} from '@/modules/businesses';
 import { setBusinessMembershipTier, type MembershipTier } from '@/modules/memberships';
 import {
   listServicesByBusiness,
@@ -332,9 +339,11 @@ const AdminBusinesses = () => {
   };
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
-      const { error } = await updateBusinessById({ id, values: { [field]: value } });
-      if (error) throw error;
+    mutationFn: async ({ id, field, value }: { id: string; field: 'is_active' | 'is_verified'; value: boolean }) => {
+      // R4E-3: route sensitive toggles through guarded wrappers.
+      if (field === 'is_active') await setBusinessActive(id, value);
+      else if (field === 'is_verified') await setBusinessVerified(id, value);
+      else throw new Error(`Unsupported toggle field: ${field}`);
       await logAction(`business_${field}_${value}`, id, { field, value });
     },
     onSuccess: () => {
