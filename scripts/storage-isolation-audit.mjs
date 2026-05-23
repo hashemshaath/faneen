@@ -85,6 +85,7 @@ const SKIP_DIRS = new Set([
 const SKIP_EXT = new Set([
   ".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico",
   ".woff", ".woff2", ".ttf", ".otf", ".lock", ".css", ".scss",
+  ".md", ".mdx", ".json",
 ]);
 const SKIP_FILES = new Set([
   "src/integrations/supabase/types.ts",
