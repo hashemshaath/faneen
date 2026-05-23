@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { adminRetryDlqEmail } from '@/modules/admin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -64,10 +65,7 @@ export const EmailDlqMonitor: React.FC = () => {
   const handleRetry = async (logId: string) => {
     setRetryingId(logId);
     try {
-      const { data: res, error } = await supabase.functions.invoke<{ ok?: boolean; error?: string; reason?: string }>(
-        'admin-retry-dlq-email',
-        { body: { logId } },
-      );
+      const { data: res, error } = await adminRetryDlqEmail<{ ok?: boolean; error?: string; reason?: string }>({ logId });
       if (error) throw error;
       if (res?.error) throw new Error(`${res.error}${res.reason ? ` (${res.reason})` : ''}`);
       toast.success(isRTL ? 'تم إعادة وضع الرسالة في الطابور' : 'Retry queued');

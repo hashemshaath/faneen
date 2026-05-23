@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { adminPreviewEmail } from '@/modules/admin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -56,10 +57,7 @@ export const EmailTemplatePreview: React.FC<Props> = ({ template, onClose }) => 
     staleTime: 60_000,
     retry: false,
     queryFn: async (): Promise<PreviewResponse> => {
-      const { data, error } = await supabase.functions.invoke<PreviewResponse>(
-        'admin-preview-email',
-        { body: { templateName: template.name } },
-      );
+      const { data, error } = await adminPreviewEmail<PreviewResponse>({ templateName: template.name });
       if (error) throw error;
       if (!data) throw new Error('empty_response');
       return data;

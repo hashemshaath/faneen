@@ -116,6 +116,9 @@ jobs:
       - name: Storage Isolation Audit
         run: node scripts/storage-isolation-audit.mjs
 
+      - name: Edge Functions Isolation Audit
+        run: node scripts/edge-functions-isolation-audit.mjs
+
       - name: Contracts Pre-launch Smoke (typecheck + targeted vitest + privacy grep)
         run: bash scripts/contracts-prelaunch-smoke.sh
 
