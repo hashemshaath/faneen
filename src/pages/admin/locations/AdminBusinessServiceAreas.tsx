@@ -9,8 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { supabase } from '@/integrations/supabase/client';
 import { listAdminBusinesses } from '@/modules/businesses';
+import {
+  listAdminServiceAreasWithBusinesses,
+  insertServiceArea,
+  deleteServiceAreaById,
+  clearPrimaryServiceAreasForBusiness,
+  setServiceAreaPrimaryById,
+} from '@/modules/catalog';
 import { toast } from 'sonner';
 import { Plus, Trash2, Star, Loader2, MapPin, ExternalLink } from 'lucide-react';
 
@@ -47,11 +53,7 @@ const AdminBusinessServiceAreas: React.FC = () => {
   const { data: areas, isLoading } = useQuery({
     queryKey: ['admin-service-areas'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('business_service_areas')
-        .select('id, business_id, city, district, is_primary, businesses!inner(name_ar, ref_id)')
-        .order('created_at', { ascending: false })
-        .limit(1000);
+      const { data, error } = await listAdminServiceAreasWithBusinesses();
       if (error) throw error;
       return (data ?? []) as unknown as AreaRow[];
     },
@@ -70,7 +72,7 @@ const AdminBusinessServiceAreas: React.FC = () => {
     mutationFn: async () => {
       if (!biz) throw new Error('biz');
       if (newCity.trim().length < 2) throw new Error('city');
-      const { error } = await supabase.from('business_service_areas').insert({
+      const { error } = await insertServiceArea({
         business_id: biz, city: newCity.trim(), district: newDistrict.trim() || null,
       });
       if (error) throw error;
@@ -91,8 +93,8 @@ const AdminBusinessServiceAreas: React.FC = () => {
 
   const setPrimary = useMutation({
     mutationFn: async (a: AreaRow) => {
-      await supabase.from('business_service_areas').update({ is_primary: false }).eq('business_id', a.business_id);
-      const { error } = await supabase.from('business_service_areas').update({ is_primary: true }).eq('id', a.id);
+      await clearPrimaryServiceAreasForBusiness(a.business_id);
+      const { error } = await setServiceAreaPrimaryById(a.id);
       if (error) throw error;
     },
     onSuccess: () => { toast.success('تم التحديث'); qc.invalidateQueries({ queryKey: ['admin-service-areas'] }); },
@@ -101,7 +103,7 @@ const AdminBusinessServiceAreas: React.FC = () => {
 
   const removeArea = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('business_service_areas').delete().eq('id', id);
+      const { error } = await deleteServiceAreaById(id);
       if (error) throw error;
     },
     onSuccess: () => { toast.success('تم الحذف'); qc.invalidateQueries({ queryKey: ['admin-service-areas'] }); },
