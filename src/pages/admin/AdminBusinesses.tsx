@@ -11,6 +11,7 @@ import type { Database } from '@/integrations/supabase/types';
 import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
 import { updateBusinessById, updateBusinessesByIds, listAdminBusinesses } from '@/modules/businesses';
+import { setBusinessMembershipTier, type MembershipTier } from '@/modules/memberships';
 import {
   listServicesByBusiness,
   listAllBusinessServicesLite,
