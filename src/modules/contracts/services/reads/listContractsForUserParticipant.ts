@@ -4,6 +4,8 @@
  * Returns raw Supabase result.
  */
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
+import type { ContractReadResult } from './listContractsForCustomer';
 
 export interface ListContractsForUserParticipantArgs {
   userId: string;
@@ -15,9 +17,9 @@ export interface ListContractsForUserParticipantArgs {
   gteCreatedAt?: string;
 }
 
-export async function listContractsForUserParticipant(
+export async function listContractsForUserParticipant<TRow = Tables<'contracts'>>(
   args: ListContractsForUserParticipantArgs,
-) {
+): Promise<ContractReadResult<TRow>> {
   const { userId, select = '*', orderBy, limit, count, gteCreatedAt } = args;
   const selectOpts = count ? { count: count.mode, head: count.head } : undefined;
   let q = supabase
@@ -27,5 +29,5 @@ export async function listContractsForUserParticipant(
   if (gteCreatedAt) q = q.gte('created_at', gteCreatedAt);
   if (orderBy) q = q.order(orderBy.column, { ascending: orderBy.ascending ?? true });
   if (typeof limit === 'number') q = q.limit(limit);
-  return q;
+  return q as unknown as Promise<ContractReadResult<TRow>>;
 }
