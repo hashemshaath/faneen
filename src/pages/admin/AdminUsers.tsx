@@ -707,8 +707,7 @@ const AdminUsers = () => {
 
   const updateStaffRoleMutation = useMutation({
     mutationFn: async ({ staffId, role }: { staffId: string; role: StaffRole }) => {
-      const { error } = await updateBusinessStaffById({ id: staffId, values: { role } });
-      if (error) throw error;
+      await updateBusinessStaffRole(staffId, role);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-business-staff'] });
@@ -719,8 +718,7 @@ const AdminUsers = () => {
 
   const removeStaffMutation = useMutation({
     mutationFn: async (staffId: string) => {
-      const { error } = await deleteBusinessStaffById({ id: staffId });
-      if (error) throw error;
+      await removeBusinessStaff(staffId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-business-staff'] });
