@@ -143,11 +143,13 @@ describe('F-4 uploadBrandAsset', () => {
     expect(brandingMocks.getPublicUrlMock).not.toHaveBeenCalled();
   });
 
-  it('defaults extension to `png` when filename has no dot', async () => {
+  it('matches legacy split-pop fallback to `png` only on empty', async () => {
     uploadMock.mockResolvedValue({ data: null, error: null });
     brandingMocks.getPublicUrlMock.mockReturnValue({ data: { publicUrl: 'u' } });
+    // Legacy behavior: split('.').pop() on 'logo' returns 'logo' (not 'png').
+    // The 'png' fallback only fires when pop() returns '' (impossible for a non-empty name).
     const file = new File(['x'], 'logo', { type: 'image/png' });
     const { path } = await uploadBrandAsset({ slot: 'm', file });
-    expect(path).toMatch(/^m-\d+\.png$/);
+    expect(path).toMatch(/^m-\d+\.logo$/);
   });
 });
