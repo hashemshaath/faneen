@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 /**
  * Thin write wrappers for `business_services` (CAT-3 — provider dashboard).
@@ -9,8 +10,10 @@ import { supabase } from '@/integrations/supabase/client';
  * can keep their existing error/throw control flow.
  */
 
-export type BusinessServiceInsertPayload = Record<string, unknown>;
-export type BusinessServiceUpdatePayload = Record<string, unknown>;
+export type BusinessServiceInsertPayload =
+  Database['public']['Tables']['business_services']['Insert'];
+export type BusinessServiceUpdatePayload =
+  Database['public']['Tables']['business_services']['Update'];
 
 export async function insertBusinessService(payload: BusinessServiceInsertPayload) {
   return await supabase.from('business_services').insert(payload);
