@@ -9,6 +9,9 @@ import {
   subscribeToPlan,
   cancelSubscriptionAtPeriodEnd,
   resumeSubscriptionRenewal,
+  findPendingMembershipUpgradeRequest,
+  insertMembershipUpgradeRequest,
+  listMyPendingMembershipUpgradeRequests,
 } from '@/modules/memberships';
 import type { Tables } from '@/integrations/supabase/types';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
@@ -311,16 +314,13 @@ const Membership = () => {
           : 'Could not verify business reference. Please refresh and try again.');
       }
       // Prevent duplicate pending requests for same business+tier
-      const { data: existing } = await supabase
-        .from('membership_upgrade_requests')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('business_id', myBusiness.id)
-        .eq('requested_tier', plan.tier)
-        .eq('status', 'pending')
-        .maybeSingle();
+      const { data: existing } = await findPendingMembershipUpgradeRequest<{ id: string }>({
+        userId: user.id,
+        businessId: myBusiness.id,
+        requestedTier: plan.tier,
+      });
       if (existing) return { duplicate: true };
-      const { data: inserted, error } = await supabase.from('membership_upgrade_requests').insert({
+      const { data: inserted, error } = await insertMembershipUpgradeRequest<{ id: string }>({
         user_id: user.id,
         business_id: myBusiness.id,
         business_ref_id: bizRefId,
@@ -329,7 +329,7 @@ const Membership = () => {
         requested_plan_id: plan.id,
         billing_cycle: billingCycle,
         note: `Bound to business ${bizRefId}`,
-      }).select('id').maybeSingle();
+      });
       if (error) throw error;
       return { duplicate: false, requestId: inserted?.id as string | undefined, tier: plan.tier };
     },
@@ -436,12 +436,7 @@ const Membership = () => {
     queryKey: ['my-upgrade-requests', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data } = await supabase
-        .from('membership_upgrade_requests')
-        .select('id, requested_tier, status, created_at')
-        .eq('user_id', user.id)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+      const { data } = await listMyPendingMembershipUpgradeRequests({ userId: user.id });
       return data ?? [];
     },
     enabled: !!user,

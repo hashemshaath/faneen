@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { listRecentMembershipSubscriptionEvents } from '@/modules/memberships';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -37,11 +37,7 @@ const AdminMembershipEvents = () => {
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['admin-msub-events'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('membership_subscription_events')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(500);
+      const { data, error } = await listRecentMembershipSubscriptionEvents<EventRow>({ limit: 500 });
       if (error) throw error;
       return (data ?? []) as unknown as EventRow[];
     },

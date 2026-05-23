@@ -45,7 +45,7 @@ describe('MEMB-2 callsite migration', () => {
     expect(src).not.toMatch(/\.from\(['"]membership_subscriptions['"]\)/);
   });
 
-  it('Membership page migrated reads only; lifecycle RPCs remain direct', () => {
+  it('Membership page migrated reads + lifecycle RPCs (MEMB-2/3); upgrade requests migrated in MEMB-4', () => {
     const src = read('src/pages/Membership.tsx');
     expect(src).toContain('listActiveMembershipPlans');
     expect(src).toContain('getCurrentMembershipSubscription');
@@ -58,8 +58,8 @@ describe('MEMB-2 callsite migration', () => {
     expect(src).not.toMatch(/supabase\.rpc\(['"]subscribe_to_plan['"]/);
     expect(src).not.toMatch(/supabase\.rpc\(['"]cancel_subscription_at_period_end['"]/);
     expect(src).not.toMatch(/supabase\.rpc\(['"]resume_subscription_renewal['"]/);
-    // Upgrade requests intentionally deferred to MEMB-4.
-    expect(src).toMatch(/\.from\(['"]membership_upgrade_requests['"]\)/);
+    // Upgrade requests migrated in MEMB-4.
+    expect(src).not.toMatch(/\.from\(['"]membership_upgrade_requests['"]\)/);
   });
 
   it('MembershipUsageWarning migrated', () => {
@@ -68,11 +68,11 @@ describe('MEMB-2 callsite migration', () => {
     expect(src).not.toMatch(/supabase\.rpc\(['"]get_membership_usage['"]/);
   });
 
-  it('AdminUpgradeRequestsPanel direct access remains deferred to MEMB-4', () => {
+  it('AdminUpgradeRequestsPanel migrated in MEMB-4', () => {
     const src = read('src/components/membership/AdminUpgradeRequestsPanel.tsx');
-    expect(src).toMatch(/\.from\(['"]membership_upgrade_requests['"]\)/);
-    // AdminUpgradeRequestsPanel's subscribe_to_plan call belongs to MEMB-4 (upgrade approval flow).
-    expect(src).toMatch(/supabase\.rpc\(['"]subscribe_to_plan['"]/);
+    expect(src).not.toMatch(/\.from\(['"]membership_upgrade_requests['"]\)/);
+    expect(src).not.toMatch(/supabase\.rpc\(['"]subscribe_to_plan['"]/);
+    expect(src).toContain('subscribeToPlan');
   });
 
   it('AdminMemberships direct access remains deferred', () => {

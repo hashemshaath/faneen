@@ -23,3 +23,31 @@ export type {
   CancelSubscriptionArgs,
   AdminUpgradeSubscriptionArgs,
 } from './services/subscriptions/mutations';
+
+// MEMB-4: upgrade requests
+export {
+  listMembershipUpgradeRequests,
+  findPendingMembershipUpgradeRequest,
+  listMyPendingMembershipUpgradeRequests,
+} from './services/upgradeRequests/reads';
+export type {
+  ListMembershipUpgradeRequestsOptions,
+  FindPendingMembershipUpgradeRequestOptions,
+  ListMyPendingMembershipUpgradeRequestsOptions,
+} from './services/upgradeRequests/reads';
+export {
+  insertMembershipUpgradeRequest,
+  updateMembershipUpgradeRequestById,
+} from './services/upgradeRequests/mutations';
+export type {
+  MembershipUpgradeRequestInsert,
+  MembershipUpgradeRequestUpdate,
+} from './services/upgradeRequests/mutations';
+
+// MEMB-4: rejections
+export { queryMembershipUpgradeRejections } from './services/rejections/reads';
+export type { QueryMembershipUpgradeRejectionsOptions } from './services/rejections/reads';
+
+// MEMB-4: subscription events
+export { listRecentMembershipSubscriptionEvents } from './services/events/reads';
+export type { ListRecentMembershipSubscriptionEventsOptions } from './services/events/reads';
