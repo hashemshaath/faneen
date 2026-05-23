@@ -11,6 +11,13 @@ type BusinessRow = Database["public"]["Tables"]["businesses"]["Row"];
 type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
 type CityRow = Database["public"]["Tables"]["cities"]["Row"];
 type CountryRow = Database["public"]["Tables"]["countries"]["Row"];
+type ServiceRow = Database["public"]["Tables"]["business_services"]["Row"];
+type BranchRow = Database["public"]["Tables"]["business_branches"]["Row"];
+
+type BranchWithJoins = BranchRow & {
+  cities: Pick<CityRow, "name_ar" | "name_en"> | null;
+  countries: Pick<CountryRow, "name_ar" | "name_en"> | null;
+};
 
 export type BusinessWithJoins = BusinessRow & {
   categories: CategoryRow | null;
@@ -65,7 +72,7 @@ export const useServices = (businessId: string | undefined) =>
         order: "sort_order",
       });
 
-      return data ?? [];
+      return (data ?? []) as ServiceRow[];
     },
     enabled: !!businessId,
   });
@@ -133,7 +140,7 @@ export const useBranches = (businessId: string | undefined) =>
         ],
       });
 
-      return data ?? [];
+      return (data ?? []) as BranchWithJoins[];
     },
     enabled: !!businessId,
   });
