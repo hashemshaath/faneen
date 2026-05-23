@@ -9,6 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  listProviderPlans,
+  listProviderSubscriptions,
+  updateProviderSubscriptionById,
+  adminAdjustProviderCredits,
+} from '@/modules/memberships';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Crown, Wallet, RefreshCw, Search, ChevronRight, Undo2 } from 'lucide-react';
@@ -51,21 +57,18 @@ const AdminProviderSubscriptions: React.FC = () => {
   const plansQ = useQuery({
     queryKey: ['admin-plans'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('provider_plans')
-        .select('id, code, name_ar, lead_credits_per_month').eq('is_active', true);
+      const { data, error } = await listProviderPlans<Plan>();
       if (error) throw error;
-      return (data ?? []) as Plan[];
+      return data ?? [];
     },
   });
 
   const subsQ = useQuery({
     queryKey: ['admin-subs'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('provider_subscriptions')
-        .select('id, business_id, provider_user_id, plan_id, status, lead_credits_balance, current_period_start, current_period_end, updated_at, plan:provider_plans(id, code, name_ar, lead_credits_per_month), business:businesses!provider_subscriptions_business_id_fkey(id, name_ar, user_id)')
-        .order('updated_at', { ascending: false }).limit(500);
+      const { data, error } = await listProviderSubscriptions<Sub>();
       if (error) throw error;
-      return (data ?? []) as unknown as Sub[];
+      return data ?? [];
     },
   });
 
@@ -189,8 +192,10 @@ const ManageSub: React.FC<{ sub: Sub; plans: Plan[]; onDone: () => void; adminId
 
   const planStatusM = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('provider_subscriptions')
-        .update({ plan_id: planId, status }).eq('id', sub.id);
+      const { error } = await updateProviderSubscriptionById({
+        id: sub.id,
+        values: { plan_id: planId, status },
+      });
       if (error) throw error;
       trackEvent('admin_subscription_updated', { sub_id: sub.id });
     },
@@ -199,7 +204,7 @@ const ManageSub: React.FC<{ sub: Sub; plans: Plan[]; onDone: () => void; adminId
   });
 
   const callRpc = async (action: 'grant'|'refund'|'adjustment', amount: number, reason: string, note?: string, leadId?: string) => {
-    const { data, error } = await supabase.rpc('admin_adjust_provider_credits', {
+    const { data, error } = await adminAdjustProviderCredits({
       p_subscription_id: sub.id,
       p_action: action,
       p_amount: amount,
