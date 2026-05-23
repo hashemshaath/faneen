@@ -24,11 +24,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const SRC = path.join(ROOT, "src");
 
-const ALLOWED_DIRS = [
-  "src/modules/memberships/services/",
-  // CRED-3: admin_adjust_provider_credits RPC relocated into credits module.
-  "src/modules/credits/services/",
-];
+const ALLOWED_DIRS = ["src/modules/memberships/services/"];
 const ALLOWED_FILES = new Set();
 
 const GUARDED_TABLES = [
@@ -56,7 +52,6 @@ const GUARDED_RPCS = [
   "cancel_subscription",
   "admin_upgrade_subscription",
   "admin_list_membership_usage",
-  "admin_adjust_provider_credits",
   "redeem_promo_code",
   "generate_invite_key",
   "revoke_invite_key",
