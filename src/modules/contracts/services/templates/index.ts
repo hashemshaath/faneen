@@ -137,3 +137,120 @@ export async function listContractMeasurementMethods(
     .select(select)
     .order(orderBy);
 }
+
+// ── contract_template_pricing_rules ──────────────────────────────────
+export async function listContractTemplatePricingRules(
+  versionId: string,
+  opts: { select?: string; orderBy?: string | null; ascending?: boolean } = {},
+) {
+  const { select = '*', orderBy = null, ascending = true } = opts;
+  let q = supabase
+    .from('contract_template_pricing_rules')
+    .select(select)
+    .eq('version_id', versionId);
+  if (orderBy) q = q.order(orderBy, { ascending });
+  return await q;
+}
+
+export async function createContractTemplatePricingRule(
+  payload: Record<string, unknown>,
+) {
+  return await supabase
+    .from('contract_template_pricing_rules')
+    .insert(payload as never);
+}
+
+export async function updateContractTemplatePricingRule(
+  id: string,
+  payload: Record<string, unknown>,
+) {
+  return await supabase
+    .from('contract_template_pricing_rules')
+    .update(payload as never)
+    .eq('id', id);
+}
+
+export async function deleteContractTemplatePricingRule(id: string) {
+  return await supabase
+    .from('contract_template_pricing_rules')
+    .delete()
+    .eq('id', id);
+}
+
+// ── contract_template_required_fields ────────────────────────────────
+export async function listContractTemplateRequiredFields(
+  versionId: string,
+  opts: { select?: string; orderBy?: string | null; ascending?: boolean } = {},
+) {
+  const { select = '*', orderBy = 'sort_order', ascending = true } = opts;
+  let q = supabase
+    .from('contract_template_required_fields')
+    .select(select)
+    .eq('version_id', versionId);
+  if (orderBy) q = q.order(orderBy, { ascending });
+  return await q;
+}
+
+export async function createContractTemplateRequiredField(
+  payload: Record<string, unknown>,
+) {
+  return await supabase
+    .from('contract_template_required_fields')
+    .insert(payload as never);
+}
+
+export async function updateContractTemplateRequiredField(
+  id: string,
+  payload: Record<string, unknown>,
+) {
+  return await supabase
+    .from('contract_template_required_fields')
+    .update(payload as never)
+    .eq('id', id);
+}
+
+export async function deleteContractTemplateRequiredField(id: string) {
+  return await supabase
+    .from('contract_template_required_fields')
+    .delete()
+    .eq('id', id);
+}
+
+// ── contract_template_attachments ────────────────────────────────────
+export async function listContractTemplateAttachments(
+  versionId: string,
+  opts: { select?: string; orderBy?: string | null; ascending?: boolean } = {},
+) {
+  const { select = '*', orderBy = 'precedence_order', ascending = true } = opts;
+  let q = supabase
+    .from('contract_template_attachments')
+    .select(select)
+    .eq('version_id', versionId);
+  if (orderBy) q = q.order(orderBy, { ascending });
+  return await q;
+}
+
+export async function createContractTemplateAttachment(
+  payload: Record<string, unknown>,
+) {
+  return await supabase
+    .from('contract_template_attachments')
+    .insert(payload as never);
+}
+
+export async function updateContractTemplateAttachment(
+  id: string,
+  payload: Record<string, unknown>,
+) {
+  return await supabase
+    .from('contract_template_attachments')
+    .update(payload as never)
+    .eq('id', id);
+}
+
+export async function deleteContractTemplateAttachment(id: string) {
+  return await supabase
+    .from('contract_template_attachments')
+    .delete()
+    .eq('id', id);
+}
