@@ -650,7 +650,7 @@ const AdminMemberships = () => {
       const isNew = !(editingPlan as any).id;
       if (isNew) {
         const tier = (editingPlan as any).tier || 'free';
-        const { error } = await supabase.from('membership_plans').insert({
+        const { error } = await insertMembershipPlan({
           tier,
           name_ar: form.name_ar, name_en: form.name_en,
           description_ar: form.description_ar || null, description_en: form.description_en || null,
@@ -660,13 +660,16 @@ const AdminMemberships = () => {
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('membership_plans').update({
-          name_ar: form.name_ar, name_en: form.name_en,
-          description_ar: form.description_ar || null, description_en: form.description_en || null,
-          price_monthly: form.price_monthly, price_yearly: form.price_yearly,
-          is_active: form.is_active, sort_order: form.sort_order,
-          features, limits,
-        }).eq('id', (editingPlan as any).id);
+        const { error } = await updateMembershipPlanById({
+          id: (editingPlan as any).id,
+          values: {
+            name_ar: form.name_ar, name_en: form.name_en,
+            description_ar: form.description_ar || null, description_en: form.description_en || null,
+            price_monthly: form.price_monthly, price_yearly: form.price_yearly,
+            is_active: form.is_active, sort_order: form.sort_order,
+            features, limits,
+          },
+        });
         if (error) throw error;
       }
     },
