@@ -204,7 +204,7 @@ describe('P-23 allowlist burn-down', () => {
     expect(src).not.toContain('getManagedBusinessesForUser.ts');
     expect(src).not.toContain('getBusinessesForMyRequests.ts');
     expect(src).not.toContain('getLeadProviderContactForEmail.ts');
-    // ensure-business remains allowlisted.
-    expect(src).toContain('src/lib/ensure-business.ts');
+    // P-25: ensure-business migrated to canonical services; allowlist is services-only.
+    expect(src).not.toContain('src/lib/ensure-business.ts');
   });
 });

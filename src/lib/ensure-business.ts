@@ -10,8 +10,7 @@
  * The DB trigger `handle_new_user` already creates the business at signup,
  * so this client-side path is a safety-net only and should rarely fire.
  */
-import { supabase } from '@/integrations/supabase/client';
-import { insertBusiness } from '@/modules/businesses';
+import { getOwnerBusiness, insertBusiness } from '@/modules/businesses';
 
 export interface EnsuredBusiness {
   id: string;
@@ -57,14 +56,13 @@ export function ensureDraftBusiness(
       'id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion';
 
     // 1) If a business already exists for this user (any status), reuse it.
-    const { data: existingRow } = await supabase
-      .from('businesses')
-      .select(SELECT_COLS)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (existingRow) return existingRow as EnsuredBusiness;
+    const { data: existingRow } = await getOwnerBusiness<EnsuredBusiness>({
+      userId,
+      select: SELECT_COLS,
+      orderBy: { column: 'created_at', ascending: true },
+      limit: 1,
+    });
+    if (existingRow) return existingRow;
 
     const placeholderUsername = 'biz-' + userId.replace(/-/g, '').slice(0, 12);
     const placeholderName =
@@ -84,14 +82,13 @@ export function ensureDraftBusiness(
 
     // 2) Concurrent insert lost the race against the unique index — fetch the winner.
     if (error) {
-      const { data: raced } = await supabase
-        .from('businesses')
-        .select(SELECT_COLS)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (raced) return raced as EnsuredBusiness;
+      const { data: raced } = await getOwnerBusiness<EnsuredBusiness>({
+        userId,
+        select: SELECT_COLS,
+        orderBy: { column: 'created_at', ascending: true },
+        limit: 1,
+      });
+      if (raced) return raced;
     }
     return null;
   })()

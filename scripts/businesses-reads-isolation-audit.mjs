@@ -12,7 +12,6 @@
  *
  * Allowed production paths:
  *   - src/modules/businesses/services/**
- *   - src/lib/ensure-business.ts
  *
  * Writes (`.insert/.update/.delete/.upsert`) are NOT enforced here — they
  * are covered by `businesses-writes-isolation-audit.mjs`.
@@ -31,9 +30,7 @@ const ROOT = path.resolve(__dirname, "..");
 const SRC = path.join(ROOT, "src");
 
 const ALLOWED_DIRS = ["src/modules/businesses/services/"];
-const ALLOWED_FILES = new Set([
-  "src/lib/ensure-business.ts",
-]);
+const ALLOWED_FILES = new Set();
 
 // Whitespace/newline tolerant: `.from('businesses')` ... `.select(`
 const PATTERN =
