@@ -76,7 +76,18 @@ export default function UserDashboardView({
   const { data: recentNotifications } = useQuery({
     queryKey: ['user-recent-notifications', user?.id],
     queryFn: async () => {
-      const { data } = await listRecentNotificationsForUser({
+      type Row = {
+        id: string;
+        title_ar: string | null;
+        title_en: string | null;
+        body_ar: string | null;
+        body_en: string | null;
+        notification_type: string | null;
+        is_read: boolean | null;
+        created_at: string;
+        action_url: string | null;
+      };
+      const { data } = await listRecentNotificationsForUser<Row>({
         userId: user.id,
         select: 'id, title_ar, title_en, body_ar, body_en, notification_type, is_read, created_at, action_url',
         limit: 5,
