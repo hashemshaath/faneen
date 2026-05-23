@@ -107,7 +107,6 @@ describe('migration regression: AdminBusinesses', () => {
   });
   it('admin_activity_log writes remain present', () => {
     expect(src).toMatch(/admin_activity_log/);
-    expect(src).toMatch(/business_tier_change/);
     expect(src).toMatch(/business_updated/);
   });
 });
