@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
  *   - ProviderEngagementPreviews: 'id, title_ar, title_en, notification_type, is_read, created_at, action_url', limit 10
  * are both expressible with no behavior change.
  */
-export function listRecentNotificationsForUser({
+export function listRecentNotificationsForUser<T = unknown>({
   userId,
   select,
   limit,
@@ -21,5 +21,6 @@ export function listRecentNotificationsForUser({
     .select(select)
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-    .limit(limit);
+    .limit(limit)
+    .returns<T[]>();
 }
