@@ -676,7 +676,9 @@ const DashboardInstallments = () => {
   const { data: allProviders = [], isLoading: loadingProviders } = useQuery({
     queryKey: ['bnpl-providers-all'],
     queryFn: async () => {
-      const { data } = await listGlobalBnplProviders({ order: 'sort_order' });
+      const { data } = await listGlobalBnplProviders<Tables<'bnpl_providers'>>({
+        order: 'sort_order',
+      });
       return data ?? [];
     },
   });
