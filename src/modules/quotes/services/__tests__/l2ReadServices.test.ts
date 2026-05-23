@@ -21,10 +21,10 @@ function makeBuilder(result: Builder['_result']): Builder {
   b.gte = vi.fn(() => b);
   b.in = vi.fn(() => b);
   b.order = vi.fn(() => b);
-  b.limit = vi.fn(() => term());
+  b.limit = vi.fn(() => b);
   b.maybeSingle = vi.fn(() => term());
-  // For chains that end at .eq().order() without .limit (files, leads, events list)
-  // and at .in() alone, make the builder thenable too.
+  // Builder is thenable, so any chain that ends without an explicit terminal
+  // (or after .order / .limit / .in / .gte / .eq) still awaits to _result.
   (b as unknown as { then: (r: (v: unknown) => void) => Promise<void> }).then = (r) => term().then(r);
   return b;
 }
