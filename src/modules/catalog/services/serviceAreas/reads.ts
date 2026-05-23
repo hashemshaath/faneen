@@ -10,12 +10,13 @@ export interface ListServiceAreasByBusinessOptions {
   order?: Array<{ column: string; ascending?: boolean }>;
 }
 
-export async function listServiceAreasByBusiness({
+export async function listServiceAreasByBusiness<T = unknown>({
   businessId,
   select = '*',
   order = [],
-}: ListServiceAreasByBusinessOptions) {
+}: ListServiceAreasByBusinessOptions): Promise<{ data: T[] | null; error: unknown }> {
   let q = supabase.from('business_service_areas').select(select).eq('business_id', businessId);
   for (const o of order) q = q.order(o.column, { ascending: o.ascending ?? true });
-  return await q;
+  const { data, error } = await q;
+  return { data: data as unknown as T[] | null, error };
 }
