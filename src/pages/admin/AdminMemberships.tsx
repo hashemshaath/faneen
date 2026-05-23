@@ -1161,7 +1161,7 @@ const AdminMemberships = () => {
                 <div className="space-y-2">
                   {filteredSubs.map((sub) => (
                     <SubRow key={sub.id} sub={sub} isRTL={isRTL} language={language} plans={plans}
-                      onCancel={(id) => cancelSubMutation.mutate(id)}
+                      onCancel={(_id) => cancelSubMutation.mutate(sub)}
                       onRenew={handleRenew}
                       onUpgrade={(s) => { setUpgradeSub(s); setUpgradeTargetPlan(''); }} />
                   ))}
