@@ -1,4 +1,11 @@
 // Module: memberships
-// Public API for this module will be added in R1/R2.
-// Scaffold only — intentionally empty.
-export {};
+// Public API — read wrappers added in MEMB-2.
+export { listActiveMembershipPlans } from './services/plans/reads';
+export type { ListActiveMembershipPlansOptions } from './services/plans/reads';
+export { getCurrentMembershipSubscription } from './services/subscriptions/reads';
+export type { GetCurrentMembershipSubscriptionOptions } from './services/subscriptions/reads';
+export { hasMembershipFeature, getMembershipUsage } from './services/usage/reads';
+export type {
+  HasMembershipFeatureArgs,
+  GetMembershipUsageArgs,
+} from './services/usage/reads';
