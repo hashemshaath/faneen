@@ -47,30 +47,22 @@ describe('CAT-2 mixed read+write files: reads migrated, writes intentionally def
     expect(src).toMatch(/supabase\.from\(['"]business_bnpl_providers['"]\)\.update/);
   });
 
-  it('ProviderServiceAreas: read migrated, write paths deferred to CAT-3', () => {
+  it('ProviderServiceAreas: read + writes fully migrated (CAT-2 read, CAT-3 writes)', () => {
     const src = read('src/pages/dashboard/ProviderServiceAreas.tsx');
     expect(src).toContain('listServiceAreasByBusiness');
-    expect(src).not.toMatch(/supabase\.from\(['"]business_service_areas['"]\)\.select/);
-    expect(src).toMatch(/supabase\.from\(['"]business_service_areas['"]\)\.insert/);
-    expect(src).toMatch(/supabase\.from\(['"]business_service_areas['"]\)\.delete/);
-    expect(src).toMatch(/supabase\.from\(['"]business_service_areas['"]\)[\s\S]*\.update\(\{ is_primary/);
+    expect(src).not.toMatch(/supabase\.from\(['"]business_service_areas['"]\)/);
   });
 
-  it('DashboardBookings: availability read migrated, replace-pattern writes deferred', () => {
+  it('DashboardBookings: availability read + replace-pattern writes fully migrated', () => {
     const src = read('src/pages/dashboard/DashboardBookings.tsx');
     expect(src).toContain('listAvailabilityByBusiness');
-    expect(src).not.toMatch(/supabase\.from\(['"]business_availability['"]\)\.select/);
-    expect(src).toMatch(/supabase\.from\(['"]business_availability['"]\)\.delete/);
-    expect(src).toMatch(/supabase\.from\(['"]business_availability['"]\)\.insert/);
+    expect(src).not.toMatch(/supabase\.from\(['"]business_availability['"]\)/);
   });
 
-  it('DashboardWarranties: list read migrated, writes deferred', () => {
+  it('DashboardWarranties: list read + writes fully migrated (CAT-2 read, CAT-3 writes)', () => {
     const src = read('src/pages/dashboard/DashboardWarranties.tsx');
     expect(src).toContain('listWarrantiesByContractIds');
-    expect(src).not.toMatch(/supabase\.from\(['"]warranties['"]\)\.select/);
-    expect(src).toMatch(/supabase\.from\(['"]warranties['"]\)\.update/);
-    expect(src).toMatch(/supabase\.from\(['"]warranties['"]\)\.insert/);
-    expect(src).toMatch(/supabase\.from\(['"]warranties['"]\)\.delete/);
+    expect(src).not.toMatch(/supabase\.from\(['"]warranties['"]\)/);
   });
 });
 
