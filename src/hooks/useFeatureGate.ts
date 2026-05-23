@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { hasMembershipFeature } from '@/modules/memberships';
 import { useAuth } from '@/contexts/AuthContext';
 
 /**
@@ -19,7 +19,7 @@ export function useFeatureGate(featureKey: string | null | undefined, businessId
     staleTime: 60_000,
     queryFn: async (): Promise<boolean> => {
       if (!user?.id || !featureKey) return false;
-      const { data, error } = await supabase.rpc('has_membership_feature', {
+      const { data, error } = await hasMembershipFeature({
         _user_id: user.id,
         _feature_key: featureKey,
         _business_id: businessId ?? undefined,

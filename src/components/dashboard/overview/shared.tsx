@@ -8,6 +8,7 @@ import {
 } from '@/modules/contracts';
 import { countMessagesSentByUserSince } from '@/modules/messaging';
 import { countNotificationsForUserSince } from '@/modules/notifications';
+import { getCurrentMembershipSubscription } from '@/modules/memberships';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -272,15 +273,12 @@ export const MembershipWidget = React.memo(function MembershipWidget({
   const { data: sub } = useQuery({
     queryKey: ['membership-widget', userId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('membership_subscriptions')
-        .select('expires_at, billing_cycle, plan:membership_plans!plan_id(name_ar, name_en, tier)')
-        .eq('user_id', userId)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data as MembershipSub | null;
+      const { data } = await getCurrentMembershipSubscription<MembershipSub>({
+        userId,
+        select:
+          'expires_at, billing_cycle, plan:membership_plans!plan_id(name_ar, name_en, tier)',
+      });
+      return data;
     },
     staleTime: 300000,
   });

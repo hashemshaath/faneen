@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getMembershipUsage } from '@/modules/memberships';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { AlertTriangle, ArrowUpRight, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -66,7 +66,7 @@ export const MembershipUsageWarning: React.FC<Props> = ({
   const { data: rows } = useQuery({
     queryKey: ['membership-usage', userId ?? null, businessId ?? null],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_membership_usage', {
+      const { data, error } = await getMembershipUsage<UsageRow>({
         _business_id: businessId ?? undefined,
         _user_id: userId ?? undefined,
       });
