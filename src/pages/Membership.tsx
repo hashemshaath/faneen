@@ -3,7 +3,13 @@ import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listOwnerBusinesses, listManagedStaffMembershipForUser } from '@/modules/businesses';
-import { listActiveMembershipPlans, getCurrentMembershipSubscription } from '@/modules/memberships';
+import {
+  listActiveMembershipPlans,
+  getCurrentMembershipSubscription,
+  subscribeToPlan,
+  cancelSubscriptionAtPeriodEnd,
+  resumeSubscriptionRenewal,
+} from '@/modules/memberships';
 import type { Tables } from '@/integrations/supabase/types';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
@@ -276,7 +282,7 @@ const Membership = () => {
   const subscribeMutation = useMutation({
     mutationFn: async (planId: string) => {
       if (!user || !myBusiness) throw new Error(isRTL ? 'يجب تسجيل الدخول وإنشاء نشاط تجاري أولاً' : 'Login and create a business first');
-      const { error } = await supabase.rpc('subscribe_to_plan' , {
+      const { error } = await subscribeToPlan({
         _user_id: user.id,
         _plan_id: planId,
         _business_id: myBusiness.id,
@@ -445,7 +451,7 @@ const Membership = () => {
     mutationFn: async (downgradeToPlanId: string | null) => {
       if (!mySubscription) throw new Error('No active subscription');
       const subId = mySubscription.id as string;
-      const { error } = await supabase.rpc('cancel_subscription_at_period_end', {
+      const { error } = await cancelSubscriptionAtPeriodEnd({
         _subscription_id: subId,
         _downgrade_to_plan_id: downgradeToPlanId,
       });
@@ -498,7 +504,7 @@ const Membership = () => {
     mutationFn: async () => {
       if (!mySubscription) throw new Error('No subscription');
       const subId = mySubscription.id as string;
-      const { error } = await supabase.rpc('resume_subscription_renewal', { _subscription_id: subId });
+      const { error } = await resumeSubscriptionRenewal({ _subscription_id: subId });
       if (error) throw error;
     },
     onSuccess: () => {

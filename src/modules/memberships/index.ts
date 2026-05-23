@@ -9,3 +9,17 @@ export type {
   HasMembershipFeatureArgs,
   GetMembershipUsageArgs,
 } from './services/usage/reads';
+export {
+  subscribeToPlan,
+  cancelSubscriptionAtPeriodEnd,
+  resumeSubscriptionRenewal,
+  cancelSubscription,
+  adminUpgradeSubscription,
+} from './services/subscriptions/mutations';
+export type {
+  SubscribeToPlanArgs,
+  CancelSubscriptionAtPeriodEndArgs,
+  ResumeSubscriptionRenewalArgs,
+  CancelSubscriptionArgs,
+  AdminUpgradeSubscriptionArgs,
+} from './services/subscriptions/mutations';
