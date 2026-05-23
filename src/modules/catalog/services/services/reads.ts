@@ -17,16 +17,17 @@ export interface ListServicesByBusinessOptions {
   order?: string | null;
 }
 
-export async function listServicesByBusiness({
+export async function listServicesByBusiness<T = unknown>({
   businessId,
   select = '*',
   activeOnly = true,
   order = 'sort_order',
-}: ListServicesByBusinessOptions) {
+}: ListServicesByBusinessOptions): Promise<{ data: T[] | null; error: unknown }> {
   let q = supabase.from('business_services').select(select).eq('business_id', businessId);
   if (activeOnly) q = q.eq('is_active', true);
   if (order) q = q.order(order);
-  return await q;
+  const { data, error } = await q;
+  return { data: data as unknown as T[] | null, error };
 }
 
 export interface CountServicesByBusinessOptions {
