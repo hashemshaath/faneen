@@ -1447,18 +1447,22 @@ const AdminBusinesses = () => {
                     </div>
                     <div className="p-3.5 rounded-xl bg-muted/30 border border-border/30">
                       <p className="text-sm font-medium mb-2">{isRTL ? 'مستوى العضوية' : 'Membership Tier'}</p>
-                      <Select value={editForm.membership_tier} onValueChange={v => setField('membership_tier', v)}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {tiers.map(t => (
-                            <SelectItem key={t.value} value={t.value}>
-                              <span className="flex items-center gap-2">
-                                <span>{t.icon}</span> {language === 'ar' ? t.label_ar : t.label_en}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {(() => {
+                        const cur = tiers.find(t => t.value === editForm.membership_tier) || tiers[0];
+                        return (
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background/60 border border-border/40">
+                            <span>{cur.icon}</span>
+                            <span className="text-sm font-medium">
+                              {language === 'ar' ? cur.label_ar : cur.label_en}
+                            </span>
+                          </div>
+                        );
+                      })()}
+                      <p className="text-[10px] text-muted-foreground mt-2">
+                        {isRTL
+                          ? 'تغيير العضوية يتم من خيار العضوية في صف المنشأة.'
+                          : 'Use the row tier picker to change membership.'}
+                      </p>
                     </div>
                   </div>
                 </TabsContent>
