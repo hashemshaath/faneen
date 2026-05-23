@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listPublicAvailabilityByBusiness } from '@/modules/catalog';
+import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -36,7 +38,12 @@ export const BookingWidget = ({ businessId, businessName, open, onOpenChange }: 
   const { data: availability = [] } = useQuery({
     queryKey: ['business-availability-public', businessId],
     queryFn: async () => {
-      const { data } = await supabase.from('business_availability').select('*').eq('business_id', businessId).eq('is_active', true);
+      const { data } = await listPublicAvailabilityByBusiness<
+        Database['public']['Tables']['business_availability']['Row']
+      >({
+        businessId,
+        select: '*',
+      });
       return data || [];
     },
     enabled: open,

@@ -3,6 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getContractById } from '@/modules/contracts';
+import { listWarrantiesForContract } from '@/modules/catalog';
+import type { Database } from '@/integrations/supabase/types';
 import { verifyPdfArabic } from '@/modules/contracts/services/pdf/verifyPdfArabic';
 import { getProfileForContractParty } from '@/modules/users';
 import { createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
@@ -351,7 +353,9 @@ const ContractDetail = () => {
   const { data: warranties } = useQuery({
     queryKey: ['warranties', id],
     queryFn: async () => {
-      const { data } = await supabase.from('warranties').select('*').eq('contract_id', id!);
+      const { data } = await listWarrantiesForContract<
+        Database['public']['Tables']['warranties']['Row']
+      >({ contractId: id!, select: '*' });
       return data ?? [];
     },
     enabled: !!id && !!user,

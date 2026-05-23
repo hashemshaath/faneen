@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listOwnerBusinesses } from '@/modules/businesses';
+import { listServiceAreasByBusiness } from '@/modules/catalog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,12 +52,14 @@ const ProviderServiceAreas: React.FC = () => {
     queryKey: ['service-areas', activeBiz],
     enabled: !!activeBiz,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('business_service_areas')
-        .select('id, business_id, city, district, is_primary')
-        .eq('business_id', activeBiz)
-        .order('is_primary', { ascending: false })
-        .order('created_at', { ascending: true });
+      const { data, error } = await listServiceAreasByBusiness<AreaRow>({
+        businessId: activeBiz,
+        select: 'id, business_id, city, district, is_primary',
+        order: [
+          { column: 'is_primary', ascending: false },
+          { column: 'created_at', ascending: true },
+        ],
+      });
       if (error) throw error;
       return (data ?? []) as AreaRow[];
     },

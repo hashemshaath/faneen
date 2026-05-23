@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { countLeadsForBusiness } from '@/modules/leads';
+import { countServicesByBusiness } from '@/modules/catalog';
 import {
   listConversationIdsForUser,
   countUnreadMessagesInConversations,
@@ -41,7 +42,7 @@ export const ProviderTipsCard: React.FC<Props> = ({ businessId }) => {
     staleTime: 60000,
     queryFn: async () => {
       const [services, portfolio, projects, leads, convs] = await Promise.all([
-        supabase.from('business_services').select('id', { count: 'exact', head: true }).eq('business_id', businessId!).eq('is_active', true),
+        countServicesByBusiness({ businessId: businessId!, activeOnly: true }),
         supabase.from('portfolio_items').select('id', { count: 'exact', head: true }).eq('business_id', businessId!),
         supabase.from('projects').select('id', { count: 'exact', head: true }).eq('business_id', businessId!),
         countLeadsForBusiness(businessId!),

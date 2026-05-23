@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  listGlobalBnplProviders,
+  listBusinessBnplProviders,
+} from '@/modules/catalog';
+import type { Database } from '@/integrations/supabase/types';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,7 +35,13 @@ export const BnplProvidersManager = ({ businessId }: Props) => {
   const { data: allProviders = [], isLoading: loadingProviders } = useQuery({
     queryKey: ['bnpl-providers'],
     queryFn: async () => {
-      const { data } = await supabase.from('bnpl_providers').select('*').eq('is_active', true).order('sort_order');
+      const { data } = await listGlobalBnplProviders<
+        Database['public']['Tables']['bnpl_providers']['Row']
+      >({
+        select: '*',
+        activeOnly: true,
+        order: 'sort_order',
+      });
       return data ?? [];
     },
   });
@@ -38,7 +49,12 @@ export const BnplProvidersManager = ({ businessId }: Props) => {
   const { data: businessProviders = [], isLoading: loadingBP } = useQuery({
     queryKey: ['business-bnpl', businessId],
     queryFn: async () => {
-      const { data } = await supabase.from('business_bnpl_providers').select('*').eq('business_id', businessId);
+      const { data } = await listBusinessBnplProviders<
+        Database['public']['Tables']['business_bnpl_providers']['Row']
+      >({
+        businessId,
+        select: '*',
+      });
       return data ?? [];
     },
     enabled: !!businessId,

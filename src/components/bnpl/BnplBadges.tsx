@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listGlobalBnplProviders } from '@/modules/catalog';
+import type { Database } from '@/integrations/supabase/types';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, Check, DollarSign, Calendar, Percent, Globe, ExternalLink } from 'lucide-react';
@@ -31,11 +33,13 @@ export const BnplBadges = ({ businessId, compact = false }: Props) => {
   const { data: providers = [] } = useQuery({
     queryKey: ['bnpl-providers', providerIds],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('bnpl_providers')
-        .select('*')
-        .in('id', providerIds)
-        .eq('is_active', true);
+      const { data } = await listGlobalBnplProviders<
+        Database['public']['Tables']['bnpl_providers']['Row']
+      >({
+        select: '*',
+        ids: providerIds,
+        activeOnly: true,
+      });
       return data ?? [];
     },
     enabled: providerIds.length > 0,
