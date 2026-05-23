@@ -9,8 +9,8 @@ import { listContractsForUserParticipant } from '@/modules/contracts';
 import {
   listAdminBusinesses,
   listAllBusinessStaffForAdmin,
-  updateBusinessStaffById,
-  deleteBusinessStaffById,
+  updateBusinessStaffRole,
+  removeBusinessStaff,
 } from '@/modules/businesses';
 import { countMessagesBySender } from '@/modules/messaging';
 import { Button } from '@/components/ui/button';
