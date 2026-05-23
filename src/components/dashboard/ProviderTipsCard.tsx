@@ -3,6 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { countLeadsForBusiness } from '@/modules/leads';
+import {
+  listConversationIdsForUser,
+  countUnreadMessagesInConversations,
+} from '@/modules/messaging';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useProviderReadiness } from '@/hooks/useProviderReadiness';
@@ -41,17 +45,15 @@ export const ProviderTipsCard: React.FC<Props> = ({ businessId }) => {
         supabase.from('portfolio_items').select('id', { count: 'exact', head: true }).eq('business_id', businessId!),
         supabase.from('projects').select('id', { count: 'exact', head: true }).eq('business_id', businessId!),
         countLeadsForBusiness(businessId!),
-        supabase.from('conversations').select('id').or(`participant_1.eq.${user!.id},participant_2.eq.${user!.id}`),
+        listConversationIdsForUser({ userId: user!.id }),
       ]);
       const convIds = (convs.data ?? []).map((c) => c.id);
       let unreadCount = 0;
       if (convIds.length > 0) {
-        const { count } = await supabase
-          .from('messages')
-          .select('id', { count: 'exact', head: true })
-          .in('conversation_id', convIds)
-          .eq('is_read', false)
-          .neq('sender_id', user!.id);
+        const { count } = await countUnreadMessagesInConversations({
+          conversationIds: convIds,
+          viewerUserId: user!.id,
+        });
         unreadCount = count ?? 0;
       }
       return {

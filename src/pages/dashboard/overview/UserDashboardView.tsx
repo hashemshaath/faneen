@@ -24,6 +24,7 @@ import { LiveActivityWidget } from '@/components/dashboard/overview/widgets/Live
 import { SmartTasksWidget } from '@/components/dashboard/overview/widgets/SmartTasksWidget';
 import { TrendsWidget } from '@/components/dashboard/overview/widgets/TrendsWidget';
 import { KeyboardShortcuts } from '@/components/dashboard/overview/KeyboardShortcuts';
+import { countConversationsForUser } from '@/modules/messaging';
 
 const WIDGET_DEFAULTS = ['trends', 'activity', 'tasks', 'contracts', 'notifications', 'status', 'links'];
 
@@ -42,7 +43,7 @@ export default function UserDashboardView({
     queryFn: async () => {
       const [contracts, messages, bookmarks, notifications] = await Promise.all([
         supabase.from('contracts').select('id, contract_number, title_ar, title_en, status, total_amount, currency_code, created_at', { count: 'exact' }).eq('client_id', user.id).order('created_at', { ascending: false }).limit(5),
-        supabase.from('conversations').select('id', { count: 'exact', head: true }).or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`),
+        countConversationsForUser({ userId: user.id }),
         supabase.from('blog_bookmarks').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false),
       ]);
