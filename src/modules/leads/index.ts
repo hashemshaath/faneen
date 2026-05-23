@@ -27,3 +27,6 @@ export * from './services/countLeadsByStatus';
 export * from './services/countLeadsForBusiness';
 export * from './services/listLeadAnalyticsForBusiness';
 export * from './services/listRecentLeadsForBusiness';
+
+// EF-2 edge function wrappers
+export * from './services/getRevealedContact';

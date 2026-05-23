@@ -22,6 +22,9 @@ export * from './services/amendments';
 export * from './services/invitations';
 export * from './services/pdfHistory';
 export * from './services/pdf';
+// EF-2 edge function wrappers
+export * from './services/notifications';
+export * from './services/pdf/verifyPdfArabic';
 // L-4 lead RPC wrappers
 export * from './services/leadRpcs';
 // CT-2 runtime read wrappers

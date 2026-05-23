@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getContractById } from '@/modules/contracts';
+import { verifyPdfArabic } from '@/modules/contracts/services/pdf/verifyPdfArabic';
 import { getProfileForContractParty } from '@/modules/users';
 import { createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -1277,10 +1278,16 @@ const ContractDetail = () => {
           binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + chunk, bytes.length)));
         }
         const pdfBase64 = btoa(binary);
-        const { data: backend, error } = await supabase.functions.invoke('verify-pdf-arabic', {
-          body: { pdfBase64, fileName },
-        });
+        const { data, error } = await verifyPdfArabic({ pdfBase64, fileName });
         if (error) throw error;
+        const backend = data as {
+          status?: string;
+          mojibakeDetected?: boolean;
+          mojibakeCount?: number;
+          sample?: string;
+          verifiedAt?: string;
+          report?: string;
+        } | null;
         backendStatus = backend?.status === 'PASS' ? 'PASS' : 'FAIL';
         mojibakeDetected = !!backend?.mojibakeDetected;
         mojibakeCount = Number(backend?.mojibakeCount ?? 0);

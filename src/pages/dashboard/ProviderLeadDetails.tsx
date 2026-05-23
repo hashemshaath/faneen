@@ -24,8 +24,8 @@ import {
   SECTOR_LABEL_AR, TIMELINE_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, normalizePhoneForWhatsApp,
 } from '@/lib/quoteRequests';
-import { supabase as sb } from '@/integrations/supabase/client';
 import { getProviderLeadDetail } from '@/modules/leads/services/detail';
+import { getRevealedContact } from '@/modules/leads/services/getRevealedContact';
 import {
   markProviderLeadViewed,
   updateProviderLeadResponse,
@@ -138,9 +138,7 @@ const ProviderLeadDetails: React.FC = () => {
     setLoadingContact(true);
     trackEvent('provider_contact_viewed', { lead_id: lead.id });
     try {
-      const { data, error } = await sb.functions.invoke('get-revealed-contact', {
-        body: { lead_id: lead.id },
-      });
+      const { data, error } = await getRevealedContact({ lead_id: lead.id });
       if (error) throw error;
       const res = data as { success: boolean; contact?: RevealedContact; message?: string };
       if (!res?.success || !res.contact) {
