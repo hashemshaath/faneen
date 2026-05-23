@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 import {
   listContractsForUserParticipant,
   listInstallmentPlansWithPaymentsForContracts,
@@ -15,6 +15,7 @@ import {
   insertBnplProvider,
   updateBnplProviderById,
   deleteBnplProviderById,
+  listGlobalBnplProviders,
 } from '@/modules/catalog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -675,7 +676,9 @@ const DashboardInstallments = () => {
   const { data: allProviders = [], isLoading: loadingProviders } = useQuery({
     queryKey: ['bnpl-providers-all'],
     queryFn: async () => {
-      const { data } = await supabase.from('bnpl_providers').select('*').order('sort_order');
+      const { data } = await listGlobalBnplProviders<Tables<'bnpl_providers'>>({
+        order: 'sort_order',
+      });
       return data ?? [];
     },
   });
