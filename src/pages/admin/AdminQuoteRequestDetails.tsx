@@ -6,6 +6,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { createNotification } from '@/modules/notifications/services/createNotification';
+import {
+  getAdminQuoteRequestById,
+  listAdminQuoteRequestFiles,
+  listAdminQuoteRequestLeads,
+  listAdminQuoteRequestEvents,
+  listAdminQuoteRequestLeadEvents,
+} from '@/modules/quotes';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -111,13 +118,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
     queryKey: ['admin-quote-request', id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_requests')
-        .select('*')
-        .eq('id', id!)
-        .maybeSingle();
-      if (error) throw error;
-      return data as AdminQuoteRow | null;
+      return await getAdminQuoteRequestById<AdminQuoteRow>(id!);
     },
   });
 
@@ -133,13 +134,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
     queryKey: ['admin-quote-files', id],
     enabled: !!id && !!quote,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_request_files')
-        .select('id, file_name, file_path, file_size, file_type')
-        .eq('quote_request_id', id!)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as FileRow[];
+      return (await listAdminQuoteRequestFiles(id!)) as FileRow[];
     },
   });
 
@@ -147,13 +142,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
     queryKey: ['admin-quote-leads', id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_request_leads')
-        .select('id, status, match_score, match_reasons, created_at, viewed_at, responded_at, contact_revealed, contact_revealed_at, contact_view_count, provider:businesses!quote_request_leads_provider_id_fkey(id, name_ar, city_id)')
-        .eq('quote_request_id', id!)
-        .order('match_score', { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as unknown as LeadSummaryRow[];
+      return await listAdminQuoteRequestLeads<LeadSummaryRow>(id!);
     },
   });
 
@@ -238,14 +227,12 @@ const AdminQuoteRequestDetails: React.FC = () => {
     enabled: !!id,
     queryFn: async (): Promise<QuoteEventRow[]> => {
       const [qe, le] = await Promise.all([
-        supabase.from('quote_request_events')
-          .select('id, event_type, actor_user_id, metadata, created_at')
-          .eq('quote_request_id', id!)
-          .order('created_at', { ascending: false }),
-        supabase.from('quote_request_lead_events')
-          .select('id, event_type, actor_user_id, metadata, created_at, lead_id, lead:quote_request_leads!quote_request_lead_events_lead_id_fkey(provider:businesses!quote_request_leads_provider_id_fkey(name_ar))')
-          .eq('quote_request_id', id!)
-          .order('created_at', { ascending: false }),
+        listAdminQuoteRequestEvents(id!),
+        listAdminQuoteRequestLeadEvents<{
+          id: string; event_type: string; actor_user_id: string | null;
+          metadata: Record<string, unknown> | null; created_at: string; lead_id: string;
+          lead?: { provider?: { name_ar: string | null } | null } | null;
+        }>(id!),
       ]);
       if (qe.error) throw qe.error;
       if (le.error) throw le.error;
@@ -257,11 +244,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
           created_at: r.created_at, source: 'quote',
         });
       }
-      for (const r of (le.data ?? []) as unknown as Array<{
-        id: string; event_type: string; actor_user_id: string | null;
-        metadata: Record<string, unknown> | null; created_at: string; lead_id: string;
-        lead?: { provider?: { name_ar: string | null } | null } | null;
-      }>) {
+      for (const r of (le.data ?? [])) {
         rows.push({
           id: r.id, event_type: r.event_type, actor_user_id: r.actor_user_id,
           metadata: r.metadata ?? null, created_at: r.created_at, source: 'lead',

@@ -10,6 +10,12 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
+  listAdminOpsQuoteRequests,
+  listAdminOpsQuoteRequestLeads,
+  listAdminOpsQuoteRequestEvents,
+  listAdminOpsQuoteRequestLeadEvents,
+} from '@/modules/quotes';
+import {
   Activity, RefreshCw, AlertCircle, ArrowUpRight, Sparkles, Users, Clock, Target, Info,
   Download, TrendingUp,
 } from 'lucide-react';
@@ -93,15 +99,7 @@ const AdminQuoteOperations: React.FC = () => {
   const baseQuotes = useQuery({
     queryKey: ['admin-ops-quotes', fromDateIso, sector],
     queryFn: async () => {
-      let q = supabase.from('quote_requests')
-        .select('id, sector, city, status, created_at')
-        .order('created_at', { ascending: false })
-        .limit(1000);
-      if (fromDateIso) q = q.gte('created_at', fromDateIso);
-      if (sector !== 'all') q = q.eq('sector', sector);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []) as QuoteRow[];
+      return (await listAdminOpsQuoteRequests({ fromDateIso, sector })) as QuoteRow[];
     },
   });
 
@@ -123,13 +121,7 @@ const AdminQuoteOperations: React.FC = () => {
     queryKey: ['admin-ops-leads', quoteIds],
     enabled: quoteIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_request_leads')
-        .select('id, quote_request_id, provider_id, status, match_score, match_reasons, viewed_at, responded_at, contact_revealed, contact_revealed_at, contact_view_count, created_at, provider:businesses!quote_request_leads_provider_id_fkey(id, name_ar, city_id, last_active_at)')
-        .in('quote_request_id', quoteIds)
-        .limit(5000);
-      if (error) throw error;
-      return (data ?? []) as unknown as LeadRow[];
+      return await listAdminOpsQuoteRequestLeads<LeadRow>(quoteIds);
     },
   });
 
@@ -137,13 +129,7 @@ const AdminQuoteOperations: React.FC = () => {
     queryKey: ['admin-ops-quote-events', quoteIds],
     enabled: quoteIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_request_events')
-        .select('id, quote_request_id, event_type, metadata, created_at')
-        .in('quote_request_id', quoteIds)
-        .limit(5000);
-      if (error) throw error;
-      return (data ?? []) as QuoteEventRow[];
+      return (await listAdminOpsQuoteRequestEvents(quoteIds)) as QuoteEventRow[];
     },
   });
 
@@ -151,13 +137,7 @@ const AdminQuoteOperations: React.FC = () => {
     queryKey: ['admin-ops-lead-events', quoteIds],
     enabled: quoteIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quote_request_lead_events')
-        .select('id, lead_id, quote_request_id, event_type, metadata, created_at')
-        .in('quote_request_id', quoteIds)
-        .limit(10000);
-      if (error) throw error;
-      return (data ?? []) as LeadEventRow[];
+      return (await listAdminOpsQuoteRequestLeadEvents(quoteIds)) as LeadEventRow[];
     },
   });
 
