@@ -10,7 +10,7 @@
  * All sensitive metadata (template name, document hash, counts) is resolved
  * server-side and never echoed back beyond the safe summary.
  */
-import { supabase } from '@/integrations/supabase/client';
+import { recordContractPdfExportRpc } from '@/modules/contracts/services/pdfExports';
 
 export type PdfExportSource =
   | 'contract_detail'
@@ -31,7 +31,7 @@ export async function recordContractPdfExport(
   locale?: string | null,
 ): Promise<PdfExportLogResult | null> {
   try {
-    const { data, error } = await supabase.rpc('record_contract_pdf_export', {
+    const { data, error } = await recordContractPdfExportRpc({
       _contract_id: contractId,
       _source: source,
       _export_locale: locale ?? null,
@@ -41,7 +41,7 @@ export async function recordContractPdfExport(
       console.warn('[pdf-export-log] failed', error.message);
       return null;
     }
-    const row = Array.isArray(data) ? data[0] : data;
+    const row = Array.isArray(data) ? (data as unknown[])[0] : data;
     return (row ?? null) as PdfExportLogResult | null;
   } catch (e) {
     // eslint-disable-next-line no-console
