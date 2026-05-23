@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { getOwnerBusiness } from "@/modules/businesses";
+import { uploadShowcaseImage } from "@/modules/files";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { toast } from "sonner";
@@ -122,14 +123,11 @@ const DashboardShowcase: React.FC = () => {
 
       setUploading(true);
       try {
-        const ext = form.file.name.split(".").pop()?.toLowerCase() || "jpg";
-        const path = `${user.id}/${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("showcase").upload(path, form.file, {
-          cacheControl: "3600",
-          upsert: false,
+        const { publicUrl, error: upErr } = await uploadShowcaseImage({
+          userId: user.id,
+          file: form.file,
         });
         if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("showcase").getPublicUrl(path);
 
         const { error } = await supabase.from("showcase_submissions").insert([
           {
@@ -141,7 +139,7 @@ const DashboardShowcase: React.FC = () => {
             description_ar: form.description_ar || null,
             link_url: form.link_url || null,
             sector_slug: form.sector_slug || null,
-            image_url: pub.publicUrl,
+            image_url: publicUrl,
           },
         ]);
         if (error) throw error;

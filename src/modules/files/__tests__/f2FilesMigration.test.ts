@@ -53,9 +53,8 @@ describe('F-2 storage migration', () => {
     expect(src).toContain('contentType: file.type');
   });
 
-  it('out-of-scope storage callsites remain direct (deferred to F-3..F-5)', () => {
-    expect(read('src/components/blog/RichMarkdownEditor.tsx')).toMatch(/supabase\.storage\.from\('blog-images'\)/);
-    expect(read('src/pages/dashboard/DashboardShowcase.tsx')).toMatch(/supabase\.storage\.from\("showcase"\)/);
+  it('out-of-scope storage callsites remain direct (deferred to F-4)', () => {
+    // F-3 migrated blog-images + showcase; assertion narrowed accordingly.
     expect(read('src/pages/admin/AdminBranding.tsx')).toMatch(/supabase\.storage\.from\('brand-assets'\)/);
     expect(read('src/components/admin/CrDocumentScanner.tsx')).toMatch(/supabase\.storage/);
   });

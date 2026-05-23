@@ -6,3 +6,5 @@ export { removePublicImage } from './removePublicImage';
 export type { RemovePublicImageParams } from './removePublicImage';
 export { extractPublicStoragePath } from './extractPublicStoragePath';
 export type { ExtractPublicStoragePathParams } from './extractPublicStoragePath';
+export { listPublicImages } from './listPublicImages';
+export type { ListPublicImagesParams, ListPublicImagesOptions } from './listPublicImages';

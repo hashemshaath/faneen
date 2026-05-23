@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrentUser } from '@/modules/identity';
+import { uploadBlogContentImage, getBlogContentImageUrl, listBlogImages } from '@/modules/files';
 import { compressImage } from '@/lib/image-compress';
 import {
   ALLOWED_PUBLIC_IMAGE_MIMES,
@@ -181,9 +182,9 @@ export const RichMarkdownEditor: React.FC<RichEditorProps> = ({
     const ext = processed.name.split('.').pop() || 'webp';
     const path = `content/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     toast.loading(isRTL ? 'جاري الرفع...' : 'Uploading...');
-    const { error } = await supabase.storage.from('blog-images').upload(path, processed, { contentType: processed.type });
+    const { error } = await uploadBlogContentImage({ path, file: processed, contentType: processed.type });
     if (error) { toast.dismiss(); toast.error(error.message); return; }
-    const { data: urlData } = supabase.storage.from('blog-images').getPublicUrl(path);
+    const { data: urlData } = getBlogContentImageUrl(path);
     toast.dismiss();
     toast.success(isRTL ? 'تم الرفع' : 'Uploaded');
     handleInsertImage(urlData.publicUrl, processed.name.split('.')[0]);
@@ -363,15 +364,13 @@ const BlogImageLibrary: React.FC<{ isRTL: boolean; onSelect: (url: string) => vo
         return;
       }
       const uid = userData.user.id;
-      const { data, error } = await supabase.storage
-        .from('blog-images')
-        .list(uid, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+      const { data, error } = await listBlogImages(uid);
       if (error) throw error;
       const items = (data || [])
         .filter(f => f.name && f.id && /\.(jpg|jpeg|png|gif|webp|avif|svg)$/i.test(f.name))
         .map(f => ({
           name: f.name,
-          url: supabase.storage.from('blog-images').getPublicUrl(`${uid}/${f.name}`).data.publicUrl,
+          url: getBlogContentImageUrl(`${uid}/${f.name}`).data.publicUrl,
         }));
       setImages(items);
       setLoaded(true);
