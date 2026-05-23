@@ -8,6 +8,7 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { runWeeklySlaReport, testContactWebhook } from '@/modules/contact';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,7 +108,7 @@ export default function AdminContactInboxSettings() {
 
   const sendTestReport = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.functions.invoke('weekly-sla-report');
+      const { error } = await runWeeklySlaReport();
       if (error) throw error;
     },
     onSuccess: () => toast.success(isRTL ? 'تم إرسال تقرير تجريبي' : 'Test report sent'),
@@ -156,8 +157,9 @@ export default function AdminContactInboxSettings() {
     setTesting(true);
     setTestResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke('test-contact-webhook', {
-        body: { override_url: form.webhook_url, override_secret: form.webhook_secret },
+      const { data, error } = await testContactWebhook({
+        override_url: form.webhook_url,
+        override_secret: form.webhook_secret,
       });
       if (error) throw error;
       setTestResult(data as typeof testResult);
