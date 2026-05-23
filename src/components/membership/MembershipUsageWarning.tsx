@@ -66,7 +66,7 @@ export const MembershipUsageWarning: React.FC<Props> = ({
   const { data: rows } = useQuery({
     queryKey: ['membership-usage', userId ?? null, businessId ?? null],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_membership_usage', {
+      const { data, error } = await getMembershipUsage<UsageRow>({
         _business_id: businessId ?? undefined,
         _user_id: userId ?? undefined,
       });

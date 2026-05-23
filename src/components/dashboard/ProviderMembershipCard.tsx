@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getCurrentMembershipSubscription, getMembershipUsage } from '@/modules/memberships';
 import { countBusinesses } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -49,14 +49,25 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
   const { data: subscription } = useQuery({
     queryKey: ['provider-active-subscription', userId, businessId ?? null],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('membership_subscriptions')
-        .select('id, status, billing_cycle, starts_at, expires_at, plan:membership_plans!plan_id(id, tier, name_ar, name_en, limits)')
-        .eq('user_id', userId)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      type Sub = {
+        id: string;
+        status: string;
+        billing_cycle: string | null;
+        starts_at: string | null;
+        expires_at: string | null;
+        plan: {
+          id: string;
+          tier: string;
+          name_ar: string;
+          name_en: string;
+          limits: unknown;
+        } | null;
+      };
+      const { data } = await getCurrentMembershipSubscription<Sub>({
+        userId,
+        select:
+          'id, status, billing_cycle, starts_at, expires_at, plan:membership_plans!plan_id(id, tier, name_ar, name_en, limits)',
+      });
       return data;
     },
     enabled: !!userId,
@@ -78,7 +89,7 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
   const { data: usageRows } = useQuery({
     queryKey: ['membership-usage', userId, businessId ?? null],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_membership_usage', {
+      const { data, error } = await getMembershipUsage<UsageRow>({
         _business_id: businessId ?? undefined,
         _user_id: userId,
       });
