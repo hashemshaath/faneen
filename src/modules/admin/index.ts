@@ -1,4 +1,3 @@
 // Module: admin
-// Public API for this module will be added in R1/R2.
-// Scaffold only — intentionally empty.
-export {};
+// Public API — admin tooling service wrappers.
+export { abEvaluate } from './services/experiments/abEvaluate';
