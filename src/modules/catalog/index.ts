@@ -57,3 +57,12 @@ export {
   listAdminServiceAreasWithBusinesses,
   countAllServiceAreas,
 } from './services/serviceAreas/admin';
+
+// ── CAT-5 BNPL mutation wrappers ──
+export {
+  insertBnplProvider,
+  updateBnplProviderById,
+  deleteBnplProviderById,
+  upsertBusinessBnplProvider,
+  updateBusinessBnplProviderForBusiness,
+} from './services/bnpl/mutations';
