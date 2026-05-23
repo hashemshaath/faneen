@@ -550,11 +550,14 @@ const AdminBusinesses = () => {
       for (const f of fields) {
         const sourceKey = f.to === 'en' ? f.key.replace('_en', '_ar') : f.key.replace('_ar', '_en');
         const text = editForm[sourceKey] as string;
-        const { data, error } = await supabase.functions.invoke('blog-ai-tools', {
-          body: { action: 'translate', text, sourceLang: f.from, targetLang: f.to },
+        const { data, error } = await invokeBlogAiTools({
+          action: 'translate',
+          text,
+          sourceLang: f.from,
+          targetLang: f.to,
         });
         if (error) throw error;
-        const translated = (data?.result || '').trim();
+        const translated = ((data as { result?: string } | null)?.result || '').trim();
         if (translated) { setField(f.key, translated); done += 1; }
       }
       toast.success(isRTL ? `تمت ترجمة ${done} حقل` : `Translated ${done} field(s)`);
