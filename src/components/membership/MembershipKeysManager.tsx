@@ -66,7 +66,8 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
         _notes: null,
       });
       if (error) throw error;
-      const row = Array.isArray(data) ? data[0] : (data as unknown as { id: string; code: string });
+      const d = data as unknown;
+      const row = Array.isArray(d) ? d[0] : d;
       return row as { id: string; code: string };
     },
     onSuccess: (row) => {
@@ -97,7 +98,8 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
         _business_id: businessId,
       });
       if (error) throw error;
-      const row = Array.isArray(data) ? data[0] : (data as unknown as { id: string; raw_key: string });
+      const d = data as unknown;
+      const row = Array.isArray(d) ? d[0] : d;
       return row as { id: string; raw_key: string };
     },
     onSuccess: (row) => {
