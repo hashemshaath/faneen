@@ -10863,12 +10863,10 @@ export type Database = {
         Args: { _subscription_id: string }
         Returns: undefined
       }
-      cancel_subscription_at_period_end:
-        | { Args: { _subscription_id: string }; Returns: undefined }
-        | {
-            Args: { _downgrade_to_plan_id?: string; _subscription_id: string }
-            Returns: undefined
-          }
+      cancel_subscription_at_period_end: {
+        Args: { _downgrade_to_plan_id?: string; _subscription_id: string }
+        Returns: undefined
+      }
       categorize_email_link: { Args: { _url: string }; Returns: string }
       check_email_deliverability: { Args: never; Returns: undefined }
       check_password_reset_rate_limit: {
