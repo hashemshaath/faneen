@@ -145,8 +145,7 @@ const DashboardNotifications = () => {
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['all-notifications', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('notifications').select('*')
-        .eq('user_id', user!.id).order('created_at', { ascending: false }).limit(500);
+      const { data, error } = await listNotificationsForUser({ userId: user!.id, limit: 500 });
       if (error) throw error;
       return data;
     },
