@@ -18,3 +18,7 @@ export * from './services/markConversationMessagesRead';
 // M-4 realtime helpers.
 export * from './services/realtime/subscribeConversationMessages';
 export * from './services/realtime/subscribeUserConversations';
+// M-5 storage helpers.
+export * from './constants/storage';
+export * from './services/storage/uploadChatAttachment';
+export * from './services/storage/getChatAttachmentPublicUrl';
