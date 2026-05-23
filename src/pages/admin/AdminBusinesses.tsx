@@ -11,6 +11,7 @@ import type { Database } from '@/integrations/supabase/types';
 import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
 import { updateBusinessById, updateBusinessesByIds, listAdminBusinesses } from '@/modules/businesses';
+import { setBusinessMembershipTier, type MembershipTier } from '@/modules/memberships';
 import {
   listServicesByBusiness,
   listAllBusinessServicesLite,
@@ -344,15 +345,17 @@ const AdminBusinesses = () => {
   });
 
   const tierMutation = useMutation({
-    mutationFn: async ({ id, tier }: { id: string; tier: string }) => {
-      const { error } = await updateBusinessById({ id, values: { membership_tier: tier } });
-      if (error) throw error;
-      await logAction('business_tier_change', id, { new_tier: tier });
+    mutationFn: async ({ id, tier }: { id: string; tier: MembershipTier }) => {
+      // R4E-2C-4-PHASE-3: route through membership-owned RPC. RPC writes
+      // admin_activity_log itself, so no frontend logAction here.
+      await setBusinessMembershipTier(id, tier, 'AdminBusinesses single tier change');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
       toast.success(isRTL ? 'تم تغيير العضوية' : 'Tier updated');
     },
+    onError: (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل تغيير العضوية' : 'Tier change failed')),
   });
 
   const updateBizMutation = useMutation({
@@ -372,7 +375,9 @@ const AdminBusinesses = () => {
         logo_url: editForm.logo_url || null, cover_url: editForm.cover_url || null,
         unified_number: editForm.unified_number || null, contact_person: editForm.contact_person || null,
         mobile: editForm.mobile || null, customer_service_phone: editForm.customer_service_phone || null,
-        is_active: editForm.is_active, is_verified: editForm.is_verified, membership_tier: editForm.membership_tier,
+        // R4E-2C-4-PHASE-3: membership_tier no longer written from the edit
+        // form. Use the row tier picker (routes through admin RPC).
+        is_active: editForm.is_active, is_verified: editForm.is_verified,
       };
       const { error } = await updateBusinessById({ id, values: payload });
       if (error) throw error;
@@ -899,7 +904,31 @@ const AdminBusinesses = () => {
               onClick={() => bulkMutation.mutate({ ids: [...selected], patch: { is_verified: false } })}>
               <XCircle className="w-3.5 h-3.5" />{isRTL ? 'إلغاء التوثيق' : 'Unverify'}
             </Button>
-            <Select onValueChange={(v) => bulkMutation.mutate({ ids: [...selected], patch: { membership_tier: v } })}>
+            <Select
+              onValueChange={async (v) => {
+                // R4E-2C-4-PHASE-3: bulk tier change goes per-business through
+                // membership-owned RPC. No batch RPC yet; use Promise.allSettled.
+                const ids = [...selected];
+                const results = await Promise.allSettled(
+                  ids.map((id) =>
+                    setBusinessMembershipTier(
+                      id,
+                      v as MembershipTier,
+                      'AdminBusinesses bulk tier change',
+                    ),
+                  ),
+                );
+                const ok = results.filter((r) => r.status === 'fulfilled').length;
+                const fail = results.length - ok;
+                queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+                if (fail === 0) {
+                  toast.success(isRTL ? `تم تحديث ${ok}` : `Updated ${ok}`);
+                } else {
+                  toast.error(isRTL ? `نجح ${ok}، فشل ${fail}` : `Succeeded ${ok}, failed ${fail}`);
+                }
+                clearSelected();
+              }}
+            >
               <SelectTrigger className="h-8 w-36 text-xs rounded-xl"><Crown className="w-3.5 h-3.5 me-1" />
                 <SelectValue placeholder={isRTL ? 'تغيير العضوية' : 'Change tier'} />
               </SelectTrigger>
@@ -1442,18 +1471,22 @@ const AdminBusinesses = () => {
                     </div>
                     <div className="p-3.5 rounded-xl bg-muted/30 border border-border/30">
                       <p className="text-sm font-medium mb-2">{isRTL ? 'مستوى العضوية' : 'Membership Tier'}</p>
-                      <Select value={editForm.membership_tier} onValueChange={v => setField('membership_tier', v)}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {tiers.map(t => (
-                            <SelectItem key={t.value} value={t.value}>
-                              <span className="flex items-center gap-2">
-                                <span>{t.icon}</span> {language === 'ar' ? t.label_ar : t.label_en}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {(() => {
+                        const cur = tiers.find(t => t.value === editForm.membership_tier) || tiers[0];
+                        return (
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background/60 border border-border/40">
+                            <span>{cur.icon}</span>
+                            <span className="text-sm font-medium">
+                              {language === 'ar' ? cur.label_ar : cur.label_en}
+                            </span>
+                          </div>
+                        );
+                      })()}
+                      <p className="text-[10px] text-muted-foreground mt-2">
+                        {isRTL
+                          ? 'تغيير العضوية يتم من خيار العضوية في صف المنشأة.'
+                          : 'Use the row tier picker to change membership.'}
+                      </p>
                     </div>
                   </div>
                 </TabsContent>
@@ -1769,7 +1802,7 @@ const AdminBusinesses = () => {
                       </div>
 
                       <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
-                        <Select value={biz.membership_tier} onValueChange={tier => tierMutation.mutate({ id: biz.id, tier })}>
+                        <Select value={biz.membership_tier} onValueChange={tier => tierMutation.mutate({ id: biz.id, tier: tier as MembershipTier })}>
                           <SelectTrigger className="h-8 text-xs w-28 border-dashed rounded-xl"><SelectValue /></SelectTrigger>
                           <SelectContent className="rounded-xl">
                             {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}

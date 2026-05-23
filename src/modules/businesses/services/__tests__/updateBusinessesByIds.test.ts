@@ -47,7 +47,7 @@ describe('updateBusinessesByIds', () => {
   });
 
   it('passes exact values reference (no transform)', async () => {
-    const values = { membership_tier: 'premium', sectors: [] as string[] };
+    const values = { is_verified: true, sectors: [] as string[] };
     await updateBusinessesByIds({ ids: ['x'], values });
     expect((builder.update.mock.calls[0]?.[0] as unknown)).toBe(values);
   });
@@ -89,18 +89,24 @@ describe('migration regression: AdminBusinesses', () => {
   it('preserves toggle payload pattern { [field]: value }', () => {
     expect(src).toMatch(/updateBusinessById\(\{\s*id,\s*values:\s*\{\s*\[field\]:\s*value\s*\}\s*\}\)/);
   });
-  it('preserves membership_tier payload', () => {
-    expect(src).toMatch(/updateBusinessById\(\{\s*id,\s*values:\s*\{\s*membership_tier:\s*tier\s*\}\s*\}\)/);
-  });
   it('preserves full admin edit using payload variable', () => {
     expect(src).toMatch(/updateBusinessById\(\{\s*id,\s*values:\s*payload\s*\}\)/);
   });
   it('preserves bulk patch using ids/patch', () => {
     expect(src).toMatch(/updateBusinessesByIds\(\{\s*ids,\s*values:\s*patch\s*\}\)/);
   });
+  // R4E-2C-4-PHASE-3: tier changes go through membership-owned RPC.
+  it('does NOT pass membership_tier in updateBusinessById values', () => {
+    expect(src).not.toMatch(/updateBusinessById\([^)]*membership_tier/);
+  });
+  it('does NOT pass membership_tier in updateBusinessesByIds values/patch', () => {
+    expect(src).not.toMatch(/updateBusinessesByIds\([^)]*membership_tier/);
+  });
+  it('routes tier changes through setBusinessMembershipTier', () => {
+    expect(src).toMatch(/setBusinessMembershipTier\(/);
+  });
   it('admin_activity_log writes remain present', () => {
     expect(src).toMatch(/admin_activity_log/);
-    expect(src).toMatch(/business_tier_change/);
     expect(src).toMatch(/business_updated/);
   });
 });

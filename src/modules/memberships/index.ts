@@ -24,6 +24,13 @@ export type {
   AdminUpgradeSubscriptionArgs,
 } from './services/subscriptions/mutations';
 
+// R4E-2C-4-PHASE-3: admin membership tier override (membership-owned).
+export { setBusinessMembershipTier } from './services/subscriptions/setBusinessMembershipTier';
+export type {
+  MembershipTier,
+  AdminSetBusinessMembershipTierResult,
+} from './services/subscriptions/setBusinessMembershipTier';
+
 // MEMB-4: upgrade requests
 export {
   listMembershipUpgradeRequests,
