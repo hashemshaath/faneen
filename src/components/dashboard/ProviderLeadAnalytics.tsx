@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { listLeadAnalyticsForBusiness } from '@/modules/leads';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Inbox, GitBranch, TrendingUp, Info, AlertTriangle, RefreshCcw, FileSignature, CheckCircle2 } from 'lucide-react';
@@ -52,13 +52,11 @@ export const ProviderLeadAnalytics: React.FC<Props> = ({ businessId, period }) =
     enabled: !!businessId,
     staleTime: 60000,
     queryFn: async () => {
-      const { data: leads, error } = await supabase
-        .from('lead_requests')
-        .select('id, status, created_at, viewed_at, quoted_at, accepted_at, rejected_at, closed_at, converted_contract_id, converted_at')
-        .eq('business_id', businessId!)
-        .gte('created_at', range.start.toISOString());
-      if (error) throw new Error('lead_analytics_fetch_failed');
-      return leads ?? [];
+      try {
+        return await listLeadAnalyticsForBusiness(businessId!, range.start.toISOString());
+      } catch {
+        throw new Error('lead_analytics_fetch_failed');
+      }
     },
   });
 

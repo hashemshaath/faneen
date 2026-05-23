@@ -20,3 +20,10 @@ export * from './services/createOrGetLeadConversation';
 export * from './services/getManagedBusinessesForUser';
 export * from './services/getBusinessesForMyRequests';
 export * from './services/submit';
+
+// L-2 reads
+export * from './services/countLeadsByDateRange';
+export * from './services/countLeadsByStatus';
+export * from './services/countLeadsForBusiness';
+export * from './services/listLeadAnalyticsForBusiness';
+export * from './services/listRecentLeadsForBusiness';
