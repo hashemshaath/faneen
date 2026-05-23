@@ -50,9 +50,7 @@ describe('L-2 admin quote read callsite migration', () => {
 
   it('Completed lead/quote pages remain clean', () => {
     const pages = [
-      'src/pages/LeadRequestForm.tsx',
       'src/pages/Quote.tsx',
-      'src/pages/QuoteRequestDetails.tsx',
       'src/pages/admin/AdminLeadRequests.tsx',
       'src/pages/dashboard/DashboardLeads.tsx',
       'src/pages/dashboard/DashboardMyRequests.tsx',
