@@ -12,7 +12,9 @@ import {
   updateBusinessServiceById,
   deleteBusinessServiceById,
   deleteDemoBusinessServicesForBusiness,
+  listServicesByBusiness,
 } from '@/modules/catalog';
+import type { Tables } from '@/integrations/supabase/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -257,7 +259,12 @@ const DashboardServices = () => {
     queryKey: ['dashboard-services', businessId],
     queryFn: async () => {
       if (!businessId) return [];
-      const { data } = await supabase.from('business_services').select('*').eq('business_id', businessId).order('sort_order');
+      const { data } = await listServicesByBusiness<Tables<'business_services'>>({
+        businessId,
+        select: '*',
+        activeOnly: false,
+        order: 'sort_order',
+      });
       return data ?? [];
     },
     enabled: !!businessId,
