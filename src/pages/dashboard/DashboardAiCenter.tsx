@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeAiCenter } from '@/modules/ai';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiSettings, DEFAULT_AI_SETTINGS, type ToneType, type AiModel, type AiSettings, type ResponseStyle } from '@/hooks/useAiSettings';
 import {
