@@ -20,8 +20,8 @@ describe('N-2 migration: notification read callsites use service wrappers', () =
     const s = read('pages/dashboard/DashboardNotifications.tsx');
     expect(s).toMatch(/listNotificationsForUser\(\{\s*userId:\s*user!\.id,\s*limit:\s*500\s*\}\)/);
     expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*select/);
-    // Realtime remains deferred to N-4
-    expect(s).toMatch(/postgres_changes/);
+    // N-4: realtime migrated to subscribeUserNotifications helper
+    expect(s).toMatch(/subscribeUserNotifications/);
     // N-3: mutations migrated to services
     expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*update/);
     expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*delete/);
@@ -31,7 +31,7 @@ describe('N-2 migration: notification read callsites use service wrappers', () =
     const s = read('components/notifications/NotificationBell.tsx');
     expect(s).toMatch(/listNotificationsForUser\(\{\s*userId:\s*user!\.id,\s*limit:\s*50\s*\}\)/);
     expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*select/);
-    expect(s).toMatch(/postgres_changes/);
+    expect(s).toMatch(/subscribeUserNotifications/);
     // N-3: mutations migrated to services
     expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*update/);
     expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*delete/);
@@ -61,7 +61,7 @@ describe('N-2 migration: notification read callsites use service wrappers', () =
     const s = read('components/dashboard/overview/widgets/LiveActivityWidget.tsx');
     expect(s).toMatch(/listLiveActivityNotifications\(\{\s*userId,\s*limit:\s*15\s*\}\)/);
     expect(s).not.toMatch(/\.from\(\s*['"]notifications['"]\s*\)\s*\.\s*select/);
-    expect(s).toMatch(/postgres_changes/);
+    expect(s).toMatch(/subscribeUserNotifications/);
   });
 
   it('shared.tsx TodaySummary: uses countNotificationsForUserSince', () => {

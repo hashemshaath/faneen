@@ -51,9 +51,9 @@ describe('N-3 migration: notification mutation callsites use service wrappers', 
     expect(s).toMatch(/invalidateQueries\(\{\s*queryKey:\s*\['notifications',\s*user\?\.id\]\s*\}\)/);
   });
 
-  it('realtime subscriptions remain deferred (still using postgres_changes directly)', () => {
-    expect(read('pages/dashboard/DashboardNotifications.tsx')).toMatch(/postgres_changes/);
-    expect(read('components/notifications/NotificationBell.tsx')).toMatch(/postgres_changes/);
+  it('realtime subscriptions migrated in N-4 to subscribeUserNotifications', () => {
+    expect(read('pages/dashboard/DashboardNotifications.tsx')).toMatch(/subscribeUserNotifications/);
+    expect(read('components/notifications/NotificationBell.tsx')).toMatch(/subscribeUserNotifications/);
   });
 
   it('preferences remain deferred (no preference services yet)', () => {
