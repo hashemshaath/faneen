@@ -142,7 +142,7 @@ export function useContractDraftAutosave(args: UseContractDraftAutosaveArgs): Us
     const token = { aborted: false };
     inflightRef.current = token;
     try {
-      const { data, error } = await supabase.rpc('update_contract_draft_autosave', {
+      const { data, error } = await updateContractDraftAutosave({
         _contract_id: contractId,
         _patch: patch as unknown as never,
         _expected_updated_at: expectedUpdatedAtRef.current ?? undefined,
