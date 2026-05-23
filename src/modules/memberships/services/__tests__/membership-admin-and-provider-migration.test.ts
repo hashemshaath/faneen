@@ -42,8 +42,9 @@ describe('MEMB-7 admin + provider legacy migration', () => {
     // Query keys preserved.
     expect(src).toContain("['admin-plans']");
     expect(src).toContain("['admin-subs']");
-    // provider_lead_credit_transactions is out of scope (separate billing track).
-    expect(src).toContain('provider_lead_credit_transactions');
+    // provider_lead_credit_transactions migrated to credits module in CRED-2.
+    expect(src).not.toMatch(/\.from\(['"]provider_lead_credit_transactions['"]\)/);
+    expect(src).toContain('listProviderCreditTransactionsForBusiness');
   });
 
   it('ProviderMembership uses listProviderSubscriptionsForCurrentUser', () => {
