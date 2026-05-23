@@ -54,10 +54,16 @@ describe('EmailTemplatePreview email isolation (E-Mail-10)', () => {
     expect(src).toContain('setSending(false)');
   });
 
-  it('retains supabase import for admin-preview-email and email_send_log queries', () => {
+  it('uses adminPreviewEmail wrapper and keeps direct email_send_log read', () => {
     const src = read(TARGET);
+    // EF-6 migration: admin-preview-email is now invoked through the
+    // src/modules/admin wrapper instead of supabase.functions.invoke directly.
+    expect(src).toContain("import { adminPreviewEmail } from '@/modules/admin';");
+    expect(src).toContain('adminPreviewEmail<PreviewResponse>(');
+    expect(src).not.toMatch(/supabase\.functions\.invoke<PreviewResponse>\(\s*'admin-preview-email'/);
+    // email_send_log direct read is still intentionally allowed here
+    // (not yet governed by a domain isolation track).
     expect(src).toContain("import { supabase } from '@/integrations/supabase/client';");
-    expect(src).toContain("supabase.functions.invoke<PreviewResponse>(\n        'admin-preview-email',");
     expect(src).toContain("supabase\n        .from('email_send_log')");
   });
 });
