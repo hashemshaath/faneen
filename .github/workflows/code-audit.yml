@@ -113,6 +113,9 @@ jobs:
       - name: Identity Isolation Audit
         run: node scripts/identity-isolation-audit.mjs
 
+      - name: Storage Isolation Audit
+        run: node scripts/storage-isolation-audit.mjs
+
       - name: Contracts Pre-launch Smoke (typecheck + targeted vitest + privacy grep)
         run: bash scripts/contracts-prelaunch-smoke.sh
 
