@@ -7,6 +7,11 @@ import {
 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  insertBusinessStaff,
+  updateBusinessStaffById,
+  deleteBusinessStaffById,
+} from '@/modules/businesses';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,15 +103,15 @@ export const RepresentativesSection: React.FC<Props> = ({
         toast.error(isRTL ? 'هذا المستخدم مضاف بالفعل' : 'This user is already a representative');
         return;
       }
-      const { error: insertError } = await supabase
-        .from('business_staff')
-        .insert({
+      const { error: insertError } = await insertBusinessStaff({
+        payload: {
           business_id: businessId,
           user_id: profile.user_id,
           role: newRole,
           invited_by: user?.id ?? null,
           is_active: true,
-        });
+        },
+      });
       if (insertError) throw insertError;
       toast.success(isRTL ? `تمت إضافة ${profile.full_name ?? profile.email ?? ref}` : `Added ${profile.full_name ?? profile.email ?? ref}`);
       setRefIdInput('');
@@ -124,7 +129,7 @@ export const RepresentativesSection: React.FC<Props> = ({
   const updateRow = async (id: string, patch: Partial<Pick<StaffMember, 'role' | 'is_active'>>) => {
     setBusyRowId(id);
     try {
-      const { error } = await supabase.from('business_staff').update(patch).eq('id', id);
+      const { error } = await updateBusinessStaffById({ id, values: patch });
       if (error) throw error;
       toast.success(isRTL ? 'تم التحديث' : 'Updated');
       qc.invalidateQueries({ queryKey: ['business-staff', businessId] });
@@ -143,7 +148,7 @@ export const RepresentativesSection: React.FC<Props> = ({
     }
     setBusyRowId(row.id);
     try {
-      const { error } = await supabase.from('business_staff').delete().eq('id', row.id);
+      const { error } = await deleteBusinessStaffById({ id: row.id });
       if (error) throw error;
       toast.success(isRTL ? 'تمت الإزالة' : 'Removed');
       qc.invalidateQueries({ queryKey: ['business-staff', businessId] });
