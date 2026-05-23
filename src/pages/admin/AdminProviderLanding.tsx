@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeBlogAiTools } from '@/modules/ai';
 import {
   fetchLandingContent,
   fetchLandingFeatures,
@@ -556,8 +557,10 @@ const AiAssistantPanel = ({ onSaved }: { onSaved: () => void }) => {
           setLoading(true);
           setOutput('');
           try {
-            const { data, error } = await supabase.functions.invoke('blog-ai-tools', {
-              body: { action: 'generate', prompt, model: 'google/gemini-2.5-flash' },
+            const { data, error } = await invokeBlogAiTools({
+              action: 'generate',
+              prompt,
+              model: 'google/gemini-2.5-flash',
             });
             if (error) throw error;
             const text = (data as { text?: string; content?: string })?.text || (data as { content?: string })?.content || JSON.stringify(data);
