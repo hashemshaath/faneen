@@ -32,15 +32,14 @@ describe('M-2 migration: read callsites no longer touch conversations/messages d
     expect(src).not.toMatch(/\.from\(\s*["']conversations["']\s*\)\s*\.\s*select/);
   });
 
-  it('DashboardMessages.tsx — all three reads migrated; realtime/storage remain deferred', () => {
+  it('DashboardMessages.tsx — all three reads migrated; storage remains deferred', () => {
     const src = read('pages/dashboard/DashboardMessages.tsx');
     expect(src).toMatch(/listConversationsForUser\(/);
     expect(src).toMatch(/listUnreadMessageConversationIds\(/);
     expect(src).toMatch(/listMessagesForConversation\(/);
     // No remaining .from('conversations').select
     expect(src).not.toMatch(/\.from\(\s*['"]conversations['"]\s*\)\s*\.\s*select/);
-    // Realtime + storage stay direct for M-4/M-5
-    expect(src).toMatch(/postgres_changes/);
+    // Storage stays direct for M-5
     expect(src).toMatch(/supabase\.storage\.from\(\s*'chat-attachments'\s*\)/);
   });
 
