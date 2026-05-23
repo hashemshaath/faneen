@@ -23,6 +23,9 @@
 --   G4 — CLOSED by R4E-2C-1 (trg_businesses_sensitive_guard): owner cannot
 --        self-write is_verified / approval_status / is_demo / is_active
 --   G5 — CLOSED by R4E-2C-1: owner cannot re-key own businesses.user_id
+--   G3 — CLOSED by R4E-2C-4-PHASE-4 (trg_businesses_membership_tier_guard):
+--        direct businesses.membership_tier writes are blocked unless the
+--        membership-owned RPC marker app.membership_rpc='1' is set.
 -- =============================================================================
 
 BEGIN;
@@ -32,7 +35,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET search_path = public, extensions;
 
-SELECT plan(33);
+SELECT plan(35);
 
 -- ---------------------------------------------------------------------------
 -- SEED (as superuser; RLS bypassed for table owners)
@@ -241,13 +244,13 @@ SELECT isnt_empty(
   $$ UPDATE public.businesses SET is_active = false
      WHERE id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' RETURNING id $$,
   'T11d admin can set is_active=false');
--- membership_tier write currently passes RLS but bypasses memberships state
--- machine — see TODO_GAP_G3 below; baseline assertion still records that the
--- write is permitted today.
-SELECT isnt_empty(
+-- T11e — direct admin write of membership_tier WITHOUT marker is now rejected
+-- by trg_businesses_membership_tier_guard (R4E-2C-4-PHASE-4 closes G3).
+SELECT throws_ok(
   $$ UPDATE public.businesses SET membership_tier = 'platinum'
-     WHERE id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' RETURNING id $$,
-  'T11e admin can write membership_tier (state-machine ownership: TODO_GAP_G3)');
+     WHERE id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' $$,
+  '42501', NULL,
+  'T11e admin direct membership_tier write rejected without app.membership_rpc marker (G3 closed)');
 
 -- ---------------------------------------------------------------------------
 -- T12 — bulk admin mutation writes one admin_activity_log per business   [G1]
@@ -312,25 +315,36 @@ SELECT results_eq(
 SELECT tests_helpers.become('33333333-3333-3333-3333-333333333333');
 
 -- ---------------------------------------------------------------------------
--- T13 — membership_tier write without active provider_subscriptions  [G3]
+-- T13 — membership_tier enforcement trigger (G3 CLOSED by R4E-2C-4-PHASE-4)
 -- ---------------------------------------------------------------------------
--- No provider_subscriptions row exists for Biz A; admin sets tier=platinum;
--- expectation is that DB state-machine rejects or reverts. Currently it does
--- not — TODO_GAP_G3.
-SELECT todo_start('TODO_GAP_G3: businesses.membership_tier is not gated by provider_subscriptions');
+-- Direct admin UPDATE of membership_tier without the membership RPC marker is
+-- rejected with SQLSTATE 42501. Setting the marker explicitly (the documented
+-- migration/service escape hatch) lets the write through. Same-tier writes
+-- always pass because the guard only fires on IS DISTINCT FROM changes.
 
-UPDATE public.businesses SET membership_tier = 'free'
- WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
-UPDATE public.businesses SET membership_tier = 'platinum'
- WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
-
-SELECT is(
-  (SELECT membership_tier FROM public.businesses
-    WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
-  'free',
-  'T13 membership_tier unchanged without provider_subscriptions row'
+-- T13a — direct admin tier change WITHOUT marker is rejected
+SELECT throws_ok(
+  $$ UPDATE public.businesses SET membership_tier = 'premium'
+     WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' $$,
+  '42501', NULL,
+  'T13a direct membership_tier change rejected without app.membership_rpc marker'
 );
-SELECT todo_end();
+
+-- T13b — same-tier UPDATE (no actual change) is allowed
+SELECT lives_ok(
+  $$ UPDATE public.businesses
+        SET membership_tier = membership_tier
+      WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' $$,
+  'T13b same-tier UPDATE passes guard (IS DISTINCT FROM check)'
+);
+
+-- T13c — explicit marker (migration/service escape hatch) allows the change
+SELECT lives_ok(
+  $$ SELECT set_config('app.membership_rpc','1',true);
+     UPDATE public.businesses SET membership_tier = 'premium'
+      WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' $$,
+  'T13c direct UPDATE allowed when app.membership_rpc=1 marker is set'
+);
 
 -- ---------------------------------------------------------------------------
 -- T14 — businesses_public round-trip (expected PASS today)
