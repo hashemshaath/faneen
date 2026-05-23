@@ -5,7 +5,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listOwnerBusinesses } from '@/modules/businesses';
-import { listServiceAreasByBusiness } from '@/modules/catalog';
+import {
+  listServiceAreasByBusiness,
+  insertServiceArea,
+  deleteServiceAreaById,
+  clearPrimaryServiceAreasForBusiness,
+  setServiceAreaPrimaryById,
+} from '@/modules/catalog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,11 +78,9 @@ const ProviderServiceAreas: React.FC = () => {
       if (c.length < 2) throw new Error('city too short');
       // If marking primary, clear others first
       if (isPrimary) {
-        await supabase.from('business_service_areas')
-          .update({ is_primary: false })
-          .eq('business_id', activeBiz);
+        await clearPrimaryServiceAreasForBusiness(activeBiz);
       }
-      const { error } = await supabase.from('business_service_areas').insert({
+      const { error } = await insertServiceArea({
         business_id: activeBiz,
         city: c,
         district: district.trim() || null,
@@ -101,7 +105,7 @@ const ProviderServiceAreas: React.FC = () => {
 
   const removeArea = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('business_service_areas').delete().eq('id', id);
+      const { error } = await deleteServiceAreaById(id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -115,10 +119,8 @@ const ProviderServiceAreas: React.FC = () => {
 
   const setPrimary = useMutation({
     mutationFn: async (id: string) => {
-      await supabase.from('business_service_areas')
-        .update({ is_primary: false }).eq('business_id', activeBiz);
-      const { error } = await supabase.from('business_service_areas')
-        .update({ is_primary: true }).eq('id', id);
+      await clearPrimaryServiceAreasForBusiness(activeBiz);
+      const { error } = await setServiceAreaPrimaryById(id);
       if (error) throw error;
     },
     onSuccess: () => {
