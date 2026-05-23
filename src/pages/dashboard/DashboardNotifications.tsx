@@ -1,7 +1,12 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  listNotificationsForUser,
+  markNotificationRead,
+  markAllNotificationsRead,
+  deleteNotification as deleteNotificationSvc,
+} from '@/modules/notifications';
 import { supabase } from '@/integrations/supabase/client';
-import { listNotificationsForUser } from '@/modules/notifications';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -206,17 +211,17 @@ const DashboardNotifications = () => {
   }, [notifications, unreadCount]);
 
   const markRead = useMutation({
-    mutationFn: async (id: string) => { await supabase.from('notifications').update({ is_read: true }).eq('id', id); },
+    mutationFn: async (id: string) => { await markNotificationRead(id); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-notifications'] }); queryClient.invalidateQueries({ queryKey: ['notifications'] }); },
   });
 
   const markAllRead = useMutation({
-    mutationFn: async () => { await supabase.from('notifications').update({ is_read: true }).eq('user_id', user!.id).eq('is_read', false); },
+    mutationFn: async () => { await markAllNotificationsRead(user!.id); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-notifications'] }); queryClient.invalidateQueries({ queryKey: ['notifications'] }); },
   });
 
   const deleteNotification = useMutation({
-    mutationFn: async (id: string) => { await supabase.from('notifications').delete().eq('id', id); },
+    mutationFn: async (id: string) => { await deleteNotificationSvc(id); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-notifications'] }); queryClient.invalidateQueries({ queryKey: ['notifications'] }); },
   });
 
