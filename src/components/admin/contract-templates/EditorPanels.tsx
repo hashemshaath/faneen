@@ -284,7 +284,7 @@ export const PricingRulesPanel: React.FC<{
     queryFn: async () => {
       const { data, error } = await listContractTemplatePricingRules(versionId);
       if (error) throw error;
-      return (data || []) as CTPricingRule[];
+      return ((data || []) as unknown) as CTPricingRule[];
     },
   });
   const inv = () => qc.invalidateQueries({ queryKey: ['ct-pricing', versionId] });
