@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getContractById } from '@/modules/contracts';
 import { getProfileForContractParty } from '@/modules/users';
 import { createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -287,7 +288,7 @@ const ContractDetail = () => {
   const { data: contract, isLoading } = useQuery({
     queryKey: ['contract', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('contracts').select('*').eq('id', id!).maybeSingle();
+      const { data, error } = await getContractById({ id: id!, select: '*' });
       if (error) throw error;
       return data;
     },

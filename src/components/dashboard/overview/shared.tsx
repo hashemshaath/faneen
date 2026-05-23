@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listEndingSoonContractsForUser } from '@/modules/contracts';
 import { countMessagesSentByUserSince } from '@/modules/messaging';
 import { countNotificationsForUserSince } from '@/modules/notifications';
 import { Card, CardContent } from '@/components/ui/card';
@@ -213,14 +214,11 @@ export const OverdueAlerts = React.memo(function OverdueAlerts({
         .lt('due_date', today)
         .limit(10);
 
-      const { data: expiringContracts } = await supabase
-        .from('contracts')
-        .select('id')
-        .eq('status', 'active')
-        .not('end_date', 'is', null)
-        .lt('end_date', new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0])
-        .or(`client_id.eq.${userId},provider_id.eq.${userId}`)
-        .limit(10);
+      const { data: expiringContracts } = await listEndingSoonContractsForUser({
+        userId,
+        cutoffDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+        limit: 10,
+      });
 
       return {
         overduePayments: overduePayments?.length ?? 0,

@@ -11,6 +11,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listContractsForOwner } from '@/modules/contracts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -476,24 +477,29 @@ function ClientDetail({
     enabled: !!user?.id,
     staleTime: 60_000,
     queryFn: async () => {
-      let q = supabase
-        .from('contracts')
-        .select('id, contract_number, status, total_amount, created_at')
-        .eq('provider_id', user!.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      if (r.user_id) {
-        q = q.eq('client_id', r.user_id);
-      } else {
-        // guest: filter by either email or phone digits
-        const parts = r.client_key.startsWith('g:') ? r.client_key.slice(2).split('|') : ['', ''];
-        const e = parts[0] || '';
-        const p = parts[1] || '';
-        if (e && p)      q = q.or(`guest_client_email.ilike.${e},guest_client_phone.ilike.%${p}%`);
-        else if (e)      q = q.ilike('guest_client_email', e);
-        else if (p)      q = q.ilike('guest_client_phone', `%${p}%`);
-      }
-      const { data, error } = await q;
+      const { data, error } = await listContractsForOwner<ContractDetailRow>({
+        providerId: user!.id,
+        select: 'id, contract_number, status, total_amount, created_at',
+        orderBy: { column: 'created_at', ascending: false },
+        limit: 5,
+        customize: (q) => {
+          if (r.user_id) {
+            return (q as { eq: (c: string, v: string) => unknown }).eq('client_id', r.user_id) as typeof q;
+          }
+          // guest: filter by either email or phone digits
+          const parts = r.client_key.startsWith('g:') ? r.client_key.slice(2).split('|') : ['', ''];
+          const e = parts[0] || '';
+          const p = parts[1] || '';
+          const b = q as {
+            or: (s: string) => unknown;
+            ilike: (c: string, v: string) => unknown;
+          };
+          if (e && p)      return b.or(`guest_client_email.ilike.${e},guest_client_phone.ilike.%${p}%`) as typeof q;
+          else if (e)      return b.ilike('guest_client_email', e) as typeof q;
+          else if (p)      return b.ilike('guest_client_phone', `%${p}%`) as typeof q;
+          return q;
+        },
+      });
       if (error) throw error;
       return (data ?? []) as ContractDetailRow[];
     },

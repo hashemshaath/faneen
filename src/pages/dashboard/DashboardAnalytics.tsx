@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listContractsForProviderOrBusiness } from '@/modules/contracts';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOwnerBusiness } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -100,9 +101,12 @@ const DashboardAnalytics = () => {
       const { start } = dateRange;
 
       const [contracts, bookings, reviews, services, projects, portfolio] = await Promise.all([
-        supabase.from('contracts').select('id, status, total_amount, created_at, currency_code')
-          .or(`provider_id.eq.${user!.id},business_id.eq.${business.id}`)
-          .gte('created_at', start),
+        listContractsForProviderOrBusiness<{ id: string; status: string; total_amount: number | null; created_at: string; currency_code: string | null }>({
+          userId: user!.id,
+          businessId: business.id,
+          select: 'id, status, total_amount, created_at, currency_code',
+          gteCreatedAt: start,
+        }),
         supabase.from('bookings').select('id, status, booking_date, created_at')
           .eq('business_id', business.id)
           .gte('created_at', start),

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
 import { countConversationsForUser } from '@/modules/messaging';
+import { listContractsForOwner } from '@/modules/contracts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -74,7 +75,11 @@ export default function ProviderDashboardView({
         businessId ? supabase.from('business_services').select('id', { count: 'exact', head: true }).eq('business_id', businessId) : { count: 0 },
         businessId ? supabase.from('portfolio_items').select('id', { count: 'exact', head: true }).eq('business_id', businessId) : { count: 0 },
         businessId ? supabase.from('reviews').select('id, rating', { count: 'exact' }).eq('business_id', businessId) : { count: 0, data: [] },
-        supabase.from('contracts').select('id, total_amount, status, created_at', { count: 'exact' }).eq('provider_id', user.id),
+        listContractsForOwner<{ id: string; total_amount: number | null; status: string; created_at: string }>({
+          providerId: user.id,
+          select: 'id, total_amount, status, created_at',
+          count: { mode: 'exact' },
+        }),
         businessId ? supabase.from('projects').select('id', { count: 'exact', head: true }).eq('business_id', businessId) : { count: 0 },
         supabase.from('operations_log').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         countConversationsForUser({ userId: user.id }),
@@ -122,8 +127,12 @@ export default function ProviderDashboardView({
   const { data: recentContracts } = useQuery({
     queryKey: ['provider-recent-contracts', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('contracts').select('id, contract_number, title_ar, title_en, status, total_amount, currency_code, created_at')
-        .eq('provider_id', user.id).order('created_at', { ascending: false }).limit(5);
+      const { data } = await listContractsForOwner({
+        providerId: user.id,
+        select: 'id, contract_number, title_ar, title_en, status, total_amount, currency_code, created_at',
+        orderBy: { column: 'created_at', ascending: false },
+        limit: 5,
+      });
       return data || [];
     },
     enabled: !!user,

@@ -6,6 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listContractsForOwner } from '@/modules/contracts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,8 +54,11 @@ const DashboardWarranties = () => {
   const { data: contracts = [] } = useQuery({
     queryKey: ['provider-contracts', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('contracts').select('id, title_ar, title_en, contract_number')
-        .eq('provider_id', user!.id).order('created_at', { ascending: false });
+      const { data } = await listContractsForOwner<{ id: string; title_ar: string; title_en: string | null; contract_number: string | null }>({
+        providerId: user!.id,
+        select: 'id, title_ar, title_en, contract_number',
+        orderBy: { column: 'created_at', ascending: false },
+      });
       return data ?? [];
     },
     enabled: !!user,
