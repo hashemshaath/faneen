@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import {
   countUnreadNotificationsForUser,
   listRecentNotificationsForUser,
 } from '@/modules/notifications';
 import { listContractsForCustomer } from '@/modules/contracts';
-import { countBlogBookmarksForUser } from '@/modules/blog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
