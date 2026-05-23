@@ -16,7 +16,8 @@
 --       them without failing CI while the gap-closure migrations are designed.
 --
 -- TODO_GAP markers (see R4E dry runs):
---   G1 — admin bulk mutation does not write admin_activity_log per business
+--   G1 — CLOSED by R4E-2C-3 (trg_businesses_sensitive_audit): admin bulk
+--        mutation writes one admin_activity_log row per affected business
 --   G2 — CLOSED by R4E-2C-2 (trg_business_staff_last_owner_guard)
 --   G3 — businesses.membership_tier writes bypass provider_subscriptions state
 --   G4 — CLOSED by R4E-2C-1 (trg_businesses_sensitive_guard): owner cannot
