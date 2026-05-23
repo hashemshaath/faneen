@@ -11,6 +11,11 @@ import {
   markInstallmentPaymentPaid,
 } from '@/modules/contracts';
 import { hasAdminAccess } from '@/modules/identity';
+import {
+  insertBnplProvider,
+  updateBnplProviderById,
+  deleteBnplProviderById,
+} from '@/modules/catalog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -721,10 +726,10 @@ const DashboardInstallments = () => {
   const saveProviderMutation = useMutation({
     mutationFn: async ({ form, id }: { form: any; id?: string }) => {
       if (id) {
-        const { error } = await supabase.from('bnpl_providers').update(form).eq('id', id);
+        const { error } = await updateBnplProviderById({ id, values: form });
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('bnpl_providers').insert(form);
+        const { error } = await insertBnplProvider(form);
         if (error) throw error;
       }
     },
@@ -739,7 +744,7 @@ const DashboardInstallments = () => {
 
   const deleteProviderMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('bnpl_providers').delete().eq('id', id);
+      const { error } = await deleteBnplProviderById(id);
       if (error) throw error;
     },
     onSuccess: () => {
