@@ -1136,8 +1136,10 @@ const DashboardContracts = () => {
       }
       // Dispatch invite email via dedicated edge function. Token is sent
       // server-side once — never persisted in client state.
-      const { error: notifyErr } = await supabase.functions.invoke('notify-client-invitation', {
-        body: { invite_id: result.invite_id, token: result.token, kind: 'created' },
+      const { error: notifyErr } = await notifyClientInvitation({
+        invite_id: result.invite_id,
+        token: result.token,
+        kind: 'created',
       });
       if (notifyErr) throw notifyErr;
       return {
@@ -1169,8 +1171,10 @@ const DashboardContracts = () => {
       if (!pendingInvite) throw new Error('No pending invite');
       const data = await resendClientInvitation(pendingInvite.id);
       const result = data as { invite_id: string; ref_id: string; token: string; reminder_count: number; expires_at: string };
-      const { error: notifyErr } = await supabase.functions.invoke('notify-client-invitation', {
-        body: { invite_id: result.invite_id, token: result.token, kind: 'reminder' },
+      const { error: notifyErr } = await notifyClientInvitation({
+        invite_id: result.invite_id,
+        token: result.token,
+        kind: 'reminder',
       });
       if (notifyErr) throw notifyErr;
       return result;
