@@ -82,17 +82,6 @@ describe('CAT-3 DashboardWarranties provider writes migrated', () => {
 });
 
 describe('CAT-3 deferred / out-of-scope guardrails', () => {
-  it('AdminBusinesses catalog writes remain direct (deferred to CAT-4)', () => {
-    const src = read('src/pages/admin/AdminBusinesses.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]business_services['"]\)\.(insert|update|delete)/);
-    expect(src).toMatch(/supabase\.from\(['"]business_branches['"]\)\.(insert|update|delete)/);
-  });
-
-  it('AdminBusinessServiceAreas admin writes remain direct (deferred to CAT-4)', () => {
-    const src = read('src/pages/admin/locations/AdminBusinessServiceAreas.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]business_service_areas['"]\)\.(insert|update|delete)/);
-  });
-
   it('BnplProvidersManager business_bnpl_providers writes remain direct (deferred to CAT-5)', () => {
     const src = read('src/components/bnpl/BnplProvidersManager.tsx');
     expect(src).toMatch(/supabase\.from\(['"]business_bnpl_providers['"]\)\.upsert/);
