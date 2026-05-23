@@ -10506,6 +10506,32 @@ export type Database = {
         Args: { _reason: string; _site_id: string }
         Returns: Json
       }
+      admin_get_membership_lifecycle_email_markers: {
+        Args: { p_limit?: number }
+        Returns: {
+          created_at: string
+          dispatch_key: string
+          id: string
+          message_id: string
+          recipient_email: string
+          status: string
+          template_name: string
+        }[]
+      }
+      admin_get_membership_lifecycle_jobs: {
+        Args: never
+        Returns: {
+          active: boolean
+          jobname: string
+          last_run_end: string
+          last_run_return_message: string
+          last_run_started: string
+          last_run_status: string
+          recent_failures_count: number
+          schedule: string
+          total_runs_7d: number
+        }[]
+      }
       admin_list_barcodes: {
         Args: {
           _entity_type?: string
