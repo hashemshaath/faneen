@@ -75,8 +75,10 @@ describe('MEMB-2 callsite migration', () => {
     expect(src).toContain('subscribeToPlan');
   });
 
-  it('AdminMemberships direct access remains deferred', () => {
+  it('AdminMemberships fully migrated in MEMB-7', () => {
     const src = read('src/pages/admin/AdminMemberships.tsx');
-    expect(src).toMatch(/\.from\(['"]membership_plans['"]\)/);
+    expect(src).not.toMatch(/\.from\(['"]membership_plans['"]\)/);
+    expect(src).not.toMatch(/\.from\(['"]membership_subscriptions['"]\)/);
+    expect(src).toContain('listAdminMembershipPlans');
   });
 });
