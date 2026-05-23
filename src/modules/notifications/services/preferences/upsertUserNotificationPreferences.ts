@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesInsert } from '@/integrations/supabase/types';
 
 /**
  * N-5 upsert wrapper for per-user notification preferences.
@@ -7,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
  * Returns raw Supabase result untransformed.
  */
 export function upsertUserNotificationPreferences(
-  payload: Record<string, unknown> & { user_id: string },
+  payload: TablesInsert<'notification_preferences'> & { user_id: string },
 ) {
   return supabase
     .from('notification_preferences')
