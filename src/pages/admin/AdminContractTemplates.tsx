@@ -44,7 +44,7 @@ const AdminContractTemplates: React.FC = () => {
         activeOnly: false,
       });
       if (error) throw error;
-      return (data || []) as CTTemplate[];
+      return ((data as unknown) as CTTemplate[]) || [];
     },
   });
 
