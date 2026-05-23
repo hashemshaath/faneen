@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService } from '@/services/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { createPasswordResetLog } from '@/modules/identity';
 import { useLoginLockout } from '@/hooks/useLoginLockout';
 import { translateAuthError, isRateLimitError, isNetworkError } from '@/services/auth/errorMessages';
 import { getAuthErrorHelpLinks } from '@/services/auth/errorMessages';
@@ -78,7 +78,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
 
   const logResetRequest = async (status: string, requestId: string) => {
     try {
-      await supabase.from('password_reset_log').insert({
+      await createPasswordResetLog({
         email: email.trim().toLowerCase(),
         status,
         request_id: requestId,
