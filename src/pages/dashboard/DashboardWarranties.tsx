@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listContractsForOwner } from '@/modules/contracts';
+import { listWarrantiesByContractIds } from '@/modules/catalog';
+import type { Database } from '@/integrations/supabase/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,8 +72,13 @@ const DashboardWarranties = () => {
     queryKey: ['dashboard-warranties', contractIds],
     queryFn: async () => {
       if (contractIds.length === 0) return [];
-      const { data } = await supabase.from('warranties').select('*')
-        .in('contract_id', contractIds).order('created_at', { ascending: false });
+      const { data } = await listWarrantiesByContractIds<
+        Database['public']['Tables']['warranties']['Row']
+      >({
+        contractIds,
+        select: '*',
+        order: { column: 'created_at', ascending: false },
+      });
       return data ?? [];
     },
     enabled: contractIds.length > 0,
