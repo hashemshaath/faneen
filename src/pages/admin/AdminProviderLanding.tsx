@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
+import { pingSearchEngines } from '@/modules/seo';
 import { invokeBlogAiTools } from '@/modules/ai';
 import {
   fetchLandingContent,
@@ -422,7 +423,7 @@ const AdminProviderLanding = () => {
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" onClick={async () => {
                   try {
-                    const { error } = await supabase.functions.invoke('ping-search-engines', { body: { url: 'https://qitaat.com/for-providers' } });
+                    const { error } = await pingSearchEngines({ url: 'https://qitaat.com/for-providers' });
                     if (error) throw error;
                     toast({ title: 'تم إرسال طلب الفهرسة' });
                   } catch (e) { handleErr(e); }

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { pingSearchEngines } from '@/modules/seo';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,9 +58,7 @@ export const SitemapSubmissionsCard = () => {
   const triggerPing = useMutation({
     mutationFn: async () => {
       setSubmitting(true);
-      const { data, error } = await supabase.functions.invoke('ping-search-engines', {
-        body: { source: 'manual' },
-      });
+      const { data, error } = await pingSearchEngines({ source: 'manual' });
       if (error) throw error;
       return data;
     },

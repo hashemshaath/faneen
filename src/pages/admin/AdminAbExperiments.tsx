@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
+import { abEvaluate } from '@/modules/admin';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Beaker, Crown, Play, Pause, Trash2, Plus, RefreshCw, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
@@ -198,7 +199,7 @@ const AdminAbExperiments: React.FC = () => {
 
   const evaluateNow = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('ab-evaluate');
+      const { data, error } = await abEvaluate();
       if (error) throw error;
       return data;
     },

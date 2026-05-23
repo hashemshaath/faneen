@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { runSiteAudit } from '@/modules/seo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -129,7 +130,7 @@ const AdminSiteAudit = () => {
   /* Run audit */
   const runMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('run-site-audit');
+      const { data, error } = await runSiteAudit();
       if (error) throw error;
       return data;
     },
