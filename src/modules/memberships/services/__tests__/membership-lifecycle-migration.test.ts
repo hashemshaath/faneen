@@ -25,8 +25,9 @@ describe('MEMB-3 lifecycle migration', () => {
     expect(src).not.toMatch(/supabase\.rpc\(\s*['"]resume_subscription_renewal['"]/);
   });
 
-  it('only AdminUpgradeRequestsPanel retains a direct subscribe_to_plan call (MEMB-4)', () => {
+  it('AdminUpgradeRequestsPanel uses subscribeToPlan wrapper (migrated in MEMB-4)', () => {
     const panel = read('src/components/membership/AdminUpgradeRequestsPanel.tsx');
-    expect(panel).toMatch(/supabase\.rpc\(\s*['"]subscribe_to_plan['"]/);
+    expect(panel).not.toMatch(/supabase\.rpc\(\s*['"]subscribe_to_plan['"]/);
+    expect(panel).toContain('subscribeToPlan');
   });
 });
