@@ -47,8 +47,10 @@ describe('L-3: AdminQuoteRequestDetails mutation migration', () => {
     expect(SRC).toMatch(/if\s*\(error\)\s*throw\s+error/);
   });
 
-  it('keeps deferred L-4 edge calls direct (admin-reveal-lead-contact, match-quote-request)', () => {
-    expect(SRC).toMatch(/supabase\.functions\.invoke\(\s*['"]admin-reveal-lead-contact['"]/);
-    expect(SRC).toMatch(/supabase\.functions\.invoke\(\s*['"]match-quote-request['"]/);
+  it('L-4: edge calls migrated to service wrappers', () => {
+    expect(SRC).not.toMatch(/supabase\.functions\.invoke\(\s*['"]admin-reveal-lead-contact['"]/);
+    expect(SRC).not.toMatch(/supabase\.functions\.invoke\(\s*['"]match-quote-request['"]/);
+    expect(SRC).toMatch(/adminRevealLeadContact\s*\(/);
+    expect(SRC).toMatch(/matchQuoteRequest\s*\(/);
   });
 });
