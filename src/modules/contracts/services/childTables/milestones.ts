@@ -25,3 +25,7 @@ export async function updateContractMilestone(
     .update(update as never)
     .eq('id', milestoneId);
 }
+
+export async function deleteContractMilestone(milestoneId: string) {
+  return await supabase.from('contract_milestones').delete().eq('id', milestoneId);
+}
