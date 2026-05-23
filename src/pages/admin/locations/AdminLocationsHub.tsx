@@ -4,8 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { supabase } from '@/integrations/supabase/client';
 import { countBusinesses } from '@/modules/businesses';
+import { countAllServiceAreas } from '@/modules/catalog';
+import { supabase } from '@/integrations/supabase/client';
 import { MapPin, Building2, Map, ListTree, ArrowLeft } from 'lucide-react';
 
 const StatCard: React.FC<{ label: string; value: number | string; icon: React.ReactNode; tone?: string }> = ({ label, value, icon, tone = 'text-primary' }) => (
@@ -43,7 +44,7 @@ const AdminLocationsHub: React.FC = () => {
     queryFn: async () => {
       const [catalog, areas, withCoords, total] = await Promise.all([
         supabase.from('location_catalog').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('business_service_areas').select('id', { count: 'exact', head: true }),
+        countAllServiceAreas(),
         countBusinesses({
           select: 'id',
           filters: [

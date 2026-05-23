@@ -270,7 +270,7 @@ const AdminBusinesses = () => {
     queryKey: ['admin-services', servicesPanel],
     queryFn: async () => {
       if (!servicesPanel) return [];
-      const { data } = await listServicesByBusiness({
+      const { data } = await listServicesByBusiness<Database['public']['Tables']['business_services']['Row']>({
         businessId: servicesPanel,
         select: '*',
         activeOnly: false,
@@ -284,7 +284,9 @@ const AdminBusinesses = () => {
   const { data: allServices = [] } = useQuery({
     queryKey: ['all-business-services'],
     queryFn: async () => {
-      const { data } = await listAllBusinessServicesLite();
+      const { data } = await listAllBusinessServicesLite<
+        Pick<Database['public']['Tables']['business_services']['Row'], 'id' | 'name_ar' | 'name_en' | 'business_id'>
+      >();
       return data || [];
     },
   });
@@ -293,7 +295,7 @@ const AdminBusinesses = () => {
     queryKey: ['admin-branches', editingBiz?.id],
     queryFn: async () => {
       if (!editingBiz?.id) return [];
-      const { data } = await listBranchesByBusiness({
+      const { data } = await listBranchesByBusiness<Database['public']['Tables']['business_branches']['Row']>({
         businessId: editingBiz.id,
         select: '*',
         order: [{ column: 'sort_order' }],
