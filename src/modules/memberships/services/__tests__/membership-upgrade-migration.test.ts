@@ -45,20 +45,13 @@ describe('MEMB-4 upgrade requests / rejections / events migration', () => {
     expect(src).not.toMatch(/\.from\(['"]membership_subscription_events['"]\)/);
   });
 
-  it('legacy invite/access/promo/provider callsites remain deferred (not in this phase)', () => {
-    // Sanity-only: ensure we did not accidentally remove unrelated direct access.
-    // These tables are still managed by their own components/hooks.
-    const candidates = [
-      'src/components/membership/MembershipKeysManager.tsx',
-      'src/components/membership/PromoCodeRedeem.tsx',
-    ];
-    let touched = false;
-    for (const p of candidates) {
-      try {
-        const src = read(p);
-        if (src.includes("from '@/integrations/supabase/client'")) touched = true;
-      } catch { /* file may not exist; ignore */ }
-    }
-    expect(touched).toBe(true);
+  it('invite/access (MEMB-5) and promo (MEMB-6) are migrated; provider legacy deferred to MEMB-7', () => {
+    // Sanity-only: invite/access were migrated in MEMB-5, promo in MEMB-6.
+    // Provider legacy paths (provider_plans/provider_subscriptions) remain
+    // deferred and are tracked by their own phase.
+    const keys = read('src/components/membership/MembershipKeysManager.tsx');
+    const promo = read('src/components/membership/PromoCodeRedeem.tsx');
+    expect(keys).not.toMatch(/from\s+['"]@\/integrations\/supabase\/client['"]/);
+    expect(promo).not.toMatch(/from\s+['"]@\/integrations\/supabase\/client['"]/);
   });
 });

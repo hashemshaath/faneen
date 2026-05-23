@@ -36,9 +36,9 @@ describe('MEMB-5 invite/access keys migration', () => {
     expect(src).toContain("['invite-redemptions', businessId]");
   });
 
-  it('promo codes remain deferred to MEMB-6', () => {
+  it('promo codes are migrated in MEMB-6 (no longer deferred)', () => {
     const src = read('src/components/membership/PromoCodeRedeem.tsx');
-    // Still uses direct supabase client (legacy promo path).
-    expect(src).toContain("from '@/integrations/supabase/client'");
+    expect(src).toContain("from '@/modules/memberships'");
+    expect(src).toContain('redeemPromoCode');
   });
 });

@@ -87,3 +87,15 @@ export type {
   CreateAccessKeyArgs,
   RevokeAccessKeyArgs,
 } from './services/accessKeys/mutations';
+
+// MEMB-6: promo codes
+export {
+  listMembershipPromoCodes,
+  listMembershipPromoCodeAttempts,
+} from './services/promoCodes/reads';
+export type {
+  ListMembershipPromoCodesOptions,
+  ListMembershipPromoCodeAttemptsOptions,
+} from './services/promoCodes/reads';
+export { redeemPromoCode } from './services/promoCodes/mutations';
+export type { RedeemPromoCodeArgs } from './services/promoCodes/mutations';
