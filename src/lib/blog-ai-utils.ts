@@ -1,5 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { invokeBlogAiTools } from '@/modules/ai';
 
 type AiAction = 'translate' | 'generate_keywords' | 'generate_meta' | 'seo_analysis' | 'improve_content' | 'generate_excerpt' | 'competitor_analysis';
 
@@ -14,9 +14,7 @@ interface AiRequest {
 }
 
 export async function callBlogAi(params: AiRequest): Promise<string> {
-  const { data, error } = await supabase.functions.invoke('blog-ai-tools', {
-    body: params,
-  });
+  const { data, error } = await invokeBlogAiTools(params as unknown as Record<string, unknown>);
   if (error) {
     if (error.message?.includes('429')) toast.error('Rate limited, please wait.');
     else if (error.message?.includes('402')) toast.error('Credits exhausted.');
