@@ -17,7 +17,7 @@
 --
 -- TODO_GAP markers (see R4E dry runs):
 --   G1 — admin bulk mutation does not write admin_activity_log per business
---   G2 — sole-owner business_staff delete is client-guard only
+--   G2 — CLOSED by R4E-2C-2 (trg_business_staff_last_owner_guard)
 --   G3 — businesses.membership_tier writes bypass provider_subscriptions state
 --   G4 — CLOSED by R4E-2C-1 (trg_businesses_sensitive_guard): owner cannot
 --        self-write is_verified / approval_status / is_demo / is_active
@@ -31,7 +31,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET search_path = public, extensions;
 
-SELECT plan(28);
+SELECT plan(31);
 
 -- ---------------------------------------------------------------------------
 -- SEED (as superuser; RLS bypassed for table owners)
@@ -175,17 +175,49 @@ SELECT is_empty(
 );
 
 -- ---------------------------------------------------------------------------
--- T10 — sole-owner business_staff delete must be blocked         [TODO_GAP_G2]
+-- T10 — sole-owner business_staff guard (R4E-2C-2)
 -- ---------------------------------------------------------------------------
 SELECT tests_helpers.become('11111111-1111-1111-1111-111111111111');
-SELECT todo_start('TODO_GAP_G2: sole-owner delete is client-guard only, no DB trigger');
-SELECT is_empty(
+
+-- T10a: DELETE sole owner → reject (23514)
+SELECT throws_ok(
   $$ DELETE FROM public.business_staff
      WHERE business_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-       AND role = 'owner' RETURNING id $$,
-  'T10 sole-owner delete blocked by DB'
+       AND role = 'owner' $$,
+  '23514', NULL,
+  'T10a sole-owner DELETE rejected (R4E-2C-2 trigger)'
 );
-SELECT todo_end();
+
+-- T10b: deactivate sole owner → reject (23514)
+SELECT throws_ok(
+  $$ UPDATE public.business_staff SET is_active = false
+     WHERE business_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+       AND role = 'owner' $$,
+  '23514', NULL,
+  'T10b sole-owner deactivate rejected (R4E-2C-2 trigger)'
+);
+
+-- T10c: demote sole owner → reject (23514)
+SELECT throws_ok(
+  $$ UPDATE public.business_staff SET role = 'manager'
+     WHERE business_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+       AND role = 'owner' $$,
+  '23514', NULL,
+  'T10c sole-owner demote rejected (R4E-2C-2 trigger)'
+);
+
+-- T10d: with a second active owner present, removing the original owner is allowed.
+INSERT INTO public.business_staff(business_id, user_id, role, is_active)
+VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+        '33333333-3333-3333-3333-333333333333', 'owner', true);
+
+SELECT lives_ok(
+  $$ DELETE FROM public.business_staff
+     WHERE business_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+       AND user_id = '11111111-1111-1111-1111-111111111111'
+       AND role = 'owner' $$,
+  'T10d second active owner present → original owner DELETE allowed'
+);
 
 -- ---------------------------------------------------------------------------
 -- T11 — admin baseline: allowed sensitive operations
