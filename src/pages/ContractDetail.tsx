@@ -26,7 +26,7 @@ import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { mapContractLockError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { approveAmendment, rejectAmendment, cancelAmendment, applyAmendment } from '@/modules/contracts/services/amendments';
-import { acceptContract } from '@/modules/contracts/services/mutations';
+import { acceptContract, recalcContractTotal as recalcContractTotalService } from '@/modules/contracts/services/mutations';
 import { getContractSourceLeadSummary } from '@/modules/contracts/services/leadRpcs';
 import { recordContractPdfExport } from '@/lib/contract-pdf-history';
 import { ContractPdfExportHistory } from '@/components/contract/ContractPdfExportHistory';
@@ -617,7 +617,7 @@ const ContractDetail = () => {
   const recalcContractTotal = async (): Promise<void> => {
     if (!id) return;
     // C6.4a — recompute via SECURITY DEFINER RPC (sums measurements + line items).
-    await supabase.rpc('recalc_contract_total', { _contract_id: id });
+    await recalcContractTotalService(id);
     await queryClient.invalidateQueries({ queryKey: ['contract', id] });
   };
 

@@ -14,7 +14,8 @@
  * captured guest contact for inclusion in the contract create payload.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { searchContractClients } from '@/modules/contracts/services/searchContractClients';
+import { quickResolveContractClient } from '@/modules/contracts/services/quickResolveContractClient';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
