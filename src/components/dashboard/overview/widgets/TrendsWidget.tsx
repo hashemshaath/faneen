@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listNotificationCreatedAtSeries } from '@/modules/notifications';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -41,7 +42,7 @@ export const TrendsWidget = React.memo(function TrendsWidget({
     queryFn: async () => {
       const since = new Date(Date.now() - 14 * 86400000).toISOString();
       const [notifs, contracts] = await Promise.all([
-        supabase.from('notifications').select('created_at').eq('user_id', userId).gte('created_at', since).limit(500),
+        listNotificationCreatedAtSeries({ userId, sinceIso: since, limit: 500 }),
         supabase.from('contracts').select('created_at').or(`client_id.eq.${userId},provider_id.eq.${userId}`).gte('created_at', since).limit(500),
       ]);
       return {

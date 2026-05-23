@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { listLiveActivityNotifications } from '@/modules/notifications';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,12 +46,7 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
     queryKey: ['live-activity', userId],
     queryFn: async (): Promise<ActivityRow[]> => {
       const [notifs, contracts] = await Promise.all([
-        supabase
-          .from('notifications')
-          .select('id, title_ar, title_en, body_ar, body_en, action_url, is_read, created_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(15),
+        listLiveActivityNotifications({ userId, limit: 15 }),
         supabase
           .from('contracts')
           .select('id, contract_number, title_ar, title_en, status, updated_at')
