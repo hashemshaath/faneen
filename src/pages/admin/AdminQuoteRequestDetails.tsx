@@ -14,6 +14,8 @@ import {
   listAdminQuoteRequestLeadEvents,
   updateQuoteRequestById,
   insertQuoteRequestEvent,
+  adminRevealLeadContact,
+  matchQuoteRequest,
 } from '@/modules/quotes';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -151,12 +153,10 @@ const AdminQuoteRequestDetails: React.FC = () => {
   const revealMutation = useMutation({
     mutationFn: async (vars: { lead_id: string; note: string; override_credit_check?: boolean }) => {
       trackEvent('admin_contact_reveal_clicked', { lead_id: vars.lead_id });
-      const { data, error } = await supabase.functions.invoke('admin-reveal-lead-contact', {
-        body: {
-          lead_id: vars.lead_id,
-          note: vars.note || undefined,
-          override_credit_check: vars.override_credit_check || undefined,
-        },
+      const { data, error } = await adminRevealLeadContact({
+        lead_id: vars.lead_id,
+        note: vars.note || undefined,
+        override_credit_check: vars.override_credit_check || undefined,
       });
       if (error) throw error;
       return data as { success: boolean; message?: string };
@@ -196,9 +196,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
   const matchMutation = useMutation({
     mutationFn: async () => {
       trackEvent('quote_matching_started', { quote_request_id: id });
-      const { data, error } = await supabase.functions.invoke('match-quote-request', {
-        body: { quote_request_id: id, limit: 10 },
-      });
+      const { data, error } = await matchQuoteRequest({ quote_request_id: id, limit: 10 });
       if (error) throw error;
       return data as {
         success: boolean; matched_count: number; message?: string;

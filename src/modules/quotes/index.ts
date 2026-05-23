@@ -16,3 +16,7 @@ export * from './services/listAdminOpsQuoteRequestLeadEvents';
 // L-3 mutations
 export * from './services/updateQuoteRequestById';
 export * from './services/insertQuoteRequestEvent';
+
+// L-4 edge wrappers
+export * from './services/adminRevealLeadContact';
+export * from './services/matchQuoteRequest';

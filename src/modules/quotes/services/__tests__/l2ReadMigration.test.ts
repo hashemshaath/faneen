@@ -22,9 +22,9 @@ describe('L-2 admin quote read callsite migration', () => {
     expect(src).toContain('listAdminQuoteRequestLeadEvents');
     // L-3: direct quote_request_events insert migrated to service.
     expect(src).not.toContain("supabase.from('quote_request_events').insert(");
-    // Deferred L-4 edge calls still present.
-    expect(src).toContain("supabase.functions.invoke('admin-reveal-lead-contact'");
-    expect(src).toContain("supabase.functions.invoke('match-quote-request'");
+    // L-4: direct edge invokes migrated to service wrappers.
+    expect(src).not.toContain("supabase.functions.invoke('admin-reveal-lead-contact'");
+    expect(src).not.toContain("supabase.functions.invoke('match-quote-request'");
     // Query keys preserved
     expect(src).toContain("queryKey: ['admin-quote-request', id]");
     expect(src).toContain("queryKey: ['admin-quote-files', id]");

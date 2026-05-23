@@ -26,6 +26,7 @@ import { mapContractLockError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { approveAmendment, rejectAmendment, cancelAmendment, applyAmendment } from '@/modules/contracts/services/amendments';
 import { acceptContract } from '@/modules/contracts/services/mutations';
+import { getContractSourceLeadSummary } from '@/modules/contracts/services/leadRpcs';
 import { recordContractPdfExport } from '@/lib/contract-pdf-history';
 import { ContractPdfExportHistory } from '@/components/contract/ContractPdfExportHistory';
 import { ContractPdfPreviewOverlay } from '@/components/contract/ContractPdfPreviewOverlay';
@@ -67,7 +68,7 @@ const SourceLeadSummaryCard: React.FC<{
   const { data, isLoading } = useQuery({
     queryKey: ['contract-source-lead-summary', contractId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_contract_source_lead_summary', {
+      const { data, error } = await getContractSourceLeadSummary({
         _contract_id: contractId,
       });
       if (error) return null;

@@ -47,6 +47,7 @@ import {
   completeContractFromInvitation,
 } from '@/modules/contracts/services/mutations';
 import { approveAmendment } from '@/modules/contracts/services/amendments';
+import { prepareContractPrefillFromLead } from '@/modules/contracts/services/leadRpcs';
 import {
   createClientInvitation,
   resendClientInvitation,
@@ -527,7 +528,7 @@ const DashboardContracts = () => {
 
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase.rpc('prepare_contract_prefill_from_lead', { _lead_id: leadId });
+      const { data, error } = await prepareContractPrefillFromLead({ _lead_id: leadId });
       // Strip ?lead= regardless of outcome to prevent re-apply on refresh.
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
