@@ -260,7 +260,10 @@ const Membership = () => {
     queryKey: ['my-subscription', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await getCurrentMembershipSubscription({
+      type MySub = Tables<'membership_subscriptions'> & {
+        plan: Pick<Tables<'membership_plans'>, 'name_ar' | 'name_en' | 'tier'> | null;
+      };
+      const { data } = await getCurrentMembershipSubscription<MySub>({
         userId: user.id,
         select: '*, plan:membership_plans!plan_id(name_ar, name_en, tier)',
         statuses: ['active', 'past_due'],
