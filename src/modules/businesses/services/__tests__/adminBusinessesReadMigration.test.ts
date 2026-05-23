@@ -115,9 +115,11 @@ describe('P-20 intentionally-deferred businesses reads', () => {
     expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
   });
 
-  it('P-12 write services (updateBusinessById / updateBusinessesByIds) remain in use by AdminBusinesses', () => {
+  it('P-12 write services + R4E-3 guarded wrappers in use by AdminBusinesses', () => {
     const src = read('src/pages/admin/AdminBusinesses.tsx');
     expect(src).toContain('updateBusinessById');
-    expect(src).toContain('updateBusinessesByIds');
+    // R4E-3: bulk sensitive toggles now use guarded bulk wrappers.
+    expect(src).toContain('bulkSetBusinessesActive');
+    expect(src).toContain('bulkSetBusinessesVerified');
   });
 });
