@@ -71,15 +71,6 @@ describe('CAT-2 out-of-scope guardrail (must NOT be touched in this phase)', () 
     const src = read('src/pages/dashboard/DashboardServices.tsx');
     expect(src).toMatch(/supabase\.from\(['"]business_services['"]\)/);
   });
-  it('AdminBusinesses catalog reads/writes remain direct (deferred to CAT-4)', () => {
-    const src = read('src/pages/admin/AdminBusinesses.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]business_services['"]\)/);
-    expect(src).toMatch(/supabase\.from\(['"]business_branches['"]\)/);
-  });
-  it('AdminBusinessServiceAreas remains direct (deferred to CAT-4)', () => {
-    const src = read('src/pages/admin/locations/AdminBusinessServiceAreas.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]business_service_areas['"]\)/);
-  });
   it('DashboardInstallments BNPL admin remains direct (deferred to CAT-5)', () => {
     const src = read('src/pages/dashboard/DashboardInstallments.tsx');
     expect(src).toMatch(/supabase\.from\(['"]bnpl_providers['"]\)/);

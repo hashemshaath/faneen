@@ -45,3 +45,15 @@ export {
   updateWarrantyById,
   deleteWarrantyById,
 } from './services/warranties/mutations';
+
+// ── CAT-4 admin wrappers ──
+export { listAllBusinessServicesLite } from './services/services/admin';
+export {
+  insertBusinessBranch,
+  updateBusinessBranchById,
+  deleteBusinessBranchById,
+} from './services/branches/mutations';
+export {
+  listAdminServiceAreasWithBusinesses,
+  countAllServiceAreas,
+} from './services/serviceAreas/admin';

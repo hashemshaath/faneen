@@ -11,6 +11,17 @@ import type { Database } from '@/integrations/supabase/types';
 import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
 import { updateBusinessById, updateBusinessesByIds, listAdminBusinesses } from '@/modules/businesses';
+import {
+  listServicesByBusiness,
+  listAllBusinessServicesLite,
+  listBranchesByBusiness,
+  insertBusinessService,
+  updateBusinessServiceById,
+  deleteBusinessServiceById,
+  insertBusinessBranch,
+  updateBusinessBranchById,
+  deleteBusinessBranchById,
+} from '@/modules/catalog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -259,7 +270,12 @@ const AdminBusinesses = () => {
     queryKey: ['admin-services', servicesPanel],
     queryFn: async () => {
       if (!servicesPanel) return [];
-      const { data } = await supabase.from('business_services').select('*').eq('business_id', servicesPanel).order('sort_order');
+      const { data } = await listServicesByBusiness<Database['public']['Tables']['business_services']['Row']>({
+        businessId: servicesPanel,
+        select: '*',
+        activeOnly: false,
+        order: 'sort_order',
+      });
       return data || [];
     },
     enabled: !!servicesPanel,
@@ -268,7 +284,9 @@ const AdminBusinesses = () => {
   const { data: allServices = [] } = useQuery({
     queryKey: ['all-business-services'],
     queryFn: async () => {
-      const { data } = await supabase.from('business_services').select('id, name_ar, name_en, business_id');
+      const { data } = await listAllBusinessServicesLite<
+        Pick<Database['public']['Tables']['business_services']['Row'], 'id' | 'name_ar' | 'name_en' | 'business_id'>
+      >();
       return data || [];
     },
   });
@@ -277,7 +295,11 @@ const AdminBusinesses = () => {
     queryKey: ['admin-branches', editingBiz?.id],
     queryFn: async () => {
       if (!editingBiz?.id) return [];
-      const { data } = await supabase.from('business_branches').select('*').eq('business_id', editingBiz.id).order('sort_order');
+      const { data } = await listBranchesByBusiness<Database['public']['Tables']['business_branches']['Row']>({
+        businessId: editingBiz.id,
+        select: '*',
+        order: [{ column: 'sort_order' }],
+      });
       return data || [];
     },
     enabled: !!editingBiz?.id,
@@ -366,7 +388,7 @@ const AdminBusinesses = () => {
 
   const addServiceMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('business_services').insert({
+      const { error } = await insertBusinessService({
         business_id: servicesPanel!,
         name_ar: newService.name_ar, name_en: newService.name_en || null,
         description_ar: newService.description_ar || null, description_en: newService.description_en || null,
@@ -385,7 +407,7 @@ const AdminBusinesses = () => {
 
   const toggleServiceMutation = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase.from('business_services').update({ is_active }).eq('id', id);
+      const { error } = await updateBusinessServiceById(id, { is_active });
       if (error) throw error;
     },
     onSuccess: () => refetchServices(),
@@ -393,7 +415,7 @@ const AdminBusinesses = () => {
 
   const deleteServiceMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('business_services').delete().eq('id', id);
+      const { error } = await deleteBusinessServiceById(id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -448,10 +470,10 @@ const AdminBusinesses = () => {
         longitude: branchForm.longitude || null,
       };
       if (editingBranchId) {
-        const { error } = await supabase.from('business_branches').update(payload).eq('id', editingBranchId);
+        const { error } = await updateBusinessBranchById(editingBranchId, payload);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('business_branches').insert(payload);
+        const { error } = await insertBusinessBranch(payload);
         if (error) throw error;
       }
     },
@@ -469,7 +491,7 @@ const AdminBusinesses = () => {
 
   const deleteBranchMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('business_branches').delete().eq('id', id);
+      const { error } = await deleteBusinessBranchById(id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -480,7 +502,7 @@ const AdminBusinesses = () => {
 
   const toggleBranchMutation = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase.from('business_branches').update({ is_active }).eq('id', id);
+      const { error } = await updateBusinessBranchById(id, { is_active });
       if (error) throw error;
     },
     onSuccess: () => refetchBranches(),
