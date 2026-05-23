@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, History } from 'lucide-react';
+import { MembershipLifecycleJobsPanel } from '@/components/admin/MembershipLifecycleJobsPanel';
 
 interface EventRow {
   id: string;
@@ -44,7 +45,8 @@ const AdminMembershipEvents = () => {
   });
 
   return (
-    <div className="container px-4 py-6 max-w-6xl">
+    <div className="container px-4 py-6 max-w-6xl space-y-6">
+      <MembershipLifecycleJobsPanel />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
