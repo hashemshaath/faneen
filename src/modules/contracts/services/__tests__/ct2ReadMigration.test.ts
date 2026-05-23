@@ -127,9 +127,8 @@ describe('CT-2b migration: contracts/contract_templates read callsites use servi
   });
 
   it('out-of-scope mutations / template child tables / storage / RPC remain untouched', () => {
-    // DashboardContracts.tsx still performs the contract update mutation directly.
-    const dc = read('pages/dashboard/DashboardContracts.tsx');
-    expect(dc).toMatch(/from\(['"]contracts['"]\)\.update/);
+    // CT-3 migrated DashboardContracts.tsx off the direct contracts.update;
+    // that callsite is now covered by ct3MutationMigration.test.ts.
     // AdminContractTemplates.tsx still uses contract_template_versions /
     // contract_measurement_methods directly (template child-table CRUD = CT-5).
     const act = read('pages/admin/AdminContractTemplates.tsx');

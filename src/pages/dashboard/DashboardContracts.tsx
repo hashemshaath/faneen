@@ -47,6 +47,8 @@ import {
   linkLeadToContract,
   completeContractFromInvitation,
 } from '@/modules/contracts/services/mutations';
+import { updateContractById } from '@/modules/contracts/services/updateContractById';
+import { createContractFromTemplate } from '@/modules/contracts/services/createContractFromTemplate';
 import { approveAmendment } from '@/modules/contracts/services/amendments';
 import { prepareContractPrefillFromLead } from '@/modules/contracts/services/leadRpcs';
 import {
@@ -1017,7 +1019,7 @@ const DashboardContracts = () => {
       };
 
       if (editingId) {
-        const { error } = await supabase.from('contracts').update(payload).eq('id', editingId);
+        const { error } = await updateContractById(editingId, payload);
         if (error) throw error;
         return { contractId: editingId, isNew: false };
       } else {
@@ -1027,7 +1029,7 @@ const DashboardContracts = () => {
         if (!versionId) {
           throw new Error(isRTL ? 'لا يوجد قالب عقد منشور' : 'No published contract template available');
         }
-        const { data, error } = await supabase.rpc('create_contract_from_template', {
+        const { data, error } = await createContractFromTemplate({
           _payload: payload,
           _template_version_id: versionId,
           _pricing_method: selectedPricingMethod,

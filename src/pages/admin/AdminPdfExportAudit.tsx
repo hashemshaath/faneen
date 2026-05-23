@@ -7,7 +7,10 @@
  */
 import React, { useMemo, useState } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  adminListContractPdfExports,
+  adminContractPdfExportsSummary,
+} from '@/modules/contracts/services/pdfExports';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -92,7 +95,7 @@ const AdminPdfExportAudit: React.FC = () => {
     queryKey: ['admin-pdf-exports', page, filters],
     placeholderData: keepPreviousData,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('admin_list_contract_pdf_exports', {
+      const { data, error } = await adminListContractPdfExports({
         _search: filters.search,
         _source: filters.source,
         _contract_status: filters.status,
@@ -110,7 +113,7 @@ const AdminPdfExportAudit: React.FC = () => {
   const summary = useQuery({
     queryKey: ['admin-pdf-exports-summary'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('admin_contract_pdf_exports_summary');
+      const { data, error } = await adminContractPdfExportsSummary();
       if (error) throw error;
       return (data?.[0] || null) as Summary | null;
     },

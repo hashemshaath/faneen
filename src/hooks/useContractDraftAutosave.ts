@@ -14,7 +14,7 @@
  *  - No toasts. Status is reported via the returned `state` for inline UI.
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { updateContractDraftAutosave } from '@/modules/contracts/services/updateContractDraftAutosave';
 import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
 
 export type AutosaveState =
@@ -142,7 +142,7 @@ export function useContractDraftAutosave(args: UseContractDraftAutosaveArgs): Us
     const token = { aborted: false };
     inflightRef.current = token;
     try {
-      const { data, error } = await supabase.rpc('update_contract_draft_autosave', {
+      const { data, error } = await updateContractDraftAutosave({
         _contract_id: contractId,
         _patch: patch as unknown as never,
         _expected_updated_at: expectedUpdatedAtRef.current ?? undefined,

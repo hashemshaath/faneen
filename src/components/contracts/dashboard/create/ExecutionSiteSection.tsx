@@ -14,6 +14,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MapPin, Plus, Loader2, X, Check, Building2, Phone, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { listClientSitesForContract } from '@/modules/contracts/services/listClientSitesForContract';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -105,7 +106,7 @@ export const ExecutionSiteSection: React.FC<Props> = ({
   const { data: sites = [], isLoading, refetch } = useQuery({
     queryKey: ['client-sites', businessId, clientUserId ?? null],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('list_client_sites_for_contract', {
+      const { data, error } = await listClientSitesForContract({
         _business_id: businessId!,
         _client_user_id: clientUserId ?? undefined,
       });

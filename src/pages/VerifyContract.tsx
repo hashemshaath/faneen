@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { ShieldCheck, ShieldAlert, ShieldX, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { verifyContractPublic } from '@/modules/contracts/services/verifyContractPublic';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 
@@ -29,7 +29,7 @@ const VerifyContract = () => {
     let cancelled = false;
     (async () => {
       try {
-        const { data, error } = await supabase.rpc('verify_contract_public', {
+        const { data, error } = await verifyContractPublic({
           _contract_number: number || '', _hash: hash, _barcode_code: code || null,
         });
         if (cancelled) return;
