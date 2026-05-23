@@ -51,11 +51,14 @@ describe('MEMB-2 callsite migration', () => {
     expect(src).toContain('getCurrentMembershipSubscription');
     expect(src).not.toMatch(/\.from\(['"]membership_subscriptions['"]\)/);
     expect(src).not.toMatch(/\.from\(['"]membership_plans['"]\)/);
-    // Lifecycle RPCs intentionally deferred to MEMB-3.
-    expect(src).toMatch(/supabase\.rpc\(['"]subscribe_to_plan['"]/);
-    expect(src).toMatch(/supabase\.rpc\(['"]cancel_subscription_at_period_end['"]/);
-    expect(src).toMatch(/supabase\.rpc\(['"]resume_subscription_renewal['"]/);
-    // Upgrade requests intentionally deferred.
+    // Lifecycle RPCs migrated in MEMB-3.
+    expect(src).toContain('subscribeToPlan');
+    expect(src).toContain('cancelSubscriptionAtPeriodEnd');
+    expect(src).toContain('resumeSubscriptionRenewal');
+    expect(src).not.toMatch(/supabase\.rpc\(['"]subscribe_to_plan['"]/);
+    expect(src).not.toMatch(/supabase\.rpc\(['"]cancel_subscription_at_period_end['"]/);
+    expect(src).not.toMatch(/supabase\.rpc\(['"]resume_subscription_renewal['"]/);
+    // Upgrade requests intentionally deferred to MEMB-4.
     expect(src).toMatch(/\.from\(['"]membership_upgrade_requests['"]\)/);
   });
 
@@ -68,6 +71,8 @@ describe('MEMB-2 callsite migration', () => {
   it('AdminUpgradeRequestsPanel direct access remains deferred to MEMB-4', () => {
     const src = read('src/components/membership/AdminUpgradeRequestsPanel.tsx');
     expect(src).toMatch(/\.from\(['"]membership_upgrade_requests['"]\)/);
+    // AdminUpgradeRequestsPanel's subscribe_to_plan call belongs to MEMB-4 (upgrade approval flow).
+    expect(src).toMatch(/supabase\.rpc\(['"]subscribe_to_plan['"]/);
   });
 
   it('AdminMemberships direct access remains deferred', () => {
