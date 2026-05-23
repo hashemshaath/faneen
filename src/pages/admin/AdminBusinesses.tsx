@@ -386,11 +386,23 @@ const AdminBusinesses = () => {
         mobile: editForm.mobile || null, customer_service_phone: editForm.customer_service_phone || null,
         // R4E-2C-4-PHASE-3: membership_tier no longer written from the edit
         // form. Use the row tier picker (routes through admin RPC).
-        is_active: editForm.is_active, is_verified: editForm.is_verified,
+        // R4E-3: is_active / is_verified are no longer bagged in the generic
+        // profile payload — they flip through setBusinessActive /
+        // setBusinessVerified guarded wrappers below.
       };
       const { error } = await updateBusinessById({ id, values: payload });
       if (error) throw error;
-      await logAction('business_updated', id, { fields: Object.keys(payload) });
+      // R4E-3: detect sensitive toggles and apply them through guarded wrappers.
+      const activeChanged = typeof editForm.is_active === 'boolean'
+        && editForm.is_active !== editingBiz.is_active;
+      const verifiedChanged = typeof editForm.is_verified === 'boolean'
+        && editForm.is_verified !== editingBiz.is_verified;
+      if (activeChanged) await setBusinessActive(id, editForm.is_active);
+      if (verifiedChanged) await setBusinessVerified(id, editForm.is_verified);
+      const fields = Object.keys(payload);
+      if (activeChanged) fields.push('is_active');
+      if (verifiedChanged) fields.push('is_verified');
+      await logAction('business_updated', id, { fields });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
