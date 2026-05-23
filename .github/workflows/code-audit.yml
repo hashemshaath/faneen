@@ -98,6 +98,9 @@ jobs:
       - name: Business Staff Isolation Audit
         run: node scripts/business-staff-isolation-audit.mjs
 
+      - name: Leads / Quotes Isolation Audit
+        run: node scripts/leads-quotes-isolation-audit.mjs
+
       - name: Contracts Pre-launch Smoke (typecheck + targeted vitest + privacy grep)
         run: bash scripts/contracts-prelaunch-smoke.sh
 
