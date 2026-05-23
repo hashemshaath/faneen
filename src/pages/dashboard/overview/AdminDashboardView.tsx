@@ -25,6 +25,10 @@ import { countByRole } from '@/services/userRoles';
 import { countProfiles, listProfiles } from '@/modules/users';
 import { countBusinesses } from '@/modules/businesses';
 import {
+  countLeadsByDateRange,
+  countLeadsByStatus,
+} from '@/modules/leads';
+import {
   CHART_COLORS, ChartTooltipStyle, getStatusLabel, buildMonthlyData,
   StatCard, QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
   RefreshButton, getTimeGreeting,
@@ -58,10 +62,10 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         supabase.from('blog_posts').select('id', { count: 'exact', head: true }),
         supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('status', 'new'),
         listProfiles<{ created_at: string }>({ select: 'created_at', orderBy: { column: 'created_at', ascending: true } }),
-        supabase.from('lead_requests').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
+        countLeadsByDateRange(todayIso),
         supabase.from('contracts').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
         countBusinesses({ select: 'id', filters: [{ column: 'created_at', op: 'gte', value: todayIso }] }),
-        supabase.from('lead_requests').select('id', { count: 'exact', head: true }).eq('status', 'new'),
+        countLeadsByStatus('new'),
         countBusinesses({ select: 'id', filters: [{ column: 'approval_status', op: 'in', value: ['submitted', 'under_review'] }] }),
         supabase.from('email_send_log').select('id', { count: 'exact', head: true }).eq('status', 'dlq').gte('created_at', fresh48hIso),
         supabase.from('contracts').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),

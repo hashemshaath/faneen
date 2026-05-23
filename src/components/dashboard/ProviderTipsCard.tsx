@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { countLeadsForBusiness } from '@/modules/leads';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useProviderReadiness } from '@/hooks/useProviderReadiness';
@@ -39,7 +40,7 @@ export const ProviderTipsCard: React.FC<Props> = ({ businessId }) => {
         supabase.from('business_services').select('id', { count: 'exact', head: true }).eq('business_id', businessId!).eq('is_active', true),
         supabase.from('portfolio_items').select('id', { count: 'exact', head: true }).eq('business_id', businessId!),
         supabase.from('projects').select('id', { count: 'exact', head: true }).eq('business_id', businessId!),
-        supabase.from('lead_requests').select('id', { count: 'exact', head: true }).eq('business_id', businessId!),
+        countLeadsForBusiness(businessId!),
         supabase.from('conversations').select('id').or(`participant_1.eq.${user!.id},participant_2.eq.${user!.id}`),
       ]);
       const convIds = (convs.data ?? []).map((c) => c.id);

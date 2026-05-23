@@ -6,21 +6,13 @@ import {
   Loader2, AlertCircle,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { listRecentLeadsForBusiness } from '@/modules/leads';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-
-type LeadRow = {
-  id: string;
-  ref_id: string | null;
-  status: string | null;
-  created_at: string;
-  subject: string | null;
-  business_id: string | null;
-};
 
 type ConversationRow = {
   id: string;
@@ -88,14 +80,7 @@ export function ProviderEngagementPreviews({ businessId }: { businessId: string 
     enabled: !!businessId,
     staleTime: 30_000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('lead_requests')
-        .select('id, ref_id, status, created_at, subject, business_id')
-        .eq('business_id', businessId!)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (error) throw error;
-      return (data ?? []) as LeadRow[];
+      return await listRecentLeadsForBusiness(businessId!);
     },
   });
   const newLeadCount = useMemo(
