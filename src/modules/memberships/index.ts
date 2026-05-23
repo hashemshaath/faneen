@@ -51,3 +51,39 @@ export type { QueryMembershipUpgradeRejectionsOptions } from './services/rejecti
 // MEMB-4: subscription events
 export { listRecentMembershipSubscriptionEvents } from './services/events/reads';
 export type { ListRecentMembershipSubscriptionEventsOptions } from './services/events/reads';
+
+// MEMB-5: invite keys
+export {
+  listMembershipInviteKeys,
+  listMembershipInviteRedemptions,
+} from './services/inviteKeys/reads';
+export type {
+  ListMembershipInviteKeysOptions,
+  ListMembershipInviteRedemptionsOptions,
+} from './services/inviteKeys/reads';
+export {
+  generateInviteKey,
+  revokeInviteKey,
+} from './services/inviteKeys/mutations';
+export type {
+  GenerateInviteKeyArgs,
+  RevokeInviteKeyArgs,
+} from './services/inviteKeys/mutations';
+
+// MEMB-5: access keys
+export {
+  listMembershipAccessKeys,
+  listAccessKeyUsageLog,
+} from './services/accessKeys/reads';
+export type {
+  ListMembershipAccessKeysOptions,
+  ListAccessKeyUsageLogOptions,
+} from './services/accessKeys/reads';
+export {
+  createAccessKey,
+  revokeAccessKey,
+} from './services/accessKeys/mutations';
+export type {
+  CreateAccessKeyArgs,
+  RevokeAccessKeyArgs,
+} from './services/accessKeys/mutations';
