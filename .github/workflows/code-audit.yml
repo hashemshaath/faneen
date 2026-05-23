@@ -104,6 +104,9 @@ jobs:
       - name: Credits Isolation Audit
         run: node scripts/credits-isolation-audit.mjs
 
+      - name: Edge Credits Isolation Audit
+        run: node scripts/edge-credits-isolation-audit.mjs
+
       - name: Business Staff Isolation Audit
         run: node scripts/business-staff-isolation-audit.mjs
 
