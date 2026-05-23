@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  listMembershipPromoCodes,
+  listMembershipPromoCodeAttempts,
+} from '@/modules/memberships';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -62,10 +65,7 @@ export const AdminPromoCodesPanel: React.FC<Props> = ({ isRTL }) => {
   const { data: codes = [], isLoading } = useQuery({
     queryKey: ['admin-promo-codes'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('membership_promo_codes')
-        .select('id, code, type, target_tier, duration_days, discount_percent, max_redemptions, used_count, valid_from, valid_until, is_active')
-        .order('created_at', { ascending: false });
+      const { data } = await listMembershipPromoCodes<PromoCode>();
       return (data ?? []) as PromoCode[];
     },
   });
@@ -73,11 +73,7 @@ export const AdminPromoCodesPanel: React.FC<Props> = ({ isRTL }) => {
   const { data: attempts = [] } = useQuery({
     queryKey: ['admin-promo-attempts'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('membership_promo_code_attempts')
-        .select('id, code, promo_code_id, user_id, success, rejection_reason, created_at')
-        .order('created_at', { ascending: false })
-        .limit(500);
+      const { data } = await listMembershipPromoCodeAttempts<Attempt>();
       return (data ?? []) as Attempt[];
     },
   });
