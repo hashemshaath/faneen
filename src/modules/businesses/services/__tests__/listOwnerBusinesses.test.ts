@@ -104,8 +104,8 @@ describe('P-18 owner-list migration', () => {
     // Merge + dedup logic untouched.
     expect(src).toContain('const merged = [...((owned ?? []) as BusinessRow[]), ...staffBusinesses];');
     expect(src).toContain('seen.has(b.id)');
-    // business_staff direct read intentionally deferred.
-    expect(src).toMatch(/from\(['"]business_staff['"]\)/);
+    // BS-2: staff read migrated to canonical service.
+    expect(src).toContain('listActiveStaffBusinessesForUser');
   });
 
   it('DashboardPrivateSectors owner list uses listOwnerBusinesses', () => {
@@ -115,8 +115,8 @@ describe('P-18 owner-list migration', () => {
     expect(src).toContain("'id, name_ar, name_en'");
     expect(src).toContain("['my-businesses-for-sectors', user?.id]");
     expect(src).toContain('enabled: !!user');
-    // business_staff embedded read intentionally deferred.
-    expect(src).toMatch(/from\(['"]business_staff['"]\)/);
+    // BS-2: staff embedded read migrated to canonical service.
+    expect(src).toContain('listActiveStaffBusinessesForUser');
   });
 
   it('ProviderServiceAreas owner list uses listOwnerBusinesses', () => {
@@ -137,8 +137,8 @@ describe('P-18 owner-list migration', () => {
     );
     expect(src).toContain("['my-business-membership', user?.id, profile?.account_type]");
     expect(src).toContain('owned.data[0]');
-    // staff fallback still direct (embedded select).
-    expect(src).toMatch(/from\(['"]business_staff['"]\)/);
+    // BS-2: staff fallback migrated to canonical service.
+    expect(src).toContain('listManagedStaffMembershipForUser');
   });
 });
 
@@ -163,8 +163,8 @@ describe('P-23 allowlist burn-down', () => {
     expect(src).not.toMatch(/supabase[\s\S]{0,40}\.from\(['"]businesses['"]\)[\s\S]{0,80}select/);
     expect(src).toContain("'id, name_ar, name_en'");
     expect(src).toContain("['my-businesses-switcher', user?.id]");
-    // business_staff direct read intentionally deferred.
-    expect(src).toMatch(/from\(['"]business_staff['"]\)/);
+    // BS-2: staff read migrated to canonical service.
+    expect(src).toContain('listActiveStaffBusinessesForUser');
   });
 
   it('PublicSiteScan owner read goes through listOwnerBusinesses', () => {
@@ -173,7 +173,8 @@ describe('P-23 allowlist burn-down', () => {
     expect(src).not.toMatch(/supabase[\s\S]{0,40}\.from\(['"]businesses['"]\)[\s\S]{0,80}select/);
     expect(src).toContain("'id, name_ar, name_en'");
     expect(src).toContain("['my-managed-businesses', user?.id]");
-    expect(src).toMatch(/from\(['"]business_staff['"]\)/);
+    // BS-2: staff read migrated to canonical service.
+    expect(src).toContain('listActiveStaffBusinessesForUser');
   });
 
   it('DashboardAnalytics owner business read goes through getOwnerBusiness with activeOnly', () => {
@@ -191,7 +192,8 @@ describe('P-23 allowlist burn-down', () => {
     expect(src).not.toMatch(/supabase[\s\S]{0,40}\.from\(['"]businesses['"]\)[\s\S]{0,80}select/);
     expect(src).toContain("'id, name_ar, name_en'");
     expect(src).toContain("['my-managed-businesses', user?.id]");
-    expect(src).toMatch(/from\(['"]business_staff['"]\)/);
+    // BS-2: staff read migrated to canonical service.
+    expect(src).toContain('listManagedStaffMembershipForUser');
   });
 
   it('audit allowlist no longer includes the four P-23 migrated files nor the P-24 lead delegators', () => {
