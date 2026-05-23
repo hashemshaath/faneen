@@ -1,17 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const removeMock = vi.fn();
-const uploadMock = vi.fn();
-const getPublicUrlMock = vi.fn();
-const fromMock = vi.fn(() => ({
-  upload: uploadMock,
-  getPublicUrl: getPublicUrlMock,
-  remove: removeMock,
-}));
+const mocks = vi.hoisted(() => {
+  const removeMock = vi.fn();
+  const uploadMock = vi.fn();
+  const getPublicUrlMock = vi.fn();
+  const fromMock = vi.fn(() => ({
+    upload: uploadMock,
+    getPublicUrl: getPublicUrlMock,
+    remove: removeMock,
+  }));
+  return { removeMock, uploadMock, getPublicUrlMock, fromMock };
+});
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { storage: { from: fromMock } },
+  supabase: { storage: { from: mocks.fromMock } },
 }));
+
+const { removeMock, uploadMock, getPublicUrlMock, fromMock } = mocks;
 
 import { uploadPublicImage } from '../uploadPublicImage';
 import { getPublicImageUrl } from '../getPublicImageUrl';
