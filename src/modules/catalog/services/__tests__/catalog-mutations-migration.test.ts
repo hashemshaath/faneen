@@ -81,16 +81,16 @@ describe('CAT-3 DashboardWarranties provider writes migrated', () => {
   });
 });
 
-describe('CAT-3 deferred / out-of-scope guardrails', () => {
-  it('BnplProvidersManager business_bnpl_providers writes remain direct (deferred to CAT-5)', () => {
+describe('CAT-3 out-of-scope guardrails (post CAT-5: BNPL migrated)', () => {
+  it('BnplProvidersManager business_bnpl_providers writes migrated in CAT-5', () => {
     const src = read('src/components/bnpl/BnplProvidersManager.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]business_bnpl_providers['"]\)\.upsert/);
-    expect(src).toMatch(/supabase\.from\(['"]business_bnpl_providers['"]\)\.update/);
+    expect(src).not.toMatch(/supabase\.from\(['"]business_bnpl_providers['"]\)/);
+    expect(src).toContain('upsertBusinessBnplProvider');
   });
 
-  it('DashboardInstallments BNPL admin CRUD remains direct (deferred to CAT-5)', () => {
+  it('DashboardInstallments BNPL admin CRUD migrated in CAT-5', () => {
     const src = read('src/pages/dashboard/DashboardInstallments.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]bnpl_providers['"]\)\.(insert|update|delete)/);
+    expect(src).not.toMatch(/supabase\.from\(['"]bnpl_providers['"]\)\.(insert|update|delete)/);
   });
 
   it('contracts aggregate warranties service is untouched and still owned by contracts module', () => {
