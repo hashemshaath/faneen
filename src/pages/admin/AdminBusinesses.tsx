@@ -345,15 +345,17 @@ const AdminBusinesses = () => {
   });
 
   const tierMutation = useMutation({
-    mutationFn: async ({ id, tier }: { id: string; tier: string }) => {
-      const { error } = await updateBusinessById({ id, values: { membership_tier: tier } });
-      if (error) throw error;
-      await logAction('business_tier_change', id, { new_tier: tier });
+    mutationFn: async ({ id, tier }: { id: string; tier: MembershipTier }) => {
+      // R4E-2C-4-PHASE-3: route through membership-owned RPC. RPC writes
+      // admin_activity_log itself, so no frontend logAction here.
+      await setBusinessMembershipTier(id, tier, 'AdminBusinesses single tier change');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
       toast.success(isRTL ? 'تم تغيير العضوية' : 'Tier updated');
     },
+    onError: (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل تغيير العضوية' : 'Tier change failed')),
   });
 
   const updateBizMutation = useMutation({
