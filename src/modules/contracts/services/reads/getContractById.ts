@@ -4,6 +4,7 @@
  * single/maybeSingle terminal.
  */
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
 export interface GetContractByIdArgs {
   id: string;
@@ -13,8 +14,11 @@ export interface GetContractByIdArgs {
   terminal?: 'single' | 'maybeSingle';
 }
 
-export async function getContractById(args: GetContractByIdArgs) {
+export async function getContractById<TRow = Tables<'contracts'>>(args: GetContractByIdArgs) {
   const { id, select = '*', terminal = 'maybeSingle' } = args;
   const q = supabase.from('contracts').select(select).eq('id', id);
-  return terminal === 'single' ? q.single() : q.maybeSingle();
+  return (terminal === 'single' ? q.single() : q.maybeSingle()) as unknown as Promise<{
+    data: TRow | null;
+    error: { message: string } | null;
+  }>;
 }
