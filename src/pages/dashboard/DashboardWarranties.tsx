@@ -7,7 +7,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listContractsForOwner } from '@/modules/contracts';
-import { listWarrantiesByContractIds } from '@/modules/catalog';
+import {
+  listWarrantiesByContractIds,
+  insertWarranty,
+  updateWarrantyById,
+  deleteWarrantyById,
+} from '@/modules/catalog';
 import type { Database } from '@/integrations/supabase/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -109,10 +114,10 @@ const DashboardWarranties = () => {
         start_date: form.start_date, end_date: form.end_date,
       };
       if (editId) {
-        const { error } = await supabase.from('warranties').update(payload).eq('id', editId);
+        const { error } = await updateWarrantyById(editId, payload);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('warranties').insert(payload);
+        const { error } = await insertWarranty(payload);
         if (error) throw error;
       }
     },
@@ -126,7 +131,7 @@ const DashboardWarranties = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('warranties').delete().eq('id', id);
+      const { error } = await deleteWarrantyById(id);
       if (error) throw error;
     },
     onSuccess: () => {
