@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { createPasswordResetLog } from '@/modules/identity';
 import { PasswordField } from '@/components/auth/PasswordField';
 import { PasswordResetSuccessView } from '@/components/auth/PasswordResetSuccessView';
 import { Button } from '@/components/ui/button';
@@ -76,7 +76,7 @@ const ResetPassword = () => {
       await authService.updatePassword(password);
       // Log successful reset
       try {
-        await supabase.from('password_reset_log').insert({
+        await createPasswordResetLog({
           user_id: session?.user?.id || null,
           email: session?.user?.email || '',
           status: 'completed',
@@ -89,7 +89,7 @@ const ResetPassword = () => {
       const msg = err instanceof Error ? err.message : '';
       // Log failed reset
       try {
-        await supabase.from('password_reset_log').insert({
+        await createPasswordResetLog({
           user_id: session?.user?.id || null,
           email: session?.user?.email || '',
           status: 'failed',

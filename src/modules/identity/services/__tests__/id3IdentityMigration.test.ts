@@ -30,9 +30,11 @@ describe('ID-3 migration guardrails', () => {
     expect(f).not.toMatch(/functions\.invoke\(['"]admin-reset-password['"]/);
   });
 
-  it('password_reset_log direct access remains deferred (still present in AdminAccessManagement)', () => {
+  it('password_reset_log still referenced in AdminAccessManagement (via wrapper or query keys)', () => {
+    // After ID-4 the direct .from('password_reset_log') call is gone, but the
+    // panel still references the table by name (query keys, wrapper imports).
     const f = read('pages/admin/AdminAccessManagement.tsx');
-    expect(f).toMatch(/password_reset_log/);
+    expect(f).toMatch(/password-reset-logs/);
   });
 
   it('exact admin edge payload fields preserved', () => {

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { listPasswordResetLogs } from '@/modules/identity';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,12 +53,10 @@ export const PasswordResetLogPanel: React.FC = () => {
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ['password-reset-log', rangeStart],
     queryFn: async () => {
-      let query = supabase.from('password_reset_log')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(500);
-      if (rangeStart) query = query.gte('created_at', rangeStart);
-      const { data, error } = await query;
+      const { data, error } = await listPasswordResetLogs({
+        sinceIso: rangeStart,
+        limit: 500,
+      });
       if (error) throw error;
       return data as any[];
     },
