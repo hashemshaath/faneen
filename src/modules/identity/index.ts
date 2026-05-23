@@ -7,3 +7,4 @@
  * session/account wrappers.
  */
 export * from './services/roles';
+export * from './services/adminSecurity';
