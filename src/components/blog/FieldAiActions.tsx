@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Languages, Sparkles, Wand2, Loader2 } from 'lucide-react';
 import { stripMarkdown } from '@/lib/blog-ai-utils';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { useAiSettings } from '@/hooks/useAiSettings';
+import { invokeBlogAiTools } from '@/modules/ai';
 
 interface Props {
   value: string;
@@ -17,15 +17,15 @@ interface Props {
   compact?: boolean;
 }
 
-async function callWithSettings(params: Record<string, any>): Promise<string> {
-  const { data, error } = await supabase.functions.invoke('blog-ai-tools', { body: params });
+async function callWithSettings(params: Record<string, unknown>): Promise<string> {
+  const { data, error } = await invokeBlogAiTools(params);
   if (error) {
     if (error.message?.includes('429')) toast.error('Rate limited, please wait.');
     else if (error.message?.includes('402')) toast.error('Credits exhausted.');
     else toast.error(error.message || 'AI error');
     throw error;
   }
-  return data?.result || '';
+  return (data as { result?: string } | null)?.result || '';
 }
 
 export const FieldAiActions: React.FC<Props> = ({

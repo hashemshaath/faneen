@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Languages, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeBlogAiTools } from '@/modules/ai';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -50,19 +50,17 @@ export const BilingualField: React.FC<BilingualFieldProps> = ({
     }
     setBusy(from);
     try {
-      const { data, error } = await supabase.functions.invoke('blog-ai-tools', {
-        body: {
-          action: 'translate',
-          text,
-          sourceLang: from,
-          targetLang: from === 'ar' ? 'en' : 'ar',
-          tone: settings?.default_tone,
-          model: settings?.default_model,
-          translationInstructions: settings?.translation_instructions || undefined,
-        },
+      const { data, error } = await invokeBlogAiTools({
+        action: 'translate',
+        text,
+        sourceLang: from,
+        targetLang: from === 'ar' ? 'en' : 'ar',
+        tone: settings?.default_tone,
+        model: settings?.default_model,
+        translationInstructions: settings?.translation_instructions || undefined,
       });
       if (error) throw error;
-      const result = stripMarkdown(String(data?.result ?? '')).trim();
+      const result = stripMarkdown(String((data as { result?: string } | null)?.result ?? '')).trim();
       if (!result) throw new Error('Empty translation');
       if (from === 'ar') onChangeEn(result); else onChangeAr(result);
       toast.success(isRTL ? 'تمت الترجمة' : 'Translated');

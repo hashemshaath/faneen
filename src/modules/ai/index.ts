@@ -1,4 +1,7 @@
-// Module: ai
-// Public API for this module will be added in R1/R2.
-// Scaffold only — intentionally empty.
-export {};
+/**
+ * Module: ai
+ *
+ * EF-3 — Thin domain wrappers around AI/content edge functions.
+ */
+export * from './services/blogAiTools';
+export * from './services/aiCenter';
