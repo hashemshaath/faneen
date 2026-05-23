@@ -1,4 +1,10 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import {
+  buildRevealIdempotencyKey,
+  debitProviderLeadCredit,
+  getProviderCreditBalance,
+  insertCreditLedgerTransaction,
+} from '../_shared/credits/index.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -70,36 +76,41 @@ Deno.serve(async (req) => {
     const needCredit = COMMERCIAL.requireCreditForContactReveal && !overrideCreditCheck;
     const cost = COMMERCIAL.defaultLeadRevealCost;
 
-    let { data: sub } = await admin
-      .from('provider_subscriptions')
-      .select('id, business_id, provider_user_id, lead_credits_balance')
-      .eq('business_id', lead.provider_id)
-      .maybeSingle();
+    // EDGE-3: route balance read through shared helper.
+    let { data: sub } = await getProviderCreditBalance(admin, lead.provider_id);
 
     if (needCredit) {
-      if (!sub || (sub.lead_credits_balance ?? 0) < cost) {
-        return json(402, { success: false, message: 'رصيد المزود غير كافٍ لإتاحة بيانات التواصل' });
-      }
-      const newBal = (sub.lead_credits_balance ?? 0) - cost;
-      const { error: balErr } = await admin
-        .from('provider_subscriptions')
-        .update({ lead_credits_balance: newBal })
-        .eq('id', sub.id);
-      if (balErr) {
-        console.error('balance update error', balErr);
+      // EDGE-3: atomic debit + ledger insert via SECURITY DEFINER RPC with idempotency.
+      const idempotencyKey = buildRevealIdempotencyKey({ leadId: lead_id, userId });
+      const { data: debitData, error: debitErr } = await debitProviderLeadCredit(admin, {
+        businessId: lead.provider_id,
+        cost,
+        reason: 'contact_reveal_consumption',
+        quoteRequestLeadId: lead_id,
+        createdBy: userId,
+        idempotencyKey,
+      });
+      if (debitErr || !debitData) {
+        console.error('debit rpc error', debitErr);
         return json(500, { success: false, message: 'تعذر خصم الرصيد' });
       }
-      await admin.from('provider_lead_credit_transactions').insert({
-        business_id: sub.business_id,
-        provider_user_id: sub.provider_user_id,
-        quote_request_lead_id: lead_id,
-        type: 'consume',
-        amount: -cost,
-        balance_after: newBal,
-        reason: 'contact_reveal_consumption',
-        created_by: userId,
-      });
-      sub = { ...sub, lead_credits_balance: newBal };
+      const d = debitData as {
+        ok: boolean;
+        code?: string;
+        balance?: number;
+        balance_after?: number;
+        idempotent?: boolean;
+      };
+      if (d.ok === false) {
+        if (d.code === 'insufficient' || d.code === 'subscription_not_found') {
+          return json(402, { success: false, message: 'رصيد المزود غير كافٍ لإتاحة بيانات التواصل' });
+        }
+        return json(500, { success: false, message: 'تعذر خصم الرصيد' });
+      }
+      const newBal = d.balance_after ?? ((sub?.lead_credits_balance ?? 0) - cost);
+      if (sub) {
+        sub = { ...sub, lead_credits_balance: newBal };
+      }
     }
 
     const newStatus = lead.status === 'interested' ? 'contacted' : lead.status;
@@ -133,12 +144,13 @@ Deno.serve(async (req) => {
       metadata: { note, commercial_mode: commercialMode, credit_cost: creditCost },
     });
 
-    // Zero-amount log so launch reveals are still auditable
+    // Zero-amount log so launch reveals are still auditable.
+    // EDGE-3: routed through shared insertCreditLedgerTransaction helper.
     if (!needCredit && sub) {
       const reason = overrideCreditCheck
         ? 'admin_override_reveal'
         : (COMMERCIAL.freeRevealDuringLaunch ? 'launch_free_reveal' : 'free_reveal');
-      await admin.from('provider_lead_credit_transactions').insert({
+      await insertCreditLedgerTransaction(admin, {
         business_id: sub.business_id,
         provider_user_id: sub.provider_user_id,
         quote_request_lead_id: lead_id,
