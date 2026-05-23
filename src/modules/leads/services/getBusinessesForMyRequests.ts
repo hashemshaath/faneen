@@ -1,22 +1,18 @@
-import { supabase } from '@/integrations/supabase/client';
-
-export interface MyRequestsBusiness {
-  id: string;
-  name_ar: string | null;
-  name_en: string | null;
-  username: string | null;
-}
-
 /**
- * D4: Resolves business display data for the customer "My Requests"
- * dashboard. Extracted verbatim from DashboardMyRequests.tsx — preserves
- * exact table, select string, `.in('id', ids)` filter, and error throw.
+ * P-24: This lead-module service now delegates to the canonical
+ * `listBusinessesForRequests` wrapper in `src/modules/businesses/services/`.
+ * Exported name, signature, and behavior preserved. No direct `businesses`
+ * reads remain here.
  */
-export async function getBusinessesForMyRequests(businessIds: string[]): Promise<MyRequestsBusiness[]> {
-  const { data, error } = await supabase
-    .from('businesses')
-    .select('id, name_ar, name_en, username')
-    .in('id', businessIds);
-  if (error) throw error;
-  return (data ?? []) as MyRequestsBusiness[];
+import {
+  listBusinessesForRequests,
+  type RequestsBusiness,
+} from '@/modules/businesses/services/listBusinessesForRequests';
+
+export type MyRequestsBusiness = RequestsBusiness;
+
+export async function getBusinessesForMyRequests(
+  businessIds: string[],
+): Promise<MyRequestsBusiness[]> {
+  return listBusinessesForRequests(businessIds);
 }

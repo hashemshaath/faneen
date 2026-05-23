@@ -12,9 +12,6 @@
  *
  * Allowed production paths:
  *   - src/modules/businesses/services/**
- *   - src/modules/leads/services/getManagedBusinessesForUser.ts
- *   - src/modules/leads/services/getBusinessesForMyRequests.ts
- *   - src/modules/leads/services/getLeadProviderContactForEmail.ts
  *   - src/lib/ensure-business.ts
  *
  * Writes (`.insert/.update/.delete/.upsert`) are NOT enforced here — they
@@ -35,9 +32,6 @@ const SRC = path.join(ROOT, "src");
 
 const ALLOWED_DIRS = ["src/modules/businesses/services/"];
 const ALLOWED_FILES = new Set([
-  "src/modules/leads/services/getManagedBusinessesForUser.ts",
-  "src/modules/leads/services/getBusinessesForMyRequests.ts",
-  "src/modules/leads/services/getLeadProviderContactForEmail.ts",
   "src/lib/ensure-business.ts",
 ]);
 

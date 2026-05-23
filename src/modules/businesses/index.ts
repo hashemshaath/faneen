@@ -31,6 +31,15 @@ export { getOwnerBusiness, getOwnerBusinessId } from './services/getOwnerBusines
 export type { GetOwnerBusinessOptions } from './services/getOwnerBusiness';
 export { listOwnerBusinesses } from './services/listOwnerBusinesses';
 export type { ListOwnerBusinessesOptions } from './services/listOwnerBusinesses';
+export { listManagedBusinessesForUser } from './services/listManagedBusinessesForUser';
+export type { ManagedBusiness } from './services/listManagedBusinessesForUser';
+export { listBusinessesForRequests } from './services/listBusinessesForRequests';
+export type { RequestsBusiness } from './services/listBusinessesForRequests';
+export { getBusinessProviderContactForEmail } from './services/getBusinessProviderContactForEmail';
+export type {
+  GetBusinessProviderContactForEmailOptions,
+  BusinessProviderContactForEmail,
+} from './services/getBusinessProviderContactForEmail';
 export { getActiveBusinessStaffMembership } from './services/getActiveBusinessStaffMembership';
 export type { GetActiveBusinessStaffMembershipOptions } from './services/getActiveBusinessStaffMembership';
 export { updateBusinessById } from './services/updateBusinessById';

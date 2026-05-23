@@ -7,8 +7,6 @@
  *
  * Allowed direct access (production):
  *   - src/modules/users/services/**       (canonical profile wrappers)
- *   - src/modules/leads/services/getLeadProviderContactForEmail.ts
- *     (existing service-layer read; classified allowed in P-8)
  *
  * Test files (`__tests__/`, `.test.ts`, `.test.tsx`) are skipped because
  * regression/migration tests intentionally reference the literal string.
@@ -26,9 +24,7 @@ const ROOT = path.resolve(__dirname, "..");
 const SRC = path.join(ROOT, "src");
 
 const ALLOWED_DIRS = ["src/modules/users/services/"];
-const ALLOWED_FILES = new Set([
-  "src/modules/leads/services/getLeadProviderContactForEmail.ts",
-]);
+const ALLOWED_FILES = new Set();
 
 // Match `.from('profiles')` and `.from("profiles")` (covers both the
 // `supabase.from(...)` form and any chained `.from(...)` form).

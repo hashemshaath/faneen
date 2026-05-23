@@ -225,8 +225,8 @@ describe('P-21 intentionally-deferred businesses reads', () => {
     expect(src).toMatch(/\.from\(['"]businesses['"]\)/);
   });
 
-  it('business_staff aggregation in getManagedBusinessesForUser remains canonical', () => {
-    const src = read('src/modules/leads/services/getManagedBusinessesForUser.ts');
+  it('business_staff aggregation in listManagedBusinessesForUser remains canonical (P-24)', () => {
+    const src = read('src/modules/businesses/services/listManagedBusinessesForUser.ts');
     expect(src).toMatch(/supabase\.from\(['"]business_staff['"]\)/);
   });
 });
