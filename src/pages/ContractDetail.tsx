@@ -352,7 +352,7 @@ const ContractDetail = () => {
   const { data: warranties } = useQuery({
     queryKey: ['warranties', id],
     queryFn: async () => {
-      const { data } = await supabase.from('warranties').select('*').eq('contract_id', id!);
+      const { data } = await listWarrantiesForContract({ contractId: id!, select: '*' });
       return data ?? [];
     },
     enabled: !!id && !!user,
