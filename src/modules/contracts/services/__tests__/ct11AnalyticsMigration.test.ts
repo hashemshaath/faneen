@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 
 const SRC = resolve(__dirname, '../../../../');
 const read = (rel: string) => readFileSync(resolve(SRC, rel), 'utf8');
@@ -92,23 +92,20 @@ describe('CT-11 regression guard: zero direct runtime contract RPCs in app layer
   ];
 
   it('app layer (excluding services/tests/generated) has no direct rpc calls to these', () => {
-    const pattern = RUNTIME_RPCS.map((n) => `rpc\\([\\s'"\`]*${n}`).join('|');
-    let out = '';
-    try {
-      out = execSync(
-        `rg -n --no-heading -e "${pattern}" src/ ` +
-          `--glob '!src/modules/contracts/**' ` +
-          `--glob '!src/**/__tests__/**' ` +
-          `--glob '!src/test/**' ` +
-          `--glob '!src/integrations/**'`,
-        { cwd: resolve(__dirname, '../../../../../'), encoding: 'utf8' },
-      );
-    } catch (e: unknown) {
-      // rg exits 1 when no matches — that is the success case.
-      const err = e as { status?: number; stdout?: string };
-      if (err.status === 1) out = '';
-      else throw e;
-    }
-    expect(out.trim()).toBe('');
+    const pattern = RUNTIME_RPCS.map((n) => `rpc\\(\\s*['"\`]${n}['"\`]`).join('|');
+    const r = spawnSync(
+      'rg',
+      [
+        '-n', '--no-heading', '-e', pattern, 'src/',
+        '--glob', '!src/modules/contracts/**',
+        '--glob', '!src/**/__tests__/**',
+        '--glob', '!src/test/**',
+        '--glob', '!src/integrations/**',
+      ],
+      { cwd: resolve(__dirname, '../../../../../'), encoding: 'utf8' },
+    );
+    // rg exits 0 with matches, 1 with no matches.
+    if (r.status !== 0 && r.status !== 1) throw new Error(r.stderr);
+    expect((r.stdout ?? '').trim()).toBe('');
   });
 });
