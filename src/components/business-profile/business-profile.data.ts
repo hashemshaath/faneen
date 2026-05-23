@@ -1,6 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getPublicBusinessByUsername } from "@/modules/businesses";
+import {
+  listServicesByBusiness,
+  listBranchesByBusiness,
+} from "@/modules/catalog";
 import type { Database } from "@/integrations/supabase/types";
 
 type BusinessRow = Database["public"]["Tables"]["businesses"]["Row"];
@@ -54,12 +58,12 @@ export const useServices = (businessId: string | undefined) =>
   useQuery({
     queryKey: ["services", businessId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("business_services")
-        .select("*")
-        .eq("business_id", businessId!)
-        .eq("is_active", true)
-        .order("sort_order");
+      const { data } = await listServicesByBusiness({
+        businessId: businessId!,
+        select: "*",
+        activeOnly: true,
+        order: "sort_order",
+      });
 
       return data ?? [];
     },
@@ -119,13 +123,15 @@ export const useBranches = (businessId: string | undefined) =>
   useQuery({
     queryKey: ["branches", businessId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("business_branches")
-        .select("*, cities(name_ar, name_en), countries(name_ar, name_en)")
-        .eq("business_id", businessId!)
-        .eq("is_active", true)
-        .order("is_main", { ascending: false })
-        .order("sort_order");
+      const { data } = await listBranchesByBusiness({
+        businessId: businessId!,
+        select: "*, cities(name_ar, name_en), countries(name_ar, name_en)",
+        activeOnly: true,
+        order: [
+          { column: "is_main", ascending: false },
+          { column: "sort_order" },
+        ],
+      });
 
       return data ?? [];
     },
