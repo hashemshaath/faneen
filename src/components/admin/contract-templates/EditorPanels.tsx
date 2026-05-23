@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import {
   listContractTemplateSections,
   listContractTemplateClausesBySectionIds,
@@ -10,6 +9,18 @@ import {
   createContractTemplateClause,
   updateContractTemplateClause,
   deleteContractTemplateClause,
+  listContractTemplatePricingRules,
+  createContractTemplatePricingRule,
+  updateContractTemplatePricingRule,
+  deleteContractTemplatePricingRule,
+  listContractTemplateRequiredFields,
+  createContractTemplateRequiredField,
+  updateContractTemplateRequiredField,
+  deleteContractTemplateRequiredField,
+  listContractTemplateAttachments,
+  createContractTemplateAttachment,
+  updateContractTemplateAttachment,
+  deleteContractTemplateAttachment,
 } from '@/modules/contracts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -271,8 +282,7 @@ export const PricingRulesPanel: React.FC<{
   const rulesQ = useQuery({
     queryKey: ['ct-pricing', versionId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('contract_template_pricing_rules')
-        .select('*').eq('version_id', versionId);
+      const { data, error } = await listContractTemplatePricingRules(versionId);
       if (error) throw error;
       return (data || []) as CTPricingRule[];
     },
@@ -281,7 +291,7 @@ export const PricingRulesPanel: React.FC<{
   const add = useMutation({
     mutationFn: async () => {
       const method = methods[0]?.id || 'unit';
-      const { error } = await supabase.from('contract_template_pricing_rules').insert({
+      const { error } = await createContractTemplatePricingRule({
         version_id: versionId, method, is_default: (rulesQ.data?.length || 0) === 0,
         required_fields: [], formula: null, rounding: { mode: 'round', decimals: 2 },
         vat_handling: 'inclusive', display_in_pdf: { show_method: true },
@@ -293,12 +303,12 @@ export const PricingRulesPanel: React.FC<{
   });
   const upd = useMutation({
     mutationFn: async (r: CTPricingRule) => {
-      const { error } = await supabase.from('contract_template_pricing_rules').update({
+      const { error } = await updateContractTemplatePricingRule(r.id, {
         method: r.method, is_default: r.is_default,
         required_fields: r.required_fields as never, formula: r.formula,
         rounding: r.rounding as never, vat_handling: r.vat_handling,
         display_in_pdf: r.display_in_pdf as never,
-      }).eq('id', r.id);
+      });
       if (error) throw error;
     },
     onSuccess: () => { inv(); toast.success(isRTL ? 'تم الحفظ' : 'Saved'); },
@@ -306,7 +316,7 @@ export const PricingRulesPanel: React.FC<{
   });
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('contract_template_pricing_rules').delete().eq('id', id);
+      const { error } = await deleteContractTemplatePricingRule(id);
       if (error) throw error;
     },
     onSuccess: () => { inv(); toast.success(isRTL ? 'تم الحذف' : 'Deleted'); },
