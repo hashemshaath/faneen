@@ -171,14 +171,14 @@ describe('CAT-4 AdminLocationsHub migrated', () => {
   });
 });
 
-describe('CAT-4 still-deferred guardrails', () => {
-  it('BnplProvidersManager business_bnpl_providers writes remain direct (CAT-5)', () => {
+describe('CAT-4 → CAT-5 transition (BNPL writes now migrated)', () => {
+  it('BnplProvidersManager business_bnpl_providers writes migrated', () => {
     const src = read('src/components/bnpl/BnplProvidersManager.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]business_bnpl_providers['"]\)/);
+    expect(src).not.toMatch(/supabase\.from\(['"]business_bnpl_providers['"]\)/);
   });
 
-  it('DashboardInstallments BNPL admin CRUD remains direct (CAT-5)', () => {
+  it('DashboardInstallments BNPL admin write CRUD migrated (read still direct)', () => {
     const src = read('src/pages/dashboard/DashboardInstallments.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]bnpl_providers['"]\)/);
+    expect(src).not.toMatch(/supabase\.from\(['"]bnpl_providers['"]\)\.(insert|update|delete)/);
   });
 });
