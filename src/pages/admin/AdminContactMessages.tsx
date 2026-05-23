@@ -11,6 +11,7 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { runWeeklySlaReport, triageContactMessage } from '@/modules/contact';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -607,7 +608,7 @@ const AdminContactMessages = () => {
               variant="outline" size="sm" className="gap-2"
               onClick={async () => {
                 const t = toast.loading(isRTL ? 'جارٍ توليد التقرير...' : 'Generating report...');
-                const { data, error } = await supabase.functions.invoke('weekly-sla-report');
+                const { data, error } = await runWeeklySlaReport() as { data: { ok?: boolean } | null; error: unknown };
                 toast.dismiss(t);
                 if (error || !data?.ok) {
                   toast.error(isRTL ? 'فشل توليد التقرير' : 'Report failed');
@@ -623,7 +624,7 @@ const AdminContactMessages = () => {
                 variant="default" size="sm" className="gap-2"
                 onClick={async () => {
                   const t = toast.loading(isRTL ? 'يحلّل الذكاء الاصطناعي الرسالة...' : 'AI analysing...');
-                  const { data, error } = await supabase.functions.invoke('triage-contact-message', { body: { message_id: focused.id } });
+                  const { data, error } = await triageContactMessage({ message_id: focused.id }) as { data: { error?: string; priority?: string; category?: string } | null; error: unknown };
                   toast.dismiss(t);
                   if (error || data?.error) {
                     toast.error(data?.error || (isRTL ? 'فشل الفرز الذكي' : 'Triage failed'));

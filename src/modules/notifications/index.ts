@@ -35,3 +35,5 @@ export { getUserNotificationPreferences } from './services/preferences/getUserNo
 export { upsertUserNotificationPreferences } from './services/preferences/upsertUserNotificationPreferences';
 export { getBusinessNotificationPreferences } from './services/preferences/getBusinessNotificationPreferences';
 export { upsertBusinessNotificationPreferences } from './services/preferences/upsertBusinessNotificationPreferences';
+// EF-4: public unsubscribe edge function wrapper.
+export { handleEmailUnsubscribe } from './services/handleEmailUnsubscribe';
