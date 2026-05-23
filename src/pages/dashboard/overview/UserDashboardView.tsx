@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import {
   countUnreadNotificationsForUser,
   listRecentNotificationsForUser,
 } from '@/modules/notifications';
+import { listContractsForCustomer } from '@/modules/contracts';
+import { countBlogBookmarksForUser } from '@/modules/blog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,7 +47,13 @@ export default function UserDashboardView({
     queryKey: ['user-overview-stats', user?.id],
     queryFn: async () => {
       const [contracts, messages, bookmarks, notifications] = await Promise.all([
-        supabase.from('contracts').select('id, contract_number, title_ar, title_en, status, total_amount, currency_code, created_at', { count: 'exact' }).eq('client_id', user.id).order('created_at', { ascending: false }).limit(5),
+        listContractsForCustomer({
+          clientId: user.id,
+          select: 'id, contract_number, title_ar, title_en, status, total_amount, currency_code, created_at',
+          count: { mode: 'exact' },
+          orderBy: { column: 'created_at', ascending: false },
+          limit: 5,
+        }),
         countConversationsForUser({ userId: user.id }),
         supabase.from('blog_bookmarks').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         countUnreadNotificationsForUser({ userId: user.id }),
