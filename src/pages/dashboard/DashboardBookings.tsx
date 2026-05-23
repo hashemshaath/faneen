@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listProfilesByUserIds } from '@/modules/users';
 import { getOwnerBusiness } from '@/modules/businesses';
+import { listAvailabilityByBusiness } from '@/modules/catalog';
+import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -114,7 +116,13 @@ const DashboardBookings = () => {
   const { data: availability = [] } = useQuery({
     queryKey: ['business-availability', business?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('business_availability').select('*').eq('business_id', business!.id).order('day_of_week');
+      const { data } = await listAvailabilityByBusiness<
+        Database['public']['Tables']['business_availability']['Row']
+      >({
+        businessId: business!.id,
+        select: '*',
+        order: 'day_of_week',
+      });
       return data || [];
     },
     enabled: !!business,
