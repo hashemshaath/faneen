@@ -43,6 +43,8 @@ export * from './services/templates';
 export * from './services/attachments';
 // CT-9 contract runtime installment plan/payment wrappers
 export * from './services/installments';
+// CT-11 contract analytics RPC wrappers
+export * from './services/analytics';
 // types.ts is available at '@/modules/contracts/types' for consumers that
 // want type-only imports. Not re-exported here to avoid duplicate type
 // re-exports (all types are already reachable via the value exports above).
