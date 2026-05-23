@@ -648,9 +648,10 @@ const DashboardInstallments = () => {
     queryKey: ['installment-plans', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data: contracts } = await supabase.from('contracts')
-        .select('id, title_ar, title_en, contract_number, client_id, provider_id')
-        .or(`client_id.eq.${user.id},provider_id.eq.${user.id}`);
+      const { data: contracts } = await listContractsForUserParticipant<{ id: string; title_ar: string; title_en: string | null; contract_number: string | null; client_id: string; provider_id: string }>({
+        userId: user.id,
+        select: 'id, title_ar, title_en, contract_number, client_id, provider_id',
+      });
       if (!contracts?.length) return [];
       const { data } = await supabase.from('installment_plans')
         .select('*, installment_payments(*)')

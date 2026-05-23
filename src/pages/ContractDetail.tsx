@@ -287,7 +287,7 @@ const ContractDetail = () => {
   const { data: contract, isLoading } = useQuery({
     queryKey: ['contract', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('contracts').select('*').eq('id', id!).maybeSingle();
+      const { data, error } = await getContractById({ id: id!, select: '*' });
       if (error) throw error;
       return data;
     },

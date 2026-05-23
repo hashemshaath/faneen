@@ -37,10 +37,11 @@ const AdminContractTemplates: React.FC = () => {
   const templatesQ = useQuery({
     queryKey: ['ct-templates'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contract_templates')
-        .select('id,slug,name_ar,name_en,category,service_category_id,default_locale,current_version_id,is_active,archived_at,updated_at')
-        .order('updated_at', { ascending: false });
+      const { data, error } = await listActiveContractTemplates({
+        select: 'id,slug,name_ar,name_en,category,service_category_id,default_locale,current_version_id,is_active,archived_at,updated_at',
+        orderBy: { column: 'updated_at', ascending: false },
+        activeOnly: false,
+      });
       if (error) throw error;
       return (data || []) as CTTemplate[];
     },

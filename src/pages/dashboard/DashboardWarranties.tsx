@@ -53,8 +53,11 @@ const DashboardWarranties = () => {
   const { data: contracts = [] } = useQuery({
     queryKey: ['provider-contracts', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('contracts').select('id, title_ar, title_en, contract_number')
-        .eq('provider_id', user!.id).order('created_at', { ascending: false });
+      const { data } = await listContractsForOwner<{ id: string; title_ar: string; title_en: string | null; contract_number: string | null }>({
+        providerId: user!.id,
+        select: 'id, title_ar, title_en, contract_number',
+        orderBy: { column: 'created_at', ascending: false },
+      });
       return data ?? [];
     },
     enabled: !!user,

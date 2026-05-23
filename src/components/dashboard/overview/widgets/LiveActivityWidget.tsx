@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import {
   listLiveActivityNotifications,
   subscribeUserNotifications,
 } from '@/modules/notifications';
+import { listContractsForUserParticipant } from '@/modules/contracts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,12 +50,12 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
     queryFn: async (): Promise<ActivityRow[]> => {
       const [notifs, contracts] = await Promise.all([
         listLiveActivityNotifications({ userId, limit: 15 }),
-        supabase
-          .from('contracts')
-          .select('id, contract_number, title_ar, title_en, status, updated_at')
-          .or(`client_id.eq.${userId},provider_id.eq.${userId}`)
-          .order('updated_at', { ascending: false })
-          .limit(8),
+        listContractsForUserParticipant<{ id: string; contract_number: string | null; title_ar: string; title_en: string | null; status: string; updated_at: string }>({
+          userId,
+          select: 'id, contract_number, title_ar, title_en, status, updated_at',
+          orderBy: { column: 'updated_at', ascending: false },
+          limit: 8,
+        }),
       ]);
 
       const rows: ActivityRow[] = [];

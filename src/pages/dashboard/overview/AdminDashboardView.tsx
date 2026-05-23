@@ -29,6 +29,7 @@ import {
   countLeadsByStatus,
 } from '@/modules/leads';
 import { countConversationsTotal } from '@/modules/messaging';
+import { listAllContracts } from '@/modules/contracts';
 import {
   CHART_COLORS, ChartTooltipStyle, getStatusLabel, buildMonthlyData,
   StatCard, QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
@@ -53,7 +54,10 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
       ] = await Promise.all([
         countProfiles(),
         countBusinesses({ select: 'id' }),
-        supabase.from('contracts').select('id, status, total_amount, created_at', { count: 'exact' }),
+        listAllContracts<{ id: string; status: string; total_amount: number | null; created_at: string }>({
+          select: 'id, status, total_amount, created_at',
+          count: { mode: 'exact' },
+        }),
         supabase.from('categories').select('id', { count: 'exact', head: true }),
         countConversationsTotal(),
         supabase.from('membership_subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active'),
@@ -64,12 +68,12 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('status', 'new'),
         listProfiles<{ created_at: string }>({ select: 'created_at', orderBy: { column: 'created_at', ascending: true } }),
         countLeadsByDateRange(todayIso),
-        supabase.from('contracts').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
+        listAllContracts({ select: 'id', count: { mode: 'exact', head: true }, gteCreatedAt: todayIso }),
         countBusinesses({ select: 'id', filters: [{ column: 'created_at', op: 'gte', value: todayIso }] }),
         countLeadsByStatus('new'),
         countBusinesses({ select: 'id', filters: [{ column: 'approval_status', op: 'in', value: ['submitted', 'under_review'] }] }),
         supabase.from('email_send_log').select('id', { count: 'exact', head: true }).eq('status', 'dlq').gte('created_at', fresh48hIso),
-        supabase.from('contracts').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
+        listAllContracts({ select: 'id', count: { mode: 'exact', head: true }, eqStatus: 'pending_approval' }),
       ]);
 
       const allContracts = contracts.data || [];

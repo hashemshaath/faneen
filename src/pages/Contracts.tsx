@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { listContractsForCustomer, listContractsForOwner } from '@/modules/contracts';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -105,7 +105,11 @@ const Contracts = () => {
   const { data: clientContracts, isLoading: loadingClient } = useQuery({
     queryKey: ['contracts', 'client', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('contracts').select('*').eq('client_id', user!.id).order('created_at', { ascending: false });
+      const { data } = await listContractsForCustomer<Contract>({
+        clientId: user!.id,
+        select: '*',
+        orderBy: { column: 'created_at', ascending: false },
+      });
       return data ?? [];
     },
     enabled: !!user,
@@ -114,7 +118,11 @@ const Contracts = () => {
   const { data: providerContracts, isLoading: loadingProvider } = useQuery({
     queryKey: ['contracts', 'provider', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('contracts').select('*').eq('provider_id', user!.id).order('created_at', { ascending: false });
+      const { data } = await listContractsForOwner<Contract>({
+        providerId: user!.id,
+        select: '*',
+        orderBy: { column: 'created_at', ascending: false },
+      });
       return data ?? [];
     },
     enabled: !!user,

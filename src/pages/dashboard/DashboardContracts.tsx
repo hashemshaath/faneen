@@ -421,7 +421,7 @@ const DashboardContracts = () => {
   const { data: templates = [] } = useQuery({
     queryKey: ['contract-templates'],
     queryFn: async () => {
-      const { data } = await supabase.from('contract_templates').select('*').eq('is_active', true).order('sort_order');
+      const { data } = await listActiveContractTemplates({ select: '*', orderBy: { column: 'sort_order' } });
       return data ?? [];
     },
     enabled: !!user,
