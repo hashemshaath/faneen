@@ -20,6 +20,7 @@ import {
 } from '@/modules/businesses';
 import { setBusinessMembershipTier, type MembershipTier } from '@/modules/memberships';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
+import { getProfileByUserId } from '@/modules/users/services/getProfileByUserId';
 import {
   listServicesByBusiness,
   listAllBusinessServicesLite,
