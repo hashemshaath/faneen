@@ -97,7 +97,7 @@ export function ClientPicker({
     if (query.trim().length < 2) { setResults([]); setOpen(false); return; }
     debounce.current = window.setTimeout(async () => {
       setLoading(true);
-      const { data, error } = await supabase.rpc('search_contract_clients', { _q: query.trim() });
+      const { data, error } = await searchContractClients({ _q: query.trim() });
       setLoading(false);
       if (error) { setResults([]); return; }
       setResults((data as SearchRow[]) ?? []);
@@ -114,7 +114,7 @@ export function ClientPicker({
     if (!email && !phone) { setMatch(null); return; }
     resolveDebounce.current = window.setTimeout(async () => {
       setResolving(true);
-      const { data } = await supabase.rpc('quick_resolve_contract_client', {
+      const { data } = await quickResolveContractClient({
         _email: email || null,
         _phone: phone || null,
       });

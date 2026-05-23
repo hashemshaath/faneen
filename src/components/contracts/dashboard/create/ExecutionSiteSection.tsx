@@ -14,6 +14,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MapPin, Plus, Loader2, X, Check, Building2, Phone, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { listClientSitesForContract } from '@/modules/contracts/services/listClientSitesForContract';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
