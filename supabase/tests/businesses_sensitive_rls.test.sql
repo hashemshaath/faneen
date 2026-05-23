@@ -32,7 +32,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET search_path = public, extensions;
 
-SELECT plan(31);
+SELECT plan(34);
 
 -- ---------------------------------------------------------------------------
 -- SEED (as superuser; RLS bypassed for table owners)
