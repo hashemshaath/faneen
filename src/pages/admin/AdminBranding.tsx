@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Loader2, Save, RotateCcw, Upload, Image as ImageIcon, Palette, Eye, Sparkles } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { BrandLogo } from '@/components/common/BrandLogo';
+import { uploadBrandAsset } from '@/modules/files';
 import { DEFAULT_BRANDING, BRANDING_KEYS, type BrandingConfig } from '@/hooks/useBranding';
 import { BRAND_THEME_KEY_BY_FIELD, BRAND_THEME_FIELD_BY_KEY } from '@/hooks/useThemeColors';
 import { BRAND_COLORS, type BrandColorTokens } from '@/config/brandTheme';
