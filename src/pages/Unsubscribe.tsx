@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { handleEmailUnsubscribe } from "@/modules/notifications";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, XCircle, Loader2, MailX } from "lucide-react";
@@ -34,7 +34,7 @@ const Unsubscribe = () => {
   const handleUnsubscribe = async () => {
     setBusy(true);
     try {
-      const { data } = await supabase.functions.invoke("handle-email-unsubscribe", { body: { token } });
+      const { data } = await handleEmailUnsubscribe({ token }) as { data: { success?: boolean; reason?: string } | null };
       if (data?.success) setStatus("success");
       else if (data?.reason === "already_unsubscribed") setStatus("already");
       else setStatus("error");
