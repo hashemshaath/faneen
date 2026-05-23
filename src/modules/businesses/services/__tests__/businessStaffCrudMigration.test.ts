@@ -6,25 +6,30 @@ const read = (rel: string) =>
   readFileSync(resolve(__dirname, '../../../../..', rel), 'utf-8');
 
 describe('BS-3: business_staff CRUD migration', () => {
-  it('AdminUsers.tsx uses updateBusinessStaffById and deleteBusinessStaffById', () => {
+  it('AdminUsers.tsx uses guarded staff wrappers (R4E-3)', () => {
     const src = read('src/pages/admin/AdminUsers.tsx');
-    expect(src).toContain('updateBusinessStaffById');
-    expect(src).toContain('deleteBusinessStaffById');
-    expect(src).toContain('updateBusinessStaffById({ id: staffId, values: { role } })');
-    expect(src).toContain('deleteBusinessStaffById({ id: staffId })');
-    // Preserve error-throw behavior so React Query onError fires.
-    expect(src).toMatch(/if \(error\) throw error;/);
+    expect(src).toContain('updateBusinessStaffRole');
+    expect(src).toContain('removeBusinessStaff');
+    expect(src).toContain('updateBusinessStaffRole(staffId, role)');
+    expect(src).toContain('removeBusinessStaff(staffId)');
+    // Direct low-level wrappers must no longer be imported / called here.
+    expect(src).not.toMatch(/updateBusinessStaffById\s*\(/);
+    expect(src).not.toMatch(/deleteBusinessStaffById\s*\(/);
     // Preserve query invalidation keys.
     expect(src).toContain("queryKey: ['admin-business-staff']");
     // No direct supabase.from('business_staff') remains.
     expect(src).not.toMatch(/supabase\s*\.\s*from\(['"]business_staff['"]\)/);
   });
 
-  it('RepresentativesSection.tsx uses insertBusinessStaff/updateBusinessStaffById/deleteBusinessStaffById', () => {
+  it('RepresentativesSection.tsx uses insertBusinessStaff + guarded staff wrappers (R4E-3)', () => {
     const src = read('src/components/dashboard/business-edit/RepresentativesSection.tsx');
     expect(src).toContain('insertBusinessStaff');
-    expect(src).toContain('updateBusinessStaffById({ id, values: patch })');
-    expect(src).toContain('deleteBusinessStaffById({ id: row.id })');
+    expect(src).toContain('updateBusinessStaffRole');
+    expect(src).toContain('setBusinessStaffActive');
+    expect(src).toContain('removeBusinessStaff(row.id)');
+    // Direct low-level wrappers must no longer be called here.
+    expect(src).not.toMatch(/updateBusinessStaffById\s*\(/);
+    expect(src).not.toMatch(/deleteBusinessStaffById\s*\(/);
     // Exact insert payload fields preserved.
     expect(src).toContain('business_id: businessId');
     expect(src).toContain('user_id: profile.user_id');
