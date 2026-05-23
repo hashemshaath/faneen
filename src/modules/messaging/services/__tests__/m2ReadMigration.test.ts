@@ -24,27 +24,21 @@ describe('M-2 migration: read callsites no longer touch conversations/messages d
     });
   }
 
-  it('BusinessProfile.tsx — find conversation read is migrated, mutations remain direct (deferred to M-3)', () => {
+  it('BusinessProfile.tsx — find conversation read is migrated (mutations migrated in M-3)', () => {
     const src = read('pages/BusinessProfile.tsx');
     // Read wrapper used
     expect(src).toMatch(/findConversationBetweenUsers\(/);
     // No direct .select on conversations
     expect(src).not.toMatch(/\.from\(\s*["']conversations["']\s*\)\s*\.\s*select/);
-    // Deferred mutations remain
-    expect(src).toMatch(/\.from\(\s*["']conversations["']\s*\)\s*\.\s*insert/);
-    expect(src).toMatch(/\.from\(\s*["']messages["']\s*\)\s*\.\s*insert/);
   });
 
-  it('DashboardMessages.tsx — all three reads migrated; mutations/realtime/storage remain deferred', () => {
+  it('DashboardMessages.tsx — all three reads migrated; realtime/storage remain deferred', () => {
     const src = read('pages/dashboard/DashboardMessages.tsx');
     expect(src).toMatch(/listConversationsForUser\(/);
     expect(src).toMatch(/listUnreadMessageConversationIds\(/);
     expect(src).toMatch(/listMessagesForConversation\(/);
     // No remaining .from('conversations').select
     expect(src).not.toMatch(/\.from\(\s*['"]conversations['"]\s*\)\s*\.\s*select/);
-    // Remaining direct messages access must only be the mark-as-read update and the send insert
-    expect(src).toMatch(/\.from\('messages'\)\.update\(\s*\{\s*is_read:\s*true\s*\}\s*\)/);
-    expect(src).toMatch(/\.from\('messages'\)\.insert\(/);
     // Realtime + storage stay direct for M-4/M-5
     expect(src).toMatch(/postgres_changes/);
     expect(src).toMatch(/supabase\.storage\.from\(\s*'chat-attachments'\s*\)/);
