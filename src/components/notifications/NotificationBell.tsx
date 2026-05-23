@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listNotificationsForUser } from '@/modules/notifications';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -36,12 +37,7 @@ export const NotificationBell = () => {
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      const { data, error } = await listNotificationsForUser({ userId: user!.id, limit: 50 });
       if (error) throw error;
       return data;
     },

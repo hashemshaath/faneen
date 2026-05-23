@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listNotificationsForUser } from '@/modules/notifications';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -145,8 +146,7 @@ const DashboardNotifications = () => {
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['all-notifications', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('notifications').select('*')
-        .eq('user_id', user!.id).order('created_at', { ascending: false }).limit(500);
+      const { data, error } = await listNotificationsForUser({ userId: user!.id, limit: 500 });
       if (error) throw error;
       return data;
     },

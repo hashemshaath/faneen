@@ -6,6 +6,7 @@ import {
   Loader2, AlertCircle,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { listRecentNotificationsForUser } from '@/modules/notifications';
 import { listRecentLeadsForBusiness } from '@/modules/leads';
 import {
   listUnreadMessageConversationIds,
@@ -120,12 +121,11 @@ export function ProviderEngagementPreviews({ businessId }: { businessId: string 
     enabled: !!user?.id,
     staleTime: 30_000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('id, title_ar, title_en, notification_type, is_read, created_at, action_url')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      const { data, error } = await listRecentNotificationsForUser<NotificationRow>({
+        userId: user!.id,
+        select: 'id, title_ar, title_en, notification_type, is_read, created_at, action_url',
+        limit: 10,
+      });
       if (error) throw error;
       const rows = (data ?? []) as NotificationRow[];
       return { rows, unread: rows.filter((n) => !n.is_read).length };
