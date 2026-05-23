@@ -86,15 +86,19 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
   // Realtime subscription
   useEffect(() => {
     if (!userId) return;
-    const channel = supabase
-      .channel(`dashboard-activity-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
-        () => qc.invalidateQueries({ queryKey: ['live-activity', userId] })
-      )
-      .subscribe((status) => {
+    return subscribeUserNotifications({
+      userId,
+      channelName: `dashboard-activity-${userId}`,
+      listeners: [
+        {
+          event: '*',
+          onChange: () => qc.invalidateQueries({ queryKey: ['live-activity', userId] }),
+        },
+      ],
+      onStatus: (status) => {
         setOnline(status === 'SUBSCRIBED');
-      });
-    return () => { void supabase.removeChannel(channel); };
+      },
+    });
   }, [userId, qc]);
 
   const filtered = useMemo(() => {
