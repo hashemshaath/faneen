@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  listContractTemplateSections,
+  listContractTemplateClausesBySectionIds,
+  createContractTemplateSection,
+  updateContractTemplateSection,
+  deleteContractTemplateSection,
+  createContractTemplateClause,
+  updateContractTemplateClause,
+  deleteContractTemplateClause,
+} from '@/modules/contracts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,13 +48,9 @@ export const SectionsClausesPanel: React.FC<{
   const sectionsQ = useQuery({
     queryKey: ['ct-sections', versionId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contract_template_sections')
-        .select('*')
-        .eq('version_id', versionId)
-        .order('sort_order', { ascending: true });
+      const { data, error } = await listContractTemplateSections(versionId);
       if (error) throw error;
-      return (data || []) as CTSection[];
+      return ((data || []) as unknown) as CTSection[];
     },
   });
 
@@ -53,13 +59,9 @@ export const SectionsClausesPanel: React.FC<{
     queryFn: async () => {
       const ids = (sectionsQ.data || []).map((s) => s.id);
       if (ids.length === 0) return [] as CTClause[];
-      const { data, error } = await supabase
-        .from('contract_template_clauses')
-        .select('*')
-        .in('section_id', ids)
-        .order('sort_order', { ascending: true });
+      const { data, error } = await listContractTemplateClausesBySectionIds(ids);
       if (error) throw error;
-      return (data || []) as CTClause[];
+      return ((data || []) as unknown) as CTClause[];
     },
     enabled: !!sectionsQ.data,
   });
@@ -72,7 +74,7 @@ export const SectionsClausesPanel: React.FC<{
   const addSection = useMutation({
     mutationFn: async () => {
       const next = (sectionsQ.data?.length || 0);
-      const { error } = await supabase.from('contract_template_sections').insert({
+      const { error } = await createContractTemplateSection({
         version_id: versionId,
         section_key: `section_${next + 1}`,
         title_ar: 'قسم جديد',
@@ -88,10 +90,10 @@ export const SectionsClausesPanel: React.FC<{
 
   const updateSection = useMutation({
     mutationFn: async (s: CTSection) => {
-      const { error } = await supabase.from('contract_template_sections').update({
+      const { error } = await updateContractTemplateSection(s.id, {
         section_key: s.section_key, title_ar: s.title_ar, title_en: s.title_en,
         is_required: s.is_required, sort_order: s.sort_order,
-      }).eq('id', s.id);
+      });
       if (error) throw error;
     },
     onSuccess: () => { invalidateAll(); toast.success(isRTL ? 'تم الحفظ' : 'Saved'); },
@@ -100,7 +102,7 @@ export const SectionsClausesPanel: React.FC<{
 
   const deleteSection = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('contract_template_sections').delete().eq('id', id);
+      const { error } = await deleteContractTemplateSection(id);
       if (error) throw error;
     },
     onSuccess: () => { invalidateAll(); toast.success(isRTL ? 'تم الحذف' : 'Deleted'); },
@@ -110,7 +112,7 @@ export const SectionsClausesPanel: React.FC<{
   const addClause = useMutation({
     mutationFn: async (sectionId: string) => {
       const sectionClauses = (clausesQ.data || []).filter((c) => c.section_id === sectionId);
-      const { error } = await supabase.from('contract_template_clauses').insert({
+      const { error } = await createContractTemplateClause({
         section_id: sectionId, body_ar: 'بند جديد', body_en: 'New clause',
         is_mandatory: true, is_editable_by_provider: false, is_editable_by_client: false,
         sort_order: sectionClauses.length, tags: [], legal_reference: null,
@@ -123,12 +125,12 @@ export const SectionsClausesPanel: React.FC<{
 
   const updateClause = useMutation({
     mutationFn: async (c: CTClause) => {
-      const { error } = await supabase.from('contract_template_clauses').update({
+      const { error } = await updateContractTemplateClause(c.id, {
         body_ar: c.body_ar, body_en: c.body_en, is_mandatory: c.is_mandatory,
         is_editable_by_provider: c.is_editable_by_provider,
         is_editable_by_client: c.is_editable_by_client,
         legal_reference: c.legal_reference, sort_order: c.sort_order,
-      }).eq('id', c.id);
+      });
       if (error) throw error;
     },
     onSuccess: () => { invalidateAll(); toast.success(isRTL ? 'تم الحفظ' : 'Saved'); },
@@ -137,7 +139,7 @@ export const SectionsClausesPanel: React.FC<{
 
   const deleteClause = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('contract_template_clauses').delete().eq('id', id);
+      const { error } = await deleteContractTemplateClause(id);
       if (error) throw error;
     },
     onSuccess: () => { invalidateAll(); toast.success(isRTL ? 'تم الحذف' : 'Deleted'); },
