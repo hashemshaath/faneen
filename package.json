@@ -32,7 +32,8 @@
     "messaging-isolation-audit": "node scripts/messaging-isolation-audit.mjs",
     "notifications-isolation-audit": "node scripts/notifications-isolation-audit.mjs",
     "contracts-isolation-audit": "node scripts/contracts-isolation-audit.mjs",
-    "identity-isolation-audit": "node scripts/identity-isolation-audit.mjs"
+    "identity-isolation-audit": "node scripts/identity-isolation-audit.mjs",
+    "storage-isolation-audit": "node scripts/storage-isolation-audit.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
