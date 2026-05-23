@@ -8,13 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
 import {
   listProviderPlans,
   listProviderSubscriptions,
   updateProviderSubscriptionById,
   adminAdjustProviderCredits,
 } from '@/modules/memberships';
+import { listProviderCreditTransactionsForBusiness } from '@/modules/credits';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Crown, Wallet, RefreshCw, Search, ChevronRight, Undo2 } from 'lucide-react';
@@ -179,12 +179,9 @@ const ManageSub: React.FC<{ sub: Sub; plans: Plan[]; onDone: () => void; adminId
   const recentTxQ = useQuery({
     queryKey: ['admin-sub-tx', sub.business_id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('provider_lead_credit_transactions')
-        .select('id, type, amount, balance_after, reason, created_at, created_by, quote_request_lead_id')
-        .eq('business_id', sub.business_id)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      const { data, error } = await listProviderCreditTransactionsForBusiness({
+        businessId: sub.business_id,
+      });
       if (error) throw error;
       return data ?? [];
     },
