@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
+import { listProviderSubscriptionsForCurrentUser } from '@/modules/memberships';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Crown, Wallet, Calendar, Activity, Sparkles } from 'lucide-react';
@@ -77,12 +78,9 @@ const ProviderMembership: React.FC = () => {
     queryKey: ['provider-subscription', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('provider_subscriptions')
-        .select('id, business_id, status, current_period_start, current_period_end, lead_credits_balance, plan:provider_plans(code, name_ar, description_ar, lead_credits_per_month, monthly_price), business:businesses!provider_subscriptions_business_id_fkey(id, name_ar)')
-        .order('created_at', { ascending: false });
+      const { data, error } = await listProviderSubscriptionsForCurrentUser<SubRow>();
       if (error) throw error;
-      return (data ?? []) as unknown as SubRow[];
+      return (data ?? []) as SubRow[];
     },
   });
 

@@ -14,8 +14,8 @@ describe('MEMB-3 lifecycle migration', () => {
     expect(src).not.toMatch(/supabase\.rpc\(\s*['"]cancel_subscription['"]/);
     expect(src).not.toMatch(/supabase\.rpc\(\s*['"]admin_upgrade_subscription['"]/);
     expect(src).not.toMatch(/supabase\.rpc\(\s*['"]subscribe_to_plan['"]/);
-    // Deferred admin reads remain direct.
-    expect(src).toMatch(/\.from\(['"]membership_plans['"]\)/);
+    // Admin reads fully migrated in MEMB-7.
+    expect(src).not.toMatch(/\.from\(['"]membership_plans['"]\)/);
   });
 
   it('Membership page no longer calls lifecycle RPCs directly', () => {

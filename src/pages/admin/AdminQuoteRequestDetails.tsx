@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { createNotification } from '@/modules/notifications/services/createNotification';
+import { getProviderSubscriptionForBusiness } from '@/modules/memberships';
 import {
   getAdminQuoteRequestById,
   listAdminQuoteRequestFiles,
@@ -183,13 +184,13 @@ const AdminQuoteRequestDetails: React.FC = () => {
     queryKey: ['reveal-sub', revealProviderBizId],
     enabled: !!revealProviderBizId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('provider_subscriptions')
-        .select('lead_credits_balance, status, plan:provider_plans(name_ar, lead_credits_per_month)')
-        .eq('business_id', revealProviderBizId!)
-        .maybeSingle();
+      const { data, error } = await getProviderSubscriptionForBusiness<{
+        lead_credits_balance: number;
+        status: string;
+        plan: { name_ar: string; lead_credits_per_month: number } | null;
+      }>({ businessId: revealProviderBizId! });
       if (error) throw error;
-      return data as { lead_credits_balance: number; status: string; plan: { name_ar: string; lead_credits_per_month: number } | null } | null;
+      return data;
     },
   });
 

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useTransition } from 'react';
+import type { Database } from '@/integrations/supabase/types';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +11,11 @@ import {
   cancelSubscription,
   adminUpgradeSubscription,
   subscribeToPlan,
+  listAdminMembershipPlans,
+  listAdminMembershipSubscriptions,
+  adminListMembershipUsage,
+  insertMembershipPlan,
+  updateMembershipPlanById,
 } from '@/modules/memberships';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -474,25 +480,25 @@ const AdminMemberships = () => {
   }, []);
 
   /* ─── Queries ─── */
+  type AdminPlanRow = Database['public']['Tables']['membership_plans']['Row'];
   const { data: plans = [], isLoading: loadingPlans } = useQuery({
     queryKey: ['admin-membership-plans'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('membership_plans').select('*').order('sort_order');
+      const { data, error } = await listAdminMembershipPlans<AdminPlanRow>();
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
   });
 
+  type AdminSubRow = Database['public']['Tables']['membership_subscriptions']['Row'] & {
+    plan: { name_ar: string | null; name_en: string | null; tier: string | null } | null;
+  };
   const { data: subscriptions = [], isLoading: loadingSubs } = useQuery({
     queryKey: ['admin-subscriptions'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('membership_subscriptions')
-        .select('*, plan:membership_plans!plan_id(name_ar, name_en, tier)')
-        .order('created_at', { ascending: false })
-        .limit(500);
+      const { data, error } = await listAdminMembershipSubscriptions<AdminSubRow>();
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
   });
 
@@ -562,7 +568,7 @@ const AdminMemberships = () => {
   const { data: usageReport = [], isLoading: loadingUsage } = useQuery({
     queryKey: ['admin-membership-usage', usageOnlyFlagged],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('admin_list_membership_usage', {
+      const { data, error } = await adminListMembershipUsage({
         _only_over_or_near: usageOnlyFlagged,
         _limit: 500,
       });
@@ -644,7 +650,7 @@ const AdminMemberships = () => {
       const isNew = !(editingPlan as any).id;
       if (isNew) {
         const tier = (editingPlan as any).tier || 'free';
-        const { error } = await supabase.from('membership_plans').insert({
+        const { error } = await insertMembershipPlan({
           tier,
           name_ar: form.name_ar, name_en: form.name_en,
           description_ar: form.description_ar || null, description_en: form.description_en || null,
@@ -654,13 +660,16 @@ const AdminMemberships = () => {
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('membership_plans').update({
-          name_ar: form.name_ar, name_en: form.name_en,
-          description_ar: form.description_ar || null, description_en: form.description_en || null,
-          price_monthly: form.price_monthly, price_yearly: form.price_yearly,
-          is_active: form.is_active, sort_order: form.sort_order,
-          features, limits,
-        }).eq('id', (editingPlan as any).id);
+        const { error } = await updateMembershipPlanById({
+          id: (editingPlan as any).id,
+          values: {
+            name_ar: form.name_ar, name_en: form.name_en,
+            description_ar: form.description_ar || null, description_en: form.description_en || null,
+            price_monthly: form.price_monthly, price_yearly: form.price_yearly,
+            is_active: form.is_active, sort_order: form.sort_order,
+            features, limits,
+          },
+        });
         if (error) throw error;
       }
     },
