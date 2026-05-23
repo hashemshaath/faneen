@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface GenerateInviteKeyArgs {
   _business_id: string;
-  _role: string;
+  _role: 'viewer' | 'editor' | 'manager' | 'owner';
   _max_uses: number;
   _valid_days: number | null;
   _notes: string | null;
