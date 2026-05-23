@@ -4,7 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness, getActiveBusinessStaffMembership } from '@/modules/businesses';
 import { getProfileByUserId } from '@/modules/users';
-import { getUserRoles } from '@/services/userRoles';
+import { getUserRoles } from '@/modules/identity';
 
 interface UserProfile {
   id: string;

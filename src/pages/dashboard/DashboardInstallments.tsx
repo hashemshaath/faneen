@@ -10,7 +10,7 @@ import {
   listInstallmentPlansWithPaymentsForContracts,
   markInstallmentPaymentPaid,
 } from '@/modules/contracts';
-import { hasAdminAccess } from '@/services/userRoles';
+import { hasAdminAccess } from '@/modules/identity';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

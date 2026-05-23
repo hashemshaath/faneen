@@ -21,7 +21,7 @@ import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
 import { cn } from '@/lib/utils';
 import { maskEmail } from '@/lib/masking';
-import { countByRole } from '@/services/userRoles';
+import { countByRole } from '@/modules/identity';
 import { countProfiles, listProfiles } from '@/modules/users';
 import { countBusinesses } from '@/modules/businesses';
 import {
