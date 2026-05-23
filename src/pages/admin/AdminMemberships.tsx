@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useTransition } from 'react';
+import type { Database } from '@/integrations/supabase/types';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -479,21 +480,25 @@ const AdminMemberships = () => {
   }, []);
 
   /* ─── Queries ─── */
+  type AdminPlanRow = Database['public']['Tables']['membership_plans']['Row'];
   const { data: plans = [], isLoading: loadingPlans } = useQuery({
     queryKey: ['admin-membership-plans'],
     queryFn: async () => {
-      const { data, error } = await listAdminMembershipPlans();
+      const { data, error } = await listAdminMembershipPlans<AdminPlanRow>();
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
   });
 
+  type AdminSubRow = Database['public']['Tables']['membership_subscriptions']['Row'] & {
+    plan: { name_ar: string | null; name_en: string | null; tier: string | null } | null;
+  };
   const { data: subscriptions = [], isLoading: loadingSubs } = useQuery({
     queryKey: ['admin-subscriptions'],
     queryFn: async () => {
-      const { data, error } = await listAdminMembershipSubscriptions();
+      const { data, error } = await listAdminMembershipSubscriptions<AdminSubRow>();
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
   });
 
