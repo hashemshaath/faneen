@@ -4,7 +4,7 @@ import {
   ShieldCheck, ShieldX, ShieldAlert, Loader2, ExternalLink, MapPin, Star, BadgeCheck,
   Copy, Check, Share2, QrCode, Code2, AlertTriangle,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { getPublicBusinessForVerify } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { buildBadgeHtml, type BadgeBuildOptions } from '@/lib/badge/snippets';
