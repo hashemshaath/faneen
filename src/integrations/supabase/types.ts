@@ -8653,6 +8653,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          idempotency_key: string | null
           metadata: Json
           provider_user_id: string | null
           quote_request_lead_id: string | null
@@ -8666,6 +8667,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          idempotency_key?: string | null
           metadata?: Json
           provider_user_id?: string | null
           quote_request_lead_id?: string | null
@@ -8679,6 +8681,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          idempotency_key?: string | null
           metadata?: Json
           provider_user_id?: string | null
           quote_request_lead_id?: string | null
@@ -10958,6 +10961,17 @@ export type Database = {
         Args: { _business_id: string }
         Returns: number
       }
+      consume_provider_lead_credit: {
+        Args: {
+          p_business_id: string
+          p_cost: number
+          p_created_by?: string
+          p_idempotency_key?: string
+          p_quote_request_lead_id?: string
+          p_reason: string
+        }
+        Returns: Json
+      }
       contract_caller_can_act: {
         Args: { _contract_id: string }
         Returns: {
@@ -11391,6 +11405,16 @@ export type Database = {
           p95: number
           sample_count: number
         }[]
+      }
+      grant_monthly_provider_credit: {
+        Args: {
+          p_amount: number
+          p_period_end: string
+          p_period_start: string
+          p_plan_code?: string
+          p_subscription_id: string
+        }
+        Returns: Json
       }
       has_admin_access: { Args: { _user_id: string }; Returns: boolean }
       has_business_permission: {
