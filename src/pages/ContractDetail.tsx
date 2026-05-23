@@ -67,7 +67,7 @@ const SourceLeadSummaryCard: React.FC<{
   const { data, isLoading } = useQuery({
     queryKey: ['contract-source-lead-summary', contractId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_contract_source_lead_summary', {
+      const { data, error } = await getContractSourceLeadSummary({
         _contract_id: contractId,
       });
       if (error) return null;
