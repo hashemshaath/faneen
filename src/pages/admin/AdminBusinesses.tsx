@@ -551,9 +551,15 @@ const AdminBusinesses = () => {
 
   /* ─── Bulk mutation ─── */
   const bulkMutation = useMutation({
-    mutationFn: async ({ ids, patch }: { ids: string[]; patch: Record<string, unknown> }) => {
-      const { error } = await updateBusinessesByIds({ ids, values: patch });
-      if (error) throw error;
+    mutationFn: async ({ ids, patch }: { ids: string[]; patch: { is_active?: boolean; is_verified?: boolean } }) => {
+      // R4E-3: bulk sensitive toggles route through guarded wrappers only.
+      if ('is_active' in patch && typeof patch.is_active === 'boolean') {
+        await bulkSetBusinessesActive(ids, patch.is_active);
+      } else if ('is_verified' in patch && typeof patch.is_verified === 'boolean') {
+        await bulkSetBusinessesVerified(ids, patch.is_verified);
+      } else {
+        throw new Error('Unsupported bulk patch');
+      }
     },
     onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
