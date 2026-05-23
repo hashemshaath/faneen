@@ -31,6 +31,19 @@ type CategoryRow = {
   description_en?: string | null;
 };
 
+type CategoryBusinessRow = {
+  id: string;
+  username: string;
+  name_ar: string;
+  name_en: string | null;
+  logo_url: string | null;
+  rating_avg: number;
+  rating_count: number;
+  is_verified: boolean;
+  city_id: string | null;
+  cities: { name_ar: string; name_en: string } | null;
+};
+
 const Categories = () => {
   const { slug } = useParams<{ slug?: string }>();
   const { isRTL, language } = useLanguage();
@@ -73,10 +86,10 @@ const Categories = () => {
     [isRTL],
   );
 
-  const { data: businesses = [], isLoading: bizLoading } = useQuery({
+  const { data: businesses = [], isLoading: bizLoading } = useQuery<CategoryBusinessRow[]>({
     queryKey: ['businesses-by-category', selectedCategory?.id],
     // Use businesses_public to enforce is_active=true, approval_status='published', is_demo=false
-    queryFn: () => listPublicBusinessesByCategory(selectedCategory!.id, { limit: 50 }),
+    queryFn: () => listPublicBusinessesByCategory<CategoryBusinessRow>(selectedCategory!.id, { limit: 50 }),
     enabled: !!selectedCategory?.id,
   });
 
