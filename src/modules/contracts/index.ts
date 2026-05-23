@@ -26,6 +26,15 @@ export * from './services/pdf';
 export * from './services/leadRpcs';
 // CT-2 runtime read wrappers
 export * from './services/reads';
+// CT-3 runtime mutation/RPC wrappers
+export * from './services/updateContractById';
+export * from './services/createContractFromTemplate';
+export * from './services/updateContractDraftAutosave';
+export * from './services/searchContractClients';
+export * from './services/quickResolveContractClient';
+export * from './services/listClientSitesForContract';
+export * from './services/verifyContractPublic';
+export * from './services/pdfExports';
 // types.ts is available at '@/modules/contracts/types' for consumers that
 // want type-only imports. Not re-exported here to avoid duplicate type
 // re-exports (all types are already reachable via the value exports above).
