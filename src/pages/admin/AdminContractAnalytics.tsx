@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { getAdminContractAnalyticsDashboard } from '@/modules/contracts';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -108,8 +108,7 @@ const AdminContractAnalytics: React.FC = () => {
     staleTime: 60_000,
     retry: false,
     queryFn: async () => {
-      const { data: rpcData, error: rpcError } = await supabase.rpc(
-        'get_admin_contract_analytics_dashboard',
+      const { data: rpcData, error: rpcError } = await getAdminContractAnalyticsDashboard(
         { _period: period, _business_id: undefined, _include_demo: includeDemo },
       );
       if (rpcError) throw rpcError;
