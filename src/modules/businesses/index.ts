@@ -60,3 +60,21 @@ export { updateBusinessesByIds } from './services/updateBusinessesByIds';
 export type { UpdateBusinessesByIdsOptions } from './services/updateBusinessesByIds';
 export { insertBusiness } from './services/insertBusiness';
 export type { InsertBusinessOptions } from './services/insertBusiness';
+
+// R4B — Public read wrappers (businesses_public view)
+export { listTopPublicProviders } from './services/public/listTopPublicProviders';
+export type { ListTopPublicProvidersOptions } from './services/public/listTopPublicProviders';
+export { listPublicBusinessesByCategory } from './services/public/listPublicBusinessesByCategory';
+export type { ListPublicBusinessesByCategoryOptions } from './services/public/listPublicBusinessesByCategory';
+export { getPublicBusinessForVerify } from './services/public/getPublicBusinessForVerify';
+export { listPublicProvidersForAnalytics } from './services/public/listPublicProvidersForAnalytics';
+
+// R4A — Domain types
+export type {
+  BusinessRow,
+  BusinessInsert,
+  BusinessUpdate,
+  BusinessStaffRow,
+  BusinessStaffInsert,
+  BusinessStaffUpdate,
+} from './types';
