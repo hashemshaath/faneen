@@ -65,14 +65,14 @@ export const useServices = (businessId: string | undefined) =>
   useQuery({
     queryKey: ["services", businessId],
     queryFn: async () => {
-      const { data } = await listServicesByBusiness({
+      const { data } = await listServicesByBusiness<ServiceRow>({
         businessId: businessId!,
         select: "*",
         activeOnly: true,
         order: "sort_order",
       });
 
-      return (data ?? []) as ServiceRow[];
+      return data ?? [];
     },
     enabled: !!businessId,
   });
@@ -130,7 +130,7 @@ export const useBranches = (businessId: string | undefined) =>
   useQuery({
     queryKey: ["branches", businessId],
     queryFn: async () => {
-      const { data } = await listBranchesByBusiness({
+      const { data } = await listBranchesByBusiness<BranchWithJoins>({
         businessId: businessId!,
         select: "*, cities(name_ar, name_en), countries(name_ar, name_en)",
         activeOnly: true,
@@ -140,7 +140,7 @@ export const useBranches = (businessId: string | undefined) =>
         ],
       });
 
-      return (data ?? []) as BranchWithJoins[];
+      return data ?? [];
     },
     enabled: !!businessId,
   });
