@@ -4,8 +4,12 @@ import { Upload, RefreshCw, Trash2, ExternalLink, Download, X, Paperclip } from 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { createContractAttachment } from '@/modules/contracts/services/childTables';
+import {
+  uploadContractAttachmentFile,
+  getContractAttachmentPublicUrl,
+  removeContractAttachmentFiles,
+} from '@/modules/contracts/services/attachments';
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
 import {
   validateAttachmentFile,
@@ -66,12 +70,14 @@ export const MeasurementAttachmentsPanel: React.FC<Props> = ({
       setProgress(15);
       const ext = pending.name.split('.').pop() || 'bin';
       const path = `${contractId}/measurements/${measurementId}/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from('contract-attachments')
-        .upload(path, pending, { contentType: pending.type || 'application/octet-stream', upsert: false });
+      const { error: upErr } = await uploadContractAttachmentFile(
+        path,
+        pending,
+        { contentType: pending.type || 'application/octet-stream', upsert: false },
+      );
       if (upErr) throw upErr;
       setProgress(70);
-      const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
+      const { data: urlData } = getContractAttachmentPublicUrl(path);
       const { error } = await createContractAttachment({
         contract_id: contractId,
         user_id: userId,
@@ -87,7 +93,7 @@ export const MeasurementAttachmentsPanel: React.FC<Props> = ({
         payment_id: null,
       });
       if (error) {
-        await supabase.storage.from('contract-attachments').remove([path]).catch(() => {});
+        await removeContractAttachmentFiles([path]).catch(() => {});
         throw error;
       }
       setProgress(100);

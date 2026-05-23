@@ -10,8 +10,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { createContractAttachment } from '@/modules/contracts/services/childTables';
+import {
+  uploadContractAttachmentFile,
+  getContractAttachmentPublicUrl,
+  removeContractAttachmentFiles,
+} from '@/modules/contracts/services/attachments';
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
 import {
   validateAttachmentFile,
@@ -100,15 +104,17 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
       else if (linkType === 'payment') prefix = `${contractId}/payments/${linkId}`;
       const path = `${prefix}/${Date.now()}.${ext}`;
 
-      const { error: upErr } = await supabase.storage
-        .from('contract-attachments')
-        .upload(path, pendingFile, { contentType: pendingFile.type || 'application/octet-stream', upsert: false });
+      const { error: upErr } = await uploadContractAttachmentFile(
+        path,
+        pendingFile,
+        { contentType: pendingFile.type || 'application/octet-stream', upsert: false },
+      );
       if (upErr) throw upErr;
       setProgress(70);
 
       // Keep file_url populated for backward compatibility (private bucket;
       // actual access uses signed URLs via storage_path).
-      const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
+      const { data: urlData } = getContractAttachmentPublicUrl(path);
 
               const insertPayload = {
         contract_id: contractId,
@@ -130,7 +136,7 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
       const { error } = await createContractAttachment(insertPayload);
       if (error) {
         // Best-effort cleanup of orphaned storage object
-        await supabase.storage.from('contract-attachments').remove([path]).catch(() => {});
+        await removeContractAttachmentFiles([path]).catch(() => {});
         throw error;
       }
       setProgress(100);
