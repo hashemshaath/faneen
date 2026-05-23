@@ -19,9 +19,9 @@
 --   G1 — admin bulk mutation does not write admin_activity_log per business
 --   G2 — sole-owner business_staff delete is client-guard only
 --   G3 — businesses.membership_tier writes bypass provider_subscriptions state
---   G4 — owner can self-write is_verified / approval_status / is_demo
---        (current "Users can update their own business" policy lacks column grants)
---   G5 — owner can re-key own businesses.user_id (ownership transfer unguarded)
+--   G4 — CLOSED by R4E-2C-1 (trg_businesses_sensitive_guard): owner cannot
+--        self-write is_verified / approval_status / is_demo / is_active
+--   G5 — CLOSED by R4E-2C-1: owner cannot re-key own businesses.user_id
 -- =============================================================================
 
 BEGIN;
@@ -75,13 +75,12 @@ VALUES
 -- ---------------------------------------------------------------------------
 SELECT tests_helpers.become('11111111-1111-1111-1111-111111111111');
 
-SELECT todo_start('TODO_GAP_G4: owner self-verify currently permitted by RLS');
-SELECT is_empty(
+SELECT throws_ok(
   $$ UPDATE public.businesses SET is_verified = true
-     WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' RETURNING id $$,
-  'T1 owner cannot self-set is_verified=true'
+     WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' $$,
+  '42501', NULL,
+  'T1 owner cannot self-set is_verified=true (R4E-2C-1 trigger)'
 );
-SELECT todo_end();
 
 -- ---------------------------------------------------------------------------
 -- T2 — stranger cannot flip is_active on owner business
@@ -97,24 +96,22 @@ SELECT is_empty(
 -- T3 — owner cannot set is_demo=true                            [TODO_GAP_G4]
 -- ---------------------------------------------------------------------------
 SELECT tests_helpers.become('11111111-1111-1111-1111-111111111111');
-SELECT todo_start('TODO_GAP_G4: owner can currently flip is_demo');
-SELECT is_empty(
+SELECT throws_ok(
   $$ UPDATE public.businesses SET is_demo = true
-     WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' RETURNING id $$,
-  'T3 owner cannot self-set is_demo=true'
+     WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' $$,
+  '42501', NULL,
+  'T3 owner cannot self-set is_demo=true (R4E-2C-1 trigger)'
 );
-SELECT todo_end();
 
 -- ---------------------------------------------------------------------------
 -- T4 — owner cannot self-approve                                 [TODO_GAP_G4]
 -- ---------------------------------------------------------------------------
-SELECT todo_start('TODO_GAP_G4: owner can currently self-approve approval_status');
-SELECT is_empty(
+SELECT throws_ok(
   $$ UPDATE public.businesses SET approval_status = 'approved'
-     WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' RETURNING id $$,
-  'T4 owner cannot self-set approval_status=approved'
+     WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' $$,
+  '42501', NULL,
+  'T4 owner cannot self-set approval_status=approved (R4E-2C-1 trigger)'
 );
-SELECT todo_end();
 
 -- ---------------------------------------------------------------------------
 -- T5 — stranger cannot update businesses.user_id
@@ -129,14 +126,13 @@ SELECT is_empty(
 
 -- T5b — owner cannot re-key own business.user_id                [TODO_GAP_G5]
 SELECT tests_helpers.become('11111111-1111-1111-1111-111111111111');
-SELECT todo_start('TODO_GAP_G5: owner can currently transfer ownership');
-SELECT is_empty(
+SELECT throws_ok(
   $$ UPDATE public.businesses
      SET user_id = '22222222-2222-2222-2222-222222222222'
-     WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' RETURNING id $$,
-  'T5b owner cannot transfer own businesses.user_id'
+     WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' $$,
+  '42501', NULL,
+  'T5b owner cannot transfer own businesses.user_id (R4E-2C-1 trigger)'
 );
-SELECT todo_end();
 
 -- ---------------------------------------------------------------------------
 -- T6 — stranger cannot insert business_staff
