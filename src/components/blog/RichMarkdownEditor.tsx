@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity';
 import { compressImage } from '@/lib/image-compress';
 import {
   ALLOWED_PUBLIC_IMAGE_MIMES,
