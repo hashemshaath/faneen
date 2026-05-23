@@ -16,7 +16,8 @@
 --       them without failing CI while the gap-closure migrations are designed.
 --
 -- TODO_GAP markers (see R4E dry runs):
---   G1 — admin bulk mutation does not write admin_activity_log per business
+--   G1 — CLOSED by R4E-2C-3 (trg_businesses_sensitive_audit): admin bulk
+--        mutation writes one admin_activity_log row per affected business
 --   G2 — CLOSED by R4E-2C-2 (trg_business_staff_last_owner_guard)
 --   G3 — businesses.membership_tier writes bypass provider_subscriptions state
 --   G4 — CLOSED by R4E-2C-1 (trg_businesses_sensitive_guard): owner cannot
@@ -31,7 +32,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET search_path = public, extensions;
 
-SELECT plan(31);
+SELECT plan(33);
 
 -- ---------------------------------------------------------------------------
 -- SEED (as superuser; RLS bypassed for table owners)
@@ -256,25 +257,59 @@ UPDATE public.businesses SET is_active = true
  WHERE id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
               'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
 
-SELECT todo_start('TODO_GAP_G1: no DB trigger writes admin_activity_log on bulk flips');
+-- T12a — bulk admin update writes exactly one admin_activity_log row per row,
+-- carrying the changed field in details->'changed_fields'.
 WITH bulk AS (
-  UPDATE public.businesses SET is_active = false
+  UPDATE public.businesses SET is_verified = true
    WHERE id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')
    RETURNING id
 )
-SELECT count(*) FROM bulk;  -- materialise
+SELECT count(*) FROM bulk;
 
 SELECT results_eq(
   $$ SELECT count(*)::bigint FROM public.admin_activity_log
-     WHERE entity_type = 'business'
-       AND entity_id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                         'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')
-       AND created_at > now() - interval '1 minute' $$,
+      WHERE action = 'business_sensitive_update'
+        AND entity_type = 'business'
+        AND entity_id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                          'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')
+        AND details -> 'changed_fields' ? 'is_verified' $$,
   $$ VALUES (2::bigint) $$,
-  'T12 one admin_activity_log row per affected business'
+  'T12a bulk admin update writes one audit row per business with is_verified change'
 );
-SELECT todo_end();
+
+-- T12b — UPDATE on a non-tracked field does NOT write an audit row.
+UPDATE public.businesses SET name_ar = COALESCE(name_ar, 'biz-a') || ' '
+ WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+SELECT results_eq(
+  $$ SELECT count(*)::bigint FROM public.admin_activity_log
+      WHERE action = 'business_sensitive_update'
+        AND entity_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+        AND details -> 'changed_fields' ? 'name_ar' $$,
+  $$ VALUES (0::bigint) $$,
+  'T12b non-tracked field update writes no admin_activity_log row'
+);
+
+-- T12c — NULL auth.uid() (service-role / migration context) skips the audit
+-- insert because admin_activity_log.user_id is NOT NULL and no sentinel is
+-- invented.
+SELECT tests_helpers.become_service();
+
+UPDATE public.businesses SET is_demo = true
+ WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+SELECT results_eq(
+  $$ SELECT count(*)::bigint FROM public.admin_activity_log
+      WHERE action = 'business_sensitive_update'
+        AND entity_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+        AND details -> 'changed_fields' ? 'is_demo' $$,
+  $$ VALUES (0::bigint) $$,
+  'T12c service-role / NULL auth.uid() does not insert admin_activity_log'
+);
+
+-- Restore admin context for any downstream tests in this file.
+SELECT tests_helpers.become('33333333-3333-3333-3333-333333333333');
 
 -- ---------------------------------------------------------------------------
 -- T13 — membership_tier write without active provider_subscriptions  [G3]
