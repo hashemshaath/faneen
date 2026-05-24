@@ -609,6 +609,7 @@ const LifecycleActions: React.FC<{
 // Detail panel (inline — no popups per project rules)
 // ──────────────────────────────────────────────
 const TransferTrail: React.FC<{ barcodeId: string }> = ({ barcodeId }) => {
+  // placeholder marker
   const bi = useBi();
   const { isRTL } = useLanguage();
 
