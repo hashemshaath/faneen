@@ -10,6 +10,9 @@ import {
   listBarcodeRegistryRecords,
   getBarcodeRegistrySummary,
   getBarcodeRegistryRecordById,
+  freezeBarcodeAdmin,
+  archiveBarcodeAdmin,
+  restoreBarcodeAdmin,
 } from '../adminBarcodeRegistry';
 
 beforeEach(() => {
@@ -68,5 +71,54 @@ describe('adminBarcodeRegistry service wrappers', () => {
     rpcMock.mockResolvedValue({ data: { barcode: {}, events: [], links: [], counts: {} }, error: null });
     await getBarcodeRegistryRecordById('bc-123');
     expect(rpcMock).toHaveBeenCalledWith('admin_get_barcode_detail', { _barcode_id: 'bc-123' });
+  });
+});
+
+describe('adminBarcodeRegistry lifecycle wrappers', () => {
+  it('freezeBarcodeAdmin calls admin_freeze_barcode with id + reason and returns raw envelope', async () => {
+    const envelope = { data: { ok: true, new_status: 'frozen' }, error: null };
+    rpcMock.mockResolvedValue(envelope);
+    const out = await freezeBarcodeAdmin('bc-1', 'manual review');
+    expect(rpcMock).toHaveBeenCalledWith('admin_freeze_barcode', {
+      _barcode_id: 'bc-1',
+      _reason: 'manual review',
+    });
+    expect(out).toBe(envelope);
+  });
+
+  it('freezeBarcodeAdmin defaults reason to null when omitted', async () => {
+    rpcMock.mockResolvedValue({ data: { ok: true }, error: null });
+    await freezeBarcodeAdmin('bc-1');
+    expect(rpcMock).toHaveBeenCalledWith('admin_freeze_barcode', {
+      _barcode_id: 'bc-1',
+      _reason: null,
+    });
+  });
+
+  it('archiveBarcodeAdmin calls admin_archive_barcode and passes errors through unthrown', async () => {
+    const envelope = { data: null, error: { message: 'forbidden' } };
+    rpcMock.mockResolvedValue(envelope);
+    const out = await archiveBarcodeAdmin('bc-2', null);
+    expect(rpcMock).toHaveBeenCalledWith('admin_archive_barcode', {
+      _barcode_id: 'bc-2',
+      _reason: null,
+    });
+    expect(out).toBe(envelope);
+  });
+
+  it('restoreBarcodeAdmin calls admin_restore_barcode with id + reason', async () => {
+    rpcMock.mockResolvedValue({ data: { ok: true, new_status: 'active' }, error: null });
+    await restoreBarcodeAdmin('bc-3', 'admin restore');
+    expect(rpcMock).toHaveBeenCalledWith('admin_restore_barcode', {
+      _barcode_id: 'bc-3',
+      _reason: 'admin restore',
+    });
+  });
+
+  it('lifecycle wrappers never throw on RPC error (raw envelope contract)', async () => {
+    rpcMock.mockResolvedValue({ data: null, error: { message: 'boom' } });
+    await expect(freezeBarcodeAdmin('x')).resolves.toMatchObject({ error: { message: 'boom' } });
+    await expect(archiveBarcodeAdmin('x')).resolves.toMatchObject({ error: { message: 'boom' } });
+    await expect(restoreBarcodeAdmin('x')).resolves.toMatchObject({ error: { message: 'boom' } });
   });
 });
