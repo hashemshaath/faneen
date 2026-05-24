@@ -26,6 +26,7 @@ Authorization tokens and apikeys in the commands below are redacted
 | 29 | membership-lifecycle-dispatcher      | `30 2 * * *`   | `membership-lifecycle-dispatcher`            | cron     | OK |
 | 30 | membership-payment-reconcile-hourly  | `0 * * * *`    | `membership-payment-reconcile`               | cron     | OK (new) |
 | 31 | monthly-provider-credit-grant        | `0 0 1 * *`    | `monthly-provider-credit-grant`              | cron     | OK (new) |
+| 32 | prune-cron-run-log-daily             | `30 3 * * *`   | SQL `public.prune_cron_run_log(90)`          | DB func  | OK (new) |
 
 ### Removed in EDGE-CRON-REPAIR-1
 
@@ -77,6 +78,27 @@ SELECT net.http_post(
 ## Issues found
 
 None as of EDGE-CRON-REPAIR-1.
+
+## Observability (EDGE-CRON-OBSERVABILITY-1 / -2)
+
+- Table `public.cron_run_log` stores one row per instrumented cron run
+  (job_name, function_name, started_at, finished_at, ok, status, summary,
+  error_code, error_message, duration_ms).
+- Helper `public.log_cron_run(...)` is `SECURITY DEFINER`, pinned
+  `search_path = public`, strips secret-like keys from `summary`, and
+  truncates `error_message` to 500 chars. EXECUTE is granted to
+  `service_role` only.
+- Read access is admin/super_admin only (RLS); UI uses
+  `listCronRunLogs` (`src/modules/system/services/cronRuns.ts`).
+- Instrumented functions:
+  - `membership-payment-reconcile` (cron-sweep branch only)
+  - `monthly-provider-credit-grant`
+  - `membership-lifecycle-dispatcher` (added in EDGE-CRON-OBSERVABILITY-2)
+- Retention: `public.prune_cron_run_log(_older_than_days int default 90)`
+  is `SECURITY DEFINER`, pinned `search_path = public`, clamps days to a
+  minimum of 30, returns `{ ok, deleted, older_than_days }`. Scheduled
+  as jobid 32 (`prune-cron-run-log-daily`, `30 3 * * *`).
+- Admin UI: `/admin/cron-runs` (ProtectedRoute requireAdmin, `useNoIndex`).
 
 ## Security / redaction
 

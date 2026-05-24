@@ -12054,6 +12054,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      prune_cron_run_log: { Args: { _older_than_days?: number }; Returns: Json }
       quick_resolve_contract_client: {
         Args: { _email?: string; _phone?: string }
         Returns: {
