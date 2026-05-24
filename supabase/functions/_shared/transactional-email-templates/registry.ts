@@ -42,6 +42,7 @@ import { template as membershipRenewalFailed } from './membership-renewal-failed
 import { template as membershipPromoRedeemed } from './membership-promo-redeemed.tsx'
 import { template as membershipCancelledImmediately } from './membership-cancelled-immediately.tsx'
 import { template as membershipPaymentMarkedPaid } from './membership-payment-marked-paid.tsx'
+import { template as membershipPaymentMarkedRefunded } from './membership-payment-marked-refunded.tsx'
 import { template as contractPaymentRecorded } from './contract-payment-recorded.tsx'
 import { template as contractPaymentDue } from './contract-payment-due.tsx'
 import { template as contractMilestoneCompleted } from './contract-milestone-completed.tsx'
@@ -90,6 +91,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'membership-promo-redeemed': membershipPromoRedeemed,
   'membership-cancelled-immediately': membershipCancelledImmediately,
   'membership-payment-marked-paid': membershipPaymentMarkedPaid,
+  'membership-payment-marked-refunded': membershipPaymentMarkedRefunded,
   'contract-payment-recorded': contractPaymentRecorded,
   'contract-payment-due': contractPaymentDue,
   'contract-milestone-completed': contractMilestoneCompleted,
