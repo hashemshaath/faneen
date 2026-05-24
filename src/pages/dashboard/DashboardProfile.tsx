@@ -1,0 +1,554 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import {
+  User, Mail, Phone, Globe, MapPin, Hash, Save, Loader2, Camera,
+  ShieldCheck, ExternalLink, Building2, Crown, AtSign, Languages,
+  AlertCircle, ArrowLeft, Settings as SettingsIcon, Copy, Check,
+} from 'lucide-react';
+
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { usePageMeta } from '@/hooks/usePageMeta';
+import { useNoIndex } from '@/hooks/useNoIndex';
+import { useDisplayRefId } from '@/hooks/useDisplayRefId';
+
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ImageUpload } from '@/components/ui/image-upload';
+
+import { supabase } from '@/integrations/supabase/client';
+import { updateProfile } from '@/modules/users';
+import { getOwnerBusiness } from '@/modules/businesses';
+import { getDisplayEmail, isSyntheticPhoneEmail } from '@/lib/auth-email';
+import { cn } from '@/lib/utils';
+import { UsernamePicker } from '@/components/common/UsernamePicker';
+
+type RefRow = { id: string; name_ar: string; name_en: string };
+type CityRow = RefRow & { country_id: string };
+
+const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
+
+const DashboardProfile: React.FC = () => {
+  useNoIndex();
+  const navigate = useNavigate();
+  const { isRTL } = useLanguage();
+  const { user, profile, refreshProfile } = useAuth();
+  const displayRefId = useDisplayRefId();
+  const qc = useQueryClient();
+  usePageMeta({
+    title: t(isRTL, 'الملف الشخصي | قِطاعات', 'My Profile | Qitaat'),
+    noindex: true,
+  });
+
+  // ───────────────────────── Form state
+  const [form, setForm] = useState({
+    full_name: '',
+    username: '',
+    email: '',
+    phone: '',
+    avatar_url: '',
+    preferred_language: 'ar' as 'ar' | 'en',
+    country_id: '' as string | null,
+    city_id: '' as string | null,
+  });
+  const [usernameOk, setUsernameOk] = useState(true); // empty username is acceptable for individuals
+  const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Seed form from profile
+  useEffect(() => {
+    if (!profile) return;
+    setForm({
+      full_name: profile.full_name ?? '',
+      username: profile.username ?? '',
+      email: profile.email ?? '',
+      phone: profile.phone ?? '',
+      avatar_url: profile.avatar_url ?? '',
+      preferred_language: (profile.preferred_language as 'ar' | 'en') ?? 'ar',
+      country_id: profile.country_id ?? null,
+      city_id: profile.city_id ?? null,
+    });
+    setUsernameOk(true);
+  }, [profile]);
+
+  // Owner business (for "view as provider" link)
+  const { data: business } = useQuery({
+    queryKey: ['profile-page-owner-business', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await getOwnerBusiness<{ id: string; username: string; name_ar: string; name_en: string }>({
+        userId: user.id, select: 'id, username, name_ar, name_en',
+      });
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+
+  // Reference data
+  const { data: countries = [] } = useQuery({
+    queryKey: ['ref-countries'],
+    queryFn: async () => {
+      const { data } = await supabase.from('countries').select('id, name_ar, name_en').order('name_en');
+      return (data ?? []) as RefRow[];
+    },
+    staleTime: 5 * 60_000,
+  });
+  const { data: cities = [] } = useQuery({
+    queryKey: ['ref-cities', form.country_id],
+    queryFn: async () => {
+      if (!form.country_id) return [] as CityRow[];
+      const { data } = await supabase.from('cities')
+        .select('id, name_ar, name_en, country_id')
+        .eq('country_id', form.country_id)
+        .order('name_en');
+      return (data ?? []) as CityRow[];
+    },
+    enabled: !!form.country_id,
+    staleTime: 5 * 60_000,
+  });
+
+  // Dirty + completeness
+  const dirty = useMemo(() => {
+    if (!profile) return false;
+    return (
+      form.full_name !== (profile.full_name ?? '') ||
+      form.username !== (profile.username ?? '') ||
+      form.email !== (profile.email ?? '') ||
+      form.phone !== (profile.phone ?? '') ||
+      form.avatar_url !== (profile.avatar_url ?? '') ||
+      form.preferred_language !== ((profile.preferred_language as 'ar' | 'en') ?? 'ar') ||
+      form.country_id !== (profile.country_id ?? null) ||
+      form.city_id !== (profile.city_id ?? null)
+    );
+  }, [form, profile]);
+
+  const completion = useMemo(() => {
+    const checks = [
+      !!form.full_name.trim(),
+      !!form.avatar_url,
+      !!form.username,
+      !!form.email.trim(),
+      !!form.phone.trim(),
+      !!form.country_id,
+      !!form.city_id,
+    ];
+    const done = checks.filter(Boolean).length;
+    return Math.round((done / checks.length) * 100);
+  }, [form]);
+
+  // ───────────────────────── Save
+  const mut = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Not authenticated');
+      if (form.username && !usernameOk) {
+        throw new Error(t(isRTL, 'اسم المستخدم غير صالح أو محجوز', 'Username is invalid or taken'));
+      }
+      const { error } = await updateProfile({
+        userId: user.id,
+        values: {
+          full_name: form.full_name.trim() || null,
+          username: form.username ? form.username : null,
+          email: form.email.trim() || null,
+          phone: form.phone.trim() || '',
+          avatar_url: form.avatar_url || null,
+          preferred_language: form.preferred_language,
+          country_id: form.country_id,
+          city_id: form.city_id,
+        },
+      });
+      if (error) throw error;
+    },
+    onMutate: () => setSaving(true),
+    onSettled: () => setSaving(false),
+    onSuccess: async () => {
+      await refreshProfile();
+      qc.invalidateQueries({ queryKey: ['profile'] });
+      qc.invalidateQueries({ queryKey: ['profile-page-owner-business'] });
+      toast.success(t(isRTL, 'تم حفظ الملف الشخصي', 'Profile saved'));
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const publicUrl = form.username ? `${window.location.origin}/${form.username}` : null;
+  const copyPublic = async () => {
+    if (!publicUrl) return;
+    await navigator.clipboard.writeText(publicUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  // ───────────────────────── Render
+  return (
+    <DashboardLayout>
+      <div className="max-w-5xl mx-auto space-y-5 pb-24">
+        {/* Hero header */}
+        <Card className="relative overflow-hidden border-border/60">
+          {/* Decorative banner */}
+          <div
+            className="h-24 sm:h-28 w-full"
+            style={{
+              background:
+                'radial-gradient(120% 100% at 100% 0%, hsl(var(--primary) / 0.18) 0%, transparent 55%), linear-gradient(135deg, hsl(var(--primary) / 0.85), hsl(var(--primary) / 0.55))',
+            }}
+            aria-hidden
+          />
+          <CardContent className="p-4 sm:p-6 -mt-12 sm:-mt-14">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              <div className="flex items-end gap-4 min-w-0">
+                {/* Avatar */}
+                <div className="shrink-0">
+                  <ImageUpload
+                    bucket="business-assets"
+                    folder={`avatars/${user?.id}`}
+                    value={form.avatar_url || undefined}
+                    onChange={(url) => setForm((f) => ({ ...f, avatar_url: url }))}
+                    onRemove={() => setForm((f) => ({ ...f, avatar_url: '' }))}
+                    aspectRatio="square"
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-4 border-background shadow-md"
+                    placeholder=""
+                  />
+                </div>
+                <div className="min-w-0 pb-1">
+                  <h1 className="text-xl sm:text-2xl font-bold leading-tight truncate">
+                    {form.full_name || t(isRTL, 'حسابي', 'My account')}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                    {displayRefId && (
+                      <Badge variant="outline" className="tech-content text-[10px] h-5">
+                        <Hash className="w-2.5 h-2.5 me-1" />{displayRefId}
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-[10px] h-5">
+                      {profile?.account_type === 'business'
+                        ? <><Building2 className="w-2.5 h-2.5 me-1" />{t(isRTL, 'مزود خدمة', 'Provider')}</>
+                        : <><User className="w-2.5 h-2.5 me-1" />{t(isRTL, 'فرد', 'Individual')}</>}
+                    </Badge>
+                    <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5">
+                      <Crown className="w-2.5 h-2.5 me-1" />{profile?.membership_tier ?? 'free'}
+                    </Badge>
+                    {profile?.phone_verified && (
+                      <Badge className="bg-success/10 text-success border-success/30 text-[10px] h-5">
+                        <ShieldCheck className="w-2.5 h-2.5 me-1" />{t(isRTL, 'موثق', 'Verified')}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <Button
+                  onClick={() => mut.mutate()}
+                  disabled={!dirty || saving || (form.username !== '' && !usernameOk)}
+                  className="gap-1.5"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {t(isRTL, 'حفظ التغييرات', 'Save changes')}
+                </Button>
+              </div>
+            </div>
+
+            {/* Completion */}
+            <div className="mt-5 grid sm:grid-cols-[1fr_auto] gap-3 items-center">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{t(isRTL, 'اكتمال الملف الشخصي', 'Profile completion')}</span>
+                  <span className="tech-content font-bold text-foreground">{completion}%</span>
+                </div>
+                <Progress value={completion} className="h-1.5" />
+              </div>
+              {publicUrl && (
+                <div className="flex items-center gap-1">
+                  <Link
+                    to={`/${form.username}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline px-2 py-1 rounded-md hover:bg-primary/5"
+                  >
+                    {t(isRTL, 'عرض الصفحة العامة', 'View public page')}
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyPublic}
+                    aria-label={t(isRTL, 'نسخ الرابط', 'Copy link')}>
+                    {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Two-column layout */}
+        <div className="grid gap-5 lg:grid-cols-3">
+          {/* MAIN — Identity + Contact + Location */}
+          <div className="lg:col-span-2 space-y-5">
+            {/* Identity */}
+            <Card>
+              <CardContent className="p-4 sm:p-5 space-y-4">
+                <header className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-bold">{t(isRTL, 'الهوية', 'Identity')}</h2>
+                </header>
+
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground">
+                    {t(isRTL, 'الاسم الكامل', 'Full name')} <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    value={form.full_name}
+                    onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
+                    dir="auto"
+                    className="mt-1 h-11 rounded-xl"
+                    placeholder={t(isRTL, 'اكتب اسمك الكامل', 'Enter your full name')}
+                    maxLength={120}
+                  />
+                </div>
+
+                <UsernamePicker
+                  isRTL={isRTL}
+                  label={t(isRTL, 'اسم المستخدم (اختياري)', 'Username (optional)')}
+                  value={form.username}
+                  onChange={(v) => setForm((f) => ({ ...f, username: v }))}
+                  onValidChange={(s) => setUsernameOk(form.username === '' ? true : s.isValid && s.isAvailable)}
+                  excludeUserId={user?.id ?? null}
+                  placeholder={t(isRTL, 'مثال: ahmad-aluminum', 'e.g. ahmad-aluminum')}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Contact */}
+            <Card>
+              <CardContent className="p-4 sm:p-5 space-y-4">
+                <header className="flex items-center gap-2">
+                  <AtSign className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-bold">{t(isRTL, 'وسائل التواصل', 'Contact')}</h2>
+                </header>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      {t(isRTL, 'البريد الإلكتروني للملف', 'Profile email')}
+                    </Label>
+                    <div className="relative mt-1">
+                      <Mail className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60"
+                        style={{ [isRTL ? 'right' : 'left']: '12px' } as React.CSSProperties} aria-hidden />
+                      <Input
+                        type="email" dir="ltr" autoComplete="email"
+                        value={form.email}
+                        onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                        className="h-11 rounded-xl tech-content"
+                        style={{ paddingInlineStart: '38px' }}
+                        placeholder="name@example.com"
+                        maxLength={255}
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1 flex items-start gap-1">
+                      <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
+                      {isSyntheticPhoneEmail(user?.email)
+                        ? t(isRTL,
+                            'هذا البريد للعرض فقط. تسجيل الدخول يتم عبر رقم الجوال.',
+                            'This email is for display only. You sign in with your phone number.')
+                        : (
+                          <span>
+                            {t(isRTL, 'بريد تسجيل الدخول:', 'Login email:')}{' '}
+                            <span className="tech-content font-medium">{user?.email}</span>
+                          </span>
+                        )}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      {t(isRTL, 'رقم الجوال', 'Phone number')}
+                    </Label>
+                    <div className="relative mt-1">
+                      <Phone className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60"
+                        style={{ [isRTL ? 'right' : 'left']: '12px' } as React.CSSProperties} aria-hidden />
+                      <Input
+                        type="tel" dir="ltr" autoComplete="tel"
+                        value={form.phone}
+                        onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                        className="h-11 rounded-xl tech-content"
+                        style={{ paddingInlineStart: '38px' }}
+                        placeholder="+966 5x xxx xxxx"
+                        maxLength={20}
+                      />
+                    </div>
+                    {profile?.phone_verified
+                      ? (
+                        <p className="text-[10px] text-success mt-1 flex items-center gap-1">
+                          <ShieldCheck className="w-3 h-3" />
+                          {t(isRTL, 'الرقم موثق', 'Phone is verified')}
+                        </p>
+                      )
+                      : (
+                        <p className="text-[10px] text-warning mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {t(isRTL, 'الرقم غير موثق', 'Phone is not verified')}
+                        </p>
+                      )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Location & Preferences */}
+            <Card>
+              <CardContent className="p-4 sm:p-5 space-y-4">
+                <header className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-bold">{t(isRTL, 'الموقع والتفضيلات', 'Location & preferences')}</h2>
+                </header>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الدولة', 'Country')}</Label>
+                    <Select
+                      value={form.country_id ?? ''}
+                      onValueChange={(v) => setForm((f) => ({ ...f, country_id: v || null, city_id: null }))}
+                    >
+                      <SelectTrigger className="mt-1 h-11 rounded-xl"><SelectValue placeholder={t(isRTL, 'اختر الدولة', 'Select country')} /></SelectTrigger>
+                      <SelectContent>
+                        {countries.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'المدينة', 'City')}</Label>
+                    <Select
+                      value={form.city_id ?? ''}
+                      onValueChange={(v) => setForm((f) => ({ ...f, city_id: v || null }))}
+                      disabled={!form.country_id || cities.length === 0}
+                    >
+                      <SelectTrigger className="mt-1 h-11 rounded-xl"><SelectValue placeholder={t(isRTL, 'اختر المدينة', 'Select city')} /></SelectTrigger>
+                      <SelectContent>
+                        {cities.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      <Languages className="w-3 h-3 inline me-1" />
+                      {t(isRTL, 'اللغة المفضلة', 'Preferred language')}
+                    </Label>
+                    <Select
+                      value={form.preferred_language}
+                      onValueChange={(v) => setForm((f) => ({ ...f, preferred_language: v as 'ar' | 'en' }))}
+                    >
+                      <SelectTrigger className="mt-1 h-11 rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ar">العربية</SelectItem>
+                        <SelectItem value="en">English</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* SIDE — quick info + jump-offs */}
+          <div className="space-y-5">
+            <Card>
+              <CardContent className="p-4 sm:p-5 space-y-3">
+                <header className="flex items-center gap-2">
+                  <Hash className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-bold">{t(isRTL, 'معلومات الحساب', 'Account information')}</h2>
+                </header>
+                <Row
+                  icon={<Hash className="w-3.5 h-3.5" />}
+                  label={t(isRTL, 'المعرّف', 'Reference ID')}
+                  value={<span className="tech-content">{displayRefId ?? profile?.ref_id ?? '—'}</span>}
+                />
+                <Row
+                  icon={isSyntheticPhoneEmail(user?.email) ? <Phone className="w-3.5 h-3.5" /> : <Mail className="w-3.5 h-3.5" />}
+                  label={isSyntheticPhoneEmail(user?.email) ? t(isRTL, 'رقم الدخول', 'Login phone') : t(isRTL, 'بريد الدخول', 'Login email')}
+                  value={
+                    <span className="tech-content truncate max-w-[180px] inline-block align-middle">
+                      {isSyntheticPhoneEmail(user?.email)
+                        ? (user?.phone ? `+${user.phone}` : (profile?.phone || '—'))
+                        : (user?.email ?? '—')}
+                    </span>
+                  }
+                />
+                <Row
+                  icon={<Mail className="w-3.5 h-3.5" />}
+                  label={t(isRTL, 'البريد الرسمي', 'Profile email')}
+                  value={
+                    <span className="tech-content truncate max-w-[180px] inline-block align-middle">
+                      {getDisplayEmail({ authEmail: user?.email, profileEmail: profile?.email }) ?? '—'}
+                    </span>
+                  }
+                />
+                <Row
+                  icon={<Globe className="w-3.5 h-3.5" />}
+                  label={t(isRTL, 'اللغة', 'Language')}
+                  value={form.preferred_language === 'ar' ? 'العربية' : 'English'}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Quick jump-offs */}
+            <Card>
+              <CardContent className="p-4 sm:p-5 space-y-2">
+                <header className="flex items-center gap-2 mb-1">
+                  <SettingsIcon className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-bold">{t(isRTL, 'روابط سريعة', 'Quick links')}</h2>
+                </header>
+                <JumpLink to="/dashboard/settings?tab=security"
+                  label={t(isRTL, 'الأمان وكلمة المرور', 'Security & password')} />
+                <JumpLink to="/dashboard/settings?tab=notifications"
+                  label={t(isRTL, 'تفضيلات الإشعارات', 'Notification preferences')} />
+                <JumpLink to="/dashboard/communication-preferences"
+                  label={t(isRTL, 'تفضيلات التواصل', 'Communication preferences')} />
+                <JumpLink to="/membership"
+                  label={t(isRTL, 'العضوية والاشتراك', 'Membership & subscription')} />
+                {business && (
+                  <JumpLink to="/dashboard/business-edit"
+                    label={t(isRTL, 'تعديل بيانات المنشأة', 'Edit business profile')} />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Footer back link */}
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-2">
+          <button onClick={() => navigate('/dashboard')} className="hover:text-foreground inline-flex items-center gap-1">
+            <ArrowLeft className={cn('w-3.5 h-3.5', isRTL && 'rotate-180')} />
+            {t(isRTL, 'العودة إلى لوحة التحكم', 'Back to dashboard')}
+          </button>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+};
+
+// ───────────────────────── tiny presentational helpers
+const Row: React.FC<{ icon: React.ReactNode; label: string; value: React.ReactNode }> = ({ icon, label, value }) => (
+  <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-muted/30">
+    <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">{icon}{label}</span>
+    <span className="text-xs font-medium text-foreground">{value}</span>
+  </div>
+);
+
+const JumpLink: React.FC<{ to: string; label: string }> = ({ to, label }) => (
+  <Link
+    to={to}
+    className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-colors text-xs"
+  >
+    <span className="font-medium text-foreground">{label}</span>
+    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+  </Link>
+);
+
+export default DashboardProfile;
