@@ -25,6 +25,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
 import { CurrentSubscriptionCard } from '@/components/membership/CurrentSubscriptionCard';
+import { MembershipPaymentStatus } from '@/components/membership/MembershipPaymentStatus';
 import { PlanCard } from '@/components/membership/PlanCard';
 import { FeatureComparisonTable } from '@/components/membership/FeatureComparisonTable';
 import { PromoCodeRedeem } from '@/components/membership/PromoCodeRedeem';
@@ -884,6 +885,13 @@ const Membership = () => {
               name_ar: (p.name_ar as string) ?? '',
               name_en: (p.name_en as string) ?? '',
             }))}
+          />
+        )}
+
+        {user && mySubscription && (
+          <MembershipPaymentStatus
+            isRTL={isRTL}
+            subscriptionId={(mySubscription as { id?: string }).id ?? null}
           />
         )}
 
