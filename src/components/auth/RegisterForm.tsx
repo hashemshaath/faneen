@@ -255,18 +255,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="h-12 rounded-xl" style={{ paddingInlineStart: '42px' }} />
           </div>
         </div>
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold">{t('auth.business_username')} <span className="text-destructive">*</span></Label>
-          <div className="relative">
-            <Globe className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
-            <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" className="h-12 rounded-xl" style={{ paddingInlineStart: '42px' }} />
-          </div>
-          {username && <p className="text-xs text-muted-foreground">qitaat.com/{username}</p>}
-          {username && !validateUsername(username) && (
-            <p className="text-xs text-destructive">{isRTL ? 'اسم المستخدم غير صحيح (3-50 حرف)' : 'Invalid username (3-50 chars)'}</p>
-          )}
-        </div>
-        <Button onClick={handleRegister} disabled={loading || !businessName.trim() || !validateUsername(username)} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
+        <UsernamePicker
+          isRTL={isRTL}
+          required
+          label={t('auth.business_username')}
+          value={username}
+          onChange={setUsername}
+          onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
+          placeholder="my-business"
+        />
+        <Button onClick={handleRegister} disabled={loading || !businessName.trim() || !usernameOk} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
           {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
           {loading ? t('common.loading') : t('auth.submit')}
         </Button>
