@@ -9,6 +9,7 @@ export {
   restoreBarcodeAdmin,
   transferBarcodeAdmin,
   listBarcodeTransferTrailAdmin,
+  issueSuccessorBarcodeAdmin,
   type BarcodeRegistryRow,
   type BarcodeRegistrySummary,
   type BarcodeRegistryDetail,
@@ -16,4 +17,5 @@ export {
   type ListBarcodeRegistryRecordsResult,
   type BarcodeLifecycleResult,
   type BarcodeTransferTrailEntry,
+  type IssueSuccessorBarcodeResult,
 } from './services/adminBarcodeRegistry';
