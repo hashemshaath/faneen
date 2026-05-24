@@ -99,19 +99,64 @@ describe('AdminBarcodeRegistry source contract', () => {
   });
 });
 
-describe('BARCODE-REGISTRY-LIFECYCLE-1 — UI deferred contract', () => {
-  // Lifecycle action buttons land in BARCODE-REGISTRY-LIFECYCLE-2.
-  // This phase only ships server RPCs + service wrappers; the page must
-  // remain free of freeze/archive/restore controls until then.
-  it('page does not yet call lifecycle service wrappers', () => {
-    expect(PAGE_SRC).not.toMatch(/freezeBarcodeAdmin/);
-    expect(PAGE_SRC).not.toMatch(/archiveBarcodeAdmin/);
-    expect(PAGE_SRC).not.toMatch(/restoreBarcodeAdmin/);
+describe('BARCODE-REGISTRY-LIFECYCLE-2 — admin lifecycle UI', () => {
+  it('imports lifecycle wrappers from the canonical module', () => {
+    expect(PAGE_SRC).toMatch(/freezeBarcodeAdmin/);
+    expect(PAGE_SRC).toMatch(/archiveBarcodeAdmin/);
+    expect(PAGE_SRC).toMatch(/restoreBarcodeAdmin/);
+    expect(PAGE_SRC).toMatch(/from ['"]@\/modules\/barcodes['"]/);
   });
 
-  it('page does not call lifecycle RPCs directly', () => {
-    expect(PAGE_SRC).not.toMatch(/admin_freeze_barcode/);
-    expect(PAGE_SRC).not.toMatch(/admin_archive_barcode/);
-    expect(PAGE_SRC).not.toMatch(/admin_restore_barcode/);
+  it('does not call lifecycle RPCs directly from the page', () => {
+    expect(PAGE_SRC).not.toMatch(/supabase\.rpc\(\s*['"]admin_freeze_barcode['"]/);
+    expect(PAGE_SRC).not.toMatch(/supabase\.rpc\(\s*['"]admin_archive_barcode['"]/);
+    expect(PAGE_SRC).not.toMatch(/supabase\.rpc\(\s*['"]admin_restore_barcode['"]/);
+  });
+
+  it('renders bilingual lifecycle button labels', () => {
+    expect(PAGE_SRC).toContain("'تجميد'");   expect(PAGE_SRC).toContain("'Freeze'");
+    expect(PAGE_SRC).toContain("'أرشفة'");   expect(PAGE_SRC).toContain("'Archive'");
+    expect(PAGE_SRC).toContain("'استعادة'"); expect(PAGE_SRC).toContain("'Restore'");
+  });
+
+  it('renders bilingual reason input + cancel/confirm controls', () => {
+    expect(PAGE_SRC).toContain('سبب الإجراء');
+    expect(PAGE_SRC).toContain('Reason for action');
+    expect(PAGE_SRC).toContain("'إلغاء'");    expect(PAGE_SRC).toContain("'Cancel'");
+    expect(PAGE_SRC).toContain("'تأكيد'");   expect(PAGE_SRC).toContain("'Confirm'");
+  });
+
+  it('encodes action availability by status', () => {
+    // Per spec matrix: active→[freeze,archive], frozen→[restore,archive],
+    // archived→[restore], revoked→[archive], else→[].
+    expect(PAGE_SRC).toMatch(/case 'active':\s*return \['freeze', 'archive'\]/);
+    expect(PAGE_SRC).toMatch(/case 'frozen':\s*return \['restore', 'archive'\]/);
+    expect(PAGE_SRC).toMatch(/case 'archived':\s*return \['restore'\]/);
+    expect(PAGE_SRC).toMatch(/case 'revoked':\s*return \['archive'\]/);
+    expect(PAGE_SRC).toMatch(/default:\s*return \[\]/);
+  });
+
+  it('renders the restore-conflict bilingual error copy verbatim', () => {
+    expect(PAGE_SRC).toContain('لا يمكن الاستعادة بسبب وجود رمز نشط لنفس الكيان.');
+    expect(PAGE_SRC).toContain('Cannot restore because another active barcode exists for this entity.');
+    expect(PAGE_SRC).toMatch(/entity_already_has_active_barcode/);
+  });
+
+  it('maps invalid_transition and not_found errors', () => {
+    expect(PAGE_SRC).toMatch(/invalid_transition/);
+    expect(PAGE_SRC).toMatch(/not_found/);
+  });
+
+  it('invalidates list, summary, and detail queries after a successful action', () => {
+    expect(PAGE_SRC).toMatch(/invalidateQueries\(\{ queryKey: \['admin-barcode-detail'/);
+    expect(PAGE_SRC).toMatch(/invalidateQueries\(\{ queryKey: \['admin-barcode-list'\]/);
+    expect(PAGE_SRC).toMatch(/invalidateQueries\(\{ queryKey: \['admin-barcode-summary'\]/);
+  });
+
+  it('does not include transfer or delete UI', () => {
+    expect(PAGE_SRC).not.toMatch(/admin_transfer_barcode/);
+    expect(PAGE_SRC).not.toMatch(/transferBarcodeAdmin/);
+    expect(PAGE_SRC).not.toMatch(/admin_delete_barcode/);
+    expect(PAGE_SRC).not.toMatch(/\.delete\(/);
   });
 });

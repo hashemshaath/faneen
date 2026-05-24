@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, keepPreviousData, useQueryClient, useMutation } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import {
 import {
   QrCode, RefreshCw, Copy, Check, ChevronDown, ChevronUp, Hash,
   Activity, ShieldCheck, ShieldAlert, Archive, Snowflake, ArrowRightLeft,
-  Eye, EyeOff, Link2, Zap, ExternalLink, FilterX,
+  Eye, EyeOff, Link2, Zap, ExternalLink, FilterX, Pause, RotateCcw, X,
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useBi } from '@/components/common/Bilingual';
@@ -23,6 +23,9 @@ import {
   listBarcodeRegistryRecords,
   getBarcodeRegistrySummary,
   getBarcodeRegistryRecordById,
+  freezeBarcodeAdmin,
+  archiveBarcodeAdmin,
+  restoreBarcodeAdmin,
   type BarcodeRegistryRow as BarcodeRow,
   type BarcodeRegistrySummary as RegistrySummary,
   type BarcodeRegistryDetail as BarcodeDetail,
@@ -33,6 +36,50 @@ const ENTITY_TYPES = ['client_site', 'contract', 'business', 'customer', 'lead']
 const STATUSES = ['active', 'frozen', 'archived', 'revoked', 'transferred'];
 const VISIBILITIES = ['public', 'private', 'restricted'];
 const PAGE_SIZES = [25, 50, 100];
+
+// ──────────────────────────────────────────────
+// Lifecycle action availability + error mapping
+// ──────────────────────────────────────────────
+type LifecycleAction = 'freeze' | 'archive' | 'restore';
+
+function availableActions(status: string): LifecycleAction[] {
+  switch (status) {
+    case 'active':   return ['freeze', 'archive'];
+    case 'frozen':   return ['restore', 'archive'];
+    case 'archived': return ['restore'];
+    case 'revoked':  return ['archive'];
+    default:         return [];
+  }
+}
+
+function mapLifecycleError(
+  payload: { ok?: boolean; error?: string; conflict_barcode_id?: string } | null | undefined,
+  rpcError: { message?: string } | null | undefined,
+  bi: (ar: string, en: string) => string,
+): string | null {
+  if (rpcError?.message) {
+    const m = rpcError.message.toLowerCase();
+    if (m.includes('forbidden') || m.includes('not_admin'))
+      return bi('لا تملك صلاحية تنفيذ هذا الإجراء.', 'Permission denied.');
+    if (m.includes('unauthorized'))
+      return bi('يرجى تسجيل الدخول كمسؤول.', 'Please sign in as admin.');
+    return bi('تعذّر تنفيذ الإجراء.', 'Action failed.');
+  }
+  if (!payload || payload.ok) return null;
+  switch (payload.error) {
+    case 'not_found':
+      return bi('الرمز غير موجود.', 'Barcode not found.');
+    case 'invalid_transition':
+      return bi('انتقال حالة غير مسموح.', 'Invalid status transition.');
+    case 'entity_already_has_active_barcode':
+      return bi(
+        'لا يمكن الاستعادة بسبب وجود رمز نشط لنفس الكيان.',
+        'Cannot restore because another active barcode exists for this entity.',
+      );
+    default:
+      return bi('تعذّر تنفيذ الإجراء.', 'Action failed.');
+  }
+}
 
 // ──────────────────────────────────────────────
 // Helpers
@@ -152,11 +199,149 @@ const PublicLinkActions: React.FC<{ code: string }> = ({ code }) => {
 };
 
 // ──────────────────────────────────────────────
+// Lifecycle actions (inline — no popups, no destructive UI)
+// Exposes Freeze / Archive / Restore. Transfer/Delete intentionally absent.
+// ──────────────────────────────────────────────
+const TRANSITION_LABEL: Record<LifecycleAction, [string, string]> = {
+  freeze:  ['active → frozen',  'active → frozen'],
+  archive: ['→ archived',       '→ archived'],
+  restore: ['→ active',         '→ active'],
+};
+
+const LifecycleActions: React.FC<{
+  barcodeId: string;
+  status: string;
+  onChanged: () => void;
+}> = ({ barcodeId, status, onChanged }) => {
+  const bi = useBi();
+  const [pending, setPending] = useState<LifecycleAction | null>(null);
+  const [reason, setReason] = useState('');
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: async (vars: { action: LifecycleAction; reason: string }) => {
+      const fn =
+        vars.action === 'freeze'  ? freezeBarcodeAdmin :
+        vars.action === 'archive' ? archiveBarcodeAdmin :
+                                    restoreBarcodeAdmin;
+      return fn(barcodeId, vars.reason || null);
+    },
+    onSuccess: (res, vars) => {
+      const payload = res?.data as { ok?: boolean; error?: string; conflict_barcode_id?: string } | null;
+      const msg = mapLifecycleError(payload, res?.error ?? null, bi);
+      if (msg) { setErrMsg(msg); toast.error(msg); return; }
+      setErrMsg(null);
+      setPending(null);
+      setReason('');
+      toast.success(
+        vars.action === 'freeze'  ? bi('تم تجميد الرمز', 'Barcode frozen') :
+        vars.action === 'archive' ? bi('تمت أرشفة الرمز', 'Barcode archived') :
+                                    bi('تمت استعادة الرمز', 'Barcode restored'),
+      );
+      onChanged();
+    },
+    onError: () => {
+      const msg = bi('تعذّر تنفيذ الإجراء.', 'Action failed.');
+      setErrMsg(msg);
+      toast.error(msg);
+    },
+  });
+
+  const actions = availableActions(status);
+  if (actions.length === 0) {
+    return (
+      <div className="rounded-md border bg-card/50 px-3 py-2 text-xs text-muted-foreground">
+        {bi('لا توجد إجراءات متاحة لهذه الحالة.', 'No lifecycle actions available for this status.')}
+      </div>
+    );
+  }
+
+  const cancel = () => { setPending(null); setReason(''); setErrMsg(null); };
+
+  const actionMeta: Record<LifecycleAction, { label: string; icon: React.ElementType; tone: string }> = {
+    freeze:  { label: bi('تجميد',  'Freeze'),  icon: Pause,     tone: 'text-sky-600' },
+    archive: { label: bi('أرشفة',  'Archive'), icon: Archive,   tone: 'text-muted-foreground' },
+    restore: { label: bi('استعادة', 'Restore'), icon: RotateCcw, tone: 'text-emerald-600' },
+  };
+
+  return (
+    <div className="rounded-md border bg-card p-3 space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+          <Activity className="h-3.5 w-3.5" />
+          {bi('إجراءات الحياة (مسؤول فقط)', 'Lifecycle actions (admin only)')}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {actions.map((a) => {
+            const meta = actionMeta[a];
+            const selected = pending === a;
+            return (
+              <Button
+                key={a}
+                size="sm"
+                variant={selected ? 'default' : 'outline'}
+                onClick={() => { setPending(a); setErrMsg(null); }}
+                disabled={mutation.isPending}
+                aria-label={meta.label}
+              >
+                <meta.icon className={cn('h-3.5 w-3.5 me-1.5', meta.tone)} />
+                {meta.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {pending && (
+        <div className="space-y-2 border-t pt-3">
+          <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-[10px]">{actionMeta[pending].label}</Badge>
+              <span className="text-muted-foreground tech-content">
+                {status} {TRANSITION_LABEL[pending][0].replace(/^[^→]*→\s*/, '→ ')}
+              </span>
+            </div>
+            <Button size="sm" variant="ghost" onClick={cancel} disabled={mutation.isPending}>
+              <X className="h-3.5 w-3.5 me-1" />
+              {bi('إلغاء', 'Cancel')}
+            </Button>
+          </div>
+          <Input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder={bi('سبب الإجراء', 'Reason for action')}
+            dir="auto"
+            className="h-9"
+            aria-label={bi('سبب الإجراء', 'Reason for action')}
+            disabled={mutation.isPending}
+          />
+          {errMsg && (
+            <div className="text-xs text-destructive">{errMsg}</div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              onClick={() => mutation.mutate({ action: pending, reason })}
+              disabled={mutation.isPending}
+            >
+              {mutation.isPending
+                ? bi('جارٍ التنفيذ…', 'Working…')
+                : bi('تأكيد', 'Confirm')}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ──────────────────────────────────────────────
 // Detail panel (inline — no popups per project rules)
 // ──────────────────────────────────────────────
 const DetailPanel: React.FC<{ barcodeId: string; onClose: () => void }> = ({ barcodeId, onClose }) => {
   const bi = useBi();
   const { isRTL } = useLanguage();
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-barcode-detail', barcodeId],
@@ -178,6 +363,12 @@ const DetailPanel: React.FC<{ barcodeId: string; onClose: () => void }> = ({ bar
 
   const b = data.barcode;
   const sv = statusVariant(b.status);
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin-barcode-detail', barcodeId] });
+    queryClient.invalidateQueries({ queryKey: ['admin-barcode-list'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-barcode-summary'] });
+  };
 
   return (
     <div className="p-5 space-y-5 bg-muted/20 border-t">
@@ -206,6 +397,13 @@ const DetailPanel: React.FC<{ barcodeId: string; onClose: () => void }> = ({ bar
         entityType={b.entity_type}
         subtitle={b.entity_label || undefined}
         size="md"
+      />
+
+      {/* Lifecycle actions (admin-only RPCs) */}
+      <LifecycleActions
+        barcodeId={barcodeId}
+        status={b.status}
+        onChanged={invalidateAll}
       />
 
       {/* Stats strip */}
