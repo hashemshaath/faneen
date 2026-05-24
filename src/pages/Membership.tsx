@@ -16,6 +16,7 @@ import {
 import type { Tables } from '@/integrations/supabase/types';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
+import { getEmailDeliveryAddress, MISSING_OFFICIAL_EMAIL_REASON } from '@/lib/auth-email';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
@@ -306,14 +307,20 @@ const Membership = () => {
       setSubscribingPlanId(null);
       toast.success(isRTL ? 'تم تفعيل الاشتراك بنجاح! 🎉' : 'Subscription activated! 🎉');
       const subId = res?.subscriptionId;
-      if (!user?.email || !subId) return;
+      if (!subId) return;
+      const deliveryEmail = getEmailDeliveryAddress({ authEmail: user?.email, profileEmail: profile?.email });
+      if (!deliveryEmail) {
+        // eslint-disable-next-line no-console
+        console.info('[Membership] activated email suppressed', { reason: MISSING_OFFICIAL_EMAIL_REASON });
+        return;
+      }
       const plan = plans.find((p) => p.id === res.planId);
       const tierName = plan ? (isRTL ? plan.name_ar : plan.name_en) || plan.tier : undefined;
       const businessName = myBusiness?.name_ar || myBusiness?.name_en || undefined;
       try {
         await sendTransactionalEmail({
           templateName: 'membership-subscription-activated',
-          recipientEmail: user.email,
+          recipientEmail: deliveryEmail,
           idempotencyKey: `membership-activated-${subId}`,
           templateData: { recipientName: user.user_metadata?.full_name as string | undefined, businessName, tierName },
         });
@@ -384,11 +391,12 @@ const Membership = () => {
         // eslint-disable-next-line no-console
         console.warn('[Membership] notification insert failed', err);
       }
-      if (user.email) {
+      const upgradeDeliveryEmail = getEmailDeliveryAddress({ authEmail: user.email, profileEmail: profile?.email });
+      if (upgradeDeliveryEmail) {
         try {
           await sendTransactionalEmail({
             templateName: 'membership-upgrade-request-submitted',
-            recipientEmail: user.email,
+            recipientEmail: upgradeDeliveryEmail,
             idempotencyKey: `membership-upgrade-submitted-${requestId}`,
             templateData: { businessName, requestedTier: res?.tier },
           });
@@ -396,6 +404,9 @@ const Membership = () => {
           // eslint-disable-next-line no-console
           console.warn('[Membership] upgrade-submitted email failed', err);
         }
+      } else {
+        // eslint-disable-next-line no-console
+        console.info('[Membership] upgrade-submitted email suppressed', { reason: MISSING_OFFICIAL_EMAIL_REASON });
       }
     },
     onError: (e: Error, plan: { id: string; tier: string }) => {
@@ -500,11 +511,12 @@ const Membership = () => {
         // eslint-disable-next-line no-console
         console.warn('[Membership] cancel notification failed', err);
       }
-      if (user.email) {
+      const cancelDeliveryEmail = getEmailDeliveryAddress({ authEmail: user.email, profileEmail: profile?.email });
+      if (cancelDeliveryEmail) {
         try {
           await sendTransactionalEmail({
             templateName: 'membership-subscription-cancelled',
-            recipientEmail: user.email,
+            recipientEmail: cancelDeliveryEmail,
             idempotencyKey: `membership-cancelled-${subId}`,
             templateData: { businessName },
           });
@@ -512,6 +524,9 @@ const Membership = () => {
           // eslint-disable-next-line no-console
           console.warn('[Membership] cancel email failed', err);
         }
+      } else {
+        // eslint-disable-next-line no-console
+        console.info('[Membership] cancel email suppressed', { reason: MISSING_OFFICIAL_EMAIL_REASON });
       }
     },
     onError: (e: Error) => toast.error(e.message),
