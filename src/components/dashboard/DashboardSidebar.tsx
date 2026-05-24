@@ -32,6 +32,7 @@ import {
   MapPin,
   Beaker,
   QrCode,
+  User,
 } from 'lucide-react';
 
 interface MenuItem {
