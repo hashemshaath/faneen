@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRoleRedirect } from '@/hooks/useRoleRedirect';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { AuthLayout } from '@/components/auth/AuthLayout';
+import { IdentitySignInForm } from '@/components/auth/IdentitySignInForm';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
@@ -16,9 +17,13 @@ const Auth = () => {
   const { user, loading } = useAuth();
   const { redirectByRole } = useRoleRedirect();
 
-  const initialMode = (searchParams.get('mode') as AuthMode) || 'login';
-  const [mode, setMode] = useState<AuthMode>(
-    ['login', 'register', 'forgot-password'].includes(initialMode) ? initialMode : 'login'
+  // 'identity' = new unified entry (default). 'login' / 'register' kept as
+  // advanced fallbacks for password-based flows and business multi-step signup.
+  const initialMode = (searchParams.get('mode') as AuthMode | 'identity') || 'identity';
+  const [mode, setMode] = useState<AuthMode | 'identity'>(
+    (['identity', 'login', 'register', 'forgot-password'] as const).includes(initialMode as never)
+      ? (initialMode as AuthMode | 'identity')
+      : 'identity',
   );
   const [sentEmail, setSentEmail] = useState('');
   const redirectedRef = useRef(false);
@@ -57,6 +62,12 @@ const Auth = () => {
   return (
     <ErrorBoundary>
       <AuthLayout>
+      {mode === 'identity' && (
+        <IdentitySignInForm
+          onForgotPassword={() => setMode('forgot-password')}
+          onAdvancedRegister={() => setMode('register')}
+        />
+      )}
       {mode === 'login' && (
         <LoginForm
           onSwitchToRegister={() => setMode('register')}
@@ -65,15 +76,15 @@ const Auth = () => {
       )}
       {mode === 'register' && (
         <RegisterForm
-          onSwitchToLogin={() => setMode('login')}
+          onSwitchToLogin={() => setMode('identity')}
           onEmailSent={handleEmailSent}
         />
       )}
       {mode === 'forgot-password' && (
-        <ForgotPasswordForm onBack={() => setMode('login')} />
+        <ForgotPasswordForm onBack={() => setMode('identity')} />
       )}
       {mode === 'email-sent' && (
-        <RegistrationSuccessView email={sentEmail} onBackToLogin={() => setMode('login')} />
+        <RegistrationSuccessView email={sentEmail} onBackToLogin={() => setMode('identity')} />
       )}
       </AuthLayout>
     </ErrorBoundary>
