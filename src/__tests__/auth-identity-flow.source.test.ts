@@ -56,7 +56,7 @@ describe('AUTH-IDENTITY-VERIFY-1: source-level regression checks', () => {
     expect(src).toContain('AuthErrorHelpLinks');
     expect(src).toContain('trackLoginSuccess');
     expect(src).toContain('trackLoginFailed');
-    // smart input has label, google button, advanced register link
+    // labels, google button, advanced register link
     expect(src).toContain('<Label');
     expect(src).toContain('GoogleAuthButton');
     expect(src).toContain('onAdvancedRegister');
@@ -67,21 +67,15 @@ describe('AUTH-IDENTITY-VERIFY-1: source-level regression checks', () => {
     expect(src).not.toMatch(/@phone\.qitaat\.local/);
   });
 
-  it('detectKind classifies phone vs email vs unknown', async () => {
-    // exercise the same regex used in the component
-    const detect = (raw: string): 'phone' | 'email' | 'unknown' => {
-      const v = raw.trim();
-      if (!v) return 'unknown';
-      if (v.includes('@')) return 'email';
-      const digits = v.replace(/[\s\-()]/g, '');
-      if (/^\+?\d{5,}$/.test(digits)) return 'phone';
-      return 'unknown';
-    };
-    expect(detect('0506315300')).toBe('phone');
-    expect(detect('+966506315300')).toBe('phone');
-    expect(detect('966506315300')).toBe('phone');
-    expect(detect('user@example.com')).toBe('email');
-    expect(detect('   ')).toBe('unknown');
-    expect(detect('abc')).toBe('unknown');
+  it('IdentitySignInForm exposes a phone/email method switcher with tablist semantics', () => {
+    const src = read('src/components/auth/IdentitySignInForm.tsx');
+    expect(src).toMatch(/role="tablist"/);
+    // both tabs present
+    const tabs = src.match(/role="tab"/g) || [];
+    expect(tabs.length).toBeGreaterThanOrEqual(2);
+    // both paths use their respective service calls
+    expect(src).toContain('PhoneInput');
+    expect(src).toContain('signInWithEmail');
+    expect(src).toContain('sendLoginOtp');
   });
 });
