@@ -15,6 +15,7 @@ import {
   restoreBarcodeAdmin,
   transferBarcodeAdmin,
   listBarcodeTransferTrailAdmin,
+  issueSuccessorBarcodeAdmin,
 } from '../adminBarcodeRegistry';
 
 beforeEach(() => {
