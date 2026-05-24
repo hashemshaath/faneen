@@ -176,7 +176,9 @@ export function validateBusinessForm(form: ValidatableForm): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
 
   if (!form.name_ar?.trim()) {
-    issues.push({ key: 'name_ar', code: 'REQUIRED', severity: 'error' });
+    // Soft requirement: the business name is needed before publishing, but we
+    // still allow saving partial drafts so the user never loses progress.
+    issues.push({ key: 'name_ar', code: 'REQUIRED', severity: 'warning' });
   }
 
   checkField(vatSchema, 'vat_number', form.vat_number, issues);
@@ -200,7 +202,9 @@ export function validateBusinessForm(form: ValidatableForm): ValidationIssue[] {
 
   // Coordinates: required + range validation
   if (form.latitude == null || form.longitude == null) {
-    issues.push({ key: 'coordinates', code: 'COORDS_MISSING', severity: 'error' });
+    // Treat missing coordinates as a publish-time warning so users can save
+    // other edits before pinning the map.
+    issues.push({ key: 'coordinates', code: 'COORDS_MISSING', severity: 'warning' });
   } else if (
     form.latitude < -90 || form.latitude > 90 ||
     form.longitude < -180 || form.longitude > 180

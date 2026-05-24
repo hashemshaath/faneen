@@ -134,8 +134,14 @@ const DashboardBusinessEdit: React.FC = () => {
   const handleSave = async () => {
     if (!form || !user) return;
     if (hasErrors) {
-      toast.error(t(isRTL, 'يرجى تصحيح الحقول قبل الحفظ', 'Please fix the highlighted fields before saving'));
-      return;
+      // Allow partial saves but warn about format errors that still need
+      // attention (invalid VAT, email, phone, …). We never block the user
+      // from saving whatever valid data they've already entered.
+      toast.warning(t(
+        isRTL,
+        'تم الحفظ مع وجود حقول تحتاج إلى مراجعة لاحقًا',
+        'Saved — some fields still need review',
+      ));
     }
     setSaving(true);
     try {
@@ -164,13 +170,11 @@ const DashboardBusinessEdit: React.FC = () => {
         account_manager_position: form.account_manager_position || null,
         sectors: form.sectors ?? [], sub_services: form.sub_services ?? [],
       };
-      if (!payload.name_ar) {
-        toast.error(t(isRTL, 'اسم المنشأة (عربي) مطلوب', 'Business name (Arabic) is required'));
-        setSaving(false); return;
-      }
       const { error: updateError } = await updateBusinessById({ id: form.id, values: payload });
       if (updateError) throw updateError;
-      toast.success(t(isRTL, 'تم حفظ التعديلات بنجاح', 'Changes saved successfully'));
+      if (!hasErrors) {
+        toast.success(t(isRTL, 'تم حفظ التعديلات بنجاح', 'Changes saved successfully'));
+      }
       setDirty(false);
       qc.invalidateQueries({ queryKey: ['business-edit', user.id] });
       qc.invalidateQueries({ queryKey: ['business-completion', user.id] });
@@ -255,7 +259,7 @@ const DashboardBusinessEdit: React.FC = () => {
               )}
             </div>
           </div>
-          <Button onClick={handleSave} disabled={saving || !dirty || hasErrors} className="gap-1.5 self-start sm:self-auto">
+          <Button onClick={handleSave} disabled={saving || !dirty} className="gap-1.5 self-start sm:self-auto">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {t(isRTL, 'حفظ التغييرات', 'Save changes')}
           </Button>
