@@ -187,3 +187,38 @@ describe('adminBarcodeRegistry transfer trail wrapper', () => {
     expect(out).toEqual({ data: null, error: { message: 'forbidden' } });
   });
 });
+
+describe('adminBarcodeRegistry successor wrapper', () => {
+  it('issueSuccessorBarcodeAdmin calls admin_issue_successor_barcode with exact params', async () => {
+    const envelope = {
+      data: { ok: true, new_barcode_id: 'bc-new', new_code: 'BIZ-2026-100001', public_url: '/q/BIZ-2026-100001' },
+      error: null,
+    };
+    rpcMock.mockResolvedValue(envelope);
+    const out = await issueSuccessorBarcodeAdmin({
+      transferredBarcodeId: 'bc-old',
+      reason: 'new owner',
+    });
+    expect(rpcMock).toHaveBeenCalledWith('admin_issue_successor_barcode', {
+      _transferred_barcode_id: 'bc-old',
+      _reason: 'new owner',
+    });
+    expect(out).toBe(envelope);
+  });
+
+  it('defaults reason to null when omitted', async () => {
+    rpcMock.mockResolvedValue({ data: { ok: true }, error: null });
+    await issueSuccessorBarcodeAdmin({ transferredBarcodeId: 'bc-old' });
+    expect(rpcMock).toHaveBeenCalledWith('admin_issue_successor_barcode', {
+      _transferred_barcode_id: 'bc-old',
+      _reason: null,
+    });
+  });
+
+  it('passes RPC errors through unthrown', async () => {
+    rpcMock.mockResolvedValue({ data: null, error: { message: 'forbidden' } });
+    await expect(
+      issueSuccessorBarcodeAdmin({ transferredBarcodeId: 'x' }),
+    ).resolves.toMatchObject({ error: { message: 'forbidden' } });
+  });
+});
