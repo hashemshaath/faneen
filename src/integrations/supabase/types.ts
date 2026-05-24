@@ -5074,6 +5074,51 @@ export type Database = {
           },
         ]
       }
+      cron_run_log: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          error_message: string | null
+          finished_at: string | null
+          function_name: string
+          id: string
+          job_name: string
+          ok: boolean | null
+          started_at: string
+          status: string | null
+          summary: Json
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          finished_at?: string | null
+          function_name: string
+          id?: string
+          job_name: string
+          ok?: boolean | null
+          started_at?: string
+          status?: string | null
+          summary?: Json
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          finished_at?: string | null
+          function_name?: string
+          id?: string
+          job_name?: string
+          ok?: boolean | null
+          started_at?: string
+          status?: string | null
+          summary?: Json
+        }
+        Relationships: []
+      }
       email_deliverability_alerts: {
         Row: {
           acknowledged: boolean
@@ -11859,6 +11904,20 @@ export type Database = {
       list_site_access_requests_for_owner: {
         Args: { _site_id?: string }
         Returns: Json
+      }
+      log_cron_run: {
+        Args: {
+          _error_code?: string
+          _error_message?: string
+          _finished_at: string
+          _function_name: string
+          _job_name: string
+          _ok: boolean
+          _started_at: string
+          _status: string
+          _summary: Json
+        }
+        Returns: string
       }
       log_sector_pageview: {
         Args: {
