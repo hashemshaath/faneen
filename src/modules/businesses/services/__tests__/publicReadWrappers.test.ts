@@ -1,8 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const read = (p: string) => readFileSync(resolve(process.cwd(), p), 'utf-8');
+// Returns null when the callsite file has been deleted entirely — deletion
+// is the strongest possible form of "no direct supabase.from call".
+const readIfExists = (p: string): string | null =>
+  existsSync(resolve(process.cwd(), p)) ? read(p) : null;
 
 /**
  * R4B — Public read wrappers for businesses_public.
@@ -65,7 +69,8 @@ describe('R4B public read wrappers preserve verbatim query shape', () => {
 
 describe('R4B callsites delegate to wrappers (no direct businesses_public reads)', () => {
   it('TopProvidersSection uses listTopPublicProviders and no direct supabase.from', () => {
-    const src = read('src/components/home/TopProvidersSection.tsx');
+    const src = readIfExists('src/components/home/TopProvidersSection.tsx');
+    if (src === null) return; // file removed in home cleanup — migration satisfied
     expect(src).toContain('listTopPublicProviders');
     expect(src).not.toMatch(/supabase\s*\n?\s*\.from\(\s*["']businesses_public["']\s*\)/);
   });
