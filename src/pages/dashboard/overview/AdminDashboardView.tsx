@@ -33,9 +33,10 @@ import { listAllContracts } from '@/modules/contracts';
 import { countActiveMembershipSubscriptions } from '@/modules/memberships';
 import {
   CHART_COLORS, ChartTooltipStyle, getStatusLabel, buildMonthlyData,
-  StatCard, QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
+  QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
   RefreshButton, getTimeGreeting,
 } from '@/components/dashboard/overview/shared';
+import { BentoTile } from '@/components/dashboard/overview/BentoTile';
 
 export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
   const { user, profile } = useAuth();
@@ -136,23 +137,27 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
 
   return (
     <div className="space-y-5" ref={ref}>
-      {/* Welcome */}
-      <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-card via-card to-primary/5 p-5 sm:p-6 dark:from-card/80 dark:to-primary/10">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center shrink-0">
-              <ShieldAlert className="w-5 h-5 text-accent" aria-hidden="true" />
+      {/* Welcome — Emerald Prestige hero */}
+      <div className="dash-hero p-5 sm:p-7">
+        <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-[hsl(var(--de-gold)/0.35)] bg-[hsl(var(--de-cream)/0.10)] backdrop-blur">
+              <ShieldAlert className="w-7 h-7 text-[hsl(var(--de-gold))]" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <h1 className="font-heading font-bold text-lg sm:text-xl truncate">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider dash-hero-chip rounded-full px-2.5 py-1 mb-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--de-gold))]" aria-hidden="true" />
+                {isRTL ? 'لوحة المسؤول' : 'Admin Console'}
+              </span>
+              <h1 className="font-heading text-2xl sm:text-3xl font-bold leading-tight truncate">
                 {getTimeGreeting(isRTL)}{profile?.full_name ? `، ${profile.full_name}` : ''}
               </h1>
-              <p className="text-xs text-muted-foreground/70 mt-0.5">{isRTL ? 'نظرة شاملة على النظام' : 'System overview'}</p>
+              <p className="dash-hero-sub text-xs sm:text-sm mt-1">{isRTL ? 'نظرة شاملة على أداء النظام' : 'System-wide performance overview'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <RefreshButton onClick={handleRefresh} isLoading={isFetching} isRTL={isRTL} />
-            <Badge variant="outline" className="text-[10px] gap-1.5 bg-success/10 border-success/30 text-success">
+            <Badge className="dash-hero-gold text-[10px] gap-1 h-6 px-2">
               <Zap className="w-3 h-3" aria-hidden="true" />{isRTL ? 'مباشر' : 'Live'}
             </Badge>
           </div>
@@ -245,9 +250,20 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         </CardContent>
       </Card>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-        {adminCards.map((card) => <StatCard key={card.label} {...card} />)}
+      {/* Bento KPI grid */}
+      <div className="dash-bento">
+        {adminCards.map((card, i) => (
+          <BentoTile
+            key={card.label}
+            variant={i === 0 ? 'feature' : (i === 1 || i === 2 ? 'wide' : 'tile')}
+            accent={i === 0 ? 'gold' : 'emerald'}
+            icon={card.icon}
+            label={card.label}
+            value={card.value}
+            sub={'sub' in card ? card.sub : undefined}
+            to={card.to}
+          />
+        ))}
       </div>
 
       {/* Charts */}

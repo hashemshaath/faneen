@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useProviderActivityPing } from '@/hooks/useProviderActivityPing';
 import { DashboardViewSkeleton } from '@/components/dashboard/overview/shared';
+import '@/styles/dashboard-emerald.css';
 
 /**
  * Role-routed Dashboard entry. Each role view is split into its own chunk
@@ -24,17 +25,19 @@ const DashboardOverview = () => {
 
   return (
     <DashboardLayout>
-      <Suspense fallback={<DashboardViewSkeleton />}>
-        {isAdmin ? (
-          <AdminDashboardView isRTL={isRTL} />
-        ) : isProvider && user ? (
-          <ProviderDashboardView isRTL={isRTL} user={user} profile={profile} />
-        ) : user ? (
-          <UserDashboardView isRTL={isRTL} user={user} profile={profile} />
-        ) : (
-          <DashboardViewSkeleton />
-        )}
-      </Suspense>
+      <div className="dash-emerald">
+        <Suspense fallback={<DashboardViewSkeleton />}>
+          {isAdmin ? (
+            <AdminDashboardView isRTL={isRTL} />
+          ) : isProvider && user ? (
+            <ProviderDashboardView isRTL={isRTL} user={user} profile={profile} />
+          ) : user ? (
+            <UserDashboardView isRTL={isRTL} user={user} profile={profile} />
+          ) : (
+            <DashboardViewSkeleton />
+          )}
+        </Suspense>
+      </div>
     </DashboardLayout>
   );
 };
