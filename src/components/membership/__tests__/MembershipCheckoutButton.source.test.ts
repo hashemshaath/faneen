@@ -63,7 +63,7 @@ describe('MembershipPaymentStatus — checkout entry wiring', () => {
   it('renders the MembershipCheckoutButton only for pending intents', () => {
     expect(STATUS).toContain('MembershipCheckoutButton');
     // The button must live inside the created / requires_action branch.
-    const idx = STATUS.indexOf('MembershipCheckoutButton');
+    const idx = STATUS.lastIndexOf('<MembershipCheckoutButton');
     const branchIdx = STATUS.indexOf("status === 'created'");
     expect(branchIdx).toBeGreaterThan(-1);
     expect(idx).toBeGreaterThan(branchIdx);
