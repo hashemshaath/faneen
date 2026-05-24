@@ -82,15 +82,20 @@ Deno.serve(async (req) => {
     return json({ ok: false, code: 'missing_payment_config' }, 200);
   }
 
-  // Body
+  // Body — accepts EITHER an existing subscriptionId, OR a planId
+  // (+ optional businessId / billingCycle) so the user-facing membership
+  // page can start checkout without first activating a subscription.
   let body: any;
   try {
     body = await req.json();
   } catch {
     return json({ ok: false, code: 'invalid_body' }, 400);
   }
-  const subscriptionId = typeof body?.subscriptionId === 'string' ? body.subscriptionId : '';
-  if (!subscriptionId) {
+  const rawSubscriptionId = typeof body?.subscriptionId === 'string' ? body.subscriptionId : '';
+  const rawPlanId = typeof body?.planId === 'string' ? body.planId : '';
+  const rawBusinessId = typeof body?.businessId === 'string' ? body.businessId : '';
+  const rawCycle = body?.billingCycle === 'yearly' ? 'yearly' : 'monthly';
+  if (!rawSubscriptionId && !rawPlanId) {
     return json({ ok: false, code: 'invalid_body' }, 400);
   }
 
@@ -98,18 +103,105 @@ Deno.serve(async (req) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  // Load subscription scoped to caller — server is the source of truth.
-  const { data: sub, error: subErr } = await admin
-    .from('membership_subscriptions')
-    .select('id, user_id, business_id, plan_id, billing_cycle, status')
-    .eq('id', subscriptionId)
-    .maybeSingle();
-  if (subErr) {
-    safeLog('sub_lookup_error', { error: subErr.message });
-    return json({ ok: false, code: 'not_found' }, 200);
+  // Resolve (or create) the membership subscription the intent attaches to.
+  let sub: {
+    id: string;
+    user_id: string;
+    business_id: string | null;
+    plan_id: string;
+    billing_cycle: string;
+    status: string;
+  } | null = null;
+
+  if (rawSubscriptionId) {
+    const { data, error } = await admin
+      .from('membership_subscriptions')
+      .select('id, user_id, business_id, plan_id, billing_cycle, status')
+      .eq('id', rawSubscriptionId)
+      .maybeSingle();
+    if (error) {
+      safeLog('sub_lookup_error', { error: error.message });
+      return json({ ok: false, code: 'not_found' }, 200);
+    }
+    if (!data) return json({ ok: false, code: 'not_found' }, 200);
+    if (data.user_id !== userId) return json({ ok: false, code: 'unauthorized' }, 403);
+    sub = data as typeof sub;
+  } else {
+    // planId path — find a reusable pending subscription, else create one.
+    // Validate the requested plan exists and is active first.
+    const { data: planRow, error: planLookupErr } = await admin
+      .from('membership_plans')
+      .select('id, is_active, price_monthly, price_yearly')
+      .eq('id', rawPlanId)
+      .maybeSingle();
+    if (planLookupErr || !planRow || planRow.is_active === false) {
+      return json({ ok: false, code: 'not_found' }, 200);
+    }
+    const planPrice = Number(rawCycle === 'yearly' ? planRow.price_yearly : planRow.price_monthly);
+    if (!Number.isFinite(planPrice) || planPrice <= 0) {
+      return json({ ok: false, code: 'not_eligible' }, 200);
+    }
+
+    // Optional business scoping — when supplied, caller must own/manage it.
+    let resolvedBusinessId: string | null = null;
+    if (rawBusinessId) {
+      const { data: bizRow } = await admin
+        .from('businesses')
+        .select('id, user_id')
+        .eq('id', rawBusinessId)
+        .maybeSingle();
+      if (!bizRow) return json({ ok: false, code: 'not_found' }, 200);
+      if (bizRow.user_id !== userId) {
+        const { data: staffRow } = await admin
+          .from('business_staff')
+          .select('user_id, role')
+          .eq('business_id', rawBusinessId)
+          .eq('user_id', userId)
+          .in('role', ['owner', 'manager'])
+          .maybeSingle();
+        if (!staffRow) return json({ ok: false, code: 'unauthorized' }, 403);
+      }
+      resolvedBusinessId = rawBusinessId;
+    }
+
+    // Reuse an existing pending subscription for the same target if any.
+    const reuseQuery = admin
+      .from('membership_subscriptions')
+      .select('id, user_id, business_id, plan_id, billing_cycle, status')
+      .eq('user_id', userId)
+      .eq('plan_id', rawPlanId)
+      .eq('billing_cycle', rawCycle)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const { data: reuseRows } = resolvedBusinessId
+      ? await reuseQuery.eq('business_id', resolvedBusinessId)
+      : await reuseQuery.is('business_id', null);
+    if (reuseRows && reuseRows.length > 0) {
+      sub = reuseRows[0] as typeof sub;
+    } else {
+      const insertSub = {
+        user_id: userId,
+        plan_id: rawPlanId,
+        business_id: resolvedBusinessId,
+        billing_cycle: rawCycle,
+        status: 'pending',
+        starts_at: new Date().toISOString(),
+      };
+      const { data: createdSub, error: createSubErr } = await admin
+        .from('membership_subscriptions')
+        .insert(insertSub)
+        .select('id, user_id, business_id, plan_id, billing_cycle, status')
+        .maybeSingle();
+      if (createSubErr || !createdSub) {
+        safeLog('sub_create_failed', { error: createSubErr?.message });
+        return json({ ok: false, code: 'provider_error' }, 200);
+      }
+      sub = createdSub as typeof sub;
+    }
   }
   if (!sub) return json({ ok: false, code: 'not_found' }, 200);
-  if (sub.user_id !== userId) return json({ ok: false, code: 'unauthorized' }, 403);
+  const subscriptionId = sub.id;
 
   // Only allow checkout on subscriptions that are awaiting payment OR
   // currently active and renewable. Cancelled / expired subs are not
