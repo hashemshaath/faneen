@@ -356,7 +356,7 @@ const AdminMembershipPayments = () => {
       )}
 
       <Card>
-        <CardHeader className="flex flex-row items-center gap-2 space-y-为人0">
+        <CardHeader className="flex flex-row items-center gap-2 space-y-0">
           <CardTitle className="flex items-center gap-2 text-lg">
             <History className="w-5 h-5" />
             {isRTL ? 'أحداث الدفع الأخيرة' : 'Recent payment events'}
