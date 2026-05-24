@@ -17,6 +17,11 @@
 
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import {
+  applyProviderSnapshot,
+  fetchMoyasarPaymentStatus,
+  loadIntent,
+} from '../_shared/membership-payments/index.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -209,5 +214,46 @@ Deno.serve(async (req) => {
   }
 
   safeLog('stored', { event_id: eventId, event_type: eventType, matched: Boolean(matchedIntentId) });
+
+  // R4F-9E: best-effort inline reconciliation. The webhook only triggers
+  // a server-side provider re-fetch + idempotent state transition for a
+  // matched intent. All side effects live in the shared helper.
+  if (matchedIntentId) {
+    const MOYASAR_SECRET_KEY = Deno.env.get('MOYASAR_SECRET_KEY') ?? '';
+    if (MOYASAR_SECRET_KEY) {
+      try {
+        const intent = await loadIntent(admin, matchedIntentId);
+        if (intent?.provider_intent_id) {
+          const fetched = await fetchMoyasarPaymentStatus({
+            providerIntentId: intent.provider_intent_id,
+            secretKey: MOYASAR_SECRET_KEY,
+          });
+          if (fetched.ok) {
+            const result = await applyProviderSnapshot({
+              admin,
+              supabaseUrl: SUPABASE_URL,
+              serviceRoleKey: SERVICE_ROLE_KEY,
+              intent,
+              snapshot: fetched.snapshot,
+            });
+            // Mark event as processed only if a transition occurred or
+            // provider state is already terminal-aligned.
+            await admin
+              .from('membership_payment_webhook_events')
+              .update({ processed_at: new Date().toISOString() })
+              .eq('provider', PROVIDER)
+              .eq('event_id', eventId);
+            safeLog('reconciled_from_webhook', {
+              transitioned: result.transitioned,
+              to: result.toStatus,
+            });
+          }
+        }
+      } catch (e) {
+        safeLog('reconcile_error', { msg: e instanceof Error ? e.message : 'unknown' });
+      }
+    }
+  }
+
   return json({ ok: true, stored: true, event_id: eventId }, 200);
 });
