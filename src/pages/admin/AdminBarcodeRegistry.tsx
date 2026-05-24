@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, keepPreviousData, useQueryClient, useMutation } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import {
 import {
   QrCode, RefreshCw, Copy, Check, ChevronDown, ChevronUp, Hash,
   Activity, ShieldCheck, ShieldAlert, Archive, Snowflake, ArrowRightLeft,
-  Eye, EyeOff, Link2, Zap, ExternalLink, FilterX,
+  Eye, EyeOff, Link2, Zap, ExternalLink, FilterX, Pause, RotateCcw, X,
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useBi } from '@/components/common/Bilingual';
@@ -23,6 +23,9 @@ import {
   listBarcodeRegistryRecords,
   getBarcodeRegistrySummary,
   getBarcodeRegistryRecordById,
+  freezeBarcodeAdmin,
+  archiveBarcodeAdmin,
+  restoreBarcodeAdmin,
   type BarcodeRegistryRow as BarcodeRow,
   type BarcodeRegistrySummary as RegistrySummary,
   type BarcodeRegistryDetail as BarcodeDetail,
@@ -33,6 +36,50 @@ const ENTITY_TYPES = ['client_site', 'contract', 'business', 'customer', 'lead']
 const STATUSES = ['active', 'frozen', 'archived', 'revoked', 'transferred'];
 const VISIBILITIES = ['public', 'private', 'restricted'];
 const PAGE_SIZES = [25, 50, 100];
+
+// ──────────────────────────────────────────────
+// Lifecycle action availability + error mapping
+// ──────────────────────────────────────────────
+type LifecycleAction = 'freeze' | 'archive' | 'restore';
+
+function availableActions(status: string): LifecycleAction[] {
+  switch (status) {
+    case 'active':   return ['freeze', 'archive'];
+    case 'frozen':   return ['restore', 'archive'];
+    case 'archived': return ['restore'];
+    case 'revoked':  return ['archive'];
+    default:         return [];
+  }
+}
+
+function mapLifecycleError(
+  payload: { ok?: boolean; error?: string; conflict_barcode_id?: string } | null | undefined,
+  rpcError: { message?: string } | null | undefined,
+  bi: (ar: string, en: string) => string,
+): string | null {
+  if (rpcError?.message) {
+    const m = rpcError.message.toLowerCase();
+    if (m.includes('forbidden') || m.includes('not_admin'))
+      return bi('لا تملك صلاحية تنفيذ هذا الإجراء.', 'Permission denied.');
+    if (m.includes('unauthorized'))
+      return bi('يرجى تسجيل الدخول كمسؤول.', 'Please sign in as admin.');
+    return bi('تعذّر تنفيذ الإجراء.', 'Action failed.');
+  }
+  if (!payload || payload.ok) return null;
+  switch (payload.error) {
+    case 'not_found':
+      return bi('الرمز غير موجود.', 'Barcode not found.');
+    case 'invalid_transition':
+      return bi('انتقال حالة غير مسموح.', 'Invalid status transition.');
+    case 'entity_already_has_active_barcode':
+      return bi(
+        'لا يمكن الاستعادة بسبب وجود رمز نشط لنفس الكيان.',
+        'Cannot restore because another active barcode exists for this entity.',
+      );
+    default:
+      return bi('تعذّر تنفيذ الإجراء.', 'Action failed.');
+  }
+}
 
 // ──────────────────────────────────────────────
 // Helpers
