@@ -121,7 +121,7 @@ async function dispatchManualMarkPaidSideEffects(
         notification_type: 'membership_payment_marked_paid',
         reference_type: 'membership_payment_intent',
         reference_id: paymentIntentId,
-        action_url: '/dashboard/membership',
+        action_url: '/membership',
       },
       '[markMembershipPaidManually] notification',
     );
@@ -141,7 +141,7 @@ async function dispatchManualMarkPaidSideEffects(
         invoiceId,
         amount,
         currency,
-        dashboardUrl: '/dashboard/membership',
+        dashboardUrl: '/membership',
       },
     });
   }
