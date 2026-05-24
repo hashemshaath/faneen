@@ -8,14 +8,18 @@
   /* Emerald Prestige palette (HSL) */
   --de-emerald-deep: 158 85% 16%;   /* #064e3b */
   --de-emerald:      162 80% 26%;   /* #0d7a5f */
+  --de-emerald-mid:  162 70% 34%;
   --de-emerald-soft: 162 45% 92%;
-  --de-gold:         43 53% 54%;    /* #c9a84c */
-  --de-gold-soft:    44 56% 92%;    /* #f5f0e0 */
-  --de-cream:        44 56% 96%;
-  --de-ink:          158 30% 12%;
+  --de-gold:         43 60% 47%;    /* deeper, AA-friendly gold */
+  --de-gold-bright:  43 70% 58%;
+  --de-gold-soft:    44 56% 92%;
+  --de-cream:        44 56% 97%;
+  --de-ink:          158 30% 10%;
+  --de-rail:         linear-gradient(180deg, hsl(var(--de-gold-bright)), hsl(var(--de-emerald)));
 
   /* Heading/body fonts (English; Arabic still uses IBM Plex Sans Arabic via fallback) */
   font-family: 'Manrope', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  color: hsl(var(--foreground));
 }
 
 .dash-emerald h1,
@@ -24,22 +28,27 @@
 .dash-emerald .font-heading {
   font-family: 'Sora', 'IBM Plex Sans Arabic', system-ui, sans-serif;
   letter-spacing: -0.015em;
+  color: hsl(var(--foreground));
 }
+
+/* Lift muted text contrast across dashboard for AA compliance */
+.dash-emerald .text-muted-foreground { color: hsl(var(--muted-foreground) / 0.95); }
+.dark .dash-emerald .text-muted-foreground { color: hsl(0 0% 100% / 0.72); }
 
 /* Hero card — emerald → deep gradient with gold glow */
 .dash-emerald .dash-hero {
   position: relative;
   overflow: hidden;
-  border-radius: 1.25rem;
+  border-radius: 1.5rem;
   background:
-    radial-gradient(120% 100% at 100% 0%, hsl(var(--de-gold) / 0.18) 0%, transparent 55%),
-    radial-gradient(80% 100% at 0% 100%, hsl(var(--de-emerald) / 0.45) 0%, transparent 60%),
-    linear-gradient(135deg, hsl(var(--de-emerald-deep)) 0%, hsl(var(--de-emerald-deep) / 0.95) 50%, hsl(var(--de-ink)) 100%);
+    radial-gradient(120% 100% at 100% 0%, hsl(var(--de-gold-bright) / 0.22) 0%, transparent 55%),
+    radial-gradient(80% 100% at 0% 100%, hsl(var(--de-emerald) / 0.55) 0%, transparent 60%),
+    linear-gradient(135deg, hsl(var(--de-emerald-deep)) 0%, hsl(158 70% 12%) 55%, hsl(var(--de-ink)) 100%);
   color: hsl(var(--de-cream));
-  border: 1px solid hsl(var(--de-gold) / 0.18);
+  border: 1px solid hsl(var(--de-gold) / 0.28);
   box-shadow:
-    0 1px 0 hsl(var(--de-gold) / 0.15) inset,
-    0 20px 50px -20px hsl(var(--de-emerald-deep) / 0.55);
+    0 1px 0 hsl(var(--de-gold-bright) / 0.22) inset,
+    0 24px 60px -24px hsl(var(--de-emerald-deep) / 0.65);
 }
 .dash-emerald .dash-hero::before {
   content: '';
@@ -49,23 +58,35 @@
   mask-image: linear-gradient(180deg, black, transparent 70%);
   pointer-events: none;
 }
+.dash-emerald .dash-hero::after {
+  /* subtle gold corner rail */
+  content: '';
+  position: absolute;
+  inset-inline-end: 0; top: 0;
+  width: 3px; height: 60%;
+  background: var(--de-rail);
+  opacity: 0.55;
+  border-start-end-radius: 1.5rem;
+}
 .dash-emerald .dash-hero h1,
 .dash-emerald .dash-hero p,
 .dash-emerald .dash-hero .dash-hero-meta {
   color: hsl(var(--de-cream));
 }
-.dash-emerald .dash-hero .dash-hero-sub { color: hsl(var(--de-cream) / 0.7); }
+.dash-emerald .dash-hero .dash-hero-sub { color: hsl(var(--de-cream) / 0.82); }
 .dash-emerald .dash-hero .dash-hero-chip {
-  background: hsl(var(--de-cream) / 0.10);
-  border: 1px solid hsl(var(--de-gold) / 0.35);
+  background: hsl(var(--de-cream) / 0.14);
+  border: 1px solid hsl(var(--de-gold-bright) / 0.45);
   color: hsl(var(--de-cream));
   backdrop-filter: blur(8px);
 }
 .dash-emerald .dash-hero .dash-hero-gold {
-  background: linear-gradient(135deg, hsl(var(--de-gold)) 0%, hsl(43 60% 65%) 100%);
+  background: linear-gradient(135deg, hsl(var(--de-gold-bright)) 0%, hsl(43 75% 70%) 100%);
   color: hsl(var(--de-emerald-deep));
   border: none;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 12px -4px hsl(var(--de-gold) / 0.5);
 }
 
 /* Bento KPI tiles */
@@ -88,68 +109,93 @@
 .dash-emerald .dash-tile {
   position: relative;
   border-radius: 1rem;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--de-emerald) / 0.14);
   background: hsl(var(--card));
   padding: 1rem;
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  overflow: hidden;
 }
 .dash-emerald .dash-tile:hover {
-  transform: translateY(-2px);
-  border-color: hsl(var(--de-gold) / 0.4);
-  box-shadow: 0 10px 30px -15px hsl(var(--de-emerald) / 0.35);
+  transform: translateY(-3px);
+  border-color: hsl(var(--de-gold) / 0.55);
+  box-shadow: 0 14px 36px -18px hsl(var(--de-emerald) / 0.4);
 }
 .dash-emerald .dash-tile::after {
   content: '';
   position: absolute; inset-inline-start: 0; top: 0; bottom: 0;
   width: 3px;
-  background: linear-gradient(180deg, hsl(var(--de-gold)), hsl(var(--de-emerald)));
+  background: var(--de-rail);
   border-start-start-radius: 1rem;
   border-end-start-radius: 1rem;
   opacity: 0;
-  transition: opacity .2s ease;
+  transition: opacity .25s ease;
 }
 .dash-emerald .dash-tile:hover::after { opacity: 1; }
 
 /* Feature tile — the hero KPI of the bento */
 .dash-emerald .dash-tile.bento-feature {
   background:
-    radial-gradient(120% 100% at 100% 0%, hsl(var(--de-gold) / 0.10) 0%, transparent 55%),
-    linear-gradient(160deg, hsl(var(--de-emerald) / 0.10) 0%, hsl(var(--card)) 55%);
-  border-color: hsl(var(--de-emerald) / 0.30);
+    radial-gradient(120% 100% at 100% 0%, hsl(var(--de-gold-bright) / 0.14) 0%, transparent 55%),
+    linear-gradient(160deg, hsl(var(--de-emerald) / 0.14) 0%, hsl(var(--card)) 55%);
+  border-color: hsl(var(--de-emerald) / 0.34);
 }
+.dash-emerald .dash-tile.bento-feature::after { opacity: 0.6; }
+.dash-emerald .dash-tile.bento-feature:hover::after { opacity: 1; }
 
 .dash-emerald .dash-tile-icon {
   width: 2.5rem; height: 2.5rem;
   border-radius: 0.75rem;
   display: inline-flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, hsl(var(--de-emerald) / 0.18), hsl(var(--de-gold) / 0.18));
+  background: linear-gradient(135deg, hsl(var(--de-emerald) / 0.22), hsl(var(--de-gold) / 0.22));
   color: hsl(var(--de-emerald));
+  border: 1px solid hsl(var(--de-emerald) / 0.18);
+  box-shadow: 0 1px 0 hsl(0 0% 100% / 0.5) inset;
+}
+.dark .dash-emerald .dash-tile-icon {
+  background: linear-gradient(135deg, hsl(var(--de-emerald) / 0.28), hsl(var(--de-gold) / 0.20));
+  color: hsl(162 70% 60%);
+  border-color: hsl(var(--de-emerald) / 0.30);
+  box-shadow: 0 1px 0 hsl(0 0% 100% / 0.06) inset;
 }
 
 .dash-emerald .dash-tile-value {
   font-family: 'Sora', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 1.5rem;
+  font-weight: 800;
+  font-size: 1.625rem;
   line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: hsl(var(--foreground));
 }
-.dash-emerald .dash-tile.bento-feature .dash-tile-value { font-size: 2.25rem; }
+.dash-emerald .dash-tile.bento-feature .dash-tile-value {
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, hsl(var(--de-emerald-deep)), hsl(var(--de-emerald)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dark .dash-emerald .dash-tile.bento-feature .dash-tile-value {
+  background: linear-gradient(135deg, hsl(162 65% 70%), hsl(43 70% 65%));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
 
 .dash-emerald .dash-tile-label {
   font-size: 0.7rem;
-  color: hsl(var(--muted-foreground));
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  color: hsl(var(--foreground) / 0.7);
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+.dark .dash-emerald .dash-tile-label { color: hsl(0 0% 100% / 0.65); }
 
 /* Gold accent badge */
 .dash-emerald .dash-badge-gold {
-  background: hsl(var(--de-gold) / 0.15);
-  color: hsl(var(--de-gold));
-  border: 1px solid hsl(var(--de-gold) / 0.35);
-  font-weight: 600;
+  background: hsl(var(--de-gold) / 0.18);
+  color: hsl(43 70% 32%);
+  border: 1px solid hsl(var(--de-gold) / 0.45);
+  font-weight: 700;
 }
+.dark .dash-emerald .dash-badge-gold { color: hsl(var(--de-gold-bright)); }
 
 /* Subtle card uplift across the whole dashboard scope */
 .dash-emerald .border-border\/40,
@@ -182,89 +228,141 @@
 .dash-emerald .border-border\/40,
 .dash-emerald .border-border\/60 {
   position: relative;
-  border-radius: 1rem;
+  border-radius: 1.125rem;
   background:
     linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--card)) 100%);
-  border: 1px solid hsl(var(--de-emerald) / 0.10);
-  box-shadow: 0 1px 0 hsl(0 0% 100% / 0.04) inset;
-  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  border: 1px solid hsl(var(--de-emerald) / 0.12);
+  box-shadow:
+    0 1px 0 hsl(0 0% 100% / 0.5) inset,
+    0 1px 2px hsl(var(--de-emerald-deep) / 0.04);
+  transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
 }
 .dash-emerald [data-slot="card"]:hover,
 .dash-emerald .border-border\/40:hover {
-  border-color: hsl(var(--de-gold) / 0.40);
+  border-color: hsl(var(--de-gold) / 0.45);
   box-shadow:
-    0 1px 0 hsl(0 0% 100% / 0.04) inset,
-    0 12px 30px -18px hsl(var(--de-emerald) / 0.45);
+    0 1px 0 hsl(0 0% 100% / 0.5) inset,
+    0 16px 36px -20px hsl(var(--de-emerald) / 0.48);
+}
+
+/* Card title gold accent rail (subtle) */
+.dash-emerald [data-slot="card-header"] {
+  position: relative;
 }
 
 /* Header titles → Sora, ink-tone */
 .dash-emerald [data-slot="card-title"],
 .dash-emerald .text-xs.flex.items-center.gap-2 {
   font-family: 'Sora', 'IBM Plex Sans Arabic', system-ui, sans-serif;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.01em;
+  font-weight: 700;
   color: hsl(var(--foreground));
 }
 
 /* Re-tone semantic icons inside dashboard scope:
    accent → emerald, warning → gold, primary → emerald */
 .dash-emerald .text-accent { color: hsl(var(--de-emerald)) !important; }
+.dark .dash-emerald .text-accent { color: hsl(162 65% 60%) !important; }
 .dash-emerald .bg-accent\/15 { background: hsl(var(--de-emerald) / 0.15) !important; }
 .dash-emerald .bg-accent\/10 { background: hsl(var(--de-emerald) / 0.10) !important; }
 .dash-emerald .bg-accent\/5  { background: hsl(var(--de-gold) / 0.06) !important; }
 .dash-emerald .bg-accent     { background: hsl(var(--de-emerald)) !important; }
-.dash-emerald .text-warning  { color: hsl(var(--de-gold)) !important; }
+.dash-emerald .text-warning  { color: hsl(43 70% 38%) !important; }
+.dark .dash-emerald .text-warning { color: hsl(var(--de-gold-bright)) !important; }
+.dash-emerald .text-success  { color: hsl(var(--de-emerald)) !important; }
+.dark .dash-emerald .text-success { color: hsl(162 65% 60%) !important; }
 .dash-emerald .bg-warning\/15,
 .dash-emerald .bg-warning\/10 { background: hsl(var(--de-gold) / 0.14) !important; }
 
 /* "View all" ghost buttons → gold link tone */
 .dash-emerald a .text-accent,
 .dash-emerald button.text-accent {
-  color: hsl(var(--de-gold)) !important;
-  font-weight: 600;
+  color: hsl(43 70% 36%) !important;
+  font-weight: 700;
+}
+.dark .dash-emerald a .text-accent,
+.dark .dash-emerald button.text-accent {
+  color: hsl(var(--de-gold-bright)) !important;
 }
 
 /* Subtle gold dot for unread indicators */
 .dash-emerald .rounded-full.bg-accent {
-  background: linear-gradient(135deg, hsl(var(--de-gold)), hsl(43 60% 65%)) !important;
-  box-shadow: 0 0 0 3px hsl(var(--de-gold) / 0.15);
+  background: linear-gradient(135deg, hsl(var(--de-gold)), hsl(var(--de-gold-bright))) !important;
+  box-shadow: 0 0 0 3px hsl(var(--de-gold) / 0.18), 0 0 8px hsl(var(--de-gold) / 0.35);
 }
 
 /* Quick action tiles uplift */
 .dash-emerald .grid.grid-cols-3 > a > div,
 .dash-emerald .grid.grid-cols-3 > button {
-  border: 1px solid hsl(var(--de-emerald) / 0.12);
+  border: 1px solid hsl(var(--de-emerald) / 0.14);
   border-radius: 0.875rem;
-  transition: all .2s ease;
+  background: linear-gradient(180deg, hsl(var(--card)), hsl(var(--de-emerald) / 0.03));
+  transition: all .25s ease;
 }
 .dash-emerald .grid.grid-cols-3 > a:hover > div {
-  border-color: hsl(var(--de-gold) / 0.45);
-  background: hsl(var(--de-emerald) / 0.06);
-  transform: translateY(-1px);
+  border-color: hsl(var(--de-gold) / 0.55);
+  background: linear-gradient(180deg, hsl(var(--de-emerald) / 0.08), hsl(var(--de-gold) / 0.06));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -12px hsl(var(--de-emerald) / 0.35);
 }
 
 /* Recharts: tint default fills via CSS variable fallback (where used) */
 .dash-emerald .recharts-default-tooltip {
-  border-radius: 0.75rem !important;
-  border: 1px solid hsl(var(--de-emerald) / 0.25) !important;
+  border-radius: 0.875rem !important;
+  border: 1px solid hsl(var(--de-emerald) / 0.30) !important;
   background: hsl(var(--card)) !important;
-  box-shadow: 0 10px 30px -15px hsl(var(--de-emerald-deep) / 0.35) !important;
+  box-shadow: 0 12px 36px -18px hsl(var(--de-emerald-deep) / 0.4) !important;
+  font-family: 'Manrope', 'IBM Plex Sans Arabic', system-ui, sans-serif !important;
+}
+.dash-emerald .recharts-cartesian-axis-tick text { font-weight: 500; }
+
+/* Progress bars in dashboard pick up emerald → gold */
+.dash-emerald [role="progressbar"] > div,
+.dash-emerald [data-slot="progress-indicator"] {
+  background: linear-gradient(90deg, hsl(var(--de-emerald)), hsl(var(--de-gold-bright))) !important;
 }
 
 /* Badge outline tone within dashboard — softer gold edge */
 .dash-emerald .badge-outline,
 .dash-emerald [data-slot="badge"][class*="outline"] {
-  border-color: hsl(var(--de-gold) / 0.35);
+  border-color: hsl(var(--de-gold) / 0.40);
+  color: hsl(var(--foreground));
+  font-weight: 600;
 }
 
 /* Section spacing rhythm */
 .dash-emerald .space-y-5 > * + * { margin-top: 1.25rem; }
 
+/* Focus rings — gold ring respecting brand identity */
+.dash-emerald :focus-visible {
+  outline: 2px solid hsl(var(--de-gold) / 0.7);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* Reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .dash-emerald .dash-tile,
+  .dash-emerald [data-slot="card"],
+  .dash-emerald .grid.grid-cols-3 > a > div {
+    transition: none !important;
+  }
+  .dash-emerald .dash-tile:hover,
+  .dash-emerald .grid.grid-cols-3 > a:hover > div { transform: none !important; }
+}
+
 /* Dark-mode polish */
 .dark .dash-emerald [data-slot="card"],
 .dark .dash-emerald .border-border\/40 {
   background: hsl(var(--card));
-  border-color: hsl(var(--de-emerald) / 0.18);
+  border-color: hsl(var(--de-emerald) / 0.22);
+  box-shadow:
+    0 1px 0 hsl(0 0% 100% / 0.04) inset,
+    0 1px 2px hsl(0 0% 0% / 0.2);
 }
 .dark .dash-emerald [data-slot="card"]:hover {
-  border-color: hsl(var(--de-gold) / 0.40);
+  border-color: hsl(var(--de-gold) / 0.50);
+  box-shadow:
+    0 1px 0 hsl(0 0% 100% / 0.04) inset,
+    0 18px 40px -22px hsl(var(--de-gold) / 0.30);
 }
