@@ -59,6 +59,7 @@ import {
   getMembershipPaymentIntentById,
   createMembershipPaymentIntentRecord,
   updateMembershipPaymentIntentById,
+  getLatestMembershipPaymentIntentForSubscription,
 } from '../payments/intents';
 import {
   listMembershipPaymentWebhookEvents,
@@ -135,6 +136,25 @@ describe('payments/intents', () => {
     expect(ops[0]).toEqual({ kind: 'from', table: 'membership_payment_intents' });
     expect(ops[1]).toEqual({ kind: 'update', values });
     expect(ops[2]).toEqual({ kind: 'eq', col: 'id', val: 'i1' });
+  });
+
+  it('getLatestMembershipPaymentIntentForSubscription scopes select + order desc + limit 1', async () => {
+    terminalResult = { data: { id: 'i9', status: 'succeeded' }, error: null };
+    const res = await getLatestMembershipPaymentIntentForSubscription({
+      subscriptionId: 'sub-1',
+      select: 'id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata',
+    });
+    expect(ops[0]).toEqual({ kind: 'from', table: 'membership_payment_intents' });
+    expect(ops[1]).toEqual({
+      kind: 'select',
+      arg: 'id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata',
+      opts: undefined,
+    });
+    expect(ops[2]).toEqual({ kind: 'eq', col: 'subscription_id', val: 'sub-1' });
+    expect(ops[3]).toEqual({ kind: 'order', col: 'created_at', opts: { ascending: false } });
+    expect(ops[4]).toEqual({ kind: 'limit', n: 1 });
+    expect(ops[5]).toEqual({ kind: 'maybeSingle' });
+    expect(res).toEqual({ data: { id: 'i9', status: 'succeeded' }, error: null });
   });
 });
 
