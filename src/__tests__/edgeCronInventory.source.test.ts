@@ -30,9 +30,13 @@ const EXPECTED_CRON_FUNCTIONS = [
 
 // Targets named in the doc that are intentionally NOT on disk (stale job
 // findings the doc is reporting). Test allows these to be missing.
-// Post EDGE-CRON-REPAIR-1: stale job removed. Doc no longer references
-// `check-migration-alerts` as an active target.
-const KNOWN_STALE_TARGETS = new Set<string>([]);
+// Post EDGE-CRON-REPAIR-1: stale job removed. The doc legitimately
+// references some jobnames (not function names) in backticks — allow them.
+const KNOWN_STALE_TARGETS = new Set<string>([
+  'membership-payment-reconcile-hourly', // jobname (function is `membership-payment-reconcile`)
+  'check-migration-alerts-hourly',       // historical jobname in "Removed" table
+  'check-migration-alerts',              // historical target in "Removed" table
+]);
 
 describe('EDGE-CRON-INVENTORY-1: docs/edge-cron-inventory.md', () => {
   it('exists', () => {
