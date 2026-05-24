@@ -100,7 +100,8 @@ export const MembershipCheckoutButton: React.FC<Props> = ({
       }
       const resp = data as CreateIntentResponse | null;
       if (!resp || resp.ok !== true) {
-        const code = (resp && !resp.ok ? resp.code : 'provider_error') as CreateIntentFailure['code'];
+        const code: CreateIntentFailure['code'] =
+          resp && resp.ok === false ? resp.code : 'provider_error';
         toast.error(friendlyError(code, isRTL));
         return;
       }
