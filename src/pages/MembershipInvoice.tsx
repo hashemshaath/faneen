@@ -30,10 +30,28 @@ interface InvoiceIntent {
   created_at: string;
   updated_at: string | null;
   metadata: Record<string, unknown> | null;
+  plan?: {
+    name_ar?: string | null;
+    name_en?: string | null;
+    tier?: string | null;
+  } | null;
+  subscription?: {
+    id?: string | null;
+    ref_id?: string | null;
+    tier?: string | null;
+    starts_at?: string | null;
+    expires_at?: string | null;
+    business?: {
+      id?: string | null;
+      name_ar?: string | null;
+      name_en?: string | null;
+      ref_id?: string | null;
+    } | null;
+  } | null;
 }
 
 const SAFE_SELECT =
-  'id, subscription_id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata';
+  'id, subscription_id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata, plan:membership_plans(name_ar, name_en, tier), subscription:membership_subscriptions(id, ref_id, tier, starts_at, expires_at, business:businesses(id, name_ar, name_en, ref_id))';
 
 function readRefundedAt(metadata: Record<string, unknown> | null): string | null {
   if (!metadata || typeof metadata !== 'object') return null;
@@ -95,6 +113,16 @@ const MembershipInvoice = () => {
   }
 
   const refundedAt = readRefundedAt(data.metadata);
+  const planName = isRTL
+    ? data.plan?.name_ar || data.plan?.name_en
+    : data.plan?.name_en || data.plan?.name_ar;
+  const businessName = isRTL
+    ? data.subscription?.business?.name_ar || data.subscription?.business?.name_en
+    : data.subscription?.business?.name_en || data.subscription?.business?.name_ar;
+  const businessRef = data.subscription?.business?.ref_id ?? null;
+  const subRef = data.subscription?.ref_id ?? null;
+  const periodStart = data.subscription?.starts_at ?? null;
+  const periodEnd = data.subscription?.expires_at ?? null;
 
   return (
     <div className="container max-w-3xl py-8 print:py-2">
@@ -182,7 +210,47 @@ const MembershipInvoice = () => {
                   {isRTL ? 'مرجع الاشتراك' : 'Subscription reference'}
                 </dt>
                 <dd className="tech-content font-mono text-foreground text-xs break-all">
-                  {data.subscription_id}
+                  {subRef ?? data.subscription_id}
+                </dd>
+              </div>
+            )}
+            {planName && (
+              <div>
+                <dt className="text-xs text-muted-foreground mb-1">
+                  {isRTL ? 'الباقة' : 'Plan'}
+                </dt>
+                <dd className="text-foreground">
+                  {planName}
+                  {data.plan?.tier && (
+                    <span className="tech-content text-xs text-muted-foreground ms-2">
+                      ({data.plan.tier})
+                    </span>
+                  )}
+                </dd>
+              </div>
+            )}
+            {businessName && (
+              <div>
+                <dt className="text-xs text-muted-foreground mb-1">
+                  {isRTL ? 'الحساب' : 'Account'}
+                </dt>
+                <dd className="text-foreground">
+                  {businessName}
+                  {businessRef && (
+                    <span className="tech-content text-xs text-muted-foreground ms-2 font-mono">
+                      {businessRef}
+                    </span>
+                  )}
+                </dd>
+              </div>
+            )}
+            {(periodStart || periodEnd) && (
+              <div className="sm:col-span-2">
+                <dt className="text-xs text-muted-foreground mb-1">
+                  {isRTL ? 'فترة العضوية' : 'Membership period'}
+                </dt>
+                <dd className="tech-content text-foreground">
+                  {fmt(periodStart)} — {fmt(periodEnd)}
                 </dd>
               </div>
             )}
@@ -205,6 +273,11 @@ const MembershipInvoice = () => {
             {isRTL
               ? 'هذه وثيقة داخلية صادرة من منصة قطاعات.'
               : 'This is an internal document issued by Qitaat platform.'}
+          </p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {isRTL
+              ? 'للاستفسارات، يرجى التواصل مع دعم المنصة.'
+              : 'For questions, please contact platform support.'}
           </p>
         </CardContent>
       </Card>
