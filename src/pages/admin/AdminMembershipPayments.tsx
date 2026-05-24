@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Loader2, CreditCard, Check } from 'lucide-react';
 import {
@@ -55,6 +56,8 @@ const AdminMembershipPayments = () => {
   useNoIndex();
 
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchParams] = useSearchParams();
+  const highlightedIntentId = searchParams.get('intent');
   const [activeIntent, setActiveIntent] = useState<IntentRow | null>(null);
   const [externalPaymentId, setExternalPaymentId] = useState('');
   const [invoiceId, setInvoiceId] = useState('');
@@ -78,7 +81,13 @@ const AdminMembershipPayments = () => {
     },
   });
 
-  const filtered = useMemo(() => rows, [rows]);
+  const filtered = useMemo(() => {
+    if (!highlightedIntentId) return rows;
+    // Read-only filter: pin matching row to top, do not auto-submit.
+    const match = rows.find((r) => r.id === highlightedIntentId);
+    if (!match) return rows;
+    return [match, ...rows.filter((r) => r.id !== highlightedIntentId)];
+  }, [rows, highlightedIntentId]);
 
   const resetForm = () => {
     setActiveIntent(null);
@@ -171,8 +180,9 @@ const AdminMembershipPayments = () => {
               <TableBody>
                 {filtered.map((r) => {
                   const isPaid = PAID_STATUSES.has(r.status);
+                  const isHighlighted = highlightedIntentId === r.id;
                   return (
-                    <TableRow key={r.id}>
+                    <TableRow key={r.id} className={isHighlighted ? 'bg-primary/5' : ''}>
                       <TableCell className="tech-content text-xs">{new Date(r.created_at).toLocaleString()}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={STATUS_TONE[r.status] || ''}>{r.status}</Badge>
