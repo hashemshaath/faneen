@@ -7,6 +7,7 @@ export {
   freezeBarcodeAdmin,
   archiveBarcodeAdmin,
   restoreBarcodeAdmin,
+  transferBarcodeAdmin,
   type BarcodeRegistryRow,
   type BarcodeRegistrySummary,
   type BarcodeRegistryDetail,
