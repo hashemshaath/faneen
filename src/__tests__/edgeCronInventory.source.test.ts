@@ -30,10 +30,9 @@ const EXPECTED_CRON_FUNCTIONS = [
 
 // Targets named in the doc that are intentionally NOT on disk (stale job
 // findings the doc is reporting). Test allows these to be missing.
-const KNOWN_STALE_TARGETS = new Set([
-  'check-migration-alerts',
-  'check-migration-alerts-hourly', // jobname mentioned in stale issue
-]);
+// Post EDGE-CRON-REPAIR-1: stale job removed. Doc no longer references
+// `check-migration-alerts` as an active target.
+const KNOWN_STALE_TARGETS = new Set<string>([]);
 
 describe('EDGE-CRON-INVENTORY-1: docs/edge-cron-inventory.md', () => {
   it('exists', () => {
@@ -81,6 +80,28 @@ describe('EDGE-CRON-INVENTORY-1: docs/edge-cron-inventory.md', () => {
     // JWT signature segment of the project anon key starts with this prefix.
     expect(md).not.toContain('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9');
     expect(md).toMatch(/REDACTED/);
+  });
+
+  it('post-repair: doc no longer lists check-migration-alerts as active', () => {
+    const md = readFileSync(DOC, 'utf8');
+    // The function name may still appear in a "Removed" historical row,
+    // but must not be marked as an active target in the active jobs table.
+    const activeSection = md.split('## Removed')[0];
+    expect(activeSection).not.toMatch(/`check-migration-alerts`/);
+  });
+
+  it('post-repair: doc lists new schedules', () => {
+    const md = readFileSync(DOC, 'utf8');
+    expect(md).toContain('membership-payment-reconcile-hourly');
+    expect(md).toContain('monthly-provider-credit-grant');
+  });
+
+  it('post-repair: weekly-sla-report appears in active jobs exactly once', () => {
+    const md = readFileSync(DOC, 'utf8');
+    const activeSection = md.split('### Removed')[0];
+    // Count rows in the active table where target column is `weekly-sla-report`.
+    const targetMatches = activeSection.match(/\|\s*`weekly-sla-report`\s*\|/g) ?? [];
+    expect(targetMatches.length).toBe(1);
   });
 
   it('no duplicate function classification entries (each expected function appears in coverage table once)', () => {
