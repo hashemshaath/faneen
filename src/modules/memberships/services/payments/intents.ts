@@ -105,7 +105,7 @@ export async function getMembershipPaymentIntentForInvoice<T = unknown>(args: {
 }): Promise<{ data: T | null; error: unknown }> {
   const select =
     args.select ??
-    'id, subscription_id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata';
+    'id, subscription_id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata, plan:membership_plans(name_ar, name_en, tier), subscription:membership_subscriptions(id, ref_id, tier, starts_at, expires_at, business:businesses(id, name_ar, name_en, ref_id))';
   const { data, error } = await supabase
     .from('membership_payment_intents')
     .select(select)
