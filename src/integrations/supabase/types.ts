@@ -8061,7 +8061,7 @@ export type Database = {
           phone?: string | null
           phone_verified?: boolean
           preferred_language?: string
-          ref_id?: string
+          ref_id: string
           updated_at?: string
           user_id: string
         }
