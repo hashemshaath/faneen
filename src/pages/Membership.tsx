@@ -896,6 +896,13 @@ const Membership = () => {
           />
         )}
 
+        {user && mySubscription && (
+          <MembershipPaymentHistory
+            isRTL={isRTL}
+            subscriptionId={(mySubscription as { id?: string }).id ?? null}
+          />
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
           {plans.map((plan) => {
             const planTierIndex = tierOrder.indexOf(plan.tier);
