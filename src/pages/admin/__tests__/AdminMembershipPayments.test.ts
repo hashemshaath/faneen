@@ -99,3 +99,36 @@ describe('Admin sidebar nav entry (R4F-8F)', () => {
     expect(NAV).not.toMatch(/rpc\(\s*['"]admin_mark_membership_paid_manually['"]/);
   });
 });
+
+describe('AdminMembershipPayments webhook events panel (R4F-8G)', () => {
+  it('imports listMembershipPaymentWebhookEvents from canonical module', () => {
+    expect(SRC).toMatch(/listMembershipPaymentWebhookEvents/);
+    expect(SRC).toMatch(/from ['"]@\/modules\/memberships['"]/);
+  });
+
+  it('renders bilingual recent payment events panel title', () => {
+    expect(SRC).toMatch(/Recent payment events/);
+    expect(SRC).toMatch(/أحداث الدفع الأخيرة/);
+  });
+
+  it('deep links to payment intent via ?intent= when payload contains payment_intent_id', () => {
+    expect(SRC).toMatch(/\/admin\/membership-payments\?intent=/);
+  });
+
+  it('does not dump full raw payload JSON or expose sensitive keys', () => {
+    expect(SRC).not.toMatch(/JSON\.stringify\(\s*e\.payload/);
+    expect(SRC).not.toMatch(/signature/);
+    expect(SRC).toMatch(/extractSafePayloadSummary/);
+  });
+
+  it('remains read-only: markMembershipPaidManually is still only called once from submit handler', () => {
+    const calls = SRC.match(/markMembershipPaidManually\(/g) || [];
+    expect(calls.length).toBe(1);
+    expect(SRC).not.toMatch(/useEffect[^}]*markMembershipPaidManually/);
+  });
+
+  it('shows empty-state copy clarifying no provider integration yet', () => {
+    expect(SRC).toMatch(/No payment events yet\./);
+    expect(SRC).toMatch(/لا توجد أحداث دفع بعد\./);
+  });
+});

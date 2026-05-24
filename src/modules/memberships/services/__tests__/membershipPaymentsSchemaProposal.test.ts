@@ -67,9 +67,9 @@ describe('R4F-8B membership payments schema proposal migration', () => {
 });
 
 describe('R4F-8B audit allowlist impact', () => {
-  it('does not add the new tables to memberships isolation audit yet (deferred to R4F-8C)', () => {
+  it('tables are now present in memberships isolation audit (R4F-8C+)', () => {
     const audit = readFileSync(resolve('scripts/memberships-isolation-audit.mjs'), 'utf8');
-    expect(audit).not.toContain('membership_payment_intents');
-    expect(audit).not.toContain('membership_payment_webhook_events');
+    expect(audit).toContain('membership_payment_intents');
+    expect(audit).toContain('membership_payment_webhook_events');
   });
 });

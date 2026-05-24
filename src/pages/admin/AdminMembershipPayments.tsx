@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2, CreditCard, Check } from 'lucide-react';
+import { Loader2, CreditCard, Check, History } from 'lucide-react';
 import {
   listMembershipPaymentIntents,
+  listMembershipPaymentWebhookEvents,
   markMembershipPaidManually,
   type MarkMembershipPaidManuallyResult,
 } from '@/modules/memberships';
@@ -36,6 +37,45 @@ interface IntentRow {
   created_at: string;
   updated_at: string | null;
 }
+
+interface WebhookEventRow {
+  id: string;
+  event_id: string;
+  event_type: string;
+  provider: string;
+  received_at: string;
+  created_at: string;
+  processed_at: string | null;
+  processing_error: string | null;
+  payload: unknown;
+}
+
+function extractSafePayloadSummary(payload: unknown): { paymentIntentId?: string; lines: string[] } {
+  if (!payload || typeof payload !== 'object') return { lines: [] };
+  const p = payload as Record<string, unknown>;
+  const safeKeys = ['status', 'amount', 'currency', 'invoice_id', 'customer_id', 'subscription_id', 'object', 'type'];
+  const lines: string[] = [];
+  for (const key of safeKeys) {
+    if (p[key] != null) {
+      const value = String(p[key]);
+      lines.push(`${key}: ${value.length > 40 ? value.slice(0, 40) + '…' : value}`);
+    }
+  }
+  const paymentIntentId = p.payment_intent_id != null ? String(p.payment_intent_id) : undefined;
+  return { paymentIntentId, lines };
+}
+
+function eventStatusLabel(row: WebhookEventRow): string {
+  if (row.processing_error) return 'error';
+  if (row.processed_at) return 'processed';
+  return 'pending';
+}
+
+const EVENT_STATUS_TONE: Record<string, string> = {
+  processed: 'bg-success/10 text-success border-success/30',
+  error: 'bg-destructive/10 text-destructive border-destructive/30',
+  pending: 'bg-muted text-muted-foreground border-border',
+};
 
 const STATUS_TONE: Record<string, string> = {
   succeeded: 'bg-success/10 text-success border-success/30',
@@ -78,6 +118,22 @@ const AdminMembershipPayments = () => {
       });
       if (error) throw error;
       return (data ?? []) as IntentRow[];
+    },
+  });
+
+  const EVENT_SELECT =
+    'id,event_id,event_type,provider,received_at,created_at,processed_at,processing_error,payload';
+
+  const { data: eventRows = [], isLoading: eventsLoading } = useQuery({
+    queryKey: ['admin-membership-payment-events'],
+    queryFn: async () => {
+      const { data, error } = await listMembershipPaymentWebhookEvents<WebhookEventRow>({
+        select: EVENT_SELECT,
+        limit: 50,
+        order: { column: 'created_at', ascending: false },
+      });
+      if (error) throw error;
+      return (data ?? []) as WebhookEventRow[];
     },
   });
 
@@ -298,6 +354,82 @@ const AdminMembershipPayments = () => {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader className="flex flex-row items-center gap-2 space-y-0">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <History className="w-5 h-5" />
+            {isRTL ? 'أحداث الدفع الأخيرة' : 'Recent payment events'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {eventsLoading ? (
+            <div className="py-10 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{isRTL ? 'التاريخ' : 'Received'}</TableHead>
+                  <TableHead>{isRTL ? 'المزود' : 'Provider'}</TableHead>
+                  <TableHead>{isRTL ? 'نوع الحدث' : 'Event type'}</TableHead>
+                  <TableHead>{isRTL ? 'معرف الحدث' : 'Event ID'}</TableHead>
+                  <TableHead>{isRTL ? 'الحالة' : 'Status'}</TableHead>
+                  <TableHead>{isRTL ? 'الملخص' : 'Summary'}</TableHead>
+                  <TableHead className="text-end"> </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {eventRows.map((e) => {
+                  const summary = extractSafePayloadSummary(e.payload);
+                  const status = eventStatusLabel(e);
+                  return (
+                    <TableRow key={e.id}>
+                      <TableCell className="tech-content text-xs">{new Date(e.received_at).toLocaleString()}</TableCell>
+                      <TableCell className="tech-content text-xs">{e.provider}</TableCell>
+                      <TableCell className="tech-content text-xs">{e.event_type}</TableCell>
+                      <TableCell className="tech-content text-[10px] font-mono">{e.event_id}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={EVENT_STATUS_TONE[status] || ''}>
+                          {status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {summary.lines.length > 0 ? (
+                          <ul className="space-y-0.5">
+                            {summary.lines.map((line, i) => (
+                              <li key={i} className="text-muted-foreground">{line}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-end">
+                        {summary.paymentIntentId ? (
+                          <Button size="sm" variant="ghost" asChild>
+                            <Link
+                              to={`/admin/membership-payments?intent=${encodeURIComponent(summary.paymentIntentId)}`}
+                            >
+                              {isRTL ? 'فتح نية الدفع' : 'Open payment intent'}
+                            </Link>
+                          </Button>
+                        ) : null}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {eventRows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-sm">
+                      {isRTL ? 'لا توجد أحداث دفع بعد.' : 'No payment events yet.'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
