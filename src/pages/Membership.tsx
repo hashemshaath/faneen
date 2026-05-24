@@ -39,6 +39,8 @@ import { track } from '@/lib/analytics-events';
 import { Button } from '@/components/ui/button';
 import { ensureDraftBusiness } from '@/lib/ensure-business';
 import { logUpgradeRejection, rejectionReasonLabel, classifyRejectionReason } from '@/lib/membership-rejection-logger';
+import { createMembershipPaymentIntent } from '@/modules/memberships';
+import type { CreateMembershipPaymentIntentInput } from '@/modules/memberships';
 
 const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 
