@@ -182,6 +182,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'عضويات المزودين', en: 'Provider Subscriptions' }, url: '/admin/provider-subscriptions', icon: Crown },
       { label: { ar: 'تدقيق رفض الترقيات', en: 'Upgrade Rejections' }, url: '/admin/membership-rejections', icon: ShieldAlert },
       { label: { ar: 'سجل أحداث الاشتراكات', en: 'Subscription Events' }, url: '/admin/membership-events', icon: ShieldAlert },
+      { label: { ar: 'مدفوعات العضويات', en: 'Membership Payments' }, url: '/admin/membership-payments', icon: CreditCard },
       { label: { ar: 'تحليلات العقود', en: 'Contract Analytics' }, url: '/admin/contracts/analytics', icon: BarChart3 },
     ],
   },

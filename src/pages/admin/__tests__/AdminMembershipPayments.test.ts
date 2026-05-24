@@ -66,3 +66,36 @@ describe('AdminMembershipPayments route wiring', () => {
     expect(APP).toMatch(/requireAdmin[^>]*>\s*<AdminMembershipPayments/);
   });
 });
+
+describe('AdminMembershipPayments query-param deep link (R4F-8F)', () => {
+  it('reads "intent" search param via react-router useSearchParams', () => {
+    expect(SRC).toMatch(/useSearchParams/);
+    expect(SRC).toMatch(/searchParams\.get\(['"]intent['"]\)/);
+  });
+
+  it('opening with intent param is read-only (no auto mark-paid)', () => {
+    // markMembershipPaidManually must only be invoked from handleSubmit.
+    const calls = SRC.match(/markMembershipPaidManually\(/g) || [];
+    expect(calls.length).toBe(1);
+    // Highlight effect uses bg class, not a mutation.
+    expect(SRC).toMatch(/isHighlighted/);
+    expect(SRC).not.toMatch(/useEffect[^}]*markMembershipPaidManually/);
+  });
+});
+
+describe('Admin sidebar nav entry (R4F-8F)', () => {
+  const NAV = fs.readFileSync(
+    path.resolve(__dirname, '../../../components/dashboard/DashboardSidebar.tsx'),
+    'utf8',
+  );
+  it('includes /admin/membership-payments link with bilingual labels', () => {
+    expect(NAV).toMatch(/\/admin\/membership-payments/);
+    expect(NAV).toMatch(/مدفوعات العضويات/);
+    expect(NAV).toMatch(/Membership Payments/);
+  });
+
+  it('does not directly query payment intents or call mark-paid rpc from nav', () => {
+    expect(NAV).not.toMatch(/from\(\s*['"]membership_payment_intents['"]/);
+    expect(NAV).not.toMatch(/rpc\(\s*['"]admin_mark_membership_paid_manually['"]/);
+  });
+});
