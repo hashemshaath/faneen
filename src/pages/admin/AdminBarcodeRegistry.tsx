@@ -27,9 +27,11 @@ import {
   archiveBarcodeAdmin,
   restoreBarcodeAdmin,
   transferBarcodeAdmin,
+  listBarcodeTransferTrailAdmin,
   type BarcodeRegistryRow as BarcodeRow,
   type BarcodeRegistrySummary as RegistrySummary,
   type BarcodeRegistryDetail as BarcodeDetail,
+  type BarcodeTransferTrailEntry,
 } from '@/modules/barcodes';
 import {
   adminSearchUsersForTransfer,
