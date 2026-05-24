@@ -229,6 +229,10 @@ const AppRoutes = () => (
           <Route path="/compare" element={<Compare />} />
           <Route path="/compare-profiles" element={<CompareProfiles />} />
           <Route path="/membership" element={<Membership />} />
+          <Route
+            path="/membership/payments/:paymentIntentId/invoice"
+            element={<ProtectedRoute><MembershipInvoice /></ProtectedRoute>}
+          />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
