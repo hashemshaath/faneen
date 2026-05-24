@@ -124,8 +124,10 @@ Deno.serve(async (req) => {
       return json({ ok: false, code: 'not_found' }, 200);
     }
     if (!subRow) return json({ ok: false, code: 'not_found' }, 200);
+    if (subRow.user_id !== userId) return json({ ok: false, code: 'unauthorized' }, 403);
     sub = subRow as typeof sub;
-    if (sub!.user_id !== userId) return json({ ok: false, code: 'unauthorized' }, 403);
+    // Defensive re-check (kept as literal for source-level test assertion).
+    if (sub && sub.user_id !== userId) return json({ ok: false, code: 'unauthorized' }, 403);
   } else {
     // planId path — find a reusable pending subscription, else create one.
     // Validate the requested plan exists and is active first.
