@@ -63,6 +63,34 @@ const AdminCronRuns = () => {
 
   const rows = data ?? [];
 
+  // 30-day rollup computed from the latest 50 rows (cheap, client-side).
+  // For full 30-day fidelity we'd need a dedicated aggregate; the current
+  // hourly+daily cadence keeps 50 rows well within the 30-day window.
+  const health = useMemo(() => {
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const inWindow = rows.filter(
+      (r) => new Date(r.started_at).getTime() >= cutoff,
+    );
+    const total = inWindow.length;
+    const succeeded = inWindow.filter((r) => r.ok === true).length;
+    const failed = inWindow.filter((r) => r.ok === false).length;
+    const successRate = total > 0 ? Math.round((succeeded / total) * 100) : 0;
+    const lastRun = inWindow[0]?.started_at ?? null;
+    const latestFailed = inWindow.find((r) => r.ok === false) ?? null;
+    const jobs = new Set(inWindow.map((r) => r.job_name));
+    return {
+      total,
+      succeeded,
+      failed,
+      successRate,
+      lastRun,
+      latestFailedJob: latestFailed?.job_name ?? null,
+      jobsObserved: jobs.size,
+    };
+  }, [rows]);
+
+  const hasIssues = health.failed > 0;
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
