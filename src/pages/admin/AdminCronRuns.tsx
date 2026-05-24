@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -10,7 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, RefreshCw, Activity, AlertCircle, CheckCircle2, XCircle, CalendarClock } from 'lucide-react';
-import { listCronRunLogs } from '@/modules/system/services/cronRuns';
+import {
+  listCronRunLogs,
+  getCronRunHealth,
+  type CronRunHealthRow,
+} from '@/modules/system/services/cronRuns';
 
 interface CronRunRow {
   id: string;
@@ -47,6 +50,22 @@ const AdminCronRuns = () => {
   useNoIndex();
 
   const [jobFilter, setJobFilter] = useState('');
+  const [windowDays, setWindowDays] = useState<7 | 30 | 90>(30);
+
+  const sinceIso = useMemo(
+    () => new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString(),
+    [windowDays],
+  );
+
+  const healthQuery = useQuery({
+    queryKey: ['admin-cron-health', windowDays],
+    queryFn: async () => {
+      const { data, error } = await getCronRunHealth({ sinceIso });
+      if (error) throw error;
+      return (data ?? []) as CronRunHealthRow[];
+    },
+    staleTime: 30_000,
+  });
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['admin-cron-runs', jobFilter],
@@ -62,22 +81,27 @@ const AdminCronRuns = () => {
   });
 
   const rows = data ?? [];
+  const healthRows = healthQuery.data ?? [];
 
-  // 30-day rollup computed from the latest 50 rows (cheap, client-side).
-  // For full 30-day fidelity we'd need a dedicated aggregate; the current
-  // hourly+daily cadence keeps 50 rows well within the 30-day window.
+  // Aggregate totals from the server-side per-job rows.
   const health = useMemo(() => {
-    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const inWindow = rows.filter(
-      (r) => new Date(r.started_at).getTime() >= cutoff,
-    );
-    const total = inWindow.length;
-    const succeeded = inWindow.filter((r) => r.ok === true).length;
-    const failed = inWindow.filter((r) => r.ok === false).length;
+    const total = healthRows.reduce((a, r) => a + Number(r.total_runs || 0), 0);
+    const succeeded = healthRows.reduce((a, r) => a + Number(r.ok_runs || 0), 0);
+    const failed = healthRows.reduce((a, r) => a + Number(r.failed_runs || 0), 0);
     const successRate = total > 0 ? Math.round((succeeded / total) * 100) : 0;
-    const lastRun = inWindow[0]?.started_at ?? null;
-    const latestFailed = inWindow.find((r) => r.ok === false) ?? null;
-    const jobs = new Set(inWindow.map((r) => r.job_name));
+    const sortedByLatest = [...healthRows].sort((a, b) => {
+      const ta = a.last_run_at ? new Date(a.last_run_at).getTime() : 0;
+      const tb = b.last_run_at ? new Date(b.last_run_at).getTime() : 0;
+      return tb - ta;
+    });
+    const lastRun = sortedByLatest[0]?.last_run_at ?? null;
+    const latestFailed = [...healthRows]
+      .filter((r) => r.last_failed_at)
+      .sort(
+        (a, b) =>
+          new Date(b.last_failed_at as string).getTime() -
+          new Date(a.last_failed_at as string).getTime(),
+      )[0];
     return {
       total,
       succeeded,
@@ -85,11 +109,21 @@ const AdminCronRuns = () => {
       successRate,
       lastRun,
       latestFailedJob: latestFailed?.job_name ?? null,
-      jobsObserved: jobs.size,
+      jobsObserved: healthRows.length,
     };
-  }, [rows]);
+  }, [healthRows]);
 
   const hasIssues = health.failed > 0;
+
+  function successBadgeClass(rate: number, failedRuns: number): string {
+    if (failedRuns > 0 && rate < 90) {
+      return 'bg-destructive/10 text-destructive border-destructive/30';
+    }
+    if (failedRuns > 0) {
+      return 'bg-warning/10 text-warning border-warning/30';
+    }
+    return 'bg-success/10 text-success border-success/30';
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -101,6 +135,22 @@ const AdminCronRuns = () => {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          <div className="flex items-center rounded-md border border-border overflow-hidden">
+            {[7, 30, 90].map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setWindowDays(d as 7 | 30 | 90)}
+                className={`px-2.5 h-9 text-xs ${
+                  windowDays === d
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                {d}{isRTL ? 'ي' : 'd'}
+              </button>
+            ))}
+          </div>
           <Input
             value={jobFilter}
             onChange={(e) => setJobFilter(e.target.value)}
@@ -110,8 +160,11 @@ const AdminCronRuns = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => refetch()}
-            disabled={isFetching}
+            onClick={() => {
+              refetch();
+              healthQuery.refetch();
+            }}
+            disabled={isFetching || healthQuery.isFetching}
           >
             <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''} ${isRTL ? 'ml-2' : 'mr-2'}`} />
             {isRTL ? 'تحديث' : 'Refresh'}
@@ -127,14 +180,23 @@ const AdminCronRuns = () => {
             <CalendarClock className="h-4 w-4" />
             {isRTL ? 'صحة المهام المجدولة' : 'Cron Health'}
             <span className="text-xs text-muted-foreground font-normal">
-              {isRTL ? '(آخر 30 يوم)' : '(last 30 days)'}
+              {isRTL ? `(آخر ${windowDays} يوم)` : `(last ${windowDays} days)`}
             </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {health.total === 0 ? (
+          {healthQuery.isError ? (
+            <p className="text-sm text-destructive">
+              {isRTL ? 'تعذر تحميل ملخص الصحة.' : 'Failed to load health summary.'}
+            </p>
+          ) : healthQuery.isLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {isRTL ? 'جارٍ التحميل...' : 'Loading...'}
+            </div>
+          ) : health.total === 0 ? (
             <p className="text-sm text-muted-foreground">
-              {isRTL ? 'لا توجد بيانات كافية بعد.' : 'Not enough data yet.'}
+              {isRTL ? 'لا توجد بيانات كافية للفترة المحددة.' : 'Not enough data for the selected period.'}
             </p>
           ) : (
             <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -176,6 +238,77 @@ const AdminCronRuns = () => {
                   <span className="font-mono">{health.latestFailedJob}</span>
                 </span>
               ) : null}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-4">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">
+            {isRTL ? 'صحة المهام حسب الوظيفة' : 'Job health'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {healthQuery.isError ? (
+            <p className="text-sm text-destructive">
+              {isRTL ? 'تعذر تحميل صحة المهام.' : 'Failed to load job health.'}
+            </p>
+          ) : healthQuery.isLoading ? (
+            <div className="flex items-center justify-center py-6 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
+          ) : healthRows.length === 0 ? (
+            <p className="text-center py-6 text-muted-foreground text-sm">
+              {isRTL ? 'لا توجد بيانات كافية للفترة المحددة.' : 'Not enough data for the selected period.'}
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{isRTL ? 'المهمة' : 'Job'}</TableHead>
+                    <TableHead>{isRTL ? 'النجاح' : 'Success'}</TableHead>
+                    <TableHead>{isRTL ? 'إجمالي' : 'Total'}</TableHead>
+                    <TableHead>{isRTL ? 'فشل' : 'Failed'}</TableHead>
+                    <TableHead>{isRTL ? 'متوسط المدة (مللي)' : 'Avg (ms)'}</TableHead>
+                    <TableHead>{isRTL ? 'آخر تشغيل' : 'Last run'}</TableHead>
+                    <TableHead>{isRTL ? 'الحالة' : 'Status'}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {healthRows.map((r) => {
+                    const rate = Number(r.success_rate ?? 0);
+                    const failed = Number(r.failed_runs ?? 0);
+                    return (
+                      <TableRow key={r.job_name}>
+                        <TableCell className="text-xs font-mono">{r.job_name}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={successBadgeClass(rate, failed)}
+                          >
+                            {Math.round(rate)}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs tabular-nums">{Number(r.total_runs)}</TableCell>
+                        <TableCell className="text-xs tabular-nums">
+                          <span className={failed > 0 ? 'text-destructive' : 'text-muted-foreground'}>
+                            {failed}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs tabular-nums">
+                          {r.avg_duration_ms != null ? Math.round(Number(r.avg_duration_ms)) : '—'}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs">
+                          {r.last_run_at ? formatDate(r.last_run_at, isRTL) : '—'}
+                        </TableCell>
+                        <TableCell className="text-xs">{r.latest_status ?? '—'}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>

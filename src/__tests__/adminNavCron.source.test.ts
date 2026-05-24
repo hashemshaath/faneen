@@ -54,8 +54,9 @@ describe('Cron Health rollup card', () => {
   });
 
   it('renders the empty rollup copy in both languages', () => {
-    expect(PAGE).toContain('لا توجد بيانات كافية بعد.');
-    expect(PAGE).toContain('Not enough data yet.');
+    // ADMIN-CRON-AGGREGATE-RPC-1: empty copy now reflects the selected window.
+    expect(PAGE).toContain('لا توجد بيانات كافية للفترة المحددة.');
+    expect(PAGE).toContain('Not enough data for the selected period.');
   });
 
   it('still uses listCronRunLogs wrapper exclusively (no direct table or JSON.stringify summary)', () => {
