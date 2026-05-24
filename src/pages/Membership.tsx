@@ -39,6 +39,8 @@ import { track } from '@/lib/analytics-events';
 import { Button } from '@/components/ui/button';
 import { ensureDraftBusiness } from '@/lib/ensure-business';
 import { logUpgradeRejection, rejectionReasonLabel, classifyRejectionReason } from '@/lib/membership-rejection-logger';
+import { createMembershipPaymentIntent } from '@/modules/memberships';
+import type { CreateMembershipPaymentIntentInput } from '@/modules/memberships';
 
 const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 
@@ -529,6 +531,58 @@ const Membership = () => {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // R4F-9I: Paid-plan primary path — create (or reuse) a Moyasar payment
+  // intent for the selected plan and redirect to hosted checkout. Replaces
+  // the admin upgrade-request gate for paid packages. Server recomputes
+  // amount/currency — UI passes only context (planId / cycle / business).
+  const friendlyCheckoutError = React.useCallback((code: string): string => {
+    switch (code) {
+      case 'missing_payment_config':
+        return isRTL
+          ? 'الدفع الإلكتروني غير مفعّل حاليًا. يرجى المحاولة لاحقًا.'
+          : 'Online payment is not available yet. Please try again later.';
+      case 'not_eligible':
+        return isRTL ? 'لا يمكن إنشاء عملية دفع لهذه الباقة حاليًا.' : 'This plan is not eligible for payment right now.';
+      case 'not_found':
+        return isRTL ? 'تعذّر العثور على بيانات الباقة.' : 'Plan not found.';
+      case 'unauthorized':
+        return isRTL ? 'يرجى تسجيل الدخول للمتابعة.' : 'Please sign in to continue.';
+      case 'provider_error':
+      default:
+        return isRTL
+          ? 'تعذّر بدء عملية الدفع. يرجى المحاولة مرة أخرى.'
+          : 'Could not start the payment. Please try again.';
+    }
+  }, [isRTL]);
+
+  const checkoutMutation = useMutation({
+    mutationFn: async (plan: { id: string; tier: string }) => {
+      if (!user || !myBusiness) {
+        throw new Error('unauthorized');
+      }
+      const payload = {
+        planId: plan.id,
+        billingCycle,
+        businessId: myBusiness.id,
+        provider: 'moyasar',
+      } as unknown as CreateMembershipPaymentIntentInput;
+      const { data, error } = await createMembershipPaymentIntent(payload);
+      if (error) throw new Error('provider_error');
+      const resp = data as { ok: boolean; checkout_url?: string; code?: string } | null;
+      if (!resp || resp.ok !== true || !resp.checkout_url) {
+        throw new Error(resp && resp.ok === false && resp.code ? resp.code : 'provider_error');
+      }
+      // Hand off to Moyasar-hosted checkout. Server is the source of truth
+      // for activation, mirror, emails and notifications (R4F-9D/E).
+      window.location.href = resp.checkout_url;
+      return resp;
+    },
+    onError: (e: Error) => {
+      setSubscribingPlanId(null);
+      toast.error(friendlyCheckoutError(e.message || 'provider_error'));
+    },
+  });
+
   const currentTier = myBusiness?.membership_tier || 'free';
   const currentTierIndex = tierOrder.indexOf(currentTier);
 
@@ -571,7 +625,11 @@ const Membership = () => {
   const confirmUpgrade = () => {
     if (!pendingUpgrade) return;
     setSubscribingPlanId(pendingUpgrade.id);
-    requestUpgradeMutation.mutate(pendingUpgrade);
+    // R4F-9I: paid plans go straight to Moyasar checkout. Admin approval
+    // is no longer required before payment. Manual admin mark-paid /
+    // mark-refunded / upgrade-request history remain available for the
+    // fallback flow but no longer gate the user.
+    checkoutMutation.mutate(pendingUpgrade);
     setPendingUpgrade(null);
   };
 
@@ -591,8 +649,8 @@ const Membership = () => {
           <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
           <p className="leading-relaxed">
             {isRTL
-              ? 'نسخة تجريبية — يتم تفعيل الترقيات يدوياً حالياً دون أي رسوم. سيتم إضافة الدفع الإلكتروني لاحقاً.'
-              : 'Beta — upgrades are manually activated for now with no charge. Online payment will be added later.'}
+              ? 'الدفع الإلكتروني عبر مُيسّر — اختر الباقة المناسبة وسيتم تحويلك مباشرة إلى صفحة الدفع الآمنة.'
+              : 'Online payment via Moyasar — pick a plan and you will be taken straight to the secure checkout.'}
           </p>
         </div>
 
@@ -773,10 +831,10 @@ const Membership = () => {
               const tier = (mySubscription as { plan?: { tier?: string } }).plan?.tier;
               if (planId && tier) {
                 setSubscribingPlanId(planId);
-                requestUpgradeMutation.mutate({ id: planId, tier });
+                checkoutMutation.mutate({ id: planId, tier });
               }
             }}
-            isRenewing={requestUpgradeMutation.isPending}
+            isRenewing={checkoutMutation.isPending}
           />
         )}
 
@@ -829,10 +887,10 @@ const Membership = () => {
                   size="sm"
                   className="h-8 text-xs gap-1.5"
                   onClick={confirmUpgrade}
-                  disabled={requestUpgradeMutation.isPending || !biz.ref_id}
+                  disabled={checkoutMutation.isPending || !biz.ref_id}
                 >
                   <Send className="w-3.5 h-3.5" />
-                  {isRTL ? 'تأكيد وإرسال الطلب' : 'Confirm & send request'}
+                  {isRTL ? 'المتابعة للدفع' : 'Continue to payment'}
                 </Button>
                 <Button
                   size="sm"
