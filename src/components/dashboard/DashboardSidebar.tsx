@@ -32,6 +32,7 @@ import {
   MapPin,
   Beaker,
   QrCode,
+  User,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -105,6 +106,7 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'العضوية', en: 'Membership' }, url: '/membership', icon: Crown },
       { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
       { label: { ar: 'تفضيلات التواصل', en: 'Communication' }, url: '/dashboard/communication-preferences', icon: Settings2 },
+      { label: { ar: 'الملف الشخصي', en: 'Profile' }, url: '/dashboard/profile', icon: User },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
@@ -146,6 +148,7 @@ const userGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
       { label: { ar: 'تفضيلات التواصل', en: 'Communication' }, url: '/dashboard/communication-preferences', icon: Settings2 },
+      { label: { ar: 'الملف الشخصي', en: 'Profile' }, url: '/dashboard/profile', icon: User },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
