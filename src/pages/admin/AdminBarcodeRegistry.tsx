@@ -997,7 +997,11 @@ const AdminBarcodeRegistry: React.FC = () => {
               <SelectTrigger className="h-10"><SelectValue placeholder={bi('الحالة', 'Status')} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{bi('كل الحالات', 'All statuses')}</SelectItem>
-                {STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                {STATUSES.map(s => (
+                  <SelectItem key={s} value={s}>
+                    {s === 'transferred' ? bi('منقول', 'Transferred') : s}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Select value={visibility} onValueChange={setVisibility}>
