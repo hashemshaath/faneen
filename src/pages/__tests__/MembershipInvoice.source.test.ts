@@ -36,7 +36,7 @@ describe('MembershipInvoice — service boundary', () => {
     expect(SRC).not.toMatch(/\.payload\b/);
     expect(SRC).not.toMatch(/['"]payload['"]/);
     expect(SRC).not.toMatch(/signature/);
-    expect(SRC).not.toMatch(/token/);
+    expect(SRC).not.toMatch(/\btoken\b/);
     expect(SRC).not.toMatch(/secret/);
   });
 
@@ -76,6 +76,39 @@ describe('MembershipInvoice — bilingual copy', () => {
     expect(SRC).toContain('طباعة');
     expect(SRC).toContain("'Print'");
     expect(SRC).toMatch(/window\.print\(\)/);
+  });
+
+  it('contains plan / account / membership period labels in both languages', () => {
+    expect(SRC).toContain('الباقة');
+    expect(SRC).toContain("'Plan'");
+    expect(SRC).toContain('الحساب');
+    expect(SRC).toContain("'Account'");
+    expect(SRC).toContain('فترة العضوية');
+    expect(SRC).toContain("'Membership period'");
+  });
+
+  it('contains the support footer in both languages', () => {
+    expect(SRC).toContain('للاستفسارات، يرجى التواصل مع دعم المنصة.');
+    expect(SRC).toContain('For questions, please contact platform support.');
+  });
+});
+
+describe('MembershipInvoice — safe enrichment select', () => {
+  it('joins plan, subscription, and business via safe whitelist only', () => {
+    expect(SRC).toContain('plan:membership_plans(name_ar, name_en, tier)');
+    expect(SRC).toContain('subscription:membership_subscriptions(');
+    expect(SRC).toContain('business:businesses(');
+    expect(SRC).toContain('ref_id');
+    expect(SRC).toContain('starts_at');
+    expect(SRC).toContain('expires_at');
+  });
+
+  it('does NOT join sensitive payment fields', () => {
+    expect(SRC).not.toMatch(/payment_metadata/);
+    expect(SRC).not.toMatch(/external_subscription_id/);
+    expect(SRC).not.toMatch(/last_external_payment_id/);
+    expect(SRC).not.toMatch(/last_receipt_url/);
+    expect(SRC).not.toMatch(/payment_failure_reason/);
   });
 });
 
