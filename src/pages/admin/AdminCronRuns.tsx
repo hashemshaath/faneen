@@ -119,6 +119,68 @@ const AdminCronRuns = () => {
         </div>
       </div>
 
+      <Card
+        className={`mb-4 border ${hasIssues ? 'border-destructive/40 bg-destructive/5' : 'border-success/30 bg-success/5'}`}
+      >
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <CalendarClock className="h-4 w-4" />
+            {isRTL ? 'صحة المهام المجدولة' : 'Cron Health'}
+            <span className="text-xs text-muted-foreground font-normal">
+              {isRTL ? '(آخر 30 يوم)' : '(last 30 days)'}
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {health.total === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {isRTL ? 'لا توجد بيانات كافية بعد.' : 'Not enough data yet.'}
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <Badge
+                variant="outline"
+                className={
+                  hasIssues
+                    ? 'bg-destructive/10 text-destructive border-destructive/30'
+                    : 'bg-success/10 text-success border-success/30'
+                }
+              >
+                {health.successRate}% {isRTL ? 'نجاح' : 'success'}
+              </Badge>
+              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                {health.succeeded} {isRTL ? 'ناجحة' : 'succeeded'}
+              </span>
+              <span
+                className={`inline-flex items-center gap-1 ${hasIssues ? 'text-destructive' : 'text-muted-foreground'}`}
+              >
+                <XCircle className="h-3.5 w-3.5" />
+                {health.failed} {isRTL ? 'فاشلة' : 'failed'}
+              </span>
+              <span className="text-muted-foreground">
+                {isRTL ? 'إجمالي' : 'Total'}: {health.total}
+              </span>
+              <span className="text-muted-foreground">
+                {isRTL ? 'مهام مرصودة' : 'Jobs observed'}: {health.jobsObserved}
+              </span>
+              {health.lastRun ? (
+                <span className="text-muted-foreground">
+                  {isRTL ? 'آخر تشغيل' : 'Last run'}: {formatDate(health.lastRun, isRTL)}
+                </span>
+              ) : null}
+              {health.latestFailedJob ? (
+                <span className="inline-flex items-center gap-1 text-destructive">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  {isRTL ? 'آخر مهمة فاشلة' : 'Latest failed job'}:
+                  <span className="font-mono">{health.latestFailedJob}</span>
+                </span>
+              ) : null}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
