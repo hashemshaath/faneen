@@ -28,9 +28,10 @@ import { ProviderEngagementPreviews } from '@/components/dashboard/ProviderEngag
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import {
   ChartTooltipStyle, getStatusLabel, getStatusColor, getMonths,
-  StatCard, QuickAction, OverdueAlerts, TodaySummary,
+  QuickAction, OverdueAlerts, TodaySummary,
   RefreshButton, getTimeGreeting,
 } from '@/components/dashboard/overview/shared';
+import { BentoTile } from '@/components/dashboard/overview/BentoTile';
 
 type ProviderProfile = {
   full_name?: string | null;
@@ -168,42 +169,43 @@ export default function ProviderDashboardView({
 
   return (
     <div className="space-y-5" ref={ref}>
-      {/* Welcome */}
-      <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-primary/5 p-5 sm:p-6 dark:from-card/80 dark:to-primary/10">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-xl bg-accent/15 flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-accent/20">
+      {/* Welcome — Emerald Prestige hero */}
+      <div className="dash-hero p-5 sm:p-7">
+        <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-[hsl(var(--de-gold)/0.35)] bg-[hsl(var(--de-cream)/0.10)] backdrop-blur">
               {business?.logo_url
-                ? <img src={business.logo_url} alt={isRTL ? business.name_ar : (business.name_en || business.name_ar)} className="w-full h-full object-cover" loading="lazy" />
-                : <Building2 className="w-6 h-6 text-accent" aria-hidden="true" />}
+                ? <img src={business.logo_url} alt={isRTL ? business.name_ar ?? '' : (business.name_en || business.name_ar || '')} className="w-full h-full object-cover" loading="lazy" />
+                : <Building2 className="w-7 h-7 text-[hsl(var(--de-gold))]" aria-hidden="true" />}
             </div>
             <div className="min-w-0">
-              <h1 className="font-heading font-bold text-lg sm:text-xl flex items-center gap-2 flex-wrap leading-tight">
-                {getTimeGreeting(isRTL)}{profile?.full_name ? `، ${profile.full_name}` : ''}
-                {business?.is_verified && (
-                  <Badge variant="secondary" className="text-[11px] bg-success/10 text-success border border-success/20 gap-1 h-5 px-1.5">
-                    <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
-                    {isRTL ? 'موثق' : 'Verified'}
-                  </Badge>
-                )}
-              </h1>
-              <p className="text-[13px] text-muted-foreground mt-0.5 truncate">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider dash-hero-chip rounded-full px-2.5 py-1 mb-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--de-gold))]" aria-hidden="true" />
                 {isRTL ? 'لوحة مزود الخدمة' : 'Provider Dashboard'}
-                {business && <> — <span className="text-foreground/80 font-medium">{isRTL ? business.name_ar : (business.name_en || business.name_ar)}</span></>}
+                {business?.is_verified && (
+                  <span className="inline-flex items-center gap-0.5 ms-1">
+                    <CheckCircle2 className="w-3 h-3 text-[hsl(var(--de-gold))]" aria-hidden="true" />
+                    {isRTL ? 'موثق' : 'Verified'}
+                  </span>
+                )}
+              </span>
+              <h1 className="font-heading text-2xl sm:text-3xl font-bold leading-tight truncate">
+                {getTimeGreeting(isRTL)}{profile?.full_name ? `، ${profile.full_name}` : ''}
+              </h1>
+              <p className="dash-hero-sub text-xs sm:text-sm mt-1 truncate">
+                {business
+                  ? (isRTL ? business.name_ar ?? '' : (business.name_en || business.name_ar || ''))
+                  : (isRTL ? 'ابدأ بإعداد ملف منشأتك' : 'Set up your business profile')}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
             <RefreshButton onClick={handleRefresh} isLoading={isFetching} isRTL={isRTL} />
             {profile?.ref_id && (
-              <Badge variant="outline" className="text-[11px] h-6 px-2 tech-content border-border/60">
-                {profile.ref_id}
-              </Badge>
+              <Badge className="dash-hero-chip tech-content text-[10px] h-6 px-2">{profile.ref_id}</Badge>
             )}
             {business?.membership_tier && (
-              <Badge className="bg-accent/10 text-accent border border-accent/30 text-[11px] h-6 px-2 capitalize">
-                {business.membership_tier}
-              </Badge>
+              <Badge className="dash-hero-gold text-[10px] h-6 px-2 capitalize">{business.membership_tier}</Badge>
             )}
           </div>
         </div>
@@ -236,12 +238,39 @@ export default function ProviderDashboardView({
         />
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard icon={DollarSign} label={isRTL ? 'إجمالي الإيرادات' : 'Revenue'} value={`${animatedRevenue.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`} color="bg-success/10 text-success" />
-        <StatCard icon={FileText} label={isRTL ? 'العقود النشطة' : 'Active'} value={stats?.activeContracts ?? 0} sub={`${isRTL ? 'من' : 'of'} ${animatedContracts}`} color="bg-accent/10 text-accent" to="/dashboard/contracts" />
-        <StatCard icon={Star} label={isRTL ? 'التقييم' : 'Rating'} value={stats?.avgRating ?? '0.0'} sub={`${stats?.reviews ?? 0} ${isRTL ? 'تقييم' : 'reviews'}`} color="bg-accent/10 text-accent" to="/dashboard/reviews" />
-        <StatCard icon={Target} label={isRTL ? 'معدل الإنجاز' : 'Completion'} value={`${completionRate}%`} sub={`${stats?.completedContracts ?? 0} ${isRTL ? 'مكتمل' : 'done'}`} color="bg-primary/10 text-primary" />
+      {/* Bento KPI grid */}
+      <div className="dash-bento">
+        <BentoTile
+          variant="feature"
+          icon={DollarSign}
+          accent="gold"
+          label={isRTL ? 'إجمالي الإيرادات' : 'Total Revenue'}
+          value={`${animatedRevenue.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`}
+          sub={`${stats?.completedContracts ?? 0} ${isRTL ? 'مكتمل' : 'completed'}`}
+        />
+        <BentoTile
+          variant="wide"
+          icon={FileText}
+          label={isRTL ? 'العقود النشطة' : 'Active Contracts'}
+          value={stats?.activeContracts ?? 0}
+          sub={`${isRTL ? 'من أصل' : 'of'} ${animatedContracts}`}
+          to="/dashboard/contracts"
+        />
+        <BentoTile
+          variant="tile"
+          icon={Star}
+          label={isRTL ? 'التقييم' : 'Rating'}
+          value={stats?.avgRating ?? '0.0'}
+          sub={`${stats?.reviews ?? 0} ${isRTL ? 'تقييم' : 'reviews'}`}
+          to="/dashboard/reviews"
+        />
+        <BentoTile
+          variant="tile"
+          icon={Target}
+          label={isRTL ? 'معدل الإنجاز' : 'Completion'}
+          value={`${completionRate}%`}
+          sub={`${stats?.completedContracts ?? 0} ${isRTL ? 'مكتمل' : 'done'}`}
+        />
       </div>
 
       {/* Charts */}
