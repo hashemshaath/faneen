@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleRedirect } from '@/hooks/useRoleRedirect';
@@ -21,6 +21,7 @@ const Auth = () => {
     ['login', 'register', 'forgot-password'].includes(initialMode) ? initialMode : 'login'
   );
   const [sentEmail, setSentEmail] = useState('');
+  const redirectedRef = useRef(false);
 
   usePageMeta({
     title: mode === 'register' ? 'إنشاء حساب | قِطاعات' : 'تسجيل الدخول | قِطاعات',
@@ -30,7 +31,8 @@ const Auth = () => {
   // Role-based redirect for authenticated users
   useEffect(() => {
     if (loading) return;
-    if (user) {
+    if (user && !redirectedRef.current) {
+      redirectedRef.current = true;
       // CT4C.4 — honor pending invite token captured before auth
       try {
         const pending = sessionStorage.getItem('qitaat_pending_invite_token');
