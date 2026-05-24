@@ -141,6 +141,9 @@ export interface BarcodeLifecycleResult {
     | 'not_found'
     | 'invalid_transition'
     | 'entity_already_has_active_barcode'
+    | 'missing_target_user'
+    | 'target_user_not_found'
+    | 'same_owner'
     | string;
   from?: string;
   to?: string;
@@ -172,6 +175,34 @@ export function archiveBarcodeAdmin(barcodeId: string, reason?: string | null) {
 export function restoreBarcodeAdmin(barcodeId: string, reason?: string | null) {
   return supabase.rpc('admin_restore_barcode', {
     _barcode_id: barcodeId,
+    _reason: reason ?? null,
+  });
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Transfer (BARCODE-REGISTRY-TRANSFER-1) — backend-only.
+//
+// Safe Model A: ownership transfer. The old barcode row flips to
+// status='transferred' and becomes unavailable to the public resolver;
+// entity_type / entity_id are NOT mutated. A new barcode for the target
+// owner must be issued separately through the normal creation flow.
+//
+// UI for this action is intentionally deferred to BARCODE-REGISTRY-TRANSFER-2.
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Admin-only barcode ownership transfer. Returns the raw Supabase
+ * `{ data, error }` envelope so the caller can branch on RPC errors and on
+ * in-payload error codes (e.g. `target_user_not_found`, `same_owner`).
+ */
+export function transferBarcodeAdmin(
+  barcodeId: string,
+  transferToUserId: string,
+  reason?: string | null,
+) {
+  return supabase.rpc('admin_transfer_barcode', {
+    _barcode_id: barcodeId,
+    _transfer_to_user_id: transferToUserId,
     _reason: reason ?? null,
   });
 }
