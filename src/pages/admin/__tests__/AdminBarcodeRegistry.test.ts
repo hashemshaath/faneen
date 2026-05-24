@@ -127,10 +127,10 @@ describe('BARCODE-REGISTRY-LIFECYCLE-2 — admin lifecycle UI', () => {
   });
 
   it('encodes action availability by status', () => {
-    // Per spec matrix: active→[freeze,archive], frozen→[restore,archive],
+    // Per spec matrix: active→[freeze,archive,transfer], frozen→[restore,archive,transfer],
     // archived→[restore], revoked→[archive], else→[].
-    expect(PAGE_SRC).toMatch(/case 'active':\s*return \['freeze', 'archive'\]/);
-    expect(PAGE_SRC).toMatch(/case 'frozen':\s*return \['restore', 'archive'\]/);
+    expect(PAGE_SRC).toMatch(/case 'active':\s*return \['freeze', 'archive', 'transfer'\]/);
+    expect(PAGE_SRC).toMatch(/case 'frozen':\s*return \['restore', 'archive', 'transfer'\]/);
     expect(PAGE_SRC).toMatch(/case 'archived':\s*return \['restore'\]/);
     expect(PAGE_SRC).toMatch(/case 'revoked':\s*return \['archive'\]/);
     expect(PAGE_SRC).toMatch(/default:\s*return \[\]/);
@@ -153,10 +153,70 @@ describe('BARCODE-REGISTRY-LIFECYCLE-2 — admin lifecycle UI', () => {
     expect(PAGE_SRC).toMatch(/invalidateQueries\(\{ queryKey: \['admin-barcode-summary'\]/);
   });
 
-  it('does not include transfer or delete UI', () => {
-    expect(PAGE_SRC).not.toMatch(/admin_transfer_barcode/);
-    expect(PAGE_SRC).not.toMatch(/transferBarcodeAdmin/);
+  it('does not include delete or revoke UI (still no destructive actions)', () => {
     expect(PAGE_SRC).not.toMatch(/admin_delete_barcode/);
+    expect(PAGE_SRC).not.toMatch(/admin_revoke_barcode/);
     expect(PAGE_SRC).not.toMatch(/\.delete\(/);
+  });
+});
+
+describe('BARCODE-REGISTRY-TRANSFER-2 — admin transfer UI', () => {
+  it('imports the canonical transfer wrapper (no direct RPC)', () => {
+    expect(PAGE_SRC).toMatch(/transferBarcodeAdmin/);
+    expect(PAGE_SRC).not.toMatch(/supabase\.rpc\(\s*['"]admin_transfer_barcode['"]/);
+  });
+
+  it('renders bilingual Transfer button label', () => {
+    expect(PAGE_SRC).toContain("'نقل'");
+    expect(PAGE_SRC).toContain("'Transfer'");
+  });
+
+  it('renders bilingual target user field and helper copy', () => {
+    expect(PAGE_SRC).toContain('المستخدم المستهدف');
+    expect(PAGE_SRC).toContain('Target user');
+    expect(PAGE_SRC).toContain('أدخل معرف المستخدم UUID');
+    expect(PAGE_SRC).toContain('Enter the user UUID');
+  });
+
+  it('renders bilingual transfer reason input copy', () => {
+    expect(PAGE_SRC).toContain('سبب النقل');
+    expect(PAGE_SRC).toContain('Transfer reason');
+  });
+
+  it('renders bilingual transfer consequence warning', () => {
+    expect(PAGE_SRC).toContain(
+      'سيصبح هذا الرمز غير متاح للعامة بعد النقل. يجب إصدار رمز جديد للمالك الجديد عند الحاجة.',
+    );
+    expect(PAGE_SRC).toContain(
+      'This code will become unavailable publicly after transfer. Issue a new code for the new owner if needed.',
+    );
+  });
+
+  it('calls transferBarcodeAdmin with barcodeId, targetUserId, and reason', () => {
+    expect(PAGE_SRC).toMatch(/transferBarcodeAdmin\(\s*barcodeId\s*,/);
+    // The mutation hands off action+reason+targetUserId
+    expect(PAGE_SRC).toMatch(/action:\s*pending,\s*reason,\s*targetUserId/);
+  });
+
+  it('validates target as a UUID client-side before submit', () => {
+    expect(PAGE_SRC).toMatch(/UUID_RE/);
+    expect(PAGE_SRC).toMatch(/transferTargetValid/);
+  });
+
+  it('maps target_user_not_found / same_owner / invalid_transition error envelopes', () => {
+    expect(PAGE_SRC).toMatch(/target_user_not_found/);
+    expect(PAGE_SRC).toContain('المستخدم المستهدف غير موجود.');
+    expect(PAGE_SRC).toContain('Target user was not found.');
+    expect(PAGE_SRC).toMatch(/same_owner/);
+    expect(PAGE_SRC).toContain('لا يمكن نقل الرمز إلى نفس المالك.');
+    expect(PAGE_SRC).toContain('Cannot transfer to the same owner.');
+    expect(PAGE_SRC).toMatch(/invalid_transition/);
+    expect(PAGE_SRC).toContain('لا يمكن نقل الرمز من حالته الحالية.');
+    expect(PAGE_SRC).toContain('This code cannot be transferred from its current status.');
+  });
+
+  it('does not access profiles table directly from the page', () => {
+    expect(PAGE_SRC).not.toMatch(/from\(\s*['"]profiles['"]/);
+    expect(PAGE_SRC).not.toMatch(/\.from\(\s*['"]auth\.users['"]/);
   });
 });
