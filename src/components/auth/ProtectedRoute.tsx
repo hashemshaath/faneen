@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -104,7 +104,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (requireAuth && !user) {
     // eslint-disable-next-line no-console
     console.info('[ProtectedRoute] not authenticated → /auth', { from: location.pathname });
-    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+    return <NavigateToAuth from={location.pathname} />;
   }
 
   // Redirect to onboarding if profile is not complete (admins bypass onboarding)
@@ -127,3 +127,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 };
 
 export default ProtectedRoute;
+
+/**
+ * Stable wrapper around `<Navigate to="/auth">`. Memoizes the `state` object
+ * by `from` so react-router's internal effect does not re-fire on every
+ * AuthProvider re-render (which would cause a Maximum-update-depth loop
+ * during the brief window where `user` is null while session is rehydrating).
+ */
+const NavigateToAuth: React.FC<{ from: string }> = ({ from }) => {
+  const state = useMemo(() => ({ from }), [from]);
+  return <Navigate to="/auth" state={state} replace />;
+};
