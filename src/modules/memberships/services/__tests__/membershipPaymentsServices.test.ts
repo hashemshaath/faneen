@@ -56,6 +56,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 import {
   listMembershipPaymentIntents,
+  listMembershipPaymentIntentsForSubscription,
   getMembershipPaymentIntentById,
   createMembershipPaymentIntentRecord,
   updateMembershipPaymentIntentById,
