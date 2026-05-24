@@ -121,6 +121,22 @@ const AdminMembershipPayments = () => {
     },
   });
 
+  const EVENT_SELECT =
+    'id,event_id,event_type,provider,received_at,created_at,processed_at,processing_error,payload';
+
+  const { data: eventRows = [], isLoading: eventsLoading } = useQuery({
+    queryKey: ['admin-membership-payment-events'],
+    queryFn: async () => {
+      const { data, error } = await listMembershipPaymentWebhookEvents<WebhookEventRow>({
+        select: EVENT_SELECT,
+        limit: 50,
+        order: { column: 'created_at', ascending: false },
+      });
+      if (error) throw error;
+      return (data ?? []) as WebhookEventRow[];
+    },
+  });
+
   const filtered = useMemo(() => {
     if (!highlightedIntentId) return rows;
     // Read-only filter: pin matching row to top, do not auto-submit.
