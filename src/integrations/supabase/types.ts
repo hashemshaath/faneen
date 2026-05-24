@@ -10774,6 +10774,17 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_mark_membership_paid_manually: {
+        Args: {
+          p_admin_user_id: string
+          p_external_payment_id?: string
+          p_invoice_id?: string
+          p_notes?: string
+          p_paid_at?: string
+          p_payment_intent_id: string
+        }
+        Returns: Json
+      }
       admin_rotate_client_site_qr_token: {
         Args: { _reason: string; _site_id: string }
         Returns: Json
