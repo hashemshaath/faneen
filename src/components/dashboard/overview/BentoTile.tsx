@@ -27,7 +27,7 @@ export function BentoTile({
   icon: Icon, label, value, sub, to, variant = 'tile', trend, accent = 'emerald',
 }: Props) {
   const inner = (
-    <div className={cn('dash-tile group', variantClass[variant])}>
+    <div className={cn('dash-tile group h-full', variant === 'feature' && 'bento-feature')}>
       <div className="flex items-start justify-between gap-2">
         <span className="dash-tile-icon" aria-hidden="true">
           <Icon className="w-5 h-5" />
@@ -57,7 +57,11 @@ export function BentoTile({
       )}
     </div>
   );
-  return to ? <Link to={to} className={cn(variantClass[variant], 'block')}>{inner}</Link> : inner;
+  return to ? (
+    <Link to={to} className={cn(variantClass[variant], 'block h-full')}>{inner}</Link>
+  ) : (
+    <div className={variantClass[variant]}>{inner}</div>
+  );
 }
 
 export default BentoTile;
