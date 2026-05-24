@@ -132,3 +132,57 @@ describe('AdminMembershipPayments webhook events panel (R4F-8G)', () => {
     expect(SRC).toMatch(/لا توجد أحداث دفع بعد\./);
   });
 });
+
+describe('AdminMembershipPayments manual refund (R4F-8H)', () => {
+  it('imports markMembershipRefundedManually from canonical module', () => {
+    expect(SRC).toMatch(/markMembershipRefundedManually/);
+    expect(SRC).toMatch(/from ['"]@\/modules\/memberships['"]/);
+  });
+
+  it('UI exposes refund reference, refunded-at, and notes fields', () => {
+    expect(SRC).toMatch(/refund-ref/);
+    expect(SRC).toMatch(/refunded-at/);
+    expect(SRC).toMatch(/refund-notes/);
+  });
+
+  it('exposes bilingual "Mark refunded" action button', () => {
+    expect(SRC).toMatch(/Mark refunded/);
+    expect(SRC).toMatch(/تسجيل استرداد/);
+  });
+
+  it('renders refunded badge for refunded rows', () => {
+    expect(SRC).toMatch(/Refunded/);
+    expect(SRC).toMatch(/مسترد/);
+    expect(SRC).toMatch(/REFUNDED_STATUSES/);
+  });
+
+  it('refunded rows do not expose mark-paid or mark-refunded actions', () => {
+    expect(SRC).toMatch(/isRefunded \?[\s\S]*?:\s*isPaid \?/);
+  });
+
+  it('does not directly call supabase rpc or tables from UI for refund', () => {
+    expect(SRC).not.toMatch(/supabase\.rpc\(\s*['"]admin_mark_membership_payment_refunded_manually/);
+    expect(SRC).not.toMatch(/\.from\(\s*['"]membership_payment_intents['"]/);
+  });
+
+  it('refund submit is only invoked from handler (no useEffect auto-submit)', () => {
+    const calls = SRC.match(/markMembershipRefundedManually\(/g) || [];
+    // Once in import area logic uses identifier elsewhere, but actual invocation is in handler.
+    // Guard: at most one call site invokes it.
+    const invocations = SRC.match(/markMembershipRefundedManually\(\{/g) || [];
+    expect(invocations.length).toBe(1);
+    expect(SRC).not.toMatch(/useEffect[^}]*markMembershipRefundedManually/);
+    expect(calls.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('refreshes both intents and events lists after refund success', () => {
+    expect(SRC).toMatch(/admin-membership-payments/);
+    expect(SRC).toMatch(/admin-membership-payment-events/);
+  });
+
+  it('refund flow uses correct error codes mapping', () => {
+    expect(SRC).toMatch(/payment_not_paid/);
+    expect(SRC).toMatch(/Cannot refund a non-paid intent/);
+    expect(SRC).toMatch(/تعذر تسجيل الاسترداد/);
+  });
+});
