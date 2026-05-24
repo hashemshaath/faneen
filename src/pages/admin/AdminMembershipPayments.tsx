@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2, CreditCard, Check, History } from 'lucide-react';
+import { Loader2, CreditCard, Check, History, FileText } from 'lucide-react';
 import {
   listMembershipPaymentIntents,
   listMembershipPaymentWebhookEvents,
@@ -313,15 +313,29 @@ const AdminMembershipPayments = () => {
                       </TableCell>
                       <TableCell className="text-end">
                         {isRefunded ? (
-                          <Badge variant="outline" className="gap-1">
-                            {isRTL ? 'مسترد' : 'Refunded'}
-                          </Badge>
+                          <div className="flex items-center justify-end gap-2">
+                            <Badge variant="outline" className="gap-1">
+                              {isRTL ? 'مسترد' : 'Refunded'}
+                            </Badge>
+                            <Button size="sm" variant="ghost" asChild>
+                              <Link to={`/membership/payments/${encodeURIComponent(r.id)}/invoice`}>
+                                <FileText className="w-3 h-3 me-1" />
+                                {isRTL ? 'عرض الإشعار الدائن' : 'View credit note'}
+                              </Link>
+                            </Button>
+                          </div>
                         ) : isPaid ? (
                           <div className="flex items-center justify-end gap-2">
                             <Badge variant="outline" className="gap-1">
                               <Check className="w-3 h-3" />
                               {isRTL ? 'مدفوع' : 'Paid'}
                             </Badge>
+                            <Button size="sm" variant="ghost" asChild>
+                              <Link to={`/membership/payments/${encodeURIComponent(r.id)}/invoice`}>
+                                <FileText className="w-3 h-3 me-1" />
+                                {isRTL ? 'عرض الفاتورة' : 'View invoice'}
+                              </Link>
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
