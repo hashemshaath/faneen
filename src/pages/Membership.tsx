@@ -60,7 +60,7 @@ const Membership = () => {
     ogType: 'website',
     canonical: 'https://qitaat.com/membership',
   });
-  const { user, profile } = useAuth();
+  const { user, profile, isProvider } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -659,6 +659,42 @@ const Membership = () => {
       <Navbar />
       <div className="container px-4 py-10 sm:py-16">
         <MembershipHeader isRTL={isRTL} billingCycle={billingCycle} setBillingCycle={setBillingCycle} plans={plans} />
+
+        {user && !isProvider && profile?.account_type === 'user' && (
+          <div className="max-w-3xl mx-auto mb-6 rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/5 via-card to-primary/5 px-5 py-5">
+            <div className="flex items-start gap-3">
+              <Building2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground mb-1">
+                  {isRTL ? 'باقات العضوية مخصّصة لمزوّدي الخدمات' : 'Membership plans are for service providers'}
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                  {isRTL
+                    ? 'حسابك الحالي هو حساب مستخدم — مصمّم للتصفّح وطلب عروض الأسعار وحفظ المنشآت المفضّلة، وكل ذلك مجاناً وبدون اشتراك. باقات العضوية تظهر هنا للمنشآت الصناعية ومقدّمي الخدمات (ألمنيوم، زجاج، أخشاب، حديد) لتعزيز ظهورها واستلام طلبات العملاء.'
+                    : 'You are signed in as a regular user — designed for browsing, requesting quotes, and saving favorite businesses, all free with no subscription. Membership plans shown here are for industrial businesses and service providers (Aluminum, Glass, Wood, Steel) to boost visibility and receive customer requests.'}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Link to="/">
+                    <Button size="sm" variant="primary" className="h-8 text-xs gap-1.5">
+                      {isRTL ? 'تصفّح الدليل الصناعي' : 'Browse the directory'}
+                    </Button>
+                  </Link>
+                  <Link to="/onboarding">
+                    <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+                      <Building2 className="w-3.5 h-3.5" />
+                      {isRTL ? 'تحويل حسابي إلى مزوّد خدمة' : 'Become a service provider'}
+                    </Button>
+                  </Link>
+                  <Link to="/dashboard">
+                    <Button size="sm" variant="ghost" className="h-8 text-xs">
+                      {isRTL ? 'لوحة التحكم' : 'Go to dashboard'}
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-info/30 bg-info/5 px-4 py-3 flex items-start gap-2 text-xs text-foreground/80">
           <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
