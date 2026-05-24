@@ -27,6 +27,7 @@ import { BnplProvidersManager } from '@/components/bnpl/BnplProvidersManager';
 import { useThemeMode } from '@/components/ThemeToggle';
 import { accentPresets, getStoredAccent, applyAccent } from '@/lib/accent-colors';
 import { checkPasswordStrength } from '@/lib/password-strength';
+import { isSyntheticPhoneEmail, getDisplayEmail } from '@/lib/auth-email';
 import { useBrowserNotifications } from '@/hooks/useBrowserNotifications';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -352,8 +353,14 @@ const DashboardSettings = () => {
                           <Label className="text-[10px]">{isRTL ? 'البريد الإلكتروني (للملف الشخصي)' : 'Email (Profile)'}</Label>
                           <Input value={profileForm.email} onChange={e => setProfileForm(p => ({ ...p, email: e.target.value }))} className="h-8 text-xs mt-0.5 tech-content" dir="ltr" type="email" />
                           <p className="text-[9px] text-muted-foreground mt-0.5">
-                            {isRTL ? 'هذا البريد يظهر في ملفك الشخصي. بريد تسجيل الدخول: ' : 'This email shows on your profile. Login email: '}
-                            <span className="tech-content font-medium">{user?.email}</span>
+                            {isSyntheticPhoneEmail(user?.email)
+                              ? (isRTL ? 'هذا البريد يظهر في ملفك الشخصي. تسجيل الدخول يتم عبر رقم الجوال.' : 'This email shows on your profile. You sign in with your phone number.')
+                              : (
+                                <>
+                                  {isRTL ? 'هذا البريد يظهر في ملفك الشخصي. بريد تسجيل الدخول: ' : 'This email shows on your profile. Login email: '}
+                                  <span className="tech-content font-medium">{user?.email}</span>
+                                </>
+                              )}
                           </p>
                         </div>
                         <div>
@@ -372,7 +379,7 @@ const DashboardSettings = () => {
                             {profile?.phone_verified && <Badge className="bg-success/10 text-success text-[7px] px-1 py-0 h-3.5 gap-0.5"><CheckCircle className="w-2 h-2" />{isRTL ? 'موثق' : 'Verified'}</Badge>}
                           </div>
                           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <Mail className="w-3 h-3" /><span className="tech-content">{profile?.email || user?.email || '-'}</span>
+                            <Mail className="w-3 h-3" /><span className="tech-content">{getDisplayEmail({ authEmail: user?.email, profileEmail: profile?.email }) ?? (isRTL ? 'غير مضاف' : 'Not provided')}</span>
                           </div>
                           {profile?.phone && (
                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
@@ -408,8 +415,11 @@ const DashboardSettings = () => {
                 {[
                   { icon: Fingerprint, label: isRTL ? 'المعرف' : 'ID', value: profile?.ref_id, tech: true },
                   { icon: Globe, label: isRTL ? 'اللغة المفضلة' : 'Language', value: language === 'ar' ? 'العربية' : 'English' },
-                  { icon: Mail, label: isRTL ? 'بريد تسجيل الدخول' : 'Login Email', value: user?.email, tech: true },
-                  { icon: Mail, label: isRTL ? 'بريد الملف الشخصي' : 'Profile Email', value: profile?.email || '-', tech: true },
+                  // Login identifier: phone (for phone-login users) or email — never expose synthetic auth email.
+                  isSyntheticPhoneEmail(user?.email)
+                    ? { icon: Phone, label: isRTL ? 'رقم الدخول' : 'Login Phone', value: user?.phone ? `+${user.phone}` : (profile?.phone || '-'), tech: true }
+                    : { icon: Mail, label: isRTL ? 'بريد الدخول' : 'Login Email', value: user?.email, tech: true },
+                  { icon: Mail, label: isRTL ? 'البريد الرسمي' : 'Official Email', value: profile?.email || (isRTL ? 'غير مضاف' : 'Not provided'), tech: true },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
