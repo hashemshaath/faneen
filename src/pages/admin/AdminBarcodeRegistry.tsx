@@ -553,29 +553,11 @@ const LifecycleActions: React.FC<{
                   'This code will become unavailable publicly after transfer. Issue a new code for the new owner if needed.',
                 )}
               </div>
-              <div className="space-y-1">
-                <Input
-                  value={targetUserId}
-                  onChange={(e) => setTargetUserId(e.target.value)}
-                  placeholder={bi('المستخدم المستهدف', 'Target user')}
-                  dir="ltr"
-                  className="h-9 tech-content"
-                  aria-label={bi('المستخدم المستهدف', 'Target user')}
-                  disabled={mutation.isPending}
-                  spellCheck={false}
-                  autoComplete="off"
-                />
-                <div
-                  className={cn(
-                    'text-[11px]',
-                    trimmedTarget.length > 0 && !transferTargetValid
-                      ? 'text-destructive'
-                      : 'text-muted-foreground',
-                  )}
-                >
-                  {bi('أدخل معرف المستخدم UUID', 'Enter the user UUID')}
-                </div>
-              </div>
+              <TransferUserPicker
+                selectedUserId={targetUserId}
+                onSelect={(uid) => setTargetUserId(uid)}
+                disabled={mutation.isPending}
+              />
             </>
           )}
 
