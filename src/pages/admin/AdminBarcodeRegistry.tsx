@@ -28,6 +28,7 @@ import {
   restoreBarcodeAdmin,
   transferBarcodeAdmin,
   listBarcodeTransferTrailAdmin,
+  issueSuccessorBarcodeAdmin,
   type BarcodeRegistryRow as BarcodeRow,
   type BarcodeRegistrySummary as RegistrySummary,
   type BarcodeRegistryDetail as BarcodeDetail,
