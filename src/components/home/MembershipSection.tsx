@@ -49,9 +49,16 @@ export const MembershipSection = () => {
         <div className="text-center mb-12 sm:mb-20">
           <span className="section-eyebrow font-body mb-4 sm:mb-5">
             <Sparkles className="w-3.5 h-3.5" />
-            {t('membership.label')}
+            {isRTL ? 'لمزوّدي الخدمات الصناعية' : 'For industrial service providers'}
           </span>
-          <h2 className="font-heading font-bold text-2xl sm:text-4xl md:text-5xl text-foreground leading-tight">{t('membership.title')}</h2>
+          <h2 className="font-heading font-bold text-2xl sm:text-4xl md:text-5xl text-foreground leading-tight">
+            {isRTL ? 'باقات عضوية تنمو مع منشأتك' : 'Membership plans that grow with your business'}
+          </h2>
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            {isRTL
+              ? 'مخصّصة لمنشآت الألمنيوم والزجاج والأخشاب والحديد لتعزيز ظهورها واستلام طلبات العملاء. المستخدمون يتصفّحون الدليل ويطلبون عروض الأسعار مجاناً.'
+              : 'Tailored for Aluminum, Glass, Wood, and Steel businesses to boost visibility and receive customer requests. Regular users browse and request quotes for free.'}
+          </p>
         </div>
         <div ref={visRef} className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-8 max-w-5xl mx-auto">
           {isLoading ? (
