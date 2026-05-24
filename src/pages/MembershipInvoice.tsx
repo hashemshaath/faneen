@@ -48,7 +48,6 @@ const fmt = (d: string | null) => (d ? new Date(d).toLocaleString() : '—');
 const MembershipInvoice = () => {
   const { paymentIntentId } = useParams<{ paymentIntentId: string }>();
   const { isRTL } = useLanguage();
-  const isRefundView = false; // determined by data
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['membership-invoice', paymentIntentId],
@@ -214,4 +213,3 @@ const MembershipInvoice = () => {
 };
 
 export default MembershipInvoice;
-export { isRefundView };
