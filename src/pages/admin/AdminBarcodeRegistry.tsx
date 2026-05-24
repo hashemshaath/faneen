@@ -26,6 +26,7 @@ import {
   freezeBarcodeAdmin,
   archiveBarcodeAdmin,
   restoreBarcodeAdmin,
+  transferBarcodeAdmin,
   type BarcodeRegistryRow as BarcodeRow,
   type BarcodeRegistrySummary as RegistrySummary,
   type BarcodeRegistryDetail as BarcodeDetail,
@@ -40,12 +41,12 @@ const PAGE_SIZES = [25, 50, 100];
 // ──────────────────────────────────────────────
 // Lifecycle action availability + error mapping
 // ──────────────────────────────────────────────
-type LifecycleAction = 'freeze' | 'archive' | 'restore';
+type LifecycleAction = 'freeze' | 'archive' | 'restore' | 'transfer';
 
 function availableActions(status: string): LifecycleAction[] {
   switch (status) {
-    case 'active':   return ['freeze', 'archive'];
-    case 'frozen':   return ['restore', 'archive'];
+    case 'active':   return ['freeze', 'archive', 'transfer'];
+    case 'frozen':   return ['restore', 'archive', 'transfer'];
     case 'archived': return ['restore'];
     case 'revoked':  return ['archive'];
     default:         return [];
@@ -70,16 +71,28 @@ function mapLifecycleError(
     case 'not_found':
       return bi('الرمز غير موجود.', 'Barcode not found.');
     case 'invalid_transition':
-      return bi('انتقال حالة غير مسموح.', 'Invalid status transition.');
+      return bi(
+        'لا يمكن نقل الرمز من حالته الحالية.',
+        'This code cannot be transferred from its current status.',
+      );
     case 'entity_already_has_active_barcode':
       return bi(
         'لا يمكن الاستعادة بسبب وجود رمز نشط لنفس الكيان.',
         'Cannot restore because another active barcode exists for this entity.',
       );
+    case 'missing_target_user':
+      return bi('يرجى إدخال المستخدم المستهدف.', 'Please provide the target user.');
+    case 'target_user_not_found':
+      return bi('المستخدم المستهدف غير موجود.', 'Target user was not found.');
+    case 'same_owner':
+      return bi('لا يمكن نقل الرمز إلى نفس المالك.', 'Cannot transfer to the same owner.');
     default:
       return bi('تعذّر تنفيذ الإجراء.', 'Action failed.');
   }
 }
+
+// Basic UUID v1–v5 client-side guard (server remains the final authority).
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // ──────────────────────────────────────────────
 // Helpers
