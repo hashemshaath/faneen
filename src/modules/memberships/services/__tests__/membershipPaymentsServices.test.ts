@@ -61,6 +61,7 @@ import {
   createMembershipPaymentIntentRecord,
   updateMembershipPaymentIntentById,
   getLatestMembershipPaymentIntentForSubscription,
+  getMembershipPaymentIntentForInvoice,
 } from '../payments/intents';
 import {
   listMembershipPaymentWebhookEvents,
@@ -183,6 +184,25 @@ describe('payments/intents', () => {
     });
     expect(ops[1]).toEqual({ kind: 'select', arg: 'id, status', opts: undefined });
     expect(ops[4]).toEqual({ kind: 'limit', n: 5 });
+  });
+
+  it('getMembershipPaymentIntentForInvoice uses safe whitelist + eq id + maybeSingle', async () => {
+    terminalResult = { data: { id: 'i1', status: 'succeeded' }, error: null };
+    const res = await getMembershipPaymentIntentForInvoice({ paymentIntentId: 'i1' });
+    expect(ops[0]).toEqual({ kind: 'from', table: 'membership_payment_intents' });
+    expect(ops[1]).toEqual({
+      kind: 'select',
+      arg: 'id, subscription_id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata',
+      opts: undefined,
+    });
+    expect(ops[2]).toEqual({ kind: 'eq', col: 'id', val: 'i1' });
+    expect(ops[3]).toEqual({ kind: 'maybeSingle' });
+    expect(res).toEqual({ data: { id: 'i1', status: 'succeeded' }, error: null });
+  });
+
+  it('getMembershipPaymentIntentForInvoice respects custom select', async () => {
+    await getMembershipPaymentIntentForInvoice({ paymentIntentId: 'i2', select: 'id, status' });
+    expect(ops[1]).toEqual({ kind: 'select', arg: 'id, status', opts: undefined });
   });
 });
 
