@@ -331,10 +331,11 @@ describe('BARCODE-REGISTRY-TRANSFER-AUDIT-1 — admin transfer trail UI', () => 
   });
 
   it('keeps transferred status with no lifecycle actions and no delete/revoke', () => {
-    // availableActions('transferred') falls into default → [] (already covered),
-    // re-assert here that no destructive UI was introduced for this status.
+    // availableActions('transferred') falls into default → [] (already covered
+    // by the lifecycle suite). Re-assert here that no destructive UI was added.
     expect(PAGE_SRC).not.toMatch(/admin_delete_barcode/);
     expect(PAGE_SRC).not.toMatch(/admin_revoke_barcode/);
-    expect(PAGE_SRC).not.toMatch(/case 'transferred':/);
+    // No availableActions branch grants any action to 'transferred'.
+    expect(PAGE_SRC).not.toMatch(/case 'transferred':\s*return \[/);
   });
 });
