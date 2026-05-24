@@ -120,3 +120,58 @@ export async function getBarcodeRegistryRecordById(
   if (error) throw error;
   return data as unknown as BarcodeRegistryDetail;
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// Lifecycle actions (BARCODE-REGISTRY-LIFECYCLE-1)
+//
+// All wrappers return the raw Supabase `{ data, error }` envelope so the
+// caller can branch on PostgREST errors (e.g. 'forbidden', 'unauthorized')
+// AND on in-payload error codes (e.g. { ok:false, error:'invalid_transition' }).
+//
+// UI for these actions is intentionally NOT wired in this phase — see
+// BARCODE-REGISTRY-LIFECYCLE-2 for the inline admin action surface.
+// ───────────────────────────────────────────────────────────────────────────
+
+export interface BarcodeLifecycleResult {
+  ok: boolean;
+  barcode_id?: string;
+  previous_status?: string;
+  new_status?: string;
+  error?:
+    | 'not_found'
+    | 'invalid_transition'
+    | 'entity_already_has_active_barcode'
+    | string;
+  from?: string;
+  to?: string;
+  conflict_barcode_id?: string;
+}
+
+/** Freeze an active barcode (active → frozen). Audit-logged as 'frozen'. */
+export function freezeBarcodeAdmin(barcodeId: string, reason?: string | null) {
+  return supabase.rpc('admin_freeze_barcode', {
+    _barcode_id: barcodeId,
+    _reason: reason ?? null,
+  });
+}
+
+/** Archive a barcode (active|frozen|revoked → archived). Audit-logged as 'archived'. */
+export function archiveBarcodeAdmin(barcodeId: string, reason?: string | null) {
+  return supabase.rpc('admin_archive_barcode', {
+    _barcode_id: barcodeId,
+    _reason: reason ?? null,
+  });
+}
+
+/**
+ * Restore a frozen or archived barcode back to active. Server-side guard
+ * rejects the restore if another non-archived barcode already owns the same
+ * (entity_type, entity_id) slot (returns `entity_already_has_active_barcode`).
+ * Audit-logged as 'unfrozen' or 'reactivated'.
+ */
+export function restoreBarcodeAdmin(barcodeId: string, reason?: string | null) {
+  return supabase.rpc('admin_restore_barcode', {
+    _barcode_id: barcodeId,
+    _reason: reason ?? null,
+  });
+}
