@@ -20,6 +20,7 @@ import { uploadAvatar } from '@/modules/files';
 import { toast } from 'sonner';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { ActiveBusinessSwitcher } from './ActiveBusinessSwitcher';
+import { useDisplayRefId } from '@/hooks/useDisplayRefId';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -61,6 +62,7 @@ interface DashboardLayoutProps {
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { isRTL, language } = useLanguage();
   const { user, loading, profile, isAdmin, isSuperAdmin, isProvider, signOut, refreshProfile } = useAuth();
+  const displayRefId = useDisplayRefId();
   const location = useLocation();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -213,10 +215,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                             {profile.phone_verified && <CheckCircle2 className="w-3 h-3 text-success" />}
                           </div>
                         )}
-                        {profile?.ref_id && (
+                        {displayRefId && (
                           <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                             <User className="w-3 h-3 shrink-0" />
-                            <span className="tech-content font-mono">{profile.ref_id}</span>
+                            <span className="tech-content font-mono">{displayRefId}</span>
                           </div>
                         )}
                       </div>
