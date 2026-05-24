@@ -53,12 +53,29 @@ Deno.serve(async (req) => {
   const errors: Array<{ subscription_id: string; error: string }> = [];
   let granted = 0; let skipped = 0;
 
+  // EDGE-CRON-OBSERVABILITY-1: capture run start.
+  const runStartedAt = new Date().toISOString();
+
   const { data: subs, error } = await admin
     .from('provider_subscriptions')
     .select('id, business_id, provider_user_id, status, current_period_start, current_period_end, lead_credits_balance, plan:provider_plans!inner(code, lead_credits_per_month, is_active)')
     .eq('status', 'active');
 
   if (error) {
+    // best-effort: log the failed run
+    try {
+      await admin.rpc('log_cron_run', {
+        _job_name: 'monthly-provider-credit-grant',
+        _function_name: 'monthly-provider-credit-grant',
+        _started_at: runStartedAt,
+        _finished_at: new Date().toISOString(),
+        _ok: false,
+        _status: 'select_failed',
+        _summary: { processed: 0, granted: 0, skipped: 0, error_count: 1 },
+        _error_code: 'select_failed',
+        _error_message: null,
+      });
+    } catch (_logErr) { /* never break cron on log failure */ }
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -108,6 +125,29 @@ Deno.serve(async (req) => {
     } catch (err) {
       errors.push({ subscription_id: s.id, error: err instanceof Error ? err.message : String(err) });
     }
+  }
+
+  // EDGE-CRON-OBSERVABILITY-1: best-effort log of this monthly run.
+  // Do NOT echo raw error messages from provider/RPC; just counts + codes.
+  try {
+    await admin.rpc('log_cron_run', {
+      _job_name: 'monthly-provider-credit-grant',
+      _function_name: 'monthly-provider-credit-grant',
+      _started_at: runStartedAt,
+      _finished_at: new Date().toISOString(),
+      _ok: errors.length === 0,
+      _status: errors.length === 0 ? 'ok' : 'partial',
+      _summary: {
+        processed: rows.length,
+        granted,
+        skipped,
+        error_count: errors.length,
+      },
+      _error_code: errors.length > 0 ? 'partial_failure' : null,
+      _error_message: null,
+    });
+  } catch (_logErr) {
+    // swallow — observability must never break cron success
   }
 
   return new Response(

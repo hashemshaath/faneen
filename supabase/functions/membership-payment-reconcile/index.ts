@@ -123,6 +123,9 @@ Deno.serve(async (req) => {
       errors: [] as Array<{ intent_id: string; code: string }>,
     };
 
+    // EDGE-CRON-OBSERVABILITY-1: capture start for the cron run log.
+    const sweepStartedAt = new Date().toISOString();
+
     for (const intent of rows ?? []) {
       try {
         const fetched = await fetchMoyasarPaymentStatus({
@@ -149,6 +152,33 @@ Deno.serve(async (req) => {
       } catch (_e) {
         summary.errors.push({ intent_id: intent.id, code: 'exception' });
       }
+    }
+
+    // EDGE-CRON-OBSERVABILITY-1: best-effort log of this sweep run.
+    // Never store raw provider payloads or secrets; only safe counts +
+    // error codes. Failure to log must NOT fail the cron job.
+    try {
+      await admin.rpc('log_cron_run', {
+        _job_name: 'membership-payment-reconcile-hourly',
+        _function_name: 'membership-payment-reconcile',
+        _started_at: sweepStartedAt,
+        _finished_at: new Date().toISOString(),
+        _ok: true,
+        _status: 'cron-sweep',
+        _summary: {
+          scanned: summary.scanned,
+          processed: summary.processed,
+          succeeded: summary.succeeded,
+          failed: summary.failed,
+          cancelled: summary.cancelled,
+          still_pending: summary.still_pending,
+          error_count: summary.errors.length,
+        },
+        _error_code: null,
+        _error_message: null,
+      });
+    } catch (_logErr) {
+      // swallow — observability must never break cron success
     }
 
     return json(summary);
