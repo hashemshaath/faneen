@@ -52,23 +52,117 @@ Deno.serve(async (req) => {
   });
   const token = authHeader.replace('Bearer ', '');
   const { data: claimsRes, error: claimsErr } = await userClient.auth.getClaims(token);
-  if (claimsErr || !claimsRes?.claims?.sub) {
+  const claims = claimsRes?.claims as { sub?: string; role?: string } | undefined;
+  const isServiceRole = !claimsErr && claims?.role === 'service_role';
+  const callerId = (claims?.sub as string | undefined) ?? '';
+  if (!isServiceRole && (claimsErr || !callerId)) {
     return json({ ok: false, code: 'unauthorized' }, 401);
   }
-  const callerId = claimsRes.claims.sub as string;
 
   let body: any;
   try { body = await req.json(); } catch { return json({ ok: false, code: 'invalid_body' }, 400); }
+
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  // ──────────────────────────────────────────────────────────────
+  // R4F-9J: cron-sweep branch.
+  // Triggered hourly by jobid 30 with body `{ triggeredBy: 'cron' }`.
+  // Walks pending Moyasar intents and reconciles each idempotently
+  // via the shared helper. Caps work per run and isolates per-intent
+  // failures so one bad row doesn't abort the sweep.
+  // ──────────────────────────────────────────────────────────────
+  const isCronSweep =
+    body?.triggeredBy === 'cron' || body?.mode === 'cron-sweep';
+  if (isCronSweep && !body?.intentId && !body?.providerIntentId) {
+    // Authorize: service-role token OR admin user.
+    let allowed = isServiceRole;
+    if (!allowed && callerId) {
+      const { data: isAdmin } = await admin.rpc('has_role', {
+        _user_id: callerId,
+        _role: 'admin',
+      });
+      allowed = isAdmin === true;
+    }
+    if (!allowed) return json({ ok: false, code: 'unauthorized' }, 403);
+
+    if (!MOYASAR_SECRET_KEY) {
+      return json({ ok: true, mode: 'noop', reason: 'missing_payment_config', scanned: 0 });
+    }
+
+    const SWEEP_LIMIT = 25;
+    const GRACE_MINUTES = 5;
+    const cutoff = new Date(Date.now() - GRACE_MINUTES * 60_000).toISOString();
+
+    const { data: rows, error: selErr } = await admin
+      .from('membership_payment_intents')
+      .select(
+        'id, subscription_id, user_id, status, amount, currency, provider, provider_intent_id, plan_id, billing_cycle, business_id',
+      )
+      .eq('provider', 'moyasar')
+      .in('status', ['created', 'requires_action'])
+      .not('provider_intent_id', 'is', null)
+      .lt('created_at', cutoff)
+      .order('created_at', { ascending: true })
+      .limit(SWEEP_LIMIT);
+
+    if (selErr) {
+      return json({ ok: true, mode: 'cron-sweep', scanned: 0, error: 'select_failed' });
+    }
+
+    const summary = {
+      ok: true as const,
+      mode: 'cron-sweep' as const,
+      scanned: rows?.length ?? 0,
+      processed: 0,
+      succeeded: 0,
+      failed: 0,
+      cancelled: 0,
+      still_pending: 0,
+      errors: [] as Array<{ intent_id: string; code: string }>,
+    };
+
+    for (const intent of rows ?? []) {
+      try {
+        const fetched = await fetchMoyasarPaymentStatus({
+          providerIntentId: intent.provider_intent_id as string,
+          secretKey: MOYASAR_SECRET_KEY,
+        });
+        if (!fetched.ok) {
+          summary.errors.push({ intent_id: intent.id, code: 'provider_error' });
+          continue;
+        }
+        const result = await applyProviderSnapshot({
+          admin,
+          supabaseUrl: SUPABASE_URL,
+          serviceRoleKey: SERVICE_ROLE_KEY,
+          intent: intent as any,
+          snapshot: fetched.snapshot,
+        });
+        summary.processed += 1;
+        const to = result.toStatus;
+        if (to === 'succeeded') summary.succeeded += 1;
+        else if (to === 'failed') summary.failed += 1;
+        else if (to === 'cancelled') summary.cancelled += 1;
+        else summary.still_pending += 1;
+      } catch (_e) {
+        summary.errors.push({ intent_id: intent.id, code: 'exception' });
+      }
+    }
+
+    return json(summary);
+  }
+
+  // Single-intent path requires an authenticated user identity.
+  if (!callerId) return json({ ok: false, code: 'unauthorized' }, 401);
+
   const intentId = typeof body?.intentId === 'string' ? body.intentId : '';
   const providerIntentId =
     typeof body?.providerIntentId === 'string' ? body.providerIntentId : '';
   if (!intentId && !providerIntentId) {
     return json({ ok: false, code: 'invalid_body' }, 400);
   }
-
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 
   let intent = intentId ? await loadIntent(admin, intentId) : null;
   if (!intent && providerIntentId) {
