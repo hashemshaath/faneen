@@ -607,6 +607,104 @@ const LifecycleActions: React.FC<{
 // ──────────────────────────────────────────────
 // Detail panel (inline — no popups per project rules)
 // ──────────────────────────────────────────────
+const TransferTrail: React.FC<{ barcodeId: string }> = ({ barcodeId }) => {
+  const bi = useBi();
+  const { isRTL } = useLanguage();
+
+  const { data: envelope, isLoading } = useQuery({
+    queryKey: ['admin-barcode-transfer-trail', barcodeId],
+    queryFn: () => listBarcodeTransferTrailAdmin({ barcodeId }),
+    staleTime: 30_000,
+  });
+
+  const entries: BarcodeTransferTrailEntry[] = useMemo(() => {
+    const d = envelope?.data;
+    return Array.isArray(d) ? (d as BarcodeTransferTrailEntry[]) : [];
+  }, [envelope]);
+  const rpcErr = envelope?.error?.message ?? null;
+
+  const userLabel = (
+    display: string | null,
+    ref: string | null,
+    masked: string | null,
+    hint: string | null,
+  ) => {
+    const parts: string[] = [];
+    if (ref) parts.push(ref);
+    if (masked) parts.push(masked);
+    if (hint) parts.push(hint);
+    return { name: display || ref || bi('مستخدم', 'User'), meta: parts.join(' · ') };
+  };
+
+  return (
+    <div>
+      <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+        <ArrowRightLeft className="h-3.5 w-3.5" />
+        {bi('سجل النقل', 'Transfer history')}
+      </div>
+      {isLoading ? (
+        <div className="text-xs text-muted-foreground">{bi('جارٍ التحميل…', 'Loading…')}</div>
+      ) : rpcErr ? (
+        <div className="text-xs text-destructive">
+          {bi('تعذّر تحميل سجل النقل.', 'Failed to load transfer history.')}
+        </div>
+      ) : entries.length === 0 ? (
+        <div className="text-xs text-muted-foreground">
+          {bi('لا توجد عمليات نقل لهذا الرمز.', 'No transfer history for this code.')}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {entries.map((e) => {
+            const from = userLabel(e.from_display_name, e.from_ref_id, e.from_masked_email, e.from_phone_hint);
+            const to   = userLabel(e.to_display_name,   e.to_ref_id,   e.to_masked_email,   e.to_phone_hint);
+            return (
+              <div key={e.event_id} className="rounded-md border bg-card px-2.5 py-2 text-xs space-y-1.5">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <Badge className="text-[10px] border bg-amber-500/10 text-amber-600 border-amber-500/30" variant="outline">
+                    <ArrowRightLeft className="h-3 w-3 me-1 inline" />
+                    {bi('منقول', 'Transferred')}
+                  </Badge>
+                  <span className="text-[11px] text-muted-foreground tech-content">{fmtDate(e.created_at, isRTL)}</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="min-w-0">
+                    <div className="text-[11px] text-muted-foreground">{bi('من', 'From')}</div>
+                    <div className="font-medium truncate">{from.name}</div>
+                    {from.meta && (
+                      <div className="text-[11px] text-muted-foreground tech-content truncate">{from.meta}</div>
+                    )}
+                  </div>
+                  <ArrowRightLeft className="h-3.5 w-3.5 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <div className="text-[11px] text-muted-foreground">{bi('إلى', 'To')}</div>
+                    <div className="font-medium truncate">{to.name}</div>
+                    {to.meta && (
+                      <div className="text-[11px] text-muted-foreground tech-content truncate">{to.meta}</div>
+                    )}
+                  </div>
+                </div>
+                {e.reason && (
+                  <div className="text-[11px]">
+                    <span className="text-muted-foreground">{bi('السبب: ', 'Reason: ')}</span>
+                    <span>{e.reason}</span>
+                  </div>
+                )}
+                {e.actor_display_name && (
+                  <div className="text-[11px] text-muted-foreground">
+                    {bi('بواسطة المسؤول: ', 'By admin: ')}
+                    <span className="text-foreground">{e.actor_display_name}</span>
+                    {e.actor_ref_id && <span className="tech-content"> · {e.actor_ref_id}</span>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const DetailPanel: React.FC<{ barcodeId: string; onClose: () => void }> = ({ barcodeId, onClose }) => {
   const bi = useBi();
   const { isRTL } = useLanguage();
