@@ -186,3 +186,70 @@ describe('AdminMembershipPayments manual refund (R4F-8H)', () => {
     expect(SRC).toMatch(/تعذر تسجيل الاسترداد/);
   });
 });
+
+describe('AdminMembershipPayments live monitoring (R4F-9F)', () => {
+  it('imports reconcileMembershipPaymentStatus from canonical module', () => {
+    expect(SRC).toMatch(/reconcileMembershipPaymentStatus/);
+    expect(SRC).toMatch(/from ['"]@\/modules\/memberships['"]/);
+  });
+
+  it('does not call functions.invoke or supabase.from directly', () => {
+    expect(SRC).not.toMatch(/functions\.invoke/);
+    expect(SRC).not.toMatch(/supabase\.from/);
+  });
+
+  it('renders bilingual Reconcile status action', () => {
+    expect(SRC).toMatch(/Reconcile status/);
+    expect(SRC).toMatch(/مزامنة الحالة/);
+  });
+
+  it('renders bilingual Needs follow-up health label for stale pending intents', () => {
+    expect(SRC).toMatch(/Needs follow-up/);
+    expect(SRC).toMatch(/بحاجة إلى متابعة/);
+  });
+
+  it('renders health chips for all required states', () => {
+    expect(SRC).toMatch(/Requires action/);
+    expect(SRC).toMatch(/Waiting for webhook/);
+    expect(SRC).toMatch(/Succeeded/);
+    expect(SRC).toMatch(/Failed/);
+  });
+
+  it('does not render raw payload (no JSON.stringify of payload, no sensitive keys)', () => {
+    expect(SRC).not.toMatch(/JSON\.stringify\(\s*e\.payload/);
+    expect(SRC).not.toMatch(/JSON\.stringify\(\s*payload/);
+    for (const key of ['signature', 'secret', 'token', 'card', 'number', 'cvc']) {
+      const re = new RegExp(`['"\`]${key}['"\`]`, 'i');
+      expect(SRC).not.toMatch(re);
+    }
+  });
+
+  it('maps reconcile error codes', () => {
+    expect(SRC).toMatch(/missing_payment_config/);
+    expect(SRC).toMatch(/provider_error/);
+    expect(SRC).toMatch(/not_found/);
+    expect(SRC).toMatch(/status_not_final/);
+  });
+
+  it('refreshes both intents and events queries after reconcile', () => {
+    // both invalidation keys must appear, and the reconcile handler must invalidate both.
+    expect(SRC).toMatch(/handleReconcile/);
+    expect(SRC).toMatch(/admin-membership-payments/);
+    expect(SRC).toMatch(/admin-membership-payment-events/);
+  });
+
+  it('pending events show Pending reconcile / بانتظار المزامنة label', () => {
+    expect(SRC).toMatch(/Pending reconcile/);
+    expect(SRC).toMatch(/بانتظار المزامنة/);
+  });
+
+  it('events panel exposes a filter (All / Pending / Processed / Error)', () => {
+    expect(SRC).toMatch(/eventFilter/);
+    expect(SRC).toMatch(/Pending/);
+    expect(SRC).toMatch(/Processed/);
+  });
+
+  it('matched intent deep link remains /admin/membership-payments?intent=', () => {
+    expect(SRC).toMatch(/\/admin\/membership-payments\?intent=/);
+  });
+});

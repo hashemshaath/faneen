@@ -2,14 +2,16 @@ import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2, CreditCard, Check, History, FileText } from 'lucide-react';
+import { Loader2, CreditCard, Check, History, FileText, RefreshCw, AlertTriangle } from 'lucide-react';
 import {
   listMembershipPaymentIntents,
   listMembershipPaymentWebhookEvents,
   markMembershipPaidManually,
   markMembershipRefundedManually,
+  reconcileMembershipPaymentStatus,
   type MarkMembershipPaidManuallyResult,
   type MarkMembershipRefundedManuallyResult,
+  type MembershipPaymentProvider,
 } from '@/modules/memberships';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -91,6 +93,52 @@ const STATUS_TONE: Record<string, string> = {
 const PAID_STATUSES = new Set(['succeeded', 'refunded']);
 const REFUNDED_STATUSES = new Set(['refunded']);
 
+// R4F-9F: pending intents older than this are flagged as "Needs follow-up".
+const STALE_PENDING_MS = 30 * 60 * 1000; // 30 minutes
+
+type IntentHealth =
+  | 'succeeded'
+  | 'failed'
+  | 'refunded'
+  | 'requires_action'
+  | 'waiting_webhook'
+  | 'reconcile_needed'
+  | 'cancelled';
+
+function intentHealth(row: { status: string; created_at: string; confirmed_at: string | null }): IntentHealth {
+  if (row.status === 'succeeded') return 'succeeded';
+  if (row.status === 'failed') return 'failed';
+  if (row.status === 'refunded') return 'refunded';
+  if (row.status === 'cancelled') return 'cancelled';
+  if (row.status === 'requires_action') return 'requires_action';
+  // created
+  const ageMs = Date.now() - new Date(row.created_at).getTime();
+  if (ageMs > STALE_PENDING_MS) return 'reconcile_needed';
+  return 'waiting_webhook';
+}
+
+const HEALTH_TONE: Record<IntentHealth, string> = {
+  succeeded: 'bg-success/10 text-success border-success/30',
+  failed: 'bg-destructive/10 text-destructive border-destructive/30',
+  refunded: 'bg-muted text-muted-foreground border-border',
+  requires_action: 'bg-warning/10 text-warning border-warning/30',
+  waiting_webhook: 'bg-info/10 text-info border-info/30',
+  reconcile_needed: 'bg-warning/10 text-warning border-warning/30',
+  cancelled: 'bg-muted text-muted-foreground border-border',
+};
+
+function healthLabel(h: IntentHealth, isRTL: boolean): string {
+  switch (h) {
+    case 'succeeded': return isRTL ? 'مكتمل' : 'Succeeded';
+    case 'failed': return isRTL ? 'فشل' : 'Failed';
+    case 'refunded': return isRTL ? 'مسترد' : 'Refunded';
+    case 'requires_action': return isRTL ? 'يتطلب إجراء' : 'Requires action';
+    case 'waiting_webhook': return isRTL ? 'بانتظار التأكيد' : 'Waiting for webhook';
+    case 'reconcile_needed': return isRTL ? 'بحاجة إلى متابعة' : 'Needs follow-up';
+    case 'cancelled': return isRTL ? 'ملغاة' : 'Cancelled';
+  }
+}
+
 const AdminMembershipPayments = () => {
   const { isRTL } = useLanguage();
   const { user } = useAuth();
@@ -113,6 +161,11 @@ const AdminMembershipPayments = () => {
   const [refundedAt, setRefundedAt] = useState('');
   const [refundNotes, setRefundNotes] = useState('');
   const [refundSubmitting, setRefundSubmitting] = useState(false);
+
+  // R4F-9F: per-intent reconcile in-flight tracking.
+  const [reconcilingId, setReconcilingId] = useState<string | null>(null);
+  // R4F-9F: webhook events processing filter.
+  const [eventFilter, setEventFilter] = useState<'all' | 'pending' | 'processed' | 'error'>('all');
 
   const SELECT_COLS =
     'id, subscription_id, user_id, business_id, provider, status, amount, currency, provider_intent_id, invoice_id, confirmed_at, created_at, updated_at';
@@ -168,6 +221,56 @@ const AdminMembershipPayments = () => {
     setRefundedAt('');
     setRefundNotes('');
   };
+
+  const handleReconcile = async (row: IntentRow) => {
+    setReconcilingId(row.id);
+    try {
+      const { data, error } = await reconcileMembershipPaymentStatus({
+        intentId: row.id,
+        provider: (row.provider || 'moyasar') as MembershipPaymentProvider,
+        providerIntentId: row.provider_intent_id || undefined,
+      });
+      if (error) {
+        toast.error(isRTL ? 'تعذر مزامنة الحالة' : 'Failed to reconcile status');
+        return;
+      }
+      const result = (data ?? null) as { ok?: boolean; code?: string; status?: string } | null;
+      if (!result || !result.ok) {
+        const code = result?.code;
+        const msg =
+          code === 'missing_payment_config'
+            ? isRTL ? 'إعدادات بوابة الدفع غير مكتملة' : 'Payment provider not configured'
+          : code === 'provider_error'
+            ? isRTL ? 'خطأ من بوابة الدفع' : 'Payment provider error'
+          : code === 'not_found'
+            ? isRTL ? 'لم يتم العثور على نية الدفع لدى المزود' : 'Payment intent not found at provider'
+          : code === 'unauthorized'
+            ? isRTL ? 'غير مصرح' : 'Unauthorized'
+          : code === 'status_not_final'
+            ? isRTL ? 'الحالة غير نهائية بعد لدى المزود' : 'Provider status is not final yet'
+          : isRTL ? 'تعذر مزامنة الحالة' : 'Failed to reconcile status';
+        toast.error(msg);
+        return;
+      }
+      toast.success(
+        (isRTL ? 'تمت المزامنة. الحالة: ' : 'Reconciled. Status: ') + (result.status ?? '—'),
+      );
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-membership-payments'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-membership-payment-events'] }),
+      ]);
+    } finally {
+      setReconcilingId(null);
+    }
+  };
+
+  const filteredEvents = useMemo(() => {
+    if (eventFilter === 'all') return eventRows;
+    return eventRows.filter((e) => {
+      const status = eventStatusLabel(e);
+      return status === eventFilter;
+    });
+  }, [eventRows, eventFilter]);
 
   const handleSubmit = async () => {
     if (!activeIntent || !user) return;
@@ -283,6 +386,7 @@ const AdminMembershipPayments = () => {
                 <TableRow>
                   <TableHead>{isRTL ? 'التاريخ' : 'Created'}</TableHead>
                   <TableHead>{isRTL ? 'الحالة' : 'Status'}</TableHead>
+                  <TableHead>{isRTL ? 'الصحة' : 'Health'}</TableHead>
                   <TableHead>{isRTL ? 'المزود' : 'Provider'}</TableHead>
                   <TableHead>{isRTL ? 'المبلغ' : 'Amount'}</TableHead>
                   <TableHead>{isRTL ? 'معرف المزود' : 'Provider Intent'}</TableHead>
@@ -296,11 +400,20 @@ const AdminMembershipPayments = () => {
                   const isPaid = PAID_STATUSES.has(r.status);
                   const isRefunded = REFUNDED_STATUSES.has(r.status);
                   const isHighlighted = highlightedIntentId === r.id;
+                  const health = intentHealth(r);
+                  const showReconcile = !isPaid && !isRefunded && r.status !== 'cancelled';
+                  const reconcileBusy = reconcilingId === r.id;
                   return (
                     <TableRow key={r.id} className={isHighlighted ? 'bg-primary/5' : ''}>
                       <TableCell className="tech-content text-xs">{new Date(r.created_at).toLocaleString()}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={STATUS_TONE[r.status] || ''}>{r.status}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={HEALTH_TONE[health]}>
+                          {health === 'reconcile_needed' && <AlertTriangle className="w-3 h-3 me-1 inline" />}
+                          {healthLabel(health, isRTL)}
+                        </Badge>
                       </TableCell>
                       <TableCell className="tech-content text-xs">{r.provider || '—'}</TableCell>
                       <TableCell className="tech-content text-xs">
@@ -351,7 +464,24 @@ const AdminMembershipPayments = () => {
                             </Button>
                           </div>
                         ) : (
-                          <Button
+                          <div className="flex items-center justify-end gap-2">
+                            {showReconcile && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                disabled={reconcileBusy || !user}
+                                onClick={() => handleReconcile(r)}
+                                title={isRTL ? 'مزامنة الحالة' : 'Reconcile status'}
+                              >
+                                {reconcileBusy ? (
+                                  <Loader2 className="w-3 h-3 animate-spin me-1" />
+                                ) : (
+                                  <RefreshCw className="w-3 h-3 me-1" />
+                                )}
+                                {isRTL ? 'مزامنة الحالة' : 'Reconcile status'}
+                              </Button>
+                            )}
+                            <Button
                             size="sm"
                             variant="outline"
                             disabled={!user}
@@ -364,7 +494,8 @@ const AdminMembershipPayments = () => {
                             }}
                           >
                             {isRTL ? 'تأكيد الدفع' : 'Mark paid'}
-                          </Button>
+                            </Button>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>
@@ -372,7 +503,7 @@ const AdminMembershipPayments = () => {
                 })}
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground text-sm">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground text-sm">
                       {isRTL ? 'لا توجد مدفوعات' : 'No payment intents'}
                     </TableCell>
                   </TableRow>
@@ -507,11 +638,22 @@ const AdminMembershipPayments = () => {
       )}
 
       <Card>
-        <CardHeader className="flex flex-row items-center gap-2 space-y-0">
+        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
           <CardTitle className="flex items-center gap-2 text-lg">
             <History className="w-5 h-5" />
             {isRTL ? 'أحداث الدفع الأخيرة' : 'Recent payment events'}
           </CardTitle>
+          <Select value={eventFilter} onValueChange={(v) => setEventFilter(v as typeof eventFilter)}>
+            <SelectTrigger className="w-48 h-10">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{isRTL ? 'كل الأحداث' : 'All events'}</SelectItem>
+              <SelectItem value="pending">{isRTL ? 'بانتظار المزامنة' : 'Pending'}</SelectItem>
+              <SelectItem value="processed">{isRTL ? 'تمت المعالجة' : 'Processed'}</SelectItem>
+              <SelectItem value="error">{isRTL ? 'فشل' : 'Failed/error'}</SelectItem>
+            </SelectContent>
+          </Select>
         </CardHeader>
         <CardContent>
           {eventsLoading ? (
@@ -530,9 +672,15 @@ const AdminMembershipPayments = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {eventRows.map((e) => {
+                {filteredEvents.map((e) => {
                   const summary = extractSafePayloadSummary(e.payload);
                   const status = eventStatusLabel(e);
+                  const statusText =
+                    status === 'pending'
+                      ? (isRTL ? 'بانتظار المزامنة' : 'Pending reconcile')
+                      : status === 'processed'
+                      ? (isRTL ? 'تمت المعالجة' : 'Processed')
+                      : (isRTL ? 'خطأ' : 'Error');
                   return (
                     <TableRow key={e.id}>
                       <TableCell className="tech-content text-xs">{new Date(e.received_at).toLocaleString()}</TableCell>
@@ -541,7 +689,7 @@ const AdminMembershipPayments = () => {
                       <TableCell className="tech-content text-[10px] font-mono">{e.event_id}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={EVENT_STATUS_TONE[status] || ''}>
-                          {status}
+                          {statusText}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs">
@@ -569,7 +717,7 @@ const AdminMembershipPayments = () => {
                     </TableRow>
                   );
                 })}
-                {eventRows.length === 0 && (
+                {filteredEvents.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-sm">
                       {isRTL ? 'لا توجد أحداث دفع بعد.' : 'No payment events yet.'}
