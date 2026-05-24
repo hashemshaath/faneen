@@ -10454,6 +10454,16 @@ export type Database = {
       }
     }
     Functions: {
+      _admin_log_barcode_event: {
+        Args: {
+          _barcode_id: string
+          _event_type: string
+          _new_status: string
+          _previous_status: string
+          _reason: string
+        }
+        Returns: undefined
+      }
       _atlc_hash: { Args: { _code: string; _row_id: string }; Returns: string }
       _atlc_mask_identifier: { Args: { _identifier: string }; Returns: string }
       _atlc_normalize_identifier: {
@@ -10622,6 +10632,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_archive_barcode: {
+        Args: { _barcode_id: string; _reason?: string }
+        Returns: Json
+      }
       admin_barcode_registry_summary: { Args: never; Returns: Json }
       admin_client_sites_monitoring_summary: { Args: never; Returns: Json }
       admin_contract_pdf_exports_summary: {
@@ -10637,6 +10651,10 @@ export type Database = {
       admin_convert_lead_to_contract: {
         Args: { _lead_id: string }
         Returns: string
+      }
+      admin_freeze_barcode: {
+        Args: { _barcode_id: string; _reason?: string }
+        Returns: Json
       }
       admin_get_barcode_detail: { Args: { _barcode_id: string }; Returns: Json }
       admin_get_client_site_monitoring_detail: {
@@ -10793,6 +10811,10 @@ export type Database = {
           p_refund_reference?: string
           p_refunded_at?: string
         }
+        Returns: Json
+      }
+      admin_restore_barcode: {
+        Args: { _barcode_id: string; _reason?: string }
         Returns: Json
       }
       admin_rotate_client_site_qr_token: {
