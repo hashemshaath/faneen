@@ -386,6 +386,7 @@ const AdminMembershipPayments = () => {
                 <TableRow>
                   <TableHead>{isRTL ? 'التاريخ' : 'Created'}</TableHead>
                   <TableHead>{isRTL ? 'الحالة' : 'Status'}</TableHead>
+                  <TableHead>{isRTL ? 'الصحة' : 'Health'}</TableHead>
                   <TableHead>{isRTL ? 'المزود' : 'Provider'}</TableHead>
                   <TableHead>{isRTL ? 'المبلغ' : 'Amount'}</TableHead>
                   <TableHead>{isRTL ? 'معرف المزود' : 'Provider Intent'}</TableHead>
@@ -399,11 +400,20 @@ const AdminMembershipPayments = () => {
                   const isPaid = PAID_STATUSES.has(r.status);
                   const isRefunded = REFUNDED_STATUSES.has(r.status);
                   const isHighlighted = highlightedIntentId === r.id;
+                  const health = intentHealth(r);
+                  const showReconcile = !isPaid && !isRefunded && r.status !== 'cancelled';
+                  const reconcileBusy = reconcilingId === r.id;
                   return (
                     <TableRow key={r.id} className={isHighlighted ? 'bg-primary/5' : ''}>
                       <TableCell className="tech-content text-xs">{new Date(r.created_at).toLocaleString()}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={STATUS_TONE[r.status] || ''}>{r.status}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={HEALTH_TONE[health]}>
+                          {health === 'reconcile_needed' && <AlertTriangle className="w-3 h-3 me-1 inline" />}
+                          {healthLabel(health, isRTL)}
+                        </Badge>
                       </TableCell>
                       <TableCell className="tech-content text-xs">{r.provider || '—'}</TableCell>
                       <TableCell className="tech-content text-xs">
@@ -454,7 +464,24 @@ const AdminMembershipPayments = () => {
                             </Button>
                           </div>
                         ) : (
-                          <Button
+                          <div className="flex items-center justify-end gap-2">
+                            {showReconcile && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                disabled={reconcileBusy || !user}
+                                onClick={() => handleReconcile(r)}
+                                title={isRTL ? 'مزامنة الحالة' : 'Reconcile status'}
+                              >
+                                {reconcileBusy ? (
+                                  <Loader2 className="w-3 h-3 animate-spin me-1" />
+                                ) : (
+                                  <RefreshCw className="w-3 h-3 me-1" />
+                                )}
+                                {isRTL ? 'مزامنة الحالة' : 'Reconcile status'}
+                              </Button>
+                            )}
+                            <Button
                             size="sm"
                             variant="outline"
                             disabled={!user}
@@ -467,7 +494,8 @@ const AdminMembershipPayments = () => {
                             }}
                           >
                             {isRTL ? 'تأكيد الدفع' : 'Mark paid'}
-                          </Button>
+                            </Button>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>
@@ -475,7 +503,7 @@ const AdminMembershipPayments = () => {
                 })}
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground text-sm">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground text-sm">
                       {isRTL ? 'لا توجد مدفوعات' : 'No payment intents'}
                     </TableCell>
                   </TableRow>
