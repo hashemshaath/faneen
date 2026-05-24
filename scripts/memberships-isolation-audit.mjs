@@ -62,6 +62,8 @@ const GUARDED_RPCS = [
   "create_access_key",
   "revoke_access_key",
   "admin_set_business_membership_tier",
+  // R4F-8D: manual admin mark-paid for a membership payment intent.
+  "admin_mark_membership_paid_manually",
 ];
 
 const TABLE_PATTERN = new RegExp(

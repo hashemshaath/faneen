@@ -69,8 +69,6 @@ import {
   confirmMembershipPayment,
   reconcileMembershipPaymentStatus,
 } from '../payments/edge';
-import { markMembershipPaidManually } from '../payments/manualMarkPaid';
-
 beforeEach(() => {
   ops = [];
   terminalResult = { data: null, error: null };
@@ -207,13 +205,5 @@ describe('payments/edge', () => {
     expect(ops[0]).toEqual({
       kind: 'invoke', name: 'membership-payment-reconcile', init: { body },
     });
-  });
-});
-
-describe('payments/manualMarkPaid', () => {
-  it('throws not-implemented (RPC does not exist yet)', async () => {
-    await expect(
-      markMembershipPaidManually({ subscriptionId: 's1' }),
-    ).rejects.toThrow(/admin_mark_membership_paid_manually is not implemented yet/);
   });
 });
