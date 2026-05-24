@@ -45,7 +45,13 @@ describe('BARCODE-REGISTRY-TRANSFER-AUDIT-1 migration contract', () => {
   });
 
   it('does not touch auth.users', () => {
-    expect(MIGRATION_SRC).not.toMatch(/auth\.users/);
+    // Strip SQL line comments before checking — the header comment intentionally
+    // documents that the function does not touch auth.users.
+    const codeOnly = MIGRATION_SRC
+      .split('\n')
+      .filter((l) => !l.trim().startsWith('--'))
+      .join('\n');
+    expect(codeOnly).not.toMatch(/auth\.users/);
   });
 
   it('execute is granted to authenticated only (PUBLIC revoked)', () => {
