@@ -205,8 +205,8 @@ Deno.serve(async (req) => {
         reason: "sms_delivery_failed",
       });
       return new Response(
-        JSON.stringify({ success: false, error: "sms_delivery_failed", message: "Could not send SMS. Please try again later." }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, error: "sms_delivery_failed", fallback: true, message: "Could not send SMS. Please try again later." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
