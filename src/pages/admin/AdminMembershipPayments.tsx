@@ -38,6 +38,45 @@ interface IntentRow {
   updated_at: string | null;
 }
 
+interface WebhookEventRow {
+  id: string;
+  event_id: string;
+  event_type: string;
+  provider: string;
+  received_at: string;
+  created_at: string;
+  processed_at: string | null;
+  processing_error: string | null;
+  payload: unknown;
+}
+
+function extractSafePayloadSummary(payload: unknown): { paymentIntentId?: string; lines: string[] } {
+  if (!payload || typeof payload !== 'object') return { lines: [] };
+  const p = payload as Record<string, unknown>;
+  const safeKeys = ['status', 'amount', 'currency', 'invoice_id', 'customer_id', 'subscription_id', 'object', 'type'];
+  const lines: string[] = [];
+  for (const key of safeKeys) {
+    if (p[key] != null) {
+      const value = String(p[key]);
+      lines.push(`${key}: ${value.length > 40 ? value.slice(0, 40) + '…' : value}`);
+    }
+  }
+  const paymentIntentId = p.payment_intent_id != null ? String(p.payment_intent_id) : undefined;
+  return { paymentIntentId, lines };
+}
+
+function eventStatusLabel(row: WebhookEventRow): string {
+  if (row.processing_error) return 'error';
+  if (row.processed_at) return 'processed';
+  return 'pending';
+}
+
+const EVENT_STATUS_TONE: Record<string, string> = {
+  processed: 'bg-success/10 text-success border-success/30',
+  error: 'bg-destructive/10 text-destructive border-destructive/30',
+  pending: 'bg-muted text-muted-foreground border-border',
+};
+
 const STATUS_TONE: Record<string, string> = {
   succeeded: 'bg-success/10 text-success border-success/30',
   created: 'bg-info/10 text-info border-info/30',
