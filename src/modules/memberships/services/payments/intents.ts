@@ -70,6 +70,27 @@ export async function getLatestMembershipPaymentIntentForSubscription<T = unknow
   return { data: data as unknown as T | null, error };
 }
 
+/**
+ * R4F-8J: List payment intents scoped to a single subscription.
+ * Read-only, safe defaults, no transformation. Returns raw { data, error }.
+ */
+export async function listMembershipPaymentIntentsForSubscription<T = unknown>(args: {
+  subscriptionId: string;
+  select?: string;
+  limit?: number;
+}): Promise<{ data: T[] | null; error: unknown }> {
+  const select =
+    args.select ??
+    'id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata';
+  const { data, error } = await supabase
+    .from('membership_payment_intents')
+    .select(select)
+    .eq('subscription_id', args.subscriptionId)
+    .order('created_at', { ascending: false })
+    .limit(args.limit ?? 10);
+  return { data: data as unknown as T[] | null, error };
+}
+
 /** Intended for service-role / edge use only. No UI callsites yet. */
 export async function createMembershipPaymentIntentRecord<T = unknown>(
   payload: MembershipPaymentIntentInsert,

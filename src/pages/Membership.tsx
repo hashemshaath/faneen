@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
 import { CurrentSubscriptionCard } from '@/components/membership/CurrentSubscriptionCard';
 import { MembershipPaymentStatus } from '@/components/membership/MembershipPaymentStatus';
+import { MembershipPaymentHistory } from '@/components/membership/MembershipPaymentHistory';
 import { PlanCard } from '@/components/membership/PlanCard';
 import { FeatureComparisonTable } from '@/components/membership/FeatureComparisonTable';
 import { PromoCodeRedeem } from '@/components/membership/PromoCodeRedeem';
@@ -890,6 +891,13 @@ const Membership = () => {
 
         {user && mySubscription && (
           <MembershipPaymentStatus
+            isRTL={isRTL}
+            subscriptionId={(mySubscription as { id?: string }).id ?? null}
+          />
+        )}
+
+        {user && mySubscription && (
+          <MembershipPaymentHistory
             isRTL={isRTL}
             subscriptionId={(mySubscription as { id?: string }).id ?? null}
           />
