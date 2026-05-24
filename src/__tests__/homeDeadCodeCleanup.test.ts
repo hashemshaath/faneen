@@ -22,14 +22,16 @@ const LEGACY_HOME = [
 
 const LEGACY_ASSETS = ['hero-bg.webp', 'hero-bg.jpg'] as const;
 
-/** Ripgrep wrapper — returns matching `path:line` lines, or [] if none. */
+/** Ripgrep wrapper — returns matching `path:line` lines, or [] if none.
+ *  Excludes this test file so its own pattern strings don't self-match. */
+const SELF = 'src/__tests__/homeDeadCodeCleanup.test.ts';
 const rg = (pattern: string): string[] => {
   try {
     const out = execSync(`rg -n --no-heading ${JSON.stringify(pattern)} src/`, {
       cwd: root,
       encoding: 'utf8',
     });
-    return out.split('\n').filter(Boolean);
+    return out.split('\n').filter((line) => line && !line.startsWith(SELF));
   } catch {
     return []; // exit 1 = no matches
   }
