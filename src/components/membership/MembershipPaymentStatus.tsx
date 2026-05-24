@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Clock, AlertTriangle, RotateCcw, Receipt } from 'lucide-react';
 import { getLatestMembershipPaymentIntentForSubscription } from '@/modules/memberships';
+import { MembershipCheckoutButton } from '@/components/membership/MembershipCheckoutButton';
 
 /**
  * R4F-8I: User-facing read-only membership payment status panel.
@@ -123,11 +124,20 @@ export const MembershipPaymentStatus: React.FC<Props> = ({ subscriptionId, isRTL
             )}
 
             {(status === 'created' || status === 'requires_action') && (
-              <p className="mt-2 text-[11px] text-muted-foreground">
-                {isRTL
-                  ? 'عملية الدفع قيد الانتظار. سيتم تحديث الحالة تلقائيًا عند التأكيد.'
-                  : 'Your payment is pending. The status will update automatically once confirmed.'}
-              </p>
+              <>
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  {isRTL
+                    ? 'عملية الدفع قيد الانتظار. أكمل الدفع عبر البوابة الآمنة للتفعيل.'
+                    : 'Your payment is pending. Complete it via the secure checkout to activate.'}
+                </p>
+                <div className="mt-3">
+                  <MembershipCheckoutButton
+                    subscriptionId={subscriptionId as string}
+                    isRTL={isRTL}
+                    className="h-9 rounded-xl"
+                  />
+                </div>
+              </>
             )}
           </div>
         </div>
