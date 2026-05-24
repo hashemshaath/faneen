@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, RefreshCw, Activity, AlertCircle } from 'lucide-react';
+import { Loader2, RefreshCw, Activity, AlertCircle, CheckCircle2, XCircle, CalendarClock } from 'lucide-react';
 import { listCronRunLogs } from '@/modules/system/services/cronRuns';
 
 interface CronRunRow {
@@ -62,6 +63,34 @@ const AdminCronRuns = () => {
 
   const rows = data ?? [];
 
+  // 30-day rollup computed from the latest 50 rows (cheap, client-side).
+  // For full 30-day fidelity we'd need a dedicated aggregate; the current
+  // hourly+daily cadence keeps 50 rows well within the 30-day window.
+  const health = useMemo(() => {
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const inWindow = rows.filter(
+      (r) => new Date(r.started_at).getTime() >= cutoff,
+    );
+    const total = inWindow.length;
+    const succeeded = inWindow.filter((r) => r.ok === true).length;
+    const failed = inWindow.filter((r) => r.ok === false).length;
+    const successRate = total > 0 ? Math.round((succeeded / total) * 100) : 0;
+    const lastRun = inWindow[0]?.started_at ?? null;
+    const latestFailed = inWindow.find((r) => r.ok === false) ?? null;
+    const jobs = new Set(inWindow.map((r) => r.job_name));
+    return {
+      total,
+      succeeded,
+      failed,
+      successRate,
+      lastRun,
+      latestFailedJob: latestFailed?.job_name ?? null,
+      jobsObserved: jobs.size,
+    };
+  }, [rows]);
+
+  const hasIssues = health.failed > 0;
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -89,6 +118,68 @@ const AdminCronRuns = () => {
           </Button>
         </div>
       </div>
+
+      <Card
+        className={`mb-4 border ${hasIssues ? 'border-destructive/40 bg-destructive/5' : 'border-success/30 bg-success/5'}`}
+      >
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <CalendarClock className="h-4 w-4" />
+            {isRTL ? 'صحة المهام المجدولة' : 'Cron Health'}
+            <span className="text-xs text-muted-foreground font-normal">
+              {isRTL ? '(آخر 30 يوم)' : '(last 30 days)'}
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {health.total === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {isRTL ? 'لا توجد بيانات كافية بعد.' : 'Not enough data yet.'}
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <Badge
+                variant="outline"
+                className={
+                  hasIssues
+                    ? 'bg-destructive/10 text-destructive border-destructive/30'
+                    : 'bg-success/10 text-success border-success/30'
+                }
+              >
+                {health.successRate}% {isRTL ? 'نجاح' : 'success'}
+              </Badge>
+              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                {health.succeeded} {isRTL ? 'ناجحة' : 'succeeded'}
+              </span>
+              <span
+                className={`inline-flex items-center gap-1 ${hasIssues ? 'text-destructive' : 'text-muted-foreground'}`}
+              >
+                <XCircle className="h-3.5 w-3.5" />
+                {health.failed} {isRTL ? 'فاشلة' : 'failed'}
+              </span>
+              <span className="text-muted-foreground">
+                {isRTL ? 'إجمالي' : 'Total'}: {health.total}
+              </span>
+              <span className="text-muted-foreground">
+                {isRTL ? 'مهام مرصودة' : 'Jobs observed'}: {health.jobsObserved}
+              </span>
+              {health.lastRun ? (
+                <span className="text-muted-foreground">
+                  {isRTL ? 'آخر تشغيل' : 'Last run'}: {formatDate(health.lastRun, isRTL)}
+                </span>
+              ) : null}
+              {health.latestFailedJob ? (
+                <span className="inline-flex items-center gap-1 text-destructive">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  {isRTL ? 'آخر مهمة فاشلة' : 'Latest failed job'}:
+                  <span className="font-mono">{health.latestFailedJob}</span>
+                </span>
+              ) : null}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
