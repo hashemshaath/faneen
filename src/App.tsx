@@ -120,6 +120,7 @@ const AdminProviderAnalytics = lazyRetry(() => import("./pages/admin/AdminProvid
 const AdminContractAnalytics = lazyRetry(() => import("./pages/admin/AdminContractAnalytics"));
 const Notifications = lazyRetry(() => import("./pages/Notifications"));
 const Membership = lazyRetry(() => import("./pages/Membership"));
+const MembershipInvoice = lazyRetry(() => import("./pages/MembershipInvoice"));
 const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardOperations"));
 const DashboardAiCenter = lazyRetry(() => import("./pages/dashboard/DashboardAiCenter"));
 const DashboardLeads = lazyRetry(() => import("./pages/dashboard/DashboardLeads"));
