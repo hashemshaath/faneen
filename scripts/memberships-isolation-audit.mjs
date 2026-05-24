@@ -41,6 +41,10 @@ const GUARDED_TABLES = [
   "membership_promo_code_attempts",
   "provider_plans",
   "provider_subscriptions",
+  // R4F-8C: payments scaffold tables — wrappers live under
+  // src/modules/memberships/services/payments/.
+  "membership_payment_intents",
+  "membership_payment_webhook_events",
 ];
 
 const GUARDED_RPCS = [
