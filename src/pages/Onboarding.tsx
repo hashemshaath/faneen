@@ -12,13 +12,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { User, Building2, Phone, Globe, Check, Loader2, CheckCircle2, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
+import { User, Building2, Phone, Check, Loader2, CheckCircle2, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
 import { track } from '@/lib/analytics-events';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { SectorPicker } from '@/components/onboarding/SectorPicker';
 import type { SectorId } from '@/data/onboarding-sectors';
 import { supabase } from '@/integrations/supabase/client';
 import { updateOnboardingProgress } from '@/modules/users';
+import { UsernamePicker } from '@/components/common/UsernamePicker';
 import {
   readDraft,
   saveDraft,
@@ -58,6 +59,7 @@ const Onboarding = () => {
   const [countryCode, setCountryCode] = useState('+966');
   const [businessName, setBusinessName] = useState('');
   const [username, setUsername] = useState('');
+  const [usernameOk, setUsernameOk] = useState(false);
   const [businessDescription, setBusinessDescription] = useState('');
   const [sectors, setSectors] = useState<SectorId[]>([]);
   const [subServices, setSubServices] = useState<string[]>([]);
@@ -392,18 +394,16 @@ const Onboarding = () => {
                 <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} dir="auto" style={{ paddingInlineStart: '40px' }} />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>{isRTL ? 'اسم المستخدم' : 'Username'} <span className="text-destructive">*</span></Label>
-              <div className="relative">
-                <Globe className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" style={{ paddingInlineStart: '40px' }} />
-              </div>
-              {username && (
-                <p className="text-xs text-muted-foreground tech-content">
-                  qitaat.com/{username} · {isRTL ? 'بانتظار موافقة الإدارة قبل النشر' : 'Pending admin approval before publishing'}
-                </p>
-              )}
-            </div>
+            <UsernamePicker
+              isRTL={isRTL}
+              required
+              label={isRTL ? 'اسم المستخدم' : 'Username'}
+              value={username}
+              onChange={setUsername}
+              onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
+              excludeUserId={user?.id ?? null}
+              placeholder="my-business"
+            />
             <div className="space-y-2">
               <Label>{isRTL ? 'وصف مختصر للنشاط' : 'Short business description'}</Label>
               <Textarea
@@ -417,9 +417,9 @@ const Onboarding = () => {
             </div>
             <Button onClick={() => {
               if (!businessName.trim()) { toast.error(isRTL ? 'يرجى إدخال اسم النشاط' : 'Please enter business name'); return; }
-              if (!username || username.length < 3) { toast.error(isRTL ? 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل' : 'Username must be at least 3 characters'); return; }
+              if (!usernameOk) { toast.error(isRTL ? 'اختر اسم مستخدم صحيحاً ومتاحاً' : 'Pick a valid, available username'); return; }
               setStep('business-sectors');
-            }} disabled={!businessName.trim() || !username || username.length < 3} className="w-full" variant="hero">
+            }} disabled={!businessName.trim() || !usernameOk} className="w-full" variant="hero">
               {isRTL ? 'متابعة' : 'Continue'}
             </Button>
           </div>

@@ -8082,6 +8082,7 @@ export type Database = {
           ref_id: string
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
           account_number: number
@@ -8109,6 +8110,7 @@ export type Database = {
           ref_id: string
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
           account_number?: number
@@ -8136,6 +8138,7 @@ export type Database = {
           ref_id?: string
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: [
           {
@@ -9285,6 +9288,24 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      reserved_usernames: {
+        Row: {
+          created_at: string
+          name: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          reason?: string | null
         }
         Relationships: []
       }
@@ -11183,6 +11204,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_username_available: {
+        Args: { _exclude_user?: string; _username: string }
+        Returns: Json
+      }
       cleanup_expired_otps: { Args: never; Returns: undefined }
       cleanup_old_audit_data: { Args: never; Returns: undefined }
       cleanup_old_migration_telemetry: { Args: never; Returns: undefined }
@@ -11792,6 +11817,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_valid_username: { Args: { _username: string }; Returns: Json }
       issue_client_site_qr_token: { Args: { _site_id: string }; Returns: Json }
       jsonb_diff: { Args: { _new: Json; _old: Json }; Returns: Json }
       link_lead_to_contract: {

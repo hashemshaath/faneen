@@ -4,9 +4,9 @@ import { authService } from '@/services/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { checkPasswordStrength, validateUsername } from '@/lib/password-strength';
+import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
-import { User, Building2, Mail, Globe, Loader2, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
+import { User, Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { PhoneInput } from './PhoneInput';
 import { PasswordField } from './PasswordField';
 import { GoogleAuthButton } from './GoogleAuthButton';
@@ -16,6 +16,7 @@ import { useFieldValidation } from '@/hooks/useFieldValidation';
 import type { RegisterStep, RegisterType } from '@/services/auth/types';
 import { track, trackRegisterFailed, categorizeReason } from '@/lib/analytics-events';
 import { getAttributionPayload } from '@/lib/analytics-attribution';
+import { UsernamePicker } from '@/components/common/UsernamePicker';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -40,6 +41,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const [confirmPassword, setConfirmPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [username, setUsername] = useState('');
+  const [usernameOk, setUsernameOk] = useState(false);
 
   const passwordStrength = checkPasswordStrength(password);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
@@ -57,7 +59,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     if (phone && !validatePhoneField(phone)) { toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number'); return; }
     if (passwordStrength.score < 2) { toast.error(isRTL ? 'كلمة المرور ضعيفة جداً' : 'Password is too weak'); return; }
     if (password !== confirmPassword) { toast.error(isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match'); return; }
-    if (registerType === 'business' && !validateUsername(username)) { toast.error(isRTL ? 'اسم المستخدم غير صحيح' : 'Invalid username'); return; }
+    if (registerType === 'business' && !usernameOk) { toast.error(isRTL ? 'اختر اسم مستخدم صحيحاً ومتاحاً' : 'Pick a valid, available username'); return; }
 
     setLoading(true);
     track.signupStarted({ account_type: registerType, method: 'email' });
@@ -253,18 +255,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="h-12 rounded-xl" style={{ paddingInlineStart: '42px' }} />
           </div>
         </div>
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold">{t('auth.business_username')} <span className="text-destructive">*</span></Label>
-          <div className="relative">
-            <Globe className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
-            <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" className="h-12 rounded-xl" style={{ paddingInlineStart: '42px' }} />
-          </div>
-          {username && <p className="text-xs text-muted-foreground">qitaat.com/{username}</p>}
-          {username && !validateUsername(username) && (
-            <p className="text-xs text-destructive">{isRTL ? 'اسم المستخدم غير صحيح (3-50 حرف)' : 'Invalid username (3-50 chars)'}</p>
-          )}
-        </div>
-        <Button onClick={handleRegister} disabled={loading || !businessName.trim() || !validateUsername(username)} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
+        <UsernamePicker
+          isRTL={isRTL}
+          required
+          label={t('auth.business_username')}
+          value={username}
+          onChange={setUsername}
+          onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
+          placeholder="my-business"
+        />
+        <Button onClick={handleRegister} disabled={loading || !businessName.trim() || !usernameOk} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
           {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
           {loading ? t('common.loading') : t('auth.submit')}
         </Button>

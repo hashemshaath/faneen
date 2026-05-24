@@ -33,6 +33,7 @@ import { validateBusinessForm, issuesByKey, errorCount } from '@/components/dash
 import { ValidationBanner, FieldError } from '@/components/dashboard/business-edit/ValidationBanner';
 import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
+import { UsernamePicker } from '@/components/common/UsernamePicker';
 
 interface RefRow { id: string; name_ar: string; name_en: string }
 interface CityRow extends RefRow { country_id: string }
@@ -281,6 +282,17 @@ const DashboardBusinessEdit: React.FC = () => {
               onChangeAr={(v) => update('name_ar', v)} onChangeEn={(v) => update('name_en', v)}
               placeholderAr="مثال: شركة قطاعات الصناعية" placeholderEn="e.g. Qitaat Industrial Co."
             />
+            <div>
+              <UsernamePicker
+                isRTL={isRTL}
+                required
+                label={t(isRTL, 'اسم المستخدم (الرابط العام)', 'Username (public URL)')}
+                value={form.username ?? ''}
+                onChange={(v) => update('username', v)}
+                excludeUserId={user?.id ?? null}
+                placeholder="my-business"
+              />
+            </div>
             <div className={grid2}>
               <div>
                 <Label className={fieldLabel}>{t(isRTL, 'الشعار', 'Logo')}</Label>
