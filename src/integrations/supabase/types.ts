@@ -10785,6 +10785,16 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_mark_membership_payment_refunded_manually: {
+        Args: {
+          p_admin_user_id: string
+          p_notes?: string
+          p_payment_intent_id: string
+          p_refund_reference?: string
+          p_refunded_at?: string
+        }
+        Returns: Json
+      }
       admin_rotate_client_site_qr_token: {
         Args: { _reason: string; _site_id: string }
         Returns: Json

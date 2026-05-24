@@ -7,7 +7,9 @@ import {
   listMembershipPaymentIntents,
   listMembershipPaymentWebhookEvents,
   markMembershipPaidManually,
+  markMembershipRefundedManually,
   type MarkMembershipPaidManuallyResult,
+  type MarkMembershipRefundedManuallyResult,
 } from '@/modules/memberships';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -87,6 +89,7 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 const PAID_STATUSES = new Set(['succeeded', 'refunded']);
+const REFUNDED_STATUSES = new Set(['refunded']);
 
 const AdminMembershipPayments = () => {
   const { isRTL } = useLanguage();
@@ -104,6 +107,12 @@ const AdminMembershipPayments = () => {
   const [paidAt, setPaidAt] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const [activeRefundIntent, setActiveRefundIntent] = useState<IntentRow | null>(null);
+  const [refundReference, setRefundReference] = useState('');
+  const [refundedAt, setRefundedAt] = useState('');
+  const [refundNotes, setRefundNotes] = useState('');
+  const [refundSubmitting, setRefundSubmitting] = useState(false);
 
   const SELECT_COLS =
     'id, subscription_id, user_id, business_id, provider, status, amount, currency, provider_intent_id, invoice_id, confirmed_at, created_at, updated_at';
@@ -153,6 +162,13 @@ const AdminMembershipPayments = () => {
     setNotes('');
   };
 
+  const resetRefundForm = () => {
+    setActiveRefundIntent(null);
+    setRefundReference('');
+    setRefundedAt('');
+    setRefundNotes('');
+  };
+
   const handleSubmit = async () => {
     if (!activeIntent || !user) return;
     setSubmitting(true);
@@ -190,6 +206,48 @@ const AdminMembershipPayments = () => {
       await queryClient.invalidateQueries({ queryKey: ['admin-membership-payments'] });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleRefundSubmit = async () => {
+    if (!activeRefundIntent || !user) return;
+    setRefundSubmitting(true);
+    try {
+      const { data, error } = await markMembershipRefundedManually({
+        paymentIntentId: activeRefundIntent.id,
+        adminUserId: user.id,
+        refundReference: refundReference.trim() || null,
+        refundedAt: refundedAt ? new Date(refundedAt).toISOString() : null,
+        notes: refundNotes.trim() || null,
+      });
+      if (error) {
+        toast.error(isRTL ? 'تعذر تسجيل الاسترداد' : 'Failed to mark as refunded');
+        return;
+      }
+      const result = data as MarkMembershipRefundedManuallyResult | null;
+      if (!result || !result.ok) {
+        const code = result?.code;
+        const msg =
+          code === 'payment_intent_not_found'
+            ? isRTL ? 'لم يتم العثور على نية الدفع' : 'Payment intent not found'
+            : code === 'payment_not_paid'
+            ? isRTL ? 'لا يمكن استرداد دفعة غير مكتملة' : 'Cannot refund a non-paid intent'
+            : isRTL ? 'تعذر تسجيل الاسترداد' : 'Failed to mark as refunded';
+        toast.error(msg);
+        return;
+      }
+      if (result.idempotent) {
+        toast.info(isRTL ? 'تم تسجيل الاسترداد مسبقاً' : 'Already marked as refunded');
+      } else {
+        toast.success(isRTL ? 'تم تسجيل الاسترداد يدويًا' : 'Marked as refunded manually');
+      }
+      resetRefundForm();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-membership-payments'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-membership-payment-events'] }),
+      ]);
+    } finally {
+      setRefundSubmitting(false);
     }
   };
 
@@ -236,6 +294,7 @@ const AdminMembershipPayments = () => {
               <TableBody>
                 {filtered.map((r) => {
                   const isPaid = PAID_STATUSES.has(r.status);
+                  const isRefunded = REFUNDED_STATUSES.has(r.status);
                   const isHighlighted = highlightedIntentId === r.id;
                   return (
                     <TableRow key={r.id} className={isHighlighted ? 'bg-primary/5' : ''}>
@@ -253,11 +312,30 @@ const AdminMembershipPayments = () => {
                         {r.confirmed_at ? new Date(r.confirmed_at).toLocaleString() : '—'}
                       </TableCell>
                       <TableCell className="text-end">
-                        {isPaid ? (
+                        {isRefunded ? (
                           <Badge variant="outline" className="gap-1">
-                            <Check className="w-3 h-3" />
-                            {isRTL ? 'مدفوع' : 'Paid'}
+                            {isRTL ? 'مسترد' : 'Refunded'}
                           </Badge>
+                        ) : isPaid ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <Badge variant="outline" className="gap-1">
+                              <Check className="w-3 h-3" />
+                              {isRTL ? 'مدفوع' : 'Paid'}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={!user}
+                              onClick={() => {
+                                setActiveRefundIntent(r);
+                                setRefundReference('');
+                                setRefundedAt('');
+                                setRefundNotes('');
+                              }}
+                            >
+                              {isRTL ? 'تسجيل استرداد' : 'Mark refunded'}
+                            </Button>
+                          </div>
                         ) : (
                           <Button
                             size="sm"
@@ -349,6 +427,65 @@ const AdminMembershipPayments = () => {
               <Button onClick={handleSubmit} disabled={submitting || !user}>
                 {submitting && <Loader2 className="w-4 h-4 animate-spin me-2" />}
                 {isRTL ? 'تأكيد الدفع' : 'Confirm paid'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeRefundIntent && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              {isRTL ? 'تسجيل استرداد يدوي' : 'Mark refunded manually'}
+              <span className="ms-2 text-xs font-mono text-muted-foreground">{activeRefundIntent.id.slice(0, 8)}…</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-xs text-muted-foreground">
+              {isRTL
+                ? 'يسجل هذا الإجراء استرداداً يدوياً أو إشعار دائن للدفعة. لا يتم استدعاء بوابة الدفع.'
+                : 'This records a manual refund or credit-note for the payment. No payment gateway is contacted.'}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="refund-ref">{isRTL ? 'مرجع الاسترداد' : 'Refund reference'}</Label>
+                <Input
+                  id="refund-ref"
+                  dir="auto"
+                  value={refundReference}
+                  onChange={(e) => setRefundReference(e.target.value)}
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="refunded-at">{isRTL ? 'تاريخ الاسترداد' : 'Refunded at'}</Label>
+                <Input
+                  id="refunded-at"
+                  type="datetime-local"
+                  value={refundedAt}
+                  onChange={(e) => setRefundedAt(e.target.value)}
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="refund-notes">{isRTL ? 'ملاحظات' : 'Notes'}</Label>
+                <Textarea
+                  id="refund-notes"
+                  dir="auto"
+                  value={refundNotes}
+                  onChange={(e) => setRefundNotes(e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <Button variant="ghost" onClick={resetRefundForm} disabled={refundSubmitting}>
+                {isRTL ? 'إلغاء' : 'Cancel'}
+              </Button>
+              <Button onClick={handleRefundSubmit} disabled={refundSubmitting || !user}>
+                {refundSubmitting && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+                {isRTL ? 'تسجيل الاسترداد' : 'Mark refunded'}
               </Button>
             </div>
           </CardContent>
