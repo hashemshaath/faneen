@@ -279,3 +279,62 @@ describe('BARCODE-REGISTRY-USER-PICKER-1 — admin user picker', () => {
     expect(PAGE_SRC).not.toMatch(/u\.phone\b/);
   });
 });
+
+describe('BARCODE-REGISTRY-TRANSFER-AUDIT-1 — admin transfer trail UI', () => {
+  it('imports the canonical transfer-trail wrapper (no direct RPC)', () => {
+    expect(PAGE_SRC).toMatch(/listBarcodeTransferTrailAdmin/);
+    expect(PAGE_SRC).not.toMatch(/supabase\.rpc\(\s*['"]admin_get_barcode_transfer_trail['"]/);
+  });
+
+  it('renders bilingual "Transfer history" / "سجل النقل" section header', () => {
+    expect(PAGE_SRC).toContain('سجل النقل');
+    expect(PAGE_SRC).toContain('Transfer history');
+  });
+
+  it('renders bilingual empty state for transfer history', () => {
+    expect(PAGE_SRC).toContain('لا توجد عمليات نقل لهذا الرمز.');
+    expect(PAGE_SRC).toContain('No transfer history for this code.');
+  });
+
+  it('renders bilingual transferred-status helper copy', () => {
+    expect(PAGE_SRC).toContain(
+      'هذا الرمز منقول وغير متاح للعامة. يجب إصدار رمز جديد للمالك الجديد عند الحاجة.',
+    );
+    expect(PAGE_SRC).toContain(
+      'This code has been transferred and is unavailable publicly. Issue a new code for the new owner if needed.',
+    );
+  });
+
+  it('localizes the transferred status filter option', () => {
+    expect(PAGE_SRC).toMatch(/s === 'transferred' \? bi\('منقول',\s*'Transferred'\)/);
+  });
+
+  it('uses safe masked/labelled fields for users (no raw email/phone projection)', () => {
+    // Only the masked + label fields from BarcodeTransferTrailEntry should be projected.
+    expect(PAGE_SRC).toMatch(/from_masked_email/);
+    expect(PAGE_SRC).toMatch(/to_masked_email/);
+    expect(PAGE_SRC).toMatch(/from_phone_hint/);
+    expect(PAGE_SRC).toMatch(/to_phone_hint/);
+    // Must not project full raw email/phone fields from trail entries.
+    expect(PAGE_SRC).not.toMatch(/\.from_email\b/);
+    expect(PAGE_SRC).not.toMatch(/\.to_email\b/);
+    expect(PAGE_SRC).not.toMatch(/\.from_phone\b/);
+    expect(PAGE_SRC).not.toMatch(/\.to_phone\b/);
+    // No synthetic placeholder leak.
+    expect(PAGE_SRC).not.toMatch(/@phone\.qitaat\.local/);
+  });
+
+  it('invalidates the transfer-trail query after lifecycle changes', () => {
+    expect(PAGE_SRC).toMatch(
+      /invalidateQueries\(\{ queryKey: \['admin-barcode-transfer-trail'/,
+    );
+  });
+
+  it('keeps transferred status with no lifecycle actions and no delete/revoke', () => {
+    // availableActions('transferred') falls into default → [] (already covered),
+    // re-assert here that no destructive UI was introduced for this status.
+    expect(PAGE_SRC).not.toMatch(/admin_delete_barcode/);
+    expect(PAGE_SRC).not.toMatch(/admin_revoke_barcode/);
+    expect(PAGE_SRC).not.toMatch(/case 'transferred':/);
+  });
+});

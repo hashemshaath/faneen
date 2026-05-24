@@ -14,6 +14,7 @@ import {
   archiveBarcodeAdmin,
   restoreBarcodeAdmin,
   transferBarcodeAdmin,
+  listBarcodeTransferTrailAdmin,
 } from '../adminBarcodeRegistry';
 
 beforeEach(() => {
@@ -152,5 +153,36 @@ describe('adminBarcodeRegistry transfer wrapper', () => {
     await expect(transferBarcodeAdmin('x', 'y')).resolves.toMatchObject({
       error: { message: 'forbidden' },
     });
+  });
+});
+
+describe('adminBarcodeRegistry transfer trail wrapper', () => {
+  it('listBarcodeTransferTrailAdmin calls admin_get_barcode_transfer_trail with the barcode id', async () => {
+    rpcMock.mockResolvedValue({ data: [], error: null });
+    const out = await listBarcodeTransferTrailAdmin({ barcodeId: 'bc-1' });
+    expect(rpcMock).toHaveBeenCalledWith('admin_get_barcode_transfer_trail', {
+      _barcode_id: 'bc-1',
+    });
+    expect(out).toEqual({ data: [], error: null });
+  });
+
+  it('listBarcodeTransferTrailAdmin returns array data when present', async () => {
+    const row = {
+      event_id: 'e1', barcode_id: 'bc-1', created_at: 't', action: 'transferred',
+      reason: 'r', actor_user_id: null, actor_ref_id: null, actor_display_name: null,
+      from_user_id: null, from_ref_id: null, from_display_name: null,
+      from_masked_email: 'h***@x.com', from_phone_hint: '+9665*****1234',
+      to_user_id: null, to_ref_id: null, to_display_name: null,
+      to_masked_email: null, to_phone_hint: null,
+    };
+    rpcMock.mockResolvedValue({ data: [row], error: null });
+    const out = await listBarcodeTransferTrailAdmin({ barcodeId: 'bc-1' });
+    expect(out.data).toEqual([row]);
+  });
+
+  it('listBarcodeTransferTrailAdmin maps RPC errors to envelope.error', async () => {
+    rpcMock.mockResolvedValue({ data: null, error: { message: 'forbidden' } });
+    const out = await listBarcodeTransferTrailAdmin({ barcodeId: 'bc-1' });
+    expect(out).toEqual({ data: null, error: { message: 'forbidden' } });
   });
 });
