@@ -10657,6 +10657,29 @@ export type Database = {
         Returns: Json
       }
       admin_get_barcode_detail: { Args: { _barcode_id: string }; Returns: Json }
+      admin_get_barcode_transfer_trail: {
+        Args: { _barcode_id: string }
+        Returns: {
+          action: string
+          actor_display_name: string
+          actor_ref_id: string
+          actor_user_id: string
+          barcode_id: string
+          created_at: string
+          event_id: string
+          from_display_name: string
+          from_masked_email: string
+          from_phone_hint: string
+          from_ref_id: string
+          from_user_id: string
+          reason: string
+          to_display_name: string
+          to_masked_email: string
+          to_phone_hint: string
+          to_ref_id: string
+          to_user_id: string
+        }[]
+      }
       admin_get_client_site_monitoring_detail: {
         Args: { _site_id: string }
         Returns: Json

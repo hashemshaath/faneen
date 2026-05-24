@@ -8,10 +8,12 @@ export {
   archiveBarcodeAdmin,
   restoreBarcodeAdmin,
   transferBarcodeAdmin,
+  listBarcodeTransferTrailAdmin,
   type BarcodeRegistryRow,
   type BarcodeRegistrySummary,
   type BarcodeRegistryDetail,
   type ListBarcodeRegistryRecordsOptions,
   type ListBarcodeRegistryRecordsResult,
   type BarcodeLifecycleResult,
+  type BarcodeTransferTrailEntry,
 } from './services/adminBarcodeRegistry';

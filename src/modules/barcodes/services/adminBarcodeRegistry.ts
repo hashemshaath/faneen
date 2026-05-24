@@ -206,3 +206,50 @@ export function transferBarcodeAdmin(
     _reason: reason ?? null,
   });
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// Transfer trail (BARCODE-REGISTRY-TRANSFER-AUDIT-1)
+//
+// Admin-only enriched listing of transferred events for a single barcode.
+// All user-facing email/phone fields are masked server-side (same rules as
+// admin_search_users_for_transfer). Page layer must never read
+// barcode_events or public.profiles directly to power this view.
+// ───────────────────────────────────────────────────────────────────────────
+
+export interface BarcodeTransferTrailEntry {
+  event_id: string;
+  barcode_id: string;
+  created_at: string;
+  action: string;
+  reason: string | null;
+  actor_user_id: string | null;
+  actor_ref_id: string | null;
+  actor_display_name: string | null;
+  from_user_id: string | null;
+  from_ref_id: string | null;
+  from_display_name: string | null;
+  from_masked_email: string | null;
+  from_phone_hint: string | null;
+  to_user_id: string | null;
+  to_ref_id: string | null;
+  to_display_name: string | null;
+  to_masked_email: string | null;
+  to_phone_hint: string | null;
+}
+
+/**
+ * List the transfer trail (transferred events with safe user labels) for a
+ * single barcode. Returns the raw Supabase `{ data, error }` envelope.
+ */
+export async function listBarcodeTransferTrailAdmin({ barcodeId }: { barcodeId: string }): Promise<{
+  data: BarcodeTransferTrailEntry[] | null;
+  error: { message: string } | null;
+}> {
+  const res = await supabase.rpc('admin_get_barcode_transfer_trail', {
+    _barcode_id: barcodeId,
+  });
+  return {
+    data: (res.data as BarcodeTransferTrailEntry[] | null) ?? null,
+    error: res.error ? { message: res.error.message } : null,
+  };
+}
