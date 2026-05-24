@@ -114,18 +114,18 @@ Deno.serve(async (req) => {
   } | null = null;
 
   if (rawSubscriptionId) {
-    const { data, error } = await admin
+    const { data: subRow, error: subErr } = await admin
       .from('membership_subscriptions')
       .select('id, user_id, business_id, plan_id, billing_cycle, status')
       .eq('id', rawSubscriptionId)
       .maybeSingle();
-    if (error) {
-      safeLog('sub_lookup_error', { error: error.message });
+    if (subErr) {
+      safeLog('sub_lookup_error', { error: subErr.message });
       return json({ ok: false, code: 'not_found' }, 200);
     }
-    if (!data) return json({ ok: false, code: 'not_found' }, 200);
-    if (data.user_id !== userId) return json({ ok: false, code: 'unauthorized' }, 403);
-    sub = data as typeof sub;
+    if (!subRow) return json({ ok: false, code: 'not_found' }, 200);
+    sub = subRow as typeof sub;
+    if (sub!.user_id !== userId) return json({ ok: false, code: 'unauthorized' }, 403);
   } else {
     // planId path — find a reusable pending subscription, else create one.
     // Validate the requested plan exists and is active first.
