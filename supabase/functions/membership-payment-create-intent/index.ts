@@ -74,11 +74,26 @@ Deno.serve(async (req) => {
   const userId = claimsRes.claims.sub as string;
 
   // Provider config — required for any live checkout.
-  const MOYASAR_SECRET_KEY = Deno.env.get('MOYASAR_SECRET_KEY') ?? '';
-  const SUCCESS_URL = Deno.env.get('MEMBERSHIP_PAYMENTS_SUCCESS_URL') ?? '';
-  const CANCEL_URL = Deno.env.get('MEMBERSHIP_PAYMENTS_CANCEL_URL') ?? '';
+  const MOYASAR_SECRET_KEY = (Deno.env.get('MOYASAR_SECRET_KEY') ?? '').trim();
+  const SUCCESS_URL = (Deno.env.get('MEMBERSHIP_PAYMENTS_SUCCESS_URL') ?? '').trim();
+  const CANCEL_URL = (Deno.env.get('MEMBERSHIP_PAYMENTS_CANCEL_URL') ?? '').trim();
   if (!MOYASAR_SECRET_KEY || !SUCCESS_URL || !CANCEL_URL) {
     safeLog('env_missing_provider');
+    return json({ ok: false, code: 'missing_payment_config' }, 200);
+  }
+  // Defensive validation: both URLs must be http(s) URLs. If a secret was
+  // mis-saved (e.g. a Moyasar key value pasted into a URL slot), fail fast
+  // with a clear code instead of forwarding garbage to the provider.
+  const isHttpUrl = (u: string) => {
+    try {
+      const p = new URL(u);
+      return p.protocol === 'https:' || p.protocol === 'http:';
+    } catch {
+      return false;
+    }
+  };
+  if (!isHttpUrl(SUCCESS_URL) || !isHttpUrl(CANCEL_URL)) {
+    safeLog('env_invalid_provider_urls');
     return json({ ok: false, code: 'missing_payment_config' }, 200);
   }
 
@@ -302,6 +317,7 @@ Deno.serve(async (req) => {
     });
     const text = await resp.text();
     if (!resp.ok) {
+      // Log status only; provider body may include echoed PII / config values.
       safeLog('provider_error', { status: resp.status });
       return json({ ok: false, code: 'provider_error' }, 200);
     }
