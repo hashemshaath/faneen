@@ -234,6 +234,10 @@ const AppRoutes = () => (
             path="/membership/payments/:paymentIntentId/invoice"
             element={<ProtectedRoute><MembershipInvoice /></ProtectedRoute>}
           />
+          <Route
+            path="/membership/payment/return"
+            element={<ProtectedRoute><MembershipPaymentReturn /></ProtectedRoute>}
+          />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
