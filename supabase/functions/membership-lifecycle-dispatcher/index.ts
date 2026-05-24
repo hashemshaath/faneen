@@ -450,6 +450,32 @@ Deno.serve(async (req) => {
     console.warn('lifecycle-dispatcher: promo block failed', err);
   }
 
+  // EDGE-CRON-OBSERVABILITY-2: best-effort cron run log. Never store
+  // recipient emails, payloads, tokens, or raw errors — only safe counts.
+  // Logging failure must NEVER fail the dispatcher response.
+  try {
+    await admin.rpc('log_cron_run', {
+      _job_name: 'membership-lifecycle-dispatcher',
+      _function_name: 'membership-lifecycle-dispatcher',
+      _started_at: runStartedAt,
+      _finished_at: new Date().toISOString(),
+      _ok: failed === 0,
+      _status: dryRun ? 'dry-run' : 'completed',
+      _summary: {
+        dry_run: dryRun,
+        processed,
+        sent,
+        skipped,
+        failed,
+        error_count: failed,
+      },
+      _error_code: null,
+      _error_message: null,
+    });
+  } catch (_logErr) {
+    // swallow — observability must never break cron success
+  }
+
   return new Response(
     JSON.stringify({ success: true, dryRun, processed, sent, skipped, failed, details }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
