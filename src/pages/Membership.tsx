@@ -604,6 +604,16 @@ const Membership = () => {
   const handleSubscribe = (plan: { id: string; tier: string }) => {
     track.membershipPlanClick({ membership_tier: plan.tier });
     if (!user) { navigate('/auth'); return; }
+    // Account-type guard: regular users cannot subscribe to provider plans.
+    if (!isProvider && profile?.account_type === 'user') {
+      toast.info(
+        isRTL
+          ? 'باقات العضوية مخصّصة لمزوّدي الخدمات. حوّل حسابك إلى حساب مزوّد للاشتراك.'
+          : 'Membership plans are for service providers. Switch your account to a provider to subscribe.',
+      );
+      navigate('/onboarding');
+      return;
+    }
     if (!myBusiness) {
       toast.info(isRTL ? 'جاري تحضير منشأتك...' : 'Preparing your business...');
       return;
