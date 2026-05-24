@@ -638,11 +638,22 @@ const AdminMembershipPayments = () => {
       )}
 
       <Card>
-        <CardHeader className="flex flex-row items-center gap-2 space-y-0">
+        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
           <CardTitle className="flex items-center gap-2 text-lg">
             <History className="w-5 h-5" />
             {isRTL ? 'أحداث الدفع الأخيرة' : 'Recent payment events'}
           </CardTitle>
+          <Select value={eventFilter} onValueChange={(v) => setEventFilter(v as typeof eventFilter)}>
+            <SelectTrigger className="w-48 h-10">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{isRTL ? 'كل الأحداث' : 'All events'}</SelectItem>
+              <SelectItem value="pending">{isRTL ? 'بانتظار المزامنة' : 'Pending'}</SelectItem>
+              <SelectItem value="processed">{isRTL ? 'تمت المعالجة' : 'Processed'}</SelectItem>
+              <SelectItem value="error">{isRTL ? 'فشل' : 'Failed/error'}</SelectItem>
+            </SelectContent>
+          </Select>
         </CardHeader>
         <CardContent>
           {eventsLoading ? (
@@ -661,9 +672,15 @@ const AdminMembershipPayments = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {eventRows.map((e) => {
+                {filteredEvents.map((e) => {
                   const summary = extractSafePayloadSummary(e.payload);
                   const status = eventStatusLabel(e);
+                  const statusText =
+                    status === 'pending'
+                      ? (isRTL ? 'بانتظار المزامنة' : 'Pending reconcile')
+                      : status === 'processed'
+                      ? (isRTL ? 'تمت المعالجة' : 'Processed')
+                      : (isRTL ? 'خطأ' : 'Error');
                   return (
                     <TableRow key={e.id}>
                       <TableCell className="tech-content text-xs">{new Date(e.received_at).toLocaleString()}</TableCell>
@@ -672,7 +689,7 @@ const AdminMembershipPayments = () => {
                       <TableCell className="tech-content text-[10px] font-mono">{e.event_id}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={EVENT_STATUS_TONE[status] || ''}>
-                          {status}
+                          {statusText}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs">
@@ -700,7 +717,7 @@ const AdminMembershipPayments = () => {
                     </TableRow>
                   );
                 })}
-                {eventRows.length === 0 && (
+                {filteredEvents.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-sm">
                       {isRTL ? 'لا توجد أحداث دفع بعد.' : 'No payment events yet.'}
