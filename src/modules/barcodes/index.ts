@@ -4,9 +4,13 @@ export {
   listBarcodeRegistryRecords,
   getBarcodeRegistrySummary,
   getBarcodeRegistryRecordById,
+  freezeBarcodeAdmin,
+  archiveBarcodeAdmin,
+  restoreBarcodeAdmin,
   type BarcodeRegistryRow,
   type BarcodeRegistrySummary,
   type BarcodeRegistryDetail,
   type ListBarcodeRegistryRecordsOptions,
   type ListBarcodeRegistryRecordsResult,
+  type BarcodeLifecycleResult,
 } from './services/adminBarcodeRegistry';
