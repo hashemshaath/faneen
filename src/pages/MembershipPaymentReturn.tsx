@@ -73,7 +73,7 @@ export default function MembershipPaymentReturn() {
               <Link to="/membership">{isRTL ? 'العودة إلى صفحة الاشتراك' : 'Back to membership'}</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/dashboard/membership">{isRTL ? 'لوحة التحكم' : 'Dashboard'}</Link>
+              <Link to="/dashboard">{isRTL ? 'لوحة التحكم' : 'Dashboard'}</Link>
             </Button>
           </div>
         </CardContent>

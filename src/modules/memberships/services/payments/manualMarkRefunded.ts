@@ -115,7 +115,7 @@ async function dispatchManualRefundSideEffects(
         notification_type: 'membership_payment_marked_refunded',
         reference_type: 'membership_payment_intent',
         reference_id: paymentIntentId,
-        action_url: '/dashboard/membership',
+        action_url: '/membership',
       },
       '[markMembershipRefundedManually] notification',
     );
@@ -135,7 +135,7 @@ async function dispatchManualRefundSideEffects(
         invoiceId,
         amount,
         currency,
-        dashboardUrl: '/dashboard/membership',
+        dashboardUrl: '/membership',
       },
     });
   }
