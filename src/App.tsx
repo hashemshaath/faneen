@@ -101,6 +101,7 @@ const AdminBarcodeRegistry = lazyRetry(() => import("./pages/admin/AdminBarcodeR
 const AdminMemberships = lazyRetry(() => import("./pages/admin/AdminMemberships"));
 const AdminMembershipRejections = lazyRetry(() => import("./pages/admin/AdminMembershipRejections"));
 const AdminMembershipEvents = lazyRetry(() => import("./pages/admin/AdminMembershipEvents"));
+const AdminMembershipPayments = lazyRetry(() => import("./pages/admin/AdminMembershipPayments"));
 const AdminContactCenter = lazyRetry(() => import("./pages/admin/AdminContactCenter"));
 const AdminLeadRequests = lazyRetry(() => import("./pages/admin/AdminLeadRequests"));
 const AdminQuoteRequests = lazyRetry(() => import("./pages/admin/AdminQuoteRequests"));
@@ -305,6 +306,7 @@ const AppRoutes = () => (
           <Route path="/admin/memberships" element={<ProtectedRoute requireAdmin><AdminMemberships /></ProtectedRoute>} />
           <Route path="/admin/membership-rejections" element={<ProtectedRoute requireAdmin><AdminMembershipRejections /></ProtectedRoute>} />
           <Route path="/admin/membership-events" element={<ProtectedRoute requireAdmin><AdminMembershipEvents /></ProtectedRoute>} />
+          <Route path="/admin/membership-payments" element={<ProtectedRoute requireAdmin><AdminMembershipPayments /></ProtectedRoute>} />
           {/* Phase B — Unified Contact Center. Old routes redirect to the matching tab. */}
           <Route path="/admin/contact-messages" element={<ProtectedRoute requireAdmin><AdminContactCenter /></ProtectedRoute>} />
           <Route path="/admin/contact-inbox-settings" element={<Navigate to="/admin/contact-messages?tab=settings" replace />} />
