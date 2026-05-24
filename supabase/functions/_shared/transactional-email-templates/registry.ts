@@ -89,6 +89,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'membership-renewal-failed': membershipRenewalFailed,
   'membership-promo-redeemed': membershipPromoRedeemed,
   'membership-cancelled-immediately': membershipCancelledImmediately,
+  'membership-payment-marked-paid': membershipPaymentMarkedPaid,
   'contract-payment-recorded': contractPaymentRecorded,
   'contract-payment-due': contractPaymentDue,
   'contract-milestone-completed': contractMilestoneCompleted,
