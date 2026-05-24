@@ -388,7 +388,7 @@ const DashboardSettings = () => {
                           )}
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px] tech-content">
-                              <Hash className="w-2 h-2 me-0.5" />{profile?.ref_id}
+                              <Hash className="w-2 h-2 me-0.5" />{displayRefId || profile?.ref_id}
                             </Badge>
                             <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px]">
                               {profile?.account_type === 'provider' ? (isRTL ? 'مزود خدمة' : 'Provider') : (isRTL ? 'عميل' : 'Client')}
@@ -413,7 +413,7 @@ const DashboardSettings = () => {
                   <h3 className="font-heading font-bold text-sm">{isRTL ? 'تفاصيل الحساب' : 'Account Details'}</h3>
                 </div>
                 {[
-                  { icon: Fingerprint, label: isRTL ? 'المعرف' : 'ID', value: profile?.ref_id, tech: true },
+                  { icon: Fingerprint, label: isRTL ? 'المعرف' : 'ID', value: displayRefId || profile?.ref_id, tech: true },
                   { icon: Globe, label: isRTL ? 'اللغة المفضلة' : 'Language', value: language === 'ar' ? 'العربية' : 'English' },
                   // Login identifier: phone (for phone-login users) or email — never expose synthetic auth email.
                   isSyntheticPhoneEmail(user?.email)
