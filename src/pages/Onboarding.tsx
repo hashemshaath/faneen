@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { User, Building2, Phone, Globe, Check, Loader2, CheckCircle2, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
+import { User, Building2, Phone, Check, Loader2, CheckCircle2, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
 import { track } from '@/lib/analytics-events';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { SectorPicker } from '@/components/onboarding/SectorPicker';
