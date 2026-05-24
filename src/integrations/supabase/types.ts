@@ -10821,6 +10821,16 @@ export type Database = {
         Args: { _reason: string; _site_id: string }
         Returns: Json
       }
+      admin_search_users_for_transfer: {
+        Args: { _limit?: number; _query: string }
+        Returns: {
+          display_name: string
+          masked_email: string
+          phone_hint: string
+          ref_id: string
+          user_id: string
+        }[]
+      }
       admin_set_business_membership_tier: {
         Args: {
           _business_id: string

@@ -22,3 +22,8 @@ export { insertProfile } from './services/insertProfile';
 export type { InsertProfileOptions } from './services/insertProfile';
 export { updateOnboardingProgress } from './services/updateOnboardingProgress';
 export type { UpdateOnboardingProgressOptions } from './services/updateOnboardingProgress';
+export { adminSearchUsersForTransfer } from './services/adminSearchUsersForTransfer';
+export type {
+  AdminTransferUserHit,
+  AdminSearchUsersForTransferOptions,
+} from './services/adminSearchUsersForTransfer';

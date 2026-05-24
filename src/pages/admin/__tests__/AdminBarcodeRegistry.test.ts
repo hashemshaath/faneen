@@ -220,3 +220,62 @@ describe('BARCODE-REGISTRY-TRANSFER-2 — admin transfer UI', () => {
     expect(PAGE_SRC).not.toMatch(/\.from\(\s*['"]auth\.users['"]/);
   });
 });
+
+describe('BARCODE-REGISTRY-USER-PICKER-1 — admin user picker', () => {
+  it('imports adminSearchUsersForTransfer from the users module', () => {
+    expect(PAGE_SRC).toMatch(/adminSearchUsersForTransfer/);
+    expect(PAGE_SRC).toMatch(/from ['"]@\/modules\/users['"]/);
+  });
+
+  it('does not call the search RPC directly from the page', () => {
+    expect(PAGE_SRC).not.toMatch(/supabase\.rpc\(\s*['"]admin_search_users_for_transfer['"]/);
+  });
+
+  it('does not access raw profiles / auth.users from the page', () => {
+    expect(PAGE_SRC).not.toMatch(/from\(\s*['"]profiles['"]/);
+    expect(PAGE_SRC).not.toMatch(/from\(\s*['"]auth\.users['"]/);
+  });
+
+  it('renders bilingual search label + placeholder', () => {
+    expect(PAGE_SRC).toContain('ابحث عن المستخدم');
+    expect(PAGE_SRC).toContain('Search user');
+    expect(PAGE_SRC).toContain('ابحث بالاسم أو الرقم المرجعي أو الجوال');
+    expect(PAGE_SRC).toContain('Search by name, reference ID, or phone');
+  });
+
+  it('debounces search input and enforces min length of 2', () => {
+    // 300ms debounce timer + canSearch guard with debounced.length >= 2.
+    expect(PAGE_SRC).toMatch(/setTimeout\(\(\)\s*=>\s*setDebounced/);
+    expect(PAGE_SRC).toMatch(/debounced\.length\s*>=\s*2/);
+  });
+
+  it('renders empty-state and loading copy for the results list', () => {
+    expect(PAGE_SRC).toContain('لم يتم العثور على مستخدمين');
+    expect(PAGE_SRC).toContain('No users found');
+    expect(PAGE_SRC).toContain('جارٍ البحث…');
+    expect(PAGE_SRC).toContain('Searching…');
+  });
+
+  it('shows ref_id / masked_email / phone_hint in the result row', () => {
+    expect(PAGE_SRC).toMatch(/u\.ref_id/);
+    expect(PAGE_SRC).toMatch(/u\.masked_email/);
+    expect(PAGE_SRC).toMatch(/u\.phone_hint/);
+  });
+
+  it('keeps the UUID paste fallback with strict client-side validation', () => {
+    expect(PAGE_SRC).toContain('لصق UUID');
+    expect(PAGE_SRC).toContain('Paste UUID');
+    expect(PAGE_SRC).toMatch(/UUID_RE/);
+  });
+
+  it('selecting a search result populates targetUserId for transferBarcodeAdmin', () => {
+    expect(PAGE_SRC).toMatch(/onSelect=\{\(uid\)\s*=>\s*setTargetUserId\(uid\)\}/);
+    expect(PAGE_SRC).toMatch(/transferBarcodeAdmin\(\s*barcodeId\s*,/);
+  });
+
+  it('does not render raw full email/phone fields anywhere in the picker', () => {
+    // Picker code must only project the *masked* fields, never `.email` / `.phone`.
+    expect(PAGE_SRC).not.toMatch(/u\.email\b/);
+    expect(PAGE_SRC).not.toMatch(/u\.phone\b/);
+  });
+});

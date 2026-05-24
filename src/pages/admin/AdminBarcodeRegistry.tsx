@@ -31,6 +31,10 @@ import {
   type BarcodeRegistrySummary as RegistrySummary,
   type BarcodeRegistryDetail as BarcodeDetail,
 } from '@/modules/barcodes';
+import {
+  adminSearchUsersForTransfer,
+  type AdminTransferUserHit,
+} from '@/modules/users';
 import { buildBarcodeUrl } from '@/lib/barcodes/barcode-url';
 
 const ENTITY_TYPES = ['client_site', 'contract', 'business', 'customer', 'lead'];
@@ -93,6 +97,203 @@ function mapLifecycleError(
 
 // Basic UUID v1–v5 client-side guard (server remains the final authority).
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+// ──────────────────────────────────────────────
+// Admin-safe user picker for barcode transfer.
+// Wraps `adminSearchUsersForTransfer` (admin RPC, masked fields only) with a
+// debounced search input + result list, and a UUID-paste fallback. No direct
+// profiles / auth.users access.
+// ──────────────────────────────────────────────
+const TransferUserPicker: React.FC<{
+  selectedUserId: string;
+  onSelect: (userId: string, hit: AdminTransferUserHit | null) => void;
+  disabled?: boolean;
+}> = ({ selectedUserId, onSelect, disabled }) => {
+  const bi = useBi();
+  const [query, setQuery] = useState('');
+  const [debounced, setDebounced] = useState('');
+  const [uuidMode, setUuidMode] = useState(false);
+  const [uuidInput, setUuidInput] = useState('');
+  const [picked, setPicked] = useState<AdminTransferUserHit | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(query.trim()), 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  const canSearch = debounced.length >= 2 && !uuidMode;
+
+  const { data: searchEnvelope, isFetching } = useQuery({
+    queryKey: ['admin-transfer-user-search', debounced],
+    queryFn: () => adminSearchUsersForTransfer({ query: debounced, limit: 10 }),
+    enabled: canSearch,
+    staleTime: 30_000,
+  });
+
+  const results: AdminTransferUserHit[] = useMemo(() => {
+    const data = searchEnvelope?.data;
+    return Array.isArray(data) ? (data as AdminTransferUserHit[]) : [];
+  }, [searchEnvelope]);
+  const rpcErr = searchEnvelope?.error?.message ?? null;
+
+  const uuidValid = UUID_RE.test(uuidInput.trim());
+
+  const choose = (hit: AdminTransferUserHit) => {
+    setPicked(hit);
+    onSelect(hit.user_id, hit);
+  };
+
+  const clearSelection = () => {
+    setPicked(null);
+    setUuidInput('');
+    onSelect('', null);
+  };
+
+  // Selected user summary
+  if (selectedUserId && (picked || uuidMode)) {
+    return (
+      <div className="rounded-md border bg-card px-2.5 py-2 text-xs space-y-1">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Badge variant="secondary" className="text-[10px]">
+              {bi('المستخدم المستهدف', 'Target user')}
+            </Badge>
+            {picked ? (
+              <span className="truncate font-medium">{picked.display_name}</span>
+            ) : (
+              <span className="truncate tech-content">{selectedUserId}</span>
+            )}
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={clearSelection}
+            disabled={disabled}
+            aria-label={bi('تغيير', 'Change')}
+          >
+            <X className="h-3.5 w-3.5 me-1" />
+            {bi('تغيير', 'Change')}
+          </Button>
+        </div>
+        {picked && (
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground tech-content">
+            {picked.ref_id && <span>{picked.ref_id}</span>}
+            {picked.masked_email && <span>· {picked.masked_email}</span>}
+            {picked.phone_hint && <span>· {picked.phone_hint}</span>}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <label className="text-[11px] font-semibold text-muted-foreground">
+          {uuidMode
+            ? bi('لصق معرف UUID يدويًا', 'Paste UUID manually')
+            : bi('ابحث عن المستخدم', 'Search user')}
+        </label>
+        <button
+          type="button"
+          className="text-[11px] underline text-muted-foreground hover:text-foreground"
+          onClick={() => { setUuidMode((v) => !v); setQuery(''); setUuidInput(''); }}
+          disabled={disabled}
+        >
+          {uuidMode ? bi('بحث', 'Search') : bi('لصق UUID', 'Paste UUID')}
+        </button>
+      </div>
+
+      {uuidMode ? (
+        <div className="space-y-1">
+          <Input
+            value={uuidInput}
+            onChange={(e) => {
+              setUuidInput(e.target.value);
+              const v = e.target.value.trim();
+              if (UUID_RE.test(v)) onSelect(v, null);
+              else onSelect('', null);
+            }}
+            placeholder={bi('المستخدم المستهدف', 'Target user')}
+            dir="ltr"
+            className="h-9 tech-content"
+            aria-label={bi('المستخدم المستهدف', 'Target user')}
+            disabled={disabled}
+            spellCheck={false}
+            autoComplete="off"
+          />
+          <div
+            className={cn(
+              'text-[11px]',
+              uuidInput.length > 0 && !uuidValid ? 'text-destructive' : 'text-muted-foreground',
+            )}
+          >
+            {bi('أدخل معرف المستخدم UUID', 'Enter the user UUID')}
+          </div>
+        </div>
+      ) : (
+        <>
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={bi(
+              'ابحث بالاسم أو الرقم المرجعي أو الجوال',
+              'Search by name, reference ID, or phone',
+            )}
+            dir="auto"
+            className="h-9"
+            aria-label={bi('ابحث عن المستخدم', 'Search user')}
+            disabled={disabled}
+            autoComplete="off"
+          />
+          {rpcErr && (
+            <div className="text-[11px] text-destructive">
+              {bi('تعذّر البحث.', 'Search failed.')}
+            </div>
+          )}
+          {canSearch && (
+            <div className="rounded-md border bg-card max-h-56 overflow-auto divide-y">
+              {isFetching ? (
+                <div className="px-2.5 py-2 text-[11px] text-muted-foreground">
+                  {bi('جارٍ البحث…', 'Searching…')}
+                </div>
+              ) : results.length === 0 ? (
+                <div className="px-2.5 py-2 text-[11px] text-muted-foreground">
+                  {bi('لم يتم العثور على مستخدمين', 'No users found')}
+                </div>
+              ) : (
+                results.map((u) => (
+                  <button
+                    key={u.user_id}
+                    type="button"
+                    onClick={() => choose(u)}
+                    disabled={disabled}
+                    className="w-full text-start px-2.5 py-1.5 hover:bg-muted transition flex items-center justify-between gap-2"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-xs font-medium truncate">{u.display_name}</div>
+                      <div className="text-[11px] text-muted-foreground tech-content flex flex-wrap gap-x-2">
+                        {u.ref_id && <span>{u.ref_id}</span>}
+                        {u.masked_email && <span>· {u.masked_email}</span>}
+                        {u.phone_hint && <span>· {u.phone_hint}</span>}
+                      </div>
+                    </div>
+                    <ChevronDown className="h-3.5 w-3.5 -rotate-90 opacity-60 shrink-0" />
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+          {!canSearch && debounced.length > 0 && debounced.length < 2 && (
+            <div className="text-[11px] text-muted-foreground">
+              {bi('أدخل حرفين على الأقل', 'Enter at least 2 characters')}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
 
 // ──────────────────────────────────────────────
 // Helpers
@@ -352,29 +553,11 @@ const LifecycleActions: React.FC<{
                   'This code will become unavailable publicly after transfer. Issue a new code for the new owner if needed.',
                 )}
               </div>
-              <div className="space-y-1">
-                <Input
-                  value={targetUserId}
-                  onChange={(e) => setTargetUserId(e.target.value)}
-                  placeholder={bi('المستخدم المستهدف', 'Target user')}
-                  dir="ltr"
-                  className="h-9 tech-content"
-                  aria-label={bi('المستخدم المستهدف', 'Target user')}
-                  disabled={mutation.isPending}
-                  spellCheck={false}
-                  autoComplete="off"
-                />
-                <div
-                  className={cn(
-                    'text-[11px]',
-                    trimmedTarget.length > 0 && !transferTargetValid
-                      ? 'text-destructive'
-                      : 'text-muted-foreground',
-                  )}
-                >
-                  {bi('أدخل معرف المستخدم UUID', 'Enter the user UUID')}
-                </div>
-              </div>
+              <TransferUserPicker
+                selectedUserId={targetUserId}
+                onSelect={(uid) => setTargetUserId(uid)}
+                disabled={mutation.isPending}
+              />
             </>
           )}
 
