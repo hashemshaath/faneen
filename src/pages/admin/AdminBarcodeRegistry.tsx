@@ -623,8 +623,8 @@ const SuccessorIssuer: React.FC<{
   const [copied, setCopied] = useState(false);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      issueSuccessorBarcodeAdmin({
+    mutationFn: async () =>
+      await issueSuccessorBarcodeAdmin({
         transferredBarcodeId: barcodeId,
         reason: reason.trim() || null,
       }),
