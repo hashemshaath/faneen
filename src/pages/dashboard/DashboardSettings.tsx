@@ -34,6 +34,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
 import { useSearchParams } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { useDisplayRefId } from '@/hooks/useDisplayRefId';
 
 type SettingsTab = 'appearance' | 'account' | 'security' | 'notifications' | 'bnpl';
 
@@ -41,6 +42,7 @@ const DashboardSettings = () => {
   useNoIndex();
   const { isRTL, language } = useLanguage();
   const { user, profile, refreshProfile } = useAuth();
+  const displayRefId = useDisplayRefId();
   const { theme, setTheme } = useThemeMode();
   const queryClient = useQueryClient();
   const { isSupported: notifSupported, requestPermission, permission } = useBrowserNotifications();
