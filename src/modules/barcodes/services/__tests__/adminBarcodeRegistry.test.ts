@@ -13,6 +13,7 @@ import {
   freezeBarcodeAdmin,
   archiveBarcodeAdmin,
   restoreBarcodeAdmin,
+  transferBarcodeAdmin,
 } from '../adminBarcodeRegistry';
 
 beforeEach(() => {
@@ -120,5 +121,36 @@ describe('adminBarcodeRegistry lifecycle wrappers', () => {
     await expect(freezeBarcodeAdmin('x')).resolves.toMatchObject({ error: { message: 'boom' } });
     await expect(archiveBarcodeAdmin('x')).resolves.toMatchObject({ error: { message: 'boom' } });
     await expect(restoreBarcodeAdmin('x')).resolves.toMatchObject({ error: { message: 'boom' } });
+  });
+});
+
+describe('adminBarcodeRegistry transfer wrapper', () => {
+  it('transferBarcodeAdmin calls admin_transfer_barcode with exact params and returns raw envelope', async () => {
+    const envelope = { data: { ok: true, new_status: 'transferred' }, error: null };
+    rpcMock.mockResolvedValue(envelope);
+    const out = await transferBarcodeAdmin('bc-1', 'user-9', 'ownership change');
+    expect(rpcMock).toHaveBeenCalledWith('admin_transfer_barcode', {
+      _barcode_id: 'bc-1',
+      _transfer_to_user_id: 'user-9',
+      _reason: 'ownership change',
+    });
+    expect(out).toBe(envelope);
+  });
+
+  it('transferBarcodeAdmin defaults reason to null when omitted', async () => {
+    rpcMock.mockResolvedValue({ data: { ok: true }, error: null });
+    await transferBarcodeAdmin('bc-1', 'user-9');
+    expect(rpcMock).toHaveBeenCalledWith('admin_transfer_barcode', {
+      _barcode_id: 'bc-1',
+      _transfer_to_user_id: 'user-9',
+      _reason: null,
+    });
+  });
+
+  it('transferBarcodeAdmin passes RPC errors through unthrown', async () => {
+    rpcMock.mockResolvedValue({ data: null, error: { message: 'forbidden' } });
+    await expect(transferBarcodeAdmin('x', 'y')).resolves.toMatchObject({
+      error: { message: 'forbidden' },
+    });
   });
 });
