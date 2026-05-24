@@ -38,7 +38,7 @@ export async function markMembershipPaidManually(
     },
   );
 
-  const result = (data ?? null) as MarkMembershipPaidManuallyResult | null;
+  const result = (data ?? null) as unknown as MarkMembershipPaidManuallyResult | null;
 
   if (!error && result && result.ok && !result.idempotent && result.payment_intent_id) {
     await dispatchManualMarkPaidSideEffects(result);
