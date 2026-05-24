@@ -49,6 +49,27 @@ export async function getMembershipPaymentIntentById<T = unknown>(
   return { data: data as unknown as T | null, error };
 }
 
+/**
+ * R4F-8I: Latest payment intent for a given membership subscription.
+ * Read-only, ordered by created_at desc, limited to 1. Returns raw
+ * `{ data, error }` and is safe to call from user-facing surfaces — RLS
+ * still scopes visibility to the caller's own subscription rows.
+ */
+export async function getLatestMembershipPaymentIntentForSubscription<T = unknown>(args: {
+  subscriptionId: string;
+  select?: string;
+}): Promise<{ data: T | null; error: unknown }> {
+  const select = args.select ?? '*';
+  const { data, error } = await supabase
+    .from('membership_payment_intents')
+    .select(select)
+    .eq('subscription_id', args.subscriptionId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return { data: data as unknown as T | null, error };
+}
+
 /** Intended for service-role / edge use only. No UI callsites yet. */
 export async function createMembershipPaymentIntentRecord<T = unknown>(
   payload: MembershipPaymentIntentInsert,
