@@ -65,7 +65,9 @@ describe('R4F-9D membership-payment-webhook edge source contract', () => {
 
   it('does NOT update membership_subscriptions', () => {
     const src = read();
-    expect(src).not.toContain('membership_subscriptions');
+    // Allow header-comment mentions; forbid actual table access.
+    expect(src).not.toMatch(/\.from\(['"]membership_subscriptions['"]\)/);
+    expect(src).not.toMatch(/rpc\(['"][^'"]*subscription[^'"]*['"]/i);
   });
 
   it('does NOT send emails or create notifications', () => {
@@ -73,7 +75,8 @@ describe('R4F-9D membership-payment-webhook edge source contract', () => {
     expect(src).not.toContain('send-transactional-email');
     expect(src).not.toContain('sendTransactionalEmail');
     expect(src).not.toContain('createNotification');
-    expect(src).not.toContain('notifications');
+    expect(src).not.toMatch(/\.from\(['"]notifications['"]\)/);
+    expect(src).not.toMatch(/functions\.invoke\(['"]send-/);
   });
 
   it('does NOT call admin manual mark-paid/refunded RPCs', () => {
