@@ -190,11 +190,31 @@ describe('payments/intents', () => {
     terminalResult = { data: { id: 'i1', status: 'succeeded' }, error: null };
     const res = await getMembershipPaymentIntentForInvoice({ paymentIntentId: 'i1' });
     expect(ops[0]).toEqual({ kind: 'from', table: 'membership_payment_intents' });
-    expect(ops[1]).toEqual({
-      kind: 'select',
-      arg: 'id, subscription_id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata',
-      opts: undefined,
-    });
+    const sel = ops[1] as { kind: string; arg: string };
+    expect(sel.kind).toBe('select');
+    // Safe payment fields preserved
+    for (const f of [
+      'id', 'subscription_id', 'status', 'amount', 'currency',
+      'invoice_id', 'confirmed_at', 'created_at', 'updated_at', 'metadata',
+    ]) {
+      expect(sel.arg).toContain(f);
+    }
+    // Safe enrichment joins included
+    expect(sel.arg).toContain('plan:membership_plans(');
+    expect(sel.arg).toContain('name_ar');
+    expect(sel.arg).toContain('name_en');
+    expect(sel.arg).toContain('subscription:membership_subscriptions(');
+    expect(sel.arg).toContain('ref_id');
+    expect(sel.arg).toContain('starts_at');
+    expect(sel.arg).toContain('expires_at');
+    expect(sel.arg).toContain('business:businesses(');
+    // Sensitive fields never present
+    for (const f of [
+      'provider_intent_id', 'idempotency_key', 'processing_error',
+      'failure_reason', 'receipt_url', 'payload',
+    ]) {
+      expect(sel.arg).not.toContain(f);
+    }
     expect(ops[2]).toEqual({ kind: 'eq', col: 'id', val: 'i1' });
     expect(ops[3]).toEqual({ kind: 'maybeSingle' });
     expect(res).toEqual({ data: { id: 'i1', status: 'succeeded' }, error: null });
