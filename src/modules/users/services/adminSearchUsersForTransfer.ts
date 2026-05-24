@@ -21,10 +21,10 @@ export interface AdminSearchUsersForTransferOptions {
   limit?: number;
 }
 
-export function adminSearchUsersForTransfer(
+export async function adminSearchUsersForTransfer(
   options: AdminSearchUsersForTransferOptions,
 ) {
-  return supabase.rpc('admin_search_users_for_transfer', {
+  return await supabase.rpc('admin_search_users_for_transfer', {
     _query: options.query,
     _limit: options.limit ?? 10,
   });
