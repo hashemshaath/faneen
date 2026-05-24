@@ -8061,7 +8061,7 @@ export type Database = {
           phone?: string | null
           phone_verified?: boolean
           preferred_language?: string
-          ref_id?: string
+          ref_id: string
           updated_at?: string
           user_id: string
         }
@@ -12442,7 +12442,7 @@ export type Database = {
       }
     }
     Enums: {
-      account_type: "individual" | "business" | "company"
+      account_type: "individual" | "business" | "company" | "admin"
       app_role: "admin" | "moderator" | "user" | "super_admin"
       booking_status:
         | "pending"
@@ -12650,7 +12650,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      account_type: ["individual", "business", "company"],
+      account_type: ["individual", "business", "company", "admin"],
       app_role: ["admin", "moderator", "user", "super_admin"],
       booking_status: [
         "pending",
