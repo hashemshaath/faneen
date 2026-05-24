@@ -1,147 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Shield, Star, Trophy, CheckCircle2 } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { BrandLogo } from '@/components/common/BrandLogo';
-import authSlide1 from '@/assets/auth-slide-1.jpg';
-import authSlide2 from '@/assets/auth-slide-2.jpg';
-import authSlide3 from '@/assets/auth-slide-3.jpg';
-
-const slides = [
-  {
-    image: authSlide1,
-    title_ar: 'واجهات ألمنيوم فاخرة',
-    title_en: 'Premium Aluminum Facades',
-    desc_ar: 'تصاميم معمارية راقية بأعلى معايير الجودة والحرفية',
-    desc_en: 'Architectural designs with the highest quality standards',
-  },
-  {
-    image: authSlide2,
-    title_ar: 'تركيب وتنفيذ احترافي',
-    title_en: 'Professional Installation',
-    desc_ar: 'فنيون معتمدون لتنفيذ مشاريعك بدقة متناهية',
-    desc_en: 'Certified technicians for precise project execution',
-  },
-  {
-    image: authSlide3,
-    title_ar: 'أعمال حديد وحدادة فنية',
-    title_en: 'Artistic Iron & Metalwork',
-    desc_ar: 'درابزينات وأبواب حديد بتصاميم عصرية وكلاسيكية',
-    desc_en: 'Railings and doors with modern & classic designs',
-  },
-];
-
-const features = [
-  { icon: Star, label_ar: '+5,000 مزود خدمة', label_en: '5,000+ Providers' },
-  { icon: Trophy, label_ar: '+10,000 مشروع مكتمل', label_en: '10,000+ Projects' },
-  { icon: CheckCircle2, label_ar: 'ضمان جودة معتمد', label_en: 'Quality Guaranteed' },
-];
+import { AuthShowcase } from './AuthShowcase';
 
 export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { t, language, setLanguage, isRTL } = useLanguage();
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
+  const { language, setLanguage, isRTL } = useLanguage();
 
   return (
     <div className="min-h-screen flex bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Image Slider */}
-      <div className="hidden md:flex md:w-[50%] lg:w-[55%] relative overflow-hidden">
-        {slides.map((slide, i) => (
-          <div
-            key={i}
-            className="absolute inset-0 transition-all ease-in-out"
-            style={{
-              transitionDuration: '1500ms',
-              opacity: currentSlide === i ? 1 : 0,
-              transform: currentSlide === i ? 'scale(1)' : 'scale(1.08)',
-            }}
-          >
-            <img
-              src={slide.image}
-              alt={isRTL ? slide.title_ar : slide.title_en}
-              className="w-full h-full object-cover"
-              width={960}
-              height={1080}
-              loading={i === 0 ? undefined : 'lazy'}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/30 to-slate-900/10" />
-          </div>
-        ))}
-
-        {/* Logo */}
-        <Link to="/" className="absolute top-8 start-10 z-10 flex items-center hover:opacity-80 transition-opacity">
-          <BrandLogo variant="full" tone="dark" size="auth" priority alt="قِطاعات — Qitaat" />
-        </Link>
-
-        {/* Feature badges */}
-        <div className="absolute top-8 end-10 z-10 flex flex-col gap-2">
-          {features.map((f, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white/[0.07] backdrop-blur-2xl border border-white/10 text-white text-xs shadow-xl transition-all duration-500"
-              style={{
-                opacity: currentSlide >= 0 ? 1 : 0,
-                transitionDelay: `${i * 150}ms`,
-              }}
-            >
-              <f.icon className="w-3.5 h-3.5 text-accent shrink-0" />
-              <span className="font-medium">{isRTL ? f.label_ar : f.label_en}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Slide content */}
-        <div className="absolute bottom-0 start-0 end-0 p-10 pb-12 z-10">
-          {slides.map((slide, i) => (
-            <div
-              key={i}
-              className="transition-all duration-700 ease-out"
-              style={{
-                opacity: currentSlide === i ? 1 : 0,
-                transform: currentSlide === i ? 'translateY(0)' : 'translateY(24px)',
-                position: currentSlide === i ? 'relative' : 'absolute',
-                pointerEvents: currentSlide === i ? 'auto' : 'none',
-              }}
-            >
-              {currentSlide === i && (
-                <>
-                  <h2 className="font-heading font-bold text-[2.5rem] text-white mb-3 leading-[1.15] tracking-tight">
-                    {isRTL ? slide.title_ar : slide.title_en}
-                  </h2>
-                  <p className="text-white/50 text-[15px] max-w-md leading-relaxed">
-                    {isRTL ? slide.desc_ar : slide.desc_en}
-                  </p>
-                </>
-              )}
-            </div>
-          ))}
-
-          {/* Progress indicators */}
-          <div className="flex gap-2 mt-10">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentSlide(i)}
-                className="h-1 rounded-full transition-all duration-700 overflow-hidden bg-white/15"
-                style={{ width: currentSlide === i ? '48px' : '12px' }}
-              >
-                {currentSlide === i && (
-                  <div
-                    className="h-full bg-accent rounded-full animate-[progress_6s_linear]"
-                    key={`progress-${currentSlide}`}
-                  />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* Industrial showcase panel (SVG, no raster images) */}
+      <div className="hidden md:flex md:w-[50%] lg:w-[55%] relative">
+        <AuthShowcase />
       </div>
 
       {/* Form side */}
