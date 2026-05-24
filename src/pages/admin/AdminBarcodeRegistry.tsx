@@ -26,6 +26,7 @@ import {
   freezeBarcodeAdmin,
   archiveBarcodeAdmin,
   restoreBarcodeAdmin,
+  transferBarcodeAdmin,
   type BarcodeRegistryRow as BarcodeRow,
   type BarcodeRegistrySummary as RegistrySummary,
   type BarcodeRegistryDetail as BarcodeDetail,
@@ -40,12 +41,12 @@ const PAGE_SIZES = [25, 50, 100];
 // ──────────────────────────────────────────────
 // Lifecycle action availability + error mapping
 // ──────────────────────────────────────────────
-type LifecycleAction = 'freeze' | 'archive' | 'restore';
+type LifecycleAction = 'freeze' | 'archive' | 'restore' | 'transfer';
 
 function availableActions(status: string): LifecycleAction[] {
   switch (status) {
-    case 'active':   return ['freeze', 'archive'];
-    case 'frozen':   return ['restore', 'archive'];
+    case 'active':   return ['freeze', 'archive', 'transfer'];
+    case 'frozen':   return ['restore', 'archive', 'transfer'];
     case 'archived': return ['restore'];
     case 'revoked':  return ['archive'];
     default:         return [];
@@ -70,16 +71,28 @@ function mapLifecycleError(
     case 'not_found':
       return bi('الرمز غير موجود.', 'Barcode not found.');
     case 'invalid_transition':
-      return bi('انتقال حالة غير مسموح.', 'Invalid status transition.');
+      return bi(
+        'لا يمكن نقل الرمز من حالته الحالية.',
+        'This code cannot be transferred from its current status.',
+      );
     case 'entity_already_has_active_barcode':
       return bi(
         'لا يمكن الاستعادة بسبب وجود رمز نشط لنفس الكيان.',
         'Cannot restore because another active barcode exists for this entity.',
       );
+    case 'missing_target_user':
+      return bi('يرجى إدخال المستخدم المستهدف.', 'Please provide the target user.');
+    case 'target_user_not_found':
+      return bi('المستخدم المستهدف غير موجود.', 'Target user was not found.');
+    case 'same_owner':
+      return bi('لا يمكن نقل الرمز إلى نفس المالك.', 'Cannot transfer to the same owner.');
     default:
       return bi('تعذّر تنفيذ الإجراء.', 'Action failed.');
   }
 }
+
+// Basic UUID v1–v5 client-side guard (server remains the final authority).
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // ──────────────────────────────────────────────
 // Helpers
@@ -206,6 +219,7 @@ const TRANSITION_LABEL: Record<LifecycleAction, [string, string]> = {
   freeze:  ['active → frozen',  'active → frozen'],
   archive: ['→ archived',       '→ archived'],
   restore: ['→ active',         '→ active'],
+  transfer:['→ transferred',    '→ transferred'],
 };
 
 const LifecycleActions: React.FC<{
@@ -216,10 +230,22 @@ const LifecycleActions: React.FC<{
   const bi = useBi();
   const [pending, setPending] = useState<LifecycleAction | null>(null);
   const [reason, setReason] = useState('');
+  const [targetUserId, setTargetUserId] = useState('');
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: async (vars: { action: LifecycleAction; reason: string }) => {
+    mutationFn: async (vars: {
+      action: LifecycleAction;
+      reason: string;
+      targetUserId?: string;
+    }) => {
+      if (vars.action === 'transfer') {
+        return transferBarcodeAdmin(
+          barcodeId,
+          (vars.targetUserId ?? '').trim(),
+          vars.reason || null,
+        );
+      }
       const fn =
         vars.action === 'freeze'  ? freezeBarcodeAdmin :
         vars.action === 'archive' ? archiveBarcodeAdmin :
@@ -233,10 +259,12 @@ const LifecycleActions: React.FC<{
       setErrMsg(null);
       setPending(null);
       setReason('');
+      setTargetUserId('');
       toast.success(
         vars.action === 'freeze'  ? bi('تم تجميد الرمز', 'Barcode frozen') :
         vars.action === 'archive' ? bi('تمت أرشفة الرمز', 'Barcode archived') :
-                                    bi('تمت استعادة الرمز', 'Barcode restored'),
+        vars.action === 'restore' ? bi('تمت استعادة الرمز', 'Barcode restored') :
+                                    bi('تم نقل الرمز', 'Barcode transferred'),
       );
       onChanged();
     },
@@ -256,13 +284,22 @@ const LifecycleActions: React.FC<{
     );
   }
 
-  const cancel = () => { setPending(null); setReason(''); setErrMsg(null); };
+  const cancel = () => { setPending(null); setReason(''); setTargetUserId(''); setErrMsg(null); };
 
   const actionMeta: Record<LifecycleAction, { label: string; icon: React.ElementType; tone: string }> = {
     freeze:  { label: bi('تجميد',  'Freeze'),  icon: Pause,     tone: 'text-sky-600' },
     archive: { label: bi('أرشفة',  'Archive'), icon: Archive,   tone: 'text-muted-foreground' },
     restore: { label: bi('استعادة', 'Restore'), icon: RotateCcw, tone: 'text-emerald-600' },
+    transfer:{ label: bi('نقل',    'Transfer'),icon: ArrowRightLeft, tone: 'text-amber-600' },
   };
+
+  const isTransfer = pending === 'transfer';
+  const trimmedTarget = targetUserId.trim();
+  const trimmedReason = reason.trim();
+  const transferTargetValid = UUID_RE.test(trimmedTarget);
+  const submitDisabled =
+    mutation.isPending ||
+    (isTransfer && (!transferTargetValid || trimmedReason.length === 0));
 
   return (
     <div className="rounded-md border bg-card p-3 space-y-3">
@@ -306,13 +343,56 @@ const LifecycleActions: React.FC<{
               {bi('إلغاء', 'Cancel')}
             </Button>
           </div>
+
+          {isTransfer && (
+            <>
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-2.5 py-2 text-[11px] text-amber-700 dark:text-amber-400">
+                {bi(
+                  'سيصبح هذا الرمز غير متاح للعامة بعد النقل. يجب إصدار رمز جديد للمالك الجديد عند الحاجة.',
+                  'This code will become unavailable publicly after transfer. Issue a new code for the new owner if needed.',
+                )}
+              </div>
+              <div className="space-y-1">
+                <Input
+                  value={targetUserId}
+                  onChange={(e) => setTargetUserId(e.target.value)}
+                  placeholder={bi('المستخدم المستهدف', 'Target user')}
+                  dir="ltr"
+                  className="h-9 tech-content"
+                  aria-label={bi('المستخدم المستهدف', 'Target user')}
+                  disabled={mutation.isPending}
+                  spellCheck={false}
+                  autoComplete="off"
+                />
+                <div
+                  className={cn(
+                    'text-[11px]',
+                    trimmedTarget.length > 0 && !transferTargetValid
+                      ? 'text-destructive'
+                      : 'text-muted-foreground',
+                  )}
+                >
+                  {bi('أدخل معرف المستخدم UUID', 'Enter the user UUID')}
+                </div>
+              </div>
+            </>
+          )}
+
           <Input
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder={bi('سبب الإجراء', 'Reason for action')}
+            placeholder={
+              isTransfer
+                ? bi('سبب النقل', 'Transfer reason')
+                : bi('سبب الإجراء', 'Reason for action')
+            }
             dir="auto"
             className="h-9"
-            aria-label={bi('سبب الإجراء', 'Reason for action')}
+            aria-label={
+              isTransfer
+                ? bi('سبب النقل', 'Transfer reason')
+                : bi('سبب الإجراء', 'Reason for action')
+            }
             disabled={mutation.isPending}
           />
           {errMsg && (
@@ -321,8 +401,12 @@ const LifecycleActions: React.FC<{
           <div className="flex justify-end gap-2">
             <Button
               size="sm"
-              onClick={() => mutation.mutate({ action: pending, reason })}
-              disabled={mutation.isPending}
+              onClick={() => mutation.mutate({
+                action: pending,
+                reason,
+                targetUserId: isTransfer ? trimmedTarget : undefined,
+              })}
+              disabled={submitDisabled}
             >
               {mutation.isPending
                 ? bi('جارٍ التنفيذ…', 'Working…')
