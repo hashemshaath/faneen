@@ -255,7 +255,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
         {adminCards.map((card, i) => (
           <BentoTile
             key={card.label}
-            variant={i === 0 ? 'feature' : 'tile'}
+            variant={i === 0 ? 'feature' : (i === 1 || i === 2 ? 'wide' : 'tile')}
             accent={i === 0 ? 'gold' : 'emerald'}
             icon={card.icon}
             label={card.label}
