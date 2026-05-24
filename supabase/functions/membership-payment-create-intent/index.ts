@@ -74,13 +74,22 @@ Deno.serve(async (req) => {
   const userId = claimsRes.claims.sub as string;
 
   // Provider config — required for any live checkout.
-  const MOYASAR_SECRET_KEY = Deno.env.get('MOYASAR_SECRET_KEY') ?? '';
-  const SUCCESS_URL = Deno.env.get('MEMBERSHIP_PAYMENTS_SUCCESS_URL') ?? '';
-  const CANCEL_URL = Deno.env.get('MEMBERSHIP_PAYMENTS_CANCEL_URL') ?? '';
+  const MOYASAR_SECRET_KEY = (Deno.env.get('MOYASAR_SECRET_KEY') ?? '').trim();
+  const SUCCESS_URL = (Deno.env.get('MEMBERSHIP_PAYMENTS_SUCCESS_URL') ?? '').trim();
+  const CANCEL_URL = (Deno.env.get('MEMBERSHIP_PAYMENTS_CANCEL_URL') ?? '').trim();
   if (!MOYASAR_SECRET_KEY || !SUCCESS_URL || !CANCEL_URL) {
     safeLog('env_missing_provider');
     return json({ ok: false, code: 'missing_payment_config' }, 200);
   }
+  // Diagnostic: log URL shape (length + leading/trailing chars only, no full value).
+  safeLog('url_diag', {
+    s_len: SUCCESS_URL.length,
+    s_start: SUCCESS_URL.slice(0, 8),
+    s_end: SUCCESS_URL.slice(-8),
+    c_len: CANCEL_URL.length,
+    c_start: CANCEL_URL.slice(0, 8),
+    c_end: CANCEL_URL.slice(-8),
+  });
 
   // Body — accepts EITHER an existing subscriptionId, OR a planId
   // (+ optional businessId / billingCycle) so the user-facing membership
