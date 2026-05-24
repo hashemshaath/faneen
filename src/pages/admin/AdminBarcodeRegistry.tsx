@@ -31,6 +31,10 @@ import {
   type BarcodeRegistrySummary as RegistrySummary,
   type BarcodeRegistryDetail as BarcodeDetail,
 } from '@/modules/barcodes';
+import {
+  adminSearchUsersForTransfer,
+  type AdminTransferUserHit,
+} from '@/modules/users';
 import { buildBarcodeUrl } from '@/lib/barcodes/barcode-url';
 
 const ENTITY_TYPES = ['client_site', 'contract', 'business', 'customer', 'lead'];
