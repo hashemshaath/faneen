@@ -222,6 +222,9 @@ Deno.serve(async (req) => {
   let skipped = 0;
   let failed = 0;
 
+  // EDGE-CRON-OBSERVABILITY-2: capture run start for cron_run_log.
+  const runStartedAt = new Date().toISOString();
+
   // ── 1. Lifecycle notifications drive 3 of 4 templates ────────────────────
   const REF_TYPES = [
     'membership_subscription_expired',
