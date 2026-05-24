@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { checkPasswordStrength, validateUsername } from '@/lib/password-strength';
 import { toast } from 'sonner';
-import { User, Building2, Mail, Globe, Loader2, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
+import { User, Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { PhoneInput } from './PhoneInput';
 import { PasswordField } from './PasswordField';
 import { GoogleAuthButton } from './GoogleAuthButton';
@@ -16,6 +16,7 @@ import { useFieldValidation } from '@/hooks/useFieldValidation';
 import type { RegisterStep, RegisterType } from '@/services/auth/types';
 import { track, trackRegisterFailed, categorizeReason } from '@/lib/analytics-events';
 import { getAttributionPayload } from '@/lib/analytics-attribution';
+import { UsernamePicker } from '@/components/common/UsernamePicker';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -40,6 +41,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const [confirmPassword, setConfirmPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [username, setUsername] = useState('');
+  const [usernameOk, setUsernameOk] = useState(false);
 
   const passwordStrength = checkPasswordStrength(password);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
@@ -57,7 +59,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     if (phone && !validatePhoneField(phone)) { toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number'); return; }
     if (passwordStrength.score < 2) { toast.error(isRTL ? 'كلمة المرور ضعيفة جداً' : 'Password is too weak'); return; }
     if (password !== confirmPassword) { toast.error(isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match'); return; }
-    if (registerType === 'business' && !validateUsername(username)) { toast.error(isRTL ? 'اسم المستخدم غير صحيح' : 'Invalid username'); return; }
+    if (registerType === 'business' && !usernameOk) { toast.error(isRTL ? 'اختر اسم مستخدم صحيحاً ومتاحاً' : 'Pick a valid, available username'); return; }
 
     setLoading(true);
     track.signupStarted({ account_type: registerType, method: 'email' });
