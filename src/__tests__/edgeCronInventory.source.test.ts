@@ -30,7 +30,10 @@ const EXPECTED_CRON_FUNCTIONS = [
 
 // Targets named in the doc that are intentionally NOT on disk (stale job
 // findings the doc is reporting). Test allows these to be missing.
-const KNOWN_STALE_TARGETS = new Set(['check-migration-alerts']);
+const KNOWN_STALE_TARGETS = new Set([
+  'check-migration-alerts',
+  'check-migration-alerts-hourly', // jobname mentioned in stale issue
+]);
 
 describe('EDGE-CRON-INVENTORY-1: docs/edge-cron-inventory.md', () => {
   it('exists', () => {
