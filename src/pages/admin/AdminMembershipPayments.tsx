@@ -354,6 +354,82 @@ const AdminMembershipPayments = () => {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader className="flex flex-row items-center gap-2 space-y-为人0">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <History className="w-5 h-5" />
+            {isRTL ? 'أحداث الدفع الأخيرة' : 'Recent payment events'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {eventsLoading ? (
+            <div className="py-10 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{isRTL ? 'التاريخ' : 'Received'}</TableHead>
+                  <TableHead>{isRTL ? 'المزود' : 'Provider'}</TableHead>
+                  <TableHead>{isRTL ? 'نوع الحدث' : 'Event type'}</TableHead>
+                  <TableHead>{isRTL ? 'معرف الحدث' : 'Event ID'}</TableHead>
+                  <TableHead>{isRTL ? 'الحالة' : 'Status'}</TableHead>
+                  <TableHead>{isRTL ? 'الملخص' : 'Summary'}</TableHead>
+                  <TableHead className="text-end"> </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {eventRows.map((e) => {
+                  const summary = extractSafePayloadSummary(e.payload);
+                  const status = eventStatusLabel(e);
+                  return (
+                    <TableRow key={e.id}>
+                      <TableCell className="tech-content text-xs">{new Date(e.received_at).toLocaleString()}</TableCell>
+                      <TableCell className="tech-content text-xs">{e.provider}</TableCell>
+                      <TableCell className="tech-content text-xs">{e.event_type}</TableCell>
+                      <TableCell className="tech-content text-[10px] font-mono">{e.event_id}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={EVENT_STATUS_TONE[status] || ''}>
+                          {status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {summary.lines.length > 0 ? (
+                          <ul className="space-y-0.5">
+                            {summary.lines.map((line, i) => (
+                              <li key={i} className="text-muted-foreground">{line}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-end">
+                        {summary.paymentIntentId ? (
+                          <Button size="sm" variant="ghost" asChild>
+                            <Link
+                              to={`/admin/membership-payments?intent=${encodeURIComponent(summary.paymentIntentId)}`}
+                            >
+                              {isRTL ? 'فتح نية الدفع' : 'Open payment intent'}
+                            </Link>
+                          </Button>
+                        ) : null}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {eventRows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-sm">
+                      {isRTL ? 'لا توجد أحداث دفع بعد.' : 'No payment events yet.'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
