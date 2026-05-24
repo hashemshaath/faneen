@@ -81,15 +81,21 @@ Deno.serve(async (req) => {
     safeLog('env_missing_provider');
     return json({ ok: false, code: 'missing_payment_config' }, 200);
   }
-  // Diagnostic: log URL shape (length + leading/trailing chars only, no full value).
-  safeLog('url_diag', {
-    s_len: SUCCESS_URL.length,
-    s_start: SUCCESS_URL.slice(0, 8),
-    s_end: SUCCESS_URL.slice(-8),
-    c_len: CANCEL_URL.length,
-    c_start: CANCEL_URL.slice(0, 8),
-    c_end: CANCEL_URL.slice(-8),
-  });
+  // Defensive validation: both URLs must be http(s) URLs. If a secret was
+  // mis-saved (e.g. a Moyasar key value pasted into a URL slot), fail fast
+  // with a clear code instead of forwarding garbage to the provider.
+  const isHttpUrl = (u: string) => {
+    try {
+      const p = new URL(u);
+      return p.protocol === 'https:' || p.protocol === 'http:';
+    } catch {
+      return false;
+    }
+  };
+  if (!isHttpUrl(SUCCESS_URL) || !isHttpUrl(CANCEL_URL)) {
+    safeLog('env_invalid_provider_urls');
+    return json({ ok: false, code: 'missing_payment_config' }, 200);
+  }
 
   // Body — accepts EITHER an existing subscriptionId, OR a planId
   // (+ optional businessId / billingCycle) so the user-facing membership
