@@ -82,3 +82,26 @@ export interface MarkMembershipPaidManuallyResult {
   status?: 'paid';
   paid_at?: string;
 }
+
+export interface MarkMembershipRefundedManuallyInput {
+  /** R4F-8H: payment intent to mark as refunded / credit-noted. */
+  paymentIntentId: string;
+  /** Admin user id; must match auth.uid() when supplied. */
+  adminUserId: string;
+  /** External refund / credit-note reference (free text, stored in metadata). */
+  refundReference?: string | null;
+  /** Refund timestamp; defaults server-side to now(). */
+  refundedAt?: string | null;
+  /** Admin free-text note, stored under metadata.manual_refund.notes. */
+  notes?: string | null;
+}
+
+export interface MarkMembershipRefundedManuallyResult {
+  ok: boolean;
+  idempotent?: boolean;
+  code?: 'payment_intent_not_found' | 'payment_not_paid';
+  payment_intent_id?: string;
+  subscription_id?: string;
+  status?: 'refunded';
+  refunded_at?: string;
+}
