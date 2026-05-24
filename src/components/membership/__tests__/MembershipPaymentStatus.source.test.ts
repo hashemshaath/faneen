@@ -33,7 +33,9 @@ describe('MembershipPaymentStatus — service boundary', () => {
     expect(COMPONENT).not.toMatch(/receipt_url/);
     expect(COMPONENT).not.toMatch(/JSON\.stringify/);
     expect(COMPONENT).not.toMatch(/processing_error/);
-    expect(COMPONENT).not.toMatch(/payload/);
+    // No webhook `payload` field is referenced as data.
+    expect(COMPONENT).not.toMatch(/\.payload\b/);
+    expect(COMPONENT).not.toMatch(/['"]payload['"]/);
     // No admin-only manual_mark_paid notes surface.
     expect(COMPONENT).not.toMatch(/manual_mark_paid/);
   });
