@@ -98,6 +98,8 @@ describe('Admin sidebar nav entry (R4F-8F)', () => {
     expect(NAV).not.toMatch(/from\(\s*['"]membership_payment_intents['"]/);
     expect(NAV).not.toMatch(/rpc\(\s*['"]admin_mark_membership_paid_manually['"]/);
   });
+});
+
 describe('AdminMembershipPayments webhook events panel (R4F-8G)', () => {
   it('imports listMembershipPaymentWebhookEvents from canonical module', () => {
     expect(SRC).toMatch(/listMembershipPaymentWebhookEvents/);
