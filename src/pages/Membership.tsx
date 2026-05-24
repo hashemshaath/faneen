@@ -649,8 +649,8 @@ const Membership = () => {
           <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
           <p className="leading-relaxed">
             {isRTL
-              ? 'نسخة تجريبية — يتم تفعيل الترقيات يدوياً حالياً دون أي رسوم. سيتم إضافة الدفع الإلكتروني لاحقاً.'
-              : 'Beta — upgrades are manually activated for now with no charge. Online payment will be added later.'}
+              ? 'الدفع الإلكتروني عبر مُيسّر — اختر الباقة المناسبة وسيتم تحويلك مباشرة إلى صفحة الدفع الآمنة.'
+              : 'Online payment via Moyasar — pick a plan and you will be taken straight to the secure checkout.'}
           </p>
         </div>
 
@@ -887,10 +887,10 @@ const Membership = () => {
                   size="sm"
                   className="h-8 text-xs gap-1.5"
                   onClick={confirmUpgrade}
-                  disabled={requestUpgradeMutation.isPending || !biz.ref_id}
+                  disabled={checkoutMutation.isPending || !biz.ref_id}
                 >
                   <Send className="w-3.5 h-3.5" />
-                  {isRTL ? 'تأكيد وإرسال الطلب' : 'Confirm & send request'}
+                  {isRTL ? 'المتابعة للدفع' : 'Continue to payment'}
                 </Button>
                 <Button
                   size="sm"
