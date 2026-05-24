@@ -149,3 +149,7 @@ export type {
   ProviderSubscriptionUpdate,
   AdminAdjustProviderCreditsArgs,
 } from './services/providerSubscriptions/mutations';
+
+// R4F-8C: provider-agnostic membership payments scaffold.
+// Scaffold only — no UI callsites. See src/modules/memberships/services/payments/.
+export * from './services/payments';
