@@ -166,3 +166,105 @@
     radial-gradient(120% 100% at 100% 0%, hsl(var(--de-gold) / 0.12) 0%, transparent 55%),
     linear-gradient(160deg, hsl(var(--de-emerald) / 0.18) 0%, hsl(var(--card)) 60%);
 }
+
+/* ------------------------------------------------------------------ */
+/* Polish: lift inner widget cards into the Emerald Prestige aesthetic */
+/* ------------------------------------------------------------------ */
+
+/* Generic card uplift inside the dashboard scope */
+.dash-emerald [class*="rounded-lg"][class*="border"],
+.dash-emerald .border.rounded-xl {
+  /* no-op safety; specific selectors below do the work */
+}
+
+/* Shadcn <Card> within dashboard — refined surface with gold hover rail */
+.dash-emerald [data-slot="card"],
+.dash-emerald .border-border\/40,
+.dash-emerald .border-border\/60 {
+  position: relative;
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--card)) 100%);
+  border: 1px solid hsl(var(--de-emerald) / 0.10);
+  box-shadow: 0 1px 0 hsl(0 0% 100% / 0.04) inset;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.dash-emerald [data-slot="card"]:hover,
+.dash-emerald .border-border\/40:hover {
+  border-color: hsl(var(--de-gold) / 0.40);
+  box-shadow:
+    0 1px 0 hsl(0 0% 100% / 0.04) inset,
+    0 12px 30px -18px hsl(var(--de-emerald) / 0.45);
+}
+
+/* Header titles → Sora, ink-tone */
+.dash-emerald [data-slot="card-title"],
+.dash-emerald .text-xs.flex.items-center.gap-2 {
+  font-family: 'Sora', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  letter-spacing: -0.005em;
+  color: hsl(var(--foreground));
+}
+
+/* Re-tone semantic icons inside dashboard scope:
+   accent → emerald, warning → gold, primary → emerald */
+.dash-emerald .text-accent { color: hsl(var(--de-emerald)) !important; }
+.dash-emerald .bg-accent\/15 { background: hsl(var(--de-emerald) / 0.15) !important; }
+.dash-emerald .bg-accent\/10 { background: hsl(var(--de-emerald) / 0.10) !important; }
+.dash-emerald .bg-accent\/5  { background: hsl(var(--de-gold) / 0.06) !important; }
+.dash-emerald .bg-accent     { background: hsl(var(--de-emerald)) !important; }
+.dash-emerald .text-warning  { color: hsl(var(--de-gold)) !important; }
+.dash-emerald .bg-warning\/15,
+.dash-emerald .bg-warning\/10 { background: hsl(var(--de-gold) / 0.14) !important; }
+
+/* "View all" ghost buttons → gold link tone */
+.dash-emerald a .text-accent,
+.dash-emerald button.text-accent {
+  color: hsl(var(--de-gold)) !important;
+  font-weight: 600;
+}
+
+/* Subtle gold dot for unread indicators */
+.dash-emerald .rounded-full.bg-accent {
+  background: linear-gradient(135deg, hsl(var(--de-gold)), hsl(43 60% 65%)) !important;
+  box-shadow: 0 0 0 3px hsl(var(--de-gold) / 0.15);
+}
+
+/* Quick action tiles uplift */
+.dash-emerald .grid.grid-cols-3 > a > div,
+.dash-emerald .grid.grid-cols-3 > button {
+  border: 1px solid hsl(var(--de-emerald) / 0.12);
+  border-radius: 0.875rem;
+  transition: all .2s ease;
+}
+.dash-emerald .grid.grid-cols-3 > a:hover > div {
+  border-color: hsl(var(--de-gold) / 0.45);
+  background: hsl(var(--de-emerald) / 0.06);
+  transform: translateY(-1px);
+}
+
+/* Recharts: tint default fills via CSS variable fallback (where used) */
+.dash-emerald .recharts-default-tooltip {
+  border-radius: 0.75rem !important;
+  border: 1px solid hsl(var(--de-emerald) / 0.25) !important;
+  background: hsl(var(--card)) !important;
+  box-shadow: 0 10px 30px -15px hsl(var(--de-emerald-deep) / 0.35) !important;
+}
+
+/* Badge outline tone within dashboard — softer gold edge */
+.dash-emerald .badge-outline,
+.dash-emerald [data-slot="badge"][class*="outline"] {
+  border-color: hsl(var(--de-gold) / 0.35);
+}
+
+/* Section spacing rhythm */
+.dash-emerald .space-y-5 > * + * { margin-top: 1.25rem; }
+
+/* Dark-mode polish */
+.dark .dash-emerald [data-slot="card"],
+.dark .dash-emerald .border-border\/40 {
+  background: hsl(var(--card));
+  border-color: hsl(var(--de-emerald) / 0.18);
+}
+.dark .dash-emerald [data-slot="card"]:hover {
+  border-color: hsl(var(--de-gold) / 0.40);
+}
