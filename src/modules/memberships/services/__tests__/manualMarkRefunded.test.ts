@@ -4,6 +4,7 @@ const rpcMock = vi.fn();
 const fromMock = vi.fn();
 const createNotifMock = vi.fn();
 const sendEmailMock = vi.fn();
+const getProfileByUserIdMock = vi.fn();
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
@@ -18,6 +19,10 @@ vi.mock('@/modules/notifications/services/createNotification', () => ({
 
 vi.mock('@/modules/notifications/services/sendTransactionalEmail', () => ({
   sendTransactionalEmail: (...a: unknown[]) => sendEmailMock(...a),
+}));
+
+vi.mock('@/modules/users', () => ({
+  getProfileByUserId: (...a: unknown[]) => getProfileByUserIdMock(...a),
 }));
 
 import { markMembershipRefundedManually } from '../payments/manualMarkRefunded';
@@ -44,18 +49,9 @@ function mockSubscriptionFetch(planEn = 'Premium') {
   });
 }
 function mockProfileFetch(email: string | null = 'user@example.com') {
-  fromMock.mockImplementationOnce((table: string) => {
-    expect(table).toBe('profiles');
-    return {
-      select: () => ({
-        eq: () => ({
-          maybeSingle: () => Promise.resolve({
-            data: { email, full_name: 'Test User' },
-            error: null,
-          }),
-        }),
-      }),
-    };
+  getProfileByUserIdMock.mockResolvedValueOnce({
+    data: { email, full_name: 'Test User' },
+    error: null,
   });
 }
 
@@ -64,6 +60,7 @@ beforeEach(() => {
   fromMock.mockReset();
   createNotifMock.mockReset();
   sendEmailMock.mockReset();
+  getProfileByUserIdMock.mockReset();
 });
 
 describe('markMembershipRefundedManually', () => {
