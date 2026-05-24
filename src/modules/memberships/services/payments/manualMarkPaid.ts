@@ -1,6 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
+import { getProfileByUserId } from '@/modules/users';
+import { getEmailDeliveryAddress } from '@/lib/auth-email';
 import type {
   MarkMembershipPaidManuallyInput,
   MarkMembershipPaidManuallyResult,
@@ -92,13 +94,14 @@ async function dispatchManualMarkPaidSideEffects(
   }
 
   if (recipientUserId) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('email, full_name')
-      .eq('user_id', recipientUserId)
-      .maybeSingle();
+    const { data: profile } = await getProfileByUserId<{
+      email: string | null;
+      full_name: string | null;
+    }>({ userId: recipientUserId, select: 'email, full_name' });
     if (profile) {
-      recipientEmail = profile.email ?? null;
+      // Route through getEmailDeliveryAddress so synthetic phone-login
+      // identifiers can never be used as a transactional recipient.
+      recipientEmail = getEmailDeliveryAddress({ profileEmail: profile.email });
       recipientName = profile.full_name ?? null;
     }
   }
