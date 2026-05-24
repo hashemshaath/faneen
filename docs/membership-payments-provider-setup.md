@@ -174,7 +174,7 @@ All keys are enforced at the database layer (UNIQUE constraints) and checked bef
 | **R4F-9D** | `membership-payment-webhook` ingress + signature verification + event storage + idempotency. |
 | **R4F-9E** | `membership-payment-confirm` + `membership-payment-reconcile` return flow + subscription activation. |
 | **R4F-9F** | Admin live monitoring (real provider events, refund initiation UI). |
-| **R4F-9G** | Production verification checklist + dry-run runbook + on-call doc. |
+| **R4F-9G** | Production verification checklist + dry-run runbook + on-call doc. → See [`docs/membership-payments-production-runbook.md`](membership-payments-production-runbook.md) |
 
 ---
 
