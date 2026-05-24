@@ -121,6 +121,7 @@ const AdminContractAnalytics = lazyRetry(() => import("./pages/admin/AdminContra
 const Notifications = lazyRetry(() => import("./pages/Notifications"));
 const Membership = lazyRetry(() => import("./pages/Membership"));
 const MembershipInvoice = lazyRetry(() => import("./pages/MembershipInvoice"));
+const MembershipPaymentReturn = lazyRetry(() => import("./pages/MembershipPaymentReturn"));
 const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardOperations"));
 const DashboardAiCenter = lazyRetry(() => import("./pages/dashboard/DashboardAiCenter"));
 const DashboardLeads = lazyRetry(() => import("./pages/dashboard/DashboardLeads"));
@@ -232,6 +233,10 @@ const AppRoutes = () => (
           <Route
             path="/membership/payments/:paymentIntentId/invoice"
             element={<ProtectedRoute><MembershipInvoice /></ProtectedRoute>}
+          />
+          <Route
+            path="/membership/payment/return"
+            element={<ProtectedRoute><MembershipPaymentReturn /></ProtectedRoute>}
           />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
