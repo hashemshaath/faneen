@@ -11488,6 +11488,24 @@ export type Database = {
         Args: { _contract_id: string }
         Returns: Json
       }
+      get_cron_run_health: {
+        Args: { _since?: string }
+        Returns: {
+          avg_duration_ms: number
+          failed_runs: number
+          function_name: string
+          job_name: string
+          last_failed_at: string
+          last_ok_at: string
+          last_run_at: string
+          latest_error_code: string
+          latest_status: string
+          max_duration_ms: number
+          ok_runs: number
+          success_rate: number
+          total_runs: number
+        }[]
+      }
       get_current_migration_rerun: {
         Args: never
         Returns: {
