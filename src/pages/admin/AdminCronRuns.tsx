@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, RefreshCw, Activity, AlertCircle } from 'lucide-react';
+import { Loader2, RefreshCw, Activity, AlertCircle, CheckCircle2, XCircle, CalendarClock } from 'lucide-react';
 import { listCronRunLogs } from '@/modules/system/services/cronRuns';
 
 interface CronRunRow {
