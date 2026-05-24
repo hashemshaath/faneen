@@ -302,7 +302,7 @@ Deno.serve(async (req) => {
     });
     const text = await resp.text();
     if (!resp.ok) {
-      safeLog('provider_error', { status: resp.status });
+      safeLog('provider_error', { status: resp.status, body: text.slice(0, 500) });
       return json({ ok: false, code: 'provider_error' }, 200);
     }
     let providerJson: any = {};
