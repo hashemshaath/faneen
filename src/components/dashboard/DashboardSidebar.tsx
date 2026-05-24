@@ -219,6 +219,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: Cog, superAdminOnly: true },
       { label: { ar: 'التحليلات والموافقة', en: 'Analytics & Consent' }, url: '/admin/analytics-settings', icon: BarChart3 },
       { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: Activity },
+      { label: { ar: 'تشغيل المهام', en: 'Cron Runs' }, url: '/admin/cron-runs', icon: CalendarClock },
       { label: { ar: 'سجل تصدير العقود', en: 'PDF Export Audit' }, url: '/admin/pdf-exports', icon: FileText },
     ],
   },
