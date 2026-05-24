@@ -91,6 +91,29 @@ export async function listMembershipPaymentIntentsForSubscription<T = unknown>(a
   return { data: data as unknown as T[] | null, error };
 }
 
+/**
+ * R4F-8K: Fetch a single payment intent for invoice / credit-note rendering.
+ *
+ * Read-only. RLS scopes visibility to the caller's own subscription
+ * (admins see all). Default select is the same safe whitelist used
+ * across user-facing surfaces — never expose `provider_intent_id`,
+ * `idempotency_key`, `processing_error`, or raw provider payloads.
+ */
+export async function getMembershipPaymentIntentForInvoice<T = unknown>(args: {
+  paymentIntentId: string;
+  select?: string;
+}): Promise<{ data: T | null; error: unknown }> {
+  const select =
+    args.select ??
+    'id, subscription_id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata';
+  const { data, error } = await supabase
+    .from('membership_payment_intents')
+    .select(select)
+    .eq('id', args.paymentIntentId)
+    .maybeSingle();
+  return { data: data as unknown as T | null, error };
+}
+
 /** Intended for service-role / edge use only. No UI callsites yet. */
 export async function createMembershipPaymentIntentRecord<T = unknown>(
   payload: MembershipPaymentIntentInsert,

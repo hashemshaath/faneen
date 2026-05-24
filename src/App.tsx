@@ -120,6 +120,7 @@ const AdminProviderAnalytics = lazyRetry(() => import("./pages/admin/AdminProvid
 const AdminContractAnalytics = lazyRetry(() => import("./pages/admin/AdminContractAnalytics"));
 const Notifications = lazyRetry(() => import("./pages/Notifications"));
 const Membership = lazyRetry(() => import("./pages/Membership"));
+const MembershipInvoice = lazyRetry(() => import("./pages/MembershipInvoice"));
 const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardOperations"));
 const DashboardAiCenter = lazyRetry(() => import("./pages/dashboard/DashboardAiCenter"));
 const DashboardLeads = lazyRetry(() => import("./pages/dashboard/DashboardLeads"));
@@ -228,6 +229,10 @@ const AppRoutes = () => (
           <Route path="/compare" element={<Compare />} />
           <Route path="/compare-profiles" element={<CompareProfiles />} />
           <Route path="/membership" element={<Membership />} />
+          <Route
+            path="/membership/payments/:paymentIntentId/invoice"
+            element={<ProtectedRoute><MembershipInvoice /></ProtectedRoute>}
+          />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
