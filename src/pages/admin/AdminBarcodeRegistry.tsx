@@ -204,6 +204,7 @@ const PublicLinkActions: React.FC<{ code: string }> = ({ code }) => {
 const DetailPanel: React.FC<{ barcodeId: string; onClose: () => void }> = ({ barcodeId, onClose }) => {
   const bi = useBi();
   const { isRTL } = useLanguage();
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-barcode-detail', barcodeId],
@@ -225,6 +226,12 @@ const DetailPanel: React.FC<{ barcodeId: string; onClose: () => void }> = ({ bar
 
   const b = data.barcode;
   const sv = statusVariant(b.status);
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin-barcode-detail', barcodeId] });
+    queryClient.invalidateQueries({ queryKey: ['admin-barcode-list'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-barcode-summary'] });
+  };
 
   return (
     <div className="p-5 space-y-5 bg-muted/20 border-t">
@@ -253,6 +260,13 @@ const DetailPanel: React.FC<{ barcodeId: string; onClose: () => void }> = ({ bar
         entityType={b.entity_type}
         subtitle={b.entity_label || undefined}
         size="md"
+      />
+
+      {/* Lifecycle actions (admin-only RPCs) */}
+      <LifecycleActions
+        barcodeId={barcodeId}
+        status={b.status}
+        onChanged={invalidateAll}
       />
 
       {/* Stats strip */}
