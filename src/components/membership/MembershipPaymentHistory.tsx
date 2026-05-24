@@ -1,8 +1,9 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Clock, AlertTriangle, RotateCcw, Receipt, History } from 'lucide-react';
+import { CheckCircle2, Clock, AlertTriangle, RotateCcw, Receipt, History, FileText } from 'lucide-react';
 import { listMembershipPaymentIntentsForSubscription } from '@/modules/memberships';
 
 /**
@@ -122,6 +123,20 @@ export const MembershipPaymentHistory: React.FC<Props> = ({ subscriptionId, isRT
                           </span>
                         </span>
                       </div>
+
+                      {(status === 'succeeded' || status === 'refunded') && (
+                        <div className="mt-2">
+                          <Link
+                            to={`/membership/payments/${encodeURIComponent(intent.id)}/invoice`}
+                            className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+                          >
+                            <FileText className="w-3 h-3" />
+                            {status === 'refunded'
+                              ? isRTL ? 'عرض الإشعار الدائن' : 'View credit note'
+                              : isRTL ? 'عرض الفاتورة' : 'View invoice'}
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
