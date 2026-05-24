@@ -10829,6 +10829,14 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_transfer_barcode: {
+        Args: {
+          _barcode_id: string
+          _reason?: string
+          _transfer_to_user_id: string
+        }
+        Returns: Json
+      }
       admin_update_business_approval: {
         Args: {
           _business_id: string
