@@ -4,7 +4,7 @@ import { authService } from '@/services/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { checkPasswordStrength, validateUsername } from '@/lib/password-strength';
+import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
 import { User, Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { PhoneInput } from './PhoneInput';
