@@ -83,7 +83,7 @@ describe('prune_cron_run_log migration', () => {
 
   it('clamps minimum days to 30', () => {
     const block = MIG.match(/FUNCTION public\.prune_cron_run_log[\s\S]*?\$\$;/)?.[0] ?? '';
-    expect(block).toMatch(/GREATEST\([^)]*,\s*30\)/);
+    expect(block).toMatch(/GREATEST\([\s\S]*?,\s*30\)/);
   });
 
   it('returns the documented jsonb envelope', () => {
