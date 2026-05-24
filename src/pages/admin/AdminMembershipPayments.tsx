@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2, CreditCard, Check } from 'lucide-react';
+import { Loader2, CreditCard, Check, History } from 'lucide-react';
 import {
   listMembershipPaymentIntents,
   markMembershipPaidManually,
