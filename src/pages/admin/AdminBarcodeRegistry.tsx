@@ -11,82 +11,23 @@ import {
 import {
   QrCode, RefreshCw, Copy, Check, ChevronDown, ChevronUp, Hash,
   Activity, ShieldCheck, ShieldAlert, Archive, Snowflake, ArrowRightLeft,
-  Eye, EyeOff, Link2, Zap,
+  Eye, EyeOff, Link2, Zap, ExternalLink, FilterX,
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import BarcodeWidget from '@/components/barcodes/BarcodeWidget';
-
-// ──────────────────────────────────────────────
-// Types (safe payloads only — no PII, no token hash)
-// ──────────────────────────────────────────────
-interface BarcodeRow {
-  barcode_id: string;
-  barcode_code: string;
-  entity_type: string;
-  entity_id: string;
-  entity_label: string | null;
-  owner_label: string | null;
-  owner_business_label: string | null;
-  status: string;
-  visibility: string;
-  scan_count: number;
-  last_scanned_at: string | null;
-  created_at: string;
-  linked_entities_count: number;
-  events_count: number;
-}
-
-interface RegistrySummary {
-  total: number;
-  active: number;
-  frozen: number;
-  archived: number;
-  revoked: number;
-  transferred: number;
-  total_scans: number;
-  scanned_last_7d: number;
-  by_entity_type: Record<string, number>;
-  by_visibility: Record<string, number>;
-  top_scanned: Array<{
-    barcode_code: string;
-    entity_type: string;
-    scan_count: number;
-    last_scanned_at: string | null;
-  }>;
-}
-
-interface BarcodeDetail {
-  barcode: BarcodeRow & {
-    permanent_public_code: boolean;
-    scan_url_path: string | null;
-    archived_at: string | null;
-    frozen_at: string | null;
-    transferred_at: string | null;
-    updated_at: string;
-    source: string | null;
-  };
-  events: Array<{
-    id: string;
-    event_type: string;
-    actor_role: string | null;
-    created_at: string;
-    metadata_safe: { source?: string; reason?: string; note?: string };
-  }>;
-  links: Array<{
-    id: string;
-    linked_entity_type: string;
-    linked_entity_id: string;
-    relationship_type: string;
-    created_at: string;
-    label: string | null;
-  }>;
-  counts: { events_count: number; links_count: number };
-}
+import {
+  listBarcodeRegistryRecords,
+  getBarcodeRegistrySummary,
+  getBarcodeRegistryRecordById,
+  type BarcodeRegistryRow as BarcodeRow,
+  type BarcodeRegistrySummary as RegistrySummary,
+  type BarcodeRegistryDetail as BarcodeDetail,
+} from '@/modules/barcodes';
+import { buildBarcodeUrl } from '@/lib/barcodes/barcode-url';
 
 const ENTITY_TYPES = ['client_site', 'contract', 'business', 'customer', 'lead'];
 const STATUSES = ['active', 'frozen', 'archived', 'revoked', 'transferred'];
@@ -161,10 +102,52 @@ const CopyCode: React.FC<{ code: string }> = ({ code }) => {
       }}
       className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50 hover:bg-muted text-xs font-mono tech-content transition"
       aria-label={bi('نسخ الكود', 'Copy code')}
+      title={bi('نسخ الكود', 'Copy code')}
     >
       <span className="truncate max-w-[180px]">{code}</span>
       {done ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 opacity-60" />}
     </button>
+  );
+};
+
+// ──────────────────────────────────────────────
+// Copy / open public URL actions
+// ──────────────────────────────────────────────
+const PublicLinkActions: React.FC<{ code: string }> = ({ code }) => {
+  const bi = useBi();
+  const url = useMemo(() => buildBarcodeUrl(code), [code]);
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(bi('تم نسخ الرابط', 'Link copied'));
+    } catch {
+      toast.error(bi('تعذّر نسخ الرابط', 'Copy failed'));
+    }
+  };
+  return (
+    <span className="inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label={bi('نسخ الرابط العام', 'Copy public link')}
+        title={bi('نسخ الرابط العام', 'Copy public link')}
+        className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition"
+      >
+        <Link2 className="h-3.5 w-3.5" />
+      </button>
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer noopener"
+        onClick={(e) => e.stopPropagation()}
+        aria-label={bi('فتح الرابط العام', 'Open public link')}
+        title={bi('فتح الرابط العام', 'Open public link')}
+        className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition"
+      >
+        <ExternalLink className="h-3.5 w-3.5" />
+      </a>
+    </span>
   );
 };
 
@@ -177,11 +160,7 @@ const DetailPanel: React.FC<{ barcodeId: string; onClose: () => void }> = ({ bar
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-barcode-detail', barcodeId],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('admin_get_barcode_detail', { _barcode_id: barcodeId });
-      if (error) throw error;
-      return data as unknown as BarcodeDetail;
-    },
+    queryFn: () => getBarcodeRegistryRecordById(barcodeId),
     staleTime: 30_000,
   });
 
@@ -327,28 +306,20 @@ const AdminBarcodeRegistry: React.FC = () => {
 
   const summaryQ = useQuery({
     queryKey: ['admin-barcode-summary'],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('admin_barcode_registry_summary');
-      if (error) throw error;
-      return data as unknown as RegistrySummary;
-    },
+    queryFn: () => getBarcodeRegistrySummary(),
     staleTime: 60_000,
   });
 
   const listQ = useQuery({
     queryKey: ['admin-barcode-list', debouncedSearch, entityType, status, visibility, page, pageSize],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('admin_list_barcodes', {
-        _search: debouncedSearch || null,
-        _entity_type: entityType === 'all' ? null : entityType,
-        _status: status === 'all' ? null : status,
-        _visibility: visibility === 'all' ? null : visibility,
-        _limit: pageSize,
-        _offset: page * pageSize,
-      });
-      if (error) throw error;
-      return data as unknown as { total: number; rows: BarcodeRow[]; limit: number; offset: number };
-    },
+    queryFn: () => listBarcodeRegistryRecords({
+      search: debouncedSearch || null,
+      entityType: entityType === 'all' ? null : entityType,
+      status: status === 'all' ? null : status,
+      visibility: visibility === 'all' ? null : visibility,
+      limit: pageSize,
+      offset: page * pageSize,
+    }),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
@@ -363,6 +334,15 @@ const AdminBarcodeRegistry: React.FC = () => {
     return Object.entries(summary.by_entity_type).sort((a, b) => Number(b[1]) - Number(a[1]));
   }, [summary]);
 
+  const filtersActive = !!debouncedSearch || entityType !== 'all' || status !== 'all' || visibility !== 'all';
+  const clearFilters = () => {
+    setSearch('');
+    setEntityType('all');
+    setStatus('all');
+    setVisibility('all');
+    setPage(0);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-5 p-4 md:p-6">
@@ -371,12 +351,12 @@ const AdminBarcodeRegistry: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <QrCode className="h-6 w-6 text-primary" />
-              {bi('سجل الأكواد', 'Barcode Registry')}
+              {bi('سجل الباركود', 'Barcode Registry')}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               {bi(
-                'مراقبة وفحص جميع أكواد الباركود الموحدة عبر النظام.',
-                'Monitor and inspect all unified barcode codes across the platform.'
+                'إدارة وتتبع روابط الباركود ورموز التحقق المرتبطة بالمنشآت والخدمات.',
+                'Manage and track barcode and verification links connected to businesses and services.'
               )}
             </p>
           </div>
@@ -415,13 +395,14 @@ const AdminBarcodeRegistry: React.FC = () => {
 
         {/* Filters */}
         <Card>
-          <CardContent className="p-4 grid gap-3 md:grid-cols-5">
+          <CardContent className="p-4 grid gap-3 md:grid-cols-6">
             <Input
               placeholder={bi('بحث بكود الباركود…', 'Search barcode code…')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="md:col-span-2 h-10"
               dir="auto"
+              aria-label={bi('بحث بكود الباركود', 'Search barcode code')}
             />
             <Select value={entityType} onValueChange={setEntityType}>
               <SelectTrigger className="h-10"><SelectValue placeholder={bi('النوع', 'Type')} /></SelectTrigger>
@@ -444,6 +425,17 @@ const AdminBarcodeRegistry: React.FC = () => {
                 {VISIBILITIES.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearFilters}
+              disabled={!filtersActive}
+              className="h-10"
+              aria-label={bi('مسح عوامل التصفية', 'Clear filters')}
+            >
+              <FilterX className="h-4 w-4 me-1.5" />
+              {bi('مسح', 'Clear')}
+            </Button>
           </CardContent>
         </Card>
 
@@ -470,10 +462,24 @@ const AdminBarcodeRegistry: React.FC = () => {
                   <tr><td colSpan={10} className="px-3 py-8 text-center text-muted-foreground">{bi('جارٍ التحميل…', 'Loading…')}</td></tr>
                 )}
                 {listQ.isError && (
-                  <tr><td colSpan={10} className="px-3 py-8 text-center text-destructive">{bi('تعذر التحميل', 'Failed to load')}</td></tr>
+                  <tr>
+                    <td colSpan={10} className="px-3 py-8 text-center">
+                      <div className="text-destructive mb-2">{bi('تعذّر تحميل السجلات', 'Failed to load records')}</div>
+                      <Button size="sm" variant="outline" onClick={() => listQ.refetch()}>
+                        <RefreshCw className="h-3.5 w-3.5 me-1.5" />
+                        {bi('إعادة المحاولة', 'Retry')}
+                      </Button>
+                    </td>
+                  </tr>
                 )}
                 {!listQ.isLoading && rows.length === 0 && !listQ.isError && (
-                  <tr><td colSpan={10} className="px-3 py-8 text-center text-muted-foreground">{bi('لا توجد نتائج', 'No results')}</td></tr>
+                  <tr>
+                    <td colSpan={10} className="px-3 py-8 text-center text-muted-foreground">
+                      {filtersActive
+                        ? bi('لا توجد نتائج تطابق عوامل التصفية', 'No results match the current filters')
+                        : bi('لا توجد رموز باركود حتى الآن.', 'No barcode records yet.')}
+                    </td>
+                  </tr>
                 )}
                 {rows.map((r) => {
                   const sv = statusVariant(r.status);
@@ -485,7 +491,12 @@ const AdminBarcodeRegistry: React.FC = () => {
                         className={cn('border-t hover:bg-muted/30 cursor-pointer transition', expanded && 'bg-muted/40')}
                         onClick={() => setExpandedId(expanded ? null : r.barcode_id)}
                       >
-                        <td className="px-3 py-2"><CopyCode code={r.barcode_code} /></td>
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-1.5">
+                            <CopyCode code={r.barcode_code} />
+                            <PublicLinkActions code={r.barcode_code} />
+                          </div>
+                        </td>
                         <td className="px-3 py-2"><Badge variant="secondary" className="text-[10px]">{r.entity_type}</Badge></td>
                         <td className="px-3 py-2 max-w-[220px] truncate">{r.entity_label || '—'}</td>
                         <td className="px-3 py-2 max-w-[200px] truncate text-muted-foreground">
