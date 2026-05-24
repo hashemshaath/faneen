@@ -98,3 +98,20 @@ describe('AdminBarcodeRegistry source contract', () => {
     expect(PAGE_SRC).toMatch(/useNoIndex\(\)/);
   });
 });
+
+describe('BARCODE-REGISTRY-LIFECYCLE-1 — UI deferred contract', () => {
+  // Lifecycle action buttons land in BARCODE-REGISTRY-LIFECYCLE-2.
+  // This phase only ships server RPCs + service wrappers; the page must
+  // remain free of freeze/archive/restore controls until then.
+  it('page does not yet call lifecycle service wrappers', () => {
+    expect(PAGE_SRC).not.toMatch(/freezeBarcodeAdmin/);
+    expect(PAGE_SRC).not.toMatch(/archiveBarcodeAdmin/);
+    expect(PAGE_SRC).not.toMatch(/restoreBarcodeAdmin/);
+  });
+
+  it('page does not call lifecycle RPCs directly', () => {
+    expect(PAGE_SRC).not.toMatch(/admin_freeze_barcode/);
+    expect(PAGE_SRC).not.toMatch(/admin_archive_barcode/);
+    expect(PAGE_SRC).not.toMatch(/admin_restore_barcode/);
+  });
+});
