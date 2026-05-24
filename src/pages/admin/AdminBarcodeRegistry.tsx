@@ -762,15 +762,7 @@ const DetailPanel: React.FC<{ barcodeId: string; onClose: () => void }> = ({ bar
 
       {/* Transferred status helper */}
       {b.status === 'transferred' && (
-        <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2">
-          <ArrowRightLeft className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-          <span>
-            {bi(
-              'هذا الرمز منقول وغير متاح للعامة. يجب إصدار رمز جديد للمالك الجديد عند الحاجة.',
-              'This code has been transferred and is unavailable publicly. Issue a new code for the new owner if needed.',
-            )}
-          </span>
-        </div>
+        <SuccessorIssuer barcodeId={barcodeId} onChanged={invalidateAll} />
       )}
 
       {/* Reusable barcode widget — QR + copy/download/print */}
