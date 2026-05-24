@@ -20,9 +20,10 @@ import { useCountUp } from '@/hooks/useCountUp';
 import { cn } from '@/lib/utils';
 import {
   CHART_COLORS, getStatusLabel, getStatusColor,
-  StatCard, QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
+  QuickAction, OverdueAlerts, TodaySummary, MembershipWidget,
   RefreshButton, getTimeGreeting,
 } from '@/components/dashboard/overview/shared';
+import { BentoTile } from '@/components/dashboard/overview/BentoTile';
 import { useDashboardCustomization } from '@/hooks/useDashboardCustomization';
 import { CustomizableGrid, CustomizationToolbar } from '@/components/dashboard/overview/CustomizableSection';
 import { LiveActivityWidget } from '@/components/dashboard/overview/widgets/LiveActivityWidget';
@@ -253,14 +254,20 @@ export default function UserDashboardView({
 
   return (
     <div className="space-y-5" ref={ref}>
-      {/* Welcome */}
-      <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-card via-card to-primary/5 p-5 sm:p-6 dark:from-card/80 dark:to-primary/10">
-        <div className="flex items-center justify-between gap-3">
+      {/* Welcome — Emerald Prestige hero */}
+      <div className="dash-hero p-5 sm:p-7">
+        <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="font-heading font-bold text-lg sm:text-xl truncate">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider dash-hero-chip rounded-full px-2.5 py-1 mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--de-gold))]" aria-hidden="true" />
+              {isRTL ? 'لوحة العميل' : 'Client Dashboard'}
+            </span>
+            <h1 className="font-heading text-2xl sm:text-3xl font-bold leading-tight">
               {getTimeGreeting(isRTL)}{profile?.full_name ? `، ${profile.full_name}` : ''}
             </h1>
-            <p className="text-xs text-muted-foreground/70 mt-0.5">{isRTL ? 'تتبع عقودك ورسائلك — اضغط ؟ للاختصارات' : 'Track your contracts & messages — press ? for shortcuts'}</p>
+            <p className="dash-hero-sub text-xs sm:text-sm mt-1.5 max-w-md">
+              {isRTL ? 'تتبع عقودك ورسائلك بأناقة — اضغط ؟ لعرض الاختصارات' : 'Track your contracts & messages — press ? for shortcuts'}
+            </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <CustomizationToolbar
@@ -270,7 +277,9 @@ export default function UserDashboardView({
               onReset={customization.reset}
             />
             <RefreshButton onClick={handleRefresh} isLoading={isFetching} isRTL={isRTL} />
-            {profile?.ref_id && <Badge variant="outline" className="tech-content text-[9px] h-5">{profile.ref_id}</Badge>}
+            {profile?.ref_id && (
+              <Badge className="dash-hero-chip tech-content text-[10px] h-6 px-2">{profile.ref_id}</Badge>
+            )}
           </div>
         </div>
       </div>
@@ -282,12 +291,38 @@ export default function UserDashboardView({
         <MembershipWidget isRTL={isRTL} userId={user.id} />
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard icon={FileText} label={isRTL ? 'العقود النشطة' : 'Active'} value={stats?.activeContracts ?? 0} sub={`${isRTL ? 'من' : 'of'} ${stats?.totalContracts ?? 0}`} color="bg-accent/10 text-accent" to="/dashboard/contracts" />
-        <StatCard icon={DollarSign} label={isRTL ? 'إجمالي الإنفاق' : 'Spent'} value={`${animatedSpent.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`} color="bg-success/10 text-success" />
-        <StatCard icon={MessageSquare} label={isRTL ? 'المحادثات' : 'Conversations'} value={stats?.messages ?? 0} color="bg-primary/10 text-primary" to="/dashboard/messages" />
-        <StatCard icon={Bell} label={isRTL ? 'إشعارات جديدة' : 'Unread'} value={stats?.unreadNotifications ?? 0} color="bg-warning/10 text-warning" to="/dashboard/notifications" />
+      {/* Bento KPI grid */}
+      <div className="dash-bento">
+        <BentoTile
+          variant="feature"
+          icon={DollarSign}
+          accent="gold"
+          label={isRTL ? 'إجمالي الإنفاق' : 'Total Spent'}
+          value={`${animatedSpent.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`}
+          sub={isRTL ? `${stats?.completedContracts ?? 0} عقد مكتمل` : `${stats?.completedContracts ?? 0} completed contracts`}
+        />
+        <BentoTile
+          variant="wide"
+          icon={FileText}
+          label={isRTL ? 'العقود النشطة' : 'Active Contracts'}
+          value={stats?.activeContracts ?? 0}
+          sub={`${isRTL ? 'من أصل' : 'of'} ${stats?.totalContracts ?? 0}`}
+          to="/dashboard/contracts"
+        />
+        <BentoTile
+          variant="tile"
+          icon={MessageSquare}
+          label={isRTL ? 'المحادثات' : 'Conversations'}
+          value={stats?.messages ?? 0}
+          to="/dashboard/messages"
+        />
+        <BentoTile
+          variant="tile"
+          icon={Bell}
+          label={isRTL ? 'إشعارات جديدة' : 'Unread'}
+          value={stats?.unreadNotifications ?? 0}
+          to="/dashboard/notifications"
+        />
       </div>
 
       <CustomizableGrid
