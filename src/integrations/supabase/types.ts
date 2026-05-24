@@ -6051,6 +6051,120 @@ export type Database = {
           },
         ]
       }
+      membership_payment_intents: {
+        Row: {
+          amount: number
+          billing_cycle: string | null
+          business_id: string | null
+          confirmed_at: string | null
+          created_at: string
+          currency: string
+          failure_reason: string | null
+          id: string
+          idempotency_key: string
+          invoice_id: string | null
+          metadata: Json
+          plan_id: string | null
+          provider: string
+          provider_intent_id: string | null
+          receipt_url: string | null
+          status: string
+          subscription_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          billing_cycle?: string | null
+          business_id?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          currency: string
+          failure_reason?: string | null
+          id?: string
+          idempotency_key: string
+          invoice_id?: string | null
+          metadata?: Json
+          plan_id?: string | null
+          provider: string
+          provider_intent_id?: string | null
+          receipt_url?: string | null
+          status?: string
+          subscription_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          billing_cycle?: string | null
+          business_id?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          idempotency_key?: string
+          invoice_id?: string | null
+          metadata?: Json
+          plan_id?: string | null
+          provider?: string
+          provider_intent_id?: string | null
+          receipt_url?: string | null
+          status?: string
+          subscription_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_payment_intents_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_payment_intents_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "membership_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      membership_payment_webhook_events: {
+        Row: {
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          processing_error: string | null
+          provider: string
+          received_at: string
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          provider: string
+          received_at?: string
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          provider?: string
+          received_at?: string
+        }
+        Relationships: []
+      }
       membership_plans: {
         Row: {
           created_at: string
@@ -6351,9 +6465,18 @@ export type Database = {
           grace_period_until: string | null
           id: string
           is_demo: boolean
+          last_external_payment_id: string | null
+          last_invoice_id: string | null
+          last_paid_amount: number | null
+          last_paid_at: string | null
+          last_paid_currency: string | null
+          last_receipt_url: string | null
           last_renewal_attempt_at: string | null
           payment_failure_reason: string | null
+          payment_metadata: Json
           payment_method: string | null
+          payment_provider: string | null
+          payment_status: string | null
           plan_id: string
           ref_id: string
           renewal_failure_count: number
@@ -6375,9 +6498,18 @@ export type Database = {
           grace_period_until?: string | null
           id?: string
           is_demo?: boolean
+          last_external_payment_id?: string | null
+          last_invoice_id?: string | null
+          last_paid_amount?: number | null
+          last_paid_at?: string | null
+          last_paid_currency?: string | null
+          last_receipt_url?: string | null
           last_renewal_attempt_at?: string | null
           payment_failure_reason?: string | null
+          payment_metadata?: Json
           payment_method?: string | null
+          payment_provider?: string | null
+          payment_status?: string | null
           plan_id: string
           ref_id?: string
           renewal_failure_count?: number
@@ -6399,9 +6531,18 @@ export type Database = {
           grace_period_until?: string | null
           id?: string
           is_demo?: boolean
+          last_external_payment_id?: string | null
+          last_invoice_id?: string | null
+          last_paid_amount?: number | null
+          last_paid_at?: string | null
+          last_paid_currency?: string | null
+          last_receipt_url?: string | null
           last_renewal_attempt_at?: string | null
           payment_failure_reason?: string | null
+          payment_metadata?: Json
           payment_method?: string | null
+          payment_provider?: string | null
+          payment_status?: string | null
           plan_id?: string
           ref_id?: string
           renewal_failure_count?: number
