@@ -298,10 +298,10 @@ describe('BARCODE-REGISTRY-TRANSFER-AUDIT-1 — admin transfer trail UI', () => 
 
   it('renders bilingual transferred-status helper copy', () => {
     expect(PAGE_SRC).toContain(
-      'هذا الرمز منقول وغير متاح للعامة. يجب إصدار رمز جديد للمالك الجديد عند الحاجة.',
+      'سيبقى الرمز القديم غير متاح، وسيتم إنشاء رمز جديد نشط مرتبط بالكيان نفسه.',
     );
     expect(PAGE_SRC).toContain(
-      'This code has been transferred and is unavailable publicly. Issue a new code for the new owner if needed.',
+      'The old code will remain unavailable. A new active code will be created for the same entity.',
     );
   });
 
@@ -337,5 +337,39 @@ describe('BARCODE-REGISTRY-TRANSFER-AUDIT-1 — admin transfer trail UI', () => 
     expect(PAGE_SRC).not.toMatch(/admin_revoke_barcode/);
     // No availableActions branch grants any action to 'transferred'.
     expect(PAGE_SRC).not.toMatch(/case 'transferred':\s*return \[/);
+  });
+
+  it('exposes the successor-issuance CTA only inside the transferred-status branch', () => {
+    // CTA component exists.
+    expect(PAGE_SRC).toMatch(/const SuccessorIssuer:/);
+    // It is rendered only when status === 'transferred'.
+    expect(PAGE_SRC).toMatch(
+      /b\.status === 'transferred'[\s\S]{0,200}<SuccessorIssuer/,
+    );
+    // Bilingual CTA + explanation copy.
+    expect(PAGE_SRC).toContain('إصدار رمز جديد للمالك الجديد');
+    expect(PAGE_SRC).toContain('Issue new code for new owner');
+    // Conflict mapping copy.
+    expect(PAGE_SRC).toContain('يوجد رمز نشط بالفعل لهذا الكيان.');
+    expect(PAGE_SRC).toContain('An active code already exists for this entity.');
+  });
+
+  it('successor flow uses canonical wrapper, not direct supabase rpc/table access', () => {
+    expect(PAGE_SRC).toMatch(/issueSuccessorBarcodeAdmin/);
+    // The SuccessorIssuer block must not call supabase directly.
+    const block = PAGE_SRC.split('const SuccessorIssuer:')[1]?.split('const TransferTrail:')[0] ?? '';
+    expect(block).not.toMatch(/supabase\.rpc\(/);
+    expect(block).not.toMatch(/supabase\.from\(/);
+    // Reason input + copy-link affordances are present.
+    expect(block).toMatch(/Issuance reason|سبب الإصدار/);
+    expect(block).toMatch(/Copy link|نسخ الرابط/);
+    // Uses buildBarcodeUrl helper for public URL.
+    expect(block).toMatch(/buildBarcodeUrl\(/);
+  });
+
+  it('invalidates list/detail/summary after issuing a successor (via shared invalidateAll)', () => {
+    // SuccessorIssuer is wired through DetailPanel.invalidateAll, which already
+    // invalidates list, detail, summary, and transfer-trail queries.
+    expect(PAGE_SRC).toMatch(/<SuccessorIssuer[^>]*onChanged=\{invalidateAll\}/);
   });
 });

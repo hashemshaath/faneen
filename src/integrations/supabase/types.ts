@@ -10714,6 +10714,10 @@ export type Database = {
           total_runs_7d: number
         }[]
       }
+      admin_issue_successor_barcode: {
+        Args: { _reason?: string; _transferred_barcode_id: string }
+        Returns: Json
+      }
       admin_list_barcodes: {
         Args: {
           _entity_type?: string

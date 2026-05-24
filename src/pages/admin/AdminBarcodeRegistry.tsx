@@ -28,6 +28,7 @@ import {
   restoreBarcodeAdmin,
   transferBarcodeAdmin,
   listBarcodeTransferTrailAdmin,
+  issueSuccessorBarcodeAdmin,
   type BarcodeRegistryRow as BarcodeRow,
   type BarcodeRegistrySummary as RegistrySummary,
   type BarcodeRegistryDetail as BarcodeDetail,
@@ -607,6 +608,177 @@ const LifecycleActions: React.FC<{
 // ──────────────────────────────────────────────
 // Detail panel (inline — no popups per project rules)
 // ──────────────────────────────────────────────
+const SuccessorIssuer: React.FC<{
+  barcodeId: string;
+  onChanged: () => void;
+}> = ({ barcodeId, onChanged }) => {
+  const bi = useBi();
+  const [expanded, setExpanded] = useState(false);
+  const [reason, setReason] = useState('');
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+  const [result, setResult] = useState<{
+    new_code: string;
+    public_url: string;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: async () =>
+      await issueSuccessorBarcodeAdmin({
+        transferredBarcodeId: barcodeId,
+        reason: reason.trim() || null,
+      }),
+    onSuccess: (res) => {
+      const payload = res?.data as {
+        ok?: boolean;
+        error?: string;
+        conflict_barcode_id?: string;
+        new_code?: string;
+        public_url?: string;
+      } | null;
+      if (res?.error) {
+        const m = (res.error.message || '').toLowerCase();
+        setErrMsg(
+          m.includes('forbidden') || m.includes('unauthorized')
+            ? bi('لا تملك صلاحية تنفيذ هذا الإجراء.', 'Permission denied.')
+            : bi('تعذّر إصدار الرمز الجديد.', 'Failed to issue new code.'),
+        );
+        toast.error(bi('تعذّر إصدار الرمز الجديد.', 'Failed to issue new code.'));
+        return;
+      }
+      if (!payload || payload.ok !== true) {
+        const msg =
+          payload?.error === 'entity_already_has_active_barcode'
+            ? bi('يوجد رمز نشط بالفعل لهذا الكيان.', 'An active code already exists for this entity.')
+            : payload?.error === 'invalid_transition'
+              ? bi('لا يمكن إصدار رمز جديد إلا للرموز المنقولة.', 'Only transferred codes can issue a successor.')
+              : payload?.error === 'missing_target_user'
+                ? bi('لا يوجد مالك مستهدف لهذا النقل.', 'No target owner is set for this transfer.')
+                : payload?.error === 'missing_entity'
+                  ? bi('الكيان المرتبط بالرمز غير محدد.', 'Linked entity is missing.')
+                  : bi('تعذّر إصدار الرمز الجديد.', 'Failed to issue new code.');
+        setErrMsg(msg);
+        toast.error(msg);
+        return;
+      }
+      setErrMsg(null);
+      setResult({
+        new_code: payload.new_code || '',
+        public_url: payload.public_url || '',
+      });
+      toast.success(bi('تم إصدار رمز جديد', 'New code issued'));
+      onChanged();
+    },
+    onError: () => {
+      const msg = bi('تعذّر إصدار الرمز الجديد.', 'Failed to issue new code.');
+      setErrMsg(msg);
+      toast.error(msg);
+    },
+  });
+
+  const copyLink = async () => {
+    if (!result?.new_code) return;
+    const url = buildBarcodeUrl(result.new_code);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 space-y-2 text-xs">
+      <div className="flex items-start gap-2 text-amber-700 dark:text-amber-400">
+        <ArrowRightLeft className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+        <span>
+          {bi(
+            'سيبقى الرمز القديم غير متاح، وسيتم إنشاء رمز جديد نشط مرتبط بالكيان نفسه.',
+            'The old code will remain unavailable. A new active code will be created for the same entity.',
+          )}
+        </span>
+      </div>
+
+      {!result && !expanded && (
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => { setExpanded(true); setErrMsg(null); }}
+            aria-label={bi('إصدار رمز جديد للمالك الجديد', 'Issue new code for new owner')}
+          >
+            <Zap className="h-3.5 w-3.5 me-1.5" />
+            {bi('إصدار رمز جديد للمالك الجديد', 'Issue new code for new owner')}
+          </Button>
+        </div>
+      )}
+
+      {!result && expanded && (
+        <div className="space-y-2 border-t border-amber-500/20 pt-2">
+          <Input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder={bi('سبب الإصدار (اختياري)', 'Reason (optional)')}
+            aria-label={bi('سبب الإصدار', 'Issuance reason')}
+            dir="auto"
+            className="h-9"
+            disabled={mutation.isPending}
+          />
+          {errMsg && <div className="text-destructive">{errMsg}</div>}
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => { setExpanded(false); setReason(''); setErrMsg(null); }}
+              disabled={mutation.isPending}
+            >
+              <X className="h-3.5 w-3.5 me-1" />
+              {bi('إلغاء', 'Cancel')}
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => mutation.mutate()}
+              disabled={mutation.isPending}
+            >
+              {mutation.isPending
+                ? bi('جارٍ الإصدار…', 'Issuing…')
+                : bi('تأكيد', 'Confirm')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {result && (
+        <div className="space-y-2 border-t border-amber-500/20 pt-2 text-foreground">
+          <div className="flex items-center gap-2">
+            <Check className="h-3.5 w-3.5 text-emerald-600" />
+            <span className="font-mono tech-content font-semibold">{result.new_code}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <a
+              href={buildBarcodeUrl(result.new_code)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline tech-content break-all"
+            >
+              {buildBarcodeUrl(result.new_code)}
+              <ExternalLink className="h-3 w-3 ms-1 inline" />
+            </a>
+            <Button size="sm" variant="outline" onClick={copyLink}>
+              {copied ? (
+                <><Check className="h-3.5 w-3.5 me-1" />{bi('تم النسخ', 'Copied')}</>
+              ) : (
+                <><Copy className="h-3.5 w-3.5 me-1" />{bi('نسخ الرابط', 'Copy link')}</>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const TransferTrail: React.FC<{ barcodeId: string }> = ({ barcodeId }) => {
   const bi = useBi();
   const { isRTL } = useLanguage();
@@ -761,15 +933,7 @@ const DetailPanel: React.FC<{ barcodeId: string; onClose: () => void }> = ({ bar
 
       {/* Transferred status helper */}
       {b.status === 'transferred' && (
-        <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2">
-          <ArrowRightLeft className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-          <span>
-            {bi(
-              'هذا الرمز منقول وغير متاح للعامة. يجب إصدار رمز جديد للمالك الجديد عند الحاجة.',
-              'This code has been transferred and is unavailable publicly. Issue a new code for the new owner if needed.',
-            )}
-          </span>
-        </div>
+        <SuccessorIssuer barcodeId={barcodeId} onChanged={invalidateAll} />
       )}
 
       {/* Reusable barcode widget — QR + copy/download/print */}

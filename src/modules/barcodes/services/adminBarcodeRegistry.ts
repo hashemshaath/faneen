@@ -208,6 +208,45 @@ export function transferBarcodeAdmin(
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// Successor issuance (BARCODE-REGISTRY-NEW-CODE-1)
+//
+// Admin-only RPC that issues a new active barcode for the same entity after a
+// transfer. The old `transferred` row is NEVER mutated or deleted. The new
+// active barcode is owned by `transfer_to_user_id`. Returns raw envelope so
+// callers can branch on RPC errors and in-payload errors (e.g.
+// `entity_already_has_active_barcode`).
+// ───────────────────────────────────────────────────────────────────────────
+
+export interface IssueSuccessorBarcodeResult {
+  ok: boolean;
+  old_barcode_id?: string;
+  new_barcode_id?: string;
+  new_code?: string;
+  public_url?: string;
+  error?:
+    | 'not_found'
+    | 'invalid_transition'
+    | 'missing_target_user'
+    | 'missing_entity'
+    | 'entity_already_has_active_barcode'
+    | string;
+  conflict_barcode_id?: string;
+}
+
+export function issueSuccessorBarcodeAdmin({
+  transferredBarcodeId,
+  reason,
+}: {
+  transferredBarcodeId: string;
+  reason?: string | null;
+}) {
+  return supabase.rpc('admin_issue_successor_barcode', {
+    _transferred_barcode_id: transferredBarcodeId,
+    _reason: reason ?? null,
+  });
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 // Transfer trail (BARCODE-REGISTRY-TRANSFER-AUDIT-1)
 //
 // Admin-only enriched listing of transferred events for a single barcode.
