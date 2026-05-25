@@ -563,9 +563,32 @@ const AdminUsers = () => {
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    email: '', password: '', full_name: '', phone: '',
+    account_type: 'individual', membership_tier: 'free', role: 'none',
+  });
   const passwordValidationMessage = useMemo(() => getPasswordValidationMessage(newPassword, isRTL), [newPassword, isRTL]);
 
-  const closePanel = () => { setActivePanel(null); setNewPassword(''); setShowNewPassword(false); };
+  const closePanel = () => {
+    setActivePanel(null); setNewPassword(''); setShowNewPassword(false);
+    setCreateForm({ email: '', password: '', full_name: '', phone: '', account_type: 'individual', membership_tier: 'free', role: 'none' });
+  };
+
+  const createUserMutation = useMutation({
+    mutationFn: async (payload: typeof createForm) => {
+      const { data, error } = await supabase.functions.invoke('admin-create-user', { body: payload });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
+      closePanel();
+      toast.success(isRTL ? 'تم إنشاء المستخدم' : 'User created');
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل الإنشاء' : 'Failed to create')),
+  });
 
   // Keyboard shortcuts: ⌘K / Ctrl+K to focus search, Esc to clear panel/selection
   useEffect(() => {
