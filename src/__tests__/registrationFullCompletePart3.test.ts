@@ -85,10 +85,11 @@ describe('Part 3 — staff-invite shell', () => {
     expect(ONBOARDING).toContain('دعوة الموظفين ستكون متاحة من إعدادات المنشأة بعد اكتمال التسجيل');
   });
   it('shows role previews as informational only (no select/onClick handlers)', () => {
-    // The roles block is an aria-hidden grid; only a single skip button exists.
-    expect(ONBOARDING).toMatch(/data-role-preview="manager"/);
-    expect(ONBOARDING).toMatch(/data-role-preview="editor"/);
-    expect(ONBOARDING).toMatch(/data-role-preview="viewer"/);
+    // Roles are rendered from a literal array. Only a single skip button exists.
+    expect(ONBOARDING).toMatch(/data-role-preview=\{r\.en\.toLowerCase\(\)\}/);
+    expect(ONBOARDING).toMatch(/ar:\s*'مدير',\s*en:\s*'Manager'/);
+    expect(ONBOARDING).toMatch(/ar:\s*'محرر',\s*en:\s*'Editor'/);
+    expect(ONBOARDING).toMatch(/ar:\s*'مشاهد',\s*en:\s*'Viewer'/);
   });
   it('does not generate or display any token / fake send call', () => {
     // No token rendering inside the staff-invite block
