@@ -273,7 +273,7 @@ const DashboardSettings = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 max-w-3xl">
+      <div className="space-y-4 max-w-4xl">
         {/* Header */}
         <div>
           <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
