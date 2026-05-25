@@ -32,6 +32,7 @@ import { createQuoteRequestFileRecord } from '@/modules/quotes/services/createQu
 
 interface QuoteRow {
   id: string;
+  ref_id: string | null;
   user_id: string | null;
   customer_name: string;
   customer_phone: string;
