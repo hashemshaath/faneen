@@ -1,13 +1,16 @@
-import { supabase } from '@/integrations/supabase/client';
+import {
+  insertBusinessBranch as canonicalInsertBusinessBranch,
+  insertBusinessBranchReturning as canonicalInsertBusinessBranchReturning,
+} from '@/modules/catalog/services/branches/mutations';
+import type { BusinessBranchInsertPayload } from '@/modules/catalog/services/branches/mutations';
 
 /**
- * REGISTRATION-UX-FULL-COMPLETE-1 Part 2
- * Canonical wrapper for `supabase.from('business_branches').insert(payload)`.
- *
- * - Payload passed through unchanged (no transformation).
- * - The DB column `ref_id` has a `generate_ref_id('LOC','seq_loc')` default,
- *   so callers do not need to send one.
- * - Returns the inserted row (id + ref_id) when `terminal === 'single'`.
+ * REGISTRATION-UX-FULL-COMPLETE-1 Part 2 / Part 4
+ * Options-shaped facade over the canonical catalog branches wrapper.
+ * All actual `.from('business_branches')` access happens inside
+ * `src/modules/catalog/services/branches/mutations.ts` to satisfy the
+ * catalog isolation audit. This file only adapts the call signature used
+ * by the onboarding flow.
  */
 export interface InsertBusinessBranchOptions {
   payload: Record<string, unknown>;
@@ -19,17 +22,16 @@ export async function insertBusinessBranch(
   options: InsertBusinessBranchOptions,
 ): Promise<{ data: unknown; error: unknown }> {
   const { payload, select, terminal = 'none' } = options;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const base: any = supabase.from('business_branches').insert(payload as any);
+  const typedPayload = payload as unknown as BusinessBranchInsertPayload;
 
   if (terminal === 'none' || !select) {
-    const { data, error } = await base;
+    const { data, error } = await canonicalInsertBusinessBranch(typedPayload);
     return { data, error };
   }
-  if (terminal === 'single') {
-    const { data, error } = await base.select(select).single();
-    return { data, error };
-  }
-  const { data, error } = await base.select(select).maybeSingle();
+  const { data, error } = await canonicalInsertBusinessBranchReturning(
+    typedPayload,
+    select,
+    terminal,
+  );
   return { data, error };
 }
