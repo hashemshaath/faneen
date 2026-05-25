@@ -96,6 +96,7 @@ const AdminActivityLog = lazyRetry(() => import("./pages/admin/AdminActivityLog"
 const AdminCategories = lazyRetry(() => import("./pages/admin/AdminCategories"));
 const AdminTags = lazyRetry(() => import("./pages/admin/AdminTags"));
 const AdminBusinesses = lazyRetry(() => import("./pages/admin/AdminBusinesses"));
+const AdminEntityAccessRequests = lazyRetry(() => import("./pages/admin/AdminEntityAccessRequests"));
 const AdminLocationsHub = lazyRetry(() => import("./pages/admin/locations/AdminLocationsHub"));
 const AdminLocationsCatalog = lazyRetry(() => import("./pages/admin/locations/AdminLocationsCatalog"));
 const AdminBusinessServiceAreas = lazyRetry(() => import("./pages/admin/locations/AdminBusinessServiceAreas"));
@@ -312,6 +313,7 @@ const AppRoutes = () => (
           <Route path="/admin/categories" element={<ProtectedRoute requireAdmin><AdminCategories /></ProtectedRoute>} />
           <Route path="/admin/tags" element={<ProtectedRoute requireAdmin><AdminTags /></ProtectedRoute>} />
           <Route path="/admin/businesses" element={<ProtectedRoute requireAdmin><AdminBusinesses /></ProtectedRoute>} />
+          <Route path="/admin/entity-access-requests" element={<ProtectedRoute requireAdmin><AdminEntityAccessRequests /></ProtectedRoute>} />
           <Route path="/admin/locations" element={<ProtectedRoute requireAdmin><AdminLocationsHub /></ProtectedRoute>} />
           <Route path="/admin/locations/catalog" element={<ProtectedRoute requireAdmin><AdminLocationsCatalog /></ProtectedRoute>} />
           <Route path="/admin/locations/service-areas" element={<ProtectedRoute requireAdmin><AdminBusinessServiceAreas /></ProtectedRoute>} />
