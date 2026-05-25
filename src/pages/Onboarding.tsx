@@ -58,7 +58,8 @@ const STEP_ORDER: OnboardingStep[] = [
 
 /**
  * REGISTRATION-UX-FULL-COMPLETE-1
- * Supported entity types. Government entities are intentionally excluded.
+ * Supported entity types. Public-sector / state entities are intentionally
+ * excluded from the registration UI per approved architecture (Model D).
  */
 type EntityType =
   | 'company'
