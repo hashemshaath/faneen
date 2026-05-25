@@ -64,7 +64,7 @@ describe('leads list service', () => {
     await listAdminQuoteRequests();
     expect(calls[0].table).toBe('quote_requests');
     expect(calls[0].builder.select).toHaveBeenCalledWith(
-      'id, customer_name, customer_phone, customer_type, sector, city, status, created_at',
+      'id, ref_id, customer_name, customer_phone, customer_type, sector, city, status, created_at',
     );
     expect(calls[0].builder.limit).toHaveBeenCalledWith(500);
   });
