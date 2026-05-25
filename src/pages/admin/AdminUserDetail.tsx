@@ -72,7 +72,7 @@ const AdminUserDetail: React.FC = () => {
     enabled: !!userId,
     queryFn: async () => {
       const { data, error } = await listAdminBusinesses<BizRow>({
-        select: 'id, ref_id, name_ar, name_en, username, is_verified, is_active, membership_tier, approval_status',
+        select: 'id, ref_id, legacy_ref_id, name_ar, name_en, username, is_verified, is_active, membership_tier, approval_status',
         filters: [{ column: 'user_id', op: 'eq', value: userId! }],
       });
       if (error) throw error;
