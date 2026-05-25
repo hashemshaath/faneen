@@ -214,10 +214,25 @@ const adminBaseGroups: MenuGroup[] = [
     ],
   },
   {
+    groupLabel: { ar: 'إدارة المستخدمين', en: 'User Management' },
+    icon: Users,
+    items: [
+      { label: { ar: 'كل المستخدمين', en: 'All Users' }, url: '/admin/users', icon: Users, end: true },
+      { label: { ar: 'الأفراد', en: 'Individuals' }, url: '/admin/users?type=individual', icon: User },
+      { label: { ar: 'مزودي الخدمة', en: 'Service Providers' }, url: '/admin/users?type=business', icon: Wrench },
+      { label: { ar: 'الشركات', en: 'Companies' }, url: '/admin/users?type=company', icon: Building2 },
+      { label: { ar: 'المشرفون', en: 'Admins' }, url: '/admin/users?role=admin', icon: Shield, superAdminOnly: true },
+      { label: { ar: 'المشرف الأعلى', en: 'Super Admins' }, url: '/admin/users?role=super_admin', icon: Crown, superAdminOnly: true },
+      { label: { ar: 'المشرفون المساعدون', en: 'Moderators' }, url: '/admin/users?role=moderator', icon: ShieldCheck, superAdminOnly: true },
+      { label: { ar: 'بدون صلاحيات', en: 'No Role' }, url: '/admin/users?role=no_role', icon: UserCog, superAdminOnly: true },
+      { label: { ar: '➕ إنشاء مستخدم', en: '➕ New User' }, url: '/admin/users?create=individual', icon: UserCog },
+      { label: { ar: '➕ مزود خدمة جديد', en: '➕ New Provider' }, url: '/admin/users?create=provider', icon: UserCog },
+    ],
+  },
+  {
     groupLabel: { ar: 'النظام والأمان', en: 'System & Security' },
     icon: Cog,
     items: [
-      { label: { ar: 'المستخدمين', en: 'Users' }, url: '/admin/users', icon: Users, superAdminOnly: true },
       { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: ShieldAlert, superAdminOnly: true },
       { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: Cog, superAdminOnly: true },
       { label: { ar: 'التحليلات والموافقة', en: 'Analytics & Consent' }, url: '/admin/analytics-settings', icon: BarChart3 },

@@ -539,7 +539,7 @@ const PAGE_SIZE = 20;
 const AdminUsers = () => {
   useNoIndex();
   const { isRTL, language } = useLanguage();
-  const { user, isSuperAdmin } = useAuth();
+  const { user, isSuperAdmin, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [, startTransition] = useTransition();
 
@@ -574,19 +574,42 @@ const AdminUsers = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   useEffect(() => {
     const createParam = searchParams.get('create');
-    if (createParam && isSuperAdmin) {
+    const typeParam = searchParams.get('type');
+    const roleParam = searchParams.get('role');
+    let mutated = false;
+    const next = new URLSearchParams(searchParams);
+
+    if (typeParam) {
+      if (['individual', 'business', 'company', 'all'].includes(typeParam)) {
+        setFilterAccountType(typeParam);
+      }
+      next.delete('type');
+      mutated = true;
+    }
+    if (roleParam) {
+      if (['super_admin', 'admin', 'moderator', 'user', 'no_role', 'all'].includes(roleParam)) {
+        setFilterRole(roleParam);
+      }
+      next.delete('role');
+      mutated = true;
+    }
+
+    if (createParam && isAdmin) {
       const preset = createParam === 'provider' ? 'business' : createParam;
       const allowed = ['individual', 'business', 'company'];
       if (allowed.includes(preset)) {
         setCreateForm(p => ({ ...p, account_type: preset }));
         setActivePanel({ type: 'create' });
       }
-      const next = new URLSearchParams(searchParams);
       next.delete('create');
+      mutated = true;
+    }
+
+    if (mutated) {
       setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuperAdmin]);
+  }, [isAdmin, searchParams]);
 
   const closePanel = () => {
     setActivePanel(null); setNewPassword(''); setShowNewPassword(false);
@@ -1045,7 +1068,7 @@ const AdminUsers = () => {
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
             </Button>
-            {isSuperAdmin && (
+            {isAdmin && (
               <Button size="sm" className="gap-2 rounded-xl h-9" onClick={() => setActivePanel({ type: 'create' })}>
                 <UserPlus className="w-4 h-4" />
                 <span className="hidden sm:inline">{isRTL ? 'إنشاء مستخدم' : 'New User'}</span>
