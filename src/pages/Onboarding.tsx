@@ -146,8 +146,9 @@ const Onboarding = () => {
 
   // Entity-creation extras (additive — backward-compatible)
   const [entityType, setEntityType] = useState<EntityType>('company');
-  const [tradeName, setTradeName] = useState('');
+  const [businessNameEn, setBusinessNameEn] = useState('');
   const [crNumber, setCrNumber] = useState('');
+  const [unifiedNumber, setUnifiedNumber] = useState('');
   const [vatNumber, setVatNumber] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [capabilityMode, setCapabilityMode] = useState<CapabilityMode>('both');
