@@ -227,12 +227,17 @@ const AdminUserDetail: React.FC = () => {
               <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد منشآت' : 'No linked businesses.'}</p>
             ) : (
               <div className="space-y-2">
-                {businesses.map((b) => (
+                {businesses.map((b) => {
+                  const ref = getBusinessDisplayReference(b);
+                  return (
                   <div key={b.id} className="flex items-center gap-3 rounded-xl border border-border/30 p-3 hover-lift">
                     <Building2 className="w-4 h-4 text-success shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold truncate">{isRTL ? b.name_ar : (b.name_en || b.name_ar)}</p>
-                      <p className="text-[11px] text-muted-foreground tech-content">{b.ref_id} • {b.username} • {b.membership_tier} • {b.approval_status}</p>
+                      <p className="text-[11px] text-muted-foreground tech-content">{ref.primary ?? '—'} • {b.username} • {b.membership_tier} • {b.approval_status}</p>
+                      {ref.secondary && (
+                        <LegacyReferenceHint legacyRefId={ref.secondary} isRTL={isRTL} className="block mt-0.5" />
+                      )}
                     </div>
                     {b.is_verified && <Badge variant="outline" className="text-[10px] border-success/40 text-success">✓ {isRTL ? 'موثّق' : 'Verified'}</Badge>}
                     {b.username && (
@@ -241,7 +246,8 @@ const AdminUserDetail: React.FC = () => {
                       </Button>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
