@@ -7,6 +7,7 @@ import { CrQuickScanInline } from '@/components/admin/CrQuickScanInline';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { adminCreateUser } from '@/modules/admin';
 import { listContractsForUserParticipant } from '@/modules/contracts';
 import {
   listAdminBusinesses,
