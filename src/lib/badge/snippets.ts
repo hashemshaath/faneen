@@ -166,7 +166,7 @@ export function buildBadgeHtml(opts: BadgeBuildOptions): string {
   const sealBg = isGradient ? 'rgba(255,255,255,.18)' : accent.solid;
   const sealFg = '#ffffff';
   const sealInnerHtml = opts.logoDataUrl
-    ? `<img src="${escapeAttr(opts.logoDataUrl)}" alt="" width="${size.iconBox - 2}" height="${size.iconBox - 2}" style="width:${size.iconBox - 2}px;height:${size.iconBox - 2}px;border-radius:9999px;object-fit:cover;display:block;" />`
+    ? `<img src="${escapeAttr(opts.logoDataUrl)}" alt="${escapeAttr(opts.displayName)}" width="${size.iconBox - 2}" height="${size.iconBox - 2}" style="width:${size.iconBox - 2}px;height:${size.iconBox - 2}px;border-radius:9999px;object-fit:cover;display:block;" />`
     : `<svg width="${size.icon}" height="${size.icon}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SHIELD_PATH}</svg>`;
 
   return `<a href="${href}" target="_blank" rel="noopener" title="${safeName} — ${label}" dir="${dir}" style="display:inline-flex;align-items:center;gap:${size.gap}px;padding:${size.padY}px ${size.padX}px;border:1px solid ${border};border-radius:${size.radius}px;background:${bg};color:${fg};font:600 ${size.label}px/1.2 ${fontFamily};text-decoration:none;box-shadow:0 1px 2px rgba(0,0,0,.04);position:relative;">

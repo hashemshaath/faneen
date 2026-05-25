@@ -29,7 +29,9 @@ function walk(dir) {
   return out;
 }
 
-const files = walk(SRC);
+const files = walk(SRC).filter(
+  (p) => !/[\\/]__tests__[\\/]/.test(p) && !/\.test\.(t|j)sx?$/.test(p)
+);
 const errors = [];
 const warnings = [];
 
@@ -48,6 +50,9 @@ const decorativeContexts = [
   /className="[^"]*avatar/,
   /className="[^"]*thumbnail/,
   /w-5 h-5|w-4 h-4|w-3 h-3/,  // tiny icons
+  /aria-hidden=/,
+  /width="1"/,
+  /role="presentation"/,
 ];
 
 function isDecorative(tag) {

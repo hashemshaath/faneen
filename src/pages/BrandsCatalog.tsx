@@ -151,7 +151,7 @@ const BrandsCatalog: React.FC = () => {
                   )}
                   <CardContent className="p-4 space-y-2">
                     <div className="flex items-center gap-2">
-                      {b.logo_url && <img src={b.logo_url} alt="" className="h-8 w-8 rounded border object-cover" loading="lazy" />}
+                      {b.logo_url && <img src={b.logo_url} alt={isRTL ? b.name_ar : (b.name_en || b.name_ar)} className="h-8 w-8 rounded border object-cover" loading="lazy" />}
                       <div className="font-semibold truncate">{isRTL ? b.name_ar : (b.name_en || b.name_ar)}</div>
                     </div>
                     {(b.short_description_ar || b.short_description_en) && (

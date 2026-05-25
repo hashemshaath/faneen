@@ -67,8 +67,8 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   if (tone === 'auto') {
     return (
       <span className={cn('inline-flex items-center', className)} aria-label={alt}>
-        <img {...commonImgProps} src={lightSrc} alt="" aria-hidden="true" className={cn(commonImgProps.className, 'block dark:hidden')} />
-        <img {...commonImgProps} src={darkSrc}  alt="" aria-hidden="true" className={cn(commonImgProps.className, 'hidden dark:block')} />
+        <img {...commonImgProps} src={lightSrc} alt={alt} aria-hidden="true" className={cn(commonImgProps.className, 'block dark:hidden')} />
+        <img {...commonImgProps} src={darkSrc}  alt={alt} aria-hidden="true" className={cn(commonImgProps.className, 'hidden dark:block')} />
       </span>
     );
   }

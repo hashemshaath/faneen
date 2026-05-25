@@ -278,7 +278,7 @@ const SectorBrief: React.FC = () => {
                               >
                                 <div className="w-9 h-9 rounded-lg bg-muted shrink-0 overflow-hidden flex items-center justify-center">
                                   {p.logo_url ? (
-                                    <img src={p.logo_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                    <img src={p.logo_url} alt={p.name_ar} className="w-full h-full object-cover" loading="lazy" />
                                   ) : (
                                     <Building2 className="w-4 h-4 text-muted-foreground" />
                                   )}
