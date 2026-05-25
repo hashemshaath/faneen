@@ -119,7 +119,10 @@ log; only P0 / quick-P1 fixes are permitted during freeze.
       official ref-id.
 - [ ] Admin walkthrough: contracts analytics, membership events, email
       center, contact center, cron runs.
-- [ ] Notifications / email: in-app action URLs resolve;
+- [ ] Notifications / email: in-app action URLs resolve.
+- [ ] **Registration UX smoke** (`docs/registration-ux-smoke-checklist.md`):
+  fresh signup → intent selection → business onboarding → main-location →
+  staff-invite skip → verification badge on summary → admin access requests.
       `email_send_log` pending → sent transitions observed.
 - [ ] Cron / email queue activity confirmed in Lovable Cloud dashboard.
 
