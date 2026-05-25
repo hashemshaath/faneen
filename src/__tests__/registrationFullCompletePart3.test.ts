@@ -32,7 +32,7 @@ describe('Part 3 — step order extended with main-location + staff-invite', () 
     expect(ONBOARDING).toMatch(/setStep\('staff-invite'\)/);
   });
   it('staff-invite completes onboarding via completeOnboarding', () => {
-    expect(ONBOARDING).toMatch(/data-action="skip-staff-invite"[\s\S]{0,400}completeOnboarding/);
+    expect(ONBOARDING).toMatch(/completeOnboarding[\s\S]{0,400}data-action="skip-staff-invite"/);
   });
 });
 
