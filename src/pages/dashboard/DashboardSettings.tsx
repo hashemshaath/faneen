@@ -179,13 +179,20 @@ const DashboardSettings = () => {
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
+      if (profileForm.username && !usernameOk) {
+        throw new Error(isRTL ? 'اسم المستخدم غير صالح أو محجوز' : 'Username is invalid or taken');
+      }
       const { error } = await updateProfile({
         userId: user.id,
         values: {
           full_name: profileForm.full_name.trim(),
+          username: profileForm.username ? profileForm.username : null,
           phone: profileForm.phone.trim(),
           email: profileForm.email.trim(),
           avatar_url: profileForm.avatar_url,
+          preferred_language: profileForm.preferred_language,
+          country_id: profileForm.country_id,
+          city_id: profileForm.city_id,
         },
       });
       if (error) throw error;
@@ -198,6 +205,43 @@ const DashboardSettings = () => {
     },
     onError: (e) => toast.error(e.message),
   });
+
+  // Profile completeness (7 checks)
+  const completion = useMemo(() => {
+    const src = editingProfile ? profileForm : {
+      full_name: profile?.full_name || '',
+      username: profile?.username || '',
+      phone: profile?.phone || '',
+      email: profile?.email || '',
+      avatar_url: profile?.avatar_url || '',
+      country_id: profile?.country_id ?? null,
+      city_id: profile?.city_id ?? null,
+    };
+    const checks = [
+      !!src.full_name?.trim(),
+      !!src.username,
+      !!src.avatar_url,
+      !!src.email?.trim(),
+      !!src.phone?.trim(),
+      !!src.country_id,
+      !!src.city_id,
+    ];
+    const done = checks.filter(Boolean).length;
+    return { done, total: checks.length, pct: Math.round((done / checks.length) * 100) };
+  }, [editingProfile, profileForm, profile]);
+
+  const publicProfileUrl = useMemo(() => {
+    const handle = profileForm.username || profile?.username;
+    return handle ? `${window.location.origin}/${handle}` : null;
+  }, [profileForm.username, profile?.username]);
+
+  const copyPublicUrl = useCallback(async () => {
+    if (!publicProfileUrl) return;
+    await navigator.clipboard.writeText(publicProfileUrl);
+    setCopiedUrl(true);
+    toast.success(isRTL ? 'تم نسخ الرابط' : 'Link copied');
+    setTimeout(() => setCopiedUrl(false), 1500);
+  }, [publicProfileUrl, isRTL]);
 
   const handleSignOut = async () => {
     await signOutCurrentUser();
