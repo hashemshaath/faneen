@@ -4,3 +4,7 @@ export { hasLocationAccess } from './hasLocationAccess';
 export type { HasLocationAccessInput } from './hasLocationAccess';
 export { getUserEntityContexts } from './getUserEntityContexts';
 export type { GetUserEntityContextsInput } from './getUserEntityContexts';
+export { createEntityAccessRequest } from './createEntityAccessRequest';
+export type { CreateEntityAccessRequestOptions, EntityAccessRequestRow } from './createEntityAccessRequest';
+export { findPossibleDuplicateEntities } from './findPossibleDuplicateEntities';
+export type { FindPossibleDuplicateEntitiesInput, PossibleDuplicateEntity } from './findPossibleDuplicateEntities';

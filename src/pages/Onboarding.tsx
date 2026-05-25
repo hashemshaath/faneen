@@ -27,6 +27,11 @@ import {
   pullRemoteDraft,
   syncDraftToServer,
 } from '@/lib/onboarding-draft';
+import {
+  createEntityAccessRequest,
+  findPossibleDuplicateEntities,
+  type PossibleDuplicateEntity,
+} from '@/modules/entities/services/access';
 
 type OnboardingStep =
   | 'intent'
@@ -34,6 +39,8 @@ type OnboardingStep =
   | 'details'
   | 'phone-verify'
   | 'business-details'
+  | 'entity-type'
+  | 'entity-capabilities'
   | 'business-sectors'
   | 'summary';
 
@@ -43,9 +50,39 @@ const STEP_ORDER: OnboardingStep[] = [
   'details',
   'phone-verify',
   'business-details',
+  'entity-type',
+  'entity-capabilities',
   'business-sectors',
   'summary',
 ];
+
+/**
+ * REGISTRATION-UX-FULL-COMPLETE-1
+ * Supported entity types. Public-sector / state entities are intentionally
+ * excluded from the registration UI per approved architecture (Model D).
+ */
+type EntityType =
+  | 'company'
+  | 'establishment'
+  | 'individual_business'
+  | 'private_entity'
+  | 'service_provider'
+  | 'buyer_entity'
+  | 'other';
+
+type CapabilityMode = 'provider' | 'buyer' | 'both';
+
+function capabilitiesFromMode(mode: CapabilityMode): Record<string, boolean> {
+  const isProvider = mode === 'provider' || mode === 'both';
+  const isBuyer = mode === 'buyer' || mode === 'both';
+  return {
+    can_provide_services: isProvider,
+    can_request_services: isBuyer,
+    can_manage_contracts: true,
+    can_issue_quotes: isProvider,
+    can_receive_quotes: isBuyer,
+  };
+}
 
 const Onboarding = () => {
   const { t, language, isRTL } = useLanguage();
@@ -57,6 +94,9 @@ const Onboarding = () => {
   const [step, setStep] = useState<OnboardingStep>('intent');
   const [inviteToken, setInviteToken] = useState('');
   const [requestAccessQuery, setRequestAccessQuery] = useState('');
+  const [requestAccessMessage, setRequestAccessMessage] = useState('');
+  const [requestAccessSubmitting, setRequestAccessSubmitting] = useState(false);
+  const [requestAccessSubmittedRef, setRequestAccessSubmittedRef] = useState<string | null>(null);
   const [accountType, setAccountType] = useState<'individual' | 'business'>('individual');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -69,6 +109,17 @@ const Onboarding = () => {
   const [subServices, setSubServices] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Entity-creation extras (additive — backward-compatible)
+  const [entityType, setEntityType] = useState<EntityType>('company');
+  const [tradeName, setTradeName] = useState('');
+  const [crNumber, setCrNumber] = useState('');
+  const [vatNumber, setVatNumber] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [capabilityMode, setCapabilityMode] = useState<CapabilityMode>('both');
+  const [duplicates, setDuplicates] = useState<PossibleDuplicateEntity[]>([]);
+  const [duplicateAcknowledged, setDuplicateAcknowledged] = useState(false);
+  const [duplicateChecking, setDuplicateChecking] = useState(false);
 
   // Persist draft on every relevant change
   useEffect(() => {
@@ -202,6 +253,11 @@ const Onboarding = () => {
           sub_services: subServices,
           description_ar: businessDescription || undefined,
           recipientEmail: user?.email || undefined,
+          entity_type: entityType,
+          capabilities: capabilitiesFromMode(capabilityMode),
+          national_id: crNumber || undefined,
+          vat_number: vatNumber || undefined,
+          website: websiteUrl || undefined,
         });
       }
 
@@ -263,8 +319,8 @@ const Onboarding = () => {
         icon: User,
         titleAr: 'المتابعة كفرد',
         titleEn: 'Continue as individual',
-        descAr: 'حساب شخصي للبحث وطلب عروض الأسعار',
-        descEn: 'A personal account to browse and request quotes',
+        descAr: 'يمكنك استخدام قطاعات كفرد، وطلب عروض الأسعار، ثم إنشاء منشأة أو الانضمام لها لاحقًا.',
+        descEn: 'You can use Qitaat as an individual, request quotes, and create or join an entity later.',
       },
       {
         id: 'create-entity' as const,
@@ -363,24 +419,88 @@ const Onboarding = () => {
             </p>
           </div>
 
-          {/* Request access — P1 placeholder, backend deferred */}
-          <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 p-3 space-y-2">
+          {/* Request access — REGISTRATION-UX-FULL-COMPLETE-1, functional MVP */}
+          <div className="rounded-xl border border-border/60 bg-muted/10 p-3 space-y-2" data-feature="request-access">
             <Label className="text-xs">
               {isRTL ? 'طلب الانضمام لمنشأة قائمة' : 'Request access to an existing entity'}
             </Label>
-            <Input
-              value={requestAccessQuery}
-              onChange={(e) => setRequestAccessQuery(e.target.value)}
-              placeholder={isRTL ? 'اسم المنشأة أو معرّفها ENT-…' : 'Entity name or ENT-… reference'}
-              dir="auto"
-              disabled
-              aria-label={isRTL ? 'طلب الانضمام' : 'Request access'}
-            />
-            <p className="text-[11px] text-muted-foreground" data-deferred="request-access">
-              {isRTL
-                ? 'هذه الميزة قيد التطوير — استخدم رمز الدعوة من مالك المنشأة حالياً.'
-                : 'This feature is in development — use an invitation token from the entity owner for now.'}
-            </p>
+            {requestAccessSubmittedRef ? (
+              <div className="rounded-md bg-success/10 border border-success/30 p-2 text-xs text-success-foreground">
+                {isRTL
+                  ? `تم إرسال طلبك (${requestAccessSubmittedRef}). سيتم إشعارك عند مراجعته.`
+                  : `Your request was sent (${requestAccessSubmittedRef}). You will be notified when it is reviewed.`}
+              </div>
+            ) : (
+              <>
+                <Input
+                  value={requestAccessQuery}
+                  onChange={(e) => setRequestAccessQuery(e.target.value)}
+                  placeholder={isRTL ? 'اسم المنشأة أو معرّفها ENT- / BIZ-' : 'Entity name or ENT- / BIZ- reference'}
+                  dir="auto"
+                  aria-label={isRTL ? 'طلب الانضمام' : 'Request access'}
+                />
+                <Textarea
+                  value={requestAccessMessage}
+                  onChange={(e) => setRequestAccessMessage(e.target.value.slice(0, 500))}
+                  placeholder={isRTL ? 'رسالة قصيرة لمالك المنشأة (اختياري)' : 'Short message to the entity owner (optional)'}
+                  rows={2}
+                  dir="auto"
+                />
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] text-muted-foreground">
+                    {isRTL
+                      ? 'سيُرسل الطلب للمراجعة. لن يتم منح صلاحيات تلقائياً.'
+                      : 'Your request will be reviewed. Access is not granted automatically.'}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!user || requestAccessQuery.trim().length < 2 || requestAccessSubmitting}
+                    onClick={async () => {
+                      if (!user) return;
+                      setRequestAccessSubmitting(true);
+                      try {
+                        const q = requestAccessQuery.trim();
+                        const looksLikeRef = /^(ENT|BIZ)-/i.test(q);
+                        let targetBusinessId: string | null = null;
+                        if (looksLikeRef) {
+                          const { data } = await supabase
+                            .from('businesses')
+                            .select('id')
+                            .or(`ref_id.eq.${q.toUpperCase()},legacy_ref_id.eq.${q.toUpperCase()}`)
+                            .limit(1)
+                            .maybeSingle();
+                          targetBusinessId = (data as { id?: string } | null)?.id ?? null;
+                        }
+                        const { data, error } = await createEntityAccessRequest({
+                          requesterUserId: user.id,
+                          targetBusinessId,
+                          targetRef: targetBusinessId ? null : q,
+                          message: requestAccessMessage.trim() || null,
+                        });
+                        if (error) throw error;
+                        if (data?.ref_id) {
+                          setRequestAccessSubmittedRef(data.ref_id);
+                          toast.success(isRTL ? 'تم إرسال طلب الانضمام' : 'Access request sent');
+                        }
+                      } catch (err) {
+                        toast.error(
+                          err instanceof Error && err.message
+                            ? err.message
+                            : isRTL ? 'تعذّر إرسال الطلب' : 'Could not send the request',
+                        );
+                      } finally {
+                        setRequestAccessSubmitting(false);
+                      }
+                    }}
+                  >
+                    {requestAccessSubmitting
+                      ? <Loader2 className="w-3 h-3 animate-spin" />
+                      : (isRTL ? 'إرسال الطلب' : 'Send request')}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </AuthLayout>
@@ -555,7 +675,7 @@ const Onboarding = () => {
             <Button onClick={() => {
               if (!businessName.trim()) { toast.error(isRTL ? 'يرجى إدخال اسم النشاط' : 'Please enter business name'); return; }
               if (!usernameOk) { toast.error(isRTL ? 'اختر اسم مستخدم صحيحاً ومتاحاً' : 'Pick a valid, available username'); return; }
-              setStep('business-sectors');
+              setStep('entity-type');
             }} disabled={!businessName.trim() || !usernameOk} className="w-full" variant="hero">
               {isRTL ? 'متابعة' : 'Continue'}
             </Button>
@@ -563,6 +683,201 @@ const Onboarding = () => {
           <button onClick={() => setStep(phone ? 'phone-verify' : 'details')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
           </button>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  // REGISTRATION-UX-FULL-COMPLETE-1 — entity type + identifiers + duplicate check
+  if (step === 'entity-type') {
+    const entityTypes: { id: EntityType; ar: string; en: string }[] = [
+      { id: 'company', ar: 'شركة', en: 'Company' },
+      { id: 'establishment', ar: 'مؤسسة', en: 'Establishment' },
+      { id: 'individual_business', ar: 'عمل فردي', en: 'Individual business' },
+      { id: 'private_entity', ar: 'كيان خاص', en: 'Private entity' },
+      { id: 'service_provider', ar: 'مزوّد خدمة', en: 'Service provider' },
+      { id: 'buyer_entity', ar: 'جهة مشتري / مستفيد', en: 'Buyer / beneficiary' },
+      { id: 'other', ar: 'أخرى', en: 'Other' },
+    ];
+    const onContinue = async () => {
+      setDuplicateChecking(true);
+      try {
+        const list = await findPossibleDuplicateEntities({
+          name: businessName,
+          cr: crNumber || null,
+          vat: vatNumber || null,
+        });
+        setDuplicates(list);
+        if (list.length > 0 && !duplicateAcknowledged) {
+          const exact = list.some((d) => d.match_reason === 'cr' || d.match_reason === 'vat');
+          if (exact) {
+            toast.warning(isRTL
+              ? 'قد تكون هذه المنشأة مسجلة مسبقًا. يمكنك طلب الانضمام بدل إنشاء منشأة مكررة.'
+              : 'This entity may already exist. You can request access instead of creating a duplicate.');
+            return;
+          }
+          // Fuzzy — allow continue with explicit acknowledgement
+          setDuplicateAcknowledged(true);
+          toast.warning(isRTL
+            ? 'تم العثور على منشآت مشابهة. تأكّد أن منشأتك مختلفة قبل المتابعة.'
+            : 'Similar entities found. Confirm your entity is different before continuing.');
+          return;
+        }
+        setStep('entity-capabilities');
+      } finally {
+        setDuplicateChecking(false);
+      }
+    };
+    return (
+      <AuthLayout>
+        <div className="space-y-6">
+          <div className="space-y-2 text-center">
+            <h2 className="font-heading font-bold text-2xl text-foreground">
+              {isRTL ? 'نوع المنشأة وبياناتها الرسمية' : 'Entity type & official details'}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {isRTL
+                ? 'اختر نوع المنشأة وأدخل أرقامها الرسمية إن وجدت — يساعدنا ذلك على منع التكرار.'
+                : 'Pick the entity type and add official numbers if any — this helps prevent duplicates.'}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs">{isRTL ? 'نوع المنشأة' : 'Entity type'}</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {entityTypes.map((t) => {
+                const selected = entityType === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    data-entity-type={t.id}
+                    onClick={() => setEntityType(t.id)}
+                    className={`p-3 rounded-lg border text-start text-sm transition-all ${selected ? 'border-gold bg-gold/10 text-foreground font-semibold' : 'border-border hover:border-gold/50 text-muted-foreground'}`}
+                  >
+                    {isRTL ? t.ar : t.en}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'الاسم التجاري (اختياري)' : 'Trade name (optional)'}</Label>
+              <Input value={tradeName} onChange={(e) => setTradeName(e.target.value)} dir="auto" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'الموقع الإلكتروني' : 'Website'}</Label>
+              <Input value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://" dir="ltr" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'رقم السجل التجاري' : 'Commercial registration (CR)'}</Label>
+              <Input value={crNumber} onChange={(e) => setCrNumber(e.target.value)} dir="ltr" className="tech-content" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'الرقم الضريبي / الموحد' : 'VAT / Unified number'}</Label>
+              <Input value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} dir="ltr" className="tech-content" />
+            </div>
+          </div>
+
+          {duplicates.length > 0 && (
+            <div className="rounded-xl border border-warning/40 bg-warning/10 p-3 space-y-2" data-feature="duplicate-warning">
+              <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-warning" />
+                {isRTL
+                  ? 'قد تكون هذه المنشأة مسجلة مسبقًا. يمكنك طلب الانضمام بدل إنشاء منشأة مكررة.'
+                  : 'This entity may already exist. You can request access instead of creating a duplicate.'}
+              </p>
+              <ul className="space-y-1">
+                {duplicates.slice(0, 3).map((d) => (
+                  <li key={d.id} className="text-[11px] text-muted-foreground flex items-center justify-between gap-2">
+                    <span className="truncate">
+                      <span className="tech-content me-1">{d.ref_id ?? d.legacy_ref_id ?? '—'}</span>
+                      {isRTL ? (d.name_ar ?? d.name_en ?? '—') : (d.name_en ?? d.name_ar ?? '—')}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-[11px]"
+                      onClick={async () => {
+                        if (!user) return;
+                        const { data, error } = await createEntityAccessRequest({
+                          requesterUserId: user.id,
+                          targetBusinessId: d.id,
+                          message: businessName,
+                        });
+                        if (!error && data?.ref_id) {
+                          toast.success(isRTL ? `تم إرسال طلب الانضمام (${data.ref_id})` : `Access request sent (${data.ref_id})`);
+                        } else {
+                          toast.error(isRTL ? 'تعذّر إرسال الطلب' : 'Could not send the request');
+                        }
+                      }}
+                    >
+                      {isRTL ? 'طلب الانضمام' : 'Request access'}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+            <button onClick={() => setStep('business-details')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+              {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
+            </button>
+            <Button onClick={onContinue} disabled={duplicateChecking} variant="hero" className="sm:w-64">
+              {duplicateChecking ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
+              {isRTL ? 'متابعة' : 'Continue'}
+            </Button>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  if (step === 'entity-capabilities') {
+    const options: { id: CapabilityMode; ar: string; en: string; desc_ar: string; desc_en: string }[] = [
+      { id: 'provider', ar: 'مقدم خدمة', en: 'Provider', desc_ar: 'أقدّم منتجات أو خدمات', desc_en: 'I provide products or services' },
+      { id: 'buyer', ar: 'مستفيد / طالب خدمة', en: 'Buyer / beneficiary', desc_ar: 'أبحث عن منتجات أو خدمات وأطلب عروض أسعار', desc_en: 'I look for products/services and request quotes' },
+      { id: 'both', ar: 'الاثنين', en: 'Both', desc_ar: 'أقدّم وأطلب في نفس الوقت', desc_en: 'I both provide and request' },
+    ];
+    return (
+      <AuthLayout>
+        <div className="space-y-6">
+          <div className="space-y-2 text-center">
+            <h2 className="font-heading font-bold text-2xl text-foreground">
+              {isRTL ? 'ماذا ستفعل منشأتك على قِطاعات؟' : 'What will your entity do on Qitaat?'}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {isRTL ? 'يمكنك تعديل ذلك لاحقاً من إعدادات المنشأة.' : 'You can change this later from entity settings.'}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-2">
+            {options.map((o) => {
+              const selected = capabilityMode === o.id;
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  data-capability-mode={o.id}
+                  onClick={() => setCapabilityMode(o.id)}
+                  className={`p-3 rounded-lg border text-start transition-all ${selected ? 'border-gold bg-gold/10 text-foreground font-semibold' : 'border-border hover:border-gold/50 text-muted-foreground'}`}
+                >
+                  <div className="text-sm font-bold text-foreground">{isRTL ? o.ar : o.en}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{isRTL ? o.desc_ar : o.desc_en}</div>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+            <button onClick={() => setStep('entity-type')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+              {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
+            </button>
+            <Button onClick={() => setStep('business-sectors')} variant="hero" className="sm:w-64">
+              {isRTL ? 'متابعة' : 'Continue'}
+            </Button>
+          </div>
         </div>
       </AuthLayout>
     );
@@ -700,7 +1015,7 @@ const Onboarding = () => {
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
           <button
             type="button"
-            onClick={() => setStep('business-details')}
+            onClick={() => setStep('entity-capabilities')}
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             {isRTL ? '→ رجوع' : '← Back'}

@@ -5432,6 +5432,63 @@ export type Database = {
         }
         Relationships: []
       }
+      entity_access_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          ref_id: string
+          requester_user_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          target_business_id: string | null
+          target_ref: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          ref_id?: string
+          requester_user_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_business_id?: string | null
+          target_ref?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          ref_id?: string
+          requester_user_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_business_id?: string | null
+          target_ref?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_access_requests_target_business_id_fkey"
+            columns: ["target_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_access_requests_target_business_id_fkey"
+            columns: ["target_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_legal_identifiers: {
         Row: {
           country_code: string

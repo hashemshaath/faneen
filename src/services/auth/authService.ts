@@ -191,7 +191,17 @@ export const authService = {
     userId: string,
     businessName: string,
     username: string,
-    extras?: { sectors?: string[]; sub_services?: string[]; description_ar?: string; recipientEmail?: string },
+    extras?: {
+      sectors?: string[];
+      sub_services?: string[];
+      description_ar?: string;
+      recipientEmail?: string;
+      entity_type?: string;
+      capabilities?: Record<string, boolean>;
+      national_id?: string;
+      vat_number?: string;
+      website?: string;
+    },
   ) {
     const sanitizedName = sanitizeInput(businessName);
     const sanitizedUsername = username.toLowerCase().replace(/[^a-z0-9_-]/g, '');
@@ -208,6 +218,12 @@ export const authService = {
         description_ar: extras?.description_ar ? sanitizeInput(extras.description_ar) : null,
         approval_status: 'draft',
         username_status: 'pending',
+        // REGISTRATION-UX-FULL-COMPLETE-1 — additive entity fields (all nullable).
+        ...(extras?.entity_type ? { entity_type: extras.entity_type } : {}),
+        ...(extras?.capabilities ? { capabilities: extras.capabilities } : {}),
+        ...(extras?.national_id ? { national_id: sanitizeInput(extras.national_id) } : {}),
+        ...(extras?.vat_number ? { vat_number: sanitizeInput(extras.vat_number) } : {}),
+        ...(extras?.website ? { website: sanitizeInput(extras.website) } : {}),
       },
       terminal: 'none',
     });
