@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
 import { User, Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, UserPlus, Send } from 'lucide-react';
+import { Ticket, FileText, AtSign } from 'lucide-react';
 import { PhoneInput } from './PhoneInput';
 import { PasswordField } from './PasswordField';
 import { GoogleAuthButton } from './GoogleAuthButton';
@@ -52,6 +53,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const [businessName, setBusinessName] = useState('');
   const [username, setUsername] = useState('');
   const [usernameOk, setUsernameOk] = useState(false);
+  // Intent-specific fields
+  const [inviteToken, setInviteToken] = useState('');
+  const [targetEntityRef, setTargetEntityRef] = useState('');
+  const [accessReason, setAccessReason] = useState('');
 
   const passwordStrength = checkPasswordStrength(password);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
@@ -77,6 +82,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     setStep('details');
   };
 
+  // Persist intent-specific payload right before signup so /onboarding can pick it up.
+  const persistIntentPayload = () => {
+    try {
+      if (intent === 'join-invite' && inviteToken.trim()) {
+        localStorage.setItem('qitaat_pending_invite_token', inviteToken.trim());
+      }
+      if (intent === 'request-access') {
+        if (targetEntityRef.trim()) localStorage.setItem('qitaat_pending_access_target', targetEntityRef.trim());
+        if (accessReason.trim()) localStorage.setItem('qitaat_pending_access_reason', accessReason.trim());
+      }
+    } catch { /* non-blocking */ }
+  };
+
   const handleRegister = async () => {
     if (!fullName.trim()) { toast.error(isRTL ? 'يرجى إدخال الاسم الكامل' : 'Please enter your full name'); return; }
     if (!email || !validateEmailField(email)) { toast.error(isRTL ? 'البريد الإلكتروني غير صحيح' : 'Invalid email'); return; }
@@ -85,6 +103,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     if (password !== confirmPassword) { toast.error(isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match'); return; }
     if (registerType === 'business' && !usernameOk) { toast.error(isRTL ? 'اختر اسم مستخدم صحيحاً ومتاحاً' : 'Pick a valid, available username'); return; }
 
+    // Intent-specific validation
+    if (intent === 'join-invite' && !inviteToken.trim()) {
+      toast.error(isRTL ? 'يرجى إدخال رمز الدعوة' : 'Please enter your invitation token');
+      return;
+    }
+    if (intent === 'request-access' && !targetEntityRef.trim()) {
+      toast.error(isRTL ? 'يرجى إدخال معرّف المنشأة المطلوبة' : 'Please enter the target entity reference');
+      return;
+    }
+    persistIntentPayload();
     setLoading(true);
     track.signupStarted({ account_type: registerType, method: 'email' });
     try {
