@@ -18,6 +18,8 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { getProfileByUserId } from '@/modules/users';
 import { listUserRolesFor } from '@/modules/identity';
 import { listAdminBusinesses } from '@/modules/businesses';
+import { getBusinessDisplayReference } from '@/modules/businesses/services/getBusinessDisplayReference';
+import { LegacyReferenceHint } from '@/components/reference/LegacyReferenceHint';
 import { listContractsForUserParticipant } from '@/modules/contracts';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
