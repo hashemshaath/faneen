@@ -91,3 +91,7 @@ export type {
   BusinessStaffInsert,
   BusinessStaffUpdate,
 } from './types';
+
+// REGISTRATION-UX-FULL-COMPLETE-1 Part 2
+export { insertBusinessBranch } from './services/insertBusinessBranch';
+export type { InsertBusinessBranchOptions } from './services/insertBusinessBranch';
