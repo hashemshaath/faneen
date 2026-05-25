@@ -7,8 +7,6 @@ export const FooterBrand = () => {
 
   const contactItems = [
     { icon: Mail, text: "care@qitaat.com", href: "mailto:care@qitaat.com" },
-    { icon: Mail, text: "info@qitaat.com", href: "mailto:info@qitaat.com" },
-    { icon: Phone, text: "+966 56 922 0777", href: "tel:+966569220777" },
     { icon: MessageCircle, text: "+966 56 922 0777", href: "https://wa.me/966569220777" },
     { icon: MapPin, text: isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia' },
   ];
