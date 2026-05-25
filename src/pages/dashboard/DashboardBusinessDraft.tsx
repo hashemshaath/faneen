@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Building2, Save, ArrowRight, ShieldCheck } from 'lucide-react';
+import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
 
 interface DraftRow {
   id: string;
@@ -154,6 +155,20 @@ const DashboardBusinessDraft: React.FC = () => {
 
         {business && (
           <>
+            {/* CR document import — auto-fill legal fields from QR/PDF */}
+            <section className="mb-5">
+              <CrDocumentScanner
+                businessId={business.id}
+                defaults={{
+                  national_id: business.national_id,
+                  unified_number: business.unified_number,
+                  name_ar: business.name_ar,
+                  name_en: business.name_en,
+                }}
+                onSaved={() => { void refetch(); }}
+              />
+            </section>
+
             {/* Identity card — read-only ref_id auto-filled */}
             <section className="rounded-xl border border-border bg-card px-4 py-4 mb-5">
               <div className="flex items-center gap-3">
