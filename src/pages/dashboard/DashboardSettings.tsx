@@ -75,20 +75,31 @@ const DashboardSettings = () => {
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
     full_name: '',
+    username: '',
     phone: '',
     email: '',
     avatar_url: '',
+    preferred_language: 'ar' as 'ar' | 'en',
+    country_id: null as string | null,
+    city_id: null as string | null,
   });
+  const [usernameOk, setUsernameOk] = useState(true);
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
   // Sync profile form with latest profile data
   useEffect(() => {
     if (profile && !editingProfile) {
       setProfileForm({
         full_name: profile.full_name || '',
+        username: profile.username || '',
         phone: profile.phone || '',
         email: profile.email || '',
         avatar_url: profile.avatar_url || '',
+        preferred_language: ((profile.preferred_language as 'ar' | 'en') ?? 'ar'),
+        country_id: profile.country_id ?? null,
+        city_id: profile.city_id ?? null,
       });
+      setUsernameOk(true);
     }
   }, [profile, editingProfile]);
 
