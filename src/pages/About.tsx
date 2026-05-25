@@ -440,11 +440,18 @@ const ContactCTA = ({ isRTL }: { isRTL: boolean }) => {
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3">
-              <a href="mailto:info@qitaat.com" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all">
+              <a href="mailto:care@qitaat.com" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all">
                 <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center"><Mail className="w-5 h-5 text-accent" /></div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs text-primary-foreground/60 font-body">{isRTL ? 'البريد الإلكتروني' : 'Email'}</div>
-                  <div className="font-heading font-bold text-sm tech-content truncate">info@qitaat.com</div>
+                  <div className="text-xs text-primary-foreground/60 font-body">{isRTL ? 'دعم العملاء' : 'Customer Care'}</div>
+                  <div className="font-heading font-bold text-sm tech-content truncate">care@qitaat.com</div>
+                </div>
+              </a>
+              <a href="https://wa.me/966569220777" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all">
+                <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center"><Mail className="w-5 h-5 text-accent" /></div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs text-primary-foreground/60 font-body">{isRTL ? 'واتساب / جوال' : 'WhatsApp / Phone'}</div>
+                  <div className="font-heading font-bold text-sm tech-content truncate">+966 56 922 0777</div>
                 </div>
               </a>
               <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10">
@@ -530,10 +537,18 @@ const About = () => {
         : ['Aluminum', 'Glass', 'Steel', 'Wood', 'Cabinets', 'Cladding', 'Facades', 'Windows'],
       contactPoint: {
         '@type': 'ContactPoint',
-        email: 'info@qitaat.com',
+        email: 'care@qitaat.com',
+        telephone: '+966569220777',
         contactType: 'customer support',
         availableLanguage: ['Arabic', 'English'],
       },
+      sameAs: [
+        'https://x.com/qitaatcom',
+        'https://instagram.com/qitaatcom',
+        'https://facebook.com/qitaatcom',
+        'https://youtube.com/@qitaatcom',
+        'https://linkedin.com/company/qitaatcom',
+      ],
     };
 
     const faqPage = {
@@ -573,7 +588,7 @@ const About = () => {
           name: language === 'ar' ? 'كيف أتواصل مع قِطاعات؟' : 'How can I contact Qitaat?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: language === 'ar' ? 'يمكنك التواصل عبر البريد الإلكتروني info@qitaat.com أو من خلال صفحة التواصل في الموقع.' : 'You can contact us via email at info@qitaat.com or through the contact page.',
+            text: language === 'ar' ? 'يمكنك التواصل عبر البريد care@qitaat.com أو واتساب 0569220777 أو من خلال صفحة التواصل.' : 'Contact us at care@qitaat.com, WhatsApp +966569220777, or via the contact page.',
           },
         },
       ],

@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 // JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement:
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -126,8 +126,10 @@ const Contact = () => {
   };
 
   const contactInfo = [
-    { icon: Mail, label: isRTL ? 'البريد الإلكتروني' : 'Email', value: 'info@qitaat.com', href: 'mailto:info@qitaat.com' },
-    { icon: Phone, label: isRTL ? 'الهاتف' : 'Phone', value: '+966 50 000 0000', href: 'tel:+966500000000' },
+    { icon: Mail, label: isRTL ? 'البريد الإلكتروني (دعم العملاء)' : 'Email (Customer Care)', value: 'care@qitaat.com', href: 'mailto:care@qitaat.com' },
+    { icon: Mail, label: isRTL ? 'البريد الرسمي (مراسلات)' : 'Official Email', value: 'info@qitaat.com', href: 'mailto:info@qitaat.com' },
+    { icon: Phone, label: isRTL ? 'الهاتف' : 'Phone', value: '+966 56 922 0777', href: 'tel:+966569220777' },
+    { icon: MessageCircle, label: isRTL ? 'واتساب' : 'WhatsApp', value: '+966 56 922 0777', href: 'https://wa.me/966569220777' },
     { icon: MapPin, label: isRTL ? 'العنوان' : 'Address', value: isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia' },
   ];
 

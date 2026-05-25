@@ -66,6 +66,9 @@ city, phone, images, rating, reviews.
 
 ## Contact
 Website: https://qitaat.com
-Email: hello@qitaat.com
+Email: care@qitaat.com
+Official correspondence: info@qitaat.com
+Phone / WhatsApp: +966569220777
+Social: @qitaatcom on X, Instagram, Facebook, YouTube, LinkedIn, TikTok, Snapchat
 - Qitaat includes a provider membership and lead credits foundation. During launch, contact reveal can remain admin-approved and free, while the system is ready for future paid lead credits.
 - Qitaat provider lead credits include monthly grant automation, admin refunds, and append-only credit transaction history.
