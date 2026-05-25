@@ -574,6 +574,26 @@ const AdminUsers = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   useEffect(() => {
     const createParam = searchParams.get('create');
+    const typeParam = searchParams.get('type');
+    const roleParam = searchParams.get('role');
+    let mutated = false;
+    const next = new URLSearchParams(searchParams);
+
+    if (typeParam) {
+      if (['individual', 'business', 'company', 'all'].includes(typeParam)) {
+        setFilterAccountType(typeParam);
+      }
+      next.delete('type');
+      mutated = true;
+    }
+    if (roleParam) {
+      if (['super_admin', 'admin', 'moderator', 'user', 'no_role', 'all'].includes(roleParam)) {
+        setFilterRole(roleParam);
+      }
+      next.delete('role');
+      mutated = true;
+    }
+
     if (createParam && isSuperAdmin) {
       const preset = createParam === 'provider' ? 'business' : createParam;
       const allowed = ['individual', 'business', 'company'];
@@ -581,12 +601,15 @@ const AdminUsers = () => {
         setCreateForm(p => ({ ...p, account_type: preset }));
         setActivePanel({ type: 'create' });
       }
-      const next = new URLSearchParams(searchParams);
       next.delete('create');
+      mutated = true;
+    }
+
+    if (mutated) {
       setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuperAdmin]);
+  }, [isSuperAdmin, searchParams]);
 
   const closePanel = () => {
     setActivePanel(null); setNewPassword(''); setShowNewPassword(false);
