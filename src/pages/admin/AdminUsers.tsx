@@ -561,6 +561,16 @@ const AdminUsers = () => {
   useEffect(() => { localStorage.setItem('qitaat_admin_users_density', density); }, [density]);
 
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  // Open create panel and ensure it is visible: switch to a tab that renders panels,
+  // then scroll the panel into view.
+  const openCreatePanel = (preset?: 'individual' | 'business' | 'company') => {
+    if (preset) setCreateForm(p => ({ ...p, account_type: preset }));
+    if (tab !== 'users' && tab !== 'staff' && tab !== 'disabled') setTab('users');
+    setActivePanel({ type: 'create' });
+    setTimeout(() => panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  };
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -598,8 +608,7 @@ const AdminUsers = () => {
       const preset = createParam === 'provider' ? 'business' : createParam;
       const allowed = ['individual', 'business', 'company'];
       if (allowed.includes(preset)) {
-        setCreateForm(p => ({ ...p, account_type: preset }));
-        setActivePanel({ type: 'create' });
+        openCreatePanel(preset as 'individual' | 'business' | 'company');
       }
       next.delete('create');
       mutated = true;
@@ -1069,7 +1078,7 @@ const AdminUsers = () => {
               <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
             </Button>
             {isAdmin && (
-              <Button size="sm" className="gap-2 rounded-xl h-9" onClick={() => setActivePanel({ type: 'create' })}>
+              <Button size="sm" className="gap-2 rounded-xl h-9" onClick={() => openCreatePanel()}>
                 <UserPlus className="w-4 h-4" />
                 <span className="hidden sm:inline">{isRTL ? 'إنشاء مستخدم' : 'New User'}</span>
               </Button>
@@ -1314,7 +1323,7 @@ const AdminUsers = () => {
 
               {/* Inline panels */}
               {activePanel?.type === 'create' && (
-                <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
+                <div ref={panelRef} className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 scroll-mt-24">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-heading font-bold text-lg flex items-center gap-2">
                       <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center"><UserPlus className="w-4 h-4 text-accent" /></div>
