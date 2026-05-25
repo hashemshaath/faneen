@@ -628,7 +628,7 @@ const AdminUsers = () => {
 
   const createUserMutation = useMutation({
     mutationFn: async (payload: typeof createForm) => {
-      const { data, error } = await supabase.functions.invoke('admin-create-user', { body: payload });
+      const { data, error } = await adminCreateUser(payload);
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
