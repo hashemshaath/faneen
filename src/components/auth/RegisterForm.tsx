@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
 import { User, Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, UserPlus, Send } from 'lucide-react';
+import { Ticket, FileText, AtSign } from 'lucide-react';
 import { PhoneInput } from './PhoneInput';
 import { PasswordField } from './PasswordField';
 import { GoogleAuthButton } from './GoogleAuthButton';
@@ -52,6 +53,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const [businessName, setBusinessName] = useState('');
   const [username, setUsername] = useState('');
   const [usernameOk, setUsernameOk] = useState(false);
+  // Intent-specific fields
+  const [inviteToken, setInviteToken] = useState('');
+  const [targetEntityRef, setTargetEntityRef] = useState('');
+  const [accessReason, setAccessReason] = useState('');
 
   const passwordStrength = checkPasswordStrength(password);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
@@ -77,6 +82,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     setStep('details');
   };
 
+  // Persist intent-specific payload right before signup so /onboarding can pick it up.
+  const persistIntentPayload = () => {
+    try {
+      if (intent === 'join-invite' && inviteToken.trim()) {
+        localStorage.setItem('qitaat_pending_invite_token', inviteToken.trim());
+      }
+      if (intent === 'request-access') {
+        if (targetEntityRef.trim()) localStorage.setItem('qitaat_pending_access_target', targetEntityRef.trim());
+        if (accessReason.trim()) localStorage.setItem('qitaat_pending_access_reason', accessReason.trim());
+      }
+    } catch { /* non-blocking */ }
+  };
+
   const handleRegister = async () => {
     if (!fullName.trim()) { toast.error(isRTL ? 'يرجى إدخال الاسم الكامل' : 'Please enter your full name'); return; }
     if (!email || !validateEmailField(email)) { toast.error(isRTL ? 'البريد الإلكتروني غير صحيح' : 'Invalid email'); return; }
@@ -85,6 +103,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     if (password !== confirmPassword) { toast.error(isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match'); return; }
     if (registerType === 'business' && !usernameOk) { toast.error(isRTL ? 'اختر اسم مستخدم صحيحاً ومتاحاً' : 'Pick a valid, available username'); return; }
 
+    // Intent-specific validation
+    if (intent === 'join-invite' && !inviteToken.trim()) {
+      toast.error(isRTL ? 'يرجى إدخال رمز الدعوة' : 'Please enter your invitation token');
+      return;
+    }
+    if (intent === 'request-access' && !targetEntityRef.trim()) {
+      toast.error(isRTL ? 'يرجى إدخال معرّف المنشأة المطلوبة' : 'Please enter the target entity reference');
+      return;
+    }
+    persistIntentPayload();
     setLoading(true);
     track.signupStarted({ account_type: registerType, method: 'email' });
     try {
@@ -246,7 +274,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
 
   // ─── Step: Details ───
   if (step === 'details') {
-    const isFormValid = email && fullName.trim() && passwordStrength.score >= 2 && password === confirmPassword && !errors.email && !errors.phone && !emailExists;
+    const intentValid =
+      (intent !== 'join-invite' || inviteToken.trim().length > 0) &&
+      (intent !== 'request-access' || targetEntityRef.trim().length > 0);
+    const isFormValid = !!email && fullName.trim().length > 0 && passwordStrength.score >= 2 && password === confirmPassword && !errors.email && !errors.phone && !emailExists && intentValid;
     const intentLabel: Record<RegisterIntent, { ar: string; en: string }> = {
       'individual': { ar: 'متابعة كفرد', en: 'Continue as individual' },
       'create-entity': { ar: 'إنشاء منشأة', en: 'Create entity' },
@@ -277,6 +308,59 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             </span>
           </div>
         </div>
+
+        {/* Intent-specific fields shown BEFORE common details so each path looks distinct */}
+        {activeIntent === 'join-invite' && (
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-2">
+            <Label className="text-xs font-semibold flex items-center gap-1.5">
+              <Ticket className="w-3.5 h-3.5 text-primary" />
+              {isRTL ? 'رمز الدعوة' : 'Invitation token'} <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              value={inviteToken}
+              onChange={(e) => setInviteToken(e.target.value)}
+              placeholder={isRTL ? 'الصق الرمز الذي وصلك' : 'Paste the token you received'}
+              dir="ltr"
+              className="h-12 rounded-xl bg-card tech-content"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              {isRTL ? 'سنربط حسابك بالمنشأة تلقائياً بعد التحقق من البريد.' : 'We will link your account to the entity after email verification.'}
+            </p>
+          </div>
+        )}
+        {activeIntent === 'request-access' && (
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold flex items-center gap-1.5">
+                <AtSign className="w-3.5 h-3.5 text-primary" />
+                {isRTL ? 'معرّف أو اسم مستخدم المنشأة' : 'Entity username or reference'} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                value={targetEntityRef}
+                onChange={(e) => setTargetEntityRef(e.target.value)}
+                placeholder={isRTL ? 'مثل: my-business أو USR-1000001' : 'e.g. my-business or USR-1000001'}
+                dir="ltr"
+                className="h-12 rounded-xl bg-card tech-content"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-primary" />
+                {isRTL ? 'سبب الطلب (اختياري)' : 'Reason (optional)'}
+              </Label>
+              <Input
+                value={accessReason}
+                onChange={(e) => setAccessReason(e.target.value)}
+                placeholder={isRTL ? 'مثل: موظف مبيعات' : 'e.g. sales staff'}
+                className="h-12 rounded-xl bg-card"
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {isRTL ? 'سيراجع مالك المنشأة طلبك بعد إنشاء الحساب.' : 'The entity owner will review your request after signup.'}
+            </p>
+          </div>
+        )}
+
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-xs font-semibold">{t('auth.fullname')} <span className="text-destructive">*</span></Label>
