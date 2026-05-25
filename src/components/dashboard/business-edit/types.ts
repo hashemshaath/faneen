@@ -52,6 +52,14 @@ export interface BusinessRow {
   unified_number: string | null;
   vat_number: string | null;
 
+  // CR document & scan metadata (from admin CR scanner)
+  cr_document_url?: string | null;
+  cr_document_uploaded_at?: string | null;
+  cr_owner_name?: string | null;
+  cr_legal_entity?: string | null;
+  cr_issue_date?: string | null;
+  cr_expiry_date?: string | null;
+
   // Account manager (primary point of contact)
   account_manager_name: string | null;
   account_manager_phone: string | null;
