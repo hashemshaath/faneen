@@ -47,6 +47,7 @@ interface InvoiceIntent {
       name_ar?: string | null;
       name_en?: string | null;
       ref_id?: string | null;
+      legacy_ref_id?: string | null;
     } | null;
   } | null;
 }
