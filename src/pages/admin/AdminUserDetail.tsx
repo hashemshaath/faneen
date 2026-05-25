@@ -18,6 +18,8 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { getProfileByUserId } from '@/modules/users';
 import { listUserRolesFor } from '@/modules/identity';
 import { listAdminBusinesses } from '@/modules/businesses';
+import { getBusinessDisplayReference } from '@/modules/businesses/services/getBusinessDisplayReference';
+import { LegacyReferenceHint } from '@/components/reference/LegacyReferenceHint';
 import { listContractsForUserParticipant } from '@/modules/contracts';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
@@ -38,7 +40,7 @@ const accountTypeLbl: Record<string, { ar: string; en: string }> = {
 };
 
 interface BizRow {
-  id: string; ref_id: string | null; name_ar: string | null; name_en: string | null;
+  id: string; ref_id: string | null; legacy_ref_id: string | null; name_ar: string | null; name_en: string | null;
   username: string | null; is_verified: boolean | null; is_active: boolean | null;
   membership_tier: string | null; approval_status: string | null;
 }
@@ -72,7 +74,7 @@ const AdminUserDetail: React.FC = () => {
     enabled: !!userId,
     queryFn: async () => {
       const { data, error } = await listAdminBusinesses<BizRow>({
-        select: 'id, ref_id, name_ar, name_en, username, is_verified, is_active, membership_tier, approval_status',
+        select: 'id, ref_id, legacy_ref_id, name_ar, name_en, username, is_verified, is_active, membership_tier, approval_status',
         filters: [{ column: 'user_id', op: 'eq', value: userId! }],
       });
       if (error) throw error;
@@ -225,12 +227,17 @@ const AdminUserDetail: React.FC = () => {
               <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد منشآت' : 'No linked businesses.'}</p>
             ) : (
               <div className="space-y-2">
-                {businesses.map((b) => (
+                {businesses.map((b) => {
+                  const ref = getBusinessDisplayReference(b);
+                  return (
                   <div key={b.id} className="flex items-center gap-3 rounded-xl border border-border/30 p-3 hover-lift">
                     <Building2 className="w-4 h-4 text-success shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold truncate">{isRTL ? b.name_ar : (b.name_en || b.name_ar)}</p>
-                      <p className="text-[11px] text-muted-foreground tech-content">{b.ref_id} • {b.username} • {b.membership_tier} • {b.approval_status}</p>
+                      <p className="text-[11px] text-muted-foreground tech-content">{ref.primary ?? '—'} • {b.username} • {b.membership_tier} • {b.approval_status}</p>
+                      {ref.secondary && (
+                        <LegacyReferenceHint legacyRefId={ref.secondary} isRTL={isRTL} className="block mt-0.5" />
+                      )}
                     </div>
                     {b.is_verified && <Badge variant="outline" className="text-[10px] border-success/40 text-success">✓ {isRTL ? 'موثّق' : 'Verified'}</Badge>}
                     {b.username && (
@@ -239,7 +246,8 @@ const AdminUserDetail: React.FC = () => {
                       </Button>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
