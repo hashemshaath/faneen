@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   Building2, Save, Phone, Mail, Globe, MapPin, ShieldCheck, Layers,
-  FileText, Loader2, ExternalLink,
+  FileText, Image as ImageIcon, Loader2, ExternalLink, AlertTriangle,
   User, Hash, UserCog,
 } from 'lucide-react';
 
