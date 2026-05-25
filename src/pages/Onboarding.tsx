@@ -32,6 +32,8 @@ import {
   findPossibleDuplicateEntities,
   type PossibleDuplicateEntity,
 } from '@/modules/entities/services/access';
+import { insertBusinessBranch } from '@/modules/businesses';
+import { EntityVerificationStatusBadge } from '@/components/entities/EntityVerificationStatusBadge';
 
 type OnboardingStep =
   | 'intent'
@@ -42,6 +44,8 @@ type OnboardingStep =
   | 'entity-type'
   | 'entity-capabilities'
   | 'business-sectors'
+  | 'main-location'
+  | 'staff-invite'
   | 'summary';
 
 const STEP_ORDER: OnboardingStep[] = [
@@ -53,7 +57,37 @@ const STEP_ORDER: OnboardingStep[] = [
   'entity-type',
   'entity-capabilities',
   'business-sectors',
+  'main-location',
+  'staff-invite',
   'summary',
+];
+
+/**
+ * REGISTRATION-UX-FULL-COMPLETE-1 Part 3
+ * Allowed location types for the onboarding main-location step.
+ * Government / state-entity wording is intentionally excluded.
+ */
+type LocationType =
+  | 'headquarters'
+  | 'branch'
+  | 'office'
+  | 'factory'
+  | 'warehouse'
+  | 'project_site'
+  | 'service_site'
+  | 'client_site'
+  | 'other';
+
+const LOCATION_TYPES: { id: LocationType; ar: string; en: string }[] = [
+  { id: 'headquarters', ar: 'المقر الرئيسي', en: 'Headquarters' },
+  { id: 'branch', ar: 'فرع', en: 'Branch' },
+  { id: 'office', ar: 'مكتب', en: 'Office' },
+  { id: 'factory', ar: 'مصنع', en: 'Factory' },
+  { id: 'warehouse', ar: 'مستودع', en: 'Warehouse' },
+  { id: 'project_site', ar: 'موقع مشروع', en: 'Project site' },
+  { id: 'service_site', ar: 'موقع خدمة', en: 'Service site' },
+  { id: 'client_site', ar: 'موقع عميل', en: 'Client site' },
+  { id: 'other', ar: 'أخرى', en: 'Other' },
 ];
 
 /**
