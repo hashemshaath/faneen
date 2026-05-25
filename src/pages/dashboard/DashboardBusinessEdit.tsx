@@ -672,28 +672,7 @@ const DashboardBusinessEdit: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="legal" className="space-y-6 mt-4">
-            {/* Legal */}
-            <Card>
-          <CardHeader>
-            <CardTitle className={sectionTitle}><ShieldCheck className="w-4 h-4 text-primary" />{t(isRTL, 'البيانات النظامية والضريبية', 'Legal & tax identifiers')}</CardTitle>
-            <CardDescription>{t(isRTL, 'السجل التجاري والرقم الموحّد ورقم ضريبة القيمة المضافة لتفعيل التوثيق وإصدار الفواتير.', 'CR, unified national number, and VAT number to enable verification and invoicing.')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div><Label className={fieldLabel}>{t(isRTL, 'رقم السجل التجاري', 'Commercial Registration (CR)')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.national_id ?? ''} onChange={(e) => update('national_id', e.target.value)} placeholder="1010xxxxxx" maxLength={10} />
-                <FieldError issue={issueMap.national_id} isRTL={isRTL} /></div>
-              <div><Label className={fieldLabel}>{t(isRTL, 'الرقم الموحّد للمنشأة', 'Unified national number')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.unified_number ?? ''} onChange={(e) => update('unified_number', e.target.value)} placeholder="7000xxxxxx" maxLength={10} />
-                <FieldError issue={issueMap.unified_number} isRTL={isRTL} /></div>
-              <div><Label className={fieldLabel}><Receipt className="w-3 h-3 inline me-1" />{t(isRTL, 'الرقم الضريبي (VAT)', 'VAT number')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.vat_number ?? ''} onChange={(e) => update('vat_number', e.target.value)} placeholder="3xxxxxxxxxxxxx3" maxLength={15} />
-                <FieldError issue={issueMap.vat_number} isRTL={isRTL} /></div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Commercial Registration QR scanner */}
+            {/* Commercial Registration QR scanner — single source of truth for CR/Unified/VAT */}
         <Card>
           <CardHeader>
             <CardTitle className={sectionTitle}>
