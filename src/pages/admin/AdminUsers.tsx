@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useTransition, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -95,7 +96,8 @@ type ActivePanel =
   | null
   | { type: 'edit'; profile: Profile }
   | { type: 'password'; userId: string; userName: string }
-  | { type: 'delete'; userId: string; userName: string };
+  | { type: 'delete'; userId: string; userName: string }
+  | { type: 'create' };
 
 type SortKey = 'created_at' | 'full_name' | 'membership_tier' | 'account_type';
 type Density = 'comfortable' | 'compact';
@@ -454,6 +456,13 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
                 {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </Button>
             </TooltipTrigger><TooltipContent>{isRTL ? 'التفاصيل' : 'Details'}</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-xl">
+                <Link to={`/admin/users/${profile.user_id}`} aria-label={isRTL ? 'فتح صفحة المستخدم' : 'Open user page'}>
+                  <Eye className="w-4 h-4" />
+                </Link>
+              </Button>
+            </TooltipTrigger><TooltipContent>{isRTL ? 'صفحة كاملة' : 'Full page'}</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onEdit(profile)}>
                 <Pencil className="w-4 h-4" />
@@ -994,6 +1003,12 @@ const AdminUsers = () => {
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
             </Button>
+            {isSuperAdmin && (
+              <Button size="sm" className="gap-2 rounded-xl h-9" onClick={() => setActivePanel({ type: 'create' })}>
+                <UserPlus className="w-4 h-4" />
+                <span className="hidden sm:inline">{isRTL ? 'إنشاء مستخدم' : 'New User'}</span>
+              </Button>
+            )}
           </div>
         </div>
 
