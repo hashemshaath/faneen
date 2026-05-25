@@ -1,30 +1,50 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleRedirect } from '@/hooks/useRoleRedirect';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { IdentitySignInForm } from '@/components/auth/IdentitySignInForm';
-import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import { RegistrationSuccessView } from '@/components/auth/RegistrationSuccessView';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { AuthMode } from '@/services/auth/types';
 
+/**
+ * Unified auth view. The IdentitySignInForm is the single sign-in entry point.
+ * Legacy `?mode=login` / `?mode=signin` links are normalized to the identity
+ * flow so the old password-only LoginForm is never rendered.
+ */
+type ViewMode = 'identity' | 'register' | 'forgot-password' | 'email-sent';
+
+const normalizeMode = (raw: string | null): ViewMode => {
+  switch (raw) {
+    case 'register':
+    case 'signup':
+      return 'register';
+    case 'forgot-password':
+    case 'forgot':
+    case 'reset':
+      return 'forgot-password';
+    case 'identity':
+    case 'login':
+    case 'signin':
+    case 'sign-in':
+    case null:
+    case undefined:
+    default:
+      return 'identity';
+  }
+};
+
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const { user, loading } = useAuth();
   const { redirectByRole } = useRoleRedirect();
 
-  // 'identity' = new unified entry (default). 'login' / 'register' kept as
-  // advanced fallbacks for password-based flows and business multi-step signup.
-  const initialMode = (searchParams.get('mode') as AuthMode | 'identity') || 'identity';
-  const [mode, setMode] = useState<AuthMode | 'identity'>(
-    (['identity', 'login', 'register', 'forgot-password'] as const).includes(initialMode as never)
-      ? (initialMode as AuthMode | 'identity')
-      : 'identity',
-  );
+  const initialMode = useMemo(() => normalizeMode(searchParams.get('mode')), [searchParams]);
+  const [mode, setMode] = useState<ViewMode>(initialMode);
   const [sentEmail, setSentEmail] = useState('');
   const redirectedRef = useRef(false);
 
@@ -62,30 +82,24 @@ const Auth = () => {
   return (
     <ErrorBoundary>
       <AuthLayout>
-      {mode === 'identity' && (
-        <IdentitySignInForm
-          onForgotPassword={() => setMode('forgot-password')}
-          onAdvancedRegister={() => setMode('register')}
-        />
-      )}
-      {mode === 'login' && (
-        <LoginForm
-          onSwitchToRegister={() => setMode('register')}
-          onForgotPassword={() => setMode('forgot-password')}
-        />
-      )}
-      {mode === 'register' && (
-        <RegisterForm
-          onSwitchToLogin={() => setMode('identity')}
-          onEmailSent={handleEmailSent}
-        />
-      )}
-      {mode === 'forgot-password' && (
-        <ForgotPasswordForm onBack={() => setMode('identity')} />
-      )}
-      {mode === 'email-sent' && (
-        <RegistrationSuccessView email={sentEmail} onBackToLogin={() => setMode('identity')} />
-      )}
+        {mode === 'identity' && (
+          <IdentitySignInForm
+            onForgotPassword={() => setMode('forgot-password')}
+            onAdvancedRegister={() => setMode('register')}
+          />
+        )}
+        {mode === 'register' && (
+          <RegisterForm
+            onSwitchToLogin={() => setMode('identity')}
+            onEmailSent={handleEmailSent}
+          />
+        )}
+        {mode === 'forgot-password' && (
+          <ForgotPasswordForm onBack={() => setMode('identity')} />
+        )}
+        {mode === 'email-sent' && (
+          <RegistrationSuccessView email={sentEmail} onBackToLogin={() => setMode('identity')} />
+        )}
       </AuthLayout>
     </ErrorBoundary>
   );
