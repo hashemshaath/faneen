@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { CrQuickScanInline } from '@/components/admin/CrQuickScanInline';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -1297,6 +1298,17 @@ const AdminUsers = () => {
                       {isRTL ? 'إنشاء مستخدم جديد' : 'Create New User'}
                     </h3>
                     <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
+                  </div>
+                  <div className="mb-4">
+                    <CrQuickScanInline
+                      onParsed={(scan) => {
+                        setCreateForm((p) => ({
+                          ...p,
+                          full_name: p.full_name || scan.owner_name || scan.business_name_ar || scan.business_name_en || '',
+                          account_type: scan.cr_number ? 'business' : p.account_type,
+                        }));
+                      }}
+                    />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاسم الكامل *' : 'Full name *'}</Label>
