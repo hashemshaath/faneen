@@ -20,7 +20,8 @@ import {
   Settings2, Shield, Eye, EyeOff, Mail, Phone, Globe, Camera,
   Smartphone, Volume2, VolumeX, BellRing, BellOff, Hash,
   Fingerprint, KeyRound, AlertTriangle, CheckCircle, Info,
-  LogOut, Trash2, Download, Upload,
+  LogOut, Trash2, Download, Upload, AtSign, MapPin, Languages, Copy,
+  Sparkles, ExternalLink, Loader2,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BnplProvidersManager } from '@/components/bnpl/BnplProvidersManager';
@@ -35,6 +36,11 @@ import { ar as arLocale, enUS } from 'date-fns/locale';
 import { useSearchParams } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { useDisplayRefId } from '@/hooks/useDisplayRefId';
+import { UsernamePicker } from '@/components/common/UsernamePicker';
+import { supabase } from '@/integrations/supabase/client';
+
+type RefRow = { id: string; name_ar: string; name_en: string };
+type CityRow = RefRow & { country_id: string };
 
 type SettingsTab = 'appearance' | 'account' | 'security' | 'notifications' | 'bnpl';
 
