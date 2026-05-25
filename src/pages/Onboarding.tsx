@@ -418,24 +418,88 @@ const Onboarding = () => {
             </p>
           </div>
 
-          {/* Request access — P1 placeholder, backend deferred */}
-          <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 p-3 space-y-2">
+          {/* Request access — REGISTRATION-UX-FULL-COMPLETE-1, functional MVP */}
+          <div className="rounded-xl border border-border/60 bg-muted/10 p-3 space-y-2" data-feature="request-access">
             <Label className="text-xs">
               {isRTL ? 'طلب الانضمام لمنشأة قائمة' : 'Request access to an existing entity'}
             </Label>
-            <Input
-              value={requestAccessQuery}
-              onChange={(e) => setRequestAccessQuery(e.target.value)}
-              placeholder={isRTL ? 'اسم المنشأة أو معرّفها ENT-…' : 'Entity name or ENT-… reference'}
-              dir="auto"
-              disabled
-              aria-label={isRTL ? 'طلب الانضمام' : 'Request access'}
-            />
-            <p className="text-[11px] text-muted-foreground" data-deferred="request-access">
-              {isRTL
-                ? 'هذه الميزة قيد التطوير — استخدم رمز الدعوة من مالك المنشأة حالياً.'
-                : 'This feature is in development — use an invitation token from the entity owner for now.'}
-            </p>
+            {requestAccessSubmittedRef ? (
+              <div className="rounded-md bg-success/10 border border-success/30 p-2 text-xs text-success-foreground">
+                {isRTL
+                  ? `تم إرسال طلبك (${requestAccessSubmittedRef}). سيتم إشعارك عند مراجعته.`
+                  : `Your request was sent (${requestAccessSubmittedRef}). You will be notified when it is reviewed.`}
+              </div>
+            ) : (
+              <>
+                <Input
+                  value={requestAccessQuery}
+                  onChange={(e) => setRequestAccessQuery(e.target.value)}
+                  placeholder={isRTL ? 'اسم المنشأة أو معرّفها ENT- / BIZ-' : 'Entity name or ENT- / BIZ- reference'}
+                  dir="auto"
+                  aria-label={isRTL ? 'طلب الانضمام' : 'Request access'}
+                />
+                <Textarea
+                  value={requestAccessMessage}
+                  onChange={(e) => setRequestAccessMessage(e.target.value.slice(0, 500))}
+                  placeholder={isRTL ? 'رسالة قصيرة لمالك المنشأة (اختياري)' : 'Short message to the entity owner (optional)'}
+                  rows={2}
+                  dir="auto"
+                />
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] text-muted-foreground">
+                    {isRTL
+                      ? 'سيُرسل الطلب للمراجعة. لن يتم منح صلاحيات تلقائياً.'
+                      : 'Your request will be reviewed. Access is not granted automatically.'}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!user || requestAccessQuery.trim().length < 2 || requestAccessSubmitting}
+                    onClick={async () => {
+                      if (!user) return;
+                      setRequestAccessSubmitting(true);
+                      try {
+                        const q = requestAccessQuery.trim();
+                        const looksLikeRef = /^(ENT|BIZ)-/i.test(q);
+                        let targetBusinessId: string | null = null;
+                        if (looksLikeRef) {
+                          const { data } = await supabase
+                            .from('businesses')
+                            .select('id')
+                            .or(`ref_id.eq.${q.toUpperCase()},legacy_ref_id.eq.${q.toUpperCase()}`)
+                            .limit(1)
+                            .maybeSingle();
+                          targetBusinessId = (data as { id?: string } | null)?.id ?? null;
+                        }
+                        const { data, error } = await createEntityAccessRequest({
+                          requesterUserId: user.id,
+                          targetBusinessId,
+                          targetRef: targetBusinessId ? null : q,
+                          message: requestAccessMessage.trim() || null,
+                        });
+                        if (error) throw error;
+                        if (data?.ref_id) {
+                          setRequestAccessSubmittedRef(data.ref_id);
+                          toast.success(isRTL ? 'تم إرسال طلب الانضمام' : 'Access request sent');
+                        }
+                      } catch (err) {
+                        toast.error(
+                          err instanceof Error && err.message
+                            ? err.message
+                            : isRTL ? 'تعذّر إرسال الطلب' : 'Could not send the request',
+                        );
+                      } finally {
+                        setRequestAccessSubmitting(false);
+                      }
+                    }}
+                  >
+                    {requestAccessSubmitting
+                      ? <Loader2 className="w-3 h-3 animate-spin" />
+                      : (isRTL ? 'إرسال الطلب' : 'Send request')}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </AuthLayout>
