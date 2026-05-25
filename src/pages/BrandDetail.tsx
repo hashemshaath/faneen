@@ -97,12 +97,12 @@ const BrandDetail: React.FC = () => {
             <section className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background">
               {brand.cover_url && (
                 <div className="absolute inset-0 opacity-20">
-                  <img src={brand.cover_url} alt="" className="w-full h-full object-cover" />
+                  <img src={brand.cover_url} alt={isRTL ? brand.name_ar : (brand.name_en || brand.name_ar)} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="relative p-6 md:p-8 flex flex-wrap gap-5 items-start">
                 {brand.logo_url ? (
-                  <img src={brand.logo_url} alt="" className="h-20 w-20 rounded-2xl border bg-background object-cover" />
+                  <img src={brand.logo_url} alt={isRTL ? brand.name_ar : (brand.name_en || brand.name_ar)} className="h-20 w-20 rounded-2xl border bg-background object-cover" />
                 ) : (
                   <div className="h-20 w-20 rounded-2xl bg-primary/15 grid place-items-center text-primary"><Layers className="h-8 w-8" /></div>
                 )}

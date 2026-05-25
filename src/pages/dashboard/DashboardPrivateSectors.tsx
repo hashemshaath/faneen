@@ -419,7 +419,7 @@ const DashboardPrivateSectors: React.FC = () => {
                 <Card key={s.id} className="hover-lift">
                   <CardContent className="p-4 flex flex-wrap items-start gap-4">
                     {s.logo_url ? (
-                      <img src={s.logo_url} alt="" className="h-12 w-12 rounded-lg object-cover border" loading="lazy" />
+                      <img src={s.logo_url} alt={isRTL ? s.name_ar : (s.name_en || s.name_ar)} className="h-12 w-12 rounded-lg object-cover border" loading="lazy" />
                     ) : (
                       <div className="h-12 w-12 rounded-lg bg-muted grid place-items-center"><Building2 className="h-5 w-5 text-muted-foreground" /></div>
                     )}

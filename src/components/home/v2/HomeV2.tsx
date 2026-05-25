@@ -924,7 +924,7 @@ export const HeroV2 = () => {
                         : 'border-white/30 opacity-60 hover:opacity-100 hover:border-white/60'
                     }`}
                   >
-                    <img src={s.img} alt={(isRTL ? s.title_ar : s.title_en) || ''} className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
+                    <img src={s.img} alt={(isRTL ? s.titleAr : s.titleEn) || ''} className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
                     {isActive && <div className="absolute inset-0 ring-2 ring-secondary/70 rounded-md pointer-events-none" />}
                   </button>
                   );
