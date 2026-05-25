@@ -440,11 +440,18 @@ const ContactCTA = ({ isRTL }: { isRTL: boolean }) => {
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3">
-              <a href="mailto:info@qitaat.com" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all">
+              <a href="mailto:care@qitaat.com" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all">
                 <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center"><Mail className="w-5 h-5 text-accent" /></div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs text-primary-foreground/60 font-body">{isRTL ? 'البريد الإلكتروني' : 'Email'}</div>
-                  <div className="font-heading font-bold text-sm tech-content truncate">info@qitaat.com</div>
+                  <div className="text-xs text-primary-foreground/60 font-body">{isRTL ? 'دعم العملاء' : 'Customer Care'}</div>
+                  <div className="font-heading font-bold text-sm tech-content truncate">care@qitaat.com</div>
+                </div>
+              </a>
+              <a href="https://wa.me/966569220777" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all">
+                <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center"><Mail className="w-5 h-5 text-accent" /></div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs text-primary-foreground/60 font-body">{isRTL ? 'واتساب / جوال' : 'WhatsApp / Phone'}</div>
+                  <div className="font-heading font-bold text-sm tech-content truncate">+966 56 922 0777</div>
                 </div>
               </a>
               <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10">
