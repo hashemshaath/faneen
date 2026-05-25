@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
-import { User, Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
+import { User, Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, UserPlus, Send } from 'lucide-react';
 import { PhoneInput } from './PhoneInput';
 import { PasswordField } from './PasswordField';
 import { GoogleAuthButton } from './GoogleAuthButton';
@@ -23,11 +23,21 @@ interface RegisterFormProps {
   onEmailSent: (email: string) => void;
 }
 
+/**
+ * REGISTRATION-UX-VISIBLE-FIX — intent picker surfaced directly on the
+ * register screen, mirroring the new Onboarding flow (Model D Hybrid
+ * User-First). Four intents: individual / create-entity / join-invite /
+ * request-access. The latter two persist a pending intent in localStorage
+ * so the post-signup /onboarding flow can resume on the correct step.
+ */
+type RegisterIntent = 'individual' | 'create-entity' | 'join-invite' | 'request-access';
+
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onEmailSent }) => {
   const { t, isRTL } = useLanguage();
 
   const [registerType, setRegisterType] = useState<RegisterType>('individual');
   const [step, setStep] = useState<RegisterStep>('type');
+  const [intent, setIntent] = useState<RegisterIntent | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -51,6 +61,20 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     if (!email) return;
     const valid = validateEmailField(email);
     if (valid) setEmailExists(false);
+  };
+
+  const pickIntent = (id: RegisterIntent) => {
+    setIntent(id);
+    // Persist pending intent so /onboarding resumes on the correct step.
+    try {
+      if (id === 'individual' || id === 'create-entity') {
+        localStorage.removeItem('qitaat_pending_intent');
+      } else {
+        localStorage.setItem('qitaat_pending_intent', id);
+      }
+    } catch { /* storage unavailable — non-blocking */ }
+    setRegisterType(id === 'create-entity' ? 'business' : 'individual');
+    setStep('details');
   };
 
   const handleRegister = async () => {
@@ -100,41 +124,111 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     try { await authService.signInWithGoogle(); } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Google sign-in failed'); } finally { setGoogleLoading(false); }
   };
 
-  // ─── Step: Account Type ───
+  // ─── Step: Intent (NEW design — Compact Card Stack) ───
   if (step === 'type') {
+    const totalSteps = 2;
     return (
-      <div className="space-y-7">
-        <div className="space-y-2">
-          <h2 className="font-heading font-bold text-3xl text-foreground tracking-tight">{t('auth.register')}</h2>
-          <p className="text-sm text-muted-foreground/80">
-            {isRTL ? 'اختر نوع الحساب المناسب لك' : 'Choose the right account type'}
+      <div className="space-y-6" data-feature="register-intent">
+        {/* Progress header */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-heading font-bold text-2xl text-foreground tracking-tight">
+              {isRTL ? 'إنشاء حساب جديد' : 'Create a new account'}
+            </h2>
+            <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">
+              {isRTL ? `خطوة 1 من ${totalSteps}` : `Step 1 of ${totalSteps}`}
+            </span>
+          </div>
+          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+            <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: '50%' }} />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {isRTL ? 'ما هو غرضك الأساسي من الانضمام لقطاعات؟' : 'What brings you to Qitaat?'}
           </p>
         </div>
+
+        {/* Intent grid: 2 full-width primary + 2 half compact */}
         <div className="grid grid-cols-1 gap-3">
+          {/* Individual */}
           <button
-            onClick={() => { setRegisterType('individual'); setStep('details'); }}
-            className="flex items-center gap-4 p-5 rounded-2xl border-2 border-border/60 hover:border-accent/50 bg-card hover:bg-accent/5 transition-all text-start group"
+            type="button"
+            data-intent="individual"
+            onClick={() => pickIntent('individual')}
+            className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all duration-300 text-start active:scale-[0.98] hover-lift"
           >
-            <div className="w-13 h-13 rounded-xl bg-muted/60 flex items-center justify-center group-hover:bg-accent/10 transition-colors shrink-0">
-              <User className="w-6 h-6 text-muted-foreground group-hover:text-accent transition-colors" />
+            <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center shrink-0 transition-colors group-hover:bg-primary/10">
+              <User className="w-6 h-6 text-muted-foreground" />
             </div>
-            <div>
-              <h3 className="font-heading font-bold text-sm">{t('auth.register_individual')}</h3>
-              <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">{t('membership.individual.desc')}</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-heading font-bold text-sm text-foreground">
+                {isRTL ? 'متابعة كفرد' : 'Continue as individual'}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                {isRTL ? 'للتصفح والبحث وطلب عروض الأسعار' : 'Browse, search, and request quotes'}
+              </p>
             </div>
           </button>
+
+          {/* Create entity */}
           <button
-            onClick={() => { setRegisterType('business'); setStep('details'); }}
-            className="flex items-center gap-4 p-5 rounded-2xl border-2 border-accent/30 bg-accent/5 hover:border-accent hover:bg-accent/10 transition-all text-start group"
+            type="button"
+            data-intent="create-entity"
+            onClick={() => pickIntent('create-entity')}
+            className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all duration-300 text-start active:scale-[0.98] hover-lift"
           >
-            <div className="w-13 h-13 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-              <Building2 className="w-6 h-6 text-accent" />
+            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-md shadow-primary/20">
+              <Building2 className="w-6 h-6 text-primary-foreground" />
             </div>
-            <div>
-              <h3 className="font-heading font-bold text-sm">{t('auth.register_business')}</h3>
-              <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">{t('membership.business.desc')}</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-heading font-bold text-sm text-foreground">
+                {isRTL ? 'إنشاء منشأة أو شركة' : 'Create a business / entity'}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                {isRTL ? 'مزوّد، مشتري، أو الاثنين' : 'Provider, buyer, or both'}
+              </p>
             </div>
           </button>
+
+          {/* Compact pair */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              data-intent="join-invite"
+              onClick={() => pickIntent('join-invite')}
+              className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all duration-300 text-start active:scale-[0.98] hover-lift"
+            >
+              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                <Mail className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-heading font-bold text-sm text-foreground">
+                  {isRTL ? 'انضمام بدعوة' : 'Join by invite'}
+                </h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {isRTL ? 'لديك رمز دعوة' : 'I have a token'}
+                </p>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              data-intent="request-access"
+              onClick={() => pickIntent('request-access')}
+              className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all duration-300 text-start active:scale-[0.98] hover-lift"
+            >
+              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                <UserPlus className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-heading font-bold text-sm text-foreground">
+                  {isRTL ? 'طلب انضمام' : 'Request access'}
+                </h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {isRTL ? 'لمنشأة قائمة' : 'To existing entity'}
+                </p>
+              </div>
+            </button>
+          </div>
         </div>
 
         <AuthDivider isRTL={isRTL} />
@@ -142,7 +236,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
 
         <div className="text-center text-sm pt-1">
           <span className="text-muted-foreground">{isRTL ? 'لديك حساب؟' : 'Have an account?'} </span>
-          <button onClick={onSwitchToLogin} className="text-accent font-semibold hover:underline">{t('auth.has_account')}</button>
+          <button onClick={onSwitchToLogin} className="text-primary font-semibold hover:underline">
+            {t('auth.has_account')}
+          </button>
         </div>
       </div>
     );
@@ -151,14 +247,35 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   // ─── Step: Details ───
   if (step === 'details') {
     const isFormValid = email && fullName.trim() && passwordStrength.score >= 2 && password === confirmPassword && !errors.email && !errors.phone && !emailExists;
+    const intentLabel: Record<RegisterIntent, { ar: string; en: string }> = {
+      'individual': { ar: 'متابعة كفرد', en: 'Continue as individual' },
+      'create-entity': { ar: 'إنشاء منشأة', en: 'Create entity' },
+      'join-invite': { ar: 'انضمام بدعوة', en: 'Join by invite' },
+      'request-access': { ar: 'طلب انضمام', en: 'Request access' },
+    };
+    const activeIntent = intent ?? (registerType === 'business' ? 'create-entity' : 'individual');
 
     return (
-      <div className="space-y-7">
-        <div className="space-y-2">
-          <h2 className="font-heading font-bold text-3xl text-foreground tracking-tight">{t('auth.register')}</h2>
-          <p className="text-sm text-muted-foreground/80">
-            {isRTL ? 'أدخل بياناتك لإنشاء حسابك' : 'Enter your details to create an account'}
-          </p>
+      <div className="space-y-6">
+        {/* Progress header (step 2) */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-heading font-bold text-2xl text-foreground tracking-tight">
+              {isRTL ? 'أدخل بياناتك' : 'Your details'}
+            </h2>
+            <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">
+              {isRTL ? 'خطوة 2 من 2' : 'Step 2 of 2'}
+            </span>
+          </div>
+          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+            <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: '100%' }} />
+          </div>
+          <div className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-full px-3 py-1">
+            <CheckCircle className="w-3.5 h-3.5 text-primary" />
+            <span className="font-medium">
+              {isRTL ? intentLabel[activeIntent].ar : intentLabel[activeIntent].en}
+            </span>
+          </div>
         </div>
         <div className="space-y-4">
           <div className="space-y-2">
@@ -221,13 +338,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
           </div>
 
           {registerType === 'business' ? (
-            <Button onClick={() => setStep('business-details')} disabled={!isFormValid} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
+            <Button onClick={() => setStep('business-details')} disabled={!isFormValid} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
               {t('auth.next')}
+              <BackArrow className="w-4 h-4 ms-2 rotate-180" />
             </Button>
           ) : (
-            <Button onClick={handleRegister} disabled={loading || !isFormValid} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
+            <Button onClick={handleRegister} disabled={loading || !isFormValid} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
               {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-              {loading ? t('common.loading') : t('auth.submit')}
+              {loading ? t('common.loading') : (isRTL ? 'إنشاء الحساب' : 'Create account')}
             </Button>
           )}
         </div>
@@ -240,11 +358,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
 
   // ─── Step: Business Details ───
   return (
-    <div className="space-y-7">
-      <div className="space-y-2">
-        <h2 className="font-heading font-bold text-3xl text-foreground tracking-tight">{t('auth.register_business')}</h2>
-        <p className="text-sm text-muted-foreground/80">
-          {isRTL ? 'أدخل بيانات نشاطك التجاري' : 'Enter your business details'}
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-heading font-bold text-2xl text-foreground tracking-tight">
+            {isRTL ? 'بيانات المنشأة' : 'Business details'}
+          </h2>
+          <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">
+            {isRTL ? 'الخطوة الأخيرة' : 'Final step'}
+          </span>
+        </div>
+        <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+          <div className="bg-primary h-full rounded-full" style={{ width: '100%' }} />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {isRTL ? 'يمكنك إكمال بقية بيانات المنشأة (الموقع، القدرات، الفروع) بعد التحقق من البريد.' : 'You can complete the rest (location, capabilities, branches) after email verification.'}
         </p>
       </div>
       <div className="space-y-4">
@@ -264,9 +392,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
           onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
           placeholder="my-business"
         />
-        <Button onClick={handleRegister} disabled={loading || !businessName.trim() || !usernameOk} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
+        <Button onClick={handleRegister} disabled={loading || !businessName.trim() || !usernameOk} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
           {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-          {loading ? t('common.loading') : t('auth.submit')}
+          {loading ? t('common.loading') : (isRTL ? 'إنشاء حساب المنشأة' : 'Create business account')}
+          {!loading && <Send className="w-4 h-4 ms-2" />}
         </Button>
       </div>
       <button onClick={() => setStep('details')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
