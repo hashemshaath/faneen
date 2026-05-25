@@ -31,12 +31,12 @@ const AUTH_SERVICE = fs.readFileSync(
 );
 
 describe('Registration Full Complete — step order', () => {
-  it('STEP_ORDER includes entity-type and entity-capabilities between business-details and business-sectors', () => {
-    expect(ONBOARDING).toMatch(/'business-details',\s*'entity-type',\s*'entity-capabilities',\s*'business-sectors'/);
+  it('STEP_ORDER includes entity-capabilities between business-details and business-sectors', () => {
+    expect(ONBOARDING).toMatch(/'business-details',[\s\S]{0,80}'entity-capabilities',\s*'business-sectors'/);
   });
 
-  it('business-details Continue advances to entity-type (not directly to sectors)', () => {
-    expect(ONBOARDING).toMatch(/usernameOk[\s\S]{0,200}setStep\('entity-type'\)/);
+  it('business-details Continue advances directly to entity-capabilities (merged screen)', () => {
+    expect(ONBOARDING).toMatch(/setStep\('entity-capabilities'\)/);
   });
 
   it('entity-capabilities Continue advances to business-sectors', () => {
