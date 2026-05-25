@@ -274,7 +274,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
 
   // ─── Step: Details ───
   if (step === 'details') {
-    const isFormValid = email && fullName.trim() && passwordStrength.score >= 2 && password === confirmPassword && !errors.email && !errors.phone && !emailExists;
+    const intentValid =
+      (intent !== 'join-invite' || inviteToken.trim().length > 0) &&
+      (intent !== 'request-access' || targetEntityRef.trim().length > 0);
+    const isFormValid = !!email && fullName.trim().length > 0 && passwordStrength.score >= 2 && password === confirmPassword && !errors.email && !errors.phone && !emailExists && intentValid;
     const intentLabel: Record<RegisterIntent, { ar: string; en: string }> = {
       'individual': { ar: 'متابعة كفرد', en: 'Continue as individual' },
       'create-entity': { ar: 'إنشاء منشأة', en: 'Create entity' },
