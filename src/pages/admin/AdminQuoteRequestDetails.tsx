@@ -49,6 +49,7 @@ import {
 
 interface AdminQuoteRow {
   id: string;
+  ref_id: string | null;
   user_id: string | null;
   customer_name: string;
   customer_phone: string;
