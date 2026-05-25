@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { User, Building2, Phone, Check, Loader2, CheckCircle2, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
+import { User, Building2, Phone, Check, Loader2, CheckCircle2, ArrowLeft, ArrowRight, AlertCircle, Mail, UserPlus } from 'lucide-react';
 import { track } from '@/lib/analytics-events';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { SectorPicker } from '@/components/onboarding/SectorPicker';
@@ -29,6 +29,7 @@ import {
 } from '@/lib/onboarding-draft';
 
 type OnboardingStep =
+  | 'intent'
   | 'account-type'
   | 'details'
   | 'phone-verify'
@@ -37,6 +38,7 @@ type OnboardingStep =
   | 'summary';
 
 const STEP_ORDER: OnboardingStep[] = [
+  'intent',
   'account-type',
   'details',
   'phone-verify',
@@ -52,7 +54,9 @@ const Onboarding = () => {
   const { user, profile, refreshProfile, isAdmin, isSuperAdmin } = useAuth();
   const { getTargetRoute } = useRoleRedirect();
 
-  const [step, setStep] = useState<OnboardingStep>('account-type');
+  const [step, setStep] = useState<OnboardingStep>('intent');
+  const [inviteToken, setInviteToken] = useState('');
+  const [requestAccessQuery, setRequestAccessQuery] = useState('');
   const [accountType, setAccountType] = useState<'individual' | 'business'>('individual');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -250,6 +254,139 @@ const Onboarding = () => {
     return <Navigate to={getTargetRoute()} replace />;
   }
 
+  // REGISTRATION-UX-IMPLEMENTATION-P1 — Intent Selection (Model D)
+  // Four intents. Public-sector entities are excluded by design. Existing flows preserved.
+  if (step === 'intent') {
+    const intents = [
+      {
+        id: 'individual' as const,
+        icon: User,
+        titleAr: 'المتابعة كفرد',
+        titleEn: 'Continue as individual',
+        descAr: 'حساب شخصي للبحث وطلب عروض الأسعار',
+        descEn: 'A personal account to browse and request quotes',
+      },
+      {
+        id: 'create-entity' as const,
+        icon: Building2,
+        titleAr: 'إنشاء منشأة أو شركة',
+        titleEn: 'Create a business/entity',
+        descAr: 'إنشاء ملف منشأة (مزوّد، مشتري، أو الاثنين)',
+        descEn: 'Create an entity profile (provider, buyer, or both)',
+      },
+      {
+        id: 'join-invite' as const,
+        icon: Mail,
+        titleAr: 'الانضمام بدعوة',
+        titleEn: 'Join by invitation',
+        descAr: 'لديّ رمز دعوة من منشأة قائمة',
+        descEn: 'I have an invitation token from an existing entity',
+      },
+      {
+        id: 'request-access' as const,
+        icon: UserPlus,
+        titleAr: 'طلب الانضمام لمنشأة قائمة',
+        titleEn: 'Request access to an existing entity',
+        descAr: 'سيتم تفعيل هذا الخيار قريباً',
+        descEn: 'This option will be available soon',
+      },
+    ];
+    return (
+      <AuthLayout>
+        <div className="space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="font-heading font-bold text-2xl text-foreground">
+              {isRTL ? 'كيف تريد البدء؟' : 'How would you like to start?'}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {isRTL ? 'اختر المسار الأنسب لك — يمكنك إضافة منشأة لاحقاً.' : 'Pick the path that fits you — you can add an entity later.'}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            {intents.map(({ id, icon: Icon, titleAr, titleEn, descAr, descEn }) => (
+              <button
+                key={id}
+                data-intent={id}
+                onClick={() => {
+                  if (id === 'individual') {
+                    setAccountType('individual');
+                    setStep('details');
+                  } else if (id === 'create-entity') {
+                    setAccountType('business');
+                    setStep('details');
+                  }
+                  // join-invite & request-access render inline panels below
+                }}
+                className="p-4 rounded-xl border-2 border-border hover:border-gold/50 transition-all text-start group flex items-start gap-3"
+                aria-label={isRTL ? titleAr : titleEn}
+              >
+                <div className="rounded-lg bg-gold/10 p-2 shrink-0">
+                  <Icon className="w-5 h-5 text-gold" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-heading font-bold text-base text-foreground">
+                    {isRTL ? titleAr : titleEn}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {isRTL ? descAr : descEn}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Join by invitation — inline token entry, uses existing /invite/:token */}
+          <div className="rounded-xl border border-border/60 bg-muted/20 p-3 space-y-2">
+            <Label className="text-xs">
+              {isRTL ? 'لديك رمز دعوة؟' : 'Have an invitation token?'}
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                value={inviteToken}
+                onChange={(e) => setInviteToken(e.target.value.trim())}
+                placeholder={isRTL ? 'الصق رمز الدعوة' : 'Paste invitation token'}
+                dir="auto"
+                aria-label={isRTL ? 'رمز الدعوة' : 'Invitation token'}
+              />
+              <Button
+                variant="outline"
+                disabled={inviteToken.length < 6}
+                onClick={() => navigate(`/invite/${encodeURIComponent(inviteToken)}`)}
+              >
+                {isRTL ? 'متابعة' : 'Continue'}
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {isRTL
+                ? 'سيتم توجيهك لقبول الدعوة. الدعوات النشطة فقط ستعمل.'
+                : 'You will be redirected to accept. Only active invitations work.'}
+            </p>
+          </div>
+
+          {/* Request access — P1 placeholder, backend deferred */}
+          <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 p-3 space-y-2">
+            <Label className="text-xs">
+              {isRTL ? 'طلب الانضمام لمنشأة قائمة' : 'Request access to an existing entity'}
+            </Label>
+            <Input
+              value={requestAccessQuery}
+              onChange={(e) => setRequestAccessQuery(e.target.value)}
+              placeholder={isRTL ? 'اسم المنشأة أو معرّفها ENT-…' : 'Entity name or ENT-… reference'}
+              dir="auto"
+              disabled
+              aria-label={isRTL ? 'طلب الانضمام' : 'Request access'}
+            />
+            <p className="text-[11px] text-muted-foreground" data-deferred="request-access">
+              {isRTL
+                ? 'هذه الميزة قيد التطوير — استخدم رمز الدعوة من مالك المنشأة حالياً.'
+                : 'This feature is in development — use an invitation token from the entity owner for now.'}
+            </p>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
   if (step === 'account-type') {
     return (
       <AuthLayout>
@@ -268,8 +405,8 @@ const Onboarding = () => {
             <button onClick={() => { setAccountType('business'); setStep('details'); }}
               className="p-6 rounded-xl border-2 border-gold/30 bg-gold/5 hover:border-gold transition-all text-center group">
               <Building2 className="w-10 h-10 mx-auto mb-3 text-gold group-hover:scale-110 transition-transform" />
-              <h3 className="font-heading font-bold text-lg">{isRTL ? 'مزود خدمة' : 'Service Provider'}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{isRTL ? 'أعرض خدماتي ومشاريعي للعملاء' : 'Showcase my services and projects'}</p>
+              <h3 className="font-heading font-bold text-lg">{isRTL ? 'منشأة / شركة' : 'Business / Entity'}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{isRTL ? 'مزوّد، مشتري، أو الاثنين' : 'Provider, buyer, or both'}</p>
             </button>
           </div>
         </div>
