@@ -777,12 +777,61 @@ const Onboarding = () => {
   }
 
   if (step === 'business-details') {
+    // ─── Saudi number policy validators ───
+    const crValid = !crNumber || /^[0-9]{10}$/.test(crNumber);
+    const unifiedValid = !unifiedNumber || /^7[0-9]{9}$/.test(unifiedNumber);
+    const vatValid = !vatNumber || (/^3[0-9]{13}3$/.test(vatNumber) && vatNumber.length === 15);
+    const onlyDigits = (v: string, max: number) => v.replace(/\D/g, '').slice(0, max);
+    const allOfficialValid = crValid && unifiedValid && vatValid;
+
+    const onContinue = async () => {
+      if (!businessName.trim()) { toast.error(isRTL ? 'يرجى إدخال اسم النشاط بالعربية' : 'Please enter the Arabic business name'); return; }
+      if (!usernameOk) { toast.error(isRTL ? 'اختر اسم مستخدم صحيحاً ومتاحاً' : 'Pick a valid, available username'); return; }
+      if (!allOfficialValid) { toast.error(isRTL ? 'تحقق من الأرقام الرسمية' : 'Please check the official numbers'); return; }
+      setDuplicateChecking(true);
+      try {
+        const list = await findPossibleDuplicateEntities({
+          name: businessName,
+          cr: crNumber || null,
+          vat: vatNumber || null,
+        });
+        setDuplicates(list);
+        if (list.length > 0 && !duplicateAcknowledged) {
+          const exact = list.some((d) => d.match_reason === 'cr' || d.match_reason === 'vat');
+          if (exact) {
+            toast.warning(isRTL
+              ? 'قد تكون هذه المنشأة مسجلة مسبقًا. يمكنك طلب الانضمام بدل إنشاء منشأة مكررة.'
+              : 'This entity may already exist. You can request access instead of creating a duplicate.');
+            return;
+          }
+          setDuplicateAcknowledged(true);
+          toast.warning(isRTL
+            ? 'تم العثور على منشآت مشابهة. تأكّد أن منشأتك مختلفة قبل المتابعة.'
+            : 'Similar entities found. Confirm your entity is different before continuing.');
+          return;
+        }
+        setStep('entity-capabilities');
+      } finally {
+        setDuplicateChecking(false);
+      }
+    };
+
+    const entityTypes: { id: EntityType; ar: string; en: string }[] = [
+      { id: 'company', ar: 'شركة', en: 'Company' },
+      { id: 'establishment', ar: 'مؤسسة', en: 'Establishment' },
+      { id: 'individual_business', ar: 'عمل فردي', en: 'Individual business' },
+      { id: 'private_entity', ar: 'كيان خاص', en: 'Private entity' },
+      { id: 'service_provider', ar: 'مزوّد خدمة', en: 'Service provider' },
+      { id: 'buyer_entity', ar: 'جهة مشتري', en: 'Buyer / beneficiary' },
+      { id: 'other', ar: 'أخرى', en: 'Other' },
+    ];
+
     return (
       <AuthLayout>
         <div className="space-y-6">
           <div className="space-y-2">
             <h2 className="font-heading font-bold text-2xl text-foreground text-center">
-              {isRTL ? 'بيانات النشاط التجاري' : 'Business Details'}
+              {isRTL ? 'بيانات المنشأة' : 'Entity Details'}
             </h2>
             <Progress value={completionPct} className="h-1.5" />
             <p
@@ -793,14 +842,23 @@ const Onboarding = () => {
               {completionPct}% — {isRTL ? 'يمكنك الحفظ والمتابعة لاحقاً' : 'You can save and continue later'}
             </p>
           </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>{isRTL ? 'اسم النشاط التجاري' : 'Business Name'} <span className="text-destructive">*</span></Label>
-              <div className="relative">
-                <Building2 className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} dir="auto" style={{ paddingInlineStart: '40px' }} />
+
+          <div className="space-y-5">
+            {/* Identity */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'الاسم التجاري (عربي)' : 'Business name (Arabic)'} <span className="text-destructive">*</span></Label>
+                <div className="relative">
+                  <Building2 className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                  <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} dir="rtl" lang="ar" placeholder="مثال: مصنع الواجهات" style={{ paddingInlineStart: '40px' }} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'الاسم التجاري (إنجليزي)' : 'Business name (English)'}</Label>
+                <Input value={businessNameEn} onChange={(e) => setBusinessNameEn(e.target.value)} dir="ltr" lang="en" placeholder="e.g. Facades Factory" />
               </div>
             </div>
+
             <UsernamePicker
               isRTL={isRTL}
               required
@@ -811,8 +869,102 @@ const Onboarding = () => {
               excludeUserId={user?.id ?? null}
               placeholder="my-business"
             />
-            <div className="space-y-2">
-              <Label>{isRTL ? 'وصف مختصر للنشاط' : 'Short business description'}</Label>
+
+            {/* Entity type */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'نوع المنشأة' : 'Entity type'} <span className="text-destructive">*</span></Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {entityTypes.map((t) => {
+                  const selected = entityType === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      data-entity-type={t.id}
+                      onClick={() => setEntityType(t.id)}
+                      className={`p-2.5 rounded-lg border text-start text-sm transition-all ${selected ? 'border-gold bg-gold/10 text-foreground font-semibold' : 'border-border hover:border-gold/50 text-muted-foreground'}`}
+                    >
+                      {isRTL ? t.ar : t.en}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Official numbers (Saudi format) */}
+            <div className="rounded-xl border border-border/60 bg-muted/20 p-3 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-xs font-semibold">
+                  {isRTL ? 'البيانات الرسمية (اختياري — يساعد على منع التكرار)' : 'Official numbers (optional — prevents duplicates)'}
+                </Label>
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground bg-card border border-border/60 rounded-full px-2 py-0.5">
+                  <span aria-hidden>🇸🇦</span>
+                  {isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">{isRTL ? 'رقم السجل التجاري' : 'Commercial Registration (CR)'}</Label>
+                  <Input
+                    value={crNumber}
+                    onChange={(e) => setCrNumber(onlyDigits(e.target.value, 10))}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="1010XXXXXX"
+                    dir="ltr"
+                    maxLength={10}
+                    className={`tech-content ${crNumber && !crValid ? 'border-destructive' : ''}`}
+                  />
+                  <p className={`text-[11px] ${crNumber && !crValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
+                    {isRTL ? '10 أرقام — أرقام فقط' : '10 digits — numbers only'} <span className="opacity-70">({crNumber.length}/10)</span>
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs">{isRTL ? 'الرقم الموحد للمنشأة' : 'Unified Entity Number'}</Label>
+                  <Input
+                    value={unifiedNumber}
+                    onChange={(e) => setUnifiedNumber(onlyDigits(e.target.value, 10))}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="7XXXXXXXXX"
+                    dir="ltr"
+                    maxLength={10}
+                    className={`tech-content ${unifiedNumber && !unifiedValid ? 'border-destructive' : ''}`}
+                  />
+                  <p className={`text-[11px] ${unifiedNumber && !unifiedValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
+                    {isRTL ? '10 أرقام تبدأ بـ 7' : '10 digits starting with 7'} <span className="opacity-70">({unifiedNumber.length}/10)</span>
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label className="text-xs">{isRTL ? 'الرقم الضريبي (VAT)' : 'VAT Number'}</Label>
+                  <Input
+                    value={vatNumber}
+                    onChange={(e) => setVatNumber(onlyDigits(e.target.value, 15))}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="3XXXXXXXXXXXXX3"
+                    dir="ltr"
+                    maxLength={15}
+                    className={`tech-content ${vatNumber && !vatValid ? 'border-destructive' : ''}`}
+                  />
+                  <p className={`text-[11px] ${vatNumber && !vatValid ? 'text-destructive' : 'text-muted-foreground'} tech-content`}>
+                    {isRTL ? '15 رقم — يبدأ بـ 3 وينتهي بـ 3' : '15 digits — starts with 3, ends with 3'} <span className="opacity-70">({vatNumber.length}/15)</span>
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label className="text-xs">{isRTL ? 'الموقع الإلكتروني' : 'Website'}</Label>
+                  <Input value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://example.com" dir="ltr" />
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'وصف مختصر للنشاط' : 'Short business description'}</Label>
               <Textarea
                 value={businessDescription}
                 onChange={(e) => setBusinessDescription(e.target.value.slice(0, 500))}
@@ -822,14 +974,59 @@ const Onboarding = () => {
               />
               <p className="text-[11px] text-muted-foreground tech-content text-end">{businessDescription.length}/500</p>
             </div>
-            <Button onClick={() => {
-              if (!businessName.trim()) { toast.error(isRTL ? 'يرجى إدخال اسم النشاط' : 'Please enter business name'); return; }
-              if (!usernameOk) { toast.error(isRTL ? 'اختر اسم مستخدم صحيحاً ومتاحاً' : 'Pick a valid, available username'); return; }
-              setStep('entity-type');
-            }} disabled={!businessName.trim() || !usernameOk} className="w-full" variant="hero">
+
+            {duplicates.length > 0 && (
+              <div className="rounded-xl border border-warning/40 bg-warning/10 p-3 space-y-2" data-feature="duplicate-warning">
+                <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-warning" />
+                  {isRTL
+                    ? 'قد تكون هذه المنشأة مسجلة مسبقًا. يمكنك طلب الانضمام بدل إنشاء منشأة مكررة.'
+                    : 'This entity may already exist. You can request access instead of creating a duplicate.'}
+                </p>
+                <ul className="space-y-1">
+                  {duplicates.slice(0, 3).map((d) => (
+                    <li key={d.id} className="text-[11px] text-muted-foreground flex items-center justify-between gap-2">
+                      <span className="truncate">
+                        <span className="tech-content me-1">{d.ref_id ?? d.legacy_ref_id ?? '—'}</span>
+                        {isRTL ? (d.name_ar ?? d.name_en ?? '—') : (d.name_en ?? d.name_ar ?? '—')}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 px-2 text-[11px]"
+                        onClick={async () => {
+                          if (!user) return;
+                          const { data, error } = await createEntityAccessRequest({
+                            requesterUserId: user.id,
+                            targetBusinessId: d.id,
+                            message: businessName,
+                          });
+                          if (!error && data?.ref_id) {
+                            toast.success(isRTL ? `تم إرسال طلب الانضمام (${data.ref_id})` : `Access request sent (${data.ref_id})`);
+                          } else {
+                            toast.error(isRTL ? 'تعذّر إرسال الطلب' : 'Could not send the request');
+                          }
+                        }}
+                      >
+                        {isRTL ? 'طلب الانضمام' : 'Request access'}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <Button
+              onClick={onContinue}
+              disabled={!businessName.trim() || !usernameOk || !allOfficialValid || duplicateChecking}
+              className="w-full"
+              variant="hero"
+            >
+              {duplicateChecking ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
               {isRTL ? 'متابعة' : 'Continue'}
             </Button>
           </div>
+
           <button onClick={() => setStep(phone ? 'phone-verify' : 'details')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
           </button>
