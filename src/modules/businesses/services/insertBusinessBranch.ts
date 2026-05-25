@@ -7,8 +7,8 @@ import type { BusinessBranchInsertPayload } from '@/modules/catalog/services/bra
 /**
  * REGISTRATION-UX-FULL-COMPLETE-1 Part 2 / Part 4
  * Options-shaped facade over the canonical catalog branches wrapper.
- * All actual `.from('business_branches')` access happens inside
- * `src/modules/catalog/services/branches/mutations.ts` to satisfy the
+ * All actual supabase access to the business_branches table happens inside
+ * src/modules/catalog/services/branches/mutations.ts to satisfy the
  * catalog isolation audit. This file only adapts the call signature used
  * by the onboarding flow.
  */
