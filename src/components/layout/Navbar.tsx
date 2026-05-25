@@ -219,7 +219,7 @@ export const Navbar = () => {
               </div>
             ) : (
               <div className="hidden lg:flex items-center gap-2">
-                <PrefetchLink to="/auth?mode=login">
+                <PrefetchLink to="/auth">
                   <Button variant="ghost" size="sm">
                     {t('nav.login')}
                   </Button>
@@ -311,7 +311,7 @@ export const Navbar = () => {
                 <Link to="/auth?mode=register" onClick={closeMobile}>
                   <Button variant="primary" size="sm" className="w-full">{t('nav.register')}</Button>
                 </Link>
-                <Link to="/auth?mode=login" onClick={closeMobile}>
+                <Link to="/auth" onClick={closeMobile}>
                   <Button variant="ghost" className="text-sm w-full">
                     {t('nav.login')}
                   </Button>
