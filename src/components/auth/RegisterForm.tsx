@@ -305,6 +305,59 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             </span>
           </div>
         </div>
+
+        {/* Intent-specific fields shown BEFORE common details so each path looks distinct */}
+        {activeIntent === 'join-invite' && (
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-2">
+            <Label className="text-xs font-semibold flex items-center gap-1.5">
+              <Ticket className="w-3.5 h-3.5 text-primary" />
+              {isRTL ? 'رمز الدعوة' : 'Invitation token'} <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              value={inviteToken}
+              onChange={(e) => setInviteToken(e.target.value)}
+              placeholder={isRTL ? 'الصق الرمز الذي وصلك' : 'Paste the token you received'}
+              dir="ltr"
+              className="h-12 rounded-xl bg-card tech-content"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              {isRTL ? 'سنربط حسابك بالمنشأة تلقائياً بعد التحقق من البريد.' : 'We will link your account to the entity after email verification.'}
+            </p>
+          </div>
+        )}
+        {activeIntent === 'request-access' && (
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold flex items-center gap-1.5">
+                <AtSign className="w-3.5 h-3.5 text-primary" />
+                {isRTL ? 'معرّف أو اسم مستخدم المنشأة' : 'Entity username or reference'} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                value={targetEntityRef}
+                onChange={(e) => setTargetEntityRef(e.target.value)}
+                placeholder={isRTL ? 'مثل: my-business أو USR-1000001' : 'e.g. my-business or USR-1000001'}
+                dir="ltr"
+                className="h-12 rounded-xl bg-card tech-content"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-primary" />
+                {isRTL ? 'سبب الطلب (اختياري)' : 'Reason (optional)'}
+              </Label>
+              <Input
+                value={accessReason}
+                onChange={(e) => setAccessReason(e.target.value)}
+                placeholder={isRTL ? 'مثل: موظف مبيعات' : 'e.g. sales staff'}
+                className="h-12 rounded-xl bg-card"
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {isRTL ? 'سيراجع مالك المنشأة طلبك بعد إنشاء الحساب.' : 'The entity owner will review your request after signup.'}
+            </p>
+          </div>
+        )}
+
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-xs font-semibold">{t('auth.fullname')} <span className="text-destructive">*</span></Label>
