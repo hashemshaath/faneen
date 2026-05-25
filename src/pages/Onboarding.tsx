@@ -982,7 +982,160 @@ const Onboarding = () => {
     );
   }
 
-  // Final business step: sector picker + sub-services
+  // REGISTRATION-UX-FULL-COMPLETE-1 Part 3 — Main location step
+  if (step === 'main-location') {
+    const canContinue = locationName.trim().length >= 2 && locationCity.trim().length >= 2 && locationAddress1.trim().length >= 2;
+    return (
+      <AuthLayout>
+        <div className="space-y-6">
+          <div className="space-y-2 text-center">
+            <h2 className="font-heading font-bold text-2xl text-foreground">
+              {isRTL ? 'الموقع الرئيسي' : 'Main location'}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {isRTL
+                ? 'أضف الموقع الرئيسي للمنشأة. يمكنك إضافة فروع ومواقع أخرى لاحقًا.'
+                : "Add the entity's main location. You can add more branches and sites later."}
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'اسم الموقع' : 'Location name'} <span className="text-destructive">*</span></Label>
+              <Input
+                value={locationName}
+                onChange={(e) => setLocationName(e.target.value)}
+                placeholder={isRTL ? 'مثال: المقر الرئيسي - الرياض' : 'e.g. Head office — Riyadh'}
+                dir="auto"
+                data-field="location_name"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'نوع الموقع' : 'Location type'}</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" data-field="location_type">
+                {LOCATION_TYPES.map((t) => {
+                  const selected = locationType === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      data-location-type={t.id}
+                      onClick={() => setLocationType(t.id)}
+                      className={`p-2 rounded-lg border text-sm transition-all ${selected ? 'border-gold bg-gold/10 text-foreground font-semibold' : 'border-border hover:border-gold/50 text-muted-foreground'}`}
+                    >
+                      {isRTL ? t.ar : t.en}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'المدينة' : 'City'} <span className="text-destructive">*</span></Label>
+                <Input value={locationCity} onChange={(e) => setLocationCity(e.target.value)} dir="auto" data-field="city" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'الرمز البريدي (اختياري)' : 'Postal code (optional)'}</Label>
+                <Input value={locationPostalCode} onChange={(e) => setLocationPostalCode(e.target.value)} dir="ltr" className="tech-content" data-field="postal_code" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'العنوان (السطر 1)' : 'Address line 1'} <span className="text-destructive">*</span></Label>
+              <Input value={locationAddress1} onChange={(e) => setLocationAddress1(e.target.value)} dir="auto" data-field="address_line_1" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'العنوان (السطر 2) — اختياري' : 'Address line 2 (optional)'}</Label>
+              <Input value={locationAddress2} onChange={(e) => setLocationAddress2(e.target.value)} dir="auto" data-field="address_line_2" />
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+            <button onClick={() => setStep('business-sectors')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+              {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
+            </button>
+            <Button
+              onClick={() => setStep('staff-invite')}
+              disabled={!canContinue}
+              variant="hero"
+              className="sm:w-64"
+            >
+              {isRTL ? 'متابعة' : 'Continue'}
+            </Button>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  // REGISTRATION-UX-FULL-COMPLETE-1 Part 3 — Staff invite (skip-only shell)
+  if (step === 'staff-invite') {
+    return (
+      <AuthLayout>
+        <div className="space-y-6">
+          <div className="space-y-2 text-center">
+            <h2 className="font-heading font-bold text-2xl text-foreground">
+              {isRTL ? 'دعوة الموظفين' : 'Invite staff'}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {isRTL
+                ? 'يمكنك دعوة الموظفين الآن أو لاحقًا من إعدادات المنشأة.'
+                : 'You can invite staff now or later from entity settings.'}
+            </p>
+          </div>
+
+          <div
+            className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3"
+            data-feature="staff-invite-shell"
+          >
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <UserPlus className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+              <p>
+                {isRTL
+                  ? 'دعوة الموظفين ستكون متاحة من إعدادات المنشأة بعد اكتمال التسجيل.'
+                  : 'Staff invitations will be available from entity settings after onboarding.'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 opacity-60" aria-hidden="true">
+              {([
+                { ar: 'مدير', en: 'Manager' },
+                { ar: 'محرر', en: 'Editor' },
+                { ar: 'مشاهد', en: 'Viewer' },
+              ] as const).map((r) => (
+                <div
+                  key={r.en}
+                  className="p-2 rounded-lg border border-border text-center text-[11px] text-muted-foreground"
+                  data-role-preview={r.en.toLowerCase()}
+                >
+                  {isRTL ? r.ar : r.en}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+            <button onClick={() => setStep('main-location')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+              {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
+            </button>
+            <Button
+              onClick={completeOnboarding}
+              disabled={loading}
+              variant="hero"
+              className="sm:w-64"
+              data-action="skip-staff-invite"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
+              {isRTL ? 'تخطي ومتابعة' : 'Skip and continue'}
+            </Button>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
   if (step === 'summary') {
     // Required-fields readiness for the post-completion guidance line.
     const missing: { ar: string; en: string }[] = [];
