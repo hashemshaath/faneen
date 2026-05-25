@@ -7,8 +7,8 @@
  * - internalFallback  : provider_intent_id (admin/debug ONLY — never use as
  *                       a user-facing label; explicitly tagged unsafe)
  *
- * Tokens, login emails, phone numbers, and synthetic
- * `@phone.qitaat.local` identifiers are NEVER returned.
+ * Tokens, login emails, phone numbers, and synthetic phone-derived auth
+ * identifiers are NEVER returned.
  */
 export interface PaymentDisplayReferenceInput {
   ref_id?: string | null;
