@@ -608,8 +608,7 @@ const AdminUsers = () => {
       const preset = createParam === 'provider' ? 'business' : createParam;
       const allowed = ['individual', 'business', 'company'];
       if (allowed.includes(preset)) {
-        setCreateForm(p => ({ ...p, account_type: preset }));
-        setActivePanel({ type: 'create' });
+        openCreatePanel(preset as 'individual' | 'business' | 'company');
       }
       next.delete('create');
       mutated = true;
