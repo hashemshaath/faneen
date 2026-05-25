@@ -63,9 +63,7 @@ const AdminUserDetail: React.FC = () => {
     queryKey: ['admin-user-detail-roles', userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await listUserRolesFor({ userId: userId! });
-      if (error) throw error;
-      return data ?? [];
+      return await listUserRolesFor(userId!);
     },
   });
 
@@ -104,13 +102,13 @@ const AdminUserDetail: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from('lead_requests')
-        .select('id, status, sector, created_at, customer_name')
+        .select('id, status, subject, created_at, name')
         .eq('user_id', userId!)
         .order('created_at', { ascending: false })
         .limit(50);
       return (data ?? []) as Array<{
-        id: string; status: string | null; sector: string | null;
-        created_at: string; customer_name: string | null;
+        id: string; status: string | null; subject: string | null;
+        created_at: string; name: string | null;
       }>;
     },
   });
@@ -285,8 +283,8 @@ const AdminUserDetail: React.FC = () => {
                   <div key={l.id} className="flex items-center gap-3 rounded-xl border border-border/30 p-3 text-sm">
                     <Inbox className="w-4 h-4 text-warning shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium truncate">{l.customer_name || (isRTL ? 'طلب' : 'Request')}</p>
-                      <p className="text-[11px] text-muted-foreground">{l.sector} • {new Date(l.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en')}</p>
+                      <p className="font-medium truncate">{l.name || (isRTL ? 'طلب' : 'Request')}</p>
+                      <p className="text-[11px] text-muted-foreground">{l.subject ?? ''} • {new Date(l.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en')}</p>
                     </div>
                     <Badge variant="outline" className="text-[10px]">{l.status ?? '—'}</Badge>
                   </div>
