@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   Building2, Save, Phone, Mail, Globe, MapPin, ShieldCheck, Layers,
-  FileText, Image as ImageIcon, Loader2, ExternalLink, AlertTriangle,
-  User, Hash, Receipt, UserCog,
+  FileText, Loader2, ExternalLink,
+  User, Hash, UserCog,
 } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
