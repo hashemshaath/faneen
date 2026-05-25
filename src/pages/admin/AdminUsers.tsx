@@ -539,7 +539,7 @@ const PAGE_SIZE = 20;
 const AdminUsers = () => {
   useNoIndex();
   const { isRTL, language } = useLanguage();
-  const { user, isSuperAdmin } = useAuth();
+  const { user, isSuperAdmin, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [, startTransition] = useTransition();
 
@@ -1068,7 +1068,7 @@ const AdminUsers = () => {
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
             </Button>
-            {isSuperAdmin && (
+            {isAdmin && (
               <Button size="sm" className="gap-2 rounded-xl h-9" onClick={() => setActivePanel({ type: 'create' })}>
                 <UserPlus className="w-4 h-4" />
                 <span className="hidden sm:inline">{isRTL ? 'إنشاء مستخدم' : 'New User'}</span>
