@@ -1298,6 +1298,17 @@ const AdminUsers = () => {
                     </h3>
                     <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
                   </div>
+                  <div className="mb-4">
+                    <CrQuickScanInline
+                      onParsed={(scan) => {
+                        setCreateForm((p) => ({
+                          ...p,
+                          full_name: p.full_name || scan.owner_name || scan.business_name_ar || scan.business_name_en || '',
+                          account_type: scan.cr_number ? 'business' : p.account_type,
+                        }));
+                      }}
+                    />
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاسم الكامل *' : 'Full name *'}</Label>
                       <Input value={createForm.full_name} onChange={e => setCreateForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" /></div>
