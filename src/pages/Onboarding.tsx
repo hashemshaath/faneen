@@ -242,8 +242,22 @@ const Onboarding = () => {
         (d.accountType as 'individual' | 'business' | undefined) ??
         'individual';
       setAccountType(effectiveAccountType);
-      if (d.phone) setPhone(d.phone);
-      if (d.countryCode) setCountryCode(d.countryCode);
+      // Profile is the source of truth for previously-entered identity data.
+      // Fall back to draft only when the profile has no value. Strip the
+      // country-code prefix from `profile.phone` so the PhoneInput shows the
+      // local number alongside its country selector instead of leaving the
+      // field empty (which made the wizard look like it was asking again).
+      const profileCountry = profile?.country_code || '+966';
+      if (profile?.phone) {
+        const local = profile.phone.startsWith(profileCountry)
+          ? profile.phone.slice(profileCountry.length)
+          : profile.phone.replace(/^\+/, '');
+        setPhone(local);
+        setCountryCode(profileCountry);
+      } else {
+        if (d.phone) setPhone(d.phone);
+        if (d.countryCode) setCountryCode(d.countryCode);
+      }
       if (d.businessName) setBusinessName(d.businessName);
       if (d.username) setUsername(d.username);
       if (d.description) setBusinessDescription(d.description);
