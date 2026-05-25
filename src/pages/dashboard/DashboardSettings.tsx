@@ -20,7 +20,8 @@ import {
   Settings2, Shield, Eye, EyeOff, Mail, Phone, Globe, Camera,
   Smartphone, Volume2, VolumeX, BellRing, BellOff, Hash,
   Fingerprint, KeyRound, AlertTriangle, CheckCircle, Info,
-  LogOut, Trash2, Download, Upload,
+  LogOut, Trash2, Download, Upload, AtSign, MapPin, Languages, Copy,
+  Sparkles, ExternalLink, Loader2, Crown,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BnplProvidersManager } from '@/components/bnpl/BnplProvidersManager';
@@ -35,6 +36,11 @@ import { ar as arLocale, enUS } from 'date-fns/locale';
 import { useSearchParams } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { useDisplayRefId } from '@/hooks/useDisplayRefId';
+import { UsernamePicker } from '@/components/common/UsernamePicker';
+import { supabase } from '@/integrations/supabase/client';
+
+type RefRow = { id: string; name_ar: string; name_en: string };
+type CityRow = RefRow & { country_id: string };
 
 type SettingsTab = 'appearance' | 'account' | 'security' | 'notifications' | 'bnpl';
 
@@ -69,20 +75,31 @@ const DashboardSettings = () => {
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
     full_name: '',
+    username: '',
     phone: '',
     email: '',
     avatar_url: '',
+    preferred_language: 'ar' as 'ar' | 'en',
+    country_id: null as string | null,
+    city_id: null as string | null,
   });
+  const [usernameOk, setUsernameOk] = useState(true);
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
   // Sync profile form with latest profile data
   useEffect(() => {
     if (profile && !editingProfile) {
       setProfileForm({
         full_name: profile.full_name || '',
+        username: profile.username || '',
         phone: profile.phone || '',
         email: profile.email || '',
         avatar_url: profile.avatar_url || '',
+        preferred_language: ((profile.preferred_language as 'ar' | 'en') ?? 'ar'),
+        country_id: profile.country_id ?? null,
+        city_id: profile.city_id ?? null,
       });
+      setUsernameOk(true);
     }
   }, [profile, editingProfile]);
 
@@ -97,6 +114,29 @@ const DashboardSettings = () => {
       return data;
     },
     enabled: !!user,
+  });
+
+  // Reference data — countries & cities (filtered by selected country)
+  const { data: countries = [] } = useQuery({
+    queryKey: ['settings-ref-countries'],
+    queryFn: async () => {
+      const { data } = await supabase.from('countries').select('id, name_ar, name_en').order('name_en');
+      return (data ?? []) as RefRow[];
+    },
+    staleTime: 5 * 60_000,
+  });
+  const { data: cities = [] } = useQuery({
+    queryKey: ['settings-ref-cities', profileForm.country_id],
+    queryFn: async () => {
+      if (!profileForm.country_id) return [] as CityRow[];
+      const { data } = await supabase.from('cities')
+        .select('id, name_ar, name_en, country_id')
+        .eq('country_id', profileForm.country_id)
+        .order('name_en');
+      return (data ?? []) as CityRow[];
+    },
+    enabled: !!profileForm.country_id,
+    staleTime: 5 * 60_000,
   });
 
   // Sessions info
@@ -139,13 +179,20 @@ const DashboardSettings = () => {
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
+      if (profileForm.username && !usernameOk) {
+        throw new Error(isRTL ? 'اسم المستخدم غير صالح أو محجوز' : 'Username is invalid or taken');
+      }
       const { error } = await updateProfile({
         userId: user.id,
         values: {
           full_name: profileForm.full_name.trim(),
+          username: profileForm.username ? profileForm.username : null,
           phone: profileForm.phone.trim(),
           email: profileForm.email.trim(),
           avatar_url: profileForm.avatar_url,
+          preferred_language: profileForm.preferred_language,
+          country_id: profileForm.country_id,
+          city_id: profileForm.city_id,
         },
       });
       if (error) throw error;
@@ -158,6 +205,43 @@ const DashboardSettings = () => {
     },
     onError: (e) => toast.error(e.message),
   });
+
+  // Profile completeness (7 checks)
+  const completion = useMemo(() => {
+    const src = editingProfile ? profileForm : {
+      full_name: profile?.full_name || '',
+      username: profile?.username || '',
+      phone: profile?.phone || '',
+      email: profile?.email || '',
+      avatar_url: profile?.avatar_url || '',
+      country_id: profile?.country_id ?? null,
+      city_id: profile?.city_id ?? null,
+    };
+    const checks = [
+      !!src.full_name?.trim(),
+      !!src.username,
+      !!src.avatar_url,
+      !!src.email?.trim(),
+      !!src.phone?.trim(),
+      !!src.country_id,
+      !!src.city_id,
+    ];
+    const done = checks.filter(Boolean).length;
+    return { done, total: checks.length, pct: Math.round((done / checks.length) * 100) };
+  }, [editingProfile, profileForm, profile]);
+
+  const publicProfileUrl = useMemo(() => {
+    const handle = profileForm.username || profile?.username;
+    return handle ? `${window.location.origin}/${handle}` : null;
+  }, [profileForm.username, profile?.username]);
+
+  const copyPublicUrl = useCallback(async () => {
+    if (!publicProfileUrl) return;
+    await navigator.clipboard.writeText(publicProfileUrl);
+    setCopiedUrl(true);
+    toast.success(isRTL ? 'تم نسخ الرابط' : 'Link copied');
+    setTimeout(() => setCopiedUrl(false), 1500);
+  }, [publicProfileUrl, isRTL]);
 
   const handleSignOut = async () => {
     await signOutCurrentUser();
@@ -189,7 +273,7 @@ const DashboardSettings = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 max-w-3xl">
+      <div className="space-y-4 max-w-4xl">
         {/* Header */}
         <div>
           <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
@@ -302,23 +386,17 @@ const DashboardSettings = () => {
 
         {/* ═══ ACCOUNT ═══ */}
         {activeTab === 'account' && (
-          <div className="space-y-3">
-            {/* Profile Info */}
-            <Card className="border-border/40">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-accent" />
-                    <h3 className="font-heading font-bold text-sm">{isRTL ? 'الملف الشخصي' : 'Profile'}</h3>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-xs gap-1 h-7" onClick={() => {
-                    if (editingProfile) { updateProfileMutation.mutate(); }
-                    else { setEditingProfile(true); }
-                  }} disabled={updateProfileMutation.isPending}>
-                    {editingProfile ? <><Check className="w-3 h-3" />{isRTL ? 'حفظ' : 'Save'}</> : <><Camera className="w-3 h-3" />{isRTL ? 'تعديل' : 'Edit'}</>}
-                  </Button>
-                </div>
-
+          <div className="space-y-4">
+            {/* ── Hero profile header ───────────────────────────── */}
+            <Card className="relative overflow-hidden border-border/60">
+              <div
+                className="h-20 sm:h-24 w-full"
+                style={{
+                  background:
+                    'radial-gradient(120% 100% at 100% 0%, hsl(var(--primary) / 0.18) 0%, transparent 55%), linear-gradient(135deg, hsl(var(--primary) / 0.85), hsl(var(--accent) / 0.55))',
+                }}
+              />
+              <CardContent className="p-3 sm:p-4 -mt-10 sm:-mt-12">
                 <div className="flex items-start gap-3 sm:gap-4">
                   {/* Avatar */}
                   <div className="shrink-0">
@@ -330,119 +408,295 @@ const DashboardSettings = () => {
                         onRemove={() => setProfileForm(p => ({ ...p, avatar_url: '' }))}
                         folder="avatars"
                         aspectRatio="square"
-                        className="w-16 h-16 rounded-xl"
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl ring-4 ring-background shadow-lg"
                         placeholder=""
                       />
                     ) : (
-                      <div className="w-16 h-16 rounded-xl bg-accent/10 flex items-center justify-center overflow-hidden border border-border/30">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-accent/10 flex items-center justify-center overflow-hidden ring-4 ring-background shadow-lg">
                         {profile?.avatar_url ? (
                           <img src={profile.avatar_url} alt={profile?.full_name || (isRTL ? 'صورة الملف الشخصي' : 'Profile photo')} className="w-full h-full object-cover" />
                         ) : (
-                          <User className="w-6 h-6 text-accent" />
+                          <User className="w-8 h-8 text-accent" />
                         )}
                       </div>
                     )}
                   </div>
 
-                  <div className="flex-1 min-w-0 space-y-2.5">
-                    {editingProfile ? (
-                      <>
-                        <div>
-                          <Label className="text-[10px]">{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
-                          <Input value={profileForm.full_name} onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))} className="h-8 text-xs mt-0.5" />
-                        </div>
-                        <div>
-                          <Label className="text-[10px]">{isRTL ? 'البريد الإلكتروني (للملف الشخصي)' : 'Email (Profile)'}</Label>
-                          <Input value={profileForm.email} onChange={e => setProfileForm(p => ({ ...p, email: e.target.value }))} className="h-8 text-xs mt-0.5 tech-content" dir="ltr" type="email" />
-                          <p className="text-[9px] text-muted-foreground mt-0.5">
-                            {isSyntheticPhoneEmail(user?.email)
-                              ? (isRTL ? 'هذا البريد يظهر في ملفك الشخصي. تسجيل الدخول يتم عبر رقم الجوال.' : 'This email shows on your profile. You sign in with your phone number.')
-                              : (
-                                <>
-                                  {isRTL ? 'هذا البريد يظهر في ملفك الشخصي. بريد تسجيل الدخول: ' : 'This email shows on your profile. Login email: '}
-                                  <span className="tech-content font-medium">{user?.email}</span>
-                                </>
-                              )}
+                  <div className="flex-1 min-w-0 pt-10 sm:pt-12">
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
+                      <div className="min-w-0">
+                        <h2 className="font-heading font-bold text-base sm:text-lg truncate">
+                          {profile?.full_name || (isRTL ? 'بدون اسم' : 'No name')}
+                        </h2>
+                        {profile?.username && (
+                          <p className="text-[11px] text-muted-foreground tech-content flex items-center gap-1">
+                            <AtSign className="w-3 h-3" />{profile.username}
                           </p>
-                        </div>
-                        <div>
-                          <Label className="text-[10px]">{isRTL ? 'رقم الجوال' : 'Phone'}</Label>
-                          <Input value={profileForm.phone} onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))} className="h-8 text-xs mt-0.5 tech-content" dir="ltr" />
-                        </div>
-                        <Button variant="ghost" size="sm" className="text-xs h-6 text-muted-foreground" onClick={() => setEditingProfile(false)}>
-                          {isRTL ? 'إلغاء' : 'Cancel'}
+                        )}
+                      </div>
+                      <Button
+                        variant={editingProfile ? 'default' : 'outline'}
+                        size="sm"
+                        className="text-xs gap-1 h-8"
+                        onClick={() => editingProfile ? updateProfileMutation.mutate() : setEditingProfile(true)}
+                        disabled={updateProfileMutation.isPending}
+                      >
+                        {updateProfileMutation.isPending
+                          ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : editingProfile
+                            ? <><Check className="w-3 h-3" />{isRTL ? 'حفظ التعديلات' : 'Save changes'}</>
+                            : <><Camera className="w-3 h-3" />{isRTL ? 'تعديل الملف' : 'Edit profile'}</>}
+                      </Button>
+                    </div>
+
+                    {/* Badges row */}
+                    <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[16px] tech-content">
+                        <Hash className="w-2.5 h-2.5 me-0.5" />{displayRefId || profile?.ref_id}
+                      </Badge>
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[16px]">
+                        {profile?.account_type === 'provider' ? (isRTL ? 'مزود خدمة' : 'Provider') : (isRTL ? 'عميل' : 'Client')}
+                      </Badge>
+                      <Badge className="bg-accent/10 text-accent text-[9px] px-1.5 py-0 h-[16px] gap-0.5">
+                        <Crown className="w-2.5 h-2.5" />{profile?.membership_tier || 'free'}
+                      </Badge>
+                      {profile?.phone_verified && (
+                        <Badge className="bg-success/10 text-success text-[9px] px-1.5 py-0 h-[16px] gap-0.5">
+                          <CheckCircle className="w-2.5 h-2.5" />{isRTL ? 'موثق' : 'Verified'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Completeness + Public URL */}
+                <div className="grid sm:grid-cols-2 gap-2 mt-4">
+                  <div className="p-2.5 rounded-xl bg-muted/30 border border-border/40">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-medium flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-accent" />
+                        {isRTL ? 'اكتمال الملف' : 'Profile completeness'}
+                      </span>
+                      <span className="text-[10px] font-bold tech-content">{completion.pct}%</span>
+                    </div>
+                    <Progress value={completion.pct} className="h-1.5" />
+                    <p className="text-[9px] text-muted-foreground mt-1">
+                      {completion.done}/{completion.total} {isRTL ? 'حقول مكتملة' : 'fields complete'}
+                    </p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-muted/30 border border-border/40">
+                    <span className="text-[10px] font-medium flex items-center gap-1 mb-1.5">
+                      <Globe className="w-3 h-3 text-accent" />
+                      {isRTL ? 'رابط الملف العام' : 'Public profile link'}
+                    </span>
+                    {publicProfileUrl ? (
+                      <div className="flex items-center gap-1">
+                        <code className="flex-1 min-w-0 text-[10px] tech-content truncate bg-background/60 px-1.5 py-1 rounded border border-border/40" dir="ltr">
+                          {publicProfileUrl.replace(/^https?:\/\//, '')}
+                        </code>
+                        <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={copyPublicUrl}>
+                          {copiedUrl ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
                         </Button>
-                      </>
+                        <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" asChild>
+                          <a href={publicProfileUrl} target="_blank" rel="noreferrer"><ExternalLink className="w-3 h-3" /></a>
+                        </Button>
+                      </div>
                     ) : (
-                      <>
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <p className="font-heading font-bold text-sm">{profile?.full_name || (isRTL ? 'بدون اسم' : 'No name')}</p>
-                            {profile?.phone_verified && <Badge className="bg-success/10 text-success text-[7px] px-1 py-0 h-3.5 gap-0.5"><CheckCircle className="w-2 h-2" />{isRTL ? 'موثق' : 'Verified'}</Badge>}
-                          </div>
-                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <Mail className="w-3 h-3" /><span className="tech-content">{getDisplayEmail({ authEmail: user?.email, profileEmail: profile?.email }) ?? (isRTL ? 'غير مضاف' : 'Not provided')}</span>
-                          </div>
-                          {profile?.phone && (
-                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                              <Phone className="w-3 h-3" /><span className="tech-content" dir="ltr">{profile.phone}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px] tech-content">
-                              <Hash className="w-2 h-2 me-0.5" />{displayRefId || profile?.ref_id}
-                            </Badge>
-                            <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px]">
-                              {profile?.account_type === 'provider' ? (isRTL ? 'مزود خدمة' : 'Provider') : (isRTL ? 'عميل' : 'Client')}
-                            </Badge>
-                            <Badge className="bg-accent/10 text-accent text-[8px] px-1.5 py-0 h-[14px]">
-                              {profile?.membership_tier || 'free'}
-                            </Badge>
-                          </div>
-                        </div>
-                      </>
+                      <p className="text-[10px] text-muted-foreground">
+                        {isRTL ? 'أضف اسم مستخدم لإنشاء رابط عام' : 'Add a username to get a public link'}
+                      </p>
                     )}
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Account Details */}
+            {/* ── Editable fields ──────────────────────────────── */}
+            {editingProfile ? (
+              <Card className="border-accent/40 ring-1 ring-accent/20">
+                <CardContent className="p-3 sm:p-4 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-accent" />
+                    <h3 className="font-heading font-bold text-sm">{isRTL ? 'البيانات الشخصية' : 'Personal information'}</h3>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-[10px]">{isRTL ? 'الاسم الكامل' : 'Full name'}</Label>
+                      <Input value={profileForm.full_name}
+                        onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))}
+                        className="h-9 text-sm mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-[10px]">{isRTL ? 'البريد الإلكتروني للملف' : 'Profile email'}</Label>
+                      <Input value={profileForm.email}
+                        onChange={e => setProfileForm(p => ({ ...p, email: e.target.value }))}
+                        className="h-9 text-sm mt-1 tech-content" dir="ltr" type="email" />
+                      <p className="text-[9px] text-muted-foreground mt-0.5">
+                        {isSyntheticPhoneEmail(user?.email)
+                          ? (isRTL ? 'تسجيل الدخول عبر الجوال.' : 'You sign in with your phone.')
+                          : (<>{isRTL ? 'دخول: ' : 'Login: '}<span className="tech-content font-medium">{user?.email}</span></>)}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-[10px]">{isRTL ? 'رقم الجوال' : 'Phone'}</Label>
+                      <Input value={profileForm.phone}
+                        onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))}
+                        className="h-9 text-sm mt-1 tech-content" dir="ltr" />
+                    </div>
+                    <div>
+                      <Label className="text-[10px] flex items-center gap-1">
+                        <Languages className="w-3 h-3" />
+                        {isRTL ? 'لغة المراسلات' : 'Preferred language'}
+                      </Label>
+                      <Select value={profileForm.preferred_language}
+                        onValueChange={(v: 'ar' | 'en') => setProfileForm(p => ({ ...p, preferred_language: v }))}>
+                        <SelectTrigger className="h-9 text-sm mt-1"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ar">العربية</SelectItem>
+                          <SelectItem value="en">English</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Username picker */}
+                  <div className="pt-2 border-t border-border/40">
+                    <UsernamePicker
+                      value={profileForm.username}
+                      onChange={(v) => setProfileForm(p => ({ ...p, username: v }))}
+                      onValidChange={({ isValid, isAvailable }) => setUsernameOk(isValid && isAvailable)}
+                      excludeUserId={user?.id}
+                      isRTL={isRTL}
+                      label={isRTL ? 'اسم المستخدم (Handle)' : 'Username (handle)'}
+                    />
+                  </div>
+
+                  {/* Location */}
+                  <div className="pt-2 border-t border-border/40">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="w-3.5 h-3.5 text-accent" />
+                      <p className="text-xs font-medium">{isRTL ? 'الموقع' : 'Location'}</p>
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-[10px]">{isRTL ? 'الدولة' : 'Country'}</Label>
+                        <Select value={profileForm.country_id ?? ''}
+                          onValueChange={(v) => setProfileForm(p => ({ ...p, country_id: v || null, city_id: null }))}>
+                          <SelectTrigger className="h-9 text-sm mt-1">
+                            <SelectValue placeholder={isRTL ? 'اختر دولة' : 'Select country'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countries.map(c => (
+                              <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-[10px]">{isRTL ? 'المدينة' : 'City'}</Label>
+                        <Select value={profileForm.city_id ?? ''} disabled={!profileForm.country_id}
+                          onValueChange={(v) => setProfileForm(p => ({ ...p, city_id: v || null }))}>
+                          <SelectTrigger className="h-9 text-sm mt-1">
+                            <SelectValue placeholder={profileForm.country_id ? (isRTL ? 'اختر مدينة' : 'Select city') : (isRTL ? 'اختر الدولة أولاً' : 'Pick country first')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {cities.map(c => (
+                              <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-border/40">
+                    <Button size="sm" className="text-xs gap-1.5" onClick={() => updateProfileMutation.mutate()}
+                      disabled={updateProfileMutation.isPending || (!!profileForm.username && !usernameOk)}>
+                      {updateProfileMutation.isPending
+                        ? <Loader2 className="w-3 h-3 animate-spin" />
+                        : <Check className="w-3 h-3" />}
+                      {isRTL ? 'حفظ التعديلات' : 'Save changes'}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-xs"
+                      onClick={() => setEditingProfile(false)} disabled={updateProfileMutation.isPending}>
+                      {isRTL ? 'إلغاء' : 'Cancel'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              /* Read-only quick view of editable fields */
+              <Card className="border-border/40">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <User className="w-4 h-4 text-accent" />
+                    <h3 className="font-heading font-bold text-sm">{isRTL ? 'البيانات الشخصية' : 'Personal information'}</h3>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    {[
+                      { icon: User, label: isRTL ? 'الاسم' : 'Name', value: profile?.full_name },
+                      { icon: AtSign, label: isRTL ? 'اسم المستخدم' : 'Username', value: profile?.username ? `@${profile.username}` : null, tech: true },
+                      { icon: Mail, label: isRTL ? 'البريد' : 'Email', value: getDisplayEmail({ authEmail: user?.email, profileEmail: profile?.email }), tech: true },
+                      { icon: Phone, label: isRTL ? 'الجوال' : 'Phone', value: profile?.phone, tech: true },
+                      { icon: Languages, label: isRTL ? 'لغة المراسلات' : 'Language', value: profile?.preferred_language === 'ar' ? 'العربية' : 'English' },
+                      { icon: MapPin, label: isRTL ? 'الموقع' : 'Location',
+                        value: [
+                          countries.find(c => c.id === profile?.country_id),
+                          cities.find(c => c.id === profile?.city_id),
+                        ].filter(Boolean).map(r => isRTL ? r!.name_ar : r!.name_en).join(' — ') || null },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors gap-2">
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground shrink-0">
+                          <item.icon className="w-3 h-3" />{item.label}
+                        </div>
+                        <span className={cn('text-[11px] font-medium text-end truncate', item.tech && 'tech-content')}>
+                          {item.value || <span className="text-muted-foreground italic">{isRTL ? 'غير مضاف' : 'Not set'}</span>}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* ── Account details (read-only system info) ──────── */}
             <Card className="border-border/40">
               <CardContent className="p-3 sm:p-4 space-y-2">
                 <div className="flex items-center gap-2 mb-2">
                   <Info className="w-4 h-4 text-accent" />
-                  <h3 className="font-heading font-bold text-sm">{isRTL ? 'تفاصيل الحساب' : 'Account Details'}</h3>
+                  <h3 className="font-heading font-bold text-sm">{isRTL ? 'البيانات النظامية' : 'System details'}</h3>
                 </div>
-                {[
-                  { icon: Fingerprint, label: isRTL ? 'المعرف' : 'ID', value: displayRefId || profile?.ref_id, tech: true },
-                  { icon: Globe, label: isRTL ? 'اللغة المفضلة' : 'Language', value: language === 'ar' ? 'العربية' : 'English' },
-                  // Login identifier: phone (for phone-login users) or email — never expose synthetic auth email.
-                  isSyntheticPhoneEmail(user?.email)
-                    ? { icon: Phone, label: isRTL ? 'رقم الدخول' : 'Login Phone', value: user?.phone ? `+${user.phone}` : (profile?.phone || '-'), tech: true }
-                    : { icon: Mail, label: isRTL ? 'بريد الدخول' : 'Login Email', value: user?.email, tech: true },
-                  { icon: Mail, label: isRTL ? 'البريد الرسمي' : 'Official Email', value: profile?.email || (isRTL ? 'غير مضاف' : 'Not provided'), tech: true },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <item.icon className="w-3 h-3" />{item.label}
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {[
+                    { icon: Fingerprint, label: isRTL ? 'المعرف' : 'Reference ID', value: displayRefId || profile?.ref_id, tech: true },
+                    isSyntheticPhoneEmail(user?.email)
+                      ? { icon: Phone, label: isRTL ? 'رقم الدخول' : 'Login phone', value: user?.phone ? `+${user.phone}` : (profile?.phone || '-'), tech: true }
+                      : { icon: Mail, label: isRTL ? 'بريد الدخول' : 'Login email', value: user?.email, tech: true },
+                    { icon: Globe, label: isRTL ? 'لغة الواجهة' : 'Interface', value: language === 'ar' ? 'العربية' : 'English' },
+                    { icon: Crown, label: isRTL ? 'الباقة' : 'Membership', value: profile?.membership_tier || 'free' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors gap-2">
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground shrink-0">
+                        <item.icon className="w-3 h-3" />{item.label}
+                      </div>
+                      <span className={cn('text-[11px] font-medium truncate', item.tech && 'tech-content')}>{item.value || '-'}</span>
                     </div>
-                    <span className={cn('text-xs font-medium', item.tech && 'tech-content')}>{item.value || '-'}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </CardContent>
             </Card>
 
-            {/* Danger Zone */}
+            {/* ── Danger Zone ───────────────────────────────────── */}
             <Card className="border-destructive/20">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <AlertTriangle className="w-4 h-4 text-destructive" />
-                  <h3 className="font-heading font-bold text-sm text-destructive">{isRTL ? 'منطقة الخطر' : 'Danger Zone'}</h3>
+                  <h3 className="font-heading font-bold text-sm text-destructive">{isRTL ? 'منطقة الخطر' : 'Danger zone'}</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" className="text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10" onClick={handleSignOut}>
-                    <LogOut className="w-3 h-3" />{isRTL ? 'تسجيل الخروج' : 'Sign Out'}
+                    <LogOut className="w-3 h-3" />{isRTL ? 'تسجيل الخروج' : 'Sign out'}
                   </Button>
                 </div>
               </CardContent>
