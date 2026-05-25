@@ -199,8 +199,10 @@ export const authService = {
       entity_type?: string;
       capabilities?: Record<string, boolean>;
       national_id?: string;
+      unified_number?: string;
       vat_number?: string;
       website?: string;
+      name_en?: string;
     },
   ) {
     const sanitizedName = sanitizeInput(businessName);
@@ -212,6 +214,7 @@ export const authService = {
       payload: {
         user_id: userId,
         name_ar: sanitizedName,
+        ...(extras?.name_en ? { name_en: sanitizeInput(extras.name_en) } : {}),
         username: sanitizedUsername,
         sectors: extras?.sectors ?? [],
         sub_services: extras?.sub_services ?? [],
@@ -222,6 +225,7 @@ export const authService = {
         ...(extras?.entity_type ? { entity_type: extras.entity_type } : {}),
         ...(extras?.capabilities ? { capabilities: extras.capabilities } : {}),
         ...(extras?.national_id ? { national_id: sanitizeInput(extras.national_id) } : {}),
+        ...(extras?.unified_number ? { unified_number: sanitizeInput(extras.unified_number) } : {}),
         ...(extras?.vat_number ? { vat_number: sanitizeInput(extras.vat_number) } : {}),
         ...(extras?.website ? { website: sanitizeInput(extras.website) } : {}),
       },
