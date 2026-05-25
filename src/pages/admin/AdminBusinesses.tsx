@@ -1085,6 +1085,9 @@ const AdminBusinesses = () => {
                       </Button>
                     </div>
                     <p>Ref: {editingBiz.ref_id}</p>
+                    {editingBiz.legacy_ref_id && editingBiz.legacy_ref_id !== editingBiz.ref_id && (
+                      <p>{isRTL ? 'المعرف السابق' : 'Previously'}: {editingBiz.legacy_ref_id}</p>
+                    )}
                     <p>Username: @{editingBiz.username}</p>
                     <p>Owner: {editingBiz.user_id}</p>
                     <p>Created: {new Date(editingBiz.created_at).toLocaleDateString()}</p>
