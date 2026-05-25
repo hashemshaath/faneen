@@ -3,9 +3,9 @@
  * Universal reference resolver route: /r/:refId
  *
  * Reads a human-readable reference ID from the URL, calls the unified
- * lookupByReference service (which wraps the SECURITY DEFINER RPC
- * public.lookup_by_reference) and redirects to the canonical internal
- * route for the resolved entity. Server + RLS remain authoritative.
+ * lookupByReference service from the reference module and redirects
+ * to the canonical internal route for the resolved entity.
+ * Server + RLS remain authoritative.
  *
  * Safety:
  *  - Never accepts raw UUIDs or invitation tokens as the URL ref.
