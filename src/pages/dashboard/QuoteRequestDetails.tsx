@@ -29,6 +29,8 @@ import {
 } from '@/lib/quoteRequests';
 import { uploadQuoteRequestFile } from '@/modules/quotes/services/uploadQuoteRequestFile';
 import { createQuoteRequestFileRecord } from '@/modules/quotes/services/createQuoteRequestFileRecord';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
+import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 
 interface QuoteRow {
   id: string;
@@ -277,7 +279,14 @@ const QuoteRequestDetails: React.FC = () => {
         <Card>
           <CardContent className="p-5 space-y-3">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="font-mono text-xs text-muted-foreground tech-content">#{quote.id.slice(-6)}</span>
+              {quote.ref_id ? (
+                <>
+                  <ReferenceBadge refId={quote.ref_id} />
+                  <ReferenceLinkCopy refId={quote.ref_id} isRTL={isRTL} />
+                </>
+              ) : (
+                <span className="font-mono text-xs text-muted-foreground tech-content">#{quote.id.slice(-6)}</span>
+              )}
               <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${tone}`}>
                 {isRTL ? QUOTE_STATUS_LABEL_AR[status] : QUOTE_STATUS_LABEL_EN[status]}
               </span>
