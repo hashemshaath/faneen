@@ -537,10 +537,18 @@ const About = () => {
         : ['Aluminum', 'Glass', 'Steel', 'Wood', 'Cabinets', 'Cladding', 'Facades', 'Windows'],
       contactPoint: {
         '@type': 'ContactPoint',
-        email: 'info@qitaat.com',
+        email: 'care@qitaat.com',
+        telephone: '+966569220777',
         contactType: 'customer support',
         availableLanguage: ['Arabic', 'English'],
       },
+      sameAs: [
+        'https://x.com/qitaatcom',
+        'https://instagram.com/qitaatcom',
+        'https://facebook.com/qitaatcom',
+        'https://youtube.com/@qitaatcom',
+        'https://linkedin.com/company/qitaatcom',
+      ],
     };
 
     const faqPage = {
@@ -580,7 +588,7 @@ const About = () => {
           name: language === 'ar' ? 'كيف أتواصل مع قِطاعات؟' : 'How can I contact Qitaat?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: language === 'ar' ? 'يمكنك التواصل عبر البريد الإلكتروني info@qitaat.com أو من خلال صفحة التواصل في الموقع.' : 'You can contact us via email at info@qitaat.com or through the contact page.',
+            text: language === 'ar' ? 'يمكنك التواصل عبر البريد care@qitaat.com أو واتساب 0569220777 أو من خلال صفحة التواصل.' : 'Contact us at care@qitaat.com, WhatsApp +966569220777, or via the contact page.',
           },
         },
       ],
