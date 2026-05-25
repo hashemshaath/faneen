@@ -1271,9 +1271,6 @@ const AdminUsers = () => {
               )}
 
               {/* Inline panels */}
-              {activePanel?.type === 'edit' && (
-                null
-              )}
               {activePanel?.type === 'create' && (
                 <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
                   <div className="flex items-center justify-between mb-4">
