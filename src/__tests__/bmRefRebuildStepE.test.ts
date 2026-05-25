@@ -103,12 +103,9 @@ describe('Step E — Synthetic phone email + provider_intent_id never leak to di
   });
 });
 
-describe('Step E — Route surface unchanged (no /r/:refId, no /dashboard/membership)', () => {
-  it('does not introduce a /r/:refId route', () => {
-    expect(APP).not.toMatch(/path="\/r\/:refId"/);
-    expect(APP).not.toMatch(/path='\/r\/:refId'/);
-  });
-
+describe('Step E — Route surface unchanged (no /dashboard/membership)', () => {
+  // Note: /r/:refId was intentionally introduced in Step F (universal
+  // reference resolver). The Step F regression suite owns that guard.
   it('does not reintroduce the broken /dashboard/membership route', () => {
     expect(APP).not.toContain('/dashboard/membership');
   });
