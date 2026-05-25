@@ -350,7 +350,11 @@ const DashboardBusinessEdit: React.FC = () => {
         </Card>
 
         {/* Contact */}
-        <Card>
+          </TabsContent>
+
+          <TabsContent value="contact" className="space-y-6 mt-4">
+            {/* Contact */}
+            <Card>
           <CardHeader>
             <CardTitle className={sectionTitle}><Phone className="w-4 h-4 text-primary" />{t(isRTL, 'وسائل التواصل', 'Contact channels')}</CardTitle>
             <CardDescription>{t(isRTL, 'أرقام الاتصال والبريد والموقع الإلكتروني.', 'Phones, email, and website.')}</CardDescription>
@@ -401,7 +405,11 @@ const DashboardBusinessEdit: React.FC = () => {
         </Card>
 
         {/* Location */}
-        <Card>
+          </TabsContent>
+
+          <TabsContent value="location" className="space-y-6 mt-4">
+            {/* Location */}
+            <Card>
           <CardHeader>
             <CardTitle className={sectionTitle}><MapPin className="w-4 h-4 text-primary" />{t(isRTL, 'الموقع والعنوان', 'Location & address')}</CardTitle>
             <CardDescription>{t(isRTL, 'العنوان الوطني (عربي/إنجليزي) وإحداثيات الموقع لظهور منشأتك على الخريطة.', 'National address (Arabic/English) and coordinates so your business shows on the map.')}</CardDescription>
@@ -484,7 +492,11 @@ const DashboardBusinessEdit: React.FC = () => {
         </Card>
 
         {/* Sectors */}
-        <Card>
+          </TabsContent>
+
+          <TabsContent value="sectors" className="space-y-6 mt-4">
+            {/* Sectors */}
+            <Card>
           <CardHeader>
             <CardTitle className={sectionTitle}><Layers className="w-4 h-4 text-primary" />{t(isRTL, 'القطاعات والخدمات', 'Sectors & services')}</CardTitle>
             <CardDescription>{t(isRTL, 'اختر القطاعات الصناعية وخدماتك الفرعية.', 'Pick the industrial sectors and sub-services.')}</CardDescription>
@@ -500,7 +512,11 @@ const DashboardBusinessEdit: React.FC = () => {
         </Card>
 
         {/* Legal */}
-        <Card>
+          </TabsContent>
+
+          <TabsContent value="legal" className="space-y-6 mt-4">
+            {/* Legal */}
+            <Card>
           <CardHeader>
             <CardTitle className={sectionTitle}><ShieldCheck className="w-4 h-4 text-primary" />{t(isRTL, 'البيانات النظامية والضريبية', 'Legal & tax identifiers')}</CardTitle>
             <CardDescription>{t(isRTL, 'السجل التجاري والرقم الموحّد ورقم ضريبة القيمة المضافة لتفعيل التوثيق وإصدار الفواتير.', 'CR, unified national number, and VAT number to enable verification and invoicing.')}</CardDescription>
@@ -561,7 +577,11 @@ const DashboardBusinessEdit: React.FC = () => {
         </Card>
 
         {/* Representatives */}
-        <RepresentativesSection
+          </TabsContent>
+
+          <TabsContent value="team" className="space-y-6 mt-4">
+            {/* Representatives */}
+            <RepresentativesSection
           businessId={form.id}
           ownerUserId={form.user_id}
           isRTL={isRTL}
@@ -570,7 +590,11 @@ const DashboardBusinessEdit: React.FC = () => {
         />
 
         {/* Audit log */}
-        <AuditLogPanel businessId={form.id} isRTL={isRTL} />
+          </TabsContent>
+
+          <TabsContent value="system" className="space-y-6 mt-4">
+            {/* Audit log */}
+            <AuditLogPanel businessId={form.id} isRTL={isRTL} />
 
         {/* Business barcode + 30x20 cm printable sticker */}
         <BusinessBarcodeCard
@@ -588,6 +612,10 @@ const DashboardBusinessEdit: React.FC = () => {
             <div className="flex items-center gap-2"><span className="font-medium">{t(isRTL, 'نشط:', 'Active:')}</span>{form.is_active ? '✓' : '—'}</div>
           </CardContent>
         </Card>
+
+        <Separator />
+          </TabsContent>
+        </Tabs>
 
         <Separator />
 
