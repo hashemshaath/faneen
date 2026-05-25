@@ -150,6 +150,7 @@ const DashboardBusinessEdit: React.FC = () => {
       const trim = (v: string | null) => (v?.trim() || null);
       const payload = {
         name_ar: trim(form.name_ar), name_en: trim(form.name_en),
+        username: trim(form.username),
         logo_url: form.logo_url || null, cover_url: form.cover_url || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         short_description_ar: form.short_description_ar || null, short_description_en: form.short_description_en || null,
