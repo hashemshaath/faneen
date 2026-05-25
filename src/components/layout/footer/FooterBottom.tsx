@@ -55,6 +55,17 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
             </button>
           </div>
         </div>
+
+        {/* Company registration info */}
+        <div className={`mt-3 pt-3 border-t border-surface-nav-foreground/[0.06] flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-3 transition-all duration-700 delay-400 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <span className="text-[11px] text-surface-nav-foreground/60 leading-snug">
+            {isRTL ? 'إحدى مشاريع شركة بيانات تكنولوجي المحدودة' : 'A project of Bayanat Technology Ltd.'}
+          </span>
+          <span className="hidden sm:inline text-surface-nav-foreground/25 text-[10px]">·</span>
+          <span className="text-[11px] text-surface-nav-foreground/60 leading-snug" dir="ltr">
+            {isRTL ? 'الرقم الوطني الموحد للمنشأة: 7054260257' : 'Unified National ID: 7054260257'}
+          </span>
+        </div>
       </div>
     </div>
   );
