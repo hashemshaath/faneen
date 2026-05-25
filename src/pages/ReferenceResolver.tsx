@@ -52,10 +52,14 @@ function routeForRow(row: ReferenceLookupRow): string | null {
       return `/dashboard/bookings`;
     case 'contract':
       return `/contracts/${row.id}`;
+    case 'payment_intent':
+      return `/membership`;
     case 'business':
       return null; // requires username — leave to server canonical_route
     case 'staff_invitation':
       return `/dashboard/business-edit`;
+    case 'provider_subscription':
+      return null; // no safe destination — handled as not_found
     default:
       return null;
   }
