@@ -1,11 +1,12 @@
 import React, { useCallback, useRef, useState } from 'react';
 import jsQR from 'jsqr';
-import { ScanLine, Loader2, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { ScanLine, Loader2, CheckCircle2, AlertCircle, X, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { parseCrPayload, type CrScanResult } from '@/components/admin/CrDocumentScanner';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const ACCEPTED = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
 
@@ -61,10 +62,44 @@ export const CrQuickScanInline: React.FC<Props> = ({ onParsed }) => {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<CrScanResult | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [enriched, setEnriched] = useState(false);
 
   const reset = useCallback(() => {
-    setDone(null); setErr(null);
+    setDone(null); setErr(null); setEnriched(false);
     if (inputRef.current) inputRef.current.value = '';
+  }, []);
+
+  /** Fetch the page that the QR URL points to and merge any extracted fields. */
+  const enrichFromUrl = useCallback(async (base: CrScanResult): Promise<CrScanResult> => {
+    if (!base.url) return base;
+    try {
+      const { data, error } = await supabase.functions.invoke('cr-fetch-from-url', {
+        body: { url: base.url },
+      });
+      if (error) throw error;
+      const payload = data as { ok?: boolean; found?: number; data?: Partial<CrScanResult> & Record<string, unknown> };
+      if (!payload?.ok || !payload.data) return base;
+      const merged: CrScanResult = { ...base };
+      const src = payload.data;
+      const fields: (keyof CrScanResult)[] = [
+        'cr_number', 'unified_number', 'vat_number', 'owner_name',
+        'business_name_ar', 'business_name_en', 'legal_entity',
+        'issue_date', 'expiry_date',
+      ];
+      for (const f of fields) {
+        const v = (src as Record<string, unknown>)[f];
+        if (!merged[f] && typeof v === 'string' && v.trim()) {
+          (merged as Record<string, unknown>)[f] = v.trim();
+        }
+      }
+      if (src.extras && typeof src.extras === 'object') {
+        merged.extras = { ...(src.extras as Record<string, string>), ...merged.extras };
+      }
+      setEnriched(true);
+      return merged;
+    } catch {
+      return base;
+    }
   }, []);
 
   const handle = useCallback(async (f: File) => {
@@ -87,15 +122,17 @@ export const CrQuickScanInline: React.FC<Props> = ({ onParsed }) => {
         return;
       }
       const parsed = parseCrPayload(raw);
-      setDone(parsed);
-      onParsed(parsed);
+      // If the QR encodes a URL, fetch that page and enrich.
+      const final = await enrichFromUrl(parsed);
+      setDone(final);
+      onParsed(final);
       toast.success(isRTL ? 'تم سحب البيانات من الباركود' : 'Data imported from QR');
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
-  }, [isRTL, onParsed]);
+  }, [isRTL, onParsed, enrichFromUrl]);
 
   return (
     <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3 space-y-2">
@@ -128,6 +165,12 @@ export const CrQuickScanInline: React.FC<Props> = ({ onParsed }) => {
       {done && (
         <div className="flex flex-wrap gap-1.5 text-xs">
           <Badge variant="secondary" className="gap-1"><CheckCircle2 className="w-3 h-3 text-success" />{isRTL ? 'تمت القراءة' : 'Parsed'}</Badge>
+          {enriched && (
+            <Badge variant="secondary" className="gap-1">
+              <Globe className="w-3 h-3 text-info" />
+              {isRTL ? 'مُثرى من صفحة الباركود' : 'Enriched from page'}
+            </Badge>
+          )}
           {done.cr_number && <Badge variant="outline" className="tech-content">CR: {done.cr_number}</Badge>}
           {done.unified_number && <Badge variant="outline" className="tech-content">700: {done.unified_number}</Badge>}
           {done.vat_number && <Badge variant="outline" className="tech-content">VAT: {done.vat_number}</Badge>}
