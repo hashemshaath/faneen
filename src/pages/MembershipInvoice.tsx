@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface InvoiceIntent {
   id: string;
+  ref_id: string | null;
   subscription_id: string | null;
   status: string;
   amount: number | string | null;
@@ -51,7 +52,7 @@ interface InvoiceIntent {
 }
 
 const SAFE_SELECT =
-  'id, subscription_id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata, plan:membership_plans(name_ar, name_en, tier), subscription:membership_subscriptions(id, ref_id, tier, starts_at, expires_at, business:businesses(id, name_ar, name_en, ref_id))';
+  'id, ref_id, subscription_id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata, plan:membership_plans(name_ar, name_en, tier), subscription:membership_subscriptions(id, ref_id, tier, starts_at, expires_at, business:businesses(id, name_ar, name_en, ref_id, legacy_ref_id))';
 
 function readRefundedAt(metadata: Record<string, unknown> | null): string | null {
   if (!metadata || typeof metadata !== 'object') return null;
@@ -172,7 +173,7 @@ const MembershipInvoice = () => {
               <dt className="text-xs text-muted-foreground mb-1">
                 {isRTL ? 'رقم الوثيقة' : 'Document ID'}
               </dt>
-              <dd className="tech-content font-mono text-foreground">{data.id}</dd>
+              <dd className="tech-content font-mono text-foreground">{data.ref_id ?? data.id}</dd>
             </div>
             {data.invoice_id && (
               <div>
