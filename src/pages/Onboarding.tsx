@@ -1014,7 +1014,7 @@ const Onboarding = () => {
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
           <button
             type="button"
-            onClick={() => setStep('business-details')}
+            onClick={() => setStep('entity-capabilities')}
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             {isRTL ? '→ رجوع' : '← Back'}
