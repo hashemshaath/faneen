@@ -306,6 +306,58 @@ const Onboarding = () => {
           vat_number: vatNumber || undefined,
           website: websiteUrl || undefined,
         });
+
+        // Resolve the just-created business id so we can attach the main
+        // location. This is intentionally non-blocking: if anything fails
+        // we surface a warning on the summary and let the user add a
+        // location later from the dashboard.
+        try {
+          const { data: bizRow } = await supabase
+            .from('businesses')
+            .select('id, approval_status, is_verified')
+            .eq('user_id', user!.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const businessId = (bizRow as { id?: string } | null)?.id ?? null;
+          if (bizRow) {
+            setCreatedEntityStatus({
+              approvalStatus: (bizRow as { approval_status?: string | null }).approval_status ?? null,
+              isVerified: (bizRow as { is_verified?: boolean | null }).is_verified ?? null,
+            });
+          }
+          if (businessId && locationName.trim()) {
+            const nameTrim = locationName.trim();
+            const addr = [locationAddress1.trim(), locationAddress2.trim()]
+              .filter(Boolean)
+              .join(' — ');
+            const { error: branchErr } = await insertBusinessBranch({
+              payload: {
+                business_id: businessId,
+                name_ar: nameTrim,
+                name_en: nameTrim,
+                is_main: locationType === 'headquarters',
+                location_type: locationType,
+                region: locationCity.trim() || null,
+                address: addr || null,
+                additional_number: locationPostalCode.trim() || null,
+              },
+            });
+            if (branchErr) {
+              setLocationWarning(
+                isRTL
+                  ? 'تم حفظ المنشأة لكن تعذّر حفظ الموقع الرئيسي. يمكنك إضافته لاحقاً من إعدادات المنشأة.'
+                  : 'Your entity was saved but the main location could not be created. You can add it later from entity settings.',
+              );
+            }
+          }
+        } catch {
+          setLocationWarning(
+            isRTL
+              ? 'تعذّر تأكيد حفظ الموقع. يمكنك إضافته لاحقاً من إعدادات المنشأة.'
+              : 'Could not confirm the location was saved. You can add it later from entity settings.',
+          );
+        }
       }
 
       await refreshProfile();
