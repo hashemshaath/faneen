@@ -38,7 +38,7 @@ const accountTypeLbl: Record<string, { ar: string; en: string }> = {
 };
 
 interface BizRow {
-  id: string; ref_id: string | null; name_ar: string | null; name_en: string | null;
+  id: string; ref_id: string | null; legacy_ref_id: string | null; name_ar: string | null; name_en: string | null;
   username: string | null; is_verified: boolean | null; is_active: boolean | null;
   membership_tier: string | null; approval_status: string | null;
 }
