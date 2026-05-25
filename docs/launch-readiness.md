@@ -18,10 +18,11 @@ All automated gates are green as of the close of
 | Gate | Result |
 |------|--------|
 | `bunx tsc --noEmit` | ✅ Clean |
-| `bunx vitest run` | ✅ **2553/2553** |
+| `bunx vitest run` | ✅ **2616/2616** |
 | `npm run broken-links-audit` | ✅ 0 broken |
 | `npm run sitemap-integrity-audit` | ✅ Pass |
 | 19 isolation audits | ✅ All pass |
+| Registration UX suite | ✅ 56/56 |
 | Autonomous source/DB/route smoke | ✅ No automated P0/P1 |
 
 No files were changed during the autonomous smoke phase. The codebase is
@@ -44,6 +45,10 @@ manual smoke.
 - **Reference-ID rebuild (BM-REF-REBUILD)** — **closed.** Steps A–I complete,
   `docs/reference-id-architecture.md` authoritative,
   `referenceIdArchitectureDoc.test.ts` enforces invariants.
+- **Registration UX (REGISTRATION-UX-FULL-COMPLETE-4)** — **closed.**
+  Intent selection, entity onboarding (main-location + staff-invite shell),
+  verification badge, admin access-request queue, catalog isolation fix.
+  `docs/registration-ux-smoke-checklist.md` authoritative.
 - **Autonomous smoke (APP-LAUNCH-AUTONOMOUS-SMOKE-AND-FIX-1)** — green.
 
 ---
@@ -73,10 +78,11 @@ owner on the live / sandbox environment before flipping to full production:
 3. **Moyasar sandbox payment** — full happy path through
    `createMembershipPaymentIntent` → return page → `PAY-…` ref →
    `/admin/membership-payments` row.
-4. **Fresh onboarding** — new account → onboarding wizard → dashboard,
-   confirm `is_onboarded` and ref-id provisioning.
+4. **Fresh onboarding (registration UX smoke)** — new account → onboarding wizard
+   → main-location → staff-invite → dashboard. See
+   `docs/registration-ux-smoke-checklist.md` for the owner checklist.
 5. **Admin walkthrough** — admin pages, cron runs, email center, membership
-   events, contact center.
+   events, contact center, entity access requests queue.
 6. **Cron / email queue activity confirmation** — confirm `cron_run_log`
    shows recent successful runs across scheduled jobs and `email_send_log`
    pending queue drains in the Lovable Cloud dashboard.
@@ -113,7 +119,10 @@ log; only P0 / quick-P1 fixes are permitted during freeze.
       official ref-id.
 - [ ] Admin walkthrough: contracts analytics, membership events, email
       center, contact center, cron runs.
-- [ ] Notifications / email: in-app action URLs resolve;
+- [ ] Notifications / email: in-app action URLs resolve.
+- [ ] **Registration UX smoke** (`docs/registration-ux-smoke-checklist.md`):
+  fresh signup → intent selection → business onboarding → main-location →
+  staff-invite skip → verification badge on summary → admin access requests.
       `email_send_log` pending → sent transitions observed.
 - [ ] Cron / email queue activity confirmed in Lovable Cloud dashboard.
 
