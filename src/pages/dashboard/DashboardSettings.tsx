@@ -458,7 +458,7 @@ const DashboardSettings = () => {
                         {profile?.account_type === 'provider' ? (isRTL ? 'مزود خدمة' : 'Provider') : (isRTL ? 'عميل' : 'Client')}
                       </Badge>
                       <Badge className="bg-accent/10 text-accent text-[9px] px-1.5 py-0 h-[16px] gap-0.5">
-                        <Crown />{profile?.membership_tier || 'free'}
+                        <Crown className="w-2.5 h-2.5" />{profile?.membership_tier || 'free'}
                       </Badge>
                       {profile?.phone_verified && (
                         <Badge className="bg-success/10 text-success text-[9px] px-1.5 py-0 h-[16px] gap-0.5">
