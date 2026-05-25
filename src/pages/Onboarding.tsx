@@ -494,10 +494,18 @@ const Onboarding = () => {
                 onClick={() => {
                   if (id === 'individual') {
                     setAccountType('individual');
-                    setStep('details');
+                    if (profile?.full_name && profile?.phone) {
+                      void completeOnboarding();
+                    } else {
+                      setStep('details');
+                    }
                   } else if (id === 'create-entity') {
                     setAccountType('business');
-                    setStep('details');
+                    if (profile?.full_name && profile?.phone) {
+                      setStep('business-details');
+                    } else {
+                      setStep('details');
+                    }
                   }
                   // join-invite & request-access render inline panels below
                 }}
