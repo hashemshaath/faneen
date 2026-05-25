@@ -65,7 +65,7 @@ const STEP_ORDER: OnboardingStep[] = [
 /**
  * REGISTRATION-UX-FULL-COMPLETE-1 Part 3
  * Allowed location types for the onboarding main-location step.
- * Government / state-entity wording is intentionally excluded.
+ * Public-sector / state-entity wording is intentionally excluded.
  */
 type LocationType =
   | 'headquarters'
