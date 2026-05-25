@@ -1120,14 +1120,13 @@ const Onboarding = () => {
             {isRTL ? '→ رجوع' : '← Back'}
           </button>
           <Button
-            onClick={completeOnboarding}
-            disabled={loading || sectors.length === 0}
+            onClick={() => setStep('main-location')}
+            disabled={sectors.length === 0}
             variant="hero"
             className="sm:w-64"
-            aria-label={isRTL ? 'إنشاء الحساب وحفظ كمسودة' : 'Create account and save as draft'}
+            aria-label={isRTL ? 'متابعة إلى الموقع الرئيسي' : 'Continue to main location'}
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
-            {isRTL ? 'إنشاء الحساب وحفظ كمسودة' : 'Create account & save as draft'}
+            {isRTL ? 'متابعة' : 'Continue'}
           </Button>
         </div>
       </div>
