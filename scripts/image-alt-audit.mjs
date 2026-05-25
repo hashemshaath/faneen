@@ -29,7 +29,9 @@ function walk(dir) {
   return out;
 }
 
-const files = walk(SRC);
+const files = walk(SRC).filter(
+  (p) => !/[\\/]__tests__[\\/]/.test(p) && !/\.test\.(t|j)sx?$/.test(p)
+);
 const errors = [];
 const warnings = [];
 
