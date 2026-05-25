@@ -442,8 +442,8 @@ const Onboarding = () => {
         icon: UserPlus,
         titleAr: 'طلب الانضمام لمنشأة قائمة',
         titleEn: 'Request access to an existing entity',
-        descAr: 'سيتم تفعيل هذا الخيار قريباً',
-        descEn: 'This option will be available soon',
+        descAr: 'ابحث بالاسم أو معرّف ENT- / BIZ- وأرسل طلباً للمالك',
+        descEn: 'Search by name or ENT- / BIZ- reference and send a request to the owner',
       },
     ];
     return (
