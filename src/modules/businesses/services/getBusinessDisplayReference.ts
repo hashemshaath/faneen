@@ -6,7 +6,7 @@
  *   - secondary: legacy BIZ-… ref_id (hint only)
  *
  * Never returns: UUID, provider_intent_id, tokens, login email, phone, or any
- * synthetic `@phone.qitaat.local` identifier. Those are not official references.
+ * synthetic phone-derived auth identifier. Those are not official references.
  */
 export interface BusinessDisplayReferenceInput {
   ref_id?: string | null;
