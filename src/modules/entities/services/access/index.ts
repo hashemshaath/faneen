@@ -8,3 +8,7 @@ export { createEntityAccessRequest } from './createEntityAccessRequest';
 export type { CreateEntityAccessRequestOptions, EntityAccessRequestRow } from './createEntityAccessRequest';
 export { findPossibleDuplicateEntities } from './findPossibleDuplicateEntities';
 export type { FindPossibleDuplicateEntitiesInput, PossibleDuplicateEntity } from './findPossibleDuplicateEntities';
+export { listEntityAccessRequests } from './listEntityAccessRequests';
+export type { ListEntityAccessRequestsOptions, EntityAccessRequestListRow } from './listEntityAccessRequests';
+export { reviewEntityAccessRequest } from './reviewEntityAccessRequest';
+export type { ReviewEntityAccessRequestOptions } from './reviewEntityAccessRequest';
