@@ -369,7 +369,7 @@ const AdminQuoteOperations: React.FC = () => {
       const ageHours = Math.round((Date.now() - new Date(a.quote.created_at).getTime()) / 3600000);
       const last = lastEventByQuote.get(a.quote.id);
       return {
-        quote_id_short: `#${a.quote.id.slice(-6)}`,
+        quote_ref: a.quote.ref_id ?? `#${a.quote.id.slice(-6)}`,
         sector: SECTOR_LABEL_AR[a.quote.sector] ?? a.quote.sector,
         city: a.quote.city,
         status: QUOTE_STATUS_LABEL_AR[a.quote.status as QuoteStatus] ?? a.quote.status,
@@ -380,7 +380,7 @@ const AdminQuoteOperations: React.FC = () => {
       };
     });
     const headers = [
-      'quote_id_short', 'sector', 'city', 'status', 'reason',
+      'quote_ref', 'sector', 'city', 'status', 'reason',
       'request_age_hours', 'last_event_type', 'admin_url',
     ];
     downloadCsv(`qitaat-follow-up-requests-${today}.csv`, rowsToCsv(headers, rows));
