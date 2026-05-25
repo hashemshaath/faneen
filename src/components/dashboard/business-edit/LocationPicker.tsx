@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPin, Crosshair, Loader2, Search, Wand2 } from 'lucide-react';
+import { MapPin, Crosshair, Loader2, Search, Wand2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -150,20 +150,34 @@ export const LocationPicker: React.FC<Props> = ({ isRTL, latitude, longitude, on
   const markerRef = useRef<L.Marker | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [busy, setBusy] = useState(false);
+  // Tracks whether the map tiles failed to load (offline / blocked / OSM down).
+  // When true, we hide the broken map and offer a manual-coordinates fallback.
+  const [mapFailed, setMapFailed] = useState(false);
+  const [mapAttempt, setMapAttempt] = useState(0);
+  const [manualLat, setManualLat] = useState<string>(latitude != null ? String(latitude) : '');
+  const [manualLng, setManualLng] = useState<string>(longitude != null ? String(longitude) : '');
 
   // Initialize map once
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+    setMapFailed(false);
     const initial: [number, number] =
       latitude != null && longitude != null ? [latitude, longitude] : RIYADH;
     const map = L.map(containerRef.current, { zoomControl: true, attributionControl: true }).setView(
       initial,
       latitude != null ? 16 : 11,
     );
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap',
-    }).addTo(map);
+    });
+    let failedTiles = 0;
+    tiles.on('tileerror', () => {
+      failedTiles += 1;
+      // A few transient errors are normal; flip to fallback only when many fail.
+      if (failedTiles >= 4) setMapFailed(true);
+    });
+    tiles.addTo(map);
 
     const placeOrMove = (lat: number, lng: number) => {
       if (markerRef.current) {
@@ -189,7 +203,7 @@ export const LocationPicker: React.FC<Props> = ({ isRTL, latitude, longitude, on
       markerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mapAttempt]);
 
   // Sync external lat/lng changes (e.g. manual input edits)
   useEffect(() => {
@@ -274,6 +288,28 @@ export const LocationPicker: React.FC<Props> = ({ isRTL, latitude, longitude, on
 
   const hasCoords = latitude != null && longitude != null;
 
+  // Keep manual inputs in sync with external coord changes (map pick, GPS, etc.).
+  useEffect(() => {
+    if (latitude != null) setManualLat(String(latitude));
+    if (longitude != null) setManualLng(String(longitude));
+  }, [latitude, longitude]);
+
+  const applyManualCoords = useCallback(() => {
+    const lat = Number(manualLat);
+    const lng = Number(manualLng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      toast.error(isRTL ? 'أدخل إحداثيات صحيحة' : 'Enter valid coordinates');
+      return;
+    }
+    onChange(+lat.toFixed(7), +lng.toFixed(7));
+    toast.success(isRTL ? 'تم حفظ الإحداثيات' : 'Coordinates saved');
+  }, [manualLat, manualLng, onChange, isRTL]);
+
+  const retryMap = useCallback(() => {
+    setMapFailed(false);
+    setMapAttempt((n) => n + 1);
+  }, []);
+
   return (
     <div className="space-y-3">
       <div className="flex flex-col sm:flex-row gap-2">
@@ -309,10 +345,53 @@ export const LocationPicker: React.FC<Props> = ({ isRTL, latitude, longitude, on
         </div>
       </div>
 
+      {/* Map container is always mounted (so Leaflet can init), but hidden
+          when tiles fail so the user sees the manual-coordinates fallback. */}
       <div
         ref={containerRef}
-        className="w-full h-[360px] rounded-xl border border-border overflow-hidden z-0"
+        className={`w-full h-[360px] rounded-xl border border-border overflow-hidden z-0 ${mapFailed ? 'hidden' : ''}`}
       />
+
+      {mapFailed && (
+        <div className="rounded-xl border border-dashed border-warning/40 bg-warning/[0.04] p-4 space-y-3">
+          <div className="flex items-start gap-2 text-sm">
+            <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+            <p className="text-muted-foreground">
+              {isRTL
+                ? 'تعذّر تحميل الخريطة حاليًا. يمكنك إدخال الإحداثيات يدويًا أو نسخها من خرائط جوجل.'
+                : 'Could not load the map right now. Enter coordinates manually or copy them from Google Maps.'}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs text-muted-foreground">{isRTL ? 'خط العرض (Latitude)' : 'Latitude'}</label>
+              <Input dir="ltr" inputMode="decimal" className="tech-content mt-1" placeholder="24.7136"
+                value={manualLat} onChange={(e) => setManualLat(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">{isRTL ? 'خط الطول (Longitude)' : 'Longitude'}</label>
+              <Input dir="ltr" inputMode="decimal" className="tech-content mt-1" placeholder="46.6753"
+                value={manualLng} onChange={(e) => setManualLng(e.target.value)} />
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" size="sm" onClick={applyManualCoords} className="gap-1.5">
+              <MapPin className="w-3.5 h-3.5" />{isRTL ? 'حفظ الإحداثيات' : 'Save coordinates'}
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={retryMap} className="gap-1.5">
+              <RefreshCw className="w-3.5 h-3.5" />{isRTL ? 'إعادة تحميل الخريطة' : 'Retry map'}
+            </Button>
+            <a
+              href="https://www.google.com/maps"
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-primary hover:underline self-center"
+            >
+              {isRTL ? 'فتح خرائط Google لنسخ الإحداثيات' : 'Open Google Maps to copy coordinates'}
+            </a>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">

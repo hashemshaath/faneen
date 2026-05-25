@@ -588,7 +588,7 @@ const DashboardBusinessEdit: React.FC = () => {
             <div>
               <Label className={fieldLabel}>{t(isRTL, 'المدينة', 'City')}</Label>
               <select className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                value={form.city_id ?? ''} disabled={!form.country_id || !regionId}
+                value={form.city_id ?? ''} disabled={!regionId}
                 onChange={(e) => update('city_id', e.target.value || null)}>
                 <option value="">
                   {!regionId
