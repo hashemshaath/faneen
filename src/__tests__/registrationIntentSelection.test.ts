@@ -45,9 +45,11 @@ describe('Registration Intent Selection (P1)', () => {
     expect(ONBOARDING).toMatch(/navigate\(`\/invite\/\$\{encodeURIComponent\(inviteToken\)\}`\)/);
   });
 
-  it('request-access is marked deferred (no backend write)', () => {
-    expect(ONBOARDING).toContain('data-deferred="request-access"');
-    expect(ONBOARDING).not.toMatch(/request_access_insert|requestAccess\.create/);
+  it('request-access is wired to the entity_access_requests backend', () => {
+    // REGISTRATION-UX-FULL-COMPLETE-1 — placeholder replaced by functional MVP
+    expect(ONBOARDING).toContain('data-feature="request-access"');
+    expect(ONBOARDING).toContain('createEntityAccessRequest');
+    expect(ONBOARDING).not.toContain('data-deferred="request-access"');
   });
 
   it('contains no government terminology in registration UI', () => {
