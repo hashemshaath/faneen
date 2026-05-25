@@ -18,9 +18,11 @@ import {
 } from '@/components/ui/select';
 
 import { STAFF_ROLE_META, type StaffRole } from './types';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 
 interface InvitationRow {
   id: string;
+  ref_id: string | null;
   email: string;
   role: StaffRole;
   status: 'pending' | 'accepted' | 'revoked' | 'expired';
@@ -67,7 +69,7 @@ export const InvitationsPanel: React.FC<Props> = ({
     queryFn: async (): Promise<InvitationRow[]> => {
       const { data, error } = await supabase
         .from('business_staff_invitations')
-        .select('id, email, role, status, token, expires_at, created_at, accepted_at')
+        .select('id, ref_id, email, role, status, token, expires_at, created_at, accepted_at')
         .eq('business_id', businessId)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -244,6 +246,7 @@ export const InvitationsPanel: React.FC<Props> = ({
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium tech-content truncate">{inv.email}</p>
                 <p className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap">
+                  {inv.ref_id && <ReferenceBadge refId={inv.ref_id} className="text-[10px]" />}
                   <span>{isRTL ? STAFF_ROLE_META[inv.role].ar : STAFF_ROLE_META[inv.role].en}</span>
                   <span>·</span>
                   <Clock className="w-3 h-3 inline" />

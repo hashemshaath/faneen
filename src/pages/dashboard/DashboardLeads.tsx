@@ -18,6 +18,7 @@ import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
 import { notifyCustomerLeadUpdate } from '@/modules/leads/services/notifyCustomerLeadUpdate';
 import { createOrGetLeadConversation } from '@/modules/leads/services/createOrGetLeadConversation';
 import { getManagedBusinessesForUser } from '@/modules/leads/services/getManagedBusinessesForUser';
+import { LegacyReferenceHint } from '@/components/reference/LegacyReferenceHint';
 
 const FILTERS: Array<{ key: 'all' | LeadStatus; ar: string; en: string }> = [
   { key: 'all',        ar: 'الكل',           en: 'All' },
@@ -286,6 +287,7 @@ const DashboardLeads: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="font-mono text-xs text-muted-foreground tech-content">{lead.ref_id ?? '—'}</span>
+                        <LegacyReferenceHint legacyRefId={(lead as { legacy_ref_id?: string | null }).legacy_ref_id ?? null} isRTL={isRTL} />
                         <LeadStatusBadge status={lead.status} />
                         {lead.priority && lead.priority !== 'normal' && (
                           <span className="text-[11px] px-2 py-0.5 rounded-full bg-warning/10 text-warning border border-warning/30">{lead.priority}</span>
