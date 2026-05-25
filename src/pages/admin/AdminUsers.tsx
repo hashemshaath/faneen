@@ -1272,6 +1272,66 @@ const AdminUsers = () => {
 
               {/* Inline panels */}
               {activePanel?.type === 'edit' && (
+                null
+              )}
+              {activePanel?.type === 'create' && (
+                <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-heading font-bold text-lg flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center"><UserPlus className="w-4 h-4 text-accent" /></div>
+                      {isRTL ? 'إنشاء مستخدم جديد' : 'Create New User'}
+                    </h3>
+                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاسم الكامل *' : 'Full name *'}</Label>
+                      <Input value={createForm.full_name} onChange={e => setCreateForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'البريد *' : 'Email *'}</Label>
+                      <Input type="email" dir="ltr" value={createForm.email} onChange={e => setCreateForm(p => ({ ...p, email: e.target.value }))} className="h-10 rounded-xl" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'كلمة المرور *' : 'Password *'}</Label>
+                      <Input type="text" dir="ltr" value={createForm.password} onChange={e => setCreateForm(p => ({ ...p, password: e.target.value }))} className="h-10 rounded-xl tech-content" placeholder="8+ chars" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الهاتف' : 'Phone'}</Label>
+                      <Input dir="ltr" value={createForm.phone} onChange={e => setCreateForm(p => ({ ...p, phone: e.target.value }))} className="h-10 rounded-xl tech-content" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
+                      <Select value={createForm.account_type} onValueChange={v => setCreateForm(p => ({ ...p, account_type: v }))}>
+                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="individual">{isRTL ? 'فرد' : 'Individual'}</SelectItem>
+                          <SelectItem value="business">{isRTL ? 'مزود خدمة' : 'Provider'}</SelectItem>
+                          <SelectItem value="company">{isRTL ? 'شركة' : 'Company'}</SelectItem>
+                        </SelectContent>
+                      </Select></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'العضوية' : 'Tier'}</Label>
+                      <Select value={createForm.membership_tier} onValueChange={v => setCreateForm(p => ({ ...p, membership_tier: v }))}>
+                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
+                          <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
+                          <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
+                          <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
+                        </SelectContent>
+                      </Select></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الصلاحية' : 'Role'}</Label>
+                      <Select value={createForm.role} onValueChange={v => setCreateForm(p => ({ ...p, role: v }))}>
+                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">{isRTL ? 'بدون' : 'None'}</SelectItem>
+                          <SelectItem value="moderator">{isRTL ? 'مشرف محتوى' : 'Moderator'}</SelectItem>
+                          <SelectItem value="admin">{isRTL ? 'مشرف' : 'Admin'}</SelectItem>
+                          <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
+                        </SelectContent>
+                      </Select></div>
+                  </div>
+                  <Separator className="my-4" />
+                  <div className="flex items-center gap-2 justify-end">
+                    <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                    <Button onClick={() => createUserMutation.mutate(createForm)} disabled={createUserMutation.isPending || !createForm.email || !createForm.password || !createForm.full_name} className="rounded-xl gap-2">
+                      {createUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{isRTL ? 'إنشاء' : 'Create'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {activePanel?.type === 'edit' && (
                 <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-heading font-bold text-lg flex items-center gap-2">
