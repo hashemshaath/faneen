@@ -197,6 +197,17 @@ const Onboarding = () => {
     }
   }, [step, draftLoaded, accountType, user?.id]);
 
+  // Auto-skip the "Complete your details" step when the profile already
+  // has the data we'd be asking for again (name + phone).
+  useEffect(() => {
+    if (!draftLoaded) return;
+    if (step !== 'details') return;
+    if (!profile?.full_name || !profile?.phone) return;
+    if (accountType === 'business') setStep('business-details');
+    else void completeOnboarding();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, draftLoaded, profile?.full_name, profile?.phone, accountType]);
+
   const otp = useOtpFlow({
     isRTL,
     onSendOtp: () => authService.sendOtp(phone, countryCode),
@@ -494,10 +505,18 @@ const Onboarding = () => {
                 onClick={() => {
                   if (id === 'individual') {
                     setAccountType('individual');
-                    setStep('details');
+                    if (profile?.full_name && profile?.phone) {
+                      void completeOnboarding();
+                    } else {
+                      setStep('details');
+                    }
                   } else if (id === 'create-entity') {
                     setAccountType('business');
-                    setStep('details');
+                    if (profile?.full_name && profile?.phone) {
+                      setStep('business-details');
+                    } else {
+                      setStep('details');
+                    }
                   }
                   // join-invite & request-access render inline panels below
                 }}
