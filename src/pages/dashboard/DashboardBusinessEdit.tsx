@@ -613,7 +613,6 @@ const DashboardBusinessEdit: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Separator />
           </TabsContent>
         </Tabs>
 
