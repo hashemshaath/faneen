@@ -255,7 +255,7 @@ const Onboarding = () => {
   }
 
   // REGISTRATION-UX-IMPLEMENTATION-P1 — Intent Selection (Model D)
-  // Four intents. No government option. Existing flows are preserved.
+  // Four intents. Public-sector entities are excluded by design. Existing flows preserved.
   if (step === 'intent') {
     const intents = [
       {
