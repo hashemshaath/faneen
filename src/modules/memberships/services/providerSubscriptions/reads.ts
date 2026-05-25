@@ -27,7 +27,7 @@ export interface ListProviderSubscriptionsOptions {
 }
 
 export async function listProviderSubscriptions<T = unknown>({
-  select = 'id, business_id, provider_user_id, plan_id, status, lead_credits_balance, current_period_start, current_period_end, updated_at, plan:provider_plans(id, code, name_ar, lead_credits_per_month), business:businesses!provider_subscriptions_business_id_fkey(id, name_ar, user_id)',
+  select = 'id, ref_id, business_id, provider_user_id, plan_id, status, lead_credits_balance, current_period_start, current_period_end, updated_at, plan:provider_plans(id, code, name_ar, lead_credits_per_month), business:businesses!provider_subscriptions_business_id_fkey(id, name_ar, user_id)',
   limit = 500,
 }: ListProviderSubscriptionsOptions = {}): Promise<{ data: T[] | null; error: unknown }> {
   const { data, error } = await supabase
