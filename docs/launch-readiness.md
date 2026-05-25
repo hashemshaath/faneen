@@ -78,10 +78,11 @@ owner on the live / sandbox environment before flipping to full production:
 3. **Moyasar sandbox payment** — full happy path through
    `createMembershipPaymentIntent` → return page → `PAY-…` ref →
    `/admin/membership-payments` row.
-4. **Fresh onboarding** — new account → onboarding wizard → dashboard,
-   confirm `is_onboarded` and ref-id provisioning.
+4. **Fresh onboarding (registration UX smoke)** — new account → onboarding wizard
+   → main-location → staff-invite → dashboard. See
+   `docs/registration-ux-smoke-checklist.md` for the owner checklist.
 5. **Admin walkthrough** — admin pages, cron runs, email center, membership
-   events, contact center.
+   events, contact center, entity access requests queue.
 6. **Cron / email queue activity confirmation** — confirm `cron_run_log`
    shows recent successful runs across scheduled jobs and `email_send_log`
    pending queue drains in the Lovable Cloud dashboard.
