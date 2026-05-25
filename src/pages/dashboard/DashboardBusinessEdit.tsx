@@ -34,6 +34,7 @@ import { ValidationBanner, FieldError } from '@/components/dashboard/business-ed
 import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
+import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
 
 interface RefRow { id: string; name_ar: string; name_en: string }
 interface CityRow extends RefRow { country_id: string }
@@ -502,6 +503,46 @@ const DashboardBusinessEdit: React.FC = () => {
                 <Input dir="ltr" className="mt-1 tech-content" value={form.vat_number ?? ''} onChange={(e) => update('vat_number', e.target.value)} placeholder="3xxxxxxxxxxxxx3" maxLength={15} />
                 <FieldError issue={issueMap.vat_number} isRTL={isRTL} /></div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Commercial Registration QR scanner */}
+        <Card>
+          <CardHeader>
+            <CardTitle className={sectionTitle}>
+              <ShieldCheck className="w-4 h-4 text-primary" />
+              {t(isRTL, 'استيراد بيانات السجل التجاري', 'Import from Commercial Registration')}
+            </CardTitle>
+            <CardDescription>
+              {t(
+                isRTL,
+                'ارفع وثيقة السجل التجاري أو صورة الباركود (PDF / صورة) لتعبئة الحقول النظامية تلقائيًا.',
+                'Upload your CR document or QR image (PDF / image) to auto-fill all legal fields.',
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CrDocumentScanner
+              businessId={form.id}
+              defaults={{
+                cr_document_url: form.cr_document_url ?? null,
+                cr_document_uploaded_at: form.cr_document_uploaded_at ?? null,
+                cr_scan_data: null,
+                cr_scan_raw: null,
+                national_id: form.national_id ?? null,
+                unified_number: form.unified_number ?? null,
+                vat_number: form.vat_number ?? null,
+                cr_owner_name: form.cr_owner_name ?? null,
+                cr_legal_entity: form.cr_legal_entity ?? null,
+                cr_issue_date: form.cr_issue_date ?? null,
+                cr_expiry_date: form.cr_expiry_date ?? null,
+                name_ar: form.name_ar,
+                name_en: form.name_en,
+              }}
+              onSaved={() => {
+                qc.invalidateQueries({ queryKey: ['business-edit', user?.id] });
+              }}
+            />
           </CardContent>
         </Card>
 
