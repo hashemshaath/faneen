@@ -1002,12 +1002,31 @@ const Onboarding = () => {
             <h2 className="font-heading font-bold text-2xl text-foreground">
               {isRTL ? 'تم حفظ بيانات منشأتك' : 'Your business profile is saved'}
             </h2>
+            {accountType === 'business' && (
+              <div className="flex justify-center" data-feature="entity-verification-badge">
+                <EntityVerificationStatusBadge
+                  approvalStatus={createdEntityStatus?.approvalStatus ?? 'draft'}
+                  isVerified={createdEntityStatus?.isVerified ?? false}
+                />
+              </div>
+            )}
             <p className="text-sm text-muted-foreground">
               {isRTL
                 ? 'يمكنك إكمال أي بيانات ناقصة من لوحة التحكم ثم إرسال الملف للمراجعة.'
                 : 'You can complete any remaining fields from the dashboard, then submit your profile for review.'}
             </p>
           </div>
+
+          {locationWarning && (
+            <div
+              className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs text-warning-foreground"
+              role="status"
+              data-feature="main-location-warning"
+            >
+              <AlertCircle className="w-3.5 h-3.5 inline-block me-1 text-warning" />
+              {locationWarning}
+            </div>
+          )}
 
           <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-3">
             <div className="flex items-center justify-between text-xs">
