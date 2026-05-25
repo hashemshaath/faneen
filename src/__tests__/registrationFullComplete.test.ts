@@ -69,9 +69,11 @@ describe('Registration Full Complete — entity types (no government)', () => {
 
 describe('Registration Full Complete — capabilities', () => {
   it('offers provider / buyer / both modes', () => {
-    expect(ONBOARDING).toMatch(/data-capability-mode="provider"/);
-    expect(ONBOARDING).toMatch(/data-capability-mode="buyer"/);
-    expect(ONBOARDING).toMatch(/data-capability-mode="both"/);
+    // Modes are rendered via a literal options array consumed by data-capability-mode={o.id}.
+    expect(ONBOARDING).toContain('data-capability-mode={o.id}');
+    expect(ONBOARDING).toMatch(/id:\s*'provider'/);
+    expect(ONBOARDING).toMatch(/id:\s*'buyer'/);
+    expect(ONBOARDING).toMatch(/id:\s*'both'/);
   });
 
   it('translates modes into a structured capabilities jsonb shape', () => {
