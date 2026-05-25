@@ -41,7 +41,7 @@ describe('Reference-ID Architecture Doc', () => {
 
   it('includes provider_intent_id not official', () => {
     const doc = readDoc();
-    expect(doc).toMatch(/provider_intent_id.*not official/i);
+    expect(doc).toMatch(/provider_intent_id.*Internal payment token/i);
     expect(doc).toMatch(/Never display.*provider_intent_id/);
   });
 
