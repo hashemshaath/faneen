@@ -62,10 +62,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const { errors, validateEmailField, validatePhoneField, clearError } = useFieldValidation(isRTL);
 
-  const handleEmailBlur = () => {
+  const handleEmailBlur = async () => {
     if (!email) return;
     const valid = validateEmailField(email);
-    if (valid) setEmailExists(false);
+    if (!valid) { setEmailExists(false); return; }
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.rpc('check_email_registered', { _email: email.trim() });
+      if (!error) setEmailExists(Boolean(data));
+    } catch { /* non-blocking */ }
   };
 
   const pickIntent = (id: RegisterIntent) => {
