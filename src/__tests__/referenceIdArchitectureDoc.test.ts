@@ -53,7 +53,7 @@ describe('Reference-ID Architecture Doc', () => {
 
   it('includes synthetic email not official', () => {
     const doc = readDoc();
-    expect(doc).toMatch(/synthetic email/i);
-    expect(doc).toMatch(/email.*not official/i);
+    expect(doc).toMatch(/synthetic emails/i);
+    expect(doc).toMatch(/Auth identifiers, not references/i);
   });
 });
