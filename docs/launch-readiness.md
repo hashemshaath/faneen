@@ -45,6 +45,10 @@ manual smoke.
 - **Reference-ID rebuild (BM-REF-REBUILD)** — **closed.** Steps A–I complete,
   `docs/reference-id-architecture.md` authoritative,
   `referenceIdArchitectureDoc.test.ts` enforces invariants.
+- **Registration UX (REGISTRATION-UX-FULL-COMPLETE-4)** — **closed.**
+  Intent selection, entity onboarding (main-location + staff-invite shell),
+  verification badge, admin access-request queue, catalog isolation fix.
+  `docs/registration-ux-smoke-checklist.md` authoritative.
 - **Autonomous smoke (APP-LAUNCH-AUTONOMOUS-SMOKE-AND-FIX-1)** — green.
 
 ---
