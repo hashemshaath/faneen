@@ -6,6 +6,7 @@
 // so the client can show friendly messages without dealing with status codes.
 
 import 'https://deno.land/x/xhr@0.1.0/mod.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,13 +46,30 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    const apiKey = Deno.env.get('SPL_API_KEY');
+    // Resolve the SPL key: env secret first, then platform_settings fallback so
+    // admins can manage it from /admin/api-settings without a redeploy.
+    let apiKey = Deno.env.get('SPL_API_KEY') ?? '';
+    if (!apiKey) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+        const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+        if (supabaseUrl && serviceKey) {
+          const admin = createClient(supabaseUrl, serviceKey);
+          const { data } = await admin
+            .from('platform_settings')
+            .select('setting_value, is_active')
+            .eq('setting_key', 'SPL_API_KEY')
+            .maybeSingle();
+          if (data?.is_active && data.setting_value) apiKey = data.setting_value as string;
+        }
+      } catch (_) { /* fall through to not_configured */ }
+    }
     if (!apiKey) {
       return json({
         ok: false,
         code: 'not_configured',
-        message_ar: 'خدمة العنوان الوطني غير مُفعّلة بعد. يرجى إضافة مفتاح SPL_API_KEY.',
-        message_en: 'National Address service is not configured. Please add the SPL_API_KEY secret.',
+        message_ar: 'خدمة العنوان الوطني غير مُفعّلة بعد. أضف مفتاح SPL_API_KEY من لوحة الأدمن: إعدادات API والتكاملات.',
+        message_en: 'National Address service is not configured. Add the SPL_API_KEY from Admin → API Settings & Integrations.',
       });
     }
 
