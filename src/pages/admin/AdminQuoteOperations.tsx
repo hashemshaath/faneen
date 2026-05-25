@@ -30,7 +30,7 @@ import {
 type Range = 'today' | '7d' | '30d' | '90d' | 'all';
 
 interface QuoteRow {
-  id: string; sector: string; city: string; status: string; created_at: string;
+  id: string; ref_id: string | null; sector: string; city: string; status: string; created_at: string;
 }
 interface LeadRow {
   id: string; quote_request_id: string; provider_id: string; status: string;
