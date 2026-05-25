@@ -34,7 +34,7 @@ describe('Step D — Reference display utilities exist and are importable', () =
 
 describe('Step D — Admin payments surface PAY ref_id and relabel provider', () => {
   it('selects ref_id from membership_payment_intents', () => {
-    expect(ADMIN_PAYMENTS).toMatch(/select[^']*ref_id/);
+    expect(ADMIN_PAYMENTS).toMatch(/SELECT_COLS\s*=\s*'[^']*ref_id/);
   });
 
   it('renders a dedicated Payment Ref column header (EN + AR)', () => {
