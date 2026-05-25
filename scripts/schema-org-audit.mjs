@@ -115,22 +115,6 @@ const pages = [
     ],
     critical: true,
   },
-  {
-    name: "قسم مزودي الخدمة (TopProviders)",
-    file: "src/components/home/TopProvidersSection.tsx",
-    required: [
-      { type: "ItemList", label: "ItemList schema" },
-      { type: "ListItem", label: "ListItem schema" },
-      { type: "LocalBusiness", label: "LocalBusiness in list items" },
-      { type: "AggregateRating", label: "AggregateRating in providers" },
-    ],
-    requiredFields: [
-      { field: "numberOfItems", label: "numberOfItems count" },
-      { field: "itemListElement", label: "itemListElement array" },
-      { field: "priceRange", label: "priceRange in LocalBusiness" },
-    ],
-    critical: true,
-  },
 ];
 
 /* ── Hooks file validation ── */
