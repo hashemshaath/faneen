@@ -89,7 +89,7 @@ export const CrQuickScanInline: React.FC<Props> = ({ onParsed }) => {
       for (const f of fields) {
         const v = (src as Record<string, unknown>)[f];
         if (!merged[f] && typeof v === 'string' && v.trim()) {
-          (merged as Record<string, unknown>)[f] = v.trim();
+          (merged as unknown as Record<string, unknown>)[f] = v.trim();
         }
       }
       if (src.extras && typeof src.extras === 'object') {
