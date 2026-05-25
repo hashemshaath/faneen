@@ -19,6 +19,7 @@ import {
   CheckCircle2, XCircle, Shield, Key, Server, Lock, Bot, Sparkles,
   Map, BarChart3, Copy, ExternalLink, ChevronDown, ChevronUp,
   BookOpen, Zap, Info, Search, X, Code2, Hash, Activity,
+  MapPin,
 } from 'lucide-react';
 
 /* ═══════════ Types ═══════════ */
@@ -112,6 +113,23 @@ const categoryConfig: Record<string, CategoryMeta> = {
       en: ['Restrict each key to a specific domain', 'Enable Google Cloud billing to avoid unexpected suspension', 'reCAPTCHA Secret must stay private — never use in frontend code'],
     },
   },
+  address: {
+    icon: MapPin, gradient: 'from-primary/15 to-primary/5', iconColor: 'text-primary',
+    label: { ar: 'العنوان الوطني السعودي (SPL)', en: 'Saudi National Address (SPL)' },
+    desc: { ar: 'مفتاح بوابة العنوان الوطني للبحث بالعنوان المختصر وتعبئة بيانات الموقع تلقائياً', en: 'National Address gateway key for short-address lookup and auto-filling location data' },
+    docsUrl: 'https://api.address.gov.sa/',
+    setup: {
+      ar: ['سجّل دخولك إلى بوابة api.address.gov.sa', 'أنشئ تطبيقاً جديداً واطلب الاشتراك في خدمة "Address by Short Address"', 'انسخ مفتاح API الخاص بك من لوحة التحكم', 'الصق المفتاح هنا وفعّل الخدمة', 'جرّب البحث من صفحة تعديل المنشأة /dashboard/business-edit'],
+      en: ['Sign in to api.address.gov.sa portal', 'Create a new application and subscribe to "Address by Short Address"', 'Copy your API key from the dashboard', 'Paste it here and enable the service', 'Test via the business edit page /dashboard/business-edit'],
+    },
+    endpoints: [
+      { method: 'POST', path: '/national-address-lookup', desc: { ar: 'تحويل العنوان المختصر إلى عنوان كامل', en: 'Resolve short address into full structured address' }, body: `{\n  "shortAddress": "RRRD2402"\n}` },
+    ],
+    securityNotes: {
+      ar: ['المفتاح حساس ولا يجب استخدامه في الكود الأمامي — يُستهلك فقط من Edge Function', 'راقب الاستخدام من بوابة العنوان الوطني لتفادي تجاوز الحصة', 'يمكن إيقاف الخدمة مؤقتاً عند الحاجة دون حذف المفتاح'],
+      en: ['Key is sensitive — never use it in frontend code, only from the Edge Function', 'Monitor usage from the SPL portal to avoid quota overruns', 'You can disable the service temporarily without deleting the key'],
+    },
+  },
 };
 
 const settingIcons: Record<string, React.ElementType> = {
@@ -121,6 +139,7 @@ const settingIcons: Record<string, React.ElementType> = {
   OPENAI_API_KEY: Bot, GOOGLE_AI_KEY: Sparkles,
   GOOGLE_MAPS_KEY: Map, GOOGLE_ANALYTICS_ID: BarChart3,
   GOOGLE_RECAPTCHA_KEY: Shield, GOOGLE_RECAPTCHA_SECRET: Lock, FCM_SERVER_KEY: Key,
+  SPL_API_KEY: MapPin,
 };
 
 /* ═══════════ Code Block ═══════════ */
