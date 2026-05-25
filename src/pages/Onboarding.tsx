@@ -344,8 +344,10 @@ const Onboarding = () => {
           entity_type: entityType,
           capabilities: capabilitiesFromMode(capabilityMode),
           national_id: crNumber || undefined,
+          unified_number: unifiedNumber || undefined,
           vat_number: vatNumber || undefined,
           website: websiteUrl || undefined,
+          name_en: businessNameEn || undefined,
         });
 
         // Resolve the just-created business id so we can attach the main
