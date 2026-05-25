@@ -261,6 +261,21 @@ const Onboarding = () => {
         } else {
           setStep(draftStep);
         }
+      } else {
+        // REGISTRATION-UX-VISIBLE-FIX — honor pending intent picked on the
+        // /auth?mode=register screen so /onboarding does not show the
+        // intent step again. We still surface invite / request-access
+        // affordances later in the flow.
+        try {
+          const pending = localStorage.getItem('qitaat_pending_intent');
+          if (pending === 'create-entity' || pending === 'individual'
+              || pending === 'join-invite' || pending === 'request-access') {
+            if (pending === 'create-entity') setAccountType('business');
+            else setAccountType('individual');
+            setStep(pending === 'create-entity' ? 'business-details' : 'details');
+            localStorage.removeItem('qitaat_pending_intent');
+          }
+        } catch { /* storage unavailable — non-blocking */ }
       }
       setDraftLoaded(true);
     })();
