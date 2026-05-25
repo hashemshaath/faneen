@@ -32,6 +32,10 @@ import {
   findPossibleDuplicateEntities,
   type PossibleDuplicateEntity,
 } from '@/modules/entities/services/access';
+import { insertBusinessBranch } from '@/modules/businesses';
+import { listOwnerBusinesses } from '@/modules/businesses';
+import { EntityVerificationStatusBadge } from '@/components/entities/EntityVerificationStatusBadge';
+import { listActiveCities } from '@/modules/locations';
 
 type OnboardingStep =
   | 'intent'
@@ -42,6 +46,8 @@ type OnboardingStep =
   | 'entity-type'
   | 'entity-capabilities'
   | 'business-sectors'
+  | 'main-location'
+  | 'staff-invite'
   | 'summary';
 
 const STEP_ORDER: OnboardingStep[] = [
@@ -53,6 +59,8 @@ const STEP_ORDER: OnboardingStep[] = [
   'entity-type',
   'entity-capabilities',
   'business-sectors',
+  'main-location',
+  'staff-invite',
   'summary',
 ];
 
@@ -71,6 +79,22 @@ type EntityType =
   | 'other';
 
 type CapabilityMode = 'provider' | 'buyer' | 'both';
+
+/**
+ * REGISTRATION-UX-FULL-COMPLETE-1 Part 2
+ * Supported location types for the entity main location. Public-sector / state
+ * site types are intentionally excluded.
+ */
+type LocationType =
+  | 'headquarters'
+  | 'branch'
+  | 'office'
+  | 'factory'
+  | 'warehouse'
+  | 'project_site'
+  | 'service_site'
+  | 'client_site'
+  | 'other';
 
 function capabilitiesFromMode(mode: CapabilityMode): Record<string, boolean> {
   const isProvider = mode === 'provider' || mode === 'both';
