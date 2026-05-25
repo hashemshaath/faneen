@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useTransition, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -95,7 +96,8 @@ type ActivePanel =
   | null
   | { type: 'edit'; profile: Profile }
   | { type: 'password'; userId: string; userName: string }
-  | { type: 'delete'; userId: string; userName: string };
+  | { type: 'delete'; userId: string; userName: string }
+  | { type: 'create' };
 
 type SortKey = 'created_at' | 'full_name' | 'membership_tier' | 'account_type';
 type Density = 'comfortable' | 'compact';
@@ -455,6 +457,13 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
               </Button>
             </TooltipTrigger><TooltipContent>{isRTL ? 'التفاصيل' : 'Details'}</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild>
+              <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-xl">
+                <Link to={`/admin/users/${profile.user_id}`} aria-label={isRTL ? 'فتح صفحة المستخدم' : 'Open user page'}>
+                  <Eye className="w-4 h-4" />
+                </Link>
+              </Button>
+            </TooltipTrigger><TooltipContent>{isRTL ? 'صفحة كاملة' : 'Full page'}</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onEdit(profile)}>
                 <Pencil className="w-4 h-4" />
               </Button>
@@ -554,9 +563,32 @@ const AdminUsers = () => {
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    email: '', password: '', full_name: '', phone: '',
+    account_type: 'individual', membership_tier: 'free', role: 'none',
+  });
   const passwordValidationMessage = useMemo(() => getPasswordValidationMessage(newPassword, isRTL), [newPassword, isRTL]);
 
-  const closePanel = () => { setActivePanel(null); setNewPassword(''); setShowNewPassword(false); };
+  const closePanel = () => {
+    setActivePanel(null); setNewPassword(''); setShowNewPassword(false);
+    setCreateForm({ email: '', password: '', full_name: '', phone: '', account_type: 'individual', membership_tier: 'free', role: 'none' });
+  };
+
+  const createUserMutation = useMutation({
+    mutationFn: async (payload: typeof createForm) => {
+      const { data, error } = await supabase.functions.invoke('admin-create-user', { body: payload });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
+      closePanel();
+      toast.success(isRTL ? 'تم إنشاء المستخدم' : 'User created');
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل الإنشاء' : 'Failed to create')),
+  });
 
   // Keyboard shortcuts: ⌘K / Ctrl+K to focus search, Esc to clear panel/selection
   useEffect(() => {
@@ -994,6 +1026,12 @@ const AdminUsers = () => {
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
             </Button>
+            {isSuperAdmin && (
+              <Button size="sm" className="gap-2 rounded-xl h-9" onClick={() => setActivePanel({ type: 'create' })}>
+                <UserPlus className="w-4 h-4" />
+                <span className="hidden sm:inline">{isRTL ? 'إنشاء مستخدم' : 'New User'}</span>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -1233,6 +1271,63 @@ const AdminUsers = () => {
               )}
 
               {/* Inline panels */}
+              {activePanel?.type === 'create' && (
+                <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-heading font-bold text-lg flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center"><UserPlus className="w-4 h-4 text-accent" /></div>
+                      {isRTL ? 'إنشاء مستخدم جديد' : 'Create New User'}
+                    </h3>
+                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاسم الكامل *' : 'Full name *'}</Label>
+                      <Input value={createForm.full_name} onChange={e => setCreateForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'البريد *' : 'Email *'}</Label>
+                      <Input type="email" dir="ltr" value={createForm.email} onChange={e => setCreateForm(p => ({ ...p, email: e.target.value }))} className="h-10 rounded-xl" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'كلمة المرور *' : 'Password *'}</Label>
+                      <Input type="text" dir="ltr" value={createForm.password} onChange={e => setCreateForm(p => ({ ...p, password: e.target.value }))} className="h-10 rounded-xl tech-content" placeholder="8+ chars" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الهاتف' : 'Phone'}</Label>
+                      <Input dir="ltr" value={createForm.phone} onChange={e => setCreateForm(p => ({ ...p, phone: e.target.value }))} className="h-10 rounded-xl tech-content" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
+                      <Select value={createForm.account_type} onValueChange={v => setCreateForm(p => ({ ...p, account_type: v }))}>
+                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="individual">{isRTL ? 'فرد' : 'Individual'}</SelectItem>
+                          <SelectItem value="business">{isRTL ? 'مزود خدمة' : 'Provider'}</SelectItem>
+                          <SelectItem value="company">{isRTL ? 'شركة' : 'Company'}</SelectItem>
+                        </SelectContent>
+                      </Select></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'العضوية' : 'Tier'}</Label>
+                      <Select value={createForm.membership_tier} onValueChange={v => setCreateForm(p => ({ ...p, membership_tier: v }))}>
+                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
+                          <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
+                          <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
+                          <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
+                        </SelectContent>
+                      </Select></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الصلاحية' : 'Role'}</Label>
+                      <Select value={createForm.role} onValueChange={v => setCreateForm(p => ({ ...p, role: v }))}>
+                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">{isRTL ? 'بدون' : 'None'}</SelectItem>
+                          <SelectItem value="moderator">{isRTL ? 'مشرف محتوى' : 'Moderator'}</SelectItem>
+                          <SelectItem value="admin">{isRTL ? 'مشرف' : 'Admin'}</SelectItem>
+                          <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
+                        </SelectContent>
+                      </Select></div>
+                  </div>
+                  <Separator className="my-4" />
+                  <div className="flex items-center gap-2 justify-end">
+                    <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                    <Button onClick={() => createUserMutation.mutate(createForm)} disabled={createUserMutation.isPending || !createForm.email || !createForm.password || !createForm.full_name} className="rounded-xl gap-2">
+                      {createUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{isRTL ? 'إنشاء' : 'Create'}
+                    </Button>
+                  </div>
+                </div>
+              )}
               {activePanel?.type === 'edit' && (
                 <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
                   <div className="flex items-center justify-between mb-4">

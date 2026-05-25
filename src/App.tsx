@@ -88,6 +88,7 @@ const ProfileSystemDetail = lazyRetry(() => import("./pages/ProfileSystemDetail"
 const AdminApiSettings = lazyRetry(() => import("./pages/admin/AdminApiSettings"));
 const AdminApiDocs = lazyRetry(() => import("./pages/admin/AdminApiDocs"));
 const AdminUsers = lazyRetry(() => import("./pages/admin/AdminUsers"));
+const AdminUserDetail = lazyRetry(() => import("./pages/admin/AdminUserDetail"));
 const AdminSystemSettings = lazyRetry(() => import("./pages/admin/AdminSystemSettings"));
 const AdminCronRuns = lazyRetry(() => import("./pages/admin/AdminCronRuns"));
 const AdminActivityLog = lazyRetry(() => import("./pages/admin/AdminActivityLog"));
@@ -342,6 +343,7 @@ const AppRoutes = () => (
           <Route path="/admin/access-management" element={<ProtectedRoute requireSuperAdmin><AdminAccessManagement /></ProtectedRoute>} />
 
           <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
+          <Route path="/admin/users/:id" element={<ProtectedRoute requireSuperAdmin><AdminUserDetail /></ProtectedRoute>} />
           <Route path="/admin/system-settings" element={<ProtectedRoute requireSuperAdmin><AdminSystemSettings /></ProtectedRoute>} />
           <Route path="/admin/cron-runs" element={<ProtectedRoute requireAdmin><AdminCronRuns /></ProtectedRoute>} />
           <Route path="/admin/analytics-settings" element={<ProtectedRoute requireAdmin><AdminAnalyticsSettings /></ProtectedRoute>} />
