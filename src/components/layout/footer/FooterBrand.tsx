@@ -1,13 +1,15 @@
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Mail, Phone, MapPin, Shield, Award } from "lucide-react";
+import { Mail, Phone, MapPin, Shield, Award, MessageCircle } from "lucide-react";
 import { BrandLogo } from "@/components/common/BrandLogo";
 
 export const FooterBrand = () => {
   const { t, isRTL } = useLanguage();
 
   const contactItems = [
+    { icon: Mail, text: "care@qitaat.com", href: "mailto:care@qitaat.com" },
     { icon: Mail, text: "info@qitaat.com", href: "mailto:info@qitaat.com" },
-    { icon: Phone, text: "+966 50 000 0000", href: "tel:+966500000000" },
+    { icon: Phone, text: "+966 56 922 0777", href: "tel:+966569220777" },
+    { icon: MessageCircle, text: "+966 56 922 0777", href: "https://wa.me/966569220777" },
     { icon: MapPin, text: isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia' },
   ];
 
