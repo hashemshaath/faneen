@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   ShieldCheck, ShieldAlert, Search, CheckCircle2, XCircle, Eye,
-  AlertCircle, Loader2, Send, Globe, Tag, Lock,
+  AlertCircle, Loader2, Send, Globe, Tag, Lock, UserPlus, Users as UsersIcon,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { listAdminBusinesses, type ListAdminBusinessesFilter } from '@/modules/businesses';
