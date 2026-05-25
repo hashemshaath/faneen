@@ -213,6 +213,64 @@ async function fetchPage(url: string): Promise<{ ok: true; html: string } | { ok
   }
 }
 
+/** Use Firecrawl to render JS pages (e.g. Saudi Business Center SPA) and extract structured business fields. */
+async function fetchViaFirecrawl(url: string): Promise<{ ok: true; json?: Record<string, unknown>; markdown?: string } | { ok: false; error: string }> {
+  const key = Deno.env.get("FIRECRAWL_API_KEY");
+  if (!key) return { ok: false, error: "FIRECRAWL_API_KEY not configured" };
+  try {
+    const schema = {
+      type: "object",
+      properties: {
+        cr_number: { type: "string", description: "رقم السجل التجاري (10 digits)" },
+        unified_number: { type: "string", description: "الرقم الموحد (700...)" },
+        vat_number: { type: "string", description: "الرقم الضريبي - VAT (15 digits)" },
+        business_name_ar: { type: "string", description: "اسم المنشأة بالعربية" },
+        business_name_en: { type: "string", description: "اسم المنشأة بالإنجليزية" },
+        owner_name: { type: "string", description: "اسم المالك" },
+        legal_entity: { type: "string", description: "الكيان القانوني" },
+        activity: { type: "string", description: "النشاط" },
+        address: { type: "string", description: "العنوان الكامل" },
+        city: { type: "string", description: "المدينة" },
+        capital: { type: "string", description: "رأس المال" },
+        status: { type: "string", description: "حالة السجل" },
+        issue_date: { type: "string", description: "تاريخ الإصدار YYYY-MM-DD" },
+        expiry_date: { type: "string", description: "تاريخ الانتهاء YYYY-MM-DD" },
+      },
+    };
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 45_000);
+    const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+      method: "POST",
+      signal: ctrl.signal,
+      headers: {
+        "Authorization": `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url,
+        formats: [
+          "markdown",
+          { type: "json", schema, prompt: "استخرج جميع بيانات المنشأة من السجل التجاري السعودي بدقة. أرجع التواريخ بصيغة YYYY-MM-DD والأرقام بدون فواصل." },
+        ],
+        onlyMainContent: true,
+        waitFor: 3000,
+        location: { country: "SA", languages: ["ar", "en"] },
+      }),
+    });
+    clearTimeout(t);
+    const data = await res.json().catch(() => null) as Record<string, unknown> | null;
+    if (!res.ok || !data) return { ok: false, error: `Firecrawl ${res.status}` };
+    const doc = (data.data ?? data) as Record<string, unknown>;
+    return {
+      ok: true,
+      json: doc.json as Record<string, unknown> | undefined,
+      markdown: doc.markdown as string | undefined,
+    };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
@@ -224,24 +282,40 @@ Deno.serve(async (req) => {
       );
     }
 
-    const page = await fetchPage(url);
-    if (!page.ok) {
-      return new Response(
-        JSON.stringify({ ok: false, error: page.error }),
-        { status: 200, headers: { ...cors, "content-type": "application/json" } },
-      );
+    const out: Extracted = { extras: {} };
+    let source: "firecrawl" | "fetch" = "firecrawl";
+
+    // 0) Try Firecrawl first (handles JS-rendered SPAs like Saudi Business Center).
+    const fc = await fetchViaFirecrawl(url);
+    let html = "";
+    if (fc.ok) {
+      if (fc.json && typeof fc.json === "object") {
+        for (const [k, v] of Object.entries(fc.json)) {
+          if (v == null || v === "") continue;
+          assignField(out, k, String(v));
+        }
+      }
+      if (fc.markdown) html = `<pre>${fc.markdown}</pre>`;
+    } else {
+      source = "fetch";
+      const page = await fetchPage(url);
+      if (!page.ok) {
+        return new Response(
+          JSON.stringify({ ok: false, error: `firecrawl: ${fc.error}; fetch: ${page.error}` }),
+          { status: 200, headers: { ...cors, "content-type": "application/json" } },
+        );
+      }
+      html = page.html;
     }
 
-    const out: Extracted = { extras: {} };
-
-    // 1) Try structured key/value scraping.
-    const kv = extractKeyValues(page.html);
+    // 1) Try structured key/value scraping on HTML/markdown.
+    const kv = extractKeyValues(html);
     for (const [k, v] of Object.entries(kv)) assignField(out, k, v);
 
     // 2) JSON-LD or embedded JSON.
     const jsonRe = /<script[^>]*type="application\/(?:ld\+json|json)"[^>]*>([\s\S]*?)<\/script>/gi;
     let j: RegExpExecArray | null;
-    while ((j = jsonRe.exec(page.html)) !== null) {
+    while ((j = jsonRe.exec(html)) !== null) {
       try {
         const data = JSON.parse(j[1]);
         const stack: unknown[] = [data];
@@ -258,12 +332,12 @@ Deno.serve(async (req) => {
     }
 
     // 3) Plain-text fallback for IDs.
-    fallbackFromText(stripHtml(page.html), out);
+    fallbackFromText(stripHtml(html), out);
 
     const found = Object.entries(out).filter(([k, v]) => k !== "extras" && v).length;
 
     return new Response(
-      JSON.stringify({ ok: true, found, data: out }),
+      JSON.stringify({ ok: true, found, source, data: out }),
       { status: 200, headers: { ...cors, "content-type": "application/json" } },
     );
   } catch (e) {
