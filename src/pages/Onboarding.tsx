@@ -610,7 +610,7 @@ const Onboarding = () => {
             <Button onClick={() => {
               if (!businessName.trim()) { toast.error(isRTL ? 'يرجى إدخال اسم النشاط' : 'Please enter business name'); return; }
               if (!usernameOk) { toast.error(isRTL ? 'اختر اسم مستخدم صحيحاً ومتاحاً' : 'Pick a valid, available username'); return; }
-              setStep('business-sectors');
+              setStep('entity-type');
             }} disabled={!businessName.trim() || !usernameOk} className="w-full" variant="hero">
               {isRTL ? 'متابعة' : 'Continue'}
             </Button>
