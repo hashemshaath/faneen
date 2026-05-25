@@ -73,6 +73,7 @@ export interface QuoteRequestFileRow {
 export interface ProviderLeadRequestRow {
   id: string;
   ref_id: string | null;
+  legacy_ref_id: string | null;
   business_id: string;
   user_id: string | null;
   name: string;
