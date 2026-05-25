@@ -1072,6 +1072,7 @@ export type Database = {
           end_time: string
           id: string
           is_demo: boolean
+          legacy_ref_id: string | null
           notes: string | null
           ref_id: string
           start_time: string
@@ -1090,6 +1091,7 @@ export type Database = {
           end_time: string
           id?: string
           is_demo?: boolean
+          legacy_ref_id?: string | null
           notes?: string | null
           ref_id?: string
           start_time: string
@@ -1108,6 +1110,7 @@ export type Database = {
           end_time?: string
           id?: string
           is_demo?: boolean
+          legacy_ref_id?: string | null
           notes?: string | null
           ref_id?: string
           start_time?: string
@@ -1372,12 +1375,14 @@ export type Database = {
           is_demo: boolean
           is_main: boolean
           latitude: number | null
+          legacy_ref_id: string | null
           longitude: number | null
           mobile: string | null
           name_ar: string
           name_en: string | null
           national_id: string | null
           phone: string | null
+          ref_id: string | null
           region: string | null
           sort_order: number
           street_name: string | null
@@ -1402,12 +1407,14 @@ export type Database = {
           is_demo?: boolean
           is_main?: boolean
           latitude?: number | null
+          legacy_ref_id?: string | null
           longitude?: number | null
           mobile?: string | null
           name_ar: string
           name_en?: string | null
           national_id?: string | null
           phone?: string | null
+          ref_id?: string | null
           region?: string | null
           sort_order?: number
           street_name?: string | null
@@ -1432,12 +1439,14 @@ export type Database = {
           is_demo?: boolean
           is_main?: boolean
           latitude?: number | null
+          legacy_ref_id?: string | null
           longitude?: number | null
           mobile?: string | null
           name_ar?: string
           name_en?: string | null
           national_id?: string | null
           phone?: string | null
+          ref_id?: string | null
           region?: string | null
           sort_order?: number
           street_name?: string | null
@@ -1721,9 +1730,13 @@ export type Database = {
         Row: {
           business_id: string
           created_at: string
+          department: string | null
           id: string
           invited_by: string | null
           is_active: boolean
+          is_primary_manager: boolean
+          permissions_override: Json
+          ref_id: string | null
           role: Database["public"]["Enums"]["business_staff_role"]
           updated_at: string
           user_id: string
@@ -1731,9 +1744,13 @@ export type Database = {
         Insert: {
           business_id: string
           created_at?: string
+          department?: string | null
           id?: string
           invited_by?: string | null
           is_active?: boolean
+          is_primary_manager?: boolean
+          permissions_override?: Json
+          ref_id?: string | null
           role?: Database["public"]["Enums"]["business_staff_role"]
           updated_at?: string
           user_id: string
@@ -1741,9 +1758,13 @@ export type Database = {
         Update: {
           business_id?: string
           created_at?: string
+          department?: string | null
           id?: string
           invited_by?: string | null
           is_active?: boolean
+          is_primary_manager?: boolean
+          permissions_override?: Json
+          ref_id?: string | null
           role?: Database["public"]["Enums"]["business_staff_role"]
           updated_at?: string
           user_id?: string
@@ -1776,6 +1797,7 @@ export type Database = {
           id: string
           invited_by: string
           permissions: Json | null
+          ref_id: string | null
           role: string
           status: string
           token: string
@@ -1790,6 +1812,7 @@ export type Database = {
           id?: string
           invited_by: string
           permissions?: Json | null
+          ref_id?: string | null
           role?: string
           status?: string
           token: string
@@ -1804,6 +1827,7 @@ export type Database = {
           id?: string
           invited_by?: string
           permissions?: Json | null
+          ref_id?: string | null
           role?: string
           status?: string
           token?: string
@@ -1952,9 +1976,11 @@ export type Database = {
           approval_status: Database["public"]["Enums"]["business_approval_status"]
           building_number: string | null
           business_number: number
+          capabilities: Json
           category_id: string | null
           city_id: string | null
           contact_person: string | null
+          country_code: string | null
           country_id: string | null
           cover_url: string | null
           cr_document_mime: string | null
@@ -1972,17 +1998,21 @@ export type Database = {
           cr_scan_raw: string | null
           created_at: string
           customer_service_phone: string | null
+          default_currency: string | null
+          default_locale: string | null
           description_ar: string | null
           description_en: string | null
           district: string | null
           district_en: string | null
           email: string | null
+          entity_type: string | null
           id: string
           is_active: boolean
           is_demo: boolean
           is_verified: boolean
           last_active_at: string | null
           latitude: number | null
+          legacy_ref_id: string | null
           logo_url: string | null
           longitude: number | null
           membership_tier: Database["public"]["Enums"]["membership_tier"]
@@ -2006,6 +2036,7 @@ export type Database = {
           street_name_en: string | null
           sub_services: string[]
           submitted_at: string | null
+          timezone: string | null
           unified_number: string | null
           updated_at: string
           user_id: string
@@ -2026,9 +2057,11 @@ export type Database = {
           approval_status?: Database["public"]["Enums"]["business_approval_status"]
           building_number?: string | null
           business_number?: number
+          capabilities?: Json
           category_id?: string | null
           city_id?: string | null
           contact_person?: string | null
+          country_code?: string | null
           country_id?: string | null
           cover_url?: string | null
           cr_document_mime?: string | null
@@ -2046,17 +2079,21 @@ export type Database = {
           cr_scan_raw?: string | null
           created_at?: string
           customer_service_phone?: string | null
+          default_currency?: string | null
+          default_locale?: string | null
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
           district_en?: string | null
           email?: string | null
+          entity_type?: string | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
           is_verified?: boolean
           last_active_at?: string | null
           latitude?: number | null
+          legacy_ref_id?: string | null
           logo_url?: string | null
           longitude?: number | null
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
@@ -2080,6 +2117,7 @@ export type Database = {
           street_name_en?: string | null
           sub_services?: string[]
           submitted_at?: string | null
+          timezone?: string | null
           unified_number?: string | null
           updated_at?: string
           user_id: string
@@ -2100,9 +2138,11 @@ export type Database = {
           approval_status?: Database["public"]["Enums"]["business_approval_status"]
           building_number?: string | null
           business_number?: number
+          capabilities?: Json
           category_id?: string | null
           city_id?: string | null
           contact_person?: string | null
+          country_code?: string | null
           country_id?: string | null
           cover_url?: string | null
           cr_document_mime?: string | null
@@ -2120,17 +2160,21 @@ export type Database = {
           cr_scan_raw?: string | null
           created_at?: string
           customer_service_phone?: string | null
+          default_currency?: string | null
+          default_locale?: string | null
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
           district_en?: string | null
           email?: string | null
+          entity_type?: string | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
           is_verified?: boolean
           last_active_at?: string | null
           latitude?: number | null
+          legacy_ref_id?: string | null
           logo_url?: string | null
           longitude?: number | null
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
@@ -2154,6 +2198,7 @@ export type Database = {
           street_name_en?: string | null
           sub_services?: string[]
           submitted_at?: string | null
+          timezone?: string | null
           unified_number?: string | null
           updated_at?: string
           user_id?: string
@@ -2715,12 +2760,14 @@ export type Database = {
           label: string
           last_scanned_at: string | null
           latitude: number | null
+          legacy_ref_id: string | null
           longitude: number | null
           map_url: string | null
           owner_user_id: string | null
           qr_enabled: boolean
           qr_revoked_at: string | null
           qr_token_hash: string | null
+          ref_id: string | null
           scan_count: number
           site_name: string | null
           site_ref: string
@@ -2749,12 +2796,14 @@ export type Database = {
           label: string
           last_scanned_at?: string | null
           latitude?: number | null
+          legacy_ref_id?: string | null
           longitude?: number | null
           map_url?: string | null
           owner_user_id?: string | null
           qr_enabled?: boolean
           qr_revoked_at?: string | null
           qr_token_hash?: string | null
+          ref_id?: string | null
           scan_count?: number
           site_name?: string | null
           site_ref: string
@@ -2783,12 +2832,14 @@ export type Database = {
           label?: string
           last_scanned_at?: string | null
           latitude?: number | null
+          legacy_ref_id?: string | null
           longitude?: number | null
           map_url?: string | null
           owner_user_id?: string | null
           qr_enabled?: boolean
           qr_revoked_at?: string | null
           qr_token_hash?: string | null
+          ref_id?: string | null
           scan_count?: number
           site_name?: string | null
           site_ref?: string
@@ -4628,11 +4679,14 @@ export type Database = {
           is_demo: boolean
           last_pdf_generated_at: string | null
           last_pdf_snapshot_id: string | null
+          location_id: string | null
           locked_at: string | null
           official_version_number: number
           pricing_method: string | null
           provider_accepted_at: string | null
+          provider_entity_id: string | null
           provider_id: string
+          requester_entity_id: string | null
           service_category_id: string | null
           source_lead_id: string | null
           start_date: string | null
@@ -4676,11 +4730,14 @@ export type Database = {
           is_demo?: boolean
           last_pdf_generated_at?: string | null
           last_pdf_snapshot_id?: string | null
+          location_id?: string | null
           locked_at?: string | null
           official_version_number?: number
           pricing_method?: string | null
           provider_accepted_at?: string | null
+          provider_entity_id?: string | null
           provider_id: string
+          requester_entity_id?: string | null
           service_category_id?: string | null
           source_lead_id?: string | null
           start_date?: string | null
@@ -4724,11 +4781,14 @@ export type Database = {
           is_demo?: boolean
           last_pdf_generated_at?: string | null
           last_pdf_snapshot_id?: string | null
+          location_id?: string | null
           locked_at?: string | null
           official_version_number?: number
           pricing_method?: string | null
           provider_accepted_at?: string | null
+          provider_entity_id?: string | null
           provider_id?: string
+          requester_entity_id?: string | null
           service_category_id?: string | null
           source_lead_id?: string | null
           start_date?: string | null
@@ -5074,6 +5134,70 @@ export type Database = {
           },
         ]
       }
+      credit_notes: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          entity_id: string | null
+          id: string
+          invoice_id: string | null
+          metadata: Json
+          payment_intent_id: string | null
+          reason: string | null
+          ref_id: string | null
+          status: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          entity_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          metadata?: Json
+          payment_intent_id?: string | null
+          reason?: string | null
+          ref_id?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          entity_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          metadata?: Json
+          payment_intent_id?: string | null
+          reason?: string | null
+          ref_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_notes_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cron_run_log: {
         Row: {
           created_at: string
@@ -5308,6 +5432,66 @@ export type Database = {
         }
         Relationships: []
       }
+      entity_legal_identifiers: {
+        Row: {
+          country_code: string
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          expires_at: string | null
+          id: string
+          identifier_type: string
+          identifier_value: string
+          issuing_authority: string | null
+          metadata: Json
+          ref_id: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          country_code?: string
+          created_at?: string
+          created_by?: string | null
+          entity_id: string
+          expires_at?: string | null
+          id?: string
+          identifier_type: string
+          identifier_value: string
+          issuing_authority?: string | null
+          metadata?: Json
+          ref_id?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          country_code?: string
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string
+          expires_at?: string | null
+          id?: string
+          identifier_type?: string
+          identifier_value?: string
+          issuing_authority?: string | null
+          metadata?: Json
+          ref_id?: string | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_legal_identifiers_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_legal_identifiers_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_tags: {
         Row: {
           created_at: string
@@ -5453,6 +5637,89 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount: number
+          country_code: string
+          created_at: string
+          currency: string
+          entity_id: string | null
+          id: string
+          issued_to_entity_id: string | null
+          metadata: Json
+          payment_intent_id: string | null
+          ref_id: string | null
+          status: string
+          subscription_id: string | null
+          tax_rate: number | null
+          tax_registration_number: string | null
+          tax_scheme: string | null
+        }
+        Insert: {
+          amount?: number
+          country_code?: string
+          created_at?: string
+          currency?: string
+          entity_id?: string | null
+          id?: string
+          issued_to_entity_id?: string | null
+          metadata?: Json
+          payment_intent_id?: string | null
+          ref_id?: string | null
+          status?: string
+          subscription_id?: string | null
+          tax_rate?: number | null
+          tax_registration_number?: string | null
+          tax_scheme?: string | null
+        }
+        Update: {
+          amount?: number
+          country_code?: string
+          created_at?: string
+          currency?: string
+          entity_id?: string | null
+          id?: string
+          issued_to_entity_id?: string | null
+          metadata?: Json
+          payment_intent_id?: string | null
+          ref_id?: string | null
+          status?: string
+          subscription_id?: string | null
+          tax_rate?: number | null
+          tax_registration_number?: string | null
+          tax_scheme?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_issued_to_entity_id_fkey"
+            columns: ["issued_to_entity_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_issued_to_entity_id_fkey"
+            columns: ["issued_to_entity_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_request_events: {
         Row: {
           actor_id: string | null
@@ -5516,6 +5783,8 @@ export type Database = {
           initiated_by: string
           internal_notes: string | null
           is_demo: boolean
+          legacy_ref_id: string | null
+          location_id: string | null
           message: string
           name: string
           needs_info_at: string | null
@@ -5534,9 +5803,11 @@ export type Database = {
           responded_by: string | null
           site_access_grant_id: string | null
           source: string | null
+          source_entity_id: string | null
           source_site_id: string | null
           status: string
           subject: string | null
+          target_entity_id: string | null
           updated_at: string
           user_id: string | null
           viewed_at: string | null
@@ -5559,6 +5830,8 @@ export type Database = {
           initiated_by?: string
           internal_notes?: string | null
           is_demo?: boolean
+          legacy_ref_id?: string | null
+          location_id?: string | null
           message: string
           name: string
           needs_info_at?: string | null
@@ -5577,9 +5850,11 @@ export type Database = {
           responded_by?: string | null
           site_access_grant_id?: string | null
           source?: string | null
+          source_entity_id?: string | null
           source_site_id?: string | null
           status?: string
           subject?: string | null
+          target_entity_id?: string | null
           updated_at?: string
           user_id?: string | null
           viewed_at?: string | null
@@ -5602,6 +5877,8 @@ export type Database = {
           initiated_by?: string
           internal_notes?: string | null
           is_demo?: boolean
+          legacy_ref_id?: string | null
+          location_id?: string | null
           message?: string
           name?: string
           needs_info_at?: string | null
@@ -5620,9 +5897,11 @@ export type Database = {
           responded_by?: string | null
           site_access_grant_id?: string | null
           source?: string | null
+          source_entity_id?: string | null
           source_site_id?: string | null
           status?: string
           subject?: string | null
+          target_entity_id?: string | null
           updated_at?: string
           user_id?: string | null
           viewed_at?: string | null
@@ -5768,6 +6047,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      location_staff_assignments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          location_id: string
+          location_table: string
+          permissions_override: Json
+          ref_id: string | null
+          role: string | null
+          staff_membership_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          location_id: string
+          location_table?: string
+          permissions_override?: Json
+          ref_id?: string | null
+          role?: string | null
+          staff_membership_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          location_id?: string
+          location_table?: string
+          permissions_override?: Json
+          ref_id?: string | null
+          role?: string | null
+          staff_membership_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_staff_assignments_staff_membership_id_fkey"
+            columns: ["staff_membership_id"]
+            isOneToOne: false
+            referencedRelation: "business_staff"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       maintenance_requests: {
         Row: {
@@ -6113,6 +6439,7 @@ export type Database = {
           provider: string
           provider_intent_id: string | null
           receipt_url: string | null
+          ref_id: string | null
           status: string
           subscription_id: string
           updated_at: string
@@ -6134,6 +6461,7 @@ export type Database = {
           provider: string
           provider_intent_id?: string | null
           receipt_url?: string | null
+          ref_id?: string | null
           status?: string
           subscription_id: string
           updated_at?: string
@@ -6155,6 +6483,7 @@ export type Database = {
           provider?: string
           provider_intent_id?: string | null
           receipt_url?: string | null
+          ref_id?: string | null
           status?: string
           subscription_id?: string
           updated_at?: string
@@ -7272,6 +7601,30 @@ export type Database = {
           triggered_by?: string | null
           ttfb_ms?: number | null
           url?: string
+        }
+        Relationships: []
+      }
+      permissions_catalog: {
+        Row: {
+          created_at: string
+          group_key: string
+          key: string
+          label_ar: string
+          label_en: string
+        }
+        Insert: {
+          created_at?: string
+          group_key: string
+          key: string
+          label_ar: string
+          label_en: string
+        }
+        Update: {
+          created_at?: string
+          group_key?: string
+          key?: string
+          label_ar?: string
+          label_en?: string
         }
         Relationships: []
       }
@@ -8953,6 +9306,7 @@ export type Database = {
           lead_credits_balance: number
           plan_id: string
           provider_user_id: string | null
+          ref_id: string | null
           status: string
           updated_at: string
         }
@@ -8965,6 +9319,7 @@ export type Database = {
           lead_credits_balance?: number
           plan_id: string
           provider_user_id?: string | null
+          ref_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -8977,6 +9332,7 @@ export type Database = {
           lead_credits_balance?: number
           plan_id?: string
           provider_user_id?: string | null
+          ref_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -9228,14 +9584,18 @@ export type Database = {
           execution_timeline: string
           has_budget: boolean
           id: string
+          location_id: string | null
           metadata: Json
           preferred_contact_method: string
           project_description: string
           quantity: string | null
+          ref_id: string | null
+          requester_entity_id: string | null
           sector: string
           service_location_type: string
           source: string
           status: string
+          target_entity_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -9253,14 +9613,18 @@ export type Database = {
           execution_timeline: string
           has_budget?: boolean
           id?: string
+          location_id?: string | null
           metadata?: Json
           preferred_contact_method: string
           project_description: string
           quantity?: string | null
+          ref_id?: string | null
+          requester_entity_id?: string | null
           sector: string
           service_location_type: string
           source?: string
           status?: string
+          target_entity_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -9278,14 +9642,18 @@ export type Database = {
           execution_timeline?: string
           has_budget?: boolean
           id?: string
+          location_id?: string | null
           metadata?: Json
           preferred_contact_method?: string
           project_description?: string
           quantity?: string | null
+          ref_id?: string | null
+          requester_entity_id?: string | null
           sector?: string
           service_location_type?: string
           source?: string
           status?: string
+          target_entity_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -9372,6 +9740,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      role_permissions: {
+        Row: {
+          permission_key: string
+          role_key: string
+        }
+        Insert: {
+          permission_key: string
+          role_key: string
+        }
+        Update: {
+          permission_key?: string
+          role_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_key_fkey"
+            columns: ["permission_key"]
+            isOneToOne: false
+            referencedRelation: "permissions_catalog"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_key_fkey"
+            columns: ["role_key"]
+            isOneToOne: false
+            referencedRelation: "roles_catalog"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      roles_catalog: {
+        Row: {
+          created_at: string
+          description: string | null
+          key: string
+          label_ar: string
+          label_en: string
+          scope: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          key: string
+          label_ar: string
+          label_en: string
+          scope: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          key?: string
+          label_ar?: string
+          label_en?: string
+          scope?: string
+        }
+        Relationships: []
       }
       sector_page_events: {
         Row: {
@@ -10645,11 +11070,14 @@ export type Database = {
           is_demo: boolean
           last_pdf_generated_at: string | null
           last_pdf_snapshot_id: string | null
+          location_id: string | null
           locked_at: string | null
           official_version_number: number
           pricing_method: string | null
           provider_accepted_at: string | null
+          provider_entity_id: string | null
           provider_id: string
+          requester_entity_id: string | null
           service_category_id: string | null
           source_lead_id: string | null
           start_date: string | null
@@ -11106,11 +11534,14 @@ export type Database = {
           is_demo: boolean
           last_pdf_generated_at: string | null
           last_pdf_snapshot_id: string | null
+          location_id: string | null
           locked_at: string | null
           official_version_number: number
           pricing_method: string | null
           provider_accepted_at: string | null
+          provider_entity_id: string | null
           provider_id: string
+          requester_entity_id: string | null
           service_category_id: string | null
           source_lead_id: string | null
           start_date: string | null
@@ -11254,11 +11685,14 @@ export type Database = {
           is_demo: boolean
           last_pdf_generated_at: string | null
           last_pdf_snapshot_id: string | null
+          location_id: string | null
           locked_at: string | null
           official_version_number: number
           pricing_method: string | null
           provider_accepted_at: string | null
+          provider_entity_id: string | null
           provider_id: string
+          requester_entity_id: string | null
           service_category_id: string | null
           source_lead_id: string | null
           start_date: string | null
@@ -11744,6 +12178,17 @@ export type Database = {
           status: string
         }[]
       }
+      get_user_entity_contexts: {
+        Args: { _user_id: string }
+        Returns: {
+          entity_id: string
+          is_owner: boolean
+          legacy_ref_id: string
+          name_ar: string
+          ref_id: string
+          role: string
+        }[]
+      }
       get_web_vitals_summary: {
         Args: { _hours?: number }
         Returns: {
@@ -11781,6 +12226,14 @@ export type Database = {
           _roles: Database["public"]["Enums"]["business_staff_role"][]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_entity_membership: {
+        Args: { _entity_id: string; _permission?: string; _user_id: string }
+        Returns: boolean
+      }
+      has_location_access: {
+        Args: { _location_id: string; _permission?: string; _user_id: string }
         Returns: boolean
       }
       has_membership_feature: {
@@ -12009,6 +12462,17 @@ export type Database = {
           _user_agent: string
         }
         Returns: string
+      }
+      lookup_by_reference: {
+        Args: { _ref: string }
+        Returns: {
+          canonical_route: string
+          entity_type: string
+          id: string
+          legacy_ref_id: string
+          ref_id: string
+          table_name: string
+        }[]
       }
       market_sector_city_stats: {
         Args: { p_days?: number }
@@ -12365,11 +12829,14 @@ export type Database = {
           is_demo: boolean
           last_pdf_generated_at: string | null
           last_pdf_snapshot_id: string | null
+          location_id: string | null
           locked_at: string | null
           official_version_number: number
           pricing_method: string | null
           provider_accepted_at: string | null
+          provider_entity_id: string | null
           provider_id: string
+          requester_entity_id: string | null
           service_category_id: string | null
           source_lead_id: string | null
           start_date: string | null
