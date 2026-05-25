@@ -33,6 +33,7 @@ import {
   Beaker,
   QrCode,
   User,
+  UserPlus,
 } from 'lucide-react';
 
 interface MenuItem {
