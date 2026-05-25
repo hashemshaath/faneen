@@ -18,10 +18,11 @@ All automated gates are green as of the close of
 | Gate | Result |
 |------|--------|
 | `bunx tsc --noEmit` | ✅ Clean |
-| `bunx vitest run` | ✅ **2553/2553** |
+| `bunx vitest run` | ✅ **2616/2616** |
 | `npm run broken-links-audit` | ✅ 0 broken |
 | `npm run sitemap-integrity-audit` | ✅ Pass |
 | 19 isolation audits | ✅ All pass |
+| Registration UX suite | ✅ 56/56 |
 | Autonomous source/DB/route smoke | ✅ No automated P0/P1 |
 
 No files were changed during the autonomous smoke phase. The codebase is
