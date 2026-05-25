@@ -31,6 +31,7 @@ import {
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { LegacyReferenceHint } from '@/components/reference/LegacyReferenceHint';
 
 type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
 
@@ -318,6 +319,7 @@ const DashboardBookings = () => {
                                 {booking.start_time?.slice(0, 5)} - {booking.end_time?.slice(0, 5)}
                               </span>
                               <span className="tech-content text-[10px]">{booking.ref_id}</span>
+                              <LegacyReferenceHint legacyRefId={(booking as { legacy_ref_id?: string | null }).legacy_ref_id ?? null} isRTL={isRTL} />
                             </div>
                           </div>
                           <Badge className={`${cfg.color} border-0 text-[11px] gap-1`}>
