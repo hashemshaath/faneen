@@ -24,6 +24,8 @@ import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
 import { trackEvent } from '@/lib/analytics-events';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
+import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 
 interface MyLeadRow {
   id: string;
@@ -59,6 +61,7 @@ const CANCELLABLE = new Set(['new', 'viewed', 'needs_info']);
 
 interface QuoteRequestRow {
   id: string;
+  ref_id: string | null;
   sector: string;
   city: string;
   district: string | null;
