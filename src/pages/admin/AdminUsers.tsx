@@ -676,12 +676,14 @@ const AdminUsers = () => {
       return data as Profile[];
     },
     enabled: !!user,
+    staleTime: 2 * 60_000,
   });
 
   const { data: userRoles = [], isLoading: loadingRoles } = useQuery({
     queryKey: ['admin-user-roles'],
     queryFn: () => listAllUserRoles() as Promise<UserRole[]>,
     enabled: !!user,
+    staleTime: 5 * 60_000,
   });
 
   const { data: businesses = [] } = useQuery({
@@ -694,6 +696,7 @@ const AdminUsers = () => {
       return (data ?? []) as BusinessInfo[];
     },
     enabled: !!user,
+    staleTime: 5 * 60_000,
   });
 
   const { data: businessStaff = [] } = useQuery({
@@ -710,6 +713,7 @@ const AdminUsers = () => {
       return data ?? [];
     },
     enabled: !!user,
+    staleTime: 5 * 60_000,
   });
 
   const { data: recentAdminActivity = [] } = useQuery({
@@ -722,6 +726,7 @@ const AdminUsers = () => {
       return data ?? [];
     },
     enabled: !!user && (tab === 'overview' || tab === 'analytics'),
+    staleTime: 60_000,
   });
 
   const businessMap = useMemo(() => {
