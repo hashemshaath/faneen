@@ -676,6 +676,7 @@ const AdminUsers = () => {
       return data as Profile[];
     },
     enabled: !!user,
+    staleTime: 2 * 60_000,
   });
 
   const { data: userRoles = [], isLoading: loadingRoles } = useQuery({
