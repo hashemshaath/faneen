@@ -19,6 +19,8 @@ import {
   QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_TONE, QUOTE_STATUSES,
   CUSTOMER_TYPE_LABEL_AR, SECTOR_LABEL_AR, type QuoteStatus,
 } from '@/lib/quoteRequests';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
+import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 
 const AdminQuoteRequests: React.FC = () => {
   useNoIndex();
@@ -152,7 +154,14 @@ const AdminQuoteRequests: React.FC = () => {
                 <CardContent className="p-4 flex flex-wrap items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className="font-mono text-xs text-muted-foreground tech-content">#{r.id.slice(-6)}</span>
+                      {r.ref_id ? (
+                        <>
+                          <ReferenceBadge refId={r.ref_id} />
+                          <ReferenceLinkCopy refId={r.ref_id} isRTL />
+                        </>
+                      ) : (
+                        <span className="font-mono text-xs text-muted-foreground tech-content">#{r.id.slice(-6)}</span>
+                      )}
                       <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
                         {QUOTE_STATUS_LABEL_AR[r.status as QuoteStatus] ?? r.status}
                       </span>

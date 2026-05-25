@@ -33,6 +33,8 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { Crown, Wallet, RefreshCw, Search, ChevronRight, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { trackEvent } from '@/lib/analytics';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
+import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 
 const REASON_LABEL: Record<string, string> = {
   monthly_grant: 'منح شهري',
@@ -49,7 +51,7 @@ const TYPE_LABEL_ADMIN: Record<string, string> = {
 
 interface Plan { id: string; code: string; name_ar: string; lead_credits_per_month: number; }
 interface Sub {
-  id: string; business_id: string; provider_user_id: string | null;
+  id: string; ref_id: string | null; business_id: string; provider_user_id: string | null;
   plan_id: string; status: string; lead_credits_balance: number;
   current_period_start: string | null; current_period_end: string | null; updated_at: string;
   plan: Plan | null;
@@ -133,6 +135,7 @@ const AdminProviderSubscriptions: React.FC = () => {
                   <thead className="text-muted-foreground">
                     <tr>
                       <th className="text-start py-2 px-2">المنشأة</th>
+                      <th className="text-start py-2 px-2">المرجع</th>
                       <th className="text-start py-2 px-2">الخطة</th>
                       <th className="text-start py-2 px-2">الحالة</th>
                       <th className="text-start py-2 px-2">الرصيد</th>
@@ -144,6 +147,16 @@ const AdminProviderSubscriptions: React.FC = () => {
                     {filtered.map((s) => (
                       <tr key={s.id} className={`border-t border-border cursor-pointer hover:bg-muted/40 ${editId === s.id ? 'bg-primary/5' : ''}`} onClick={() => setEditId(s.id)}>
                         <td className="py-2 px-2 font-medium truncate max-w-[200px]">{s.business?.name_ar ?? '—'}</td>
+                        <td className="py-2 px-2">
+                          {s.ref_id ? (
+                            <span className="inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                              <ReferenceBadge refId={s.ref_id} />
+                              <ReferenceLinkCopy refId={s.ref_id} isRTL />
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
                         <td className="py-2 px-2">{s.plan?.name_ar ?? '—'}</td>
                         <td className="py-2 px-2"><span className="text-[10px] px-2 py-0.5 rounded-full border border-border bg-muted/50">{STATUS_LABEL[s.status] ?? s.status}</span></td>
                         <td className="py-2 px-2 tech-content font-medium">{s.lead_credits_balance}</td>

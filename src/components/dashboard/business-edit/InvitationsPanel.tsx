@@ -19,6 +19,7 @@ import {
 
 import { STAFF_ROLE_META, type StaffRole } from './types';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
+import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 
 interface InvitationRow {
   id: string;
@@ -262,11 +263,12 @@ export const InvitationsPanel: React.FC<Props> = ({
               <div className="flex items-center gap-1">
                 <Button
                   variant="ghost" size="icon" className="h-7 w-7"
-                  title={isRTL ? 'نسخ الرابط' : 'Copy link'}
+                  title={isRTL ? 'نسخ رابط الدعوة' : 'Copy invite link'}
                   onClick={() => copyLink(inv.token)}
                 >
                   <Copy className="w-3.5 h-3.5" />
                 </Button>
+                <ReferenceLinkCopy refId={inv.ref_id} isRTL={isRTL} />
                 {inv.status === 'pending' && (
                   <>
                     <Button

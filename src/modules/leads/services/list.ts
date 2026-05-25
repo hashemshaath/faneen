@@ -22,6 +22,7 @@ export interface ProviderLeadRow {
 
 export interface AdminQuoteRow {
   id: string;
+  ref_id: string | null;
   customer_name: string;
   customer_phone: string;
   customer_type: string;
@@ -59,6 +60,7 @@ export interface MyLeadRow {
 
 export interface MyQuoteRequestRow {
   id: string;
+  ref_id: string | null;
   sector: string;
   city: string;
   district: string | null;
@@ -74,7 +76,7 @@ const PROVIDER_LEAD_SELECT =
   'quote_request:quote_requests(id, sector, city, district, project_description, execution_timeline)';
 
 const ADMIN_QUOTE_SELECT =
-  'id, customer_name, customer_phone, customer_type, sector, city, status, created_at';
+  'id, ref_id, customer_name, customer_phone, customer_type, sector, city, status, created_at';
 
 const MY_LEAD_SELECT =
   'id, ref_id, business_id, user_id, subject, status, contact_preference, budget_range, ' +
@@ -83,7 +85,7 @@ const MY_LEAD_SELECT =
   'quote_note, quote_valid_until';
 
 const MY_QUOTE_SELECT =
-  'id, sector, city, district, project_description, status, preferred_contact_method, created_at, updated_at';
+  'id, ref_id, sector, city, district, project_description, status, preferred_contact_method, created_at, updated_at';
 
 export async function listProviderLeads(limit = 100): Promise<ProviderLeadRow[]> {
   const { data, error } = await supabase
