@@ -7,16 +7,18 @@ const read = (p: string) => fs.readFileSync(path.resolve(__dirname, '..', '..', 
 describe('AUTH-IDENTITY-VERIFY-1: source-level regression checks', () => {
   it('Auth.tsx defaults mode to identity', () => {
     const src = read('src/pages/Auth.tsx');
-    expect(src).toMatch(/'identity'\s*\)\s*\|\|\s*'identity'/);
+    // normalizeMode returns 'identity' as the default fallback
+    expect(src).toMatch(/return 'identity'/);
     expect(src).toContain('IdentitySignInForm');
   });
 
-  it('Auth.tsx still supports ?mode=login and ?mode=register', () => {
+  it('Auth.tsx normalizes legacy ?mode=login to identity and supports ?mode=register', () => {
     const src = read('src/pages/Auth.tsx');
-    expect(src).toContain("'login'");
-    expect(src).toContain("'register'");
-    // invalid mode falls back to 'identity'
-    expect(src).toMatch(/\bincludes\(initialMode as never\)/);
+    // legacy login aliases collapse into the unified identity flow
+    expect(src).toMatch(/case 'login':/);
+    expect(src).toMatch(/case 'signup':\s*\n\s*return 'register'/);
+    // the old password-only LoginForm must not be imported anymore
+    expect(src).not.toMatch(/from '@\/components\/auth\/LoginForm'/);
   });
 
   it('AuthLayout uses AuthShowcase (no auth-slide raster imports)', () => {
