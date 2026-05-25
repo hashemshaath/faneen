@@ -36,6 +36,13 @@ import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboar
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
 import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
+import {
+  SA_REGIONS,
+  findRegionByLabel,
+  findRegionForCity,
+  getRegionById,
+  type SaRegionId,
+} from '@/data/sa-regions';
 
 interface RefRow { id: string; name_ar: string; name_en: string }
 interface CityRow extends RefRow { country_id: string }
@@ -107,6 +114,117 @@ const DashboardBusinessEdit: React.FC = () => {
       return (data as CityRow[]) ?? [];
     },
   });
+
+  // ------------------------------------------------------------------
+  // SA region <-> city helpers
+  // ------------------------------------------------------------------
+  const [regionId, setRegionId] = useState<SaRegionId | ''>('');
+  // Once the form loads, infer the region id from the stored AR/EN label
+  // or from the selected city, so the dropdown shows the current value.
+  useEffect(() => {
+    if (!form) return;
+    if (regionId) return;
+    const fromLabel = findRegionByLabel(form.region) ?? findRegionByLabel(form.region_en);
+    if (fromLabel) { setRegionId(fromLabel); return; }
+    if (form.city_id && cities.length) {
+      const c = cities.find((x) => x.id === form.city_id);
+      if (c) {
+        const inferred = findRegionForCity(c.name_ar, c.name_en);
+        if (inferred) setRegionId(inferred);
+      }
+    }
+  }, [form, cities, regionId]);
+
+  const filteredCities = useMemo<CityRow[]>(() => {
+    if (!regionId) return cities;
+    const matched = cities.filter((c) => findRegionForCity(c.name_ar, c.name_en) === regionId);
+    // If our token map didn't match anything for this region, fall back to
+    // the full list so the user is never stuck with an empty dropdown.
+    return matched.length ? matched : cities;
+  }, [cities, regionId]);
+
+  const handleRegionChange = (id: SaRegionId | '') => {
+    setRegionId(id);
+    const region = getRegionById(id || null);
+    setForm((prev) => prev ? {
+      ...prev,
+      region: region?.name_ar ?? null,
+      region_en: region?.name_en ?? null,
+      // Reset city if it no longer belongs to the new region
+      city_id: prev.city_id && region && findRegionForCity(
+        cities.find((c) => c.id === prev.city_id)?.name_ar,
+        cities.find((c) => c.id === prev.city_id)?.name_en,
+      ) !== region.id ? null : prev.city_id,
+    } : prev);
+    setDirty(true);
+  };
+
+  // ------------------------------------------------------------------
+  // Saudi National Address — short-address autofill
+  // ------------------------------------------------------------------
+  const [shortAddress, setShortAddress] = useState('');
+  const [lookupBusy, setLookupBusy] = useState(false);
+
+  const handleShortAddressLookup = async () => {
+    if (!shortAddress.trim()) return;
+    setLookupBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('national-address-lookup', {
+        body: { shortAddress: shortAddress.trim() },
+      });
+      if (error) throw error;
+      const res = data as {
+        ok: boolean;
+        message_ar?: string;
+        message_en?: string;
+        address?: {
+          region_ar: string | null; region_en: string | null;
+          city_ar: string | null;   city_en: string | null;
+          district_ar: string | null; district_en: string | null;
+          street_ar: string | null;   street_en: string | null;
+          address_ar: string | null;  address_en: string | null;
+          building_number: string | null; additional_number: string | null;
+          post_code: string | null;
+        };
+      };
+      if (!res.ok || !res.address) {
+        toast.error(isRTL ? (res.message_ar ?? 'تعذّر جلب العنوان') : (res.message_en ?? 'Lookup failed'));
+        return;
+      }
+      const a = res.address;
+      setForm((prev) => prev ? {
+        ...prev,
+        region: a.region_ar ?? prev.region,
+        region_en: a.region_en ?? prev.region_en,
+        district: a.district_ar ?? prev.district,
+        district_en: a.district_en ?? prev.district_en,
+        street_name: a.street_ar ?? prev.street_name,
+        street_name_en: a.street_en ?? prev.street_name_en,
+        address: a.address_ar ?? prev.address,
+        address_en: a.address_en ?? prev.address_en,
+        building_number: a.building_number ?? prev.building_number,
+        additional_number: a.additional_number ?? prev.additional_number,
+      } : prev);
+      setDirty(true);
+      // Try to auto-select the region too
+      const inferred = findRegionByLabel(a.region_ar) ?? findRegionByLabel(a.region_en);
+      if (inferred) setRegionId(inferred);
+      // Try to auto-select the city if a matching DB row exists
+      if (a.city_ar || a.city_en) {
+        const match = cities.find((c) =>
+          (a.city_ar && c.name_ar?.includes(a.city_ar)) ||
+          (a.city_en && c.name_en?.toLowerCase().includes(a.city_en.toLowerCase())),
+        );
+        if (match) setForm((prev) => prev ? { ...prev, city_id: match.id } : prev);
+      }
+      toast.success(isRTL ? 'تم جلب العنوان وتعبئة الحقول' : 'Address fetched and fields filled');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(isRTL ? `تعذّر الاتصال بخدمة العنوان: ${message}` : `Address service error: ${message}`);
+    } finally {
+      setLookupBusy(false);
+    }
+  };
 
   const update = <K extends keyof BusinessRow>(key: K, value: BusinessRow[K]) => {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
