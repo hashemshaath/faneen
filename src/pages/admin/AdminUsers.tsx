@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useTransition, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -568,6 +568,24 @@ const AdminUsers = () => {
     account_type: 'individual', membership_tier: 'free', role: 'none',
   });
   const passwordValidationMessage = useMemo(() => getPasswordValidationMessage(newPassword, isRTL), [newPassword, isRTL]);
+
+  // Auto-open create panel when navigated with ?create=provider|business|company|individual
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const createParam = searchParams.get('create');
+    if (createParam && isSuperAdmin) {
+      const preset = createParam === 'provider' ? 'business' : createParam;
+      const allowed = ['individual', 'business', 'company'];
+      if (allowed.includes(preset)) {
+        setCreateForm(p => ({ ...p, account_type: preset }));
+        setActivePanel({ type: 'create' });
+      }
+      const next = new URLSearchParams(searchParams);
+      next.delete('create');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSuperAdmin]);
 
   const closePanel = () => {
     setActivePanel(null); setNewPassword(''); setShowNewPassword(false);
