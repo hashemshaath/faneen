@@ -292,6 +292,24 @@ export default function AdminProviderReview() {
                 : 'Approve, request changes, reject, or publish provider profiles.'}
             </p>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {isSuperAdmin && (
+              <>
+                <Button asChild size="sm" className="gap-2 rounded-xl h-10">
+                  <Link to="/admin/users?create=provider">
+                    <UserPlus className="h-4 w-4" />
+                    {isRTL ? 'إنشاء مزود جديد' : 'New Provider'}
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="gap-2 rounded-xl h-10">
+                  <Link to="/admin/users">
+                    <UsersIcon className="h-4 w-4" />
+                    {isRTL ? 'إدارة المستخدمين' : 'Manage Users'}
+                  </Link>
+                </Button>
+              </>
+            )}
+          </div>
           <div className="relative w-full sm:w-72">
             <Search className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
             <Input
