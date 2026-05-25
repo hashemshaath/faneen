@@ -561,6 +561,16 @@ const AdminUsers = () => {
   useEffect(() => { localStorage.setItem('qitaat_admin_users_density', density); }, [density]);
 
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  // Open create panel and ensure it is visible: switch to a tab that renders panels,
+  // then scroll the panel into view.
+  const openCreatePanel = (preset?: 'individual' | 'business' | 'company') => {
+    if (preset) setCreateForm(p => ({ ...p, account_type: preset }));
+    if (tab !== 'users' && tab !== 'staff' && tab !== 'disabled') setTab('users');
+    setActivePanel({ type: 'create' });
+    setTimeout(() => panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  };
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -1069,7 +1079,7 @@ const AdminUsers = () => {
               <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
             </Button>
             {isAdmin && (
-              <Button size="sm" className="gap-2 rounded-xl h-9" onClick={() => setActivePanel({ type: 'create' })}>
+              <Button size="sm" className="gap-2 rounded-xl h-9" onClick={() => openCreatePanel()}>
                 <UserPlus className="w-4 h-4" />
                 <span className="hidden sm:inline">{isRTL ? 'إنشاء مستخدم' : 'New User'}</span>
               </Button>
