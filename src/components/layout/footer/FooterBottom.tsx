@@ -2,11 +2,11 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Facebook, Twitter, Instagram, Youtube, Linkedin, ArrowUp } from "lucide-react";
 
 const socialLinks = [
-  { icon: Twitter, href: "#", label: "X" },
-  { icon: Instagram, href: "#", label: "Instagram" },
-  { icon: Facebook, href: "#", label: "Facebook" },
-  { icon: Youtube, href: "#", label: "YouTube" },
-  { icon: Linkedin, href: "#", label: "LinkedIn" },
+  { icon: Twitter, href: "https://x.com/qitaatcom", label: "X" },
+  { icon: Instagram, href: "https://instagram.com/qitaatcom", label: "Instagram" },
+  { icon: Facebook, href: "https://facebook.com/qitaatcom", label: "Facebook" },
+  { icon: Youtube, href: "https://youtube.com/@qitaatcom", label: "YouTube" },
+  { icon: Linkedin, href: "https://linkedin.com/company/qitaatcom", label: "LinkedIn" },
 ];
 
 export const FooterBottom = ({ visible }: { visible: boolean }) => {
