@@ -27,6 +27,11 @@ import {
   pullRemoteDraft,
   syncDraftToServer,
 } from '@/lib/onboarding-draft';
+import {
+  createEntityAccessRequest,
+  findPossibleDuplicateEntities,
+  type PossibleDuplicateEntity,
+} from '@/modules/entities/services/access';
 
 type OnboardingStep =
   | 'intent'
@@ -34,6 +39,8 @@ type OnboardingStep =
   | 'details'
   | 'phone-verify'
   | 'business-details'
+  | 'entity-type'
+  | 'entity-capabilities'
   | 'business-sectors'
   | 'summary';
 
@@ -43,9 +50,38 @@ const STEP_ORDER: OnboardingStep[] = [
   'details',
   'phone-verify',
   'business-details',
+  'entity-type',
+  'entity-capabilities',
   'business-sectors',
   'summary',
 ];
+
+/**
+ * REGISTRATION-UX-FULL-COMPLETE-1
+ * Supported entity types. Government entities are intentionally excluded.
+ */
+type EntityType =
+  | 'company'
+  | 'establishment'
+  | 'individual_business'
+  | 'private_entity'
+  | 'service_provider'
+  | 'buyer_entity'
+  | 'other';
+
+type CapabilityMode = 'provider' | 'buyer' | 'both';
+
+function capabilitiesFromMode(mode: CapabilityMode): Record<string, boolean> {
+  const isProvider = mode === 'provider' || mode === 'both';
+  const isBuyer = mode === 'buyer' || mode === 'both';
+  return {
+    can_provide_services: isProvider,
+    can_request_services: isBuyer,
+    can_manage_contracts: true,
+    can_issue_quotes: isProvider,
+    can_receive_quotes: isBuyer,
+  };
+}
 
 const Onboarding = () => {
   const { t, language, isRTL } = useLanguage();
@@ -57,6 +93,9 @@ const Onboarding = () => {
   const [step, setStep] = useState<OnboardingStep>('intent');
   const [inviteToken, setInviteToken] = useState('');
   const [requestAccessQuery, setRequestAccessQuery] = useState('');
+  const [requestAccessMessage, setRequestAccessMessage] = useState('');
+  const [requestAccessSubmitting, setRequestAccessSubmitting] = useState(false);
+  const [requestAccessSubmittedRef, setRequestAccessSubmittedRef] = useState<string | null>(null);
   const [accountType, setAccountType] = useState<'individual' | 'business'>('individual');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -69,6 +108,17 @@ const Onboarding = () => {
   const [subServices, setSubServices] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Entity-creation extras (additive — backward-compatible)
+  const [entityType, setEntityType] = useState<EntityType>('company');
+  const [tradeName, setTradeName] = useState('');
+  const [crNumber, setCrNumber] = useState('');
+  const [vatNumber, setVatNumber] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [capabilityMode, setCapabilityMode] = useState<CapabilityMode>('both');
+  const [duplicates, setDuplicates] = useState<PossibleDuplicateEntity[]>([]);
+  const [duplicateAcknowledged, setDuplicateAcknowledged] = useState(false);
+  const [duplicateChecking, setDuplicateChecking] = useState(false);
 
   // Persist draft on every relevant change
   useEffect(() => {
@@ -202,6 +252,11 @@ const Onboarding = () => {
           sub_services: subServices,
           description_ar: businessDescription || undefined,
           recipientEmail: user?.email || undefined,
+          entity_type: entityType,
+          capabilities: capabilitiesFromMode(capabilityMode),
+          national_id: crNumber || undefined,
+          vat_number: vatNumber || undefined,
+          website: websiteUrl || undefined,
         });
       }
 
