@@ -9,7 +9,6 @@ import { RegisterForm } from '@/components/auth/RegisterForm';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import { RegistrationSuccessView } from '@/components/auth/RegistrationSuccessView';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import type { AuthMode } from '@/services/auth/types';
 
 /**
  * Unified auth view. The IdentitySignInForm is the single sign-in entry point.
