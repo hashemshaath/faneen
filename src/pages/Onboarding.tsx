@@ -32,6 +32,8 @@ import {
   findPossibleDuplicateEntities,
   type PossibleDuplicateEntity,
 } from '@/modules/entities/services/access';
+import { insertBusinessBranch } from '@/modules/businesses';
+import { EntityVerificationStatusBadge } from '@/components/entities/EntityVerificationStatusBadge';
 
 type OnboardingStep =
   | 'intent'
@@ -42,6 +44,8 @@ type OnboardingStep =
   | 'entity-type'
   | 'entity-capabilities'
   | 'business-sectors'
+  | 'main-location'
+  | 'staff-invite'
   | 'summary';
 
 const STEP_ORDER: OnboardingStep[] = [
@@ -53,7 +57,37 @@ const STEP_ORDER: OnboardingStep[] = [
   'entity-type',
   'entity-capabilities',
   'business-sectors',
+  'main-location',
+  'staff-invite',
   'summary',
+];
+
+/**
+ * REGISTRATION-UX-FULL-COMPLETE-1 Part 3
+ * Allowed location types for the onboarding main-location step.
+ * Public-sector / state-entity wording is intentionally excluded.
+ */
+type LocationType =
+  | 'headquarters'
+  | 'branch'
+  | 'office'
+  | 'factory'
+  | 'warehouse'
+  | 'project_site'
+  | 'service_site'
+  | 'client_site'
+  | 'other';
+
+const LOCATION_TYPES: { id: LocationType; ar: string; en: string }[] = [
+  { id: 'headquarters', ar: 'المقر الرئيسي', en: 'Headquarters' },
+  { id: 'branch', ar: 'فرع', en: 'Branch' },
+  { id: 'office', ar: 'مكتب', en: 'Office' },
+  { id: 'factory', ar: 'مصنع', en: 'Factory' },
+  { id: 'warehouse', ar: 'مستودع', en: 'Warehouse' },
+  { id: 'project_site', ar: 'موقع مشروع', en: 'Project site' },
+  { id: 'service_site', ar: 'موقع خدمة', en: 'Service site' },
+  { id: 'client_site', ar: 'موقع عميل', en: 'Client site' },
+  { id: 'other', ar: 'أخرى', en: 'Other' },
 ];
 
 /**
@@ -120,6 +154,19 @@ const Onboarding = () => {
   const [duplicates, setDuplicates] = useState<PossibleDuplicateEntity[]>([]);
   const [duplicateAcknowledged, setDuplicateAcknowledged] = useState(false);
   const [duplicateChecking, setDuplicateChecking] = useState(false);
+
+  // REGISTRATION-UX-FULL-COMPLETE-1 Part 3 — main-location state
+  const [locationName, setLocationName] = useState('');
+  const [locationType, setLocationType] = useState<LocationType>('headquarters');
+  const [locationCity, setLocationCity] = useState('');
+  const [locationAddress1, setLocationAddress1] = useState('');
+  const [locationAddress2, setLocationAddress2] = useState('');
+  const [locationPostalCode, setLocationPostalCode] = useState('');
+  const [locationWarning, setLocationWarning] = useState<string | null>(null);
+  const [createdEntityStatus, setCreatedEntityStatus] = useState<{
+    approvalStatus?: string | null;
+    isVerified?: boolean | null;
+  } | null>(null);
 
   // Persist draft on every relevant change
   useEffect(() => {
@@ -259,6 +306,58 @@ const Onboarding = () => {
           vat_number: vatNumber || undefined,
           website: websiteUrl || undefined,
         });
+
+        // Resolve the just-created business id so we can attach the main
+        // location. This is intentionally non-blocking: if anything fails
+        // we surface a warning on the summary and let the user add a
+        // location later from the dashboard.
+        try {
+          const { data: bizRow } = await supabase
+            .from('businesses')
+            .select('id, approval_status, is_verified')
+            .eq('user_id', user!.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const businessId = (bizRow as { id?: string } | null)?.id ?? null;
+          if (bizRow) {
+            setCreatedEntityStatus({
+              approvalStatus: (bizRow as { approval_status?: string | null }).approval_status ?? null,
+              isVerified: (bizRow as { is_verified?: boolean | null }).is_verified ?? null,
+            });
+          }
+          if (businessId && locationName.trim()) {
+            const nameTrim = locationName.trim();
+            const addr = [locationAddress1.trim(), locationAddress2.trim()]
+              .filter(Boolean)
+              .join(' — ');
+            const { error: branchErr } = await insertBusinessBranch({
+              payload: {
+                business_id: businessId,
+                name_ar: nameTrim,
+                name_en: nameTrim,
+                is_main: locationType === 'headquarters',
+                location_type: locationType,
+                region: locationCity.trim() || null,
+                address: addr || null,
+                additional_number: locationPostalCode.trim() || null,
+              },
+            });
+            if (branchErr) {
+              setLocationWarning(
+                isRTL
+                  ? 'تم حفظ المنشأة لكن تعذّر حفظ الموقع الرئيسي. يمكنك إضافته لاحقاً من إعدادات المنشأة.'
+                  : 'Your entity was saved but the main location could not be created. You can add it later from entity settings.',
+              );
+            }
+          }
+        } catch {
+          setLocationWarning(
+            isRTL
+              ? 'تعذّر تأكيد حفظ الموقع. يمكنك إضافته لاحقاً من إعدادات المنشأة.'
+              : 'Could not confirm the location was saved. You can add it later from entity settings.',
+          );
+        }
       }
 
       await refreshProfile();
@@ -883,7 +982,160 @@ const Onboarding = () => {
     );
   }
 
-  // Final business step: sector picker + sub-services
+  // REGISTRATION-UX-FULL-COMPLETE-1 Part 3 — Main location step
+  if (step === 'main-location') {
+    const canContinue = locationName.trim().length >= 2 && locationCity.trim().length >= 2 && locationAddress1.trim().length >= 2;
+    return (
+      <AuthLayout>
+        <div className="space-y-6">
+          <div className="space-y-2 text-center">
+            <h2 className="font-heading font-bold text-2xl text-foreground">
+              {isRTL ? 'الموقع الرئيسي' : 'Main location'}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {isRTL
+                ? 'أضف الموقع الرئيسي للمنشأة. يمكنك إضافة فروع ومواقع أخرى لاحقًا.'
+                : "Add the entity's main location. You can add more branches and sites later."}
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'اسم الموقع' : 'Location name'} <span className="text-destructive">*</span></Label>
+              <Input
+                value={locationName}
+                onChange={(e) => setLocationName(e.target.value)}
+                placeholder={isRTL ? 'مثال: المقر الرئيسي - الرياض' : 'e.g. Head office — Riyadh'}
+                dir="auto"
+                data-field="location_name"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'نوع الموقع' : 'Location type'}</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" data-field="location_type">
+                {LOCATION_TYPES.map((t) => {
+                  const selected = locationType === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      data-location-type={t.id}
+                      onClick={() => setLocationType(t.id)}
+                      className={`p-2 rounded-lg border text-sm transition-all ${selected ? 'border-gold bg-gold/10 text-foreground font-semibold' : 'border-border hover:border-gold/50 text-muted-foreground'}`}
+                    >
+                      {isRTL ? t.ar : t.en}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'المدينة' : 'City'} <span className="text-destructive">*</span></Label>
+                <Input value={locationCity} onChange={(e) => setLocationCity(e.target.value)} dir="auto" data-field="city" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'الرمز البريدي (اختياري)' : 'Postal code (optional)'}</Label>
+                <Input value={locationPostalCode} onChange={(e) => setLocationPostalCode(e.target.value)} dir="ltr" className="tech-content" data-field="postal_code" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'العنوان (السطر 1)' : 'Address line 1'} <span className="text-destructive">*</span></Label>
+              <Input value={locationAddress1} onChange={(e) => setLocationAddress1(e.target.value)} dir="auto" data-field="address_line_1" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{isRTL ? 'العنوان (السطر 2) — اختياري' : 'Address line 2 (optional)'}</Label>
+              <Input value={locationAddress2} onChange={(e) => setLocationAddress2(e.target.value)} dir="auto" data-field="address_line_2" />
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+            <button onClick={() => setStep('business-sectors')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+              {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
+            </button>
+            <Button
+              onClick={() => setStep('staff-invite')}
+              disabled={!canContinue}
+              variant="hero"
+              className="sm:w-64"
+            >
+              {isRTL ? 'متابعة' : 'Continue'}
+            </Button>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  // REGISTRATION-UX-FULL-COMPLETE-1 Part 3 — Staff invite (skip-only shell)
+  if (step === 'staff-invite') {
+    return (
+      <AuthLayout>
+        <div className="space-y-6">
+          <div className="space-y-2 text-center">
+            <h2 className="font-heading font-bold text-2xl text-foreground">
+              {isRTL ? 'دعوة الموظفين' : 'Invite staff'}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {isRTL
+                ? 'يمكنك دعوة الموظفين الآن أو لاحقًا من إعدادات المنشأة.'
+                : 'You can invite staff now or later from entity settings.'}
+            </p>
+          </div>
+
+          <div
+            className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3"
+            data-feature="staff-invite-shell"
+          >
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <UserPlus className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+              <p>
+                {isRTL
+                  ? 'دعوة الموظفين ستكون متاحة من إعدادات المنشأة بعد اكتمال التسجيل.'
+                  : 'Staff invitations will be available from entity settings after onboarding.'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 opacity-60" aria-hidden="true">
+              {([
+                { ar: 'مدير', en: 'Manager' },
+                { ar: 'محرر', en: 'Editor' },
+                { ar: 'مشاهد', en: 'Viewer' },
+              ] as const).map((r) => (
+                <div
+                  key={r.en}
+                  className="p-2 rounded-lg border border-border text-center text-[11px] text-muted-foreground"
+                  data-role-preview={r.en.toLowerCase()}
+                >
+                  {isRTL ? r.ar : r.en}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+            <button onClick={() => setStep('main-location')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+              {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
+            </button>
+            <Button
+              onClick={completeOnboarding}
+              disabled={loading}
+              variant="hero"
+              className="sm:w-64"
+              data-action="skip-staff-invite"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
+              {isRTL ? 'تخطي ومتابعة' : 'Skip and continue'}
+            </Button>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
   if (step === 'summary') {
     // Required-fields readiness for the post-completion guidance line.
     const missing: { ar: string; en: string }[] = [];
@@ -903,12 +1155,31 @@ const Onboarding = () => {
             <h2 className="font-heading font-bold text-2xl text-foreground">
               {isRTL ? 'تم حفظ بيانات منشأتك' : 'Your business profile is saved'}
             </h2>
+            {accountType === 'business' && (
+              <div className="flex justify-center" data-feature="entity-verification-badge">
+                <EntityVerificationStatusBadge
+                  approvalStatus={createdEntityStatus?.approvalStatus ?? 'draft'}
+                  isVerified={createdEntityStatus?.isVerified ?? false}
+                />
+              </div>
+            )}
             <p className="text-sm text-muted-foreground">
               {isRTL
                 ? 'يمكنك إكمال أي بيانات ناقصة من لوحة التحكم ثم إرسال الملف للمراجعة.'
                 : 'You can complete any remaining fields from the dashboard, then submit your profile for review.'}
             </p>
           </div>
+
+          {locationWarning && (
+            <div
+              className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs text-warning-foreground"
+              role="status"
+              data-feature="main-location-warning"
+            >
+              <AlertCircle className="w-3.5 h-3.5 inline-block me-1 text-warning" />
+              {locationWarning}
+            </div>
+          )}
 
           <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-3">
             <div className="flex items-center justify-between text-xs">
@@ -1021,14 +1292,13 @@ const Onboarding = () => {
             {isRTL ? '→ رجوع' : '← Back'}
           </button>
           <Button
-            onClick={completeOnboarding}
-            disabled={loading || sectors.length === 0}
+            onClick={() => setStep('main-location')}
+            disabled={sectors.length === 0}
             variant="hero"
             className="sm:w-64"
-            aria-label={isRTL ? 'إنشاء الحساب وحفظ كمسودة' : 'Create account and save as draft'}
+            aria-label={isRTL ? 'متابعة إلى الموقع الرئيسي' : 'Continue to main location'}
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
-            {isRTL ? 'إنشاء الحساب وحفظ كمسودة' : 'Create account & save as draft'}
+            {isRTL ? 'متابعة' : 'Continue'}
           </Button>
         </div>
       </div>
