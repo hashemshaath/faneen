@@ -11681,6 +11681,7 @@ export type Database = {
       }
       categorize_email_link: { Args: { _url: string }; Returns: string }
       check_email_deliverability: { Args: never; Returns: undefined }
+      check_email_registered: { Args: { _email: string }; Returns: boolean }
       check_password_reset_rate_limit: {
         Args: { _email: string }
         Returns: boolean
