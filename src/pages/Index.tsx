@@ -64,6 +64,18 @@ const Index = () => {
         name: 'قِطاعات Qitaat',
         url: 'https://qitaat.com',
         logo: { '@type': 'ImageObject', url: 'https://qitaat.com/logo.png' },
+        sameAs: [
+          'https://twitter.com/qitaat',
+          'https://www.linkedin.com/company/qitaat',
+          'https://www.instagram.com/qitaat',
+        ],
+        contactPoint: [{
+          '@type': 'ContactPoint',
+          contactType: 'customer support',
+          email: 'support@qitaat.com',
+          areaServed: 'SA',
+          availableLanguage: ['Arabic', 'English'],
+        }],
       },
     },
     {
