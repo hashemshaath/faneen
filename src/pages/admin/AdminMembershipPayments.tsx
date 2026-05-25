@@ -506,7 +506,7 @@ const AdminMembershipPayments = () => {
                 })}
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground text-sm">
+                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground text-sm">
                       {isRTL ? 'لا توجد مدفوعات' : 'No payment intents'}
                     </TableCell>
                   </TableRow>
