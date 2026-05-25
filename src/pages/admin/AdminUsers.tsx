@@ -7,7 +7,7 @@ import { CrQuickScanInline } from '@/components/admin/CrQuickScanInline';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { adminCreateUser } from '@/modules/admin';
+import { adminCreateUser, type AdminCreateUserPayload } from '@/modules/admin';
 import { listContractsForUserParticipant } from '@/modules/contracts';
 import {
   listAdminBusinesses,
@@ -628,7 +628,7 @@ const AdminUsers = () => {
 
   const createUserMutation = useMutation({
     mutationFn: async (payload: typeof createForm) => {
-      const { data, error } = await adminCreateUser(payload);
+      const { data, error } = await adminCreateUser(payload as AdminCreateUserPayload);
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
