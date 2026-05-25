@@ -28,6 +28,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 interface IntentRow {
   id: string;
+  ref_id: string | null;
   subscription_id: string | null;
   user_id: string | null;
   business_id: string | null;
@@ -168,7 +169,7 @@ const AdminMembershipPayments = () => {
   const [eventFilter, setEventFilter] = useState<'all' | 'pending' | 'processed' | 'error'>('all');
 
   const SELECT_COLS =
-    'id, subscription_id, user_id, business_id, provider, status, amount, currency, provider_intent_id, invoice_id, confirmed_at, created_at, updated_at';
+    'id, ref_id, subscription_id, user_id, business_id, provider, status, amount, currency, provider_intent_id, invoice_id, confirmed_at, created_at, updated_at';
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['admin-membership-payments', statusFilter],
@@ -385,11 +386,12 @@ const AdminMembershipPayments = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>{isRTL ? 'التاريخ' : 'Created'}</TableHead>
+                  <TableHead>{isRTL ? 'مرجع الدفع' : 'Payment Ref'}</TableHead>
                   <TableHead>{isRTL ? 'الحالة' : 'Status'}</TableHead>
                   <TableHead>{isRTL ? 'الصحة' : 'Health'}</TableHead>
                   <TableHead>{isRTL ? 'المزود' : 'Provider'}</TableHead>
                   <TableHead>{isRTL ? 'المبلغ' : 'Amount'}</TableHead>
-                  <TableHead>{isRTL ? 'معرف المزود' : 'Provider Intent'}</TableHead>
+                  <TableHead>{isRTL ? 'معرف مزود الدفع' : 'Provider ID'}</TableHead>
                   <TableHead>{isRTL ? 'الفاتورة' : 'Invoice'}</TableHead>
                   <TableHead>{isRTL ? 'تأكيد' : 'Confirmed'}</TableHead>
                   <TableHead className="text-end"> </TableHead>
@@ -406,6 +408,7 @@ const AdminMembershipPayments = () => {
                   return (
                     <TableRow key={r.id} className={isHighlighted ? 'bg-primary/5' : ''}>
                       <TableCell className="tech-content text-xs">{new Date(r.created_at).toLocaleString()}</TableCell>
+                      <TableCell className="tech-content text-[10px] font-mono">{r.ref_id || '—'}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={STATUS_TONE[r.status] || ''}>{r.status}</Badge>
                       </TableCell>
