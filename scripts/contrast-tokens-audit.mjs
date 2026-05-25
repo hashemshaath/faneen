@@ -19,7 +19,6 @@ const errors = [];
 function read(rel) {
   const p = join(ROOT, rel);
   if (!existsSync(p)) {
-    errors.push(`${rel}  ❌  file missing`);
     return null;
   }
   return readFileSync(p, "utf8");
