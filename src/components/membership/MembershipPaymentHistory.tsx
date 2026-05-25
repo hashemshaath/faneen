@@ -18,6 +18,7 @@ type Status = 'created' | 'requires_action' | 'succeeded' | 'failed' | 'cancelle
 
 interface PaymentIntentSafeRow {
   id: string;
+  ref_id: string | null;
   status: Status;
   amount: number | string | null;
   currency: string | null;
@@ -34,7 +35,7 @@ interface Props {
 }
 
 const SAFE_SELECT =
-  'id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata';
+  'id, ref_id, status, amount, currency, invoice_id, confirmed_at, created_at, updated_at, metadata';
 
 const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString() : '—');
 const fmtDateTime = (d: string | null) => (d ? new Date(d).toLocaleString() : '—');
@@ -101,6 +102,12 @@ export const MembershipPaymentHistory: React.FC<Props> = ({ subscriptionId, isRT
                       </div>
 
                       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                        {intent.ref_id && (
+                          <span>
+                            {isRTL ? 'المرجع: ' : 'Reference: '}
+                            <span className="tech-content text-foreground font-mono">{intent.ref_id}</span>
+                          </span>
+                        )}
                         <span>
                           {isRTL ? 'المبلغ: ' : 'Amount: '}
                           <span className="tech-content text-foreground font-semibold">
