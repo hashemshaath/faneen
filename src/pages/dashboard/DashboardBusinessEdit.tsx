@@ -533,6 +533,35 @@ const DashboardBusinessEdit: React.FC = () => {
             <CardDescription>{t(isRTL, 'العنوان الوطني (عربي/إنجليزي) وإحداثيات الموقع لظهور منشأتك على الخريطة.', 'National address (Arabic/English) and coordinates so your business shows on the map.')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
+            {/* Short Saudi National Address — type "RRRD2402" and auto-fill everything below */}
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+              <Label className="text-xs font-medium text-primary">
+                {t(isRTL, 'العنوان الوطني المختصر', 'Short national address')}
+              </Label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  dir="ltr"
+                  className="tech-content uppercase"
+                  placeholder="RRRD2402"
+                  value={shortAddress}
+                  onChange={(e) => setShortAddress(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleShortAddressLookup(); } }}
+                  maxLength={8}
+                />
+                <Button type="button" onClick={handleShortAddressLookup} disabled={lookupBusy || shortAddress.trim().length < 8} className="gap-1.5">
+                  {lookupBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+                  {t(isRTL, 'تعبئة العنوان', 'Auto-fill address')}
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                {t(
+                  isRTL,
+                  'أدخل العنوان الوطني المختصر (4 أحرف + 4 أرقام) من خطاب الواصل لتعبئة المنطقة والمدينة والحي والشارع تلقائيًا.',
+                  'Enter your Saudi short national address (4 letters + 4 digits) from the WASEL letter to auto-fill region, city, district and street.',
+                )}
+              </p>
+            </div>
+
             <div className={grid2}>
               <div>
                 <Label className={fieldLabel}>{t(isRTL, 'الدولة', 'Country')}</Label>
@@ -544,21 +573,31 @@ const DashboardBusinessEdit: React.FC = () => {
                 </select>
               </div>
               <div>
-                <Label className={fieldLabel}>{t(isRTL, 'المدينة', 'City')}</Label>
-                <select className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                  value={form.city_id ?? ''} disabled={!form.country_id}
-                  onChange={(e) => update('city_id', e.target.value || null)}>
-                  <option value="">{t(isRTL, 'اختر المدينة', 'Select city')}</option>
-                  {cities.map((c) => <option key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</option>)}
+                <Label className={fieldLabel}>{t(isRTL, 'المنطقة', 'Region')}</Label>
+                <select className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  value={regionId}
+                  onChange={(e) => handleRegionChange(e.target.value as SaRegionId | '')}>
+                  <option value="">{t(isRTL, 'اختر المنطقة', 'Select region')}</option>
+                  {SA_REGIONS.map((r) => (
+                    <option key={r.id} value={r.id}>{isRTL ? r.name_ar : r.name_en}</option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            <BilingualField isRTL={isRTL}
-              label={{ ar: 'المنطقة', en: 'Region' }}
-              valueAr={form.region ?? ''} valueEn={form.region_en ?? ''}
-              onChangeAr={(v) => update('region', v)} onChangeEn={(v) => update('region_en', v)}
-              placeholderAr="مثال: منطقة الرياض" placeholderEn="e.g. Riyadh Region" />
+            <div>
+              <Label className={fieldLabel}>{t(isRTL, 'المدينة', 'City')}</Label>
+              <select className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                value={form.city_id ?? ''} disabled={!form.country_id || !regionId}
+                onChange={(e) => update('city_id', e.target.value || null)}>
+                <option value="">
+                  {!regionId
+                    ? t(isRTL, 'اختر المنطقة أولاً', 'Select a region first')
+                    : t(isRTL, 'اختر المدينة', 'Select city')}
+                </option>
+                {filteredCities.map((c) => <option key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</option>)}
+              </select>
+            </div>
 
             <BilingualField isRTL={isRTL}
               label={{ ar: 'الحي', en: 'District' }}
