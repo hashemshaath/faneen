@@ -1376,6 +1376,7 @@ export type Database = {
           is_main: boolean
           latitude: number | null
           legacy_ref_id: string | null
+          location_type: string | null
           longitude: number | null
           mobile: string | null
           name_ar: string
@@ -1408,6 +1409,7 @@ export type Database = {
           is_main?: boolean
           latitude?: number | null
           legacy_ref_id?: string | null
+          location_type?: string | null
           longitude?: number | null
           mobile?: string | null
           name_ar: string
@@ -1440,6 +1442,7 @@ export type Database = {
           is_main?: boolean
           latitude?: number | null
           legacy_ref_id?: string | null
+          location_type?: string | null
           longitude?: number | null
           mobile?: string | null
           name_ar?: string
