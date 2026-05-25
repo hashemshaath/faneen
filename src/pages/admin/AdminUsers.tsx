@@ -594,7 +594,7 @@ const AdminUsers = () => {
       mutated = true;
     }
 
-    if (createParam && isSuperAdmin) {
+    if (createParam && isAdmin) {
       const preset = createParam === 'provider' ? 'business' : createParam;
       const allowed = ['individual', 'business', 'company'];
       if (allowed.includes(preset)) {
@@ -609,7 +609,7 @@ const AdminUsers = () => {
       setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuperAdmin, searchParams]);
+  }, [isAdmin, searchParams]);
 
   const closePanel = () => {
     setActivePanel(null); setNewPassword(''); setShowNewPassword(false);
