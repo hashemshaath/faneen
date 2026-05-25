@@ -12,13 +12,14 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export interface AdminOpsQuoteRow {
   id: string;
+  ref_id: string | null;
   sector: string;
   city: string;
   status: string;
   created_at: string;
 }
 
-export const ADMIN_OPS_QUOTE_SELECT = 'id, sector, city, status, created_at';
+export const ADMIN_OPS_QUOTE_SELECT = 'id, ref_id, sector, city, status, created_at';
 
 export interface ListAdminOpsQuoteRequestsParams {
   fromDateIso: string | null;

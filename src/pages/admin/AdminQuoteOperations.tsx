@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useQuery } from '@tanstack/react-query';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import {
   listAdminOpsQuoteRequests,
   listAdminOpsQuoteRequestLeads,
@@ -30,7 +31,7 @@ import {
 type Range = 'today' | '7d' | '30d' | '90d' | 'all';
 
 interface QuoteRow {
-  id: string; sector: string; city: string; status: string; created_at: string;
+  id: string; ref_id: string | null; sector: string; city: string; status: string; created_at: string;
 }
 interface LeadRow {
   id: string; quote_request_id: string; provider_id: string; status: string;
@@ -368,7 +369,7 @@ const AdminQuoteOperations: React.FC = () => {
       const ageHours = Math.round((Date.now() - new Date(a.quote.created_at).getTime()) / 3600000);
       const last = lastEventByQuote.get(a.quote.id);
       return {
-        quote_id_short: `#${a.quote.id.slice(-6)}`,
+        quote_ref: a.quote.ref_id ?? `#${a.quote.id.slice(-6)}`,
         sector: SECTOR_LABEL_AR[a.quote.sector] ?? a.quote.sector,
         city: a.quote.city,
         status: QUOTE_STATUS_LABEL_AR[a.quote.status as QuoteStatus] ?? a.quote.status,
@@ -379,7 +380,7 @@ const AdminQuoteOperations: React.FC = () => {
       };
     });
     const headers = [
-      'quote_id_short', 'sector', 'city', 'status', 'reason',
+      'quote_ref', 'sector', 'city', 'status', 'reason',
       'request_age_hours', 'last_event_type', 'admin_url',
     ];
     downloadCsv(`qitaat-follow-up-requests-${today}.csv`, rowsToCsv(headers, rows));
@@ -587,7 +588,11 @@ const AdminQuoteOperations: React.FC = () => {
                       const ageMs = Date.now() - new Date(a.quote.created_at).getTime();
                       return (
                         <li key={`${a.quote.id}-${i}`} className="py-2.5 flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-xs text-muted-foreground tech-content">#{a.quote.id.slice(-6)}</span>
+                          {a.quote.ref_id ? (
+                            <ReferenceBadge refId={a.quote.ref_id} />
+                          ) : (
+                            <span className="font-mono text-xs text-muted-foreground tech-content">#{a.quote.id.slice(-6)}</span>
+                          )}
                           <span className="text-xs text-muted-foreground">{SECTOR_LABEL_AR[a.quote.sector] ?? a.quote.sector} · {a.quote.city}</span>
                           <span className={`text-[10px] px-2 py-0.5 rounded-full border ${a.tone}`}>{a.reason}</span>
                           <span className="text-[11px] text-muted-foreground tech-content">عمر: {fmtDuration(ageMs)}</span>
