@@ -81,6 +81,7 @@ const INVENTORY: Record<string, Classification> = {
   // --- admin / users ---
   'admin-delete-user': 'admin',
   'admin-reset-password': 'admin',
+  'admin-create-user': 'admin',
 
   // --- AI / content tools ---
   'ai-center': 'frontend',
