@@ -33,8 +33,16 @@ Deno.serve(async (req) => {
     if (!caller) return json({ error: "Unauthorized" }, 401);
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
-    const { data: isSuperAdmin } = await admin.rpc("is_super_admin", { _user_id: caller.id });
-    if (!isSuperAdmin) return json({ error: "Forbidden — Super Admin only" }, 403);
+    // Allow both super_admin and admin to create users.
+    const [{ data: isSuperAdmin }, { data: isAdmin }] = await Promise.all([
+      admin.rpc("is_super_admin", { _user_id: caller.id }),
+      admin.rpc("has_role", { _user_id: caller.id, _role: "admin" }),
+    ]);
+    if (!isSuperAdmin && !isAdmin) {
+      return json({ error: "Forbidden — Admin only" }, 403);
+    }
+    // Only super_admin may grant elevated roles.
+    const canGrantElevated = !!isSuperAdmin;
 
     const body = await req.json().catch(() => ({})) as {
       email?: string;
@@ -85,8 +93,8 @@ Deno.serve(async (req) => {
       })
       .eq("user_id", newUserId);
 
-    // Optional: assign role
-    if (role && role !== "none" && role !== "user") {
+    // Optional: assign role (only super_admin can grant admin/moderator/super_admin)
+    if (role && role !== "none" && role !== "user" && canGrantElevated) {
       await admin.from("user_roles").insert({ user_id: newUserId, role });
     }
 
