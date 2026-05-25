@@ -116,6 +116,29 @@ const DashboardSettings = () => {
     enabled: !!user,
   });
 
+  // Reference data — countries & cities (filtered by selected country)
+  const { data: countries = [] } = useQuery({
+    queryKey: ['settings-ref-countries'],
+    queryFn: async () => {
+      const { data } = await supabase.from('countries').select('id, name_ar, name_en').order('name_en');
+      return (data ?? []) as RefRow[];
+    },
+    staleTime: 5 * 60_000,
+  });
+  const { data: cities = [] } = useQuery({
+    queryKey: ['settings-ref-cities', profileForm.country_id],
+    queryFn: async () => {
+      if (!profileForm.country_id) return [] as CityRow[];
+      const { data } = await supabase.from('cities')
+        .select('id, name_ar, name_en, country_id')
+        .eq('country_id', profileForm.country_id)
+        .order('name_en');
+      return (data ?? []) as CityRow[];
+    },
+    enabled: !!profileForm.country_id,
+    staleTime: 5 * 60_000,
+  });
+
   // Sessions info
   const { data: sessions } = useQuery({
     queryKey: ['user-sessions', user?.id],
