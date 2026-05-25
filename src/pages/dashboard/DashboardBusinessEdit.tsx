@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { SectorPicker } from '@/components/onboarding/SectorPicker';
 import type { SectorId } from '@/data/onboarding-sectors';
@@ -270,8 +271,20 @@ const DashboardBusinessEdit: React.FC = () => {
 
         <ValidationBanner issues={validationIssues} isRTL={isRTL} />
 
-        {/* Identity */}
-        <Card>
+        <Tabs defaultValue="identity" className="w-full">
+          <TabsList className="w-full flex flex-wrap h-auto justify-start gap-1 bg-muted/40 p-1 rounded-xl">
+            <TabsTrigger value="identity" className="gap-1.5"><Building2 className="w-3.5 h-3.5" />{t(isRTL, 'الهوية والوصف', 'Identity & About')}</TabsTrigger>
+            <TabsTrigger value="contact" className="gap-1.5"><Phone className="w-3.5 h-3.5" />{t(isRTL, 'التواصل والمدير', 'Contact & Manager')}</TabsTrigger>
+            <TabsTrigger value="location" className="gap-1.5"><MapPin className="w-3.5 h-3.5" />{t(isRTL, 'الموقع', 'Location')}</TabsTrigger>
+            <TabsTrigger value="sectors" className="gap-1.5"><Layers className="w-3.5 h-3.5" />{t(isRTL, 'القطاعات', 'Sectors')}</TabsTrigger>
+            <TabsTrigger value="legal" className="gap-1.5"><ShieldCheck className="w-3.5 h-3.5" />{t(isRTL, 'البيانات النظامية', 'Legal & Tax')}</TabsTrigger>
+            <TabsTrigger value="team" className="gap-1.5"><User className="w-3.5 h-3.5" />{t(isRTL, 'المفوّضون', 'Representatives')}</TabsTrigger>
+            <TabsTrigger value="system" className="gap-1.5"><FileText className="w-3.5 h-3.5" />{t(isRTL, 'سجل ونظام', 'System & Audit')}</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="identity" className="space-y-6 mt-4">
+            {/* Identity */}
+            <Card>
           <CardHeader>
             <CardTitle className={sectionTitle}><Building2 className="w-4 h-4 text-primary" />{t(isRTL, 'الهوية', 'Identity')}</CardTitle>
             <CardDescription>{t(isRTL, 'الاسم التجاري والشعار وصورة الغلاف.', 'Trade name, logo and cover image.')}</CardDescription>
