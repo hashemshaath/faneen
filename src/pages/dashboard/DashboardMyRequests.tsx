@@ -240,7 +240,14 @@ const DashboardMyRequests: React.FC = () => {
               <Card key={q.id} className="overflow-hidden">
                 <CardContent className="p-4 sm:p-5 space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs text-muted-foreground tech-content">#{q.id.slice(0, 8)}</span>
+                    {q.ref_id ? (
+                      <>
+                        <ReferenceBadge refId={q.ref_id} />
+                        <ReferenceLinkCopy refId={q.ref_id} isRTL={isRTL} />
+                      </>
+                    ) : (
+                      <span className="font-mono text-xs text-muted-foreground tech-content">#{q.id.slice(0, 8)}</span>
+                    )}
                     <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
                       {isRTL ? QUOTE_STATUS_LABEL_AR[q.status] : QUOTE_STATUS_LABEL_EN[q.status]}
                     </span>
