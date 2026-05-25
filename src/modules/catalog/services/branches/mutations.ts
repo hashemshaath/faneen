@@ -18,6 +18,21 @@ export async function insertBusinessBranch(payload: BusinessBranchInsertPayload)
   return await supabase.from('business_branches').insert(payload);
 }
 
+/**
+ * Variant of `insertBusinessBranch` that returns the inserted row(s) via
+ * `.select(...)` with either `.single()` or `.maybeSingle()`. Kept here so all
+ * `.from('business_branches')` access stays inside the canonical catalog
+ * wrapper (CAT-4 isolation).
+ */
+export async function insertBusinessBranchReturning(
+  payload: BusinessBranchInsertPayload,
+  select: string,
+  terminal: 'single' | 'maybeSingle',
+) {
+  const base = supabase.from('business_branches').insert(payload).select(select);
+  return terminal === 'single' ? await base.single() : await base.maybeSingle();
+}
+
 export async function updateBusinessBranchById(
   id: string,
   values: BusinessBranchUpdatePayload,
