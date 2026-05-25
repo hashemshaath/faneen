@@ -318,8 +318,8 @@ const Onboarding = () => {
         icon: User,
         titleAr: 'المتابعة كفرد',
         titleEn: 'Continue as individual',
-        descAr: 'حساب شخصي للبحث وطلب عروض الأسعار',
-        descEn: 'A personal account to browse and request quotes',
+        descAr: 'يمكنك استخدام قطاعات كفرد، وطلب عروض الأسعار، ثم إنشاء منشأة أو الانضمام لها لاحقًا.',
+        descEn: 'You can use Qitaat as an individual, request quotes, and create or join an entity later.',
       },
       {
         id: 'create-entity' as const,
