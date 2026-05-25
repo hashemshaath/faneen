@@ -18,7 +18,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve as resolvePath } from 'node:path';
 import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 
 const read = (p: string) => readFileSync(resolvePath(p), 'utf8');
 
@@ -31,13 +31,18 @@ beforeEach(() => {
   lookupMock.mockReset();
 });
 
+function LocationProbe() {
+  const loc = useLocation();
+  return <div data-testid="redirected">{loc.pathname}</div>;
+}
+
 async function renderAt(path: string) {
   const { default: ReferenceResolver } = await import('@/pages/ReferenceResolver');
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route path="/r/:refId" element={<ReferenceResolver />} />
-        <Route path="*" element={<div data-testid="redirected">{location.pathname}</div>} />
+        <Route path="*" element={<LocationProbe />} />
       </Routes>
     </MemoryRouter>,
   );
