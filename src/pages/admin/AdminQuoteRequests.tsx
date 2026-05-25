@@ -19,6 +19,8 @@ import {
   QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_TONE, QUOTE_STATUSES,
   CUSTOMER_TYPE_LABEL_AR, SECTOR_LABEL_AR, type QuoteStatus,
 } from '@/lib/quoteRequests';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
+import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 
 const AdminQuoteRequests: React.FC = () => {
   useNoIndex();
