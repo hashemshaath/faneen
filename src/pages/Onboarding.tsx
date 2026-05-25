@@ -155,6 +155,19 @@ const Onboarding = () => {
   const [duplicateAcknowledged, setDuplicateAcknowledged] = useState(false);
   const [duplicateChecking, setDuplicateChecking] = useState(false);
 
+  // REGISTRATION-UX-FULL-COMPLETE-1 Part 3 — main-location state
+  const [locationName, setLocationName] = useState('');
+  const [locationType, setLocationType] = useState<LocationType>('headquarters');
+  const [locationCity, setLocationCity] = useState('');
+  const [locationAddress1, setLocationAddress1] = useState('');
+  const [locationAddress2, setLocationAddress2] = useState('');
+  const [locationPostalCode, setLocationPostalCode] = useState('');
+  const [locationWarning, setLocationWarning] = useState<string | null>(null);
+  const [createdEntityStatus, setCreatedEntityStatus] = useState<{
+    approvalStatus?: string | null;
+    isVerified?: boolean | null;
+  } | null>(null);
+
   // Persist draft on every relevant change
   useEffect(() => {
     if (!draftLoaded) return;
