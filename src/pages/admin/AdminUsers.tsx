@@ -1380,11 +1380,25 @@ const AdminUsers = () => {
             </div>
           </TabsContent>
 
-          {/* USERS / STAFF / DISABLED — shared list view */}
-          {(['users', 'staff', 'disabled'] as const).map(t => (
-            <TabsContent key={t} value={t} className="space-y-4 mt-5">
-              {/* Quick filter chips */}
+          {/* USERS — single list view (Staff/Disabled merged as scope chips) */}
+          <TabsContent value="users" className="space-y-4 mt-5">
+              {/* Scope + Quick filter chips */}
               <div className="flex items-center gap-2 flex-wrap">
+                {([
+                  { key: 'all',      icon: Users, ar: 'الجميع',         en: 'All',      active: filterScope === 'all' },
+                  { key: 'staff',    icon: Crown, ar: 'فريق الإدارة',   en: 'Staff',    active: filterScope === 'staff' },
+                  { key: 'disabled', icon: Ban,   ar: 'المعطّلون',      en: 'Disabled', active: filterScope === 'disabled' },
+                ] as const).map(s => {
+                  const Icon = s.icon;
+                  return (
+                    <button key={s.key} onClick={() => { setFilterScope(s.key); setPage(1); }}
+                      className={`text-[11px] inline-flex items-center gap-1 px-2.5 py-1 rounded-full border transition-all
+                        ${s.active ? 'bg-primary text-primary-foreground border-primary shadow-sm' : 'bg-card border-border/40 text-muted-foreground hover:border-primary/40 hover:text-foreground'}`}>
+                      <Icon className="w-3 h-3" />{isRTL ? s.ar : s.en}
+                    </button>
+                  );
+                })}
+                <span className="text-border/60" aria-hidden>•</span>
                 {([
                   { key: 'recent', icon: Zap, ar: 'أحدث 7 أيام', en: 'New 7d', active: false, onClick: () => { setSortKey('created_at'); setSortDir('desc'); } },
                   { key: 'providers', icon: Briefcase, ar: 'مزودي الخدمات', en: 'Providers', active: filterAccountType === 'business', onClick: () => { setFilterAccountType(filterAccountType === 'business' ? 'all' : 'business'); setPage(1); } },
