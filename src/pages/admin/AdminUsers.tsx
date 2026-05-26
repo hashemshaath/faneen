@@ -1314,7 +1314,21 @@ const AdminUsers = () => {
                     </Button>
                     {isSuperAdmin && (<>
                     <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-warning border-warning"
-                      onClick={() => bulkBanMutation.mutate({ ids: Array.from(selected), isBanned: true })}
+                      onClick={() => {
+                        const safeIds = sorted.filter(p => {
+                          if (!selected.has(p.id)) return false;
+                          if (p.user_id === user.id) return false;
+                          const r = roleMap.get(p.user_id) || [];
+                          return !r.some(x => x.role === 'super_admin' || x.role === 'admin');
+                        }).map(p => p.id);
+                        const skipped = selected.size - safeIds.length;
+                        if (safeIds.length === 0) {
+                          toast.error(isRTL ? 'لا يمكن تعطيل حسابك أو حسابات المشرفين' : 'Cannot disable your own account or admin accounts');
+                          return;
+                        }
+                        if (skipped > 0) toast.warning(isRTL ? `تم تجاهل ${skipped} حساب محمي` : `Skipped ${skipped} protected account(s)`);
+                        bulkBanMutation.mutate({ ids: safeIds, isBanned: true });
+                      }}
                       disabled={bulkBanMutation.isPending}>
                       <Ban className="w-3.5 h-3.5" />{isRTL ? 'تعطيل' : 'Disable'}
                     </Button>
