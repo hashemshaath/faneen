@@ -118,8 +118,8 @@ Deno.serve(async (req) => {
     const salt =
       Deno.env.get('RATE_LIMIT_SALT') || supabaseUrl || 'qitaat-default-salt'
     const ip = extractClientIp(req)
-    const ipHash = await sha256Hex(`${ip}|${salt}`)
-    const ipIdent = `lead:ip:${ipHash}:${lead.business_id}`
+    const rateIpHash = await sha256Hex(`${ip}|${salt}`)
+    const ipIdent = `lead:ip:${rateIpHash}:${lead.business_id}`
     const { data: ipAllowed } = await admin.rpc('check_rate_limit', {
       _identifier: ipIdent,
       _type: 'supplier_lead',
