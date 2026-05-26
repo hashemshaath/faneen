@@ -1477,9 +1477,9 @@ const AdminUsers = () => {
                   <span className="text-[11px] text-muted-foreground">
                     {isRTL ? `${sorted.length} نتيجة • صفحة ${page}/${totalPages}` : `${sorted.length} results • Page ${page}/${totalPages}`}
                   </span>
-                  {(deferredSearch || filterRole !== 'all' || filterAccountType !== 'all' || filterTier !== 'all' || filterBusinessLink !== 'all') && (
+                  {(deferredSearch || filterRole !== 'all' || filterAccountType !== 'all' || filterTier !== 'all' || filterBusinessLink !== 'all' || filterScope !== 'all') && (
                     <button
-                      onClick={() => { handleSearchChange(''); setFilterRole('all'); setFilterAccountType('all'); setFilterTier('all'); setFilterBusinessLink('all'); }}
+                      onClick={() => { handleSearchChange(''); setFilterRole('all'); setFilterAccountType('all'); setFilterTier('all'); setFilterBusinessLink('all'); setFilterScope('all'); }}
                       className="text-[11px] inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-border/50 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
                     >
                       <X className="w-3 h-3" />{isRTL ? 'مسح الفلاتر' : 'Clear filters'}
