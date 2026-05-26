@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { findBusinessDuplicateCandidates } from '@/modules/businesses';
 
 /**
  * REGISTRATION-UX-FULL-COMPLETE-1 — light client-side duplicate detection.
@@ -40,22 +40,18 @@ export async function findPossibleDuplicateEntities(
   // 1) Exact CR
   const cr = (input.cr ?? '').trim();
   if (cr.length >= 4) {
-    const { data } = await supabase
-      .from('businesses')
-      .select(SELECT)
-      .eq('national_id', cr)
-      .limit(5);
+    const { data } = await findBusinessDuplicateCandidates<Omit<PossibleDuplicateEntity, 'match_reason'>>({
+      kind: 'cr', value: cr, select: SELECT, limit: 5,
+    });
     (data ?? []).forEach((r) => out.push({ ...(r as Omit<PossibleDuplicateEntity, 'match_reason'>), match_reason: 'cr' }));
   }
 
   // 2) Exact VAT/unified
   const vat = (input.vat ?? '').trim();
   if (vat.length >= 4) {
-    const { data } = await supabase
-      .from('businesses')
-      .select(SELECT)
-      .or(`vat_number.eq.${vat},unified_number.eq.${vat}`)
-      .limit(5);
+    const { data } = await findBusinessDuplicateCandidates<Omit<PossibleDuplicateEntity, 'match_reason'>>({
+      kind: 'vat', value: vat, select: SELECT, limit: 5,
+    });
     (data ?? []).forEach((r) => out.push({ ...(r as Omit<PossibleDuplicateEntity, 'match_reason'>), match_reason: 'vat' }));
   }
 
@@ -63,11 +59,9 @@ export async function findPossibleDuplicateEntities(
   const name = (input.name ?? '').trim();
   if (out.length === 0 && name.length >= 3) {
     const safe = name.replace(/[,()*%]/g, ' ').trim();
-    const { data } = await supabase
-      .from('businesses')
-      .select(SELECT)
-      .or(`name_ar.ilike.${safe},name_en.ilike.${safe}`)
-      .limit(5);
+    const { data } = await findBusinessDuplicateCandidates<Omit<PossibleDuplicateEntity, 'match_reason'>>({
+      kind: 'name', value: safe, select: SELECT, limit: 5,
+    });
     (data ?? []).forEach((r) => out.push({ ...(r as Omit<PossibleDuplicateEntity, 'match_reason'>), match_reason: 'name' }));
   }
 
