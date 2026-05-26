@@ -14,6 +14,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   FileText, FileUp, Loader2, Sparkles, X, CheckCircle2, AlertTriangle,
   FileSearch, Building2, User, Calendar, Receipt, ListChecks, Ruler,
+  ShieldCheck, Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
+import { ClientPicker, type SelectedClient, type GuestClient } from '@/components/contracts/ClientPicker';
 
 const MAX_FILE_MB = 10;
 const ACCEPTED = '.pdf,.png,.jpg,.jpeg,.webp,.txt,.docx,application/pdf,image/*,text/plain';
@@ -58,10 +60,24 @@ export interface ContractExtract {
 
 export interface ContractImportPanelProps {
   isRTL: boolean;
-  onApplyToForm: (form: Partial<ContractForm>, extract: ContractExtract) => void;
-  onSaveDraft: (form: Partial<ContractForm>, extract: ContractExtract) => void | Promise<void>;
+  onApplyToForm: (args: {
+    form: Partial<ContractForm>;
+    extract: ContractExtract;
+    selectedClient: SelectedClient | null;
+    guestClient: GuestClient | null;
+  }) => void;
+  onSaveDraft: (args: {
+    form: Partial<ContractForm>;
+    extract: ContractExtract;
+    selectedClient: SelectedClient | null;
+    guestClient: GuestClient | null;
+  }) => void | Promise<void>;
   onCancel: () => void;
   isSavingDraft?: boolean;
+  /** Current provider business name (1st party). Display-only. */
+  providerBusinessName?: string | null;
+  /** Current user's display name shown as fallback when business is missing. */
+  providerOwnerName?: string | null;
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -110,6 +126,7 @@ function buildForm(e: ContractExtract): Partial<ContractForm> {
 
 export function ContractImportPanel({
   isRTL, onApplyToForm, onSaveDraft, onCancel, isSavingDraft,
+  providerBusinessName, providerOwnerName,
 }: ContractImportPanelProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -117,6 +134,25 @@ export function ContractImportPanel({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  /* Party state — second party (client). First party = current business. */
+  const [selectedClient, setSelectedClient] = useState<SelectedClient | null>(null);
+  const [guestClient, setGuestClient] = useState<GuestClient | null>(null);
+  const [fallbackEmail, setFallbackEmail] = useState('');
+
+  /* When extraction completes, seed the guest contact from extracted client. */
+  const seedGuestFromExtract = useCallback((e: ContractExtract) => {
+    const c = e.client ?? {};
+    if (selectedClient) return;
+    if (guestClient && (guestClient.email || guestClient.phone || guestClient.name)) return;
+    if (c.name || c.email || c.phone) {
+      setGuestClient({
+        name: c.name ?? null,
+        email: c.email ?? null,
+        phone: c.phone ?? null,
+      });
+      if (c.email) setFallbackEmail(c.email);
+    }
+  }, [selectedClient, guestClient]);
 
   const fileSizeOk = useMemo(() => !file || file.size <= MAX_FILE_MB * 1024 * 1024, [file]);
 
@@ -175,6 +211,7 @@ export function ContractImportPanel({
         return;
       }
       setExtract(r.data ?? {});
+      seedGuestFromExtract(r.data ?? {});
       toast.success(isRTL ? 'تم تحليل العقد بنجاح' : 'Contract analyzed');
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -182,7 +219,7 @@ export function ContractImportPanel({
     } finally {
       setIsAnalyzing(false);
     }
-  }, [file, fileSizeOk, isRTL]);
+  }, [file, fileSizeOk, isRTL, seedGuestFromExtract]);
 
   const updateExtract = <K extends keyof ContractExtract>(k: K, v: ContractExtract[K]) => {
     setExtract((prev) => (prev ? { ...prev, [k]: v } : prev));
@@ -192,6 +229,48 @@ export function ContractImportPanel({
   };
 
   const confidencePct = extract?.confidence != null ? Math.round(extract.confidence * 100) : null;
+
+  /* Compute the checklist for saving as draft. */
+  const checklist = useMemo(() => {
+    const titleOk = !!(extract?.title_ar || extract?.title_en);
+    const amountOk = extract?.total_amount != null && Number(extract.total_amount) > 0;
+    const clientOk = !!selectedClient
+      || !!(guestClient && (guestClient.name || guestClient.email || guestClient.phone))
+      || !!fallbackEmail.trim();
+    return { titleOk, amountOk, clientOk };
+  }, [extract, selectedClient, guestClient, fallbackEmail]);
+
+  /* A draft can ALWAYS be saved with just a title — everything else can be
+   * completed later from the drafts list. We only hard-require the title so
+   * the row has a recognisable label. */
+  const canSaveDraft = checklist.titleOk;
+
+  const handleSaveDraft = () => {
+    if (!extract) return;
+    if (!canSaveDraft) {
+      toast.error(isRTL ? 'أضِف عنواناً للعقد على الأقل لحفظه كمسودة' : 'Add a contract title to save a draft');
+      return;
+    }
+    const f = buildForm(extract);
+    // Sync fallback email into form so mutation has *something* to work with.
+    if (!selectedClient && !guestClient?.email && fallbackEmail.trim()) {
+      f.client_email = fallbackEmail.trim();
+    } else if (guestClient?.email) {
+      f.client_email = guestClient.email;
+    }
+    onSaveDraft({ form: f, extract, selectedClient, guestClient });
+  };
+
+  const handleApply = () => {
+    if (!extract) return;
+    const f = buildForm(extract);
+    if (!selectedClient && !guestClient?.email && fallbackEmail.trim()) {
+      f.client_email = fallbackEmail.trim();
+    } else if (guestClient?.email) {
+      f.client_email = guestClient.email;
+    }
+    onApplyToForm({ form: f, extract, selectedClient, guestClient });
+  };
 
   return (
     <div className="space-y-4">
