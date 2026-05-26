@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const order = vi.fn();
-const eq2 = vi.fn(() => ({ order }));
-const eq1 = vi.fn(() => ({ eq: eq2, order }));
-const select = vi.fn(() => ({ eq: eq1 }));
-const from = vi.fn(() => ({ select }));
+const order: ReturnType<typeof vi.fn> = vi.fn();
+const eq2: ReturnType<typeof vi.fn> = vi.fn(() => ({ order }));
+const eq1: ReturnType<typeof vi.fn> = vi.fn(() => ({ eq: eq2, order }));
+const select: ReturnType<typeof vi.fn> = vi.fn(() => ({ eq: eq1 }));
+const from: ReturnType<typeof vi.fn> = vi.fn(() => ({ select }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { from: (table: string) => from(table) },
