@@ -154,6 +154,6 @@ describe('Step G — runtime behaviour: refunded', () => {
 describe('Step G — resolver maps payment_intent fallback', () => {
   it('ReferenceResolver has explicit /membership fallback for payment_intent', () => {
     const src = read('src/pages/ReferenceResolver.tsx');
-    expect(src).toMatch(/case\s+['"]payment_intent['"]\s*:\s*\n?\s*return\s+`?['"]\/membership/);
+    expect(src).toMatch(/case\s+['"]payment_intent['"]\s*:[\s\S]{0,40}return\s+[`'"]\/membership/);
   });
 });
