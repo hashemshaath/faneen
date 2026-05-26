@@ -130,3 +130,58 @@ Behavior:
 - Dashboard migration onto `useActiveWorkspace` (per-module).
 - Role / permission catalog wiring (define canonical permission keys and
   derive defaults per `business_staff_role`).
+
+---
+
+## WORKSPACE-RBAC-6A — Role / permission catalog foundation
+
+### Canonical roles (entity-scoped)
+`owner`, `entity_admin`, `business_manager`, `site_manager`,
+`operations_manager`, `contracts_manager`, `finance`, `sales`, `staff`,
+`viewer`. Seeded into `public.roles_catalog`.
+
+### Canonical permissions
+Grouped keys: `entity.*`, `staff.*`, `locations.*`, `services.*`,
+`leads.*`, `quotes.*`, `contracts.*`, `bookings.*`, `documents.*`,
+`memberships.*`, `payments.*`, `settings.*`. Seeded into
+`public.permissions_catalog`. Defaults per role mapped via
+`public.role_permissions` (idempotent `ON CONFLICT DO NOTHING`).
+
+### Service wrappers (`src/modules/workspace/services/permissions`)
+- `listRolesCatalog()`
+- `listPermissionsCatalog()`
+- `listRolePermissions()`
+- `getRolePermissions({ role })`
+
+All return raw `{ data, error }` per project convention. Pages must not
+call `supabase.from('roles_catalog' | 'permissions_catalog' |
+'role_permissions')` directly — enforced by the
+`workspaceRbac6a.catalog` audit.
+
+### Frontend helpers
+- `hasWorkspacePermission(workspace, permission)` — pure function.
+- `useCan(permission)` — hook over `useActiveWorkspace`.
+
+Resolution order:
+1. `active_role === 'owner'` → `true`.
+2. `permissions[]` (from `business_staff.permissions_override`) contains
+   the key → `true`.
+3. Static role defaults (`ROLE_PERMISSION_DEFAULTS`, mirrors the DB
+   seed) include the key → `true`.
+4. Otherwise `false`.
+
+### ⚠️ UI-only — NOT authorization
+`useCan` / `hasWorkspacePermission` are advisory hints for showing or
+hiding affordances. **Every mutation and read continues to be gated by
+RLS / RPC.** No existing dashboard buttons or routes were rewired in
+this phase; the audit asserts there are zero `useCan(...)` callers in
+`src/pages/**` today.
+
+### Deferred (future phases)
+- Server-side `has_permission(_user_id, _entity_id, _permission)` RPC
+  backed by `business_staff.role` + `permissions_override` joined to
+  `role_permissions`.
+- Apply `useCan` to low-risk UI affordances once parity with current
+  behavior is verified.
+- RLS policy migration to consult `has_permission` instead of
+  role-only gates.
