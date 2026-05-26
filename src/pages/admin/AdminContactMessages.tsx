@@ -716,7 +716,7 @@ const AdminContactMessages = () => {
           <CardContent className="p-4 space-y-3">
             <div className="flex flex-col lg:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute top-2.5 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                <Search className="absolute top-2.5 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
                 <Input
                   id="contact-search"
                   value={searchInput}

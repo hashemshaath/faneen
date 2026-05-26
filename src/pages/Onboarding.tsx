@@ -695,7 +695,7 @@ const Onboarding = () => {
             <div className="space-y-2">
               <Label>{isRTL ? 'الاسم الكامل' : 'Full Name'} <span className="text-destructive">*</span></Label>
               <div className="relative">
-                <User className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                <User className="absolute top-3 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
                 <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={isRTL ? 'أدخل اسمك الكامل' : 'Enter your full name'} style={{ paddingInlineStart: '40px' }} />
               </div>
             </div>
@@ -849,7 +849,7 @@ const Onboarding = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs">{isRTL ? 'الاسم التجاري (عربي)' : 'Business name (Arabic)'} <span className="text-destructive">*</span></Label>
                 <div className="relative">
-                  <Building2 className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                  <Building2 className="absolute top-3 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
                   <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} dir="rtl" lang="ar" placeholder="مثال: مصنع الواجهات" style={{ paddingInlineStart: '40px' }} />
                 </div>
               </div>

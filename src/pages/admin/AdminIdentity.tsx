@@ -338,7 +338,7 @@ const AdminIdentity: React.FC = () => {
 
         {/* ─── Unified search ─── */}
         <div className="relative">
-          <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
+          <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '14px' }} />
           <Input
             ref={searchRef}
             value={searchTerm}
@@ -350,7 +350,7 @@ const AdminIdentity: React.FC = () => {
             dir="auto"
           />
           <kbd className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 items-center gap-0.5 px-2 py-0.5 rounded-md border border-border/40 bg-muted/50 text-[10px] text-muted-foreground font-mono pointer-events-none"
-            style={{ [isRTL ? 'left' : 'right']: '14px' }}>
+            style={{ insetInlineEnd: '14px' }}>
             <Command className="w-2.5 h-2.5" />K
           </kbd>
         </div>

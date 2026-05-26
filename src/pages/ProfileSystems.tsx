@@ -130,7 +130,7 @@ const ProfileSystems = () => {
           {/* Search + filter toggle (mobile) */}
           <div className="flex gap-2 mb-2 sm:mb-0">
             <div className="relative flex-1">
-              <Search className="absolute top-2.5 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+              <Search className="absolute top-2.5 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
               <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={isRTL ? 'ابحث عن قطاع...' : 'Search profiles...'} className="ps-10 bg-card h-10 text-sm" />
             </div>
             <Button

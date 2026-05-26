@@ -150,7 +150,7 @@ export const PasswordResetLogPanel: React.FC = () => {
 
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute top-2.5 w-4 h-4 text-muted-foreground" style={{ [isRTL ? 'right' : 'left']: '10px' }} />
+          <Search className="absolute top-2.5 w-4 h-4 text-muted-foreground" style={{ insetInlineStart: '10px' }} />
           <Input
             placeholder={isRTL ? 'بحث بالبريد...' : 'Search by email...'}
             value={searchTerm}

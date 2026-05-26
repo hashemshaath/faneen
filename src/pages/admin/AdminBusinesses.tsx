@@ -944,7 +944,7 @@ const AdminBusinesses = () => {
         <div className="rounded-2xl border border-border/30 bg-card p-4 sticky top-0 z-20 backdrop-blur-md bg-card/95">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+              <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" style={{ insetInlineStart: '12px' }} />
               <Input ref={searchRef} value={searchInput}
                 onChange={e => { const v = e.target.value; startTransition(() => setSearchInput(v)); }}
                 placeholder={isRTL ? 'بحث بالاسم، المعرف، الهاتف، البريد… ( / )' : 'Search by name, ID, phone, email… ( / )'}
@@ -952,7 +952,7 @@ const AdminBusinesses = () => {
                 className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background transition-colors" />
               {search && (
                 <button onClick={() => { setSearchInput(''); updateParam({ q: null }); }}
-                  className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
+                  className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" style={{ insetInlineEnd: '10px' }}>
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}

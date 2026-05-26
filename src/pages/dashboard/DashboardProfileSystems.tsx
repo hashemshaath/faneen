@@ -594,9 +594,9 @@ const DashboardProfileSystems = () => {
           <Card className="border-border/50">
             <CardContent className="p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="relative flex-1">
-                <Search className="absolute top-2.5 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '10px' }} />
+                <Search className="absolute top-2.5 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '10px' }} />
                 <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={isRTL ? 'بحث في القطاعات...' : 'Search profiles...'} className="ps-9 h-9" />
-                {search && <button onClick={() => setSearch('')} className="absolute top-2.5 text-muted-foreground hover:text-foreground" style={{ [isRTL ? 'left' : 'right']: '10px' }}><X className="w-4 h-4" /></button>}
+                {search && <button onClick={() => setSearch('')} className="absolute top-2.5 text-muted-foreground hover:text-foreground" style={{ insetInlineEnd: '10px' }}><X className="w-4 h-4" /></button>}
               </div>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="h-9 w-full sm:w-36"><SelectValue placeholder={isRTL ? 'الحالة' : 'Status'} /></SelectTrigger>

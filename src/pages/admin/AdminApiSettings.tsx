@@ -210,7 +210,7 @@ const SettingField = React.memo(({ setting, editValue, isVisible, isRTL, languag
               type="button"
               onClick={() => onToggleVis(setting.id)}
               className="absolute top-2 text-muted-foreground/50 hover:text-foreground transition-colors"
-              style={{ [isRTL ? 'left' : 'right']: '10px' }}
+              style={{ insetInlineEnd: '10px' }}
             >
               {isVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -410,14 +410,14 @@ const AdminApiSettings = () => {
           <Card className="border-border/40">
             <CardContent className="p-3">
               <div className="relative">
-                <Search className="absolute top-2.5 text-muted-foreground/50 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '10px' }} />
+                <Search className="absolute top-2.5 text-muted-foreground/50 w-4 h-4" style={{ insetInlineStart: '10px' }} />
                 <Input
                   value={search} onChange={e => setSearch(e.target.value)}
                   placeholder={isRTL ? 'بحث في المفاتيح والإعدادات...' : 'Search keys and settings...'}
                   className="ps-9 h-9 rounded-lg"
                 />
                 {search && (
-                  <button onClick={() => setSearch('')} className="absolute top-2.5 text-muted-foreground hover:text-foreground transition-colors" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
+                  <button onClick={() => setSearch('')} className="absolute top-2.5 text-muted-foreground hover:text-foreground transition-colors" style={{ insetInlineEnd: '10px' }}>
                     <X className="w-4 h-4" />
                   </button>
                 )}

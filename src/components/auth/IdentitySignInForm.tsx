@@ -220,7 +220,7 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
           <div className="space-y-2">
             <Label className="text-xs font-semibold">{isRTL ? 'البريد الإلكتروني' : 'Email address'}</Label>
             <div className="relative">
-              <Mail className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
+              <Mail className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ insetInlineStart: '14px' }} />
               <Input
                 type="email"
                 value={email}
@@ -245,7 +245,7 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
               </button>
             </div>
             <div className="relative">
-              <Lock className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
+              <Lock className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ insetInlineStart: '14px' }} />
               <Input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
@@ -260,7 +260,7 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? (isRTL ? 'إخفاء كلمة المرور' : 'Hide password') : (isRTL ? 'إظهار كلمة المرور' : 'Show password')}
                 className="absolute top-3.5 text-muted-foreground/60 hover:text-foreground transition-colors"
-                style={{ [isRTL ? 'left' : 'right']: '14px' }}
+                style={{ insetInlineEnd: '14px' }}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>

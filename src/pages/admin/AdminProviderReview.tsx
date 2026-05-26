@@ -313,7 +313,7 @@ export default function AdminProviderReview() {
             )}
           </div>
           <div className="relative w-full sm:w-72">
-            <Search className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+            <Search className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" style={{ insetInlineStart: '12px' }} />
             <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

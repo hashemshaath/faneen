@@ -69,6 +69,7 @@ const PATTERNS: Pattern[] = [
   { name: 'rtl:left/right',         regex: /\brtl:(left|right)-/ },
   { name: 'float-left/right',       regex: /\bfloat-(left|right)\b/ },
   { name: 'inline style left/right',regex: /style=\{\{[^}]*\b(left|right)\s*:/ },
+  { name: 'isRTL ternary inline inset', regex: /\[\s*isRTL\s*\?\s*['"](left|right)['"]\s*:\s*['"](left|right)['"]\s*\]/ },
 ];
 
 describe('RTL/LTR central audit', () => {

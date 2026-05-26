@@ -181,7 +181,7 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
       <div className="relative">
         <Globe
           className="absolute top-3.5 text-muted-foreground/60 w-4 h-4 pointer-events-none"
-          style={{ [isRTL ? 'right' : 'left']: '14px' } as React.CSSProperties}
+          style={{ insetInlineStart: '14px' } as React.CSSProperties}
           aria-hidden
         />
         <Input
@@ -204,7 +204,7 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
         />
         <div
           className="absolute top-1/2 -translate-y-1/2"
-          style={{ [isRTL ? 'left' : 'right']: '14px' } as React.CSSProperties}
+          style={{ insetInlineEnd: '14px' } as React.CSSProperties}
         >
           {StatusIcon}
         </div>

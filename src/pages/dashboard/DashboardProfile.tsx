@@ -539,7 +539,7 @@ const DashboardProfile: React.FC = () => {
                     </Label>
                     <div className="relative mt-1">
                       <Mail className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60"
-                        style={{ [isRTL ? 'right' : 'left']: '12px' } as React.CSSProperties} aria-hidden />
+                        style={{ insetInlineStart: '12px' } as React.CSSProperties} aria-hidden />
                       <Input
                         type="email" dir="ltr" autoComplete="email"
                         value={form.email}
@@ -570,7 +570,7 @@ const DashboardProfile: React.FC = () => {
                     </Label>
                     <div className="relative mt-1">
                       <Phone className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60"
-                        style={{ [isRTL ? 'right' : 'left']: '12px' } as React.CSSProperties} aria-hidden />
+                        style={{ insetInlineStart: '12px' } as React.CSSProperties} aria-hidden />
                       <Input
                         type="tel" dir="ltr" autoComplete="tel"
                         value={form.phone}

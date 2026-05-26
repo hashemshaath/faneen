@@ -24,7 +24,7 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
     <div className="space-y-2">
       <Label>{label}</Label>
       <div className="relative">
-        <Lock className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+        <Lock className="absolute top-3 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
         <Input
           type={showPassword ? 'text' : 'password'}
           value={password}
@@ -35,7 +35,7 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
           type="button"
           onClick={onToggleShow}
           className="absolute top-3 text-muted-foreground hover:text-foreground transition-colors"
-          style={{ [isRTL ? 'left' : 'right']: '12px' }}
+          style={{ insetInlineEnd: '12px' }}
         >
           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </button>

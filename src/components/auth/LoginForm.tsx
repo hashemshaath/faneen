@@ -213,7 +213,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
           <div className="space-y-2">
             <Label className="text-xs font-semibold">{t('auth.email')}</Label>
             <div className="relative">
-              <Mail className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
+              <Mail className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ insetInlineStart: '14px' }} />
               <Input
                 type="email" placeholder="example@email.com" value={email}
                 onChange={(e) => { setEmail(e.target.value); clearError('email'); setLoginError(''); setLoginErrorRaw(''); }}
@@ -232,12 +232,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
               <button onClick={onForgotPassword} className="text-xs text-accent hover:underline font-medium">{t('auth.forgot')}</button>
             </div>
             <div className="relative">
-              <Lock className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
+              <Lock className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ insetInlineStart: '14px' }} />
               <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => { setPassword(e.target.value); setPasswordError(''); setLoginError(''); setLoginErrorRaw(''); }}
                 className={`h-12 rounded-xl ${passwordError || loginError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 style={{ paddingInlineStart: '42px', paddingInlineEnd: '42px' }}
                 onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()} />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-3.5 text-muted-foreground/60 hover:text-foreground transition-colors" style={{ [isRTL ? 'left' : 'right']: '14px' }}>
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-3.5 text-muted-foreground/60 hover:text-foreground transition-colors" style={{ insetInlineEnd: '14px' }}>
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>

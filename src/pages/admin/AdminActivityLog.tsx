@@ -476,7 +476,7 @@ const AdminActivityLog = () => {
         <div className="rounded-2xl border border-border/30 bg-card p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+              <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" style={{ insetInlineStart: '12px' }} />
               <Input
                 placeholder={isRTL ? tx.searchPh.ar : tx.searchPh.en}
                 value={searchQuery}
@@ -485,7 +485,7 @@ const AdminActivityLog = () => {
               />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')}
-                  className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
+                  className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" style={{ insetInlineEnd: '10px' }}>
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
