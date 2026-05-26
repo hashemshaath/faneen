@@ -1021,17 +1021,34 @@ const AdminUsers = () => {
     },
     onError: (err: unknown) => {
       const raw = err instanceof Error ? err.message : (typeof err === 'object' && err && 'message' in err ? String((err as { message: unknown }).message) : '');
+      const lower = raw.toLowerCase();
       let friendly = isRTL ? 'فشل التحديث' : 'Failed to update';
-      if (raw.includes('username_unavailable') || raw.includes('username_taken')) {
-        friendly = isRTL ? 'اسم المستخدم محجوز — جرّب اسماً آخر' : 'Username already taken — pick another';
-      } else if (raw.includes('phone')) {
-        friendly = isRTL ? 'رقم الهاتف غير صالح أو مستخدم' : 'Phone is invalid or already in use';
-      } else if (raw.includes('email')) {
-        friendly = isRTL ? 'البريد الإلكتروني غير صالح أو مستخدم' : 'Email is invalid or already in use';
+      const next: typeof editFieldErrors = {};
+      if (lower.includes('username_unavailable') || lower.includes('username_taken') || lower.includes('username')) {
+        next.username = isRTL ? 'اسم المستخدم محجوز — جرّب اسماً آخر' : 'Username already taken — pick another';
+        friendly = next.username;
+      } else if (lower.includes('phone')) {
+        next.phone = isRTL ? 'رقم الهاتف غير صالح أو مستخدم في حساب آخر' : 'Phone is invalid or already in use';
+        friendly = next.phone;
+      } else if (lower.includes('email')) {
+        next.email = isRTL ? 'البريد الإلكتروني غير صالح أو مستخدم' : 'Email is invalid or already in use';
+        friendly = next.email;
       } else if (raw) {
         friendly = (isRTL ? 'فشل التحديث: ' : 'Update failed: ') + raw;
       }
+      if (Object.keys(next).length > 0) setEditFieldErrors(prev => ({ ...prev, ...next }));
       toast.error(friendly);
+      // Auto-focus the first failing field for quick correction.
+      requestAnimationFrame(() => {
+        const firstKey = Object.keys(next)[0];
+        if (!firstKey) return;
+        const el = document.querySelector<HTMLElement>(`[data-field-error="${firstKey}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const focusable = el.querySelector<HTMLElement>('input, select, textarea, button');
+          focusable?.focus();
+        }
+      });
     },
   });
 
