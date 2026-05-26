@@ -8472,18 +8472,26 @@ export type Database = {
         Row: {
           account_number: number
           account_type: Database["public"]["Enums"]["account_type"]
+          additional_number: string | null
+          address_line: string | null
           avatar_url: string | null
+          building_number: string | null
           city_id: string | null
           country_code: string
           country_id: string | null
           created_at: string
+          district: string | null
           email: string | null
           full_name: string | null
+          full_name_ar: string | null
+          full_name_en: string | null
           id: string
           is_banned: boolean
           is_onboarded: boolean
           is_verified: boolean
           membership_tier: Database["public"]["Enums"]["membership_tier"]
+          national_id: string | null
+          national_id_type: string | null
           onboarding_completed_at: string | null
           onboarding_draft: Json
           onboarding_draft_updated_at: string | null
@@ -8491,27 +8499,40 @@ export type Database = {
           onboarding_step: number
           phone: string | null
           phone_verified: boolean
+          postal_code: string | null
           preferred_language: string
           ref_id: string
+          region_name: string | null
+          short_national_address: string | null
+          street: string | null
           updated_at: string
           user_id: string
           username: string | null
+          vat_number: string | null
         }
         Insert: {
           account_number: number
           account_type?: Database["public"]["Enums"]["account_type"]
+          additional_number?: string | null
+          address_line?: string | null
           avatar_url?: string | null
+          building_number?: string | null
           city_id?: string | null
           country_code?: string
           country_id?: string | null
           created_at?: string
+          district?: string | null
           email?: string | null
           full_name?: string | null
+          full_name_ar?: string | null
+          full_name_en?: string | null
           id?: string
           is_banned?: boolean
           is_onboarded?: boolean
           is_verified?: boolean
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          national_id?: string | null
+          national_id_type?: string | null
           onboarding_completed_at?: string | null
           onboarding_draft?: Json
           onboarding_draft_updated_at?: string | null
@@ -8519,27 +8540,40 @@ export type Database = {
           onboarding_step?: number
           phone?: string | null
           phone_verified?: boolean
+          postal_code?: string | null
           preferred_language?: string
           ref_id: string
+          region_name?: string | null
+          short_national_address?: string | null
+          street?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
+          vat_number?: string | null
         }
         Update: {
           account_number?: number
           account_type?: Database["public"]["Enums"]["account_type"]
+          additional_number?: string | null
+          address_line?: string | null
           avatar_url?: string | null
+          building_number?: string | null
           city_id?: string | null
           country_code?: string
           country_id?: string | null
           created_at?: string
+          district?: string | null
           email?: string | null
           full_name?: string | null
+          full_name_ar?: string | null
+          full_name_en?: string | null
           id?: string
           is_banned?: boolean
           is_onboarded?: boolean
           is_verified?: boolean
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          national_id?: string | null
+          national_id_type?: string | null
           onboarding_completed_at?: string | null
           onboarding_draft?: Json
           onboarding_draft_updated_at?: string | null
@@ -8547,11 +8581,16 @@ export type Database = {
           onboarding_step?: number
           phone?: string | null
           phone_verified?: boolean
+          postal_code?: string | null
           preferred_language?: string
           ref_id?: string
+          region_name?: string | null
+          short_national_address?: string | null
+          street?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
+          vat_number?: string | null
         }
         Relationships: [
           {
