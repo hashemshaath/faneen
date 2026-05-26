@@ -46,6 +46,8 @@ const accountTypeLabels: Record<string, { ar: string; en: string }> = {
   business: { ar: 'مزود خدمة', en: 'Provider' },
   company: { ar: 'مزود خدمة', en: 'Provider' },
   provider: { ar: 'مزود خدمة', en: 'Provider' },
+  admin: { ar: 'مشرف', en: 'Admin' },
+  super_admin: { ar: 'مدير عام', en: 'Super Admin' },
 };
 
 function getRoleBadge(isSuperAdmin: boolean, isAdmin: boolean, isProvider: boolean, isRTL: boolean) {
@@ -93,9 +95,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
   const initial = (profile?.full_name || user.email || '?').charAt(0).toUpperCase();
   const roleBadge = getRoleBadge(isSuperAdmin, isAdmin, isProvider, isRTL);
-  const accountLabel = isProvider
-    ? accountTypeLabels.provider
-    : (accountTypeLabels[profile?.account_type || 'individual'] || accountTypeLabels.individual);
+  const accountLabel = isSuperAdmin
+    ? accountTypeLabels.super_admin
+    : isAdmin
+      ? accountTypeLabels.admin
+      : isProvider
+        ? accountTypeLabels.provider
+        : (accountTypeLabels[profile?.account_type || 'individual'] || accountTypeLabels.individual);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
