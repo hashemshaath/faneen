@@ -77,6 +77,7 @@ const INVENTORY: Record<string, Classification> = {
   'check-overdue': 'cron',
   'weekly-sla-report': 'cron',
   'verify-pdf-arabic': 'frontend',
+  'analyze-contract-document': 'frontend',
 
   // --- admin / users ---
   'admin-delete-user': 'admin',
@@ -100,6 +101,9 @@ const INVENTORY: Record<string, Classification> = {
 
   // --- analytics ---
   'ingest-web-vitals': 'public',
+
+  // --- locations / addresses ---
+  'national-address-lookup': 'frontend',
 };
 
 const CRITICAL = [
