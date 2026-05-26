@@ -177,6 +177,18 @@ const AdminMembershipRejections: React.FC = () => {
   const total = data?.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  const userIds = useMemo(() => Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean))), [rows]);
+  const { data: userRefs = {} } = useQuery({
+    queryKey: ['admin-rejections-user-refs', userIds],
+    enabled: userIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from('profiles').select('user_id, ref_id').in('user_id', userIds);
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((p) => { if (p.ref_id) map[p.user_id] = p.ref_id; });
+      return map;
+    },
+  });
+
   const stats = useMemo(() => {
     const by: Record<string, number> = {};
     rows.forEach((r) => { by[r.reason_code] = (by[r.reason_code] ?? 0) + 1; });
