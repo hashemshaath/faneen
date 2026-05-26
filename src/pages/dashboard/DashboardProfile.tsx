@@ -31,6 +31,7 @@ import { getOwnerBusiness } from '@/modules/businesses';
 import { getDisplayEmail, isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { cn } from '@/lib/utils';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
+import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
 
 type RefRow = { id: string; name_ar: string; name_en: string };
 type CityRow = RefRow & { country_id: string };
@@ -565,22 +566,12 @@ const DashboardProfile: React.FC = () => {
                     </p>
                   </div>
                   <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      {t(isRTL, 'رقم الجوال', 'Phone number')}
-                    </Label>
-                    <div className="relative mt-1">
-                      <Phone className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60"
-                        style={{ insetInlineStart: '12px' } as React.CSSProperties} aria-hidden />
-                      <Input
-                        type="tel" dir="ltr" autoComplete="tel"
-                        value={form.phone}
-                        onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                        className="h-11 rounded-xl tech-content"
-                        style={{ paddingInlineStart: '38px' }}
-                        placeholder="+966 5x xxx xxxx"
-                        maxLength={20}
-                      />
-                    </div>
+                    <PhoneField
+                      value={parsePhoneValue(form.phone)}
+                      onChange={(v) => setForm((f) => ({ ...f, phone: toE164(v) }))}
+                      label={t(isRTL, 'رقم الجوال', 'Phone number')}
+                      optional
+                    />
                     {profile?.phone_verified
                       ? (
                         <p className="text-[10px] text-success mt-1 flex items-center gap-1">
