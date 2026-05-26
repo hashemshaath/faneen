@@ -15,6 +15,10 @@
 
 // deno-lint-ignore-file no-explicit-any
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import {
+  getMembershipPlanById,
+  updateMembershipSubscriptionById,
+} from '../memberships/queries.ts';
 
 export type InternalIntentStatus =
   | 'created'
