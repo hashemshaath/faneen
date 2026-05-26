@@ -107,7 +107,7 @@ const AdminMembershipEvents = () => {
                     <TableCell className="tech-content text-xs">{r.to_tier || '—'}</TableCell>
                     <TableCell className="tech-content text-[11px] font-mono">
                       {userRefs[r.user_id] ? (
-                        <Link to={`/admin/users/${r.user_id}`} className="text-accent hover:underline">{userRefs[r.user_id]}</Link>
+                        <Link to={`/admin/users?focus=${r.user_id}&tab=users`} className="text-accent hover:underline">{userRefs[r.user_id]}</Link>
                       ) : (
                         <span className="text-muted-foreground">{r.user_id.slice(0, 8)}…</span>
                       )}
