@@ -30,8 +30,8 @@ export const EntityLink: React.FC<EntityLinkProps> = ({
   const tone = type === 'user' ? 'text-info' : 'text-success';
   const ringTone = type === 'user' ? 'hover:border-info/50' : 'hover:border-success/50';
   const to = type === 'user'
-    ? `/admin/identity/u/${targetId}`
-    : `/admin/identity/b/${targetId}`;
+    ? `/admin/users?focus=${targetId}`
+    : `/admin/businesses?focus=${targetId}`;
 
   return (
     <Link

@@ -253,6 +253,26 @@ const AdminBusinesses = () => {
     },
   });
 
+  /* ─── Consume ?focus=<biz_id> after businesses load → open inline edit panel ─── */
+  const focusParam = searchParams.get('focus');
+  useEffect(() => {
+    if (!focusParam || !businesses?.length) return;
+    const target = (businesses as Array<Record<string, unknown>>).find(
+      (b) => b.id === focusParam || b.ref_id === focusParam,
+    );
+    if (target) {
+      openEdit(target);
+      const next = new URLSearchParams(searchParams);
+      next.delete('focus');
+      setSearchParams(next, { replace: true });
+      setTimeout(() => {
+        document.getElementById(`biz-row-${target.id as string}`)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusParam, businesses]);
+
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {

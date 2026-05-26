@@ -352,7 +352,7 @@ const AdminIdentity: React.FC = () => {
                     <p className="text-[11px] text-muted-foreground italic">{isRTL ? 'لا توجد نتائج' : 'No matches'}</p>
                   )}
                   {searchResults.businesses.map(b => (
-                    <Link key={b.id} to="/admin/businesses"
+                    <Link key={b.id} to={`/admin/businesses?focus=${b.id}`}
                       className="flex items-center gap-2 rounded-lg bg-card border border-border/30 px-2 py-1.5 hover:border-success/40 hover-lift">
                       <Building2 className="w-4 h-4 text-success shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -381,7 +381,7 @@ const AdminIdentity: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Kpi icon={Crown} label={isRTL ? 'فريق الإدارة' : 'Admin staff'} value={isLoading ? '…' : kpis.staffCount} tone="warning" to="/admin/users?role=admin" />
           <Kpi icon={Sparkles} label={isRTL ? 'بانتظار المراجعة' : 'Pending review'} value={isLoading ? '…' : kpis.pendingBiz} tone="warning" to="/admin/provider-review" />
-          <Kpi icon={Ban} label={isRTL ? 'حسابات معطّلة' : 'Disabled accounts'} value={isLoading ? '…' : kpis.bannedUsers} tone="warning" to="/admin/users?role=all" />
+          <Kpi icon={Ban} label={isRTL ? 'حسابات معطّلة' : 'Disabled accounts'} value={isLoading ? '…' : kpis.bannedUsers} tone="warning" to="/admin/users?tab=disabled" />
           <Kpi icon={Shield} label={isRTL ? 'إدارة الوصول' : 'Access control'} value={isLoading ? '…' : roles.length} tone="info" to="/admin/access-management" />
         </div>
 
@@ -706,7 +706,7 @@ const CompactBusinessList: React.FC<{
                 )}
               </div>
               <Button asChild variant="outline" size="sm" className="rounded-xl gap-1 shrink-0">
-                <Link to="/admin/businesses">
+                <Link to={`/admin/businesses?focus=${b.id}`}>
                   <ExternalLink className="w-3.5 h-3.5" />{isRTL ? 'إدارة' : 'Manage'}
                 </Link>
               </Button>
