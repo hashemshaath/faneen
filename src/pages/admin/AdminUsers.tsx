@@ -693,6 +693,22 @@ const AdminUsers = () => {
     email?: string;
     phone?: string;
   }>({});
+  /**
+   * Raw machine token surfaced inline next to the friendly message (e.g. `taken`,
+   * `invalid_format`, `username_unavailable`). Lets the admin see exactly which
+   * server rule rejected the save without opening devtools.
+   */
+  const [editFieldRawCodes, setEditFieldRawCodes] = useState<{
+    username?: string;
+    email?: string;
+    phone?: string;
+  }>({});
+  /** Server-side username rejection forwarded to UsernamePicker. */
+  const [usernameServerError, setUsernameServerError] = useState<{
+    forValue: string;
+    reason: UsernameCheckReason;
+    rawCode?: string | null;
+  } | null>(null);
   const clearEditFieldError = useCallback((key: keyof typeof editFieldErrors) => {
     setEditFieldErrors(prev => {
       if (!prev[key]) return prev;
@@ -700,6 +716,13 @@ const AdminUsers = () => {
       delete next[key];
       return next;
     });
+    setEditFieldRawCodes(prev => {
+      if (!(key in prev)) return prev;
+      const next = { ...prev };
+      delete next[key as 'username' | 'email' | 'phone'];
+      return next;
+    });
+    if (key === 'username') setUsernameServerError(null);
   }, []);
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
