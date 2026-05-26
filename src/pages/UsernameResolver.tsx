@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getBusinessIdByUsername } from '@/modules/businesses';
 import BusinessProfile from './BusinessProfile';
 import PublicUserProfile from './PublicUserProfile';
 
@@ -15,11 +15,7 @@ export const UsernameResolver: React.FC = () => {
   const { data, isLoading } = useQuery({
     queryKey: ['username-kind', username.toLowerCase()],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('businesses')
-        .select('id')
-        .eq('username', username)
-        .maybeSingle();
+      const { data } = await getBusinessIdByUsername({ username });
       return data?.id ? 'business' : 'user';
     },
     enabled: !!username,
