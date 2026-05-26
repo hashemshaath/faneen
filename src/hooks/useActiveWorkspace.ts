@@ -1,28 +1,28 @@
 /**
- * WORKSPACE-CONTEXT-1 — Step 1 (minimal, safe)
- *
- * Read-only frontend aggregator that exposes the user's "active workspace"
- * as a unified shape:
+ * WORKSPACE-CONTEXT-1/2 — read-only frontend aggregator for the user's
+ * "active workspace" (entity + optional location + permissions hint).
  *
  *   {
  *     active_entity_id,        // selected entity (business) id
- *     active_location_id,      // deferred to Step 2 — always null today
- *     active_membership_id,    // owner business.id or business_staff.id
+ *     active_location_id,      // selected location within entity, or null
+ *     active_membership_id,    // businesses.id (owner) or business_staff.id
  *     active_role,             // 'owner' | business_staff_role | null
- *     permissions,             // deferred to Step 2 — RLS remains authoritative
- *     entities,                // all accessible entities w/ source + role
+ *     permissions,             // UI-only hint from permissions_override
+ *     entities,                // accessible entities w/ source + role
+ *     locations,               // accessible locations for active entity
+ *     setActiveEntityId,
+ *     setActiveLocationId,
+ *     clearActiveLocationId,
  *   }
  *
- * Important guarantees:
- * - Reuses existing `useActiveBusiness` for localStorage preference
- *   (per-user key, self-heal fallback to first accessible entity).
- * - Does NOT trust localStorage for security. RLS / has_entity_membership
- *   remain authoritative on every data path.
- * - Inaccessible entities are ignored automatically because the entity list
- *   is sourced from server-side wrappers (listOwnerBusinesses +
- *   listActiveStaffBusinessesForUser) which both go through RLS.
+ * Security:
+ * - localStorage holds preference only. RLS / has_entity_membership /
+ *   has_location_access remain authoritative on every data path.
+ * - Entity and location lists come from canonical wrappers
+ *   (RLS-scoped). Spoofed ids in localStorage cannot expose extra rows
+ *   because the self-heal step always reconciles against those lists.
  */
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +31,10 @@ import {
   listOwnerBusinesses,
   listActiveStaffBusinessesForUser,
 } from '@/modules/businesses';
+import {
+  listLocationsForEntity,
+  type WorkspaceLocationRow,
+} from '@/modules/locations';
 
 export type WorkspaceSource = 'owner' | 'staff';
 
@@ -45,13 +49,16 @@ export interface WorkspaceEntity {
 
 export interface ActiveWorkspace {
   active_entity_id: string | null;
-  active_location_id: string | null; // deferred — Step 2
+  active_location_id: string | null;
   active_membership_id: string | null;
   active_role: string | null;
-  permissions: string[]; // deferred — RLS authoritative
+  permissions: string[];
   entities: WorkspaceEntity[];
+  locations: WorkspaceLocationRow[];
   isLoading: boolean;
   setActiveEntityId: (id: string | null) => void;
+  setActiveLocationId: (id: string | null) => void;
+  clearActiveLocationId: () => void;
 }
 
 interface OwnerRow {
@@ -63,11 +70,57 @@ interface OwnerRow {
 interface StaffRow {
   id: string;
   role: string | null;
+  permissions_override: unknown;
   businesses: {
     id: string;
     name_ar: string | null;
     name_en: string | null;
   } | null;
+}
+
+interface WorkspaceEntityInternal extends WorkspaceEntity {
+  permissions_override: unknown;
+}
+
+const locationKey = (uid: string | undefined, entityId: string | null): string | null =>
+  uid && entityId ? `qitaat_active_location_${uid}_${entityId}` : null;
+
+function readLocationPref(uid: string | undefined, entityId: string | null): string | null {
+  const k = locationKey(uid, entityId);
+  if (!k) return null;
+  try {
+    const v = localStorage.getItem(k);
+    return v && v.length > 0 ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocationPref(uid: string | undefined, entityId: string | null, id: string | null): void {
+  const k = locationKey(uid, entityId);
+  if (!k) return;
+  try {
+    if (id) localStorage.setItem(k, id);
+    else localStorage.removeItem(k);
+  } catch {
+    /* noop */
+  }
+}
+
+/**
+ * Convert a jsonb `permissions_override` value into a UI-only string[]
+ * hint. Accepts arrays and `Record<string, boolean>` shapes.
+ */
+function hydratePermissions(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.filter((v): v is string => typeof v === 'string');
+  }
+  if (raw && typeof raw === 'object') {
+    return Object.entries(raw as Record<string, unknown>)
+      .filter(([, v]) => v === true)
+      .map(([k]) => k);
+  }
+  return [];
 }
 
 export function useActiveWorkspace(): ActiveWorkspace {
@@ -77,7 +130,7 @@ export function useActiveWorkspace(): ActiveWorkspace {
     queryKey: ['active-workspace-entities', user?.id],
     enabled: !!user,
     staleTime: 60_000,
-    queryFn: async (): Promise<WorkspaceEntity[]> => {
+    queryFn: async (): Promise<WorkspaceEntityInternal[]> => {
       const owned = await listOwnerBusinesses<OwnerRow>({
         userId: user!.id,
         select: 'id, name_ar, name_en',
@@ -85,10 +138,10 @@ export function useActiveWorkspace(): ActiveWorkspace {
       });
       const staff = await listActiveStaffBusinessesForUser<StaffRow>({
         userId: user!.id,
-        select: 'id, role, businesses:business_id(id, name_ar, name_en)',
+        select: 'id, role, permissions_override, businesses:business_id(id, name_ar, name_en)',
       });
 
-      const out = new Map<string, WorkspaceEntity>();
+      const out = new Map<string, WorkspaceEntityInternal>();
       (owned.data ?? []).forEach((b) => {
         out.set(b.id, {
           entity_id: b.id,
@@ -97,6 +150,7 @@ export function useActiveWorkspace(): ActiveWorkspace {
           source: 'owner',
           membership_id: b.id,
           role: 'owner',
+          permissions_override: null,
         });
       });
       (staff.data ?? []).forEach((r) => {
@@ -109,6 +163,7 @@ export function useActiveWorkspace(): ActiveWorkspace {
           source: 'staff',
           membership_id: r.id,
           role: r.role ?? 'staff',
+          permissions_override: r.permissions_override ?? null,
         });
       });
       return Array.from(out.values());
@@ -123,14 +178,82 @@ export function useActiveWorkspace(): ActiveWorkspace {
     [entities, activeBusinessId],
   );
 
+  const activeEntityId = active?.entity_id ?? null;
+
+  const { data: locationsData } = useQuery({
+    queryKey: ['active-workspace-locations', user?.id, activeEntityId],
+    enabled: !!user && !!activeEntityId,
+    staleTime: 60_000,
+    queryFn: async (): Promise<WorkspaceLocationRow[]> => {
+      const { data } = await listLocationsForEntity({ entityId: activeEntityId! });
+      return data ?? [];
+    },
+  });
+  const locations = locationsData ?? [];
+  const locationsReady = locationsData !== undefined;
+
+  // Location preference: scoped per (user, entity).
+  const [activeLocationId, setActiveLocationIdState] = useState<string | null>(null);
+
+  // Hydrate when user or active entity changes.
+  useEffect(() => {
+    setActiveLocationIdState(readLocationPref(user?.id, activeEntityId));
+  }, [user?.id, activeEntityId]);
+
+  // Self-heal against the accessible locations list (only after the
+  // locations query for the current entity has resolved — avoids racing
+  // with a stale list during entity switches).
+  useEffect(() => {
+    if (!activeEntityId) return;
+    if (!locationsReady) return;
+    if (locations.length === 0) {
+      if (activeLocationId !== null) {
+        setActiveLocationIdState(null);
+        writeLocationPref(user?.id, activeEntityId, null);
+      }
+      return;
+    }
+    const ok = activeLocationId && locations.some((l) => l.id === activeLocationId);
+    if (!ok) {
+      // No fallback to "first" — location stays optional. Only reset spoofed/stale ids.
+      if (activeLocationId !== null) {
+        setActiveLocationIdState(null);
+        writeLocationPref(user?.id, activeEntityId, null);
+      }
+    }
+  }, [locations, locationsReady, activeLocationId, activeEntityId, user?.id]);
+
+  const setActiveLocationId = useCallback(
+    (id: string | null) => {
+      // Authorization guard: ignore ids not in the accessible list.
+      if (id && !locations.some((l) => l.id === id)) return;
+      setActiveLocationIdState(id);
+      writeLocationPref(user?.id, activeEntityId, id);
+    },
+    [locations, user?.id, activeEntityId],
+  );
+
+  const clearActiveLocationId = useCallback(() => {
+    setActiveLocationIdState(null);
+    writeLocationPref(user?.id, activeEntityId, null);
+  }, [user?.id, activeEntityId]);
+
+  const permissions = useMemo(
+    () => (active ? hydratePermissions(active.permissions_override) : []),
+    [active],
+  );
+
   return {
-    active_entity_id: active?.entity_id ?? null,
-    active_location_id: null,
+    active_entity_id: activeEntityId,
+    active_location_id: activeLocationId,
     active_membership_id: active?.membership_id ?? null,
     active_role: active?.role ?? null,
-    permissions: [],
-    entities,
+    permissions,
+    entities: entities.map(({ permissions_override: _po, ...rest }) => rest),
+    locations,
     isLoading,
     setActiveEntityId: setActiveBusinessId,
+    setActiveLocationId,
+    clearActiveLocationId,
   };
 }

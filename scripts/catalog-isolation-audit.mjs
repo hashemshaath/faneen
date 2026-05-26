@@ -43,7 +43,11 @@ const TABLES = [
   "warranties",
 ];
 
-const ALLOWED_DIRS = ["src/modules/catalog/services/"];
+const ALLOWED_DIRS = [
+  "src/modules/catalog/services/",
+  // WORKSPACE-CONTEXT-2: read-only RLS-scoped workspace location wrappers.
+  "src/modules/locations/services/workspace/",
+];
 const ALLOWED_FILES = new Set([
   "src/modules/contracts/services/aggregates.ts",
 ]);
