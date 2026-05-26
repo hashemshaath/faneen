@@ -36,6 +36,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
+import { DirectionalIcon } from '@/components/ui/directional-icon';
 import { EntityLink } from '@/components/admin/identity/EntityLink';
 import { IdentityFilters, EMPTY_FILTERS, type IdentityFilterState, type SavedView } from '@/components/admin/identity/IdentityFilters';
 import { IdentityAnalytics } from '@/components/admin/identity/IdentityAnalytics';
@@ -949,7 +950,7 @@ const UnifiedFeed: React.FC<{
                     </div>
                   )}
                 </div>
-                <ArrowRight className={`w-4 h-4 text-muted-foreground transition-transform mt-1 shrink-0 ${isExp ? 'rotate-90' : ''}`} />
+                <DirectionalIcon kind="forward" className={`w-4 h-4 text-muted-foreground transition-transform mt-1 shrink-0 ${isExp ? 'rotate-90' : ''}`} />
               </button>
               {isExp && (
                 <div className="border-t border-border/30 p-4 bg-muted/10 rounded-b-2xl space-y-3 animate-in slide-in-from-top-1 duration-150">
@@ -1038,7 +1039,7 @@ const UnifiedFeed: React.FC<{
                   </div>
                 )}
               </div>
-              <ArrowRight className={`w-4 h-4 text-muted-foreground transition-transform mt-1 shrink-0 ${isExp ? 'rotate-90' : ''}`} />
+              <DirectionalIcon kind="forward" className={`w-4 h-4 text-muted-foreground transition-transform mt-1 shrink-0 ${isExp ? 'rotate-90' : ''}`} />
             </button>
             {isExp && (
               <div className="border-t border-border/30 p-4 bg-muted/10 rounded-b-2xl space-y-3 animate-in slide-in-from-top-1 duration-150">
