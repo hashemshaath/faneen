@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
-import { User, Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, UserPlus, Send } from 'lucide-react';
+import { Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, UserPlus, Send, User } from 'lucide-react';
 import { Ticket, FileText, AtSign } from 'lucide-react';
-import { PhoneInput } from './PhoneInput';
+import { PhoneField, toE164 } from '@/components/forms/PhoneField';
+import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import { PasswordField } from './PasswordField';
 import { GoogleAuthButton } from './GoogleAuthButton';
 import { AuthDivider } from './AuthDivider';
@@ -44,10 +45,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const [showPassword, setShowPassword] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
 
-  const [fullName, setFullName] = useState('');
+  const [fullNameAr, setFullNameAr] = useState('');
+  const [fullNameEn, setFullNameEn] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [countryCode, setCountryCode] = useState('+966');
+  const [phoneParts, setPhoneParts] = useState<{ countryCode: string; national: string }>({ countryCode: '+966', national: '' });
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -59,6 +60,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const [accessReason, setAccessReason] = useState('');
 
   const passwordStrength = checkPasswordStrength(password);
+  const fullName = (fullNameAr.trim() || fullNameEn.trim());
+  const phoneE164 = toE164(phoneParts);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const { errors, validateEmailField, validatePhoneField, clearError } = useFieldValidation(isRTL);
 
@@ -101,9 +104,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   };
 
   const handleRegister = async () => {
-    if (!fullName.trim()) { toast.error(isRTL ? 'يرجى إدخال الاسم الكامل' : 'Please enter your full name'); return; }
+    if (!fullNameAr.trim() && !fullNameEn.trim()) { toast.error(isRTL ? 'يرجى إدخال الاسم بالعربية أو الإنجليزية' : 'Please enter your name (Arabic or English)'); return; }
     if (!email || !validateEmailField(email)) { toast.error(isRTL ? 'البريد الإلكتروني غير صحيح' : 'Invalid email'); return; }
-    if (phone && !validatePhoneField(phone)) { toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number'); return; }
+    if (phoneParts.national && !validatePhoneField(phoneParts.national)) { toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number'); return; }
     if (passwordStrength.score < 2) { toast.error(isRTL ? 'كلمة المرور ضعيفة جداً' : 'Password is too weak'); return; }
     if (password !== confirmPassword) { toast.error(isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match'); return; }
     if (registerType === 'business' && !usernameOk) { toast.error(isRTL ? 'اختر اسم مستخدم صحيحاً ومتاحاً' : 'Pick a valid, available username'); return; }
@@ -123,8 +126,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     try {
       await authService.signUp(email, password, {
         full_name: fullName,
+        full_name_ar: fullNameAr,
+        full_name_en: fullNameEn,
+        username: registerType === 'business' ? username : undefined,
         account_type: registerType,
-        phone: phone ? `${countryCode}${phone.replace(/^0/, '')}` : '',
+        phone: phoneE164,
+        phone_country_code: phoneParts.national ? phoneParts.countryCode : '',
+        phone_national: phoneParts.national,
       });
       onEmailSent(email);
       const attribution = getAttributionPayload();
