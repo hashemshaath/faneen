@@ -383,6 +383,7 @@ export default function AdminProviderReview() {
                           </Badge>
                         </div>
                         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground tech-content">
+                          {r.ref_id && <span className="font-mono">{r.ref_id}</span>}
                           {r.username && <span>@{r.username}</span>}
                           <span>{r.onboarding_completion ?? 0}%</span>
                         </div>
