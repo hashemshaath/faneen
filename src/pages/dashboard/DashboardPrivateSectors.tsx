@@ -25,7 +25,7 @@ import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
 import { PrivateSectorTemplatesShowcase } from '@/features/private-sectors/PrivateSectorTemplatesShowcase';
 import type { PrivateSectorTemplate } from '@/features/private-sectors/templates';
 import { MyInvitationsStatus } from '@/components/dashboard/MyInvitationsStatus';
-import { useActiveBusiness } from '@/hooks/useActiveBusiness';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 
 const DashboardPrivateSectors: React.FC = () => {
   useNoIndex();
@@ -72,8 +72,18 @@ const DashboardPrivateSectors: React.FC = () => {
       return Array.from(map.values());
     },
   });
+  // WORKSPACE-CONTEXT-4B: source the active entity from the unified
+  // workspace hook. Private sectors are scoped per business and accept
+  // both owner and active staff entities — listSectorsForBusiness and
+  // its underlying RLS remain authoritative.
+  const { active_entity_id } = useActiveWorkspace();
   const businessIds = useMemo(() => businesses.map((b) => b.id), [businesses]);
-  const { activeBusinessId } = useActiveBusiness(businessIds);
+  const activeBusinessId = useMemo<string | null>(() => {
+    if (active_entity_id && businessIds.includes(active_entity_id)) {
+      return active_entity_id;
+    }
+    return businessIds[0] ?? null;
+  }, [active_entity_id, businessIds]);
   const business = useMemo(
     () => businesses.find((b) => b.id === activeBusinessId) ?? businesses[0] ?? null,
     [businesses, activeBusinessId],
