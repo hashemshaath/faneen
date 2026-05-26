@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React, { useState } from 'react';
 import { UsernamePicker } from '../UsernamePicker';
 import { FIELD_DEBOUNCE_MS } from '@/hooks/useDebouncedValue';
@@ -27,7 +27,6 @@ const Controlled = (props: { initial?: string; serverError?: React.ComponentProp
 
 describe('UsernamePicker — status message above the field', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
     (supabase.rpc as ReturnType<typeof vi.fn>).mockReset();
   });
 
@@ -36,12 +35,11 @@ describe('UsernamePicker — status message above the field', () => {
     render(<Controlled />);
     const input = screen.getByPlaceholderText('my-handle') as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'ahmed_m' } });
-    // Before debounce, status is "Checking…"
     expect(screen.getByText(/Checking/i)).toBeInTheDocument();
-    // After 450ms debounce + microtask flush, "Available" appears.
-    await act(async () => { vi.advanceTimersByTime(FIELD_DEBOUNCE_MS + 20); });
-    await act(async () => { await Promise.resolve(); });
-    expect(await screen.findByText(/Available/i)).toBeInTheDocument();
+    await waitFor(
+      () => expect(screen.getByText(/Available/i)).toBeInTheDocument(),
+      { timeout: FIELD_DEBOUNCE_MS + 500 },
+    );
   });
 
   it('shows raw token `taken` inline when serverError forces username_unavailable', async () => {
