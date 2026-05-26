@@ -64,6 +64,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { parseMembershipLimitError } from '@/lib/membership-errors';
+import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -1429,24 +1430,15 @@ const AdminBusinesses = () => {
                     <Input value={editForm.contact_person} onChange={e => setField('contact_person', e.target.value)} className="mt-1" />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
-                      <Input value={editForm.phone} onChange={e => setField('phone', e.target.value)} dir="ltr" className="mt-1 tech-content" />
-                    </div>
-                    <div>
-                      <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'رقم الجوال' : 'Mobile'}</Label>
-                      <Input value={editForm.mobile} onChange={e => setField('mobile', e.target.value)} dir="ltr" className="mt-1 tech-content" />
-                    </div>
+                    <PhoneField value={parsePhoneValue(editForm.phone)} onChange={(v) => setField('phone', toE164(v))} label={isRTL ? 'رقم الهاتف' : 'Phone'} optional />
+                    <PhoneField value={parsePhoneValue(editForm.mobile)} onChange={(v) => setField('mobile', toE164(v))} label={isRTL ? 'رقم الجوال' : 'Mobile'} optional />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'الرقم الموحد' : 'Unified Number'}</Label>
                       <Input value={editForm.unified_number} onChange={e => setField('unified_number', e.target.value)} dir="ltr" className="mt-1 tech-content" placeholder="920xxxxxxx" />
                     </div>
-                    <div>
-                      <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'خدمة العملاء' : 'Customer Service'}</Label>
-                      <Input value={editForm.customer_service_phone} onChange={e => setField('customer_service_phone', e.target.value)} dir="ltr" className="mt-1 tech-content" />
-                    </div>
+                    <PhoneField value={parsePhoneValue(editForm.customer_service_phone)} onChange={(v) => setField('customer_service_phone', toE164(v))} label={isRTL ? 'خدمة العملاء' : 'Customer Service'} optional />
                   </div>
                   <div>
                     <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" /> {isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
@@ -1555,24 +1547,15 @@ const AdminBusinesses = () => {
                         <Input value={branchForm.contact_person} onChange={e => setBranchForm((f) => ({ ...f, contact_person: e.target.value }))} className="mt-1" />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs">{isRTL ? 'الهاتف' : 'Phone'}</Label>
-                          <Input value={branchForm.phone} onChange={e => setBranchForm((f) => ({ ...f, phone: e.target.value }))} dir="ltr" className="mt-1" />
-                        </div>
-                        <div>
-                          <Label className="text-xs">{isRTL ? 'الجوال' : 'Mobile'}</Label>
-                          <Input value={branchForm.mobile} onChange={e => setBranchForm((f) => ({ ...f, mobile: e.target.value }))} dir="ltr" className="mt-1" />
-                        </div>
+                        <PhoneField value={parsePhoneValue(branchForm.phone)} onChange={(v) => setBranchForm((f) => ({ ...f, phone: toE164(v) }))} label={isRTL ? 'الهاتف' : 'Phone'} optional />
+                        <PhoneField value={parsePhoneValue(branchForm.mobile)} onChange={(v) => setBranchForm((f) => ({ ...f, mobile: toE164(v) }))} label={isRTL ? 'الجوال' : 'Mobile'} optional />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">{isRTL ? 'الرقم الموحد' : 'Unified Number'}</Label>
                           <Input value={branchForm.unified_number} onChange={e => setBranchForm((f) => ({ ...f, unified_number: e.target.value }))} dir="ltr" className="mt-1" placeholder="920xxxxxxx" />
                         </div>
-                        <div>
-                          <Label className="text-xs">{isRTL ? 'خدمة العملاء' : 'Customer Service'}</Label>
-                          <Input value={branchForm.customer_service_phone} onChange={e => setBranchForm((f) => ({ ...f, customer_service_phone: e.target.value }))} dir="ltr" className="mt-1" />
-                        </div>
+                        <PhoneField value={parsePhoneValue(branchForm.customer_service_phone)} onChange={(v) => setBranchForm((f) => ({ ...f, customer_service_phone: toE164(v) }))} label={isRTL ? 'خدمة العملاء' : 'Customer Service'} optional />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>

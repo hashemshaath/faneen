@@ -25,6 +25,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { SectorPicker } from '@/components/onboarding/SectorPicker';
 import type { SectorId } from '@/data/onboarding-sectors';
+import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
 
 import type { BusinessRow } from '@/components/dashboard/business-edit/types';
 import { BilingualField } from '@/components/dashboard/business-edit/BilingualField';
@@ -479,15 +480,18 @@ const DashboardBusinessEdit: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className={grid2}>
-              <div><Label className={fieldLabel}>{t(isRTL, 'الهاتف الثابت', 'Landline phone')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.phone ?? ''} onChange={(e) => update('phone', e.target.value)} placeholder="+966 11 000 0000" />
-                <FieldError issue={issueMap.phone} isRTL={isRTL} /></div>
-              <div><Label className={fieldLabel}>{t(isRTL, 'الجوال', 'Mobile')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.mobile ?? ''} onChange={(e) => update('mobile', e.target.value)} placeholder="+966 5x xxx xxxx" />
-                <FieldError issue={issueMap.mobile} isRTL={isRTL} /></div>
-              <div><Label className={fieldLabel}>{t(isRTL, 'هاتف خدمة العملاء', 'Customer service phone')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.customer_service_phone ?? ''} onChange={(e) => update('customer_service_phone', e.target.value)} />
-                <FieldError issue={issueMap.customer_service_phone} isRTL={isRTL} /></div>
+              <div>
+                <PhoneField value={parsePhoneValue(form.phone)} onChange={(v) => update('phone', toE164(v))} label={t(isRTL, 'الهاتف الثابت', 'Landline phone')} optional />
+                <FieldError issue={issueMap.phone} isRTL={isRTL} />
+              </div>
+              <div>
+                <PhoneField value={parsePhoneValue(form.mobile)} onChange={(v) => update('mobile', toE164(v))} label={t(isRTL, 'الجوال', 'Mobile')} optional />
+                <FieldError issue={issueMap.mobile} isRTL={isRTL} />
+              </div>
+              <div>
+                <PhoneField value={parsePhoneValue(form.customer_service_phone)} onChange={(v) => update('customer_service_phone', toE164(v))} label={t(isRTL, 'هاتف خدمة العملاء', 'Customer service phone')} optional />
+                <FieldError issue={issueMap.customer_service_phone} isRTL={isRTL} />
+              </div>
               <div><Label className={fieldLabel}><Mail className="w-3 h-3 inline me-1" />{t(isRTL, 'البريد الإلكتروني', 'Email')}</Label>
                 <Input type="email" dir="ltr" className="mt-1" value={form.email ?? ''} onChange={(e) => update('email', e.target.value)} />
                 <FieldError issue={issueMap.email} isRTL={isRTL} /></div>
@@ -512,9 +516,10 @@ const DashboardBusinessEdit: React.FC = () => {
                 <Input dir="auto" className="mt-1" value={form.account_manager_name ?? ''} onChange={(e) => update('account_manager_name', e.target.value)} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'المسمى الوظيفي', 'Job title')}</Label>
                 <Input dir="auto" className="mt-1" value={form.account_manager_position ?? ''} onChange={(e) => update('account_manager_position', e.target.value)} placeholder={t(isRTL, 'مثال: مدير مبيعات', 'e.g. Sales Manager')} /></div>
-              <div><Label className={fieldLabel}>{t(isRTL, 'الجوال', 'Mobile')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.account_manager_phone ?? ''} onChange={(e) => update('account_manager_phone', e.target.value)} placeholder="+966 5x xxx xxxx" />
-                <FieldError issue={issueMap.account_manager_phone} isRTL={isRTL} /></div>
+              <div>
+                <PhoneField value={parsePhoneValue(form.account_manager_phone)} onChange={(v) => update('account_manager_phone', toE164(v))} label={t(isRTL, 'الجوال', 'Mobile')} optional />
+                <FieldError issue={issueMap.account_manager_phone} isRTL={isRTL} />
+              </div>
               <div><Label className={fieldLabel}>{t(isRTL, 'البريد الإلكتروني', 'Email')}</Label>
                 <Input type="email" dir="ltr" className="mt-1" value={form.account_manager_email ?? ''} onChange={(e) => update('account_manager_email', e.target.value)} />
                 <FieldError issue={issueMap.account_manager_email} isRTL={isRTL} /></div>

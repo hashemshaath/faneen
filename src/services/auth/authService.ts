@@ -24,7 +24,16 @@ export const authService = {
     return data;
   },
 
-  async signUp(email: string, password: string, metadata: { full_name?: string; account_type?: string; phone?: string }) {
+  async signUp(email: string, password: string, metadata: {
+    full_name?: string;
+    full_name_ar?: string;
+    full_name_en?: string;
+    username?: string;
+    account_type?: string;
+    phone?: string;
+    phone_country_code?: string;
+    phone_national?: string;
+  }) {
     const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedEmail || !password) throw new Error('Email and password required');
     if (password.length < 8) throw new Error('Password must be at least 8 characters');
@@ -32,8 +41,13 @@ export const authService = {
     // Sanitize metadata
     const sanitizedMeta = {
       full_name: sanitizeInput(metadata.full_name || ''),
+      full_name_ar: sanitizeInput(metadata.full_name_ar || ''),
+      full_name_en: sanitizeInput(metadata.full_name_en || ''),
+      username: (metadata.username || '').trim().toLowerCase() || undefined,
       account_type: metadata.account_type || 'individual',
       phone: metadata.phone || '',
+      phone_country_code: metadata.phone_country_code || '',
+      phone_national: metadata.phone_national || '',
     };
 
     const { data, error } = await supabase.auth.signUp({
