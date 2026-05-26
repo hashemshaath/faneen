@@ -48,7 +48,12 @@ Deno.serve(async (req) => {
       email?: string;
       password?: string;
       full_name?: string;
+      full_name_ar?: string;
+      full_name_en?: string;
+      username?: string;
       phone?: string;
+      phone_country_code?: string;
+      phone_national?: string;
       account_type?: AccountType;
       membership_tier?: string;
       role?: AppRole | "none";
@@ -57,8 +62,13 @@ Deno.serve(async (req) => {
 
     const email = (body.email ?? "").trim().toLowerCase();
     const password = body.password ?? "";
-    const full_name = (body.full_name ?? "").trim();
+    const full_name_ar = (body.full_name_ar ?? "").trim();
+    const full_name_en = (body.full_name_en ?? "").trim();
+    const full_name = (body.full_name ?? full_name_ar ?? full_name_en ?? "").trim();
+    const username = (body.username ?? "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 30) || null;
     const phone = (body.phone ?? "").trim();
+    const phone_country_code = (body.phone_country_code ?? "").trim() || null;
+    const phone_national = (body.phone_national ?? "").trim().replace(/\D/g, "").replace(/^0+/, "") || null;
     const account_type: AccountType = body.account_type ?? "individual";
     const membership_tier = body.membership_tier ?? "free";
     const role = body.role ?? "none";
@@ -86,7 +96,12 @@ Deno.serve(async (req) => {
       .from("profiles")
       .update({
         full_name,
+        full_name_ar: full_name_ar || null,
+        full_name_en: full_name_en || null,
+        username,
         phone: phone || null,
+        phone_country_code,
+        phone_national,
         account_type,
         membership_tier,
         email,
