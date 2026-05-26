@@ -459,16 +459,16 @@ const AdminIdentity: React.FC = () => {
         <Tabs value={view} onValueChange={(v) => setView(v as View)} className="w-full">
           <TabsList className="bg-card border border-border/30 rounded-2xl p-1.5 h-auto flex-wrap gap-1">
             <TabsTrigger value="overview" className="rounded-xl gap-1.5 py-2"><Activity className="w-3.5 h-3.5" />{isRTL ? 'نظرة عامة' : 'Overview'}</TabsTrigger>
-            <TabsTrigger value="all" className="rounded-xl gap-1.5 py-2"><Sparkles className="w-3.5 h-3.5" />{isRTL ? 'الكل' : 'All'}</TabsTrigger>
             <TabsTrigger value="users" className="rounded-xl gap-1.5 py-2"><Users className="w-3.5 h-3.5" />{isRTL ? 'المستخدمون' : 'Users'}</TabsTrigger>
             <TabsTrigger value="businesses" className="rounded-xl gap-1.5 py-2"><Building2 className="w-3.5 h-3.5" />{isRTL ? 'المنشآت' : 'Businesses'}</TabsTrigger>
-            <TabsTrigger value="staff" className="rounded-xl gap-1.5 py-2"><Crown className="w-3.5 h-3.5" />{isRTL ? 'فريق الإدارة' : 'Staff'}</TabsTrigger>
-            <TabsTrigger value="disabled" className="rounded-xl gap-1.5 py-2"><Ban className="w-3.5 h-3.5" />{isRTL ? 'معطّلون' : 'Disabled'}</TabsTrigger>
+            <TabsTrigger value="provider-review" className="rounded-xl gap-1.5 py-2"><ShieldCheck className="w-3.5 h-3.5" />{isRTL ? 'مراجعة المزودين' : 'Provider review'}</TabsTrigger>
+            <TabsTrigger value="access-requests" className="rounded-xl gap-1.5 py-2"><KeyRoundIcon className="w-3.5 h-3.5" />{isRTL ? 'طلبات الانضمام' : 'Access requests'}</TabsTrigger>
+            <TabsTrigger value="access-management" className="rounded-xl gap-1.5 py-2"><Shield className="w-3.5 h-3.5" />{isRTL ? 'إدارة الوصول' : 'Access control'}</TabsTrigger>
             <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'تحليلات' : 'Analytics'}</TabsTrigger>
           </TabsList>
 
-          {/* Filters + Saved Views */}
-          {view !== 'overview' && (
+          {/* Filters + Saved Views — only for analytics view that still consumes them */}
+          {view === 'analytics' && (
             <div className="mt-3">
               <IdentityFilters
                 filters={filters}
@@ -609,53 +609,24 @@ const AdminIdentity: React.FC = () => {
             </div>
           </TabsContent>
 
-          {/* ─── Users tab (compact list + deep-link to full editor) ─── */}
-          <TabsContent value="users" className="mt-5">
-            <CompactUserList profiles={filteredProfiles} bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
-              isLoading={isLoading} isRTL={isRTL} isSuperAdmin={isSuperAdmin} />
-          </TabsContent>
-
-          {/* ─── Businesses tab ─── */}
-          <TabsContent value="businesses" className="mt-5">
-            <CompactBusinessList businesses={filteredBusinesses} profileByUserId={profileByUserId}
-              isLoading={isLoading} isRTL={isRTL} />
-          </TabsContent>
-
-          {/* ─── Staff tab ─── */}
-          <TabsContent value="staff" className="mt-5">
-            <CompactUserList
-              profiles={filteredProfiles.filter(p => {
-                const r = rolesByUser.get(p.user_id) || [];
-                return r.some(x => ['super_admin', 'admin', 'moderator'].includes(x.role));
-              })}
-              bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
-              isLoading={isLoading} isRTL={isRTL} isSuperAdmin={isSuperAdmin}
-            />
-          </TabsContent>
-
-          {/* ─── Disabled tab ─── */}
-          <TabsContent value="disabled" className="mt-5">
-            <CompactUserList
-              profiles={filteredProfiles.filter(p => p.is_banned)}
-              bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
-              isLoading={isLoading} isRTL={isRTL} isSuperAdmin={isSuperAdmin}
-            />
-          </TabsContent>
-
-          {/* ─── All (mixed) tab — users + businesses interleaved by created_at ─── */}
-          <TabsContent value="all" className="mt-5">
-            <UnifiedFeed
-              profiles={filteredProfiles}
-              businesses={filteredBusinesses}
-              bizsByOwner={bizsByOwner}
-              rolesByUser={rolesByUser}
-              profileByUserId={profileByUserId}
-              isLoading={isLoading}
-              isRTL={isRTL}
-              isSuperAdmin={isSuperAdmin}
-              search={deferredSearch}
-            />
-          </TabsContent>
+          {/* ─── Users / Businesses / Provider review / Access — full embedded admin pages ─── */}
+          <AdminEmbeddedContext.Provider value={true}>
+            <TabsContent value="users" className="mt-5" forceMount={view === 'users' ? true : undefined} hidden={view !== 'users'}>
+              <Suspense fallback={<PanelFallback />}><EmbeddedUsers /></Suspense>
+            </TabsContent>
+            <TabsContent value="businesses" className="mt-5" forceMount={view === 'businesses' ? true : undefined} hidden={view !== 'businesses'}>
+              <Suspense fallback={<PanelFallback />}><EmbeddedBusinesses /></Suspense>
+            </TabsContent>
+            <TabsContent value="provider-review" className="mt-5" forceMount={view === 'provider-review' ? true : undefined} hidden={view !== 'provider-review'}>
+              <Suspense fallback={<PanelFallback />}><EmbeddedProviderReview /></Suspense>
+            </TabsContent>
+            <TabsContent value="access-requests" className="mt-5" forceMount={view === 'access-requests' ? true : undefined} hidden={view !== 'access-requests'}>
+              <Suspense fallback={<PanelFallback />}><EmbeddedAccessRequests /></Suspense>
+            </TabsContent>
+            <TabsContent value="access-management" className="mt-5" forceMount={view === 'access-management' ? true : undefined} hidden={view !== 'access-management'}>
+              <Suspense fallback={<PanelFallback />}><EmbeddedAccessManagement /></Suspense>
+            </TabsContent>
+          </AdminEmbeddedContext.Provider>
 
           {/* ─── Analytics tab ─── */}
           <TabsContent value="analytics" className="mt-5">
@@ -672,8 +643,8 @@ const AdminIdentity: React.FC = () => {
         {/* ─── Footer hint ─── */}
         <p className="text-[11px] text-muted-foreground text-center pt-2">
           {isRTL
-            ? 'للتحكم المتقدّم (تعديل، حذف، تغيير كلمة المرور، إدارة الفروع…) استخدم الأزرار التي تفتح صفحات الإدارة المتخصّصة.'
-            : 'For advanced actions (edit, delete, password, branch management…), use the buttons that open the specialist pages.'}
+            ? 'كل عمليات الإدارة (تعديل، حذف، تغيير كلمة المرور، توثيق، فروع، صلاحيات…) متاحة هنا داخل التابات بدون الانتقال لصفحة أخرى.'
+            : 'All admin operations (edit, delete, password, verify, branches, roles…) are available right here inside the tabs — no page navigation needed.'}
         </p>
       </div>
     </DashboardLayout>
