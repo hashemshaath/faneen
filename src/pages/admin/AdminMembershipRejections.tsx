@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { queryMembershipUpgradeRejections } from '@/modules/memberships';
-import { supabase } from '@/integrations/supabase/client';
+import { listProfilesByUserIds } from '@/modules/users';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -183,7 +183,10 @@ const AdminMembershipRejections: React.FC = () => {
     queryKey: ['admin-rejections-user-refs', userIds],
     enabled: userIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase.from('profiles').select('user_id, ref_id').in('user_id', userIds);
+      const { data } = await listProfilesByUserIds<{ user_id: string; ref_id: string | null }>({
+        userIds,
+        select: 'user_id, ref_id',
+      });
       const map: Record<string, string> = {};
       (data ?? []).forEach((p) => { if (p.ref_id) map[p.user_id] = p.ref_id; });
       return map;
