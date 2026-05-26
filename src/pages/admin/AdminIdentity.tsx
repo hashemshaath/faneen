@@ -46,7 +46,7 @@ import { maskEmail, maskPhone } from '@/lib/masking';
 import type { Tables } from '@/integrations/supabase/types';
 import {
   Users, Building2, Search, Command, Shield, Crown, ShieldCheck, Briefcase,
-  TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, ArrowRight, Plus,
+  TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, Plus,
   UserPlus, Activity, ExternalLink, KeyRound, BarChart3,
 } from 'lucide-react';
 
@@ -93,7 +93,7 @@ const Kpi: React.FC<{
           <p className="text-[11px] text-muted-foreground mt-1 truncate">{label}</p>
           {hint && <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate">{hint}</p>}
         </div>
-        {to && <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity" />}
+        {to && <DirectionalIcon kind="forward" className="w-3.5 h-3.5 text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity" />}
       </div>
     </div>
   );
@@ -468,7 +468,7 @@ const AdminIdentity: React.FC = () => {
                     <Users className="w-4 h-4 text-info" />{isRTL ? 'أحدث المستخدمين' : 'Recent users'}
                   </h3>
                   <Button asChild variant="ghost" size="sm" className="text-[11px] h-7">
-                    <Link to="/admin/users">{isRTL ? 'الكل' : 'All'} <ArrowRight className="w-3 h-3 ms-1" /></Link>
+                    <Link to="/admin/users">{isRTL ? 'الكل' : 'All'} <DirectionalIcon kind="forward" className="w-3 h-3 ms-1" /></Link>
                   </Button>
                 </div>
                 {isLoading ? (
@@ -517,7 +517,7 @@ const AdminIdentity: React.FC = () => {
                     <Building2 className="w-4 h-4 text-success" />{isRTL ? 'أحدث المنشآت' : 'Recent businesses'}
                   </h3>
                   <Button asChild variant="ghost" size="sm" className="text-[11px] h-7">
-                    <Link to="/admin/businesses">{isRTL ? 'الكل' : 'All'} <ArrowRight className="w-3 h-3 ms-1" /></Link>
+                    <Link to="/admin/businesses">{isRTL ? 'الكل' : 'All'} <DirectionalIcon kind="forward" className="w-3 h-3 ms-1" /></Link>
                   </Button>
                 </div>
                 {isLoading ? (
