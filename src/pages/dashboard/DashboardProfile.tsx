@@ -6,6 +6,7 @@ import {
   User, Mail, Phone, Globe, MapPin, Hash, Save, Loader2, Camera,
   ShieldCheck, ExternalLink, Building2, Crown, AtSign, Languages,
   AlertCircle, ArrowLeft, Settings as SettingsIcon, Copy, Check,
+  IdCard, Receipt, MapPinned, Search,
 } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -51,6 +52,8 @@ const DashboardProfile: React.FC = () => {
   // ───────────────────────── Form state
   const [form, setForm] = useState({
     full_name: '',
+    full_name_ar: '',
+    full_name_en: '',
     username: '',
     email: '',
     phone: '',
@@ -58,16 +61,30 @@ const DashboardProfile: React.FC = () => {
     preferred_language: 'ar' as 'ar' | 'en',
     country_id: '' as string | null,
     city_id: '' as string | null,
+    national_id: '',
+    national_id_type: '' as '' | 'saudi' | 'iqama',
+    vat_number: '',
+    short_national_address: '',
+    region_name: '',
+    district: '',
+    street: '',
+    building_number: '',
+    additional_number: '',
+    postal_code: '',
+    address_line: '',
   });
   const [usernameOk, setUsernameOk] = useState(true); // empty username is acceptable for individuals
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [splLoading, setSplLoading] = useState(false);
 
   // Seed form from profile
   useEffect(() => {
     if (!profile) return;
     setForm({
       full_name: profile.full_name ?? '',
+      full_name_ar: profile.full_name_ar ?? '',
+      full_name_en: profile.full_name_en ?? '',
       username: profile.username ?? '',
       email: profile.email ?? '',
       phone: profile.phone ?? '',
@@ -75,6 +92,17 @@ const DashboardProfile: React.FC = () => {
       preferred_language: (profile.preferred_language as 'ar' | 'en') ?? 'ar',
       country_id: profile.country_id ?? null,
       city_id: profile.city_id ?? null,
+      national_id: profile.national_id ?? '',
+      national_id_type: (profile.national_id_type as 'saudi' | 'iqama' | null) ?? '',
+      vat_number: profile.vat_number ?? '',
+      short_national_address: profile.short_national_address ?? '',
+      region_name: profile.region_name ?? '',
+      district: profile.district ?? '',
+      street: profile.street ?? '',
+      building_number: profile.building_number ?? '',
+      additional_number: profile.additional_number ?? '',
+      postal_code: profile.postal_code ?? '',
+      address_line: profile.address_line ?? '',
     });
     setUsernameOk(true);
   }, [profile]);
