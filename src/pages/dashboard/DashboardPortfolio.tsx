@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { PermissionHint } from '@/components/workspace/PermissionGate';
 import {
   Plus, Trash2, Star, GripVertical, X, Pencil, Image as ImageIcon,
   Eye, EyeOff, LayoutGrid, List, Search, StarOff, CheckCircle2,
@@ -416,9 +417,11 @@ const DashboardPortfolio = () => {
                 <Download className="w-3.5 h-3.5 me-1" />{isRTL ? 'تصدير' : 'Export'}
               </Button>
             )}
-            <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
-              <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة عمل' : 'Add Work'}
-            </Button>
+            <PermissionHint permission="documents.upload">
+              <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
+                <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة عمل' : 'Add Work'}
+              </Button>
+            </PermissionHint>
           </div>
         </div>
 
