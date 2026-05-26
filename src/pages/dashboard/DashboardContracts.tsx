@@ -118,6 +118,7 @@ import { ContractDetailsSection } from '@/components/contracts/dashboard/create/
 import { VatSettingsSection } from '@/components/contracts/dashboard/create/VatSettingsSection';
 import { SupervisorSection } from '@/components/contracts/dashboard/create/SupervisorSection';
 import { ContractTermsSection } from '@/components/contracts/dashboard/create/ContractTermsSection';
+import { ContractImportPanel, type ContractExtract } from '@/components/contracts/dashboard/import/ContractImportPanel';
 import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
 import { ContractRoleTabs } from '@/components/contracts/dashboard/ContractRoleTabs';
 import { ContractFilters } from '@/components/contracts/dashboard/ContractFilters';
