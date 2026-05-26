@@ -81,8 +81,8 @@ const staffRoleConfig: Record<StaffRole, { ar: string; en: string; color: string
 };
 
 const roleConfig = {
-  super_admin: { icon: ShieldAlert, badge: 'bg-secondary text-secondary dark:bg-secondary/30 dark:text-secondary border-secondary dark:border-secondary', iconBg: 'bg-secondary/15 text-secondary dark:text-secondary', labelAr: 'مشرف أعلى', labelEn: 'Super Admin', rank: 0 },
-  admin: { icon: Crown, badge: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive border-destructive dark:border-destructive', iconBg: 'bg-destructive/15 text-destructive dark:text-destructive', labelAr: 'مشرف', labelEn: 'Admin', rank: 1 },
+  super_admin: { icon: ShieldAlert, badge: 'bg-secondary text-white dark:bg-secondary dark:text-white border-secondary', iconBg: 'bg-secondary/15 text-secondary dark:text-secondary', labelAr: 'مشرف أعلى', labelEn: 'Super Admin', rank: 0 },
+  admin: { icon: Crown, badge: 'bg-destructive text-white dark:bg-destructive dark:text-white border-destructive', iconBg: 'bg-destructive/15 text-destructive dark:text-destructive', labelAr: 'مشرف', labelEn: 'Admin', rank: 1 },
   moderator: { icon: ShieldCheck, badge: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning border-warning dark:border-warning', iconBg: 'bg-warning/15 text-warning dark:text-warning', labelAr: 'مشرف محتوى', labelEn: 'Moderator', rank: 2 },
   user: { icon: Users, badge: 'bg-info text-info dark:bg-info/30 dark:text-info border-info dark:border-info', iconBg: 'bg-info/15 text-info dark:text-info', labelAr: 'مستخدم', labelEn: 'User', rank: 3 },
 } as const;

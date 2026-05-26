@@ -18,6 +18,8 @@ export interface InsertLeadRequestPayload {
   name: string;
   email: string;
   phone: string | null;
+  phone_country_code: string | null;
+  phone_national: string | null;
   subject: string | null;
   message: string;
   budget_range: string | null;
