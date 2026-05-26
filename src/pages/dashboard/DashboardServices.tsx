@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { PermissionHint } from '@/components/workspace/PermissionGate';
 import {
   Plus, Trash2, Pencil, X, Search, CheckCircle2, Wrench,
   DollarSign, ChevronDown, ChevronRight, Package,
