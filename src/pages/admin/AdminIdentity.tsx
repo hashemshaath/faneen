@@ -756,3 +756,292 @@ const CompactBusinessList: React.FC<{
 };
 
 export default AdminIdentity;
+
+/* ─────────────────────────────────────────────────────────────────────
+ * UnifiedFeed — Interleaved users + businesses with prominent linkage.
+ * Each row makes it obvious who owns what and which roles apply.
+ * Uses inline expansion (no popups) per UX policy.
+ * ───────────────────────────────────────────────────────────────────── */
+type FeedItem =
+  | { kind: 'user'; id: string; created_at: string; data: Profile }
+  | { kind: 'business'; id: string; created_at: string; data: BizRow };
+
+const UnifiedFeed: React.FC<{
+  profiles: Profile[];
+  businesses: BizRow[];
+  bizsByOwner: Map<string, BizRow[]>;
+  rolesByUser: Map<string, UserRole[]>;
+  profileByUserId: Map<string, Profile>;
+  isLoading: boolean;
+  isRTL: boolean;
+  isSuperAdmin: boolean;
+  search: string;
+}> = ({ profiles, businesses, bizsByOwner, rolesByUser, profileByUserId, isLoading, isRTL, isSuperAdmin, search }) => {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const PAGE = 20;
+
+  const feed = useMemo<FeedItem[]>(() => {
+    const q = search.trim().toLowerCase();
+    const userItems: FeedItem[] = profiles
+      .filter(p => !q || p.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q) || p.ref_id?.toLowerCase().includes(q))
+      .map(p => ({ kind: 'user', id: `u-${p.id}`, created_at: p.created_at, data: p }));
+    const bizItems: FeedItem[] = businesses
+      .filter(b => !q || b.name_ar?.toLowerCase().includes(q) || b.name_en?.toLowerCase().includes(q) || b.ref_id?.toLowerCase().includes(q))
+      .map(b => ({ kind: 'business', id: `b-${b.id}`, created_at: b.created_at, data: b }));
+    return [...userItems, ...bizItems].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [profiles, businesses, search]);
+
+  const total = feed.length;
+  const pageCount = Math.max(1, Math.ceil(total / PAGE));
+  useEffect(() => { if (page > pageCount) setPage(1); }, [pageCount, page]);
+  const paginated = feed.slice((page - 1) * PAGE, page * PAGE);
+
+  if (isLoading) {
+    return <div className="space-y-2">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}</div>;
+  }
+  if (total === 0) {
+    return (
+      <div className="rounded-2xl border border-border/30 bg-card p-12 text-center">
+        <Search className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+        <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد نتائج' : 'No results'}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] text-muted-foreground">
+          {isRTL
+            ? `${total} عنصر (مستخدمين + منشآت) • صفحة ${page}/${pageCount}`
+            : `${total} items (users + businesses) • Page ${page}/${pageCount}`}
+        </p>
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-info" />{isRTL ? 'مستخدم' : 'User'}</span>
+          <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-success" />{isRTL ? 'منشأة' : 'Business'}</span>
+        </div>
+      </div>
+
+      {paginated.map(item => {
+        const isExp = expanded === item.id;
+        if (item.kind === 'user') {
+          const p = item.data;
+          const userBizs = bizsByOwner.get(p.user_id) || [];
+          const userRoles = rolesByUser.get(p.user_id) || [];
+          const isStaff = userRoles.some(r => ['super_admin', 'admin', 'moderator'].includes(r.role));
+          return (
+            <div key={item.id} className="rounded-2xl border border-info/20 bg-card hover:border-info/40 transition-all">
+              <button
+                onClick={() => setExpanded(isExp ? null : item.id)}
+                className="w-full text-start p-3 flex items-start gap-3 hover:bg-info/5 rounded-2xl"
+              >
+                <div className="relative shrink-0">
+                  <Avatar className="w-11 h-11 ring-2 ring-info/20">
+                    <AvatarImage src={p.avatar_url || undefined} />
+                    <AvatarFallback>{(p.full_name || '?').charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <span className="absolute -bottom-0.5 -end-0.5 w-4 h-4 rounded-full bg-info border-2 border-card flex items-center justify-center">
+                    <Users className="w-2 h-2 text-white" />
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-sm truncate">{p.full_name || (isRTL ? 'بدون اسم' : 'No name')}</p>
+                    {p.ref_id && <ReferenceBadge refId={p.ref_id} />}
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-info/30 text-info">
+                      {p.account_type === 'business' ? (isRTL ? 'مزود' : 'provider')
+                        : p.account_type === 'company' ? (isRTL ? 'شركة' : 'company')
+                        : (isRTL ? 'فرد' : 'individual')}
+                    </Badge>
+                    {isStaff && <Badge className="bg-warning/10 text-warning border-warning/30 text-[9px] px-1.5 py-0">{isRTL ? 'إدارة' : 'staff'}</Badge>}
+                    {p.is_banned && <Badge variant="destructive" className="text-[9px] px-1.5 py-0">{isRTL ? 'معطّل' : 'disabled'}</Badge>}
+                    {tierBadge(p.membership_tier, isRTL)}
+                  </div>
+                  <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap">
+                    {p.email && <span className="truncate">{isSuperAdmin ? p.email : maskEmail(p.email)}</span>}
+                    {p.phone && <span className="tech-content">{isSuperAdmin ? p.phone : maskPhone(p.phone)}</span>}
+                  </div>
+                  {userBizs.length > 0 && (
+                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                      <span className="text-[10px] text-muted-foreground">{isRTL ? `مرتبط بـ ${userBizs.length}:` : `Linked to ${userBizs.length}:`}</span>
+                      {userBizs.slice(0, 3).map(b => (
+                        <EntityLink key={b.id} type="business" refId={b.ref_id} targetId={b.id}
+                          name={isRTL ? b.name_ar : (b.name_en || b.name_ar)}
+                          hint={b.is_verified ? (isRTL ? 'موثّق' : 'verified') : undefined} />
+                      ))}
+                      {userBizs.length > 3 && (
+                        <span className="text-[10px] text-muted-foreground">+{userBizs.length - 3}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <ArrowRight className={`w-4 h-4 text-muted-foreground transition-transform mt-1 shrink-0 ${isExp ? 'rotate-90' : ''}`} />
+              </button>
+              {isExp && (
+                <div className="border-t border-border/30 p-4 bg-muted/10 rounded-b-2xl space-y-3 animate-in slide-in-from-top-1 duration-150">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[11px]">
+                    <Detail label={isRTL ? 'معرّف داخلي' : 'Ref ID'} value={p.ref_id || '—'} mono />
+                    <Detail label={isRTL ? 'النوع' : 'Type'} value={p.account_type || '—'} />
+                    <Detail label={isRTL ? 'العضوية' : 'Membership'} value={p.membership_tier || 'free'} />
+                    <Detail label={isRTL ? 'تاريخ الإنشاء' : 'Created'} value={new Date(p.created_at).toLocaleDateString(isRTL ? 'ar' : 'en')} />
+                    <Detail label={isRTL ? 'هاتف موثّق' : 'Phone verified'} value={p.phone_verified ? '✓' : '—'} />
+                    <Detail label={isRTL ? 'مكتمل التسجيل' : 'Onboarded'} value={p.is_onboarded ? '✓' : '—'} />
+                    <Detail label={isRTL ? 'الأدوار' : 'Roles'} value={userRoles.map(r => r.role).join(', ') || (isRTL ? 'لا يوجد' : 'none')} />
+                    <Detail label={isRTL ? 'منشآت مرتبطة' : 'Businesses'} value={String(userBizs.length)} />
+                  </div>
+                  {userBizs.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold text-muted-foreground mb-1.5">{isRTL ? 'كل المنشآت المرتبطة:' : 'All linked businesses:'}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {userBizs.map(b => (
+                          <EntityLink key={b.id} type="business" refId={b.ref_id} targetId={b.id}
+                            name={isRTL ? b.name_ar : (b.name_en || b.name_ar)}
+                            hint={b.is_verified ? (isRTL ? 'موثّق' : 'verified') : (b.approval_status === 'pending' ? (isRTL ? 'بانتظار المراجعة' : 'pending') : undefined)} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <Button asChild size="sm" variant="outline" className="rounded-xl gap-1.5 h-8 text-xs">
+                      <Link to={`/admin/users?focus=${p.user_id}`}>
+                        <ExternalLink className="w-3 h-3" />{isRTL ? 'تعديل المستخدم' : 'Edit user'}
+                      </Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="rounded-xl gap-1.5 h-8 text-xs">
+                      <Link to="/admin/access-management">
+                        <Shield className="w-3 h-3" />{isRTL ? 'الصلاحيات' : 'Access'}
+                      </Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="rounded-xl gap-1.5 h-8 text-xs">
+                      <Link to="/admin/memberships">
+                        <Crown className="w-3 h-3" />{isRTL ? 'العضوية' : 'Membership'}
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+        // business item
+        const b = item.data;
+        const owner = profileByUserId.get(b.user_id);
+        return (
+          <div key={item.id} className="rounded-2xl border border-success/20 bg-card hover:border-success/40 transition-all">
+            <button
+              onClick={() => setExpanded(isExp ? null : item.id)}
+              className="w-full text-start p-3 flex items-start gap-3 hover:bg-success/5 rounded-2xl"
+            >
+              <div className="relative shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-success/10 ring-2 ring-success/20 flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-success" />
+                </div>
+                <span className="absolute -bottom-0.5 -end-0.5 w-4 h-4 rounded-full bg-success border-2 border-card flex items-center justify-center">
+                  <Briefcase className="w-2 h-2 text-white" />
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-semibold text-sm truncate">{isRTL ? b.name_ar : (b.name_en || b.name_ar)}</p>
+                  <ReferenceBadge refId={b.ref_id} />
+                  {b.is_verified && <CheckCircle2 className="w-3.5 h-3.5 text-success" aria-label={isRTL ? 'موثّق' : 'verified'} />}
+                  {!b.is_active && <Badge variant="outline" className="text-[9px] border-dashed text-muted-foreground">{isRTL ? 'غير نشط' : 'inactive'}</Badge>}
+                  {b.approval_status === 'pending' && <Badge className="bg-warning/10 text-warning border-warning/30 text-[9px] px-1.5 py-0">{isRTL ? 'بانتظار المراجعة' : 'pending'}</Badge>}
+                  {tierBadge(b.membership_tier, isRTL)}
+                </div>
+                <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap">
+                  {b.username && <span className="tech-content">@{b.username}</span>}
+                  {b.name_en && b.name_ar && (
+                    <span className="opacity-70">{isRTL ? `EN: ${b.name_en}` : `AR: ${b.name_ar}`}</span>
+                  )}
+                </div>
+                {owner && (
+                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    <span className="text-[10px] text-muted-foreground">{isRTL ? 'المالك:' : 'Owner:'}</span>
+                    <EntityLink type="user" refId={owner.ref_id} targetId={owner.user_id}
+                      name={owner.full_name || undefined}
+                      hint={owner.account_type || undefined} />
+                  </div>
+                )}
+              </div>
+              <ArrowRight className={`w-4 h-4 text-muted-foreground transition-transform mt-1 shrink-0 ${isExp ? 'rotate-90' : ''}`} />
+            </button>
+            {isExp && (
+              <div className="border-t border-border/30 p-4 bg-muted/10 rounded-b-2xl space-y-3 animate-in slide-in-from-top-1 duration-150">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[11px]">
+                  <Detail label={isRTL ? 'الاسم AR' : 'Name AR'} value={b.name_ar || '—'} />
+                  <Detail label={isRTL ? 'الاسم EN' : 'Name EN'} value={b.name_en || '—'} />
+                  <Detail label={isRTL ? 'معرّف المنشأة' : 'Business Ref'} value={b.ref_id} mono />
+                  <Detail label={isRTL ? 'اسم المستخدم' : 'Username'} value={b.username ? `@${b.username}` : '—'} mono />
+                  <Detail label={isRTL ? 'حالة الموافقة' : 'Approval'} value={b.approval_status || '—'} />
+                  <Detail label={isRTL ? 'نشط' : 'Active'} value={b.is_active ? '✓' : '—'} />
+                  <Detail label={isRTL ? 'موثّق' : 'Verified'} value={b.is_verified ? '✓' : '—'} />
+                  <Detail label={isRTL ? 'العضوية' : 'Membership'} value={b.membership_tier || 'free'} />
+                </div>
+                {owner && (
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground mb-1.5">{isRTL ? 'الحساب المالك:' : 'Owner account:'}</p>
+                    <div className="flex items-center gap-2 p-2 rounded-xl bg-info/5 border border-info/20">
+                      <Avatar className="w-8 h-8"><AvatarImage src={owner.avatar_url || undefined} /><AvatarFallback>{(owner.full_name || '?').charAt(0)}</AvatarFallback></Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="text-xs font-semibold truncate">{owner.full_name || (isRTL ? 'بدون اسم' : 'No name')}</p>
+                          {owner.ref_id && <ReferenceBadge refId={owner.ref_id} />}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          {isSuperAdmin ? owner.email : maskEmail(owner.email || '')}
+                        </p>
+                      </div>
+                      <Button asChild size="sm" variant="ghost" className="h-7 rounded-lg gap-1 text-[11px]">
+                        <Link to={`/admin/users?focus=${owner.user_id}`}>
+                          <ExternalLink className="w-3 h-3" />{isRTL ? 'فتح' : 'Open'}
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 pt-1 flex-wrap">
+                  <Button asChild size="sm" variant="outline" className="rounded-xl gap-1.5 h-8 text-xs">
+                    <Link to={`/admin/businesses?focus=${b.id}`}>
+                      <ExternalLink className="w-3 h-3" />{isRTL ? 'تعديل المنشأة' : 'Edit business'}
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline" className="rounded-xl gap-1.5 h-8 text-xs">
+                    <Link to="/admin/provider-review">
+                      <ShieldCheck className="w-3 h-3" />{isRTL ? 'المراجعة' : 'Review'}
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline" className="rounded-xl gap-1.5 h-8 text-xs">
+                    <Link to="/admin/locations">
+                      <ExternalLink className="w-3 h-3" />{isRTL ? 'المواقع' : 'Locations'}
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {pageCount > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-3">
+          <Button variant="outline" size="sm" className="rounded-xl" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+            {isRTL ? 'السابق' : 'Previous'}
+          </Button>
+          <span className="text-xs text-muted-foreground tech-content">{page} / {pageCount}</span>
+          <Button variant="outline" size="sm" className="rounded-xl" disabled={page === pageCount} onClick={() => setPage(p => p + 1)}>
+            {isRTL ? 'التالي' : 'Next'}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const Detail: React.FC<{ label: string; value: string; mono?: boolean }> = ({ label, value, mono }) => (
+  <div className="space-y-0.5">
+    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
+    <p className={`text-xs font-medium truncate ${mono ? 'tech-content font-mono' : ''}`} title={value}>{value}</p>
+  </div>
+);
