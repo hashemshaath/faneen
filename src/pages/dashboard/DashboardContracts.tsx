@@ -2179,7 +2179,7 @@ const DashboardContracts = () => {
                 isSaving={createContractMutation.isPending}
                 saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !guestClient && !form.client_email) || createContractMutation.isPending}
                 onStepNav={goToStep}
-                onSave={() => createContractMutation.mutate()}
+                onSave={() => createContractMutation.mutate(undefined)}
                 completenessScore={!editingId ? calculateContractCompleteness({
                   hasClient: !!(selectedClient || guestClient || form.client_email),
                   hasExecutionSite: !!selectedSiteId,
@@ -2204,7 +2204,7 @@ const DashboardContracts = () => {
                 vatInclusive={form.vat_inclusive}
                 isSaving={createContractMutation.isPending}
                 saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !guestClient && !form.client_email) || createContractMutation.isPending}
-                onSave={() => createContractMutation.mutate()}
+                onSave={() => createContractMutation.mutate(undefined)}
               />
             </CardContent>
           </Card>
