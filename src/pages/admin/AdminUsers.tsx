@@ -679,6 +679,26 @@ const AdminUsers = () => {
     phone: '', phone_country_code: '+966', phone_national: '',
     email: '',
   });
+  /**
+   * Inline field-level errors for the edit panel. Cleared whenever the user
+   * edits the corresponding field, scrolls into view when set, and rendered
+   * directly under each input so the admin sees exactly which field failed.
+   */
+  const [editFieldErrors, setEditFieldErrors] = useState<{
+    full_name_ar?: string;
+    full_name_en?: string;
+    username?: string;
+    email?: string;
+    phone?: string;
+  }>({});
+  const clearEditFieldError = useCallback((key: keyof typeof editFieldErrors) => {
+    setEditFieldErrors(prev => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   // Suspension form (temporary/permanent disable)
