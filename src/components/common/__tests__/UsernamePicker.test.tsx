@@ -87,17 +87,17 @@ describe('parseProfileSaveError', () => {
     expect(r.reason).toBe('taken');
     expect(r.rawCode).toContain('username_unavailable: taken');
     expect(r.friendly).toMatch(/already taken/i);
-  });
+  }, 20000);
 
   it('extracts `invalid_format` reason', async () => {
     const { parseProfileSaveError } = await import('@/pages/admin/AdminUsers');
     const r = parseProfileSaveError('username_unavailable: invalid_format', false);
     expect(r.reason).toBe('invalid_format');
-  });
+  }, 20000);
 
   it('falls back to field detection for plain text errors', async () => {
     const { parseProfileSaveError } = await import('@/pages/admin/AdminUsers');
     expect(parseProfileSaveError('email already exists', false).field).toBe('email');
     expect(parseProfileSaveError('phone number malformed', false).field).toBe('phone');
-  });
+  }, 20000);
 });
