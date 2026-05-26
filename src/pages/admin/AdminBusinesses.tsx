@@ -415,6 +415,8 @@ const AdminBusinesses = () => {
         logo_url: editForm.logo_url || null, cover_url: editForm.cover_url || null,
         unified_number: editForm.unified_number || null, contact_person: editForm.contact_person || null,
         mobile: editForm.mobile || null, customer_service_phone: editForm.customer_service_phone || null,
+        region_en: editForm.region_en || null, district_en: editForm.district_en || null,
+        street_name_en: editForm.street_name_en || null, address_en: editForm.address_en || null,
         // R4E-2C-4-PHASE-3: membership_tier no longer written from the edit
         // form. Use the row tier picker (routes through admin RPC).
         // R4E-3: is_active / is_verified are no longer bagged in the generic
@@ -667,6 +669,57 @@ const AdminBusinesses = () => {
     }
   };
 
+  // Saudi National Address — short-address autofill (central microservice)
+  const [shortAddress, setShortAddress] = useState('');
+  const [splBusy, setSplBusy] = useState(false);
+  const handleShortAddressLookup = async () => {
+    const code = shortAddress.trim();
+    if (!code) return;
+    setSplBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('national-address-lookup', {
+        body: { shortAddress: code },
+      });
+      if (error) throw error;
+      const res = data as {
+        ok: boolean; message_ar?: string; message_en?: string;
+        address?: {
+          region_ar: string | null; region_en: string | null;
+          city_ar: string | null;   city_en: string | null;
+          district_ar: string | null; district_en: string | null;
+          street_ar: string | null;   street_en: string | null;
+          address_ar: string | null;  address_en: string | null;
+          building_number: string | null; additional_number: string | null;
+          post_code: string | null;
+        };
+      };
+      if (!res?.ok || !res.address) {
+        toast.error(isRTL ? (res?.message_ar ?? 'تعذّر جلب العنوان') : (res?.message_en ?? 'Lookup failed'));
+        return;
+      }
+      const a = res.address;
+      setEditForm((prev: any) => ({
+        ...prev,
+        national_id: code,
+        region: a.region_ar ?? prev.region,
+        region_en: a.region_en ?? prev.region_en,
+        district: a.district_ar ?? prev.district,
+        district_en: a.district_en ?? prev.district_en,
+        street_name: a.street_ar ?? prev.street_name,
+        street_name_en: a.street_en ?? prev.street_name_en,
+        address: a.address_ar ?? prev.address,
+        address_en: a.address_en ?? prev.address_en,
+        building_number: a.building_number ?? prev.building_number,
+        additional_number: a.additional_number ?? prev.additional_number,
+      }));
+      toast.success(isRTL ? 'تم جلب العنوان وتعبئة الحقول' : 'Address fetched');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل البحث' : 'Lookup failed'));
+    } finally {
+      setSplBusy(false);
+    }
+  };
+
   /* ─── Edit Open ─── */
   const openEdit = (biz: Record<string, unknown>) => {
     setServicesPanel(null);
@@ -681,6 +734,8 @@ const AdminBusinesses = () => {
       national_id: biz.national_id || '', additional_number: biz.additional_number || '',
       region: biz.region || '', district: biz.district || '',
       street_name: biz.street_name || '', building_number: biz.building_number || '',
+      region_en: biz.region_en || '', district_en: biz.district_en || '',
+      street_name_en: biz.street_name_en || '', address_en: biz.address_en || '',
       latitude: biz.latitude || '', longitude: biz.longitude || '',
       unified_number: biz.unified_number || '', contact_person: biz.contact_person || '',
       mobile: biz.mobile || '', customer_service_phone: biz.customer_service_phone || '',
@@ -1137,6 +1192,24 @@ const AdminBusinesses = () => {
                       <Input value={editForm.additional_number} onChange={e => setField('additional_number', e.target.value)} dir="ltr" className="mt-1" />
                     </div>
                   </div>
+                  <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 space-y-2">
+                    <Label className="text-xs font-semibold flex items-center gap-1">
+                      <MapPinned className="w-3 h-3" />
+                      {isRTL ? 'العنوان الوطني المختصر (SPL)' : 'Short National Address (SPL)'}
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground">
+                      {isRTL ? 'أدخل الرمز (4 أحرف + 4 أرقام مثال: RRRD2402) لجلب الحقول بالعربية والإنجليزية تلقائياً.' : 'Enter code (4 letters + 4 digits, e.g. RRRD2402) to autofill AR + EN fields.'}
+                    </p>
+                    <div className="flex gap-2">
+                      <Input value={shortAddress} onChange={e => setShortAddress(e.target.value.toUpperCase())}
+                        placeholder="RRRD2402" dir="ltr" className="h-9 text-xs tech-content" maxLength={8} />
+                      <Button type="button" size="sm" onClick={handleShortAddressLookup}
+                        disabled={splBusy || shortAddress.trim().length < 8} className="gap-1">
+                        {splBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
+                        {isRTL ? 'جلب' : 'Fetch'}
+                      </Button>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs">{isRTL ? 'الدولة' : 'Country'}</Label>
@@ -1166,6 +1239,14 @@ const AdminBusinesses = () => {
                       <Label className="text-xs">{isRTL ? 'الحي' : 'District'}</Label>
                       <Input value={editForm.district} onChange={e => setField('district', e.target.value)} className="mt-1" />
                     </div>
+                    <div>
+                      <Label className="text-xs">{isRTL ? 'المنطقة (EN)' : 'Region (EN)'}</Label>
+                      <Input value={editForm.region_en || ''} onChange={e => setField('region_en', e.target.value)} dir="ltr" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">{isRTL ? 'الحي (EN)' : 'District (EN)'}</Label>
+                      <Input value={editForm.district_en || ''} onChange={e => setField('district_en', e.target.value)} dir="ltr" className="mt-1" />
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -1176,6 +1257,10 @@ const AdminBusinesses = () => {
                       <Label className="text-xs">{isRTL ? 'رقم المبنى' : 'Building Number'}</Label>
                       <Input value={editForm.building_number} onChange={e => setField('building_number', e.target.value)} dir="ltr" className="mt-1" />
                     </div>
+                    <div className="col-span-2">
+                      <Label className="text-xs">{isRTL ? 'اسم الشارع (EN)' : 'Street Name (EN)'}</Label>
+                      <Input value={editForm.street_name_en || ''} onChange={e => setField('street_name_en', e.target.value)} dir="ltr" className="mt-1" />
+                    </div>
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
@@ -1184,6 +1269,10 @@ const AdminBusinesses = () => {
                         onTranslated={() => {}} onImproved={(v) => setField('address', v)} />
                     </div>
                     <Textarea value={editForm.address} onChange={e => setField('address', e.target.value)} rows={2} />
+                  </div>
+                  <div>
+                    <Label className="text-xs flex items-center gap-1"><MapPin className="w-3 h-3" /> {isRTL ? 'العنوان الكامل (EN)' : 'Full Address (EN)'}</Label>
+                    <Textarea value={editForm.address_en || ''} onChange={e => setField('address_en', e.target.value)} rows={2} dir="ltr" className="mt-1" />
                   </div>
                 </TabsContent>
 
