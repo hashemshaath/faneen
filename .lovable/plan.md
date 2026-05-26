@@ -1,70 +1,97 @@
-# Fix: anonymous visitors can read business/branch PII
 
-The Lovable security scanner flagged two ERROR-level findings:
+# Microservice مركزي للعناوين + إعداد SPL تلقائي في كل البيئات
 
-- `businesses` table publicly exposes `email`, `phone`, `mobile`, `customer_service_phone`, `account_manager_email`, `account_manager_phone` to anonymous visitors.
-- `business_branches` table publicly exposes `email`, `phone`, `mobile`, `customer_service_phone`, `contact_person` to anonymous visitors.
+## الهدف
+توحيد بيانات العنوان للأشخاص (`profiles`) والشركات (`businesses`) والفروع (`business_branches`) داخل جدول واحد `public.addresses`، مع خدمة قراءة/كتابة موحّدة، وضمان أن خدمة العنوان الوطني `national-address-lookup` تعمل تلقائياً في **التطوير + المعاينة + الإنتاج** دون تدخل يدوي.
 
-Masked public views (`businesses_public`, `business_branches_public`) already exist and exclude these columns — but the base-table RLS policy still lets `anon` SELECT every column.
+## ما هو منجز بالفعل (نُبقي عليه)
+- Edge function `national-address-lookup` تقرأ `SPL_API_KEY` من env ثم من `platform_settings` كاحتياط (موجود). 
+- استخدام مباشر في `DashboardProfile` و `DashboardBusinessEdit` و `AdminBusinesses` (أنجزناه قبل قليل). 
+- اختبارات عزل الكاش وفحص query keys (انتهت في هذه الجولة).
 
-You chose **"Require sign-in to view contact info"** — keep listings visible to everyone, hide PII columns until the user signs in.
+## التغييرات
 
-## Approach
+### 1) جدول `public.addresses` الموحّد (Migration جديدة)
 
-Combine two layers so the fix is enforced even if a query slips through:
+```text
+addresses
+├── id                uuid PK
+├── owner_type        text  CHECK in ('profile','business','branch')
+├── owner_id          uuid  -- يشير لـ profiles.user_id / businesses.id / business_branches.id
+├── label             text  -- مثل: 'main','billing','site'
+├── is_primary        boolean default false
+├── short_address     text  -- رمز SPL (RRRD2402)
+├── country_id, city_id, region, district, street_name, building_number, additional_number, post_code, address, latitude, longitude
+├── region_en, district_en, street_name_en, address_en   -- ثنائي اللغة كامل
+├── source            text  -- 'spl' | 'map_pick' | 'manual'
+├── verified_at       timestamptz
+├── created_by        uuid
+└── created_at / updated_at
+```
 
-1. **Column-level REVOKE from `anon`** on the PII columns of both base tables. Postgres rejects any `SELECT email, ...` from an anonymous client, regardless of RLS.
-2. **Tighten base-table SELECT policies** so anonymous reads still work for non-PII columns (directory browsing keeps working) and authenticated users keep full access via the existing owner/staff/admin clauses.
-3. **Keep `businesses_public` / `business_branches_public` views** as the canonical anon entry point. Switch them to `security_invoker = false` so anon reads through the view continue to work even when the base column is revoked.
+- **Index**: `(owner_type, owner_id)`, partial unique `(owner_type, owner_id) WHERE is_primary`.
+- **RLS**: المالك (حسب `owner_type/owner_id`) + admin + business_staff للفروع/الشركات.
+- **Trigger**: `addresses_set_primary` يضمن primary واحد فقط لكل مالك.
 
-## Files to change
+### 2) Microservice في الواجهة الأمامية
 
-### Migration (new)
+`src/modules/addresses/` (جديد):
 
-- `supabase/migrations/<ts>_hide_business_pii_from_anon.sql`
-  - `REVOKE SELECT (email, phone, mobile, customer_service_phone, account_manager_email, account_manager_phone) ON public.businesses FROM anon;`
-  - `REVOKE SELECT (email, phone, mobile, customer_service_phone, contact_person) ON public.business_branches FROM anon;`
-  - `ALTER VIEW public.businesses_public SET (security_invoker = false);`
-  - `ALTER VIEW public.business_branches_public SET (security_invoker = false);`
-  - Add comment on views documenting they are the only anon-facing read surface.
+```text
+modules/addresses/
+├── index.ts
+├── types.ts              # AddressRow / AddressInput / OwnerRef
+└── services/
+    ├── listAddresses.ts          # by ownerType + ownerId
+    ├── getPrimaryAddress.ts
+    ├── upsertAddress.ts          # insert or update by id
+    ├── setPrimaryAddress.ts
+    ├── deleteAddress.ts
+    └── resolveFromSpl.ts         # استدعاء national-address-lookup + بناء AddressInput
+```
 
-### Client code
+`resolveFromSpl.ts` يصبح **النقطة الوحيدة** لاستدعاء `national-address-lookup` — كل الصفحات (Profile/BusinessEdit/AdminBusinesses) تستهلك هذا الـwrapper بدل تكرار `supabase.functions.invoke`.
 
-The anon-facing services currently `select('*')` or select fields including PII from the base tables. Update them to either:
-- use `*_public` views, **or**
-- explicitly list only non-PII columns.
+### 3) SPL تلقائي في كل البيئات (zero-touch)
 
-Files to audit and adjust:
+- التحقق من وجود `SPL_API_KEY` كـ **secret على مشروع Supabase** (`secrets--fetch_secrets` ثم `add_secret` إن لزم — السرّ ينطبق تلقائياً على dev/preview/prod لأن edge functions تعمل بنفس النشر).
+- لوحة الأدمن `AdminApiSettings`: إضافة بطاقة حالة `SPL_API_KEY` (موجود مفتاح env / مفتاح في `platform_settings`؟ تاريخ آخر استعلام ناجح؟) + زر "اختبار الاتصال" يستدعي شفرة قصيرة (`RRRD2402`) ويعرض النتيجة. هذا يجعل التحقق من الإعداد ذاتيًا في كل بيئة.
+- توثيق صغير في `docs/national-address-service.md`: كيف يُضاف المفتاح مرة واحدة، وكيف تتأكد بأنه يعمل.
 
-- `src/modules/businesses/services/getPublicBusinessByUsername.ts` — drop PII fields from the select list (logged-in viewers fall back to a second authenticated call).
-- `src/modules/businesses/services/listPublicBusinessesForSector.ts` — restrict select list to non-PII fields.
-- `src/modules/businesses/services/countActiveBusinesses.ts` — already only selects `id`, no change needed; verify.
-- `src/modules/catalog/services/branches/reads.ts` — restrict select list to non-PII fields for the anon path; keep full select for authenticated calls.
-- `src/pages/Compare.tsx` — verify it doesn't read PII columns as anon.
+### 4) ترحيل البيانات (دفعة واحدة، non-destructive)
 
-For each call site, when the user is authenticated the client may continue to request the full row (RLS still allows it). The simplest pattern: split each "public read" service into a `*Public` (non-PII) and `*Authenticated` (full) variant, or branch internally on `supabase.auth.getSession()`.
+داخل نفس الـmigration:
+- نسخ صفوف العنوان الحالية من `profiles` / `businesses` / `business_branches` إلى `addresses` كـ `is_primary=true`.
+- **لا تُحذف الأعمدة الحالية في هذه المرحلة** — تبقى للقراءة الخلفية حتى نتأكد عبر الإنتاج. الكتابة الجديدة تذهب لـ `addresses` + تُحدِّث الأعمدة القديمة (dual-write) عبر الـwrapper `upsertAddress` كمرحلة انتقالية.
 
-### Regression test
+### 5) ربط الواجهة (الحد الأدنى لهذه الجولة)
 
-- Extend `src/__tests__/security/rls-anon.regression.test.ts` with assertions:
-  - anon `SELECT email FROM businesses` → permission denied
-  - anon `SELECT phone FROM business_branches` → permission denied
-  - anon SELECT through `businesses_public` view still succeeds
+- `DashboardProfile`، `DashboardBusinessEdit`، `AdminBusinesses`: استبدال استدعاء SPL المباشر بـ `resolveFromSpl` + استخدام `upsertAddress` بعد الحفظ (dual-write). الـUI لا يتغيّر بصرياً.
 
-## What stays the same
+### 6) اختبارات
 
-- Authenticated users (any signed-in account) still read the full base table — owner/staff/admin clauses unchanged.
-- Public business profile pages keep working for anonymous visitors; only the contact block needs a "Sign in to view contact info" state.
-- The three WARN findings (newsletter, provider_landing_settings, realtime bookings) are already correctly mitigated — they'll be marked ignored and the rationale logged to the security memory.
+- `addressesMicroservice.test.ts`: list/upsert/setPrimary/delete (مع Supabase mock).
+- `addressesIsolationAudit.test.ts`: يفحص أن لا يوجد `supabase.functions.invoke('national-address-lookup'` خارج `src/modules/addresses/` (يجعل الخدمة هي القناة الوحيدة).
+- `addressesRlsRegression.test.ts`: anon لا يقرأ/يكتب؛ owner يقرأ/يكتب صفوفه فقط.
 
-## Out of scope
+## الملفات
 
-- No changes to membership pricing, payment flows, or any business logic.
-- No changes to admin or owner dashboards.
-- No edits to `src/integrations/supabase/{client,types}.ts`.
+- `supabase/migrations/<ts>_addresses_central_table.sql` (جديد)
+- `src/modules/addresses/{index,types}.ts` (جديد)
+- `src/modules/addresses/services/*.ts` (6 ملفات جديدة)
+- `src/pages/dashboard/DashboardProfile.tsx` (تحديث استدعاءات SPL/الحفظ)
+- `src/pages/dashboard/DashboardBusinessEdit.tsx` (نفس)
+- `src/pages/admin/AdminBusinesses.tsx` (نفس)
+- `src/pages/admin/AdminApiSettings.tsx` (بطاقة حالة SPL + زر اختبار)
+- `docs/national-address-service.md` (جديد)
+- 3 ملفات اختبارات
 
-## Technical notes
+## خارج النطاق
+- حذف الأعمدة القديمة (`businesses.address` ...) — مرحلة لاحقة بعد تشغيل dual-write لفترة.
+- تغيير شكل صفحات العرض العامة.
+- تعديل خدمات أخرى (booking/contracts) لاستخدام الجدول الجديد — تتم تدريجياً.
 
-- Postgres column-level grants are enforced before RLS, so revoking from `anon` is sufficient even if a future RLS policy regression exposes the row.
-- `security_invoker = false` on the public views means they execute with the view owner's privileges — safe because the views already hard-exclude PII columns in their definition.
-- `service_role` is unaffected by `REVOKE … FROM anon`, so edge functions continue to work.
+## ملاحظات تقنية
+- `owner_id` بدون FK مركّب لأنه polymorphic؛ يُضبط بـtrigger يتحقق من وجود الصف في الجدول الصحيح حسب `owner_type`.
+- `set_primary` trigger يستخدم `BEFORE INSERT/UPDATE` لإلغاء primary السابق ضمن نفس `(owner_type, owner_id)` ذرّياً.
+- SPL: المفتاح يُحفظ كـ secret على Supabase → يصل لكل edge function deployment تلقائياً في كل البيئات (لا حاجة لمتغيرات بيئة منفصلة في الواجهة).
