@@ -713,7 +713,20 @@ export function ContractImportPanel({
               <ChecklistItem ok={checklist.titleOk} required label={isRTL ? 'عنوان العقد (مطلوب)' : 'Contract title (required)'} />
               <ChecklistItem ok={checklist.amountOk} label={isRTL ? 'القيمة الإجمالية' : 'Total amount'} />
               <ChecklistItem ok={checklist.clientOk} label={isRTL ? 'العميل (يمكن لاحقاً)' : 'Client (optional)'} />
+              {isAdmin && (
+                <ChecklistItem ok={checklist.providerOk} required label={isRTL ? 'الطرف الأول — المزوّد (مطلوب)' : 'First party — Provider (required)'} />
+              )}
             </ul>
+            {(adminSelfAsParty || sameParties) && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-2 flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+                <p className="text-[11px] text-destructive leading-relaxed">
+                  {adminSelfAsParty
+                    ? (isRTL ? 'لا يمكن أن يكون الأدمن أحد أطراف العقد.' : 'Admin cannot be a contract party.')
+                    : (isRTL ? 'الطرف الأول والثاني لا يمكن أن يكونا نفس الشخص.' : 'First and second party must be different.')}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* CTAs */}
