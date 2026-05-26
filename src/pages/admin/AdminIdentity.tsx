@@ -69,7 +69,7 @@ interface BizRow {
   created_at: string;
 }
 
-type View = 'overview' | 'all' | 'users' | 'businesses' | 'staff' | 'disabled';
+type View = 'overview' | 'all' | 'users' | 'businesses' | 'staff' | 'disabled' | 'analytics';
 
 /* ─── KPI card ─── */
 const Kpi: React.FC<{
