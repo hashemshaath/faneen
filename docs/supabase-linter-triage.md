@@ -4,6 +4,7 @@ Snapshot history:
 - STABILITY-HARDENING-1: 421 issues.
 - SUPABASE-LINTER-HARDENING-1: **418 issues** (−3 ERROR fixes; see below).
 - SUPABASE-LINTER-HARDENING-2: **416 issues** (−2 `public.*` search_path pinned).
+- SUPABASE-LINTER-HARDENING-4: **415 issues** (−1 0008 sealed-table policy added).
 
 ## Triage policy
 
@@ -15,7 +16,7 @@ dedicated security-hardening track to avoid destabilizing launch-ready flows.
 
 | Lint code | Level | Count (approx.) | Class | Action |
 |-----------|-------|------------------|-------|--------|
-| 0008 RLS Enabled No Policy | INFO | 1 | Inactive/staging table | Defer (P3) |
+| 0008 RLS Enabled No Policy | INFO | 0 | Fixed in SUPABASE-LINTER-HARDENING-4 (explicit deny-all on `auth_temporary_login_codes`) | Resolved |
 | 0010 Security Definer View | ERROR | 0 | Fixed in SUPABASE-LINTER-HARDENING-1 | Resolved |
 | 0011 Function Search Path Mutable | WARN | ~150 in reserved schemas, 0 in `public` | All remaining are in `extensions`, `pgmq`, `storage`, `realtime`, `net`, `cron`, `auth`, `vault`, `graphql_public` — owned by Supabase, must not be modified per project rules | Accepted |
 | 0024 RLS Policy Always True (write) | WARN | 4 | Verified: anon telemetry inserts only (badge_clicks/impressions/conversions, provider_landing_metrics) | Accepted |
@@ -57,6 +58,16 @@ identical to before for every role.
 All other 0011 findings live in Supabase-reserved schemas. Per project rules,
 those schemas must not be modified by the app. They are tracked as **Accepted
 (out of scope)**.
+
+## SUPABASE-LINTER-HARDENING-4 changes
+
+| Object | Action | Reason it is safe |
+|--------|--------|-------------------|
+| `public.auth_temporary_login_codes` | Added `CREATE POLICY … FOR ALL TO public USING (false) WITH CHECK (false)` | Table stores hashed one-time login codes; original migration already `REVOKE ALL … FROM PUBLIC, anon, authenticated`. All access goes through SECURITY DEFINER RPCs which bypass RLS as the function owner. The new policy makes the sealed intent explicit and clears linter 0008 without changing behavior. |
+
+No grants, columns, or RPC bodies were touched. PostgREST cannot reach the
+table (no grant); a hypothetical privileged-role direct query now hits an
+explicit `false` predicate instead of the implicit RLS deny.
 
 ## What is NOT acceptable
 
