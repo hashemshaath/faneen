@@ -10,6 +10,24 @@ vi.mock('@/i18n/LanguageContext', () => ({
   useLanguage: () => ({ isRTL: false }),
 }));
 
+// Render DropdownMenu primitives inline so portal/pointer behavior
+// doesn't interfere with jsdom click tests.
+vi.mock('@/components/ui/dropdown-menu', () => {
+  const Pass = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
+  const Trigger = ({ children }: { children?: React.ReactNode; asChild?: boolean }) => <>{children}</>;
+  const Item = ({ children, onClick, className, ...rest }: React.HTMLAttributes<HTMLDivElement>) => (
+    <div onClick={onClick} className={className} {...rest}>{children}</div>
+  );
+  return {
+    DropdownMenu: Pass,
+    DropdownMenuTrigger: Trigger,
+    DropdownMenuContent: Pass,
+    DropdownMenuItem: Item,
+    DropdownMenuLabel: Pass,
+    DropdownMenuSeparator: () => <hr />,
+  };
+});
+
 import { ActiveLocationSwitcher } from '@/components/dashboard/ActiveLocationSwitcher';
 
 const baseLoc = (id: string, name: string, is_main = false) => ({
@@ -57,9 +75,7 @@ describe('ActiveLocationSwitcher', () => {
       setActiveLocationId, clearActiveLocationId,
     });
     render(<ActiveLocationSwitcher />);
-    const trigger = screen.getByTestId('active-location-trigger');
-    expect(trigger).toHaveTextContent('All locations');
-    fireEvent.click(trigger);
+    expect(screen.getByTestId('active-location-trigger')).toHaveTextContent('All locations');
     expect(screen.getByTestId('active-location-option-all')).toBeInTheDocument();
     expect(screen.getByTestId('active-location-option-l1')).toHaveTextContent('Main');
     expect(screen.getByTestId('active-location-option-l2')).toHaveTextContent('Branch B');
@@ -73,7 +89,6 @@ describe('ActiveLocationSwitcher', () => {
       setActiveLocationId, clearActiveLocationId: vi.fn(),
     });
     render(<ActiveLocationSwitcher />);
-    fireEvent.click(screen.getByTestId('active-location-trigger'));
     fireEvent.click(screen.getByTestId('active-location-option-l2'));
     expect(setActiveLocationId).toHaveBeenCalledWith('l2');
   });
@@ -86,7 +101,6 @@ describe('ActiveLocationSwitcher', () => {
       setActiveLocationId: vi.fn(), clearActiveLocationId,
     });
     render(<ActiveLocationSwitcher />);
-    fireEvent.click(screen.getByTestId('active-location-trigger'));
     fireEvent.click(screen.getByTestId('active-location-option-all'));
     expect(clearActiveLocationId).toHaveBeenCalled();
   });
@@ -98,7 +112,6 @@ describe('ActiveLocationSwitcher', () => {
       setActiveLocationId: vi.fn(), clearActiveLocationId: vi.fn(),
     });
     render(<ActiveLocationSwitcher />);
-    fireEvent.click(screen.getByTestId('active-location-trigger'));
     expect(screen.queryByTestId('active-location-option-l-ghost')).toBeNull();
   });
 });
