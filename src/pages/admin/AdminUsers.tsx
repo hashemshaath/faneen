@@ -43,6 +43,7 @@ import {
 } from 'recharts';
 import type { Tables } from '@/integrations/supabase/types';
 import { maskEmail, maskPhone } from '@/lib/masking';
+import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminDeleteUser, logAdminActivity } from '@/modules/identity';
 import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
 import type { NormalizedRpcError } from '@/services/rpc';
@@ -315,7 +316,10 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
   const compact = density === 'compact';
   // Super-admin only sees raw PII; other admins see masked values they can't copy.
   const canSeePII = isSuperAdmin;
-  const displayedEmail = profile.email ? (canSeePII ? profile.email : maskEmail(profile.email)) : null;
+  // Never render synthetic phone-login emails (e.g. 9665...@phone.qitaat.local)
+  // as if they were official user emails — they are internal auth identifiers only.
+  const officialEmail = profile.email && !isSyntheticPhoneEmail(profile.email) ? profile.email : null;
+  const displayedEmail = officialEmail ? (canSeePII ? officialEmail : maskEmail(officialEmail)) : null;
   const displayedPhone = profile.phone ? (canSeePII ? profile.phone : maskPhone(profile.phone)) : null;
 
   const handleCopy = useCallback((value: string, label: string) => {
@@ -366,8 +370,8 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
             </div>
             {!compact && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-              {displayedEmail && (
-                <button onClick={() => handleCopy(profile.email!, isRTL ? 'البريد' : 'Email')}
+              {displayedEmail && officialEmail && (
+                <button onClick={() => handleCopy(officialEmail, isRTL ? 'البريد' : 'Email')}
                   className={`flex items-center gap-1 text-[11px] truncate max-w-[200px] transition-colors group/cp ${canSeePII ? 'text-muted-foreground hover:text-accent' : 'text-muted-foreground/70 cursor-not-allowed'}`}
                   title={canSeePII ? (isRTL ? 'نسخ البريد' : 'Copy email') : (isRTL ? 'متاح فقط لمدير النظام' : 'Super Admin only')}>
                   <Mail className="w-3 h-3 shrink-0" />
@@ -952,7 +956,10 @@ const AdminUsers = () => {
       // PII fields are only prefilled for Super Admin. Non-super admins see empty
       // placeholders so masked values are never leaked through the edit form.
       phone: isSuperAdmin ? (profile.phone || '') : '',
-      email: isSuperAdmin ? (profile.email || '') : '',
+      // Never pre-fill an edit field with a synthetic phone-login email.
+      email: isSuperAdmin && profile.email && !isSyntheticPhoneEmail(profile.email)
+        ? profile.email
+        : '',
     });
   }, [isSuperAdmin]);
 
@@ -968,7 +975,14 @@ const AdminUsers = () => {
     // Only Super Admin may write PII fields; for others we keep existing values.
     if (isSuperAdmin) {
       data.phone = editForm.phone.trim() || '';
-      data.email = editForm.email.trim() || null;
+      const nextEmail = editForm.email.trim();
+      if (nextEmail && isSyntheticPhoneEmail(nextEmail)) {
+        toast.error(isRTL
+          ? 'البريد الرسمي لا يمكن أن ينتهي بـ @phone.qitaat.local — هذا معرّف داخلي لتسجيل الدخول بالهاتف.'
+          : 'Official email cannot end with @phone.qitaat.local — that is an internal phone-login identifier.');
+        return;
+      }
+      data.email = nextEmail || null;
     }
     updateProfileMutation.mutate({ profileId: activePanel.profile.id, data });
   };
@@ -980,7 +994,7 @@ const AdminUsers = () => {
       const bizList = businessMap.get(p.user_id) || [];
       const matchesSearch = !deferredSearch
         || p.full_name?.toLowerCase().includes(lower)
-        || p.email?.toLowerCase().includes(lower)
+        || (p.email && !isSyntheticPhoneEmail(p.email) ? p.email.toLowerCase().includes(lower) : false)
         || p.phone?.includes(deferredSearch)
         || p.ref_id?.toLowerCase().includes(lower)
         || bizList.some(b => b.ref_id?.toLowerCase().includes(lower) || b.name_ar?.toLowerCase().includes(lower) || b.username?.toLowerCase().includes(lower));
@@ -1093,7 +1107,8 @@ const AdminUsers = () => {
       const bizRefs = bizList.map(b => b.ref_id).join(' | ');
       const bizNames = bizList.map(b => b.name_ar).join(' | ');
       const created = p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : '';
-      return [p.ref_id, p.full_name || '', p.email || '', p.phone || '', p.account_type, bizRefs, bizNames, p.membership_tier, roles, p.is_banned ? 'Yes' : 'No', created]
+      const emailCell = p.email && !isSyntheticPhoneEmail(p.email) ? p.email : '';
+      return [p.ref_id, p.full_name || '', emailCell, p.phone || '', p.account_type, bizRefs, bizNames, p.membership_tier, roles, p.is_banned ? 'Yes' : 'No', created]
         .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
     });
     const csv = '\uFEFF' + ['Ref,Name,Email,Phone,Type,BizRefs,BizNames,Tier,Roles,Banned,Created', ...rows].join('\n');
@@ -1265,7 +1280,7 @@ const AdminUsers = () => {
                   <div className="relative flex-1">
                     <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
                     <Input ref={searchInputRef} value={searchTerm} onChange={e => handleSearchChange(e.target.value)}
-                      placeholder={isRTL ? 'بحث: اسم، بريد، هاتف، معرّف، أو نشاط تجاري...' : 'Search name, email, phone, ID, or business...'}
+                     placeholder={isRTL ? 'بحث بالاسم، البريد، الجوال، أو رقم USR/ENT' : 'Search by name, email, phone, USR or ENT'}
                       className="ps-10 pe-16 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background" dir="auto" />
                     <kbd className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 items-center gap-0.5 px-1.5 py-0.5 rounded-md border border-border/40 bg-background/80 text-[10px] text-muted-foreground font-mono pointer-events-none"
                       style={{ [isRTL ? 'left' : 'right']: '10px' }}>
@@ -1368,7 +1383,8 @@ const AdminUsers = () => {
                       const rows = selectedProfiles.map(p => {
                         const roles = (roleMap.get(p.user_id) || []).map(r => r.role).join(', ') || 'none';
                         const created = p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : '';
-                        return [p.ref_id, p.full_name || '', p.email || '', p.phone || '', p.account_type, p.membership_tier, roles, p.is_banned ? 'Yes' : 'No', created]
+                        const emailCell = p.email && !isSyntheticPhoneEmail(p.email) ? p.email : '';
+                        return [p.ref_id, p.full_name || '', emailCell, p.phone || '', p.account_type, p.membership_tier, roles, p.is_banned ? 'Yes' : 'No', created]
                           .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
                       });
                       const csv = '\uFEFF' + ['Ref,Name,Email,Phone,Type,Tier,Roles,Banned,Created', ...rows].join('\n');

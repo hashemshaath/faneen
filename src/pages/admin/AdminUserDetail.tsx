@@ -17,11 +17,12 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { getProfileByUserId } from '@/modules/users';
 import { listUserRolesFor } from '@/modules/identity';
-import { listAdminBusinesses } from '@/modules/businesses';
+import { listUserEntityLinks, type UserEntityLink } from '@/modules/admin';
 import { getBusinessDisplayReference } from '@/modules/businesses/services/getBusinessDisplayReference';
 import { LegacyReferenceHint } from '@/components/reference/LegacyReferenceHint';
 import { listContractsForUserParticipant } from '@/modules/contracts';
 import { supabase } from '@/integrations/supabase/client';
+import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Profile = Tables<'profiles'>;
@@ -39,11 +40,12 @@ const accountTypeLbl: Record<string, { ar: string; en: string }> = {
   company:    { ar: 'شركة', en: 'Company' },
 };
 
-interface BizRow {
-  id: string; ref_id: string | null; legacy_ref_id: string | null; name_ar: string | null; name_en: string | null;
-  username: string | null; is_verified: boolean | null; is_active: boolean | null;
-  membership_tier: string | null; approval_status: string | null;
-}
+const entityRoleLabel: Record<string, { ar: string; en: string; cls: string }> = {
+  owner:   { ar: 'مالك',  en: 'Owner',   cls: 'bg-success/10 text-success border-success/30' },
+  manager: { ar: 'مدير',  en: 'Manager', cls: 'bg-info/10 text-info border-info/30' },
+  editor:  { ar: 'محرر',  en: 'Editor',  cls: 'bg-warning/10 text-warning border-warning/30' },
+  viewer:  { ar: 'مشاهد', en: 'Viewer',  cls: 'bg-muted text-muted-foreground border-border' },
+};
 
 const AdminUserDetail: React.FC = () => {
   const { id: userId } = useParams<{ id: string }>();
@@ -69,16 +71,13 @@ const AdminUserDetail: React.FC = () => {
     },
   });
 
-  const { data: businesses = [] } = useQuery<BizRow[]>({
-    queryKey: ['admin-user-detail-bizs', userId],
+  const { data: entityLinks = [] } = useQuery<UserEntityLink[]>({
+    queryKey: ['admin-user-detail-entity-links', userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await listAdminBusinesses<BizRow>({
-        select: 'id, ref_id, legacy_ref_id, name_ar, name_en, username, is_verified, is_active, membership_tier, approval_status',
-        filters: [{ column: 'user_id', op: 'eq', value: userId! }],
-      });
+      const { data, error } = await listUserEntityLinks(userId!);
       if (error) throw error;
-      return data ?? [];
+      return data;
     },
   });
 
@@ -116,11 +115,11 @@ const AdminUserDetail: React.FC = () => {
   });
 
   const stats = useMemo(() => ([
-    { label: isRTL ? 'المنشآت' : 'Businesses',     val: businesses.length, icon: Building2, color: 'text-success bg-success/10' },
+    { label: isRTL ? 'المنشآت المرتبطة' : 'Linked entities', val: entityLinks.length, icon: Building2, color: 'text-success bg-success/10' },
     { label: isRTL ? 'العقود' : 'Contracts',       val: contracts.length,  icon: FileText,  color: 'text-info bg-info/10' },
     { label: isRTL ? 'الطلبات' : 'Lead Requests',  val: leadRequests.length, icon: Inbox,   color: 'text-warning bg-warning/10' },
     { label: isRTL ? 'الصلاحيات' : 'Roles',        val: roles.length,      icon: Shield,    color: 'text-accent bg-accent/10' },
-  ]), [businesses, contracts, leadRequests, roles, isRTL]);
+  ]), [entityLinks, contracts, leadRequests, roles, isRTL]);
 
   if (isLoading) {
     return (
@@ -147,6 +146,7 @@ const AdminUserDetail: React.FC = () => {
   }
 
   const acct = accountTypeLbl[profile.account_type] ?? accountTypeLbl.individual;
+  const officialEmail = profile.email && !isSyntheticPhoneEmail(profile.email) ? profile.email : null;
 
   return (
     <DashboardLayout>
@@ -200,7 +200,7 @@ const AdminUserDetail: React.FC = () => {
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><Users className="w-4 h-4 text-primary" />{isRTL ? 'بيانات الحساب' : 'Account info'}</CardTitle></CardHeader>
           <CardContent>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-              <div><p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Mail className="w-3 h-3" />{isRTL ? 'البريد' : 'Email'}</p><p className="font-medium break-all">{profile.email || '—'}</p></div>
+              <div><p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Mail className="w-3 h-3" />{isRTL ? 'البريد الرسمي' : 'Official email'}</p><p className="font-medium break-all">{officialEmail || (isRTL ? 'غير محدد' : '—')}</p></div>
               <div><p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Phone className="w-3 h-3" />{isRTL ? 'الهاتف' : 'Phone'}</p><p className="font-medium tech-content">{profile.phone || '—'}</p></div>
               <div><p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Calendar className="w-3 h-3" />{isRTL ? 'تاريخ التسجيل' : 'Joined'}</p><p className="font-medium tech-content">{new Date(profile.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en')}</p></div>
               <div><p className="text-xs text-muted-foreground mb-1">{isRTL ? 'مكتمل التسجيل' : 'Onboarded'}</p><p className="font-medium">{profile.is_onboarded ? '✓' : '—'}</p></div>
@@ -219,30 +219,47 @@ const AdminUserDetail: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Businesses */}
+        {/* Linked entities */}
         <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Building2 className="w-4 h-4 text-primary" />{isRTL ? 'المنشآت المرتبطة' : 'Linked businesses'} ({businesses.length})</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Building2 className="w-4 h-4 text-primary" />{isRTL ? 'المنشآت المرتبطة' : 'Linked entities'} ({entityLinks.length})</CardTitle></CardHeader>
           <CardContent>
-            {businesses.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد منشآت' : 'No linked businesses.'}</p>
+            {entityLinks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد منشآت مرتبطة بهذا المستخدم.' : 'This user is not linked to any entity.'}</p>
             ) : (
               <div className="space-y-2">
-                {businesses.map((b) => {
-                  const ref = getBusinessDisplayReference(b);
+                {entityLinks.map((b) => {
+                  const ref = getBusinessDisplayReference({
+                    ref_id: b.business_ref_id,
+                    legacy_ref_id: b.business_legacy_ref_id,
+                  });
+                  const roleCfg = entityRoleLabel[b.role] ?? entityRoleLabel.viewer;
                   return (
-                  <div key={b.id} className="flex items-center gap-3 rounded-xl border border-border/30 p-3 hover-lift">
+                  <div key={b.business_id} className="flex items-center gap-3 rounded-xl border border-border/30 p-3 hover-lift">
                     <Building2 className="w-4 h-4 text-success shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold truncate">{isRTL ? b.name_ar : (b.name_en || b.name_ar)}</p>
-                      <p className="text-[11px] text-muted-foreground tech-content">{ref.primary ?? '—'} • {b.username} • {b.membership_tier} • {b.approval_status}</p>
+                      <p className="font-semibold truncate">{isRTL ? (b.business_name_ar || b.business_name_en || '—') : (b.business_name_en || b.business_name_ar || '—')}</p>
+                      <p className="text-[11px] text-muted-foreground tech-content">
+                        {ref.primary ?? '—'}
+                        {b.business_username ? ` • ${b.business_username}` : ''}
+                        {b.membership_tier ? ` • ${b.membership_tier}` : ''}
+                        {b.approval_status ? ` • ${b.approval_status}` : ''}
+                        {b.staff_ref_id ? ` • ${b.staff_ref_id}` : ''}
+                      </p>
                       {ref.secondary && (
                         <LegacyReferenceHint legacyRefId={ref.secondary} isRTL={isRTL} className="block mt-0.5" />
                       )}
                     </div>
+                    <Badge variant="outline" className={`text-[10px] ${roleCfg.cls}`}>{isRTL ? roleCfg.ar : roleCfg.en}</Badge>
+                    {b.is_primary_manager && (
+                      <Badge variant="outline" className="text-[10px] border-accent/40 text-accent">{isRTL ? 'مدير رئيسي' : 'Primary'}</Badge>
+                    )}
+                    {!b.is_active && (
+                      <Badge variant="outline" className="text-[10px] border-dashed text-muted-foreground">{isRTL ? 'غير نشط' : 'inactive'}</Badge>
+                    )}
                     {b.is_verified && <Badge variant="outline" className="text-[10px] border-success/40 text-success">✓ {isRTL ? 'موثّق' : 'Verified'}</Badge>}
-                    {b.username && (
+                    {b.business_username && (
                       <Button asChild size="sm" variant="ghost" className="rounded-xl">
-                        <Link to={`/${b.username}`} target="_blank" rel="noreferrer"><ExternalLink className="w-3.5 h-3.5" /></Link>
+                        <Link to={`/${b.business_username}`} target="_blank" rel="noreferrer"><ExternalLink className="w-3.5 h-3.5" /></Link>
                       </Button>
                     )}
                   </div>
@@ -250,6 +267,11 @@ const AdminUserDetail: React.FC = () => {
                 })}
               </div>
             )}
+            <p className="text-[11px] text-muted-foreground mt-3">
+              {isRTL
+                ? 'الصلاحيات التفصيلية ستظهر بعد تفعيل نظام الصلاحيات المتقدم.'
+                : 'Detailed permissions will appear after the advanced permissions system is enabled.'}
+            </p>
           </CardContent>
         </Card>
 
