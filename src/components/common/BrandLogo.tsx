@@ -68,7 +68,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   // so the lock-up (mark + wordmark) appears in every surface that uses
   // BrandLogo: public navbar, dashboard/admin topbars, auth, footer, etc.
   const showMarkAlongside = variant === 'full';
-  const markHeight = Math.round(height * 0.95);
+  const markHeight = Math.round(height * 0.76);
   const markWidth = markHeight; // mark aspect ratio ~ 1:1
   const markImgProps = {
     width: markWidth,
