@@ -147,16 +147,30 @@ const DashboardProfile: React.FC = () => {
   // Dirty + completeness
   const dirty = useMemo(() => {
     if (!profile) return false;
-    return (
-      form.full_name !== (profile.full_name ?? '') ||
-      form.username !== (profile.username ?? '') ||
-      form.email !== (profile.email ?? '') ||
-      form.phone !== (profile.phone ?? '') ||
-      form.avatar_url !== (profile.avatar_url ?? '') ||
-      form.preferred_language !== ((profile.preferred_language as 'ar' | 'en') ?? 'ar') ||
-      form.country_id !== (profile.country_id ?? null) ||
-      form.city_id !== (profile.city_id ?? null)
-    );
+    const cmp: Array<[unknown, unknown]> = [
+      [form.full_name, profile.full_name ?? ''],
+      [form.full_name_ar, profile.full_name_ar ?? ''],
+      [form.full_name_en, profile.full_name_en ?? ''],
+      [form.username, profile.username ?? ''],
+      [form.email, profile.email ?? ''],
+      [form.phone, profile.phone ?? ''],
+      [form.avatar_url, profile.avatar_url ?? ''],
+      [form.preferred_language, (profile.preferred_language as 'ar' | 'en') ?? 'ar'],
+      [form.country_id, profile.country_id ?? null],
+      [form.city_id, profile.city_id ?? null],
+      [form.national_id, profile.national_id ?? ''],
+      [form.national_id_type, (profile.national_id_type ?? '')],
+      [form.vat_number, profile.vat_number ?? ''],
+      [form.short_national_address, profile.short_national_address ?? ''],
+      [form.region_name, profile.region_name ?? ''],
+      [form.district, profile.district ?? ''],
+      [form.street, profile.street ?? ''],
+      [form.building_number, profile.building_number ?? ''],
+      [form.additional_number, profile.additional_number ?? ''],
+      [form.postal_code, profile.postal_code ?? ''],
+      [form.address_line, profile.address_line ?? ''],
+    ];
+    return cmp.some(([a, b]) => a !== b);
   }, [form, profile]);
 
   const completion = useMemo(() => {
@@ -168,6 +182,8 @@ const DashboardProfile: React.FC = () => {
       !!form.phone.trim(),
       !!form.country_id,
       !!form.city_id,
+      !!form.national_id.trim(),
+      !!(form.district.trim() || form.address_line.trim() || form.short_national_address.trim()),
     ];
     const done = checks.filter(Boolean).length;
     return Math.round((done / checks.length) * 100);
@@ -180,10 +196,31 @@ const DashboardProfile: React.FC = () => {
       if (form.username && !usernameOk) {
         throw new Error(t(isRTL, 'اسم المستخدم غير صالح أو محجوز', 'Username is invalid or taken'));
       }
+      // Client-side Saudi format validation
+      const nid = form.national_id.replace(/\D/g, '');
+      if (nid && !/^[12]\d{9}$/.test(nid)) {
+        throw new Error(t(isRTL,
+          'رقم الهوية يجب أن يكون 10 أرقام ويبدأ بـ 1 (سعودي) أو 2 (مقيم)',
+          'National ID must be 10 digits and start with 1 (Saudi) or 2 (Resident)'));
+      }
+      const vat = form.vat_number.replace(/\D/g, '');
+      if (vat && (vat.length !== 15 || vat[0] !== '3' || vat[10] !== '3' || vat[14] !== '3')) {
+        throw new Error(t(isRTL,
+          'الرقم الضريبي يجب أن يكون 15 رقمًا ويبدأ بـ 3 وينتهي بـ 3 والرقم 11 = 3',
+          'VAT must be 15 digits, start with 3, end with 3, and 11th digit = 3'));
+      }
+      const sna = form.short_national_address.trim().toUpperCase().replace(/\s+/g, '');
+      if (sna && !/^[A-Z]{4}\d{4}$/.test(sna)) {
+        throw new Error(t(isRTL,
+          'العنوان الوطني المختصر يجب أن يكون 4 أحرف ثم 4 أرقام (مثل RRRD2402)',
+          'Short national address must be 4 letters + 4 digits (e.g. RRRD2402)'));
+      }
       const { error } = await updateProfile({
         userId: user.id,
         values: {
           full_name: form.full_name.trim() || null,
+          full_name_ar: form.full_name_ar.trim() || null,
+          full_name_en: form.full_name_en.trim() || null,
           username: form.username ? form.username : null,
           email: form.email.trim() || null,
           phone: form.phone.trim() || '',
@@ -191,6 +228,17 @@ const DashboardProfile: React.FC = () => {
           preferred_language: form.preferred_language,
           country_id: form.country_id,
           city_id: form.city_id,
+          national_id: nid || null,
+          national_id_type: nid ? (nid[0] === '1' ? 'saudi' : 'iqama') : null,
+          vat_number: vat || null,
+          short_national_address: sna || null,
+          region_name: form.region_name.trim() || null,
+          district: form.district.trim() || null,
+          street: form.street.trim() || null,
+          building_number: form.building_number.trim() || null,
+          additional_number: form.additional_number.trim() || null,
+          postal_code: form.postal_code.trim() || null,
+          address_line: form.address_line.trim() || null,
         },
       });
       if (error) throw error;
