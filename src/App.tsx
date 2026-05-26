@@ -330,6 +330,7 @@ const AppRoutes = () => (
           <Route path="/admin/email-deliverability" element={<ProtectedRoute requireAdmin><AdminEmailDeliverability /></ProtectedRoute>} />
           <Route path="/admin/email-center" element={<ProtectedRoute requireAdmin><AdminEmailCenter /></ProtectedRoute>} />
           <Route path="/admin/site-audit" element={<ProtectedRoute requireAdmin><AdminSiteAudit /></ProtectedRoute>} />
+          <Route path="/admin/diagnostics" element={<ProtectedRoute requireAdmin><AdminDiagnostics /></ProtectedRoute>} />
           <Route path="/admin/sector-seo" element={<ProtectedRoute requireAdmin><AdminSectorSeo /></ProtectedRoute>} />
           <Route path="/admin/market-analytics" element={<ProtectedRoute requireAdmin><AdminMarketAnalytics /></ProtectedRoute>} />
           <Route path="/admin/sitemap-status" element={<ProtectedRoute requireAdmin><AdminSitemapStatus /></ProtectedRoute>} />
