@@ -7,9 +7,10 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, AtSign, Languages } from 'lucide-react';
+import { User, Languages } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { cn } from '@/lib/utils';
+import { UsernamePicker } from '@/components/common/UsernamePicker';
 
 export interface BilingualNameValue {
   full_name_ar: string;
@@ -28,9 +29,11 @@ export interface BilingualNameFieldProps {
   errors?: Partial<Record<keyof BilingualNameValue, string>>;
   /** Receive derived combined full_name when AR/EN change. */
   onFullNameChange?: (full: string) => void;
+  /** Exclude a specific user_id from the live username collision check. */
+  excludeUserId?: string | null;
+  /** Bubble up real-time validity for username so parents can gate submit. */
+  onUsernameValidChange?: (state: { value: string; isValid: boolean; isAvailable: boolean }) => void;
 }
-
-const USERNAME_RE = /[^a-zA-Z0-9_]/g;
 
 export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
   value,
@@ -42,6 +45,8 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
   className,
   errors,
   onFullNameChange,
+  excludeUserId,
+  onUsernameValidChange,
 }) => {
   const { isRTL } = useLanguage();
 
@@ -98,30 +103,18 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
       </div>
 
       {showUsername && (
-        <div className="space-y-1.5 md:col-span-2">
-          <Label className="text-sm font-medium flex items-center gap-1.5">
-            <AtSign className="w-3.5 h-3.5 text-muted-foreground" />
-            {isRTL ? 'اسم المستخدم' : 'Username'}
-            <span className="text-xs text-muted-foreground">
-              ({isRTL ? 'يستخدم في الرابط' : 'used in profile URL'})
-            </span>
-          </Label>
-          <div className="relative">
-            <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground tech-content text-sm pointer-events-none">@</span>
-            <Input
-              value={value.username || ''}
-              onChange={(e) =>
-                update({ username: e.target.value.replace(USERNAME_RE, '').toLowerCase().slice(0, 30) })
-              }
-              disabled={disabled || usernameReadOnly}
-              readOnly={usernameReadOnly}
-              placeholder="ahmed_m"
-              dir="ltr"
-              maxLength={30}
-              className={cn('h-10 ps-8 rounded-xl tech-content', errors?.username && 'border-destructive')}
-            />
-          </div>
-          {errors?.username && <p className="text-xs text-destructive">{errors.username}</p>}
+        <div className="md:col-span-2">
+          <UsernamePicker
+            value={value.username || ''}
+            onChange={(v) => update({ username: v })}
+            onValidChange={onUsernameValidChange}
+            excludeUserId={excludeUserId ?? null}
+            isRTL={isRTL}
+            label={isRTL ? 'اسم المستخدم' : 'Username'}
+            required={required}
+            placeholder="ahmed_m"
+          />
+          {errors?.username && <p className="text-xs text-destructive mt-1">{errors.username}</p>}
         </div>
       )}
     </div>
