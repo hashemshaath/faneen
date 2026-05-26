@@ -27,6 +27,8 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
+import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 
 type ApprovalStatus =
   | 'draft' | 'submitted' | 'under_review'
