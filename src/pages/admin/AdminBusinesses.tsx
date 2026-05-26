@@ -501,6 +501,94 @@ const AdminBusinesses = () => {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  /* ─── Resolve owner (email OR USR-XXXXX ref_id) → user_id ─── */
+  const resolveOwner = useCallback(async () => {
+    const q = (createForm.owner_query || '').trim();
+    if (!q) return;
+    setCreateForm((f: any) => ({ ...f, resolving_owner: true, owner_error: '', resolved_user_id: '', resolved_owner_label: '' }));
+    try {
+      let userId: string | null = null;
+      let label = '';
+      if (q.includes('@')) {
+        const { data, error } = await getProfileByEmail<{ user_id: string; full_name: string | null; ref_id: string | null }>({
+          email: q.toLowerCase(),
+          select: 'user_id, full_name, ref_id',
+        });
+        if (error) throw error;
+        if (data) { userId = data.user_id; label = `${data.full_name ?? ''} (${data.ref_id ?? ''})`.trim(); }
+      } else {
+        const ref = q.toUpperCase();
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, ref_id, email')
+          .eq('ref_id', ref)
+          .maybeSingle();
+        if (error) throw error;
+        if (data) { userId = data.user_id as string; label = `${data.full_name ?? ''} (${data.email ?? ''})`.trim(); }
+      }
+      if (!userId) {
+        setCreateForm((f: any) => ({ ...f, resolving_owner: false, owner_error: isRTL ? 'لم يتم العثور على المستخدم' : 'User not found' }));
+        return;
+      }
+      setCreateForm((f: any) => ({ ...f, resolving_owner: false, resolved_user_id: userId!, resolved_owner_label: label }));
+    } catch (e) {
+      setCreateForm((f: any) => ({
+        ...f,
+        resolving_owner: false,
+        owner_error: e instanceof Error ? e.message : (isRTL ? 'فشل البحث' : 'Lookup failed'),
+      }));
+    }
+  }, [createForm.owner_query, isRTL]);
+
+  /* ─── Create business mutation ─── */
+  const createBizMutation = useMutation({
+    mutationFn: async () => {
+      if (!createForm.resolved_user_id) {
+        throw new Error(isRTL ? 'حدّد المالك أولاً' : 'Resolve the owner first');
+      }
+      if (!createForm.username || !createForm.username_ok) {
+        throw new Error(isRTL ? 'اسم المستخدم غير صالح أو محجوز' : 'Username is invalid or taken');
+      }
+      if (!createForm.name_ar?.trim()) {
+        throw new Error(isRTL ? 'الاسم بالعربية مطلوب' : 'Arabic name is required');
+      }
+      const phoneE164 = createForm.phone_national
+        ? toE164(createForm.phone_cc || '+966', createForm.phone_national)
+        : null;
+      const payload: Record<string, unknown> = {
+        user_id: createForm.resolved_user_id,
+        username: createForm.username.trim().toLowerCase(),
+        name_ar: createForm.name_ar.trim(),
+        name_en: createForm.name_en?.trim() || null,
+        phone: phoneE164 || null,
+        email: createForm.email?.trim() || null,
+        category_id: createForm.category_id || null,
+        city_id: createForm.city_id || null,
+        approval_status: 'approved',
+        is_active: true,
+      };
+      const { data, error } = await insertBusiness({
+        payload,
+        select: '*',
+        terminal: 'single',
+      });
+      if (error) throw error;
+      await logAction('business_created', (data as any)?.id ?? '', { username: payload.username });
+      return data as Record<string, unknown>;
+    },
+    onSuccess: (row) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+      toast.success(isRTL ? 'تم إنشاء المنشأة' : 'Business created');
+      setCreatingBiz(false);
+      setCreateForm(emptyCreateForm());
+      if (row) openEdit(row);
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : (isRTL ? 'فشل الإنشاء' : 'Create failed');
+      toast.error(isRTL ? 'فشل إنشاء المنشأة' : 'Failed to create business', { description: msg });
+    },
+  });
+
   const addServiceMutation = useMutation({
     mutationFn: async () => {
       const { error } = await insertBusinessService({
