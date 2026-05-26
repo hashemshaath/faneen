@@ -4,6 +4,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Loader2, CreditCard, Check, History, FileText, RefreshCw, AlertTriangle } from 'lucide-react';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
+import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import {
   listMembershipPaymentIntents,
   listMembershipPaymentWebhookEvents,
@@ -409,7 +410,16 @@ const AdminMembershipPayments = () => {
                   return (
                     <TableRow key={r.id} className={isHighlighted ? 'bg-primary/5' : ''}>
                       <TableCell className="tech-content text-xs">{new Date(r.created_at).toLocaleString()}</TableCell>
-                      <TableCell>{r.ref_id ? <ReferenceBadge refId={r.ref_id} /> : <span className="text-muted-foreground text-xs">—</span>}</TableCell>
+                      <TableCell>
+                        {r.ref_id ? (
+                          <span className="inline-flex items-center gap-1">
+                            <ReferenceBadge refId={r.ref_id} />
+                            <ReferenceLinkCopy refId={r.ref_id} isRTL={isRTL} />
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" className={STATUS_TONE[r.status] || ''}>{r.status}</Badge>
                       </TableCell>
