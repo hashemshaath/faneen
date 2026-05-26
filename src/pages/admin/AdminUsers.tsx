@@ -640,13 +640,14 @@ const AdminUsers = () => {
   const queryClient = useQueryClient();
   const [, startTransition] = useTransition();
 
-  const [tab, setTab] = useState<'overview' | 'users' | 'staff' | 'disabled' | 'analytics'>('overview');
+  const [tab, setTab] = useState<'overview' | 'users' | 'analytics'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [deferredSearch, setDeferredSearch] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterAccountType, setFilterAccountType] = useState('all');
   const [filterTier, setFilterTier] = useState('all');
   const [filterBusinessLink, setFilterBusinessLink] = useState<'all' | 'multi' | 'none' | 'single'>('all');
+  const [filterScope, setFilterScope] = useState<'all' | 'staff' | 'disabled'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
@@ -664,7 +665,7 @@ const AdminUsers = () => {
   // then scroll the panel into view.
   const openCreatePanel = (preset?: 'individual' | 'business' | 'company') => {
     if (preset) setCreateForm(p => ({ ...p, account_type: preset }));
-    if (tab !== 'users' && tab !== 'staff' && tab !== 'disabled') setTab('users');
+    if (tab !== 'users') setTab('users');
     setActivePanel({ type: 'create' });
     setTimeout(() => panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
@@ -689,8 +690,13 @@ const AdminUsers = () => {
     const next = new URLSearchParams(searchParams);
 
     if (tabParam) {
-      if (['overview', 'users', 'staff', 'disabled', 'analytics'].includes(tabParam)) {
-        setTab(tabParam as typeof tab);
+      // Map legacy tabs (staff/disabled) into Users tab + scope filter
+      if (tabParam === 'staff') {
+        setTab('users'); setFilterScope('staff');
+      } else if (tabParam === 'disabled') {
+        setTab('users'); setFilterScope('disabled');
+      } else if (['overview', 'users', 'analytics'].includes(tabParam)) {
+        setTab(tabParam as 'overview' | 'users' | 'analytics');
       }
       next.delete('tab');
       mutated = true;
