@@ -643,12 +643,22 @@ const EmptyState = ({ isRTL, message }: { isRTL: boolean; message?: string }) =>
   </div>
 );
 
-const EmptyError = ({ isRTL, onRetry }: { isRTL: boolean; onRetry: () => void }) => (
+const EmptyError = ({
+  isRTL,
+  onRetry,
+  message,
+}: {
+  isRTL: boolean;
+  onRetry: () => void;
+  message?: string;
+}) => (
   <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
     <div className="h-12 w-12 rounded-2xl bg-destructive/15 flex items-center justify-center">
       <AlertCircle className="h-5 w-5 text-destructive" />
     </div>
-    <p className="text-sm text-destructive">{isRTL ? 'تعذر تحميل البيانات.' : 'Failed to load data.'}</p>
+    <p className="text-sm text-destructive">
+      {message ?? (isRTL ? 'تعذر تحميل البيانات.' : 'Failed to load data.')}
+    </p>
     <Button variant="outline" size="sm" onClick={onRetry}>
       {isRTL ? 'إعادة المحاولة' : 'Retry'}
     </Button>
