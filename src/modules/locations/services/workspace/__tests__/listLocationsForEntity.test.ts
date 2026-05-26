@@ -7,7 +7,7 @@ const select = vi.fn(() => ({ eq: eq1 }));
 const from = vi.fn(() => ({ select }));
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { from: (...a: unknown[]) => from(...a) },
+  supabase: { from: (table: string) => from(table) },
 }));
 
 import { listLocationsForEntity } from '@/modules/locations/services/workspace/listLocationsForEntity';
