@@ -683,6 +683,8 @@ const AdminBusinesses = () => {
       national_id: biz.national_id || '', additional_number: biz.additional_number || '',
       region: biz.region || '', district: biz.district || '',
       street_name: biz.street_name || '', building_number: biz.building_number || '',
+      region_en: biz.region_en || '', district_en: biz.district_en || '',
+      street_name_en: biz.street_name_en || '', address_en: biz.address_en || '',
       latitude: biz.latitude || '', longitude: biz.longitude || '',
       unified_number: biz.unified_number || '', contact_person: biz.contact_person || '',
       mobile: biz.mobile || '', customer_service_phone: biz.customer_service_phone || '',
