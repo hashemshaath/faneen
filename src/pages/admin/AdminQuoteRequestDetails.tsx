@@ -39,8 +39,7 @@ import { trackEvent } from '@/lib/analytics';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PROVIDER_COMMERCIAL_CONFIG } from '@/lib/providerCommercialConfig';
-import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
-import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
+import { ReferenceTag } from '@/components/reference/ReferenceTag';
 import {
   QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_TONE, QUOTE_STATUSES,
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
@@ -404,14 +403,9 @@ const AdminQuoteRequestDetails: React.FC = () => {
           <div>
             <h1 className="font-heading font-bold text-xl sm:text-2xl flex flex-wrap items-center gap-2">
               <span>طلب عرض سعر</span>
-              {quote.ref_id ? (
-                <>
-                  <ReferenceBadge refId={quote.ref_id} />
-                  <ReferenceLinkCopy refId={quote.ref_id} isRTL />
-                </>
-              ) : (
-                <span className="font-mono text-base text-muted-foreground tech-content">#{quote.id.slice(-6)}</span>
-              )}
+              {quote.ref_id
+                ? <ReferenceTag refId={quote.ref_id} isRTL />
+                : <span className="font-mono text-base text-muted-foreground tech-content">#{quote.id.slice(-6)}</span>}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">إدارة الطلب وتحديث حالته.</p>
           </div>
