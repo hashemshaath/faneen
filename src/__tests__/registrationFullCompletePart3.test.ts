@@ -66,7 +66,10 @@ describe('Part 3 — main-location UI', () => {
     expect(ONBOARDING).toContain('أضف الموقع الرئيسي للمنشأة');
   });
   it('calls insertBusinessBranch after createBusiness with the resolved business id', () => {
-    expect(ONBOARDING).toContain("import { insertBusinessBranch } from '@/modules/businesses'");
+    // Onboarding may import insertBusinessBranch via a grouped multi-line import.
+    // Match the symbol + module without pinning a specific single-line literal.
+    expect(ONBOARDING).toMatch(/insertBusinessBranch[\s\S]{0,2000}from\s+['"]@\/modules\/businesses['"]/);
+    expect(ONBOARDING).toMatch(/from\s+['"]@\/modules\/businesses['"][\s\S]{0,2000}insertBusinessBranch|insertBusinessBranch[\s\S]{0,2000}from\s+['"]@\/modules\/businesses['"]/);
     expect(ONBOARDING).toMatch(/createBusiness\([\s\S]{0,3000}insertBusinessBranch/);
     expect(ONBOARDING).toMatch(/location_type:\s*locationType/);
     expect(ONBOARDING).toMatch(/is_main:\s*locationType === 'headquarters'/);
