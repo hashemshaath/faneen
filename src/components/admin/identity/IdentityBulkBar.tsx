@@ -12,7 +12,7 @@ import {
   X, Download, Ban, CheckCircle2, ShieldCheck, Loader2,
 } from 'lucide-react';
 import { updateProfilesByIds } from '@/modules/users';
-import { updateBusinessesByIds } from '@/modules/businesses';
+import { updateBusinessesByIds, bulkSetBusinessesVerified } from '@/modules/businesses';
 import { logAdminActivityBatch } from '@/modules/identity';
 
 export type BulkKind = 'user' | 'business';
@@ -83,8 +83,7 @@ export const IdentityBulkBar: React.FC<Props> = ({ selected, onClear, onMutated,
     setBusy(true);
     try {
       const ids = biz.map(b => b.id);
-      const { error } = await updateBusinessesByIds({ ids, values: { is_verified: isVerified } });
-      if (error) throw error;
+      await bulkSetBusinessesVerified(ids, isVerified);
       await logAdminActivityBatch(biz.map(b => ({
         action: isVerified ? 'business.verify.bulk' : 'business.unverify.bulk',
         entityType: 'business',
