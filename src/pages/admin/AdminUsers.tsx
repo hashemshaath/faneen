@@ -1046,24 +1046,32 @@ const AdminUsers = () => {
     },
     onError: (err: unknown) => {
       const raw = err instanceof Error ? err.message : (typeof err === 'object' && err && 'message' in err ? String((err as { message: unknown }).message) : '');
-      const lower = raw.toLowerCase();
-      let friendly = isRTL ? 'فشل التحديث' : 'Failed to update';
+      const parsed = parseProfileSaveError(raw, isRTL);
+      let friendly = parsed.friendly ?? (isRTL ? 'فشل التحديث' : 'Failed to update');
       const next: typeof editFieldErrors = {};
-      if (lower.includes('username_unavailable') || lower.includes('username_taken') || lower.includes('username')) {
-        next.username = isRTL ? 'اسم المستخدم محجوز — جرّب اسماً آخر' : 'Username already taken — pick another';
-        friendly = next.username;
-      } else if (lower.includes('phone')) {
-        next.phone = isRTL ? 'رقم الهاتف غير صالح أو مستخدم في حساب آخر' : 'Phone is invalid or already in use';
-        friendly = next.phone;
-      } else if (lower.includes('email')) {
-        next.email = isRTL ? 'البريد الإلكتروني غير صالح أو مستخدم' : 'Email is invalid or already in use';
-        friendly = next.email;
+      const rawNext: typeof editFieldRawCodes = {};
+      if (parsed.field === 'username') {
+        next.username = parsed.friendly!;
+        rawNext.username = parsed.rawCode;
+        // Pin the live picker into a "taken" state with stable suggestions.
+        setUsernameServerError({
+          forValue: editForm.username.trim().toLowerCase(),
+          reason: parsed.reason as UsernameCheckReason,
+          rawCode: parsed.rawCode,
+        });
+      } else if (parsed.field === 'email') {
+        next.email = parsed.friendly!;
+        rawNext.email = parsed.rawCode;
+      } else if (parsed.field === 'phone') {
+        next.phone = parsed.friendly!;
+        rawNext.phone = parsed.rawCode;
       } else if (raw) {
         friendly = (isRTL ? 'فشل التحديث: ' : 'Update failed: ') + raw;
       }
       if (Object.keys(next).length > 0) setEditFieldErrors(prev => ({ ...prev, ...next }));
-      // Surface the raw reason (e.g. "username_unavailable: taken") so power users
-      // can spot the precise failure cause without opening devtools.
+      if (Object.keys(rawNext).length > 0) setEditFieldRawCodes(prev => ({ ...prev, ...rawNext }));
+      // Top-center toast (Sonner is configured at top-center) — always surface the
+      // raw reason token (e.g. `username_unavailable: taken`) in the description.
       toast.error(friendly, raw ? { description: raw } : undefined);
       // Auto-focus the first failing field for quick correction.
       requestAnimationFrame(() => {
