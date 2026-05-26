@@ -28,7 +28,7 @@ describe('addresses isolation — SPL chokepoint', () => {
   const files = ROOTS.flatMap((r) => walk(r));
   const offenders: string[] = [];
   for (const file of files) {
-    if (file.replaceAll('\\', '/').startsWith(ALLOWED_PREFIX)) continue;
+    if (file.split('\\').join('/').startsWith(ALLOWED_PREFIX)) continue;
     if (file.includes('__tests__')) continue;
     const src = readFileSync(file, 'utf8');
     if (/functions\.invoke\(\s*['"`]national-address-lookup['"`]/.test(src)) {
