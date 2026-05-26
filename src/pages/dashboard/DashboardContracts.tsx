@@ -1674,6 +1674,7 @@ const DashboardContracts = () => {
             queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
           }}
           isRefreshing={isLoading}
+          onImport={() => { closeForm(); setViewSection('import'); }}
         />
 
         {viewSection === 'list' && <ContractStatsSummary stats={stats} isRTL={isRTL} />}
