@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { FIELD_DEBOUNCE_MS } from '@/hooks/useDebouncedValue';
 
 /**
  * Professional, real-time username picker.
@@ -38,6 +39,18 @@ export interface UsernamePickerProps {
   /** Optional className for outer wrapper. */
   className?: string;
   autoFocus?: boolean;
+  /**
+   * Server-side rejection (e.g. from save mutation: `username_unavailable: taken`).
+   * When set AND `value === serverError.forValue`, the picker locks the status to
+   * `taken|invalid` with the supplied reason and keeps suggestions visible across
+   * retries until the user edits the value.
+   */
+  serverError?: {
+    forValue: string;
+    reason: UsernameCheckReason;
+    /** Raw machine token (e.g. `taken`, `username_unavailable`) — surfaced inline. */
+    rawCode?: string | null;
+  } | null;
 }
 
 /** Sanitize as the user types — keep input strict but forgiving. */
@@ -95,9 +108,11 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
   value, onChange, onValidChange, excludeUserId = null,
   isRTL = false, label, required, placeholder = 'my-handle',
   hidePreview = false, className, autoFocus,
+  serverError = null,
 }) => {
   const [status, setStatus] = useState<Status>('idle');
   const [reason, setReason] = useState<UsernameCheckReason | null>(null);
+  const [cachedSuggestions, setCachedSuggestions] = useState<string[]>([]);
   const lastChecked = useRef<string>('');
   const aborter = useRef<number | null>(null);
 
@@ -116,10 +131,22 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
   useEffect(() => {
     if (aborter.current) window.clearTimeout(aborter.current);
 
+    // ── Server-side override takes precedence while the value matches ──
+    if (serverError && serverError.forValue === value && value) {
+      setStatus(serverError.reason === 'taken' ? 'taken' : 'invalid');
+      setReason(serverError.reason);
+      onValidChange?.({ value, isValid: false, isAvailable: false });
+      if (serverError.reason === 'taken') {
+        setCachedSuggestions((prev) => (prev.length ? prev : suggestionsFor(value)));
+      }
+      return;
+    }
+
     const local = localValidate(value);
     if (!local.ok) {
       setStatus(value ? 'invalid' : 'idle');
       setReason(value ? (local.reason ?? null) : null);
+      setCachedSuggestions([]);
       onValidChange?.({ value, isValid: false, isAvailable: false });
       return;
     }
@@ -141,10 +168,16 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
         if (payload.available) {
           setStatus('available');
           setReason(null);
+          setCachedSuggestions([]);
           onValidChange?.({ value: candidate, isValid: true, isAvailable: true });
         } else {
           setStatus(payload.reason === 'taken' ? 'taken' : 'invalid');
           setReason(payload.reason ?? 'taken');
+          if ((payload.reason ?? 'taken') === 'taken') {
+            setCachedSuggestions(suggestionsFor(candidate));
+          } else {
+            setCachedSuggestions([]);
+          }
           onValidChange?.({ value: candidate, isValid: false, isAvailable: false });
         }
       } catch {
@@ -152,14 +185,22 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
         setReason('network');
         onValidChange?.({ value: candidate, isValid: false, isAvailable: false });
       }
-    }, 450);
+    }, FIELD_DEBOUNCE_MS);
 
     return () => {
       if (aborter.current) window.clearTimeout(aborter.current);
     };
-  }, [value, excludeUserId, onValidChange]);
+  }, [value, excludeUserId, onValidChange, serverError]);
 
-  const suggestions = status === 'taken' ? suggestionsFor(value) : [];
+  // Prefer cached suggestions (from server failure or last live check); fall back to live for any 'taken'.
+  const suggestions = status === 'taken'
+    ? (cachedSuggestions.length ? cachedSuggestions : suggestionsFor(value))
+    : [];
+
+  // Raw machine token shown inline for power users (e.g. `taken`, `invalid_format`).
+  const rawToken = serverError && serverError.forValue === value
+    ? (serverError.rawCode ?? serverError.reason)
+    : (status === 'taken' || status === 'invalid' ? reason : null);
 
   const StatusIcon = (() => {
     switch (status) {
@@ -197,9 +238,14 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
           </Badge>
         )}
         {(status === 'taken' || status === 'invalid') && reason && (
-          <span className="text-destructive flex items-center gap-1">
+          <span data-testid="username-status-error" className="text-destructive flex items-center gap-1 flex-wrap">
             <AlertCircle className="w-3 h-3" />
-            {reasonMessage(reason, isRTL)}
+            <span>{reasonMessage(reason, isRTL)}</span>
+            {rawToken && (
+              <code className="tech-content text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 border border-destructive/20">
+                {rawToken}
+              </code>
+            )}
           </span>
         )}
         {!hidePreview && value && status !== 'taken' && status !== 'invalid' && (
