@@ -325,6 +325,17 @@ const AdminBusinesses = () => {
     enabled: !!editingBiz?.id,
   });
 
+  // Owner ref_id (USR-…) — Reference-ID Architecture: never display raw UUIDs as primary identity.
+  const { data: ownerRef } = useQuery({
+    queryKey: ['admin-business-owner-ref', editingBiz?.user_id],
+    queryFn: async () => {
+      if (!editingBiz?.user_id) return null;
+      const { data } = await supabase.from('profiles').select('ref_id, full_name_ar, full_name_en').eq('user_id', editingBiz.user_id).maybeSingle();
+      return data;
+    },
+    enabled: !!editingBiz?.user_id,
+  });
+
   const { data: contractBusinessIds = [] } = useQuery({
     queryKey: ['contract-business-ids'],
     queryFn: async () => {
@@ -1153,23 +1164,48 @@ const AdminBusinesses = () => {
                   </div>
                   <Separator />
                   <div className="p-3 rounded-xl bg-muted/30 border border-border/30 text-[10px] space-y-1 text-muted-foreground font-mono">
+                    {/* Primary reference — official platform identifier */}
                     <div className="flex items-center justify-between">
-                      <span>ID: {editingBiz.id}</span>
-                      <Button variant="ghost" size="sm" className="h-5 w-5 p-0"
-                        onClick={() => { navigator.clipboard.writeText(editingBiz.id); toast.success('Copied'); }}>
-                        <Copy className="w-2.5 h-2.5" />
-                      </Button>
+                      <span className="text-foreground font-semibold">{isRTL ? 'المعرف' : 'Ref'}: {editingBiz.ref_id || '—'}</span>
+                      {editingBiz.ref_id && (
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]"
+                            onClick={() => { navigator.clipboard.writeText(`/r/${editingBiz.ref_id}`); toast.success(isRTL ? 'تم نسخ /r/' + editingBiz.ref_id : 'Copied /r/' + editingBiz.ref_id); }}>
+                            /r/{editingBiz.ref_id}
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-5 w-5 p-0"
+                            onClick={() => { navigator.clipboard.writeText(editingBiz.ref_id); toast.success('Copied'); }}>
+                            <Copy className="w-2.5 h-2.5" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    <p>Ref: {editingBiz.ref_id}</p>
                     {editingBiz.legacy_ref_id && editingBiz.legacy_ref_id !== editingBiz.ref_id && (
                       <p>{isRTL ? 'المعرف السابق' : 'Previously'}: {editingBiz.legacy_ref_id}</p>
                     )}
                     <p>Username: @{editingBiz.username}</p>
-                    <p>Owner: {editingBiz.user_id}</p>
+                    <p>
+                      {isRTL ? 'المالك' : 'Owner'}:{' '}
+                      <span className="text-foreground">{ownerRef?.ref_id || (isRTL ? '…تحميل' : 'loading…')}</span>
+                      {ownerRef?.ref_id && (
+                        <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px] ms-1"
+                          onClick={() => { navigator.clipboard.writeText(`/r/${ownerRef.ref_id}`); toast.success(isRTL ? 'تم النسخ' : 'Copied'); }}>
+                          /r/{ownerRef.ref_id}
+                        </Button>
+                      )}
+                    </p>
                     <p>Created: {new Date(editingBiz.created_at).toLocaleDateString()}</p>
                     <p className="flex items-center gap-1">
                       Rating: <Star className="w-2.5 h-2.5 text-accent" /> {editingBiz.rating_avg} ({editingBiz.rating_count} reviews)
                     </p>
+                    {/* Internal-only technical UUIDs — kept collapsed; never the primary identifier */}
+                    <details className="mt-1 pt-1 border-t border-border/30">
+                      <summary className="cursor-pointer text-[9px] opacity-60 hover:opacity-100">{isRTL ? 'معرفات تقنية (UUID)' : 'Technical (UUID)'}</summary>
+                      <div className="mt-1 space-y-0.5 opacity-70">
+                        <p className="break-all">business.id: {editingBiz.id}</p>
+                        <p className="break-all">owner.user_id: {editingBiz.user_id}</p>
+                      </div>
+                    </details>
                   </div>
                 </TabsContent>
 
