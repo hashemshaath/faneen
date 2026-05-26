@@ -1168,6 +1168,7 @@ const AdminUsers = () => {
 
   const openEdit = useCallback((profile: Profile) => {
     setActivePanel({ type: 'edit', profile });
+    setEditFieldErrors({});
     const parsed = parsePhoneValue(isSuperAdmin ? profile.phone : '');
     setEditForm({
       full_name: profile.full_name || '',
