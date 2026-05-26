@@ -4,7 +4,8 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getOwnerBusiness } from '@/modules/businesses';
+import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import {
   insertBusinessService,
   insertBusinessServices,
@@ -237,10 +238,28 @@ const DashboardServices = () => {
   );
 
   /* ─── Data ─── */
+  // WORKSPACE-CONTEXT-4B: services are owner-managed. Honor the active
+  // entity only when it points at a business this user owns
+  // (source === 'owner'); staff entities never escalate into this
+  // owner-only catalog editor. Falls back to getOwnerBusiness when no
+  // entity is selected (single-business owners keep current behavior).
+  const { active_entity_id, entities } = useActiveWorkspace();
+  const activeOwnerEntityId = useMemo(() => {
+    if (!active_entity_id) return null;
+    const e = entities.find((x) => x.entity_id === active_entity_id);
+    return e && e.source === 'owner' ? e.entity_id : null;
+  }, [active_entity_id, entities]);
   const { data: business } = useQuery({
-    queryKey: ['my-business', user?.id],
+    queryKey: ['my-business', user?.id, activeOwnerEntityId],
     queryFn: async () => {
       if (!user) return null;
+      if (activeOwnerEntityId) {
+        const { data } = await listBusinessesByIds<{ id: string; category_id: string | null; username: string | null }>({
+          ids: [activeOwnerEntityId],
+          select: 'id, category_id, username',
+        });
+        return (data ?? [])[0] ?? null;
+      }
       const { data } = await getOwnerBusiness<{ id: string; category_id: string | null; username: string | null }>({
         userId: user.id,
         select: 'id, category_id, username',
