@@ -36,7 +36,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AdminEmbeddedContext } from '@/contexts/AdminTabsContext';
-import { Loader2, KeyRound as KeyRoundIcon } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { DirectionalIcon } from '@/components/ui/directional-icon';
 import { EntityLink } from '@/components/admin/identity/EntityLink';
@@ -462,7 +462,7 @@ const AdminIdentity: React.FC = () => {
             <TabsTrigger value="users" className="rounded-xl gap-1.5 py-2"><Users className="w-3.5 h-3.5" />{isRTL ? 'المستخدمون' : 'Users'}</TabsTrigger>
             <TabsTrigger value="businesses" className="rounded-xl gap-1.5 py-2"><Building2 className="w-3.5 h-3.5" />{isRTL ? 'المنشآت' : 'Businesses'}</TabsTrigger>
             <TabsTrigger value="provider-review" className="rounded-xl gap-1.5 py-2"><ShieldCheck className="w-3.5 h-3.5" />{isRTL ? 'مراجعة المزودين' : 'Provider review'}</TabsTrigger>
-            <TabsTrigger value="access-requests" className="rounded-xl gap-1.5 py-2"><KeyRoundIcon className="w-3.5 h-3.5" />{isRTL ? 'طلبات الانضمام' : 'Access requests'}</TabsTrigger>
+            <TabsTrigger value="access-requests" className="rounded-xl gap-1.5 py-2"><KeyRound className="w-3.5 h-3.5" />{isRTL ? 'طلبات الانضمام' : 'Access requests'}</TabsTrigger>
             <TabsTrigger value="access-management" className="rounded-xl gap-1.5 py-2"><Shield className="w-3.5 h-3.5" />{isRTL ? 'إدارة الوصول' : 'Access control'}</TabsTrigger>
             <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'تحليلات' : 'Analytics'}</TabsTrigger>
           </TabsList>
