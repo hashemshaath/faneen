@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { queryClient } from '@/lib/queryClient';
 import { getOwnerBusiness, getActiveBusinessStaffMembership } from '@/modules/businesses';
 import { getProfileByUserId } from '@/modules/users';
 import { getUserRoles } from '@/modules/identity';
@@ -64,6 +65,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [dataLoaded, setDataLoaded] = useState(false);
   const initRef = useRef(false);
   const loadingRef = useRef(false);
+  const lastUserIdRef = useRef<string | null>(null);
+
+  // Clear all React Query cache whenever the signed-in user identity changes
+  // (sign-out, sign-in, or switching accounts). Prevents previously-fetched
+  // data of the old user from leaking into the new user's session via cache.
+  const resetForUser = useCallback((nextUserId: string | null) => {
+    if (lastUserIdRef.current !== nextUserId) {
+      try { queryClient.clear(); } catch { /* noop */ }
+      lastUserIdRef.current = nextUserId;
+    }
+  }, []);
 
   const fetchRoles = useCallback(async (userId: string) => {
     try {
@@ -136,6 +148,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (!mounted) return;
 
+      const nextUserId = newSession?.user?.id ?? null;
+      resetForUser(nextUserId);
+
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
@@ -156,6 +171,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       if (!mounted) return;
+      const nextUserId = initialSession?.user?.id ?? null;
+      resetForUser(nextUserId);
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       if (initialSession?.user) {
@@ -170,13 +187,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [loadUserData]);
+  }, [loadUserData, resetForUser]);
 
   const signOut = useCallback(async () => {
     setRoles([]);
     setProfile(null);
     setProviderAccess(false);
     setDataLoaded(false);
+    try { queryClient.clear(); } catch { /* noop */ }
+    lastUserIdRef.current = null;
     await supabase.auth.signOut();
   }, []);
 
