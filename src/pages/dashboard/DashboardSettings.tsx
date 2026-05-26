@@ -105,7 +105,7 @@ const DashboardSettings = () => {
   }, [profile, editingProfile]);
 
   const { data: business } = useQuery({
-    queryKey: ['my-business-for-settings'],
+    queryKey: ['my-business-for-settings', user?.id],
     queryFn: async () => {
       if (!user) return null;
       const { data } = await getOwnerBusiness<{ id: string; name_ar: string; name_en: string }>({
