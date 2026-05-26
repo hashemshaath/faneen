@@ -1105,6 +1105,27 @@ const AdminBusinesses = () => {
 
                 {/* ── Info Tab ── */}
                 <TabsContent value="info" className="space-y-4 mt-3">
+                  {(() => {
+                    const hasArabic = (s: string) => /[\u0600-\u06FF]/.test(s || '');
+                    const hasLatin = (s: string) => /[A-Za-z]/.test(s || '');
+                    const arLooksEn = editForm.name_ar && hasLatin(editForm.name_ar) && !hasArabic(editForm.name_ar);
+                    const enLooksAr = editForm.name_en && hasArabic(editForm.name_en) && !hasLatin(editForm.name_en);
+                    if (!arLooksEn && !enLooksAr) return null;
+                    return (
+                      <div className="flex items-start justify-between gap-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-300/50">
+                        <p className="text-[11px] text-amber-800 dark:text-amber-200">
+                          {isRTL ? 'يبدو أن الاسم العربي والإنجليزي معكوسان.' : 'Arabic and English names appear swapped.'}
+                        </p>
+                        <Button type="button" size="sm" variant="outline" className="h-6 text-[10px] px-2"
+                          onClick={() => {
+                            const ar = editForm.name_ar; const en = editForm.name_en;
+                            setField('name_ar', en); setField('name_en', ar);
+                          }}>
+                          {isRTL ? '↔ تبديل' : '↔ Swap'}
+                        </Button>
+                      </div>
+                    );
+                  })()}
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <Label className="text-xs">{isRTL ? 'الاسم (عربي)' : 'Name (AR)'} *</Label>
