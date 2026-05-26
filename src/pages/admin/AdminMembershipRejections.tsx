@@ -444,10 +444,10 @@ const AdminMembershipRejections: React.FC = () => {
                           <Link
                             to={`/admin/users?q=${encodeURIComponent(r.user_id)}`}
                             className="tech-content inline-flex items-center gap-1 text-primary hover:underline"
-                            title={r.user_id}
+                            title={userRefs[r.user_id] || r.user_id}
                           >
                             <User2 className="h-3.5 w-3.5" />
-                            {r.user_id.slice(0, 8)}…
+                            {userRefs[r.user_id] || `${r.user_id.slice(0, 8)}…`}
                           </Link>
                         </TableCell>
                         <TableCell className="text-end">
