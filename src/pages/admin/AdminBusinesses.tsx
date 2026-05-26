@@ -228,6 +228,26 @@ const AdminBusinesses = () => {
   const clearSelected = () => setSelected(new Set());
   const [editingBiz, setEditingBiz] = useState<any | null>(null);
   const [editForm, setEditForm] = useState<any>({});
+  // ── Create new business (admin) ──
+  const [creatingBiz, setCreatingBiz] = useState(false);
+  const emptyCreateForm = () => ({
+    owner_query: '',                  // email OR USR-XXXXX
+    resolved_user_id: '' as string,
+    resolved_owner_label: '' as string,
+    resolving_owner: false,
+    owner_error: '' as string,
+    name_ar: '',
+    name_en: '',
+    username: '',
+    username_ok: false,
+    phone_cc: '+966',
+    phone_national: '',
+    email: '',
+    category_id: '',
+    city_id: '',
+  });
+  const [createForm, setCreateForm] = useState<any>(emptyCreateForm());
+  const setCField = (k: string, v: unknown) => setCreateForm((f: any) => ({ ...f, [k]: v }));
   const [servicesPanel, setServicesPanel] = useState<string | null>(null);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
