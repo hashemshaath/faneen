@@ -679,6 +679,26 @@ const AdminUsers = () => {
     phone: '', phone_country_code: '+966', phone_national: '',
     email: '',
   });
+  /**
+   * Inline field-level errors for the edit panel. Cleared whenever the user
+   * edits the corresponding field, scrolls into view when set, and rendered
+   * directly under each input so the admin sees exactly which field failed.
+   */
+  const [editFieldErrors, setEditFieldErrors] = useState<{
+    full_name_ar?: string;
+    full_name_en?: string;
+    username?: string;
+    email?: string;
+    phone?: string;
+  }>({});
+  const clearEditFieldError = useCallback((key: keyof typeof editFieldErrors) => {
+    setEditFieldErrors(prev => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   // Suspension form (temporary/permanent disable)
@@ -1001,17 +1021,34 @@ const AdminUsers = () => {
     },
     onError: (err: unknown) => {
       const raw = err instanceof Error ? err.message : (typeof err === 'object' && err && 'message' in err ? String((err as { message: unknown }).message) : '');
+      const lower = raw.toLowerCase();
       let friendly = isRTL ? 'فشل التحديث' : 'Failed to update';
-      if (raw.includes('username_unavailable') || raw.includes('username_taken')) {
-        friendly = isRTL ? 'اسم المستخدم محجوز — جرّب اسماً آخر' : 'Username already taken — pick another';
-      } else if (raw.includes('phone')) {
-        friendly = isRTL ? 'رقم الهاتف غير صالح أو مستخدم' : 'Phone is invalid or already in use';
-      } else if (raw.includes('email')) {
-        friendly = isRTL ? 'البريد الإلكتروني غير صالح أو مستخدم' : 'Email is invalid or already in use';
+      const next: typeof editFieldErrors = {};
+      if (lower.includes('username_unavailable') || lower.includes('username_taken') || lower.includes('username')) {
+        next.username = isRTL ? 'اسم المستخدم محجوز — جرّب اسماً آخر' : 'Username already taken — pick another';
+        friendly = next.username;
+      } else if (lower.includes('phone')) {
+        next.phone = isRTL ? 'رقم الهاتف غير صالح أو مستخدم في حساب آخر' : 'Phone is invalid or already in use';
+        friendly = next.phone;
+      } else if (lower.includes('email')) {
+        next.email = isRTL ? 'البريد الإلكتروني غير صالح أو مستخدم' : 'Email is invalid or already in use';
+        friendly = next.email;
       } else if (raw) {
         friendly = (isRTL ? 'فشل التحديث: ' : 'Update failed: ') + raw;
       }
+      if (Object.keys(next).length > 0) setEditFieldErrors(prev => ({ ...prev, ...next }));
       toast.error(friendly);
+      // Auto-focus the first failing field for quick correction.
+      requestAnimationFrame(() => {
+        const firstKey = Object.keys(next)[0];
+        if (!firstKey) return;
+        const el = document.querySelector<HTMLElement>(`[data-field-error="${firstKey}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const focusable = el.querySelector<HTMLElement>('input, select, textarea, button');
+          focusable?.focus();
+        }
+      });
     },
   });
 
@@ -1148,6 +1185,7 @@ const AdminUsers = () => {
 
   const openEdit = useCallback((profile: Profile) => {
     setActivePanel({ type: 'edit', profile });
+    setEditFieldErrors({});
     const parsed = parsePhoneValue(isSuperAdmin ? profile.phone : '');
     setEditForm({
       full_name: profile.full_name || '',
@@ -1179,10 +1217,16 @@ const AdminUsers = () => {
 
   const handleSaveProfile = () => {
     if (activePanel?.type !== 'edit') return;
+    setEditFieldErrors({});
     const nameAr = editForm.full_name_ar.trim();
     const nameEn = editForm.full_name_en.trim();
     const combined = nameAr || nameEn || editForm.full_name.trim();
-    if (!combined) { toast.error(isRTL ? 'الاسم مطلوب (عربي أو إنجليزي)' : 'Name required (AR or EN)'); return; }
+    if (!combined) {
+      const msg = isRTL ? 'الاسم مطلوب (عربي أو إنجليزي)' : 'Name required (AR or EN)';
+      setEditFieldErrors({ full_name_ar: msg, full_name_en: msg });
+      toast.error(msg);
+      return;
+    }
     const data: Partial<Profile> = {
       full_name: combined,
       full_name_ar: nameAr || null,
@@ -1204,9 +1248,11 @@ const AdminUsers = () => {
       data.phone_national = editForm.phone_national || null;
       const nextEmail = editForm.email.trim();
       if (nextEmail && isSyntheticPhoneEmail(nextEmail)) {
-        toast.error(isRTL
+        const msg = isRTL
           ? 'البريد الرسمي لا يمكن أن ينتهي بـ @phone.qitaat.local — هذا معرّف داخلي لتسجيل الدخول بالهاتف.'
-          : 'Official email cannot end with @phone.qitaat.local — that is an internal phone-login identifier.');
+          : 'Official email cannot end with @phone.qitaat.local — that is an internal phone-login identifier.';
+        setEditFieldErrors({ email: msg });
+        toast.error(msg);
         return;
       }
       data.email = nextEmail || null;
@@ -1871,25 +1917,57 @@ const AdminUsers = () => {
 
                     {/* ── Profile tab ── */}
                     <TabsContent value="profile" className="p-5 pt-4 m-0 space-y-4">
-                      <BilingualNameField
-                        value={{ full_name_ar: editForm.full_name_ar, full_name_en: editForm.full_name_en, username: editForm.username }}
-                        onChange={(v) => setEditForm(p => ({ ...p, full_name_ar: v.full_name_ar, full_name_en: v.full_name_en, username: v.username || '' }))}
-                        onFullNameChange={(f) => setEditForm(p => ({ ...p, full_name: f }))}
-                        required
-                      />
+                       <div data-field-error="full_name_ar">
+                         <div data-field-error="full_name_en">
+                           <div data-field-error="username">
+                             <BilingualNameField
+                               value={{ full_name_ar: editForm.full_name_ar, full_name_en: editForm.full_name_en, username: editForm.username }}
+                               onChange={(v) => {
+                                 setEditForm(p => ({ ...p, full_name_ar: v.full_name_ar, full_name_en: v.full_name_en, username: v.username || '' }));
+                                 if (editFieldErrors.full_name_ar) clearEditFieldError('full_name_ar');
+                                 if (editFieldErrors.full_name_en) clearEditFieldError('full_name_en');
+                                 if (editFieldErrors.username) clearEditFieldError('username');
+                               }}
+                               onFullNameChange={(f) => setEditForm(p => ({ ...p, full_name: f }))}
+                               errors={{
+                                 full_name_ar: editFieldErrors.full_name_ar,
+                                 full_name_en: editFieldErrors.full_name_en,
+                                 username: editFieldErrors.username,
+                               }}
+                               required
+                             />
+                           </div>
+                         </div>
+                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {isSuperAdmin ? (
                           <>
-                            <div className="space-y-1.5">
+                            <div className="space-y-1.5" data-field-error="email">
                               <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" />{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
-                              <Input type="email" dir="ltr" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl tech-content" />
+                              <Input
+                                type="email" dir="ltr"
+                                value={editForm.email}
+                                onChange={e => {
+                                  setEditForm(p => ({ ...p, email: e.target.value }));
+                                  if (editFieldErrors.email) clearEditFieldError('email');
+                                }}
+                                maxLength={255}
+                                className={`h-10 rounded-xl tech-content ${editFieldErrors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                              />
+                              {editFieldErrors.email && <p className="text-xs text-destructive">{editFieldErrors.email}</p>}
                             </div>
-                            <PhoneField
-                              value={{ countryCode: editForm.phone_country_code, national: editForm.phone_national }}
-                              onChange={(v) => setEditForm(p => ({ ...p, phone_country_code: v.countryCode, phone_national: v.national }))}
-                              onE164Change={(e164) => setEditForm(p => ({ ...p, phone: e164 }))}
-                              optional
-                            />
+                            <div data-field-error="phone">
+                              <PhoneField
+                                value={{ countryCode: editForm.phone_country_code, national: editForm.phone_national }}
+                                onChange={(v) => {
+                                  setEditForm(p => ({ ...p, phone_country_code: v.countryCode, phone_national: v.national }));
+                                  if (editFieldErrors.phone) clearEditFieldError('phone');
+                                }}
+                                onE164Change={(e164) => setEditForm(p => ({ ...p, phone: e164 }))}
+                                optional
+                                error={editFieldErrors.phone}
+                              />
+                            </div>
                           </>
                         ) : (
                           <div className="md:col-span-1 rounded-xl border border-dashed border-warning/40 bg-warning/5 p-3 text-[11px] text-muted-foreground flex items-start gap-2">
