@@ -5,7 +5,7 @@ import { resolve, join, relative } from 'node:path';
 /**
  * RTL-LTR-CODE-CLEANUP-AND-CENTRAL-AUDIT-1 — centralized strict audit.
  *
- * Scans production source files (`src/**\/*.ts(x)`) and fails on any
+ * Scans production source files under src and fails on any
  * direction-physical Tailwind utility / inline style that should have a
  * logical equivalent. Vendored shadcn primitives in `src/components/ui/`
  * and CSS/docs files are allowlisted because the patterns appear there in
