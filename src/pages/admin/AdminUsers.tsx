@@ -892,16 +892,17 @@ const AdminUsers = () => {
     if (activePanel?.type !== 'edit') return;
     const trimmed = editForm.full_name.trim();
     if (!trimmed) { toast.error(isRTL ? 'الاسم مطلوب' : 'Name required'); return; }
-    updateProfileMutation.mutate({
-      profileId: activePanel.profile.id,
-      data: {
-        full_name: trimmed,
-        account_type: editForm.account_type as Profile['account_type'],
-        membership_tier: editForm.membership_tier as Profile['membership_tier'],
-        phone: editForm.phone.trim() || '',
-        email: editForm.email.trim() || null,
-      },
-    });
+    const data: Partial<Profile> = {
+      full_name: trimmed,
+      account_type: editForm.account_type as Profile['account_type'],
+      membership_tier: editForm.membership_tier as Profile['membership_tier'],
+    };
+    // Only Super Admin may write PII fields; for others we keep existing values.
+    if (isSuperAdmin) {
+      data.phone = editForm.phone.trim() || '';
+      data.email = editForm.email.trim() || null;
+    }
+    updateProfileMutation.mutate({ profileId: activePanel.profile.id, data });
   };
 
   // ─── Filtering ───
