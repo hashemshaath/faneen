@@ -178,6 +178,36 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
           {label}{required && <span className="text-destructive ms-1">*</span>}
         </Label>
       )}
+      {/* Status message ABOVE the input — instant feedback at the top of the field */}
+      <div
+        id="username-picker-msg"
+        aria-live="polite"
+        className="min-h-[1.25rem] text-xs flex items-center gap-2 flex-wrap"
+      >
+        {status === 'checking' && (
+          <span className="text-muted-foreground flex items-center gap-1">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            {isRTL ? 'جارٍ التحقق…' : 'Checking…'}
+          </span>
+        )}
+        {status === 'available' && (
+          <Badge variant="outline" className="border-success/40 text-success text-[10px] h-5 px-1.5 gap-1">
+            <Check className="w-3 h-3" />
+            {isRTL ? 'متاح' : 'Available'}
+          </Badge>
+        )}
+        {(status === 'taken' || status === 'invalid') && reason && (
+          <span className="text-destructive flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            {reasonMessage(reason, isRTL)}
+          </span>
+        )}
+        {!hidePreview && value && status !== 'taken' && status !== 'invalid' && (
+          <span className="tech-content text-muted-foreground ms-auto">
+            qitaat.com/<span className="font-semibold text-foreground">{value}</span>
+          </span>
+        )}
+      </div>
       <div className="relative">
         <Globe
           className="absolute top-3.5 text-muted-foreground/60 w-4 h-4 pointer-events-none"
@@ -208,27 +238,6 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
         >
           {StatusIcon}
         </div>
-      </div>
-
-      {/* Live preview + status message */}
-      <div id="username-picker-msg" className="min-h-[1.25rem] text-xs flex items-center gap-2 flex-wrap">
-        {!hidePreview && value && (
-          <span className="tech-content text-muted-foreground">
-            qitaat.com/<span className="font-semibold text-foreground">{value}</span>
-          </span>
-        )}
-        {status === 'available' && (
-          <Badge variant="outline" className="border-success/40 text-success text-[10px] h-5 px-1.5 gap-1">
-            <Check className="w-3 h-3" />
-            {isRTL ? 'متاح' : 'Available'}
-          </Badge>
-        )}
-        {(status === 'taken' || status === 'invalid') && reason && (
-          <span className="text-destructive flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
-            {reasonMessage(reason, isRTL)}
-          </span>
-        )}
       </div>
 
       {/* Rules checklist — only show while typing or on invalid */}
