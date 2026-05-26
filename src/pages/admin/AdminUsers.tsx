@@ -878,10 +878,15 @@ const AdminUsers = () => {
   const openEdit = useCallback((profile: Profile) => {
     setActivePanel({ type: 'edit', profile });
     setEditForm({
-      full_name: profile.full_name || '', account_type: profile.account_type || 'individual',
-      membership_tier: profile.membership_tier || 'free', phone: profile.phone || '', email: profile.email || '',
+      full_name: profile.full_name || '',
+      account_type: profile.account_type || 'individual',
+      membership_tier: profile.membership_tier || 'free',
+      // PII fields are only prefilled for Super Admin. Non-super admins see empty
+      // placeholders so masked values are never leaked through the edit form.
+      phone: isSuperAdmin ? (profile.phone || '') : '',
+      email: isSuperAdmin ? (profile.email || '') : '',
     });
-  }, []);
+  }, [isSuperAdmin]);
 
   const handleSaveProfile = () => {
     if (activePanel?.type !== 'edit') return;
