@@ -43,6 +43,7 @@ import {
 } from 'recharts';
 import type { Tables } from '@/integrations/supabase/types';
 import { maskEmail, maskPhone } from '@/lib/masking';
+import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminDeleteUser, logAdminActivity } from '@/modules/identity';
 import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
 import type { NormalizedRpcError } from '@/services/rpc';
@@ -315,7 +316,10 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
   const compact = density === 'compact';
   // Super-admin only sees raw PII; other admins see masked values they can't copy.
   const canSeePII = isSuperAdmin;
-  const displayedEmail = profile.email ? (canSeePII ? profile.email : maskEmail(profile.email)) : null;
+  // Never render synthetic phone-login emails (e.g. 9665...@phone.qitaat.local)
+  // as if they were official user emails — they are internal auth identifiers only.
+  const officialEmail = profile.email && !isSyntheticPhoneEmail(profile.email) ? profile.email : null;
+  const displayedEmail = officialEmail ? (canSeePII ? officialEmail : maskEmail(officialEmail)) : null;
   const displayedPhone = profile.phone ? (canSeePII ? profile.phone : maskPhone(profile.phone)) : null;
 
   const handleCopy = useCallback((value: string, label: string) => {
@@ -366,8 +370,8 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
             </div>
             {!compact && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-              {displayedEmail && (
-                <button onClick={() => handleCopy(profile.email!, isRTL ? 'البريد' : 'Email')}
+              {displayedEmail && officialEmail && (
+                <button onClick={() => handleCopy(officialEmail, isRTL ? 'البريد' : 'Email')}
                   className={`flex items-center gap-1 text-[11px] truncate max-w-[200px] transition-colors group/cp ${canSeePII ? 'text-muted-foreground hover:text-accent' : 'text-muted-foreground/70 cursor-not-allowed'}`}
                   title={canSeePII ? (isRTL ? 'نسخ البريد' : 'Copy email') : (isRTL ? 'متاح فقط لمدير النظام' : 'Super Admin only')}>
                   <Mail className="w-3 h-3 shrink-0" />
