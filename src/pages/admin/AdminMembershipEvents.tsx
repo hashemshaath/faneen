@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { listRecentMembershipSubscriptionEvents } from '@/modules/memberships';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -8,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, History } from 'lucide-react';
 import { MembershipLifecycleJobsPanel } from '@/components/admin/MembershipLifecycleJobsPanel';
+import { Link } from 'react-router-dom';
 
 interface EventRow {
   id: string;
@@ -41,6 +43,31 @@ const AdminMembershipEvents = () => {
       const { data, error } = await listRecentMembershipSubscriptionEvents<EventRow>({ limit: 500 });
       if (error) throw error;
       return (data ?? []) as unknown as EventRow[];
+    },
+  });
+
+  const userIds = Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean)));
+  const subIds = Array.from(new Set(rows.map((r) => r.subscription_id).filter(Boolean)));
+
+  const { data: userRefs = {} } = useQuery({
+    queryKey: ['admin-msub-events-user-refs', userIds],
+    enabled: userIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from('profiles').select('user_id, ref_id').in('user_id', userIds);
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((p) => { if (p.ref_id) map[p.user_id] = p.ref_id; });
+      return map;
+    },
+  });
+
+  const { data: subRefs = {} } = useQuery({
+    queryKey: ['admin-msub-events-sub-refs', subIds],
+    enabled: subIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from('membership_subscriptions').select('id, ref_id').in('id', subIds);
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((s) => { if (s.ref_id) map[s.id] = s.ref_id; });
+      return map;
     },
   });
 
@@ -78,8 +105,16 @@ const AdminMembershipEvents = () => {
                     </TableCell>
                     <TableCell className="tech-content text-xs">{r.from_tier || '—'}</TableCell>
                     <TableCell className="tech-content text-xs">{r.to_tier || '—'}</TableCell>
-                    <TableCell className="tech-content text-[10px] font-mono">{r.user_id.slice(0, 8)}…</TableCell>
-                    <TableCell className="tech-content text-[10px] font-mono">{r.subscription_id.slice(0, 8)}…</TableCell>
+                    <TableCell className="tech-content text-[11px] font-mono">
+                      {userRefs[r.user_id] ? (
+                        <Link to={`/admin/users/${r.user_id}`} className="text-accent hover:underline">{userRefs[r.user_id]}</Link>
+                      ) : (
+                        <span className="text-muted-foreground">{r.user_id.slice(0, 8)}…</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="tech-content text-[11px] font-mono">
+                      {subRefs[r.subscription_id] || <span className="text-muted-foreground">{r.subscription_id.slice(0, 8)}…</span>}
+                    </TableCell>
                   </TableRow>
                 ))}
                 {rows.length === 0 && (

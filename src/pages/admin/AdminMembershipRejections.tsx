@@ -6,6 +6,7 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { queryMembershipUpgradeRejections } from '@/modules/memberships';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -176,6 +177,18 @@ const AdminMembershipRejections: React.FC = () => {
   const rows = data?.rows ?? [];
   const total = data?.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const userIds = useMemo(() => Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean))), [rows]);
+  const { data: userRefs = {} } = useQuery({
+    queryKey: ['admin-rejections-user-refs', userIds],
+    enabled: userIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from('profiles').select('user_id, ref_id').in('user_id', userIds);
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((p) => { if (p.ref_id) map[p.user_id] = p.ref_id; });
+      return map;
+    },
+  });
 
   const stats = useMemo(() => {
     const by: Record<string, number> = {};
@@ -431,10 +444,10 @@ const AdminMembershipRejections: React.FC = () => {
                           <Link
                             to={`/admin/users?q=${encodeURIComponent(r.user_id)}`}
                             className="tech-content inline-flex items-center gap-1 text-primary hover:underline"
-                            title={r.user_id}
+                            title={userRefs[r.user_id] || r.user_id}
                           >
                             <User2 className="h-3.5 w-3.5" />
-                            {r.user_id.slice(0, 8)}…
+                            {userRefs[r.user_id] || `${r.user_id.slice(0, 8)}…`}
                           </Link>
                         </TableCell>
                         <TableCell className="text-end">
