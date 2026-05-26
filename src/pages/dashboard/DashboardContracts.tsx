@@ -1009,6 +1009,8 @@ const DashboardContracts = () => {
       overrideForm?: Partial<ContractForm>;
       overrideSelectedClient?: SelectedClient | null;
       overrideGuestClient?: GuestClient | null;
+      /** Admin-only: override provider_id (admin cannot be a party themselves). */
+      overrideProviderUserId?: string | null;
       /** When true, do NOT throw if client is missing — save as a bare draft. */
       allowMissingClient?: boolean;
     }) => {
@@ -1038,7 +1040,9 @@ const DashboardContracts = () => {
       }
 
       const payload: any = {
-        provider_id: user!.id, client_id: clientUserId, business_id: businessId || null,
+        provider_id: vars?.overrideProviderUserId ?? user!.id,
+        client_id: clientUserId,
+        business_id: businessId || null,
         guest_client_name:  !clientUserId ? (effGuestClient?.name  ?? null) : null,
         guest_client_email: !clientUserId ? (effGuestClient?.email ?? (effForm.client_email?.trim() || null)) : null,
         guest_client_phone: !clientUserId ? (effGuestClient?.phone ?? null) : null,
