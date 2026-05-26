@@ -293,7 +293,9 @@ const AdminCronRuns = () => {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <CalendarClock className="h-4 w-4 text-primary" />
-                {isRTL ? 'صحة المهام حسب الوظيفة' : 'Job health breakdown'}
+                {isRTL
+                  ? 'صحة المهام المجدولة — صحة المهام حسب الوظيفة'
+                  : 'Cron Health — Job health breakdown'}
               </CardTitle>
               <Badge variant="outline" className="text-[11px]">
                 {healthRows.length} {isRTL ? 'مهمة' : 'jobs'}
@@ -302,7 +304,11 @@ const AdminCronRuns = () => {
           </CardHeader>
           <CardContent className="p-0">
             {healthQuery.isError ? (
-              <EmptyError isRTL={isRTL} onRetry={() => healthQuery.refetch()} />
+              <EmptyError
+                isRTL={isRTL}
+                onRetry={() => healthQuery.refetch()}
+                message={isRTL ? 'تعذر تحميل صحة المهام.' : 'Failed to load job health.'}
+              />
             ) : healthQuery.isLoading ? (
               <div className="p-4 space-y-2">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -310,7 +316,12 @@ const AdminCronRuns = () => {
                 ))}
               </div>
             ) : healthRows.length === 0 ? (
-              <EmptyState isRTL={isRTL} />
+              <EmptyState
+                isRTL={isRTL}
+                message={isRTL
+                  ? 'لا توجد بيانات كافية للفترة المحددة.'
+                  : 'Not enough data for the selected period.'}
+              />
             ) : (
               <div className="overflow-x-auto">
                 <Table>
@@ -437,9 +448,20 @@ const AdminCronRuns = () => {
                 ))}
               </div>
             ) : isError ? (
-              <EmptyError isRTL={isRTL} onRetry={() => refetch()} />
+              <EmptyError
+                isRTL={isRTL}
+                onRetry={() => refetch()}
+                message={isRTL ? 'تعذر تحميل السجلات.' : 'Failed to load logs.'}
+              />
             ) : filteredRuns.length === 0 ? (
-              <EmptyState isRTL={isRTL} message={isRTL ? 'لا توجد نتائج مطابقة.' : 'No matching runs.'} />
+              <EmptyState
+                isRTL={isRTL}
+                message={
+                  rows.length === 0
+                    ? (isRTL ? 'لا توجد تشغيلات مسجلة بعد.' : 'No cron runs recorded yet.')
+                    : (isRTL ? 'لا توجد نتائج مطابقة.' : 'No matching runs.')
+                }
+              />
             ) : (
               <ul className="divide-y divide-border/60">
                 {filteredRuns.map((r) => {
@@ -621,12 +643,22 @@ const EmptyState = ({ isRTL, message }: { isRTL: boolean; message?: string }) =>
   </div>
 );
 
-const EmptyError = ({ isRTL, onRetry }: { isRTL: boolean; onRetry: () => void }) => (
+const EmptyError = ({
+  isRTL,
+  onRetry,
+  message,
+}: {
+  isRTL: boolean;
+  onRetry: () => void;
+  message?: string;
+}) => (
   <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
     <div className="h-12 w-12 rounded-2xl bg-destructive/15 flex items-center justify-center">
       <AlertCircle className="h-5 w-5 text-destructive" />
     </div>
-    <p className="text-sm text-destructive">{isRTL ? 'تعذر تحميل البيانات.' : 'Failed to load data.'}</p>
+    <p className="text-sm text-destructive">
+      {message ?? (isRTL ? 'تعذر تحميل البيانات.' : 'Failed to load data.')}
+    </p>
     <Button variant="outline" size="sm" onClick={onRetry}>
       {isRTL ? 'إعادة المحاولة' : 'Retry'}
     </Button>
