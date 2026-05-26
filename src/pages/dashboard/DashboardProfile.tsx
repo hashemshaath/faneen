@@ -251,7 +251,50 @@ const DashboardProfile: React.FC = () => {
       qc.invalidateQueries({ queryKey: ['profile-page-owner-business'] });
       toast.success(t(isRTL, 'تم حفظ الملف الشخصي', 'Profile saved'));
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : 'Error'),
+    onError: (e) => {
+      const raw = e instanceof Error ? e.message : String(e);
+      const map: Record<string, { ar: string; en: string }> = {
+        INVALID_NATIONAL_ID: {
+          ar: 'رقم الهوية غير صحيح. يجب أن يكون 10 أرقام ويبدأ بـ 1 (سعودي) أو 2 (مقيم).',
+          en: 'Invalid National ID. Must be 10 digits starting with 1 (Saudi) or 2 (Resident).',
+        },
+        INVALID_VAT_NUMBER: {
+          ar: 'الرقم الضريبي غير صحيح. يجب أن يكون 15 رقمًا ويبدأ بـ 3 وينتهي بـ 3 والرقم 11 = 3.',
+          en: 'Invalid VAT number. 15 digits, starts with 3, ends with 3, 11th digit = 3.',
+        },
+        INVALID_SHORT_NATIONAL_ADDRESS: {
+          ar: 'العنوان الوطني المختصر غير صحيح. يجب أن يكون 4 أحرف ثم 4 أرقام.',
+          en: 'Invalid short national address. Must be 4 letters + 4 digits.',
+        },
+      };
+      const key = Object.keys(map).find((k) => raw.includes(k));
+      if (key) {
+        toast.error(isRTL ? map[key].ar : map[key].en);
+        return;
+      }
+      // Postgres unique-constraint friendly mapping
+      if (raw.includes('idx_profiles_username_unique') || raw.includes('username')) {
+        toast.error(t(isRTL, 'اسم المستخدم محجوز لشخص آخر', 'Username is already taken'));
+        return;
+      }
+      if (raw.includes('idx_profiles_email_unique')) {
+        toast.error(t(isRTL, 'هذا البريد مستخدم في حساب آخر', 'This email is used by another account'));
+        return;
+      }
+      if (raw.includes('idx_profiles_phone_unique')) {
+        toast.error(t(isRTL, 'رقم الجوال مستخدم في حساب آخر', 'This phone is used by another account'));
+        return;
+      }
+      if (raw.includes('idx_profiles_national_id_unique')) {
+        toast.error(t(isRTL, 'رقم الهوية مستخدم في حساب آخر', 'National ID is used by another account'));
+        return;
+      }
+      if (raw.includes('idx_profiles_vat_number_unique')) {
+        toast.error(t(isRTL, 'الرقم الضريبي مستخدم في حساب آخر', 'VAT number is used by another account'));
+        return;
+      }
+      toast.error(raw, { duration: 6000 });
+    },
   });
 
   const publicUrl = form.username ? `${window.location.origin}/${form.username}` : null;
