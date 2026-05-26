@@ -37,7 +37,10 @@ describe('membership-payment-create-intent edge fn — auth & config', () => {
 
 describe('membership-payment-create-intent edge fn — server-side trust', () => {
   it('recomputes amount + currency from membership_plans (never trusts client)', () => {
-    expect(EDGE).toContain("from('membership_plans')");
+    // Edge fn now reads plans via the shared wrapper (getMembershipPlanById)
+    // instead of an in-file `from('membership_plans')` call.
+    expect(EDGE).toContain('getMembershipPlanById');
+    expect(EDGE).not.toMatch(/supabase\.from\(['"]membership_plans['"]\)/);
     expect(EDGE).toContain('price_monthly');
     expect(EDGE).toContain('price_yearly');
     expect(EDGE).toContain('currency_code');
@@ -47,8 +50,11 @@ describe('membership-payment-create-intent edge fn — server-side trust', () =>
   });
 
   it('scopes the subscription to the JWT user id', () => {
-    expect(EDGE).toContain("from('membership_subscriptions')");
-    expect(EDGE).toContain('sub.user_id !== userId');
+    // Subscription lookups go through getMembershipSubscriptionById; the
+    // user-id guard remains in the edge fn body.
+    expect(EDGE).toContain('getMembershipSubscriptionById');
+    expect(EDGE).not.toMatch(/supabase\.from\(['"]membership_subscriptions['"]\)/);
+    expect(EDGE).toMatch(/user_id\s*!==\s*userId/);
   });
 
   it('persists provider=moyasar with a deterministic idempotency key', () => {

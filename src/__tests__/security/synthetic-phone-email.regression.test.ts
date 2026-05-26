@@ -15,6 +15,26 @@ const read = (p: string) => readFileSync(resolve(process.cwd(), p), 'utf8');
 
 const SYNTHETIC_LITERAL = /@phone\.qitaat\.local/;
 
+/**
+ * Strip occurrences that are intentionally *educational* — JS line/block
+ * comments and validation/warning copy that tells the user NOT to use the
+ * synthetic domain. Those are not "renders" of a synthetic identity.
+ */
+function stripEducationalMentions(src: string): string {
+  return src
+    .split('\n')
+    .filter((line) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('//')) return false;
+      if (trimmed.startsWith('*')) return false;
+      // Warning/validation copy (EN + AR) explaining the forbidden suffix.
+      if (/cannot end with @phone\.qitaat\.local/i.test(line)) return false;
+      if (/لا يمكن أن ينتهي بـ @phone\.qitaat\.local/.test(line)) return false;
+      return true;
+    })
+    .join('\n');
+}
+
 const USER_FACING_FILES = [
   'src/pages/MembershipInvoice.tsx',
   'src/pages/Membership.tsx',
@@ -27,7 +47,7 @@ const USER_FACING_FILES = [
 describe('synthetic phone-login email is never rendered as official email', () => {
   for (const file of USER_FACING_FILES) {
     it(`${file} contains no hardcoded synthetic-domain literal`, () => {
-      expect(read(file)).not.toMatch(SYNTHETIC_LITERAL);
+      expect(stripEducationalMentions(read(file))).not.toMatch(SYNTHETIC_LITERAL);
     });
   }
 });

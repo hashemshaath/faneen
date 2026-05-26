@@ -133,7 +133,10 @@ describe('P-5 profile read migration', () => {
     expect(src).not.toMatch(/supabase\.from\(['"]profiles['"]\)/);
     expect(src).toContain('listProfilesByUserIds');
     expect(src).toContain("'user_id, full_name, phone, avatar_url'");
-    expect(src).toContain("['booking-client-profiles', clientIds]");
+    // Query key was extended to include user.id + business.id for safer
+    // cache scoping; assert the prefix + clientIds presence instead of a
+    // brittle full-literal match.
+    expect(src).toMatch(/\[\s*'booking-client-profiles'[\s\S]{0,200}clientIds\s*\]/);
   });
   it('AdminMemberships uses listProfilesByUserIds (membership_tier field preserved)', () => {
     const src = read('src/pages/admin/AdminMemberships.tsx');

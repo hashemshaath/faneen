@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Tabs } from '@/components/ui/tabs';
 import { ContractTabsHeader } from '../ContractTabsHeader';
+import { LanguageProvider } from '@/i18n/LanguageContext';
 
 const fullCounts = {
   milestones: 3,
@@ -16,7 +17,11 @@ const fullCounts = {
 };
 
 function renderWithTabs(ui: React.ReactNode) {
-  return render(<Tabs defaultValue="milestones">{ui}</Tabs>);
+  return render(
+    <LanguageProvider>
+      <Tabs defaultValue="milestones">{ui}</Tabs>
+    </LanguageProvider>,
+  );
 }
 
 describe('ContractTabsHeader', () => {
