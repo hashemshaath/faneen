@@ -20,6 +20,7 @@ import { uploadAvatar } from '@/modules/files';
 import { toast } from 'sonner';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { ActiveBusinessSwitcher } from './ActiveBusinessSwitcher';
+import { ActiveLocationSwitcher } from './ActiveLocationSwitcher';
 import { useDisplayRefId } from '@/hooks/useDisplayRefId';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
@@ -166,6 +167,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                     hide the active-business switcher to prevent any context
                     leak from the admin identity into a provider scope. */}
                 {!isAdmin && !isSuperAdmin && <ActiveBusinessSwitcher />}
+                {!isAdmin && !isSuperAdmin && <ActiveLocationSwitcher />}
                 <ThemeToggle />
                 <NotificationBell />
 
