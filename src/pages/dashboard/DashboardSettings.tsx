@@ -21,7 +21,7 @@ import {
   Smartphone, Volume2, VolumeX, BellRing, BellOff, Hash,
   Fingerprint, KeyRound, AlertTriangle, CheckCircle, Info,
   LogOut, Trash2, Download, Upload, AtSign, MapPin, Languages, Copy,
-  Sparkles, ExternalLink, Loader2, Crown,
+  Sparkles, ExternalLink, Loader2, Crown, History,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BnplProvidersManager } from '@/components/bnpl/BnplProvidersManager';
