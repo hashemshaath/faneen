@@ -51,3 +51,82 @@ memberships across other businesses). Minimal, safe, non-breaking.
   `business_staff.permissions_override` + role defaults.
 - Step 3: migrate dashboard pages from `useActiveBusiness` to
   `useActiveWorkspace` incrementally (one module at a time).
+
+---
+
+## WORKSPACE-CONTEXT-2 — Step 2 (locations + permissions hydration)
+
+### Location source of truth
+There is no `business_locations` table. After audit, the active location
+within an entity maps to `public.business_branches`. Decision:
+
+- **Canonical source: `public.business_branches`** (`business_id` foreign key).
+- `public.client_sites` represents *customer* sites for projects/contracts,
+  not provider workspace locations — out of scope for the workspace switcher.
+- `public.location_staff_assignments` (per-branch staff scoping) is exposed
+  via an optional read wrapper but is not yet consumed by the active
+  workspace. RLS on it is admin-only today, so staff assignment scoping
+  remains server-side.
+
+### New canonical wrappers (`src/modules/locations`)
+- `listLocationsForEntity({ entityId, activeOnly? })` — RLS-scoped read of
+  `business_branches` filtered by `business_id`, ordered by `is_main desc,
+  sort_order asc`.
+- `getLocationById({ locationId })` — single-row lookup, returns null when
+  the caller cannot see the row.
+- `listLocationAssignmentsForUser({ userId, entityId? })` — optional read
+  of `location_staff_assignments` joined to `business_staff` for the
+  current user. Provided for future per-location permission UI.
+
+No pages access these tables directly via `supabase.from` (audit test
+`workspaceContext2.audit.test.ts`).
+
+### useActiveWorkspace additions
+New shape (additive — existing fields unchanged):
+
+```
+{
+  active_location_id: string | null,
+  locations: WorkspaceLocationRow[],
+  setActiveLocationId: (id: string | null) => void,
+  clearActiveLocationId: () => void,
+  permissions: string[],  // hydrated, see below
+}
+```
+
+Behavior:
+- `locations` is fetched per active entity via `listLocationsForEntity`
+  (React Query, `staleTime: 60s`).
+- `active_location_id` is persisted per `(user, entity)` under
+  `localStorage` key `qitaat_active_location_<uid>_<entityId>`.
+- Switching the active entity rehydrates `active_location_id` from the new
+  entity's preference (or null if absent).
+- Self-heal: a persisted id that is not in the accessible `locations[]`
+  list (revoked branch, spoofed value) is cleared. No automatic fallback
+  to "first" — locations remain optional.
+- `setActiveLocationId` ignores ids not in the accessible list, blocking
+  localStorage / runtime spoofing from setting an inaccessible id.
+
+### Permissions hydration
+- Derived from the active membership's `business_staff.permissions_override`
+  (jsonb). Accepts both shapes:
+  - `Record<string, boolean>` → keys with value `true`.
+  - `string[]` → returned as-is.
+- For owner memberships there is no staff row; `permissions` is `[]` (the
+  owner role grants full access via RLS — this hint is for UI only).
+- **Authorization remains server-side.** `permissions` is a UI convenience
+  for hiding/showing controls; every mutation and read continues to go
+  through RLS / RPC.
+
+### Intentionally NOT done in Step 2
+- No `ActiveBusinessSwitcher` UI changes (no location dropdown yet).
+- No dashboard migrations off `useActiveBusiness`.
+- No RLS changes; no new policies; no route changes; no payment/auth
+  changes.
+
+### Deferred next steps
+- Location switcher UI (extend `ActiveBusinessSwitcher` with a secondary
+  selector).
+- Dashboard migration onto `useActiveWorkspace` (per-module).
+- Role / permission catalog wiring (define canonical permission keys and
+  derive defaults per `business_staff_role`).
