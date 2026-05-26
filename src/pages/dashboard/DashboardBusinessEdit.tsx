@@ -13,8 +13,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
-import { getOwnerBusiness, updateBusinessById } from '@/modules/businesses';
+import { getOwnerBusiness, updateBusinessById, listBusinessesByIds } from '@/modules/businesses';
 import { nationalAddressLookup } from '@/modules/locations';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -81,11 +82,29 @@ const DashboardBusinessEdit: React.FC = () => {
   const errors = errorCount(validationIssues);
   const hasErrors = errors > 0;
 
+  // WORKSPACE-CONTEXT-4A: respect the active entity selection when it
+  // refers to a business the user owns. RLS on `businesses.user_id`
+  // remains authoritative; this only changes which owned row is loaded
+  // for multi-business owners. Reset local form when entity changes.
+  const { active_entity_id, entities } = useActiveWorkspace();
+  const activeOwnerEntityId = useMemo(() => {
+    if (!active_entity_id) return null;
+    const e = entities.find((x) => x.entity_id === active_entity_id);
+    return e && e.source === 'owner' ? e.entity_id : null;
+  }, [active_entity_id, entities]);
+
   const { data: business, isLoading, error } = useQuery({
-    queryKey: ['business-edit', user?.id],
+    queryKey: ['business-edit', user?.id, activeOwnerEntityId],
     enabled: !!user,
     queryFn: async (): Promise<BusinessRow | null> => {
       if (!user) return null;
+      if (activeOwnerEntityId) {
+        const { data, error } = await listBusinessesByIds<BusinessRow>({
+          ids: [activeOwnerEntityId], select: '*',
+        });
+        if (error) throw error;
+        return ((data ?? [])[0] as BusinessRow | undefined) ?? null;
+      }
       const { data, error } = await getOwnerBusiness<BusinessRow>({
         userId: user.id,
         select: '*',
@@ -97,7 +116,12 @@ const DashboardBusinessEdit: React.FC = () => {
     },
   });
 
-  useEffect(() => { if (business && !form) setForm(business); }, [business, form]);
+  // Reset form when the loaded business id changes (e.g. user switched
+  // the active entity in the workspace switcher).
+  useEffect(() => {
+    if (!business) return;
+    if (!form || form.id !== business.id) setForm(business);
+  }, [business, form]);
 
   const { data: countries = [] } = useQuery({
     queryKey: ['ref-countries'],

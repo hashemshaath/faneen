@@ -27,8 +27,9 @@ import { ImageUpload } from '@/components/ui/image-upload';
 
 import { supabase } from '@/integrations/supabase/client';
 import { updateProfile } from '@/modules/users';
-import { getOwnerBusiness } from '@/modules/businesses';
+import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
 import { nationalAddressLookup } from '@/modules/locations';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { getDisplayEmail, isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { cn } from '@/lib/utils';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
@@ -46,6 +47,17 @@ const DashboardProfile: React.FC = () => {
   const { user, profile, refreshProfile } = useAuth();
   const displayRefId = useDisplayRefId();
   const qc = useQueryClient();
+  // WORKSPACE-CONTEXT-4A: source the active entity id from the unified
+  // workspace hook so multi-business owners see the picked business in
+  // the "view as provider" link instead of always the first owned one.
+  // Falls back to getOwnerBusiness when no entity is selected (preserves
+  // pre-migration behavior for single-business users).
+  const { active_entity_id, entities } = useActiveWorkspace();
+  const activeOwnerEntityId = useMemo(() => {
+    if (!active_entity_id) return null;
+    const e = entities.find((x) => x.entity_id === active_entity_id);
+    return e && e.source === 'owner' ? e.entity_id : null;
+  }, [active_entity_id, entities]);
   usePageMeta({
     title: t(isRTL, 'الملف الشخصي | قِطاعات', 'My Profile | Qitaat'),
     noindex: true,
@@ -111,9 +123,18 @@ const DashboardProfile: React.FC = () => {
 
   // Owner business (for "view as provider" link)
   const { data: business } = useQuery({
-    queryKey: ['profile-page-owner-business', user?.id],
+    queryKey: ['profile-page-owner-business', user?.id, activeOwnerEntityId],
     queryFn: async () => {
       if (!user) return null;
+      // Prefer the active owner entity when one is selected via the
+      // workspace switcher; otherwise fall back to the legacy single-row
+      // owner lookup. RLS is authoritative either way.
+      if (activeOwnerEntityId) {
+        const { data } = await listBusinessesByIds<{
+          id: string; username: string; name_ar: string; name_en: string;
+        }>({ ids: [activeOwnerEntityId], select: 'id, username, name_ar, name_en' });
+        return data?.[0] ?? null;
+      }
       const { data } = await getOwnerBusiness<{ id: string; username: string; name_ar: string; name_en: string }>({
         userId: user.id, select: 'id, username, name_ar, name_en',
       });
