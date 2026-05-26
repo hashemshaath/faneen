@@ -547,6 +547,50 @@ const AdminBusinesses = () => {
     }
   }, [createForm.owner_query, isRTL]);
 
+  /* ─── Live owner search (autocomplete) ─── */
+  useEffect(() => {
+    if (!creatingBiz) return;
+    const q = (createForm.owner_query || '').trim();
+    if (q.length < 2) { setOwnerResults([]); setOwnerSearching(false); return; }
+    if (createForm.resolved_user_id) return; // already picked
+    setOwnerSearching(true);
+    const handle = setTimeout(async () => {
+      try {
+        const like = `%${q.replace(/[%,]/g, '')}%`;
+        const upper = q.toUpperCase();
+        const lower = q.toLowerCase();
+        const orParts = [
+          `full_name.ilike.${like}`,
+          `full_name_ar.ilike.${like}`,
+          `full_name_en.ilike.${like}`,
+          `email.ilike.${like}`,
+          `username.ilike.${like}`,
+          `ref_id.ilike.%${upper}%`,
+        ].join(',');
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, full_name_ar, full_name_en, email, username, ref_id, avatar_url')
+          .or(orParts)
+          .limit(8);
+        if (error) throw error;
+        // Promote exact email/username/ref_id match to top
+        const rows = (data || []) as any[];
+        rows.sort((a, b) => {
+          const ax = (a.email === lower || a.username === lower || a.ref_id === upper) ? 0 : 1;
+          const bx = (b.email === lower || b.username === lower || b.ref_id === upper) ? 0 : 1;
+          return ax - bx;
+        });
+        setOwnerResults(rows);
+        setOwnerOpen(true);
+      } catch {
+        setOwnerResults([]);
+      } finally {
+        setOwnerSearching(false);
+      }
+    }, 280);
+    return () => clearTimeout(handle);
+  }, [createForm.owner_query, createForm.resolved_user_id, creatingBiz]);
+
   /* ─── Create business mutation ─── */
   const createBizMutation = useMutation({
     mutationFn: async () => {
