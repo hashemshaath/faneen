@@ -2064,6 +2064,7 @@ const AdminUsers = () => {
                           <>
                             <div className="space-y-1.5" data-field-error="email">
                               <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" />{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                              <EmailLiveHint value={editForm.email} isRTL={isRTL} />
                               <Input
                                 type="email" dir="ltr"
                                 value={editForm.email}
@@ -2074,7 +2075,16 @@ const AdminUsers = () => {
                                 maxLength={255}
                                 className={`h-10 rounded-xl tech-content ${editFieldErrors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                               />
-                              {editFieldErrors.email && <p className="text-xs text-destructive">{editFieldErrors.email}</p>}
+                              {editFieldErrors.email && (
+                                <p className="text-xs text-destructive flex items-center gap-1.5 flex-wrap">
+                                  <span>{editFieldErrors.email}</span>
+                                  {editFieldRawCodes.email && (
+                                    <code className="tech-content text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 border border-destructive/20">
+                                      {editFieldRawCodes.email}
+                                    </code>
+                                  )}
+                                </p>
+                              )}
                             </div>
                             <div data-field-error="phone">
                               <PhoneField
@@ -2087,6 +2097,13 @@ const AdminUsers = () => {
                                 optional
                                 error={editFieldErrors.phone}
                               />
+                              {editFieldRawCodes.phone && (
+                                <p className="mt-1 text-[10px] text-destructive/80 flex items-center gap-1.5">
+                                  <code className="tech-content px-1.5 py-0.5 rounded bg-destructive/10 border border-destructive/20">
+                                    {editFieldRawCodes.phone}
+                                  </code>
+                                </p>
+                              )}
                             </div>
                           </>
                         ) : (
