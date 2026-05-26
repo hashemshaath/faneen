@@ -389,9 +389,11 @@ const AdminIdentity: React.FC = () => {
         <Tabs value={view} onValueChange={(v) => setView(v as View)} className="w-full">
           <TabsList className="bg-card border border-border/30 rounded-2xl p-1.5 h-auto flex-wrap gap-1">
             <TabsTrigger value="overview" className="rounded-xl gap-1.5 py-2"><Activity className="w-3.5 h-3.5" />{isRTL ? 'نظرة عامة' : 'Overview'}</TabsTrigger>
+            <TabsTrigger value="all" className="rounded-xl gap-1.5 py-2"><Sparkles className="w-3.5 h-3.5" />{isRTL ? 'الكل' : 'All'}</TabsTrigger>
             <TabsTrigger value="users" className="rounded-xl gap-1.5 py-2"><Users className="w-3.5 h-3.5" />{isRTL ? 'المستخدمون' : 'Users'}</TabsTrigger>
             <TabsTrigger value="businesses" className="rounded-xl gap-1.5 py-2"><Building2 className="w-3.5 h-3.5" />{isRTL ? 'المنشآت' : 'Businesses'}</TabsTrigger>
             <TabsTrigger value="staff" className="rounded-xl gap-1.5 py-2"><Crown className="w-3.5 h-3.5" />{isRTL ? 'فريق الإدارة' : 'Staff'}</TabsTrigger>
+            <TabsTrigger value="disabled" className="rounded-xl gap-1.5 py-2"><Ban className="w-3.5 h-3.5" />{isRTL ? 'معطّلون' : 'Disabled'}</TabsTrigger>
           </TabsList>
 
           {/* ─── Overview tab ─── */}
@@ -543,6 +545,30 @@ const AdminIdentity: React.FC = () => {
               })}
               bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
               isLoading={isLoading} isRTL={isRTL} isSuperAdmin={isSuperAdmin}
+            />
+          </TabsContent>
+
+          {/* ─── Disabled tab ─── */}
+          <TabsContent value="disabled" className="mt-5">
+            <CompactUserList
+              profiles={profiles.filter(p => p.is_banned)}
+              bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
+              isLoading={isLoading} isRTL={isRTL} isSuperAdmin={isSuperAdmin}
+            />
+          </TabsContent>
+
+          {/* ─── All (mixed) tab — users + businesses interleaved by created_at ─── */}
+          <TabsContent value="all" className="mt-5">
+            <UnifiedFeed
+              profiles={profiles}
+              businesses={businesses}
+              bizsByOwner={bizsByOwner}
+              rolesByUser={rolesByUser}
+              profileByUserId={profileByUserId}
+              isLoading={isLoading}
+              isRTL={isRTL}
+              isSuperAdmin={isSuperAdmin}
+              search={deferredSearch}
             />
           </TabsContent>
         </Tabs>
