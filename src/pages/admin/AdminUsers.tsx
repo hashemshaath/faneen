@@ -43,7 +43,7 @@ import {
 } from 'recharts';
 import type { Tables } from '@/integrations/supabase/types';
 import { maskEmail, maskPhone } from '@/lib/masking';
-import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminDeleteUser } from '@/modules/identity';
+import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminDeleteUser, logAdminActivity } from '@/modules/identity';
 import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
 import type { NormalizedRpcError } from '@/services/rpc';
 
