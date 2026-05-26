@@ -33,7 +33,8 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { Crown, Wallet, RefreshCw, Search, ChevronRight, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { trackEvent } from '@/lib/analytics';
-import { ReferenceTag } from '@/components/reference/ReferenceTag';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
+import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 
 const REASON_LABEL: Record<string, string> = {
   monthly_grant: 'منح شهري',
@@ -149,7 +150,10 @@ const AdminProviderSubscriptions: React.FC = () => {
                         <td className="py-2 px-2">
                           {s.ref_id ? (
                             <span onClick={(e) => e.stopPropagation()}>
-                              <ReferenceTag refId={s.ref_id} isRTL />
+                              <span className="inline-flex items-center gap-1">
+                                <ReferenceBadge refId={s.ref_id} />
+                                <ReferenceLinkCopy refId={s.ref_id} isRTL={true} />
+                              </span>
                             </span>
                           ) : (
                             <span className="text-muted-foreground">—</span>
