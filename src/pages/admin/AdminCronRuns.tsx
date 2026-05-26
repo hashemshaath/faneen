@@ -293,7 +293,9 @@ const AdminCronRuns = () => {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <CalendarClock className="h-4 w-4 text-primary" />
-                {isRTL ? 'صحة المهام حسب الوظيفة' : 'Job health breakdown'}
+                {isRTL
+                  ? 'صحة المهام المجدولة — صحة المهام حسب الوظيفة'
+                  : 'Cron Health — Job health breakdown'}
               </CardTitle>
               <Badge variant="outline" className="text-[11px]">
                 {healthRows.length} {isRTL ? 'مهمة' : 'jobs'}
@@ -302,7 +304,11 @@ const AdminCronRuns = () => {
           </CardHeader>
           <CardContent className="p-0">
             {healthQuery.isError ? (
-              <EmptyError isRTL={isRTL} onRetry={() => healthQuery.refetch()} />
+              <EmptyError
+                isRTL={isRTL}
+                onRetry={() => healthQuery.refetch()}
+                message={isRTL ? 'تعذر تحميل صحة المهام.' : 'Failed to load job health.'}
+              />
             ) : healthQuery.isLoading ? (
               <div className="p-4 space-y-2">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -310,7 +316,12 @@ const AdminCronRuns = () => {
                 ))}
               </div>
             ) : healthRows.length === 0 ? (
-              <EmptyState isRTL={isRTL} />
+              <EmptyState
+                isRTL={isRTL}
+                message={isRTL
+                  ? 'لا توجد بيانات كافية للفترة المحددة.'
+                  : 'Not enough data for the selected period.'}
+              />
             ) : (
               <div className="overflow-x-auto">
                 <Table>
