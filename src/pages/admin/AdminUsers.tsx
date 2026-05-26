@@ -617,6 +617,7 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
       {expanded && (
         <UserDetailPanel
           userId={profile.user_id}
+          profile={profile}
           isRTL={isRTL}
           businessLinks={businessLinks}
           isSuperAdmin={isSuperAdmin}
