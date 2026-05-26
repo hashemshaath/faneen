@@ -27,8 +27,9 @@ import { ImageUpload } from '@/components/ui/image-upload';
 
 import { supabase } from '@/integrations/supabase/client';
 import { updateProfile } from '@/modules/users';
-import { getOwnerBusiness } from '@/modules/businesses';
+import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
 import { nationalAddressLookup } from '@/modules/locations';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { getDisplayEmail, isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { cn } from '@/lib/utils';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
