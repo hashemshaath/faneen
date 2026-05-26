@@ -444,7 +444,22 @@ const AdminIdentity: React.FC = () => {
             <TabsTrigger value="businesses" className="rounded-xl gap-1.5 py-2"><Building2 className="w-3.5 h-3.5" />{isRTL ? 'المنشآت' : 'Businesses'}</TabsTrigger>
             <TabsTrigger value="staff" className="rounded-xl gap-1.5 py-2"><Crown className="w-3.5 h-3.5" />{isRTL ? 'فريق الإدارة' : 'Staff'}</TabsTrigger>
             <TabsTrigger value="disabled" className="rounded-xl gap-1.5 py-2"><Ban className="w-3.5 h-3.5" />{isRTL ? 'معطّلون' : 'Disabled'}</TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'تحليلات' : 'Analytics'}</TabsTrigger>
           </TabsList>
+
+          {/* Filters + Saved Views */}
+          {view !== 'overview' && view !== 'analytics' && (
+            <div className="mt-3">
+              <IdentityFilters
+                filters={filters}
+                onChange={setFilters}
+                currentView={view}
+                currentSearch={deferredSearch}
+                onApplyView={applySavedView}
+                isRTL={isRTL}
+              />
+            </div>
+          )}
 
           {/* ─── Overview tab ─── */}
           <TabsContent value="overview" className="space-y-4 mt-5">
@@ -576,20 +591,20 @@ const AdminIdentity: React.FC = () => {
 
           {/* ─── Users tab (compact list + deep-link to full editor) ─── */}
           <TabsContent value="users" className="mt-5">
-            <CompactUserList profiles={profiles} bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
+            <CompactUserList profiles={filteredProfiles} bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
               isLoading={isLoading} isRTL={isRTL} isSuperAdmin={isSuperAdmin} />
           </TabsContent>
 
           {/* ─── Businesses tab ─── */}
           <TabsContent value="businesses" className="mt-5">
-            <CompactBusinessList businesses={businesses} profileByUserId={profileByUserId}
+            <CompactBusinessList businesses={filteredBusinesses} profileByUserId={profileByUserId}
               isLoading={isLoading} isRTL={isRTL} />
           </TabsContent>
 
           {/* ─── Staff tab ─── */}
           <TabsContent value="staff" className="mt-5">
             <CompactUserList
-              profiles={profiles.filter(p => {
+              profiles={filteredProfiles.filter(p => {
                 const r = rolesByUser.get(p.user_id) || [];
                 return r.some(x => ['super_admin', 'admin', 'moderator'].includes(x.role));
               })}
@@ -601,7 +616,7 @@ const AdminIdentity: React.FC = () => {
           {/* ─── Disabled tab ─── */}
           <TabsContent value="disabled" className="mt-5">
             <CompactUserList
-              profiles={profiles.filter(p => p.is_banned)}
+              profiles={filteredProfiles.filter(p => p.is_banned)}
               bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
               isLoading={isLoading} isRTL={isRTL} isSuperAdmin={isSuperAdmin}
             />
@@ -610,8 +625,8 @@ const AdminIdentity: React.FC = () => {
           {/* ─── All (mixed) tab — users + businesses interleaved by created_at ─── */}
           <TabsContent value="all" className="mt-5">
             <UnifiedFeed
-              profiles={profiles}
-              businesses={businesses}
+              profiles={filteredProfiles}
+              businesses={filteredBusinesses}
               bizsByOwner={bizsByOwner}
               rolesByUser={rolesByUser}
               profileByUserId={profileByUserId}
@@ -619,6 +634,17 @@ const AdminIdentity: React.FC = () => {
               isRTL={isRTL}
               isSuperAdmin={isSuperAdmin}
               search={deferredSearch}
+            />
+          </TabsContent>
+
+          {/* ─── Analytics tab ─── */}
+          <TabsContent value="analytics" className="mt-5">
+            <IdentityAnalytics
+              profiles={profiles}
+              businesses={businesses}
+              roles={roles}
+              isRTL={isRTL}
+              isLoading={isLoading}
             />
           </TabsContent>
         </Tabs>
