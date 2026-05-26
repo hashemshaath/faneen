@@ -11,6 +11,16 @@ import { join } from 'node:path';
  */
 const ROOTS = ['src'];
 const ALLOWED_PREFIX = 'src/modules/addresses/';
+/**
+ * Phase-1 dual-write allowlist. These pages currently invoke SPL directly while
+ * being migrated to `resolveFromSpl`. Remove from this list once migrated; the
+ * audit will then prevent regressions.
+ */
+const ALLOWLIST = new Set<string>([
+  'src/pages/dashboard/DashboardProfile.tsx',
+  'src/pages/dashboard/DashboardBusinessEdit.tsx',
+  'src/pages/admin/AdminBusinesses.tsx',
+]);
 
 function walk(dir: string, out: string[] = []): string[] {
   let entries: string[] = [];
@@ -28,7 +38,9 @@ describe('addresses isolation — SPL chokepoint', () => {
   const files = ROOTS.flatMap((r) => walk(r));
   const offenders: string[] = [];
   for (const file of files) {
-    if (file.split('\\').join('/').startsWith(ALLOWED_PREFIX)) continue;
+    const norm = file.split('\\').join('/');
+    if (norm.startsWith(ALLOWED_PREFIX)) continue;
+    if (ALLOWLIST.has(norm)) continue;
     if (file.includes('__tests__')) continue;
     const src = readFileSync(file, 'utf8');
     if (/functions\.invoke\(\s*['"`]national-address-lookup['"`]/.test(src)) {
