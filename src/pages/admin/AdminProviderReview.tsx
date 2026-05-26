@@ -415,6 +415,12 @@ export default function AdminProviderReview() {
                         <CardTitle className="text-base">
                           {language === 'ar' ? (selected.name_ar ?? selected.name_en) : (selected.name_en ?? selected.name_ar)}
                         </CardTitle>
+                        {selected.ref_id && (
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <ReferenceBadge refId={selected.ref_id} />
+                            <ReferenceLinkCopy refId={selected.ref_id} isRTL={isRTL} />
+                          </div>
+                        )}
                         {selected.username && (
                           <a
                             href={`/${selected.username}`}
