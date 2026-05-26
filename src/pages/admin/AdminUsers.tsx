@@ -585,6 +585,7 @@ const AdminUsers = () => {
     const createParam = searchParams.get('create');
     const typeParam = searchParams.get('type');
     const roleParam = searchParams.get('role');
+    const focusParam = searchParams.get('focus');
     let mutated = false;
     const next = new URLSearchParams(searchParams);
 
@@ -611,6 +612,13 @@ const AdminUsers = () => {
       }
       next.delete('create');
       mutated = true;
+    }
+
+    if (focusParam && isAdmin) {
+      // Defer until profiles load; handled in a separate effect below.
+      next.delete('focus');
+      mutated = true;
+      sessionStorage.setItem('qitaat_admin_users_pending_focus', focusParam);
     }
 
     if (mutated) {
