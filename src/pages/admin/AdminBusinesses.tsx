@@ -546,11 +546,9 @@ const AdminBusinesses = () => {
         if (data) { userId = data.user_id; label = `${data.full_name ?? ''} (${data.ref_id ?? ''})`.trim(); }
       } else {
         const ref = q.toUpperCase();
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, ref_id, email')
-          .eq('ref_id', ref)
-          .maybeSingle();
+        const { data, error } = await getProfileByRefId<{
+          user_id: string; full_name: string | null; ref_id: string | null; email: string | null;
+        }>({ refId: ref, select: 'user_id, full_name, ref_id, email' });
         if (error) throw error;
         if (data) { userId = data.user_id as string; label = `${data.full_name ?? ''} (${data.email ?? ''})`.trim(); }
       }
@@ -588,11 +586,11 @@ const AdminBusinesses = () => {
           `username.ilike.${like}`,
           `ref_id.ilike.%${upper}%`,
         ].join(',');
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, full_name_ar, full_name_en, email, username, ref_id, avatar_url')
-          .or(orParts)
-          .limit(8);
+        const { data, error } = await searchProfilesByOr<Record<string, unknown>>({
+          or: orParts,
+          select: 'user_id, full_name, full_name_ar, full_name_en, email, username, ref_id, avatar_url',
+          limit: 8,
+        });
         if (error) throw error;
         // Promote exact email/username/ref_id match to top
         const rows = (data || []) as any[];
@@ -910,9 +908,7 @@ const AdminBusinesses = () => {
     if (!code) return;
     setSplBusy(true);
     try {
-      const { data, error } = await supabase.functions.invoke('national-address-lookup', {
-        body: { shortAddress: code },
-      });
+      const { data, error } = await nationalAddressLookup({ shortAddress: code });
       if (error) throw error;
       const res = data as {
         ok: boolean; message_ar?: string; message_en?: string;
