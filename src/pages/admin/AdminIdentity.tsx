@@ -122,7 +122,7 @@ const AdminIdentity: React.FC = () => {
   const navigate = useNavigate();
   const [, startTransition] = useTransition();
 
-  const view = (searchParams.get('view') as View) || 'overview';
+  const view = (searchParams.get('view') as View) || 'all';
   const setView = useCallback((v: View) => {
     const next = new URLSearchParams(searchParams);
     next.set('view', v);
