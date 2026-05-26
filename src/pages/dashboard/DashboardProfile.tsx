@@ -6,6 +6,7 @@ import {
   User, Mail, Phone, Globe, MapPin, Hash, Save, Loader2, Camera,
   ShieldCheck, ExternalLink, Building2, Crown, AtSign, Languages,
   AlertCircle, ArrowLeft, Settings as SettingsIcon, Copy, Check,
+  IdCard, Receipt, MapPinned, Search,
 } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -51,6 +52,8 @@ const DashboardProfile: React.FC = () => {
   // ───────────────────────── Form state
   const [form, setForm] = useState({
     full_name: '',
+    full_name_ar: '',
+    full_name_en: '',
     username: '',
     email: '',
     phone: '',
@@ -58,16 +61,30 @@ const DashboardProfile: React.FC = () => {
     preferred_language: 'ar' as 'ar' | 'en',
     country_id: '' as string | null,
     city_id: '' as string | null,
+    national_id: '',
+    national_id_type: '' as '' | 'saudi' | 'iqama',
+    vat_number: '',
+    short_national_address: '',
+    region_name: '',
+    district: '',
+    street: '',
+    building_number: '',
+    additional_number: '',
+    postal_code: '',
+    address_line: '',
   });
   const [usernameOk, setUsernameOk] = useState(true); // empty username is acceptable for individuals
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [splLoading, setSplLoading] = useState(false);
 
   // Seed form from profile
   useEffect(() => {
     if (!profile) return;
     setForm({
       full_name: profile.full_name ?? '',
+      full_name_ar: profile.full_name_ar ?? '',
+      full_name_en: profile.full_name_en ?? '',
       username: profile.username ?? '',
       email: profile.email ?? '',
       phone: profile.phone ?? '',
@@ -75,6 +92,17 @@ const DashboardProfile: React.FC = () => {
       preferred_language: (profile.preferred_language as 'ar' | 'en') ?? 'ar',
       country_id: profile.country_id ?? null,
       city_id: profile.city_id ?? null,
+      national_id: profile.national_id ?? '',
+      national_id_type: (profile.national_id_type as 'saudi' | 'iqama' | null) ?? '',
+      vat_number: profile.vat_number ?? '',
+      short_national_address: profile.short_national_address ?? '',
+      region_name: profile.region_name ?? '',
+      district: profile.district ?? '',
+      street: profile.street ?? '',
+      building_number: profile.building_number ?? '',
+      additional_number: profile.additional_number ?? '',
+      postal_code: profile.postal_code ?? '',
+      address_line: profile.address_line ?? '',
     });
     setUsernameOk(true);
   }, [profile]);
@@ -119,16 +147,30 @@ const DashboardProfile: React.FC = () => {
   // Dirty + completeness
   const dirty = useMemo(() => {
     if (!profile) return false;
-    return (
-      form.full_name !== (profile.full_name ?? '') ||
-      form.username !== (profile.username ?? '') ||
-      form.email !== (profile.email ?? '') ||
-      form.phone !== (profile.phone ?? '') ||
-      form.avatar_url !== (profile.avatar_url ?? '') ||
-      form.preferred_language !== ((profile.preferred_language as 'ar' | 'en') ?? 'ar') ||
-      form.country_id !== (profile.country_id ?? null) ||
-      form.city_id !== (profile.city_id ?? null)
-    );
+    const cmp: Array<[unknown, unknown]> = [
+      [form.full_name, profile.full_name ?? ''],
+      [form.full_name_ar, profile.full_name_ar ?? ''],
+      [form.full_name_en, profile.full_name_en ?? ''],
+      [form.username, profile.username ?? ''],
+      [form.email, profile.email ?? ''],
+      [form.phone, profile.phone ?? ''],
+      [form.avatar_url, profile.avatar_url ?? ''],
+      [form.preferred_language, (profile.preferred_language as 'ar' | 'en') ?? 'ar'],
+      [form.country_id, profile.country_id ?? null],
+      [form.city_id, profile.city_id ?? null],
+      [form.national_id, profile.national_id ?? ''],
+      [form.national_id_type, (profile.national_id_type ?? '')],
+      [form.vat_number, profile.vat_number ?? ''],
+      [form.short_national_address, profile.short_national_address ?? ''],
+      [form.region_name, profile.region_name ?? ''],
+      [form.district, profile.district ?? ''],
+      [form.street, profile.street ?? ''],
+      [form.building_number, profile.building_number ?? ''],
+      [form.additional_number, profile.additional_number ?? ''],
+      [form.postal_code, profile.postal_code ?? ''],
+      [form.address_line, profile.address_line ?? ''],
+    ];
+    return cmp.some(([a, b]) => a !== b);
   }, [form, profile]);
 
   const completion = useMemo(() => {
@@ -140,6 +182,8 @@ const DashboardProfile: React.FC = () => {
       !!form.phone.trim(),
       !!form.country_id,
       !!form.city_id,
+      !!form.national_id.trim(),
+      !!(form.district.trim() || form.address_line.trim() || form.short_national_address.trim()),
     ];
     const done = checks.filter(Boolean).length;
     return Math.round((done / checks.length) * 100);
@@ -152,10 +196,31 @@ const DashboardProfile: React.FC = () => {
       if (form.username && !usernameOk) {
         throw new Error(t(isRTL, 'اسم المستخدم غير صالح أو محجوز', 'Username is invalid or taken'));
       }
+      // Client-side Saudi format validation
+      const nid = form.national_id.replace(/\D/g, '');
+      if (nid && !/^[12]\d{9}$/.test(nid)) {
+        throw new Error(t(isRTL,
+          'رقم الهوية يجب أن يكون 10 أرقام ويبدأ بـ 1 (سعودي) أو 2 (مقيم)',
+          'National ID must be 10 digits and start with 1 (Saudi) or 2 (Resident)'));
+      }
+      const vat = form.vat_number.replace(/\D/g, '');
+      if (vat && (vat.length !== 15 || vat[0] !== '3' || vat[10] !== '3' || vat[14] !== '3')) {
+        throw new Error(t(isRTL,
+          'الرقم الضريبي يجب أن يكون 15 رقمًا ويبدأ بـ 3 وينتهي بـ 3 والرقم 11 = 3',
+          'VAT must be 15 digits, start with 3, end with 3, and 11th digit = 3'));
+      }
+      const sna = form.short_national_address.trim().toUpperCase().replace(/\s+/g, '');
+      if (sna && !/^[A-Z]{4}\d{4}$/.test(sna)) {
+        throw new Error(t(isRTL,
+          'العنوان الوطني المختصر يجب أن يكون 4 أحرف ثم 4 أرقام (مثل RRRD2402)',
+          'Short national address must be 4 letters + 4 digits (e.g. RRRD2402)'));
+      }
       const { error } = await updateProfile({
         userId: user.id,
         values: {
           full_name: form.full_name.trim() || null,
+          full_name_ar: form.full_name_ar.trim() || null,
+          full_name_en: form.full_name_en.trim() || null,
           username: form.username ? form.username : null,
           email: form.email.trim() || null,
           phone: form.phone.trim() || '',
@@ -163,6 +228,17 @@ const DashboardProfile: React.FC = () => {
           preferred_language: form.preferred_language,
           country_id: form.country_id,
           city_id: form.city_id,
+          national_id: nid || null,
+          national_id_type: nid ? (nid[0] === '1' ? 'saudi' : 'iqama') : null,
+          vat_number: vat || null,
+          short_national_address: sna || null,
+          region_name: form.region_name.trim() || null,
+          district: form.district.trim() || null,
+          street: form.street.trim() || null,
+          building_number: form.building_number.trim() || null,
+          additional_number: form.additional_number.trim() || null,
+          postal_code: form.postal_code.trim() || null,
+          address_line: form.address_line.trim() || null,
         },
       });
       if (error) throw error;
@@ -184,6 +260,57 @@ const DashboardProfile: React.FC = () => {
     await navigator.clipboard.writeText(publicUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  // ───────────────────────── National Address SPL lookup
+  const lookupShortAddress = async () => {
+    const code = form.short_national_address.trim().toUpperCase().replace(/\s+/g, '');
+    if (!/^[A-Z]{4}\d{4}$/.test(code)) {
+      toast.error(t(isRTL,
+        'أدخل رقم العنوان الوطني (4 أحرف + 4 أرقام)',
+        'Enter a short national address (4 letters + 4 digits)'));
+      return;
+    }
+    setSplLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('national-address-lookup', {
+        body: { shortAddress: code },
+      });
+      if (error) throw error;
+      const res = data as {
+        ok: boolean; message_ar?: string; message_en?: string;
+        address?: {
+          region_ar?: string | null; region_en?: string | null;
+          city_ar?: string | null; city_en?: string | null;
+          district_ar?: string | null; district_en?: string | null;
+          street_ar?: string | null; street_en?: string | null;
+          address_ar?: string | null; address_en?: string | null;
+          building_number?: string | null; additional_number?: string | null;
+          post_code?: string | null;
+        };
+      };
+      if (!res?.ok || !res.address) {
+        toast.error(isRTL ? (res?.message_ar ?? 'تعذّر العثور على العنوان') : (res?.message_en ?? 'Address not found'));
+        return;
+      }
+      const a = res.address;
+      setForm((f) => ({
+        ...f,
+        short_national_address: code,
+        region_name: (isRTL ? a.region_ar : a.region_en) ?? a.region_ar ?? a.region_en ?? f.region_name,
+        district: (isRTL ? a.district_ar : a.district_en) ?? a.district_ar ?? a.district_en ?? f.district,
+        street: (isRTL ? a.street_ar : a.street_en) ?? a.street_ar ?? a.street_en ?? f.street,
+        building_number: a.building_number ?? f.building_number,
+        additional_number: a.additional_number ?? f.additional_number,
+        postal_code: a.post_code ?? f.postal_code,
+        address_line: (isRTL ? a.address_ar : a.address_en) ?? a.address_ar ?? a.address_en ?? f.address_line,
+      }));
+      toast.success(t(isRTL, 'تم تعبئة العنوان', 'Address filled in'));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error');
+    } finally {
+      setSplLoading(false);
+    }
   };
 
   // ───────────────────────── Render
@@ -311,6 +438,37 @@ const DashboardProfile: React.FC = () => {
                   />
                 </div>
 
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      {t(isRTL, 'الاسم بالعربية', 'Arabic name')}
+                    </Label>
+                    <Input
+                      value={form.full_name_ar}
+                      onChange={(e) => setForm((f) => ({ ...f, full_name_ar: e.target.value }))}
+                      dir="rtl"
+                      lang="ar"
+                      className="mt-1 h-11 rounded-xl"
+                      placeholder="أحمد بن محمد"
+                      maxLength={120}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      {t(isRTL, 'الاسم بالإنجليزية', 'English name')}
+                    </Label>
+                    <Input
+                      value={form.full_name_en}
+                      onChange={(e) => setForm((f) => ({ ...f, full_name_en: e.target.value }))}
+                      dir="ltr"
+                      lang="en"
+                      className="mt-1 h-11 rounded-xl tech-content"
+                      placeholder="Ahmad Mohammad"
+                      maxLength={120}
+                    />
+                  </div>
+                </div>
+
                 <UsernamePicker
                   isRTL={isRTL}
                   label={t(isRTL, 'اسم المستخدم (اختياري)', 'Username (optional)')}
@@ -394,6 +552,195 @@ const DashboardProfile: React.FC = () => {
                         </p>
                       )}
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Identity documents */}
+            <Card>
+              <CardContent className="p-4 sm:p-5 space-y-4">
+                <header className="flex items-center gap-2">
+                  <IdCard className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-bold">{t(isRTL, 'الوثائق الرسمية', 'Official documents')}</h2>
+                </header>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      {t(isRTL, 'رقم الهوية / الإقامة', 'National ID / Iqama')}
+                    </Label>
+                    <Input
+                      value={form.national_id}
+                      onChange={(e) => setForm((f) => ({ ...f, national_id: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                      dir="ltr"
+                      inputMode="numeric"
+                      className="mt-1 h-11 rounded-xl tech-content"
+                      placeholder="1xxxxxxxxx / 2xxxxxxxxx"
+                      maxLength={10}
+                    />
+                    {form.national_id && (
+                      <p className="text-[10px] mt-1 flex items-center gap-1">
+                        {/^[12]\d{9}$/.test(form.national_id) ? (
+                          <span className="text-success inline-flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3" />
+                            {form.national_id[0] === '1'
+                              ? t(isRTL, 'هوية سعودية', 'Saudi National ID')
+                              : t(isRTL, 'إقامة', 'Iqama')}
+                          </span>
+                        ) : (
+                          <span className="text-warning inline-flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {t(isRTL, '10 أرقام تبدأ بـ 1 أو 2', '10 digits starting with 1 or 2')}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground inline-flex items-center gap-1">
+                      <Receipt className="w-3 h-3" />
+                      {t(isRTL, 'الرقم الضريبي (اختياري)', 'VAT number (optional)')}
+                    </Label>
+                    <Input
+                      value={form.vat_number}
+                      onChange={(e) => setForm((f) => ({ ...f, vat_number: e.target.value.replace(/\D/g, '').slice(0, 15) }))}
+                      dir="ltr"
+                      inputMode="numeric"
+                      className="mt-1 h-11 rounded-xl tech-content"
+                      placeholder="3xxxxxxxxx3xxxx"
+                      maxLength={15}
+                    />
+                    {form.vat_number && form.vat_number.length === 15 && (
+                      <p className="text-[10px] mt-1 text-muted-foreground">
+                        {t(isRTL, 'سيتم التحقق عند الحفظ', 'Will be validated on save')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* National Address (SPL) */}
+            <Card>
+              <CardContent className="p-4 sm:p-5 space-y-4">
+                <header className="flex items-center gap-2">
+                  <MapPinned className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-bold">{t(isRTL, 'العنوان الوطني', 'National address')}</h2>
+                </header>
+
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground">
+                    {t(isRTL, 'رقم العنوان الوطني المختصر', 'Short national address')}
+                  </Label>
+                  <div className="mt-1 flex gap-2">
+                    <Input
+                      value={form.short_national_address}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          short_national_address: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8),
+                        }))
+                      }
+                      dir="ltr"
+                      className="h-11 rounded-xl tech-content uppercase"
+                      placeholder="RRRD2402"
+                      maxLength={8}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={lookupShortAddress}
+                      disabled={splLoading || form.short_national_address.length !== 8}
+                      className="h-11 rounded-xl gap-1.5 shrink-0"
+                    >
+                      {splLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                      {t(isRTL, 'استدعاء', 'Lookup')}
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {t(isRTL,
+                      '4 أحرف ثم 4 أرقام. سنقوم بتعبئة المنطقة والحي والشارع تلقائيًا.',
+                      '4 letters + 4 digits. We will auto-fill region, district and street.')}
+                  </p>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'المنطقة', 'Region')}</Label>
+                    <Input
+                      value={form.region_name}
+                      onChange={(e) => setForm((f) => ({ ...f, region_name: e.target.value }))}
+                      dir="auto"
+                      className="mt-1 h-11 rounded-xl"
+                      maxLength={120}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الحي', 'District')}</Label>
+                    <Input
+                      value={form.district}
+                      onChange={(e) => setForm((f) => ({ ...f, district: e.target.value }))}
+                      dir="auto"
+                      className="mt-1 h-11 rounded-xl"
+                      maxLength={120}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع', 'Street')}</Label>
+                    <Input
+                      value={form.street}
+                      onChange={(e) => setForm((f) => ({ ...f, street: e.target.value }))}
+                      dir="auto"
+                      className="mt-1 h-11 rounded-xl"
+                      maxLength={160}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'رقم المبنى', 'Building number')}</Label>
+                    <Input
+                      value={form.building_number}
+                      onChange={(e) => setForm((f) => ({ ...f, building_number: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                      dir="ltr"
+                      inputMode="numeric"
+                      className="mt-1 h-11 rounded-xl tech-content"
+                      maxLength={6}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الرقم الإضافي', 'Additional number')}</Label>
+                    <Input
+                      value={form.additional_number}
+                      onChange={(e) => setForm((f) => ({ ...f, additional_number: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                      dir="ltr"
+                      inputMode="numeric"
+                      className="mt-1 h-11 rounded-xl tech-content"
+                      maxLength={4}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الرمز البريدي', 'Postal code')}</Label>
+                    <Input
+                      value={form.postal_code}
+                      onChange={(e) => setForm((f) => ({ ...f, postal_code: e.target.value.replace(/\D/g, '').slice(0, 5) }))}
+                      dir="ltr"
+                      inputMode="numeric"
+                      className="mt-1 h-11 rounded-xl tech-content"
+                      maxLength={5}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground">
+                    {t(isRTL, 'العنوان التفصيلي', 'Detailed address line')}
+                  </Label>
+                  <Input
+                    value={form.address_line}
+                    onChange={(e) => setForm((f) => ({ ...f, address_line: e.target.value }))}
+                    dir="auto"
+                    className="mt-1 h-11 rounded-xl"
+                    placeholder={t(isRTL, 'مثال: حي الياسمين، شارع الأمير سلطان', 'e.g. Al Yasmin, Prince Sultan St.')}
+                    maxLength={250}
+                  />
                 </div>
               </CardContent>
             </Card>

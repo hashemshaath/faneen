@@ -24,6 +24,19 @@ interface UserProfile {
   preferred_language: string | null;
   country_id: string | null;
   city_id: string | null;
+  full_name_ar: string | null;
+  full_name_en: string | null;
+  national_id_type: string | null;
+  national_id: string | null;
+  vat_number: string | null;
+  short_national_address: string | null;
+  region_name: string | null;
+  district: string | null;
+  street: string | null;
+  building_number: string | null;
+  additional_number: string | null;
+  postal_code: string | null;
+  address_line: string | null;
 }
 
 interface AuthContextType {
@@ -67,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data } = await getProfileByUserId<UserProfile>({
         userId,
-        select: 'id, user_id, full_name, phone, email, account_type, is_onboarded, phone_verified, country_code, avatar_url, account_number, ref_id, membership_tier, username, preferred_language, country_id, city_id',
+        select: 'id, user_id, full_name, phone, email, account_type, is_onboarded, phone_verified, country_code, avatar_url, account_number, ref_id, membership_tier, username, preferred_language, country_id, city_id, full_name_ar, full_name_en, national_id_type, national_id, vat_number, short_national_address, region_name, district, street, building_number, additional_number, postal_code, address_line',
         terminal: 'single',
       });
       setProfile(data as UserProfile | null);
