@@ -6,6 +6,7 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { queryMembershipUpgradeRejections } from '@/modules/memberships';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
