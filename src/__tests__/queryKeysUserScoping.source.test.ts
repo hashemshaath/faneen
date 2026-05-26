@@ -35,8 +35,13 @@ function isPersonalKey(first: string): boolean {
   return PERSONAL_PREFIXES.some((p) => first.startsWith(p));
 }
 
-// Matches: queryKey: ['some-name', ...rest]   (single quotes or double or backticks)
-const QUERY_KEY_RE = /queryKey:\s*\[\s*(['"`])([^'"`]+)\1([^\]]*)\]/g;
+// Match queryKey arrays only when they belong to an actual fetch hook
+// (`useQuery` / `useInfiniteQuery` / `useQueries`). Invalidation / cache
+// management calls (`invalidateQueries`, `removeQueries`, `cancelQueries`,
+// `getQueryData`, `setQueryData`) use prefix matching and are intentionally
+// not user-scoped.
+const QUERY_KEY_RE =
+  /\buse(?:Infinite)?Quer(?:y|ies)\s*\(\s*\{[\s\S]*?queryKey:\s*\[\s*(['"`])([^'"`]+)\1([^\]]*)\]/g;
 
 describe('personal query keys are scoped to user.id', () => {
   const files = ROOTS.flatMap((r) => walk(r));
