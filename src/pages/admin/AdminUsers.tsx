@@ -332,7 +332,7 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
   }, [isRTL, isSuperAdmin]);
 
   return (
-    <div className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
+    <div id={`user-row-${profile.id}`} className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
       ${selected ? 'ring-2 ring-accent border-accent/50' : isCurrentUser ? 'border-accent/40 ring-1 ring-accent/20' : 'border-border/30'}
       ${isBanned ? 'opacity-70 border-destructive/40' : ''}`}>
       <div className={`${compact ? 'p-2.5 sm:p-3 gap-2' : 'p-3 sm:p-4 gap-3'} flex flex-col sm:flex-row sm:items-start`}>
