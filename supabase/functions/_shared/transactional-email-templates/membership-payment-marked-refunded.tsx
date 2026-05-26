@@ -10,6 +10,8 @@ interface Props {
   planNameEn?: string | null
   refundedAt?: string | null
   invoiceId?: string | null
+  paymentRef?: string | null
+  subscriptionRef?: string | null
   amount?: number | string | null
   currency?: string | null
   dashboardUrl?: string | null
@@ -23,7 +25,7 @@ const formatAmount = (amount?: number | string | null, currency?: string | null)
 
 const Email: React.FC<Props> = ({
   recipientName, planName, planNameAr, planNameEn,
-  refundedAt, invoiceId, amount, currency, dashboardUrl,
+  refundedAt, invoiceId, paymentRef, subscriptionRef, amount, currency, dashboardUrl,
 }) => {
   const planAr = planNameAr ?? planName ?? ''
   const planEn = planNameEn ?? planName ?? ''
@@ -41,6 +43,8 @@ const Email: React.FC<Props> = ({
       details={[
         ...(planEn || planAr ? [{ labelAr: 'الباقة', labelEn: 'Plan', value: planEn || planAr, mono: true }] : []),
         ...(amt ? [{ labelAr: 'المبلغ', labelEn: 'Amount', value: amt, mono: true }] : []),
+        ...(paymentRef ? [{ labelAr: 'مرجع الدفع', labelEn: 'Payment reference', value: paymentRef, mono: true }] : []),
+        ...(subscriptionRef ? [{ labelAr: 'مرجع الاشتراك', labelEn: 'Subscription reference', value: subscriptionRef, mono: true }] : []),
         ...(invoiceId ? [{ labelAr: 'رقم الفاتورة', labelEn: 'Invoice', value: invoiceId, mono: true }] : []),
         ...(refundedAt ? [{ labelAr: 'تاريخ الاسترداد', labelEn: 'Refunded at', value: refundedAt }] : []),
       ]}
@@ -58,6 +62,8 @@ export const template = {
     planName: 'premium',
     refundedAt: '2026-05-24T10:00:00Z',
     invoiceId: 'INV-2026-0001',
+    paymentRef: 'PAY-1000123',
+    subscriptionRef: 'PVS-1000045',
     amount: 199,
     currency: 'SAR',
   },
