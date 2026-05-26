@@ -290,7 +290,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     const intentValid =
       (intent !== 'join-invite' || inviteToken.trim().length > 0) &&
       (intent !== 'request-access' || targetEntityRef.trim().length > 0);
-    const isFormValid = !!email && fullName.trim().length > 0 && passwordStrength.score >= 2 && password === confirmPassword && !errors.email && !errors.phone && !emailExists && intentValid;
+    const isFormValid = !!email && fullName.length > 0 && passwordStrength.score >= 2 && password === confirmPassword && !errors.email && !errors.phone && !emailExists && intentValid;
     const intentLabel: Record<RegisterIntent, { ar: string; en: string }> = {
       'individual': { ar: 'متابعة كفرد', en: 'Continue as individual' },
       'create-entity': { ar: 'إنشاء منشأة', en: 'Create entity' },
@@ -375,13 +375,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
         )}
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold">{t('auth.fullname')} <span className="text-destructive">*</span></Label>
-            <div className="relative">
-              <User className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ insetInlineStart: '14px' }} />
-              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-12 rounded-xl" style={{ paddingInlineStart: '42px' }} />
-            </div>
-          </div>
+          <BilingualNameField
+            value={{ full_name_ar: fullNameAr, full_name_en: fullNameEn }}
+            onChange={(v) => { setFullNameAr(v.full_name_ar); setFullNameEn(v.full_name_en); }}
+            showUsername={false}
+            required
+          />
 
           <div className="space-y-2">
             <Label className="text-xs font-semibold">{t('auth.email')} <span className="text-destructive">*</span></Label>
@@ -412,12 +411,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             )}
           </div>
 
-          <PhoneInput
-            phone={phone} countryCode={countryCode}
-            onPhoneChange={(v) => { setPhone(v); clearError('phone'); }}
-            onCountryCodeChange={setCountryCode} isRTL={isRTL} optional
+          <PhoneField
+            value={phoneParts}
+            onChange={(v) => { setPhoneParts(v); clearError('phone'); }}
+            optional
             error={errors.phone}
-            onBlur={() => phone && validatePhoneField(phone)}
           />
 
           <PasswordField
