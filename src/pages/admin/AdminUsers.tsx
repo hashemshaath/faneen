@@ -1929,6 +1929,11 @@ const AdminUsers = () => {
                                  if (editFieldErrors.username) clearEditFieldError('username');
                                }}
                                onFullNameChange={(f) => setEditForm(p => ({ ...p, full_name: f }))}
+                                excludeUserId={activePanel.profile.user_id}
+                                onUsernameValidChange={(s) => {
+                                  // Clear server-side error as soon as the live picker confirms availability.
+                                  if (s.isValid && s.isAvailable && editFieldErrors.username) clearEditFieldError('username');
+                                }}
                                errors={{
                                  full_name_ar: editFieldErrors.full_name_ar,
                                  full_name_en: editFieldErrors.full_name_en,
