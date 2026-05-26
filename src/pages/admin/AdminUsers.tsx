@@ -1831,7 +1831,7 @@ const AdminUsers = () => {
                 </>
               )}
             </TabsContent>
-          ))}
+
 
           {/* ANALYTICS */}
           <TabsContent value="analytics" className="space-y-5 mt-5">
