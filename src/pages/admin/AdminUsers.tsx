@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { adminCreateUser, type AdminCreateUserPayload } from '@/modules/admin';
+import { listUserEntityLinks, type UserEntityLink } from '@/modules/admin';
 import { listContractsForUserParticipant } from '@/modules/contracts';
 import {
   listAdminBusinesses,
@@ -32,10 +33,10 @@ import {
 import { toast } from 'sonner';
 import {
   Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Mail, Phone, Calendar, Crown,
-  Loader2, Pencil, Ban, UserX, Download, KeyRound, Send, Lock, Eye, EyeOff, X, AlertTriangle,
+  Loader2, Pencil, Ban, UserX, Download, KeyRound, Send, Lock, EyeOff, X, AlertTriangle,
   Check, TrendingUp, UserCheck, Filter, Hash, Sparkles, Building2, Briefcase, Link2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, BarChart3, Activity, FileText, MessageSquare,
-  Star, MoreHorizontal, RefreshCw, ArrowUpDown, Copy, Clock, Rows3, LayoutList, Zap, TrendingDown, Command,
+  Star, MoreHorizontal, RefreshCw, ArrowUpDown, Copy, Clock, Rows3, LayoutList, Zap, TrendingDown, Command, Inbox,
 } from 'lucide-react';
 import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RTooltip,
