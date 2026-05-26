@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listActiveContractTemplates, notifyClientInvitation } from '@/modules/contracts';
-import { getOwnerBusiness } from '@/modules/businesses';
+import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { getProfileByEmail } from '@/modules/users';
 import { createNotification, createNotificationFireAndForget } from '@/modules/notifications/services/createNotification';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -194,6 +195,22 @@ const DashboardContracts = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
+
+  // WORKSPACE-CONTEXT-4E: contracts are owner-managed; the business_id
+  // stamped on a newly created contract must come from a business the
+  // signed-in user actually owns. Honor the active workspace entity only
+  // when it points at an owned business (source === 'owner') — staff
+  // memberships never escalate into provider contract creation. Falls
+  // back to getOwnerBusiness so single-business owners keep current
+  // behavior. active_location_id is intentionally NOT applied here yet;
+  // contracts have no enforced branch column and execution site is
+  // selected explicitly via ExecutionSiteSection.
+  const { active_entity_id, entities } = useActiveWorkspace();
+  const activeOwnerEntityId = useMemo(() => {
+    if (!active_entity_id) return null;
+    const e = entities.find((x) => x.entity_id === active_entity_id);
+    return e && e.source === 'owner' ? e.entity_id : null;
+  }, [active_entity_id, entities]);
 
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState<'all' | 'provider' | 'client'>('all');
@@ -518,8 +535,15 @@ const DashboardContracts = () => {
   }, [selectedWorkType, publishedVersions]);
 
   const { data: businessId } = useQuery({
-    queryKey: ['my-business-id-contracts', user?.id],
+    queryKey: ['my-business-id-contracts', user?.id, activeOwnerEntityId],
     queryFn: async () => {
+      if (activeOwnerEntityId) {
+        const { data } = await listBusinessesByIds<{ id: string }>({
+          ids: [activeOwnerEntityId],
+          select: 'id',
+        });
+        return (data ?? [])[0]?.id ?? null;
+      }
       const { data } = await getOwnerBusiness<{ id: string }>({
         userId: user!.id,
         select: 'id',

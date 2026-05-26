@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { listOwnerBusinesses, listManagedStaffMembershipForUser } from '@/modules/businesses';
 import { getContractAnalyticsDashboard } from '@/modules/contracts';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -123,6 +124,12 @@ const DashboardContractAnalytics: React.FC = () => {
   const [businessId, setBusinessId] = useState<string>('all');
   const locale = language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US';
 
+  // WORKSPACE-CONTEXT-4E: align the analytics scope selector with the
+  // active workspace entity. We never widen access — the entity must
+  // already exist in `managedBusinesses` (owned or staff-managed), and
+  // the underlying RPC still enforces authorization.
+  const { active_entity_id } = useActiveWorkspace();
+
   usePageMeta({
     title: language === 'ar' ? 'تحليلات العقود' : 'Contract Analytics',
     description:
@@ -161,6 +168,12 @@ const DashboardContractAnalytics: React.FC = () => {
   const businessOptions = managedBusinesses ?? [];
   const showSelector = businessOptions.length > 1;
   const effectiveBusinessId = businessId === 'all' ? null : businessId;
+
+  useEffect(() => {
+    if (!active_entity_id) return;
+    if (!businessOptions.some((b) => b.id === active_entity_id)) return;
+    setBusinessId((prev) => (prev === active_entity_id ? prev : active_entity_id));
+  }, [active_entity_id, businessOptions]);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery<AnalyticsPayload>({
     queryKey: ['contract-analytics', user?.id ?? null, effectiveBusinessId, period],

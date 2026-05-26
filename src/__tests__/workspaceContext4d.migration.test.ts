@@ -73,9 +73,10 @@ describe('WORKSPACE-CONTEXT-4D — quotes / leads', () => {
     }
   });
 
-  it('migration did not touch contracts/payments/membership dashboard pages', () => {
+  it('migration did not touch payments/membership dashboard pages', () => {
     const dashDir = join(ROOT, 'pages/dashboard');
-    const skip = /contract|payment|membership/i;
+    // contracts (4E) intentionally migrated.
+    const skip = /payment|membership/i;
     for (const name of readdirSync(dashDir)) {
       if (!skip.test(name)) continue;
       const src = read(`pages/dashboard/${name}`);
