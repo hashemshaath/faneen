@@ -125,6 +125,8 @@ export {
   countActiveMembershipSubscriptions,
   adminListMembershipUsage,
 } from './services/subscriptions/reads';
+export { listMembershipSubscriptionsByIds } from './services/subscriptions/listMembershipSubscriptionsByIds';
+export type { ListMembershipSubscriptionsByIdsOptions } from './services/subscriptions/listMembershipSubscriptionsByIds';
 export type {
   ListAdminMembershipSubscriptionsOptions,
   AdminListMembershipUsageArgs,

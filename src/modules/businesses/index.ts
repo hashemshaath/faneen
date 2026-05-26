@@ -95,3 +95,14 @@ export type {
 // REGISTRATION-UX-FULL-COMPLETE-1 Part 2
 export { insertBusinessBranch } from './services/insertBusinessBranch';
 export type { InsertBusinessBranchOptions } from './services/insertBusinessBranch';
+
+// WRAPPER-ISOLATION-BACKLOG-1
+export { getBusinessIdByUsername } from './services/getBusinessIdByUsername';
+export type { GetBusinessIdByUsernameOptions } from './services/getBusinessIdByUsername';
+export { getBusinessIdByRefOrLegacyRef } from './services/getBusinessIdByRefOrLegacyRef';
+export type { GetBusinessIdByRefOrLegacyRefOptions } from './services/getBusinessIdByRefOrLegacyRef';
+export { findBusinessDuplicateCandidates } from './services/findBusinessDuplicateCandidates';
+export type {
+  FindBusinessDuplicateCandidatesOptions,
+  FindBusinessDuplicateCandidatesKind,
+} from './services/findBusinessDuplicateCandidates';
