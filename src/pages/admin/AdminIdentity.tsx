@@ -125,6 +125,7 @@ const AdminIdentity: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [, startTransition] = useTransition();
+  const queryClient = useQueryClient();
 
   const view = (searchParams.get('view') as View) || 'all';
   const setView = useCallback((v: View) => {
@@ -132,6 +133,34 @@ const AdminIdentity: React.FC = () => {
     next.set('view', v);
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
+
+  // Filters (also encoded in URL for shareable deep links)
+  const filters: IdentityFilterState = useMemo(() => ({
+    accountType: (searchParams.get('type') as IdentityFilterState['accountType']) || 'all',
+    tier: (searchParams.get('tier') as IdentityFilterState['tier']) || 'all',
+    status: (searchParams.get('status') as IdentityFilterState['status']) || 'all',
+  }), [searchParams]);
+  const setFilters = useCallback((next: IdentityFilterState) => {
+    const sp = new URLSearchParams(searchParams);
+    (['accountType','tier','status'] as const).forEach(k => {
+      const urlKey = k === 'accountType' ? 'type' : k;
+      if (next[k] && next[k] !== 'all') sp.set(urlKey, next[k]); else sp.delete(urlKey);
+    });
+    setSearchParams(sp, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const applySavedView = useCallback((v: SavedView) => {
+    const sp = new URLSearchParams();
+    sp.set('view', v.view);
+    if (v.filters.accountType !== 'all') sp.set('type', v.filters.accountType);
+    if (v.filters.tier !== 'all') sp.set('tier', v.filters.tier);
+    if (v.filters.status !== 'all') sp.set('status', v.filters.status);
+    setSearchParams(sp, { replace: true });
+    if (v.search) {
+      setSearchTerm(v.search);
+      startTransition(() => setDeferredSearch(v.search));
+    }
+  }, [setSearchParams]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [deferredSearch, setDeferredSearch] = useState('');
