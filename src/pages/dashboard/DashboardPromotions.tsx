@@ -243,7 +243,7 @@ const DashboardPromotions = () => {
   const businessUsername = businessInfo?.username ?? null;
 
   const { data: promotions = [], isLoading } = useQuery({
-    queryKey: ['my-promotions', businessId],
+    queryKey: ['my-promotions', user?.id, businessId],
     queryFn: async () => {
       const { data } = await supabase.from('promotions').select('*').eq('business_id', businessId!).order('sort_order').order('created_at', { ascending: false });
       return data ?? [];
