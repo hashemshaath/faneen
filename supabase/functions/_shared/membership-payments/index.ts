@@ -265,29 +265,23 @@ export async function reconcileIntentWithProvider(args: {
 
   // Mirror onto membership_subscriptions for terminal success/refund only.
   if (target === 'succeeded') {
-    await admin
-      .from('membership_subscriptions')
-      .update({
-        payment_provider: 'moyasar',
-        payment_status: 'paid',
-        last_paid_at: snapshot.paidAt ?? new Date().toISOString(),
-        last_paid_amount: intent.amount,
-        last_paid_currency: intent.currency,
-        last_invoice_id: snapshot.invoiceId,
-        last_external_payment_id: snapshot.paymentId,
-        renewal_failure_count: 0,
-        payment_failure_reason: null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', intent.subscription_id);
+    await updateMembershipSubscriptionById(admin, intent.subscription_id, {
+      payment_provider: 'moyasar',
+      payment_status: 'paid',
+      last_paid_at: snapshot.paidAt ?? new Date().toISOString(),
+      last_paid_amount: intent.amount,
+      last_paid_currency: intent.currency,
+      last_invoice_id: snapshot.invoiceId,
+      last_external_payment_id: snapshot.paymentId,
+      renewal_failure_count: 0,
+      payment_failure_reason: null,
+      updated_at: new Date().toISOString(),
+    });
   } else if (target === 'refunded') {
-    await admin
-      .from('membership_subscriptions')
-      .update({
-        payment_status: 'refunded',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', intent.subscription_id);
+    await updateMembershipSubscriptionById(admin, intent.subscription_id, {
+      payment_status: 'refunded',
+      updated_at: new Date().toISOString(),
+    });
   }
 
   return {
@@ -348,11 +342,7 @@ interface RecipientLite {
 async function loadPlanAndRecipient(admin: SupabaseClient, intent: IntentRow) {
   let plan: PlanLite = { name_ar: null, name_en: null };
   if (intent.plan_id) {
-    const { data } = await admin
-      .from('membership_plans')
-      .select('name_ar, name_en')
-      .eq('id', intent.plan_id)
-      .maybeSingle();
+    const { data } = await getMembershipPlanById(admin, intent.plan_id, 'name_ar, name_en');
     if (data) plan = data as PlanLite;
   }
   let recipient: RecipientLite = { email: null, full_name: null };
