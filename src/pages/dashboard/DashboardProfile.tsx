@@ -438,6 +438,37 @@ const DashboardProfile: React.FC = () => {
                   />
                 </div>
 
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      {t(isRTL, 'الاسم بالعربية', 'Arabic name')}
+                    </Label>
+                    <Input
+                      value={form.full_name_ar}
+                      onChange={(e) => setForm((f) => ({ ...f, full_name_ar: e.target.value }))}
+                      dir="rtl"
+                      lang="ar"
+                      className="mt-1 h-11 rounded-xl"
+                      placeholder="أحمد بن محمد"
+                      maxLength={120}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      {t(isRTL, 'الاسم بالإنجليزية', 'English name')}
+                    </Label>
+                    <Input
+                      value={form.full_name_en}
+                      onChange={(e) => setForm((f) => ({ ...f, full_name_en: e.target.value }))}
+                      dir="ltr"
+                      lang="en"
+                      className="mt-1 h-11 rounded-xl tech-content"
+                      placeholder="Ahmad Mohammad"
+                      maxLength={120}
+                    />
+                  </div>
+                </div>
+
                 <UsernamePicker
                   isRTL={isRTL}
                   label={t(isRTL, 'اسم المستخدم (اختياري)', 'Username (optional)')}
