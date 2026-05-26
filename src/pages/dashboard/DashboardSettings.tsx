@@ -21,7 +21,7 @@ import {
   Smartphone, Volume2, VolumeX, BellRing, BellOff, Hash,
   Fingerprint, KeyRound, AlertTriangle, CheckCircle, Info,
   LogOut, Trash2, Download, Upload, AtSign, MapPin, Languages, Copy,
-  Sparkles, ExternalLink, Loader2, Crown,
+  Sparkles, ExternalLink, Loader2, Crown, History,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BnplProvidersManager } from '@/components/bnpl/BnplProvidersManager';
@@ -37,12 +37,13 @@ import { useSearchParams } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { useDisplayRefId } from '@/hooks/useDisplayRefId';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
+import { AccountActivityLog } from '@/components/dashboard/settings/AccountActivityLog';
 import { supabase } from '@/integrations/supabase/client';
 
 type RefRow = { id: string; name_ar: string; name_en: string };
 type CityRow = RefRow & { country_id: string };
 
-type SettingsTab = 'appearance' | 'account' | 'security' | 'notifications' | 'bnpl';
+type SettingsTab = 'appearance' | 'account' | 'activity' | 'security' | 'notifications' | 'bnpl';
 
 const DashboardSettings = () => {
   useNoIndex();
@@ -54,7 +55,7 @@ const DashboardSettings = () => {
   const { isSupported: notifSupported, requestPermission, permission } = useBrowserNotifications();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const validTabs: SettingsTab[] = ['appearance', 'account', 'security', 'notifications', 'bnpl'];
+  const validTabs: SettingsTab[] = ['appearance', 'account', 'activity', 'security', 'notifications', 'bnpl'];
   const tabFromUrl = searchParams.get('tab') as SettingsTab | null;
   const [activeTab, setActiveTabState] = useState<SettingsTab>(
     tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : 'appearance'
@@ -264,6 +265,7 @@ const DashboardSettings = () => {
   const tabs: { key: SettingsTab; icon: React.ElementType; ar: string; en: string; show?: boolean }[] = [
     { key: 'appearance', icon: Palette, ar: 'المظهر', en: 'Appearance' },
     { key: 'account', icon: User, ar: 'الحساب', en: 'Account' },
+    { key: 'activity', icon: History, ar: 'سجل التغييرات', en: 'Activity' },
     { key: 'security', icon: Shield, ar: 'الأمان', en: 'Security' },
     { key: 'notifications', icon: Bell, ar: 'الإشعارات', en: 'Notifications' },
     { key: 'bnpl', icon: CreditCard, ar: 'التقسيط', en: 'BNPL', show: !!business },
@@ -701,6 +703,13 @@ const DashboardSettings = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {/* ═══ ACTIVITY ═══ */}
+        {activeTab === 'activity' && (
+          <div className="space-y-3">
+            <AccountActivityLog />
           </div>
         )}
 

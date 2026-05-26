@@ -40,6 +40,7 @@ const PublicBarcodeResolve = lazyRetry(() => import("./pages/PublicBarcodeResolv
 const ReferenceResolver = lazyRetry(() => import("./pages/ReferenceResolver"));
 const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
 const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
+const UsernameResolver = lazyRetry(() => import("./pages/UsernameResolver"));
 const Search = lazyRetry(() => import("./pages/Search"));
 const Quote = lazyRetry(() => import("./pages/Quote"));
 const ProviderLeads = lazyRetry(() => import("./pages/dashboard/ProviderLeads"));
@@ -357,7 +358,7 @@ const AppRoutes = () => (
           <Route path="/admin/pdf-visual-qa" element={<ProtectedRoute requireAdmin><AdminPdfVisualQa /></ProtectedRoute>} />
           <Route path="/admin/contracts/analytics" element={<ProtectedRoute requireAdmin><AdminContractAnalytics /></ProtectedRoute>} />
 
-          <Route path="/:username" element={<BusinessProfile />} />
+          <Route path="/:username" element={<UsernameResolver />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

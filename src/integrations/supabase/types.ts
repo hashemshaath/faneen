@@ -8182,6 +8182,33 @@ export type Database = {
           },
         ]
       }
+      profile_activity_log: {
+        Row: {
+          changed_at: string
+          field: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          field: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          field?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profile_images: {
         Row: {
           caption_ar: string | null
@@ -12254,6 +12281,25 @@ export type Database = {
           user_id: string
           username: string
           website: string
+        }[]
+      }
+      get_public_profile: {
+        Args: { _username: string }
+        Returns: {
+          account_type: string
+          avatar_url: string
+          city_name_ar: string
+          city_name_en: string
+          country_name_ar: string
+          country_name_en: string
+          created_at: string
+          full_name: string
+          full_name_ar: string
+          full_name_en: string
+          is_verified: boolean
+          membership_tier: string
+          region_name: string
+          username: string
         }[]
       }
       get_public_site_by_token: { Args: { _token: string }; Returns: Json }
