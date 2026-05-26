@@ -686,6 +686,26 @@ const AdminUsers = () => {
     staleTime: 2 * 60_000,
   });
 
+  // Consume pending ?focus=<user_id> after profiles load: switch to users tab,
+  // expand the row, jump to the page containing it, and open the edit panel.
+  useEffect(() => {
+    const pending = sessionStorage.getItem('qitaat_admin_users_pending_focus');
+    if (!pending || profiles.length === 0) return;
+    const target = profiles.find(p => p.user_id === pending);
+    sessionStorage.removeItem('qitaat_admin_users_pending_focus');
+    if (!target) {
+      toast.error(isRTL ? 'المستخدم غير موجود في القائمة' : 'User not found in list');
+      return;
+    }
+    setTab('users');
+    setExpanded(prev => new Set(prev).add(target.id));
+    openEdit(target);
+    setTimeout(() => {
+      document.getElementById(`user-row-${target.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 200);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profiles]);
+
   const { data: userRoles = [], isLoading: loadingRoles } = useQuery({
     queryKey: ['admin-user-roles'],
     queryFn: () => listAllUserRoles() as Promise<UserRole[]>,
