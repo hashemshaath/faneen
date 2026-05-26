@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { PermissionHint } from '@/components/workspace/PermissionGate';
 import {
   Plus, Trash2, Pencil, X, Search, CheckCircle2, Wrench,
   DollarSign, ChevronDown, ChevronRight, Package,
@@ -518,9 +519,11 @@ const DashboardServices = () => {
                 <Download className="w-3.5 h-3.5 me-1.5" />{rtl ? 'تصدير' : 'Export'}
               </Button>
             )}
-            <Button variant="hero" size="sm" className="h-9 text-xs rounded-xl" onClick={() => { closeForm(); setShowForm(true); setShowCatalog(false); scrollToForm(); }}>
-              <Plus className="w-3.5 h-3.5 me-1.5" />{rtl ? 'إضافة خدمة' : 'Add Service'}
-            </Button>
+            <PermissionHint permission="services.manage">
+              <Button variant="hero" size="sm" className="h-9 text-xs rounded-xl" onClick={() => { closeForm(); setShowForm(true); setShowCatalog(false); scrollToForm(); }}>
+                <Plus className="w-3.5 h-3.5 me-1.5" />{rtl ? 'إضافة خدمة' : 'Add Service'}
+              </Button>
+            </PermissionHint>
           </div>
         </div>
 
