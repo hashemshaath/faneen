@@ -17,7 +17,7 @@ import { resolve } from 'node:path';
  *  - useNoIndex is applied on both routes
  */
 
-const root = resolve(__dirname, '..', '..', '..');
+const root = resolve(__dirname, '..', '..', '..', '..');
 
 const APP        = readFileSync(resolve(root, 'src/App.tsx'), 'utf8');
 const USERS      = readFileSync(resolve(root, 'src/pages/admin/AdminUsers.tsx'), 'utf8');
