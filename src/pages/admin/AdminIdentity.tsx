@@ -347,12 +347,12 @@ const AdminIdentity: React.FC = () => {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
-              <Link to="/admin/users?create=individual">
+              <Link to="/admin/identity?view=users&create=individual">
                 <UserPlus className="w-4 h-4" />{isRTL ? 'مستخدم جديد' : 'New user'}
               </Link>
             </Button>
             <Button asChild size="sm" className="rounded-xl gap-1.5">
-              <Link to="/admin/businesses">
+              <Link to="/admin/identity?view=businesses">
                 <Plus className="w-4 h-4" />{isRTL ? 'إدارة المنشآت' : 'Manage businesses'}
               </Link>
             </Button>
