@@ -1413,10 +1413,19 @@ const AdminUsers = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
                       <Input value={editForm.full_name} onChange={e => setEditForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" /></div>
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'البريد' : 'Email'}</Label>
-                      <Input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl" /></div>
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الهاتف' : 'Phone'}</Label>
-                      <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} dir="ltr" maxLength={20} className="h-10 rounded-xl tech-content" /></div>
+                    {isSuperAdmin ? (
+                      <>
+                        <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'البريد' : 'Email'}</Label>
+                          <Input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl" /></div>
+                        <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الهاتف' : 'Phone'}</Label>
+                          <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} dir="ltr" maxLength={20} className="h-10 rounded-xl tech-content" /></div>
+                      </>
+                    ) : (
+                      <div className="md:col-span-2 rounded-xl border border-dashed border-border/40 bg-muted/30 p-3 text-[11px] text-muted-foreground flex items-center gap-2">
+                        <Lock className="w-3.5 h-3.5 shrink-0" />
+                        {isRTL ? 'تعديل البريد والهاتف متاح فقط لمدير النظام (Super Admin).' : 'Editing email & phone is restricted to Super Admins.'}
+                      </div>
+                    )}
                     <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
                       <Select value={editForm.account_type} onValueChange={v => setEditForm(p => ({ ...p, account_type: v }))}>
                         <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
