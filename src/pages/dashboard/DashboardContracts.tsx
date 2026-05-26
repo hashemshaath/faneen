@@ -118,6 +118,7 @@ import { ContractDetailsSection } from '@/components/contracts/dashboard/create/
 import { VatSettingsSection } from '@/components/contracts/dashboard/create/VatSettingsSection';
 import { SupervisorSection } from '@/components/contracts/dashboard/create/SupervisorSection';
 import { ContractTermsSection } from '@/components/contracts/dashboard/create/ContractTermsSection';
+import { ContractImportPanel } from '@/components/contracts/dashboard/import/ContractImportPanel';
 import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
 import { ContractRoleTabs } from '@/components/contracts/dashboard/ContractRoleTabs';
 import { ContractFilters } from '@/components/contracts/dashboard/ContractFilters';
@@ -181,7 +182,7 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 
 
-type ViewSection = 'list' | 'create' | 'templates' | 'template-preview';
+type ViewSection = 'list' | 'create' | 'templates' | 'template-preview' | 'import';
 
 
 /* ──────────── Main ──────────── */
@@ -1673,6 +1674,7 @@ const DashboardContracts = () => {
             queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
           }}
           isRefreshing={isLoading}
+          onImport={() => { closeForm(); setViewSection('import'); }}
         />
 
         {viewSection === 'list' && <ContractStatsSummary stats={stats} isRTL={isRTL} />}
@@ -1748,6 +1750,39 @@ const DashboardContracts = () => {
           </Card>
         )}
 
+        {/* ═══ Import / Digitize ═══ */}
+        {viewSection === 'import' && (
+          <ContractImportPanel
+            isRTL={isRTL}
+            isSavingDraft={createContractMutation.isPending}
+            onCancel={() => setViewSection('list')}
+            onApplyToForm={(partial, extract) => {
+              setForm(f => ({ ...f, ...partial }) as ContractForm);
+              const c = extract.client ?? {};
+              if (!selectedClient && (c.name || c.email || c.phone)) {
+                setGuestClient({
+                  name: c.name ?? '',
+                  email: c.email ?? '',
+                  phone: c.phone ?? '',
+                });
+              }
+              setViewSection('create');
+              toast.success(isRTL ? 'تم تطبيق البيانات على نموذج العقد' : 'Data applied to contract form');
+            }}
+            onSaveDraft={(partial, extract) => {
+              setForm(f => ({ ...f, ...partial }) as ContractForm);
+              const c = extract.client ?? {};
+              if (!selectedClient && (c.name || c.email || c.phone)) {
+                setGuestClient({
+                  name: c.name ?? '',
+                  email: c.email ?? '',
+                  phone: c.phone ?? '',
+                });
+              }
+              setTimeout(() => createContractMutation.mutate(), 0);
+            }}
+          />
+        )}
         {/* ═══ Create/Edit Form ═══ */}
         {viewSection === 'create' && (
           <Card className="border-accent/20 shadow-sm">
