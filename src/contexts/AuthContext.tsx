@@ -72,7 +72,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // data of the old user from leaking into the new user's session via cache.
   const resetForUser = useCallback((nextUserId: string | null) => {
     if (lastUserIdRef.current !== nextUserId) {
-      try { queryClient.clear(); } catch { /* noop */ }
+      try {
+        // Abort any in-flight queries from the previous identity, then drop
+        // every cached entry + observer so the next identity starts cold.
+        queryClient.cancelQueries();
+        queryClient.removeQueries();
+        queryClient.clear();
+      } catch { /* noop */ }
       lastUserIdRef.current = nextUserId;
     }
   }, []);
@@ -144,18 +150,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth listener FIRST, then get initial session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    // Set up auth listener FIRST, then get initial session.
+    // We treat every event uniformly: if the underlying user.id changed
+    // (sign-in, sign-out, account switch, token refresh after impersonation,
+    // user-update with a new id) we hard-reset the cache and local state.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!mounted) return;
 
       const nextUserId = newSession?.user?.id ?? null;
+      const identityChanged = lastUserIdRef.current !== nextUserId;
       resetForUser(nextUserId);
+
+      // Always wipe local auth-derived state on explicit sign-out, even if
+      // resetForUser short-circuited because the id was already null.
+      if (event === 'SIGNED_OUT') {
+        setRoles([]);
+        setProfile(null);
+        setProviderAccess(false);
+        setDataLoaded(false);
+      }
 
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
       if (newSession?.user) {
-        // Use setTimeout to avoid Supabase deadlock with parallel requests during auth state change
+        // On identity change, drop derived state immediately so consumers
+        // never render the previous user's roles/profile while the new
+        // user's data is loading.
+        if (identityChanged) {
+          setRoles([]);
+          setProfile(null);
+          setProviderAccess(false);
+          setDataLoaded(false);
+        }
+        // Defer to avoid Supabase deadlock with parallel requests during
+        // auth state change.
         setTimeout(() => {
           if (mounted) loadUserData(newSession.user.id);
         }, 0);
@@ -194,7 +223,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(null);
     setProviderAccess(false);
     setDataLoaded(false);
-    try { queryClient.clear(); } catch { /* noop */ }
+    try {
+      queryClient.cancelQueries();
+      queryClient.removeQueries();
+      queryClient.clear();
+    } catch { /* noop */ }
     lastUserIdRef.current = null;
     await supabase.auth.signOut();
   }, []);
