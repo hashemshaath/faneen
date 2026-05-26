@@ -43,7 +43,7 @@ import {
 } from 'recharts';
 import type { Tables } from '@/integrations/supabase/types';
 import { maskEmail, maskPhone } from '@/lib/masking';
-import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminDeleteUser } from '@/modules/identity';
+import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminDeleteUser, logAdminActivity } from '@/modules/identity';
 import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
 import type { NormalizedRpcError } from '@/services/rpc';
 
@@ -812,7 +812,11 @@ const AdminUsers = () => {
   const addRoleMutation = useMutation({
     mutationFn: ({ userId, role }: { userId: string; role: string }) =>
       grantRole(userId, role as Tables<'user_roles'>['role']),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] }); toast.success(isRTL ? 'تم إضافة الصلاحية' : 'Role added'); },
+    onSuccess: (_d, v) => {
+      void logAdminActivity({ action: 'user.role.grant', entityType: 'profile', entityId: v.userId, details: { role: v.role } });
+      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
+      toast.success(isRTL ? 'تم إضافة الصلاحية' : 'Role added');
+    },
     onError: (err: unknown) => {
       const code = (err as { normalized?: NormalizedRpcError })?.normalized?.code;
       toast.error(
@@ -825,7 +829,11 @@ const AdminUsers = () => {
 
   const removeRoleMutation = useMutation({
     mutationFn: (id: string) => revokeRoleById(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] }); toast.success(isRTL ? 'تم إزالة الصلاحية' : 'Role removed'); },
+    onSuccess: (_d, id) => {
+      void logAdminActivity({ action: 'user.role.revoke', entityType: 'user_roles', entityId: id });
+      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
+      toast.success(isRTL ? 'تم إزالة الصلاحية' : 'Role removed');
+    },
     onError: () => toast.error(isRTL ? 'فشل الإزالة' : 'Failed to remove'),
   });
 
@@ -856,7 +864,12 @@ const AdminUsers = () => {
       const { error } = await updateProfileById({ id: profileId, values: data });
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-profiles'] }); closePanel(); toast.success(isRTL ? 'تم التحديث' : 'Updated'); },
+    onSuccess: (_d, v) => {
+      void logAdminActivity({ action: 'user.profile.update', entityType: 'profile', entityId: v.profileId, details: { fields: Object.keys(v.data) } });
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      closePanel();
+      toast.success(isRTL ? 'تم التحديث' : 'Updated');
+    },
     onError: () => toast.error(isRTL ? 'فشل التحديث' : 'Failed to update'),
   });
 
@@ -865,7 +878,11 @@ const AdminUsers = () => {
       const { error } = await updateProfileById({ id: profileId, values: { is_banned: isBanned } });
       if (error) throw error;
     },
-    onSuccess: (_, v) => { queryClient.invalidateQueries({ queryKey: ['admin-profiles'] }); toast.success(v.isBanned ? (isRTL ? 'تم التعطيل' : 'Disabled') : (isRTL ? 'تم التفعيل' : 'Enabled')); },
+    onSuccess: (_, v) => {
+      void logAdminActivity({ action: v.isBanned ? 'user.disable' : 'user.enable', entityType: 'profile', entityId: v.profileId });
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      toast.success(v.isBanned ? (isRTL ? 'تم التعطيل' : 'Disabled') : (isRTL ? 'تم التفعيل' : 'Enabled'));
+    },
     onError: () => toast.error(isRTL ? 'فشل' : 'Failed'),
   });
 
@@ -875,6 +892,7 @@ const AdminUsers = () => {
       if (error) throw error;
     },
     onSuccess: (_, v) => {
+      void logAdminActivity({ action: v.isBanned ? 'user.disable.bulk' : 'user.enable.bulk', entityType: 'profile', details: { ids: v.ids, count: v.ids.length } });
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
       setSelected(new Set());
       toast.success(isRTL ? `تم ${v.isBanned ? 'تعطيل' : 'تفعيل'} ${v.ids.length} حساب` : `${v.ids.length} accounts ${v.isBanned ? 'disabled' : 'enabled'}`);
@@ -888,7 +906,11 @@ const AdminUsers = () => {
       if (res.error) throw res.error;
       if (res.data?.error) throw new Error(res.data.error);
     },
-    onSuccess: () => { closePanel(); toast.success(isRTL ? 'تم تغيير كلمة المرور' : 'Password changed'); },
+    onSuccess: (_d, v) => {
+      void logAdminActivity({ action: 'user.password.change', entityType: 'auth.users', entityId: v.targetUserId });
+      closePanel();
+      toast.success(isRTL ? 'تم تغيير كلمة المرور' : 'Password changed');
+    },
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : (isRTL ? 'فشل' : 'Failed')),
   });
 
@@ -898,7 +920,10 @@ const AdminUsers = () => {
       if (res.error) throw res.error;
       if (res.data?.error) throw new Error(res.data.error);
     },
-    onSuccess: () => toast.success(isRTL ? 'تم إرسال الرابط' : 'Link sent'),
+    onSuccess: (_d, targetUserId) => {
+      void logAdminActivity({ action: 'user.password.reset_link', entityType: 'auth.users', entityId: targetUserId });
+      toast.success(isRTL ? 'تم إرسال الرابط' : 'Link sent');
+    },
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : (isRTL ? 'فشل' : 'Failed')),
   });
 
@@ -908,7 +933,13 @@ const AdminUsers = () => {
       if (res.error) throw res.error;
       if (res.data?.error) throw new Error(res.data.error);
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-profiles'] }); queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] }); closePanel(); toast.success(isRTL ? 'تم الحذف' : 'Deleted'); },
+    onSuccess: (_d, targetUserId) => {
+      void logAdminActivity({ action: 'user.delete', entityType: 'auth.users', entityId: targetUserId });
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
+      closePanel();
+      toast.success(isRTL ? 'تم الحذف' : 'Deleted');
+    },
     onError: () => toast.error(isRTL ? 'فشل الحذف' : 'Failed to delete'),
   });
 

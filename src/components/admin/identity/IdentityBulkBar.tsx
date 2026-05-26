@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import {
   X, Download, Ban, CheckCircle2, ShieldCheck, Loader2,
@@ -34,10 +35,13 @@ const csvCell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
 export const IdentityBulkBar: React.FC<Props> = ({ selected, onClear, onMutated, isRTL }) => {
   const [busy, setBusy] = useState(false);
+  const [reason, setReason] = useState('');
   if (selected.length === 0) return null;
 
   const users = selected.filter(s => s.kind === 'user');
   const biz   = selected.filter(s => s.kind === 'business');
+
+  const trimmedReason = reason.trim() || undefined;
 
   const handleExportCsv = () => {
     const header = ['kind', 'id', 'ref_id', 'label'];
@@ -62,7 +66,7 @@ export const IdentityBulkBar: React.FC<Props> = ({ selected, onClear, onMutated,
         action: isBanned ? 'user.disable.bulk' : 'user.enable.bulk',
         entityType: 'profile',
         entityId: u.id,
-        details: { ref_id: u.refId, label: u.label, count: users.length },
+        details: { ref_id: u.refId, label: u.label, count: users.length, reason: trimmedReason },
       })));
       toast.success(isRTL
         ? `${isBanned ? 'تم تعطيل' : 'تم تفعيل'} ${users.length} مستخدم`
@@ -85,7 +89,7 @@ export const IdentityBulkBar: React.FC<Props> = ({ selected, onClear, onMutated,
         action: isVerified ? 'business.verify.bulk' : 'business.unverify.bulk',
         entityType: 'business',
         entityId: b.id,
-        details: { ref_id: b.refId, label: b.label, count: biz.length },
+        details: { ref_id: b.refId, label: b.label, count: biz.length, reason: trimmedReason },
       })));
       toast.success(isRTL
         ? `${isVerified ? 'تم توثيق' : 'تم إلغاء توثيق'} ${biz.length} منشأة`
@@ -104,6 +108,14 @@ export const IdentityBulkBar: React.FC<Props> = ({ selected, onClear, onMutated,
       </Badge>
       {users.length > 0 && <Badge variant="outline" className="text-info border-info/30">{users.length} {isRTL ? 'مستخدم' : 'users'}</Badge>}
       {biz.length > 0 && <Badge variant="outline" className="text-success border-success/30">{biz.length} {isRTL ? 'منشأة' : 'businesses'}</Badge>}
+
+      <Input
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder={isRTL ? 'سبب اختياري (يُسجَّل بالتدقيق)' : 'Optional reason (logged to audit)'}
+        className="h-8 rounded-xl w-full sm:w-64 text-xs"
+        dir="auto"
+      />
 
       <div className="ms-auto flex items-center gap-1.5 flex-wrap">
         <Button size="sm" variant="outline" className="rounded-xl h-8 gap-1.5" onClick={handleExportCsv} disabled={busy}>
