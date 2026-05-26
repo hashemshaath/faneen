@@ -37,6 +37,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { EntityLink } from '@/components/admin/identity/EntityLink';
+import { IdentityFilters, EMPTY_FILTERS, type IdentityFilterState, type SavedView } from '@/components/admin/identity/IdentityFilters';
+import { IdentityAnalytics } from '@/components/admin/identity/IdentityAnalytics';
 import { listProfiles } from '@/modules/users';
 import { listAllUserRoles } from '@/modules/identity';
 import { listAdminBusinesses } from '@/modules/businesses';
@@ -45,7 +47,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import {
   Users, Building2, Search, Command, Shield, Crown, ShieldCheck, Briefcase,
   TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, ArrowRight, Plus,
-  UserPlus, Activity, ExternalLink, KeyRound, Filter,
+  UserPlus, Activity, ExternalLink, KeyRound, BarChart3,
 } from 'lucide-react';
 
 type Profile = Tables<'profiles'>;
@@ -65,7 +67,7 @@ interface BizRow {
   created_at: string;
 }
 
-type View = 'overview' | 'all' | 'users' | 'businesses' | 'staff' | 'disabled';
+type View = 'overview' | 'all' | 'users' | 'businesses' | 'staff' | 'disabled' | 'analytics';
 
 /* ─── KPI card ─── */
 const Kpi: React.FC<{
@@ -128,6 +130,34 @@ const AdminIdentity: React.FC = () => {
     next.set('view', v);
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
+
+  // Filters (also encoded in URL for shareable deep links)
+  const filters: IdentityFilterState = useMemo(() => ({
+    accountType: (searchParams.get('type') as IdentityFilterState['accountType']) || 'all',
+    tier: (searchParams.get('tier') as IdentityFilterState['tier']) || 'all',
+    status: (searchParams.get('status') as IdentityFilterState['status']) || 'all',
+  }), [searchParams]);
+  const setFilters = useCallback((next: IdentityFilterState) => {
+    const sp = new URLSearchParams(searchParams);
+    (['accountType','tier','status'] as const).forEach(k => {
+      const urlKey = k === 'accountType' ? 'type' : k;
+      if (next[k] && next[k] !== 'all') sp.set(urlKey, next[k]); else sp.delete(urlKey);
+    });
+    setSearchParams(sp, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const applySavedView = useCallback((v: SavedView) => {
+    const sp = new URLSearchParams();
+    sp.set('view', v.view);
+    if (v.filters.accountType !== 'all') sp.set('type', v.filters.accountType);
+    if (v.filters.tier !== 'all') sp.set('tier', v.filters.tier);
+    if (v.filters.status !== 'all') sp.set('status', v.filters.status);
+    setSearchParams(sp, { replace: true });
+    if (v.search) {
+      setSearchTerm(v.search);
+      startTransition(() => setDeferredSearch(v.search));
+    }
+  }, [setSearchParams]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [deferredSearch, setDeferredSearch] = useState('');
@@ -209,6 +239,23 @@ const AdminIdentity: React.FC = () => {
     profiles.forEach(p => m.set(p.user_id, p));
     return m;
   }, [profiles]);
+
+  /* ─── Apply filters ─── */
+  const filteredProfiles = useMemo(() => profiles.filter(p => {
+    if (filters.accountType !== 'all' && p.account_type !== filters.accountType) return false;
+    if (filters.tier !== 'all' && p.membership_tier !== filters.tier) return false;
+    if (filters.status === 'disabled' && !p.is_banned) return false;
+    if (filters.status === 'active' && p.is_banned) return false;
+    return true;
+  }), [profiles, filters]);
+  const filteredBusinesses = useMemo(() => businesses.filter(b => {
+    if (filters.tier !== 'all' && b.membership_tier !== filters.tier) return false;
+    if (filters.status === 'verified' && !b.is_verified) return false;
+    if (filters.status === 'pending' && b.approval_status !== 'pending') return false;
+    if (filters.status === 'active' && !b.is_active) return false;
+    if (filters.status === 'disabled' && b.is_active) return false;
+    return true;
+  }), [businesses, filters]);
 
   /* ─── Combined KPIs ─── */
   const kpis = useMemo(() => {
@@ -394,7 +441,22 @@ const AdminIdentity: React.FC = () => {
             <TabsTrigger value="businesses" className="rounded-xl gap-1.5 py-2"><Building2 className="w-3.5 h-3.5" />{isRTL ? 'المنشآت' : 'Businesses'}</TabsTrigger>
             <TabsTrigger value="staff" className="rounded-xl gap-1.5 py-2"><Crown className="w-3.5 h-3.5" />{isRTL ? 'فريق الإدارة' : 'Staff'}</TabsTrigger>
             <TabsTrigger value="disabled" className="rounded-xl gap-1.5 py-2"><Ban className="w-3.5 h-3.5" />{isRTL ? 'معطّلون' : 'Disabled'}</TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'تحليلات' : 'Analytics'}</TabsTrigger>
           </TabsList>
+
+          {/* Filters + Saved Views */}
+          {view !== 'overview' && view !== 'analytics' && (
+            <div className="mt-3">
+              <IdentityFilters
+                filters={filters}
+                onChange={setFilters}
+                currentView={view}
+                currentSearch={deferredSearch}
+                onApplyView={applySavedView}
+                isRTL={isRTL}
+              />
+            </div>
+          )}
 
           {/* ─── Overview tab ─── */}
           <TabsContent value="overview" className="space-y-4 mt-5">
@@ -526,20 +588,20 @@ const AdminIdentity: React.FC = () => {
 
           {/* ─── Users tab (compact list + deep-link to full editor) ─── */}
           <TabsContent value="users" className="mt-5">
-            <CompactUserList profiles={profiles} bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
+            <CompactUserList profiles={filteredProfiles} bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
               isLoading={isLoading} isRTL={isRTL} isSuperAdmin={isSuperAdmin} />
           </TabsContent>
 
           {/* ─── Businesses tab ─── */}
           <TabsContent value="businesses" className="mt-5">
-            <CompactBusinessList businesses={businesses} profileByUserId={profileByUserId}
+            <CompactBusinessList businesses={filteredBusinesses} profileByUserId={profileByUserId}
               isLoading={isLoading} isRTL={isRTL} />
           </TabsContent>
 
           {/* ─── Staff tab ─── */}
           <TabsContent value="staff" className="mt-5">
             <CompactUserList
-              profiles={profiles.filter(p => {
+              profiles={filteredProfiles.filter(p => {
                 const r = rolesByUser.get(p.user_id) || [];
                 return r.some(x => ['super_admin', 'admin', 'moderator'].includes(x.role));
               })}
@@ -551,7 +613,7 @@ const AdminIdentity: React.FC = () => {
           {/* ─── Disabled tab ─── */}
           <TabsContent value="disabled" className="mt-5">
             <CompactUserList
-              profiles={profiles.filter(p => p.is_banned)}
+              profiles={filteredProfiles.filter(p => p.is_banned)}
               bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
               isLoading={isLoading} isRTL={isRTL} isSuperAdmin={isSuperAdmin}
             />
@@ -560,8 +622,8 @@ const AdminIdentity: React.FC = () => {
           {/* ─── All (mixed) tab — users + businesses interleaved by created_at ─── */}
           <TabsContent value="all" className="mt-5">
             <UnifiedFeed
-              profiles={profiles}
-              businesses={businesses}
+              profiles={filteredProfiles}
+              businesses={filteredBusinesses}
               bizsByOwner={bizsByOwner}
               rolesByUser={rolesByUser}
               profileByUserId={profileByUserId}
@@ -569,6 +631,17 @@ const AdminIdentity: React.FC = () => {
               isRTL={isRTL}
               isSuperAdmin={isSuperAdmin}
               search={deferredSearch}
+            />
+          </TabsContent>
+
+          {/* ─── Analytics tab ─── */}
+          <TabsContent value="analytics" className="mt-5">
+            <IdentityAnalytics
+              profiles={profiles}
+              businesses={businesses}
+              roles={roles}
+              isRTL={isRTL}
+              isLoading={isLoading}
             />
           </TabsContent>
         </Tabs>
