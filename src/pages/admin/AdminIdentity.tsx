@@ -123,7 +123,6 @@ const AdminIdentity: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [, startTransition] = useTransition();
-  const queryClient = useQueryClient();
 
   const view = (searchParams.get('view') as View) || 'all';
   const setView = useCallback((v: View) => {
