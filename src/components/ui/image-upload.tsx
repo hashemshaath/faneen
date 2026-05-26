@@ -325,7 +325,7 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         });
 
         if (error) {
-          if (import.meta.env.DEV) console.warn('Upload error');
+          logUploadFailure({ bucket, path, size: compressed.size, mime: compressed.type }, error, { silentToast: true });
           continue;
         }
 
@@ -339,6 +339,7 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         toast.success(`تم رفع ${newUrls.length} صورة`);
       }
     } catch (err: unknown) {
+      logUploadFailure({ bucket }, err, { silentToast: true });
       toast.error(err instanceof Error ? err.message : 'فشل رفع الصور');
     } finally {
       setUploading(false);
