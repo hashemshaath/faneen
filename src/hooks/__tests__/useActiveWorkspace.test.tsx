@@ -7,6 +7,7 @@ import React from 'react';
 
 const mockListOwner = vi.fn();
 const mockListStaff = vi.fn();
+const mockListLocations = vi.fn();
 const mockUser = { id: 'user-1' };
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -16,6 +17,10 @@ vi.mock('@/contexts/AuthContext', () => ({
 vi.mock('@/modules/businesses', () => ({
   listOwnerBusinesses: (...args: unknown[]) => mockListOwner(...args),
   listActiveStaffBusinessesForUser: (...args: unknown[]) => mockListStaff(...args),
+}));
+
+vi.mock('@/modules/locations', () => ({
+  listLocationsForEntity: (...args: unknown[]) => mockListLocations(...args),
 }));
 
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
@@ -28,6 +33,8 @@ function wrapper({ children }: { children: React.ReactNode }) {
 beforeEach(() => {
   mockListOwner.mockReset();
   mockListStaff.mockReset();
+  mockListLocations.mockReset();
+  mockListLocations.mockResolvedValue({ data: [], error: null });
   localStorage.clear();
 });
 
