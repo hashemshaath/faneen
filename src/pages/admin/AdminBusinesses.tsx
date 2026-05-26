@@ -553,7 +553,7 @@ const AdminBusinesses = () => {
         throw new Error(isRTL ? 'الاسم بالعربية مطلوب' : 'Arabic name is required');
       }
       const phoneE164 = createForm.phone_national
-        ? toE164(createForm.phone_cc || '+966', createForm.phone_national)
+        ? toE164({ countryCode: createForm.phone_cc || '+966', national: createForm.phone_national })
         : null;
       const payload: Record<string, unknown> = {
         user_id: createForm.resolved_user_id,
