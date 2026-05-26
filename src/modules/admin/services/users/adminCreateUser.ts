@@ -12,7 +12,12 @@ export interface AdminCreateUserPayload {
   email: string;
   password: string;
   full_name: string;
+  full_name_ar?: string;
+  full_name_en?: string;
+  username?: string;
   phone?: string;
+  phone_country_code?: string;
+  phone_national?: string;
   account_type?: AdminCreateUserAccountType;
   membership_tier?: string;
   role?: AdminCreateUserRole;

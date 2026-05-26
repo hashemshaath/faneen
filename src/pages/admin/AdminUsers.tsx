@@ -47,6 +47,8 @@ import { maskEmail, maskPhone } from '@/lib/masking';
 import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminDeleteUser, logAdminActivity } from '@/modules/identity';
 import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
+import { PhoneField, parsePhoneValue } from '@/components/forms/PhoneField';
+import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import type { NormalizedRpcError } from '@/services/rpc';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
@@ -669,11 +671,18 @@ const AdminUsers = () => {
     setActivePanel({ type: 'create' });
     setTimeout(() => panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
-  const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
+  const [editForm, setEditForm] = useState({
+    full_name: '', full_name_ar: '', full_name_en: '', username: '',
+    account_type: '', membership_tier: '',
+    phone: '', phone_country_code: '+966', phone_national: '',
+    email: '',
+  });
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [createForm, setCreateForm] = useState({
-    email: '', password: '', full_name: '', phone: '',
+    email: '', password: '',
+    full_name: '', full_name_ar: '', full_name_en: '', username: '',
+    phone: '', phone_country_code: '+966', phone_national: '',
     account_type: 'individual', membership_tier: 'free', role: 'none',
   });
   const passwordValidationMessage = useMemo(() => getPasswordValidationMessage(newPassword, isRTL), [newPassword, isRTL]);
@@ -742,7 +751,12 @@ const AdminUsers = () => {
 
   const closePanel = () => {
     setActivePanel(null); setNewPassword(''); setShowNewPassword(false);
-    setCreateForm({ email: '', password: '', full_name: '', phone: '', account_type: 'individual', membership_tier: 'free', role: 'none' });
+    setCreateForm({
+      email: '', password: '',
+      full_name: '', full_name_ar: '', full_name_en: '', username: '',
+      phone: '', phone_country_code: '+966', phone_national: '',
+      account_type: 'individual', membership_tier: 'free', role: 'none',
+    });
   };
 
   const createUserMutation = useMutation({
@@ -1049,13 +1063,19 @@ const AdminUsers = () => {
 
   const openEdit = useCallback((profile: Profile) => {
     setActivePanel({ type: 'edit', profile });
+    const parsed = parsePhoneValue(isSuperAdmin ? profile.phone : '');
     setEditForm({
       full_name: profile.full_name || '',
+      full_name_ar: profile.full_name_ar || '',
+      full_name_en: profile.full_name_en || '',
+      username: profile.username || '',
       account_type: profile.account_type || 'individual',
       membership_tier: profile.membership_tier || 'free',
       // PII fields are only prefilled for Super Admin. Non-super admins see empty
       // placeholders so masked values are never leaked through the edit form.
       phone: isSuperAdmin ? (profile.phone || '') : '',
+      phone_country_code: parsed.countryCode,
+      phone_national: parsed.national,
       // Never pre-fill an edit field with a synthetic phone-login email.
       email: isSuperAdmin && profile.email && !isSyntheticPhoneEmail(profile.email)
         ? profile.email
@@ -1065,16 +1085,22 @@ const AdminUsers = () => {
 
   const handleSaveProfile = () => {
     if (activePanel?.type !== 'edit') return;
-    const trimmed = editForm.full_name.trim();
-    if (!trimmed) { toast.error(isRTL ? 'الاسم مطلوب' : 'Name required'); return; }
+    const nameAr = editForm.full_name_ar.trim();
+    const nameEn = editForm.full_name_en.trim();
+    const combined = nameAr || nameEn || editForm.full_name.trim();
+    if (!combined) { toast.error(isRTL ? 'الاسم مطلوب (عربي أو إنجليزي)' : 'Name required (AR or EN)'); return; }
     const data: Partial<Profile> = {
-      full_name: trimmed,
+      full_name: combined,
+      full_name_ar: nameAr || null,
+      full_name_en: nameEn || null,
+      username: editForm.username.trim() || null,
       account_type: editForm.account_type as Profile['account_type'],
       membership_tier: editForm.membership_tier as Profile['membership_tier'],
     };
     // Only Super Admin may write PII fields; for others we keep existing values.
     if (isSuperAdmin) {
-      data.phone = editForm.phone.trim() || '';
+      data.phone_country_code = editForm.phone_national ? editForm.phone_country_code : null;
+      data.phone_national = editForm.phone_national || null;
       const nextEmail = editForm.email.trim();
       if (nextEmail && isSyntheticPhoneEmail(nextEmail)) {
         toast.error(isRTL
@@ -1595,14 +1621,24 @@ const AdminUsers = () => {
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاسم الكامل *' : 'Full name *'}</Label>
-                      <Input value={createForm.full_name} onChange={e => setCreateForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" /></div>
+                    <div className="lg:col-span-3">
+                      <BilingualNameField
+                        value={{ full_name_ar: createForm.full_name_ar, full_name_en: createForm.full_name_en, username: createForm.username }}
+                        onChange={(v) => setCreateForm(p => ({ ...p, full_name_ar: v.full_name_ar, full_name_en: v.full_name_en, username: v.username || '' }))}
+                        onFullNameChange={(f) => setCreateForm(p => ({ ...p, full_name: f }))}
+                        required
+                      />
+                    </div>
                     <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'البريد *' : 'Email *'}</Label>
                       <Input type="email" dir="ltr" value={createForm.email} onChange={e => setCreateForm(p => ({ ...p, email: e.target.value }))} className="h-10 rounded-xl" /></div>
                     <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'كلمة المرور *' : 'Password *'}</Label>
                       <Input type="text" dir="ltr" value={createForm.password} onChange={e => setCreateForm(p => ({ ...p, password: e.target.value }))} className="h-10 rounded-xl tech-content" placeholder="8+ chars" /></div>
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الهاتف' : 'Phone'}</Label>
-                      <Input dir="ltr" value={createForm.phone} onChange={e => setCreateForm(p => ({ ...p, phone: e.target.value }))} className="h-10 rounded-xl tech-content" /></div>
+                    <PhoneField
+                      value={{ countryCode: createForm.phone_country_code, national: createForm.phone_national }}
+                      onChange={(v) => setCreateForm(p => ({ ...p, phone_country_code: v.countryCode, phone_national: v.national }))}
+                      onE164Change={(e164) => setCreateForm(p => ({ ...p, phone: e164 }))}
+                      optional
+                    />
                     <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
                       <Select value={createForm.account_type} onValueChange={v => setCreateForm(p => ({ ...p, account_type: v }))}>
                         <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
@@ -1727,21 +1763,25 @@ const AdminUsers = () => {
 
                     {/* ── Profile tab ── */}
                     <TabsContent value="profile" className="p-5 pt-4 m-0 space-y-4">
+                      <BilingualNameField
+                        value={{ full_name_ar: editForm.full_name_ar, full_name_en: editForm.full_name_en, username: editForm.username }}
+                        onChange={(v) => setEditForm(p => ({ ...p, full_name_ar: v.full_name_ar, full_name_en: v.full_name_en, username: v.username || '' }))}
+                        onFullNameChange={(f) => setEditForm(p => ({ ...p, full_name: f }))}
+                        required
+                      />
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs flex items-center gap-1"><Users className="w-3 h-3" />{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
-                          <Input value={editForm.full_name} onChange={e => setEditForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" dir="auto" />
-                        </div>
                         {isSuperAdmin ? (
                           <>
                             <div className="space-y-1.5">
                               <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" />{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
                               <Input type="email" dir="ltr" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl tech-content" />
                             </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" />{isRTL ? 'الهاتف' : 'Phone'}</Label>
-                              <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} dir="ltr" maxLength={20} className="h-10 rounded-xl tech-content" />
-                            </div>
+                            <PhoneField
+                              value={{ countryCode: editForm.phone_country_code, national: editForm.phone_national }}
+                              onChange={(v) => setEditForm(p => ({ ...p, phone_country_code: v.countryCode, phone_national: v.national }))}
+                              onE164Change={(e164) => setEditForm(p => ({ ...p, phone: e164 }))}
+                              optional
+                            />
                           </>
                         ) : (
                           <div className="md:col-span-1 rounded-xl border border-dashed border-warning/40 bg-warning/5 p-3 text-[11px] text-muted-foreground flex items-start gap-2">

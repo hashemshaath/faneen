@@ -1470,6 +1470,8 @@ export type Database = {
           name_en: string | null
           national_id: string | null
           phone: string | null
+          phone_country_code: string | null
+          phone_national: string | null
           ref_id: string | null
           region: string | null
           sort_order: number
@@ -1503,6 +1505,8 @@ export type Database = {
           name_en?: string | null
           national_id?: string | null
           phone?: string | null
+          phone_country_code?: string | null
+          phone_national?: string | null
           ref_id?: string | null
           region?: string | null
           sort_order?: number
@@ -1536,6 +1540,8 @@ export type Database = {
           name_en?: string | null
           national_id?: string | null
           phone?: string | null
+          phone_country_code?: string | null
+          phone_national?: string | null
           ref_id?: string | null
           region?: string | null
           sort_order?: number
@@ -2112,6 +2118,8 @@ export type Database = {
           national_id: string | null
           onboarding_completion: number
           phone: string | null
+          phone_country_code: string | null
+          phone_national: string | null
           rating_avg: number
           rating_count: number
           ref_id: string
@@ -2193,6 +2201,8 @@ export type Database = {
           national_id?: string | null
           onboarding_completion?: number
           phone?: string | null
+          phone_country_code?: string | null
+          phone_national?: string | null
           rating_avg?: number
           rating_count?: number
           ref_id?: string
@@ -2274,6 +2284,8 @@ export type Database = {
           national_id?: string | null
           onboarding_completion?: number
           phone?: string | null
+          phone_country_code?: string | null
+          phone_national?: string | null
           rating_avg?: number
           rating_count?: number
           ref_id?: string
@@ -5936,6 +5948,8 @@ export type Database = {
           name: string
           needs_info_at: string | null
           phone: string | null
+          phone_country_code: string | null
+          phone_national: string | null
           priority: string
           project_scope: string | null
           quote_amount: number | null
@@ -5983,6 +5997,8 @@ export type Database = {
           name: string
           needs_info_at?: string | null
           phone?: string | null
+          phone_country_code?: string | null
+          phone_national?: string | null
           priority?: string
           project_scope?: string | null
           quote_amount?: number | null
@@ -6030,6 +6046,8 @@ export type Database = {
           name?: string
           needs_info_at?: string | null
           phone?: string | null
+          phone_country_code?: string | null
+          phone_national?: string | null
           priority?: string
           project_scope?: string | null
           quote_amount?: number | null
@@ -8612,6 +8630,8 @@ export type Database = {
           onboarding_started_at: string | null
           onboarding_step: number
           phone: string | null
+          phone_country_code: string | null
+          phone_national: string | null
           phone_verified: boolean
           postal_code: string | null
           preferred_language: string
@@ -8653,6 +8673,8 @@ export type Database = {
           onboarding_started_at?: string | null
           onboarding_step?: number
           phone?: string | null
+          phone_country_code?: string | null
+          phone_national?: string | null
           phone_verified?: boolean
           postal_code?: string | null
           preferred_language?: string
@@ -8694,6 +8716,8 @@ export type Database = {
           onboarding_started_at?: string | null
           onboarding_step?: number
           phone?: string | null
+          phone_country_code?: string | null
+          phone_national?: string | null
           phone_verified?: boolean
           postal_code?: string | null
           preferred_language?: string
@@ -13123,6 +13147,15 @@ export type Database = {
         Args: { _reason: string }
         Returns: undefined
       }
+      split_phone: {
+        Args: { _phone: string }
+        Returns: {
+          cc_out: string
+          nat_out: string
+        }[]
+      }
+      split_phone_cc: { Args: { _phone: string }; Returns: string }
+      split_phone_nat: { Args: { _phone: string }; Returns: string }
       submit_business_for_review: {
         Args: { _business_id: string }
         Returns: Database["public"]["Enums"]["business_approval_status"]
