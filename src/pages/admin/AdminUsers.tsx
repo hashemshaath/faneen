@@ -681,6 +681,15 @@ const AdminUsers = () => {
   });
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
+  // Suspension form (temporary/permanent disable)
+  const [suspendForm, setSuspendForm] = useState<{
+    mode: 'temporary' | 'permanent';
+    until: string; // datetime-local value
+    reason: string;
+  }>({ mode: 'temporary', until: '', reason: '' });
+  // Add-business-link form
+  const [linkForm, setLinkForm] = useState<{ businessId: string; role: StaffRole }>({ businessId: '', role: 'viewer' });
+  const [linkSearch, setLinkSearch] = useState('');
   const [createForm, setCreateForm] = useState({
     email: '', password: '',
     full_name: '', full_name_ar: '', full_name_en: '', username: '',
