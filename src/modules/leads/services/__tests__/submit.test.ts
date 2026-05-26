@@ -16,6 +16,8 @@ const payload: InsertLeadRequestPayload = {
   name: 'Test',
   email: 't@example.com',
   phone: null,
+  phone_country_code: null,
+  phone_national: null,
   subject: null,
   message: 'hello world long enough',
   budget_range: null,
