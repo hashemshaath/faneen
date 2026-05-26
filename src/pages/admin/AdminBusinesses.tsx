@@ -20,6 +20,8 @@ import {
   insertBusiness,
 } from '@/modules/businesses';
 import { getProfileByEmail } from '@/modules/users/services/getProfileByEmail';
+import { getProfileByRefId, searchProfilesByOr, listProfilesByUserIds } from '@/modules/users';
+import { nationalAddressLookup } from '@/modules/locations';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import { RegionCitySelector } from '@/components/forms/RegionCitySelector';
 import { SA_REGIONS, type SaRegionId } from '@/data/sa-regions';
@@ -398,7 +400,10 @@ const AdminBusinesses = () => {
     queryKey: ['admin-business-owner-ref', editingBiz?.user_id],
     queryFn: async () => {
       if (!editingBiz?.user_id) return null;
-      const { data } = await supabase.from('profiles').select('ref_id, full_name_ar, full_name_en').eq('user_id', editingBiz.user_id).maybeSingle();
+      const { data } = await getProfileByUserId<{ ref_id: string | null; full_name_ar: string | null; full_name_en: string | null }>({
+        userId: editingBiz.user_id,
+        select: 'ref_id, full_name_ar, full_name_en',
+      });
       return data;
     },
     enabled: !!editingBiz?.user_id,
