@@ -1,97 +1,116 @@
-
-# Microservice مركزي للعناوين + إعداد SPL تلقائي في كل البيئات
-
 ## الهدف
-توحيد بيانات العنوان للأشخاص (`profiles`) والشركات (`businesses`) والفروع (`business_branches`) داخل جدول واحد `public.addresses`، مع خدمة قراءة/كتابة موحّدة، وضمان أن خدمة العنوان الوطني `national-address-lookup` تعمل تلقائياً في **التطوير + المعاينة + الإنتاج** دون تدخل يدوي.
 
-## ما هو منجز بالفعل (نُبقي عليه)
-- Edge function `national-address-lookup` تقرأ `SPL_API_KEY` من env ثم من `platform_settings` كاحتياط (موجود). 
-- استخدام مباشر في `DashboardProfile` و `DashboardBusinessEdit` و `AdminBusinesses` (أنجزناه قبل قليل). 
-- اختبارات عزل الكاش وفحص query keys (انتهت في هذه الجولة).
+دمج صفحتَي `/admin/users` (1681 سطر) و`/admin/businesses` (2076 سطر) في **مركز إدارة موحّد** يربط بين المستخدم وما يملكه من منشآت وصلاحيات وعقود في عرض واحد، مع تنظيف الكود وإعادة تصميم احترافية وآمنة.
 
-## التغييرات
+## البنية الجديدة
 
-### 1) جدول `public.addresses` الموحّد (Migration جديدة)
+مسار موحّد جديد: **`/admin/identity`** (مع إبقاء `/admin/users` و`/admin/businesses` كـ redirects).
 
 ```text
-addresses
-├── id                uuid PK
-├── owner_type        text  CHECK in ('profile','business','branch')
-├── owner_id          uuid  -- يشير لـ profiles.user_id / businesses.id / business_branches.id
-├── label             text  -- مثل: 'main','billing','site'
-├── is_primary        boolean default false
-├── short_address     text  -- رمز SPL (RRRD2402)
-├── country_id, city_id, region, district, street_name, building_number, additional_number, post_code, address, latitude, longitude
-├── region_en, district_en, street_name_en, address_en   -- ثنائي اللغة كامل
-├── source            text  -- 'spl' | 'map_pick' | 'manual'
-├── verified_at       timestamptz
-├── created_by        uuid
-└── created_at / updated_at
+/admin/identity                      ← الصفحة الرئيسية (شل واحد)
+  ?view=overview                     ← KPIs مدمجة (مستخدمين + منشآت + صلاحيات)
+  ?view=users                        ← قائمة المستخدمين
+  ?view=businesses                   ← قائمة المنشآت
+  ?view=staff                        ← فريق الإدارة
+  ?view=disabled                     ← المعطّلون
+  ?view=analytics                    ← تحليلات مدمجة
+  &focus=USR-1000017                 ← فتح بطاقة جانبية لأي كيان
+
+/admin/identity/u/:userId            ← صفحة كاملة لمستخدم (تستبدل AdminUserDetail)
+/admin/identity/b/:businessId        ← صفحة كاملة لمنشأة
 ```
 
-- **Index**: `(owner_type, owner_id)`, partial unique `(owner_type, owner_id) WHERE is_primary`.
-- **RLS**: المالك (حسب `owner_type/owner_id`) + admin + business_staff للفروع/الشركات.
-- **Trigger**: `addresses_set_primary` يضمن primary واحد فقط لكل مالك.
+## التصميم الاحترافي
 
-### 2) Microservice في الواجهة الأمامية
-
-`src/modules/addresses/` (جديد):
+شل ثلاثي الأقسام يعتمد على Brand Identity v1.0 + Design Tokens:
 
 ```text
-modules/addresses/
-├── index.ts
-├── types.ts              # AddressRow / AddressInput / OwnerRef
-└── services/
-    ├── listAddresses.ts          # by ownerType + ownerId
-    ├── getPrimaryAddress.ts
-    ├── upsertAddress.ts          # insert or update by id
-    ├── setPrimaryAddress.ts
-    ├── deleteAddress.ts
-    └── resolveFromSpl.ts         # استدعاء national-address-lookup + بناء AddressInput
+┌─────────────────────────────────────────────────────────────┐
+│ Header: عنوان + KPI Strip (6 بطاقات صغيرة)          [+ جديد]│
+├──────────┬──────────────────────────────┬───────────────────┤
+│ Filters  │ List (Users أو Businesses)   │ Detail Drawer     │
+│ Sidebar  │  ┌──────────────────────┐   │ (inline, ليس Popup)│
+│          │  │ Row: avatar + اسم    │   │  - بيانات الحساب  │
+│ - بحث    │  │ ref_id + شارات       │   │  - المنشآت        │
+│ - الدور  │  │ روابط متبادلة:        │   │  - الصلاحيات      │
+│ - النوع  │  │  USR → [BIZ-x,BIZ-y]  │   │  - العقود/الطلبات│
+│ - الفئة  │  │  BIZ → USR-owner      │   │  - النشاط الإداري │
+│ - الربط  │  │ [Actions منسقة]      │   │  [إغلاق ×]        │
+│          │  └──────────────────────┘   │                    │
+│ [مسح]    │  …                           │                    │
+└──────────┴──────────────────────────────┴───────────────────┘
 ```
 
-`resolveFromSpl.ts` يصبح **النقطة الوحيدة** لاستدعاء `national-address-lookup` — كل الصفحات (Profile/BusinessEdit/AdminBusinesses) تستهلك هذا الـwrapper بدل تكرار `supabase.functions.invoke`.
+- استخدام `<Bi>` و`pickBi()` بدل `isRTL ? ar : en`.
+- شارات الـ ref_id موحّدة عبر `<ReferenceBadge>`/`<ReferenceTag>`.
+- شارات التحقق عبر `<VerifiedBadge>` (لا `BadgeCheck`).
+- ألوان semantic فقط (success/info/warning/destructive)، بدون hex مباشر.
+- Drawer جانبي ينزلق من الجهة (يحترم RTL)، يحل محل اللوحات الـ inline المكدّسة.
+- جدول صفوف مضغوط مع وضع `comfortable` و`compact` (يبقى من الكود الحالي).
 
-### 3) SPL تلقائي في كل البيئات (zero-touch)
+## الربط بين الكيانين
 
-- التحقق من وجود `SPL_API_KEY` كـ **secret على مشروع Supabase** (`secrets--fetch_secrets` ثم `add_secret` إن لزم — السرّ ينطبق تلقائياً على dev/preview/prod لأن edge functions تعمل بنفس النشر).
-- لوحة الأدمن `AdminApiSettings`: إضافة بطاقة حالة `SPL_API_KEY` (موجود مفتاح env / مفتاح في `platform_settings`؟ تاريخ آخر استعلام ناجح؟) + زر "اختبار الاتصال" يستدعي شفرة قصيرة (`RRRD2402`) ويعرض النتيجة. هذا يجعل التحقق من الإعداد ذاتيًا في كل بيئة.
-- توثيق صغير في `docs/national-address-service.md`: كيف يُضاف المفتاح مرة واحدة، وكيف تتأكد بأنه يعمل.
+نقطة الانطلاق الأساسية: **العلاقة `profile ↔ businesses ↔ business_staff`** موجودة فعلياً، لكنها مبعثرة. الجديد:
 
-### 4) ترحيل البيانات (دفعة واحدة، non-destructive)
+1. **في صف المستخدم**: قائمة منشآته كأزرار قابلة للنقر → تفتح Drawer للمنشأة بدون مغادرة الصفحة.
+2. **في صف المنشأة**: اسم المالك ومعرّفه USR كزر → يفتح Drawer للمستخدم.
+3. **شريط التنقل الجانبي**: عند فتح Drawer لمستخدم، نعرض "مرتبط بـ N منشآت" مع شرائح تنقل سريعة.
+4. **بحث موحّد** (`⌘K`): يبحث عبر الاسم/البريد/الهاتف/ref_id لكلا الكيانَين دفعة واحدة.
 
-داخل نفس الـmigration:
-- نسخ صفوف العنوان الحالية من `profiles` / `businesses` / `business_branches` إلى `addresses` كـ `is_primary=true`.
-- **لا تُحذف الأعمدة الحالية في هذه المرحلة** — تبقى للقراءة الخلفية حتى نتأكد عبر الإنتاج. الكتابة الجديدة تذهب لـ `addresses` + تُحدِّث الأعمدة القديمة (dual-write) عبر الـwrapper `upsertAddress` كمرحلة انتقالية.
+## ضمان عدم فقدان وظائف
 
-### 5) ربط الواجهة (الحد الأدنى لهذه الجولة)
+جرد كامل لما يجب الاحتفاظ به من كلا الصفحتَين:
 
-- `DashboardProfile`، `DashboardBusinessEdit`، `AdminBusinesses`: استبدال استدعاء SPL المباشر بـ `resolveFromSpl` + استخدام `upsertAddress` بعد الحفظ (dual-write). الـUI لا يتغيّر بصرياً.
+**من AdminUsers**: إنشاء/تعديل/حذف مستخدم، تغيير كلمة المرور، إرسال رابط استرداد، Ban/Unban (فردي + Bulk مع الحماية الجديدة)، Grant/Revoke roles، Bulk Disable/Enable، CSV Export، فلترة Role/Type/Tier/BusinessLink، KPIs، Recharts (تسجيلات 30 يوم)، Recent Admin Activity، CrQuickScanInline لإنشاء حساب من السجل التجاري، Multi-business permissions inline، اختصارات لوحة المفاتيح.
 
-### 6) اختبارات
+**من AdminBusinesses**: عرض/تعديل/حذف/تفعيل/تحقق منشأة، إدارة الفروع، Membership Tier، Approval Status، Provider Review entry، Bulk operations، Username conflict handling، صورة الشعار/الغلاف، إحصائيات (مشاهدات/طلبات/عقود).
 
-- `addressesMicroservice.test.ts`: list/upsert/setPrimary/delete (مع Supabase mock).
-- `addressesIsolationAudit.test.ts`: يفحص أن لا يوجد `supabase.functions.invoke('national-address-lookup'` خارج `src/modules/addresses/` (يجعل الخدمة هي القناة الوحيدة).
-- `addressesRlsRegression.test.ts`: anon لا يقرأ/يكتب؛ owner يقرأ/يكتب صفوفه فقط.
+سيتم إنشاء **checklist تلقائي** قبل الإطلاق في تعليق رأس الملف الجديد، يربط كل ميزة قديمة بمكانها الجديد.
 
-## الملفات
+## التنظيف بعد التعديل
 
-- `supabase/migrations/<ts>_addresses_central_table.sql` (جديد)
-- `src/modules/addresses/{index,types}.ts` (جديد)
-- `src/modules/addresses/services/*.ts` (6 ملفات جديدة)
-- `src/pages/dashboard/DashboardProfile.tsx` (تحديث استدعاءات SPL/الحفظ)
-- `src/pages/dashboard/DashboardBusinessEdit.tsx` (نفس)
-- `src/pages/admin/AdminBusinesses.tsx` (نفس)
-- `src/pages/admin/AdminApiSettings.tsx` (بطاقة حالة SPL + زر اختبار)
-- `docs/national-address-service.md` (جديد)
-- 3 ملفات اختبارات
+- **حذف**: `AdminUserDetail.tsx` (تحلّ مكانه الصفحة الكاملة الجديدة).
+- **تقسيم**: المكوّن الرئيسي إلى ملفات صغيرة تحت `src/components/admin/identity/`:
+  - `IdentityShell.tsx`، `IdentityHeader.tsx`، `IdentityKpiStrip.tsx`
+  - `users/UserRow.tsx`، `users/UserDrawer.tsx`، `users/UserForms.tsx`
+  - `businesses/BusinessRow.tsx`، `businesses/BusinessDrawer.tsx`، `businesses/BusinessForms.tsx`
+  - `shared/IdentityFilters.tsx`، `shared/IdentityBulkBar.tsx`، `shared/EntityLink.tsx`
+  - `hooks/useIdentityData.ts` (يجمع كل الاستعلامات في مكان واحد)
+- **استبدال** آخر استخدامات `c.id.slice(0,8)` و`<Hash>` اليدوية بـ `<ReferenceBadge>`.
+- **Redirects**: `/admin/users → /admin/identity?view=users`، `/admin/businesses → /admin/identity?view=businesses`، `/admin/users/:id → /admin/identity/u/:id`.
+- **تحديث**: روابط في `DashboardSidebar.tsx`, `AdminDashboardView.tsx`, و7 صفحات أدمن أخرى لتشير للمسار الجديد.
 
-## خارج النطاق
-- حذف الأعمدة القديمة (`businesses.address` ...) — مرحلة لاحقة بعد تشغيل dual-write لفترة.
-- تغيير شكل صفحات العرض العامة.
-- تعديل خدمات أخرى (booking/contracts) لاستخدام الجدول الجديد — تتم تدريجياً.
+## ضمانات الأمان
 
-## ملاحظات تقنية
-- `owner_id` بدون FK مركّب لأنه polymorphic؛ يُضبط بـtrigger يتحقق من وجود الصف في الجدول الصحيح حسب `owner_type`.
-- `set_primary` trigger يستخدم `BEFORE INSERT/UPDATE` لإلغاء primary السابق ضمن نفس `(owner_type, owner_id)` ذرّياً.
-- SPL: المفتاح يُحفظ كـ secret على Supabase → يصل لكل edge function deployment تلقائياً في كل البيئات (لا حاجة لمتغيرات بيئة منفصلة في الواجهة).
+- إبقاء `requireSuperAdmin` على القائمة الكاملة (PII)؛ `requireAdmin` فقط لقائمة المنشآت.
+- استمرار `maskEmail`/`maskPhone` لغير Super Admin + قفل تعديل PII (الإصلاحات السابقة).
+- استمرار حماية Bulk Disable من إصابة المشرفين/الذات.
+- لا UUID خام في أي مكان مرئي.
+- `useNoIndex` لكل المسارات.
+- لا منبثقات؛ Drawer + Inline forms فقط.
+
+## الإنجاز على مراحل
+
+تجنباً لتعطيل العمل، التنفيذ على 3 موجات صغيرة:
+
+**موجة 1**: إنشاء الهيكل الجديد (`/admin/identity`) مع تبويب المستخدمين فقط منقول من الكود الحالي، وإضافة `EntityLink` و`UserDrawer`. الصفحات القديمة تبقى تعمل.
+
+**موجة 2**: نقل تبويب المنشآت + `BusinessDrawer` + ربط المستخدم↔المنشأة.
+
+**موجة 3**: إضافة Redirects، تحديث الروابط، حذف الملفات القديمة، تنظيف نهائي، اختبار TypeScript.
+
+## ملاحظات تقنية (للقارئ التقني)
+
+- إجمالي ~4000 سطر سيتقلّص إلى ~2500 موزّع على ملفات < 400 سطر لكل ملف.
+- جميع الاستعلامات تنتقل إلى hook موحّد `useIdentityData()` يستخدم `useQuery` مع `staleTime` المناسب لكل جدول.
+- Drawer مبني على `Sheet` من shadcn (مسموح كونه inline-overlay وليس popup إجباري).
+- Memoization صارمة على Row components وقوائم البحث.
+- لا تغيير في مخطط قاعدة البيانات (DB schema) ولا في RLS — فقط طبقة العرض.
+
+## ما يحتاج تأكيدك
+
+1. **المسار**: `/admin/identity` مقبول، أم تفضّل `/admin/people` أو `/admin/accounts`؟
+2. **Drawer جانبي**: مقبول كحل بديل عن الـ inline panel الحالي (يبقى inline وليس popup)؟ أم تفضّل الإبقاء على الكروت الـ inline تحت كل صف؟
+3. **حذف `AdminUserDetail.tsx`**: موافق على دمجه في `/admin/identity/u/:id`، أم تريد الإبقاء على الصفحة المستقلة؟
+
+بعد تأكيدك للنقاط الثلاث أبدأ بالموجة 1 فوراً.
