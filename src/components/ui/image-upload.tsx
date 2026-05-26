@@ -107,7 +107,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       toast.success(tx.uploadOk);
     } catch (err: unknown) {
       // Do not log file names or contents.
-      if (import.meta.env.DEV) console.warn('Upload error');
+      if (import.meta.env.DEV) console.warn('Upload error', err);
       toast.error(err instanceof Error ? err.message : tx.uploadFail);
     } finally {
       setUploading(false);
