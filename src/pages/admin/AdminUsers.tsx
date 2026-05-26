@@ -1763,21 +1763,25 @@ const AdminUsers = () => {
 
                     {/* ── Profile tab ── */}
                     <TabsContent value="profile" className="p-5 pt-4 m-0 space-y-4">
+                      <BilingualNameField
+                        value={{ full_name_ar: editForm.full_name_ar, full_name_en: editForm.full_name_en, username: editForm.username }}
+                        onChange={(v) => setEditForm(p => ({ ...p, full_name_ar: v.full_name_ar, full_name_en: v.full_name_en, username: v.username || '' }))}
+                        onFullNameChange={(f) => setEditForm(p => ({ ...p, full_name: f }))}
+                        required
+                      />
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs flex items-center gap-1"><Users className="w-3 h-3" />{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
-                          <Input value={editForm.full_name} onChange={e => setEditForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" dir="auto" />
-                        </div>
                         {isSuperAdmin ? (
                           <>
                             <div className="space-y-1.5">
                               <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" />{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
                               <Input type="email" dir="ltr" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl tech-content" />
                             </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" />{isRTL ? 'الهاتف' : 'Phone'}</Label>
-                              <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} dir="ltr" maxLength={20} className="h-10 rounded-xl tech-content" />
-                            </div>
+                            <PhoneField
+                              value={{ countryCode: editForm.phone_country_code, national: editForm.phone_national }}
+                              onChange={(v) => setEditForm(p => ({ ...p, phone_country_code: v.countryCode, phone_national: v.national }))}
+                              onE164Change={(e164) => setEditForm(p => ({ ...p, phone: e164 }))}
+                              optional
+                            />
                           </>
                         ) : (
                           <div className="md:col-span-1 rounded-xl border border-dashed border-warning/40 bg-warning/5 p-3 text-[11px] text-muted-foreground flex items-start gap-2">
