@@ -180,7 +180,7 @@ export function useActiveWorkspace(): ActiveWorkspace {
 
   const activeEntityId = active?.entity_id ?? null;
 
-  const { data: locations = [] } = useQuery({
+  const { data: locationsData } = useQuery({
     queryKey: ['active-workspace-locations', user?.id, activeEntityId],
     enabled: !!user && !!activeEntityId,
     staleTime: 60_000,
@@ -189,6 +189,8 @@ export function useActiveWorkspace(): ActiveWorkspace {
       return data ?? [];
     },
   });
+  const locations = locationsData ?? [];
+  const locationsReady = locationsData !== undefined;
 
   // Location preference: scoped per (user, entity).
   const [activeLocationId, setActiveLocationIdState] = useState<string | null>(null);
@@ -198,9 +200,12 @@ export function useActiveWorkspace(): ActiveWorkspace {
     setActiveLocationIdState(readLocationPref(user?.id, activeEntityId));
   }, [user?.id, activeEntityId]);
 
-  // Self-heal against the accessible locations list.
+  // Self-heal against the accessible locations list (only after the
+  // locations query for the current entity has resolved — avoids racing
+  // with a stale list during entity switches).
   useEffect(() => {
     if (!activeEntityId) return;
+    if (!locationsReady) return;
     if (locations.length === 0) {
       if (activeLocationId !== null) {
         setActiveLocationIdState(null);
@@ -216,7 +221,7 @@ export function useActiveWorkspace(): ActiveWorkspace {
         writeLocationPref(user?.id, activeEntityId, null);
       }
     }
-  }, [locations, activeLocationId, activeEntityId, user?.id]);
+  }, [locations, locationsReady, activeLocationId, activeEntityId, user?.id]);
 
   const setActiveLocationId = useCallback(
     (id: string | null) => {
