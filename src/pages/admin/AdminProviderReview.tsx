@@ -11,7 +11,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { maskEmail, maskPhone } from '@/lib/masking';
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
