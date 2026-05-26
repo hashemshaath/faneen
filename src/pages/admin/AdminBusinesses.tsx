@@ -20,7 +20,7 @@ import {
   insertBusiness,
 } from '@/modules/businesses';
 import { getProfileByEmail } from '@/modules/users/services/getProfileByEmail';
-import { getProfileByRefId, searchProfilesByOr, listProfilesByUserIds } from '@/modules/users';
+import { getProfileByRefId, searchProfilesByOr } from '@/modules/users';
 import { nationalAddressLookup } from '@/modules/locations';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import { RegionCitySelector } from '@/components/forms/RegionCitySelector';
