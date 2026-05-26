@@ -27,6 +27,8 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
+import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 
 type ApprovalStatus =
   | 'draft' | 'submitted' | 'under_review'
@@ -88,6 +90,7 @@ const NOTIFY_MAP: Partial<Record<ApprovalStatus, {
 
 interface ProviderRow {
   id: string;
+  ref_id: string | null;
   user_id: string;
   name_ar: string | null;
   name_en: string | null;
@@ -139,7 +142,7 @@ export default function AdminProviderReview() {
       const filters: ListAdminBusinessesFilter[] = [];
       if (statusFilter !== 'all') filters.push({ column: 'approval_status', op: 'eq', value: statusFilter });
       const { data, error } = await listAdminBusinesses({
-        select: 'id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,sectors,sub_services,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date',
+        select: 'id,ref_id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,sectors,sub_services,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date',
         orderBy: [
           { column: 'submitted_at', ascending: false, nullsFirst: false },
           { column: 'created_at', ascending: false },
@@ -380,6 +383,7 @@ export default function AdminProviderReview() {
                           </Badge>
                         </div>
                         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground tech-content">
+                          {r.ref_id && <span className="font-mono">{r.ref_id}</span>}
                           {r.username && <span>@{r.username}</span>}
                           <span>{r.onboarding_completion ?? 0}%</span>
                         </div>
@@ -411,6 +415,12 @@ export default function AdminProviderReview() {
                         <CardTitle className="text-base">
                           {language === 'ar' ? (selected.name_ar ?? selected.name_en) : (selected.name_en ?? selected.name_ar)}
                         </CardTitle>
+                        {selected.ref_id && (
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <ReferenceBadge refId={selected.ref_id} />
+                            <ReferenceLinkCopy refId={selected.ref_id} isRTL={isRTL} />
+                          </div>
+                        )}
                         {selected.username && (
                           <a
                             href={`/${selected.username}`}
