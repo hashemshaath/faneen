@@ -247,6 +247,20 @@ const AdminBusinesses = () => {
     email: '',
     category_id: '',
     city_id: '',
+    region_id: '' as SaRegionId | '',
+    // Registry / official identifiers
+    national_id: '',          // CR (commercial registration) number
+    unified_number: '',       // 700-/national unified number
+    vat_number: '',           // VAT/tax number
+    // Detailed national address
+    district: '',
+    district_en: '',
+    street_name: '',
+    street_name_en: '',
+    building_number: '',
+    additional_number: '',
+    address: '',
+    address_en: '',
   });
   const [createForm, setCreateForm] = useState<any>(emptyCreateForm());
   const setCField = (k: string, v: unknown) => setCreateForm((f: any) => ({ ...f, [k]: v }));
