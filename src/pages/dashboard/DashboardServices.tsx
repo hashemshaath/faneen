@@ -519,9 +519,11 @@ const DashboardServices = () => {
                 <Download className="w-3.5 h-3.5 me-1.5" />{rtl ? 'تصدير' : 'Export'}
               </Button>
             )}
-            <Button variant="hero" size="sm" className="h-9 text-xs rounded-xl" onClick={() => { closeForm(); setShowForm(true); setShowCatalog(false); scrollToForm(); }}>
-              <Plus className="w-3.5 h-3.5 me-1.5" />{rtl ? 'إضافة خدمة' : 'Add Service'}
-            </Button>
+            <PermissionHint permission="services.manage">
+              <Button variant="hero" size="sm" className="h-9 text-xs rounded-xl" onClick={() => { closeForm(); setShowForm(true); setShowCatalog(false); scrollToForm(); }}>
+                <Plus className="w-3.5 h-3.5 me-1.5" />{rtl ? 'إضافة خدمة' : 'Add Service'}
+              </Button>
+            </PermissionHint>
           </div>
         </div>
 
