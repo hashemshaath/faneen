@@ -243,6 +243,23 @@ const AdminIdentity: React.FC = () => {
     return m;
   }, [profiles]);
 
+  /* ─── Apply filters ─── */
+  const filteredProfiles = useMemo(() => profiles.filter(p => {
+    if (filters.accountType !== 'all' && p.account_type !== filters.accountType) return false;
+    if (filters.tier !== 'all' && p.membership_tier !== filters.tier) return false;
+    if (filters.status === 'disabled' && !p.is_banned) return false;
+    if (filters.status === 'active' && p.is_banned) return false;
+    return true;
+  }), [profiles, filters]);
+  const filteredBusinesses = useMemo(() => businesses.filter(b => {
+    if (filters.tier !== 'all' && b.membership_tier !== filters.tier) return false;
+    if (filters.status === 'verified' && !b.is_verified) return false;
+    if (filters.status === 'pending' && b.approval_status !== 'pending') return false;
+    if (filters.status === 'active' && !b.is_active) return false;
+    if (filters.status === 'disabled' && b.is_active) return false;
+    return true;
+  }), [businesses, filters]);
+
   /* ─── Combined KPIs ─── */
   const kpis = useMemo(() => {
     const now = Date.now();
