@@ -15,12 +15,13 @@
  *    service-layer wrapper from Step C.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import {
   lookupByReference,
   type ReferenceLookupRow,
 } from '@/modules/reference';
+import { useNoIndex } from '@/hooks/useNoIndex';
 
 // Strict shape: 2–6 uppercase letters, hyphen, then alphanumerics/hyphens.
 // Total length capped so opaque tokens (typically very long) are rejected.
@@ -73,6 +74,7 @@ type ResolveState =
   | { status: 'error' };
 
 export default function ReferenceResolver() {
+  useNoIndex();
   const { refId } = useParams<{ refId: string }>();
   const safeRef = useMemo(() => (isSafeRef(refId) ? refId : null), [refId]);
   const [state, setState] = useState<ResolveState>(() =>
@@ -125,7 +127,12 @@ export default function ReferenceResolver() {
         {state.status === 'loading' && (
           <>
             <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
-            <h1 className="text-lg font-semibold">Resolving reference…</h1>
+            <h1 className="text-lg font-semibold" lang="ar" dir="rtl">
+              جارٍ فتح المرجع...
+            </h1>
+            <p className="text-sm text-muted-foreground" lang="en" dir="ltr">
+              Opening reference…
+            </p>
             {displayRef && (
               <p className="tech-content text-sm text-muted-foreground">
                 {displayRef}
@@ -135,31 +142,58 @@ export default function ReferenceResolver() {
         )}
         {state.status === 'invalid' && (
           <>
-            <h1 className="text-lg font-semibold">Invalid reference</h1>
-            <p className="text-sm text-muted-foreground">
-              The reference ID is not in a recognized format.
+            <h1 className="text-lg font-semibold" lang="ar" dir="rtl">
+              لم يتم العثور على هذا المرجع أو لم يعد متاحًا.
+            </h1>
+            <p className="text-sm text-muted-foreground" lang="en" dir="ltr">
+              Invalid reference — this reference was not found or is no longer available.
             </p>
+            <BackLink />
           </>
         )}
         {state.status === 'not_found' && (
           <>
-            <h1 className="text-lg font-semibold">Reference not found</h1>
+            <h1 className="text-lg font-semibold" lang="ar" dir="rtl">
+              لم يتم العثور على هذا المرجع أو لم يعد متاحًا.
+            </h1>
+            <p className="text-sm text-muted-foreground" lang="en" dir="ltr">
+              Reference not found — this reference was not found or is no longer available.
+            </p>
             {displayRef && (
               <p className="tech-content text-sm text-muted-foreground">
                 {displayRef}
               </p>
             )}
+            <BackLink />
           </>
         )}
         {state.status === 'error' && (
           <>
-            <h1 className="text-lg font-semibold">Reference not found</h1>
-            <p className="text-sm text-muted-foreground">
-              We could not resolve this reference right now.
+            <h1 className="text-lg font-semibold" lang="ar" dir="rtl">
+              لم يتم العثور على هذا المرجع أو لم يعد متاحًا.
+            </h1>
+            <p className="text-sm text-muted-foreground" lang="en" dir="ltr">
+              Reference not found — we could not resolve this reference right now.
             </p>
+            <BackLink />
           </>
         )}
       </div>
     </main>
+  );
+}
+
+function BackLink() {
+  return (
+    <p className="pt-2">
+      <Link
+        to="/"
+        className="text-sm text-primary hover:underline"
+      >
+        <span lang="ar" dir="rtl">العودة</span>
+        <span aria-hidden="true"> · </span>
+        <span lang="en" dir="ltr">Back</span>
+      </Link>
+    </p>
   );
 }
