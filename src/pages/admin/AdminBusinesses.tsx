@@ -669,6 +669,57 @@ const AdminBusinesses = () => {
     }
   };
 
+  // Saudi National Address — short-address autofill (central microservice)
+  const [shortAddress, setShortAddress] = useState('');
+  const [splBusy, setSplBusy] = useState(false);
+  const handleShortAddressLookup = async () => {
+    const code = shortAddress.trim();
+    if (!code) return;
+    setSplBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('national-address-lookup', {
+        body: { shortAddress: code },
+      });
+      if (error) throw error;
+      const res = data as {
+        ok: boolean; message_ar?: string; message_en?: string;
+        address?: {
+          region_ar: string | null; region_en: string | null;
+          city_ar: string | null;   city_en: string | null;
+          district_ar: string | null; district_en: string | null;
+          street_ar: string | null;   street_en: string | null;
+          address_ar: string | null;  address_en: string | null;
+          building_number: string | null; additional_number: string | null;
+          post_code: string | null;
+        };
+      };
+      if (!res?.ok || !res.address) {
+        toast.error(isRTL ? (res?.message_ar ?? 'تعذّر جلب العنوان') : (res?.message_en ?? 'Lookup failed'));
+        return;
+      }
+      const a = res.address;
+      setEditForm((prev: any) => ({
+        ...prev,
+        national_id: code,
+        region: a.region_ar ?? prev.region,
+        region_en: a.region_en ?? prev.region_en,
+        district: a.district_ar ?? prev.district,
+        district_en: a.district_en ?? prev.district_en,
+        street_name: a.street_ar ?? prev.street_name,
+        street_name_en: a.street_en ?? prev.street_name_en,
+        address: a.address_ar ?? prev.address,
+        address_en: a.address_en ?? prev.address_en,
+        building_number: a.building_number ?? prev.building_number,
+        additional_number: a.additional_number ?? prev.additional_number,
+      }));
+      toast.success(isRTL ? 'تم جلب العنوان وتعبئة الحقول' : 'Address fetched');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل البحث' : 'Lookup failed'));
+    } finally {
+      setSplBusy(false);
+    }
+  };
+
   /* ─── Edit Open ─── */
   const openEdit = (biz: Record<string, unknown>) => {
     setServicesPanel(null);
