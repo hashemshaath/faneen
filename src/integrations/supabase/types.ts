@@ -180,6 +180,93 @@ export type Database = {
         }
         Relationships: []
       }
+      addresses: {
+        Row: {
+          additional_number: string | null
+          address: string | null
+          address_en: string | null
+          building_number: string | null
+          city_id: string | null
+          country_id: string | null
+          created_at: string
+          created_by: string | null
+          district: string | null
+          district_en: string | null
+          id: string
+          is_primary: boolean
+          label: string | null
+          latitude: number | null
+          longitude: number | null
+          owner_id: string
+          owner_type: string
+          post_code: string | null
+          region: string | null
+          region_en: string | null
+          short_address: string | null
+          source: string
+          street_name: string | null
+          street_name_en: string | null
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          additional_number?: string | null
+          address?: string | null
+          address_en?: string | null
+          building_number?: string | null
+          city_id?: string | null
+          country_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          district?: string | null
+          district_en?: string | null
+          id?: string
+          is_primary?: boolean
+          label?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          owner_id: string
+          owner_type: string
+          post_code?: string | null
+          region?: string | null
+          region_en?: string | null
+          short_address?: string | null
+          source?: string
+          street_name?: string | null
+          street_name_en?: string | null
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          additional_number?: string | null
+          address?: string | null
+          address_en?: string | null
+          building_number?: string | null
+          city_id?: string | null
+          country_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          district?: string | null
+          district_en?: string | null
+          id?: string
+          is_primary?: boolean
+          label?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          owner_id?: string
+          owner_type?: string
+          post_code?: string | null
+          region?: string | null
+          region_en?: string | null
+          short_address?: string | null
+          source?: string
+          street_name?: string | null
+          street_name_en?: string | null
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       admin_activity_log: {
         Row: {
           action: string
@@ -11631,6 +11718,10 @@ export type Database = {
           _unit_price: number
         }
         Returns: Json
+      }
+      can_access_address: {
+        Args: { _owner_id: string; _owner_type: string }
+        Returns: boolean
       }
       cancel_client_invitation: { Args: { _id: string }; Returns: Json }
       cancel_contract: {
