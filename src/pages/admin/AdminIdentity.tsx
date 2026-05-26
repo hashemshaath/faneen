@@ -23,7 +23,7 @@
  */
 import React, { useState, useMemo, useEffect, useRef, useTransition, useCallback } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,10 +35,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { EntityLink } from '@/components/admin/identity/EntityLink';
-import { IdentityBulkBar, type BulkRow } from '@/components/admin/identity/IdentityBulkBar';
 import { IdentityFilters, EMPTY_FILTERS, type IdentityFilterState, type SavedView } from '@/components/admin/identity/IdentityFilters';
 import { IdentityAnalytics } from '@/components/admin/identity/IdentityAnalytics';
 import { listProfiles } from '@/modules/users';
