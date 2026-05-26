@@ -162,7 +162,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-2.5">
-                <ActiveBusinessSwitcher />
+                {/* Admins/super-admins must never act as a business owner —
+                    hide the active-business switcher to prevent any context
+                    leak from the admin identity into a provider scope. */}
+                {!isAdmin && !isSuperAdmin && <ActiveBusinessSwitcher />}
                 <ThemeToggle />
                 <NotificationBell />
 
