@@ -975,7 +975,14 @@ const AdminUsers = () => {
     // Only Super Admin may write PII fields; for others we keep existing values.
     if (isSuperAdmin) {
       data.phone = editForm.phone.trim() || '';
-      data.email = editForm.email.trim() || null;
+      const nextEmail = editForm.email.trim();
+      if (nextEmail && isSyntheticPhoneEmail(nextEmail)) {
+        toast.error(isRTL
+          ? 'البريد الرسمي لا يمكن أن ينتهي بـ @phone.qitaat.local — هذا معرّف داخلي لتسجيل الدخول بالهاتف.'
+          : 'Official email cannot end with @phone.qitaat.local — that is an internal phone-login identifier.');
+        return;
+      }
+      data.email = nextEmail || null;
     }
     updateProfileMutation.mutate({ profileId: activePanel.profile.id, data });
   };
