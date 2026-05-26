@@ -9,7 +9,7 @@
  *  - Only the 6C-approved pages adopt PermissionHint / PermissionGate.
  *  - No contracts / payments / membership / auth pages were touched.
  *  - No RLS / RPC / policy migrations introduced.
- *  - No page calls supabase.rpc('has_permission') yet.
+ *  - No page calls the server-side permission RPC yet.
  */
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
