@@ -21,7 +21,7 @@
  * Security: requireAdmin for the shell. PII rows respect existing maskEmail /
  * maskPhone behaviour from the specialist pages.
  */
-import React, { useState, useMemo, useEffect, useRef, useTransition, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useTransition, useCallback, Suspense, lazy } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -35,6 +35,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { AdminEmbeddedContext } from '@/contexts/AdminTabsContext';
+import { Loader2, KeyRound as KeyRoundIcon } from 'lucide-react';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { DirectionalIcon } from '@/components/ui/directional-icon';
 import { EntityLink } from '@/components/admin/identity/EntityLink';
@@ -50,6 +52,19 @@ import {
   TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, Plus,
   UserPlus, Activity, ExternalLink, KeyRound, BarChart3,
 } from 'lucide-react';
+
+/* Lazy-loaded specialist admin pages, embedded inside Identity tabs. */
+const EmbeddedUsers              = lazy(() => import('./AdminUsers'));
+const EmbeddedBusinesses         = lazy(() => import('./AdminBusinesses'));
+const EmbeddedProviderReview     = lazy(() => import('./AdminProviderReview'));
+const EmbeddedAccessRequests     = lazy(() => import('./AdminEntityAccessRequests'));
+const EmbeddedAccessManagement   = lazy(() => import('./AdminAccessManagement'));
+
+const PanelFallback: React.FC = () => (
+  <div className="flex items-center justify-center py-20 text-muted-foreground">
+    <Loader2 className="w-5 h-5 animate-spin" />
+  </div>
+);
 
 type Profile = Tables<'profiles'>;
 type UserRole = Tables<'user_roles'>;
