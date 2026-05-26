@@ -1006,6 +1006,11 @@ const AdminBusinesses = () => {
               <Download className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
             </Button>
+            <Button size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
+              onClick={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); }}>
+              <Plus className="w-3.5 h-3.5" />
+              {isRTL ? 'منشأة جديدة' : 'New Business'}
+            </Button>
           </div>
         </div>
 
