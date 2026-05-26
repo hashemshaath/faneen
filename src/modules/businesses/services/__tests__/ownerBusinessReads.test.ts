@@ -120,7 +120,7 @@ const OWNER_BIZ_MIGRATED: Array<{ path: string; key: string }> = [
   { path: 'src/pages/dashboard/DashboardReviews.tsx', key: "['my-business-for-reviews', user?.id, activeOwnerEntityId]" },
   { path: 'src/pages/dashboard/DashboardProjects.tsx', key: "['my-business', user?.id]" },
   { path: 'src/pages/dashboard/DashboardPortfolio.tsx', key: "['my-business', user?.id]" },
-  { path: 'src/pages/dashboard/DashboardBookings.tsx', key: "['my-business', user?.id]" },
+  { path: 'src/pages/dashboard/DashboardBookings.tsx', key: "['my-business', user?.id, activeOwnerEntityId]" },
   { path: 'src/pages/dashboard/DashboardContracts.tsx', key: "['my-business-id-contracts', user?.id]" },
   { path: 'src/pages/dashboard/overview/ProviderDashboardView.tsx', key: "['my-business', user?.id]" },
 ];
