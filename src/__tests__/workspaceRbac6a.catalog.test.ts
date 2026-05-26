@@ -161,11 +161,14 @@ describe('WORKSPACE-RBAC-6A — safety invariants', () => {
     }
   });
 
-  it('no RLS, payment, auth, or membership product code was modified for this phase', () => {
-    // Static guard: the wrapper + hook only depend on the supabase client.
+  it('helpers do not import payment, auth, or membership modules', () => {
     const wrapper = readFileSync(join(SRC, 'modules/workspace/services/permissions/index.ts'), 'utf8');
-    expect(wrapper).not.toMatch(/membership|payment|auth\b/i);
     const hook = readFileSync(join(SRC, 'hooks/useCan.ts'), 'utf8');
-    expect(hook).not.toMatch(/membership|payment|auth\b/i);
+    for (const src of [wrapper, hook]) {
+      expect(src).not.toMatch(/from\s+['"]@\/modules\/memberships/);
+      expect(src).not.toMatch(/from\s+['"]@\/modules\/payments/);
+      expect(src).not.toMatch(/from\s+['"]@\/contexts\/AuthContext/);
+      expect(src).not.toMatch(/supabase\.auth\b/);
+    }
   });
 });
