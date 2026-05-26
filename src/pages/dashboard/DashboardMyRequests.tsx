@@ -119,7 +119,7 @@ const DashboardMyRequests: React.FC = () => {
 
   const quoteIds = useMemo(() => (quoteRequests ?? []).map((q) => q.id), [quoteRequests]);
   const { data: quoteFileCounts } = useQuery({
-    queryKey: ['my-quote-file-counts', quoteIds.join(',')],
+    queryKey: ['my-quote-file-counts', user?.id, quoteIds.join(',')],
     enabled: quoteIds.length > 0,
     queryFn: () => countQuoteRequestFiles(quoteIds),
   });
@@ -130,7 +130,7 @@ const DashboardMyRequests: React.FC = () => {
   );
 
   const { data: businesses } = useQuery({
-    queryKey: ['my-requests-businesses', businessIds.join(',')],
+    queryKey: ['my-requests-businesses', user?.id, businessIds.join(',')],
     enabled: businessIds.length > 0,
     queryFn: () => getBusinessesForMyRequests(businessIds),
   });

@@ -80,7 +80,7 @@ const DashboardPrivateSectors: React.FC = () => {
   );
 
   const { data: sectors = [], isLoading } = useQuery({
-    queryKey: ['my-private-sectors', business?.id],
+    queryKey: ['my-private-sectors', user?.id, business?.id],
     enabled: !!business?.id,
     queryFn: () => listSectorsForBusiness(business!.id),
   });
