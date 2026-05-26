@@ -12283,6 +12283,25 @@ export type Database = {
           website: string
         }[]
       }
+      get_public_profile: {
+        Args: { _username: string }
+        Returns: {
+          account_type: string
+          avatar_url: string
+          city_name_ar: string
+          city_name_en: string
+          country_name_ar: string
+          country_name_en: string
+          created_at: string
+          full_name: string
+          full_name_ar: string
+          full_name_en: string
+          is_verified: boolean
+          membership_tier: string
+          region_name: string
+          username: string
+        }[]
+      }
       get_public_site_by_token: { Args: { _token: string }; Returns: Json }
       get_review_authors: {
         Args: { _user_ids: string[] }
