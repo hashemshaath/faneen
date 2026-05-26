@@ -1,4 +1,4 @@
-import { BookOpen, FileText, Plus, X, BarChart3, RefreshCw } from 'lucide-react';
+import { BookOpen, FileText, Plus, X, BarChart3, RefreshCw, FileSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
@@ -15,6 +15,8 @@ interface ContractPageHeaderProps {
   /** Optional refresh handler — shows refresh icon button when provided. */
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  /** Optional — opens the "Import & digitize contract" panel. */
+  onImport?: () => void;
 }
 
 /**
@@ -23,7 +25,7 @@ interface ContractPageHeaderProps {
  */
 export function ContractPageHeader({
   isRTL, showListActions, templatesCount, onOpenTemplates, onCreate, onBack,
-  showAnalytics, onRefresh, isRefreshing,
+  showAnalytics, onRefresh, isRefreshing, onImport,
 }: ContractPageHeaderProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-card via-card to-accent/[0.04] shadow-[var(--elev-1)]">
@@ -71,6 +73,12 @@ export function ContractPageHeader({
                 <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4">{templatesCount}</Badge>
               )}
             </Button>
+            {onImport && (
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9 hover-lift" onClick={onImport}>
+                <FileSearch className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
+                {isRTL ? 'استيراد عقد' : 'Import contract'}
+              </Button>
+            )}
             <Button variant="hero" size="sm" className="gap-1.5 text-xs h-9 shadow-lg shadow-accent/20 hover-lift" onClick={onCreate}>
               <Plus className="w-4 h-4" aria-hidden="true" />
               {isRTL ? 'عقد جديد' : 'New Contract'}
