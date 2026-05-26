@@ -546,6 +546,20 @@
   .text-start { text-align: start; }
   .text-end { text-align: end; }
 
+  /* ── Central direction primitives (RTL-LTR-CODE-CLEANUP-AND-CENTRAL-AUDIT-1) ──
+     Use via <TechnicalText>, <BidiText>, <ReferenceText> wrappers. */
+  .technical-ltr {
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-variant-numeric: tabular-nums;
+  }
+  .bidi-auto {
+    unicode-bidi: plaintext;
+  }
+  .bidi-isolate {
+    unicode-bidi: isolate;
+  }
+
   /* Logical float helpers */
   .float-start { float: inline-start; }
   .float-end { float: inline-end; }
