@@ -1820,7 +1820,7 @@ const AdminUsers = () => {
 
                   <Tabs defaultValue="profile" className="w-full">
                     <div className="px-5 pt-4">
-                      <TabsList className="grid w-full grid-cols-3 h-10 rounded-xl bg-muted/50 p-1">
+                      <TabsList className="grid w-full grid-cols-4 h-10 rounded-xl bg-muted/50 p-1">
                         <TabsTrigger value="profile" className="rounded-lg text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
                           <Pencil className="w-3.5 h-3.5" />
                           {isRTL ? 'البيانات' : 'Profile'}
@@ -1837,6 +1837,13 @@ const AdminUsers = () => {
                           {isRTL ? 'الجهات' : 'Businesses'}
                           {editingLinks.length > 0 && (
                             <span className="ms-0.5 px-1.5 py-0 rounded-full bg-success/15 text-success text-[10px] font-bold tech-content">{editingLinks.length}</span>
+                          )}
+                        </TabsTrigger>
+                        <TabsTrigger value="suspension" className="rounded-lg text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                          <ShieldOff className="w-3.5 h-3.5" />
+                          {isRTL ? 'الإيقاف' : 'Suspension'}
+                          {editingProfile.is_banned && (
+                            <span className="ms-0.5 px-1.5 py-0 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold tech-content">!</span>
                           )}
                         </TabsTrigger>
                       </TabsList>
