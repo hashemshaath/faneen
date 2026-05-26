@@ -47,6 +47,17 @@ const DashboardProfile: React.FC = () => {
   const { user, profile, refreshProfile } = useAuth();
   const displayRefId = useDisplayRefId();
   const qc = useQueryClient();
+  // WORKSPACE-CONTEXT-4A: source the active entity id from the unified
+  // workspace hook so multi-business owners see the picked business in
+  // the "view as provider" link instead of always the first owned one.
+  // Falls back to getOwnerBusiness when no entity is selected (preserves
+  // pre-migration behavior for single-business users).
+  const { active_entity_id, entities } = useActiveWorkspace();
+  const activeOwnerEntityId = useMemo(() => {
+    if (!active_entity_id) return null;
+    const e = entities.find((x) => x.entity_id === active_entity_id);
+    return e && e.source === 'owner' ? e.entity_id : null;
+  }, [active_entity_id, entities]);
   usePageMeta({
     title: t(isRTL, 'الملف الشخصي | قِطاعات', 'My Profile | Qitaat'),
     noindex: true,
