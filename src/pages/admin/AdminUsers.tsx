@@ -1217,10 +1217,16 @@ const AdminUsers = () => {
 
   const handleSaveProfile = () => {
     if (activePanel?.type !== 'edit') return;
+    setEditFieldErrors({});
     const nameAr = editForm.full_name_ar.trim();
     const nameEn = editForm.full_name_en.trim();
     const combined = nameAr || nameEn || editForm.full_name.trim();
-    if (!combined) { toast.error(isRTL ? 'الاسم مطلوب (عربي أو إنجليزي)' : 'Name required (AR or EN)'); return; }
+    if (!combined) {
+      const msg = isRTL ? 'الاسم مطلوب (عربي أو إنجليزي)' : 'Name required (AR or EN)';
+      setEditFieldErrors({ full_name_ar: msg, full_name_en: msg });
+      toast.error(msg);
+      return;
+    }
     const data: Partial<Profile> = {
       full_name: combined,
       full_name_ar: nameAr || null,
@@ -1242,9 +1248,11 @@ const AdminUsers = () => {
       data.phone_national = editForm.phone_national || null;
       const nextEmail = editForm.email.trim();
       if (nextEmail && isSyntheticPhoneEmail(nextEmail)) {
-        toast.error(isRTL
+        const msg = isRTL
           ? 'البريد الرسمي لا يمكن أن ينتهي بـ @phone.qitaat.local — هذا معرّف داخلي لتسجيل الدخول بالهاتف.'
-          : 'Official email cannot end with @phone.qitaat.local — that is an internal phone-login identifier.');
+          : 'Official email cannot end with @phone.qitaat.local — that is an internal phone-login identifier.';
+        setEditFieldErrors({ email: msg });
+        toast.error(msg);
         return;
       }
       data.email = nextEmail || null;
