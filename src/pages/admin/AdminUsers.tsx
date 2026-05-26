@@ -47,6 +47,8 @@ import { maskEmail, maskPhone } from '@/lib/masking';
 import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminDeleteUser, logAdminActivity } from '@/modules/identity';
 import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
+import { PhoneField, parsePhoneValue } from '@/components/forms/PhoneField';
+import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import type { NormalizedRpcError } from '@/services/rpc';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
@@ -669,7 +671,12 @@ const AdminUsers = () => {
     setActivePanel({ type: 'create' });
     setTimeout(() => panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
-  const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
+  const [editForm, setEditForm] = useState({
+    full_name: '', full_name_ar: '', full_name_en: '', username: '',
+    account_type: '', membership_tier: '',
+    phone: '', phone_country_code: '+966', phone_national: '',
+    email: '',
+  });
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [createForm, setCreateForm] = useState({
@@ -744,7 +751,12 @@ const AdminUsers = () => {
 
   const closePanel = () => {
     setActivePanel(null); setNewPassword(''); setShowNewPassword(false);
-    setCreateForm({ email: '', password: '', full_name: '', phone: '', account_type: 'individual', membership_tier: 'free', role: 'none' });
+    setCreateForm({
+      email: '', password: '',
+      full_name: '', full_name_ar: '', full_name_en: '', username: '',
+      phone: '', phone_country_code: '+966', phone_national: '',
+      account_type: 'individual', membership_tier: 'free', role: 'none',
+    });
   };
 
   const createUserMutation = useMutation({
