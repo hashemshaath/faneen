@@ -1,9 +1,22 @@
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 import { cn } from "@/lib/utils";
 
-const Tabs = TabsPrimitive.Root;
+/**
+ * Direction-aware Tabs root. Defaults `dir` to the active language so
+ * tab order, arrow-key navigation, and flex layout flow correctly in
+ * RTL without each call-site having to pass `dir` manually.
+ */
+const Tabs = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root>
+>(({ dir, ...props }, ref) => {
+  const { isRTL } = useLanguage();
+  return <TabsPrimitive.Root ref={ref} dir={dir ?? (isRTL ? "rtl" : "ltr")} {...props} />;
+});
+Tabs.displayName = "Tabs";
 
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
