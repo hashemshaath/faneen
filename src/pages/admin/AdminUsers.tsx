@@ -673,7 +673,9 @@ const AdminUsers = () => {
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [createForm, setCreateForm] = useState({
-    email: '', password: '', full_name: '', phone: '',
+    email: '', password: '',
+    full_name: '', full_name_ar: '', full_name_en: '', username: '',
+    phone: '', phone_country_code: '+966', phone_national: '',
     account_type: 'individual', membership_tier: 'free', role: 'none',
   });
   const passwordValidationMessage = useMemo(() => getPasswordValidationMessage(newPassword, isRTL), [newPassword, isRTL]);
