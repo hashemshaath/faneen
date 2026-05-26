@@ -158,100 +158,142 @@ const userGroups: MenuGroup[] = [
 // ══════════════════════════════════════════
 //  المشرف — Admin-Only Base Menu
 //  (replaces user/provider base when admin)
+//
+//  ADMIN-SIDEBAR-UX-RESTRUCTURE-2:
+//  Professional 9-group structure. No duplicate hrefs. Every link
+//  resolves to a route registered in App.tsx. Items flagged
+//  `superAdminOnly` are hidden for non-super admins.
+//
+//  Hidden / deep-link-only admin routes (intentionally not in sidebar):
+//   - /admin/users, /admin/users/:id   → superseded by /admin/identity
+//   - /admin/businesses                → superseded by /admin/identity?view=businesses
+//   - /admin/quote-requests(/:id)      → opened from Quote Operations
+//   - /admin/pdf-visual-qa             → opened from PDF Export Audit
+//   - /admin/contracts/analytics       → opened from Contracts dashboard
+//   - /admin/diagnostics               → ops deep link
+//   - /admin/showcase                  → opened from Dashboard Showcase
+//   - /admin/locations/{catalog,service-areas,business-coordinates}
+//                                      → sub-pages of /admin/locations
+//   - /admin/contact-{inbox-settings,audit-log,sla-dashboard,notification-log}
+//                                      → redirected into /admin/contact-messages tabs
 // ══════════════════════════════════════════
 const adminBaseGroups: MenuGroup[] = [
   {
-    // Operations — daily admin work (most-used links first).
-    groupLabel: { ar: 'العمليات', en: 'Operations' },
-    icon: Activity,
+    // 1) Overview
+    groupLabel: { ar: 'نظرة عامة', en: 'Overview' },
+    icon: LayoutDashboard,
     items: [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
-      { label: { ar: 'طلبات العملاء', en: 'Lead Requests' }, url: '/admin/lead-requests', icon: Inbox },
-      { label: { ar: 'تشغيل عروض الأسعار', en: 'Quote Operations' }, url: '/admin/quote-operations', icon: Activity },
-      { label: { ar: 'مركز التواصل', en: 'Contact Center' }, url: '/admin/contact-messages', icon: MessageSquare },
-      { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
-      { label: { ar: 'مراقبة المواقع', en: 'Site Monitoring' }, url: '/admin/client-sites', icon: MapPin },
-      { label: { ar: 'سجل الأكواد', en: 'Barcode Registry' }, url: '/admin/barcode-registry', icon: QrCode },
-      { label: { ar: 'مراجعة المزودين', en: 'Provider Review' }, url: '/admin/provider-review', icon: ShieldCheck },
+      { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: Activity },
+      { label: { ar: 'تشغيل المهام', en: 'Cron Runs' }, url: '/admin/cron-runs', icon: CalendarClock },
     ],
   },
   {
-    groupLabel: { ar: 'الحسابات والمنشآت', en: 'Accounts & Businesses' },
+    // 2) Users & Access
+    groupLabel: { ar: 'المستخدمون والوصول', en: 'Users & Access' },
     icon: Users,
     items: [
-      { label: { ar: 'مركز الحسابات', en: 'Accounts Hub' }, url: '/admin/identity', icon: Users, end: true },
-      { label: { ar: 'الكل (مستخدمين + منشآت)', en: 'All (users + businesses)' }, url: '/admin/identity?view=all', icon: Activity },
+      { label: { ar: 'مركز الحسابات', en: 'Account Center' }, url: '/admin/identity', icon: Users, end: true },
       { label: { ar: 'المستخدمون', en: 'Users' }, url: '/admin/identity?view=users', icon: User },
-      { label: { ar: 'المنشآت والمزودون', en: 'Businesses & Providers' }, url: '/admin/identity?view=businesses', icon: Building2 },
-      { label: { ar: 'فريق الإدارة', en: 'Staff' }, url: '/admin/identity?view=staff', icon: Crown, superAdminOnly: true },
-      { label: { ar: 'حسابات معطّلة', en: 'Disabled' }, url: '/admin/identity?view=disabled', icon: ShieldAlert },
-      { label: { ar: 'مراجعة المزودين', en: 'Provider Review' }, url: '/admin/provider-review', icon: ShieldCheck },
+      { label: { ar: 'فريق الإدارة', en: 'Admin Team' }, url: '/admin/identity?view=staff', icon: Crown, superAdminOnly: true },
+      { label: { ar: 'حسابات معطّلة', en: 'Disabled Accounts' }, url: '/admin/identity?view=disabled', icon: ShieldAlert },
       { label: { ar: 'طلبات الانضمام', en: 'Access Requests' }, url: '/admin/entity-access-requests', icon: UserPlus },
       { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: Shield, superAdminOnly: true },
-      { label: { ar: 'مركز المواقع', en: 'Locations Hub' }, url: '/admin/locations', icon: MapPin },
-      { label: { ar: 'العضويات', en: 'Memberships' }, url: '/admin/memberships', icon: Crown },
-      { label: { ar: 'عضويات المزودين', en: 'Provider Subscriptions' }, url: '/admin/provider-subscriptions', icon: Crown },
-      { label: { ar: 'مدفوعات العضويات', en: 'Membership Payments' }, url: '/admin/membership-payments', icon: CreditCard },
-      { label: { ar: 'تحليلات المزودين', en: 'Provider Analytics' }, url: '/admin/provider-analytics', icon: TrendingUp },
-      { label: { ar: 'تدقيق رفض الترقيات', en: 'Upgrade Rejections' }, url: '/admin/membership-rejections', icon: ShieldAlert, superAdminOnly: true },
-      { label: { ar: 'سجل أحداث الاشتراكات', en: 'Subscription Events' }, url: '/admin/membership-events', icon: ShieldAlert, superAdminOnly: true },
     ],
   },
   {
-    groupLabel: { ar: 'الاتصالات', en: 'Communications' },
+    // 3) Businesses & Providers
+    groupLabel: { ar: 'المنشآت والمزودون', en: 'Businesses & Providers' },
+    icon: Building2,
+    items: [
+      { label: { ar: 'المنشآت والكيانات', en: 'Businesses & Entities' }, url: '/admin/identity?view=businesses', icon: Building2 },
+      { label: { ar: 'مراجعة المزودين', en: 'Provider Review' }, url: '/admin/provider-review', icon: ShieldCheck },
+      { label: { ar: 'تحليلات المزودين', en: 'Provider Analytics' }, url: '/admin/provider-analytics', icon: TrendingUp },
+      { label: { ar: 'صفحة هبوط المزودين', en: 'Provider Landing Page' }, url: '/admin/provider-landing', icon: Gauge },
+      { label: { ar: 'مركز المواقع', en: 'Locations Center' }, url: '/admin/locations', icon: MapPin },
+    ],
+  },
+  {
+    // 4) Requests & Contracts
+    groupLabel: { ar: 'الطلبات والعقود', en: 'Requests & Contracts' },
+    icon: FileText,
+    items: [
+      { label: { ar: 'طلبات العملاء', en: 'Customer Requests' }, url: '/admin/lead-requests', icon: Inbox },
+      { label: { ar: 'تشغيل عروض الأسعار', en: 'Quote Operations' }, url: '/admin/quote-operations', icon: Activity },
+      { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
+      { label: { ar: 'قوالب العقود', en: 'Contract Templates' }, url: '/admin/contract-templates', icon: FileText },
+      { label: { ar: 'سجل تصدير العقود', en: 'Contract Export Audit' }, url: '/admin/pdf-exports', icon: FileText },
+    ],
+  },
+  {
+    // 5) Memberships & Payments
+    groupLabel: { ar: 'العضويات والمدفوعات', en: 'Memberships & Payments' },
+    icon: Crown,
+    items: [
+      { label: { ar: 'العضويات', en: 'Memberships' }, url: '/admin/memberships', icon: Crown },
+      { label: { ar: 'عضويات المزودين', en: 'Provider Memberships' }, url: '/admin/provider-subscriptions', icon: Crown },
+      { label: { ar: 'مدفوعات العضويات', en: 'Membership Payments' }, url: '/admin/membership-payments', icon: CreditCard },
+      { label: { ar: 'سجل أحداث الاشتراكات', en: 'Subscription Events' }, url: '/admin/membership-events', icon: ShieldAlert, superAdminOnly: true },
+      { label: { ar: 'تدقيق رفض الترقيات', en: 'Upgrade Rejection Audit' }, url: '/admin/membership-rejections', icon: ShieldAlert, superAdminOnly: true },
+    ],
+  },
+  {
+    // 6) Communications
+    groupLabel: { ar: 'التواصل', en: 'Communications' },
     icon: Mail,
     items: [
+      { label: { ar: 'مركز التواصل', en: 'Contact Center' }, url: '/admin/contact-messages', icon: MessageSquare },
       { label: { ar: 'مركز البريد', en: 'Email Center' }, url: '/admin/email-center', icon: Mail },
-      { label: { ar: 'مراقبة البريد', en: 'Email Deliverability' }, url: '/admin/email-deliverability', icon: Activity },
-      { label: { ar: 'كل المحادثات', en: 'All Conversations' }, url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
+      { label: { ar: 'مراقبة البريد', en: 'Email Monitoring' }, url: '/admin/email-deliverability', icon: Activity },
+      { label: { ar: 'كل المحادثات', en: 'Conversations' }, url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
     ],
   },
   {
+    // 7) Content & SEO
     groupLabel: { ar: 'المحتوى والـ SEO', en: 'Content & SEO' },
     icon: Database,
     items: [
-      { label: { ar: 'المدونة', en: 'Blog Editor' }, url: '/dashboard/blog', icon: PenSquare },
+      { label: { ar: 'المدونة', en: 'Blog' }, url: '/dashboard/blog', icon: PenSquare },
       { label: { ar: 'التصنيفات', en: 'Categories' }, url: '/admin/categories', icon: FolderTree },
       { label: { ar: 'الوسوم', en: 'Tags' }, url: '/admin/tags', icon: Tags },
+      { label: { ar: 'القطاعات', en: 'Sectors' }, url: '/dashboard/profile-systems', icon: Layers },
       { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/admin/private-sectors', icon: Layers },
-      { label: { ar: 'القطاعات', en: 'Profile Systems' }, url: '/dashboard/profile-systems', icon: Layers },
-      { label: { ar: 'تدقيق الأداء و SEO', en: 'Site Audit' }, url: '/admin/site-audit', icon: Gauge },
       { label: { ar: 'حالة Sitemap', en: 'Sitemap Status' }, url: '/admin/sitemap-status', icon: SearchIcon },
+      { label: { ar: 'تدقيق الأداء و SEO', en: 'SEO Performance Audit' }, url: '/admin/site-audit', icon: Gauge },
       { label: { ar: 'سيو القطاعات', en: 'Sector SEO' }, url: '/admin/sector-seo', icon: SearchIcon },
+    ],
+  },
+  {
+    // 8) Operations & Insights
+    groupLabel: { ar: 'التشغيل والتحليلات', en: 'Operations & Insights' },
+    icon: Activity,
+    items: [
+      { label: { ar: 'سجل الأكواد', en: 'Barcode Registry' }, url: '/admin/barcode-registry', icon: QrCode },
+      { label: { ar: 'مراقبة المواقع', en: 'Site Monitoring' }, url: '/admin/client-sites', icon: MapPin },
       { label: { ar: 'تحليلات السوق', en: 'Market Analytics' }, url: '/admin/market-analytics', icon: TrendingUp },
-    ],
-  },
-  {
-    groupLabel: { ar: 'النظام والأمان', en: 'System & Security' },
-    icon: Cog,
-    items: [
-      { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: ShieldAlert, superAdminOnly: true },
-      { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: Cog, superAdminOnly: true },
-      { label: { ar: 'التحليلات والموافقة', en: 'Analytics & Consent' }, url: '/admin/analytics-settings', icon: BarChart3 },
-      { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: Activity },
-      { label: { ar: 'تشغيل المهام', en: 'Cron Runs' }, url: '/admin/cron-runs', icon: CalendarClock },
-      { label: { ar: 'سجل تصدير العقود', en: 'PDF Export Audit' }, url: '/admin/pdf-exports', icon: FileText },
-    ],
-  },
-  {
-    groupLabel: { ar: 'الإعدادات والتكاملات', en: 'Configuration' },
-    icon: Settings,
-    items: [
-      { label: { ar: 'العلامة التجارية', en: 'Branding & Logo' }, url: '/admin/branding', icon: Palette },
-      { label: { ar: 'إعدادات API', en: 'API Settings' }, url: '/admin/api-settings', icon: Key },
-      { label: { ar: 'توثيق API', en: 'API Docs' }, url: '/admin/api-docs', icon: Book },
-      { label: { ar: 'صفحة هبوط المزودين', en: 'Provider Landing' }, url: '/admin/provider-landing', icon: Gauge },
       { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/admin/ai-center', icon: Brain },
       { label: { ar: 'تجارب A/B', en: 'A/B Experiments' }, url: '/admin/ab-experiments', icon: Beaker },
-      { label: { ar: 'قوالب العقود', en: 'Contract Templates' }, url: '/admin/contract-templates', icon: FileText },
     ],
   },
   {
+    // 9) Settings & Integrations
+    groupLabel: { ar: 'الإعدادات والتكاملات', en: 'Settings & Integrations' },
+    icon: Cog,
+    items: [
+      { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: Cog, superAdminOnly: true },
+      { label: { ar: 'التحليلات والموافقة', en: 'Analytics & Consent' }, url: '/admin/analytics-settings', icon: BarChart3 },
+      { label: { ar: 'العلامة التجارية', en: 'Branding' }, url: '/admin/branding', icon: Palette },
+      { label: { ar: 'إعدادات API', en: 'API Settings' }, url: '/admin/api-settings', icon: Key },
+      { label: { ar: 'توثيق API', en: 'API Documentation' }, url: '/admin/api-docs', icon: Book },
+    ],
+  },
+  {
+    // 10) Account (personal)
     groupLabel: { ar: 'الحساب', en: 'Account' },
-    icon: Settings,
+    icon: User,
     items: [
       { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
-      { label: { ar: 'تفضيلات التواصل', en: 'Communication' }, url: '/dashboard/communication-preferences', icon: Settings2 },
+      { label: { ar: 'تفضيلات التواصل', en: 'Communication Preferences' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
