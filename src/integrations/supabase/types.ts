@@ -12507,6 +12507,10 @@ export type Database = {
         Args: { _business_id?: string; _feature_key: string; _user_id: string }
         Returns: boolean
       }
+      has_permission: {
+        Args: { _entity_id: string; _permission: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
