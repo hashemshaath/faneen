@@ -13,3 +13,4 @@ export * from './services/tempCode';
 export * from './services/session';
 export * from './services/account';
 export * from './services/invitations';
+export * from './services/adminActivity';
