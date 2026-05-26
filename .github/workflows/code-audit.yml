@@ -140,8 +140,24 @@ jobs:
       - name: Vitest Full Suite
         run: npx vitest run
 
+      - name: ADMIN-SIDEBAR-UX-SMOKE
+        run: npx vitest run src/__tests__/adminSidebarRestructure.test.ts src/__tests__/adminNavCron.source.test.ts
+
       - name: TypeScript Check
         run: npx tsc --noEmit
+
+      - name: PR Summary Report (vitest + broken-links + sitemap-integrity)
+        if: always()
+        run: node scripts/ci-pr-report.mjs
+        continue-on-error: true
+
+      - name: Upload CI Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-report
+          path: ci-report/
+          if-no-files-found: ignore
 
       - name: ESLint Check
         run: npx eslint src --ext .ts,.tsx --max-warnings 50
