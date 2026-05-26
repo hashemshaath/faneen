@@ -118,6 +118,7 @@ const QuoteRequestDetails = lazyRetry(() => import("./pages/dashboard/QuoteReque
 const AdminEmailDeliverability = lazyRetry(() => import("./pages/admin/AdminEmailDeliverability"));
 const AdminEmailCenter = lazyRetry(() => import("./pages/admin/AdminEmailCenter"));
 const AdminSiteAudit = lazyRetry(() => import("./pages/admin/AdminSiteAudit"));
+const AdminDiagnostics = lazyRetry(() => import("./pages/admin/AdminDiagnostics"));
 const AdminSectorSeo = lazyRetry(() => import("./pages/admin/AdminSectorSeo"));
 const AdminMarketAnalytics = lazyRetry(() => import("./pages/admin/AdminMarketAnalytics"));
 const AdminSitemapStatus = lazyRetry(() => import("./pages/admin/AdminSitemapStatus"));
