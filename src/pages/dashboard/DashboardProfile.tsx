@@ -123,9 +123,18 @@ const DashboardProfile: React.FC = () => {
 
   // Owner business (for "view as provider" link)
   const { data: business } = useQuery({
-    queryKey: ['profile-page-owner-business', user?.id],
+    queryKey: ['profile-page-owner-business', user?.id, activeOwnerEntityId],
     queryFn: async () => {
       if (!user) return null;
+      // Prefer the active owner entity when one is selected via the
+      // workspace switcher; otherwise fall back to the legacy single-row
+      // owner lookup. RLS is authoritative either way.
+      if (activeOwnerEntityId) {
+        const { data } = await listBusinessesByIds<{
+          id: string; username: string; name_ar: string; name_en: string;
+        }>({ ids: [activeOwnerEntityId], select: 'id, username, name_ar, name_en' });
+        return data?.[0] ?? null;
+      }
       const { data } = await getOwnerBusiness<{ id: string; username: string; name_ar: string; name_en: string }>({
         userId: user.id, select: 'id, username, name_ar, name_en',
       });
