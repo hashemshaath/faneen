@@ -21,6 +21,12 @@
 
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import {
+  getMembershipSubscriptionById,
+  getMembershipPlanById,
+  findReusablePendingMembershipSubscription,
+  insertMembershipSubscription,
+} from '../_shared/memberships/queries.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
