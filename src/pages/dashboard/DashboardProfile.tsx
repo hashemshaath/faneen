@@ -262,6 +262,57 @@ const DashboardProfile: React.FC = () => {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  // ───────────────────────── National Address SPL lookup
+  const lookupShortAddress = async () => {
+    const code = form.short_national_address.trim().toUpperCase().replace(/\s+/g, '');
+    if (!/^[A-Z]{4}\d{4}$/.test(code)) {
+      toast.error(t(isRTL,
+        'أدخل رقم العنوان الوطني (4 أحرف + 4 أرقام)',
+        'Enter a short national address (4 letters + 4 digits)'));
+      return;
+    }
+    setSplLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('national-address-lookup', {
+        body: { shortAddress: code },
+      });
+      if (error) throw error;
+      const res = data as {
+        ok: boolean; message_ar?: string; message_en?: string;
+        address?: {
+          region_ar?: string | null; region_en?: string | null;
+          city_ar?: string | null; city_en?: string | null;
+          district_ar?: string | null; district_en?: string | null;
+          street_ar?: string | null; street_en?: string | null;
+          address_ar?: string | null; address_en?: string | null;
+          building_number?: string | null; additional_number?: string | null;
+          post_code?: string | null;
+        };
+      };
+      if (!res?.ok || !res.address) {
+        toast.error(isRTL ? (res?.message_ar ?? 'تعذّر العثور على العنوان') : (res?.message_en ?? 'Address not found'));
+        return;
+      }
+      const a = res.address;
+      setForm((f) => ({
+        ...f,
+        short_national_address: code,
+        region_name: (isRTL ? a.region_ar : a.region_en) ?? a.region_ar ?? a.region_en ?? f.region_name,
+        district: (isRTL ? a.district_ar : a.district_en) ?? a.district_ar ?? a.district_en ?? f.district,
+        street: (isRTL ? a.street_ar : a.street_en) ?? a.street_ar ?? a.street_en ?? f.street,
+        building_number: a.building_number ?? f.building_number,
+        additional_number: a.additional_number ?? f.additional_number,
+        postal_code: a.post_code ?? f.postal_code,
+        address_line: (isRTL ? a.address_ar : a.address_en) ?? a.address_ar ?? a.address_en ?? f.address_line,
+      }));
+      toast.success(t(isRTL, 'تم تعبئة العنوان', 'Address filled in'));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error');
+    } finally {
+      setSplLoading(false);
+    }
+  };
+
   // ───────────────────────── Render
   return (
     <DashboardLayout>
