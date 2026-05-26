@@ -61,10 +61,10 @@ describe('WORKSPACE-CONTEXT-4A — DashboardProfile + DashboardBusinessEdit', ()
     expect(src).toContain('updateBusinessById');
   });
 
-  it('migration did not touch contracts/payments/quotes/leads dashboard pages', () => {
+  it('migration did not touch contracts/payments/membership dashboard pages', () => {
     const dashDir = join(ROOT, 'pages/dashboard');
-    // bookings was intentionally migrated in WORKSPACE-CONTEXT-4C.
-    const skip = /contract|payment|quote|lead/i;
+    // bookings (4C) and quotes/leads (4D) were intentionally migrated.
+    const skip = /contract|payment|membership/i;
     for (const name of readdirSync(dashDir)) {
       if (!skip.test(name)) continue;
       const src = read(`pages/dashboard/${name}`);

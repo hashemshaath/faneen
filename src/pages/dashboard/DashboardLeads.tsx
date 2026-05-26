@@ -19,6 +19,7 @@ import { notifyCustomerLeadUpdate } from '@/modules/leads/services/notifyCustome
 import { createOrGetLeadConversation } from '@/modules/leads/services/createOrGetLeadConversation';
 import { getManagedBusinessesForUser } from '@/modules/leads/services/getManagedBusinessesForUser';
 import { LegacyReferenceHint } from '@/components/reference/LegacyReferenceHint';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 
 const FILTERS: Array<{ key: 'all' | LeadStatus; ar: string; en: string }> = [
   { key: 'all',        ar: 'الكل',           en: 'All' },
@@ -45,6 +46,17 @@ const DashboardLeads: React.FC = () => {
   const [openId, setOpenId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
 
+  // WORKSPACE-CONTEXT-4D: provider leads are staff-safe today —
+  // `getManagedBusinessesForUser` already returns owner + active
+  // manager memberships and `listProviderLeadRequests` is keyed by
+  // those business ids (RLS stays authoritative). When the user picks
+  // a specific workspace entity, narrow the lead query to that entity
+  // only; otherwise fall back to all managed businesses so multi-
+  // business owners and single-business users keep current behavior.
+  // `active_location_id` is intentionally NOT applied — leads have no
+  // branch column today.
+  const { active_entity_id } = useActiveWorkspace();
+
   // Resolve user's businesses (owner or manager)
   const { data: bizIds } = useQuery({
     queryKey: ['my-managed-businesses', user?.id],
@@ -58,10 +70,16 @@ const DashboardLeads: React.FC = () => {
     return m;
   }, [bizIds, isRTL]);
 
-  const ids = (bizIds ?? []).map((b) => b.id);
+  const allIds = (bizIds ?? []).map((b) => b.id);
+  const ids = useMemo(() => {
+    if (active_entity_id && allIds.includes(active_entity_id)) {
+      return [active_entity_id];
+    }
+    return allIds;
+  }, [active_entity_id, allIds]);
 
   const { data: leads, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ['provider-leads', ids.join(','), filter],
+    queryKey: ['provider-leads', ids.join(','), filter, active_entity_id],
     enabled: ids.length > 0,
     queryFn: () =>
       listProviderLeadRequests(ids, filter) as unknown as Promise<LeadRow[]>,
