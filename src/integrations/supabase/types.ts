@@ -8607,6 +8607,8 @@ export type Database = {
           additional_number: string | null
           address_line: string | null
           avatar_url: string | null
+          ban_reason: string | null
+          banned_until: string | null
           building_number: string | null
           city_id: string | null
           country_code: string
@@ -8650,6 +8652,8 @@ export type Database = {
           additional_number?: string | null
           address_line?: string | null
           avatar_url?: string | null
+          ban_reason?: string | null
+          banned_until?: string | null
           building_number?: string | null
           city_id?: string | null
           country_code?: string
@@ -8693,6 +8697,8 @@ export type Database = {
           additional_number?: string | null
           address_line?: string | null
           avatar_url?: string | null
+          ban_reason?: string | null
+          banned_until?: string | null
           building_number?: string | null
           city_id?: string | null
           country_code?: string
