@@ -1264,9 +1264,11 @@ const AdminBusinesses = () => {
                   <Plus className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-bold text-base">{isRTL ? 'إنشاء منشأة جديدة' : 'Create New Business'}</h3>
+                  <h3 className="font-heading font-bold text-base">{isRTL ? 'إضافة منشأة / جهة جديدة' : 'Add new entity (company / organization)'}</h3>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {isRTL ? 'حدّد المالك من المستخدمين، ثم أكمل البيانات الأساسية. يمكنك إكمال التفاصيل بعد الإنشاء.' : 'Pick an owner (existing user), then fill core fields. You can complete details after creation.'}
+                    {isRTL
+                      ? 'مخصّص للشركات والمؤسسات والجهات الحكومية والخاصة. اختر المسؤول/المالك من المستخدمين ثم أدخل البيانات الرسمية للمنشأة (السجل التجاري، الرقم الموحّد، الضريبة… تُكمل لاحقاً).'
+                      : 'For companies, foundations, and public/private entities. Pick a responsible owner, then enter the entity\'s official data (CR, unified number, VAT… can be completed later).'}
                   </p>
                 </div>
               </div>
@@ -1281,13 +1283,13 @@ const AdminBusinesses = () => {
                 <div className="flex items-center gap-2">
                   <User className="w-3.5 h-3.5 text-info" />
                   <Label className="text-xs font-semibold">
-                    {isRTL ? '١) مالك المنشأة (مستخدم موجود)' : '1) Business Owner (existing user)'} <span className="text-destructive">*</span>
+                    {isRTL ? '١) المسؤول / المالك للمنشأة (حساب مستخدم موجود)' : '1) Entity owner / responsible person (existing user account)'} <span className="text-destructive">*</span>
                   </Label>
                 </div>
                 <p className="text-[10.5px] text-muted-foreground leading-relaxed">
                   {isRTL
-                    ? 'ابحث بالاسم، البريد الإلكتروني، اسم المستخدم، أو معرّف USR. يجب اختيار مالك لإنشاء المنشأة (يمكن إضافة مديرين/موظفين لاحقاً من تبويب الفريق).'
-                    : 'Search by name, email, username, or USR ID. An owner is required to create the business (managers/staff can be added later from the team tab).'}
+                    ? 'الشخص المرتبط قانونياً أو إدارياً بالمنشأة (المالك أو الممثل الرسمي). ابحث بالاسم، البريد، اسم المستخدم، أو معرّف USR-XXXXXXX. يمكن إضافة مديرين ومفوّضين لاحقاً من تبويب الفريق.'
+                    : 'The person legally or administratively linked to the entity (owner or official representative). Search by name, email, username, or USR-XXXXXXX. Managers and representatives can be added later from the team tab.'}
                 </p>
                 {createForm.resolved_user_id ? (
                   <div className="flex items-center justify-between gap-2 rounded-lg border border-success/40 bg-success/10 px-3 py-2">
@@ -1369,10 +1371,10 @@ const AdminBusinesses = () => {
               <div className="flex items-center gap-2 pt-1">
                 <Building2 className="w-3.5 h-3.5 text-primary" />
                 <Label className="text-xs font-semibold">
-                  {isRTL ? '٢) بيانات المنشأة' : '2) Business Details'}
+                  {isRTL ? '٢) البيانات الرسمية للمنشأة' : '2) Entity official data'}
                 </Label>
                 <span className="text-[10.5px] text-muted-foreground">
-                  {isRTL ? '(الاسم والجوال والبريد التالية تخص المنشأة وليس المالك)' : '(name, phone & email below belong to the business, not the owner)'}
+                  {isRTL ? '(الاسم التجاري، رقم التواصل الرسمي، وبريد المنشأة — وليست بيانات المالك الشخصية)' : '(commercial name, official contact number, and entity email — not the owner\'s personal data)'}
                 </span>
               </div>
 
@@ -1396,6 +1398,7 @@ const AdminBusinesses = () => {
                 }}
                 required
                 excludeUserId={null}
+                subject="entity"
               />
 
               {/* Contact + classification */}
@@ -1403,24 +1406,24 @@ const AdminBusinesses = () => {
                 <PhoneField
                   value={{ countryCode: createForm.phone_cc, national: createForm.phone_national }}
                   onChange={(next) => setCreateForm((f: any) => ({ ...f, phone_cc: next.countryCode, phone_national: next.national }))}
-                  label={isRTL ? 'الجوال' : 'Phone'}
+                  label={isRTL ? 'رقم التواصل الرسمي للمنشأة' : 'Official entity contact number'}
                   optional
                 />
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                  <Label className="text-xs">{isRTL ? 'البريد الرسمي للمنشأة' : 'Official entity email'}</Label>
                   <Input
                     value={createForm.email}
                     onChange={(e) => setCField('email', e.target.value)}
                     type="email"
-                    placeholder="business@example.com"
+                    placeholder="info@company.com"
                     dir="ltr"
                     className="h-10 rounded-xl"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isRTL ? 'التصنيف' : 'Category'}</Label>
+                  <Label className="text-xs">{isRTL ? 'نشاط/قطاع المنشأة' : 'Entity sector / activity'}</Label>
                   <Select value={createForm.category_id} onValueChange={(v) => setCField('category_id', v)}>
-                    <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder={isRTL ? 'اختر التصنيف' : 'Select category'} /></SelectTrigger>
+                    <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder={isRTL ? 'اختر القطاع' : 'Select sector'} /></SelectTrigger>
                     <SelectContent className="rounded-xl">
                       {categories.map((c: any) => (
                         <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
@@ -1429,7 +1432,7 @@ const AdminBusinesses = () => {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isRTL ? 'المدينة' : 'City'}</Label>
+                  <Label className="text-xs">{isRTL ? 'مدينة المقر الرئيسي' : 'Headquarters city'}</Label>
                   <Select value={createForm.city_id} onValueChange={(v) => setCField('city_id', v)}>
                     <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder={isRTL ? 'اختر المدينة' : 'Select city'} /></SelectTrigger>
                     <SelectContent className="rounded-xl">
@@ -1455,7 +1458,7 @@ const AdminBusinesses = () => {
                   className="flex-1 gap-1.5 rounded-xl"
                 >
                   {createBizMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                  {isRTL ? 'إنشاء وفتح للتعديل' : 'Create & open for editing'}
+                  {isRTL ? 'إنشاء المنشأة وفتح بيانات السجل للتعديل' : 'Create entity & open registry data'}
                 </Button>
                 <Button variant="outline" onClick={() => { setCreatingBiz(false); setCreateForm(emptyCreateForm()); }} className="rounded-xl">
                   {isRTL ? 'إلغاء' : 'Cancel'}
