@@ -610,8 +610,11 @@ const AdminBusinesses = () => {
   /* ─── Create business mutation ─── */
   const createBizMutation = useMutation({
     mutationFn: async () => {
-      if (!createForm.resolved_user_id) {
-        throw new Error(isRTL ? 'حدّد المالك أولاً' : 'Resolve the owner first');
+      // Owner is optional — fallback to the current admin so the row satisfies user_id NOT NULL.
+      // Admin can reassign the real owner later from the edit panel / team tab.
+      const ownerId = createForm.resolved_user_id || user?.id;
+      if (!ownerId) {
+        throw new Error(isRTL ? 'تعذّر تحديد منشئ السجل' : 'Cannot determine record creator');
       }
       if (!createForm.username || !createForm.username_ok) {
         throw new Error(isRTL ? 'اسم المستخدم غير صالح أو محجوز' : 'Username is invalid or taken');
@@ -622,8 +625,9 @@ const AdminBusinesses = () => {
       const phoneE164 = createForm.phone_national
         ? toE164({ countryCode: createForm.phone_cc || '+966', national: createForm.phone_national })
         : null;
+      const region = SA_REGIONS.find((r) => r.id === createForm.region_id);
       const payload: Record<string, unknown> = {
-        user_id: createForm.resolved_user_id,
+        user_id: ownerId,
         username: createForm.username.trim().toLowerCase(),
         name_ar: createForm.name_ar.trim(),
         name_en: createForm.name_en?.trim() || null,
@@ -631,6 +635,19 @@ const AdminBusinesses = () => {
         email: createForm.email?.trim() || null,
         category_id: createForm.category_id || null,
         city_id: createForm.city_id || null,
+        region: region ? region.name_ar : null,
+        region_en: region ? region.name_en : null,
+        national_id: createForm.national_id?.trim() || null,
+        unified_number: createForm.unified_number?.trim() || null,
+        vat_number: createForm.vat_number?.trim() || null,
+        district: createForm.district?.trim() || null,
+        district_en: createForm.district_en?.trim() || null,
+        street_name: createForm.street_name?.trim() || null,
+        street_name_en: createForm.street_name_en?.trim() || null,
+        building_number: createForm.building_number?.trim() || null,
+        additional_number: createForm.additional_number?.trim() || null,
+        address: createForm.address?.trim() || null,
+        address_en: createForm.address_en?.trim() || null,
         approval_status: 'approved',
         is_active: true,
       };
