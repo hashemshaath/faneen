@@ -20,7 +20,7 @@ import { resolve, join, relative } from 'node:path';
  *   rounded-l / rounded-r → rounded-s / rounded-e
  *   space-x-N             → gap-N (preferred) or ms-/me- spacing
  *   float-left/right      → float-start / float-end
- *   rtl:left/right-*      → start-*/end-* (Tailwind 3.3+ supports logical insets)
+ *   rtl:left/right        → start / end (Tailwind 3.3+ supports logical insets)
  */
 
 const ROOT = resolve(__dirname, '..', '..');
