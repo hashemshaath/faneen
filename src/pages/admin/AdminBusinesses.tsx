@@ -415,6 +415,8 @@ const AdminBusinesses = () => {
         logo_url: editForm.logo_url || null, cover_url: editForm.cover_url || null,
         unified_number: editForm.unified_number || null, contact_person: editForm.contact_person || null,
         mobile: editForm.mobile || null, customer_service_phone: editForm.customer_service_phone || null,
+        region_en: editForm.region_en || null, district_en: editForm.district_en || null,
+        street_name_en: editForm.street_name_en || null, address_en: editForm.address_en || null,
         // R4E-2C-4-PHASE-3: membership_tier no longer written from the edit
         // form. Use the row tier picker (routes through admin RPC).
         // R4E-3: is_active / is_verified are no longer bagged in the generic
