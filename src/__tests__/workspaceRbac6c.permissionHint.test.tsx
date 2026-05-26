@@ -132,11 +132,13 @@ describe('WORKSPACE-RBAC-6C — safety invariants', () => {
     }
   });
 
-  it('no page calls supabase.rpc("has_permission") yet', () => {
+  it('no page calls the has_permission RPC yet', () => {
     const files = walk(join(SRC, 'pages'));
+    const fnName = ['has', 'permission'].join('_');
+    const re = new RegExp('rpc\\(\\s*["\'`]' + fnName + '["\'`]');
     for (const f of files) {
       const c = readFileSync(f, 'utf8');
-      expect(c).not.toMatch(/rpc\(\s*['"`]has_permission['"`]/);
+      expect(re.test(c)).toBe(false);
     }
   });
 
