@@ -137,14 +137,25 @@ describe('WORKSPACE-RBAC-6A — safety invariants', () => {
     return out;
   };
 
-  it('useCan is not yet wired into dashboard pages (advisory only)', () => {
+  it('useCan / PermissionHint usage is limited to the 6C-approved low-risk pages', () => {
+    // WORKSPACE-RBAC-6C: a small, audited allow-list of UI-only callers.
+    // Extend this list only via an explicit follow-up phase.
+    const ALLOWED = new Set(
+      [
+        'pages/dashboard/DashboardServices.tsx',
+        'pages/dashboard/DashboardPortfolio.tsx',
+        'pages/dashboard/DashboardPromotions.tsx',
+      ].map((p) => join(SRC, p)),
+    );
     const pagesDir = join(SRC, 'pages');
     const files = walk(pagesDir);
-    const callers = files.filter((f) => {
+    const offenders: string[] = [];
+    for (const f of files) {
       const c = readFileSync(f, 'utf8');
-      return /\buseCan\s*\(/.test(c);
-    });
-    expect(callers).toEqual([]);
+      const uses = /\buseCan\s*\(/.test(c) || /\bPermissionHint\b/.test(c) || /\bPermissionGate\b/.test(c);
+      if (uses && !ALLOWED.has(f)) offenders.push(f);
+    }
+    expect(offenders).toEqual([]);
   });
 
   it('catalog tables are only accessed through the workspace permissions wrapper', () => {
