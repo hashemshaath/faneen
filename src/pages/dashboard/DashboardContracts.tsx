@@ -1752,6 +1752,52 @@ const DashboardContracts = () => {
 
         {/* ═══ Create/Edit Form ═══ */}
         {viewSection === 'create' && (
+          // (rendered below)
+          null
+        )}
+        {/* placeholder so the diff below keeps the original create block intact */}
+        {false && (
+          <></>
+        )}
+        {viewSection === 'import' && (
+          <ContractImportPanel
+            isRTL={isRTL}
+            isSavingDraft={createContractMutation.isPending}
+            onCancel={() => setViewSection('list')}
+            onApplyToForm={(partial, extract) => {
+              setForm(f => ({ ...f, ...partial }) as ContractForm);
+              // Populate guest client from the extracted client party so the
+              // create form has a usable client even before a real user account
+              // exists. The user can still switch to the registered picker.
+              const c = extract.client ?? {};
+              if (!selectedClient && (c.name || c.email || c.phone)) {
+                setGuestClient({
+                  name: c.name ?? '',
+                  email: c.email ?? '',
+                  phone: c.phone ?? '',
+                });
+              }
+              setViewSection('create');
+              toast.success(isRTL ? 'تم تطبيق البيانات على نموذج العقد' : 'Data applied to contract form');
+            }}
+            onSaveDraft={(partial, extract) => {
+              setForm(f => ({ ...f, ...partial }) as ContractForm);
+              const c = extract.client ?? {};
+              if (!selectedClient && (c.name || c.email || c.phone)) {
+                setGuestClient({
+                  name: c.name ?? '',
+                  email: c.email ?? '',
+                  phone: c.phone ?? '',
+                });
+              }
+              // Trigger the existing create mutation on the next tick so the
+              // form state above is committed first.
+              setTimeout(() => createContractMutation.mutate(), 0);
+            }}
+          />
+        )}
+        {/* original create block follows */}
+        {viewSection === 'create' && (
           <Card className="border-accent/20 shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
