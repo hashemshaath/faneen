@@ -83,7 +83,14 @@ interface BizRow {
   created_at: string;
 }
 
-type View = 'overview' | 'all' | 'users' | 'businesses' | 'staff' | 'disabled' | 'analytics';
+type View =
+  | 'overview'
+  | 'users'
+  | 'businesses'
+  | 'provider-review'
+  | 'access-requests'
+  | 'access-management'
+  | 'analytics';
 
 /* ─── KPI card ─── */
 const Kpi: React.FC<{
