@@ -59,6 +59,9 @@ const PATTERNS: Pattern[] = [
   { name: 'pl-N/pr-N',       regex: /\b(pl|pr)-[0-9]/ },
   { name: 'border-l/r',      regex: /\b(border-l|border-r)\b/ },
   { name: 'rounded-l/r',     regex: /\brounded-(l|r)\b/ },
+  { name: 'left-N/right-N (inset)', regex: /(?<![A-Za-z])-?(left|right)-[0-9]/ },
+  { name: 'space-x-N',       regex: /\bspace-x-[0-9]/ },
+  { name: 'rtl:left/right',  regex: /\brtl:(left|right)-/ },
 ];
 
 describe('RTL/LTR direction audit (static)', () => {
