@@ -65,12 +65,14 @@ export interface ContractImportPanelProps {
     extract: ContractExtract;
     selectedClient: SelectedClient | null;
     guestClient: GuestClient | null;
+    selectedProvider?: SelectedClient | null;
   }) => void;
   onSaveDraft: (args: {
     form: Partial<ContractForm>;
     extract: ContractExtract;
     selectedClient: SelectedClient | null;
     guestClient: GuestClient | null;
+    selectedProvider?: SelectedClient | null;
   }) => void | Promise<void>;
   onCancel: () => void;
   isSavingDraft?: boolean;
@@ -78,6 +80,10 @@ export interface ContractImportPanelProps {
   providerBusinessName?: string | null;
   /** Current user's display name shown as fallback when business is missing. */
   providerOwnerName?: string | null;
+  /** Whether the current user is an admin (forces picking 1st party from list). */
+  isAdmin?: boolean;
+  /** Current user id — used to prevent admin from picking themselves as a party. */
+  currentUserId?: string | null;
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -126,7 +132,7 @@ function buildForm(e: ContractExtract): Partial<ContractForm> {
 
 export function ContractImportPanel({
   isRTL, onApplyToForm, onSaveDraft, onCancel, isSavingDraft,
-  providerBusinessName, providerOwnerName,
+  providerBusinessName, providerOwnerName, isAdmin, currentUserId,
 }: ContractImportPanelProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -138,6 +144,9 @@ export function ContractImportPanel({
   const [selectedClient, setSelectedClient] = useState<SelectedClient | null>(null);
   const [guestClient, setGuestClient] = useState<GuestClient | null>(null);
   const [fallbackEmail, setFallbackEmail] = useState('');
+  /* Admin-only: 1st party (provider) must be picked from a list — admin can never be a party. */
+  const [selectedProvider, setSelectedProvider] = useState<SelectedClient | null>(null);
+  const [providerFallbackEmail, setProviderFallbackEmail] = useState('');
 
   /* When extraction completes, seed the guest contact from extracted client. */
   const seedGuestFromExtract = useCallback((e: ContractExtract) => {
@@ -237,16 +246,36 @@ export function ContractImportPanel({
     const clientOk = !!selectedClient
       || !!(guestClient && (guestClient.name || guestClient.email || guestClient.phone))
       || !!fallbackEmail.trim();
-    return { titleOk, amountOk, clientOk };
-  }, [extract, selectedClient, guestClient, fallbackEmail]);
+    const providerOk = isAdmin ? !!selectedProvider : true;
+    return { titleOk, amountOk, clientOk, providerOk };
+  }, [extract, selectedClient, guestClient, fallbackEmail, isAdmin, selectedProvider]);
 
   /* A draft can ALWAYS be saved with just a title — everything else can be
    * completed later from the drafts list. We only hard-require the title so
    * the row has a recognisable label. */
-  const canSaveDraft = checklist.titleOk;
+  const canSaveDraft = checklist.titleOk && checklist.providerOk;
+
+  /* Guard: prevent admin from being either party. */
+  const adminSelfAsParty = isAdmin && currentUserId
+    ? (selectedProvider?.user_id === currentUserId || selectedClient?.user_id === currentUserId)
+    : false;
+  /* Guard: provider and client must be different. */
+  const sameParties = !!(selectedProvider && selectedClient && selectedProvider.user_id === selectedClient.user_id);
 
   const handleSaveDraft = () => {
     if (!extract) return;
+    if (isAdmin && !selectedProvider) {
+      toast.error(isRTL ? 'اختر الطرف الأول (المزوّد) من القائمة' : 'Pick the first party (provider) from the list');
+      return;
+    }
+    if (adminSelfAsParty) {
+      toast.error(isRTL ? 'لا يمكن أن يكون الأدمن أحد أطراف العقد' : 'Admin cannot be a contract party');
+      return;
+    }
+    if (sameParties) {
+      toast.error(isRTL ? 'الطرف الأول والثاني لا يمكن أن يكونا نفس الشخص' : 'First and second party must be different');
+      return;
+    }
     if (!canSaveDraft) {
       toast.error(isRTL ? 'أضِف عنواناً للعقد على الأقل لحفظه كمسودة' : 'Add a contract title to save a draft');
       return;
@@ -258,18 +287,30 @@ export function ContractImportPanel({
     } else if (guestClient?.email) {
       f.client_email = guestClient.email;
     }
-    onSaveDraft({ form: f, extract, selectedClient, guestClient });
+    onSaveDraft({ form: f, extract, selectedClient, guestClient, selectedProvider });
   };
 
   const handleApply = () => {
     if (!extract) return;
+    if (isAdmin && !selectedProvider) {
+      toast.error(isRTL ? 'اختر الطرف الأول (المزوّد) من القائمة' : 'Pick the first party (provider) from the list');
+      return;
+    }
+    if (adminSelfAsParty) {
+      toast.error(isRTL ? 'لا يمكن أن يكون الأدمن أحد أطراف العقد' : 'Admin cannot be a contract party');
+      return;
+    }
+    if (sameParties) {
+      toast.error(isRTL ? 'الطرف الأول والثاني لا يمكن أن يكونا نفس الشخص' : 'First and second party must be different');
+      return;
+    }
     const f = buildForm(extract);
     if (!selectedClient && !guestClient?.email && fallbackEmail.trim()) {
       f.client_email = fallbackEmail.trim();
     } else if (guestClient?.email) {
       f.client_email = guestClient.email;
     }
-    onApplyToForm({ form: f, extract, selectedClient, guestClient });
+    onApplyToForm({ form: f, extract, selectedClient, guestClient, selectedProvider });
   };
 
   return (
@@ -463,20 +504,50 @@ export function ContractImportPanel({
           <Section icon={<ShieldCheck className="w-4 h-4" />} title={isRTL ? 'ربط أطراف العقد' : 'Link contract parties'}>
             <div className="grid lg:grid-cols-2 gap-3">
               {/* First party — Provider (current business / owner) */}
-              <div className="p-4 rounded-xl border-2 border-success/30 bg-success/5 space-y-1.5">
-                <Label className="text-xs font-semibold flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-success" />
-                  {isRTL ? 'الطرف الأول — المزوّد (أنت)' : 'First party — Provider (you)'}
-                </Label>
-                <div className="text-sm font-medium" dir="auto">
-                  {providerBusinessName || providerOwnerName || (isRTL ? 'منشأتك الحالية' : 'Your current business')}
+              {isAdmin ? (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-success" />
+                    {isRTL ? 'الطرف الأول — المزوّد (اختر من القائمة)' : 'First party — Provider (pick from list)'}
+                  </Label>
+                  <ClientPicker
+                    isRTL={isRTL}
+                    selected={selectedProvider}
+                    onSelect={(c) => {
+                      if (c && currentUserId && c.user_id === currentUserId) {
+                        toast.error(isRTL ? 'لا يمكن أن يكون الأدمن أحد أطراف العقد' : 'Admin cannot be a contract party');
+                        return;
+                      }
+                      setSelectedProvider(c);
+                    }}
+                    fallbackEmail={providerFallbackEmail}
+                    onFallbackEmail={setProviderFallbackEmail}
+                    prefillName={extract.provider?.name ?? null}
+                    prefillEmail={extract.provider?.email ?? null}
+                    prefillPhone={extract.provider?.phone ?? null}
+                  />
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    {isRTL
+                      ? 'بصفتك أدمن، يجب اختيار المنشأة/المزوّد كطرف أول من القائمة — الأدمن لا يمكن أن يكون طرفاً في العقد.'
+                      : 'As admin, pick the provider/business as first party from the list — admin cannot be a contract party.'}
+                  </p>
                 </div>
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  {isRTL
-                    ? 'سيُحفظ العقد باسم منشأتك الحالية كطرف أول. يمكنك تبديل المنشأة من قائمة الحسابات في الشريط العلوي.'
-                    : 'The contract will be saved under your current business as the first party. Switch businesses from the top-bar account menu.'}
-                </p>
-              </div>
+              ) : (
+                <div className="p-4 rounded-xl border-2 border-success/30 bg-success/5 space-y-1.5">
+                  <Label className="text-xs font-semibold flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-success" />
+                    {isRTL ? 'الطرف الأول — المزوّد (أنت)' : 'First party — Provider (you)'}
+                  </Label>
+                  <div className="text-sm font-medium" dir="auto">
+                    {providerBusinessName || providerOwnerName || (isRTL ? 'منشأتك الحالية' : 'Your current business')}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    {isRTL
+                      ? 'سيُحفظ العقد باسم منشأتك الحالية كطرف أول. يمكنك تبديل المنشأة من قائمة الحسابات في الشريط العلوي.'
+                      : 'The contract will be saved under your current business as the first party. Switch businesses from the top-bar account menu.'}
+                  </p>
+                </div>
+              )}
               {/* Second party — Client picker (search + quick add) */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold flex items-center gap-1.5">
@@ -486,7 +557,17 @@ export function ContractImportPanel({
                 <ClientPicker
                   isRTL={isRTL}
                   selected={selectedClient}
-                  onSelect={setSelectedClient}
+                  onSelect={(c) => {
+                    if (c && currentUserId && c.user_id === currentUserId) {
+                      toast.error(isRTL ? 'لا يمكن أن يكون الأدمن أحد أطراف العقد' : 'Admin cannot be a contract party');
+                      return;
+                    }
+                    if (c && selectedProvider && c.user_id === selectedProvider.user_id) {
+                      toast.error(isRTL ? 'لا يمكن اختيار نفس الطرف مرتين' : 'Cannot pick the same party twice');
+                      return;
+                    }
+                    setSelectedClient(c);
+                  }}
                   fallbackEmail={fallbackEmail}
                   onFallbackEmail={setFallbackEmail}
                   guest={guestClient}
@@ -632,7 +713,20 @@ export function ContractImportPanel({
               <ChecklistItem ok={checklist.titleOk} required label={isRTL ? 'عنوان العقد (مطلوب)' : 'Contract title (required)'} />
               <ChecklistItem ok={checklist.amountOk} label={isRTL ? 'القيمة الإجمالية' : 'Total amount'} />
               <ChecklistItem ok={checklist.clientOk} label={isRTL ? 'العميل (يمكن لاحقاً)' : 'Client (optional)'} />
+              {isAdmin && (
+                <ChecklistItem ok={checklist.providerOk} required label={isRTL ? 'الطرف الأول — المزوّد (مطلوب)' : 'First party — Provider (required)'} />
+              )}
             </ul>
+            {(adminSelfAsParty || sameParties) && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-2 flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+                <p className="text-[11px] text-destructive leading-relaxed">
+                  {adminSelfAsParty
+                    ? (isRTL ? 'لا يمكن أن يكون الأدمن أحد أطراف العقد.' : 'Admin cannot be a contract party.')
+                    : (isRTL ? 'الطرف الأول والثاني لا يمكن أن يكونا نفس الشخص.' : 'First and second party must be different.')}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* CTAs */}
