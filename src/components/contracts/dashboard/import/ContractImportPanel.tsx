@@ -14,6 +14,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   FileText, FileUp, Loader2, Sparkles, X, CheckCircle2, AlertTriangle,
   FileSearch, Building2, User, Calendar, Receipt, ListChecks, Ruler,
+  ShieldCheck, Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
+import { ClientPicker, type SelectedClient, type GuestClient } from '@/components/contracts/ClientPicker';
 
 const MAX_FILE_MB = 10;
 const ACCEPTED = '.pdf,.png,.jpg,.jpeg,.webp,.txt,.docx,application/pdf,image/*,text/plain';
@@ -58,10 +60,24 @@ export interface ContractExtract {
 
 export interface ContractImportPanelProps {
   isRTL: boolean;
-  onApplyToForm: (form: Partial<ContractForm>, extract: ContractExtract) => void;
-  onSaveDraft: (form: Partial<ContractForm>, extract: ContractExtract) => void | Promise<void>;
+  onApplyToForm: (args: {
+    form: Partial<ContractForm>;
+    extract: ContractExtract;
+    selectedClient: SelectedClient | null;
+    guestClient: GuestClient | null;
+  }) => void;
+  onSaveDraft: (args: {
+    form: Partial<ContractForm>;
+    extract: ContractExtract;
+    selectedClient: SelectedClient | null;
+    guestClient: GuestClient | null;
+  }) => void | Promise<void>;
   onCancel: () => void;
   isSavingDraft?: boolean;
+  /** Current provider business name (1st party). Display-only. */
+  providerBusinessName?: string | null;
+  /** Current user's display name shown as fallback when business is missing. */
+  providerOwnerName?: string | null;
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -110,6 +126,7 @@ function buildForm(e: ContractExtract): Partial<ContractForm> {
 
 export function ContractImportPanel({
   isRTL, onApplyToForm, onSaveDraft, onCancel, isSavingDraft,
+  providerBusinessName, providerOwnerName,
 }: ContractImportPanelProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -117,6 +134,25 @@ export function ContractImportPanel({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  /* Party state — second party (client). First party = current business. */
+  const [selectedClient, setSelectedClient] = useState<SelectedClient | null>(null);
+  const [guestClient, setGuestClient] = useState<GuestClient | null>(null);
+  const [fallbackEmail, setFallbackEmail] = useState('');
+
+  /* When extraction completes, seed the guest contact from extracted client. */
+  const seedGuestFromExtract = useCallback((e: ContractExtract) => {
+    const c = e.client ?? {};
+    if (selectedClient) return;
+    if (guestClient && (guestClient.email || guestClient.phone || guestClient.name)) return;
+    if (c.name || c.email || c.phone) {
+      setGuestClient({
+        name: c.name ?? null,
+        email: c.email ?? null,
+        phone: c.phone ?? null,
+      });
+      if (c.email) setFallbackEmail(c.email);
+    }
+  }, [selectedClient, guestClient]);
 
   const fileSizeOk = useMemo(() => !file || file.size <= MAX_FILE_MB * 1024 * 1024, [file]);
 
@@ -175,6 +211,7 @@ export function ContractImportPanel({
         return;
       }
       setExtract(r.data ?? {});
+      seedGuestFromExtract(r.data ?? {});
       toast.success(isRTL ? 'تم تحليل العقد بنجاح' : 'Contract analyzed');
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -182,7 +219,7 @@ export function ContractImportPanel({
     } finally {
       setIsAnalyzing(false);
     }
-  }, [file, fileSizeOk, isRTL]);
+  }, [file, fileSizeOk, isRTL, seedGuestFromExtract]);
 
   const updateExtract = <K extends keyof ContractExtract>(k: K, v: ContractExtract[K]) => {
     setExtract((prev) => (prev ? { ...prev, [k]: v } : prev));
@@ -192,6 +229,48 @@ export function ContractImportPanel({
   };
 
   const confidencePct = extract?.confidence != null ? Math.round(extract.confidence * 100) : null;
+
+  /* Compute the checklist for saving as draft. */
+  const checklist = useMemo(() => {
+    const titleOk = !!(extract?.title_ar || extract?.title_en);
+    const amountOk = extract?.total_amount != null && Number(extract.total_amount) > 0;
+    const clientOk = !!selectedClient
+      || !!(guestClient && (guestClient.name || guestClient.email || guestClient.phone))
+      || !!fallbackEmail.trim();
+    return { titleOk, amountOk, clientOk };
+  }, [extract, selectedClient, guestClient, fallbackEmail]);
+
+  /* A draft can ALWAYS be saved with just a title — everything else can be
+   * completed later from the drafts list. We only hard-require the title so
+   * the row has a recognisable label. */
+  const canSaveDraft = checklist.titleOk;
+
+  const handleSaveDraft = () => {
+    if (!extract) return;
+    if (!canSaveDraft) {
+      toast.error(isRTL ? 'أضِف عنواناً للعقد على الأقل لحفظه كمسودة' : 'Add a contract title to save a draft');
+      return;
+    }
+    const f = buildForm(extract);
+    // Sync fallback email into form so mutation has *something* to work with.
+    if (!selectedClient && !guestClient?.email && fallbackEmail.trim()) {
+      f.client_email = fallbackEmail.trim();
+    } else if (guestClient?.email) {
+      f.client_email = guestClient.email;
+    }
+    onSaveDraft({ form: f, extract, selectedClient, guestClient });
+  };
+
+  const handleApply = () => {
+    if (!extract) return;
+    const f = buildForm(extract);
+    if (!selectedClient && !guestClient?.email && fallbackEmail.trim()) {
+      f.client_email = fallbackEmail.trim();
+    } else if (guestClient?.email) {
+      f.client_email = guestClient.email;
+    }
+    onApplyToForm({ form: f, extract, selectedClient, guestClient });
+  };
 
   return (
     <div className="space-y-4">
@@ -380,6 +459,46 @@ export function ContractImportPanel({
             />
           </div>
 
+          {/* Party linking — first & second party */}
+          <Section icon={<ShieldCheck className="w-4 h-4" />} title={isRTL ? 'ربط أطراف العقد' : 'Link contract parties'}>
+            <div className="grid lg:grid-cols-2 gap-3">
+              {/* First party — Provider (current business / owner) */}
+              <div className="p-4 rounded-xl border-2 border-success/30 bg-success/5 space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-success" />
+                  {isRTL ? 'الطرف الأول — المزوّد (أنت)' : 'First party — Provider (you)'}
+                </Label>
+                <div className="text-sm font-medium" dir="auto">
+                  {providerBusinessName || providerOwnerName || (isRTL ? 'منشأتك الحالية' : 'Your current business')}
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  {isRTL
+                    ? 'سيُحفظ العقد باسم منشأتك الحالية كطرف أول. يمكنك تبديل المنشأة من قائمة الحسابات في الشريط العلوي.'
+                    : 'The contract will be saved under your current business as the first party. Switch businesses from the top-bar account menu.'}
+                </p>
+              </div>
+              {/* Second party — Client picker (search + quick add) */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-accent" />
+                  {isRTL ? 'الطرف الثاني — العميل' : 'Second party — Client'}
+                </Label>
+                <ClientPicker
+                  isRTL={isRTL}
+                  selected={selectedClient}
+                  onSelect={setSelectedClient}
+                  fallbackEmail={fallbackEmail}
+                  onFallbackEmail={setFallbackEmail}
+                  guest={guestClient}
+                  onSelectGuest={setGuestClient}
+                  prefillName={extract.client?.name ?? null}
+                  prefillEmail={extract.client?.email ?? null}
+                  prefillPhone={extract.client?.phone ?? null}
+                />
+              </div>
+            </div>
+          </Section>
+
           {/* Financial + dates */}
           <Section icon={<Receipt className="w-4 h-4" />} title={isRTL ? 'البيانات المالية والزمنية' : 'Financial & timeline'}>
             <div className="grid sm:grid-cols-3 gap-3">
@@ -499,6 +618,23 @@ export function ContractImportPanel({
 
           <Separator />
 
+          {/* Draft requirements + info banner */}
+          <div className="rounded-xl border border-border/50 bg-muted/20 p-3 sm:p-4 space-y-2.5">
+            <div className="flex items-start gap-2">
+              <Info className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                {isRTL
+                  ? 'يمكن حفظ المسودة في أي وقت — حتى دون عميل أو قيمة. ستجدها في قائمة العقود بحالة "مسودة" لإكمالها لاحقاً.'
+                  : 'A draft can be saved at any time — even without a client or amount. Find it in the contracts list under "Draft" status and continue later.'}
+              </p>
+            </div>
+            <ul className="grid sm:grid-cols-3 gap-1.5 text-[11px]">
+              <ChecklistItem ok={checklist.titleOk} required label={isRTL ? 'عنوان العقد (مطلوب)' : 'Contract title (required)'} />
+              <ChecklistItem ok={checklist.amountOk} label={isRTL ? 'القيمة الإجمالية' : 'Total amount'} />
+              <ChecklistItem ok={checklist.clientOk} label={isRTL ? 'العميل (يمكن لاحقاً)' : 'Client (optional)'} />
+            </ul>
+          </div>
+
           {/* CTAs */}
           <div className="flex flex-wrap items-center justify-end gap-2 pb-2">
             <Button variant="ghost" size="sm" className="h-10 text-xs" onClick={() => { setExtract(null); setFile(null); }}>
@@ -508,8 +644,9 @@ export function ContractImportPanel({
               variant="outline"
               size="sm"
               className="h-10 text-xs gap-1.5"
-              disabled={isSavingDraft}
-              onClick={() => onSaveDraft(buildForm(extract), extract)}
+              disabled={isSavingDraft || !canSaveDraft}
+              onClick={handleSaveDraft}
+              title={!canSaveDraft ? (isRTL ? 'أضِف عنواناً للعقد' : 'Add a contract title') : undefined}
             >
               {isSavingDraft ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
               {isRTL ? 'حفظ مباشر كمسودة' : 'Save as draft'}
@@ -518,7 +655,7 @@ export function ContractImportPanel({
               variant="hero"
               size="sm"
               className="h-10 text-xs gap-1.5"
-              onClick={() => onApplyToForm(buildForm(extract), extract)}
+              onClick={handleApply}
             >
               <Sparkles className="w-3.5 h-3.5" />
               {isRTL ? 'متابعة وتعديل في نموذج العقد' : 'Continue & edit in form'}
@@ -531,6 +668,19 @@ export function ContractImportPanel({
 }
 
 /* ───────────── helpers ───────────── */
+
+function ChecklistItem({ ok, label, required }: { ok: boolean; label: string; required?: boolean }) {
+  return (
+    <li className={`flex items-center gap-1.5 rounded-md px-2 py-1.5 border ${
+      ok ? 'border-success/30 bg-success/5 text-success' :
+      required ? 'border-destructive/30 bg-destructive/5 text-destructive' :
+      'border-border/40 bg-background text-muted-foreground'
+    }`}>
+      {ok ? <CheckCircle2 className="w-3 h-3" /> : required ? <AlertTriangle className="w-3 h-3" /> : <Info className="w-3 h-3" />}
+      <span className="truncate">{label}</span>
+    </li>
+  );
+}
 
 function Section({
   icon, title, children,

@@ -1005,33 +1005,51 @@ const DashboardContracts = () => {
   });
 
   const createContractMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (vars?: {
+      overrideForm?: Partial<ContractForm>;
+      overrideSelectedClient?: SelectedClient | null;
+      overrideGuestClient?: GuestClient | null;
+      /** When true, do NOT throw if client is missing — save as a bare draft. */
+      allowMissingClient?: boolean;
+    }) => {
+      const effForm: ContractForm = { ...form, ...(vars?.overrideForm ?? {}) } as ContractForm;
+      const effSelectedClient = vars?.overrideSelectedClient !== undefined
+        ? vars.overrideSelectedClient : selectedClient;
+      const effGuestClient = vars?.overrideGuestClient !== undefined
+        ? vars.overrideGuestClient : guestClient;
       // CT4B — Prefer the picker-selected client; fall back to manual email lookup.
-      let clientUserId: string | null = selectedClient?.user_id ?? null;
-      if (!clientUserId && !editingId && !guestClient) {
-        const email = form.client_email.trim();
-        if (!email) throw new Error(isRTL ? 'يرجى اختيار العميل أولاً' : 'Please select a client first');
-        const { data: cp, error: cpe } = await getProfileByEmail<{ user_id: string }>({
+      let clientUserId: string | null = effSelectedClient?.user_id ?? null;
+      if (!clientUserId && !editingId && !effGuestClient) {
+        const email = (effForm.client_email ?? '').trim();
+        if (!email) {
+          if (vars?.allowMissingClient) {
+            // Allow bare draft with no client — caller (import flow) accepts this.
+          } else {
+            throw new Error(isRTL ? 'يرجى اختيار العميل أولاً' : 'Please select a client first');
+          }
+        } else {
+          const { data: cp, error: cpe } = await getProfileByEmail<{ user_id: string }>({
           email,
           select: 'user_id',
         });
-        if (cpe) throw cpe;
-        if (cp) clientUserId = cp.user_id;
+          if (cpe) throw cpe;
+          if (cp) clientUserId = cp.user_id;
+        }
       }
 
       const payload: any = {
         provider_id: user!.id, client_id: clientUserId, business_id: businessId || null,
-        guest_client_name:  !clientUserId ? (guestClient?.name  ?? null) : null,
-        guest_client_email: !clientUserId ? (guestClient?.email ?? form.client_email.trim() ?? null) : null,
-        guest_client_phone: !clientUserId ? (guestClient?.phone ?? null) : null,
-        title_ar: form.title_ar, title_en: form.title_en || null,
-        description_ar: form.description_ar || null, description_en: form.description_en || null,
-        total_amount: Number(form.total_amount), currency_code: form.currency_code,
-        start_date: form.start_date || null, end_date: form.end_date || null,
-        terms_ar: form.terms_ar || null, terms_en: form.terms_en || null,
-        supervisor_name: form.supervisor_name || null, supervisor_phone: form.supervisor_phone || null,
-        supervisor_email: form.supervisor_email || null, status: 'draft',
-        vat_inclusive: form.vat_inclusive, vat_rate: Number(form.vat_rate),
+        guest_client_name:  !clientUserId ? (effGuestClient?.name  ?? null) : null,
+        guest_client_email: !clientUserId ? (effGuestClient?.email ?? (effForm.client_email?.trim() || null)) : null,
+        guest_client_phone: !clientUserId ? (effGuestClient?.phone ?? null) : null,
+        title_ar: effForm.title_ar, title_en: effForm.title_en || null,
+        description_ar: effForm.description_ar || null, description_en: effForm.description_en || null,
+        total_amount: Number(effForm.total_amount) || 0, currency_code: effForm.currency_code,
+        start_date: effForm.start_date || null, end_date: effForm.end_date || null,
+        terms_ar: effForm.terms_ar || null, terms_en: effForm.terms_en || null,
+        supervisor_name: effForm.supervisor_name || null, supervisor_phone: effForm.supervisor_phone || null,
+        supervisor_email: effForm.supervisor_email || null, status: 'draft',
+        vat_inclusive: effForm.vat_inclusive, vat_rate: Number(effForm.vat_rate),
       };
 
       if (editingId) {
@@ -1754,32 +1772,30 @@ const DashboardContracts = () => {
         {viewSection === 'import' && (
           <ContractImportPanel
             isRTL={isRTL}
-            isSavingDraft={createContractMutation.isPending}
+              isSavingDraft={createContractMutation.isPending}
             onCancel={() => setViewSection('list')}
-            onApplyToForm={(partial, extract) => {
+            providerBusinessName={null}
+            providerOwnerName={profile?.full_name ?? null}
+            onApplyToForm={({ form: partial, selectedClient: sc, guestClient: gc }) => {
               setForm(f => ({ ...f, ...partial }) as ContractForm);
-              const c = extract.client ?? {};
-              if (!selectedClient && (c.name || c.email || c.phone)) {
-                setGuestClient({
-                  name: c.name ?? '',
-                  email: c.email ?? '',
-                  phone: c.phone ?? '',
-                });
-              }
+              if (sc) setSelectedClient(sc);
+              else if (gc) setGuestClient(gc);
               setViewSection('create');
               toast.success(isRTL ? 'تم تطبيق البيانات على نموذج العقد' : 'Data applied to contract form');
             }}
-            onSaveDraft={(partial, extract) => {
+            onSaveDraft={({ form: partial, selectedClient: sc, guestClient: gc }) => {
+              // Apply to state for continuity if user comes back to the form,
+              // AND pass overrides into the mutation directly to avoid any
+              // stale-state race during the same tick.
               setForm(f => ({ ...f, ...partial }) as ContractForm);
-              const c = extract.client ?? {};
-              if (!selectedClient && (c.name || c.email || c.phone)) {
-                setGuestClient({
-                  name: c.name ?? '',
-                  email: c.email ?? '',
-                  phone: c.phone ?? '',
-                });
-              }
-              setTimeout(() => createContractMutation.mutate(), 0);
+              if (sc) setSelectedClient(sc);
+              else if (gc) setGuestClient(gc);
+              createContractMutation.mutate({
+                overrideForm: partial,
+                overrideSelectedClient: sc,
+                overrideGuestClient: gc,
+                allowMissingClient: true,
+              });
             }}
           />
         )}
@@ -2163,7 +2179,7 @@ const DashboardContracts = () => {
                 isSaving={createContractMutation.isPending}
                 saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !guestClient && !form.client_email) || createContractMutation.isPending}
                 onStepNav={goToStep}
-                onSave={() => createContractMutation.mutate()}
+                onSave={() => createContractMutation.mutate(undefined)}
                 completenessScore={!editingId ? calculateContractCompleteness({
                   hasClient: !!(selectedClient || guestClient || form.client_email),
                   hasExecutionSite: !!selectedSiteId,
@@ -2188,7 +2204,7 @@ const DashboardContracts = () => {
                 vatInclusive={form.vat_inclusive}
                 isSaving={createContractMutation.isPending}
                 saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !guestClient && !form.client_email) || createContractMutation.isPending}
-                onSave={() => createContractMutation.mutate()}
+                onSave={() => createContractMutation.mutate(undefined)}
               />
             </CardContent>
           </Card>
