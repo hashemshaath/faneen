@@ -445,7 +445,7 @@ const AdminIdentity: React.FC = () => {
           </TabsList>
 
           {/* Filters + Saved Views */}
-          {view !== 'overview' && view !== 'analytics' && (
+          {view !== 'overview' && (
             <div className="mt-3">
               <IdentityFilters
                 filters={filters}
@@ -637,8 +637,8 @@ const AdminIdentity: React.FC = () => {
           {/* ─── Analytics tab ─── */}
           <TabsContent value="analytics" className="mt-5">
             <IdentityAnalytics
-              profiles={profiles}
-              businesses={businesses}
+              profiles={filteredProfiles}
+              businesses={filteredBusinesses}
               roles={roles}
               isRTL={isRTL}
               isLoading={isLoading}
