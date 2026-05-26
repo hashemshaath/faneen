@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { User, Languages, Building2 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { cn } from '@/lib/utils';
-import { UsernamePicker } from '@/components/common/UsernamePicker';
+import { UsernamePicker, type UsernameCheckReason } from '@/components/common/UsernamePicker';
 
 export interface BilingualNameValue {
   full_name_ar: string;
@@ -33,6 +33,12 @@ export interface BilingualNameFieldProps {
   excludeUserId?: string | null;
   /** Bubble up real-time validity for username so parents can gate submit. */
   onUsernameValidChange?: (state: { value: string; isValid: boolean; isAvailable: boolean }) => void;
+  /** Forward a server-side username rejection so the picker pins the error + suggestions. */
+  usernameServerError?: {
+    forValue: string;
+    reason: UsernameCheckReason;
+    rawCode?: string | null;
+  } | null;
   /**
    * Subject kind — adapts labels, icon and placeholders.
    * - 'person'  (default): "Name (Arabic/English)", person icon, person example.
@@ -54,6 +60,7 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
   onFullNameChange,
   excludeUserId,
   onUsernameValidChange,
+  usernameServerError = null,
   subject = 'person',
 }) => {
   const { isRTL } = useLanguage();
@@ -139,6 +146,7 @@ export const BilingualNameField: React.FC<BilingualNameFieldProps> = ({
             label={usernameLabel}
             required={required}
             placeholder={usernamePlaceholder}
+            serverError={usernameServerError}
           />
           {errors?.username && <p className="text-xs text-destructive mt-1">{errors.username}</p>}
         </div>

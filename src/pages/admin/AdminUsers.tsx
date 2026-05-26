@@ -51,6 +51,87 @@ import { listAllUserRoles, grantRole, revokeRoleById, adminResetPassword, adminD
 import { listProfiles, updateProfileById, updateProfilesByIds } from '@/modules/users';
 import { PhoneField, parsePhoneValue } from '@/components/forms/PhoneField';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
+import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+
+/**
+ * Parse a raw save-mutation error into a structured `{ field, reason, rawCode, friendly }`.
+ *
+ * Recognised wire formats (case-insensitive):
+ *   - `username_unavailable: taken`
+ *   - `username_unavailable: invalid_format`
+ *   - `email_unavailable: taken`
+ *   - `phone_unavailable: taken`
+ *   - generic text mentioning `username` / `email` / `phone`
+ *
+ * Exported (named export hoisted via `export function`) so tests can import it.
+ */
+export type ProfileSaveErrorField = 'username' | 'email' | 'phone' | null;
+export interface ParsedProfileSaveError {
+  field: ProfileSaveErrorField;
+  /** Reason token compatible with UsernameCheckReason where applicable. */
+  reason: string;
+  /** Raw machine token (whatever the server emitted after the colon, or the prefix). */
+  rawCode: string;
+  /** Localized friendly message for inline + toast. */
+  friendly: string | null;
+}
+
+export function parseProfileSaveError(raw: string, isRTL: boolean): ParsedProfileSaveError {
+  const lower = (raw || '').toLowerCase();
+  // Structured "prefix: code" form, e.g. `username_unavailable: taken`.
+  const m = lower.match(/(username|email|phone)[_-]?unavailable\s*:\s*([a-z_]+)/);
+  if (m) {
+    const field = m[1] as 'username' | 'email' | 'phone';
+    const code = m[2];
+    return {
+      field,
+      reason: code,
+      rawCode: `${m[1]}_unavailable: ${code}`,
+      friendly: friendlyFor(field, code, isRTL),
+    };
+  }
+  if (lower.includes('username_taken') || lower.includes('username')) {
+    return { field: 'username', reason: 'taken', rawCode: 'username_taken',
+      friendly: friendlyFor('username', 'taken', isRTL) };
+  }
+  if (lower.includes('email')) {
+    return { field: 'email', reason: 'invalid', rawCode: 'email_invalid_or_taken',
+      friendly: friendlyFor('email', 'invalid', isRTL) };
+  }
+  if (lower.includes('phone')) {
+    return { field: 'phone', reason: 'invalid', rawCode: 'phone_invalid_or_taken',
+      friendly: friendlyFor('phone', 'invalid', isRTL) };
+  }
+  return { field: null, reason: 'unknown', rawCode: raw || 'unknown', friendly: null };
+}
+
+function friendlyFor(field: 'username' | 'email' | 'phone', code: string, isRTL: boolean): string {
+  const ar: Record<string, string> = {
+    'username:taken': 'اسم المستخدم محجوز — جرّب اسماً آخر',
+    'username:invalid_format': 'تنسيق اسم المستخدم غير صحيح',
+    'username:reserved': 'هذا الاسم محجوز للنظام',
+    'username:too_short': 'اسم المستخدم قصير جداً',
+    'username:too_long': 'اسم المستخدم طويل جداً',
+    'email:taken': 'البريد الإلكتروني مستخدم في حساب آخر',
+    'email:invalid': 'البريد الإلكتروني غير صالح أو مستخدم',
+    'phone:taken': 'رقم الهاتف مستخدم في حساب آخر',
+    'phone:invalid': 'رقم الهاتف غير صالح أو مستخدم',
+  };
+  const en: Record<string, string> = {
+    'username:taken': 'Username already taken — pick another',
+    'username:invalid_format': 'Username format is invalid',
+    'username:reserved': 'This username is reserved',
+    'username:too_short': 'Username is too short',
+    'username:too_long': 'Username is too long',
+    'email:taken': 'Email is already used by another account',
+    'email:invalid': 'Email is invalid or already in use',
+    'phone:taken': 'Phone is already used by another account',
+    'phone:invalid': 'Phone is invalid or already in use',
+  };
+  const key = `${field}:${code}`;
+  return (isRTL ? ar[key] : en[key]) ?? (isRTL ? 'تعذّر الحفظ' : 'Could not save');
+}
 import type { NormalizedRpcError } from '@/services/rpc';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
@@ -691,6 +772,22 @@ const AdminUsers = () => {
     email?: string;
     phone?: string;
   }>({});
+  /**
+   * Raw machine token surfaced inline next to the friendly message (e.g. `taken`,
+   * `invalid_format`, `username_unavailable`). Lets the admin see exactly which
+   * server rule rejected the save without opening devtools.
+   */
+  const [editFieldRawCodes, setEditFieldRawCodes] = useState<{
+    username?: string;
+    email?: string;
+    phone?: string;
+  }>({});
+  /** Server-side username rejection forwarded to UsernamePicker. */
+  const [usernameServerError, setUsernameServerError] = useState<{
+    forValue: string;
+    reason: UsernameCheckReason;
+    rawCode?: string | null;
+  } | null>(null);
   const clearEditFieldError = useCallback((key: keyof typeof editFieldErrors) => {
     setEditFieldErrors(prev => {
       if (!prev[key]) return prev;
@@ -698,6 +795,13 @@ const AdminUsers = () => {
       delete next[key];
       return next;
     });
+    setEditFieldRawCodes(prev => {
+      if (!(key in prev)) return prev;
+      const next = { ...prev };
+      delete next[key as 'username' | 'email' | 'phone'];
+      return next;
+    });
+    if (key === 'username') setUsernameServerError(null);
   }, []);
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -1021,24 +1125,32 @@ const AdminUsers = () => {
     },
     onError: (err: unknown) => {
       const raw = err instanceof Error ? err.message : (typeof err === 'object' && err && 'message' in err ? String((err as { message: unknown }).message) : '');
-      const lower = raw.toLowerCase();
-      let friendly = isRTL ? 'فشل التحديث' : 'Failed to update';
+      const parsed = parseProfileSaveError(raw, isRTL);
+      let friendly = parsed.friendly ?? (isRTL ? 'فشل التحديث' : 'Failed to update');
       const next: typeof editFieldErrors = {};
-      if (lower.includes('username_unavailable') || lower.includes('username_taken') || lower.includes('username')) {
-        next.username = isRTL ? 'اسم المستخدم محجوز — جرّب اسماً آخر' : 'Username already taken — pick another';
-        friendly = next.username;
-      } else if (lower.includes('phone')) {
-        next.phone = isRTL ? 'رقم الهاتف غير صالح أو مستخدم في حساب آخر' : 'Phone is invalid or already in use';
-        friendly = next.phone;
-      } else if (lower.includes('email')) {
-        next.email = isRTL ? 'البريد الإلكتروني غير صالح أو مستخدم' : 'Email is invalid or already in use';
-        friendly = next.email;
+      const rawNext: typeof editFieldRawCodes = {};
+      if (parsed.field === 'username') {
+        next.username = parsed.friendly!;
+        rawNext.username = parsed.rawCode;
+        // Pin the live picker into a "taken" state with stable suggestions.
+        setUsernameServerError({
+          forValue: editForm.username.trim().toLowerCase(),
+          reason: parsed.reason as UsernameCheckReason,
+          rawCode: parsed.rawCode,
+        });
+      } else if (parsed.field === 'email') {
+        next.email = parsed.friendly!;
+        rawNext.email = parsed.rawCode;
+      } else if (parsed.field === 'phone') {
+        next.phone = parsed.friendly!;
+        rawNext.phone = parsed.rawCode;
       } else if (raw) {
         friendly = (isRTL ? 'فشل التحديث: ' : 'Update failed: ') + raw;
       }
       if (Object.keys(next).length > 0) setEditFieldErrors(prev => ({ ...prev, ...next }));
-      // Surface the raw reason (e.g. "username_unavailable: taken") so power users
-      // can spot the precise failure cause without opening devtools.
+      if (Object.keys(rawNext).length > 0) setEditFieldRawCodes(prev => ({ ...prev, ...rawNext }));
+      // Top-center toast (Sonner is configured at top-center) — always surface the
+      // raw reason token (e.g. `username_unavailable: taken`) in the description.
       toast.error(friendly, raw ? { description: raw } : undefined);
       // Auto-focus the first failing field for quick correction.
       requestAnimationFrame(() => {
@@ -1936,6 +2048,7 @@ const AdminUsers = () => {
                                   // Clear server-side error as soon as the live picker confirms availability.
                                   if (s.isValid && s.isAvailable && editFieldErrors.username) clearEditFieldError('username');
                                 }}
+                                usernameServerError={usernameServerError}
                                errors={{
                                  full_name_ar: editFieldErrors.full_name_ar,
                                  full_name_en: editFieldErrors.full_name_en,
@@ -1951,6 +2064,7 @@ const AdminUsers = () => {
                           <>
                             <div className="space-y-1.5" data-field-error="email">
                               <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" />{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                              <EmailLiveHint value={editForm.email} isRTL={isRTL} />
                               <Input
                                 type="email" dir="ltr"
                                 value={editForm.email}
@@ -1961,7 +2075,16 @@ const AdminUsers = () => {
                                 maxLength={255}
                                 className={`h-10 rounded-xl tech-content ${editFieldErrors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                               />
-                              {editFieldErrors.email && <p className="text-xs text-destructive">{editFieldErrors.email}</p>}
+                              {editFieldErrors.email && (
+                                <p className="text-xs text-destructive flex items-center gap-1.5 flex-wrap">
+                                  <span>{editFieldErrors.email}</span>
+                                  {editFieldRawCodes.email && (
+                                    <code className="tech-content text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 border border-destructive/20">
+                                      {editFieldRawCodes.email}
+                                    </code>
+                                  )}
+                                </p>
+                              )}
                             </div>
                             <div data-field-error="phone">
                               <PhoneField
@@ -1974,6 +2097,13 @@ const AdminUsers = () => {
                                 optional
                                 error={editFieldErrors.phone}
                               />
+                              {editFieldRawCodes.phone && (
+                                <p className="mt-1 text-[10px] text-destructive/80 flex items-center gap-1.5">
+                                  <code className="tech-content px-1.5 py-0.5 rounded bg-destructive/10 border border-destructive/20">
+                                    {editFieldRawCodes.phone}
+                                  </code>
+                                </p>
+                              )}
                             </div>
                           </>
                         ) : (
@@ -2627,3 +2757,29 @@ const AdminUsers = () => {
 };
 
 export default AdminUsers;
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * EmailLiveHint — shared debounced (450ms) live format validation for email.
+ * Rendered ABOVE the email input so the user sees the status instantly after
+ * they stop typing. Uses the unified `useDebouncedValue` hook so every field
+ * (username, email, phone) shares the same 450ms timing.
+ * ─────────────────────────────────────────────────────────────────────────── */
+export const EmailLiveHint: React.FC<{ value: string; isRTL: boolean }> = ({ value, isRTL }) => {
+  const debounced = useDebouncedValue(value);
+  if (!debounced) return <div data-testid="email-live-hint" className="min-h-[1rem]" />;
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(debounced.trim());
+  return (
+    <div data-testid="email-live-hint" className="min-h-[1rem] text-[11px] flex items-center gap-1.5">
+      {ok ? (
+        <span className="text-success">{isRTL ? '✓ تنسيق صالح' : '✓ Valid format'}</span>
+      ) : (
+        <span className="text-destructive flex items-center gap-1.5">
+          <span>{isRTL ? 'تنسيق غير صحيح' : 'Invalid format'}</span>
+          <code className="tech-content text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 border border-destructive/20">
+            invalid_format
+          </code>
+        </span>
+      )}
+    </div>
+  );
+};
