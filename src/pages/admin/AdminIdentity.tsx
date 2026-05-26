@@ -21,7 +21,7 @@
  * Security: requireAdmin for the shell. PII rows respect existing maskEmail /
  * maskPhone behaviour from the specialist pages.
  */
-import React, { useState, useMemo, useEffect, useRef, useTransition, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useTransition, useCallback, Suspense, lazy } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -35,6 +35,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { AdminEmbeddedContext } from '@/contexts/AdminTabsContext';
+import { Loader2 } from 'lucide-react';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { DirectionalIcon } from '@/components/ui/directional-icon';
 import { EntityLink } from '@/components/admin/identity/EntityLink';
@@ -50,6 +52,19 @@ import {
   TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, Plus,
   UserPlus, Activity, ExternalLink, KeyRound, BarChart3,
 } from 'lucide-react';
+
+/* Lazy-loaded specialist admin pages, embedded inside Identity tabs. */
+const EmbeddedUsers              = lazy(() => import('./AdminUsers'));
+const EmbeddedBusinesses         = lazy(() => import('./AdminBusinesses'));
+const EmbeddedProviderReview     = lazy(() => import('./AdminProviderReview'));
+const EmbeddedAccessRequests     = lazy(() => import('./AdminEntityAccessRequests'));
+const EmbeddedAccessManagement   = lazy(() => import('./AdminAccessManagement'));
+
+const PanelFallback: React.FC = () => (
+  <div className="flex items-center justify-center py-20 text-muted-foreground">
+    <Loader2 className="w-5 h-5 animate-spin" />
+  </div>
+);
 
 type Profile = Tables<'profiles'>;
 type UserRole = Tables<'user_roles'>;
@@ -68,7 +83,14 @@ interface BizRow {
   created_at: string;
 }
 
-type View = 'overview' | 'all' | 'users' | 'businesses' | 'staff' | 'disabled' | 'analytics';
+type View =
+  | 'overview'
+  | 'users'
+  | 'businesses'
+  | 'provider-review'
+  | 'access-requests'
+  | 'access-management'
+  | 'analytics';
 
 /* ─── KPI card ─── */
 const Kpi: React.FC<{
@@ -125,7 +147,7 @@ const AdminIdentity: React.FC = () => {
   const navigate = useNavigate();
   const [, startTransition] = useTransition();
 
-  const view = (searchParams.get('view') as View) || 'all';
+  const view = (searchParams.get('view') as View) || 'overview';
   const setView = useCallback((v: View) => {
     const next = new URLSearchParams(searchParams);
     next.set('view', v);
@@ -325,12 +347,12 @@ const AdminIdentity: React.FC = () => {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
-              <Link to="/admin/users?create=individual">
+              <Link to="/admin/identity?view=users&create=individual">
                 <UserPlus className="w-4 h-4" />{isRTL ? 'مستخدم جديد' : 'New user'}
               </Link>
             </Button>
             <Button asChild size="sm" className="rounded-xl gap-1.5">
-              <Link to="/admin/businesses">
+              <Link to="/admin/identity?view=businesses">
                 <Plus className="w-4 h-4" />{isRTL ? 'إدارة المنشآت' : 'Manage businesses'}
               </Link>
             </Button>
@@ -419,34 +441,34 @@ const AdminIdentity: React.FC = () => {
 
         {/* ─── KPI strip ─── */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3">
-          <Kpi icon={Users} label={isRTL ? 'إجمالي الحسابات' : 'Total accounts'} value={isLoading ? '…' : kpis.totalUsers} tone="primary" to="/admin/users"
+          <Kpi icon={Users} label={isRTL ? 'إجمالي الحسابات' : 'Total accounts'} value={isLoading ? '…' : kpis.totalUsers} tone="primary" to="/admin/identity?view=users"
                hint={isRTL ? `+${kpis.newUsers7d} هذا الأسبوع` : `+${kpis.newUsers7d} this week`} />
-          <Kpi icon={Building2} label={isRTL ? 'المنشآت المسجّلة' : 'Registered businesses'} value={isLoading ? '…' : kpis.totalBusinesses} tone="success" to="/admin/businesses"
+          <Kpi icon={Building2} label={isRTL ? 'المنشآت المسجّلة' : 'Registered businesses'} value={isLoading ? '…' : kpis.totalBusinesses} tone="success" to="/admin/identity?view=businesses"
                hint={isRTL ? `+${kpis.newBiz7d} هذا الأسبوع` : `+${kpis.newBiz7d} this week`} />
-          <Kpi icon={UserCheck} label={isRTL ? 'مزودو الخدمات' : 'Service providers'} value={isLoading ? '…' : kpis.providers} tone="info" to="/admin/users?type=business" />
-          <Kpi icon={CheckCircle2} label={isRTL ? 'منشآت موثّقة' : 'Verified'} value={isLoading ? '…' : kpis.verifiedBiz} tone="accent" to="/admin/businesses" />
+          <Kpi icon={UserCheck} label={isRTL ? 'مزودو الخدمات' : 'Service providers'} value={isLoading ? '…' : kpis.providers} tone="info" to="/admin/identity?view=users&type=business" />
+          <Kpi icon={CheckCircle2} label={isRTL ? 'منشآت موثّقة' : 'Verified'} value={isLoading ? '…' : kpis.verifiedBiz} tone="accent" to="/admin/identity?view=businesses" />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Kpi icon={Crown} label={isRTL ? 'فريق الإدارة' : 'Admin staff'} value={isLoading ? '…' : kpis.staffCount} tone="warning" to="/admin/users?role=admin" />
-          <Kpi icon={Sparkles} label={isRTL ? 'بانتظار المراجعة' : 'Pending review'} value={isLoading ? '…' : kpis.pendingBiz} tone="warning" to="/admin/provider-review" />
-          <Kpi icon={Ban} label={isRTL ? 'حسابات معطّلة' : 'Disabled accounts'} value={isLoading ? '…' : kpis.bannedUsers} tone="warning" to="/admin/users?tab=disabled" />
-          <Kpi icon={Shield} label={isRTL ? 'إدارة الوصول' : 'Access control'} value={isLoading ? '…' : roles.length} tone="info" to="/admin/access-management" />
+          <Kpi icon={Crown} label={isRTL ? 'فريق الإدارة' : 'Admin staff'} value={isLoading ? '…' : kpis.staffCount} tone="warning" to="/admin/identity?view=users&role=admin" />
+          <Kpi icon={Sparkles} label={isRTL ? 'بانتظار المراجعة' : 'Pending review'} value={isLoading ? '…' : kpis.pendingBiz} tone="warning" to="/admin/identity?view=provider-review" />
+          <Kpi icon={Ban} label={isRTL ? 'حسابات معطّلة' : 'Disabled accounts'} value={isLoading ? '…' : kpis.bannedUsers} tone="warning" to="/admin/identity?view=users&tab=disabled" />
+          <Kpi icon={Shield} label={isRTL ? 'إدارة الوصول' : 'Access control'} value={isLoading ? '…' : roles.length} tone="info" to="/admin/identity?view=access-management" />
         </div>
 
         {/* ─── Tabs ─── */}
         <Tabs value={view} onValueChange={(v) => setView(v as View)} className="w-full">
           <TabsList className="bg-card border border-border/30 rounded-2xl p-1.5 h-auto flex-wrap gap-1">
             <TabsTrigger value="overview" className="rounded-xl gap-1.5 py-2"><Activity className="w-3.5 h-3.5" />{isRTL ? 'نظرة عامة' : 'Overview'}</TabsTrigger>
-            <TabsTrigger value="all" className="rounded-xl gap-1.5 py-2"><Sparkles className="w-3.5 h-3.5" />{isRTL ? 'الكل' : 'All'}</TabsTrigger>
             <TabsTrigger value="users" className="rounded-xl gap-1.5 py-2"><Users className="w-3.5 h-3.5" />{isRTL ? 'المستخدمون' : 'Users'}</TabsTrigger>
             <TabsTrigger value="businesses" className="rounded-xl gap-1.5 py-2"><Building2 className="w-3.5 h-3.5" />{isRTL ? 'المنشآت' : 'Businesses'}</TabsTrigger>
-            <TabsTrigger value="staff" className="rounded-xl gap-1.5 py-2"><Crown className="w-3.5 h-3.5" />{isRTL ? 'فريق الإدارة' : 'Staff'}</TabsTrigger>
-            <TabsTrigger value="disabled" className="rounded-xl gap-1.5 py-2"><Ban className="w-3.5 h-3.5" />{isRTL ? 'معطّلون' : 'Disabled'}</TabsTrigger>
+            <TabsTrigger value="provider-review" className="rounded-xl gap-1.5 py-2"><ShieldCheck className="w-3.5 h-3.5" />{isRTL ? 'مراجعة المزودين' : 'Provider review'}</TabsTrigger>
+            <TabsTrigger value="access-requests" className="rounded-xl gap-1.5 py-2"><KeyRound className="w-3.5 h-3.5" />{isRTL ? 'طلبات الانضمام' : 'Access requests'}</TabsTrigger>
+            <TabsTrigger value="access-management" className="rounded-xl gap-1.5 py-2"><Shield className="w-3.5 h-3.5" />{isRTL ? 'إدارة الوصول' : 'Access control'}</TabsTrigger>
             <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'تحليلات' : 'Analytics'}</TabsTrigger>
           </TabsList>
 
-          {/* Filters + Saved Views */}
-          {view !== 'overview' && (
+          {/* Filters + Saved Views — only for analytics view that still consumes them */}
+          {view === 'analytics' && (
             <div className="mt-3">
               <IdentityFilters
                 filters={filters}
@@ -587,53 +609,24 @@ const AdminIdentity: React.FC = () => {
             </div>
           </TabsContent>
 
-          {/* ─── Users tab (compact list + deep-link to full editor) ─── */}
-          <TabsContent value="users" className="mt-5">
-            <CompactUserList profiles={filteredProfiles} bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
-              isLoading={isLoading} isRTL={isRTL} isSuperAdmin={isSuperAdmin} />
-          </TabsContent>
-
-          {/* ─── Businesses tab ─── */}
-          <TabsContent value="businesses" className="mt-5">
-            <CompactBusinessList businesses={filteredBusinesses} profileByUserId={profileByUserId}
-              isLoading={isLoading} isRTL={isRTL} />
-          </TabsContent>
-
-          {/* ─── Staff tab ─── */}
-          <TabsContent value="staff" className="mt-5">
-            <CompactUserList
-              profiles={filteredProfiles.filter(p => {
-                const r = rolesByUser.get(p.user_id) || [];
-                return r.some(x => ['super_admin', 'admin', 'moderator'].includes(x.role));
-              })}
-              bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
-              isLoading={isLoading} isRTL={isRTL} isSuperAdmin={isSuperAdmin}
-            />
-          </TabsContent>
-
-          {/* ─── Disabled tab ─── */}
-          <TabsContent value="disabled" className="mt-5">
-            <CompactUserList
-              profiles={filteredProfiles.filter(p => p.is_banned)}
-              bizsByOwner={bizsByOwner} rolesByUser={rolesByUser}
-              isLoading={isLoading} isRTL={isRTL} isSuperAdmin={isSuperAdmin}
-            />
-          </TabsContent>
-
-          {/* ─── All (mixed) tab — users + businesses interleaved by created_at ─── */}
-          <TabsContent value="all" className="mt-5">
-            <UnifiedFeed
-              profiles={filteredProfiles}
-              businesses={filteredBusinesses}
-              bizsByOwner={bizsByOwner}
-              rolesByUser={rolesByUser}
-              profileByUserId={profileByUserId}
-              isLoading={isLoading}
-              isRTL={isRTL}
-              isSuperAdmin={isSuperAdmin}
-              search={deferredSearch}
-            />
-          </TabsContent>
+          {/* ─── Users / Businesses / Provider review / Access — full embedded admin pages ─── */}
+          <AdminEmbeddedContext.Provider value={true}>
+            <TabsContent value="users" className="mt-5" forceMount={view === 'users' ? true : undefined} hidden={view !== 'users'}>
+              <Suspense fallback={<PanelFallback />}><EmbeddedUsers /></Suspense>
+            </TabsContent>
+            <TabsContent value="businesses" className="mt-5" forceMount={view === 'businesses' ? true : undefined} hidden={view !== 'businesses'}>
+              <Suspense fallback={<PanelFallback />}><EmbeddedBusinesses /></Suspense>
+            </TabsContent>
+            <TabsContent value="provider-review" className="mt-5" forceMount={view === 'provider-review' ? true : undefined} hidden={view !== 'provider-review'}>
+              <Suspense fallback={<PanelFallback />}><EmbeddedProviderReview /></Suspense>
+            </TabsContent>
+            <TabsContent value="access-requests" className="mt-5" forceMount={view === 'access-requests' ? true : undefined} hidden={view !== 'access-requests'}>
+              <Suspense fallback={<PanelFallback />}><EmbeddedAccessRequests /></Suspense>
+            </TabsContent>
+            <TabsContent value="access-management" className="mt-5" forceMount={view === 'access-management' ? true : undefined} hidden={view !== 'access-management'}>
+              <Suspense fallback={<PanelFallback />}><EmbeddedAccessManagement /></Suspense>
+            </TabsContent>
+          </AdminEmbeddedContext.Provider>
 
           {/* ─── Analytics tab ─── */}
           <TabsContent value="analytics" className="mt-5">
@@ -650,8 +643,8 @@ const AdminIdentity: React.FC = () => {
         {/* ─── Footer hint ─── */}
         <p className="text-[11px] text-muted-foreground text-center pt-2">
           {isRTL
-            ? 'للتحكم المتقدّم (تعديل، حذف، تغيير كلمة المرور، إدارة الفروع…) استخدم الأزرار التي تفتح صفحات الإدارة المتخصّصة.'
-            : 'For advanced actions (edit, delete, password, branch management…), use the buttons that open the specialist pages.'}
+            ? 'كل عمليات الإدارة (تعديل، حذف، تغيير كلمة المرور، توثيق، فروع، صلاحيات…) متاحة هنا داخل التابات بدون الانتقال لصفحة أخرى.'
+            : 'All admin operations (edit, delete, password, verify, branches, roles…) are available right here inside the tabs — no page navigation needed.'}
         </p>
       </div>
     </DashboardLayout>

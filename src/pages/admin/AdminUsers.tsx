@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useTransition, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { CrQuickScanInline } from '@/components/admin/CrQuickScanInline';
 import { useAuth } from '@/contexts/AuthContext';

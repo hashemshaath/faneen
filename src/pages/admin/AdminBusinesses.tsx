@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo, useTransition } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { invokeBlogAiTools } from '@/modules/ai';

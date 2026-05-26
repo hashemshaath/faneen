@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
