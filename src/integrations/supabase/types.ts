@@ -1832,7 +1832,7 @@ export type Database = {
           is_active: boolean
           is_primary_manager: boolean
           permissions_override: Json
-          ref_id: string | null
+          ref_id: string
           role: Database["public"]["Enums"]["business_staff_role"]
           updated_at: string
           user_id: string
@@ -1846,7 +1846,7 @@ export type Database = {
           is_active?: boolean
           is_primary_manager?: boolean
           permissions_override?: Json
-          ref_id?: string | null
+          ref_id: string
           role?: Database["public"]["Enums"]["business_staff_role"]
           updated_at?: string
           user_id: string
@@ -1860,7 +1860,7 @@ export type Database = {
           is_active?: boolean
           is_primary_manager?: boolean
           permissions_override?: Json
-          ref_id?: string | null
+          ref_id?: string
           role?: Database["public"]["Enums"]["business_staff_role"]
           updated_at?: string
           user_id?: string
@@ -9549,7 +9549,7 @@ export type Database = {
           lead_credits_balance: number
           plan_id: string
           provider_user_id: string | null
-          ref_id: string | null
+          ref_id: string
           status: string
           updated_at: string
         }
@@ -9562,7 +9562,7 @@ export type Database = {
           lead_credits_balance?: number
           plan_id: string
           provider_user_id?: string | null
-          ref_id?: string | null
+          ref_id: string
           status?: string
           updated_at?: string
         }
@@ -9575,7 +9575,7 @@ export type Database = {
           lead_credits_balance?: number
           plan_id?: string
           provider_user_id?: string | null
-          ref_id?: string | null
+          ref_id?: string
           status?: string
           updated_at?: string
         }
