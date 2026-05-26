@@ -1085,16 +1085,22 @@ const AdminUsers = () => {
 
   const handleSaveProfile = () => {
     if (activePanel?.type !== 'edit') return;
-    const trimmed = editForm.full_name.trim();
-    if (!trimmed) { toast.error(isRTL ? 'الاسم مطلوب' : 'Name required'); return; }
+    const nameAr = editForm.full_name_ar.trim();
+    const nameEn = editForm.full_name_en.trim();
+    const combined = nameAr || nameEn || editForm.full_name.trim();
+    if (!combined) { toast.error(isRTL ? 'الاسم مطلوب (عربي أو إنجليزي)' : 'Name required (AR or EN)'); return; }
     const data: Partial<Profile> = {
-      full_name: trimmed,
+      full_name: combined,
+      full_name_ar: nameAr || null,
+      full_name_en: nameEn || null,
+      username: editForm.username.trim() || null,
       account_type: editForm.account_type as Profile['account_type'],
       membership_tier: editForm.membership_tier as Profile['membership_tier'],
     };
     // Only Super Admin may write PII fields; for others we keep existing values.
     if (isSuperAdmin) {
-      data.phone = editForm.phone.trim() || '';
+      data.phone_country_code = editForm.phone_national ? editForm.phone_country_code : null;
+      data.phone_national = editForm.phone_national || null;
       const nextEmail = editForm.email.trim();
       if (nextEmail && isSyntheticPhoneEmail(nextEmail)) {
         toast.error(isRTL
