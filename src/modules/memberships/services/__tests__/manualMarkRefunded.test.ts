@@ -36,11 +36,27 @@ function mockSubscriptionFetch(planEn = 'Premium') {
           maybeSingle: () => Promise.resolve({
             data: {
               user_id: 'u1',
+              ref_id: 'PVS-1000045',
               last_paid_amount: 199,
               last_paid_currency: 'SAR',
               last_invoice_id: 'INV-1',
               plan: { name_ar: 'بريميوم', name_en: planEn },
             },
+            error: null,
+          }),
+        }),
+      }),
+    };
+  });
+}
+function mockPaymentIntentFetch(refId: string | null = 'PAY-1000123') {
+  fromMock.mockImplementationOnce((table: string) => {
+    expect(table).toBe('membership_payment_intents');
+    return {
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () => Promise.resolve({
+            data: { ref_id: refId, provider_intent_id: 'mys_abc123' },
             error: null,
           }),
         }),
@@ -130,6 +146,7 @@ describe('markMembershipRefundedManually', () => {
       },
       error: null,
     });
+    mockPaymentIntentFetch('PAY-1000123');
     mockSubscriptionFetch('Premium');
     mockProfileFetch('user@example.com');
 
@@ -148,5 +165,9 @@ describe('markMembershipRefundedManually', () => {
     expect(emailArg.templateName).toBe('membership-payment-marked-refunded');
     expect(emailArg.recipientEmail).toBe('user@example.com');
     expect(emailArg.idempotencyKey).toBe('mp-refund-pi-1');
+    // Step E: PAY + SUB official refs surfaced; provider_intent_id stays internal.
+    expect(emailArg.templateData.paymentRef).toBe('PAY-1000123');
+    expect(emailArg.templateData.subscriptionRef).toBe('PVS-1000045');
+    expect(JSON.stringify(emailArg.templateData)).not.toContain('mys_abc123');
   });
 });

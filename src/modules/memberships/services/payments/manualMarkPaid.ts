@@ -3,6 +3,7 @@ import { createNotificationFireAndForget } from '@/modules/notifications/service
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { getProfileByUserId } from '@/modules/users';
 import { getEmailDeliveryAddress } from '@/lib/auth-email';
+import { getPaymentDisplayReference } from './getPaymentDisplayReference';
 import type {
   MarkMembershipPaidManuallyInput,
   MarkMembershipPaidManuallyResult,
@@ -67,24 +68,41 @@ async function dispatchManualMarkPaidSideEffects(
   let amount: number | null = null;
   let currency: string | null = null;
   let invoiceId: string | null = null;
+  let subscriptionRef: string | null = null;
+
+  // BM-REF Step E: resolve official PAY ref_id (never expose provider_intent_id
+  // as the primary user-facing payment reference).
+  let paymentRef: string | null = null;
+  {
+    const { data: intentRow } = await supabase
+      .from('membership_payment_intents')
+      .select('ref_id, provider_intent_id')
+      .eq('id', paymentIntentId)
+      .maybeSingle();
+    paymentRef = getPaymentDisplayReference(
+      intentRow as { ref_id: string | null; provider_intent_id: string | null } | null,
+    ).primary;
+  }
 
   if (subscriptionId) {
     const { data: sub } = await supabase
       .from('membership_subscriptions')
       .select(
-        'user_id, last_paid_amount, last_paid_currency, last_invoice_id, plan:membership_plans!inner(name_ar, name_en)',
+        'user_id, ref_id, last_paid_amount, last_paid_currency, last_invoice_id, plan:membership_plans!inner(name_ar, name_en)',
       )
       .eq('id', subscriptionId)
       .maybeSingle();
     if (sub) {
       const row = sub as unknown as {
         user_id: string;
+        ref_id: string | null;
         last_paid_amount: number | null;
         last_paid_currency: string | null;
         last_invoice_id: string | null;
         plan?: { name_ar: string | null; name_en: string | null } | null;
       };
       recipientUserId = row.user_id;
+      subscriptionRef = row.ref_id ?? null;
       amount = row.last_paid_amount;
       currency = row.last_paid_currency;
       invoiceId = row.last_invoice_id;
@@ -139,6 +157,8 @@ async function dispatchManualMarkPaidSideEffects(
         planNameEn,
         paidAt: result.paid_at,
         invoiceId,
+        paymentRef,
+        subscriptionRef,
         amount,
         currency,
         dashboardUrl: '/membership',
