@@ -19,6 +19,7 @@ import { getContractAfterConvert } from '@/modules/leads/services/conversion';
 import { adminConvertLeadToContract }  from '@/modules/leads/services/adminConvertLeadToContract';
 import { sendLeadTransactionalEmail } from '@/modules/leads/services/sendLeadTransactionalEmail';
 import { getLeadProviderContactForEmail } from '@/modules/leads/services/getLeadProviderContactForEmail';
+import { ReferenceTag } from '@/components/reference/ReferenceTag';
 
 // SR-4A: Service Request lifecycle statuses (new vocabulary).
 type Status =
@@ -334,7 +335,9 @@ const AdminLeadRequests: React.FC = () => {
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-xs text-muted-foreground tech-content">{r.ref_id ?? '—'}</span>
+                        {r.ref_id
+                          ? <ReferenceTag refId={r.ref_id} isRTL={isRTL} />
+                          : <span className="font-mono text-xs text-muted-foreground tech-content">—</span>}
                         <span className="font-semibold truncate">{r.name}</span>
                         <LeadStatusBadge status={r.status} />
                         {isLegacy(r.status) && (

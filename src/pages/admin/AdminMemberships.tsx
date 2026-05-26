@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useTransition } from 'react';
 import type { Database } from '@/integrations/supabase/types';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -390,7 +391,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
               )}
             </div>
             <div className="flex items-center gap-3 text-[9px] text-muted-foreground flex-wrap">
-              <span className="tech-content font-mono">{sub.ref_id}</span>
+              <ReferenceBadge refId={sub.ref_id} />
               <span className="flex items-center gap-1">
                 <Clock className="w-2.5 h-2.5" />
                 {format(new Date(sub.starts_at), 'dd/MM/yyyy')} → {sub.expires_at ? format(new Date(sub.expires_at), 'dd/MM/yyyy') : '∞'}

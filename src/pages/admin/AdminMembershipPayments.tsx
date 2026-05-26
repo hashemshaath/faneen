@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Loader2, CreditCard, Check, History, FileText, RefreshCw, AlertTriangle } from 'lucide-react';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import {
   listMembershipPaymentIntents,
   listMembershipPaymentWebhookEvents,
@@ -408,7 +409,7 @@ const AdminMembershipPayments = () => {
                   return (
                     <TableRow key={r.id} className={isHighlighted ? 'bg-primary/5' : ''}>
                       <TableCell className="tech-content text-xs">{new Date(r.created_at).toLocaleString()}</TableCell>
-                      <TableCell className="tech-content text-[10px] font-mono">{r.ref_id || '—'}</TableCell>
+                      <TableCell>{r.ref_id ? <ReferenceBadge refId={r.ref_id} /> : <span className="text-muted-foreground text-xs">—</span>}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={STATUS_TONE[r.status] || ''}>{r.status}</Badge>
                       </TableCell>

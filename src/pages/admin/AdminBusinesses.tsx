@@ -47,6 +47,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import { toast } from 'sonner';
+import { ReferenceTag } from '@/components/reference/ReferenceTag';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
@@ -1165,35 +1166,20 @@ const AdminBusinesses = () => {
                   <Separator />
                   <div className="p-3 rounded-xl bg-muted/30 border border-border/30 text-[10px] space-y-1 text-muted-foreground font-mono">
                     {/* Primary reference — official platform identifier */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-foreground font-semibold">{isRTL ? 'المعرف' : 'Ref'}: {editingBiz.ref_id || '—'}</span>
-                      {editingBiz.ref_id && (
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]"
-                            onClick={() => { navigator.clipboard.writeText(`/r/${editingBiz.ref_id}`); toast.success(isRTL ? 'تم نسخ /r/' + editingBiz.ref_id : 'Copied /r/' + editingBiz.ref_id); }}>
-                            /r/{editingBiz.ref_id}
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-5 w-5 p-0"
-                            onClick={() => { navigator.clipboard.writeText(editingBiz.ref_id); toast.success('Copied'); }}>
-                            <Copy className="w-2.5 h-2.5" />
-                          </Button>
-                        </div>
-                      )}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-foreground font-semibold">{isRTL ? 'المعرف' : 'Ref'}</span>
+                      <ReferenceTag refId={editingBiz.ref_id} isRTL={isRTL} />
                     </div>
                     {editingBiz.legacy_ref_id && editingBiz.legacy_ref_id !== editingBiz.ref_id && (
                       <p>{isRTL ? 'المعرف السابق' : 'Previously'}: {editingBiz.legacy_ref_id}</p>
                     )}
                     <p>Username: @{editingBiz.username}</p>
-                    <p>
-                      {isRTL ? 'المالك' : 'Owner'}:{' '}
-                      <span className="text-foreground">{ownerRef?.ref_id || (isRTL ? '…تحميل' : 'loading…')}</span>
-                      {ownerRef?.ref_id && (
-                        <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px] ms-1"
-                          onClick={() => { navigator.clipboard.writeText(`/r/${ownerRef.ref_id}`); toast.success(isRTL ? 'تم النسخ' : 'Copied'); }}>
-                          /r/{ownerRef.ref_id}
-                        </Button>
-                      )}
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>{isRTL ? 'المالك' : 'Owner'}</span>
+                      {ownerRef?.ref_id
+                        ? <ReferenceTag refId={ownerRef.ref_id} isRTL={isRTL} />
+                        : <span className="text-muted-foreground">{isRTL ? '…تحميل' : 'loading…'}</span>}
+                    </div>
                     <p>Created: {new Date(editingBiz.created_at).toLocaleDateString()}</p>
                     <p className="flex items-center gap-1">
                       Rating: <Star className="w-2.5 h-2.5 text-accent" /> {editingBiz.rating_avg} ({editingBiz.rating_count} reviews)

@@ -8,6 +8,7 @@ import { listProfiles } from '@/modules/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
@@ -262,7 +263,7 @@ const AdminAccessManagement = () => {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-heading font-bold text-sm truncate">{profile.full_name || (isRTL ? 'بدون اسم' : 'No name')}</span>
-                            {profile.ref_id && <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono"><Hash className="w-2.5 h-2.5 me-0.5" />{profile.ref_id}</Badge>}
+                            <ReferenceBadge refId={profile.ref_id} />
                             {isSelf && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{isRTL ? 'أنت' : 'You'}</Badge>}
                           </div>
                           <div className="flex flex-wrap items-center gap-x-3 mt-0.5">
@@ -385,7 +386,7 @@ const AdminAccessManagement = () => {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-heading font-bold text-sm truncate">{profile.full_name || (isRTL ? 'بدون اسم' : 'No name')}</span>
-                          {profile.ref_id && <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono"><Hash className="w-2.5 h-2.5 me-0.5" />{profile.ref_id}</Badge>}
+                          <ReferenceBadge refId={profile.ref_id} />
                           {isBanned && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطّل' : 'Disabled'}</Badge>}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
