@@ -448,9 +448,20 @@ const AdminCronRuns = () => {
                 ))}
               </div>
             ) : isError ? (
-              <EmptyError isRTL={isRTL} onRetry={() => refetch()} />
+              <EmptyError
+                isRTL={isRTL}
+                onRetry={() => refetch()}
+                message={isRTL ? 'تعذر تحميل السجلات.' : 'Failed to load logs.'}
+              />
             ) : filteredRuns.length === 0 ? (
-              <EmptyState isRTL={isRTL} message={isRTL ? 'لا توجد نتائج مطابقة.' : 'No matching runs.'} />
+              <EmptyState
+                isRTL={isRTL}
+                message={
+                  rows.length === 0
+                    ? (isRTL ? 'لا توجد تشغيلات مسجلة بعد.' : 'No cron runs recorded yet.')
+                    : (isRTL ? 'لا توجد نتائج مطابقة.' : 'No matching runs.')
+                }
+              />
             ) : (
               <ul className="divide-y divide-border/60">
                 {filteredRuns.map((r) => {
