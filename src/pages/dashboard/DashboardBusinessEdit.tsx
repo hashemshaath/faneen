@@ -14,6 +14,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness, updateBusinessById } from '@/modules/businesses';
+import { nationalAddressLookup } from '@/modules/locations';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -170,9 +171,7 @@ const DashboardBusinessEdit: React.FC = () => {
     if (!shortAddress.trim()) return;
     setLookupBusy(true);
     try {
-      const { data, error } = await supabase.functions.invoke('national-address-lookup', {
-        body: { shortAddress: shortAddress.trim() },
-      });
+      const { data, error } = await nationalAddressLookup({ shortAddress: shortAddress.trim() });
       if (error) throw error;
       const res = data as {
         ok: boolean;

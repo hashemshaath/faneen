@@ -23,7 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { analyzeContractDocument } from '@/modules/contracts';
 import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
 import { ClientPicker, type SelectedClient, type GuestClient } from '@/components/contracts/ClientPicker';
 
@@ -195,9 +195,7 @@ export function ContractImportPanel({
         payload.file_base64 = await fileToBase64(file);
         payload.mime_type = file.type || 'application/pdf';
       }
-      const { data, error } = await supabase.functions.invoke('analyze-contract-document', {
-        body: payload,
-      });
+      const { data, error } = await analyzeContractDocument(payload);
       if (error) throw error;
       const r = data as { ok?: boolean; data?: ContractExtract; error?: string; hint?: string };
       if (!r?.ok) {
