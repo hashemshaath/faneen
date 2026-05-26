@@ -640,13 +640,14 @@ const AdminUsers = () => {
   const queryClient = useQueryClient();
   const [, startTransition] = useTransition();
 
-  const [tab, setTab] = useState<'overview' | 'users' | 'staff' | 'disabled' | 'analytics'>('overview');
+  const [tab, setTab] = useState<'overview' | 'users' | 'analytics'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [deferredSearch, setDeferredSearch] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterAccountType, setFilterAccountType] = useState('all');
   const [filterTier, setFilterTier] = useState('all');
   const [filterBusinessLink, setFilterBusinessLink] = useState<'all' | 'multi' | 'none' | 'single'>('all');
+  const [filterScope, setFilterScope] = useState<'all' | 'staff' | 'disabled'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
@@ -664,7 +665,7 @@ const AdminUsers = () => {
   // then scroll the panel into view.
   const openCreatePanel = (preset?: 'individual' | 'business' | 'company') => {
     if (preset) setCreateForm(p => ({ ...p, account_type: preset }));
-    if (tab !== 'users' && tab !== 'staff' && tab !== 'disabled') setTab('users');
+    if (tab !== 'users') setTab('users');
     setActivePanel({ type: 'create' });
     setTimeout(() => panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
@@ -689,8 +690,13 @@ const AdminUsers = () => {
     const next = new URLSearchParams(searchParams);
 
     if (tabParam) {
-      if (['overview', 'users', 'staff', 'disabled', 'analytics'].includes(tabParam)) {
-        setTab(tabParam as typeof tab);
+      // Map legacy tabs (staff/disabled) into Users tab + scope filter
+      if (tabParam === 'staff') {
+        setTab('users'); setFilterScope('staff');
+      } else if (tabParam === 'disabled') {
+        setTab('users'); setFilterScope('disabled');
+      } else if (['overview', 'users', 'analytics'].includes(tabParam)) {
+        setTab(tabParam as 'overview' | 'users' | 'analytics');
       }
       next.delete('tab');
       mutated = true;
@@ -1107,13 +1113,13 @@ const AdminUsers = () => {
   }, [profiles, deferredSearch, filterRole, filterAccountType, filterTier, filterBusinessLink, roleMap, businessMap, businessLinksMap]);
 
   const tabFiltered = useMemo(() => {
-    if (tab === 'staff') return baseFiltered.filter(p => {
+    if (filterScope === 'staff') return baseFiltered.filter(p => {
       const r = roleMap.get(p.user_id) || [];
       return r.some(x => x.role === 'super_admin' || x.role === 'admin' || x.role === 'moderator');
     });
-    if (tab === 'disabled') return baseFiltered.filter(p => p.is_banned);
+    if (filterScope === 'disabled') return baseFiltered.filter(p => p.is_banned);
     return baseFiltered;
-  }, [baseFiltered, tab, roleMap]);
+  }, [baseFiltered, filterScope, roleMap]);
 
   const sorted = useMemo(() => {
     const copy = [...tabFiltered];
@@ -1242,45 +1248,75 @@ const AdminUsers = () => {
   return (
     <DashboardLayout>
       <div className="space-y-5">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-sm">
-                <Users className="w-5 h-5 text-accent" />
+        {/* Premium Hero Header — glassmorphism + inline KPI strip */}
+        <div className="relative overflow-hidden rounded-3xl border border-border/40 bg-gradient-to-br from-accent/5 via-card to-primary/5 p-5 sm:p-6">
+          <div className="absolute -top-16 -end-16 w-64 h-64 rounded-full bg-accent/10 blur-3xl pointer-events-none" aria-hidden />
+          <div className="absolute -bottom-20 -start-10 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none" aria-hidden />
+          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-start gap-4 min-w-0">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent to-primary text-accent-foreground flex items-center justify-center shadow-lg shrink-0">
+                <Users className="w-7 h-7" />
               </div>
-              {isRTL ? 'إدارة المستخدمين' : 'User Management'}
-            </h1>
-            <p className="text-muted-foreground font-body mt-1 text-sm">
-              {isRTL ? `${stats.totalUsers} مستخدم • ${stats.providers} مزود • ${stats.recentUsers} جديد هذا الأسبوع` : `${stats.totalUsers} users • ${stats.providers} providers • ${stats.recentUsers} new this week`}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="rounded-xl gap-2 h-9" onClick={() => refetchProfiles()}>
-              <RefreshCw className="w-4 h-4" />
-              <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
-            </Button>
-            <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2 rounded-xl h-9">
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
-            </Button>
-            {isAdmin && (
-              <Button size="sm" className="gap-2 rounded-xl h-9" onClick={() => openCreatePanel()}>
-                <UserPlus className="w-4 h-4" />
-                <span className="hidden sm:inline">{isRTL ? 'إنشاء مستخدم' : 'New User'}</span>
+              <div className="min-w-0">
+                <h1 className="font-heading font-bold text-2xl sm:text-3xl text-foreground leading-tight">
+                  {isRTL ? 'إدارة المستخدمين' : 'User Management'}
+                </h1>
+                <p className="text-muted-foreground font-body mt-1 text-sm">
+                  {isRTL
+                    ? 'إدارة شاملة للحسابات، الصلاحيات، والمنشآت المرتبطة'
+                    : 'Unified control for accounts, roles, and linked businesses'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="outline" size="sm" className="rounded-xl gap-2 h-9 bg-card/60 backdrop-blur" onClick={() => refetchProfiles()}>
+                <RefreshCw className="w-4 h-4" />
+                <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
               </Button>
-            )}
+              <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2 rounded-xl h-9 bg-card/60 backdrop-blur">
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
+              </Button>
+              {isAdmin && (
+                <Button size="sm" className="gap-2 rounded-xl h-9 shadow-md" onClick={() => openCreatePanel()}>
+                  <UserPlus className="w-4 h-4" />
+                  <span className="hidden sm:inline">{isRTL ? 'إنشاء مستخدم' : 'New User'}</span>
+                </Button>
+              )}
+            </div>
+          </div>
+          {/* Inline KPI strip — always visible */}
+          <div className="relative mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            {([
+              { icon: Users, label: isRTL ? 'الإجمالي' : 'Total', val: stats.totalUsers, color: 'text-primary bg-primary/10' },
+              { icon: Briefcase, label: isRTL ? 'مزودين' : 'Providers', val: stats.providers, color: 'text-success bg-success/10' },
+              { icon: UserCheck, label: isRTL ? 'مكتمل' : 'Onboarded', val: stats.onboarded, color: 'text-info bg-info/10' },
+              { icon: Crown, label: isRTL ? 'فريق' : 'Staff', val: stats.superAdmins + stats.admins + stats.moderators, color: 'text-accent bg-accent/10' },
+              { icon: Ban, label: isRTL ? 'معطّل' : 'Disabled', val: stats.bannedCount, color: 'text-destructive bg-destructive/10' },
+              { icon: TrendingUp, label: isRTL ? '٧ أيام' : '7d', val: stats.recentUsers, color: 'text-warning bg-warning/10' },
+            ]).map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <div key={i} className="rounded-xl border border-border/30 bg-card/70 backdrop-blur p-2.5 flex items-center gap-2 hover-lift">
+                  <div className={`w-8 h-8 rounded-lg ${s.color} flex items-center justify-center shrink-0`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-lg font-bold leading-none tech-content">{s.val}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{s.label}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs — consolidated to 3 (Staff/Disabled moved to scope chips) */}
         <Tabs value={tab} onValueChange={(v) => { setTab(v as typeof tab); setPage(1); setSelected(new Set()); }}>
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto p-1 rounded-2xl bg-muted/40">
-            <TabsTrigger value="overview" className="rounded-xl gap-1.5 py-2"><Sparkles className="w-3.5 h-3.5" />{isRTL ? 'نظرة عامة' : 'Overview'}</TabsTrigger>
-            <TabsTrigger value="users" className="rounded-xl gap-1.5 py-2"><Users className="w-3.5 h-3.5" />{isRTL ? 'المستخدمون' : 'Users'}</TabsTrigger>
-            <TabsTrigger value="staff" className="rounded-xl gap-1.5 py-2"><Crown className="w-3.5 h-3.5" />{isRTL ? 'فريق الإدارة' : 'Staff'}</TabsTrigger>
-            <TabsTrigger value="disabled" className="rounded-xl gap-1.5 py-2"><Ban className="w-3.5 h-3.5" />{isRTL ? 'المعطّلون' : 'Disabled'}</TabsTrigger>
-            <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'تحليلات' : 'Analytics'}</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 h-auto p-1 rounded-2xl bg-muted/40">
+            <TabsTrigger value="overview" className="rounded-xl gap-1.5 py-2.5"><Sparkles className="w-3.5 h-3.5" />{isRTL ? 'نظرة عامة' : 'Overview'}</TabsTrigger>
+            <TabsTrigger value="users" className="rounded-xl gap-1.5 py-2.5"><Users className="w-3.5 h-3.5" />{isRTL ? 'المستخدمون' : 'Users'}</TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2.5"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'تحليلات' : 'Analytics'}</TabsTrigger>
           </TabsList>
 
           {/* OVERVIEW */}
@@ -1344,11 +1380,25 @@ const AdminUsers = () => {
             </div>
           </TabsContent>
 
-          {/* USERS / STAFF / DISABLED — shared list view */}
-          {(['users', 'staff', 'disabled'] as const).map(t => (
-            <TabsContent key={t} value={t} className="space-y-4 mt-5">
-              {/* Quick filter chips */}
+          {/* USERS — single list view (Staff/Disabled merged as scope chips) */}
+          <TabsContent value="users" className="space-y-4 mt-5">
+              {/* Scope + Quick filter chips */}
               <div className="flex items-center gap-2 flex-wrap">
+                {([
+                  { key: 'all',      icon: Users, ar: 'الجميع',         en: 'All',      active: filterScope === 'all' },
+                  { key: 'staff',    icon: Crown, ar: 'فريق الإدارة',   en: 'Staff',    active: filterScope === 'staff' },
+                  { key: 'disabled', icon: Ban,   ar: 'المعطّلون',      en: 'Disabled', active: filterScope === 'disabled' },
+                ] as const).map(s => {
+                  const Icon = s.icon;
+                  return (
+                    <button key={s.key} onClick={() => { setFilterScope(s.key); setPage(1); }}
+                      className={`text-[11px] inline-flex items-center gap-1 px-2.5 py-1 rounded-full border transition-all
+                        ${s.active ? 'bg-primary text-primary-foreground border-primary shadow-sm' : 'bg-card border-border/40 text-muted-foreground hover:border-primary/40 hover:text-foreground'}`}>
+                      <Icon className="w-3 h-3" />{isRTL ? s.ar : s.en}
+                    </button>
+                  );
+                })}
+                <span className="text-border/60" aria-hidden>•</span>
                 {([
                   { key: 'recent', icon: Zap, ar: 'أحدث 7 أيام', en: 'New 7d', active: false, onClick: () => { setSortKey('created_at'); setSortDir('desc'); } },
                   { key: 'providers', icon: Briefcase, ar: 'مزودي الخدمات', en: 'Providers', active: filterAccountType === 'business', onClick: () => { setFilterAccountType(filterAccountType === 'business' ? 'all' : 'business'); setPage(1); } },
@@ -1427,9 +1477,9 @@ const AdminUsers = () => {
                   <span className="text-[11px] text-muted-foreground">
                     {isRTL ? `${sorted.length} نتيجة • صفحة ${page}/${totalPages}` : `${sorted.length} results • Page ${page}/${totalPages}`}
                   </span>
-                  {(deferredSearch || filterRole !== 'all' || filterAccountType !== 'all' || filterTier !== 'all' || filterBusinessLink !== 'all') && (
+                  {(deferredSearch || filterRole !== 'all' || filterAccountType !== 'all' || filterTier !== 'all' || filterBusinessLink !== 'all' || filterScope !== 'all') && (
                     <button
-                      onClick={() => { handleSearchChange(''); setFilterRole('all'); setFilterAccountType('all'); setFilterTier('all'); setFilterBusinessLink('all'); }}
+                      onClick={() => { handleSearchChange(''); setFilterRole('all'); setFilterAccountType('all'); setFilterTier('all'); setFilterBusinessLink('all'); setFilterScope('all'); }}
                       className="text-[11px] inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-border/50 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
                     >
                       <X className="w-3 h-3" />{isRTL ? 'مسح الفلاتر' : 'Clear filters'}
@@ -1781,7 +1831,7 @@ const AdminUsers = () => {
                 </>
               )}
             </TabsContent>
-          ))}
+
 
           {/* ANALYTICS */}
           <TabsContent value="analytics" className="space-y-5 mt-5">
