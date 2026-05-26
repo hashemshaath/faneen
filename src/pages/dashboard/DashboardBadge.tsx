@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { useActiveBusiness } from '@/hooks/useActiveBusiness';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import {
   Area, AreaChart, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
@@ -146,8 +146,17 @@ const DashboardBadge: React.FC = () => {
     },
   });
 
+  // WORKSPACE-CONTEXT-4B: source the active entity from the unified
+  // workspace hook. Badge analytics are safe for both owner and staff
+  // entities — existing RLS on badge_* tables stays authoritative.
+  const { active_entity_id } = useActiveWorkspace();
   const availableIds = useMemo(() => businesses.map((b) => b.id), [businesses]);
-  const { activeBusinessId } = useActiveBusiness(availableIds);
+  const activeBusinessId = useMemo<string | null>(() => {
+    if (active_entity_id && availableIds.includes(active_entity_id)) {
+      return active_entity_id;
+    }
+    return availableIds[0] ?? null;
+  }, [active_entity_id, availableIds]);
   const business = useMemo<BusinessRow | null>(() => {
     if (businesses.length === 0) return null;
     return businesses.find((b) => b.id === activeBusinessId) ?? businesses[0];
