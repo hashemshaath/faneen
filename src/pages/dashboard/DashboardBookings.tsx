@@ -2,7 +2,8 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listProfilesByUserIds } from '@/modules/users';
-import { getOwnerBusiness } from '@/modules/businesses';
+import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import {
   listAvailabilityByBusiness,
   deleteAvailabilityForBusiness,
@@ -64,10 +65,32 @@ const DashboardBookings = () => {
     noindex: true,
   });
 
+  // WORKSPACE-CONTEXT-4C: bookings are owner-managed; mutations write
+  // business_id derived from the loaded owner business and the existing
+  // RLS on bookings is the owner-only model. Honor the active entity
+  // only when it points at a business this user owns (source === 'owner')
+  // — staff entities never escalate into this provider booking surface.
+  // Falls back to getOwnerBusiness when no entity is selected so single
+  // business owners keep their current behavior. active_location_id is
+  // intentionally NOT applied here yet; bookings have no branch column.
+  const { active_entity_id, entities } = useActiveWorkspace();
+  const activeOwnerEntityId = useMemo(() => {
+    if (!active_entity_id) return null;
+    const e = entities.find((x) => x.entity_id === active_entity_id);
+    return e && e.source === 'owner' ? e.entity_id : null;
+  }, [active_entity_id, entities]);
+
   // Check if user is a provider
   const { data: business } = useQuery({
-    queryKey: ['my-business', user?.id],
+    queryKey: ['my-business', user?.id, activeOwnerEntityId],
     queryFn: async () => {
+      if (activeOwnerEntityId) {
+        const { data } = await listBusinessesByIds<{ id: string; name_ar: string; name_en: string }>({
+          ids: [activeOwnerEntityId],
+          select: 'id, name_ar, name_en',
+        });
+        return (data ?? [])[0] ?? null;
+      }
       const { data } = await getOwnerBusiness<{ id: string; name_ar: string; name_en: string }>({
         userId: user!.id,
         select: 'id, name_ar, name_en',

@@ -77,9 +77,10 @@ describe('WORKSPACE-CONTEXT-4B — Badge / PrivateSectors / Services / Reviews',
     }
   });
 
-  it('migration did not touch contracts/payments/bookings/quotes/leads pages', () => {
+  it('migration did not touch contracts/payments/quotes/leads pages', () => {
     const dashDir = join(ROOT, 'pages/dashboard');
-    const skip = /contract|payment|booking|quote|lead/i;
+    // bookings was intentionally migrated in WORKSPACE-CONTEXT-4C.
+    const skip = /contract|payment|quote|lead/i;
     for (const name of readdirSync(dashDir)) {
       if (!skip.test(name)) continue;
       const src = read(`pages/dashboard/${name}`);
