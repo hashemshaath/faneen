@@ -10,3 +10,8 @@ export type {
   AdminCreateUserAccountType,
   AdminCreateUserRole,
 } from './services/users/adminCreateUser';
+export { listUserEntityLinks } from './services/users/listUserEntityLinks';
+export type {
+  UserEntityLink,
+  UserEntityRole,
+} from './services/users/listUserEntityLinks';
