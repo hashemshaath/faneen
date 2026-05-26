@@ -46,11 +46,17 @@ describe('ADMIN-USERS-REDESIGN-1: synthetic email safety', () => {
   it('AdminUserDetail imports isSyntheticPhoneEmail', () => {
     expect(DETAIL).toMatch(/isSyntheticPhoneEmail/);
   });
-  it('AdminUsers never renders profile.email without filtering synthetic', () => {
-    // The display path now resolves through `officialEmail`; the raw
-    // displayedEmail expression must guard against synthetic identifiers.
+  it('AdminUsers renders email via the officialEmail guard', () => {
+    // The display path now resolves through `officialEmail`, which is null
+    // for synthetic phone-login identifiers.
     expect(USERS).toMatch(/officialEmail/);
-    expect(USERS).not.toContain('@phone.qitaat.local');
+    // The only allowed occurrences of the synthetic domain are inside
+    // bilingual validation copy — never as a rendered email value.
+    const renderingHits = USERS
+      .split('\n')
+      .filter((l) => l.includes('@phone.qitaat.local'))
+      .filter((l) => !/toast\.error|placeholder|aria-/.test(l) && !/ينتهي بـ|cannot end with|Never render/i.test(l));
+    expect(renderingHits).toEqual([]);
   });
   it('Edit form rejects @phone.qitaat.local on save', () => {
     expect(USERS).toMatch(/isSyntheticPhoneEmail\(nextEmail\)/);
@@ -87,7 +93,9 @@ describe('ADMIN-USERS-REDESIGN-1: entity linkage service', () => {
   it('listUserEntityLinks composes the canonical wrappers (no raw supabase.from)', () => {
     expect(SVC).toContain('listAdminBusinesses');
     expect(SVC).toContain('listAllBusinessStaffForAdmin');
-    expect(SVC).not.toMatch(/supabase\.from\(/);
+    // Strip comments before asserting no raw supabase.from() calls.
+    const code = SVC.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(code).not.toMatch(/supabase\.from\(/);
   });
   it('listUserEntityLinks returns STF and ENT projections', () => {
     expect(SVC).toMatch(/staff_ref_id/);
