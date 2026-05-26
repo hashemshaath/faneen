@@ -173,16 +173,14 @@ const UserDetailPanel = React.memo(({
   const { data, isLoading } = useQuery({
     queryKey: ['admin-user-detail', userId],
     queryFn: async () => {
-      const [contracts, projects, messages, reviews, lastActivity] = await Promise.all([
+      const [contracts, messages, reviews, lastActivity] = await Promise.all([
         listContractsForUserParticipant({ userId, select: 'id', count: { mode: 'exact', head: true } }),
-        supabase.from('projects').select('id', { count: 'exact', head: true }),
         countMessagesBySender({ userId }),
         supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('admin_activity_log').select('action, created_at, details').or(`user_id.eq.${userId},entity_id.eq.${userId}`).order('created_at', { ascending: false }).limit(5),
       ]);
       return {
         contracts: contracts.count ?? 0,
-        projects: projects.count ?? 0,
         messages: messages.count ?? 0,
         reviews: reviews.count ?? 0,
         recentActivity: lastActivity.data ?? [],
@@ -334,7 +332,7 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
   }, [isRTL, isSuperAdmin]);
 
   return (
-    <div className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
+    <div id={`user-row-${profile.id}`} className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
       ${selected ? 'ring-2 ring-accent border-accent/50' : isCurrentUser ? 'border-accent/40 ring-1 ring-accent/20' : 'border-border/30'}
       ${isBanned ? 'opacity-70 border-destructive/40' : ''}`}>
       <div className={`${compact ? 'p-2.5 sm:p-3 gap-2' : 'p-3 sm:p-4 gap-3'} flex flex-col sm:flex-row sm:items-start`}>
@@ -587,6 +585,7 @@ const AdminUsers = () => {
     const createParam = searchParams.get('create');
     const typeParam = searchParams.get('type');
     const roleParam = searchParams.get('role');
+    const focusParam = searchParams.get('focus');
     let mutated = false;
     const next = new URLSearchParams(searchParams);
 
@@ -613,6 +612,13 @@ const AdminUsers = () => {
       }
       next.delete('create');
       mutated = true;
+    }
+
+    if (focusParam && isAdmin) {
+      // Defer until profiles load; handled in a separate effect below.
+      next.delete('focus');
+      mutated = true;
+      sessionStorage.setItem('qitaat_admin_users_pending_focus', focusParam);
     }
 
     if (mutated) {
@@ -679,6 +685,26 @@ const AdminUsers = () => {
     enabled: !!user,
     staleTime: 2 * 60_000,
   });
+
+  // Consume pending ?focus=<user_id> after profiles load: switch to users tab,
+  // expand the row, jump to the page containing it, and open the edit panel.
+  useEffect(() => {
+    const pending = sessionStorage.getItem('qitaat_admin_users_pending_focus');
+    if (!pending || profiles.length === 0) return;
+    const target = profiles.find(p => p.user_id === pending);
+    sessionStorage.removeItem('qitaat_admin_users_pending_focus');
+    if (!target) {
+      toast.error(isRTL ? 'المستخدم غير موجود في القائمة' : 'User not found in list');
+      return;
+    }
+    setTab('users');
+    setExpanded(prev => new Set(prev).add(target.id));
+    openEdit(target);
+    setTimeout(() => {
+      document.getElementById(`user-row-${target.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 200);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profiles]);
 
   const { data: userRoles = [], isLoading: loadingRoles } = useQuery({
     queryKey: ['admin-user-roles'],
@@ -880,25 +906,31 @@ const AdminUsers = () => {
   const openEdit = useCallback((profile: Profile) => {
     setActivePanel({ type: 'edit', profile });
     setEditForm({
-      full_name: profile.full_name || '', account_type: profile.account_type || 'individual',
-      membership_tier: profile.membership_tier || 'free', phone: profile.phone || '', email: profile.email || '',
+      full_name: profile.full_name || '',
+      account_type: profile.account_type || 'individual',
+      membership_tier: profile.membership_tier || 'free',
+      // PII fields are only prefilled for Super Admin. Non-super admins see empty
+      // placeholders so masked values are never leaked through the edit form.
+      phone: isSuperAdmin ? (profile.phone || '') : '',
+      email: isSuperAdmin ? (profile.email || '') : '',
     });
-  }, []);
+  }, [isSuperAdmin]);
 
   const handleSaveProfile = () => {
     if (activePanel?.type !== 'edit') return;
     const trimmed = editForm.full_name.trim();
     if (!trimmed) { toast.error(isRTL ? 'الاسم مطلوب' : 'Name required'); return; }
-    updateProfileMutation.mutate({
-      profileId: activePanel.profile.id,
-      data: {
-        full_name: trimmed,
-        account_type: editForm.account_type as Profile['account_type'],
-        membership_tier: editForm.membership_tier as Profile['membership_tier'],
-        phone: editForm.phone.trim() || '',
-        email: editForm.email.trim() || null,
-      },
-    });
+    const data: Partial<Profile> = {
+      full_name: trimmed,
+      account_type: editForm.account_type as Profile['account_type'],
+      membership_tier: editForm.membership_tier as Profile['membership_tier'],
+    };
+    // Only Super Admin may write PII fields; for others we keep existing values.
+    if (isSuperAdmin) {
+      data.phone = editForm.phone.trim() || '';
+      data.email = editForm.email.trim() || null;
+    }
+    updateProfileMutation.mutate({ profileId: activePanel.profile.id, data });
   };
 
   // ─── Filtering ───
@@ -1310,7 +1342,21 @@ const AdminUsers = () => {
                     </Button>
                     {isSuperAdmin && (<>
                     <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-warning border-warning"
-                      onClick={() => bulkBanMutation.mutate({ ids: Array.from(selected), isBanned: true })}
+                      onClick={() => {
+                        const safeIds = sorted.filter(p => {
+                          if (!selected.has(p.id)) return false;
+                          if (p.user_id === user.id) return false;
+                          const r = roleMap.get(p.user_id) || [];
+                          return !r.some(x => x.role === 'super_admin' || x.role === 'admin');
+                        }).map(p => p.id);
+                        const skipped = selected.size - safeIds.length;
+                        if (safeIds.length === 0) {
+                          toast.error(isRTL ? 'لا يمكن تعطيل حسابك أو حسابات المشرفين' : 'Cannot disable your own account or admin accounts');
+                          return;
+                        }
+                        if (skipped > 0) toast.warning(isRTL ? `تم تجاهل ${skipped} حساب محمي` : `Skipped ${skipped} protected account(s)`);
+                        bulkBanMutation.mutate({ ids: safeIds, isBanned: true });
+                      }}
                       disabled={bulkBanMutation.isPending}>
                       <Ban className="w-3.5 h-3.5" />{isRTL ? 'تعطيل' : 'Disable'}
                     </Button>
@@ -1409,10 +1455,19 @@ const AdminUsers = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
                       <Input value={editForm.full_name} onChange={e => setEditForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" /></div>
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'البريد' : 'Email'}</Label>
-                      <Input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl" /></div>
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الهاتف' : 'Phone'}</Label>
-                      <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} dir="ltr" maxLength={20} className="h-10 rounded-xl tech-content" /></div>
+                    {isSuperAdmin ? (
+                      <>
+                        <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'البريد' : 'Email'}</Label>
+                          <Input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl" /></div>
+                        <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الهاتف' : 'Phone'}</Label>
+                          <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} dir="ltr" maxLength={20} className="h-10 rounded-xl tech-content" /></div>
+                      </>
+                    ) : (
+                      <div className="md:col-span-2 rounded-xl border border-dashed border-border/40 bg-muted/30 p-3 text-[11px] text-muted-foreground flex items-center gap-2">
+                        <Lock className="w-3.5 h-3.5 shrink-0" />
+                        {isRTL ? 'تعديل البريد والهاتف متاح فقط لمدير النظام (Super Admin).' : 'Editing email & phone is restricted to Super Admins.'}
+                      </div>
+                    )}
                     <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
                       <Select value={editForm.account_type} onValueChange={v => setEditForm(p => ({ ...p, account_type: v }))}>
                         <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
