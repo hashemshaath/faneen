@@ -352,7 +352,7 @@ const AdminIdentity: React.FC = () => {
                     <p className="text-[11px] text-muted-foreground italic">{isRTL ? 'لا توجد نتائج' : 'No matches'}</p>
                   )}
                   {searchResults.businesses.map(b => (
-                    <Link key={b.id} to="/admin/businesses"
+                    <Link key={b.id} to={`/admin/businesses?focus=${b.id}`}
                       className="flex items-center gap-2 rounded-lg bg-card border border-border/30 px-2 py-1.5 hover:border-success/40 hover-lift">
                       <Building2 className="w-4 h-4 text-success shrink-0" />
                       <div className="flex-1 min-w-0">
