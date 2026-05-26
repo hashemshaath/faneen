@@ -97,7 +97,7 @@ export const HowItWorksSection = () => {
                       "absolute -top-4 font-heading font-black leading-none select-none pointer-events-none",
                       "text-[88px] sm:text-[96px]",
                       "text-primary/10 dark:text-primary/15 group-hover:text-primary/20 transition-colors duration-500",
-                      isRTL ? "-left-2" : "-right-2"
+                      "-end-2"
                     )}
                   >
                     {step.step}
