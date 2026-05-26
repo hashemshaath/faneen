@@ -1917,25 +1917,57 @@ const AdminUsers = () => {
 
                     {/* ── Profile tab ── */}
                     <TabsContent value="profile" className="p-5 pt-4 m-0 space-y-4">
-                      <BilingualNameField
-                        value={{ full_name_ar: editForm.full_name_ar, full_name_en: editForm.full_name_en, username: editForm.username }}
-                        onChange={(v) => setEditForm(p => ({ ...p, full_name_ar: v.full_name_ar, full_name_en: v.full_name_en, username: v.username || '' }))}
-                        onFullNameChange={(f) => setEditForm(p => ({ ...p, full_name: f }))}
-                        required
-                      />
+                       <div data-field-error="full_name_ar">
+                         <div data-field-error="full_name_en">
+                           <div data-field-error="username">
+                             <BilingualNameField
+                               value={{ full_name_ar: editForm.full_name_ar, full_name_en: editForm.full_name_en, username: editForm.username }}
+                               onChange={(v) => {
+                                 setEditForm(p => ({ ...p, full_name_ar: v.full_name_ar, full_name_en: v.full_name_en, username: v.username || '' }));
+                                 if (editFieldErrors.full_name_ar) clearEditFieldError('full_name_ar');
+                                 if (editFieldErrors.full_name_en) clearEditFieldError('full_name_en');
+                                 if (editFieldErrors.username) clearEditFieldError('username');
+                               }}
+                               onFullNameChange={(f) => setEditForm(p => ({ ...p, full_name: f }))}
+                               errors={{
+                                 full_name_ar: editFieldErrors.full_name_ar,
+                                 full_name_en: editFieldErrors.full_name_en,
+                                 username: editFieldErrors.username,
+                               }}
+                               required
+                             />
+                           </div>
+                         </div>
+                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {isSuperAdmin ? (
                           <>
-                            <div className="space-y-1.5">
+                            <div className="space-y-1.5" data-field-error="email">
                               <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" />{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
-                              <Input type="email" dir="ltr" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl tech-content" />
+                              <Input
+                                type="email" dir="ltr"
+                                value={editForm.email}
+                                onChange={e => {
+                                  setEditForm(p => ({ ...p, email: e.target.value }));
+                                  if (editFieldErrors.email) clearEditFieldError('email');
+                                }}
+                                maxLength={255}
+                                className={`h-10 rounded-xl tech-content ${editFieldErrors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                              />
+                              {editFieldErrors.email && <p className="text-xs text-destructive">{editFieldErrors.email}</p>}
                             </div>
-                            <PhoneField
-                              value={{ countryCode: editForm.phone_country_code, national: editForm.phone_national }}
-                              onChange={(v) => setEditForm(p => ({ ...p, phone_country_code: v.countryCode, phone_national: v.national }))}
-                              onE164Change={(e164) => setEditForm(p => ({ ...p, phone: e164 }))}
-                              optional
-                            />
+                            <div data-field-error="phone">
+                              <PhoneField
+                                value={{ countryCode: editForm.phone_country_code, national: editForm.phone_national }}
+                                onChange={(v) => {
+                                  setEditForm(p => ({ ...p, phone_country_code: v.countryCode, phone_national: v.national }));
+                                  if (editFieldErrors.phone) clearEditFieldError('phone');
+                                }}
+                                onE164Change={(e164) => setEditForm(p => ({ ...p, phone: e164 }))}
+                                optional
+                                error={editFieldErrors.phone}
+                              />
+                            </div>
                           </>
                         ) : (
                           <div className="md:col-span-1 rounded-xl border border-dashed border-warning/40 bg-warning/5 p-3 text-[11px] text-muted-foreground flex items-start gap-2">
