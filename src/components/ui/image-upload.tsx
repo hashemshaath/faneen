@@ -6,6 +6,7 @@ import { Upload, X, Loader2, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { compressImage } from '@/lib/image-compress';
+import { logUploadFailure } from '@/lib/admin-alerts';
 import {
   ALLOWED_PUBLIC_IMAGE_MIMES,
   validateImageFile,
@@ -106,8 +107,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       onChange(publicUrl);
       toast.success(tx.uploadOk);
     } catch (err: unknown) {
-      // Do not log file names or contents.
-      if (import.meta.env.DEV) console.warn('Upload error', err);
+      // Surface real cause (RLS, bucket, mime…) into /admin/diagnostics and toast.
+      logUploadFailure(
+        { bucket, size: file.size, mime: file.type },
+        err,
+        { silentToast: true },
+      );
       toast.error(err instanceof Error ? err.message : tx.uploadFail);
     } finally {
       setUploading(false);
@@ -320,7 +325,7 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         });
 
         if (error) {
-          if (import.meta.env.DEV) console.warn('Upload error');
+          logUploadFailure({ bucket, path, size: compressed.size, mime: compressed.type }, error, { silentToast: true });
           continue;
         }
 
@@ -334,6 +339,7 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         toast.success(`تم رفع ${newUrls.length} صورة`);
       }
     } catch (err: unknown) {
+      logUploadFailure({ bucket }, err, { silentToast: true });
       toast.error(err instanceof Error ? err.message : 'فشل رفع الصور');
     } finally {
       setUploading(false);
