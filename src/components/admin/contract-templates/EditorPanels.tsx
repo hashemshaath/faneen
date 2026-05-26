@@ -780,7 +780,7 @@ export const PreviewPanel: React.FC<{
             <li key={f.id}>
               <span className="font-medium">{isRTL ? f.label_ar : (f.label_en || f.label_ar)}</span>
               <span className="text-xs text-muted-foreground ms-2">({f.field_type} • {f.applies_to})</span>
-              {f.is_required && <Badge variant="secondary" className="text-[10px] ml-2">{isRTL ? 'إلزامي' : 'required'}</Badge>}
+              {f.is_required && <Badge variant="secondary" className="text-[10px] ms-2">{isRTL ? 'إلزامي' : 'required'}</Badge>}
             </li>
           ))}
         </ul>
@@ -791,8 +791,8 @@ export const PreviewPanel: React.FC<{
           {(attachQ.data || []).map((a) => (
             <li key={a.id}>
               <span className="font-medium">{isRTL ? a.title_ar : (a.title_en || a.title_ar)}</span>
-              <span className="text-xs text-muted-foreground ml-2">[{a.kind}] precedence #{a.precedence_order}</span>
-              {a.is_mandatory && <Badge variant="secondary" className="text-[10px] ml-2">{isRTL ? 'إلزامي' : 'mandatory'}</Badge>}
+              <span className="text-xs text-muted-foreground ms-2">[{a.kind}] precedence #{a.precedence_order}</span>
+              {a.is_mandatory && <Badge variant="secondary" className="text-[10px] ms-2">{isRTL ? 'إلزامي' : 'mandatory'}</Badge>}
             </li>
           ))}
         </ul>
