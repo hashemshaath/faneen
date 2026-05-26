@@ -504,20 +504,50 @@ export function ContractImportPanel({
           <Section icon={<ShieldCheck className="w-4 h-4" />} title={isRTL ? 'ربط أطراف العقد' : 'Link contract parties'}>
             <div className="grid lg:grid-cols-2 gap-3">
               {/* First party — Provider (current business / owner) */}
-              <div className="p-4 rounded-xl border-2 border-success/30 bg-success/5 space-y-1.5">
-                <Label className="text-xs font-semibold flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-success" />
-                  {isRTL ? 'الطرف الأول — المزوّد (أنت)' : 'First party — Provider (you)'}
-                </Label>
-                <div className="text-sm font-medium" dir="auto">
-                  {providerBusinessName || providerOwnerName || (isRTL ? 'منشأتك الحالية' : 'Your current business')}
+              {isAdmin ? (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-success" />
+                    {isRTL ? 'الطرف الأول — المزوّد (اختر من القائمة)' : 'First party — Provider (pick from list)'}
+                  </Label>
+                  <ClientPicker
+                    isRTL={isRTL}
+                    selected={selectedProvider}
+                    onSelect={(c) => {
+                      if (c && currentUserId && c.user_id === currentUserId) {
+                        toast.error(isRTL ? 'لا يمكن أن يكون الأدمن أحد أطراف العقد' : 'Admin cannot be a contract party');
+                        return;
+                      }
+                      setSelectedProvider(c);
+                    }}
+                    fallbackEmail={providerFallbackEmail}
+                    onFallbackEmail={setProviderFallbackEmail}
+                    prefillName={extract.provider?.name ?? null}
+                    prefillEmail={extract.provider?.email ?? null}
+                    prefillPhone={extract.provider?.phone ?? null}
+                  />
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    {isRTL
+                      ? 'بصفتك أدمن، يجب اختيار المنشأة/المزوّد كطرف أول من القائمة — الأدمن لا يمكن أن يكون طرفاً في العقد.'
+                      : 'As admin, pick the provider/business as first party from the list — admin cannot be a contract party.'}
+                  </p>
                 </div>
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  {isRTL
-                    ? 'سيُحفظ العقد باسم منشأتك الحالية كطرف أول. يمكنك تبديل المنشأة من قائمة الحسابات في الشريط العلوي.'
-                    : 'The contract will be saved under your current business as the first party. Switch businesses from the top-bar account menu.'}
-                </p>
-              </div>
+              ) : (
+                <div className="p-4 rounded-xl border-2 border-success/30 bg-success/5 space-y-1.5">
+                  <Label className="text-xs font-semibold flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-success" />
+                    {isRTL ? 'الطرف الأول — المزوّد (أنت)' : 'First party — Provider (you)'}
+                  </Label>
+                  <div className="text-sm font-medium" dir="auto">
+                    {providerBusinessName || providerOwnerName || (isRTL ? 'منشأتك الحالية' : 'Your current business')}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    {isRTL
+                      ? 'سيُحفظ العقد باسم منشأتك الحالية كطرف أول. يمكنك تبديل المنشأة من قائمة الحسابات في الشريط العلوي.'
+                      : 'The contract will be saved under your current business as the first party. Switch businesses from the top-bar account menu.'}
+                  </p>
+                </div>
+              )}
               {/* Second party — Client picker (search + quick add) */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold flex items-center gap-1.5">
@@ -527,7 +557,17 @@ export function ContractImportPanel({
                 <ClientPicker
                   isRTL={isRTL}
                   selected={selectedClient}
-                  onSelect={setSelectedClient}
+                  onSelect={(c) => {
+                    if (c && currentUserId && c.user_id === currentUserId) {
+                      toast.error(isRTL ? 'لا يمكن أن يكون الأدمن أحد أطراف العقد' : 'Admin cannot be a contract party');
+                      return;
+                    }
+                    if (c && selectedProvider && c.user_id === selectedProvider.user_id) {
+                      toast.error(isRTL ? 'لا يمكن اختيار نفس الطرف مرتين' : 'Cannot pick the same party twice');
+                      return;
+                    }
+                    setSelectedClient(c);
+                  }}
                   fallbackEmail={fallbackEmail}
                   onFallbackEmail={setFallbackEmail}
                   guest={guestClient}
