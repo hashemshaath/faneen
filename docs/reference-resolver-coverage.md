@@ -26,6 +26,32 @@ prefix considered for outbound `/r/{ref}` linking in emails and notifications.
   template as `${SITE_URL}${dashboardUrl}` which now resolves to
   `${SITE_URL}/r/PAY-…` when available.
 
+## Step H — copy-link policy (UI)
+
+Which prefixes are approved for `<ReferenceLinkCopy>` (universal `/r/{REF}`
+copy buttons) in admin/provider/user UI:
+
+| Prefix | Copy link in UI? | Rationale |
+|---|---|---|
+| PAY | ✅ Admin + user-facing where the official ref is already shown | Server canonical route resolves to `/membership/payments/{id}/invoice` (succeeded/refunded) or `/membership`; resolver fallback is safe. |
+| ENT | ✅ When canonical `/{username|id}` is present | Public business profile. |
+| QTE | ✅ | Auth-gated detail route. |
+| LED / LR | ✅ | Auth-gated provider lead route. |
+| STI | ✅ Admin only (badge + copy link) | Resolver requires admin; reference is the STI ref_id, NEVER the invitation token. |
+| PVS | ✅ Badge + copy link (admin-only) | Resolver returns a safe `not_found` for non-admins; admin link is still useful for cross-referencing. |
+| BKG / BK | ✅ Badge + copy link | Resolves to bookings list. |
+| CNT (contract) | ✅ | Auth-gated. |
+| TKT | ❌ Deferred — not yet wired. |
+| Tokens, UUIDs, `provider_intent_id`, synthetic phone emails | ❌ Never — `ReferenceLinkCopy` itself rejects via the `SAFE_REF_PATTERN`. |
+
+Component contract recap:
+
+- `ReferenceBadge` — purely presentational; displays the official ref text.
+- `ReferenceLinkCopy` — copy-to-clipboard for `${origin}/r/{refId}`. Refuses
+  anything that fails the safe pattern (UUIDs, opaque tokens, blank values).
+  Never invokes Supabase / edge functions, never renders `href="#"`.
+- `ReferenceTag` — convenience wrapper that composes the two above.
+
 ## Explicitly NOT changed
 
 - Invitation accept URLs (signed tokens).
