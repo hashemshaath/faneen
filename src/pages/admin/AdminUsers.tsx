@@ -173,16 +173,14 @@ const UserDetailPanel = React.memo(({
   const { data, isLoading } = useQuery({
     queryKey: ['admin-user-detail', userId],
     queryFn: async () => {
-      const [contracts, projects, messages, reviews, lastActivity] = await Promise.all([
+      const [contracts, messages, reviews, lastActivity] = await Promise.all([
         listContractsForUserParticipant({ userId, select: 'id', count: { mode: 'exact', head: true } }),
-        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('user_id', userId),
         countMessagesBySender({ userId }),
         supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('admin_activity_log').select('action, created_at, details').or(`user_id.eq.${userId},entity_id.eq.${userId}`).order('created_at', { ascending: false }).limit(5),
       ]);
       return {
         contracts: contracts.count ?? 0,
-        projects: projects.count ?? 0,
         messages: messages.count ?? 0,
         reviews: reviews.count ?? 0,
         recentActivity: lastActivity.data ?? [],
