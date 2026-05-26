@@ -1780,14 +1780,24 @@ const DashboardContracts = () => {
             onCancel={() => setViewSection('list')}
             providerBusinessName={null}
             providerOwnerName={profile?.full_name ?? null}
-            onApplyToForm={({ form: partial, selectedClient: sc, guestClient: gc }) => {
+            isAdmin={isAdmin}
+            currentUserId={user?.id ?? null}
+            onApplyToForm={({ form: partial, selectedClient: sc, guestClient: gc, selectedProvider: sp }) => {
+              if (isAdmin && !sp) {
+                toast.error(isRTL ? 'اختر الطرف الأول (المزوّد) من القائمة' : 'Pick the first party (provider) from the list');
+                return;
+              }
               setForm(f => ({ ...f, ...partial }) as ContractForm);
               if (sc) setSelectedClient(sc);
               else if (gc) setGuestClient(gc);
               setViewSection('create');
               toast.success(isRTL ? 'تم تطبيق البيانات على نموذج العقد' : 'Data applied to contract form');
             }}
-            onSaveDraft={({ form: partial, selectedClient: sc, guestClient: gc }) => {
+            onSaveDraft={({ form: partial, selectedClient: sc, guestClient: gc, selectedProvider: sp }) => {
+              if (isAdmin && !sp) {
+                toast.error(isRTL ? 'اختر الطرف الأول (المزوّد) من القائمة' : 'Pick the first party (provider) from the list');
+                return;
+              }
               // Apply to state for continuity if user comes back to the form,
               // AND pass overrides into the mutation directly to avoid any
               // stale-state race during the same tick.
@@ -1798,6 +1808,7 @@ const DashboardContracts = () => {
                 overrideForm: partial,
                 overrideSelectedClient: sc,
                 overrideGuestClient: gc,
+                overrideProviderUserId: isAdmin ? (sp?.user_id ?? null) : undefined,
                 allowMissingClient: true,
               });
             }}
