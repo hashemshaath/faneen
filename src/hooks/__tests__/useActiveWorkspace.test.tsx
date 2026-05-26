@@ -250,4 +250,3 @@ describe('useActiveWorkspace', () => {
     await waitFor(() => expect(result.current.active_location_id).toBe('loc-2'));
   });
 });
-});
