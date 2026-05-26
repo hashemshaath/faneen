@@ -1004,7 +1004,11 @@ const AdminUsers = () => {
 
   const toggleBanMutation = useMutation({
     mutationFn: async ({ profileId, isBanned }: { profileId: string; isBanned: boolean }) => {
-      const { error } = await updateProfileById({ id: profileId, values: { is_banned: isBanned } });
+      // When toggling off, clear the temporary-ban metadata so the row is fully reset.
+      const values: Partial<Profile> & { banned_until?: string | null; ban_reason?: string | null } = isBanned
+        ? { is_banned: true }
+        : { is_banned: false, banned_until: null, ban_reason: null };
+      const { error } = await updateProfileById({ id: profileId, values: values as Partial<Profile> });
       if (error) throw error;
     },
     onSuccess: (_, v) => {
@@ -1013,6 +1017,63 @@ const AdminUsers = () => {
       toast.success(v.isBanned ? (isRTL ? 'تم التعطيل' : 'Disabled') : (isRTL ? 'تم التفعيل' : 'Enabled'));
     },
     onError: () => toast.error(isRTL ? 'فشل' : 'Failed'),
+  });
+
+  // Apply a structured suspension (permanent or until a given timestamp + optional reason).
+  const suspendMutation = useMutation({
+    mutationFn: async (args: {
+      profileId: string;
+      mode: 'permanent' | 'temporary';
+      until: string | null;
+      reason: string | null;
+    }) => {
+      const values: Partial<Profile> & { banned_until?: string | null; ban_reason?: string | null } = {
+        is_banned: true,
+        banned_until: args.mode === 'temporary' ? args.until : null,
+        ban_reason: args.reason && args.reason.trim().length > 0 ? args.reason.trim() : null,
+      };
+      const { error } = await updateProfileById({ id: args.profileId, values: values as Partial<Profile> });
+      if (error) throw error;
+    },
+    onSuccess: (_d, v) => {
+      void logAdminActivity({
+        action: v.mode === 'temporary' ? 'user.suspend.temporary' : 'user.suspend.permanent',
+        entityType: 'profile',
+        entityId: v.profileId,
+        details: { until: v.until, reason: v.reason },
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      toast.success(isRTL ? 'تم تطبيق الإيقاف' : 'Suspension applied');
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل الإيقاف' : 'Failed to suspend')),
+  });
+
+  // Link an existing business to the user via business_staff with a selected role.
+  const linkBusinessMutation = useMutation({
+    mutationFn: async (args: { businessId: string; userId: string; role: StaffRole }) => {
+      const { error } = await insertBusinessStaff({
+        payload: { business_id: args.businessId, user_id: args.userId, role: args.role, is_active: true },
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_d, v) => {
+      void logAdminActivity({
+        action: 'user.business.link',
+        entityType: 'business_staff',
+        entityId: v.businessId,
+        details: { user_id: v.userId, role: v.role },
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin-business-staff'] });
+      setLinkForm({ businessId: '', role: 'viewer' });
+      setLinkSearch('');
+      toast.success(isRTL ? 'تم ربط المنشأة' : 'Business linked');
+    },
+    onError: (e: unknown) => {
+      const msg = e instanceof Error ? e.message : '';
+      toast.error(msg.includes('duplicate') || msg.includes('unique')
+        ? (isRTL ? 'هذا المستخدم مرتبط بالفعل بهذه المنشأة' : 'User is already linked to this business')
+        : (isRTL ? 'فشل ربط المنشأة' : 'Failed to link business'));
+    },
   });
 
   const bulkBanMutation = useMutation({
