@@ -14,6 +14,7 @@ import { track, trackLeadFailed, categorizeReason } from '@/lib/analytics-events
 import { notifySupplierLead } from '@/modules/leads/services/notifications';
 import { insertLeadRequest } from '@/modules/leads/services/submit';
 import { getAttributionPayload } from '@/lib/analytics-attribution';
+import { PhoneField, parsePhoneValue, toE164, type PhoneFieldValue } from '@/components/forms/PhoneField';
 
 /**
  * Inline lead-request form (NO popups, per UX policy).
@@ -65,6 +66,7 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
     name: '', email: '', phone: '', subject: '', message: '',
     budget_range: '', contact_preference: 'any',
   });
+  const [phoneParts, setPhoneParts] = useState<PhoneFieldValue>(() => parsePhoneValue(''));
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -96,13 +98,16 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
     setSubmitting(true);
     try {
       const leadId = crypto.randomUUID();
+      const phoneE164 = toE164(phoneParts);
       const payload = {
         id: leadId,
         business_id: businessId,
         user_id: user?.id ?? null,
         name: parsed.data.name,
         email: parsed.data.email,
-        phone: parsed.data.phone || null,
+        phone: phoneE164 || null,
+        phone_country_code: phoneParts.national ? phoneParts.countryCode : null,
+        phone_national: phoneParts.national || null,
         subject: parsed.data.subject || null,
         message: parsed.data.message,
         budget_range: parsed.data.budget_range || null,
@@ -192,11 +197,16 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="lr-phone" className="text-xs">{isRTL ? 'الهاتف (اختياري)' : 'Phone (optional)'}</Label>
-              <Input id="lr-phone" type="tel" dir="ltr" className="h-10 tech-content" value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })} autoComplete="tel" />
-            </div>
+            <PhoneField
+              id="lr-phone"
+              value={phoneParts}
+              onChange={(next) => {
+                setPhoneParts(next);
+                setForm((f) => ({ ...f, phone: toE164(next) }));
+              }}
+              label={isRTL ? 'الهاتف' : 'Phone'}
+              optional
+            />
             <div className="space-y-1">
               <Label className="text-xs">{isRTL ? 'طريقة التواصل المفضلة' : 'Preferred contact'}</Label>
               <Select value={form.contact_preference} onValueChange={(v) => setForm({ ...form, contact_preference: v as FormState['contact_preference'] })}>
