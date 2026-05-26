@@ -2089,6 +2089,184 @@ const AdminUsers = () => {
                         <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إغلاق' : 'Close'}</Button>
                       </div>
                     </TabsContent>
+
+                    {/* ── Suspension tab ── */}
+                    <TabsContent value="suspension" className="p-5 pt-4 m-0 space-y-4">
+                      {!isSuperAdmin && (
+                        <div className="rounded-xl border border-dashed border-warning/40 bg-warning/5 p-3 text-[11px] text-muted-foreground flex items-center gap-2">
+                          <Lock className="w-3.5 h-3.5 shrink-0 text-warning" />
+                          {isRTL ? 'إدارة الإيقاف متاحة فقط لمدير النظام (Super Admin).' : 'Suspension is restricted to Super Admins.'}
+                        </div>
+                      )}
+                      {(() => {
+                        const bu = (editingProfile as Profile & { banned_until?: string | null }).banned_until ?? null;
+                        const reason = (editingProfile as Profile & { ban_reason?: string | null }).ban_reason ?? null;
+                        const isSelf = user?.id === editingProfile.user_id;
+                        const disabled = !isSuperAdmin || isSelf || suspendMutation.isPending || toggleBanMutation.isPending;
+                        return (
+                          <>
+                            {/* Current status */}
+                            <div className={`rounded-xl border p-3 ${editingProfile.is_banned ? 'border-destructive/30 bg-destructive/5' : 'border-success/30 bg-success/5'}`}>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                {editingProfile.is_banned ? <Ban className="w-4 h-4 text-destructive" /> : <UserCheck className="w-4 h-4 text-success" />}
+                                <p className="text-xs font-bold">
+                                  {editingProfile.is_banned
+                                    ? (bu ? (isRTL ? 'موقوف مؤقتاً' : 'Temporarily suspended') : (isRTL ? 'موقوف دائماً' : 'Permanently suspended'))
+                                    : (isRTL ? 'الحساب نشط' : 'Account is active')}
+                                </p>
+                              </div>
+                              {editingProfile.is_banned && (
+                                <div className="text-[11px] text-muted-foreground space-y-0.5">
+                                  {bu && (
+                                    <p className="tech-content">
+                                      {isRTL ? 'ينتهي:' : 'Ends:'} <span className="font-bold">{new Date(bu).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en')}</span>
+                                    </p>
+                                  )}
+                                  {reason && <p>{isRTL ? 'السبب:' : 'Reason:'} <span className="font-medium">{reason}</span></p>}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Mode selector */}
+                            <div>
+                              <Label className="text-[11px] font-bold text-muted-foreground mb-2 block">
+                                {isRTL ? 'نوع الإيقاف' : 'Suspension type'}
+                              </Label>
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  disabled={disabled}
+                                  onClick={() => setSuspendForm(p => ({ ...p, mode: 'temporary' }))}
+                                  className={`rounded-xl border p-3 text-start transition-all hover-lift disabled:opacity-50 disabled:cursor-not-allowed
+                                    ${suspendForm.mode === 'temporary' ? 'border-warning/50 bg-warning/10 ring-2 ring-warning/20' : 'border-border/40 bg-card'}`}
+                                >
+                                  <div className="flex items-center gap-1.5 mb-1">
+                                    <Timer className="w-4 h-4 text-warning" />
+                                    <p className="text-xs font-bold">{isRTL ? 'إيقاف مؤقت' : 'Temporary'}</p>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground">{isRTL ? 'يُرفع تلقائياً عند انتهاء المدة' : 'Auto-lifts at expiry'}</p>
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={disabled}
+                                  onClick={() => setSuspendForm(p => ({ ...p, mode: 'permanent' }))}
+                                  className={`rounded-xl border p-3 text-start transition-all hover-lift disabled:opacity-50 disabled:cursor-not-allowed
+                                    ${suspendForm.mode === 'permanent' ? 'border-destructive/50 bg-destructive/10 ring-2 ring-destructive/20' : 'border-border/40 bg-card'}`}
+                                >
+                                  <div className="flex items-center gap-1.5 mb-1">
+                                    <Ban className="w-4 h-4 text-destructive" />
+                                    <p className="text-xs font-bold">{isRTL ? 'إيقاف دائم' : 'Permanent'}</p>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground">{isRTL ? 'يبقى حتى يقوم الأدمن برفعه' : 'Until admin lifts it'}</p>
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Quick presets + custom datetime */}
+                            {suspendForm.mode === 'temporary' && (
+                              <div className="space-y-2">
+                                <Label className="text-[11px] font-bold text-muted-foreground">{isRTL ? 'مدة سريعة' : 'Quick presets'}</Label>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {[
+                                    { label: isRTL ? '1 ساعة' : '1 hour', ms: 3600_000 },
+                                    { label: isRTL ? '24 ساعة' : '24 hours', ms: 86400_000 },
+                                    { label: isRTL ? '7 أيام' : '7 days', ms: 7 * 86400_000 },
+                                    { label: isRTL ? '30 يوم' : '30 days', ms: 30 * 86400_000 },
+                                    { label: isRTL ? '90 يوم' : '90 days', ms: 90 * 86400_000 },
+                                  ].map(p => (
+                                    <Button key={p.label} type="button" variant="outline" size="sm" disabled={disabled}
+                                      onClick={() => setSuspendForm(s => ({ ...s, until: new Date(Date.now() + p.ms).toISOString().slice(0, 16) }))}
+                                      className="h-8 rounded-lg text-[11px]">
+                                      {p.label}
+                                    </Button>
+                                  ))}
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs flex items-center gap-1"><Calendar className="w-3 h-3" />{isRTL ? 'ينتهي في' : 'Ends at'}</Label>
+                                  <Input
+                                    type="datetime-local"
+                                    value={suspendForm.until}
+                                    min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+                                    onChange={(e) => setSuspendForm(p => ({ ...p, until: e.target.value }))}
+                                    disabled={disabled}
+                                    className="h-10 rounded-xl tech-content"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">{isRTL ? 'سبب الإيقاف (اختياري — يُسجَّل بالتدقيق)' : 'Reason (optional — logged to audit)'}</Label>
+                              <Input
+                                value={suspendForm.reason}
+                                onChange={(e) => setSuspendForm(p => ({ ...p, reason: e.target.value }))}
+                                placeholder={isRTL ? 'مثال: مخالفة سياسات النشر' : 'e.g. policy violation'}
+                                maxLength={200}
+                                disabled={disabled}
+                                dir="auto"
+                                className="h-10 rounded-xl"
+                              />
+                            </div>
+
+                            <Separator />
+
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              {editingProfile.is_banned ? (
+                                <Button
+                                  variant="outline"
+                                  onClick={() => toggleBanMutation.mutate({ profileId: editingProfile.id, isBanned: false })}
+                                  disabled={disabled}
+                                  className="rounded-xl gap-2 text-success border-success/40 hover:bg-success/10">
+                                  {toggleBanMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />}
+                                  {isRTL ? 'رفع الإيقاف الآن' : 'Lift suspension'}
+                                </Button>
+                              ) : <span />}
+                              <Button
+                                onClick={() => {
+                                  if (suspendForm.mode === 'temporary') {
+                                    if (!suspendForm.until) {
+                                      toast.error(isRTL ? 'حدد تاريخ الانتهاء' : 'Pick an end date');
+                                      return;
+                                    }
+                                    const untilDate = new Date(suspendForm.until);
+                                    if (untilDate.getTime() <= Date.now()) {
+                                      toast.error(isRTL ? 'تاريخ الانتهاء يجب أن يكون في المستقبل' : 'End date must be in the future');
+                                      return;
+                                    }
+                                    suspendMutation.mutate({
+                                      profileId: editingProfile.id,
+                                      mode: 'temporary',
+                                      until: untilDate.toISOString(),
+                                      reason: suspendForm.reason,
+                                    });
+                                  } else {
+                                    suspendMutation.mutate({
+                                      profileId: editingProfile.id,
+                                      mode: 'permanent',
+                                      until: null,
+                                      reason: suspendForm.reason,
+                                    });
+                                  }
+                                }}
+                                disabled={disabled}
+                                variant={suspendForm.mode === 'permanent' ? 'destructive' : 'default'}
+                                className="rounded-xl gap-2">
+                                {suspendMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (suspendForm.mode === 'permanent' ? <Ban className="w-4 h-4" /> : <Timer className="w-4 h-4" />)}
+                                {suspendForm.mode === 'permanent'
+                                  ? (isRTL ? 'إيقاف دائم' : 'Suspend permanently')
+                                  : (isRTL ? 'إيقاف مؤقت' : 'Suspend temporarily')}
+                              </Button>
+                            </div>
+                            {isSelf && (
+                              <p className="text-[11px] text-warning flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" />
+                                {isRTL ? 'لا يمكنك إيقاف حسابك بنفسك.' : 'You cannot suspend your own account.'}
+                              </p>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </TabsContent>
                   </Tabs>
                 </div>
                 );
