@@ -706,7 +706,7 @@ const CompactBusinessList: React.FC<{
                 )}
               </div>
               <Button asChild variant="outline" size="sm" className="rounded-xl gap-1 shrink-0">
-                <Link to="/admin/businesses">
+                <Link to={`/admin/businesses?focus=${b.id}`}>
                   <ExternalLink className="w-3.5 h-3.5" />{isRTL ? 'إدارة' : 'Manage'}
                 </Link>
               </Button>
