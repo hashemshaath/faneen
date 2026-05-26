@@ -421,7 +421,7 @@ const SectorCity: React.FC = () => {
             <CardContent className="p-4 space-y-3">
               <div className="flex flex-col md:flex-row gap-3 md:items-center">
                 <div className="relative flex-1">
-                  <SearchIcon className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-muted-foreground`} />
+                  <SearchIcon className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     dir="auto"
                     className="ps-9"

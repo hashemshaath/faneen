@@ -264,7 +264,7 @@ const AdminContractTemplates: React.FC = () => {
           <Card>
             <CardContent className="p-3 space-y-2">
               <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute start-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input className="ps-8" placeholder={isRTL ? 'بحث...' : 'Search...'}
                   value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>

@@ -190,7 +190,7 @@ const AdminPdfExportAudit: React.FC = () => {
           <CardContent className="p-3 md:p-4 space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
               <form onSubmit={onSubmitSearch} className="relative">
-                <Search className="absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground left-2 rtl:right-2 rtl:left-auto" />
+                <Search className="absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground start-2" />
                 <Input
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}

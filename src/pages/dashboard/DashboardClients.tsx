@@ -254,7 +254,7 @@ const DashboardClients: React.FC = () => {
           <CardContent className="p-3 space-y-3">
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">
-                <Search className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} w-4 h-4 text-muted-foreground`} />
+                <Search className="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-muted-foreground" />
                 <Input
                   ref={searchRef}
                   value={search}

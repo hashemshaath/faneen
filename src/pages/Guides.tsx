@@ -130,7 +130,7 @@ const Guides = () => {
 
         {/* Search */}
         <div className="relative mb-5">
-          <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
+          <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground start-3" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}

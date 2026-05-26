@@ -77,7 +77,7 @@ export function KeyboardShortcuts({
       role="dialog"
       aria-modal="false"
       aria-label={isRTL ? 'اختصارات لوحة المفاتيح' : 'Keyboard shortcuts'}
-      className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:max-w-sm z-40 rounded-xl border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl p-4 animate-in fade-in slide-in-from-bottom-4"
+      className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:end-4 sm:bottom-4 sm:max-w-sm z-40 rounded-xl border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl p-4 animate-in fade-in slide-in-from-bottom-4"
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
