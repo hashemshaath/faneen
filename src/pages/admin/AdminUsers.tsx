@@ -956,7 +956,10 @@ const AdminUsers = () => {
       // PII fields are only prefilled for Super Admin. Non-super admins see empty
       // placeholders so masked values are never leaked through the edit form.
       phone: isSuperAdmin ? (profile.phone || '') : '',
-      email: isSuperAdmin ? (profile.email || '') : '',
+      // Never pre-fill an edit field with a synthetic phone-login email.
+      email: isSuperAdmin && profile.email && !isSyntheticPhoneEmail(profile.email)
+        ? profile.email
+        : '',
     });
   }, [isSuperAdmin]);
 
@@ -984,7 +987,7 @@ const AdminUsers = () => {
       const bizList = businessMap.get(p.user_id) || [];
       const matchesSearch = !deferredSearch
         || p.full_name?.toLowerCase().includes(lower)
-        || p.email?.toLowerCase().includes(lower)
+        || (p.email && !isSyntheticPhoneEmail(p.email) ? p.email.toLowerCase().includes(lower) : false)
         || p.phone?.includes(deferredSearch)
         || p.ref_id?.toLowerCase().includes(lower)
         || bizList.some(b => b.ref_id?.toLowerCase().includes(lower) || b.name_ar?.toLowerCase().includes(lower) || b.username?.toLowerCase().includes(lower));
@@ -1097,7 +1100,8 @@ const AdminUsers = () => {
       const bizRefs = bizList.map(b => b.ref_id).join(' | ');
       const bizNames = bizList.map(b => b.name_ar).join(' | ');
       const created = p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : '';
-      return [p.ref_id, p.full_name || '', p.email || '', p.phone || '', p.account_type, bizRefs, bizNames, p.membership_tier, roles, p.is_banned ? 'Yes' : 'No', created]
+      const emailCell = p.email && !isSyntheticPhoneEmail(p.email) ? p.email : '';
+      return [p.ref_id, p.full_name || '', emailCell, p.phone || '', p.account_type, bizRefs, bizNames, p.membership_tier, roles, p.is_banned ? 'Yes' : 'No', created]
         .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
     });
     const csv = '\uFEFF' + ['Ref,Name,Email,Phone,Type,BizRefs,BizNames,Tier,Roles,Banned,Created', ...rows].join('\n');
@@ -1372,7 +1376,8 @@ const AdminUsers = () => {
                       const rows = selectedProfiles.map(p => {
                         const roles = (roleMap.get(p.user_id) || []).map(r => r.role).join(', ') || 'none';
                         const created = p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : '';
-                        return [p.ref_id, p.full_name || '', p.email || '', p.phone || '', p.account_type, p.membership_tier, roles, p.is_banned ? 'Yes' : 'No', created]
+                        const emailCell = p.email && !isSyntheticPhoneEmail(p.email) ? p.email : '';
+                        return [p.ref_id, p.full_name || '', emailCell, p.phone || '', p.account_type, p.membership_tier, roles, p.is_banned ? 'Yes' : 'No', created]
                           .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
                       });
                       const csv = '\uFEFF' + ['Ref,Name,Email,Phone,Type,Tier,Roles,Banned,Created', ...rows].join('\n');
