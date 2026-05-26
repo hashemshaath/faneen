@@ -1041,7 +1041,7 @@ const DashboardMessages = () => {
                 </div>
 
                 <div className="relative">
-                  <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                  <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
                   <Input
                     value={searchTerm}
                     onChange={e => handleSearchChange(e.target.value)}
@@ -1049,7 +1049,7 @@ const DashboardMessages = () => {
                     className="ps-9 h-9 text-xs bg-muted/30 border-border/20 rounded-xl focus:bg-background transition-colors"
                   />
                   {searchTerm && (
-                    <button onClick={() => handleSearchChange('')} className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
+                    <button onClick={() => handleSearchChange('')} className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" style={{ insetInlineEnd: '10px' }}>
                       <X className="w-3.5 h-3.5" />
                     </button>
                   )}

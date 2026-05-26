@@ -218,7 +218,7 @@ const AdminAccessManagement = () => {
             {/* Search reused */}
             <div className="rounded-2xl border border-border/30 bg-card p-4">
               <div className="relative">
-                <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
                 <Input
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
@@ -347,7 +347,7 @@ const AdminAccessManagement = () => {
         {/* Search */}
         <div className="rounded-2xl border border-border/30 bg-card p-4">
           <div className="relative">
-            <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+            <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
             <Input
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}

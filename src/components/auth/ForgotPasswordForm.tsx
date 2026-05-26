@@ -348,7 +348,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
               <div key={i} className="flex items-start gap-3 relative">
                 {/* Connector line */}
                 {i < 2 && (
-                  <div className="absolute top-6 w-px h-[calc(100%-4px)] bg-border" style={{ [isRTL ? 'right' : 'left']: '11px' }} />
+                  <div className="absolute top-6 w-px h-[calc(100%-4px)] bg-border" style={{ insetInlineStart: '11px' }} />
                 )}
                 <div className={`w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center shrink-0 z-10`}>
                   <StepIcon className={`w-3 h-3 ${step.color}`} />
@@ -498,7 +498,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         <div className="space-y-2">
           <Label>{t('auth.email')}</Label>
           <div className="relative">
-            <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+            <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
             <Input
               type="email"
               value={email}

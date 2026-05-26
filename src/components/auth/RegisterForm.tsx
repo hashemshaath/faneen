@@ -370,7 +370,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
           <div className="space-y-2">
             <Label className="text-xs font-semibold">{t('auth.fullname')} <span className="text-destructive">*</span></Label>
             <div className="relative">
-              <User className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
+              <User className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ insetInlineStart: '14px' }} />
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-12 rounded-xl" style={{ paddingInlineStart: '42px' }} />
             </div>
           </div>
@@ -378,7 +378,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
           <div className="space-y-2">
             <Label className="text-xs font-semibold">{t('auth.email')} <span className="text-destructive">*</span></Label>
             <div className="relative">
-              <Mail className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
+              <Mail className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ insetInlineStart: '14px' }} />
               <Input
                 type="email" placeholder="example@email.com" value={email}
                 onChange={(e) => { setEmail(e.target.value); clearError('email'); setEmailExists(false); }}
@@ -468,7 +468,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
         <div className="space-y-2">
           <Label className="text-xs font-semibold">{t('auth.business_name')} <span className="text-destructive">*</span></Label>
           <div className="relative">
-            <Building2 className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
+            <Building2 className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ insetInlineStart: '14px' }} />
             <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="h-12 rounded-xl" style={{ paddingInlineStart: '42px' }} />
           </div>
         </div>

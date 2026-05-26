@@ -1278,12 +1278,12 @@ const AdminUsers = () => {
               <div className="rounded-2xl border border-border/30 bg-card p-4">
                 <div className="flex flex-col md:flex-row gap-3">
                   <div className="relative flex-1">
-                    <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                    <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
                     <Input ref={searchInputRef} value={searchTerm} onChange={e => handleSearchChange(e.target.value)}
                      placeholder={isRTL ? 'بحث بالاسم، البريد، الجوال، أو رقم USR/ENT' : 'Search by name, email, phone, USR or ENT'}
                       className="ps-10 pe-16 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background" dir="auto" />
                     <kbd className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 items-center gap-0.5 px-1.5 py-0.5 rounded-md border border-border/40 bg-background/80 text-[10px] text-muted-foreground font-mono pointer-events-none"
-                      style={{ [isRTL ? 'left' : 'right']: '10px' }}>
+                      style={{ insetInlineEnd: '10px' }}>
                       <Command className="w-2.5 h-2.5" />K
                     </kbd>
                   </div>
@@ -1570,7 +1570,7 @@ const AdminUsers = () => {
                       <div className="relative">
                         <Input type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)}
                           placeholder={isRTL ? '8+ مع أرقام ورموز' : '8+ with numbers and symbols'} minLength={8} className="pe-10 h-10 rounded-xl" />
-                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground hover:text-foreground" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
+                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground hover:text-foreground" style={{ insetInlineEnd: '10px' }}>
                           {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
