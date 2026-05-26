@@ -459,6 +459,46 @@ export function ContractImportPanel({
             />
           </div>
 
+          {/* Party linking — first & second party */}
+          <Section icon={<ShieldCheck className="w-4 h-4" />} title={isRTL ? 'ربط أطراف العقد' : 'Link contract parties'}>
+            <div className="grid lg:grid-cols-2 gap-3">
+              {/* First party — Provider (current business / owner) */}
+              <div className="p-4 rounded-xl border-2 border-success/30 bg-success/5 space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-success" />
+                  {isRTL ? 'الطرف الأول — المزوّد (أنت)' : 'First party — Provider (you)'}
+                </Label>
+                <div className="text-sm font-medium" dir="auto">
+                  {providerBusinessName || providerOwnerName || (isRTL ? 'منشأتك الحالية' : 'Your current business')}
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  {isRTL
+                    ? 'سيُحفظ العقد باسم منشأتك الحالية كطرف أول. يمكنك تبديل المنشأة من قائمة الحسابات في الشريط العلوي.'
+                    : 'The contract will be saved under your current business as the first party. Switch businesses from the top-bar account menu.'}
+                </p>
+              </div>
+              {/* Second party — Client picker (search + quick add) */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-accent" />
+                  {isRTL ? 'الطرف الثاني — العميل' : 'Second party — Client'}
+                </Label>
+                <ClientPicker
+                  isRTL={isRTL}
+                  selected={selectedClient}
+                  onSelect={setSelectedClient}
+                  fallbackEmail={fallbackEmail}
+                  onFallbackEmail={setFallbackEmail}
+                  guest={guestClient}
+                  onSelectGuest={setGuestClient}
+                  prefillName={extract.client?.name ?? null}
+                  prefillEmail={extract.client?.email ?? null}
+                  prefillPhone={extract.client?.phone ?? null}
+                />
+              </div>
+            </div>
+          </Section>
+
           {/* Financial + dates */}
           <Section icon={<Receipt className="w-4 h-4" />} title={isRTL ? 'البيانات المالية والزمنية' : 'Financial & timeline'}>
             <div className="grid sm:grid-cols-3 gap-3">
@@ -578,6 +618,23 @@ export function ContractImportPanel({
 
           <Separator />
 
+          {/* Draft requirements + info banner */}
+          <div className="rounded-xl border border-border/50 bg-muted/20 p-3 sm:p-4 space-y-2.5">
+            <div className="flex items-start gap-2">
+              <Info className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                {isRTL
+                  ? 'يمكن حفظ المسودة في أي وقت — حتى دون عميل أو قيمة. ستجدها في قائمة العقود بحالة "مسودة" لإكمالها لاحقاً.'
+                  : 'A draft can be saved at any time — even without a client or amount. Find it in the contracts list under "Draft" status and continue later.'}
+              </p>
+            </div>
+            <ul className="grid sm:grid-cols-3 gap-1.5 text-[11px]">
+              <ChecklistItem ok={checklist.titleOk} required label={isRTL ? 'عنوان العقد (مطلوب)' : 'Contract title (required)'} />
+              <ChecklistItem ok={checklist.amountOk} label={isRTL ? 'القيمة الإجمالية' : 'Total amount'} />
+              <ChecklistItem ok={checklist.clientOk} label={isRTL ? 'العميل (يمكن لاحقاً)' : 'Client (optional)'} />
+            </ul>
+          </div>
+
           {/* CTAs */}
           <div className="flex flex-wrap items-center justify-end gap-2 pb-2">
             <Button variant="ghost" size="sm" className="h-10 text-xs" onClick={() => { setExtract(null); setFile(null); }}>
@@ -587,8 +644,9 @@ export function ContractImportPanel({
               variant="outline"
               size="sm"
               className="h-10 text-xs gap-1.5"
-              disabled={isSavingDraft}
-              onClick={() => onSaveDraft(buildForm(extract), extract)}
+              disabled={isSavingDraft || !canSaveDraft}
+              onClick={handleSaveDraft}
+              title={!canSaveDraft ? (isRTL ? 'أضِف عنواناً للعقد' : 'Add a contract title') : undefined}
             >
               {isSavingDraft ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
               {isRTL ? 'حفظ مباشر كمسودة' : 'Save as draft'}
@@ -597,7 +655,7 @@ export function ContractImportPanel({
               variant="hero"
               size="sm"
               className="h-10 text-xs gap-1.5"
-              onClick={() => onApplyToForm(buildForm(extract), extract)}
+              onClick={handleApply}
             >
               <Sparkles className="w-3.5 h-3.5" />
               {isRTL ? 'متابعة وتعديل في نموذج العقد' : 'Continue & edit in form'}
@@ -610,6 +668,19 @@ export function ContractImportPanel({
 }
 
 /* ───────────── helpers ───────────── */
+
+function ChecklistItem({ ok, label, required }: { ok: boolean; label: string; required?: boolean }) {
+  return (
+    <li className={`flex items-center gap-1.5 rounded-md px-2 py-1.5 border ${
+      ok ? 'border-success/30 bg-success/5 text-success' :
+      required ? 'border-destructive/30 bg-destructive/5 text-destructive' :
+      'border-border/40 bg-background text-muted-foreground'
+    }`}>
+      {ok ? <CheckCircle2 className="w-3 h-3" /> : required ? <AlertTriangle className="w-3 h-3" /> : <Info className="w-3 h-3" />}
+      <span className="truncate">{label}</span>
+    </li>
+  );
+}
 
 function Section({
   icon, title, children,
