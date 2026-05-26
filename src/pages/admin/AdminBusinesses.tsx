@@ -62,7 +62,7 @@ import {
   TrendingUp, ArrowUpRight, Filter, RefreshCw, Copy, MoreHorizontal,
   Activity, Zap, Languages, ArrowUpDown, ChevronLeft, ChevronRight,
   CheckSquare, Square, AlertTriangle,
-  FlaskConical,
+  FlaskConical, User,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
@@ -248,6 +248,13 @@ const AdminBusinesses = () => {
   });
   const [createForm, setCreateForm] = useState<any>(emptyCreateForm());
   const setCField = (k: string, v: unknown) => setCreateForm((f: any) => ({ ...f, [k]: v }));
+  // Owner autocomplete (search profiles by name/email/username/ref_id)
+  const [ownerResults, setOwnerResults] = useState<Array<{
+    user_id: string; full_name: string | null; full_name_ar: string | null; full_name_en: string | null;
+    email: string | null; username: string | null; ref_id: string | null; avatar_url: string | null;
+  }>>([]);
+  const [ownerSearching, setOwnerSearching] = useState(false);
+  const [ownerOpen, setOwnerOpen] = useState(false);
   const [servicesPanel, setServicesPanel] = useState<string | null>(null);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
@@ -539,6 +546,50 @@ const AdminBusinesses = () => {
       }));
     }
   }, [createForm.owner_query, isRTL]);
+
+  /* ─── Live owner search (autocomplete) ─── */
+  useEffect(() => {
+    if (!creatingBiz) return;
+    const q = (createForm.owner_query || '').trim();
+    if (q.length < 2) { setOwnerResults([]); setOwnerSearching(false); return; }
+    if (createForm.resolved_user_id) return; // already picked
+    setOwnerSearching(true);
+    const handle = setTimeout(async () => {
+      try {
+        const like = `%${q.replace(/[%,]/g, '')}%`;
+        const upper = q.toUpperCase();
+        const lower = q.toLowerCase();
+        const orParts = [
+          `full_name.ilike.${like}`,
+          `full_name_ar.ilike.${like}`,
+          `full_name_en.ilike.${like}`,
+          `email.ilike.${like}`,
+          `username.ilike.${like}`,
+          `ref_id.ilike.%${upper}%`,
+        ].join(',');
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, full_name_ar, full_name_en, email, username, ref_id, avatar_url')
+          .or(orParts)
+          .limit(8);
+        if (error) throw error;
+        // Promote exact email/username/ref_id match to top
+        const rows = (data || []) as any[];
+        rows.sort((a, b) => {
+          const ax = (a.email === lower || a.username === lower || a.ref_id === upper) ? 0 : 1;
+          const bx = (b.email === lower || b.username === lower || b.ref_id === upper) ? 0 : 1;
+          return ax - bx;
+        });
+        setOwnerResults(rows);
+        setOwnerOpen(true);
+      } catch {
+        setOwnerResults([]);
+      } finally {
+        setOwnerSearching(false);
+      }
+    }, 280);
+    return () => clearTimeout(handle);
+  }, [createForm.owner_query, createForm.resolved_user_id, creatingBiz]);
 
   /* ─── Create business mutation ─── */
   const createBizMutation = useMutation({
@@ -1225,37 +1276,104 @@ const AdminBusinesses = () => {
             </div>
 
             <div className="space-y-4">
-              {/* Owner picker */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="md:col-span-2 space-y-1.5">
-                  <Label className="text-xs">{isRTL ? 'مالك المنشأة (بريد إلكتروني أو معرف USR-XXXXXXX)' : 'Owner (email or USR-XXXXXXX)'} <span className="text-destructive">*</span></Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={createForm.owner_query}
-                      onChange={(e) => setCField('owner_query', e.target.value)}
-                      placeholder={isRTL ? 'owner@example.com أو USR-1000001' : 'owner@example.com or USR-1000001'}
-                      className="h-10 rounded-xl"
-                      dir="ltr"
-                    />
-                    <Button type="button" variant="outline" onClick={resolveOwner}
-                      disabled={createForm.resolving_owner || !createForm.owner_query.trim()}
-                      className="rounded-xl gap-1.5 whitespace-nowrap">
-                      {createForm.resolving_owner ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-                      {isRTL ? 'بحث' : 'Find'}
+              {/* ─── Section 1: Owner picker (existing user) ─── */}
+              <div className="rounded-xl border border-info/30 bg-info/5 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <User className="w-3.5 h-3.5 text-info" />
+                  <Label className="text-xs font-semibold">
+                    {isRTL ? '١) مالك المنشأة (مستخدم موجود)' : '1) Business Owner (existing user)'} <span className="text-destructive">*</span>
+                  </Label>
+                </div>
+                <p className="text-[10.5px] text-muted-foreground leading-relaxed">
+                  {isRTL
+                    ? 'ابحث بالاسم، البريد الإلكتروني، اسم المستخدم، أو معرّف USR. يجب اختيار مالك لإنشاء المنشأة (يمكن إضافة مديرين/موظفين لاحقاً من تبويب الفريق).'
+                    : 'Search by name, email, username, or USR ID. An owner is required to create the business (managers/staff can be added later from the team tab).'}
+                </p>
+                {createForm.resolved_user_id ? (
+                  <div className="flex items-center justify-between gap-2 rounded-lg border border-success/40 bg-success/10 px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <CheckCircle className="w-4 h-4 text-success shrink-0" />
+                      <span className="text-xs font-medium truncate">{createForm.resolved_owner_label}</span>
+                    </div>
+                    <Button type="button" variant="ghost" size="sm" className="h-7 text-[11px] rounded-lg"
+                      onClick={() => setCreateForm((f: any) => ({ ...f, resolved_user_id: '', resolved_owner_label: '', owner_query: '' }))}>
+                      <X className="w-3 h-3 me-1" /> {isRTL ? 'تغيير' : 'Change'}
                     </Button>
                   </div>
-                  {createForm.resolved_user_id && (
-                    <p className="text-[11px] text-success flex items-center gap-1.5">
-                      <CheckCircle className="w-3 h-3" />
-                      {isRTL ? 'تم تحديد المالك:' : 'Owner resolved:'} <span className="font-medium">{createForm.resolved_owner_label}</span>
-                    </p>
-                  )}
-                  {createForm.owner_error && (
-                    <p className="text-[11px] text-destructive flex items-center gap-1.5">
-                      <AlertTriangle className="w-3 h-3" /> {createForm.owner_error}
-                    </p>
-                  )}
-                </div>
+                ) : (
+                  <div className="relative">
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute top-1/2 -translate-y-1/2 start-3 text-muted-foreground" />
+                      <Input
+                        value={createForm.owner_query}
+                        onChange={(e) => { setCField('owner_query', e.target.value); setOwnerOpen(true); }}
+                        onFocus={() => setOwnerOpen(true)}
+                        placeholder={isRTL ? 'ابحث بالاسم / البريد / اسم المستخدم / USR-1000001' : 'Search by name / email / username / USR-1000001'}
+                        className="h-10 rounded-xl ps-9"
+                      />
+                      {ownerSearching && (
+                        <Loader2 className="w-3.5 h-3.5 absolute top-1/2 -translate-y-1/2 end-3 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
+                    {ownerOpen && createForm.owner_query.trim().length >= 2 && (
+                      <div className="absolute z-30 mt-1 w-full rounded-xl border border-border bg-popover shadow-lg max-h-72 overflow-y-auto">
+                        {ownerResults.length === 0 && !ownerSearching ? (
+                          <div className="p-3 text-xs text-muted-foreground text-center">
+                            {isRTL ? 'لا توجد نتائج مطابقة' : 'No matching users'}
+                          </div>
+                        ) : (
+                          ownerResults.map((u) => {
+                            const displayName = (isRTL ? (u.full_name_ar || u.full_name) : (u.full_name_en || u.full_name)) || u.full_name || (isRTL ? 'بدون اسم' : 'No name');
+                            return (
+                              <button
+                                key={u.user_id}
+                                type="button"
+                                onClick={() => {
+                                  setCreateForm((f: any) => ({
+                                    ...f,
+                                    resolved_user_id: u.user_id,
+                                    resolved_owner_label: `${displayName}${u.ref_id ? ` (${u.ref_id})` : ''}${u.email ? ` · ${u.email}` : ''}`,
+                                    owner_error: '',
+                                  }));
+                                  setOwnerOpen(false);
+                                }}
+                                className="w-full text-start px-3 py-2 hover:bg-accent/60 transition-colors flex items-center gap-2 border-b border-border/40 last:border-0"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0 overflow-hidden">
+                                  {u.avatar_url ? <img src={u.avatar_url} alt="" className="w-full h-full object-cover" /> : (displayName.charAt(0).toUpperCase())}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-xs font-medium truncate">{displayName}</div>
+                                  <div className="text-[10.5px] text-muted-foreground tech-content truncate flex items-center gap-2">
+                                    {u.ref_id && <span className="font-mono">{u.ref_id}</span>}
+                                    {u.username && <span>· @{u.username}</span>}
+                                    {u.email && <span className="truncate">· {u.email}</span>}
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                    {createForm.owner_error && (
+                      <p className="text-[11px] text-destructive flex items-center gap-1.5 mt-1.5">
+                        <AlertTriangle className="w-3 h-3" /> {createForm.owner_error}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* ─── Section 2: Business data ─── */}
+              <div className="flex items-center gap-2 pt-1">
+                <Building2 className="w-3.5 h-3.5 text-primary" />
+                <Label className="text-xs font-semibold">
+                  {isRTL ? '٢) بيانات المنشأة' : '2) Business Details'}
+                </Label>
+                <span className="text-[10.5px] text-muted-foreground">
+                  {isRTL ? '(الاسم والجوال والبريد التالية تخص المنشأة وليس المالك)' : '(name, phone & email below belong to the business, not the owner)'}
+                </span>
               </div>
 
               {/* Names + username */}
