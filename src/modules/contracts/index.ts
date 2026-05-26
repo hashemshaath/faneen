@@ -48,6 +48,8 @@ export * from './services/attachments';
 export * from './services/installments';
 // CT-11 contract analytics RPC wrappers
 export * from './services/analytics';
+// WRAPPER-ISOLATION-BACKLOG-1: edge function wrapper
+export { analyzeContractDocument } from './services/analyzeContractDocument';
 // types.ts is available at '@/modules/contracts/types' for consumers that
 // want type-only imports. Not re-exported here to avoid duplicate type
 // re-exports (all types are already reachable via the value exports above).

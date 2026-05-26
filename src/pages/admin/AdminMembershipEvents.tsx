@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { listRecentMembershipSubscriptionEvents } from '@/modules/memberships';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  listRecentMembershipSubscriptionEvents,
+  listMembershipSubscriptionsByIds,
+} from '@/modules/memberships';
+import { listProfilesByUserIds } from '@/modules/users';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -53,7 +56,10 @@ const AdminMembershipEvents = () => {
     queryKey: ['admin-msub-events-user-refs', userIds],
     enabled: userIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase.from('profiles').select('user_id, ref_id').in('user_id', userIds);
+      const { data } = await listProfilesByUserIds<{ user_id: string; ref_id: string | null }>({
+        userIds,
+        select: 'user_id, ref_id',
+      });
       const map: Record<string, string> = {};
       (data ?? []).forEach((p) => { if (p.ref_id) map[p.user_id] = p.ref_id; });
       return map;
@@ -64,7 +70,10 @@ const AdminMembershipEvents = () => {
     queryKey: ['admin-msub-events-sub-refs', subIds],
     enabled: subIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase.from('membership_subscriptions').select('id, ref_id').in('id', subIds);
+      const { data } = await listMembershipSubscriptionsByIds<{ id: string; ref_id: string | null }>({
+        ids: subIds,
+        select: 'id, ref_id',
+      });
       const map: Record<string, string> = {};
       (data ?? []).forEach((s) => { if (s.ref_id) map[s.id] = s.ref_id; });
       return map;

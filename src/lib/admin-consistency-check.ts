@@ -9,6 +9,8 @@
  * Read-only. Results power the /admin/diagnostics consistency tab.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { listAdminBusinesses } from '@/modules/businesses';
+import { listProfiles } from '@/modules/users';
 
 const ARABIC_RE = /[\u0600-\u06FF]/;
 const LATIN_RE = /[A-Za-z]/;
@@ -63,11 +65,13 @@ function checkBilingual(
 }
 
 async function scanBusinesses(limit = 500): Promise<ConsistencyIssue[]> {
-  const { data } = await supabase
-    .from('businesses')
-    .select('id, ref_id, name_ar, name_en')
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  const { data } = await listAdminBusinesses<{
+    id: string; ref_id: string | null; name_ar: string | null; name_en: string | null;
+  }>({
+    select: 'id, ref_id, name_ar, name_en',
+    orderBy: { column: 'created_at', ascending: false },
+    limit,
+  });
   const rows = (data ?? []) as Array<{ id: string; ref_id: string | null; name_ar: string | null; name_en: string | null }>;
   const issues: ConsistencyIssue[] = [];
   rows.forEach((r) => {
@@ -78,11 +82,14 @@ async function scanBusinesses(limit = 500): Promise<ConsistencyIssue[]> {
 }
 
 async function scanProfiles(limit = 500): Promise<ConsistencyIssue[]> {
-  const { data } = await supabase
-    .from('profiles')
-    .select('id, user_id, ref_id, full_name, full_name_ar, full_name_en')
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  const { data } = await listProfiles<{
+    id: string; user_id: string; ref_id: string | null;
+    full_name: string | null; full_name_ar: string | null; full_name_en: string | null;
+  }>({
+    select: 'id, user_id, ref_id, full_name, full_name_ar, full_name_en',
+    orderBy: { column: 'created_at', ascending: false },
+    limit,
+  });
   const rows = (data ?? []) as Array<{
     id: string; user_id: string; ref_id: string | null;
     full_name: string | null; full_name_ar: string | null; full_name_en: string | null;

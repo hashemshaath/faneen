@@ -28,6 +28,7 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import { supabase } from '@/integrations/supabase/client';
 import { updateProfile } from '@/modules/users';
 import { getOwnerBusiness } from '@/modules/businesses';
+import { nationalAddressLookup } from '@/modules/locations';
 import { getDisplayEmail, isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { cn } from '@/lib/utils';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
@@ -317,9 +318,7 @@ const DashboardProfile: React.FC = () => {
     }
     setSplLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('national-address-lookup', {
-        body: { shortAddress: code },
-      });
+      const { data, error } = await nationalAddressLookup({ shortAddress: code });
       if (error) throw error;
       const res = data as {
         ok: boolean; message_ar?: string; message_en?: string;

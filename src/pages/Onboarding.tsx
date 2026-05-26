@@ -32,7 +32,11 @@ import {
   findPossibleDuplicateEntities,
   type PossibleDuplicateEntity,
 } from '@/modules/entities/services/access';
-import { insertBusinessBranch } from '@/modules/businesses';
+import {
+  insertBusinessBranch,
+  getOwnerBusiness,
+  getBusinessIdByRefOrLegacyRef,
+} from '@/modules/businesses';
 import { EntityVerificationStatusBadge } from '@/components/entities/EntityVerificationStatusBadge';
 
 type OnboardingStep =
@@ -355,13 +359,14 @@ const Onboarding = () => {
         // we surface a warning on the summary and let the user add a
         // location later from the dashboard.
         try {
-          const { data: bizRow } = await supabase
-            .from('businesses')
-            .select('id, approval_status, is_verified')
-            .eq('user_id', user!.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+          const { data: bizRow } = await getOwnerBusiness<{
+            id: string; approval_status: string | null; is_verified: boolean | null;
+          }>({
+            userId: user!.id,
+            select: 'id, approval_status, is_verified',
+            orderBy: { column: 'created_at', ascending: false },
+            limit: 1,
+          });
           const businessId = (bizRow as { id?: string } | null)?.id ?? null;
           if (bizRow) {
             setCreatedEntityStatus({
@@ -614,12 +619,7 @@ const Onboarding = () => {
                         const looksLikeRef = /^(ENT|BIZ)-/i.test(q);
                         let targetBusinessId: string | null = null;
                         if (looksLikeRef) {
-                          const { data } = await supabase
-                            .from('businesses')
-                            .select('id')
-                            .or(`ref_id.eq.${q.toUpperCase()},legacy_ref_id.eq.${q.toUpperCase()}`)
-                            .limit(1)
-                            .maybeSingle();
+                          const { data } = await getBusinessIdByRefOrLegacyRef({ reference: q });
                           targetBusinessId = (data as { id?: string } | null)?.id ?? null;
                         }
                         const { data, error } = await createEntityAccessRequest({

@@ -27,3 +27,9 @@ export type {
   AdminTransferUserHit,
   AdminSearchUsersForTransferOptions,
 } from './services/adminSearchUsersForTransfer';
+
+// WRAPPER-ISOLATION-BACKLOG-1
+export { getProfileByRefId } from './services/getProfileByRefId';
+export type { GetProfileByRefIdOptions } from './services/getProfileByRefId';
+export { searchProfilesByOr } from './services/searchProfilesByOr';
+export type { SearchProfilesByOrOptions } from './services/searchProfilesByOr';

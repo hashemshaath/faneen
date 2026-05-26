@@ -21,6 +21,12 @@
 
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import {
+  getMembershipSubscriptionById,
+  getMembershipPlanById,
+  findReusablePendingMembershipSubscription,
+  insertMembershipSubscription,
+} from '../_shared/memberships/queries.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -129,11 +135,11 @@ Deno.serve(async (req) => {
   } | null = null;
 
   if (rawSubscriptionId) {
-    const { data: subRow, error: subErr } = await admin
-      .from('membership_subscriptions')
-      .select('id, user_id, business_id, plan_id, billing_cycle, status')
-      .eq('id', rawSubscriptionId)
-      .maybeSingle();
+    const { data: subRow, error: subErr } = await getMembershipSubscriptionById(
+      admin,
+      rawSubscriptionId,
+      'id, user_id, business_id, plan_id, billing_cycle, status',
+    );
     if (subErr) {
       safeLog('sub_lookup_error', { error: subErr.message });
       return json({ ok: false, code: 'not_found' }, 200);
@@ -146,11 +152,11 @@ Deno.serve(async (req) => {
   } else {
     // planId path — find a reusable pending subscription, else create one.
     // Validate the requested plan exists and is active first.
-    const { data: planRow, error: planLookupErr } = await admin
-      .from('membership_plans')
-      .select('id, is_active, price_monthly, price_yearly')
-      .eq('id', rawPlanId)
-      .maybeSingle();
+    const { data: planRow, error: planLookupErr } = await getMembershipPlanById(
+      admin,
+      rawPlanId,
+      'id, is_active, price_monthly, price_yearly',
+    );
     if (planLookupErr || !planRow || planRow.is_active === false) {
       return json({ ok: false, code: 'not_found' }, 200);
     }
@@ -182,18 +188,14 @@ Deno.serve(async (req) => {
     }
 
     // Reuse an existing pending subscription for the same target if any.
-    const reuseQuery = admin
-      .from('membership_subscriptions')
-      .select('id, user_id, business_id, plan_id, billing_cycle, status')
-      .eq('user_id', userId)
-      .eq('plan_id', rawPlanId)
-      .eq('billing_cycle', rawCycle)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-      .limit(1);
-    const { data: reuseRows } = resolvedBusinessId
-      ? await reuseQuery.eq('business_id', resolvedBusinessId)
-      : await reuseQuery.is('business_id', null);
+    const { data: reuseRows } = await findReusablePendingMembershipSubscription(admin, {
+      userId,
+      planId: rawPlanId,
+      billingCycle: rawCycle,
+      businessId: resolvedBusinessId,
+      select: 'id, user_id, business_id, plan_id, billing_cycle, status',
+      limit: 1,
+    });
     if (reuseRows && reuseRows.length > 0) {
       sub = reuseRows[0] as typeof sub;
     } else {
@@ -205,11 +207,11 @@ Deno.serve(async (req) => {
         status: 'pending',
         starts_at: new Date().toISOString(),
       };
-      const { data: createdSub, error: createSubErr } = await admin
-        .from('membership_subscriptions')
-        .insert(insertSub)
-        .select('id, user_id, business_id, plan_id, billing_cycle, status')
-        .maybeSingle();
+      const { data: createdSub, error: createSubErr } = await insertMembershipSubscription(
+        admin,
+        insertSub,
+        'id, user_id, business_id, plan_id, billing_cycle, status',
+      );
       if (createSubErr || !createdSub) {
         safeLog('sub_create_failed', { error: createSubErr?.message });
         return json({ ok: false, code: 'provider_error' }, 200);
@@ -230,11 +232,11 @@ Deno.serve(async (req) => {
 
   const billingCycle = sub.billing_cycle === 'yearly' ? 'yearly' : 'monthly';
 
-  const { data: plan, error: planErr } = await admin
-    .from('membership_plans')
-    .select('id, tier, price_monthly, price_yearly, currency_code, name_en, name_ar')
-    .eq('id', sub.plan_id)
-    .maybeSingle();
+  const { data: plan, error: planErr } = await getMembershipPlanById(
+    admin,
+    sub.plan_id,
+    'id, tier, price_monthly, price_yearly, currency_code, name_en, name_ar',
+  );
   if (planErr || !plan) return json({ ok: false, code: 'not_found' }, 200);
 
   const amountNumber = Number(billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly);
