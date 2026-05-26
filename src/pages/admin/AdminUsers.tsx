@@ -2048,6 +2048,7 @@ const AdminUsers = () => {
                                   // Clear server-side error as soon as the live picker confirms availability.
                                   if (s.isValid && s.isAvailable && editFieldErrors.username) clearEditFieldError('username');
                                 }}
+                                usernameServerError={usernameServerError}
                                errors={{
                                  full_name_ar: editFieldErrors.full_name_ar,
                                  full_name_en: editFieldErrors.full_name_en,
