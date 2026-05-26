@@ -29,6 +29,7 @@ const ALLOWED_DIR_PREFIXES = [
   'src/styles/',
   // Tests and audits (this file references the forbidden patterns by name).
   'src/__tests__/rtlLtrDirectionAudit.test.ts',
+  'src/__tests__/rtlLtrCentralAudit.test.ts',
 ];
 
 const isAllowed = (rel: string) =>
