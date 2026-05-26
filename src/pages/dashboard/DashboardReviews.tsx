@@ -6,7 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listProfilesByUserIds } from '@/modules/users';
-import { getOwnerBusiness } from '@/modules/businesses';
+import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -202,10 +203,27 @@ const DashboardReviews = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
+  // WORKSPACE-CONTEXT-4B: reviews are owner-scoped. Honor active entity
+  // only when it is owner-source (no staff escalation). Falls back to
+  // getOwnerBusiness to preserve single-business owner behavior.
+  const { active_entity_id, entities } = useActiveWorkspace();
+  const activeOwnerEntityId = useMemo(() => {
+    if (!active_entity_id) return null;
+    const e = entities.find((x) => x.entity_id === active_entity_id);
+    return e && e.source === 'owner' ? e.entity_id : null;
+  }, [active_entity_id, entities]);
+
   const { data: business } = useQuery({
-    queryKey: ['my-business-for-reviews', user?.id],
+    queryKey: ['my-business-for-reviews', user?.id, activeOwnerEntityId],
     queryFn: async () => {
       if (!user) return null;
+      if (activeOwnerEntityId) {
+        const { data } = await listBusinessesByIds<{ id: string }>({
+          ids: [activeOwnerEntityId],
+          select: 'id',
+        });
+        return (data ?? [])[0] ?? null;
+      }
       const { data } = await getOwnerBusiness<{ id: string }>({
         userId: user.id,
         select: 'id',
