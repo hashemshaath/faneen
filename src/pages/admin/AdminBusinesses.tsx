@@ -1204,6 +1204,149 @@ const AdminBusinesses = () => {
           </div>
         )}
 
+        {/* ─── Inline Create Panel ─── */}
+        {creatingBiz && (
+          <div className="rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-heading font-bold text-base">{isRTL ? 'إنشاء منشأة جديدة' : 'Create New Business'}</h3>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {isRTL ? 'حدّد المالك من المستخدمين، ثم أكمل البيانات الأساسية. يمكنك إكمال التفاصيل بعد الإنشاء.' : 'Pick an owner (existing user), then fill core fields. You can complete details after creation.'}
+                  </p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => { setCreatingBiz(false); setCreateForm(emptyCreateForm()); }} className="rounded-xl">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Owner picker */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="md:col-span-2 space-y-1.5">
+                  <Label className="text-xs">{isRTL ? 'مالك المنشأة (بريد إلكتروني أو معرف USR-XXXXXXX)' : 'Owner (email or USR-XXXXXXX)'} <span className="text-destructive">*</span></Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={createForm.owner_query}
+                      onChange={(e) => setCField('owner_query', e.target.value)}
+                      placeholder={isRTL ? 'owner@example.com أو USR-1000001' : 'owner@example.com or USR-1000001'}
+                      className="h-10 rounded-xl"
+                      dir="ltr"
+                    />
+                    <Button type="button" variant="outline" onClick={resolveOwner}
+                      disabled={createForm.resolving_owner || !createForm.owner_query.trim()}
+                      className="rounded-xl gap-1.5 whitespace-nowrap">
+                      {createForm.resolving_owner ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+                      {isRTL ? 'بحث' : 'Find'}
+                    </Button>
+                  </div>
+                  {createForm.resolved_user_id && (
+                    <p className="text-[11px] text-success flex items-center gap-1.5">
+                      <CheckCircle className="w-3 h-3" />
+                      {isRTL ? 'تم تحديد المالك:' : 'Owner resolved:'} <span className="font-medium">{createForm.resolved_owner_label}</span>
+                    </p>
+                  )}
+                  {createForm.owner_error && (
+                    <p className="text-[11px] text-destructive flex items-center gap-1.5">
+                      <AlertTriangle className="w-3 h-3" /> {createForm.owner_error}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Names + username */}
+              <BilingualNameField
+                value={{
+                  full_name_ar: createForm.name_ar,
+                  full_name_en: createForm.name_en,
+                  username: createForm.username,
+                }}
+                onChange={(next) => {
+                  setCreateForm((f: any) => ({
+                    ...f,
+                    name_ar: next.full_name_ar,
+                    name_en: next.full_name_en,
+                    username: next.username || '',
+                  }));
+                }}
+                onUsernameValidChange={(st) => {
+                  setCField('username_ok', st.isValid && st.isAvailable);
+                }}
+                required
+                excludeUserId={null}
+              />
+
+              {/* Contact + classification */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <PhoneField
+                  value={{ countryCode: createForm.phone_cc, national: createForm.phone_national }}
+                  onChange={(next) => setCreateForm((f: any) => ({ ...f, phone_cc: next.countryCode, phone_national: next.national }))}
+                  label={isRTL ? 'الجوال' : 'Phone'}
+                  optional
+                />
+                <div className="space-y-1.5">
+                  <Label className="text-xs">{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                  <Input
+                    value={createForm.email}
+                    onChange={(e) => setCField('email', e.target.value)}
+                    type="email"
+                    placeholder="business@example.com"
+                    dir="ltr"
+                    className="h-10 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">{isRTL ? 'التصنيف' : 'Category'}</Label>
+                  <Select value={createForm.category_id} onValueChange={(v) => setCField('category_id', v)}>
+                    <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder={isRTL ? 'اختر التصنيف' : 'Select category'} /></SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      {categories.map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">{isRTL ? 'المدينة' : 'City'}</Label>
+                  <Select value={createForm.city_id} onValueChange={(v) => setCField('city_id', v)}>
+                    <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder={isRTL ? 'اختر المدينة' : 'Select city'} /></SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      {cities.map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <Separator className="my-2" />
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => createBizMutation.mutate()}
+                  disabled={
+                    createBizMutation.isPending
+                    || !createForm.resolved_user_id
+                    || !createForm.name_ar?.trim()
+                    || !createForm.username
+                    || !createForm.username_ok
+                  }
+                  className="flex-1 gap-1.5 rounded-xl"
+                >
+                  {createBizMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                  {isRTL ? 'إنشاء وفتح للتعديل' : 'Create & open for editing'}
+                </Button>
+                <Button variant="outline" onClick={() => { setCreatingBiz(false); setCreateForm(emptyCreateForm()); }} className="rounded-xl">
+                  {isRTL ? 'إلغاء' : 'Cancel'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ─── Inline Edit Panel ─── */}
         {editingBiz && (
           <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200 shadow-sm">
