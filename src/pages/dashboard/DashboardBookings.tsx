@@ -103,7 +103,7 @@ const DashboardBookings = () => {
   }, [bookings, isProvider]);
 
   const { data: clientProfiles = {} } = useQuery({
-    queryKey: ['booking-client-profiles', clientIds],
+    queryKey: ['booking-client-profiles', user?.id, business?.id, clientIds],
     queryFn: async () => {
       if (clientIds.length === 0) return {};
       const { data } = await listProfilesByUserIds<{ user_id: string; full_name: string | null; phone: string | null; avatar_url: string | null }>({
@@ -119,7 +119,7 @@ const DashboardBookings = () => {
 
   // Fetch availability
   const { data: availability = [] } = useQuery({
-    queryKey: ['business-availability', business?.id],
+    queryKey: ['business-availability', user?.id, business?.id],
     queryFn: async () => {
       const { data } = await listAvailabilityByBusiness<
         Database['public']['Tables']['business_availability']['Row']
