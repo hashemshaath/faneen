@@ -1316,13 +1316,16 @@ const AdminBusinesses = () => {
                 <div className="flex items-center gap-2">
                   <User className="w-3.5 h-3.5 text-info" />
                   <Label className="text-xs font-semibold">
-                    {isRTL ? '١) المسؤول / المالك للمنشأة (حساب مستخدم موجود)' : '1) Entity owner / responsible person (existing user account)'} <span className="text-destructive">*</span>
+                    {isRTL ? '١) المسؤول / المالك للمنشأة (اختياري)' : '1) Entity owner / responsible person (optional)'}
                   </Label>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
+                    {isRTL ? 'يمكن إسناده لاحقاً' : 'Can be assigned later'}
+                  </span>
                 </div>
                 <p className="text-[10.5px] text-muted-foreground leading-relaxed">
                   {isRTL
-                    ? 'الشخص المرتبط قانونياً أو إدارياً بالمنشأة (المالك أو الممثل الرسمي). ابحث بالاسم، البريد، اسم المستخدم، أو معرّف USR-XXXXXXX. يمكن إضافة مديرين ومفوّضين لاحقاً من تبويب الفريق.'
-                    : 'The person legally or administratively linked to the entity (owner or official representative). Search by name, email, username, or USR-XXXXXXX. Managers and representatives can be added later from the team tab.'}
+                    ? 'يمكنك إنشاء المنشأة الآن دون مالك ثم إسناد مالك/مدير لاحقاً من تبويب الفريق. إذا تركته فارغاً سيُسجَّل الإنشاء باسم حسابك الإداري مؤقتاً. ابحث بالاسم، البريد، اسم المستخدم، أو معرّف USR-XXXXXXX.'
+                    : 'You can create the entity now without an owner and assign one later from the team tab. If left empty, your admin account is recorded as the temporary creator. Search by name, email, username, or USR-XXXXXXX.'}
                 </p>
                 {createForm.resolved_user_id ? (
                   <div className="flex items-center justify-between gap-2 rounded-lg border border-success/40 bg-success/10 px-3 py-2">
@@ -1464,16 +1467,98 @@ const AdminBusinesses = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">{isRTL ? 'مدينة المقر الرئيسي' : 'Headquarters city'}</Label>
-                  <Select value={createForm.city_id} onValueChange={(v) => setCField('city_id', v)}>
-                    <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder={isRTL ? 'اختر المدينة' : 'Select city'} /></SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      {cities.map((c: any) => (
-                        <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              </div>
+
+              {/* ─── Section 3: Official registry numbers ─── */}
+              <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5 text-primary" />
+                  <Label className="text-xs font-semibold">
+                    {isRTL ? '٣) بيانات السجل والأرقام الرسمية' : '3) Registry & official numbers'}
+                  </Label>
+                  <span className="text-[10.5px] text-muted-foreground">{isRTL ? '(اختياري — يمكن استكمالها لاحقاً)' : '(optional — can be completed later)'}</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">{isRTL ? 'رقم السجل التجاري (CR)' : 'Commercial Registration (CR)'}</Label>
+                    <Input value={createForm.national_id} onChange={(e) => setCField('national_id', e.target.value)} dir="ltr" placeholder="1010xxxxxx" className="h-10 rounded-xl tech-content" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">{isRTL ? 'الرقم الموحّد (700)' : 'Unified number (700)'}</Label>
+                    <Input value={createForm.unified_number} onChange={(e) => setCField('unified_number', e.target.value)} dir="ltr" placeholder="7001234567" className="h-10 rounded-xl tech-content" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">{isRTL ? 'الرقم الضريبي (VAT)' : 'VAT / Tax number'}</Label>
+                    <Input value={createForm.vat_number} onChange={(e) => setCField('vat_number', e.target.value)} dir="ltr" placeholder="3xxxxxxxxxxxxx3" className="h-10 rounded-xl tech-content" />
+                  </div>
+                </div>
+              </div>
+
+              {/* ─── Section 4: National address ─── */}
+              <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-3.5 h-3.5 text-primary" />
+                  <Label className="text-xs font-semibold">
+                    {isRTL ? '٤) العنوان الوطني التفصيلي للمنشأة' : '4) National detailed address'}
+                  </Label>
+                  <span className="text-[10.5px] text-muted-foreground">{isRTL ? '(اختر المنطقة لتظهر المدن التابعة لها)' : '(pick region to see its cities)'}</span>
+                </div>
+
+                <RegionCitySelector
+                  value={{ region_id: createForm.region_id, city_id: createForm.city_id }}
+                  onChange={(next) => setCreateForm((f: any) => ({ ...f, region_id: next.region_id || '', city_id: next.city_id || '' }))}
+                  regionLabel={isRTL ? 'المنطقة' : 'Region'}
+                  cityLabel={isRTL ? 'المدينة' : 'City'}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">{isRTL ? 'الحي (عربي)' : 'District (AR)'}</Label>
+                    <div className="flex gap-1.5 items-start">
+                      <Input value={createForm.district} onChange={(e) => setCField('district', e.target.value)} dir="auto" placeholder={isRTL ? 'مثال: العليا' : 'e.g. Al Olaya'} className="h-10 rounded-xl flex-1" />
+                      <FieldAiActions value={createForm.district} lang="ar" fieldType="short_text" compact isRTL={isRTL}
+                        onTranslated={(t) => setCField('district_en', t)} />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">{isRTL ? 'الحي (English)' : 'District (EN)'}</Label>
+                    <Input value={createForm.district_en} onChange={(e) => setCField('district_en', e.target.value)} dir="ltr" placeholder="e.g. Al Olaya" className="h-10 rounded-xl" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">{isRTL ? 'اسم الشارع (عربي)' : 'Street name (AR)'}</Label>
+                    <div className="flex gap-1.5 items-start">
+                      <Input value={createForm.street_name} onChange={(e) => setCField('street_name', e.target.value)} dir="auto" placeholder={isRTL ? 'مثال: شارع الأمير محمد' : 'e.g. Prince Mohammed St'} className="h-10 rounded-xl flex-1" />
+                      <FieldAiActions value={createForm.street_name} lang="ar" fieldType="short_text" compact isRTL={isRTL}
+                        onTranslated={(t) => setCField('street_name_en', t)} />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">{isRTL ? 'اسم الشارع (English)' : 'Street name (EN)'}</Label>
+                    <Input value={createForm.street_name_en} onChange={(e) => setCField('street_name_en', e.target.value)} dir="ltr" className="h-10 rounded-xl" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">{isRTL ? 'رقم المبنى' : 'Building number'}</Label>
+                    <Input value={createForm.building_number} onChange={(e) => setCField('building_number', e.target.value)} dir="ltr" placeholder="1234" className="h-10 rounded-xl tech-content" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">{isRTL ? 'الرقم الإضافي (العنوان الوطني)' : 'Additional number (national address)'}</Label>
+                    <Input value={createForm.additional_number} onChange={(e) => setCField('additional_number', e.target.value)} dir="ltr" placeholder="5678" className="h-10 rounded-xl tech-content" />
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label className="text-xs">{isRTL ? 'العنوان التفصيلي (عربي)' : 'Detailed address (AR)'}</Label>
+                    <div className="flex gap-1.5 items-start">
+                      <Input value={createForm.address} onChange={(e) => setCField('address', e.target.value)} dir="auto" placeholder={isRTL ? 'الحي - الشارع - معالم قريبة' : 'District - street - landmarks'} className="h-10 rounded-xl flex-1" />
+                      <FieldAiActions value={createForm.address} lang="ar" fieldType="short_text" compact isRTL={isRTL}
+                        onTranslated={(t) => setCField('address_en', t)} />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label className="text-xs">{isRTL ? 'العنوان التفصيلي (English)' : 'Detailed address (EN)'}</Label>
+                    <Input value={createForm.address_en} onChange={(e) => setCField('address_en', e.target.value)} dir="ltr" className="h-10 rounded-xl" />
+                  </div>
                 </div>
               </div>
 
@@ -1483,7 +1568,6 @@ const AdminBusinesses = () => {
                   onClick={() => createBizMutation.mutate()}
                   disabled={
                     createBizMutation.isPending
-                    || !createForm.resolved_user_id
                     || !createForm.name_ar?.trim()
                     || !createForm.username
                     || !createForm.username_ok
