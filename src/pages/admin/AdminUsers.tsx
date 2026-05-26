@@ -586,8 +586,17 @@ const AdminUsers = () => {
     const typeParam = searchParams.get('type');
     const roleParam = searchParams.get('role');
     const focusParam = searchParams.get('focus');
+    const tabParam = searchParams.get('tab');
     let mutated = false;
     const next = new URLSearchParams(searchParams);
+
+    if (tabParam) {
+      if (['overview', 'users', 'staff', 'disabled', 'analytics'].includes(tabParam)) {
+        setTab(tabParam as typeof tab);
+      }
+      next.delete('tab');
+      mutated = true;
+    }
 
     if (typeParam) {
       if (['individual', 'business', 'company', 'all'].includes(typeParam)) {
