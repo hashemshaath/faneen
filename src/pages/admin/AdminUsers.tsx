@@ -1063,13 +1063,19 @@ const AdminUsers = () => {
 
   const openEdit = useCallback((profile: Profile) => {
     setActivePanel({ type: 'edit', profile });
+    const parsed = parsePhoneValue(isSuperAdmin ? profile.phone : '');
     setEditForm({
       full_name: profile.full_name || '',
+      full_name_ar: profile.full_name_ar || '',
+      full_name_en: profile.full_name_en || '',
+      username: profile.username || '',
       account_type: profile.account_type || 'individual',
       membership_tier: profile.membership_tier || 'free',
       // PII fields are only prefilled for Super Admin. Non-super admins see empty
       // placeholders so masked values are never leaked through the edit form.
       phone: isSuperAdmin ? (profile.phone || '') : '',
+      phone_country_code: parsed.countryCode,
+      phone_national: parsed.national,
       // Never pre-fill an edit field with a synthetic phone-login email.
       email: isSuperAdmin && profile.email && !isSyntheticPhoneEmail(profile.email)
         ? profile.email
