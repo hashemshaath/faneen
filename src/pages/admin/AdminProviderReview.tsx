@@ -90,6 +90,7 @@ const NOTIFY_MAP: Partial<Record<ApprovalStatus, {
 
 interface ProviderRow {
   id: string;
+  ref_id: string | null;
   user_id: string;
   name_ar: string | null;
   name_en: string | null;
@@ -141,7 +142,7 @@ export default function AdminProviderReview() {
       const filters: ListAdminBusinessesFilter[] = [];
       if (statusFilter !== 'all') filters.push({ column: 'approval_status', op: 'eq', value: statusFilter });
       const { data, error } = await listAdminBusinesses({
-        select: 'id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,sectors,sub_services,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date',
+        select: 'id,ref_id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,sectors,sub_services,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date',
         orderBy: [
           { column: 'submitted_at', ascending: false, nullsFirst: false },
           { column: 'created_at', ascending: false },
