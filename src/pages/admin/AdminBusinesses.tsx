@@ -325,6 +325,17 @@ const AdminBusinesses = () => {
     enabled: !!editingBiz?.id,
   });
 
+  // Owner ref_id (USR-…) — Reference-ID Architecture: never display raw UUIDs as primary identity.
+  const { data: ownerRef } = useQuery({
+    queryKey: ['admin-business-owner-ref', editingBiz?.user_id],
+    queryFn: async () => {
+      if (!editingBiz?.user_id) return null;
+      const { data } = await supabase.from('profiles').select('ref_id, full_name_ar, full_name_en').eq('user_id', editingBiz.user_id).maybeSingle();
+      return data;
+    },
+    enabled: !!editingBiz?.user_id,
+  });
+
   const { data: contractBusinessIds = [] } = useQuery({
     queryKey: ['contract-business-ids'],
     queryFn: async () => {
