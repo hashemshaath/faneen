@@ -1037,7 +1037,9 @@ const AdminUsers = () => {
         friendly = (isRTL ? 'فشل التحديث: ' : 'Update failed: ') + raw;
       }
       if (Object.keys(next).length > 0) setEditFieldErrors(prev => ({ ...prev, ...next }));
-      toast.error(friendly);
+      // Surface the raw reason (e.g. "username_unavailable: taken") so power users
+      // can spot the precise failure cause without opening devtools.
+      toast.error(friendly, raw ? { description: raw } : undefined);
       // Auto-focus the first failing field for quick correction.
       requestAnimationFrame(() => {
         const firstKey = Object.keys(next)[0];
