@@ -27,8 +27,7 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
-import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
-import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
+import { ReferenceTag } from '@/components/reference/ReferenceTag';
 
 type ApprovalStatus =
   | 'draft' | 'submitted' | 'under_review'
@@ -416,9 +415,8 @@ export default function AdminProviderReview() {
                           {language === 'ar' ? (selected.name_ar ?? selected.name_en) : (selected.name_en ?? selected.name_ar)}
                         </CardTitle>
                         {selected.ref_id && (
-                          <div className="mt-1 flex items-center gap-1.5">
-                            <ReferenceBadge refId={selected.ref_id} />
-                            <ReferenceLinkCopy refId={selected.ref_id} isRTL={isRTL} />
+                          <div className="mt-1">
+                            <ReferenceTag refId={selected.ref_id} isRTL={isRTL} />
                           </div>
                         )}
                         {selected.username && (
