@@ -189,7 +189,7 @@ type ViewSection = 'list' | 'create' | 'templates' | 'template-preview' | 'impor
 const DashboardContracts = () => {
   useNoIndex();
   const { isRTL, language } = useLanguage();
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
