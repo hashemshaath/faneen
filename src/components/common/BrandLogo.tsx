@@ -64,9 +64,30 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
     className: cn('select-none object-contain', imgClassName),
   };
 
+  // When showing the full wordmark, also render the brand mark beside it
+  // so the lock-up (mark + wordmark) appears in every surface that uses
+  // BrandLogo: public navbar, dashboard/admin topbars, auth, footer, etc.
+  const showMarkAlongside = variant === 'full';
+  const markHeight = Math.round(height * 0.95);
+  const markWidth = markHeight; // mark aspect ratio ~ 1:1
+  const markImgProps = {
+    width: markWidth,
+    height: markHeight,
+    style: { height: markHeight, width: 'auto' as const },
+    loading: commonImgProps.loading,
+    decoding: commonImgProps.decoding,
+    draggable: false,
+    className: cn('select-none object-contain', imgClassName),
+    src: branding.markUrl,
+    alt: '',
+    'aria-hidden': true as const,
+  };
+  const gapClass = 'gap-2';
+
   if (tone === 'auto') {
     return (
-      <span className={cn('inline-flex items-center', className)} aria-label={alt}>
+      <span className={cn('inline-flex items-center', gapClass, className)} aria-label={alt}>
+        {showMarkAlongside && <img {...markImgProps} />}
         <img {...commonImgProps} src={lightSrc} alt={alt} aria-hidden="true" className={cn(commonImgProps.className, 'block dark:hidden')} />
         <img {...commonImgProps} src={darkSrc}  alt={alt} aria-hidden="true" className={cn(commonImgProps.className, 'hidden dark:block')} />
       </span>
@@ -75,7 +96,8 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 
   const src = tone === 'dark' ? darkSrc : lightSrc;
   return (
-    <span className={cn('inline-flex items-center', className)}>
+    <span className={cn('inline-flex items-center', gapClass, className)}>
+      {showMarkAlongside && <img {...markImgProps} />}
       <img {...commonImgProps} alt={alt} src={src} />
     </span>
   );
