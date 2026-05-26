@@ -115,7 +115,7 @@ describe('getActiveBusinessStaffMembership', () => {
 const read = (p: string) => readFileSync(resolve(process.cwd(), p), 'utf-8');
 
 const OWNER_BIZ_MIGRATED: Array<{ path: string; key: string }> = [
-  { path: 'src/pages/dashboard/DashboardSettings.tsx', key: "['my-business-for-settings']" },
+  { path: 'src/pages/dashboard/DashboardSettings.tsx', key: "['my-business-for-settings'" },
   { path: 'src/pages/dashboard/DashboardServices.tsx', key: "['my-business', user?.id]" },
   { path: 'src/pages/dashboard/DashboardReviews.tsx', key: "['my-business-for-reviews', user?.id]" },
   { path: 'src/pages/dashboard/DashboardProjects.tsx', key: "['my-business', user?.id]" },
