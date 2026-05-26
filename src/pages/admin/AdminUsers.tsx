@@ -53,6 +53,85 @@ import { PhoneField, parsePhoneValue } from '@/components/forms/PhoneField';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import type { UsernameCheckReason } from '@/components/common/UsernamePicker';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+
+/**
+ * Parse a raw save-mutation error into a structured `{ field, reason, rawCode, friendly }`.
+ *
+ * Recognised wire formats (case-insensitive):
+ *   - `username_unavailable: taken`
+ *   - `username_unavailable: invalid_format`
+ *   - `email_unavailable: taken`
+ *   - `phone_unavailable: taken`
+ *   - generic text mentioning `username` / `email` / `phone`
+ *
+ * Exported (named export hoisted via `export function`) so tests can import it.
+ */
+export type ProfileSaveErrorField = 'username' | 'email' | 'phone' | null;
+export interface ParsedProfileSaveError {
+  field: ProfileSaveErrorField;
+  /** Reason token compatible with UsernameCheckReason where applicable. */
+  reason: string;
+  /** Raw machine token (whatever the server emitted after the colon, or the prefix). */
+  rawCode: string;
+  /** Localized friendly message for inline + toast. */
+  friendly: string | null;
+}
+
+export function parseProfileSaveError(raw: string, isRTL: boolean): ParsedProfileSaveError {
+  const lower = (raw || '').toLowerCase();
+  // Structured "prefix: code" form, e.g. `username_unavailable: taken`.
+  const m = lower.match(/(username|email|phone)[_-]?unavailable\s*:\s*([a-z_]+)/);
+  if (m) {
+    const field = m[1] as 'username' | 'email' | 'phone';
+    const code = m[2];
+    return {
+      field,
+      reason: code,
+      rawCode: `${m[1]}_unavailable: ${code}`,
+      friendly: friendlyFor(field, code, isRTL),
+    };
+  }
+  if (lower.includes('username_taken') || lower.includes('username')) {
+    return { field: 'username', reason: 'taken', rawCode: 'username_taken',
+      friendly: friendlyFor('username', 'taken', isRTL) };
+  }
+  if (lower.includes('email')) {
+    return { field: 'email', reason: 'invalid', rawCode: 'email_invalid_or_taken',
+      friendly: friendlyFor('email', 'invalid', isRTL) };
+  }
+  if (lower.includes('phone')) {
+    return { field: 'phone', reason: 'invalid', rawCode: 'phone_invalid_or_taken',
+      friendly: friendlyFor('phone', 'invalid', isRTL) };
+  }
+  return { field: null, reason: 'unknown', rawCode: raw || 'unknown', friendly: null };
+}
+
+function friendlyFor(field: 'username' | 'email' | 'phone', code: string, isRTL: boolean): string {
+  const ar: Record<string, string> = {
+    'username:taken': 'اسم المستخدم محجوز — جرّب اسماً آخر',
+    'username:invalid_format': 'تنسيق اسم المستخدم غير صحيح',
+    'username:reserved': 'هذا الاسم محجوز للنظام',
+    'username:too_short': 'اسم المستخدم قصير جداً',
+    'username:too_long': 'اسم المستخدم طويل جداً',
+    'email:taken': 'البريد الإلكتروني مستخدم في حساب آخر',
+    'email:invalid': 'البريد الإلكتروني غير صالح أو مستخدم',
+    'phone:taken': 'رقم الهاتف مستخدم في حساب آخر',
+    'phone:invalid': 'رقم الهاتف غير صالح أو مستخدم',
+  };
+  const en: Record<string, string> = {
+    'username:taken': 'Username already taken — pick another',
+    'username:invalid_format': 'Username format is invalid',
+    'username:reserved': 'This username is reserved',
+    'username:too_short': 'Username is too short',
+    'username:too_long': 'Username is too long',
+    'email:taken': 'Email is already used by another account',
+    'email:invalid': 'Email is invalid or already in use',
+    'phone:taken': 'Phone is already used by another account',
+    'phone:invalid': 'Phone is invalid or already in use',
+  };
+  const key = `${field}:${code}`;
+  return (isRTL ? ar[key] : en[key]) ?? (isRTL ? 'تعذّر الحفظ' : 'Could not save');
+}
 import type { NormalizedRpcError } from '@/services/rpc';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
