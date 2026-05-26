@@ -1092,6 +1092,15 @@ const AdminUsers = () => {
         ? profile.email
         : '',
     });
+    // Reset suspension + link forms whenever a different user is opened.
+    const bu = (profile as Profile & { banned_until?: string | null }).banned_until ?? null;
+    setSuspendForm({
+      mode: bu ? 'temporary' : 'permanent',
+      until: bu ? new Date(bu).toISOString().slice(0, 16) : '',
+      reason: (profile as Profile & { ban_reason?: string | null }).ban_reason ?? '',
+    });
+    setLinkForm({ businessId: '', role: 'viewer' });
+    setLinkSearch('');
   }, [isSuperAdmin]);
 
   const handleSaveProfile = () => {
