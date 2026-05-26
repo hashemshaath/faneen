@@ -1642,61 +1642,329 @@ const AdminUsers = () => {
                   </div>
                 </div>
               )}
-              {activePanel?.type === 'edit' && (
-                <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-heading font-bold text-lg flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center"><Pencil className="w-4 h-4 text-accent" /></div>
-                      {isRTL ? 'تعديل المستخدم' : 'Edit User'}
-                      {activePanel.profile.ref_id && <Badge variant="outline" className="font-mono text-xs tech-content">{activePanel.profile.ref_id}</Badge>}
-                    </h3>
-                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
-                      <Input value={editForm.full_name} onChange={e => setEditForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" /></div>
-                    {isSuperAdmin ? (
-                      <>
-                        <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'البريد' : 'Email'}</Label>
-                          <Input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl" /></div>
-                        <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الهاتف' : 'Phone'}</Label>
-                          <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} dir="ltr" maxLength={20} className="h-10 rounded-xl tech-content" /></div>
-                      </>
-                    ) : (
-                      <div className="md:col-span-2 rounded-xl border border-dashed border-border/40 bg-muted/30 p-3 text-[11px] text-muted-foreground flex items-center gap-2">
-                        <Lock className="w-3.5 h-3.5 shrink-0" />
-                        {isRTL ? 'تعديل البريد والهاتف متاح فقط لمدير النظام (Super Admin).' : 'Editing email & phone is restricted to Super Admins.'}
+              {activePanel?.type === 'edit' && (() => {
+                const editingProfile = activePanel.profile;
+                const editingRoles = roleMap.get(editingProfile.user_id) || [];
+                const editingLinks = businessLinksMap.get(editingProfile.user_id) || [];
+                const editingAcc = accountTypeConfig[editingProfile.account_type] || accountTypeConfig.individual;
+                const EditAccIcon = editingAcc.icon;
+                const editingTier = tierConfig[editingProfile.membership_tier as keyof typeof tierConfig] || tierConfig.free;
+                const ownedByEntityCount = editingLinks.filter(l => l.isOwnerByEntity).length;
+                const staffCount = editingLinks.filter(l => !l.isOwnerByEntity && l.staffId).length;
+                const availableRolesToAdd = (['super_admin', 'admin', 'moderator', 'user'] as const)
+                  .filter(r => !editingRoles.some(er => er.role === r));
+                return (
+                <div ref={panelRef} className="rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/5 via-card to-transparent shadow-lg animate-in slide-in-from-top-2 scroll-mt-24 overflow-hidden">
+                  {/* Premium header */}
+                  <div className="relative p-5 border-b border-border/40 bg-gradient-to-l from-accent/10 via-transparent to-transparent">
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="w-12 h-12 ring-2 ring-accent/20 shrink-0">
+                          <AvatarImage src={editingProfile.avatar_url || undefined} />
+                          <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold">
+                            {(editingProfile.full_name || '?').charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-heading font-bold text-base sm:text-lg truncate">
+                              {editingProfile.full_name || (isRTL ? 'بدون اسم' : 'No name')}
+                            </h3>
+                            {editingProfile.ref_id && (
+                              <Badge variant="outline" className="font-mono text-[10px] tech-content gap-0.5">
+                                <Hash className="w-2.5 h-2.5" />{editingProfile.ref_id}
+                              </Badge>
+                            )}
+                            {editingProfile.is_banned && (
+                              <Badge variant="destructive" className="text-[10px] gap-0.5 px-1.5 py-0">
+                                <Ban className="w-2.5 h-2.5" />{isRTL ? 'معطّل' : 'Disabled'}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                            <Badge className={`${editingAcc.color} text-[10px] border px-1.5 py-0 gap-0.5`}>
+                              <EditAccIcon className="w-2.5 h-2.5" />
+                              {isRTL ? editingAcc.labelAr : editingAcc.labelEn}
+                            </Badge>
+                            <Badge className={`${editingTier.color} text-[10px] border px-1.5 py-0`}>
+                              {isRTL ? editingTier.labelAr : editingTier.labelEn}
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground inline-flex items-center gap-0.5">
+                              <Calendar className="w-2.5 h-2.5" />{formatDate(editingProfile.created_at, language)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
-                      <Select value={editForm.account_type} onValueChange={v => setEditForm(p => ({ ...p, account_type: v }))}>
-                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="individual">{isRTL ? 'فرد' : 'Individual'}</SelectItem>
-                          <SelectItem value="business">{isRTL ? 'مزود' : 'Provider'}</SelectItem>
-                          <SelectItem value="company">{isRTL ? 'شركة' : 'Company'}</SelectItem>
-                        </SelectContent>
-                      </Select></div>
-                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'العضوية' : 'Tier'}</Label>
-                      <Select value={editForm.membership_tier} onValueChange={v => setEditForm(p => ({ ...p, membership_tier: v }))}>
-                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
-                          <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
-                          <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
-                          <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
-                        </SelectContent>
-                      </Select></div>
+                      <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl shrink-0">
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <Separator className="my-4" />
-                  <div className="flex items-center gap-2 justify-end">
-                    <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-                    <Button onClick={handleSaveProfile} disabled={updateProfileMutation.isPending} className="rounded-xl gap-2">
-                      {updateProfileMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{isRTL ? 'حفظ' : 'Save'}
-                    </Button>
-                  </div>
+
+                  <Tabs defaultValue="profile" className="w-full">
+                    <div className="px-5 pt-4">
+                      <TabsList className="grid w-full grid-cols-3 h-10 rounded-xl bg-muted/50 p-1">
+                        <TabsTrigger value="profile" className="rounded-lg text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                          <Pencil className="w-3.5 h-3.5" />
+                          {isRTL ? 'البيانات' : 'Profile'}
+                        </TabsTrigger>
+                        <TabsTrigger value="permissions" className="rounded-lg text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                          <Shield className="w-3.5 h-3.5" />
+                          {isRTL ? 'الصلاحيات' : 'Permissions'}
+                          {editingRoles.length > 0 && (
+                            <span className="ms-0.5 px-1.5 py-0 rounded-full bg-accent/15 text-accent text-[10px] font-bold tech-content">{editingRoles.length}</span>
+                          )}
+                        </TabsTrigger>
+                        <TabsTrigger value="businesses" className="rounded-lg text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                          <Building2 className="w-3.5 h-3.5" />
+                          {isRTL ? 'الجهات' : 'Businesses'}
+                          {editingLinks.length > 0 && (
+                            <span className="ms-0.5 px-1.5 py-0 rounded-full bg-success/15 text-success text-[10px] font-bold tech-content">{editingLinks.length}</span>
+                          )}
+                        </TabsTrigger>
+                      </TabsList>
+                    </div>
+
+                    {/* ── Profile tab ── */}
+                    <TabsContent value="profile" className="p-5 pt-4 m-0 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs flex items-center gap-1"><Users className="w-3 h-3" />{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
+                          <Input value={editForm.full_name} onChange={e => setEditForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" dir="auto" />
+                        </div>
+                        {isSuperAdmin ? (
+                          <>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" />{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                              <Input type="email" dir="ltr" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl tech-content" />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" />{isRTL ? 'الهاتف' : 'Phone'}</Label>
+                              <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} dir="ltr" maxLength={20} className="h-10 rounded-xl tech-content" />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="md:col-span-1 rounded-xl border border-dashed border-warning/40 bg-warning/5 p-3 text-[11px] text-muted-foreground flex items-start gap-2">
+                            <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5 text-warning" />
+                            <span>{isRTL ? 'تعديل البريد والهاتف متاح فقط لمدير النظام (Super Admin).' : 'Email & phone editing is restricted to Super Admins.'}</span>
+                          </div>
+                        )}
+                        <div className="space-y-1.5">
+                          <Label className="text-xs flex items-center gap-1"><Briefcase className="w-3 h-3" />{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
+                          <Select value={editForm.account_type} onValueChange={v => setEditForm(p => ({ ...p, account_type: v }))}>
+                            <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="individual">{isRTL ? 'فرد' : 'Individual'}</SelectItem>
+                              <SelectItem value="business">{isRTL ? 'مزود خدمة' : 'Provider'}</SelectItem>
+                              <SelectItem value="company">{isRTL ? 'شركة' : 'Company'}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs flex items-center gap-1"><Crown className="w-3 h-3" />{isRTL ? 'العضوية' : 'Membership Tier'}</Label>
+                          <Select value={editForm.membership_tier} onValueChange={v => setEditForm(p => ({ ...p, membership_tier: v }))}>
+                            <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
+                              <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
+                              <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
+                              <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <Separator />
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <p className="text-[11px] text-muted-foreground">
+                          {isRTL ? 'سيتم تسجيل أي تعديل في سجل النشاط الإداري.' : 'All changes are logged in the admin activity log.'}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                          <Button onClick={handleSaveProfile} disabled={updateProfileMutation.isPending} className="rounded-xl gap-2">
+                            {updateProfileMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                            {isRTL ? 'حفظ التعديلات' : 'Save Changes'}
+                          </Button>
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    {/* ── Permissions tab ── */}
+                    <TabsContent value="permissions" className="p-5 pt-4 m-0 space-y-4">
+                      {!isSuperAdmin && (
+                        <div className="rounded-xl border border-dashed border-warning/40 bg-warning/5 p-3 text-[11px] text-muted-foreground flex items-center gap-2">
+                          <Lock className="w-3.5 h-3.5 shrink-0 text-warning" />
+                          {isRTL ? 'إدارة صلاحيات النظام متاحة فقط لمدير النظام (Super Admin).' : 'System role management is restricted to Super Admins.'}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-[11px] font-bold text-muted-foreground mb-2 flex items-center gap-1">
+                          <Shield className="w-3 h-3" />
+                          {isRTL ? `الصلاحيات الحالية (${editingRoles.length})` : `Current roles (${editingRoles.length})`}
+                        </p>
+                        {editingRoles.length === 0 ? (
+                          <div className="rounded-xl border border-dashed border-border/40 bg-muted/20 p-4 text-center">
+                            <Shield className="w-5 h-5 text-muted-foreground/50 mx-auto mb-1" />
+                            <p className="text-[11px] text-muted-foreground">{isRTL ? 'لا توجد صلاحيات نظام مُسندة — عضو عادي.' : 'No system roles assigned — regular member.'}</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {editingRoles.map(r => {
+                              const cfg = roleConfig[r.role as keyof typeof roleConfig] || roleConfig.user;
+                              const RIcon = cfg.icon;
+                              const isSelf = user?.id === editingProfile.user_id;
+                              return (
+                                <div key={r.id} className="flex items-center gap-2 rounded-xl bg-card border border-border/30 px-3 py-2 hover-lift">
+                                  <div className={`w-7 h-7 rounded-lg ${cfg.iconBg} flex items-center justify-center shrink-0`}>
+                                    <RIcon className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold">{isRTL ? cfg.labelAr : cfg.labelEn}</p>
+                                    <p className="text-[10px] text-muted-foreground font-mono tech-content">{r.role}</p>
+                                  </div>
+                                  {isSuperAdmin && !isSelf ? (
+                                    <Button
+                                      variant="ghost" size="sm"
+                                      onClick={() => removeRoleMutation.mutate(r.id)}
+                                      disabled={removeRoleMutation.isPending}
+                                      className="h-8 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10 gap-1 text-[11px]">
+                                      <X className="w-3.5 h-3.5" />
+                                      {isRTL ? 'إزالة' : 'Revoke'}
+                                    </Button>
+                                  ) : (
+                                    <Lock className="w-3.5 h-3.5 text-muted-foreground/50" />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                      {isSuperAdmin && availableRolesToAdd.length > 0 && user?.id !== editingProfile.user_id && (
+                        <div>
+                          <p className="text-[11px] font-bold text-muted-foreground mb-2 flex items-center gap-1">
+                            <UserPlus className="w-3 h-3" />
+                            {isRTL ? 'منح صلاحية إضافية' : 'Grant additional role'}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {availableRolesToAdd.map(rk => {
+                              const cfg = roleConfig[rk];
+                              const RIcon = cfg.icon;
+                              return (
+                                <Button
+                                  key={rk} variant="outline" size="sm"
+                                  onClick={() => addRoleMutation.mutate({ userId: editingProfile.user_id, role: rk })}
+                                  disabled={addRoleMutation.isPending}
+                                  className="h-9 rounded-xl gap-1.5 text-xs hover:border-accent/50 hover-lift">
+                                  <RIcon className="w-3.5 h-3.5" />
+                                  {isRTL ? cfg.labelAr : cfg.labelEn}
+                                  <span className="ms-0.5 text-muted-foreground">+</span>
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    {/* ── Linked Businesses tab ── */}
+                    <TabsContent value="businesses" className="p-5 pt-4 m-0 space-y-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div className="rounded-xl border border-border/30 bg-card p-2.5">
+                          <p className="text-[10px] text-muted-foreground">{isRTL ? 'الإجمالي' : 'Total'}</p>
+                          <p className="text-lg font-bold tech-content">{editingLinks.length}</p>
+                        </div>
+                        <div className="rounded-xl border border-success/20 bg-success/5 p-2.5">
+                          <p className="text-[10px] text-muted-foreground">{isRTL ? 'مالك' : 'Owned'}</p>
+                          <p className="text-lg font-bold tech-content text-success">{ownedByEntityCount}</p>
+                        </div>
+                        <div className="rounded-xl border border-info/20 bg-info/5 p-2.5">
+                          <p className="text-[10px] text-muted-foreground">{isRTL ? 'عضو فريق' : 'Staff'}</p>
+                          <p className="text-lg font-bold tech-content text-info">{staffCount}</p>
+                        </div>
+                      </div>
+                      {editingLinks.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-border/40 bg-muted/20 p-6 text-center">
+                          <Building2 className="w-6 h-6 text-muted-foreground/50 mx-auto mb-1.5" />
+                          <p className="text-xs text-muted-foreground">{isRTL ? 'هذا المستخدم غير مرتبط بأي منشأة بعد.' : 'This user is not linked to any business yet.'}</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5 max-h-[420px] overflow-auto pe-1">
+                          {editingLinks.map(link => {
+                            const cfg = staffRoleConfig[link.role];
+                            const lockedOwner = link.isOwnerByEntity;
+                            return (
+                              <div key={link.business.id + (link.staffId ?? 'owner')}
+                                className={`flex items-center gap-2 rounded-xl border bg-card px-3 py-2.5 hover-lift transition-all
+                                  ${lockedOwner ? 'border-success/30 bg-success/5' : 'border-border/30'}
+                                  ${!link.isActive ? 'opacity-60' : ''}`}>
+                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0
+                                  ${lockedOwner ? 'bg-success/15 text-success' : 'bg-info/10 text-info'}`}>
+                                  <Building2 className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <p className="text-xs font-bold truncate">
+                                      {isRTL ? link.business.name_ar : (link.business.name_en || link.business.name_ar)}
+                                    </p>
+                                    {link.business.is_verified && (
+                                      <Check className="w-3 h-3 text-success shrink-0" />
+                                    )}
+                                    {!link.isActive && (
+                                      <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed px-1 py-0">
+                                        {isRTL ? 'غير نشط' : 'inactive'}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <Link to={`/admin/businesses?focus=${link.business.id}`}
+                                      className="text-[10px] font-mono tech-content text-success hover:underline inline-flex items-center gap-0.5">
+                                      <Hash className="w-2.5 h-2.5" />{link.business.ref_id}
+                                    </Link>
+                                    {link.business.username && (
+                                      <Link to={`/${link.business.username}`} target="_blank" rel="noreferrer"
+                                        className="text-[10px] text-muted-foreground hover:text-accent inline-flex items-center gap-0.5">
+                                        <Link2 className="w-2.5 h-2.5" />{isRTL ? 'فتح الصفحة' : 'View'}
+                                      </Link>
+                                    )}
+                                  </div>
+                                </div>
+                                {isSuperAdmin && !lockedOwner && link.staffId ? (
+                                  <Select value={link.role} onValueChange={(v) => updateStaffRoleMutation.mutate({ staffId: link.staffId!, role: v as StaffRole })}>
+                                    <SelectTrigger className="h-8 w-28 text-[11px] rounded-lg shrink-0"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="manager">{isRTL ? 'مدير' : 'Manager'}</SelectItem>
+                                      <SelectItem value="editor">{isRTL ? 'محرر' : 'Editor'}</SelectItem>
+                                      <SelectItem value="viewer">{isRTL ? 'مشاهد' : 'Viewer'}</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                ) : (
+                                  <Badge className={`${cfg.color} text-[10px] border px-1.5 py-0.5 gap-0.5 shrink-0`}>
+                                    {isRTL ? cfg.ar : cfg.en}
+                                    {lockedOwner && <Lock className="w-2.5 h-2.5" />}
+                                  </Badge>
+                                )}
+                                {isSuperAdmin && !lockedOwner && link.staffId && (
+                                  <Button
+                                    variant="ghost" size="icon"
+                                    onClick={() => removeStaffMutation.mutate(link.staffId!)}
+                                    title={isRTL ? 'إزالة الصلاحية' : 'Remove access'}
+                                    className="h-8 w-8 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10 shrink-0">
+                                    <X className="w-3.5 h-3.5" />
+                                  </Button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <div className="flex items-center justify-end pt-2">
+                        <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إغلاق' : 'Close'}</Button>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 </div>
-              )}
+                );
+              })()}
 
               {activePanel?.type === 'password' && (
                 <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
