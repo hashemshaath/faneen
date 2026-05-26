@@ -999,7 +999,20 @@ const AdminUsers = () => {
       closePanel();
       toast.success(isRTL ? 'تم التحديث' : 'Updated');
     },
-    onError: () => toast.error(isRTL ? 'فشل التحديث' : 'Failed to update'),
+    onError: (err: unknown) => {
+      const raw = err instanceof Error ? err.message : (typeof err === 'object' && err && 'message' in err ? String((err as { message: unknown }).message) : '');
+      let friendly = isRTL ? 'فشل التحديث' : 'Failed to update';
+      if (raw.includes('username_unavailable') || raw.includes('username_taken')) {
+        friendly = isRTL ? 'اسم المستخدم محجوز — جرّب اسماً آخر' : 'Username already taken — pick another';
+      } else if (raw.includes('phone')) {
+        friendly = isRTL ? 'رقم الهاتف غير صالح أو مستخدم' : 'Phone is invalid or already in use';
+      } else if (raw.includes('email')) {
+        friendly = isRTL ? 'البريد الإلكتروني غير صالح أو مستخدم' : 'Email is invalid or already in use';
+      } else if (raw) {
+        friendly = (isRTL ? 'فشل التحديث: ' : 'Update failed: ') + raw;
+      }
+      toast.error(friendly);
+    },
   });
 
   const toggleBanMutation = useMutation({
