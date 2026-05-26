@@ -124,6 +124,10 @@ async function dispatchManualMarkPaidSideEffects(
     }
   }
 
+  // BM-REF Step G: prefer /r/{PAY} when official ref_id resolves; fall back
+  // to /membership otherwise. Never embed UUID or provider_intent_id in URLs.
+  const actionUrl = paymentRef ? `/r/${paymentRef}` : '/membership';
+
   if (recipientUserId) {
     createNotificationFireAndForget(
       {
@@ -139,7 +143,7 @@ async function dispatchManualMarkPaidSideEffects(
         notification_type: 'membership_payment_marked_paid',
         reference_type: 'membership_payment_intent',
         reference_id: paymentIntentId,
-        action_url: '/membership',
+        action_url: actionUrl,
       },
       '[markMembershipPaidManually] notification',
     );
@@ -161,7 +165,7 @@ async function dispatchManualMarkPaidSideEffects(
         subscriptionRef,
         amount,
         currency,
-        dashboardUrl: '/membership',
+        dashboardUrl: actionUrl,
       },
     });
   }
