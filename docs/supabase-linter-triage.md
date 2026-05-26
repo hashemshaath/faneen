@@ -3,6 +3,7 @@
 Snapshot history:
 - STABILITY-HARDENING-1: 421 issues.
 - SUPABASE-LINTER-HARDENING-1: **418 issues** (−3 ERROR fixes; see below).
+- SUPABASE-LINTER-HARDENING-2: **416 issues** (−2 `public.*` search_path pinned).
 
 ## Triage policy
 
@@ -16,7 +17,7 @@ dedicated security-hardening track to avoid destabilizing launch-ready flows.
 |-----------|-------|------------------|-------|--------|
 | 0008 RLS Enabled No Policy | INFO | 1 | Inactive/staging table | Defer (P3) |
 | 0010 Security Definer View | ERROR | 0 | Fixed in SUPABASE-LINTER-HARDENING-1 | Resolved |
-| 0011 Function Search Path Mutable | WARN | many | Mostly legacy helpers | P2 — gradual hardening |
+| 0011 Function Search Path Mutable | WARN | ~150 in reserved schemas, 0 in `public` | All remaining are in `extensions`, `pgmq`, `storage`, `realtime`, `net`, `cron`, `auth`, `vault`, `graphql_public` — owned by Supabase, must not be modified per project rules | Accepted |
 | 0024 RLS Policy Always True (write) | WARN | 4 | Verified: anon telemetry inserts only (badge_clicks/impressions/conversions, provider_landing_metrics) | Accepted |
 | 0025 Public Bucket Allows Listing | WARN | 2 | Public image buckets (profile/marketing); already masked | P2 — accepted risk |
 | 0028 Anon Can Execute SECURITY DEFINER Function | WARN | many | Intentional public RPCs (lookup_by_reference, public_resolve_*) | P3 — by design |
@@ -46,6 +47,17 @@ dedicated security-hardening track to avoid destabilizing launch-ready flows.
 No grants, policies, or column lists were changed. Visible row sets are
 identical to before for every role.
 
+## SUPABASE-LINTER-HARDENING-2 changes (Batch 1)
+
+| Function | Callable by | Risk | Action | Why safe | Test coverage |
+|----------|-------------|------|--------|----------|---------------|
+| `public.jsonb_diff(jsonb, jsonb)` | anon, authenticated (SECURITY INVOKER) | Mutable search_path on a SQL helper that touches only `pg_catalog` built-ins (`jsonb_each`, `jsonb_object_agg`, `jsonb_build_object`) | `ALTER FUNCTION … SET search_path = public` | No table references in the body; `pg_catalog` is always implicitly on the search_path; pinning to `public` does not change name resolution. | `supabaseLinterHardening2.searchPath.test.ts` + existing audit triggers that call it. |
+| `public.tg_sanitize_visit_log_metadata()` | trigger (BEFORE INSERT/UPDATE on visit logs) | Mutable search_path on a trigger that validates `NEW.metadata` JSON keys against a hardcoded banned list | `ALTER FUNCTION … SET search_path = public` | Body uses only built-in `jsonb_typeof`, ARRAY/FOREACH, RAISE — no schema-qualified references. Behavior is purely validation, no DML. | Same regression test + existing visit-log insert tests that exercise the trigger path. |
+
+All other 0011 findings live in Supabase-reserved schemas. Per project rules,
+those schemas must not be modified by the app. They are tracked as **Accepted
+(out of scope)**.
+
 ## What is NOT acceptable
 
 - Any new table created in `public` without explicit `GRANT` + RLS policy.
@@ -56,10 +68,9 @@ These rules are already enforced by the project's CI isolation audits.
 
 ## Next phases (not in scope here)
 
-1. Sweep `0011` functions and add `SET search_path = public` per function in
-   small migrations (10–20 at a time), starting with anon-callable
-   SECURITY DEFINER functions, with vitest re-run between batches.
-2. Re-audit `0025` public buckets and decide whether to scope listing per
+1. Re-audit `0025` public buckets and decide whether to scope listing per
    folder for brand-assets / showcase (low value, low risk).
-3. Annual review of 0028 RPCs against the actual `/r/:refId` and contact
+2. Annual review of 0028 RPCs against the actual `/r/:refId` and contact
    flows to confirm anon exposure is still required.
+3. Re-evaluate the single 0008 inactive-table finding and either add a policy
+   or drop the table.
