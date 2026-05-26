@@ -706,6 +706,13 @@ const DashboardSettings = () => {
           </div>
         )}
 
+        {/* ═══ ACTIVITY ═══ */}
+        {activeTab === 'activity' && (
+          <div className="space-y-3">
+            <AccountActivityLog />
+          </div>
+        )}
+
         {/* ═══ SECURITY ═══ */}
         {activeTab === 'security' && (
           <div className="space-y-3">
