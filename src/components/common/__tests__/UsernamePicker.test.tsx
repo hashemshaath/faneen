@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, act, fireEvent } from '@testing-library/react';
+import React, { useState } from 'react';
 import { UsernamePicker } from '../UsernamePicker';
 import { FIELD_DEBOUNCE_MS } from '@/hooks/useDebouncedValue';
 
@@ -14,7 +14,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 import { supabase } from '@/integrations/supabase/client';
 
 const Controlled = (props: { initial?: string; serverError?: React.ComponentProps<typeof UsernamePicker>['serverError'] }) => {
-  const [v, setV] = (require('react') as typeof import('react')).useState(props.initial ?? '');
+  const [v, setV] = useState(props.initial ?? '');
   return (
     <UsernamePicker
       value={v}
@@ -31,15 +31,15 @@ describe('UsernamePicker — status message above the field', () => {
     (supabase.rpc as ReturnType<typeof vi.fn>).mockReset();
   });
 
-  it('shows "Available" after debounce when RPC returns available', async () => {
+  it('shows "Checking" then "Available" after debounce when RPC returns available', async () => {
     (supabase.rpc as ReturnType<typeof vi.fn>).mockResolvedValue({ data: { available: true }, error: null });
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<Controlled />);
-    await user.type(screen.getByPlaceholderText('my-handle'), 'ahmed_m');
+    const input = screen.getByPlaceholderText('my-handle') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'ahmed_m' } });
     // Before debounce, status is "Checking…"
     expect(screen.getByText(/Checking/i)).toBeInTheDocument();
     // After 450ms debounce + microtask flush, "Available" appears.
-    await act(async () => { vi.advanceTimersByTime(FIELD_DEBOUNCE_MS + 10); });
+    await act(async () => { vi.advanceTimersByTime(FIELD_DEBOUNCE_MS + 20); });
     await act(async () => { await Promise.resolve(); });
     expect(await screen.findByText(/Available/i)).toBeInTheDocument();
   });
