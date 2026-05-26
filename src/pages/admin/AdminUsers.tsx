@@ -2757,3 +2757,29 @@ const AdminUsers = () => {
 };
 
 export default AdminUsers;
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * EmailLiveHint — shared debounced (450ms) live format validation for email.
+ * Rendered ABOVE the email input so the user sees the status instantly after
+ * they stop typing. Uses the unified `useDebouncedValue` hook so every field
+ * (username, email, phone) shares the same 450ms timing.
+ * ─────────────────────────────────────────────────────────────────────────── */
+export const EmailLiveHint: React.FC<{ value: string; isRTL: boolean }> = ({ value, isRTL }) => {
+  const debounced = useDebouncedValue(value);
+  if (!debounced) return <div data-testid="email-live-hint" className="min-h-[1rem]" />;
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(debounced.trim());
+  return (
+    <div data-testid="email-live-hint" className="min-h-[1rem] text-[11px] flex items-center gap-1.5">
+      {ok ? (
+        <span className="text-success">{isRTL ? '✓ تنسيق صالح' : '✓ Valid format'}</span>
+      ) : (
+        <span className="text-destructive flex items-center gap-1.5">
+          <span>{isRTL ? 'تنسيق غير صحيح' : 'Invalid format'}</span>
+          <code className="tech-content text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 border border-destructive/20">
+            invalid_format
+          </code>
+        </span>
+      )}
+    </div>
+  );
+};
