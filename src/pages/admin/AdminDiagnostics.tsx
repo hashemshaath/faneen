@@ -162,7 +162,7 @@ const AdminDiagnostics: React.FC = () => {
                     {isRTL ? 'لا توجد تنبيهات. كل شيء على ما يرام.' : 'No alerts captured. All clean.'}
                   </div>
                 ) : (
-                  <ScrollArea className="h-[420px] pr-2">
+                  <ScrollArea className="h-[420px] pe-2">
                     <ul className="space-y-2">
                       {filtered.slice().reverse().map((e) => (
                         <li key={e.id} className="rounded-xl border border-border/40 bg-card/60 p-3 text-xs space-y-1">
@@ -228,7 +228,7 @@ const AdminDiagnostics: React.FC = () => {
                         {isRTL ? '✓ لا توجد مخالفات — جميع الحقول متسقة.' : '✓ No inconsistencies found.'}
                       </div>
                     ) : (
-                      <ScrollArea className="h-[380px] pr-2">
+                      <ScrollArea className="h-[380px] pe-2">
                         <ul className="space-y-2">
                           {report.issues.map((i, idx) => (
                             <li key={idx} className="rounded-xl border border-border/40 bg-card/60 p-3 text-xs flex items-center gap-2 flex-wrap">

@@ -30,7 +30,7 @@ export const ContactSupplierSheet = ({
         side={isRTL ? "right" : "left"}
         className="w-full sm:max-w-lg overflow-y-auto p-4 sm:p-6"
       >
-        <SheetHeader className={isRTL ? "text-right" : "text-left"}>
+        <SheetHeader className="text-start">
           <SheetTitle className="font-heading text-base sm:text-lg">
             {isRTL ? "تواصل مع المورّد" : "Contact supplier"}
           </SheetTitle>

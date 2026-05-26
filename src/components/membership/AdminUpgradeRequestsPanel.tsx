@@ -191,7 +191,7 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
   });
 
   if (isLoading) {
-    return <div className="py-12 text-center text-xs text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin inline mr-2" />{isRTL ? 'جاري التحميل…' : 'Loading…'}</div>;
+    return <div className="py-12 text-center text-xs text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin inline me-2" />{isRTL ? 'جاري التحميل…' : 'Loading…'}</div>;
   }
 
   if (isError) {

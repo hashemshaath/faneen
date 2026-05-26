@@ -265,7 +265,7 @@ const AdminContractTemplates: React.FC = () => {
             <CardContent className="p-3 space-y-2">
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input className="pl-8" placeholder={isRTL ? 'بحث...' : 'Search...'}
+                <Input className="ps-8" placeholder={isRTL ? 'بحث...' : 'Search...'}
                   value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
               {templatesQ.isLoading && <div className="text-sm text-muted-foreground p-2">{isRTL ? 'جارٍ التحميل...' : 'Loading...'}</div>}
@@ -384,7 +384,7 @@ const AdminContractTemplates: React.FC = () => {
                     <div className="flex items-center justify-between mb-3">
                       <h2 className="text-sm font-semibold">
                         {isRTL ? `تحرير v${selectedVersion.version_number}` : `Editing v${selectedVersion.version_number}`}
-                        {readOnly && <span className="ml-2 text-xs text-amber-700">{isRTL ? '(للقراءة فقط)' : '(read-only)'}</span>}
+                        {readOnly && <span className="ms-2 text-xs text-amber-700">{isRTL ? '(للقراءة فقط)' : '(read-only)'}</span>}
                       </h2>
                     </div>
                     <Tabs defaultValue="sections">

@@ -245,7 +245,7 @@ export const LegalReviewPanel: React.FC<Props> = ({ version, templateId, isRTL }
               <Label className="text-xs">
                 {isRTL ? 'ملاحظة (داخلية)' : 'Note (internal)'}
                 {status === 'in_review' && (
-                  <span className="text-muted-foreground ml-1">
+                  <span className="text-muted-foreground ms-1">
                     {isRTL ? '— مطلوبة عند طلب التعديلات' : '— required for change requests'}
                   </span>
                 )}
