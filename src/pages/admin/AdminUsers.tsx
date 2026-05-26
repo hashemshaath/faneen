@@ -1273,7 +1273,7 @@ const AdminUsers = () => {
                   <div className="relative flex-1">
                     <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
                     <Input ref={searchInputRef} value={searchTerm} onChange={e => handleSearchChange(e.target.value)}
-                      placeholder={isRTL ? 'بحث: اسم، بريد، هاتف، معرّف، أو نشاط تجاري...' : 'Search name, email, phone, ID, or business...'}
+                     placeholder={isRTL ? 'بحث بالاسم، البريد، الجوال، أو رقم USR/ENT' : 'Search by name, email, phone, USR or ENT'}
                       className="ps-10 pe-16 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background" dir="auto" />
                     <kbd className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 items-center gap-0.5 px-1.5 py-0.5 rounded-md border border-border/40 bg-background/80 text-[10px] text-muted-foreground font-mono pointer-events-none"
                       style={{ [isRTL ? 'left' : 'right']: '10px' }}>
