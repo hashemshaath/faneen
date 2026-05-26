@@ -52,9 +52,10 @@ describe('WORKSPACE-CONTEXT-4C — DashboardBookings', () => {
     expect(src).toContain("['my-business', user?.id, activeOwnerEntityId]");
   });
 
-  it('did not touch contracts/payments/quotes/leads/memberships dashboard pages', () => {
+  it('did not touch contracts/payments/memberships dashboard pages', () => {
     const dashDir = join(ROOT, 'pages/dashboard');
-    const skip = /contract|payment|quote|lead|membership/i;
+    // quotes/leads were intentionally migrated in WORKSPACE-CONTEXT-4D.
+    const skip = /contract|payment|membership/i;
     for (const name of readdirSync(dashDir)) {
       if (!skip.test(name)) continue;
       const src = read(`pages/dashboard/${name}`);
