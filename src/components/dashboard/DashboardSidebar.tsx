@@ -219,6 +219,7 @@ const adminBaseGroups: MenuGroup[] = [
     groupLabel: { ar: 'إدارة المستخدمين', en: 'User Management' },
     icon: Users,
     items: [
+      { label: { ar: 'مركز الحسابات', en: 'Identity Hub' }, url: '/admin/identity', icon: Users, superAdminOnly: true },
       { label: { ar: 'كل المستخدمين', en: 'All Users' }, url: '/admin/users', icon: Users, end: true },
       { label: { ar: 'الأفراد', en: 'Individuals' }, url: '/admin/users?type=individual', icon: User },
       { label: { ar: 'مزودي الخدمة', en: 'Service Providers' }, url: '/admin/users?type=business', icon: Wrench },
