@@ -2085,6 +2085,75 @@ const AdminUsers = () => {
                           })}
                         </div>
                       )}
+                      {/* Add new business link */}
+                      {isSuperAdmin && (() => {
+                        const linkedIds = new Set(editingLinks.map(l => l.business.id));
+                        const candidates = businesses
+                          .filter(b => !linkedIds.has(b.id))
+                          .filter(b => {
+                            const q = linkSearch.trim().toLowerCase();
+                            if (!q) return true;
+                            return (b.name_ar || '').toLowerCase().includes(q)
+                              || (b.name_en || '').toLowerCase().includes(q)
+                              || (b.ref_id || '').toLowerCase().includes(q)
+                              || (b.username || '').toLowerCase().includes(q);
+                          })
+                          .slice(0, 50);
+                        return (
+                          <div className="rounded-xl border border-dashed border-accent/30 bg-accent/5 p-3 space-y-2">
+                            <p className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                              <Plus className="w-3 h-3" />
+                              {isRTL ? 'ربط منشأة جديدة بهذا المستخدم' : 'Link a new business to this user'}
+                            </p>
+                            <Input
+                              value={linkSearch}
+                              onChange={(e) => setLinkSearch(e.target.value)}
+                              placeholder={isRTL ? 'ابحث بالاسم أو المعرّف أو @المعرّف' : 'Search by name, ref, or @username'}
+                              dir="auto"
+                              className="h-9 rounded-lg text-xs"
+                            />
+                            <div className="flex items-center gap-2">
+                              <Select value={linkForm.businessId} onValueChange={(v) => setLinkForm(p => ({ ...p, businessId: v }))}>
+                                <SelectTrigger className="h-9 rounded-lg text-xs flex-1">
+                                  <SelectValue placeholder={isRTL ? 'اختر منشأة' : 'Select a business'} />
+                                </SelectTrigger>
+                                <SelectContent className="max-h-72">
+                                  {candidates.length === 0 ? (
+                                    <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+                                      {isRTL ? 'لا توجد منشآت متاحة' : 'No businesses available'}
+                                    </div>
+                                  ) : candidates.map(b => (
+                                    <SelectItem key={b.id} value={b.id}>
+                                      <span className="font-medium">{isRTL ? (b.name_ar || b.name_en) : (b.name_en || b.name_ar)}</span>
+                                      <span className="ms-2 font-mono tech-content text-[10px] text-muted-foreground">{b.ref_id}</span>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Select value={linkForm.role} onValueChange={(v) => setLinkForm(p => ({ ...p, role: v as StaffRole }))}>
+                                <SelectTrigger className="h-9 w-28 rounded-lg text-xs"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="manager">{isRTL ? 'مدير' : 'Manager'}</SelectItem>
+                                  <SelectItem value="editor">{isRTL ? 'محرر' : 'Editor'}</SelectItem>
+                                  <SelectItem value="viewer">{isRTL ? 'مشاهد' : 'Viewer'}</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                size="sm"
+                                onClick={() => linkBusinessMutation.mutate({
+                                  businessId: linkForm.businessId,
+                                  userId: editingProfile.user_id,
+                                  role: linkForm.role,
+                                })}
+                                disabled={!linkForm.businessId || linkBusinessMutation.isPending}
+                                className="h-9 rounded-lg gap-1.5 text-xs">
+                                {linkBusinessMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}
+                                {isRTL ? 'ربط' : 'Link'}
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })()}
                       <div className="flex items-center justify-end pt-2">
                         <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إغلاق' : 'Close'}</Button>
                       </div>
