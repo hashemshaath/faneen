@@ -1113,13 +1113,13 @@ const AdminUsers = () => {
   }, [profiles, deferredSearch, filterRole, filterAccountType, filterTier, filterBusinessLink, roleMap, businessMap, businessLinksMap]);
 
   const tabFiltered = useMemo(() => {
-    if (tab === 'staff') return baseFiltered.filter(p => {
+    if (filterScope === 'staff') return baseFiltered.filter(p => {
       const r = roleMap.get(p.user_id) || [];
       return r.some(x => x.role === 'super_admin' || x.role === 'admin' || x.role === 'moderator');
     });
-    if (tab === 'disabled') return baseFiltered.filter(p => p.is_banned);
+    if (filterScope === 'disabled') return baseFiltered.filter(p => p.is_banned);
     return baseFiltered;
-  }, [baseFiltered, tab, roleMap]);
+  }, [baseFiltered, filterScope, roleMap]);
 
   const sorted = useMemo(() => {
     const copy = [...tabFiltered];
