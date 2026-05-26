@@ -181,7 +181,7 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 
 
-type ViewSection = 'list' | 'create' | 'templates' | 'template-preview';
+type ViewSection = 'list' | 'create' | 'templates' | 'template-preview' | 'import';
 
 
 /* ──────────── Main ──────────── */
