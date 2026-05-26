@@ -166,7 +166,7 @@ const AdminCronRuns = () => {
             }}
             disabled={isFetching || healthQuery.isFetching}
           >
-            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''} ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''} me-2`} />
             {isRTL ? 'تحديث' : 'Refresh'}
           </Button>
         </div>

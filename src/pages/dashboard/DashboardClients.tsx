@@ -260,7 +260,7 @@ const DashboardClients: React.FC = () => {
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(0); }}
                   placeholder={isRTL ? 'ابحث بالاسم، البريد، الجوال، أو USR-…  ( / للتركيز)' : 'Search by name, email, phone, or USR-…  (press /)'}
-                  className={`h-10 ${isRTL ? 'pr-9' : 'pl-9'}`}
+                  className="h-10 ps-9"
                 />
               </div>
               <div className="flex items-center gap-1.5">

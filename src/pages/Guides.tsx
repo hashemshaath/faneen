@@ -135,7 +135,7 @@ const Guides = () => {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={isRTL ? 'ابحث في الأدلة...' : 'Search guides...'}
-            className={`h-12 rounded-xl ${isRTL ? 'pr-10' : 'pl-10'}`}
+            className="h-12 rounded-xl ps-10"
             dir="auto"
           />
         </div>

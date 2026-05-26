@@ -122,7 +122,7 @@ const Services: React.FC = () => {
                 <SearchIcon className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-muted-foreground`} />
                 <Input
                   dir="auto"
-                  className={isRTL ? 'pr-9' : 'pl-9'}
+                  className="ps-9"
                   placeholder={isRTL ? 'ابحث عن خدمة...' : 'Search a service...'}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}

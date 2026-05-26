@@ -217,7 +217,7 @@ export const SectionsClausesPanel: React.FC<{
                 )}
               </div>
 
-              <div className="space-y-2 pl-3 border-l-2 border-muted">
+              <div className="space-y-2 ps-3 border-s-2 border-muted">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-muted-foreground">
                     {isRTL ? `البنود (${sectionClauses.length})` : `Clauses (${sectionClauses.length})`}
@@ -745,12 +745,12 @@ export const PreviewPanel: React.FC<{
       <Card><CardContent className="p-4 space-y-4">
         <h3 className="text-base font-semibold">{isRTL ? 'الأقسام والبنود' : 'Sections & clauses'}</h3>
         {(sectionsQ.data || []).map((s) => (
-          <div key={s.id} className="border-l-2 border-primary/40 pl-3">
+          <div key={s.id} className="border-s-2 border-primary/40 ps-3">
             <div className="flex items-center gap-2">
               <span className="font-semibold">{isRTL ? s.title_ar : (s.title_en || s.title_ar)}</span>
               {s.is_required && <Badge variant="secondary" className="text-[10px]">{isRTL ? 'إلزامي' : 'required'}</Badge>}
             </div>
-            <ol className="list-decimal mr-5 ml-5 mt-1 space-y-1 text-sm text-muted-foreground">
+            <ol className="list-decimal ms-5 me-5 mt-1 space-y-1 text-sm text-muted-foreground">
               {(clausesQ.data || []).filter((c) => c.section_id === s.id).map((c) => (
                 <li key={c.id} dir="auto">{isRTL ? c.body_ar : (c.body_en || c.body_ar)}</li>
               ))}
@@ -766,8 +766,8 @@ export const PreviewPanel: React.FC<{
             return (
               <li key={r.id}>
                 {m ? (isRTL ? m.label_ar : m.label_en) : r.method}
-                {r.is_default && <Badge className="ml-2 text-[10px]" variant="secondary">{isRTL ? 'افتراضي' : 'default'}</Badge>}
-                <span className="ml-2 text-xs text-muted-foreground">VAT: {r.vat_handling}</span>
+                {r.is_default && <Badge className="ms-2 text-[10px]" variant="secondary">{isRTL ? 'افتراضي' : 'default'}</Badge>}
+                <span className="ms-2 text-xs text-muted-foreground">VAT: {r.vat_handling}</span>
               </li>
             );
           })}
@@ -779,7 +779,7 @@ export const PreviewPanel: React.FC<{
           {(fieldsQ.data || []).map((f) => (
             <li key={f.id}>
               <span className="font-medium">{isRTL ? f.label_ar : (f.label_en || f.label_ar)}</span>
-              <span className="text-xs text-muted-foreground ml-2">({f.field_type} • {f.applies_to})</span>
+              <span className="text-xs text-muted-foreground ms-2">({f.field_type} • {f.applies_to})</span>
               {f.is_required && <Badge variant="secondary" className="text-[10px] ml-2">{isRTL ? 'إلزامي' : 'required'}</Badge>}
             </li>
           ))}
