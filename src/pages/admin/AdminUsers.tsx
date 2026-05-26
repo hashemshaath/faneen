@@ -33,7 +33,7 @@ import {
 import { toast } from 'sonner';
 import {
   Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Mail, Phone, Calendar, Crown,
-  Loader2, Pencil, Ban, UserX, Download, KeyRound, Send, Lock, EyeOff, X, AlertTriangle,
+  Loader2, Pencil, Ban, UserX, Download, KeyRound, Send, Lock, Eye, EyeOff, X, AlertTriangle,
   Check, TrendingUp, UserCheck, Filter, Hash, Sparkles, Building2, Briefcase, Link2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, BarChart3, Activity, FileText, MessageSquare,
   Star, MoreHorizontal, RefreshCw, ArrowUpDown, Copy, Clock, Rows3, LayoutList, Zap, TrendingDown, Command, Inbox,
@@ -461,13 +461,6 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
                 {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </Button>
             </TooltipTrigger><TooltipContent>{isRTL ? 'التفاصيل' : 'Details'}</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild>
-              <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-xl">
-                <Link to={`/admin/users/${profile.user_id}`} aria-label={isRTL ? 'فتح صفحة المستخدم' : 'Open user page'}>
-                  <Eye className="w-4 h-4" />
-                </Link>
-              </Button>
-            </TooltipTrigger><TooltipContent>{isRTL ? 'صفحة كاملة' : 'Full page'}</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onEdit(profile)}>
                 <Pencil className="w-4 h-4" />
