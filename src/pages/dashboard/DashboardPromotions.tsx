@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { PermissionHint } from '@/components/workspace/PermissionGate';
 import {
   Megaphone, Plus, Trash2, Pencil, Eye, Video, Tag, Calendar, X,
   Search, CheckCircle2, Percent, LayoutGrid, List,
@@ -552,9 +553,11 @@ const DashboardPromotions = () => {
                 <Download className="w-3.5 h-3.5 me-1.5" />{rtl ? 'تصدير' : 'Export'}
               </Button>
             )}
-            <Button variant="hero" size="sm" className="h-9 text-xs rounded-xl" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
-              <Plus className="w-3.5 h-3.5 me-1.5" />{rtl ? 'إضافة عرض' : 'Add Promotion'}
-            </Button>
+            <PermissionHint permission="services.manage">
+              <Button variant="hero" size="sm" className="h-9 text-xs rounded-xl" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
+                <Plus className="w-3.5 h-3.5 me-1.5" />{rtl ? 'إضافة عرض' : 'Add Promotion'}
+              </Button>
+            </PermissionHint>
           </div>
         </div>
 
