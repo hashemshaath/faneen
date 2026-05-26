@@ -170,18 +170,6 @@ const AdminContractTemplates = lazyRetry(() => import("./pages/admin/AdminContra
 const AdminPdfExportAudit = lazyRetry(() => import("./pages/admin/AdminPdfExportAudit"));
 const AdminPdfVisualQa = lazyRetry(() => import("./pages/admin/AdminPdfVisualQa"));
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,
-      gcTime: 30 * 60 * 1000,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: 'always',
-      retry: 1,
-    },
-  },
-});
-
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
     <div className="animate-pulse">
