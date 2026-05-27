@@ -110,11 +110,11 @@ export type LifecycleDomain =
 export const TERMINAL_STATES: Record<LifecycleDomain, readonly string[]> = {
   business: ['archived'],
   staff: ['revoked', 'expired'],
-  lead: ['won', 'lost', 'archived', 'spam'],
-  contract: ['completed', 'cancelled', 'expired', 'archived'],
+  lead: ['won', 'archived', 'spam'],
+  contract: ['archived'],
   subscription: ['cancelled', 'expired'],
-  payment_intent: ['paid', 'refunded', 'chargeback', 'expired'],
-  moderation: ['approved', 'rejected'],
+  payment_intent: ['refunded', 'chargeback', 'expired'],
+  moderation: [],
 };
 
 export const ACTOR_OWNERS = [
