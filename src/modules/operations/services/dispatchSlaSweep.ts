@@ -43,7 +43,7 @@ import type {
 } from './notificationDispatcher';
 import { safeSlaContentBuilder } from './notificationContent';
 import {
-  createSafeSlaRecipientResolver,
+  createSafeSlaMultiRecipientResolver,
 } from './notificationRecipients';
 
 export interface DispatchSlaSweepInput {
@@ -253,7 +253,7 @@ async function runNonDryRun(
   ) {
     const resolver =
       input.notificationRecipientResolver ??
-      createSafeSlaRecipientResolver();
+      createSafeSlaMultiRecipientResolver();
     const contentBuilder =
       input.notificationContentBuilder ?? safeSlaContentBuilder;
     notificationsDispatch = await dispatchPlannedNotifications({
