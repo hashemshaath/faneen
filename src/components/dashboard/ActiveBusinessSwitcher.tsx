@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Building2, Check, ChevronDown, Crown, Users } from 'lucide-react';
 
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
