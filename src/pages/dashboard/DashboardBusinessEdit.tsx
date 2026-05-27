@@ -20,6 +20,7 @@ import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PermissionHint } from '@/components/workspace/PermissionGate';
+import { usePermissionParity } from '@/hooks/usePermissionParity';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -344,6 +345,10 @@ const DashboardBusinessEdit: React.FC = () => {
     ];
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   }, [form]);
+
+  // WORKSPACE-RBAC-6E — shadow parity check (observability only, no enforcement).
+  // Hook must run unconditionally before any early returns below.
+  usePermissionParity('entity.manage');
 
   if (isLoading) {
     return (

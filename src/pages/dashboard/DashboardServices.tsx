@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { PermissionHint } from '@/components/workspace/PermissionGate';
+import { usePermissionParity } from '@/hooks/usePermissionParity';
 import {
   Plus, Trash2, Pencil, X, Search, CheckCircle2, Wrench,
   DollarSign, ChevronDown, ChevronRight, Package,
@@ -491,6 +492,9 @@ const DashboardServices = () => {
     { key: 'inactive' as const, label: rtl ? 'معطلة' : 'Off', count: stats.inactive, icon: EyeOff },
     { key: 'no-price' as const, label: rtl ? 'بدون سعر' : 'No Price', count: stats.noPrice, icon: DollarSign },
   ], [rtl, stats]);
+
+  // WORKSPACE-RBAC-6E — shadow parity check (observability only, no enforcement).
+  usePermissionParity('services.manage');
 
   return (
     <DashboardLayout>

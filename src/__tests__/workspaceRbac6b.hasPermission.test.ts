@@ -143,6 +143,8 @@ describe('WORKSPACE-RBAC-6B — runtime smoke', () => {
     }
     const callers = walk(SRC)
       .filter((f) => !f.endsWith('workspaceRbac6b.hasPermission.test.ts'))
+      .filter((f) => !f.endsWith('workspaceRbac6e.shadowParity.test.tsx'))
+      .filter((f) => !f.endsWith('modules/workspace/services/hasPermissionServer.ts'))
       .filter((f) => /rpc\(\s*['"]has_permission['"]/.test(readFileSync(f, 'utf8')));
     expect(callers).toEqual([]);
   });
