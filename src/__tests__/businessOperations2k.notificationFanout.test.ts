@@ -250,7 +250,7 @@ describe('2K dispatchPlannedNotifications — fan-out', () => {
       ],
     };
     const resolver = vi
-      .fn<[PlannedNotification], NotificationRecipient[] | Promise<NotificationRecipient[]>>()
+      .fn()
       .mockImplementationOnce(() => {
         throw new Error('rls denied');
       })
