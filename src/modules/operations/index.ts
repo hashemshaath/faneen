@@ -83,3 +83,16 @@ export {
   type PaymentIntentRow,
   type SlaConditionCode,
 } from './services/candidateLoaders';
+
+export {
+  PRODUCTION_ROW_FETCHERS,
+  loadExistingAlertSnapshots,
+} from './services/productionFetchers';
+
+export {
+  previewSlaSweepForAdmin,
+  DEFAULT_PREVIEW_SAMPLE_LIMIT,
+  type PreviewSlaSweepInput,
+  type PreviewSlaSweepResult,
+  type SafeActionSample,
+} from './services/previewSlaSweepForAdmin';
