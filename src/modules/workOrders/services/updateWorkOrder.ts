@@ -31,7 +31,8 @@ export async function updateWorkOrder(
 
   const { data, error } = await supabase
     .from("work_orders")
-    .update(patch)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .update(patch as any)
     .eq("id", input.id)
     .select(
       "id, ref_id, business_id, source_type, source_id, title, customer_name, customer_phone, status, current_stage_key, priority, owner_user_id, created_by_user_id, due_at, completed_at, created_at, updated_at, deleted_at",
