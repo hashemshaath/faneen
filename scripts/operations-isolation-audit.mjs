@@ -93,14 +93,19 @@ for (const file of walk(SRC)) {
     else violations.push(record);
   }
 
-  // sla-sweep cron wiring must not exist yet
-  const reCron = new RegExp(CRON_PATTERN.source, 'g');
-  let c;
-  while ((c = reCron.exec(source)) !== null) {
-    if (isCommentLine(source, c.index)) continue;
-    const line = source.slice(0, c.index).split('\n').length;
-    const snippet = source.slice(c.index, c.index + 160).replace(/\s+/g, ' ').trim();
-    cronViolations.push({ file: rel, line, snippet });
+  // sla-sweep cron wiring must not exist yet OUTSIDE the operations module.
+  // The operations module itself may use 'sla-sweep' as a run-type identifier
+  // (e.g. in the dispatch run-log envelope introduced in 2D). What is still
+  // forbidden until 2E+ is wiring it from cron/edge/UI surfaces.
+  if (!isAllowed(rel)) {
+    const reCron = new RegExp(CRON_PATTERN.source, 'g');
+    let c;
+    while ((c = reCron.exec(source)) !== null) {
+      if (isCommentLine(source, c.index)) continue;
+      const line = source.slice(0, c.index).split('\n').length;
+      const snippet = source.slice(c.index, c.index + 160).replace(/\s+/g, ' ').trim();
+      cronViolations.push({ file: rel, line, snippet });
+    }
   }
 }
 

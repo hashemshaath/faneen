@@ -54,7 +54,7 @@ describe('BUSINESS-OPERATIONS-2A SLA architecture', () => {
   // wrappers. The "no table yet" guard is now owned by 2B's dedicated
   // isolation test (`businessOperations2b.operationalAlerts.test.ts`).
 
-  it('does not yet wire an sla-sweep cron job', () => {
+  it('does not yet wire an sla-sweep cron job (scheduling surfaces only)', () => {
     const supa = resolve(ROOT, 'supabase');
     const src = resolve(ROOT, 'src');
     const files = [...walk(src), ...walk(supa)];
@@ -62,6 +62,11 @@ describe('BUSINESS-OPERATIONS-2A SLA architecture', () => {
       if (f.endsWith('business-operations-sla-escalation.md')) continue;
       if (f.endsWith('businessOperations2a.slaArchitecture.test.ts')) continue;
       if (f.endsWith('businessOperations2b.operationalAlerts.test.ts')) continue;
+      if (f.endsWith('businessOperations2d.slaDispatch.test.ts')) continue;
+      // 2D introduces the dispatch run-log envelope which uses 'sla-sweep'
+      // as a run-type identifier inside the operations module. This is NOT
+      // cron scheduling; cron wiring is still deferred to 2E+.
+      if (f.includes('/modules/operations/')) continue;
       if (f.endsWith('operations-isolation-audit.mjs')) continue;
       const txt = readFileSync(f, 'utf-8');
       expect(txt.includes("'sla-sweep'") || txt.includes('"sla-sweep"'),
