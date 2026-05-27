@@ -153,6 +153,7 @@ export {
 export {
   resolveSlaNotificationRecipients,
   createSafeSlaRecipientResolver,
+  createSafeSlaMultiRecipientResolver,
   type AlertOwnershipSnapshot,
   type AlertOwnershipLookup,
   type BusinessOwnerLookup,
