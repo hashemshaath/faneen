@@ -148,3 +148,24 @@ export {
   type DispatchPlannedNotificationsTotals,
   type NotificationRecipientResolver,
 } from './services/dispatchPlannedNotifications';
+
+export {
+  resolveSlaNotificationRecipients,
+  createSafeSlaRecipientResolver,
+  type AlertOwnershipSnapshot,
+  type AlertOwnershipLookup,
+  type BusinessOwnerLookup,
+  type CreateRecipientResolverDeps,
+  type RecipientResolverResult,
+  type RecipientSourceReason,
+  type ResolvedRecipient,
+  type SafeNotificationRecipientResolver,
+} from './services/notificationRecipients';
+
+export {
+  buildSafeSlaNotificationContent,
+  createSafeSlaContentBuilder,
+  safeSlaContentBuilder,
+  type SafeSlaContentBuilderOptions,
+  type SupportedLocale,
+} from './services/notificationContent';

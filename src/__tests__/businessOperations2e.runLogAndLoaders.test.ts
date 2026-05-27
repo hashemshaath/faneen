@@ -366,6 +366,7 @@ describe('2E — source purity & cron isolation', () => {
       'alertWriters.ts',
       'getOperationalAlertById.ts',
       'listOperationalAlerts.ts',
+      'notificationRecipients.ts',
       'persistSlaRunLog.ts',
       'productionFetchers.ts',
     ]);
