@@ -19,6 +19,7 @@ import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PermissionHint } from '@/components/workspace/PermissionGate';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -405,10 +406,12 @@ const DashboardBusinessEdit: React.FC = () => {
               )}
             </div>
           </div>
-          <Button onClick={handleSave} disabled={saving || !dirty} className="gap-1.5 self-start sm:self-auto">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {t(isRTL, 'حفظ التغييرات', 'Save changes')}
-          </Button>
+          <PermissionHint permission="entity.manage">
+            <Button onClick={handleSave} disabled={saving || !dirty} className="gap-1.5 self-start sm:self-auto">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {t(isRTL, 'حفظ التغييرات', 'Save changes')}
+            </Button>
+          </PermissionHint>
         </header>
 
         <ValidationBanner issues={validationIssues} isRTL={isRTL} />
@@ -789,10 +792,12 @@ const DashboardBusinessEdit: React.FC = () => {
               ? (<><AlertTriangle className="w-3.5 h-3.5 text-warning" />{t(isRTL, 'لديك تغييرات غير محفوظة', 'You have unsaved changes')}</>)
               : (<><ImageIcon className="w-3.5 h-3.5" />{t(isRTL, 'لا توجد تغييرات معلّقة', 'No pending changes')}</>)}
           </div>
-          <Button onClick={handleSave} disabled={saving || !dirty || hasErrors} className="gap-1.5">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {t(isRTL, 'حفظ التغييرات', 'Save changes')}
-          </Button>
+          <PermissionHint permission="entity.manage">
+            <Button onClick={handleSave} disabled={saving || !dirty || hasErrors} className="gap-1.5">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {t(isRTL, 'حفظ التغييرات', 'Save changes')}
+            </Button>
+          </PermissionHint>
         </div>
       </div>
     </DashboardLayout>
