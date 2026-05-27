@@ -22,14 +22,19 @@ export async function recordWorkOrderAudit(
   input: RecordWorkOrderAuditInput,
 ): Promise<void> {
   try {
-    await supabase.from("business_audit_log").insert({
+    const payload: Record<string, unknown> = {
       business_id: input.business_id,
       actor_id: input.actor_id,
       entity_type: "work_order",
       entity_id: input.entity_id,
       action: input.action,
       metadata: input.metadata ?? {},
-    });
+    };
+    // Supabase typed-overload variance — cast at the boundary only.
+    await supabase
+      .from("business_audit_log")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .insert(payload as any);
   } catch {
     /* swallow — observability only */
   }
