@@ -346,6 +346,10 @@ const DashboardBusinessEdit: React.FC = () => {
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   }, [form]);
 
+  // WORKSPACE-RBAC-6E — shadow parity check (observability only, no enforcement).
+  // Hook must run unconditionally before any early returns below.
+  usePermissionParity('entity.manage');
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -382,9 +386,6 @@ const DashboardBusinessEdit: React.FC = () => {
 
   const status = (form.approval_status ?? 'draft') as keyof typeof statusToneMap;
   const statusTone = statusToneMap[status] ?? statusToneMap.draft;
-
-  // WORKSPACE-RBAC-6E — shadow parity check (observability only, no enforcement).
-  usePermissionParity('entity.manage');
 
   return (
     <DashboardLayout>
