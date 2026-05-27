@@ -104,6 +104,7 @@ describe('WORKSPACE-RBAC-6C — safety invariants', () => {
     'pages/dashboard/DashboardServices.tsx',
     'pages/dashboard/DashboardPortfolio.tsx',
     'pages/dashboard/DashboardPromotions.tsx',
+    'pages/dashboard/DashboardBusinessEdit.tsx',
   ].map((p) => join(SRC, p));
 
   it('PermissionHint/PermissionGate adoption is limited to the approved pages', () => {
