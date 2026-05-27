@@ -29,7 +29,7 @@
  *   - Missing/unresolved recipients are skipped (never failed).
  *   - Unsupported channels (anything other than `in_app`) are skipped
  *     and counted under `unsupportedChannelSkipped`. No SMS / email /
- *     push / WhatsApp delivery.
+ *     push / external messaging delivery.
  *
  * Channel: in_app only. Other surfaces are out of scope here.
  */
