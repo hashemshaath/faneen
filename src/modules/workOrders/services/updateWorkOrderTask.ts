@@ -35,10 +35,6 @@ export async function updateWorkOrderTask(
     .maybeSingle();
 
   if (!error && data) {
-    const action =
-      input.patch.status === "completed"
-        ? "work_order.task_completed"
-        : "work_order.task_created"; // placeholder; we narrow below
     if (input.patch.status === "completed") {
       await recordWorkOrderAudit({
         business_id: data.business_id,
@@ -48,7 +44,6 @@ export async function updateWorkOrderTask(
         metadata: { task_id: data.id, ref_id: data.ref_id },
       });
     }
-    void action;
   }
 
   return { data: (data as WorkOrderTaskRow | null) ?? null, error };
