@@ -34,7 +34,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { useAdminOperationsPreview } from '@/modules/operations';
+import {
+  useAdminOperationsPreview,
+  useRecentManualSlaPreviewRuns,
+  MANUAL_PREVIEW_RUNS_CAP,
+  type ManualPreviewRunSummary,
+} from '@/modules/operations';
 import type {
   PreviewSlaSweepResult,
   SafeActionSample,
@@ -260,8 +265,9 @@ const AdminOperations = () => {
 
   const {
     data, isLoading, isFetching, isError, error, refetch,
-    lastSuccessfulAt, phase,
+    lastSuccessfulAt, phase, ledger,
   } = useAdminOperationsPreview();
+  const recent = useRecentManualSlaPreviewRuns();
 
   const totals = data?.totals;
   const lastGoodIso = lastSuccessfulAt ? new Date(lastSuccessfulAt).toISOString() : undefined;
@@ -323,6 +329,30 @@ const AdminOperations = () => {
 
       {/* Safety panel — always visible. Pure copy, no controls. */}
       <SafetyPanel bi={bi} />
+
+      {/* Ledger status banner — surfaces the most recent manual-preview log result. */}
+      {ledger && (
+        <Card data-testid="ledger-status">
+          <CardContent className="p-3 flex items-start gap-2 text-xs">
+            {ledger.ok ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                <span className="text-muted-foreground">
+                  {bi('تم تسجيل تشغيل المعاينة (سجل المعاينة اليدوية فقط).',
+                      'Preview run logged (manual preview log only).')}
+                </span>
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                <span className="text-warning tech-content" data-testid="ledger-error">
+                  {bi('فشل تسجيل المعاينة:', 'Logging failed:')} {ledger.error ?? '—'}
+                </span>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Error state */}
       {isError && (
@@ -452,6 +482,33 @@ const AdminOperations = () => {
               <ActionSamplesTable samples={data.sampleActions} bi={bi} />
             )
           ) : null}
+        </CardContent>
+      </Card>
+
+      {/* Recent manual dry-run preview runs — sanitized, capped */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center justify-between">
+            <span>{bi('آخر عمليات المعاينة اليدوية', 'Recent manual preview runs')}</span>
+            <span className="text-xs text-muted-foreground">
+              {bi(`الحد ${MANUAL_PREVIEW_RUNS_CAP}`, `cap ${MANUAL_PREVIEW_RUNS_CAP}`)}
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent data-testid="recent-runs">
+          {recent.isLoading ? (
+            <Skeleton className="h-16" />
+          ) : recent.isError ? (
+            <div className="text-xs text-muted-foreground">
+              {bi('تعذّر تحميل السجلات الأخيرة.', 'Could not load recent runs.')}
+            </div>
+          ) : recent.runs.length === 0 ? (
+            <div className="text-sm text-muted-foreground p-4 text-center">
+              {bi('لا توجد عمليات معاينة مسجّلة بعد.', 'No manual preview runs logged yet.')}
+            </div>
+          ) : (
+            <RecentRunsTable runs={recent.runs} bi={bi} isRTL={isRTL} />
+          )}
         </CardContent>
       </Card>
     </main>
