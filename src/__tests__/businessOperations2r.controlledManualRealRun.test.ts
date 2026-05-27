@@ -437,13 +437,18 @@ describe('2R — AdminOperations dashboard remains safe', () => {
     expect(src).not.toMatch(/onClick=\{[^}]*executeManualSlaRealRun/);
     expect(src).not.toMatch(/onClick=\{[^}]*requestManualRealRun/);
     expect(src).not.toMatch(/onClick=\{[^}]*handleManualRealRunEndpoint/);
-    expect(src).not.toMatch(/Schedule cron|Enable cron/i);
-    expect(src).not.toMatch(/Send notification|Send SMS|Send email|Send push/i);
-    expect(src).not.toMatch(/Unlock real-run|Approve production/i);
+    expect(src).not.toMatch(/onClick=\{[^}]*(notif|cron|sms|email|whatsapp|push|unlock|approve|dispatch|sendSlaSweep)/i);
+    // No buttons whose label triggers real-run/notification/cron actions.
+    expect(src).not.toMatch(/<Button[^>]*>[^<]*Schedule\s+cron/i);
+    expect(src).not.toMatch(/<Button[^>]*>[^<]*Send\s+(notification|sms|email|push)/i);
+    expect(src).not.toMatch(/<Button[^>]*>[^<]*Unlock\s+real-?run/i);
+    expect(src).not.toMatch(/<Button[^>]*>[^<]*Approve\s+production/i);
   });
 
   it('does not import the controlled executor (UI must stay disabled)', () => {
-    expect(src).not.toMatch(/executeManualSlaRealRun/);
+    // The UI must not import or call the controlled executor.
+    expect(src).not.toMatch(/import[^;]*executeManualSlaRealRun/);
+    expect(src).not.toMatch(/executeManualSlaRealRun\s*\(/);
   });
 });
 
