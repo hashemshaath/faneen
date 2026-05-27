@@ -363,6 +363,7 @@ describe('2E — source purity & cron isolation', () => {
       if (/from\s+['"]@\/integrations\/supabase\/client['"]/.test(src)) supaImports.push(file);
     }
     expect(supaImports.sort()).toEqual([
+      'alertWriters.ts',
       'getOperationalAlertById.ts',
       'listOperationalAlerts.ts',
       'persistSlaRunLog.ts',
