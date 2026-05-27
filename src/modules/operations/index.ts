@@ -266,3 +266,19 @@ export {
   type UseOperationsApprovalAuditOptions,
   type UseOperationsApprovalAuditResult,
 } from './hooks/useOperationsApprovalAudit';
+
+export {
+  handleManualRealRunEndpoint,
+  validateManualRealRunEndpointRequest,
+  MANUAL_REAL_RUN_ENDPOINT_DISABLED_REASON,
+  MANUAL_REAL_RUN_ENDPOINT_REJECTION_REASONS,
+  type ManualRealRunEndpointRequest,
+  type ManualRealRunEndpointResponse,
+  type ManualRealRunEndpointContext,
+  type ManualRealRunEndpointContextRole,
+  type ManualRealRunEndpointExecutionContext,
+  type ManualRealRunEndpointSource,
+  type ManualRealRunEndpointRejectionReason,
+  type ManualRealRunEndpointDeps,
+  type ManualRealRunEndpointAuditWriter,
+} from './services/manualRealRunEndpointContract';

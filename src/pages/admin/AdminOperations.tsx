@@ -204,6 +204,11 @@ function ReadinessPanel({ bi }: { bi: (ar: string, en: string) => string }) {
       value: bi('مفعّل', 'Enabled'),
       tone: 'ok',
     },
+    {
+      label: bi('عقد نقطة النهاية على الخادم', 'Server endpoint contract'),
+      value: bi('مُصمَّم ومعطّل', 'Designed, disabled'),
+      tone: 'off',
+    },
   ];
   return (
     <Card data-testid="readiness-panel">
