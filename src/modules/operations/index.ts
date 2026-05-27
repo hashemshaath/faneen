@@ -54,3 +54,32 @@ export {
   type SlaRunLogger,
   type SlaRunLogRecord,
 } from './services/dispatchSlaSweep';
+
+export {
+  persistSlaRunLog,
+  buildSafeRunLogSummary,
+  createSupabaseSlaRunLogger,
+  SLA_RUN_LOG_JOB_NAME,
+  SLA_RUN_LOG_FUNCTION_NAME,
+  type SafeRunLogSummary,
+  type PersistSlaRunLogDeps,
+  type PersistSlaRunLogResult,
+} from './services/persistSlaRunLog';
+
+export {
+  loadSlaSweepCandidates,
+  normalizeLeadSubmittedNotViewed24h,
+  normalizeLeadContactedNoQuote72h,
+  normalizeInvitationPending7d,
+  normalizeContractPendingSignature7d,
+  normalizePaymentIntentPending1h,
+  type RowFetchers,
+  type LoaderError,
+  type LoadSlaSweepCandidatesInput,
+  type LoadSlaSweepCandidatesResult,
+  type QuoteRequestRow,
+  type BusinessStaffInvitationRow,
+  type ContractRow,
+  type PaymentIntentRow,
+  type SlaConditionCode,
+} from './services/candidateLoaders';
