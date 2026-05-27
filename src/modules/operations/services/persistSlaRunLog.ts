@@ -86,9 +86,20 @@ export function buildSafeRunLogSummary(
 export interface PersistSlaRunLogDeps {
   /** Injectable RPC caller for unit tests. Defaults to the supabase client. */
   rpc?: (
-    fn: 'log_cron_run',
-    args: Record<string, unknown>,
+    args: LogCronRunArgs,
   ) => Promise<{ data: unknown; error: { message: string } | null }>;
+}
+
+interface LogCronRunArgs {
+  _job_name: string;
+  _function_name: string;
+  _started_at: string;
+  _finished_at: string;
+  _ok: boolean;
+  _status: string;
+  _summary: SafeRunLogSummary;
+  _error_code: string | null;
+  _error_message: string | null;
 }
 
 function deriveErrorCode(record: SlaRunLogRecord): string | null {
@@ -104,12 +115,18 @@ export async function persistSlaRunLog(
   record: SlaRunLogRecord,
   deps: PersistSlaRunLogDeps = {},
 ): Promise<PersistSlaRunLogResult> {
-  const rpc = deps.rpc ?? ((fn, args) => supabase.rpc(fn, args) as ReturnType<NonNullable<PersistSlaRunLogDeps['rpc']>>);
+  const rpc =
+    deps.rpc ??
+    (async (args: LogCronRunArgs) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)('log_cron_run', args);
+      return { data, error };
+    });
   const summary = buildSafeRunLogSummary(record);
   const errorCode = deriveErrorCode(record);
   const errorMessage = record.status === 'failed' ? (record.error ?? null) : null;
   try {
-    const { data, error } = await rpc('log_cron_run', {
+    const { data, error } = await rpc({
       _job_name: SLA_RUN_LOG_JOB_NAME,
       _function_name: SLA_RUN_LOG_FUNCTION_NAME,
       _started_at: record.startedAt,
