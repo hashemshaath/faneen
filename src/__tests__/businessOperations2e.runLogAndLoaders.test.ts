@@ -355,14 +355,19 @@ describe('2E — source purity & cron isolation', () => {
     }
   });
 
-  it('persistSlaRunLog is the only operations file importing the supabase client', () => {
+  it('only the approved operations files import the supabase client', () => {
     const dir = resolve(__dirname, '../modules/operations/services');
     const supaImports: string[] = [];
     for (const file of readdirSync(dir)) {
       const src = readFileSync(resolve(dir, file), 'utf-8');
       if (/from\s+['"]@\/integrations\/supabase\/client['"]/.test(src)) supaImports.push(file);
     }
-    expect(supaImports.sort()).toEqual(['getOperationalAlertById.ts', 'listOperationalAlerts.ts', 'persistSlaRunLog.ts']);
+    expect(supaImports.sort()).toEqual([
+      'getOperationalAlertById.ts',
+      'listOperationalAlerts.ts',
+      'persistSlaRunLog.ts',
+      'productionFetchers.ts',
+    ]);
   });
 
   it('operations module does not wire any cron scheduler', () => {
