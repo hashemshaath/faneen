@@ -126,6 +126,7 @@ export {
 
 export {
   buildNotificationKey,
+  buildRecipientNotificationKey,
   defaultNotificationContent,
   createInAppNotificationDispatcher,
   type NotificationDispatcher,
