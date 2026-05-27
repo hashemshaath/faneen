@@ -221,7 +221,7 @@ const AdminOperations = () => {
             variant="outline"
             size="sm"
             onClick={() => { void refetch(); }}
-            disabled={isFetching}
+            disabled={isLoading}
             data-testid="refresh-preview"
           >
             {isFetching
