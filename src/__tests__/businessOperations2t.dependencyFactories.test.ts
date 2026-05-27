@@ -74,33 +74,28 @@ function makeAdminClient(over: Partial<ServerOnlyAdminClient> = {}): ServerOnlyA
 describe('2T: factories require an injected admin client', () => {
   it('audit writer throws synchronously when client missing', () => {
     expect(() =>
-      // @ts-expect-error — exercising fail-closed runtime guard
-      createManualRunAuditWriter(),
+      createManualRunAuditWriter(undefined as unknown as never),
     ).toThrow(/admin Supabase client/);
     expect(() =>
-      // @ts-expect-error
-      createManualRunAuditWriter({}),
+      createManualRunAuditWriter({} as never),
     ).toThrow(/admin Supabase client/);
   });
 
   it('logger throws synchronously when client missing', () => {
     expect(() =>
-      // @ts-expect-error
-      createManualRunLogger(undefined),
+      createManualRunLogger(undefined as unknown as never),
     ).toThrow(/admin Supabase client/);
   });
 
   it('alert writer throws synchronously when client missing', () => {
     expect(() =>
-      // @ts-expect-error
-      createManualRunAlertWriter(undefined),
+      createManualRunAlertWriter(undefined as unknown as never),
     ).toThrow(/admin Supabase client/);
   });
 
   it('bundle composer throws when client missing', () => {
     expect(() =>
-      // @ts-expect-error
-      createManualRunDependencyBundle({}),
+      createManualRunDependencyBundle({} as never),
     ).toThrow(/admin Supabase client/);
   });
 });
@@ -131,7 +126,11 @@ describe('2T: audit writer writes safe payload only', () => {
 
     expect(res.ok).toBe(true);
     expect(rpc).toHaveBeenCalledTimes(1);
-    const [fn, args] = rpc.mock.calls[0];
+    const call = rpc.mock.calls[0]!;
+    const fn = call[0];
+    const args = call[1] as Record<string, unknown> & {
+      _summary: { scope: string };
+    };
     expect(fn).toBe('log_cron_run');
     expect(args._function_name).toBe('operations-approval-audit');
     const summary = JSON.stringify(args._summary);
