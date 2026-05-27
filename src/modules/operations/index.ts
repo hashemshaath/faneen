@@ -302,3 +302,15 @@ export {
   type ManualSlaRealRunHarnessRejectionReason,
   type ManualSlaRealRunHarnessExecutionSummary,
 } from './services/manualSlaRealRunHarness';
+
+export {
+  createManualRunAuditWriter,
+  createManualRunLogger,
+  createManualRunAlertWriter,
+  createManualRunDependencyBundle,
+  type ManualRunFactoryInput,
+  type ManualRunDependencyBundle,
+  type ServerOnlyAdminClient,
+  type AdminQueryBuilder,
+  type AdminRpcResult,
+} from './services/manualRealRunDependencies';
