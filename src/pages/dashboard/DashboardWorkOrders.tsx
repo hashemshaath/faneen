@@ -45,7 +45,7 @@ export default function DashboardWorkOrders() {
   usePageMeta({
     title: isRTL ? "أوامر العمل" : "Work Orders",
     description: isRTL ? "إدارة أوامر العمل والمهام والمراحل" : "Manage work orders, tasks and stages",
-    noIndex: true,
+    noindex: true,
   });
 
   const businessId = workspace.active_entity_id;
