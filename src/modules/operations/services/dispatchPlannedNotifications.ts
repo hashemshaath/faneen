@@ -1,28 +1,42 @@
 /**
- * BUSINESS-OPERATIONS-2H — Gated planned-notification dispatcher.
+ * BUSINESS-OPERATIONS-2H + 2K — Gated planned-notification dispatcher
+ * with multi-recipient fan-out.
  *
- * Walks a `NotificationPlan` (produced by `planNotifications`) and hands
- * each entry to the injected `NotificationDispatcher`.
+ * Walks a `NotificationPlan` (produced by `planNotifications`) and
+ * hands each (planned × recipient) pair to the injected
+ * `NotificationDispatcher` exactly once per run.
  *
  * Safety gate (fails closed):
- *   - Requires `dryRun: false` AND `enableNotificationWrites: true` AND
- *     a non-null `dispatcher`. Any missing prerequisite → returns
- *     `dispatched: false` with the gate reason; the dispatcher is never
- *     invoked. This gate is INDEPENDENT of the alert-write gate
- *     (`enableWrites`) so notifications can be held back even when alert
- *     writes are live.
+ *   - Requires `dryRun: false` AND `enableNotificationWrites: true`
+ *     AND a non-null `dispatcher` AND a non-null `recipientResolver`.
+ *     Any missing prerequisite → returns `dispatched: false` with the
+ *     gate reason; the dispatcher is never invoked. This gate is
+ *     INDEPENDENT of the alert-write gate (`enableWrites`).
+ *
+ * Fan-out (2K):
+ *   - `recipientResolver` may return a single recipient, an array of
+ *     recipients, or `null`. Recipients are deduped by `userId` per
+ *     planned notification.
+ *   - Each unique (planned × userId) pair gets its own deterministic
+ *     `notificationKey` via `buildRecipientNotificationKey`, which
+ *     guarantees per-recipient idempotency across runs.
+ *   - Duplicate (planned × userId) pairs within the run are skipped.
  *
  * Per-run guarantees:
- *   - Duplicate `notificationKey`s within a run are skipped (idempotent).
+ *   - Resolver throws → one failed result, loop continues.
+ *   - Dispatcher throws → one failed result for that recipient, loop
+ *     continues for remaining recipients.
  *   - Missing/unresolved recipients are skipped (never failed).
- *   - Individual dispatch failures do NOT abort the loop and do NOT
- *     mutate alerts or other notifications.
+ *   - Unsupported channels (anything other than `in_app`) are skipped
+ *     and counted under `unsupportedChannelSkipped`. No SMS / email /
+ *     push / external messaging delivery.
  *
  * Channel: in_app only. Other surfaces are out of scope here.
  */
 import type { NotificationPlan, PlannedNotification } from './planNotifications';
 import {
   buildNotificationKey,
+  buildRecipientNotificationKey,
   defaultNotificationContent,
   type NotificationContentBuilder,
   type NotificationDispatcher,
@@ -39,9 +53,25 @@ export const NOTIFICATION_GATE_REQUIRES_DISPATCHER =
 export const NOTIFICATION_GATE_REQUIRES_RESOLVER =
   'dispatchPlannedNotifications requires a recipientResolver';
 
+/**
+ * Recipient resolver may return:
+ *   - a single `NotificationRecipient` (back-compat with 2H/2I)
+ *   - an array of recipients (2K multi-recipient fan-out)
+ *   - `null` / `undefined` when no recipient is resolved
+ */
 export type NotificationRecipientResolver = (
   planned: PlannedNotification,
-) => NotificationRecipient | null | Promise<NotificationRecipient | null>;
+) =>
+  | NotificationRecipient
+  | readonly NotificationRecipient[]
+  | null
+  | undefined
+  | Promise<
+      | NotificationRecipient
+      | readonly NotificationRecipient[]
+      | null
+      | undefined
+    >;
 
 export interface DispatchPlannedNotificationsInput {
   plan: NotificationPlan;
@@ -53,10 +83,20 @@ export interface DispatchPlannedNotificationsInput {
 }
 
 export interface DispatchPlannedNotificationsTotals {
+  /** Number of planned notifications in the input plan. */
   planned: number;
+  /** Unique (planned × recipient) deliveries actually attempted. */
+  deliveriesAttempted: number;
   sent: number;
+  /** Aggregate of all skipped reasons. */
   skipped: number;
   failed: number;
+  /** Subset of `skipped`: channel not supported (non-`in_app`). */
+  unsupportedChannelSkipped: number;
+  /** Subset of `skipped`: resolver returned no usable recipients. */
+  missingRecipientSkipped: number;
+  /** Subset of `skipped`: duplicate (planned × recipient) within run. */
+  duplicateSkipped: number;
 }
 
 export interface DispatchPlannedNotificationsResult {
@@ -67,7 +107,16 @@ export interface DispatchPlannedNotificationsResult {
 }
 
 function emptyTotals(planned: number): DispatchPlannedNotificationsTotals {
-  return { planned, sent: 0, skipped: 0, failed: 0 };
+  return {
+    planned,
+    deliveriesAttempted: 0,
+    sent: 0,
+    skipped: 0,
+    failed: 0,
+    unsupportedChannelSkipped: 0,
+    missingRecipientSkipped: 0,
+    duplicateSkipped: 0,
+  };
 }
 
 function bump(
@@ -77,6 +126,22 @@ function bump(
   if (r.outcome === 'sent') totals.sent++;
   else if (r.outcome === 'skipped') totals.skipped++;
   else totals.failed++;
+}
+
+function normalizeRecipients(
+  raw:
+    | NotificationRecipient
+    | readonly NotificationRecipient[]
+    | null
+    | undefined,
+): NotificationRecipient[] {
+  if (raw == null) return [];
+  if (Array.isArray(raw)) {
+    return (raw as readonly NotificationRecipient[]).filter(
+      (r): r is NotificationRecipient => !!r,
+    );
+  }
+  return [raw as NotificationRecipient];
 }
 
 export async function dispatchPlannedNotifications(
@@ -117,35 +182,40 @@ export async function dispatchPlannedNotifications(
     };
   }
 
+  const dispatcher = input.dispatcher;
+  const resolver = input.recipientResolver;
   const build = input.contentBuilder ?? defaultNotificationContent;
   const totals = emptyTotals(plannedCount);
   const results: NotificationDispatchResult[] = [];
-  const seen = new Set<string>();
+  const seenDeliveries = new Set<string>();
 
   for (const planned of input.plan.notifications) {
-    const key = buildNotificationKey(planned);
+    const baseKey = buildNotificationKey(planned);
 
-    if (seen.has(key)) {
+    // Channel guard. In-app only in this phase.
+    if (planned.channel !== 'in_app') {
       const r: NotificationDispatchResult = {
         outcome: 'skipped',
         channel: 'in_app',
-        notificationKey: key,
-        reason: 'duplicate notification key within run',
+        notificationKey: baseKey,
+        reason: `unsupported channel: ${planned.channel}`,
       };
       results.push(r);
       bump(totals, r);
+      totals.unsupportedChannelSkipped++;
       continue;
     }
-    seen.add(key);
 
-    let recipient: NotificationRecipient | null = null;
+    // Resolve recipients (single / array / null) with throw safety.
+    let resolved: NotificationRecipient[];
     try {
-      recipient = (await input.recipientResolver(planned)) ?? null;
+      const raw = await resolver(planned);
+      resolved = normalizeRecipients(raw);
     } catch (err) {
       const r: NotificationDispatchResult = {
         outcome: 'failed',
         channel: 'in_app',
-        notificationKey: key,
+        notificationKey: baseKey,
         error:
           'recipientResolver: ' +
           (err instanceof Error ? err.message : 'unknown error'),
@@ -155,22 +225,88 @@ export async function dispatchPlannedNotifications(
       continue;
     }
 
-    if (!recipient || !recipient.userId) {
+    // Dedupe by userId within this planned notification.
+    const perPlannedSeen = new Set<string>();
+    const unique: NotificationRecipient[] = [];
+    let duplicateWithinPlanned = 0;
+    for (const r of resolved) {
+      if (!r || !r.userId) continue;
+      if (perPlannedSeen.has(r.userId)) {
+        duplicateWithinPlanned++;
+        continue;
+      }
+      perPlannedSeen.add(r.userId);
+      unique.push(r);
+    }
+
+    if (unique.length === 0) {
       const r: NotificationDispatchResult = {
         outcome: 'skipped',
         channel: 'in_app',
-        notificationKey: key,
+        notificationKey: baseKey,
         reason: 'no recipient resolved',
       };
       results.push(r);
       bump(totals, r);
+      totals.missingRecipientSkipped++;
+      totals.duplicateSkipped += duplicateWithinPlanned;
       continue;
     }
 
     const content = build(planned);
-    const r = await input.dispatcher.dispatch(planned, recipient, content, key);
-    results.push(r);
-    bump(totals, r);
+
+    // Surface duplicates collapsed at recipient-resolution time.
+    for (let i = 0; i < duplicateWithinPlanned; i++) {
+      const r: NotificationDispatchResult = {
+        outcome: 'skipped',
+        channel: 'in_app',
+        notificationKey: baseKey,
+        reason: 'duplicate recipient within planned notification',
+      };
+      results.push(r);
+      bump(totals, r);
+      totals.duplicateSkipped++;
+    }
+
+    // Fan out: one delivery attempt per unique (planned × userId).
+    for (const recipient of unique) {
+      const perKey = buildRecipientNotificationKey(planned, recipient.userId);
+      if (seenDeliveries.has(perKey)) {
+        const r: NotificationDispatchResult = {
+          outcome: 'skipped',
+          channel: 'in_app',
+          notificationKey: perKey,
+          recipientUserId: recipient.userId,
+          reason: 'duplicate notification key within run',
+        };
+        results.push(r);
+        bump(totals, r);
+        totals.duplicateSkipped++;
+        continue;
+      }
+      seenDeliveries.add(perKey);
+      totals.deliveriesAttempted++;
+
+      let r: NotificationDispatchResult;
+      try {
+        r = await dispatcher.dispatch(planned, recipient, content, perKey);
+      } catch (err) {
+        // Dispatchers should never throw, but if they do, isolate the
+        // failure to this delivery and keep the loop running for the
+        // remaining recipients of the same planned notification.
+        r = {
+          outcome: 'failed',
+          channel: 'in_app',
+          notificationKey: perKey,
+          recipientUserId: recipient.userId,
+          error:
+            'dispatcher threw: ' +
+            (err instanceof Error ? err.message : 'unknown error'),
+        };
+      }
+      results.push(r);
+      bump(totals, r);
+    }
   }
 
   return { dispatched: true, totals, results };

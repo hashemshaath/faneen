@@ -126,6 +126,7 @@ export {
 
 export {
   buildNotificationKey,
+  buildRecipientNotificationKey,
   defaultNotificationContent,
   createInAppNotificationDispatcher,
   type NotificationDispatcher,
@@ -152,6 +153,7 @@ export {
 export {
   resolveSlaNotificationRecipients,
   createSafeSlaRecipientResolver,
+  createSafeSlaMultiRecipientResolver,
   type AlertOwnershipSnapshot,
   type AlertOwnershipLookup,
   type BusinessOwnerLookup,
