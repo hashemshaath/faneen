@@ -148,7 +148,7 @@ export function createSupabaseAlertWriter(): AlertWriter {
             due_at: input.dueAt ?? null,
             triggered_at: triggeredAt,
             idempotency_key: input.idempotencyKey,
-            metadata: input.metadata ?? {},
+            metadata: (input.metadata ?? {}) as never,
           }])
           .select('id')
           .maybeSingle();
