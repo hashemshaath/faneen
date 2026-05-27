@@ -82,6 +82,24 @@ export function buildNotificationKey(planned: PlannedNotification): string {
 }
 
 /**
+ * BUSINESS-OPERATIONS-2K — per-recipient idempotency key. Combines the
+ * base notification key with the resolved internal `userId` so that
+ * fan-out to multiple recipients writes one row per (planned, user)
+ * pair and remains stable across runs.
+ *
+ * The recipient `userId` is an internal Supabase identifier (uuid).
+ * It is NOT PII and is only consumed by the internal dispatch path
+ * (notifications.user_id + idempotency log). Never surfaced to the
+ * admin dashboard.
+ */
+export function buildRecipientNotificationKey(
+  planned: PlannedNotification,
+  userId: string,
+): string {
+  return `${buildNotificationKey(planned)}:user:${userId}`;
+}
+
+/**
  * Safe placeholder content — condition code only. Real localized copy is
  * the caller's responsibility via `contentBuilder`. NEVER include PII
  * (names, phones, emails, lead/contract content) in the default.
