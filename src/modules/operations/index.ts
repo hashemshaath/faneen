@@ -203,3 +203,24 @@ export {
   type ListManualPreviewRunsResult,
   type ListManualPreviewRunsDeps,
 } from './services/listManualSlaPreviewRuns';
+
+export {
+  OPERATIONS_REAL_RUN_FLAG,
+  OPERATIONS_NOTIFICATION_WRITES_FLAG,
+  OPERATIONS_CRON_FLAG,
+  OPERATIONS_GUARD_REASONS,
+  detectGuardContext,
+  checkOperationsRealRunAllowed,
+  checkOperationsNotificationWritesAllowed,
+  checkOperationsCronAllowed,
+  getOperationsRealRunReadiness,
+  guardedDispatchSlaSweep,
+  type OperationsGuardReason,
+  type OperationsFlagName,
+  type OperationsGuardEnv,
+  type OperationsGuardResult,
+  type OperationsRealRunReadiness,
+  type GetOperationsRealRunReadinessOptions,
+  type GuardedDispatchSlaSweepInput,
+  type GuardedDispatchSlaSweepResult,
+} from './services/operationsRunGuards';
