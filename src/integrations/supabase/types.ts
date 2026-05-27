@@ -10729,6 +10729,239 @@ export type Database = {
         }
         Relationships: []
       }
+      work_order_comments: {
+        Row: {
+          author_user_id: string
+          body: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          task_id: string | null
+          work_order_id: string
+        }
+        Insert: {
+          author_user_id: string
+          body: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          task_id?: string | null
+          work_order_id: string
+        }
+        Update: {
+          author_user_id?: string
+          body?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          task_id?: string | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_comments_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_stages: {
+        Row: {
+          assigned_to_user_id: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          sort_order: number
+          stage_key: string
+          started_at: string | null
+          status: string
+          title_ar: string
+          title_en: string
+          updated_at: string
+          work_order_id: string
+        }
+        Insert: {
+          assigned_to_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          sort_order?: number
+          stage_key: string
+          started_at?: string | null
+          status?: string
+          title_ar: string
+          title_en: string
+          updated_at?: string
+          work_order_id: string
+        }
+        Update: {
+          assigned_to_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          sort_order?: number
+          stage_key?: string
+          started_at?: string | null
+          status?: string
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_stages_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_tasks: {
+        Row: {
+          assigned_to_user_id: string | null
+          business_id: string
+          completed_at: string | null
+          created_at: string
+          created_by_user_id: string
+          deleted_at: string | null
+          description: string | null
+          due_at: string | null
+          id: string
+          priority: string
+          ref_id: string | null
+          stage_id: string | null
+          status: string
+          title: string
+          updated_at: string
+          work_order_id: string
+        }
+        Insert: {
+          assigned_to_user_id?: string | null
+          business_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by_user_id: string
+          deleted_at?: string | null
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          priority?: string
+          ref_id?: string | null
+          stage_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          work_order_id: string
+        }
+        Update: {
+          assigned_to_user_id?: string | null
+          business_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by_user_id?: string
+          deleted_at?: string | null
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          priority?: string
+          ref_id?: string | null
+          stage_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_tasks_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_tasks_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_orders: {
+        Row: {
+          business_id: string
+          completed_at: string | null
+          created_at: string
+          created_by_user_id: string
+          current_stage_key: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          deleted_at: string | null
+          due_at: string | null
+          id: string
+          owner_user_id: string
+          priority: string
+          ref_id: string | null
+          source_id: string | null
+          source_type: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by_user_id: string
+          current_stage_key?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          deleted_at?: string | null
+          due_at?: string | null
+          id?: string
+          owner_user_id: string
+          priority?: string
+          ref_id?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by_user_id?: string
+          current_stage_key?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          deleted_at?: string | null
+          due_at?: string | null
+          id?: string
+          owner_user_id?: string
+          priority?: string
+          ref_id?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       business_branches_public: {
@@ -12677,6 +12910,10 @@ export type Database = {
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       is_valid_username: { Args: { _username: string }; Returns: Json }
+      is_work_order_member: {
+        Args: { _business_id: string; _user_id: string }
+        Returns: boolean
+      }
       issue_client_site_qr_token: { Args: { _site_id: string }; Returns: Json }
       jsonb_diff: { Args: { _new: Json; _old: Json }; Returns: Json }
       link_lead_to_contract: {

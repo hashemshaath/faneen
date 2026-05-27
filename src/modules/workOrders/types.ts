@@ -1,0 +1,79 @@
+/**
+ * BUSINESS-CORE-3A — Work Order domain types.
+ *
+ * Single source of truth for the work-order family of tables. UI/services
+ * MUST import from this module barrel — never reach into
+ * `@/integrations/supabase/types` directly.
+ */
+import type { Database } from "@/integrations/supabase/types";
+
+export type WorkOrderRow =
+  Database["public"]["Tables"]["work_orders"]["Row"];
+export type WorkOrderInsert =
+  Database["public"]["Tables"]["work_orders"]["Insert"];
+export type WorkOrderUpdate =
+  Database["public"]["Tables"]["work_orders"]["Update"];
+
+export type WorkOrderStageRow =
+  Database["public"]["Tables"]["work_order_stages"]["Row"];
+export type WorkOrderStageInsert =
+  Database["public"]["Tables"]["work_order_stages"]["Insert"];
+export type WorkOrderStageUpdate =
+  Database["public"]["Tables"]["work_order_stages"]["Update"];
+
+export type WorkOrderTaskRow =
+  Database["public"]["Tables"]["work_order_tasks"]["Row"];
+export type WorkOrderTaskInsert =
+  Database["public"]["Tables"]["work_order_tasks"]["Insert"];
+export type WorkOrderTaskUpdate =
+  Database["public"]["Tables"]["work_order_tasks"]["Update"];
+
+export type WorkOrderCommentRow =
+  Database["public"]["Tables"]["work_order_comments"]["Row"];
+export type WorkOrderCommentInsert =
+  Database["public"]["Tables"]["work_order_comments"]["Insert"];
+
+export type WorkOrderStatus =
+  | "draft"
+  | "active"
+  | "on_hold"
+  | "completed"
+  | "cancelled";
+
+export type WorkOrderPriority = "low" | "medium" | "high" | "urgent";
+
+export type WorkOrderStageStatus =
+  | "pending"
+  | "active"
+  | "completed"
+  | "skipped";
+
+export type WorkOrderTaskStatus =
+  | "todo"
+  | "in_progress"
+  | "blocked"
+  | "completed"
+  | "archived";
+
+/**
+ * Canonical default lifecycle stages seeded on manual work-order creation.
+ * Keep keys stable — they are persisted on each stage row.
+ */
+export const DEFAULT_WORK_ORDER_STAGES: ReadonlyArray<{
+  key: string;
+  title_ar: string;
+  title_en: string;
+}> = [
+  { key: "lead_received", title_ar: "وصول الطلب", title_en: "Lead received" },
+  { key: "site_visit", title_ar: "معاينة الموقع", title_en: "Site visit" },
+  { key: "measurements", title_ar: "المقاسات", title_en: "Measurements" },
+  { key: "quote", title_ar: "عرض السعر", title_en: "Quote" },
+  { key: "approval", title_ar: "الاعتماد", title_en: "Approval" },
+  { key: "contract", title_ar: "العقد", title_en: "Contract" },
+  { key: "advance_payment", title_ar: "الدفعة المقدمة", title_en: "Advance payment" },
+  { key: "procurement", title_ar: "شراء المواد", title_en: "Procurement" },
+  { key: "fabrication", title_ar: "التصنيع", title_en: "Fabrication" },
+  { key: "installation", title_ar: "التركيب", title_en: "Installation" },
+  { key: "handover", title_ar: "التسليم", title_en: "Handover" },
+  { key: "warranty", title_ar: "الضمان", title_en: "Warranty" },
+];
