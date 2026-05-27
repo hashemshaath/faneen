@@ -61,6 +61,14 @@ export interface SafeActionSample {
 export interface PreviewSlaSweepResult {
   /** Always true in this phase. */
   dryRun: true;
+  /**
+   * Coarse status for the admin dashboard. Derived from log/partial/totals.
+   *  - `failed`  : run logger marked the run failed.
+   *  - `partial` : at least one loader or the alerts snapshot failed.
+   *  - `empty`   : no candidates and no existing alerts.
+   *  - `success` : everything healthy with data to display.
+   */
+  status: 'success' | 'partial' | 'failed' | 'empty';
   evaluatedAt: string;
   totals: {
     candidates: number;
@@ -73,11 +81,17 @@ export interface PreviewSlaSweepResult {
   };
   actionCountsByKind: Record<SweepActionKind, number>;
   loaderErrors: LoaderError[];
+  /** Convenience count of loader errors (mirrors `loaderErrors.length`). */
+  loaderErrorsCount: number;
   existingAlertsError?: string;
   log: SlaRunLogRecord;
   logError?: string;
   /** Capped sample of actions, no PII. */
   sampleActions: SafeActionSample[];
+  /** Number of samples actually returned (`sampleActions.length`). */
+  actionSampleCount: number;
+  /** Total actions produced by the plan before capping (for "N of M"). */
+  totalActionCount: number;
   sampleLimit: number;
   partial: boolean;
 }
@@ -146,25 +160,41 @@ export async function previewSlaSweepForAdmin(
 
   const actions = res.plan?.actions ?? [];
   const partial = candidateRes.partial || !!alertsRes.error;
+  const samples = actions.slice(0, sampleLimit).map(toSafeSample);
+
+  const totalsCandidates = res.plan?.totals.candidates ?? 0;
+  const existingAlertsCount = alertsRes.alerts.length;
+  const logFailed = res.log.status === 'failed';
+  const status: PreviewSlaSweepResult['status'] = logFailed
+    ? 'failed'
+    : partial
+      ? 'partial'
+      : totalsCandidates === 0 && existingAlertsCount === 0
+        ? 'empty'
+        : 'success';
 
   return {
     dryRun: true,
+    status,
     evaluatedAt: res.plan?.evaluatedAt ?? now.toISOString(),
     totals: {
-      candidates: res.plan?.totals.candidates ?? 0,
+      candidates: totalsCandidates,
       create: res.plan?.totals.create ?? 0,
       escalate: res.plan?.totals.escalate ?? 0,
       resolve: res.plan?.totals.resolve ?? 0,
       skipped: res.plan?.totals.skipped ?? 0,
       plannedNotifications: res.notifications?.totals.planned ?? 0,
-      existingAlerts: alertsRes.alerts.length,
+      existingAlerts: existingAlertsCount,
     },
     actionCountsByKind: countActionsByKind(actions),
     loaderErrors: candidateRes.loaderErrors,
+    loaderErrorsCount: candidateRes.loaderErrors.length,
     existingAlertsError: alertsRes.error,
     log: res.log,
     logError: res.logError,
-    sampleActions: actions.slice(0, sampleLimit).map(toSafeSample),
+    sampleActions: samples,
+    actionSampleCount: samples.length,
+    totalActionCount: actions.length,
     sampleLimit,
     partial,
   };
