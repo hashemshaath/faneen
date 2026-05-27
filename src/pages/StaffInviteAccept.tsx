@@ -3,7 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Loader2, ShieldCheck, AlertTriangle, Mail, Building2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { acceptStaffInvitation, getStaffInvitationPreview } from '@/modules/identity';
+import {
+  acceptStaffInvitation,
+  getStaffInvitationPreview,
+  checkInvitationTransition,
+} from '@/modules/identity';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -71,6 +75,15 @@ const StaffInviteAccept: React.FC = () => {
     if (!user) {
       navigate(`/auth?redirect=${encodeURIComponent(`/staff-invite/${token}`)}`);
       return;
+    }
+    // BUSINESS-OPERATIONS-1B: additional client-side lifecycle guard.
+    // Server RPC `accept_staff_invitation` remains authoritative.
+    if (preview) {
+      const check = checkInvitationTransition(preview.status, 'accept');
+      if (!check.allowed) {
+        toast.error(isRTL ? check.reasonAr! : check.reasonEn!);
+        return;
+      }
     }
     setAccepting(true);
     const { data, error: rpcError } = await acceptStaffInvitation({ _token: token });

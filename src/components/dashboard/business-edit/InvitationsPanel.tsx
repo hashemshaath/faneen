@@ -8,6 +8,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { getProfileByUserId } from '@/modules/users';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
+import { checkInvitationTransition } from '@/modules/identity';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -144,6 +145,14 @@ export const InvitationsPanel: React.FC<Props> = ({
   const revokeInvitation = async (id: string) => {
     setBusyId(id);
     try {
+      // BUSINESS-OPERATIONS-1B: client-side lifecycle guard before mutation.
+      const current = invitations.find((i) => i.id === id);
+      const check = checkInvitationTransition(current?.status, 'revoke');
+      if (!check.allowed) {
+        toast.error(isRTL ? check.reasonAr! : check.reasonEn!);
+        setBusyId(null);
+        return;
+      }
       const { error } = await supabase
         .from('business_staff_invitations')
         .update({ status: 'revoked' })
