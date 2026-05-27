@@ -34,6 +34,7 @@ import {
   QrCode,
   User,
   UserPlus,
+  ClipboardList,
 } from 'lucide-react';
 
 interface MenuItem {
