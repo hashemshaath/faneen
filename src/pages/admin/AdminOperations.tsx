@@ -40,6 +40,7 @@ import {
   MANUAL_PREVIEW_RUNS_CAP,
   type ManualPreviewRunSummary,
 } from '@/modules/operations';
+import { getOperationsRealRunReadiness } from '@/modules/operations';
 import type {
   PreviewSlaSweepResult,
   SafeActionSample,
@@ -139,6 +140,86 @@ function SafetyPanel({ bi }: { bi: (ar: string, en: string) => string }) {
             </li>
           ))}
         </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Real-run readiness panel — read-only status grid. No controls. */
+function ReadinessPanel({ bi }: { bi: (ar: string, en: string) => string }) {
+  const readiness = useMemo(() => getOperationsRealRunReadiness(), []);
+  const rows: Array<{ label: string; value: string; tone: 'ok' | 'off' }> = [
+    {
+      label: bi('التشغيل الفعلي', 'Real-run'),
+      value: bi('معطّل', 'Disabled'),
+      tone: 'off',
+    },
+    {
+      label: bi('المهام المجدولة', 'Cron'),
+      value: bi('معطّل', 'Disabled'),
+      tone: 'off',
+    },
+    {
+      label: bi('قنوات الإشعارات الخارجية', 'External notification channels'),
+      value: bi('معطّل', 'Disabled'),
+      tone: 'off',
+    },
+    {
+      label: bi('سجل المعاينة اليدوية', 'Manual preview ledger'),
+      value: bi('مفعّل', 'Enabled'),
+      tone: 'ok',
+    },
+    {
+      label: bi('المعاينة (Dry-run)', 'Dry-run preview'),
+      value: bi('مفعّل', 'Enabled'),
+      tone: 'ok',
+    },
+    {
+      label: bi('تعديل التنبيهات من الواجهة', 'Alert mutation from UI'),
+      value: bi('معطّل (محصور بالخادم)', 'Server-gated only / Disabled'),
+      tone: 'off',
+    },
+  ];
+  return (
+    <Card data-testid="readiness-panel">
+      <CardHeader>
+        <CardTitle className="text-sm flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-primary" />
+          {bi('جاهزية التشغيل الفعلي', 'Real-run readiness')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <ul
+          className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs"
+          data-testid="readiness-rows"
+        >
+          {rows.map((r) => (
+            <li
+              key={r.label}
+              className="flex items-center justify-between rounded-lg border bg-card px-3 py-2"
+              data-testid="readiness-row"
+              data-tone={r.tone}
+            >
+              <span className="text-muted-foreground">{r.label}</span>
+              <Badge
+                variant="outline"
+                className={
+                  r.tone === 'ok'
+                    ? 'bg-success/10 text-success border-success/30'
+                    : 'bg-muted text-muted-foreground border-border'
+                }
+              >
+                {r.value}
+              </Badge>
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-muted-foreground" data-testid="readiness-recommendation">
+          {bi(
+            'استمر في استخدام المعاينة (Dry-run) حتى الحصول على موافقة الإنتاج الصريحة.',
+            readiness.recommendation,
+          )}
+        </p>
       </CardContent>
     </Card>
   );
@@ -377,6 +458,9 @@ const AdminOperations = () => {
 
       {/* Safety panel — always visible. Pure copy, no controls. */}
       <SafetyPanel bi={bi} />
+
+      {/* Real-run readiness panel — read-only. No buttons. */}
+      <ReadinessPanel bi={bi} />
 
       {/* Ledger status banner — surfaces the most recent manual-preview log result. */}
       {ledger && (
