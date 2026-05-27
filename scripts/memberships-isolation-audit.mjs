@@ -25,7 +25,12 @@ const ROOT = path.resolve(__dirname, "..");
 const SRC = path.join(ROOT, "src");
 
 const ALLOWED_DIRS = ["src/modules/memberships/services/"];
-const ALLOWED_FILES = new Set();
+const ALLOWED_FILES = new Set([
+  // BUSINESS-OPERATIONS-2F: read-only SLA candidate fetcher for pending
+  // membership_payment_intents. Selects only id/created_at/status/
+  // user_id/business_id/confirmed_at. No provider payload, no amounts.
+  "src/modules/operations/services/productionFetchers.ts",
+]);
 
 const GUARDED_TABLES = [
   "membership_plans",
