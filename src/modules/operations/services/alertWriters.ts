@@ -132,7 +132,7 @@ export function createSupabaseAlertWriter(): AlertWriter {
         const triggeredAt = input.triggeredAt ?? nowIso();
         const insert = await supabase
           .from('operational_alerts')
-          .insert({
+          .insert([{
             domain: input.domain,
             entity_type: input.entityType,
             entity_id: input.entityId,
@@ -149,7 +149,7 @@ export function createSupabaseAlertWriter(): AlertWriter {
             triggered_at: triggeredAt,
             idempotency_key: input.idempotencyKey,
             metadata: input.metadata ?? {},
-          })
+          }])
           .select('id')
           .maybeSingle();
         if (insert.error) {
