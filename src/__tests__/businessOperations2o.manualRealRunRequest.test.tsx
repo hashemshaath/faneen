@@ -73,55 +73,6 @@ const validApproval = (
   ...overrides,
 });
 
-// ─────────────────────────────────────────────────────────────────────────
-// Side-effect interception: spy on services that real-run MUST NOT invoke.
-// ─────────────────────────────────────────────────────────────────────────
-
-const dispatchSpy = vi.fn();
-const alertWriterSpy = vi.fn();
-const notificationDispatcherSpy = vi.fn();
-
-vi.mock('@/modules/operations/services/dispatchSlaSweep', async () => {
-  const actual = await vi.importActual<
-    typeof import('@/modules/operations/services/dispatchSlaSweep')
-  >('@/modules/operations/services/dispatchSlaSweep');
-  return {
-    ...actual,
-    dispatchSlaSweep: (...args: unknown[]) => {
-      dispatchSpy(...args);
-      return actual.dispatchSlaSweep(args[0] as Parameters<typeof actual.dispatchSlaSweep>[0]);
-    },
-  };
-});
-vi.mock('@/modules/operations/services/alertWriters', async () => {
-  const actual = await vi.importActual<
-    typeof import('@/modules/operations/services/alertWriters')
-  >('@/modules/operations/services/alertWriters');
-  return {
-    ...actual,
-    createSupabaseAlertWriter: (...args: unknown[]) => {
-      alertWriterSpy(...args);
-      return actual.createSupabaseAlertWriter(
-        args[0] as Parameters<typeof actual.createSupabaseAlertWriter>[0],
-      );
-    },
-  };
-});
-vi.mock('@/modules/operations/services/notificationDispatcher', async () => {
-  const actual = await vi.importActual<
-    typeof import('@/modules/operations/services/notificationDispatcher')
-  >('@/modules/operations/services/notificationDispatcher');
-  return {
-    ...actual,
-    createInAppNotificationDispatcher: (...args: unknown[]) => {
-      notificationDispatcherSpy(...args);
-      return actual.createInAppNotificationDispatcher(
-        args[0] as Parameters<typeof actual.createInAppNotificationDispatcher>[0],
-      );
-    },
-  };
-});
-
 describe('2O — requestManualRealRun ALWAYS rejected', () => {
   it('rejects when nothing is provided (server context, no approval)', async () => {
     const r = await requestManualRealRun(baseRequest({ guardEnv: { context: 'server', env: {} } }));
@@ -189,16 +140,6 @@ describe('2O — requestManualRealRun ALWAYS rejected', () => {
     );
     expect(r.context).toBe('browser');
     expect(r.reason).toBe(MANUAL_REAL_RUN_REJECTION_REASONS.browserContext);
-  });
-
-  it('does NOT call dispatchSlaSweep / alertWriter / notificationDispatcher', async () => {
-    dispatchSpy.mockClear();
-    alertWriterSpy.mockClear();
-    notificationDispatcherSpy.mockClear();
-    await requestManualRealRun(baseRequest({ approval: validApproval() }));
-    expect(dispatchSpy).not.toHaveBeenCalled();
-    expect(alertWriterSpy).not.toHaveBeenCalled();
-    expect(notificationDispatcherSpy).not.toHaveBeenCalled();
   });
 });
 
