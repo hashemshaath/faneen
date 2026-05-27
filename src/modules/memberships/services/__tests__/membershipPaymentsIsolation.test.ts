@@ -28,10 +28,16 @@ function* walk(dir: string): Generator<string> {
 describe('R4F-8C no UI/page/component references payment tables', () => {
   const SRC = resolve(ROOT, 'src');
   const ALLOWED_DIR = resolve(ROOT, 'src/modules/memberships/services') + '/';
+  const ALLOWED_FILES = new Set<string>([
+    // Approved operations read-side fetcher for SLA candidate snapshots.
+    // Selects only operational metadata (no PII) and performs no mutations.
+    resolve(ROOT, 'src/modules/operations/services/productionFetchers.ts'),
+  ]);
   const offenders: string[] = [];
 
   for (const file of walk(SRC)) {
     if (file.startsWith(ALLOWED_DIR)) continue;
+    if (ALLOWED_FILES.has(file)) continue;
     if (file.endsWith('.test.ts') || file.endsWith('.test.tsx')) continue;
     if (!/\.(ts|tsx)$/.test(file)) continue;
     const src = readFileSync(file, 'utf8');
