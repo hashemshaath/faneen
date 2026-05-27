@@ -1581,6 +1581,60 @@ export type Database = {
           },
         ]
       }
+      business_internal_notes: {
+        Row: {
+          author_user_id: string
+          body: string
+          business_id: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          pinned: boolean
+          ref_id: string | null
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          author_user_id: string
+          body: string
+          business_id: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          pinned?: boolean
+          ref_id?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          author_user_id?: string
+          body?: string
+          business_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          pinned?: boolean
+          ref_id?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_internal_notes_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_internal_notes_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_notification_preferences: {
         Row: {
           business_id: string
