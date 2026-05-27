@@ -38,3 +38,19 @@ export {
   type SweepActionKind,
   type SweepPlan,
 } from './services/slaSweep';
+
+export {
+  planNotifications,
+  type PlannedNotification,
+  type PlannedNotificationChannel,
+  type NotificationPlan,
+} from './services/planNotifications';
+
+export {
+  dispatchSlaSweep,
+  NON_DRY_RUN_NOT_ENABLED,
+  type DispatchSlaSweepInput,
+  type DispatchSlaSweepResult,
+  type SlaRunLogger,
+  type SlaRunLogRecord,
+} from './services/dispatchSlaSweep';
