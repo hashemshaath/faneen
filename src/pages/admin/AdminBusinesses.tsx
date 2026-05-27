@@ -48,6 +48,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BusinessOperationsPanel } from '@/components/business/BusinessOperationsPanel';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -1624,7 +1625,7 @@ const AdminBusinesses = () => {
               </div>
             </div>
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full grid grid-cols-7 h-9 rounded-xl">
+                <TabsList className="w-full grid grid-cols-8 h-9 rounded-xl">
                   <TabsTrigger value="info" className="text-[10px] rounded-lg">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
                   <TabsTrigger value="address" className="text-[10px] rounded-lg">{isRTL ? 'العنوان' : 'Address'}</TabsTrigger>
                   <TabsTrigger value="content" className="text-[10px] rounded-lg">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
@@ -1632,6 +1633,7 @@ const AdminBusinesses = () => {
                   <TabsTrigger value="contact" className="text-[10px] rounded-lg">{isRTL ? 'التواصل' : 'Contact'}</TabsTrigger>
                   <TabsTrigger value="branches" className="text-[10px] rounded-lg">{isRTL ? 'الفروع' : 'Branches'} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
                   <TabsTrigger value="controls" className="text-[10px] rounded-lg">{isRTL ? 'التحكم' : 'Controls'}</TabsTrigger>
+                  <TabsTrigger value="ops" className="text-[10px] rounded-lg">{isRTL ? 'العمليات' : 'Ops'}</TabsTrigger>
                 </TabsList>
 
                 {/* ── Info Tab ── */}
