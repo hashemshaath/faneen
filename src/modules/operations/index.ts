@@ -282,3 +282,14 @@ export {
   type ManualRealRunEndpointDeps,
   type ManualRealRunEndpointAuditWriter,
 } from './services/manualRealRunEndpointContract';
+
+export {
+  executeManualSlaRealRun,
+  EXECUTE_MANUAL_REAL_RUN_REJECTION_REASONS,
+  NOTIFICATION_WRITES_DEFERRED_REASON,
+  type ExecuteManualSlaRealRunInput,
+  type ExecuteManualSlaRealRunResult,
+  type ExecuteManualSlaRealRunContext,
+  type ExecuteManualSlaRealRunContextRole,
+  type ExecuteManualSlaRealRunRejectionReason,
+} from './services/executeManualSlaRealRun';

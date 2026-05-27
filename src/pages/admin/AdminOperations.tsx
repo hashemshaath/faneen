@@ -209,6 +209,16 @@ function ReadinessPanel({ bi }: { bi: (ar: string, en: string) => string }) {
       value: bi('مُصمَّم ومعطّل', 'Designed, disabled'),
       tone: 'off',
     },
+    {
+      label: bi('التشغيل الفعلي المُتحكَّم به', 'Controlled server real-run'),
+      value: bi('متاح من جانب الخادم فقط', 'Server-only, not from UI'),
+      tone: 'off',
+    },
+    {
+      label: bi('كتابة الإشعارات', 'Notification writes'),
+      value: bi('مؤجَّلة', 'Deferred'),
+      tone: 'off',
+    },
   ];
   return (
     <Card data-testid="readiness-panel">
