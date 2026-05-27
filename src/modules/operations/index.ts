@@ -175,6 +175,31 @@ export {
 export {
   useAdminOperationsPreview,
   ADMIN_OPERATIONS_PREVIEW_QUERY_KEY,
+  useRecentManualSlaPreviewRuns,
+  RECENT_MANUAL_PREVIEW_RUNS_QUERY_KEY,
   type UseAdminOperationsPreviewOptions,
   type UseAdminOperationsPreviewResult,
+  type UseRecentManualPreviewRunsOptions,
+  type UseRecentManualPreviewRunsResult,
 } from './hooks/useAdminOperationsPreview';
+
+export {
+  logManualSlaPreviewRun,
+  buildManualPreviewSummary,
+  MANUAL_PREVIEW_RUN_TYPE,
+  MANUAL_PREVIEW_JOB_NAME,
+  MANUAL_PREVIEW_FUNCTION_NAME,
+  type ManualPreviewLedgerSummary,
+  type ManualPreviewLedgerTotals,
+  type LogManualPreviewInput,
+  type LogManualPreviewResult,
+  type LogManualPreviewDeps,
+} from './services/logManualSlaPreviewRun';
+
+export {
+  listManualSlaPreviewRuns,
+  MANUAL_PREVIEW_RUNS_CAP,
+  type ManualPreviewRunSummary,
+  type ListManualPreviewRunsResult,
+  type ListManualPreviewRunsDeps,
+} from './services/listManualSlaPreviewRuns';
