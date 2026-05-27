@@ -35,6 +35,7 @@ import type { BusinessRow } from '@/components/dashboard/business-edit/types';
 import { BilingualField } from '@/components/dashboard/business-edit/BilingualField';
 import { RepresentativesSection } from '@/components/dashboard/business-edit/RepresentativesSection';
 import { AuditLogPanel } from '@/components/dashboard/business-edit/AuditLogPanel';
+import { BusinessInternalNotesCard } from '@/components/business/BusinessInternalNotesCard';
 import { validateBusinessForm, issuesByKey, errorCount } from '@/components/dashboard/business-edit/validation';
 import { ValidationBanner, FieldError } from '@/components/dashboard/business-edit/ValidationBanner';
 import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
@@ -767,6 +768,9 @@ const DashboardBusinessEdit: React.FC = () => {
           <TabsContent value="system" className="space-y-6 mt-4">
             {/* Audit log */}
             <AuditLogPanel businessId={form.id} isRTL={isRTL} />
+
+            {/* BUSINESS-CORE-2 — Internal notes (RLS-gated to owner/manager/staff) */}
+            <BusinessInternalNotesCard businessId={form.id} />
 
         {/* Business barcode + 30x20 cm printable sticker */}
         <BusinessBarcodeCard
