@@ -24,3 +24,17 @@ export {
   getOperationalAlertById,
   type GetOperationalAlertByIdArgs,
 } from './services/getOperationalAlertById';
+
+export {
+  evaluateSlaSweep,
+  buildIdempotencyKey,
+  isKnownSlaCondition,
+  SLA_CONDITIONS,
+  type SlaCondition,
+  type SweepCandidate,
+  type ExistingAlert,
+  type SweepInput,
+  type SweepAction,
+  type SweepActionKind,
+  type SweepPlan,
+} from './services/slaSweep';
