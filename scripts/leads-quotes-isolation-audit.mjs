@@ -52,6 +52,10 @@ const ALLOWED_DIRS = [
 const ALLOWED_FILES = new Set([
   "src/lib/quoteRequests.ts",
   "src/modules/leads/constants/storage.ts",
+  // BUSINESS-OPERATIONS-2F: read-only SLA candidate fetcher.
+  // Selects only id/created_at/updated_at/status/user_id/target_entity_id
+  // from quote_requests. No PII (no name/phone/email/notes/files).
+  "src/modules/operations/services/productionFetchers.ts",
 ]);
 
 const TABLES = [
