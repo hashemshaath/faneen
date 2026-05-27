@@ -229,6 +229,11 @@ function ReadinessPanel({ bi }: { bi: (ar: string, en: string) => string }) {
       value: bi('معطّل', 'Disabled'),
       tone: 'off',
     },
+    {
+      label: bi('ربط اعتماديات قاعدة البيانات', 'Supabase dependency wiring'),
+      value: bi('جاهز / من جانب الخادم فقط', 'Ready / Server-only'),
+      tone: 'off',
+    },
   ];
   return (
     <Card data-testid="readiness-panel">
