@@ -41,6 +41,10 @@ import type {
   NotificationContentBuilder,
   NotificationDispatcher,
 } from './notificationDispatcher';
+import { safeSlaContentBuilder } from './notificationContent';
+import {
+  createSafeSlaRecipientResolver,
+} from './notificationRecipients';
 
 export interface DispatchSlaSweepInput {
   now?: Date;
@@ -67,6 +71,12 @@ export interface DispatchSlaSweepInput {
   notificationDispatcher?: NotificationDispatcher;
   notificationRecipientResolver?: NotificationRecipientResolver;
   notificationContentBuilder?: NotificationContentBuilder;
+  /**
+   * Opt-in to the production safe SLA recipient resolver when no custom
+   * `notificationRecipientResolver` is provided. Off by default to keep
+   * dispatch fully injection-driven.
+   */
+  useSafeRecipientResolverDefault?: boolean;
 }
 
 export interface SlaRunLogRecord {
@@ -238,13 +248,19 @@ async function runNonDryRun(
   if (
     input.enableNotificationWrites === true &&
     input.notificationDispatcher &&
-    input.notificationRecipientResolver
+    (input.notificationRecipientResolver ||
+      input.useSafeRecipientResolverDefault === true)
   ) {
+    const resolver =
+      input.notificationRecipientResolver ??
+      createSafeSlaRecipientResolver();
+    const contentBuilder =
+      input.notificationContentBuilder ?? safeSlaContentBuilder;
     notificationsDispatch = await dispatchPlannedNotifications({
       plan: notifications,
       dispatcher: input.notificationDispatcher,
-      recipientResolver: input.notificationRecipientResolver,
-      contentBuilder: input.notificationContentBuilder,
+      recipientResolver: resolver,
+      contentBuilder,
       dryRun: false,
       enableNotificationWrites: true,
     });

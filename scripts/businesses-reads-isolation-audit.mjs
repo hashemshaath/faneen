@@ -30,7 +30,11 @@ const ROOT = path.resolve(__dirname, "..");
 const SRC = path.join(ROOT, "src");
 
 const ALLOWED_DIRS = ["src/modules/businesses/services/"];
-const ALLOWED_FILES = new Set();
+const ALLOWED_FILES = new Set([
+  // BUSINESS-OPERATIONS-2I: narrow opaque-ownership lookup (user_id only)
+  // for SLA notification recipient resolution. No PII fields selected.
+  "src/modules/operations/services/notificationRecipients.ts",
+]);
 
 // Whitespace/newline tolerant: `.from('businesses')` ... `.select(`
 const PATTERN =
