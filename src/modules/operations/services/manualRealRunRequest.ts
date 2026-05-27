@@ -31,6 +31,12 @@ import {
   type OperationsGuardEnv,
   type OperationsGuardResult,
 } from './operationsRunGuards';
+import type {
+  LogOperationsApprovalAuditDeps,
+  LogOperationsApprovalAuditInput,
+  LogOperationsApprovalAuditResult,
+  OperationsApprovalAuditEvent,
+} from './logOperationsApprovalAudit';
 
 export const MANUAL_REAL_RUN_SCOPE = 'manual_sla_real_run' as const;
 
@@ -75,6 +81,48 @@ export interface ManualRealRunResult {
   guard?: OperationsGuardResult;
   context: 'browser' | 'server';
   scope: typeof MANUAL_REAL_RUN_SCOPE;
+  audit?: LogOperationsApprovalAuditResult;
+}
+
+/**
+ * Optional dependency injection for the approval audit writer. Kept here
+ * as a function type only so `manualRealRunRequest.ts` remains Supabase-
+ * free. Callers (admin UI, edge functions) wire the real writer.
+ */
+export type OperationsApprovalAuditWriter = (
+  input: LogOperationsApprovalAuditInput,
+  deps?: LogOperationsApprovalAuditDeps,
+) => Promise<LogOperationsApprovalAuditResult>;
+
+export interface ManualRealRunDeps {
+  /** Audit writer. Defaults to a safe no-op stub. */
+  logAudit?: OperationsApprovalAuditWriter;
+  /** Forwarded to the audit writer; ignored if `logAudit` is provided. */
+  auditDeps?: LogOperationsApprovalAuditDeps;
+}
+
+/** Default no-op audit writer — never throws, never enables execution. */
+const noopAudit: OperationsApprovalAuditWriter = async () => ({
+  ok: false,
+  error: 'approval audit writer not injected',
+});
+
+function eventForReason(
+  reason: ManualRealRunRejectionReason,
+): OperationsApprovalAuditEvent {
+  switch (reason) {
+    case 'BROWSER_CONTEXT_FORBIDDEN':
+    case 'GUARD_DENIED':
+      return 'guard_denied';
+    case 'APPROVAL_MISSING':
+    case 'APPROVAL_NOT_APPROVED':
+    case 'APPROVAL_WRONG_SCOPE':
+    case 'APPROVAL_EXPIRED':
+    case 'APPROVAL_MALFORMED':
+      return 'production_approval_rejected';
+    default:
+      return 'manual_real_run_rejected';
+  }
 }
 
 /**
@@ -119,16 +167,38 @@ export function evaluateProductionApproval(
  */
 export async function requestManualRealRun(
   request: ManualRealRunRequest,
+  deps: ManualRealRunDeps = {},
 ): Promise<ManualRealRunResult> {
   const context = detectGuardContext(request.guardEnv?.context);
+  const logAudit = deps.logAudit ?? noopAudit;
+  const requestedAt = new Date().toISOString();
+  const baseAudit: Omit<LogOperationsApprovalAuditInput, 'eventType' | 'status' | 'reasonCode'> = {
+    scope: MANUAL_REAL_RUN_SCOPE,
+    requestedBy: request.requestedBy,
+    requestedAt,
+    approvalTicket: request.approval?.approvalTicket ?? null,
+    expiresAt: request.approval?.expiresAt ?? null,
+    dryRun: request.dryRun === true,
+    enableWrites: request.enableWrites === true,
+    enableNotificationWrites: request.enableNotificationWrites === true,
+    context,
+  };
 
   // Browser context can never request real-run, even structurally.
   if (context === 'browser') {
+    const audit = await safeAudit(logAudit, {
+      ...baseAudit,
+      eventType: 'guard_denied',
+      status: 'denied',
+      reasonCode: MANUAL_REAL_RUN_REJECTION_REASONS.browserContext,
+      guardReason: 'browser context',
+    }, deps.auditDeps);
     return {
       accepted: false,
       reason: MANUAL_REAL_RUN_REJECTION_REASONS.browserContext,
       context,
       scope: MANUAL_REAL_RUN_SCOPE,
+      audit,
     };
   }
 
@@ -140,33 +210,74 @@ export async function requestManualRealRun(
   });
 
   if (!request.confirmationToken || typeof request.confirmationToken !== 'string') {
+    const audit = await safeAudit(logAudit, {
+      ...baseAudit,
+      eventType: 'manual_real_run_rejected',
+      status: 'rejected',
+      reasonCode: MANUAL_REAL_RUN_REJECTION_REASONS.confirmationMissing,
+      guardReason: guard.reason,
+    }, deps.auditDeps);
     return {
       accepted: false,
       reason: MANUAL_REAL_RUN_REJECTION_REASONS.confirmationMissing,
       guard,
       context,
       scope: MANUAL_REAL_RUN_SCOPE,
+      audit,
     };
   }
 
   const approvalCheck = evaluateProductionApproval(request.approval);
   if (!approvalCheck.valid) {
+    const audit = await safeAudit(logAudit, {
+      ...baseAudit,
+      eventType: eventForReason(approvalCheck.reason!),
+      status: 'rejected',
+      reasonCode: approvalCheck.reason!,
+      guardReason: guard.reason,
+    }, deps.auditDeps);
     return {
       accepted: false,
       reason: approvalCheck.reason!,
       guard,
       context,
       scope: MANUAL_REAL_RUN_SCOPE,
+      audit,
     };
   }
 
   // Final structural deny. Phase 2O does NOT activate real-run under any
  // circumstance. The pathway is designed and disabled.
+  const audit = await safeAudit(logAudit, {
+    ...baseAudit,
+    eventType: 'manual_real_run_rejected',
+    status: 'rejected',
+    reasonCode: MANUAL_REAL_RUN_REJECTION_REASONS.productionApprovalRequired,
+    guardReason: guard.reason,
+  }, deps.auditDeps);
   return {
     accepted: false,
     reason: MANUAL_REAL_RUN_REJECTION_REASONS.productionApprovalRequired,
     guard,
     context,
     scope: MANUAL_REAL_RUN_SCOPE,
+    audit,
   };
+}
+
+/** Audit writer wrapper that swallows all errors. Audit MUST NOT throw. */
+async function safeAudit(
+  logAudit: OperationsApprovalAuditWriter,
+  input: LogOperationsApprovalAuditInput,
+  auditDeps?: LogOperationsApprovalAuditDeps,
+): Promise<LogOperationsApprovalAuditResult> {
+  try {
+    return await logAudit(input, auditDeps);
+  } catch (err) {
+    return {
+      ok: false,
+      error:
+        err instanceof Error ? err.message : 'approval audit threw unexpectedly',
+    };
+  }
 }

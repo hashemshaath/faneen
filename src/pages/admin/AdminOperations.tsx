@@ -40,7 +40,12 @@ import {
   MANUAL_PREVIEW_RUNS_CAP,
   type ManualPreviewRunSummary,
 } from '@/modules/operations';
-import { getOperationsRealRunReadiness } from '@/modules/operations';
+import {
+  getOperationsRealRunReadiness,
+  useOperationsApprovalAudit,
+  OPERATIONS_APPROVAL_AUDIT_CAP,
+  type OperationsApprovalAuditEntry,
+} from '@/modules/operations';
 import type {
   PreviewSlaSweepResult,
   SafeActionSample,
@@ -193,6 +198,11 @@ function ReadinessPanel({ bi }: { bi: (ar: string, en: string) => string }) {
       label: bi('التنفيذ من جانب الخادم فقط', 'Server-only execution'),
       value: bi('مطلوب', 'Required'),
       tone: 'off',
+    },
+    {
+      label: bi('تسجيل تدقيق الموافقات', 'Approval audit logging'),
+      value: bi('مفعّل', 'Enabled'),
+      tone: 'ok',
     },
   ];
   return (
@@ -399,6 +409,39 @@ function RecentRunsTable({ runs, bi, isRTL }: {
   );
 }
 
+function ApprovalAuditTable({ entries, bi, isRTL }: {
+  entries: OperationsApprovalAuditEntry[];
+  bi: (ar: string, en: string) => string;
+  isRTL: boolean;
+}) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>{bi('الوقت', 'Time')}</TableHead>
+          <TableHead>{bi('الحدث', 'Event')}</TableHead>
+          <TableHead>{bi('الحالة', 'Status')}</TableHead>
+          <TableHead>{bi('السبب', 'Reason')}</TableHead>
+          <TableHead>{bi('التذكرة', 'Ticket')}</TableHead>
+          <TableHead>{bi('السياق', 'Context')}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {entries.map((e) => (
+          <TableRow key={e.id} data-testid="approval-audit-row">
+            <TableCell className="tech-content text-xs">{formatTime(e.startedAt, isRTL)}</TableCell>
+            <TableCell className="tech-content text-xs">{e.eventType ?? '—'}</TableCell>
+            <TableCell className="tech-content text-xs">{e.auditStatus ?? e.status ?? '—'}</TableCell>
+            <TableCell className="tech-content text-xs text-muted-foreground">{e.reasonCode ?? '—'}</TableCell>
+            <TableCell className="tech-content text-xs text-muted-foreground">{e.approvalTicket ?? '—'}</TableCell>
+            <TableCell className="tech-content text-xs text-muted-foreground">{e.context}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
 const AdminOperations = () => {
   const { isRTL } = useLanguage();
   const bi = useBi();
@@ -412,6 +455,7 @@ const AdminOperations = () => {
     lastSuccessfulAt, phase, ledger,
   } = useAdminOperationsPreview();
   const recent = useRecentManualSlaPreviewRuns();
+  const approvalAudit = useOperationsApprovalAudit();
 
   const totals = data?.totals;
   const lastGoodIso = lastSuccessfulAt ? new Date(lastSuccessfulAt).toISOString() : undefined;
@@ -655,6 +699,33 @@ const AdminOperations = () => {
             </div>
           ) : (
             <RecentRunsTable runs={recent.runs} bi={bi} isRTL={isRTL} />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recent approval audit attempts — sanitized, capped, read-only */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center justify-between">
+            <span>{bi('سجل تدقيق موافقات الإنتاج', 'Production approval audit')}</span>
+            <span className="text-xs text-muted-foreground">
+              {bi(`الحد ${OPERATIONS_APPROVAL_AUDIT_CAP}`, `cap ${OPERATIONS_APPROVAL_AUDIT_CAP}`)}
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent data-testid="approval-audit">
+          {approvalAudit.isLoading ? (
+            <Skeleton className="h-16" />
+          ) : approvalAudit.isError ? (
+            <div className="text-xs text-muted-foreground">
+              {bi('تعذّر تحميل سجل التدقيق.', 'Could not load approval audit.')}
+            </div>
+          ) : approvalAudit.entries.length === 0 ? (
+            <div className="text-sm text-muted-foreground p-4 text-center">
+              {bi('لا توجد محاولات موافقة مسجّلة بعد.', 'No approval attempts logged yet.')}
+            </div>
+          ) : (
+            <ApprovalAuditTable entries={approvalAudit.entries} bi={bi} isRTL={isRTL} />
           )}
         </CardContent>
       </Card>

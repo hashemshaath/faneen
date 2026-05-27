@@ -234,4 +234,35 @@ export {
   type ManualRealRunRequest,
   type ManualRealRunResult,
   type ManualRealRunRejectionReason,
+  type ManualRealRunDeps,
+  type OperationsApprovalAuditWriter,
 } from './services/manualRealRunRequest';
+
+export {
+  logOperationsApprovalAudit,
+  buildApprovalAuditSummary,
+  OPERATIONS_APPROVAL_AUDIT_JOB_NAME,
+  OPERATIONS_APPROVAL_AUDIT_FUNCTION_NAME,
+  OPERATIONS_APPROVAL_AUDIT_EVENTS,
+  type OperationsApprovalAuditEvent,
+  type OperationsApprovalAuditStatus,
+  type OperationsApprovalAuditSummary,
+  type LogOperationsApprovalAuditInput,
+  type LogOperationsApprovalAuditResult,
+  type LogOperationsApprovalAuditDeps,
+} from './services/logOperationsApprovalAudit';
+
+export {
+  listOperationsApprovalAudit,
+  OPERATIONS_APPROVAL_AUDIT_CAP,
+  type OperationsApprovalAuditEntry,
+  type ListOperationsApprovalAuditResult,
+  type ListOperationsApprovalAuditDeps,
+} from './services/listOperationsApprovalAudit';
+
+export {
+  useOperationsApprovalAudit,
+  OPERATIONS_APPROVAL_AUDIT_QUERY_KEY,
+  type UseOperationsApprovalAuditOptions,
+  type UseOperationsApprovalAuditResult,
+} from './hooks/useOperationsApprovalAudit';
