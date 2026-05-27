@@ -104,7 +104,10 @@ describe('2T: factories require an injected admin client', () => {
 
 describe('2T: audit writer writes safe payload only', () => {
   it('forwards a sanitized summary via log_cron_run RPC', async () => {
-    const rpc = vi.fn(async () => ({ data: 'audit-id', error: null }));
+    const rpc: ServerOnlyAdminClient['rpc'] = vi.fn(async () => ({
+      data: 'audit-id',
+      error: null,
+    }));
     const admin = makeAdminClient({ rpc });
     const writer = createManualRunAuditWriter({ supabaseAdmin: admin });
 
@@ -126,8 +129,9 @@ describe('2T: audit writer writes safe payload only', () => {
 
     expect(res.ok).toBe(true);
     expect(rpc).toHaveBeenCalledTimes(1);
-    const call = rpc.mock.calls[0]!;
-    const fn = call[0];
+    const calls = (rpc as unknown as { mock: { calls: unknown[][] } }).mock.calls;
+    const call = calls[0]!;
+    const fn = call[0] as string;
     const args = call[1] as Record<string, unknown> & {
       _summary: { scope: string };
     };
