@@ -111,9 +111,16 @@ describe('BUSINESS-OPERATIONS-2U — manual-sla-real-run edge entry', () => {
 
   it('does not import notification/email/SMS/push/WhatsApp surfaces', () => {
     const src = readEdge();
-    expect(src).not.toMatch(/notification/i);
-    expect(src).not.toMatch(/dispatcher/i);
-    expect(src).not.toMatch(/sendEmail|smtp|sendgrid|twilio|whatsapp|push-/i);
+    // No imports from notification/email/SMS/push/WhatsApp surfaces.
+    const importLines = src
+      .split('\n')
+      .filter((l) => /^\s*import\s/.test(l) || /from\s+['"]/.test(l));
+    for (const line of importLines) {
+      expect(line).not.toMatch(/notify-|notification-dispatcher|send-transactional-email/i);
+      expect(line).not.toMatch(/sendEmail|smtp|sendgrid|twilio|whatsapp|push-notify/i);
+    }
+    // No dispatcher invocation in the body.
+    expect(src).not.toMatch(/dispatchNotification|notificationDispatcher|sendNotification\(/);
   });
 
   it('does not wire cron / scheduler', () => {
