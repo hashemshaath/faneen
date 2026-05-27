@@ -18,7 +18,7 @@
  *
  * Notification policy: even if `enableNotificationWrites === true`, this
  * phase records `notificationsDeferredReason: 'NOTIFICATION_WRITES_DEFERRED'`
- * and never calls a notification dispatcher / SMS / email / WhatsApp / push.
+ * and never calls any notification dispatcher / external channel.
  *
  * Idempotency: delegated to `applySlaSweepPlan` + the alert writer's own
  * idempotency_key handling. Repeated executions must not duplicate alerts.
