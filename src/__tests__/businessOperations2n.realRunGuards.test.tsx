@@ -7,12 +7,25 @@
  * and that the operations services module remains Supabase-free for the
  * new guards file.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
+
+vi.mock('@/i18n/LanguageContext', () => ({
+  useLanguage: () => ({
+    isRTL: false,
+    language: 'en',
+    setLanguage: vi.fn(),
+    t: (k: string) => k,
+  }),
+  LanguageProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+vi.mock('@/hooks/usePageMeta', () => ({ usePageMeta: () => {} }));
+vi.mock('@/hooks/useNoIndex', () => ({ useNoIndex: () => {} }));
+
 import {
   OPERATIONS_REAL_RUN_FLAG,
   OPERATIONS_NOTIFICATION_WRITES_FLAG,
