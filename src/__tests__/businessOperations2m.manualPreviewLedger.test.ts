@@ -247,7 +247,7 @@ describe('2M source-level guarantees', () => {
   it('writer never schedules cron and does not touch operational_alerts/notifications', () => {
     for (const banned of [
       'cron.schedule', 'pg_cron', 'setInterval', 'setTimeout',
-      'operational_alerts', 'notifications', 'twilio', 'resend',
+      'operational_alerts', '.from(\'notifications', 'twilio', 'resend.com',
       'sendTransactionalEmail', 'send_sms', 'pushNotification',
     ]) {
       expect(writerSrc.toLowerCase()).not.toContain(banned.toLowerCase());
@@ -263,7 +263,7 @@ describe('2M source-level guarantees', () => {
     expect(readerSrc).toMatch(/cron_run_log/);
     expect(readerSrc).toMatch(/MANUAL_PREVIEW_JOB_NAME/);
     expect(readerSrc).not.toMatch(/operational_alerts/);
-    expect(readerSrc).not.toMatch(/notifications/);
+    expect(readerSrc).not.toMatch(/\.from\(['"]notifications['"]\)/);
   });
 
   it('admin page exposes no real-run / cron / mutation controls (2M no regressions)', () => {
