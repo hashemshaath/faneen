@@ -234,6 +234,11 @@ function ReadinessPanel({ bi }: { bi: (ar: string, en: string) => string }) {
       value: bi('جاهز / من جانب الخادم فقط', 'Ready / Server-only'),
       tone: 'off',
     },
+    {
+      label: bi('نقطة طرف SLA اليدوية', 'Manual SLA edge endpoint'),
+      value: bi('منشورة / معطّلة بالعلامة', 'Deployed / Disabled by flag'),
+      tone: 'off',
+    },
   ];
   return (
     <Card data-testid="readiness-panel">

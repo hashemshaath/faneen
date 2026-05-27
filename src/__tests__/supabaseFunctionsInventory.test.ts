@@ -79,6 +79,9 @@ const INVENTORY: Record<string, Classification> = {
   'verify-pdf-arabic': 'frontend',
   'analyze-contract-document': 'frontend',
 
+  // --- operations (server-only manual SLA real-run) ---
+  'manual-sla-real-run': 'admin',
+
   // --- admin / users ---
   'admin-delete-user': 'admin',
   'admin-reset-password': 'admin',
