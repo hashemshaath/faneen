@@ -7631,6 +7631,87 @@ export type Database = {
         }
         Relationships: []
       }
+      operational_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          condition_code: string
+          created_at: string
+          domain: string
+          due_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          idempotency_key: string
+          message_ar: string
+          message_en: string
+          metadata: Json
+          owner_business_id: string | null
+          owner_user_id: string | null
+          ref_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          title_ar: string
+          title_en: string
+          triggered_at: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          condition_code: string
+          created_at?: string
+          domain: string
+          due_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          idempotency_key: string
+          message_ar: string
+          message_en: string
+          metadata?: Json
+          owner_business_id?: string | null
+          owner_user_id?: string | null
+          ref_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          status?: string
+          title_ar: string
+          title_en: string
+          triggered_at?: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          condition_code?: string
+          created_at?: string
+          domain?: string
+          due_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          idempotency_key?: string
+          message_ar?: string
+          message_en?: string
+          metadata?: Json
+          owner_business_id?: string | null
+          owner_user_id?: string | null
+          ref_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          title_ar?: string
+          title_en?: string
+          triggered_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       operations_log: {
         Row: {
           created_at: string
