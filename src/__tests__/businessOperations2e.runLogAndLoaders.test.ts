@@ -365,7 +365,9 @@ describe('2E — source purity & cron isolation', () => {
     expect(supaImports.sort()).toEqual([
       'alertWriters.ts',
       'getOperationalAlertById.ts',
+      'listManualSlaPreviewRuns.ts',
       'listOperationalAlerts.ts',
+      'logManualSlaPreviewRun.ts',
       'notificationRecipients.ts',
       'persistSlaRunLog.ts',
       'productionFetchers.ts',
