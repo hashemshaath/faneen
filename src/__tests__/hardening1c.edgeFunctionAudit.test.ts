@@ -47,6 +47,8 @@ const NOTIFICATION_DISPATCHERS = new Set([
   'membership-payment-reconcile',
   'admin-reset-password',
   'temp-code-session',
+  'admin-reveal-lead-contact',
+  'match-quote-request',
 ]);
 
 describe('HARDENING-1C: Edge function audit', () => {
