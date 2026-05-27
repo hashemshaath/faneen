@@ -186,6 +186,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: Activity },
       { label: { ar: 'تشغيل المهام', en: 'Cron Runs' }, url: '/admin/cron-runs', icon: CalendarClock },
+      { label: { ar: 'لوحة العمليات', en: 'Operations' }, url: '/admin/operations', icon: Activity },
     ],
   },
   {

@@ -95,6 +95,7 @@ const AdminUserDetail = lazyRetry(() => import("./pages/admin/AdminUserDetail"))
 const AdminIdentity = lazyRetry(() => import("./pages/admin/AdminIdentity"));
 const AdminSystemSettings = lazyRetry(() => import("./pages/admin/AdminSystemSettings"));
 const AdminCronRuns = lazyRetry(() => import("./pages/admin/AdminCronRuns"));
+const AdminOperations = lazyRetry(() => import("./pages/admin/AdminOperations"));
 const AdminActivityLog = lazyRetry(() => import("./pages/admin/AdminActivityLog"));
 const AdminCategories = lazyRetry(() => import("./pages/admin/AdminCategories"));
 const AdminTags = lazyRetry(() => import("./pages/admin/AdminTags"));
@@ -344,6 +345,7 @@ const AppRoutes = () => (
           <Route path="/admin/identity" element={<ProtectedRoute requireSuperAdmin><AdminIdentity /></ProtectedRoute>} />
           <Route path="/admin/system-settings" element={<ProtectedRoute requireSuperAdmin><AdminSystemSettings /></ProtectedRoute>} />
           <Route path="/admin/cron-runs" element={<ProtectedRoute requireAdmin><AdminCronRuns /></ProtectedRoute>} />
+          <Route path="/admin/operations" element={<ProtectedRoute requireAdmin><AdminOperations /></ProtectedRoute>} />
           <Route path="/admin/analytics-settings" element={<ProtectedRoute requireAdmin><AdminAnalyticsSettings /></ProtectedRoute>} />
           <Route path="/admin/branding" element={<ProtectedRoute requireAdmin><AdminBranding /></ProtectedRoute>} />
           <Route path="/admin/contract-templates" element={<ProtectedRoute requireAdmin><AdminContractTemplates /></ProtectedRoute>} />

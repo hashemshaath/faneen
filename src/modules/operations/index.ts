@@ -169,3 +169,10 @@ export {
   type SafeSlaContentBuilderOptions,
   type SupportedLocale,
 } from './services/notificationContent';
+
+export {
+  useAdminOperationsPreview,
+  ADMIN_OPERATIONS_PREVIEW_QUERY_KEY,
+  type UseAdminOperationsPreviewOptions,
+  type UseAdminOperationsPreviewResult,
+} from './hooks/useAdminOperationsPreview';
