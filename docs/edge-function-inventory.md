@@ -68,3 +68,7 @@ edge function may insert into `public.notifications`.
 - **HARDENING-1C**: redacted raw `token` value from
   `handle-email-unsubscribe` error log (was a bearer-credential leak in
   function logs).
+- **HARDENING-1D**: normalized error envelopes for `admin-delete-user`,
+  `check-overdue`, and `monthly-provider-credit-grant`. All three now return
+  safe `code` strings instead of raw `err.message` in HTTP responses, and log
+  coarse safe error categories without exposing secrets or PII.

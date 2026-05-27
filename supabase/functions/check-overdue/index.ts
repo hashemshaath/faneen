@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       .lt("due_date", today);
 
     if (payErr) {
-      results.errors.push(`installment query error: ${payErr.message}`);
+      results.errors.push("installment_query_failed");
     } else if (overduePayments?.length) {
       for (const payment of overduePayments) {
         const plan = (payment as any).plan;
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       .lt("end_date", today);
 
     if (cErr) {
-      results.errors.push(`contract query error: ${cErr.message}`);
+      results.errors.push("contract_query_failed");
     } else if (overdueContracts?.length) {
       for (const contract of overdueContracts) {
         // Check if already notified today
@@ -146,7 +146,8 @@ Deno.serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("check_overdue_failed", { code: "overdue_check_failed" });
+    return new Response(JSON.stringify({ ok: false, code: "overdue_check_failed", error: "Overdue check failed" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

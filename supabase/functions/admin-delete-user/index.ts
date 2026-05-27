@@ -63,6 +63,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    console.error("admin_delete_user_failed", { code: "delete_user_failed" });
+    return new Response(JSON.stringify({ ok: false, code: "delete_user_failed", error: "Delete user operation failed" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

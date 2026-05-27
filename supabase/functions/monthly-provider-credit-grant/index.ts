@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
   }
 
   const admin = createClient(supabaseUrl, serviceKey);
-  const errors: Array<{ subscription_id: string; error: string }> = [];
+  const errors: Array<{ subscription_id: string; code: string }> = [];
   let granted = 0; let skipped = 0;
 
   // EDGE-CRON-OBSERVABILITY-1: capture run start.
@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
         _error_message: null,
       });
     } catch (_logErr) { /* never break cron on log failure */ }
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ ok: false, code: 'select_failed', error: 'Failed to load subscriptions' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
@@ -123,7 +123,8 @@ Deno.serve(async (req) => {
         skipped++;
       }
     } catch (err) {
-      errors.push({ subscription_id: s.id, error: err instanceof Error ? err.message : String(err) });
+      const code = err instanceof Error ? (err as Error & { code?: string }).code ?? 'grant_failed' : 'grant_failed';
+      errors.push({ subscription_id: s.id, code });
     }
   }
 
