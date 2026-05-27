@@ -41,6 +41,11 @@ const ALLOWED_FILES = new Set([
   // already living in the leads service layer. Governed by the
   // leads-quotes-isolation-audit; kept here as a documented allowlist.
   "src/modules/leads/services/conversion.ts",
+  // BUSINESS-OPERATIONS-2F: read-only SLA candidate fetcher for
+  // contracts pending signature. Selects only id/created_at/status/
+  // provider_id/client_id/provider_accepted_at/client_accepted_at.
+  // No PII (no titles, descriptions, terms, addresses, or amounts).
+  "src/modules/operations/services/productionFetchers.ts",
 ]);
 
 const TABLES = [
