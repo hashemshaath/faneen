@@ -221,7 +221,7 @@ const AdminOperations = () => {
             variant="outline"
             size="sm"
             onClick={() => { void refetch(); }}
-            disabled={isFetching}
+            aria-busy={isFetching}
             data-testid="refresh-preview"
           >
             {isFetching
