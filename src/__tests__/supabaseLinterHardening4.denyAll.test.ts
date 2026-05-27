@@ -35,7 +35,9 @@ describe('SUPABASE-LINTER-HARDENING-4: auth_temporary_login_codes is sealed', ()
   });
 
   it('no permissive USING (true) policy is added to this table', () => {
-    const re = /CREATE POLICY[^;]+ON public\.auth_temporary_login_codes[\s\S]+?USING\s*\(\s*true\s*\)/i;
+    // Constrain match to a single CREATE POLICY statement (no `;` crossed)
+    // so unrelated `USING (true)` policies on other tables don't false-positive.
+    const re = /CREATE POLICY[^;]+ON public\.auth_temporary_login_codes[^;]+USING\s*\(\s*true\s*\)/i;
     expect(re.test(sql)).toBe(false);
   });
 });

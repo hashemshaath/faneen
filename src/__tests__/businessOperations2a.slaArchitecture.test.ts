@@ -50,18 +50,9 @@ describe('BUSINESS-OPERATIONS-2A SLA architecture', () => {
     }
   });
 
-  it('does not yet introduce an operational_alerts table or wrapper', () => {
-    const src = resolve(ROOT, 'src');
-    const supa = resolve(ROOT, 'supabase');
-    const files = [...walk(src), ...walk(supa)];
-    for (const f of files) {
-      if (f.endsWith('.md')) continue;
-      if (f.endsWith('business-operations-sla-escalation.md')) continue;
-      if (f.endsWith('businessOperations2a.slaArchitecture.test.ts')) continue;
-      const txt = readFileSync(f, 'utf-8');
-      expect(txt.includes('operational_alerts'), `unexpected operational_alerts reference in ${f}`).toBe(false);
-    }
-  });
+  // BUSINESS-OPERATIONS-2B has introduced the operational_alerts table and
+  // wrappers. The "no table yet" guard is now owned by 2B's dedicated
+  // isolation test (`businessOperations2b.operationalAlerts.test.ts`).
 
   it('does not yet wire an sla-sweep cron job', () => {
     const supa = resolve(ROOT, 'supabase');
@@ -70,6 +61,8 @@ describe('BUSINESS-OPERATIONS-2A SLA architecture', () => {
     for (const f of files) {
       if (f.endsWith('business-operations-sla-escalation.md')) continue;
       if (f.endsWith('businessOperations2a.slaArchitecture.test.ts')) continue;
+      if (f.endsWith('businessOperations2b.operationalAlerts.test.ts')) continue;
+      if (f.endsWith('operations-isolation-audit.mjs')) continue;
       const txt = readFileSync(f, 'utf-8');
       expect(txt.includes("'sla-sweep'") || txt.includes('"sla-sweep"'),
         `unexpected sla-sweep cron wiring in ${f}`).toBe(false);
