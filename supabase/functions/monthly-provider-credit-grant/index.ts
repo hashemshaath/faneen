@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
   }
 
   const admin = createClient(supabaseUrl, serviceKey);
-  const errors: Array<{ subscription_id: string; error: string }> = [];
+  const errors: Array<{ subscription_id: string; code: string }> = [];
   let granted = 0; let skipped = 0;
 
   // EDGE-CRON-OBSERVABILITY-1: capture run start.
