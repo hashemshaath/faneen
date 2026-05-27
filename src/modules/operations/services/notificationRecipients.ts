@@ -170,3 +170,19 @@ export function createSafeSlaRecipientResolver(
     return recipients[0] ?? null;
   };
 }
+
+/**
+ * BUSINESS-OPERATIONS-2K — multi-recipient fan-out resolver. Returns
+ * the full deduped recipient list for a planned SLA notification,
+ * suitable for the `NotificationRecipientResolver` shape consumed by
+ * `dispatchPlannedNotifications`. Never throws; returns `[]` on any
+ * lookup failure so the dispatcher records `skipped` (not `failed`).
+ */
+export function createSafeSlaMultiRecipientResolver(
+  deps: CreateRecipientResolverDeps = {},
+): (planned: PlannedNotification) => Promise<ResolvedRecipient[]> {
+  return async (planned) => {
+    const { recipients } = await resolveSlaNotificationRecipients(planned, deps);
+    return recipients;
+  };
+}
