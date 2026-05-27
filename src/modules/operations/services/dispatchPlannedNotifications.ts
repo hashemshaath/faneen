@@ -18,7 +18,7 @@
  *   - Individual dispatch failures do NOT abort the loop and do NOT
  *     mutate alerts or other notifications.
  *
- * Channel: in_app only. No SMS / email / push / webhook surfaces here.
+ * Channel: in_app only. Other surfaces are out of scope here.
  */
 import type { NotificationPlan, PlannedNotification } from './planNotifications';
 import {
