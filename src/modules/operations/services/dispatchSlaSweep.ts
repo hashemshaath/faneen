@@ -32,6 +32,15 @@ import {
   type SweepActionContentBuilder,
 } from './applySlaSweepPlan';
 import type { AlertWriter } from './alertWriters';
+import {
+  dispatchPlannedNotifications,
+  type DispatchPlannedNotificationsResult,
+  type NotificationRecipientResolver,
+} from './dispatchPlannedNotifications';
+import type {
+  NotificationContentBuilder,
+  NotificationDispatcher,
+} from './notificationDispatcher';
 
 export interface DispatchSlaSweepInput {
   now?: Date;
@@ -47,6 +56,17 @@ export interface DispatchSlaSweepInput {
   contentBuilder?: SweepActionContentBuilder;
   /** Optional run-log sink. Failures are caught and surfaced as logError. */
   logger?: SlaRunLogger;
+  /**
+   * Independent hard gate for in-app notification dispatch. Even when
+   * `enableWrites` is true, notifications are NOT sent unless this is
+   * `true` AND a `notificationDispatcher` + `notificationRecipientResolver`
+   * are injected. Decoupled so alert writes can go live before
+   * notifications.
+   */
+  enableNotificationWrites?: boolean;
+  notificationDispatcher?: NotificationDispatcher;
+  notificationRecipientResolver?: NotificationRecipientResolver;
+  notificationContentBuilder?: NotificationContentBuilder;
 }
 
 export interface SlaRunLogRecord {
@@ -69,6 +89,9 @@ export interface SlaRunLogRecord {
     resolved?: number;
     skippedWrites?: number;
     failedWrites?: number;
+    notificationsSent?: number;
+    notificationsSkipped?: number;
+    notificationsFailed?: number;
   };
   error?: string;
 }
@@ -83,6 +106,8 @@ export interface DispatchSlaSweepResult {
   logError?: string;
   /** Present only when non-dry-run writes ran. */
   apply?: ApplySlaSweepPlanResult;
+  /** Present only when notification dispatch ran (or its gate was reached). */
+  notificationsDispatch?: DispatchPlannedNotificationsResult;
 }
 
 export const NON_DRY_RUN_NOT_ENABLED =
@@ -207,6 +232,24 @@ async function runNonDryRun(
     contentBuilder: input.contentBuilder,
   });
 
+  // Independent notification dispatch gate. Failures here never affect
+  // alert writes or alter the apply totals.
+  let notificationsDispatch: DispatchPlannedNotificationsResult | undefined;
+  if (
+    input.enableNotificationWrites === true &&
+    input.notificationDispatcher &&
+    input.notificationRecipientResolver
+  ) {
+    notificationsDispatch = await dispatchPlannedNotifications({
+      plan: notifications,
+      dispatcher: input.notificationDispatcher,
+      recipientResolver: input.notificationRecipientResolver,
+      contentBuilder: input.notificationContentBuilder,
+      dryRun: false,
+      enableNotificationWrites: true,
+    });
+  }
+
   const finishedAt = new Date().toISOString();
   const log: SlaRunLogRecord = {
     runType: 'sla-sweep',
@@ -227,12 +270,15 @@ async function runNonDryRun(
       resolved: apply.totals.resolved,
       skippedWrites: apply.totals.skipped,
       failedWrites: apply.totals.failed,
+      notificationsSent: notificationsDispatch?.totals.sent,
+      notificationsSkipped: notificationsDispatch?.totals.skipped,
+      notificationsFailed: notificationsDispatch?.totals.failed,
     },
     error: apply.totals.failed > 0 ? `${apply.totals.failed} write(s) failed` : undefined,
   };
 
   const logError = await safeLog(input.logger, log);
-  return { plan, notifications, log, logError, apply };
+  return { plan, notifications, log, logError, apply, notificationsDispatch };
 }
 
 async function safeLog(

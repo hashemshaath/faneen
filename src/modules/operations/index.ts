@@ -123,3 +123,28 @@ export {
   NON_DRY_RUN_REQUIRES_WRITER,
   NON_DRY_RUN_REQUIRES_ENABLE_WRITES,
 } from './services/dispatchSlaSweep';
+
+export {
+  buildNotificationKey,
+  defaultNotificationContent,
+  createInAppNotificationDispatcher,
+  type NotificationDispatcher,
+  type NotificationDispatchOutcome,
+  type NotificationDispatchResult,
+  type NotificationRecipient,
+  type InAppNotificationContent,
+  type InAppNotificationSink,
+  type NotificationContentBuilder,
+} from './services/notificationDispatcher';
+
+export {
+  dispatchPlannedNotifications,
+  NOTIFICATION_GATE_REQUIRES_NON_DRY_RUN,
+  NOTIFICATION_GATE_REQUIRES_ENABLE_NOTIFICATION_WRITES,
+  NOTIFICATION_GATE_REQUIRES_DISPATCHER,
+  NOTIFICATION_GATE_REQUIRES_RESOLVER,
+  type DispatchPlannedNotificationsInput,
+  type DispatchPlannedNotificationsResult,
+  type DispatchPlannedNotificationsTotals,
+  type NotificationRecipientResolver,
+} from './services/dispatchPlannedNotifications';
