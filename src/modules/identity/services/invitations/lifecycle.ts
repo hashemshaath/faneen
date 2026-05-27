@@ -10,10 +10,8 @@
  * Disable by setting LIFECYCLE_VALIDATE_STAFF_INVITES to false if a
  * production issue appears.
  */
-import {
-  canTransition,
-  type StaffMembershipState,
-} from '@/modules/shared/lifecycle';
+import type { StaffMembershipState } from '@/modules/shared/lifecycle';
+import { canTransition } from '@/modules/shared/lifecycle/transitions';
 
 export const LIFECYCLE_VALIDATE_STAFF_INVITES = true;
 
