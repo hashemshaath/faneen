@@ -2186,6 +2186,11 @@ const AdminBusinesses = () => {
                     </div>
                   </div>
                 </TabsContent>
+
+                {/* ── Ops Tab (BUSINESS-CORE-2): internal notes + activity timeline ── */}
+                <TabsContent value="ops" className="space-y-4 mt-3">
+                  <BusinessOperationsPanel businessId={editingBiz.id} />
+                </TabsContent>
               </Tabs>
 
               <Separator className="my-4" />
