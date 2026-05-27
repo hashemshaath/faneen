@@ -224,3 +224,14 @@ export {
   type GuardedDispatchSlaSweepInput,
   type GuardedDispatchSlaSweepResult,
 } from './services/operationsRunGuards';
+
+export {
+  requestManualRealRun,
+  evaluateProductionApproval,
+  MANUAL_REAL_RUN_SCOPE,
+  MANUAL_REAL_RUN_REJECTION_REASONS,
+  type OperationsProductionApproval,
+  type ManualRealRunRequest,
+  type ManualRealRunResult,
+  type ManualRealRunRejectionReason,
+} from './services/manualRealRunRequest';

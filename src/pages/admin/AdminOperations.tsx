@@ -179,6 +179,21 @@ function ReadinessPanel({ bi }: { bi: (ar: string, en: string) => string }) {
       value: bi('معطّل (محصور بالخادم)', 'Server-gated only / Disabled'),
       tone: 'off',
     },
+    {
+      label: bi('مسار التشغيل اليدوي الفعلي', 'Manual real-run pathway'),
+      value: bi('مُصمَّم ومعطّل', 'Designed, disabled'),
+      tone: 'off',
+    },
+    {
+      label: bi('موافقة الإنتاج', 'Production approval'),
+      value: bi('مطلوبة', 'Required'),
+      tone: 'off',
+    },
+    {
+      label: bi('التنفيذ من جانب الخادم فقط', 'Server-only execution'),
+      value: bi('مطلوب', 'Required'),
+      tone: 'off',
+    },
   ];
   return (
     <Card data-testid="readiness-panel">
