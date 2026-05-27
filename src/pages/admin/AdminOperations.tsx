@@ -379,6 +379,9 @@ const AdminOperations = () => {
       {/* Safety panel — always visible. Pure copy, no controls. */}
       <SafetyPanel bi={bi} />
 
+      {/* Real-run readiness panel — read-only. No buttons. */}
+      <ReadinessPanel bi={bi} />
+
       {/* Ledger status banner — surfaces the most recent manual-preview log result. */}
       {ledger && (
         <Card data-testid="ledger-status">
