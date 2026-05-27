@@ -102,7 +102,7 @@ describe('BUSINESS-OPERATIONS-2C SLA sweep — evaluator', () => {
       entityId: 'lead-1',
       severity: 'warning',
       status: 'open',
-      triggeredAt: hoursAgo(25),
+      triggeredAt: hoursAgo(2),
       idempotencyKey: 'sla:leads:lead-1:lead.submitted_not_viewed_24h:2026-05-26',
     }];
     const plan = evaluateSlaSweep({
