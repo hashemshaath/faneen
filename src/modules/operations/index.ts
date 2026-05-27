@@ -96,3 +96,30 @@ export {
   type PreviewSlaSweepResult,
   type SafeActionSample,
 } from './services/previewSlaSweepForAdmin';
+
+export {
+  createSupabaseAlertWriter,
+  isStrictPromotion,
+  type AlertWriter,
+  type AlertWriteOutcome,
+  type AlertWriteResult,
+  type CreateOperationalAlertInput,
+  type EscalateOperationalAlertInput,
+  type ResolveOperationalAlertInput,
+} from './services/alertWriters';
+
+export {
+  applySlaSweepPlan,
+  APPLY_GATE_REQUIRES_NON_DRY_RUN,
+  APPLY_GATE_REQUIRES_ENABLE_WRITES,
+  type ApplySlaSweepPlanInput,
+  type ApplySlaSweepPlanResult,
+  type ApplySlaSweepPlanTotals,
+  type SweepActionContent,
+  type SweepActionContentBuilder,
+} from './services/applySlaSweepPlan';
+
+export {
+  NON_DRY_RUN_REQUIRES_WRITER,
+  NON_DRY_RUN_REQUIRES_ENABLE_WRITES,
+} from './services/dispatchSlaSweep';

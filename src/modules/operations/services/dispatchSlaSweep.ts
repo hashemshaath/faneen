@@ -26,6 +26,12 @@ import {
   planNotifications,
   type NotificationPlan,
 } from './planNotifications';
+import {
+  applySlaSweepPlan,
+  type ApplySlaSweepPlanResult,
+  type SweepActionContentBuilder,
+} from './applySlaSweepPlan';
+import type { AlertWriter } from './alertWriters';
 
 export interface DispatchSlaSweepInput {
   now?: Date;
@@ -33,6 +39,12 @@ export interface DispatchSlaSweepInput {
   existingAlerts: readonly ExistingAlert[];
   /** Defaults to true. Non-dry-run mode is not yet implemented. */
   dryRun?: boolean;
+  /** Hard gate required (with dryRun:false + writer) to perform any writes. */
+  enableWrites?: boolean;
+  /** Required when dryRun:false. Injectable for tests. */
+  writer?: AlertWriter;
+  /** Optional sweep action → alert content mapper. */
+  contentBuilder?: SweepActionContentBuilder;
   /** Optional run-log sink. Failures are caught and surfaced as logError. */
   logger?: SlaRunLogger;
 }
@@ -43,6 +55,8 @@ export interface SlaRunLogRecord {
   startedAt: string;
   finishedAt: string;
   status: 'ok' | 'failed';
+  /** 'start' is emitted for non-dry-run runs before any writes. */
+  phase?: 'start' | 'finish';
   totals: {
     candidates: number;
     create: number;
@@ -50,6 +64,11 @@ export interface SlaRunLogRecord {
     resolve: number;
     skipped: number;
     plannedNotifications: number;
+    created?: number;
+    escalated?: number;
+    resolved?: number;
+    skippedWrites?: number;
+    failedWrites?: number;
   };
   error?: string;
 }
@@ -62,10 +81,16 @@ export interface DispatchSlaSweepResult {
   log: SlaRunLogRecord;
   /** Captured (but non-fatal) logger error message, if any. */
   logError?: string;
+  /** Present only when non-dry-run writes ran. */
+  apply?: ApplySlaSweepPlanResult;
 }
 
 export const NON_DRY_RUN_NOT_ENABLED =
   'non-dry-run not enabled: SLA dispatch write wrappers are not implemented yet (phase 2D foundation)';
+export const NON_DRY_RUN_REQUIRES_WRITER =
+  'non-dry-run requires an injected AlertWriter';
+export const NON_DRY_RUN_REQUIRES_ENABLE_WRITES =
+  'non-dry-run requires enableWrites:true';
 
 export async function dispatchSlaSweep(
   input: DispatchSlaSweepInput,
@@ -73,27 +98,25 @@ export async function dispatchSlaSweep(
   const startedAt = new Date().toISOString();
   const dryRun = input.dryRun ?? true;
 
-  // Safety: fail closed for any non-dry-run request.
+  // Safety: fail closed for any non-dry-run request without explicit writer
+  // + enableWrites. We deliberately reuse NON_DRY_RUN_NOT_ENABLED as the
+  // outward error so older callers see the same fail-closed shape.
   if (!dryRun) {
-    const finishedAt = new Date().toISOString();
-    const log: SlaRunLogRecord = {
-      runType: 'sla-sweep',
-      dryRun: false,
-      startedAt,
-      finishedAt,
-      status: 'failed',
-      totals: {
-        candidates: input.candidates.length,
-        create: 0,
-        escalate: 0,
-        resolve: 0,
-        skipped: 0,
-        plannedNotifications: 0,
-      },
-      error: NON_DRY_RUN_NOT_ENABLED,
-    };
-    const logError = await safeLog(input.logger, log);
-    return { plan: null, notifications: null, log, logError };
+    if (!input.writer || input.enableWrites !== true) {
+      const finishedAt = new Date().toISOString();
+      const log: SlaRunLogRecord = {
+        runType: 'sla-sweep',
+        dryRun: false,
+        startedAt,
+        finishedAt,
+        status: 'failed',
+        totals: emptyTotals(input.candidates.length),
+        error: NON_DRY_RUN_NOT_ENABLED,
+      };
+      const logError = await safeLog(input.logger, log);
+      return { plan: null, notifications: null, log, logError };
+    }
+    return runNonDryRun(input, startedAt);
   }
 
   const now = input.now ?? new Date();
@@ -123,6 +146,93 @@ export async function dispatchSlaSweep(
 
   const logError = await safeLog(input.logger, log);
   return { plan, notifications, log, logError };
+}
+
+function emptyTotals(candidates: number): SlaRunLogRecord['totals'] {
+  return {
+    candidates,
+    create: 0,
+    escalate: 0,
+    resolve: 0,
+    skipped: 0,
+    plannedNotifications: 0,
+  };
+}
+
+async function runNonDryRun(
+  input: DispatchSlaSweepInput,
+  startedAt: string,
+): Promise<DispatchSlaSweepResult> {
+  const now = input.now ?? new Date();
+
+  // Pre-run log: any failure aborts before writes.
+  const startLog: SlaRunLogRecord = {
+    runType: 'sla-sweep',
+    dryRun: false,
+    phase: 'start',
+    startedAt,
+    finishedAt: startedAt,
+    status: 'ok',
+    totals: emptyTotals(input.candidates.length),
+  };
+  if (input.logger) {
+    try {
+      await input.logger(startLog);
+    } catch (err) {
+      const finishedAt = new Date().toISOString();
+      const log: SlaRunLogRecord = {
+        ...startLog,
+        phase: 'finish',
+        finishedAt,
+        status: 'failed',
+        error: 'pre-run log failure: ' +
+          (err instanceof Error ? err.message : 'unknown'),
+      };
+      return { plan: null, notifications: null, log, logError: log.error };
+    }
+  }
+
+  const plan = evaluateSlaSweep({
+    now,
+    candidates: input.candidates,
+    existingAlerts: input.existingAlerts,
+  });
+  const notifications = planNotifications(plan);
+  // Writer + enableWrites already validated by caller.
+  const apply = await applySlaSweepPlan({
+    plan,
+    writer: input.writer!,
+    dryRun: false,
+    enableWrites: true,
+    contentBuilder: input.contentBuilder,
+  });
+
+  const finishedAt = new Date().toISOString();
+  const log: SlaRunLogRecord = {
+    runType: 'sla-sweep',
+    dryRun: false,
+    phase: 'finish',
+    startedAt,
+    finishedAt,
+    status: apply.totals.failed > 0 ? 'failed' : 'ok',
+    totals: {
+      candidates: plan.totals.candidates,
+      create: plan.totals.create,
+      escalate: plan.totals.escalate,
+      resolve: plan.totals.resolve,
+      skipped: plan.totals.skipped,
+      plannedNotifications: notifications.totals.planned,
+      created: apply.totals.created,
+      escalated: apply.totals.escalated,
+      resolved: apply.totals.resolved,
+      skippedWrites: apply.totals.skipped,
+      failedWrites: apply.totals.failed,
+    },
+    error: apply.totals.failed > 0 ? `${apply.totals.failed} write(s) failed` : undefined,
+  };
+
+  const logError = await safeLog(input.logger, log);
+  return { plan, notifications, log, logError, apply };
 }
 
 async function safeLog(
