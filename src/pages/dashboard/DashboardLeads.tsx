@@ -15,6 +15,7 @@ import { LeadDetailPanel, type LeadRow } from '@/components/leads/LeadDetailPane
 import { trackEvent } from '@/lib/analytics-events';
 import { listProviderLeadRequests } from '@/modules/leads/services/detail';
 import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
+import { checkLeadTransition, leadActionFromTargetStatus } from '@/modules/leads/services/lifecycle';
 import { notifyCustomerLeadUpdate } from '@/modules/leads/services/notifyCustomerLeadUpdate';
 import { createOrGetLeadConversation } from '@/modules/leads/services/createOrGetLeadConversation';
 import { getManagedBusinessesForUser } from '@/modules/leads/services/getManagedBusinessesForUser';
@@ -150,7 +151,21 @@ const DashboardLeads: React.FC = () => {
     onSettled: () => setPendingId(null),
   });
 
-  const handleAction = (id: string, next: LeadStatus) => updateStatus.mutate({ id, next });
+  const handleAction = (id: string, next: LeadStatus) => {
+    // BUSINESS-OPERATIONS-1C: Additive client-side lifecycle guard.
+    // Only gates low-risk archive/lost transitions; other actions are
+    // unaffected. Server-side RLS remains authoritative.
+    const action = leadActionFromTargetStatus(next);
+    if (action) {
+      const current = leads?.find((l) => l.id === id)?.status;
+      const check = checkLeadTransition(current, action);
+      if (!check.allowed) {
+        toast.error(isRTL ? check.reasonAr! : check.reasonEn!);
+        return;
+      }
+    }
+    updateStatus.mutate({ id, next });
+  };
 
   const ensureConversation = useMutation({
     mutationFn: async (id: string) => {

@@ -15,6 +15,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
 import { listAdminLeadRequests } from '@/modules/leads/services/detail';
 import { updateLeadRequestStatus } from '@/modules/leads/services/mutations';
+import { checkLeadTransition, leadActionFromTargetStatus } from '@/modules/leads/services/lifecycle';
 import { getContractAfterConvert } from '@/modules/leads/services/conversion';
 import { adminConvertLeadToContract }  from '@/modules/leads/services/adminConvertLeadToContract';
 import { sendLeadTransactionalEmail } from '@/modules/leads/services/sendLeadTransactionalEmail';
@@ -148,7 +149,17 @@ const AdminLeadRequests: React.FC = () => {
   };
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: Status }) => {
+    mutationFn: async ({ id, status, current }: { id: string; status: Status; current?: string | null }) => {
+      // BUSINESS-OPERATIONS-1C: Additive client-side lifecycle guard for
+      // archive/lost transitions only. Other admin status changes remain
+      // unchanged. RLS + RPC checks remain authoritative.
+      const action = leadActionFromTargetStatus(status);
+      if (action) {
+        const check = checkLeadTransition(current, action);
+        if (!check.allowed) {
+          throw new Error(isRTL ? check.reasonAr! : check.reasonEn!);
+        }
+      }
       await updateLeadRequestStatus(id, status);
     },
     onSuccess: () => {
@@ -414,7 +425,7 @@ const AdminLeadRequests: React.FC = () => {
                   <div className="flex flex-wrap gap-2 pt-1">
                     <Select
                       value={isLegacy(r.status) ? '' : r.status}
-                      onValueChange={(v) => updateStatus.mutate({ id: r.id, status: v as Status })}
+                      onValueChange={(v) => updateStatus.mutate({ id: r.id, status: v as Status, current: r.status })}
                     >
                       <SelectTrigger className="h-9 w-[180px]" aria-label={isRTL ? 'تغيير الحالة' : 'Change status'}>
                         <SelectValue placeholder={isLegacy(r.status) ? (isRTL ? 'تحديث للحالة الجديدة' : 'Update to new status') : undefined} />
