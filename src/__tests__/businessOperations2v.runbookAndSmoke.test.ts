@@ -77,10 +77,14 @@ describe('BUSINESS-OPERATIONS-2V — runbook + smoke harness', () => {
 
   it('smoke harness never enables notification writes or hardcodes the flag', () => {
     const src = read(SMOKE);
-    // Ignore the explanatory comment line that documents what we never set.
+    // Ignore comment lines (line // and JSDoc *) that document what we
+    // explicitly never set.
     const stripped = src
       .split('\n')
-      .filter((line) => !line.trim().startsWith('//'))
+      .filter((line) => {
+        const t = line.trim();
+        return !t.startsWith('//') && !t.startsWith('*');
+      })
       .join('\n');
     expect(stripped).not.toMatch(/enableNotificationWrites\s*:\s*true/);
     expect(src).not.toMatch(/OPERATIONS_REAL_RUN_ENABLED\s*=\s*['"]true/);
@@ -109,8 +113,8 @@ describe('BUSINESS-OPERATIONS-2V — runbook + smoke harness', () => {
   it('smoke harness exits non-zero on usage error (no URL, no --no-network)', () => {
     const src = read(SMOKE);
     expect(src).toMatch(/MANUAL_SLA_REAL_RUN_URL_REQUIRED/);
-    // Usage error path emits exit code 2 via emit(..., 2).
-    expect(src).toMatch(/emit\([^)]*,\s*2\s*\)/);
+    // Usage error path emits exit code 2 via a trailing `, 2,` arg to emit().
+    expect(src).toMatch(/MANUAL_SLA_REAL_RUN_URL_REQUIRED[\s\S]{0,400}\n\s*2,/);
     expect(src).toMatch(/process\.exit\(exitCode\)/);
   });
 
