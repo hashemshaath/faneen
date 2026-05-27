@@ -40,6 +40,11 @@ const FACTORY_FILE = resolve(
   '../modules/operations/services/manualRealRunDependencies.ts',
 );
 const FACTORY_SOURCE = readFileSync(FACTORY_FILE, 'utf8');
+// Strip block + line comments so doc-string mentions of forbidden words
+// (which are descriptive, not actual imports) don't trip the audit.
+const FACTORY_CODE = FACTORY_SOURCE
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/(^|[^:])\/\/.*$/gm, '$1');
 
 // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -318,27 +323,28 @@ describe('2T: alert writer forwards idempotency + safe outcomes', () => {
 
 describe('2T: factory module forbidden imports', () => {
   it('does not import the browser Supabase client', () => {
-    expect(FACTORY_SOURCE).not.toMatch(/@\/integrations\/supabase\/client/);
+    expect(FACTORY_CODE).not.toMatch(/@\/integrations\/supabase\/client/);
+    expect(FACTORY_CODE).not.toMatch(/from\s+['"]@\/integrations\/supabase\/client['"]/);
   });
 
   it('does not import notification dispatchers, recipients, or content', () => {
-    expect(FACTORY_SOURCE).not.toMatch(/notificationDispatcher/);
-    expect(FACTORY_SOURCE).not.toMatch(/notificationRecipients/);
-    expect(FACTORY_SOURCE).not.toMatch(/notificationContent/);
-    expect(FACTORY_SOURCE).not.toMatch(/dispatchPlannedNotifications/);
+    expect(FACTORY_CODE).not.toMatch(/notificationDispatcher/);
+    expect(FACTORY_CODE).not.toMatch(/notificationRecipients/);
+    expect(FACTORY_CODE).not.toMatch(/notificationContent/);
+    expect(FACTORY_CODE).not.toMatch(/dispatchPlannedNotifications/);
   });
 
   it('does not import SMS/email/push/WhatsApp surfaces', () => {
-    expect(FACTORY_SOURCE).not.toMatch(/whatsapp|twilio|sendgrid|resend|fcm|apns|webpush/i);
+    expect(FACTORY_CODE).not.toMatch(/whatsapp|twilio|sendgrid|resend|fcm|apns|webpush/i);
   });
 
   it('does not import UI/pages/admin code', () => {
-    expect(FACTORY_SOURCE).not.toMatch(/@\/pages\//);
-    expect(FACTORY_SOURCE).not.toMatch(/@\/components\//);
+    expect(FACTORY_CODE).not.toMatch(/@\/pages\//);
+    expect(FACTORY_CODE).not.toMatch(/@\/components\//);
   });
 
   it('does not reference cron / scheduler primitives', () => {
-    expect(FACTORY_SOURCE).not.toMatch(/cron\.schedule|pg_cron|setInterval|setTimeout\s*\(/);
+    expect(FACTORY_CODE).not.toMatch(/cron\.schedule|pg_cron|setInterval|setTimeout\s*\(/);
   });
 });
 
