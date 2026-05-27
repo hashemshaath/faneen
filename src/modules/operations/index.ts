@@ -293,3 +293,12 @@ export {
   type ExecuteManualSlaRealRunContextRole,
   type ExecuteManualSlaRealRunRejectionReason,
 } from './services/executeManualSlaRealRun';
+
+export {
+  invokeManualSlaRealRunHarness,
+  MANUAL_SLA_REAL_RUN_HARNESS_REJECTION_REASONS,
+  type ManualSlaRealRunHarnessInput,
+  type ManualSlaRealRunHarnessResult,
+  type ManualSlaRealRunHarnessRejectionReason,
+  type ManualSlaRealRunHarnessExecutionSummary,
+} from './services/manualSlaRealRunHarness';
