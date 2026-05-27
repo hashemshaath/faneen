@@ -132,6 +132,7 @@ describe('2J previewSlaSweepForAdmin — DTO safety', () => {
 function sampleResult(overrides: Partial<PreviewSlaSweepResult> = {}): PreviewSlaSweepResult {
   return {
     dryRun: true,
+    status: 'success',
     evaluatedAt: NOW.toISOString(),
     totals: {
       candidates: 4,
@@ -148,6 +149,7 @@ function sampleResult(overrides: Partial<PreviewSlaSweepResult> = {}): PreviewSl
       'skip-unknown-condition': 0, 'skip-resolved-no-alert': 0,
     },
     loaderErrors: [],
+    loaderErrorsCount: 0,
     log: {
       runType: 'sla-sweep',
       dryRun: true,
@@ -167,6 +169,8 @@ function sampleResult(overrides: Partial<PreviewSlaSweepResult> = {}): PreviewSl
         idempotencyKey: 'sla:leads:qr-1:lead.submitted_not_viewed_24h:2026-05-27',
       },
     ],
+    actionSampleCount: 1,
+    totalActionCount: 1,
     sampleLimit: 25,
     partial: false,
     ...overrides,
@@ -238,7 +242,8 @@ describe('2J AdminOperations page', () => {
   it('refresh button triggers refetch', async () => {
     mockedPreview.mockResolvedValue(sampleResult());
     renderPage();
-    await waitFor(() => expect(mockedPreview).toHaveBeenCalled());
+    // Wait for initial fetch to fully settle so the debounced refetch is unblocked.
+    await screen.findByTestId('status-badge');
     const before = mockedPreview.mock.calls.length;
     fireEvent.click(screen.getByTestId('refresh-preview'));
     await waitFor(() => expect(mockedPreview.mock.calls.length).toBeGreaterThan(before));
@@ -252,9 +257,11 @@ describe('2J AdminOperations page', () => {
   });
 
   it('renders empty state when no samples', async () => {
-    mockedPreview.mockResolvedValue(sampleResult({ sampleActions: [], loaderErrors: [] }));
+    mockedPreview.mockResolvedValue(sampleResult({
+      sampleActions: [], loaderErrors: [], actionSampleCount: 0, totalActionCount: 0,
+    }));
     renderPage();
-    await screen.findByText(/No action samples/);
+    await screen.findByTestId('empty-state');
   });
 });
 

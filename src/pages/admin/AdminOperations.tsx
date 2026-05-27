@@ -20,6 +20,8 @@ import {
   Loader2,
   Database,
   Bell,
+  Inbox,
+  ServerOff,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
@@ -74,6 +76,67 @@ function formatTime(iso: string | undefined, isRTL: boolean): string {
   } catch {
     return iso;
   }
+}
+
+/** Status badge color tone for the preview's coarse `status` field. */
+function StatusBadge({ status, bi }: {
+  status: PreviewSlaSweepResult['status'];
+  bi: (ar: string, en: string) => string;
+}) {
+  if (status === 'failed') {
+    return (
+      <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30" data-testid="status-badge" data-status="failed">
+        <XCircle className="w-3 h-3 me-1" />{bi('فشل المعاينة', 'Preview failed')}
+      </Badge>
+    );
+  }
+  if (status === 'partial') {
+    return (
+      <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30" data-testid="status-badge" data-status="partial">
+        <AlertTriangle className="w-3 h-3 me-1" />{bi('معاينة جزئية', 'Partial preview')}
+      </Badge>
+    );
+  }
+  if (status === 'empty') {
+    return (
+      <Badge variant="outline" className="bg-muted text-muted-foreground border-border" data-testid="status-badge" data-status="empty">
+        <Inbox className="w-3 h-3 me-1" />{bi('لا توجد بيانات', 'No data')}
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="bg-success/10 text-success border-success/30" data-testid="status-badge" data-status="success">
+      <CheckCircle2 className="w-3 h-3 me-1" />{bi('معاينة جاهزة', 'Preview ready')}
+    </Badge>
+  );
+}
+
+/** Dry-run safety reassurance panel. Pure copy — no controls. */
+function SafetyPanel({ bi }: { bi: (ar: string, en: string) => string }) {
+  const items = [
+    bi('معاينة فقط', 'Preview only'),
+    bi('لا يتم تعديل أي تنبيهات', 'No alerts are changed'),
+    bi('لا يتم إرسال أي إشعارات', 'No notifications are sent'),
+    bi('لا توجد مهمة مجدولة قيد التشغيل', 'No cron job is running'),
+  ];
+  return (
+    <Card data-testid="safety-panel">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2 mb-2 text-sm font-medium">
+          <ShieldCheck className="w-4 h-4 text-primary" />
+          {bi('ضمانات السلامة', 'Safety guarantees')}
+        </div>
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-muted-foreground">
+          {items.map((label) => (
+            <li key={label} className="flex items-center gap-2">
+              <CheckCircle2 className="w-3 h-3 text-success shrink-0" />
+              <span>{label}</span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
 }
 
 function ActionSamplesTable({ samples, bi }: {
@@ -132,6 +195,8 @@ function LoaderHealthTable({ preview, bi }: {
       error: errs.get(code) ?? null,
     }));
   }, [preview]);
+  const healthy = codes.filter((c) => !c.error).length;
+  const failed = codes.filter((c) => c.error).length;
   if (codes.length === 0) {
     return (
       <div className="text-sm text-muted-foreground p-4 text-center">
@@ -140,6 +205,17 @@ function LoaderHealthTable({ preview, bi }: {
     );
   }
   return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-3 text-xs" data-testid="loader-health-summary">
+        <span className="inline-flex items-center gap-1 text-success">
+          <CheckCircle2 className="w-3 h-3" />
+          {bi('سليم', 'Healthy')}: <span className="tabular-nums">{healthy}</span>
+        </span>
+        <span className="inline-flex items-center gap-1 text-destructive">
+          <XCircle className="w-3 h-3" />
+          {bi('فشل', 'Failed')}: <span className="tabular-nums">{failed}</span>
+        </span>
+      </div>
     <Table>
       <TableHeader>
         <TableRow>
@@ -170,6 +246,7 @@ function LoaderHealthTable({ preview, bi }: {
         ))}
       </TableBody>
     </Table>
+    </div>
   );
 }
 
@@ -181,18 +258,22 @@ const AdminOperations = () => {
   });
   useNoIndex();
 
-  const { data, isLoading, isFetching, isError, error, refetch, fetchedAt } =
-    useAdminOperationsPreview();
+  const {
+    data, isLoading, isFetching, isError, error, refetch,
+    lastSuccessfulAt, phase,
+  } = useAdminOperationsPreview();
 
   const totals = data?.totals;
-  const fetchedAtIso = fetchedAt ? new Date(fetchedAt).toISOString() : undefined;
+  const lastGoodIso = lastSuccessfulAt ? new Date(lastSuccessfulAt).toISOString() : undefined;
+  // Show stale data on transient refresh failure rather than clearing it.
+  const showStale = isError && !!data;
 
   return (
     <main className="container mx-auto py-8 space-y-6" data-testid="admin-operations-page">
       {/* Header */}
       <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
             <Activity className="w-5 h-5 text-primary" />
             <h1 className="text-2xl font-semibold">
               {bi('لوحة العمليات', 'Operations Dashboard')}
@@ -205,6 +286,13 @@ const AdminOperations = () => {
               <ShieldCheck className="w-3 h-3 me-1" />
               {bi('معاينة فقط — بدون كتابة', 'Dry-run preview only')}
             </Badge>
+            {data && <StatusBadge status={data.status} bi={bi} />}
+            {phase === 'refreshing' && (
+              <Badge variant="outline" data-testid="refreshing-badge">
+                <Loader2 className="w-3 h-3 me-1 animate-spin" />
+                {bi('جارٍ التحديث', 'Refreshing')}
+              </Badge>
+            )}
           </div>
           <p className="text-sm text-muted-foreground max-w-2xl">
             {bi(
@@ -214,8 +302,9 @@ const AdminOperations = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {bi('آخر تحديث:', 'Last refresh:')} <span className="tech-content">{formatTime(fetchedAtIso, isRTL)}</span>
+          <span className="text-xs text-muted-foreground" data-testid="last-success-time">
+            {bi('آخر معاينة ناجحة:', 'Last successful preview:')}{' '}
+            <span className="tech-content">{formatTime(lastGoodIso, isRTL)}</span>
           </span>
           <Button
             variant="outline"
@@ -232,14 +321,25 @@ const AdminOperations = () => {
         </div>
       </header>
 
+      {/* Safety panel — always visible. Pure copy, no controls. */}
+      <SafetyPanel bi={bi} />
+
       {/* Error state */}
       {isError && (
         <Card className="border-destructive/40" data-testid="preview-error">
           <CardContent className="p-4 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
+            <ServerOff className="w-5 h-5 text-destructive mt-0.5" />
             <div className="text-sm">
               <div className="font-medium">{bi('تعذّر تحميل المعاينة', 'Could not load preview')}</div>
               <div className="text-muted-foreground mt-1">{error?.message ?? '—'}</div>
+              {showStale && (
+                <div className="text-xs text-muted-foreground mt-2">
+                  {bi(
+                    'تم الإبقاء على آخر معاينة ناجحة معروضة أدناه.',
+                    'Showing the last successful preview below.',
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -250,7 +350,7 @@ const AdminOperations = () => {
         className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
         data-testid="totals-grid"
       >
-        {isLoading ? (
+        {isLoading && !data ? (
           Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))
@@ -317,7 +417,7 @@ const AdminOperations = () => {
             </CardTitle>
           </CardHeader>
           <CardContent data-testid="loader-health">
-            {isLoading ? <Skeleton className="h-16" /> : data ? (
+            {isLoading && !data ? <Skeleton className="h-16" /> : data ? (
               <LoaderHealthTable preview={data} bi={bi} />
             ) : null}
           </CardContent>
@@ -329,14 +429,28 @@ const AdminOperations = () => {
         <CardHeader>
           <CardTitle className="text-sm flex items-center justify-between">
             <span>{bi('عينات الإجراءات', 'Action samples')}</span>
-            <span className="text-xs text-muted-foreground">
-              {bi('الحد الأقصى', 'Cap')}: {data?.sampleLimit ?? '—'}
+            <span className="text-xs text-muted-foreground" data-testid="sample-cap-text">
+              {data
+                ? bi(
+                    `عرض ${data.actionSampleCount} من ${data.totalActionCount} (الحد ${data.sampleLimit})`,
+                    `Showing ${data.actionSampleCount} of ${data.totalActionCount} (cap ${data.sampleLimit})`,
+                  )
+                : bi('الحد الأقصى', 'Cap') + ': —'}
             </span>
           </CardTitle>
         </CardHeader>
         <CardContent data-testid="action-samples">
-          {isLoading ? <Skeleton className="h-24" /> : data ? (
-            <ActionSamplesTable samples={data.sampleActions} bi={bi} />
+          {isLoading && !data ? <Skeleton className="h-24" /> : data ? (
+            data.sampleActions.length === 0 ? (
+              <div className="text-sm text-muted-foreground p-4 text-center" data-testid="empty-state">
+                {bi(
+                  'لا توجد إجراءات SLA تتطلب الانتباه حاليًا.',
+                  'No SLA actions currently require attention.',
+                )}
+              </div>
+            ) : (
+              <ActionSamplesTable samples={data.sampleActions} bi={bi} />
+            )
           ) : null}
         </CardContent>
       </Card>
