@@ -255,6 +255,54 @@ function LoaderHealthTable({ preview, bi }: {
   );
 }
 
+function RecentRunsTable({ runs, bi, isRTL }: {
+  runs: ManualPreviewRunSummary[];
+  bi: (ar: string, en: string) => string;
+  isRTL: boolean;
+}) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>{bi('بدء', 'Started')}</TableHead>
+          <TableHead>{bi('الحالة', 'Status')}</TableHead>
+          <TableHead>{bi('النوع', 'Run type')}</TableHead>
+          <TableHead>{bi('إجمالي الإجراءات', 'Total actions')}</TableHead>
+          <TableHead>{bi('المدة (ms)', 'Duration (ms)')}</TableHead>
+          <TableHead>{bi('رمز الخطأ', 'Error code')}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {runs.map((r) => (
+          <TableRow key={r.id} data-testid="recent-run-row">
+            <TableCell className="tech-content text-xs">{formatTime(r.startedAt, isRTL)}</TableCell>
+            <TableCell>
+              <Badge
+                variant="outline"
+                className={
+                  r.status === 'failed'
+                    ? 'bg-destructive/10 text-destructive border-destructive/30'
+                    : r.status === 'partial'
+                      ? 'bg-warning/10 text-warning border-warning/30'
+                      : r.status === 'empty'
+                        ? 'bg-muted text-muted-foreground border-border'
+                        : 'bg-success/10 text-success border-success/30'
+                }
+              >
+                {r.status ?? '—'}
+              </Badge>
+            </TableCell>
+            <TableCell className="tech-content text-xs">{r.runType}</TableCell>
+            <TableCell className="tech-content text-xs tabular-nums">{r.totalActionCount}</TableCell>
+            <TableCell className="tech-content text-xs tabular-nums">{r.durationMs ?? '—'}</TableCell>
+            <TableCell className="tech-content text-xs text-muted-foreground">{r.errorCode ?? '—'}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
 const AdminOperations = () => {
   const { isRTL } = useLanguage();
   const bi = useBi();
