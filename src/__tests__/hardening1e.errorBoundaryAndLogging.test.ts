@@ -28,9 +28,15 @@ describe("HARDENING-1E: ErrorBoundary", () => {
 
   it("ErrorBoundary renders only error.message, never error.stack, in the UI", () => {
     const src = readFileSync(join(SRC, "components/ErrorBoundary.tsx"), "utf8");
-    // Stack may be captured into diagnostics (logDiag) but must never be put inside JSX.
-    expect(src).not.toMatch(/\{[^}]*error\.stack[^}]*\}/);
-    expect(src).not.toMatch(/\{[^}]*errorInfo\.componentStack[^}]*\}/);
+    // Stack may be captured into diagnostics (logDiag) but never rendered in JSX.
+    // Any reference to error.stack/componentStack must be inside the logDiag call.
+    const stackRefs = src.match(/error\.stack|componentStack/g) ?? [];
+    expect(stackRefs.length).toBeGreaterThan(0);
+    const renderStart = src.indexOf("render()");
+    const logDiagLine = src.split("\n").find((l) => l.includes("logDiag") && l.includes("stack"));
+    expect(logDiagLine, "stack must be logged via logDiag only").toBeTruthy();
+    // No stack references after render() begins.
+    expect(src.slice(renderStart)).not.toMatch(/error\.stack|componentStack/);
     // Localized, user-friendly fallback exists.
     expect(src).toMatch(/حدث خطأ غير متوقع/);
     expect(src).toMatch(/An unexpected error occurred/);
