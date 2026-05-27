@@ -94,6 +94,7 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'مناطق الخدمة', en: 'Service Areas' }, url: '/dashboard/provider/service-areas', icon: MapPin },
       { label: { ar: 'العضوية والرصيد', en: 'Membership & Credits' }, url: '/dashboard/provider/membership', icon: Crown },
       { label: { ar: 'العملاء', en: 'Clients' }, url: '/dashboard/clients', icon: Users },
+      { label: { ar: 'أوامر العمل', en: 'Work Orders' }, url: '/dashboard/work-orders', icon: ClipboardList },
       { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
       { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },
