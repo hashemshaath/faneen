@@ -134,6 +134,7 @@ describe("BUSINESS-CORE-2: isolation + security", () => {
   });
 
   it("notes card does not render bare user UUIDs as the primary label", () => {
+    const notes = readFileSync(NOTES, "utf8");
     // author_user_id should not appear as a top-level text node in JSX.
     expect(notes).not.toMatch(/\{\s*n\.author_user_id\s*\}/);
   });
