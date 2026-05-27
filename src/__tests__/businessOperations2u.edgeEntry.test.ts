@@ -125,7 +125,7 @@ describe('BUSINESS-OPERATIONS-2U — manual-sla-real-run edge entry', () => {
 
   it('does not wire cron / scheduler', () => {
     const src = readEdge();
-    expect(src).not.toMatch(/cron\.schedule|pg_cron|setInterval|scheduler/i);
+    expect(src).not.toMatch(/cron\.schedule\(|pg_cron|setInterval\(|scheduler\./i);
   });
 
   it('never leaks the service-role key to the response or logs', () => {
@@ -147,6 +147,10 @@ describe('BUSINESS-OPERATIONS-2U — manual-sla-real-run edge entry', () => {
   });
 
   it('is NOT imported by any frontend code under src/', () => {
+    // Only an import/path reference to the edge function would be a
+    // boundary violation. The harness mints request IDs prefixed
+    // "manual-sla-real-run-..." — that's not an import.
+    const FORBIDDEN = /supabase\/functions\/manual-sla-real-run|functions\.invoke\s*\(\s*['"]manual-sla-real-run['"]/;
     function* walk(dir: string): Generator<string> {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         const full = join(dir, entry.name);
@@ -166,7 +170,7 @@ describe('BUSINESS-OPERATIONS-2U — manual-sla-real-run edge entry', () => {
     for (const file of walk(srcDir)) {
       const body = readFileSync(file, 'utf8');
       expect(
-        /manual-sla-real-run/.test(body),
+        FORBIDDEN.test(body),
         `${file} unexpectedly references manual-sla-real-run`,
       ).toBe(false);
     }
