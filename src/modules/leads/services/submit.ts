@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { emitLeadCreated } from './emitLeadAudit';
 
 /**
  * Lead request insert payload — mirrors LeadRequestForm exactly (R3G/R3H).
@@ -37,5 +38,23 @@ export async function insertLeadRequest(
 ): Promise<{ id: string }> {
   const { error } = await supabase.from('lead_requests').insert(payload);
   if (error) throw error;
+  // BUSINESS-CORE-16 — emit a per-business lead.created event for the
+  // Unified Operations Feed. Best-effort; never blocks the caller. The
+  // owning business_id and lead_ref are taken from the payload so no
+  // round-trip is required. (Customer-side `quote_requests` inserts are
+  // intentionally NOT audited here — they have no business_id until
+  // provider fanout occurs.)
+  try {
+    await emitLeadCreated({
+      leadRequestId: payload.id,
+      businessId: payload.business_id,
+      // ref_id is stamped by a DB trigger; we don't have it client-side
+      // at insert time and never try to invent one. The normalizer
+      // resolves the lead-side ref from the entity_id link.
+      refId: null,
+    });
+  } catch {
+    /* never fail the mutation on audit error */
+  }
   return { id: payload.id };
 }

@@ -4,6 +4,7 @@ import {
   emitQuoteAudit,
   readLeadRequestStatusSafe,
 } from '@/modules/quotes/services/emitQuoteAudit';
+import { emitLeadStatusChanged } from './emitLeadAudit';
 
 // Lead mutation wrappers (R3D). All writes run under the caller's JWT and
 // rely on existing RLS policies — no service_role, no RLS bypass. Edge
@@ -43,8 +44,8 @@ export async function updateLeadRequestStatus(
     .eq('id', id);
   if (error) throw error;
   // BUSINESS-CORE-15 — emit a lifecycle event for the Unified Operations Feed.
-  // `quoted` (or any update carrying quote fields) is the provider-response
-  // event; everything else is a generic update. Audit is best-effort.
+  // `quoted` (or any update carrying quote fields) is a quote.responded event;
+  // every other transition is routed through BC-16 as lead.status_changed.
   try {
     const isResponse =
       status === 'quoted' ||
@@ -54,12 +55,20 @@ export async function updateLeadRequestStatus(
         extra.quote_note !== undefined ||
         extra.quote_valid_until !== undefined
       ));
-    await emitQuoteAudit({
-      leadRequestId: id,
-      action: isResponse ? 'quote.responded' : 'quote.updated',
-      previousStatus,
-      newStatus: status,
-    });
+    if (isResponse) {
+      await emitQuoteAudit({
+        leadRequestId: id,
+        action: 'quote.responded',
+        previousStatus,
+        newStatus: status,
+      });
+    } else {
+      await emitLeadStatusChanged({
+        leadRequestId: id,
+        previousStatus,
+        newStatus: status,
+      });
+    }
   } catch {
     /* never fail the mutation on audit error */
   }
