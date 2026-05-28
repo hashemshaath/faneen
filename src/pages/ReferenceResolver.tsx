@@ -86,6 +86,13 @@ export default function ReferenceResolver() {
       setState({ status: 'invalid' });
       return;
     }
+    // BUSINESS-CORE-5 — Work Order refs short-circuit to the workspace
+    // detail route. WO ref_ids are deterministic and the detail page
+    // performs its own RLS-gated lookup, so no RPC round-trip is needed.
+    if (safeRef.startsWith('WO-')) {
+      setState({ status: 'redirect', to: `/dashboard/work-orders/${safeRef}` });
+      return;
+    }
     let cancelled = false;
     setState({ status: 'loading' });
     (async () => {
