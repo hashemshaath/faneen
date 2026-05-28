@@ -22,7 +22,11 @@ export interface RecordWorkOrderAuditInput {
     | "work_order.measurement_deleted"
     | "work_order.boq_generated"
     | "work_order.boq_item_updated"
-    | "work_order.boq_finalized";
+    | "work_order.boq_finalized"
+    | "work_order.quotation_created"
+    | "work_order.quotation_sent"
+    | "work_order.quotation_approved"
+    | "work_order.quotation_rejected";
   metadata?: Record<string, unknown>;
 }
 
