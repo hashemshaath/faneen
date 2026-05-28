@@ -27,6 +27,7 @@ import { UnifiedOperationsFeed } from "@/components/operations/UnifiedOperations
 import { OperationsBreadcrumbs } from "@/components/operations/OperationsBreadcrumbs";
 import { computeOperationalMetrics } from "@/modules/operations/metrics/computeOperationalMetrics";
 import { ProviderOperationalMetricsCards } from "@/components/workOrders/ProviderOperationalMetricsCards";
+import { ProviderConversionBreakdown } from "@/components/workOrders/ProviderConversionBreakdown";
 import {
   listBusinessActivityTimeline,
   type BusinessActivityEvent,
