@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { format, addDays, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
+import { emitBookingCreated } from '@/modules/bookings/services/emitBookingAudit';
 
 interface BookingWidgetProps {
   businessId: string;
@@ -131,6 +132,21 @@ export const BookingWidget = ({ businessId, businessName, open, onOpenChange }: 
         notes: notes.trim() || null,
       }).select('ref_id').single();
       if (error) throw error;
+
+      // BUSINESS-CORE-17 — emit booking.created for the Unified Operations
+      // Feed. Best-effort; never blocks the booking flow. business_id +
+      // ref_id are taken from the insert/return so no extra round-trip
+      // is required.
+      try {
+        await emitBookingCreated({
+          bookingId,
+          businessId,
+          refId: (inserted?.ref_id as string | null) ?? null,
+          status: 'pending',
+        });
+      } catch {
+        /* never fail the mutation on audit error */
+      }
 
       // Send booking confirmation email (fire-and-forget)
       if (user.email) {

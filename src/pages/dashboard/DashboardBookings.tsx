@@ -23,6 +23,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import {
+  emitBookingStatusChanged,
+  readBookingStatusSafe,
+} from '@/modules/bookings/services/emitBookingAudit';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
@@ -165,8 +169,27 @@ const DashboardBookings = () => {
         updateData.cancellation_reason = reason || null;
         updateData.cancelled_by = user!.id;
       }
+      // BUSINESS-CORE-17 — snapshot previous status BEFORE the write so the
+      // audit can record an accurate transition. Best-effort; never blocks.
+      let previousStatus: string | null = null;
+      try {
+        previousStatus = await readBookingStatusSafe(id);
+      } catch {
+        previousStatus = null;
+      }
       const { error } = await supabase.from('bookings').update(updateData).eq('id', id);
       if (error) throw error;
+      // BUSINESS-CORE-17 — emit booking.status_changed for the Unified
+      // Operations Feed. Audit is best-effort; never blocks the mutation.
+      try {
+        await emitBookingStatusChanged({
+          bookingId: id,
+          previousStatus,
+          newStatus: status,
+        });
+      } catch {
+        /* never fail the mutation on audit error */
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
