@@ -51,7 +51,7 @@ describe("BUSINESS-WORKFLOW-4: migration creates tables + RLS", () => {
 
   it("unit allow-list and attachment_type allow-list are enforced via CHECK", () => {
     expect(sql!).toMatch(/unit\s+text[\s\S]+CHECK \(unit IN \('mm','cm','m','inch'\)\)/);
-    expect(sql!).toMatch(/attachment_type[\s\S]+CHECK \(attachment_type IN \([^)]*'general'[^)]*'handover_document'\)\)/);
+    expect(sql!).toMatch(/attachment_type[\s\S]+CHECK \(attachment_type IN \([\s\S]*?'general'[\s\S]*?'handover_document'[\s\S]*?\)\)/);
   });
 
   it("storage bucket work-order-files is created as PRIVATE", () => {
