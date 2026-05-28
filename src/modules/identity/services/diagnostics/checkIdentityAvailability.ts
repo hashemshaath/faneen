@@ -28,5 +28,5 @@ export async function checkIdentityAvailability(
     _phone: args.phone ?? null,
     _exclude_user_id: args.excludeUserId ?? null,
   });
-  return { data: (data as IdentityAvailabilityResult | null) ?? null, error };
+  return { data: (data as unknown as IdentityAvailabilityResult | null) ?? null, error };
 }
