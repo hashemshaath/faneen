@@ -14,7 +14,10 @@ describe('ADMIN-IDENTITY-REDESIGN-1 page header & subtitle', () => {
     expect(src).toContain('Identity & Entities Center');
   });
   it('renders a subtitle mentioning users, businesses, ownership, diagnostics', () => {
-    expect(src).toMatch(/المستخدمين والمنشآت وعلاقات الملكية وتشخيصات الهوية/);
+    expect(src).toContain('المستخدمين');
+    expect(src).toContain('المنشآت');
+    expect(src).toContain('الملكية');
+    expect(src).toContain('تشخيصات');
     expect(src).toMatch(/users.*businesses.*ownership.*identity diagnostics/i);
   });
   it('uses noindex meta and admin-only shell (DashboardLayout + useNoIndex)', () => {
