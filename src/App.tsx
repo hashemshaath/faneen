@@ -288,6 +288,7 @@ const AppRoutes = () => (
           <Route path="/admin/private-sectors" element={<ProtectedRoute requireAdmin><AdminPrivateSectors /></ProtectedRoute>} />
           <Route path="/dashboard/projects" element={<ProtectedRoute requireProvider><DashboardProjects /></ProtectedRoute>} />
           <Route path="/dashboard/operations" element={<ProtectedRoute><DashboardOperations /></ProtectedRoute>} />
+          <Route path="/dashboard/operations/feed" element={<ProtectedRoute><DashboardOperationsFeed /></ProtectedRoute>} />
           <Route path="/dashboard/analytics" element={<ProtectedRoute requireProvider><DashboardAnalytics /></ProtectedRoute>} />
           <Route path="/dashboard/contract-analytics" element={<ProtectedRoute requireProvider><DashboardContractAnalytics /></ProtectedRoute>} />
           <Route path="/dashboard/leads" element={<ProtectedRoute requireProvider><DashboardLeads /></ProtectedRoute>} />
