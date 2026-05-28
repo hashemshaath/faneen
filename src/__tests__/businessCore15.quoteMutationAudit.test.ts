@@ -90,8 +90,9 @@ describe('BUSINESS-CORE-15 — quote mutation audit emission', () => {
   it('previous-status read failure does not block the mutation or the emit', async () => {
     readStatusMock.mockRejectedValueOnce(new Error('read fail'));
     await updateLeadRequestStatus('l6', 'accepted');
-    expect(emitMock).toHaveBeenCalledTimes(1);
-    expect(emitMock.mock.calls[0][0].previousStatus).toBeNull();
+    // non-quote transitions now route to emitLeadStatusChanged (BC-16)
+    expect(emitLeadStatusChangedMock).toHaveBeenCalledTimes(1);
+    expect(emitLeadStatusChangedMock.mock.calls[0][0].previousStatus).toBeNull();
   });
 });
 
