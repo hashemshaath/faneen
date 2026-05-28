@@ -270,11 +270,11 @@ export default function DashboardWorkOrders() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" /> {tx.loading}
             </div>
-          ) : orders.length === 0 ? (
+          ) : filteredOrders.length === 0 ? (
             <p className="text-sm text-muted-foreground">{tx.empty}</p>
           ) : (
             <ul className="space-y-2" aria-label={tx.title}>
-              {orders.map((o) => (
+              {filteredOrders.map((o) => (
                 <li key={o.id}>
                   <button
                     type="button"
@@ -289,6 +289,7 @@ export default function DashboardWorkOrders() {
                       <div className="flex items-center gap-1">
                         <Badge variant="outline">{statusLabel(o.status)}</Badge>
                         <Badge variant="secondary">{priorityLabel(o.priority)}</Badge>
+                        <WorkOrderSlaBadge row={o} isRTL={isRTL} />
                       </div>
                     </div>
                     <p className="mt-2 font-medium text-foreground line-clamp-1" dir="auto">
@@ -296,8 +297,11 @@ export default function DashboardWorkOrders() {
                     </p>
                     <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
                       <span>{new Date(o.updated_at).toLocaleString(isRTL ? "ar" : "en")}</span>
-                      {o.source_type && <span>· {o.source_type}</span>}
-                      {o.source_ref_id && <ReferenceBadge refId={o.source_ref_id} />}
+                      <WorkOrderSourceBadge
+                        sourceType={o.source_type ?? "manual"}
+                        sourceRefId={o.source_ref_id}
+                        isRTL={isRTL}
+                      />
                     </div>
                   </button>
                 </li>
