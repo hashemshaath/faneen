@@ -66,10 +66,17 @@ describe('ORG-RBAC-STRUCTURE-8 — business_staff access isolation', () => {
   });
 
   it('only the businesses/services layer accesses business_staff directly', () => {
-    const allowedPrefix = join(SRC, 'modules/businesses/services');
+    // Canonical service layers permitted to touch business_staff directly:
+    //  1. modules/businesses/services/** — primary CRUD wrappers.
+    //  2. modules/identity/services/diagnostics/** — admin-only read-only
+    //     diagnostics introduced by CRITICAL-ENTITY-IDENTITY-ACCESS-FIX-1.
+    const allowedPrefixes = [
+      join(SRC, 'modules/businesses/services'),
+      join(SRC, 'modules/identity/services/diagnostics'),
+    ];
     const offenders: string[] = [];
     for (const f of walk(SRC)) {
-      if (f.startsWith(allowedPrefix)) continue;
+      if (allowedPrefixes.some((p) => f.startsWith(p))) continue;
       const c = readFileSync(f, 'utf8');
       if (DIRECT_RE.test(c)) offenders.push(f.replace(ROOT + '/', ''));
     }
