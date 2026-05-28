@@ -42,6 +42,9 @@ import { DirectionalIcon } from '@/components/ui/directional-icon';
 import { EntityLink } from '@/components/admin/identity/EntityLink';
 import { IdentityFilters, EMPTY_FILTERS, type IdentityFilterState, type SavedView } from '@/components/admin/identity/IdentityFilters';
 import { IdentityAnalytics } from '@/components/admin/identity/IdentityAnalytics';
+import { IdentityCommandPalette } from '@/components/admin/identity/IdentityCommandPalette';
+import { IdentityActivityFeed } from '@/components/admin/identity/IdentityActivityFeed';
+import { IdentitySignupsChart } from '@/components/admin/identity/IdentitySignupsChart';
 import { listProfiles } from '@/modules/users';
 import { listAllUserRoles } from '@/modules/identity';
 import { listAdminBusinesses } from '@/modules/businesses';
@@ -185,19 +188,19 @@ const AdminIdentity: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [deferredSearch, setDeferredSearch] = useState('');
   const searchRef = useRef<HTMLInputElement | null>(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   const handleSearchChange = useCallback((val: string) => {
     setSearchTerm(val);
     startTransition(() => setDeferredSearch(val));
   }, []);
 
-  // ⌘K to focus search
+  // ⌘K to open command palette (preferred); fallback to search focus when palette already open
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        searchRef.current?.focus();
-        searchRef.current?.select();
+        setPaletteOpen(prev => !prev);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -346,6 +349,19 @@ const AdminIdentity: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl gap-1.5"
+              onClick={() => setPaletteOpen(true)}
+              aria-label={isRTL ? 'فتح لوحة الأوامر' : 'Open command palette'}
+            >
+              <Command className="w-3.5 h-3.5" />
+              <span>{isRTL ? 'لوحة الأوامر' : 'Command'}</span>
+              <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0 rounded border border-border/40 bg-muted/40 text-[10px] font-mono">
+                <Command className="w-2.5 h-2.5" />K
+              </kbd>
+            </Button>
             <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
               <Link to="/admin/identity?view=users&create=individual">
                 <UserPlus className="w-4 h-4" />{isRTL ? 'مستخدم جديد' : 'New user'}
@@ -483,6 +499,19 @@ const AdminIdentity: React.FC = () => {
 
           {/* ─── Overview tab ─── */}
           <TabsContent value="overview" className="space-y-4 mt-5">
+            {/* Insights row: signups chart + live activity feed */}
+            <div className="grid lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                <IdentitySignupsChart
+                  profiles={profiles}
+                  businesses={businesses}
+                  isRTL={isRTL}
+                  days={30}
+                />
+              </div>
+              <IdentityActivityFeed isRTL={isRTL} limit={15} />
+            </div>
+
             <div className="grid lg:grid-cols-2 gap-4">
               {/* Recent users */}
               <div className="rounded-2xl border border-border/30 bg-card p-5">
@@ -647,6 +676,13 @@ const AdminIdentity: React.FC = () => {
             : 'All admin operations (edit, delete, password, verify, branches, roles…) are available right here inside the tabs — no page navigation needed.'}
         </p>
       </div>
+      <IdentityCommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        isRTL={isRTL}
+        profiles={profiles}
+        businesses={businesses}
+      />
     </DashboardLayout>
   );
 };

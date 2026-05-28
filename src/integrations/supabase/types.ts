@@ -12181,6 +12181,14 @@ export type Database = {
         Returns: Json
       }
       admin_barcode_registry_summary: { Args: never; Returns: Json }
+      admin_bulk_set_business_active: {
+        Args: { _active: boolean; _business_ids: string[] }
+        Returns: number
+      }
+      admin_bulk_set_user_ban: {
+        Args: { _banned: boolean; _user_ids: string[] }
+        Returns: number
+      }
       admin_client_sites_monitoring_summary: { Args: never; Returns: Json }
       admin_contract_pdf_exports_summary: {
         Args: never
