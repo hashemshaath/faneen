@@ -68,6 +68,26 @@ export { updateWorkOrderMeasurement } from "./services/updateWorkOrderMeasuremen
 export type { UpdateWorkOrderMeasurementPatch } from "./services/updateWorkOrderMeasurement";
 export { softDeleteWorkOrderMeasurement } from "./services/softDeleteWorkOrderMeasurement";
 
+// BUSINESS-WORKFLOW-5B — Measurement templates
+export { listMeasurementTemplates } from "./services/listMeasurementTemplates";
+export type { ListMeasurementTemplatesOptions } from "./services/listMeasurementTemplates";
+export { getMeasurementTemplateByKey } from "./services/getMeasurementTemplateByKey";
+export {
+  buildMeasurementFromTemplate,
+} from "./services/buildMeasurementFromTemplate";
+export type {
+  TemplateValueMap,
+  BuildMeasurementError,
+  BuildMeasurementErrorCode,
+  BuildMeasurementResult,
+  BuiltMeasurementDraft,
+} from "./services/buildMeasurementFromTemplate";
+export { createMeasurementsFromTemplate } from "./services/createMeasurementsFromTemplate";
+export type {
+  CreateMeasurementsFromTemplateInput,
+  CreateMeasurementsFromTemplateResult,
+} from "./services/createMeasurementsFromTemplate";
+
 // BUSINESS-CORE-4 — shared lib helpers
 export * from "./lib/statusHelpers";
 export * from "./lib/source";

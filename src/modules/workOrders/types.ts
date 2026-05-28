@@ -159,3 +159,70 @@ export interface WorkOrderMeasurementRow {
   updated_at: string;
   deleted_at: string | null;
 }
+
+/* ─────────────────────────────────────────────────────────────
+ * BUSINESS-WORKFLOW-5B — Measurement templates
+ * ───────────────────────────────────────────────────────────── */
+export type WorkOrderMeasurementTemplateFieldType =
+  | "number"
+  | "text"
+  | "select"
+  | "boolean";
+
+export const WORK_ORDER_MEASUREMENT_TEMPLATE_FIELD_TYPES: ReadonlyArray<WorkOrderMeasurementTemplateFieldType> = [
+  "number",
+  "text",
+  "select",
+  "boolean",
+];
+
+/** Standard work_order_measurements row columns a field may map into. */
+export type WorkOrderMeasurementMappedColumn =
+  | "width"
+  | "height"
+  | "depth"
+  | "length"
+  | "quantity";
+
+export const WORK_ORDER_MEASUREMENT_MAPPED_COLUMNS: ReadonlyArray<WorkOrderMeasurementMappedColumn> = [
+  "width",
+  "height",
+  "depth",
+  "length",
+  "quantity",
+];
+
+export interface WorkOrderMeasurementTemplateFieldOption {
+  value: string;
+  label_ar: string;
+  label_en: string;
+}
+
+export interface WorkOrderMeasurementTemplateField {
+  key: string;
+  label_ar: string;
+  label_en: string;
+  type: WorkOrderMeasurementTemplateFieldType;
+  unit?: WorkOrderMeasurementUnit;
+  required?: boolean;
+  options?: WorkOrderMeasurementTemplateFieldOption[];
+  maps_to?: WorkOrderMeasurementMappedColumn;
+}
+
+export interface WorkOrderMeasurementTemplateRow {
+  id: string;
+  ref_id: string | null;
+  sector_key: string;
+  template_key: string;
+  title_ar: string;
+  title_en: string;
+  description_ar: string | null;
+  description_en: string | null;
+  default_measurement_type: string;
+  default_unit: WorkOrderMeasurementUnit;
+  fields: WorkOrderMeasurementTemplateField[];
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
