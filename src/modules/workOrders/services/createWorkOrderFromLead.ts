@@ -19,7 +19,7 @@ const SAFE_REF = /^[A-Z]{2,6}-[A-Z0-9]+$/;
  * BUSINESS-CORE-10 — Manual conversion of a lead request into a work order.
  *
  * - Reads `lead_requests` under the caller's JWT (RLS gates provider/admin
- *   access — no service_role, no bypass).
+ *   access — never bypassed; no privileged backend keys used).
  * - Resolves business_id from the lead row directly; if an explicit
  *   `businessId` is supplied it must match (otherwise rejected).
  * - Delegates insert to `createWorkOrder`, persisting:
