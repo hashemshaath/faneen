@@ -18,5 +18,5 @@ export async function getQuotationByToken(input: {
     _token: input.token,
   });
   if (error) return { data: null, error };
-  return { data: (data as PublicQuotationView | null) ?? null, error: null };
+  return { data: (data as unknown as PublicQuotationView | null) ?? null, error: null };
 }
