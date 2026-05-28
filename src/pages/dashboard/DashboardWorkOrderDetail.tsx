@@ -229,8 +229,17 @@ export default function DashboardWorkOrderDetail() {
                 <p className="text-xs text-muted-foreground">{tx.noTasks}</p>
               ) : (
                 <ul className="space-y-1.5">
-                  {tasks.map((t) => (
-                    <li key={t.id} className="rounded-xl border border-border/40 bg-background/40 p-2.5 space-y-1">
+                  {tasks.map((t) => {
+                    const a = t.assigned_to_user_id ? assigneeMap[t.assigned_to_user_id] : undefined;
+                    const highlighted = !!highlightTaskRef && t.ref_id === highlightTaskRef;
+                    return (
+                    <li
+                      key={t.id}
+                      id={t.ref_id ?? undefined}
+                      className={`rounded-xl border bg-background/40 p-2.5 space-y-1 ${
+                        highlighted ? "border-primary ring-2 ring-primary/30" : "border-border/40"
+                      }`}
+                    >
                       <div className="flex items-start justify-between gap-2">
                         <span className="text-xs font-medium text-foreground truncate" dir="auto">
                           {t.title}
@@ -239,9 +248,16 @@ export default function DashboardWorkOrderDetail() {
                           {pickBi(WORK_ORDER_TASK_STATUS_LABELS[t.status as keyof typeof WORK_ORDER_TASK_STATUS_LABELS], isRTL)}
                         </Badge>
                       </div>
-                      <ReferenceBadge refId={t.ref_id} />
+                      <div className="flex items-center justify-between gap-2">
+                        <ReferenceBadge refId={t.ref_id} />
+                        <WorkOrderAssigneeChip
+                          assigneeUserId={t.assigned_to_user_id}
+                          assigneeName={a?.full_name ?? a?.ref_id ?? null}
+                          isRTL={isRTL}
+                        />
+                      </div>
                     </li>
-                  ))}
+                  );})}
                 </ul>
               )}
             </section>
