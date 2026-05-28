@@ -626,12 +626,6 @@ const AdminBusinesses = () => {
   /* ─── Create business mutation ─── */
   const createBizMutation = useMutation({
     mutationFn: async () => {
-      // Owner is optional — fallback to the current admin so the row satisfies user_id NOT NULL.
-      // Admin can reassign the real owner later from the edit panel / team tab.
-      const ownerId = createForm.resolved_user_id || user?.id;
-      if (!ownerId) {
-        throw new Error(isRTL ? 'تعذّر تحديد منشئ السجل' : 'Cannot determine record creator');
-      }
       if (!createForm.username || !createForm.username_ok) {
         throw new Error(isRTL ? 'اسم المستخدم غير صالح أو محجوز' : 'Username is invalid or taken');
       }
@@ -642,8 +636,10 @@ const AdminBusinesses = () => {
         ? toE164({ countryCode: createForm.phone_cc || '+966', national: createForm.phone_national })
         : null;
       const region = SA_REGIONS.find((r) => r.id === createForm.region_id);
-      const payload: Record<string, unknown> = {
-        user_id: ownerId,
+      const ownerMode = (createForm.owner_mode || 'existing') as 'existing' | 'new' | 'invite';
+
+      // Shared business payload used by both code paths
+      const bizCore: AdminCreateBusinessPayload = {
         username: createForm.username.trim().toLowerCase(),
         name_ar: createForm.name_ar.trim(),
         name_en: createForm.name_en?.trim() || null,
@@ -664,6 +660,44 @@ const AdminBusinesses = () => {
         additional_number: createForm.additional_number?.trim() || null,
         address: createForm.address?.trim() || null,
         address_en: createForm.address_en?.trim() || null,
+      };
+
+      // Path A — Create new auth user (or invite) via edge function
+      if (ownerMode === 'new' || ownerMode === 'invite') {
+        const email = (createForm.owner_email || '').trim().toLowerCase();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          throw new Error(isRTL ? 'بريد المسؤول غير صالح' : 'Invalid manager email');
+        }
+        if (ownerMode === 'new' && (createForm.owner_password || '').length < 8) {
+          throw new Error(isRTL ? 'كلمة المرور يجب ألا تقل عن 8 أحرف' : 'Password must be at least 8 characters');
+        }
+        const res = await adminCreateBusinessWithOwner({
+          owner: {
+            mode: ownerMode,
+            email,
+            password: ownerMode === 'new' ? createForm.owner_password : undefined,
+            full_name: (createForm.owner_full_name || createForm.name_ar || '').trim(),
+            phone: (createForm.owner_phone || '').trim() || undefined,
+            position: (createForm.owner_position || '').trim() || undefined,
+            auto_confirm: true,
+          },
+          business: bizCore,
+          redirect_to: `${window.location.origin}/auth/reset-password`,
+        });
+        if (!res.success || !res.business) {
+          throw new Error(res.error || (isRTL ? 'فشل الإنشاء' : 'Create failed'));
+        }
+        return res.business as unknown as Record<string, unknown>;
+      }
+
+      // Path B — Existing user (default). Falls back to current admin only if no picker.
+      const ownerId = createForm.resolved_user_id || user?.id;
+      if (!ownerId) {
+        throw new Error(isRTL ? 'تعذّر تحديد المالك' : 'Cannot determine owner');
+      }
+      const payload: Record<string, unknown> = {
+        ...bizCore,
+        user_id: ownerId,
         approval_status: 'approved',
         is_active: true,
       };
@@ -673,12 +707,25 @@ const AdminBusinesses = () => {
         terminal: 'single',
       });
       if (error) throw error;
-      await logAction('business_created', (data as any)?.id ?? '', { username: payload.username });
+      await logAction('business_created', (data as { id?: string } | null)?.id ?? '', { username: payload.username });
       return data as Record<string, unknown>;
     },
     onSuccess: (row) => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
-      toast.success(isRTL ? 'تم إنشاء المنشأة' : 'Business created');
+      const mode = createForm.owner_mode;
+      toast.success(
+        isRTL
+          ? mode === 'invite'
+            ? 'تم إنشاء المنشأة وإرسال دعوة للمسؤول'
+            : mode === 'new'
+            ? 'تم إنشاء المنشأة وحساب المسؤول'
+            : 'تم إنشاء المنشأة'
+          : mode === 'invite'
+          ? 'Business created — invitation sent to manager'
+          : mode === 'new'
+          ? 'Business and manager account created'
+          : 'Business created',
+      );
       setCreatingBiz(false);
       setCreateForm(emptyCreateForm());
       if (row) openEdit(row);
