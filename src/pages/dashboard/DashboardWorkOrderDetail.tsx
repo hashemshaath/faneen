@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ReferenceTag } from "@/components/reference/ReferenceTag";
 import { ReferenceBadge } from "@/components/reference/ReferenceBadge";
+import { OperationsBreadcrumbs } from "@/components/operations/OperationsBreadcrumbs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -58,6 +59,7 @@ export default function DashboardWorkOrderDetail() {
   const [searchParams] = useSearchParams();
   const highlightTaskRef = searchParams.get("task");
   const { user } = useAuth();
+  const { isAdmin } = useAuth();
   const { isRTL } = useLanguage();
 
   usePageMeta({
@@ -86,6 +88,12 @@ export default function DashboardWorkOrderDetail() {
   const tx = useMemo(
     () => ({
       back: isRTL ? "أوامر العمل" : "Work Orders",
+      crumbOps: isRTL ? "العمليات" : "Operations",
+      crumbBoard: isRTL ? "أوامر العمل" : "Work Orders",
+      overview: isRTL ? "نظرة عامة" : "Overview",
+      feed: isRTL ? "سجل العمليات" : "Operations Feed",
+      inspector: isRTL ? "مستكشف المراجع" : "Ref Inspector",
+      linkedSource: isRTL ? "مصدر مرتبط" : "Linked source",
       notFound: isRTL
         ? "لم يتم العثور على أمر العمل أو لا تملك صلاحية الوصول."
         : "Work order not found or you don't have access.",
@@ -128,6 +136,19 @@ export default function DashboardWorkOrderDetail() {
 
   useEffect(() => { void load(); }, [load]);
 
+  // Scroll the highlighted task into view once data is loaded.
+  useEffect(() => {
+    if (!highlightTaskRef || tasks.length === 0) return;
+    const el = document.getElementById(highlightTaskRef);
+    if (el) {
+      try {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      } catch {
+        el.scrollIntoView();
+      }
+    }
+  }, [highlightTaskRef, tasks]);
+
   const onSend = useCallback(async () => {
     if (!wo || !user || !draft.trim()) return;
     setSending(true);
@@ -157,12 +178,30 @@ export default function DashboardWorkOrderDetail() {
   return (
     <DashboardLayout>
     <main dir={isRTL ? "rtl" : "ltr"} className="container max-w-5xl py-4 sm:py-6 space-y-4 sm:space-y-6">
-      <div className="flex items-center gap-2">
+      <OperationsBreadcrumbs
+        crumbs={[
+          { labelEn: tx.crumbOps, labelAr: tx.crumbOps, to: "/dashboard/work-orders/overview" },
+          { labelEn: tx.crumbBoard, labelAr: tx.crumbBoard, to: "/dashboard/work-orders" },
+          { labelEn: refId, labelAr: refId },
+        ]}
+      />
+      <div className="flex flex-wrap items-center gap-2">
         <Button asChild variant="ghost" size="sm" className="rounded-lg">
           <Link to="/dashboard/work-orders" aria-label={tx.back}>
             <BackIcon className="w-4 h-4 me-1" /> {tx.back}
           </Link>
         </Button>
+        <Button asChild variant="ghost" size="sm" className="rounded-lg">
+          <Link to="/dashboard/work-orders/overview">{tx.overview}</Link>
+        </Button>
+        <Button asChild variant="ghost" size="sm" className="rounded-lg">
+          <Link to="/dashboard/operations/feed">{tx.feed}</Link>
+        </Button>
+        {isAdmin && refId && (
+          <Button asChild variant="outline" size="sm" className="rounded-lg ms-auto">
+            <Link to={`/admin/ref/${refId}`} className="tech-content">{tx.inspector}</Link>
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -184,7 +223,16 @@ export default function DashboardWorkOrderDetail() {
                 <WorkOrderPriorityBadge priority={wo.priority as WorkOrderPriority} isRTL={isRTL} />
                 <WorkOrderSourceBadge sourceType={wo.source_type} isRTL={isRTL} />
                 {wo.source_ref_id && (
-                  <ReferenceTag refId={wo.source_ref_id} isRTL={isRTL} />
+                  <Link
+                    to={`/r/${wo.source_ref_id}`}
+                    className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/5 px-1.5 py-0.5 hover:bg-accent/10 transition-colors"
+                    aria-label={`${tx.linkedSource}: ${wo.source_ref_id}`}
+                  >
+                    <span className="text-[9px] uppercase tracking-wide text-muted-foreground">
+                      {tx.linkedSource}
+                    </span>
+                    <ReferenceTag refId={wo.source_ref_id} isRTL={isRTL} />
+                  </Link>
                 )}
                 <WorkOrderAssigneeChip
                   assigneeUserId={wo.owner_user_id}
