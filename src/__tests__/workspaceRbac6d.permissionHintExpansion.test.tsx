@@ -130,6 +130,7 @@ describe('WORKSPACE-RBAC-6D — safety invariants', () => {
       'pages/dashboard/DashboardPortfolio.tsx',
       'pages/dashboard/DashboardPromotions.tsx',
       'pages/dashboard/DashboardBusinessEdit.tsx',
+      'pages/dashboard/DashboardStaffCenter.tsx',
     ].map((p) => join(SRC, p)),
   );
 
