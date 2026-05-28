@@ -39,8 +39,8 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
         </div>
 
         {/* Form container */}
-        <div className="flex-1 flex items-center justify-center px-5 sm:px-10 py-4">
-          <div className="w-full max-w-[420px]">
+        <div className="flex-1 flex items-center justify-center px-5 sm:px-8 lg:px-12 py-6 sm:py-8">
+          <div className="w-full max-w-[460px] sm:max-w-[520px] lg:max-w-[560px]">
             {children}
           </div>
         </div>
