@@ -14,6 +14,9 @@ vi.mock('@/i18n/LanguageContext', () => ({
 }));
 vi.mock('@/hooks/usePageMeta', () => ({ usePageMeta: () => {} }));
 vi.mock('@/hooks/useNoIndex', () => ({ useNoIndex: () => {} }));
+vi.mock('@/components/dashboard/DashboardLayout', () => ({
+  DashboardLayout: ({ children }) => children,
+}));
 
 import {
   requestManualRealRun,

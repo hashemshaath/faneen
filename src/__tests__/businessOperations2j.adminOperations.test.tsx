@@ -38,6 +38,9 @@ vi.mock('@/i18n/LanguageContext', () => ({
 }));
 vi.mock('@/hooks/usePageMeta', () => ({ usePageMeta: () => {} }));
 vi.mock('@/hooks/useNoIndex', () => ({ useNoIndex: () => {} }));
+vi.mock('@/components/dashboard/DashboardLayout', () => ({
+  DashboardLayout: ({ children }) => children,
+}));
 
 const NOW = new Date('2026-05-27T12:00:00.000Z');
 const hoursAgo = (h: number) => new Date(NOW.getTime() - h * 36e5).toISOString();
