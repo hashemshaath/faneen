@@ -19,6 +19,15 @@ function read(rel: string): string {
   return readFileSync(resolve(__dirname, rel), "utf8");
 }
 
+/** Strip /* … *​/ block comments and // line comments so static safety
+ *  scans only inspect executable code, not the JSDoc that purposefully
+ *  enumerates the very fields we want to keep out of the result. */
+function stripComments(src: string): string {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+}
+
 /* ------------------------------------------------------------------ */
 /* Static safety checks — each wrapper                                 */
 /* ------------------------------------------------------------------ */
@@ -26,7 +35,7 @@ describe("BUSINESS-ADMIN-4 — wrapper static safety", () => {
   const sources = Object.fromEntries(
     Object.entries(FILES)
       .filter(([k]) => !["resolver", "adminBarrel", "page"].includes(k))
-      .map(([k, p]) => [k, read(p)]),
+      .map(([k, p]) => [k, stripComments(read(p))]),
   ) as Record<string, string>;
 
   it.each(Object.keys(sources))(
