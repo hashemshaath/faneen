@@ -7,16 +7,34 @@
  *  - Argument shapes match the real call sites verbatim.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { emitContractAudit, readContractStatusSafe } from './emitContractAudit';
 
 export async function acceptContract(contractId: string): Promise<unknown> {
   const { data, error } = await supabase.rpc('accept_contract', { _contract_id: contractId });
   if (error) throw error;
+  // BUSINESS-CORE-14 — accept_contract is the signing event for the Unified Operations Feed.
+  try {
+    await emitContractAudit({ contractId, action: 'contract.signed' });
+  } catch {
+    /* never fail the mutation on audit error */
+  }
   return data ?? null;
 }
 
 export async function sendContractForApproval(contractId: string): Promise<void> {
+  const previousStatus = await readContractStatusSafe(contractId);
   const { error } = await supabase.rpc('send_contract_for_approval', { _contract_id: contractId });
   if (error) throw error;
+  // BUSINESS-CORE-14 — status transition into the approval queue.
+  try {
+    await emitContractAudit({
+      contractId,
+      action: 'contract.status_changed',
+      previousStatus,
+    });
+  } catch {
+    /* never fail the mutation on audit error */
+  }
 }
 
 export interface CloneContractAsDraftArgs {
