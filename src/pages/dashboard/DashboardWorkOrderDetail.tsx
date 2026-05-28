@@ -48,7 +48,7 @@ import {
  * BUSINESS-CORE-5 — Work Order detail page.
  *
  * Resolved by `ref_id` (e.g. WO-1000007). Read-mostly mobile-first
- * operational surface. No realtime / no automation / no notifications.
+ * operational surface. Read-mostly. No background behavior of any kind.
  */
 export default function DashboardWorkOrderDetail() {
   useNoIndex();
