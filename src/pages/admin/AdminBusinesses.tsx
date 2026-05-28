@@ -237,6 +237,13 @@ const AdminBusinesses = () => {
   // ── Create new business (admin) ──
   const [creatingBiz, setCreatingBiz] = useState(false);
   const emptyCreateForm = () => ({
+    // Owner mode: pick existing user, create a new account, or send invite
+    owner_mode: 'existing' as 'existing' | 'new' | 'invite',
+    owner_email: '',
+    owner_password: '',
+    owner_full_name: '',
+    owner_phone: '',
+    owner_position: '',
     owner_query: '',                  // email OR USR-XXXXX
     resolved_user_id: '' as string,
     resolved_owner_label: '' as string,
