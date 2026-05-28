@@ -23,7 +23,7 @@
  */
 import React, { useState, useMemo, useEffect, useRef, useTransition, useCallback, Suspense, lazy } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,6 +55,7 @@ import {
   Users, Building2, Search, Command, Shield, Crown, ShieldCheck, Briefcase,
   TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, Plus,
   UserPlus, Activity, ExternalLink, KeyRound, BarChart3, ShieldAlert,
+  RefreshCw, Stethoscope,
 } from 'lucide-react';
 
 /* Lazy-loaded specialist admin pages, embedded inside Identity tabs. */
@@ -95,7 +96,8 @@ type View =
   | 'access-requests'
   | 'access-management'
   | 'analytics'
-  | 'integrity';
+  | 'integrity'
+  | 'activity';
 
 /* ─── KPI card ─── */
 const Kpi: React.FC<{
@@ -144,13 +146,23 @@ const AdminIdentity: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
   usePageMeta({
-    title: isRTL ? 'مركز الحسابات والمنشآت | إدارة قِطاعات' : 'Identity Hub | Qitaat Admin',
+    title: isRTL ? 'مركز الهوية والكيانات | إدارة قِطاعات' : 'Identity & Entities Center | Qitaat Admin',
     noindex: true,
   });
   const { isSuperAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [, startTransition] = useTransition();
+  const queryClient = useQueryClient();
+
+  /** Re-fetch every identity / business / diagnostics data source. */
+  const refreshDiagnostics = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['identity-profiles'] });
+    queryClient.invalidateQueries({ queryKey: ['identity-roles'] });
+    queryClient.invalidateQueries({ queryKey: ['identity-businesses'] });
+    queryClient.invalidateQueries({ queryKey: ['identity-activity'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-identity-integrity'] });
+  }, [queryClient]);
 
   const view = (searchParams.get('view') as View) || 'overview';
   const setView = useCallback((v: View) => {
@@ -341,12 +353,12 @@ const AdminIdentity: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold font-heading">
-                {isRTL ? 'مركز الحسابات والمنشآت' : 'Identity Hub'}
+                {isRTL ? 'مركز الهوية والكيانات' : 'Identity & Entities Center'}
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {isRTL
-                  ? 'إدارة موحّدة للمستخدمين والمنشآت والصلاحيات في مكان واحد'
-                  : 'Unified management for users, businesses, and roles in one place'}
+                  ? 'إدارة موحّدة للمستخدمين والمنشآت وعلاقات الملكية وتشخيصات الهوية في مكان واحد.'
+                  : 'Unified management for users, businesses, ownership relationships, and identity diagnostics in one place.'}
               </p>
             </div>
           </div>
@@ -365,13 +377,33 @@ const AdminIdentity: React.FC = () => {
               </kbd>
             </Button>
             <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
+              <Link to="/admin/identity?view=integrity" aria-label={isRTL ? 'تحديث التشخيصات' : 'Refresh diagnostics'}>
+                <RefreshCw className="w-3.5 h-3.5" />{isRTL ? 'التشخيصات' : 'Diagnostics'}
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-xl gap-1.5"
+              onClick={refreshDiagnostics}
+              aria-label={isRTL ? 'تحديث البيانات' : 'Refresh data'}
+            >
+              <RefreshCw className="w-3.5 h-3.5" />{isRTL ? 'تحديث' : 'Refresh'}
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
               <Link to="/admin/identity?view=users&create=individual">
                 <UserPlus className="w-4 h-4" />{isRTL ? 'مستخدم جديد' : 'New user'}
               </Link>
             </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
+              <Link to="/admin/identity?view=businesses&create=owner" aria-label={isRTL ? 'إضافة/دعوة مالك' : 'Add or invite owner'}>
+                <UserPlus className="w-4 h-4" />{isRTL ? 'إضافة/دعوة مالك' : 'Add / invite owner'}
+              </Link>
+            </Button>
             <Button asChild size="sm" className="rounded-xl gap-1.5">
               <Link to="/admin/identity?view=businesses">
-                <Plus className="w-4 h-4" />{isRTL ? 'إدارة المنشآت' : 'Manage businesses'}
+                <Plus className="w-4 h-4" />{isRTL ? 'إضافة منشأة' : 'Add business'}
               </Link>
             </Button>
           </div>
@@ -483,7 +515,8 @@ const AdminIdentity: React.FC = () => {
             <TabsTrigger value="access-requests" className="rounded-xl gap-1.5 py-2"><KeyRound className="w-3.5 h-3.5" />{isRTL ? 'طلبات الانضمام' : 'Access requests'}</TabsTrigger>
             <TabsTrigger value="access-management" className="rounded-xl gap-1.5 py-2"><Shield className="w-3.5 h-3.5" />{isRTL ? 'إدارة الوصول' : 'Access control'}</TabsTrigger>
             <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'تحليلات' : 'Analytics'}</TabsTrigger>
-            <TabsTrigger value="integrity" className="rounded-xl gap-1.5 py-2"><ShieldAlert className="w-3.5 h-3.5" />{isRTL ? 'السلامة والتكرار' : 'Integrity'}</TabsTrigger>
+            <TabsTrigger value="integrity" className="rounded-xl gap-1.5 py-2"><Stethoscope className="w-3.5 h-3.5" />{isRTL ? 'التشخيصات' : 'Diagnostics'}</TabsTrigger>
+            <TabsTrigger value="activity" className="rounded-xl gap-1.5 py-2"><Activity className="w-3.5 h-3.5" />{isRTL ? 'سجل النشاط' : 'Activity'}</TabsTrigger>
           </TabsList>
 
           {/* Filters + Saved Views — only for analytics view that still consumes them */}
@@ -674,6 +707,24 @@ const AdminIdentity: React.FC = () => {
           {/* ─── Integrity & Duplicates tab ─── */}
           <TabsContent value="integrity" className="mt-5">
             <IdentityIntegrityPanel isRTL={isRTL} />
+          </TabsContent>
+
+          {/* ─── Activity log tab (admin_activity_log timeline) ─── */}
+          <TabsContent value="activity" className="mt-5">
+            <div className="rounded-2xl border border-border/30 bg-card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-heading font-bold text-sm flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-info" />
+                  {isRTL ? 'سجل نشاط الإدارة' : 'Admin activity log'}
+                </h3>
+                <p className="text-[11px] text-muted-foreground">
+                  {isRTL
+                    ? 'آخر الإجراءات على الحسابات والمنشآت — للقراءة فقط.'
+                    : 'Most recent actions on accounts and entities — read-only.'}
+                </p>
+              </div>
+              <IdentityActivityFeed isRTL={isRTL} limit={50} />
+            </div>
           </TabsContent>
         </Tabs>
 
