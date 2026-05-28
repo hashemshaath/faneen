@@ -77,3 +77,85 @@ export const DEFAULT_WORK_ORDER_STAGES: ReadonlyArray<{
   { key: "handover", title_ar: "التسليم", title_en: "Handover" },
   { key: "warranty", title_ar: "الضمان", title_en: "Warranty" },
 ];
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * BUSINESS-WORKFLOW-4 — Attachments & Measurements
+ * ──────────────────────────────────────────────────────────────────────── */
+
+export type WorkOrderAttachmentType =
+  | "general"
+  | "measurement_photo"
+  | "drawing"
+  | "quote_file"
+  | "contract_file"
+  | "installation_photo"
+  | "handover_document";
+
+export const WORK_ORDER_ATTACHMENT_TYPES: ReadonlyArray<WorkOrderAttachmentType> = [
+  "general",
+  "measurement_photo",
+  "drawing",
+  "quote_file",
+  "contract_file",
+  "installation_photo",
+  "handover_document",
+];
+
+export interface WorkOrderAttachmentRow {
+  id: string;
+  ref_id: string | null;
+  work_order_id: string;
+  task_id: string | null;
+  business_id: string;
+  uploaded_by_user_id: string;
+  file_path: string;
+  file_name: string;
+  file_type: string | null;
+  file_size: number | null;
+  attachment_type: WorkOrderAttachmentType;
+  created_at: string;
+  deleted_at: string | null;
+}
+
+export type WorkOrderMeasurementUnit = "mm" | "cm" | "m" | "inch";
+
+export const WORK_ORDER_MEASUREMENT_UNITS: ReadonlyArray<WorkOrderMeasurementUnit> = [
+  "mm",
+  "cm",
+  "m",
+  "inch",
+];
+
+export const WORK_ORDER_MEASUREMENT_TYPES: ReadonlyArray<string> = [
+  "site",
+  "kitchen",
+  "window",
+  "door",
+  "facade",
+  "glass",
+  "steel",
+  "wood",
+  "custom",
+];
+
+export interface WorkOrderMeasurementRow {
+  id: string;
+  ref_id: string | null;
+  work_order_id: string;
+  task_id: string | null;
+  business_id: string;
+  recorded_by_user_id: string;
+  measurement_type: string;
+  label: string;
+  width: number | null;
+  height: number | null;
+  depth: number | null;
+  length: number | null;
+  quantity: number | null;
+  unit: WorkOrderMeasurementUnit;
+  notes: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}

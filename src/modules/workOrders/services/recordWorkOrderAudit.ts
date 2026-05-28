@@ -14,7 +14,12 @@ export interface RecordWorkOrderAuditInput {
     | "work_order.created_from_contract"
     | "work_order.created_from_quote"
     | "work_order.created_from_lead"
-    | "work_order.created_from_booking";
+    | "work_order.created_from_booking"
+    | "work_order.attachment_added"
+    | "work_order.attachment_deleted"
+    | "work_order.measurement_added"
+    | "work_order.measurement_updated"
+    | "work_order.measurement_deleted";
   metadata?: Record<string, unknown>;
 }
 

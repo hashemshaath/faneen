@@ -10985,6 +10985,69 @@ export type Database = {
         }
         Relationships: []
       }
+      work_order_attachments: {
+        Row: {
+          attachment_type: string
+          business_id: string
+          created_at: string
+          deleted_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          ref_id: string | null
+          task_id: string | null
+          uploaded_by_user_id: string
+          work_order_id: string
+        }
+        Insert: {
+          attachment_type?: string
+          business_id: string
+          created_at?: string
+          deleted_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          ref_id?: string | null
+          task_id?: string | null
+          uploaded_by_user_id: string
+          work_order_id: string
+        }
+        Update: {
+          attachment_type?: string
+          business_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          ref_id?: string | null
+          task_id?: string | null
+          uploaded_by_user_id?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_attachments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_attachments_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_order_comments: {
         Row: {
           author_user_id: string
@@ -11023,6 +11086,87 @@ export type Database = {
           },
           {
             foreignKeyName: "work_order_comments_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_measurements: {
+        Row: {
+          business_id: string
+          created_at: string
+          deleted_at: string | null
+          depth: number | null
+          height: number | null
+          id: string
+          label: string
+          length: number | null
+          measurement_type: string
+          metadata: Json
+          notes: string | null
+          quantity: number | null
+          recorded_by_user_id: string
+          ref_id: string | null
+          task_id: string | null
+          unit: string
+          updated_at: string
+          width: number | null
+          work_order_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          deleted_at?: string | null
+          depth?: number | null
+          height?: number | null
+          id?: string
+          label: string
+          length?: number | null
+          measurement_type: string
+          metadata?: Json
+          notes?: string | null
+          quantity?: number | null
+          recorded_by_user_id: string
+          ref_id?: string | null
+          task_id?: string | null
+          unit?: string
+          updated_at?: string
+          width?: number | null
+          work_order_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          depth?: number | null
+          height?: number | null
+          id?: string
+          label?: string
+          length?: number | null
+          measurement_type?: string
+          metadata?: Json
+          notes?: string | null
+          quantity?: number | null
+          recorded_by_user_id?: string
+          ref_id?: string | null
+          task_id?: string | null
+          unit?: string
+          updated_at?: string
+          width?: number | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_measurements_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_measurements_work_order_id_fkey"
             columns: ["work_order_id"]
             isOneToOne: false
             referencedRelation: "work_orders"
