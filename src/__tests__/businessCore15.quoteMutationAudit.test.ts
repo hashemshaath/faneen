@@ -113,9 +113,18 @@ describe('BUSINESS-CORE-15 — emitQuoteAudit safety', () => {
     fromMock.mockReturnValue({ select: selectMock });
   }
 
+  // The top-level vi.mock replaces emitQuoteAudit module with a stub.
+  // The safety tests need the REAL implementation — import it via importActual.
+  async function loadReal() {
+    const mod = await vi.importActual<
+      typeof import('@/modules/quotes/services/emitQuoteAudit')
+    >('@/modules/quotes/services/emitQuoteAudit');
+    return mod;
+  }
+
   it('skips emit when lead has no business_id', async () => {
     mockLeadRow({ id: 'l1', business_id: null, ref_id: 'QTE-1', status: 'new' });
-    const { emitQuoteAudit } = await import('@/modules/quotes/services/emitQuoteAudit');
+    const { emitQuoteAudit } = await loadReal();
     await emitQuoteAudit({ leadRequestId: 'l1', action: 'quote.updated' });
     expect(recordMock).not.toHaveBeenCalled();
   });
@@ -128,7 +137,7 @@ describe('BUSINESS-CORE-15 — emitQuoteAudit safety', () => {
       legacy_ref_id: null,
       status: 'quoted',
     });
-    const { emitQuoteAudit } = await import('@/modules/quotes/services/emitQuoteAudit');
+    const { emitQuoteAudit } = await loadReal();
     await emitQuoteAudit({ leadRequestId: 'l1', action: 'quote.responded' });
     expect(recordMock).toHaveBeenCalledTimes(1);
     const [arg] = recordMock.mock.calls[0];
@@ -139,7 +148,7 @@ describe('BUSINESS-CORE-15 — emitQuoteAudit safety', () => {
     mockLeadRow({
       id: 'l1', business_id: 'biz-1', ref_id: 'LRQ-1000001', legacy_ref_id: null, status: 'quoted',
     });
-    const { emitQuoteAudit } = await import('@/modules/quotes/services/emitQuoteAudit');
+    const { emitQuoteAudit } = await loadReal();
     await emitQuoteAudit({
       leadRequestId: 'l1',
       action: 'quote.responded',
