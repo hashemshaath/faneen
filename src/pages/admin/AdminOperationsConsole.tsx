@@ -20,12 +20,16 @@ import {
 import { UnifiedOperationsFeed } from '@/components/operations/UnifiedOperationsFeed';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { AdminOperationalNotesPanel } from '@/components/admin/AdminOperationalNotesPanel';
+import { AdminOperationalMetricsCards } from '@/components/admin/AdminOperationalMetricsCards';
 import {
   listAdminOperationalActivity,
   listAdminWorkOrders,
+  listAdminOperationalNotes,
+  type AdminOperationalNoteRow,
   type AdminOperationalSourceType,
 } from '@/modules/admin';
 import { computeWorkOrderKpis, type WorkOrderRow } from '@/modules/workOrders';
+import { computeOperationalMetrics } from '@/modules/operations/metrics/computeOperationalMetrics';
 import type { BusinessActivityEvent } from '@/modules/businesses/notes';
 
 /**
@@ -122,6 +126,7 @@ export default function AdminOperationsConsole() {
 
   const [events, setEvents] = useState<BusinessActivityEvent[]>([]);
   const [orders, setOrders] = useState<WorkOrderRow[]>([]);
+  const [notes, setNotes] = useState<AdminOperationalNoteRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -134,7 +139,7 @@ export default function AdminOperationsConsole() {
   const reload = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [actRes, woRes] = await Promise.all([
+    const [actRes, woRes, notesRes] = await Promise.all([
       listAdminOperationalActivity({
         limit: 200,
         sourceType: source === 'all' ? undefined : source,
@@ -148,16 +153,30 @@ export default function AdminOperationsConsole() {
         businessId: businessId.trim() || undefined,
         search: refIsOfficial && trimmedRef ? trimmedRef : undefined,
       }),
+      listAdminOperationalNotes({ status: 'open', limit: 200 }),
     ]);
-    if (actRes.error || woRes.error) setError(tx.err);
+    if (actRes.error || woRes.error || notesRes.error) setError(tx.err);
     setEvents(actRes.data ?? []);
     setOrders(woRes.data ?? []);
+    setNotes(notesRes.data ?? []);
     setLoading(false);
   }, [source, status, priority, businessId, trimmedRef, refIsOfficial, tx.err]);
 
   useEffect(() => { void reload(); }, [reload]);
 
   const kpis = useMemo(() => computeWorkOrderKpis(orders), [orders]);
+  const metrics = useMemo(
+    () => computeOperationalMetrics({
+      workOrders: orders,
+      activityEvents: events,
+      adminNotes: notes.map((n) => ({
+        severity: n.severity,
+        status: n.status,
+        created_at: n.created_at,
+      })),
+    }),
+    [orders, events, notes],
+  );
   const converted = useMemo(
     () => events.filter((e) => e.action.endsWith('.converted_to_work_order')),
     [events],
