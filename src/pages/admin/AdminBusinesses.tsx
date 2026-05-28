@@ -25,6 +25,7 @@ import {
   adminCreateBusinessWithOwner,
   type AdminCreateBusinessPayload,
 } from '@/modules/businesses/services/adminCreateBusinessWithOwner';
+import { mapAdminCreateBizError } from '@/modules/businesses/services/adminCreateBusinessWithOwnerErrors';
 import { nationalAddressLookup } from '@/modules/locations';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import { RegionCitySelector } from '@/components/forms/RegionCitySelector';
@@ -731,7 +732,11 @@ const AdminBusinesses = () => {
       if (row) openEdit(row);
     },
     onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : (isRTL ? 'فشل الإنشاء' : 'Create failed');
+      // Map stable edge-function codes → friendly localized text. We never
+      // surface raw server strings to admins; unknown codes fall back to the
+      // generic bucket inside `mapAdminCreateBizError`.
+      const raw = err instanceof Error ? err.message : '';
+      const msg = mapAdminCreateBizError(raw, isRTL ? 'ar' : 'en');
       toast.error(isRTL ? 'فشل إنشاء المنشأة' : 'Failed to create business', { description: msg });
     },
   });
