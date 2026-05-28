@@ -499,6 +499,19 @@ const AdminIdentity: React.FC = () => {
 
           {/* ─── Overview tab ─── */}
           <TabsContent value="overview" className="space-y-4 mt-5">
+            {/* Insights row: signups chart + live activity feed */}
+            <div className="grid lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                <IdentitySignupsChart
+                  profiles={profiles}
+                  businesses={businesses}
+                  isRTL={isRTL}
+                  days={30}
+                />
+              </div>
+              <IdentityActivityFeed isRTL={isRTL} limit={15} />
+            </div>
+
             <div className="grid lg:grid-cols-2 gap-4">
               {/* Recent users */}
               <div className="rounded-2xl border border-border/30 bg-card p-5">
