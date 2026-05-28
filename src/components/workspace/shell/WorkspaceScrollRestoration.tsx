@@ -6,7 +6,7 @@
  *
  * Pure UI; no DB. Render once inside DashboardLayout.
  */
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 
 const STORAGE_KEY = 'qitaat_shell_scroll_v1';
