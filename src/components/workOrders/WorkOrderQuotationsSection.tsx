@@ -22,6 +22,8 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  FileSignature,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +40,7 @@ import {
   createQuotationFromBoq,
   sendWorkOrderQuotation,
   generateQuotationPdfData,
+  createContractDraftFromApprovedQuotation,
   type WorkOrderBoqRow,
   type WorkOrderQuotationRow,
   type WorkOrderQuotationItemRow,
@@ -119,6 +122,10 @@ export function WorkOrderQuotationsSection({
       errLoad: isRTL ? "تعذّر تحميل البيانات." : "Failed to load data.",
       errGen: isRTL ? "تعذّر إنشاء العرض." : "Failed to generate quotation.",
       errSend: isRTL ? "تعذّر إرسال العرض." : "Failed to send quotation.",
+      errConvert: isRTL ? "تعذّر إنشاء مسودة العقد." : "Failed to create contract draft.",
+      createContractDraft: isRTL ? "إنشاء مسودة عقد" : "Create contract draft",
+      openContract: isRTL ? "فتح العقد" : "Open contract",
+      signedBy: isRTL ? "وقّع باسم" : "Signed by",
       copied: isRTL ? "تم النسخ" : "Copied",
       sent: isRTL ? "مُرسل" : "Sent",
       viewed: isRTL ? "تمت المشاهدة" : "Viewed",
@@ -235,6 +242,28 @@ export function WorkOrderQuotationsSection({
       /* no-op */
     }
   }, [clientUrl]);
+
+  const onConvertToContract = useCallback(async () => {
+    if (!user || !activeQuotation || activeQuotation.status !== "approved") return;
+    setBusy(true); setError(null);
+    const res = await createContractDraftFromApprovedQuotation({
+      quotationId: activeQuotation.id,
+      businessId: activeQuotation.business_id,
+      workOrderId: activeQuotation.work_order_id,
+      actorId: user.id,
+      quotationRefId: activeQuotation.ref_id,
+    });
+    setBusy(false);
+    if (res.error || !res.contractId) {
+      setError(tx.errConvert);
+      return;
+    }
+    setQuotations((prev) =>
+      prev.map((q) =>
+        q.id === activeQuotation.id ? { ...q, contract_id: res.contractId } : q,
+      ),
+    );
+  }, [user, activeQuotation, tx.errConvert]);
 
   const pdfData = useMemo(() => {
     if (!activeQuotation) return null;
@@ -427,8 +456,52 @@ export function WorkOrderQuotationsSection({
                       {tx.send}
                     </Button>
                   )}
+                  {canManage &&
+                    activeQuotation.status === "approved" &&
+                    !activeQuotation.contract_id && (
+                      <Button
+                        type="button" size="sm"
+                        className="rounded-xl h-9"
+                        onClick={() => void onConvertToContract()}
+                        disabled={busy}
+                        data-testid="wo-quotations-create-contract-draft-btn"
+                      >
+                        <FileSignature className="w-3.5 h-3.5 me-1" />
+                        {tx.createContractDraft}
+                      </Button>
+                    )}
+                  {activeQuotation.contract_id && (
+                    <Link
+                      to={`/dashboard/contracts/${activeQuotation.contract_id}`}
+                      className="inline-flex items-center gap-1 rounded-xl border border-emerald-500/40 bg-emerald-500/5 px-3 h-9 text-xs text-emerald-700 hover:bg-emerald-500/10"
+                      data-testid="wo-quotations-open-contract-link"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      {tx.openContract}
+                    </Link>
+                  )}
                 </div>
               </div>
+
+              {activeQuotation.status === "approved" &&
+                activeQuotation.approved_by_name && (
+                  <div
+                    className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-[11px] text-emerald-700"
+                    data-testid="wo-quotations-signature-block"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 inline me-1" />
+                    <span className="opacity-80">{tx.signedBy}:</span>{" "}
+                    <span className="font-medium" dir="auto">
+                      {activeQuotation.approved_by_name}
+                    </span>
+                    {activeQuotation.approved_by_title && (
+                      <>
+                        {" — "}
+                        <span dir="auto">{activeQuotation.approved_by_title}</span>
+                      </>
+                    )}
+                  </div>
+                )}
 
               {/* One-time share link surface (shown only right after sending). */}
               {shareToken && clientUrl && activeQuotation.status !== "draft" && (

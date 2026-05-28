@@ -11439,10 +11439,15 @@ export type Database = {
       }
       work_order_quotations: {
         Row: {
+          approval_ip_hash: string | null
           approval_token_hash: string | null
+          approval_user_agent_hash: string | null
           approved_at: string | null
+          approved_by_name: string | null
+          approved_by_title: string | null
           boq_id: string
           business_id: string
+          contract_id: string | null
           created_at: string
           created_by: string
           currency: string
@@ -11455,6 +11460,7 @@ export type Database = {
           rejected_at: string | null
           rejection_reason: string | null
           sent_at: string | null
+          signature_text: string | null
           status: string
           subtotal: number
           tax: number
@@ -11466,10 +11472,15 @@ export type Database = {
           work_order_id: string
         }
         Insert: {
+          approval_ip_hash?: string | null
           approval_token_hash?: string | null
+          approval_user_agent_hash?: string | null
           approved_at?: string | null
+          approved_by_name?: string | null
+          approved_by_title?: string | null
           boq_id: string
           business_id: string
+          contract_id?: string | null
           created_at?: string
           created_by: string
           currency?: string
@@ -11482,6 +11493,7 @@ export type Database = {
           rejected_at?: string | null
           rejection_reason?: string | null
           sent_at?: string | null
+          signature_text?: string | null
           status?: string
           subtotal?: number
           tax?: number
@@ -11493,10 +11505,15 @@ export type Database = {
           work_order_id: string
         }
         Update: {
+          approval_ip_hash?: string | null
           approval_token_hash?: string | null
+          approval_user_agent_hash?: string | null
           approved_at?: string | null
+          approved_by_name?: string | null
+          approved_by_title?: string | null
           boq_id?: string
           business_id?: string
+          contract_id?: string | null
           created_at?: string
           created_by?: string
           currency?: string
@@ -11509,6 +11526,7 @@ export type Database = {
           rejected_at?: string | null
           rejection_reason?: string | null
           sent_at?: string | null
+          signature_text?: string | null
           status?: string
           subtotal?: number
           tax?: number
@@ -11525,6 +11543,13 @@ export type Database = {
             columns: ["boq_id"]
             isOneToOne: false
             referencedRelation: "work_order_boqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_quotations_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
             referencedColumns: ["id"]
           },
           {
@@ -12961,7 +12986,15 @@ export type Database = {
         }
       }
       approve_quotation_by_token: {
-        Args: { _ref_id: string; _token: string }
+        Args: {
+          _approved_by_name: string
+          _approved_by_title?: string
+          _ip_hash?: string
+          _ref_id: string
+          _signature_text: string
+          _token: string
+          _user_agent_hash?: string
+        }
         Returns: Json
       }
       archive_client_site: { Args: { _site_id: string }; Returns: Json }
@@ -13265,6 +13298,10 @@ export type Database = {
         Returns: Json
       }
       create_client_site: { Args: { _payload: Json }; Returns: Json }
+      create_contract_draft_from_quotation: {
+        Args: { _quotation_id: string }
+        Returns: Json
+      }
       create_contract_from_template: {
         Args: {
           _payload: Json

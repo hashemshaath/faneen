@@ -332,6 +332,12 @@ export interface WorkOrderQuotationRow {
   rejection_reason: string | null;
   approval_token_hash: string | null;
   pdf_attachment_id: string | null;
+  approved_by_name: string | null;
+  approved_by_title: string | null;
+  signature_text: string | null;
+  approval_ip_hash: string | null;
+  approval_user_agent_hash: string | null;
+  contract_id: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
