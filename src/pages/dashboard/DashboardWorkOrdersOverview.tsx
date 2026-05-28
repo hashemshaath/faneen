@@ -25,10 +25,12 @@ import { WorkOrderSourceBadge } from "@/components/workOrders/WorkOrderSourceBad
 import { WorkOrderAssigneeChip } from "@/components/workOrders/WorkOrderAssigneeChip";
 import { UnifiedOperationsFeed } from "@/components/operations/UnifiedOperationsFeed";
 import { OperationsBreadcrumbs } from "@/components/operations/OperationsBreadcrumbs";
+import { computeOperationalMetrics } from "@/modules/operations/metrics/computeOperationalMetrics";
+import { ProviderOperationalMetricsCards } from "@/components/workOrders/ProviderOperationalMetricsCards";
 import {
-  computeOperationalMetrics,
-  formatDurationShort,
-} from "@/modules/operations/metrics/computeOperationalMetrics";
+  listBusinessActivityTimeline,
+  type BusinessActivityEvent,
+} from "@/modules/businesses/notes";
 
 /**
  * BUSINESS-CORE-4 — Unified Work Orders operations dashboard.
@@ -50,6 +52,7 @@ export default function DashboardWorkOrdersOverview() {
   const businessId = workspace.active_entity_id;
 
   const [orders, setOrders] = useState<WorkOrderRow[]>([]);
+  const [activity, setActivity] = useState<BusinessActivityEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,12 +74,6 @@ export default function DashboardWorkOrdersOverview() {
       openFeed: isRTL ? "سجل العمليات" : "Operations Feed",
       crumbOps: isRTL ? "العمليات" : "Operations",
       crumbOverview: isRTL ? "نظرة عامة" : "Overview",
-      approxHint: isRTL
-        ? "مقاييس تقريبية للنافذة الحالية"
-        : "Approximate, current-window metrics",
-      mAvgAge: isRTL ? "متوسط عمر المفتوح" : "Avg open age",
-      mAvgCycle: isRTL ? "متوسط زمن الإنجاز" : "Avg cycle time",
-      mUnassigned: isRTL ? "غير مُسند" : "Unassigned",
       due: isRTL ? "تاريخ الاستحقاق" : "Due",
       noDue: isRTL ? "بدون موعد" : "No due date",
       assignee: isRTL ? "المسؤول" : "Owner",
@@ -88,12 +85,13 @@ export default function DashboardWorkOrdersOverview() {
     if (!businessId) return;
     setLoading(true);
     setError(null);
-    const { data, error: err } = await listWorkOrdersForBusiness({
-      businessId,
-      limit: 200,
-    });
-    if (err) setError(tx.errorLoad);
-    setOrders(data ?? []);
+    const [woRes, actRes] = await Promise.all([
+      listWorkOrdersForBusiness({ businessId, limit: 200 }),
+      listBusinessActivityTimeline({ businessId, limit: 200 }),
+    ]);
+    if (woRes.error || actRes.error) setError(tx.errorLoad);
+    setOrders(woRes.data ?? []);
+    setActivity(actRes.data ?? []);
     setLoading(false);
   }, [businessId, tx.errorLoad]);
 
@@ -104,8 +102,8 @@ export default function DashboardWorkOrdersOverview() {
 
   const kpis = useMemo(() => computeWorkOrderKpis(orders), [orders]);
   const opsMetrics = useMemo(
-    () => computeOperationalMetrics({ workOrders: orders }),
-    [orders],
+    () => computeOperationalMetrics({ workOrders: orders, activityEvents: activity }),
+    [orders, activity],
   );
 
   const recentOpen = useMemo(() => {
@@ -190,31 +188,11 @@ export default function DashboardWorkOrdersOverview() {
 
             <WorkOrderKpiCards kpis={kpis} isRTL={isRTL} />
 
-            <div className="rounded-2xl border border-border/40 bg-card/40 p-3 sm:p-4">
-              <p className="text-[11px] text-muted-foreground mb-2" data-testid="ops-approx-hint">
-                {tx.approxHint}
-              </p>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="rounded-xl border border-border/40 bg-background/40 p-2.5">
-                  <div className="text-[10px] text-muted-foreground">{tx.mAvgAge}</div>
-                  <div className="mt-1 text-base font-semibold tabular-nums tech-content">
-                    {formatDurationShort(opsMetrics.workOrders.avgOpenAgeMs)}
-                  </div>
-                </div>
-                <div className="rounded-xl border border-border/40 bg-background/40 p-2.5">
-                  <div className="text-[10px] text-muted-foreground">{tx.mAvgCycle}</div>
-                  <div className="mt-1 text-base font-semibold tabular-nums tech-content">
-                    {formatDurationShort(opsMetrics.workOrders.avgCycleTimeMs)}
-                  </div>
-                </div>
-                <div className="rounded-xl border border-border/40 bg-background/40 p-2.5">
-                  <div className="text-[10px] text-muted-foreground">{tx.mUnassigned}</div>
-                  <div className="mt-1 text-base font-semibold tabular-nums tech-content text-amber-600 dark:text-amber-400">
-                    {opsMetrics.workOrders.unassignedOpen}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ProviderOperationalMetricsCards
+              metrics={opsMetrics}
+              isRTL={isRTL}
+              recentActivityCount={activity.length}
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <section className="lg:col-span-2 rounded-2xl border border-border/50 bg-card p-4 sm:p-5 space-y-3">
