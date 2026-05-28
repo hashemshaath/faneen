@@ -43,6 +43,8 @@ import {
 } from '@/modules/workspace/governance';
 import { listManagedBusinessesForUser } from '@/modules/businesses';
 import { listBusinessStaffByBusiness } from '@/modules/businesses/services/listBusinessStaffByBusiness';
+import { useTransferPrimaryManagerMutation } from '@/hooks/useTransferPrimaryManagerMutation';
+import { mapTransferPrimaryManagerCode } from '@/modules/businesses/services/transferPrimaryManagerMessages';
 import {
   validateDelegatedAccessDraft,
   DELEGATED_ACCESS_MAX_DAYS,
@@ -52,6 +54,7 @@ import {
 
 type StaffRow = {
   id: string;
+  user_id?: string | null;
   ref_id?: string | null;
   role?: string | null;
   is_active?: boolean | null;
@@ -154,8 +157,31 @@ function ErrorRetry({ message, onRetry }: { message: string; onRetry: () => void
   );
 }
 
+/**
+ * ORG-RBAC-STRUCTURE-9E — Eligible roles for primary-manager delegation.
+ * Mirrors the Phase-9C RPC allow-list. UI parity only; RPC remains authoritative.
+ */
+const PRIMARY_MANAGER_ELIGIBLE_ROLES = [
+  'owner',
+  'entity_admin',
+  'business_manager',
+  'operations_manager',
+] as const;
+
+function isPrimaryManagerEligible(row: StaffRow): boolean {
+  if (!row.is_active) return false;
+  if (!row.role) return false;
+  return (PRIMARY_MANAGER_ELIGIBLE_ROLES as readonly string[]).includes(row.role);
+}
+
 function StaffOverview({ businessId }: { businessId: string }) {
   const bi = useBi();
+  const { language } = useLanguage();
+  const lang: 'en' | 'ar' = language === 'ar' ? 'ar' : 'en';
+  const canManage = useCan('staff.manage');
+  const transferMutation = useTransferPrimaryManagerMutation();
+  const [pendingRowId, setPendingRowId] = useState<string | null>(null);
+  const [reason, setReason] = useState('');
   const [rows, setRows] = useState<StaffRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -163,7 +189,7 @@ function StaffOverview({ businessId }: { businessId: string }) {
     setError(null);
     const { data, error: e } = await listBusinessStaffByBusiness<StaffRow>({
       businessId,
-      select: 'id, ref_id, role, is_active, is_primary_manager, display_name',
+      select: 'id, user_id, ref_id, role, is_active, is_primary_manager, display_name',
       includeInactive: true,
     });
     if (e) setError(bi('تعذر تحميل الموظفين', 'Failed to load staff'));
@@ -171,6 +197,24 @@ function StaffOverview({ businessId }: { businessId: string }) {
   }, [businessId, bi]);
 
   useEffect(() => { void load(); }, [load]);
+
+  const confirmTransfer = async (row: StaffRow) => {
+    if (!row.user_id) return;
+    if (reason.trim().length < 4) return;
+    const result = await transferMutation.mutateAsync({
+      businessId,
+      toUserId: row.user_id,
+      reason: reason.trim(),
+    });
+    if (result.ok) {
+      toast.success(mapTransferPrimaryManagerCode(result.code, lang));
+      setPendingRowId(null);
+      setReason('');
+      void load();
+    } else {
+      toast.error(mapTransferPrimaryManagerCode(result.code, lang));
+    }
+  };
 
   return (
     <SectionShell icon={Users} title={bi('الموظفون', 'Staff')}>
@@ -185,25 +229,79 @@ function StaffOverview({ businessId }: { businessId: string }) {
         <p className="text-sm text-muted-foreground">{bi('لا يوجد موظفون بعد.', 'No staff yet.')}</p>
       ) : (
         <ul className="divide-y">
-          {rows.map((r) => (
-            <li key={r.id} className="flex items-center justify-between gap-2 py-3 text-sm">
-              <div className="flex flex-col">
-                <span className="font-medium">
-                  {r.display_name ?? bi('عضو فريق', 'Staff member')}
-                </span>
-                {r.ref_id ? <span className="tech-content text-xs text-muted-foreground">{r.ref_id}</span> : null}
-              </div>
-              <div className="flex items-center gap-2">
-                {r.is_primary_manager ? (
-                  <Badge variant="secondary">{bi('مدير رئيسي', 'Primary manager')}</Badge>
+          {rows.map((r) => {
+            const eligible = isPrimaryManagerEligible(r);
+            const isPM = !!r.is_primary_manager;
+            const showAction = canManage && eligible && !isPM && !!r.user_id;
+            const isPending = pendingRowId === r.id;
+            return (
+              <li key={r.id} className="flex flex-col gap-2 py-3 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-col">
+                    <span className="font-medium">
+                      {r.display_name ?? bi('عضو فريق', 'Staff member')}
+                    </span>
+                    {r.ref_id ? <span className="tech-content text-xs text-muted-foreground">{r.ref_id}</span> : null}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isPM ? (
+                      <Badge variant="secondary">{bi('المدير الأساسي', 'Primary manager')}</Badge>
+                    ) : null}
+                    {r.role ? <Badge variant="outline">{r.role}</Badge> : null}
+                    <Badge variant={r.is_active ? 'default' : 'outline'}>
+                      {r.is_active ? bi('نشط', 'Active') : bi('غير نشط', 'Inactive')}
+                    </Badge>
+                    {showAction && !isPending ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => { setPendingRowId(r.id); setReason(''); }}
+                      >
+                        {bi('تعيين كمدير أساسي', 'Make primary manager')}
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+                {isPending ? (
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+                    <p className="mb-2 text-xs text-amber-700">
+                      {bi(
+                        'سيتم نقل الإدارة التشغيلية لهذا الكيان.',
+                        'This will transfer operational management for this entity.',
+                      )}
+                    </p>
+                    <Label htmlFor={`pm-reason-${r.id}`} className="text-xs">
+                      {bi('سبب النقل (مطلوب)', 'Reason (required)')}
+                    </Label>
+                    <Textarea
+                      id={`pm-reason-${r.id}`}
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      maxLength={240}
+                      dir="auto"
+                    />
+                    <div className="mt-2 flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { setPendingRowId(null); setReason(''); }}
+                        disabled={transferMutation.isPending}
+                      >
+                        {bi('إلغاء', 'Cancel')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => void confirmTransfer(r)}
+                        disabled={transferMutation.isPending || reason.trim().length < 4}
+                      >
+                        {bi('تأكيد النقل', 'Confirm transfer')}
+                      </Button>
+                    </div>
+                  </div>
                 ) : null}
-                {r.role ? <Badge variant="outline">{r.role}</Badge> : null}
-                <Badge variant={r.is_active ? 'default' : 'outline'}>
-                  {r.is_active ? bi('نشط', 'Active') : bi('غير نشط', 'Inactive')}
-                </Badge>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
     </SectionShell>
