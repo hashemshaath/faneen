@@ -1718,6 +1718,17 @@ const AdminBusinesses = () => {
                   </div>
                 </TabsContent>
 
+                {/* ── Owner Tab (ORG-RBAC-9F) ── */}
+                <TabsContent value="owner" className="space-y-4 mt-3">
+                  <BusinessOwnerPanel
+                    businessId={editingBiz.id}
+                    businessRef={editingBiz.ref_id ?? null}
+                    ownerUserId={editingBiz.user_id}
+                    isRTL={isRTL}
+                    onOwnerReassigned={() => setEditingBiz(null)}
+                  />
+                </TabsContent>
+
                 {/* ── Address Tab ── */}
                 <TabsContent value="address" className="space-y-4 mt-3">
                   <div>
