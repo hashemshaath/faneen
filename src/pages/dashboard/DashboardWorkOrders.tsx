@@ -186,6 +186,61 @@ export default function DashboardWorkOrders() {
         <WorkOrderSearchInput businessId={businessId} isRTL={isRTL} />
       </div>
 
+      {/* BUSINESS-WORKFLOW-2 — UI-only filters */}
+      <div className="flex flex-wrap items-center gap-2" role="region" aria-label={isRTL ? "تصفية" : "Filters"}>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as WorkOrderStatus | "all")}>
+          <SelectTrigger className="w-[150px] h-9" aria-label={isRTL ? "تصفية الحالة" : "Status filter"}>
+            <SelectValue placeholder={isRTL ? "الحالة" : "Status"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{isRTL ? "كل الحالات" : "All statuses"}</SelectItem>
+            {STATUS_VALUES.map((s) => (
+              <SelectItem key={s} value={s}>{statusLabel(s)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as WorkOrderPriority | "all")}>
+          <SelectTrigger className="w-[150px] h-9" aria-label={isRTL ? "تصفية الأولوية" : "Priority filter"}>
+            <SelectValue placeholder={isRTL ? "الأولوية" : "Priority"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{isRTL ? "كل الأولويات" : "All priorities"}</SelectItem>
+            {PRIORITY_VALUES.map((p) => (
+              <SelectItem key={p} value={p}>{priorityLabel(p)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={sourceFilter} onValueChange={setSourceFilter}>
+          <SelectTrigger className="w-[160px] h-9" aria-label={isRTL ? "تصفية المصدر" : "Source filter"}>
+            <SelectValue placeholder={isRTL ? "المصدر" : "Source"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{isRTL ? "كل المصادر" : "All sources"}</SelectItem>
+            {SOURCE_VALUES.map((s) => (
+              <SelectItem key={s} value={s}>
+                {({
+                  manual: isRTL ? "يدوي" : "Manual",
+                  lead: isRTL ? "طلب" : "Lead",
+                  quote: isRTL ? "عرض" : "Quote",
+                  contract: isRTL ? "عقد" : "Contract",
+                  booking: isRTL ? "حجز" : "Booking",
+                } as Record<string, string>)[s]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          size="sm"
+          variant={overdueOnly ? "destructive" : "outline"}
+          className="h-9"
+          aria-pressed={overdueOnly}
+          onClick={() => setOverdueOnly((v) => !v)}
+        >
+          {isRTL ? "المتأخرة فقط" : "Overdue only"}
+        </Button>
+      </div>
+
       {error && (
         <div className="flex items-center gap-2 text-sm text-destructive">
           <AlertCircle className="w-4 h-4" /> <span>{error}</span>
