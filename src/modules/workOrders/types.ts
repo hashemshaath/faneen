@@ -226,3 +226,65 @@ export interface WorkOrderMeasurementTemplateRow {
   created_at: string;
   updated_at: string;
 }
+
+/* ─────────────────────────────────────────────────────────────
+ * BUSINESS-WORKFLOW-5C — Bill of Quantities (BOQ)
+ * ───────────────────────────────────────────────────────────── */
+
+export type WorkOrderBoqStatus = "draft" | "finalized";
+
+export const WORK_ORDER_BOQ_STATUSES: ReadonlyArray<WorkOrderBoqStatus> = [
+  "draft",
+  "finalized",
+];
+
+export type WorkOrderBoqItemType =
+  | "material"
+  | "labor"
+  | "service"
+  | "fabrication";
+
+export const WORK_ORDER_BOQ_ITEM_TYPES: ReadonlyArray<WorkOrderBoqItemType> = [
+  "material",
+  "labor",
+  "service",
+  "fabrication",
+];
+
+export interface WorkOrderBoqRow {
+  id: string;
+  ref_id: string | null;
+  work_order_id: string;
+  business_id: string;
+  title: string;
+  status: WorkOrderBoqStatus;
+  notes: string | null;
+  subtotal: number;
+  tax: number;
+  total: number;
+  created_by: string;
+  finalized_at: string | null;
+  finalized_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface WorkOrderBoqItemRow {
+  id: string;
+  ref_id: string | null;
+  boq_id: string;
+  measurement_id: string | null;
+  item_type: WorkOrderBoqItemType;
+  title_ar: string;
+  title_en: string;
+  quantity: number;
+  unit: string;
+  unit_price: number;
+  total_price: number;
+  metadata: Record<string, unknown>;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
