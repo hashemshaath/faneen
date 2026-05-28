@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   Loader2,
   AlertCircle,
@@ -36,6 +36,7 @@ import {
   WORK_ORDER_TASK_STATUS_LABELS,
   WORK_ORDER_TASK_TONE,
   pickBi,
+  useAssigneeNames,
   type WorkOrderRow,
   type WorkOrderStageRow,
   type WorkOrderTaskRow,
@@ -53,6 +54,8 @@ import {
 export default function DashboardWorkOrderDetail() {
   useNoIndex();
   const { refId = "" } = useParams<{ refId: string }>();
+  const [searchParams] = useSearchParams();
+  const highlightTaskRef = searchParams.get("task");
   const { user } = useAuth();
   const { isRTL } = useLanguage();
 
@@ -70,6 +73,14 @@ export default function DashboardWorkOrderDetail() {
   const [comments, setComments] = useState<WorkOrderCommentRow[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+
+  const assigneeIds = useMemo(() => {
+    const ids: Array<string | null | undefined> = [wo?.owner_user_id];
+    for (const t of tasks) ids.push(t.assigned_to_user_id);
+    return ids;
+  }, [wo?.owner_user_id, tasks]);
+  const { map: assigneeMap } = useAssigneeNames(assigneeIds);
+  const ownerLabel = wo?.owner_user_id ? assigneeMap[wo.owner_user_id] : undefined;
 
   const tx = useMemo(
     () => ({
@@ -172,6 +183,7 @@ export default function DashboardWorkOrderDetail() {
                 <WorkOrderSourceBadge sourceType={wo.source_type} isRTL={isRTL} />
                 <WorkOrderAssigneeChip
                   assigneeUserId={wo.owner_user_id}
+                  assigneeName={ownerLabel?.full_name ?? ownerLabel?.ref_id ?? null}
                   isRTL={isRTL}
                 />
               </div>
