@@ -12189,6 +12189,15 @@ export type Database = {
         Args: { _banned: boolean; _user_ids: string[] }
         Returns: number
       }
+      admin_check_identity_availability: {
+        Args: {
+          _email?: string
+          _exclude_user_id?: string
+          _phone?: string
+          _username?: string
+        }
+        Returns: Json
+      }
       admin_client_sites_monitoring_summary: { Args: never; Returns: Json }
       admin_contract_pdf_exports_summary: {
         Args: never
@@ -12264,6 +12273,16 @@ export type Database = {
           recent_failures_count: number
           schedule: string
           total_runs_7d: number
+        }[]
+      }
+      admin_identity_duplicates_report: {
+        Args: never
+        Returns: {
+          details: Json
+          kind: string
+          occurrences: number
+          user_ids: string[]
+          value: string
         }[]
       }
       admin_identity_integrity_report: {
@@ -12437,6 +12456,10 @@ export type Database = {
           _reason?: string
           _tier: Database["public"]["Enums"]["membership_tier"]
         }
+        Returns: Json
+      }
+      admin_sync_profile_email_from_auth: {
+        Args: { _target_user_id: string }
         Returns: Json
       }
       admin_transfer_barcode: {
