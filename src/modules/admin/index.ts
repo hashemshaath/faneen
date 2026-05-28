@@ -22,7 +22,7 @@ export type {
   AdminOperationalSourceType,
   ListAdminOperationalActivityOptions,
 } from './services/operations/listAdminOperationalActivity';
-export { listAdminWorkOrders } from './services/operations/listAdminWorkOrders';
-export type { ListAdminWorkOrdersOptions } from './services/operations/listAdminWorkOrders';
+export { listAdminWorkOrders } from '@/modules/workOrders';
+export type { ListAdminWorkOrdersOptions } from '@/modules/workOrders';
 export { getAdminOperationsSummary } from './services/operations/getAdminOperationsSummary';
 export type { AdminOperationsSummary } from './services/operations/getAdminOperationsSummary';
