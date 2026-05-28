@@ -24,6 +24,11 @@ import { WorkOrderPriorityBadge } from "@/components/workOrders/WorkOrderPriorit
 import { WorkOrderSourceBadge } from "@/components/workOrders/WorkOrderSourceBadge";
 import { WorkOrderAssigneeChip } from "@/components/workOrders/WorkOrderAssigneeChip";
 import { UnifiedOperationsFeed } from "@/components/operations/UnifiedOperationsFeed";
+import { OperationsBreadcrumbs } from "@/components/operations/OperationsBreadcrumbs";
+import {
+  computeOperationalMetrics,
+  formatDurationShort,
+} from "@/modules/operations/metrics/computeOperationalMetrics";
 
 /**
  * BUSINESS-CORE-4 — Unified Work Orders operations dashboard.
@@ -63,6 +68,15 @@ export default function DashboardWorkOrdersOverview() {
       recent: isRTL ? "أحدث أوامر العمل المفتوحة" : "Recent open work orders",
       empty: isRTL ? "لا توجد أوامر عمل بعد." : "No work orders yet.",
       openBoard: isRTL ? "فتح لوحة أوامر العمل" : "Open work orders board",
+      openFeed: isRTL ? "سجل العمليات" : "Operations Feed",
+      crumbOps: isRTL ? "العمليات" : "Operations",
+      crumbOverview: isRTL ? "نظرة عامة" : "Overview",
+      approxHint: isRTL
+        ? "مقاييس تقريبية للنافذة الحالية"
+        : "Approximate, current-window metrics",
+      mAvgAge: isRTL ? "متوسط عمر المفتوح" : "Avg open age",
+      mAvgCycle: isRTL ? "متوسط زمن الإنجاز" : "Avg cycle time",
+      mUnassigned: isRTL ? "غير مُسند" : "Unassigned",
       due: isRTL ? "تاريخ الاستحقاق" : "Due",
       noDue: isRTL ? "بدون موعد" : "No due date",
       assignee: isRTL ? "المسؤول" : "Owner",
@@ -89,6 +103,10 @@ export default function DashboardWorkOrdersOverview() {
   }, [businessId, reload]);
 
   const kpis = useMemo(() => computeWorkOrderKpis(orders), [orders]);
+  const opsMetrics = useMemo(
+    () => computeOperationalMetrics({ workOrders: orders }),
+    [orders],
+  );
 
   const recentOpen = useMemo(() => {
     const open = orders.filter((o) =>
@@ -111,6 +129,12 @@ export default function DashboardWorkOrdersOverview() {
   return (
     <DashboardLayout>
       <div dir={isRTL ? "rtl" : "ltr"} className="space-y-4 sm:space-y-5">
+        <OperationsBreadcrumbs
+          crumbs={[
+            { labelEn: tx.crumbOps, labelAr: tx.crumbOps, to: "/dashboard/work-orders" },
+            { labelEn: tx.crumbOverview, labelAr: tx.crumbOverview },
+          ]}
+        />
         <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
           <div>
             <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
@@ -121,13 +145,22 @@ export default function DashboardWorkOrdersOverview() {
               {tx.subtitle}
             </p>
           </div>
-          <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5 w-full sm:w-auto">
-            <Link to="/dashboard/work-orders">
-              <ClipboardList className="w-3.5 h-3.5" />
-              {tx.openBoard}
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5 w-full sm:w-auto">
+              <Link to="/dashboard/work-orders">
+                <ClipboardList className="w-3.5 h-3.5" />
+                {tx.openBoard}
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm" className="rounded-xl gap-1.5 w-full sm:w-auto">
+              <Link to="/dashboard/operations/feed">
+                <Activity className="w-3.5 h-3.5" />
+                {tx.openFeed}
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+            </Button>
+          </div>
         </header>
 
         {!businessId ? (
@@ -157,6 +190,32 @@ export default function DashboardWorkOrdersOverview() {
 
             <WorkOrderKpiCards kpis={kpis} isRTL={isRTL} />
 
+            <div className="rounded-2xl border border-border/40 bg-card/40 p-3 sm:p-4">
+              <p className="text-[11px] text-muted-foreground mb-2" data-testid="ops-approx-hint">
+                {tx.approxHint}
+              </p>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="rounded-xl border border-border/40 bg-background/40 p-2.5">
+                  <div className="text-[10px] text-muted-foreground">{tx.mAvgAge}</div>
+                  <div className="mt-1 text-base font-semibold tabular-nums tech-content">
+                    {formatDurationShort(opsMetrics.workOrders.avgOpenAgeMs)}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-border/40 bg-background/40 p-2.5">
+                  <div className="text-[10px] text-muted-foreground">{tx.mAvgCycle}</div>
+                  <div className="mt-1 text-base font-semibold tabular-nums tech-content">
+                    {formatDurationShort(opsMetrics.workOrders.avgCycleTimeMs)}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-border/40 bg-background/40 p-2.5">
+                  <div className="text-[10px] text-muted-foreground">{tx.mUnassigned}</div>
+                  <div className="mt-1 text-base font-semibold tabular-nums tech-content text-amber-600 dark:text-amber-400">
+                    {opsMetrics.workOrders.unassignedOpen}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <section className="lg:col-span-2 rounded-2xl border border-border/50 bg-card p-4 sm:p-5 space-y-3">
                 <header className="flex items-center justify-between gap-2">
@@ -171,7 +230,7 @@ export default function DashboardWorkOrdersOverview() {
                     {recentOpen.map((wo) => (
                       <li key={wo.id}>
                         <Link
-                          to="/dashboard/work-orders"
+                          to={`/dashboard/work-orders/${wo.ref_id}`}
                           className="block rounded-xl border border-border/40 bg-background/40 p-3 hover:bg-accent/5 transition-colors"
                         >
                           <div className="flex items-start justify-between gap-2">

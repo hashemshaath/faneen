@@ -26,6 +26,7 @@ import {
   type AdminNoteSeverity,
   type AdminNoteEntityType,
 } from '@/modules/admin';
+import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
 
 /**
  * BUSINESS-ADMIN-5 — Admin Bulk Reference Triage.
@@ -213,6 +214,13 @@ export default function AdminBulkReferenceTriage() {
   return (
     <DashboardLayout>
       <div className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
+        <OperationsBreadcrumbs
+          homeTo="/admin"
+          crumbs={[
+            { labelEn: 'Operations', labelAr: 'العمليات', to: '/admin/operations/console' },
+            { labelEn: 'Bulk Reference Triage', labelAr: 'فحص المراجع المتعدد' },
+          ]}
+        />
         <div>
           <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-accent" aria-hidden="true" />
