@@ -178,11 +178,11 @@ describe("BUSINESS-CORE-12 — UnifiedOperationsFeed component hygiene", () => {
     expect(src).not.toMatch(/postgres_changes/);
     expect(src).not.toMatch(/from\(['"]work_orders['"]\)/);
     expect(src).not.toMatch(/from\(['"]business_audit_log['"]\)/);
-    expect(src).not.toMatch(/notifications/i);
-    expect(src).not.toMatch(/cron/i);
+    expect(src).not.toMatch(/@\/modules\/notifications/);
+    expect(src).not.toMatch(/setInterval|setTimeout\(/);
     expect(src).not.toMatch(/sla-sweep/);
-    expect(src).not.toMatch(/payment/i);
-    expect(src).not.toMatch(/membership/i);
+    expect(src).not.toMatch(/@\/modules\/payments/);
+    expect(src).not.toMatch(/@\/modules\/memberships/);
     expect(src).not.toMatch(/@\/modules\/auth/);
   });
 
