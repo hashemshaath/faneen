@@ -30,7 +30,13 @@ export function useCommandPalette(): CommandPaletteState {
     };
     // Capture phase so we run before useGlobalSearch's document listener.
     document.addEventListener('keydown', handler, { capture: true });
-    return () => document.removeEventListener('keydown', handler, { capture: true } as EventListenerOptions);
+    // APP-SHELL-2: mobile workspace actions can dispatch this event to open the palette.
+    const openEvt = () => setOpen(true);
+    window.addEventListener('qitaat:open-command-palette', openEvt);
+    return () => {
+      document.removeEventListener('keydown', handler, { capture: true } as EventListenerOptions);
+      window.removeEventListener('qitaat:open-command-palette', openEvt);
+    };
   }, []);
 
   return { open, setOpen, toggle, close };
