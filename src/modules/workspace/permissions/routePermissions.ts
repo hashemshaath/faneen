@@ -97,6 +97,7 @@ export const WORKSPACE_ROUTE_PERMISSIONS = {
   '/dashboard/profile':                      { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/communication-preferences':    { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/settings':                     { permissions: ['settings.view'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
+  '/dashboard/settings/staff':               { permissions: ['staff.view'],                             scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
 
   // User-only routes (no permission gate — visible to any authed user)
   '/dashboard/my-requests':                  { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },

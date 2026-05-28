@@ -33,6 +33,8 @@ export { listOwnerBusinesses } from './services/listOwnerBusinesses';
 export type { ListOwnerBusinessesOptions } from './services/listOwnerBusinesses';
 export { listManagedBusinessesForUser } from './services/listManagedBusinessesForUser';
 export type { ManagedBusiness } from './services/listManagedBusinessesForUser';
+export { listBusinessStaffByBusiness } from './services/listBusinessStaffByBusiness';
+export type { ListBusinessStaffByBusinessOptions } from './services/listBusinessStaffByBusiness';
 export { listBusinessesForRequests } from './services/listBusinessesForRequests';
 export type { RequestsBusiness } from './services/listBusinessesForRequests';
 export { getBusinessProviderContactForEmail } from './services/getBusinessProviderContactForEmail';
