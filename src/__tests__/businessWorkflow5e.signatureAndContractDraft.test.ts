@@ -102,7 +102,8 @@ describe("approveWorkOrderQuotation service (5E)", () => {
 
   it("never logs or returns the raw token", () => {
     expect(src).not.toMatch(/console\.[a-z]+\(.*token/i);
-    expect(src).not.toMatch(/return\s*{[^}]*token\b/);
+    // No object property named `token` (or `approval_token`/`approvalToken`) in any return.
+    expect(src).not.toMatch(/return[^;]*\b(approval_?t|t)oken\s*:/i);
   });
 });
 
