@@ -11030,6 +11030,42 @@ export type Database = {
           },
         ]
       }
+      work_order_sla_events: {
+        Row: {
+          business_id: string
+          created_at: string
+          event_type: string
+          id: string
+          idempotency_key: string
+          level: string
+          metadata: Json
+          task_id: string | null
+          work_order_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          idempotency_key: string
+          level: string
+          metadata?: Json
+          task_id?: string | null
+          work_order_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          idempotency_key?: string
+          level?: string
+          metadata?: Json
+          task_id?: string | null
+          work_order_id?: string
+        }
+        Relationships: []
+      }
       work_order_stages: {
         Row: {
           assigned_to_user_id: string | null
@@ -13461,6 +13497,7 @@ export type Database = {
           notified: number
         }[]
       }
+      process_work_order_sla_due_items: { Args: never; Returns: Json }
       provider_clients_list: {
         Args: {
           _filter?: string

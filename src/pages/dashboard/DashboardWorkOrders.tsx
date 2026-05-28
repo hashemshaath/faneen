@@ -10,6 +10,7 @@ import { ReferenceBadge } from "@/components/reference/ReferenceBadge";
 import { WorkOrderSearchInput } from "@/components/workOrders/WorkOrderSearchInput";
 import { WorkOrderSourceBadge } from "@/components/workOrders/WorkOrderSourceBadge";
 import { WorkOrderSlaBadge } from "@/components/workOrders/WorkOrderSlaBadge";
+import { WorkOrderSlaSummaryCards } from "@/components/workOrders/WorkOrderSlaSummaryCards";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
@@ -185,6 +186,24 @@ export default function DashboardWorkOrders() {
       <div className="w-full sm:max-w-md">
         <WorkOrderSearchInput businessId={businessId} isRTL={isRTL} />
       </div>
+
+      {/* BUSINESS-WORKFLOW-3 — SLA summary cards (display-only) */}
+      <WorkOrderSlaSummaryCards
+        orders={orders}
+        isRTL={isRTL}
+        onSelectBucket={(b) => {
+          if (b === "overdue") {
+            setOverdueOnly(true);
+            setStatusFilter("all");
+          } else if (b === "completed") {
+            setOverdueOnly(false);
+            setStatusFilter("completed");
+          } else {
+            setOverdueOnly(false);
+            setStatusFilter("all");
+          }
+        }}
+      />
 
       {/* BUSINESS-WORKFLOW-2 — UI-only filters */}
       <div className="flex flex-wrap items-center gap-2" role="region" aria-label={isRTL ? "تصفية" : "Filters"}>
