@@ -23,7 +23,7 @@
  */
 import React, { useState, useMemo, useEffect, useRef, useTransition, useCallback, Suspense, lazy } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -153,16 +153,16 @@ const AdminIdentity: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [, startTransition] = useTransition();
-  const queryClientForRefresh = (() => {
-    // Local accessor so the "Refresh diagnostics" CTA can invalidate queries
-    // without coupling the whole page to QueryClient context patterns above.
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-      return require('@tanstack/react-query').useQueryClient?.();
-    } catch {
-      return null;
-    }
-  })();
+  const queryClient = useQueryClient();
+
+  /** Re-fetch every identity / business / diagnostics data source. */
+  const refreshDiagnostics = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['identity-profiles'] });
+    queryClient.invalidateQueries({ queryKey: ['identity-roles'] });
+    queryClient.invalidateQueries({ queryKey: ['identity-businesses'] });
+    queryClient.invalidateQueries({ queryKey: ['identity-activity'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-identity-integrity'] });
+  }, [queryClient]);
 
   const view = (searchParams.get('view') as View) || 'overview';
   const setView = useCallback((v: View) => {
