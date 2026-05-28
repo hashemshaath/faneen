@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -13,6 +13,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { NavLink } from '@/components/NavLink';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Separator } from '@/components/ui/separator';
@@ -43,12 +44,16 @@ interface MenuItem {
   icon: React.ElementType;
   end?: boolean;
   superAdminOnly?: boolean;
+  /** Optional static badge — must not require a query. */
+  badge?: { ar: string; en: string; tone?: 'new' | 'support' | 'neutral' };
 }
 
 interface MenuGroup {
   groupLabel: { ar: string; en: string };
   icon: React.ElementType;
   items: MenuItem[];
+  /** Optional short bilingual description shown under the group label. */
+  description?: { ar: string; en: string };
 }
 
 // ══════════════════════════════════════════
