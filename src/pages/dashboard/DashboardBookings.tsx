@@ -33,6 +33,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { LegacyReferenceHint } from '@/components/reference/LegacyReferenceHint';
+import { CreateWorkOrderFromBookingButton } from '@/components/workOrders/CreateWorkOrderFromBookingButton';
 
 type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
 
@@ -399,11 +400,23 @@ const DashboardBookings = () => {
                               onClick={() => setCancelDialog({ id: booking.id, isProvider })}
                               disabled={updateStatus.isPending}
                             >
-                              <XCircle className="w-3 h-3" />
-                              {isRTL ? 'إلغاء' : 'Cancel'}
-                            </Button>
-                          </div>
-                        )}
+                            <XCircle className="w-3 h-3" />
+                            {isRTL ? 'إلغاء' : 'Cancel'}
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* BUSINESS-CORE-11 — manual work order creation from booking */}
+                      {isProvider && (
+                        <div className="mt-3">
+                          <CreateWorkOrderFromBookingButton
+                            bookingId={booking.id}
+                            businessId={business!.id}
+                            defaultTitle={booking.client_name || `${isRTL ? 'حجز' : 'Booking'} ${booking.booking_date}`}
+                            bookingRefId={booking.ref_id}
+                          />
+                        </div>
+                      )}
                       </div>
                     </div>
                   </CardContent>

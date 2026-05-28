@@ -14,7 +14,7 @@ export interface CreateWorkOrderInput {
   customer_name?: string | null;
   customer_phone?: string | null;
   priority?: WorkOrderPriority;
-  source_type?: "lead" | "quote" | "contract" | "manual";
+  source_type?: "lead" | "quote" | "contract" | "booking" | "manual";
   source_id?: string | null;
   /**
    * Optional human-readable source reference (e.g. CNT-1000007, QTE-1000003).
