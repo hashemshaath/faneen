@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -43,12 +43,16 @@ interface MenuItem {
   icon: React.ElementType;
   end?: boolean;
   superAdminOnly?: boolean;
+  /** Optional static badge — must not require a query. */
+  badge?: { ar: string; en: string; tone?: 'new' | 'support' | 'neutral' };
 }
 
 interface MenuGroup {
   groupLabel: { ar: string; en: string };
   icon: React.ElementType;
   items: MenuItem[];
+  /** Optional short bilingual description shown under the group label. */
+  description?: { ar: string; en: string };
 }
 
 // ══════════════════════════════════════════
@@ -62,7 +66,7 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'التحليلات', en: 'Analytics' }, url: '/dashboard/analytics', icon: BarChart3 },
       { label: { ar: 'نظرة عامة على العمليات', en: 'Operations Overview' }, url: '/dashboard/work-orders/overview', icon: ClipboardList },
-      { label: { ar: 'سجل العمليات', en: 'Operations Feed' }, url: '/dashboard/operations/feed', icon: Activity },
+      { label: { ar: 'سجل العمليات', en: 'Operations Feed' }, url: '/dashboard/operations/feed', icon: Activity, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
     ],
   },
   {
@@ -93,8 +97,9 @@ const providerGroups: MenuGroup[] = [
   {
     groupLabel: { ar: 'العمليات', en: 'Operations' },
     icon: Activity,
+    description: { ar: 'إدارة أوامر العمل والعقود والضمانات', en: 'Work orders, contracts, and warranties' },
     items: [
-      { label: { ar: 'أوامر العمل', en: 'Work Orders' }, url: '/dashboard/work-orders', icon: ClipboardList },
+      { label: { ar: 'أوامر العمل', en: 'Work Orders' }, url: '/dashboard/work-orders', icon: ClipboardList, end: true, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
       { label: { ar: 'تحليلات العقود', en: 'Contract Analytics' }, url: '/dashboard/contract-analytics', icon: BarChart3 },
       { label: { ar: 'الضمانات', en: 'Warranties' }, url: '/dashboard/warranties', icon: Shield },
@@ -103,6 +108,7 @@ const providerGroups: MenuGroup[] = [
   {
     groupLabel: { ar: 'العضوية والفوترة', en: 'Membership & Billing' },
     icon: Crown,
+    description: { ar: 'الاشتراكات والرصيد والأقساط', en: 'Subscriptions, credits, and installments' },
     items: [
       { label: { ar: 'العضوية', en: 'Membership' }, url: '/membership', icon: Crown },
       { label: { ar: 'العضوية والرصيد', en: 'Provider Membership' }, url: '/dashboard/provider/membership', icon: Crown },
@@ -202,13 +208,14 @@ const adminBaseGroups: MenuGroup[] = [
     // 1) Overview
     groupLabel: { ar: 'نظرة عامة', en: 'Overview' },
     icon: LayoutDashboard,
+    description: { ar: 'لوحات المراقبة والعمليات والمراجع', en: 'Dashboards, operations, and references' },
     items: [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: Activity },
       { label: { ar: 'تشغيل المهام', en: 'Cron Runs' }, url: '/admin/cron-runs', icon: CalendarClock },
-      { label: { ar: 'لوحة العمليات', en: 'Operations' }, url: '/admin/operations', icon: Activity },
+      { label: { ar: 'لوحة العمليات', en: 'Operations' }, url: '/admin/operations', icon: Activity, end: true },
       { label: { ar: 'مركز العمليات', en: 'Operations Console' }, url: '/admin/operations/console', icon: ShieldCheck },
-      { label: { ar: 'فحص المراجع المتعدد', en: 'Bulk Reference Triage' }, url: '/admin/ref/triage', icon: SearchIcon },
+      { label: { ar: 'فحص المراجع المتعدد', en: 'Bulk Reference Triage' }, url: '/admin/ref/triage', icon: SearchIcon, badge: { ar: 'دعم', en: 'Support', tone: 'support' } },
     ],
   },
   {
@@ -325,29 +332,84 @@ const adminBaseGroups: MenuGroup[] = [
 // ══════════════════════════════════════════
 //  Render helpers
 // ══════════════════════════════════════════
+
+/**
+ * Best-match active resolver. For a given pathname, returns the single
+ * URL among `urls` whose path is the longest prefix of pathname (or an
+ * exact match). This avoids highlighting both "Work Orders" and
+ * "Operations Overview" when the URL is /dashboard/work-orders/overview,
+ * and similar parent/child overlaps for /admin/operations/console and
+ * /admin/ref/<id>.
+ */
+const resolveBestMatch = (pathname: string, urls: string[]): string | null => {
+  // Strip query, normalise trailing slash
+  const path = (pathname || '/').split('?')[0].replace(/\/+$/, '') || '/';
+  let best: string | null = null;
+  let bestLen = -1;
+  for (const raw of urls) {
+    const u = raw.split('?')[0].replace(/\/+$/, '') || '/';
+    const isMatch = path === u || path.startsWith(u + '/');
+    if (isMatch && u.length > bestLen) {
+      best = raw; // keep original (with query) for equality compare
+      bestLen = u.length;
+    }
+  }
+  return best;
+};
+
+const BadgePill: React.FC<{ tone?: 'new' | 'support' | 'neutral'; children: React.ReactNode }> = ({ tone = 'neutral', children }) => {
+  const cls =
+    tone === 'new'
+      ? 'bg-primary/15 text-primary border-primary/25'
+      : tone === 'support'
+      ? 'bg-accent/15 text-accent border-accent/25'
+      : 'bg-muted text-muted-foreground border-border';
+  return (
+    <span className={`ms-auto shrink-0 rounded-md border px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide leading-none ${cls}`}>
+      {children}
+    </span>
+  );
+};
+
 const RenderMenu: React.FC<{
   items: MenuItem[];
   collapsed: boolean;
   isRTL: boolean;
   closeMobile: () => void;
-}> = ({ items, collapsed, isRTL, closeMobile }) => (
+  bestActiveUrl: string | null;
+}> = ({ items, collapsed, isRTL, closeMobile, bestActiveUrl }) => (
   <SidebarMenu>
     {items.map((item) => {
       const label = isRTL ? item.label.ar : item.label.en;
+      const isActive = item.url === bestActiveUrl;
+      const badgeLabel = item.badge ? (isRTL ? item.badge.ar : item.badge.en) : null;
       return (
         <SidebarMenuItem key={item.url + item.label.en}>
-          <SidebarMenuButton asChild tooltip={collapsed ? label : undefined}>
+          <SidebarMenuButton
+            asChild
+            tooltip={collapsed ? label : undefined}
+            isActive={isActive}
+            className="min-h-9 sm:min-h-9"
+          >
             <NavLink
               to={item.url}
-              end={item.end}
               title={collapsed ? label : undefined}
               aria-label={label}
-              className="relative rounded-lg transition-colors text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              activeClassName="!bg-primary/12 !text-primary font-semibold dark:!bg-primary/18 dark:!text-primary-foreground before:absolute before:inset-y-1 before:start-0 before:w-[3px] before:rounded-full before:bg-primary"
+              aria-current={isActive ? 'page' : undefined}
+              className={
+                'relative rounded-lg transition-colors outline-none ' +
+                'focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-0 ' +
+                (isActive
+                  ? 'bg-primary/12 text-primary font-semibold dark:bg-primary/18 dark:text-primary-foreground ' +
+                    'before:absolute before:inset-y-1 before:start-0 before:w-[3px] before:rounded-full before:bg-primary'
+                  : 'text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground')
+              }
+              activeClassName=""
               onClick={closeMobile}
             >
               <item.icon className="h-4 w-4 shrink-0" />
               {!collapsed && <span className="ms-2 truncate">{label}</span>}
+              {!collapsed && badgeLabel ? <BadgePill tone={item.badge?.tone}>{badgeLabel}</BadgePill> : null}
             </NavLink>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -362,29 +424,57 @@ const RenderGroups: React.FC<{
   isRTL: boolean;
   closeMobile: () => void;
   isSuperAdmin?: boolean;
-}> = ({ groups, collapsed, isRTL, closeMobile, isSuperAdmin = false }) => (
-  <>
-    {groups.map((group) => {
+  pathname: string;
+}> = ({ groups, collapsed, isRTL, closeMobile, isSuperAdmin = false, pathname }) => {
+  // Compute best-match across ALL visible items in ALL groups, then
+  // pass it down. This prevents two sidebar entries (e.g. "Work Orders"
+  // and "Operations Overview") from both highlighting on a nested route.
+  const allUrls: string[] = [];
+  for (const g of groups) {
+    for (const it of g.items) {
+      if (it.superAdminOnly && !isSuperAdmin) continue;
+      // For `end:true` items we still feed them into the resolver — the
+      // longest-prefix rule already gives the correct exact-match winner.
+      allUrls.push(it.url);
+    }
+  }
+  const bestActiveUrl = resolveBestMatch(pathname, allUrls);
+
+  return (
+  <div className="space-y-1">
+    {groups.map((group, gi) => {
       const visibleItems = group.items.filter(item => !item.superAdminOnly || isSuperAdmin);
       if (visibleItems.length === 0) return null;
       return (
-        <SidebarGroup key={group.groupLabel.en}>
+        <SidebarGroup key={group.groupLabel.en} className={gi > 0 && !collapsed ? 'mt-1.5 pt-1.5 border-t border-sidebar-border/60' : ''}>
           <SidebarGroupLabel>
             {!collapsed ? (
-              <span className="flex items-center gap-1.5">
-                <group.icon className="w-3 h-3 opacity-60" />
+              <span className="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/55">
+                <group.icon className="w-3 h-3 opacity-70" />
                 {isRTL ? group.groupLabel.ar : group.groupLabel.en}
               </span>
             ) : ''}
           </SidebarGroupLabel>
+          {!collapsed && group.description ? (
+            <p className="px-2 mb-1 text-[10.5px] text-sidebar-foreground/50 leading-snug">
+              {isRTL ? group.description.ar : group.description.en}
+            </p>
+          ) : null}
           <SidebarGroupContent>
-            <RenderMenu items={visibleItems} collapsed={collapsed} isRTL={isRTL} closeMobile={closeMobile} />
+            <RenderMenu
+              items={visibleItems}
+              collapsed={collapsed}
+              isRTL={isRTL}
+              closeMobile={closeMobile}
+              bestActiveUrl={bestActiveUrl}
+            />
           </SidebarGroupContent>
         </SidebarGroup>
       );
     })}
-  </>
-);
+  </div>
+  );
+};
 
 export const DashboardSidebar: React.FC = () => {
   const { state, setOpenMobile, isMobile } = useSidebar();
@@ -392,6 +482,7 @@ export const DashboardSidebar: React.FC = () => {
   const { language, setLanguage, isRTL } = useLanguage();
   const { signOut, isAdmin, isSuperAdmin, isProvider } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   const closeMobile = () => { if (isMobile) setOpenMobile(false); };
   const handleLogout = async () => { await signOut(); navigate('/'); };
@@ -433,7 +524,7 @@ export const DashboardSidebar: React.FC = () => {
         )}
 
         {/* ─── Role-based menu ─── */}
-        <RenderGroups groups={baseGroups} collapsed={collapsed} isRTL={isRTL} closeMobile={closeMobile} isSuperAdmin={isSuperAdmin} />
+        <RenderGroups groups={baseGroups} collapsed={collapsed} isRTL={isRTL} closeMobile={closeMobile} isSuperAdmin={isSuperAdmin} pathname={pathname} />
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3 space-y-1">
