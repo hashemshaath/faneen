@@ -22,6 +22,11 @@ import { BrandLogo } from '@/components/common/BrandLogo';
 import { ActiveBusinessSwitcher } from './ActiveBusinessSwitcher';
 import { ActiveLocationSwitcher } from './ActiveLocationSwitcher';
 import { useDisplayRefId } from '@/hooks/useDisplayRefId';
+import { WorkspaceHeader } from '@/components/workspace/shell/WorkspaceHeader';
+import { WorkspaceContextBar } from '@/components/workspace/shell/WorkspaceContextBar';
+import { WorkspaceSearchLauncher } from '@/components/workspace/shell/WorkspaceSearchLauncher';
+import { RecentWorkspaceContext } from '@/components/workspace/shell/RecentWorkspaceContext';
+import { CommandPalette } from '@/components/workspace/shell/CommandPalette';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -268,7 +273,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           </header>
 
           <main className="flex-1 p-3 sm:p-5 md:p-7 bg-background overflow-auto">
+            <WorkspaceHeader rightSlot={<WorkspaceSearchLauncher />} className="-mx-3 sm:-mx-5 md:-mx-7 -mt-3 sm:-mt-5 md:-mt-7 mb-3" />
+            <WorkspaceContextBar>
+              <RecentWorkspaceContext />
+            </WorkspaceContextBar>
             {children}
+            <CommandPalette />
           </main>
         </div>
       </div>
