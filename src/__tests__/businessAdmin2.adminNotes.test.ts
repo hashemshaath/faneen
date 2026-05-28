@@ -121,7 +121,8 @@ describe('BUSINESS-ADMIN-2 — service wrappers', () => {
     expect(CREATE).toMatch(/isOfficialRef/);
     expect(CREATE).toMatch(/assertSafeNoteText/);
     expect(CREATE).toMatch(/sanitizeAdminNoteMetadata/);
-    expect(CREATE).toMatch(/supabase\.auth\.getUser/);
+    expect(CREATE).toMatch(/getCurrentUser\(\)/);
+    expect(CREATE).toMatch(/from ['"]@\/modules\/identity\/services\/session\/getCurrentUser['"]/);
     expect(CREATE).toMatch(/from\(['"]admin_operational_notes['"]\)\s*\.insert/);
     expect(CREATE).toMatch(/status: 'open' as const/);
   });
