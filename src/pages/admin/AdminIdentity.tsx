@@ -353,12 +353,12 @@ const AdminIdentity: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold font-heading">
-                {isRTL ? 'مركز الحسابات والمنشآت' : 'Identity Hub'}
+                {isRTL ? 'مركز الهوية والكيانات' : 'Identity & Entities Center'}
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {isRTL
-                  ? 'إدارة موحّدة للمستخدمين والمنشآت والصلاحيات في مكان واحد'
-                  : 'Unified management for users, businesses, and roles in one place'}
+                  ? 'إدارة موحّدة للمستخدمين والمنشآت وعلاقات الملكية وتشخيصات الهوية في مكان واحد.'
+                  : 'Unified management for users, businesses, ownership relationships, and identity diagnostics in one place.'}
               </p>
             </div>
           </div>
@@ -377,13 +377,33 @@ const AdminIdentity: React.FC = () => {
               </kbd>
             </Button>
             <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
+              <Link to="/admin/identity?view=integrity" aria-label={isRTL ? 'تحديث التشخيصات' : 'Refresh diagnostics'}>
+                <RefreshCw className="w-3.5 h-3.5" />{isRTL ? 'التشخيصات' : 'Diagnostics'}
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-xl gap-1.5"
+              onClick={refreshDiagnostics}
+              aria-label={isRTL ? 'تحديث البيانات' : 'Refresh data'}
+            >
+              <RefreshCw className="w-3.5 h-3.5" />{isRTL ? 'تحديث' : 'Refresh'}
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
               <Link to="/admin/identity?view=users&create=individual">
                 <UserPlus className="w-4 h-4" />{isRTL ? 'مستخدم جديد' : 'New user'}
               </Link>
             </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
+              <Link to="/admin/identity?view=businesses&create=owner" aria-label={isRTL ? 'إضافة/دعوة مالك' : 'Add or invite owner'}>
+                <UserPlus className="w-4 h-4" />{isRTL ? 'إضافة/دعوة مالك' : 'Add / invite owner'}
+              </Link>
+            </Button>
             <Button asChild size="sm" className="rounded-xl gap-1.5">
               <Link to="/admin/identity?view=businesses">
-                <Plus className="w-4 h-4" />{isRTL ? 'إدارة المنشآت' : 'Manage businesses'}
+                <Plus className="w-4 h-4" />{isRTL ? 'إضافة منشأة' : 'Add business'}
               </Link>
             </Button>
           </div>
