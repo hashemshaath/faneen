@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import {
   listWorkOrdersForBusiness,
   createWorkOrder,
@@ -134,14 +135,17 @@ export default function DashboardWorkOrders() {
 
   if (!businessId) {
     return (
+      <DashboardLayout>
       <main dir={isRTL ? "rtl" : "ltr"} className="container max-w-6xl py-8">
         <h1 className="text-2xl font-bold mb-2">{tx.title}</h1>
         <p className="text-muted-foreground">{tx.noEntity}</p>
       </main>
+      </DashboardLayout>
     );
   }
 
   return (
+    <DashboardLayout>
     <main dir={isRTL ? "rtl" : "ltr"} className="container max-w-7xl py-6 space-y-6">
       <header className="flex items-center justify-between gap-4 flex-wrap">
         <div>
@@ -251,6 +255,7 @@ export default function DashboardWorkOrders() {
 
       <p className="text-xs text-muted-foreground">{tx.noPermissionHint}</p>
     </main>
+    </DashboardLayout>
   );
 }
 

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Loader2, CreditCard, Check, History, FileText, RefreshCw, AlertTriangle } from 'lucide-react';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
 import {
@@ -358,6 +359,7 @@ const AdminMembershipPayments = () => {
   };
 
   return (
+    <DashboardLayout>
     <div className="container px-4 py-6 max-w-6xl space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
@@ -744,6 +746,7 @@ const AdminMembershipPayments = () => {
         </CardContent>
       </Card>
     </div>
+    </DashboardLayout>
   );
 };
 

@@ -7,6 +7,7 @@ import { listProfilesByUserIds } from '@/modules/users';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -81,6 +82,7 @@ const AdminMembershipEvents = () => {
   });
 
   return (
+    <DashboardLayout>
     <div className="container px-4 py-6 max-w-6xl space-y-6">
       <MembershipLifecycleJobsPanel />
       <Card>
@@ -135,6 +137,7 @@ const AdminMembershipEvents = () => {
         </CardContent>
       </Card>
     </div>
+    </DashboardLayout>
   );
 };
 

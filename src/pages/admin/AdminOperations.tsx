@@ -27,6 +27,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -503,6 +504,7 @@ const AdminOperations = () => {
   const showStale = isError && !!data;
 
   return (
+    <DashboardLayout>
     <main className="container mx-auto py-8 space-y-6" data-testid="admin-operations-page">
       {/* Header */}
       <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -770,6 +772,7 @@ const AdminOperations = () => {
         </CardContent>
       </Card>
     </main>
+    </DashboardLayout>
   );
 };
 

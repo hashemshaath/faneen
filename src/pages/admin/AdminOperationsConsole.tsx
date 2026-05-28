@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity, AlertCircle, ClipboardList, GitBranch, RefreshCw,
-  Search, ShieldCheck, TrendingUp,
+  Search, ShieldCheck, TrendingUp, ExternalLink,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -463,6 +463,45 @@ export default function AdminOperationsConsole() {
           scopedRefId={refIsOfficial && trimmedRef ? trimmedRef.toUpperCase() : undefined}
           isRTL={isRTL}
         />
+
+        <Card data-testid="provider-operations-shortcuts">
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <ExternalLink className="w-4 h-4" />
+              {isRTL ? 'اختصارات عمليات المزود' : 'Provider Operations Shortcuts'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              {isRTL
+                ? 'هذه الصفحات تخص المزوّد وتعتمد على مساحة العمل النشطة.'
+                : 'These pages are provider-scoped and depend on the active workspace.'}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <Link
+                to="/dashboard/work-orders"
+                className="rounded-xl border bg-card hover:bg-muted/50 transition-colors p-3 text-sm"
+              >
+                <div className="font-medium">{isRTL ? 'أوامر عمل المزوّد' : 'Provider Work Orders'}</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">/dashboard/work-orders</div>
+              </Link>
+              <Link
+                to="/dashboard/work-orders/overview"
+                className="rounded-xl border bg-card hover:bg-muted/50 transition-colors p-3 text-sm"
+              >
+                <div className="font-medium">{isRTL ? 'نظرة عامة على عمليات المزوّد' : 'Provider Operations Overview'}</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">/dashboard/work-orders/overview</div>
+              </Link>
+              <Link
+                to="/dashboard/operations/feed"
+                className="rounded-xl border bg-card hover:bg-muted/50 transition-colors p-3 text-sm"
+              >
+                <div className="font-medium">{isRTL ? 'موجز عمليات المزوّد' : 'Provider Operations Feed'}</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">/dashboard/operations/feed</div>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );

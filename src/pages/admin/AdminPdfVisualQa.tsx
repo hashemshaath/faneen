@@ -20,6 +20,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -333,6 +334,7 @@ const AdminPdfVisualQa: React.FC = () => {
   };
 
   return (
+    <DashboardLayout>
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         <header className="space-y-1">
@@ -543,6 +545,7 @@ const AdminPdfVisualQa: React.FC = () => {
         </Card>
       </div>
     </div>
+    </DashboardLayout>
   );
 };
 

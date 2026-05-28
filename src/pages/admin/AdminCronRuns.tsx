@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -201,6 +202,7 @@ const AdminCronRuns = () => {
     ) : null;
 
   return (
+    <DashboardLayout>
     <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-gradient-to-b from-muted/40 to-background">
       {/* Hero header */}
       <div className="relative overflow-hidden border-b border-border/60 bg-gradient-to-br from-primary/95 via-primary to-primary-hover">
@@ -573,6 +575,7 @@ const AdminCronRuns = () => {
         </Card>
       </div>
     </div>
+    </DashboardLayout>
   );
 };
 
