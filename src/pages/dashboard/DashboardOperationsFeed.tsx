@@ -119,6 +119,16 @@ export default function DashboardOperationsFeed() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Initialise filters from URL query params (safe fallback on invalid values).
+  useEffect(() => {
+    const src = searchParams.get('source') as SourceFilter;
+    const act = searchParams.get('action') as ActionFilter;
+    const ref = searchParams.get('ref');
+    if (src && VALID_SOURCES.has(src)) setSource(src);
+    if (act && VALID_ACTIONS.has(act)) setAction(act);
+    if (ref !== null) setQuery(ref);
+  }, [searchParams]);
+
   const reload = useCallback(async () => {
     if (!active_entity_id) return;
     setLoading(true);
