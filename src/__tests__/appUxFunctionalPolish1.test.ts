@@ -59,7 +59,9 @@ describe('APP-UX-FUNCTIONAL-POLISH-1 — provider operations pages', () => {
     expect(src).toContain('OperationsBreadcrumbs');
     expect(src).toContain('/dashboard/operations/feed');
     expect(src).toContain('computeOperationalMetrics');
-    expect(src).toContain('data-testid="ops-approx-hint"');
+    // BUSINESS-OPS-METRICS-2 replaced the inline mini-strip with the
+    // shared <ProviderOperationalMetricsCards/> component.
+    expect(src).toContain('ProviderOperationalMetricsCards');
     // recent items deep-link to the detail page by ref_id
     expect(src).toContain('/dashboard/work-orders/${wo.ref_id}');
   });
