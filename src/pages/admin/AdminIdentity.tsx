@@ -670,6 +670,11 @@ const AdminIdentity: React.FC = () => {
               isLoading={isLoading}
             />
           </TabsContent>
+
+          {/* ─── Integrity & Duplicates tab ─── */}
+          <TabsContent value="integrity" className="mt-5">
+            <IdentityIntegrityPanel isRTL={isRTL} />
+          </TabsContent>
         </Tabs>
 
         {/* ─── Footer hint ─── */}
