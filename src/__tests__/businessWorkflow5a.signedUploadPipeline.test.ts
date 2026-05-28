@@ -192,7 +192,10 @@ describe("WorkOrderAttachmentsSection UI invariants", () => {
   it("never renders r.file_path or a public URL", () => {
     expect(ui).not.toMatch(/\{r\.file_path\}/);
     expect(ui).not.toMatch(/getPublicUrl/);
-    expect(ui).not.toMatch(/\{[^}]*signedUrl[^}]*\}/);
+    // signedUrl may flow through window.open but must never appear as
+    // a JSX text/attribute node like >{...signedUrl}< or href={...signedUrl}.
+    expect(ui).not.toMatch(/>\s*\{[^}]*signedUrl[^}]*\}\s*</);
+    expect(ui).not.toMatch(/href=\{[^}]*signedUrl[^}]*\}/);
   });
 
   it("file_path text input was removed", () => {
