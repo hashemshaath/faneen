@@ -313,6 +313,16 @@ const ProviderLeadDetails: React.FC = () => {
               : 'تمت متابعة هذه الفرصة.'}
           </CardContent></Card>
         )}
+
+        {/* BUSINESS-CORE-9 — Create work order from quote request */}
+        {lead.provider_id && q.id && (
+          <CreateWorkOrderFromQuoteButton
+            quoteRequestId={q.id}
+            businessId={lead.provider_id}
+            defaultTitle={q.project_description}
+            quoteRefId={q.ref_id}
+          />
+        )}
       </div>
 
       <Dialog open={contactOpen} onOpenChange={setContactOpen}>
