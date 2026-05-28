@@ -14,7 +14,7 @@ describe("BUSINESS-CORE-9: createWorkOrderFromQuote service", () => {
   const src = readFileSync(SERVICE, "utf8");
 
   it("delegates to createWorkOrder (no direct work_orders insert)", () => {
-    expect(src).toMatch(/from\s+["']\.\.\/createWorkOrder["']/);
+    expect(src).toMatch(/from\s+["']\.\/createWorkOrder["']/);
     expect(src).not.toMatch(/\.from\(["']work_orders["']\)/);
     expect(src).not.toMatch(/\.from\(["']work_order_stages["']\)/);
   });
