@@ -35,6 +35,13 @@ const SHELL_FILES = [
   'src/modules/workspace/shell/quickActions.ts',
   'src/modules/workspace/shell/contextualQuickActions.ts',
   'src/modules/workspace/state/workspaceStateStore.ts',
+  // APP-SHELL-STABILIZATION-1 additions:
+  'src/modules/workspace/shell/shellTokens.ts',
+  'src/modules/workspace/shell/shellSpacing.ts',
+  'src/components/workspace/shell/WorkspacePageSkeleton.tsx',
+  'src/components/workspace/shell/WorkspaceSectionSkeleton.tsx',
+  'src/components/workspace/shell/WorkspaceScrollRestoration.tsx',
+  'src/hooks/useWorkspacePreferences.ts',
 ];
 
 const FORBIDDEN_IMPORT_PATTERNS = [
