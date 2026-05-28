@@ -6,6 +6,8 @@
 export * from "./types";
 export { listWorkOrdersForBusiness } from "./services/listWorkOrdersForBusiness";
 export { getWorkOrderById } from "./services/getWorkOrderById";
+export { getWorkOrderByRefId } from "./services/getWorkOrderByRefId";
+export { searchWorkOrders } from "./services/searchWorkOrders";
 export { createWorkOrder } from "./services/createWorkOrder";
 export { updateWorkOrder } from "./services/updateWorkOrder";
 export { recordWorkOrderAudit } from "./services/recordWorkOrderAudit";
