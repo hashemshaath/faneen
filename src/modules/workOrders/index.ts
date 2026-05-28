@@ -151,6 +151,38 @@ export type {
   QuotationPdfLine,
 } from "./services/generateQuotationPdfData";
 
+// BUSINESS-WORKFLOW-6 — Production & Fabrication Pipeline
+export {
+  transitionWorkOrderStage,
+  WORK_ORDER_PIPELINE_STAGES,
+} from "./services/transitionWorkOrderStage";
+export type {
+  TransitionWorkOrderStageInput,
+  TransitionWorkOrderStageResult,
+  WorkOrderPipelineStage,
+} from "./services/transitionWorkOrderStage";
+export {
+  assignWorkOrderStageUser,
+  listWorkOrderStageAssignments,
+} from "./services/assignWorkOrderStageUser";
+export type { AssignWorkOrderStageUserInput } from "./services/assignWorkOrderStageUser";
+export { listWorkOrderPipelineEvents } from "./services/listWorkOrderPipelineEvents";
+export {
+  listWorkOrderChecklists,
+  listChecklistItems,
+} from "./services/listWorkOrderChecklists";
+export { createWorkOrderChecklist } from "./services/createWorkOrderChecklist";
+export type {
+  CreateWorkOrderChecklistInput,
+  CreateWorkOrderChecklistResult,
+} from "./services/createWorkOrderChecklist";
+export {
+  updateChecklistItem,
+  completeChecklistItem,
+  completeChecklist,
+} from "./services/updateChecklistItem";
+export type { UpdateChecklistItemPatch } from "./services/updateChecklistItem";
+
 // BUSINESS-CORE-4 — shared lib helpers
 export * from "./lib/statusHelpers";
 export * from "./lib/source";
