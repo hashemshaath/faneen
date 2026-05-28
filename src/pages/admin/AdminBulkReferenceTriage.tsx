@@ -489,7 +489,7 @@ export default function AdminBulkReferenceTriage() {
                     </div>
                   ) : null}
                   {bulkReport.fail.length > 0 ? (
-                    <ul className="list-disc pl-4 mt-1 tech-content">
+                    <ul className="list-disc ps-4 mt-1 tech-content">
                       {bulkReport.fail.slice(0, 10).map((f, i) => (
                         <li key={i} className="text-destructive">{f.ref}: {f.msg}</li>
                       ))}
