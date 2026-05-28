@@ -35,7 +35,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { ReferenceTag } from '@/components/common/ReferenceTag';
+import { ReferenceTag } from '@/components/reference/ReferenceTag';
 
 import { getProfileByUserId } from '@/modules/users/services/getProfileByUserId';
 import { getProfileByRefId } from '@/modules/users/services/getProfileByRefId';
