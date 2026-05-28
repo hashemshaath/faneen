@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { LeadStatusBadge, type LeadStatus } from './LeadStatusBadge';
 import { LeadActionsBar } from './LeadActionsBar';
+import { CreateWorkOrderFromLeadButton } from '@/components/workOrders/CreateWorkOrderFromLeadButton';
 
 export interface LeadRow {
   id: string;
@@ -96,6 +97,16 @@ export const LeadDetailPanel: React.FC<Props> = ({ lead, pending, onAction, onOp
       )}
 
       <p className="text-sm leading-7 whitespace-pre-wrap text-foreground/90">{lead.message}</p>
+
+      {/* BUSINESS-CORE-10 — manual lead → work order. */}
+      {!isDemo && (
+        <CreateWorkOrderFromLeadButton
+          leadRequestId={lead.id}
+          businessId={lead.business_id}
+          defaultTitle={lead.subject || lead.name}
+          leadRefId={lead.ref_id}
+        />
+      )}
 
       {/* 5B.3 — Create Contract from Lead */}
       {(canCreateContract || alreadyConverted) && (
