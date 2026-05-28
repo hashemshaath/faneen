@@ -181,6 +181,9 @@ export default function DashboardWorkOrderDetail() {
                 <WorkOrderStatusBadge status={wo.status as WorkOrderStatus} isRTL={isRTL} />
                 <WorkOrderPriorityBadge priority={wo.priority as WorkOrderPriority} isRTL={isRTL} />
                 <WorkOrderSourceBadge sourceType={wo.source_type} isRTL={isRTL} />
+                {wo.source_ref_id && (
+                  <ReferenceTag refId={wo.source_ref_id} isRTL={isRTL} />
+                )}
                 <WorkOrderAssigneeChip
                   assigneeUserId={wo.owner_user_id}
                   assigneeName={ownerLabel?.full_name ?? ownerLabel?.ref_id ?? null}
