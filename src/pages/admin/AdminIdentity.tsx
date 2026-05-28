@@ -55,6 +55,7 @@ import {
   Users, Building2, Search, Command, Shield, Crown, ShieldCheck, Briefcase,
   TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, Plus,
   UserPlus, Activity, ExternalLink, KeyRound, BarChart3, ShieldAlert,
+  RefreshCw, Stethoscope,
 } from 'lucide-react';
 
 /* Lazy-loaded specialist admin pages, embedded inside Identity tabs. */
@@ -95,7 +96,8 @@ type View =
   | 'access-requests'
   | 'access-management'
   | 'analytics'
-  | 'integrity';
+  | 'integrity'
+  | 'activity';
 
 /* ─── KPI card ─── */
 const Kpi: React.FC<{
