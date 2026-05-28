@@ -13933,6 +13933,10 @@ export type Database = {
         }
         Returns: string
       }
+      transfer_primary_manager: {
+        Args: { _business_id: string; _reason?: string; _to_user_id: string }
+        Returns: Json
+      }
       unsubscribe_newsletter: { Args: { p_email: string }; Returns: boolean }
       update_client_site: {
         Args: { _patch: Json; _site_id: string }
