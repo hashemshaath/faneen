@@ -12397,6 +12397,14 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_reassign_business_owner: {
+        Args: {
+          _business_id: string
+          _new_owner_user_id: string
+          _reason?: string
+        }
+        Returns: Json
+      }
       admin_restore_barcode: {
         Args: { _barcode_id: string; _reason?: string }
         Returns: Json

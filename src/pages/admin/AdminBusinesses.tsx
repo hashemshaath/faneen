@@ -73,6 +73,7 @@ import { Link } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { parseMembershipLimitError } from '@/lib/membership-errors';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
+import { BusinessOwnerPanel } from '@/components/admin/BusinessOwnerPanel';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -1625,8 +1626,9 @@ const AdminBusinesses = () => {
               </div>
             </div>
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full grid grid-cols-8 h-9 rounded-xl">
+                <TabsList className="w-full grid grid-cols-9 h-9 rounded-xl">
                   <TabsTrigger value="info" className="text-[10px] rounded-lg">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
+                  <TabsTrigger value="owner" className="text-[10px] rounded-lg">{isRTL ? 'المسؤول' : 'Owner'}</TabsTrigger>
                   <TabsTrigger value="address" className="text-[10px] rounded-lg">{isRTL ? 'العنوان' : 'Address'}</TabsTrigger>
                   <TabsTrigger value="content" className="text-[10px] rounded-lg">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
                   <TabsTrigger value="media" className="text-[10px] rounded-lg">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
@@ -1714,6 +1716,17 @@ const AdminBusinesses = () => {
                       </div>
                     </details>
                   </div>
+                </TabsContent>
+
+                {/* ── Owner Tab (ORG-RBAC-9F) ── */}
+                <TabsContent value="owner" className="space-y-4 mt-3">
+                  <BusinessOwnerPanel
+                    businessId={editingBiz.id}
+                    businessRef={editingBiz.ref_id ?? null}
+                    ownerUserId={editingBiz.user_id}
+                    isRTL={isRTL}
+                    onOwnerReassigned={() => setEditingBiz(null)}
+                  />
                 </TabsContent>
 
                 {/* ── Address Tab ── */}
