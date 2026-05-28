@@ -19,7 +19,10 @@ export interface RecordWorkOrderAuditInput {
     | "work_order.attachment_deleted"
     | "work_order.measurement_added"
     | "work_order.measurement_updated"
-    | "work_order.measurement_deleted";
+    | "work_order.measurement_deleted"
+    | "work_order.boq_generated"
+    | "work_order.boq_item_updated"
+    | "work_order.boq_finalized";
   metadata?: Record<string, unknown>;
 }
 
