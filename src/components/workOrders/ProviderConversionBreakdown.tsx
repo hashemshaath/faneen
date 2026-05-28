@@ -71,25 +71,37 @@ export function ProviderConversionBreakdown({ metrics, isRTL }: Props) {
       key: 'ledToWo',
       icon: <Inbox className="w-5 h-5" aria-hidden="true" />,
       tone: 'text-blue-600 dark:text-blue-400',
+      to: '/dashboard/operations/feed?source=lead&action=converted',
     },
     {
       key: 'qteToWo',
       icon: <FileText className="w-5 h-5" aria-hidden="true" />,
       tone: 'text-amber-600 dark:text-amber-400',
+      to: '/dashboard/operations/feed?source=quote&action=converted',
     },
     {
       key: 'cntToWo',
       icon: <FileSignature className="w-5 h-5" aria-hidden="true" />,
       tone: 'text-emerald-600 dark:text-emerald-400',
+      to: '/dashboard/operations/feed?source=contract&action=converted',
     },
     {
       key: 'bkgToWo',
       icon: <CalendarDays className="w-5 h-5" aria-hidden="true" />,
       tone: 'text-violet-600 dark:text-violet-400',
+      to: '/dashboard/operations/feed?source=booking&action=converted',
     },
   ];
 
   const sectionLabel = isRTL ? 'تحويل المصادر إلى أوامر عمل' : 'Source conversions to Work Orders';
+
+  function chipAriaLabel(s: SourceConfig, value: number): string {
+    const label = L(s.key, isRTL);
+    if (isRTL) {
+      return `عرض ${value} ${label} في سجل العمليات`;
+    }
+    return `View ${value} ${label} in operations feed`;
+  }
 
   return (
     <section
@@ -127,6 +139,15 @@ export function ProviderConversionBreakdown({ metrics, isRTL }: Props) {
             label={L(s.key, isRTL)}
             icon={s.icon}
             tone={s.tone}
+            to={s.to}
+            ariaLabel={chipAriaLabel(s, s.key === 'ledToWo'
+              ? metrics.leadsQuotes.leadToWorkOrder
+              : s.key === 'qteToWo'
+                ? metrics.leadsQuotes.quoteToWorkOrder
+                : s.key === 'cntToWo'
+                  ? metrics.contracts.contractToWorkOrder
+                  : metrics.bookings.bookingToWorkOrder
+            )}
           />
         ))}
       </div>
