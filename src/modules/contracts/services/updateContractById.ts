@@ -25,22 +25,23 @@ export async function updateContractById(
     .eq('id', contractId);
   // BUSINESS-CORE-14 — best-effort source-side audit for the Unified Operations Feed.
   if (!res.error) {
-    if (includesStatus) {
-      const nextStatus =
-        typeof (payload as Record<string, unknown>).status === 'string'
-          ? ((payload as Record<string, unknown>).status as string)
-          : null;
-      await emitContractAudit({
-        contractId,
-        action: 'contract.status_changed',
-        previousStatus,
-        newStatus: nextStatus,
-      });
-    } else {
-      await emitContractAudit({
-        contractId,
-        action: 'contract.updated',
-      });
+    try {
+      if (includesStatus) {
+        const nextStatus =
+          typeof (payload as Record<string, unknown>).status === 'string'
+            ? ((payload as Record<string, unknown>).status as string)
+            : null;
+        await emitContractAudit({
+          contractId,
+          action: 'contract.status_changed',
+          previousStatus,
+          newStatus: nextStatus,
+        });
+      } else {
+        await emitContractAudit({ contractId, action: 'contract.updated' });
+      }
+    } catch {
+      /* never fail the mutation on audit error */
     }
   }
   return res;
