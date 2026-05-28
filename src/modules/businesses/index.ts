@@ -112,3 +112,16 @@ export type {
 // BUSINESS-ADMIN-4: admin-safe enrichment wrapper for ENT/BIZ refs
 export { getAdminBusinessSummaryByRef } from './services/getAdminBusinessSummaryByRef';
 export type { AdminBusinessSummary } from './services/getAdminBusinessSummaryByRef';
+
+// ORG-RBAC-STRUCTURE-9D: primary-manager transfer wrapper
+export { transferPrimaryManager } from './services/transferPrimaryManager';
+export type {
+  TransferPrimaryManagerOptions,
+  TransferPrimaryManagerResult,
+  TransferPrimaryManagerCode,
+} from './services/transferPrimaryManager';
+export {
+  mapTransferPrimaryManagerCode,
+  getTransferPrimaryManagerMessageEntries,
+} from './services/transferPrimaryManagerMessages';
+export type { TransferPrimaryManagerLang } from './services/transferPrimaryManagerMessages';
