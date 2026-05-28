@@ -26,3 +26,23 @@ export { listAdminWorkOrders } from '@/modules/workOrders';
 export type { ListAdminWorkOrdersOptions } from '@/modules/workOrders';
 export { getAdminOperationsSummary } from './services/operations/getAdminOperationsSummary';
 export type { AdminOperationsSummary } from './services/operations/getAdminOperationsSummary';
+
+// BUSINESS-ADMIN-2: Admin Operational Notes wrappers (append-only, internal).
+export { listAdminOperationalNotes } from './services/notes/listAdminOperationalNotes';
+export type {
+  AdminOperationalNoteRow,
+  ListAdminOperationalNotesOptions,
+} from './services/notes/listAdminOperationalNotes';
+export { createAdminOperationalNote } from './services/notes/createAdminOperationalNote';
+export type { CreateAdminOperationalNoteInput } from './services/notes/createAdminOperationalNote';
+export { resolveAdminOperationalNote } from './services/notes/resolveAdminOperationalNote';
+export { getAdminOperationalNotesSummary } from './services/notes/getAdminOperationalNotesSummary';
+export type { AdminOperationalNotesSummary } from './services/notes/getAdminOperationalNotesSummary';
+export {
+  isOfficialRef as isOfficialAdminNoteRef,
+  sanitizeAdminNoteMetadata,
+  assertSafeNoteText,
+  type AdminNoteSeverity,
+  type AdminNoteStatus,
+  type AdminNoteEntityType,
+} from './services/notes/sanitizeAdminNote';
