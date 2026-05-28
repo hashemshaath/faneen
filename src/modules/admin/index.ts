@@ -15,3 +15,14 @@ export type {
   UserEntityLink,
   UserEntityRole,
 } from './services/users/listUserEntityLinks';
+
+// BUSINESS-ADMIN-1: Admin Operations Console wrappers.
+export { listAdminOperationalActivity } from './services/operations/listAdminOperationalActivity';
+export type {
+  AdminOperationalSourceType,
+  ListAdminOperationalActivityOptions,
+} from './services/operations/listAdminOperationalActivity';
+export { listAdminWorkOrders } from '@/modules/workOrders';
+export type { ListAdminWorkOrdersOptions } from '@/modules/workOrders';
+export { getAdminOperationsSummary } from './services/operations/getAdminOperationsSummary';
+export type { AdminOperationsSummary } from './services/operations/getAdminOperationsSummary';
