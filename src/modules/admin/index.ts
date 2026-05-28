@@ -39,6 +39,19 @@ export type {
   AdminReferenceInspectorBundle,
 } from './services/operations/getAdminReferenceSummary';
 
+// BUSINESS-ADMIN-5: Admin Bulk Reference Triage.
+export {
+  parseAdminBulkRefs,
+  ADMIN_BULK_REF_MAX,
+} from './services/operations/parseAdminBulkRefs';
+export type { ParseAdminBulkRefsResult } from './services/operations/parseAdminBulkRefs';
+export { getAdminBulkReferenceTriage } from './services/operations/getAdminBulkReferenceTriage';
+export type {
+  AdminBulkTriageRow,
+  AdminBulkTriageResult,
+  AdminBulkTriageStatus,
+} from './services/operations/getAdminBulkReferenceTriage';
+
 // BUSINESS-ADMIN-4: per-entity admin enrichment wrappers (re-exports from
 // canonical domain modules — admin barrel is the single import surface).
 export { getAdminContractSummaryByRef } from '@/modules/contracts';

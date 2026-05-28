@@ -101,6 +101,7 @@ const AdminCronRuns = lazyRetry(() => import("./pages/admin/AdminCronRuns"));
 const AdminOperations = lazyRetry(() => import("./pages/admin/AdminOperations"));
 const AdminOperationsConsole = lazyRetry(() => import("./pages/admin/AdminOperationsConsole"));
 const AdminReferenceInspector = lazyRetry(() => import("./pages/admin/AdminReferenceInspector"));
+const AdminBulkReferenceTriage = lazyRetry(() => import("./pages/admin/AdminBulkReferenceTriage"));
 const AdminActivityLog = lazyRetry(() => import("./pages/admin/AdminActivityLog"));
 const AdminCategories = lazyRetry(() => import("./pages/admin/AdminCategories"));
 const AdminTags = lazyRetry(() => import("./pages/admin/AdminTags"));
@@ -357,6 +358,7 @@ const AppRoutes = () => (
           <Route path="/admin/cron-runs" element={<ProtectedRoute requireAdmin><AdminCronRuns /></ProtectedRoute>} />
           <Route path="/admin/operations" element={<ProtectedRoute requireAdmin><AdminOperations /></ProtectedRoute>} />
           <Route path="/admin/operations/console" element={<ProtectedRoute requireAdmin><AdminOperationsConsole /></ProtectedRoute>} />
+         <Route path="/admin/ref/triage" element={<ProtectedRoute requireAdmin><AdminBulkReferenceTriage /></ProtectedRoute>} />
          <Route path="/admin/ref/:refId" element={<ProtectedRoute requireAdmin><AdminReferenceInspector /></ProtectedRoute>} />
           <Route path="/admin/analytics-settings" element={<ProtectedRoute requireAdmin><AdminAnalyticsSettings /></ProtectedRoute>} />
           <Route path="/admin/branding" element={<ProtectedRoute requireAdmin><AdminBranding /></ProtectedRoute>} />
