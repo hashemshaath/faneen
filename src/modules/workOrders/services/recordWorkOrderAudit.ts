@@ -26,7 +26,9 @@ export interface RecordWorkOrderAuditInput {
     | "work_order.quotation_created"
     | "work_order.quotation_sent"
     | "work_order.quotation_approved"
-    | "work_order.quotation_rejected";
+    | "work_order.quotation_approved_with_signature"
+    | "work_order.quotation_rejected"
+    | "work_order.quotation_converted_to_contract_draft";
   metadata?: Record<string, unknown>;
 }
 
