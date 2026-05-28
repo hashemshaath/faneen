@@ -83,7 +83,7 @@ export async function listWorkOrdersForBoard(
     .limit(limit);
 
   if (woErr) return { data: null, error: woErr };
-  const orders = ((woRows ?? []) as BoardWorkOrderRow[]) ?? [];
+  const orders = (woRows ?? []) as BoardWorkOrderRow[];
   if (orders.length === 0) {
     return {
       data: { orders, assignments: [], quotations: [], checklists: [] },
@@ -193,7 +193,7 @@ export async function listWorkOrdersForBoard(
   return {
     data: {
       orders,
-      assignments: ((asgRows ?? []) as BoardAssignmentRow[]) ?? [],
+      assignments: (asgRows ?? []) as BoardAssignmentRow[],
       quotations,
       checklists: Array.from(cs.values()),
     },
