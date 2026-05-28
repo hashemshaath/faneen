@@ -190,3 +190,14 @@ export * from "./lib/kpis";
 export * from "./lib/useAssigneeNames";
 // BUSINESS-WORKFLOW-2 — display-only SLA helpers
 export * from "./lib/sla";
+// BUSINESS-WORKFLOW-7 — Production board rules + listing
+export * from "./lib/pipelineRules";
+export { listWorkOrdersForBoard } from "./services/listWorkOrdersForBoard";
+export type {
+  ListWorkOrdersForBoardOptions,
+  ListWorkOrdersForBoardResult,
+  BoardWorkOrderRow,
+  BoardAssignmentRow,
+  BoardQuotationSummary,
+  BoardChecklistSummary,
+} from "./services/listWorkOrdersForBoard";
