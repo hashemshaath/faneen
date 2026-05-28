@@ -376,6 +376,48 @@ export type Database = {
           },
         ]
       }
+      admin_operational_notes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entity_type: string
+          id: string
+          metadata: Json
+          note: string
+          ref_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json
+          note: string
+          ref_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          note?: string
+          ref_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+        }
+        Relationships: []
+      }
       ai_assistant_settings: {
         Row: {
           content_instructions: string
