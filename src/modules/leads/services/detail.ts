@@ -21,6 +21,7 @@ export interface ProviderLeadDetailRow {
   contact_view_count: number;
   quote_request: {
     id: string;
+    ref_id: string | null;
     sector: string;
     city: string;
     district: string | null;
@@ -109,7 +110,7 @@ const PROVIDER_LEAD_DETAIL_SELECT = `
   contact_revealed, contact_revealed_at, contact_view_count,
   provider_id, provider_user_id,
   quote_request:quote_requests(
-    id, sector, city, district, project_description, approx_dimensions, quantity,
+    id, ref_id, sector, city, district, project_description, approx_dimensions, quantity,
     execution_timeline, service_location_type, has_budget, budget_amount, budget_note
   )
 `;

@@ -11,7 +11,8 @@ export interface RecordWorkOrderAuditInput {
     | "work_order.task_created"
     | "work_order.task_completed"
     | "work_order.comment_added"
-    | "work_order.created_from_contract";
+    | "work_order.created_from_contract"
+    | "work_order.created_from_quote";
   metadata?: Record<string, unknown>;
 }
 
