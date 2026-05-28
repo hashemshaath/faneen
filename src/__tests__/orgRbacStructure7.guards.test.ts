@@ -50,10 +50,9 @@ describe('ORG-RBAC-STRUCTURE-7 — guardrails', () => {
     }
   });
 
-  // Sanity: business_staff direct reads from pages should remain rare;
-  // we don't enforce an empty list (some legacy pages still read), but
-  // we capture the current count so a future PR cannot silently widen.
-  it('business_staff direct supabase.from() callsites in pages stay within budget', () => {
+  // Phase-8 tightened this from a budget to zero. See
+  // orgRbacStructure8.businessStaffAccess.test.ts for the canonical check.
+  it('business_staff direct supabase.from() callsites in pages is zero', () => {
     const pagesDir = join(ROOT, 'src/pages');
     const walk = (d: string): string[] => {
       const out: string[] = [];
@@ -71,7 +70,6 @@ describe('ORG-RBAC-STRUCTURE-7 — guardrails', () => {
     for (const f of files) {
       if (re.test(readFileSync(f, 'utf8'))) offenders.push(f.replace(ROOT + '/', ''));
     }
-    // Snapshot current budget — adjust deliberately with a follow-up phase.
-    expect(offenders.length).toBeLessThanOrEqual(20);
+    expect(offenders).toEqual([]);
   });
 });
