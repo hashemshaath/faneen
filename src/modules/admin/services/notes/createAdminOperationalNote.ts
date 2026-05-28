@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import {
   assertSafeNoteText,
   isOfficialRef,
@@ -47,7 +48,7 @@ export async function createAdminOperationalNote(
     severity: input.severity ?? 'info',
     status: 'open' as const,
     created_by: userRes.user.id,
-    metadata: sanitizeAdminNoteMetadata(input.metadata ?? {}),
+    metadata: sanitizeAdminNoteMetadata(input.metadata ?? {}) as Json,
   };
 
   const { data, error } = await supabase
