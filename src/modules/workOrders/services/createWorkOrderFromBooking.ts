@@ -96,5 +96,18 @@ export async function createWorkOrderFromBooking(
     },
   });
 
+  await recordBusinessSourceAudit({
+    business_id: wo.business_id,
+    actor_id: uid,
+    entity_type: "booking",
+    entity_id: booking.id,
+    action: "booking.converted_to_work_order",
+    metadata: {
+      booking_ref_id: sourceRefId,
+      work_order_ref_id: wo.ref_id,
+      source_type: "booking",
+    },
+  });
+
   return { data: wo, error: null };
 }
