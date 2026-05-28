@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { WorkOrderStatusBadge } from "@/components/workOrders/WorkOrderStatusBadge";
 import { WorkOrderPriorityBadge } from "@/components/workOrders/WorkOrderPriorityBadge";
 import { WorkOrderSourceBadge } from "@/components/workOrders/WorkOrderSourceBadge";
@@ -154,6 +155,7 @@ export default function DashboardWorkOrderDetail() {
   }
 
   return (
+    <DashboardLayout>
     <main dir={isRTL ? "rtl" : "ltr"} className="container max-w-5xl py-4 sm:py-6 space-y-4 sm:space-y-6">
       <div className="flex items-center gap-2">
         <Button asChild variant="ghost" size="sm" className="rounded-lg">
@@ -327,5 +329,6 @@ export default function DashboardWorkOrderDetail() {
         </>
       )}
     </main>
+    </DashboardLayout>
   );
 }
