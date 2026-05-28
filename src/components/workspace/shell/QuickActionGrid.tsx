@@ -41,7 +41,9 @@ export const QuickActionGrid: React.FC<QuickActionGridProps> = ({ className }) =
       className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 ${className ?? ''}`}
     >
       {actions.map((a) => {
-        const Icon = (Icons as Record<string, React.ComponentType<{ className?: string }>>)[a.icon] ?? Icons.Square;
+        const Icon =
+          (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[a.icon] ??
+          (Icons.Square as unknown as React.ComponentType<{ className?: string }>);
         return (
           <Link
             key={a.id}
