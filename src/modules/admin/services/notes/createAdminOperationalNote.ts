@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session/getCurrentUser';
 import type { Json } from '@/integrations/supabase/types';
 import {
   assertSafeNoteText,
@@ -36,7 +37,7 @@ export async function createAdminOperationalNote(
     return { data: null, error: err };
   }
 
-  const { data: userRes, error: userErr } = await supabase.auth.getUser();
+  const { data: userRes, error: userErr } = await getCurrentUser();
   if (userErr || !userRes?.user?.id) {
     return { data: null, error: userErr ?? new Error('admin-note: no-session') };
   }

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session/getCurrentUser';
 import type { AdminOperationalNoteRow } from './listAdminOperationalNotes';
 
 /**
@@ -16,7 +17,7 @@ export async function resolveAdminOperationalNote({
   if (typeof id !== 'string' || id.length === 0) {
     return { data: null, error: new Error('admin-note: invalid-id') };
   }
-  const { data: userRes, error: userErr } = await supabase.auth.getUser();
+  const { data: userRes, error: userErr } = await getCurrentUser();
   if (userErr || !userRes?.user?.id) {
     return { data: null, error: userErr ?? new Error('admin-note: no-session') };
   }
