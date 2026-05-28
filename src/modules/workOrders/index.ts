@@ -88,6 +88,33 @@ export type {
   CreateMeasurementsFromTemplateResult,
 } from "./services/createMeasurementsFromTemplate";
 
+// BUSINESS-WORKFLOW-5C — Bill of Quantities (BOQ)
+export {
+  generateBoqItemsFromMeasurements,
+  BOQ_SECTOR_KEYS,
+} from "./services/generateBoqItemsFromMeasurements";
+export type {
+  BoqSectorKey,
+  BoqItemDraft,
+  GenerateBoqItemsInput,
+} from "./services/generateBoqItemsFromMeasurements";
+export { createBoqFromMeasurements } from "./services/createBoqFromMeasurements";
+export type {
+  CreateBoqFromMeasurementsInput,
+  CreateBoqFromMeasurementsResult,
+} from "./services/createBoqFromMeasurements";
+export { listWorkOrderBoqs } from "./services/listWorkOrderBoqs";
+export { listBoqItems } from "./services/listBoqItems";
+export { updateBoqItemPricing } from "./services/updateBoqItemPricing";
+export type { UpdateBoqItemPricingPatch } from "./services/updateBoqItemPricing";
+export {
+  computeBoqTotals,
+  recomputeBoqTotals,
+  BOQ_VAT_RATE,
+} from "./services/recomputeBoqTotals";
+export type { BoqTotals } from "./services/recomputeBoqTotals";
+export { finalizeBoq } from "./services/finalizeBoq";
+
 // BUSINESS-CORE-4 — shared lib helpers
 export * from "./lib/statusHelpers";
 export * from "./lib/source";
