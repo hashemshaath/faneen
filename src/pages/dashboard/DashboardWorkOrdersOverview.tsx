@@ -23,7 +23,7 @@ import { WorkOrderStatusBadge } from "@/components/workOrders/WorkOrderStatusBad
 import { WorkOrderPriorityBadge } from "@/components/workOrders/WorkOrderPriorityBadge";
 import { WorkOrderSourceBadge } from "@/components/workOrders/WorkOrderSourceBadge";
 import { WorkOrderAssigneeChip } from "@/components/workOrders/WorkOrderAssigneeChip";
-import { WorkOrderActivityCard } from "@/components/workOrders/WorkOrderActivityCard";
+import { UnifiedOperationsFeed } from "@/components/operations/UnifiedOperationsFeed";
 
 /**
  * BUSINESS-CORE-4 — Unified Work Orders operations dashboard.
@@ -213,7 +213,7 @@ export default function DashboardWorkOrdersOverview() {
                 )}
               </section>
 
-              <WorkOrderActivityCard businessId={businessId} isRTL={isRTL} limit={100} />
+              <UnifiedOperationsFeed businessId={businessId} isRTL={isRTL} limit={150} />
             </div>
           </>
         )}
