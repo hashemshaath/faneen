@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase/client";
 import { getContractById } from "@/modules/contracts/services/reads/getContractById";
+import { getCurrentUser } from "@/modules/identity/services/session/getCurrentUser";
 import { createWorkOrder } from "./createWorkOrder";
 import { recordWorkOrderAudit } from "./recordWorkOrderAudit";
 import type { WorkOrderRow, WorkOrderPriority } from "../types";
@@ -63,7 +63,7 @@ export async function createWorkOrderFromContract(
   }
 
   // Identify acting user (auth-gated; RLS enforces is_work_order_member on insert).
-  const { data: userRes, error: userErr } = await supabase.auth.getUser();
+  const { data: userRes, error: userErr } = await getCurrentUser();
   const uid = userRes?.user?.id ?? null;
   if (userErr || !uid) {
     return { data: null, error: userErr ?? new Error("not_authenticated") };
