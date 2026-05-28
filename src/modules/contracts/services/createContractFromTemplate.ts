@@ -16,10 +16,11 @@ export async function createContractFromTemplate(args: CreateContractFromTemplat
   const res = await supabase.rpc('create_contract_from_template', args);
   // BUSINESS-CORE-14 — best-effort source-side audit for the Unified Operations Feed.
   if (!res.error && typeof res.data === 'string' && res.data) {
-    await emitContractAudit({
-      contractId: res.data,
-      action: 'contract.created',
-    });
+    try {
+      await emitContractAudit({ contractId: res.data, action: 'contract.created' });
+    } catch {
+      /* never fail the mutation on audit error */
+    }
   }
   return res;
 }
