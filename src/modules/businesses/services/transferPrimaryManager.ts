@@ -48,7 +48,7 @@ export async function transferPrimaryManager(
     _reason: reason ?? null,
   });
   return {
-    data: (data as TransferPrimaryManagerResult | null) ?? null,
+    data: (data as unknown as TransferPrimaryManagerResult | null) ?? null,
     error,
   };
 }
