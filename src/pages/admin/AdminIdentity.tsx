@@ -676,6 +676,13 @@ const AdminIdentity: React.FC = () => {
             : 'All admin operations (edit, delete, password, verify, branches, roles…) are available right here inside the tabs — no page navigation needed.'}
         </p>
       </div>
+      <IdentityCommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        isRTL={isRTL}
+        profiles={profiles}
+        businesses={businesses}
+      />
     </DashboardLayout>
   );
 };
