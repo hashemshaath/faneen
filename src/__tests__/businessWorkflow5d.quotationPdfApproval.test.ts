@@ -289,11 +289,16 @@ describe("BUSINESS-WORKFLOW-5D UI", () => {
     expect(src).toMatch(/data-testid="wo-quotation-pdf"/);
     expect(src).toMatch(/عرض سعر/);
     expect(src).toMatch(/Quotation/);
-    expect(src).toMatch(/طباعة PDF/);
-    expect(src).toMatch(/Print PDF/);
     expect(src).toMatch(/صالح حتى/);
     expect(src).toMatch(/Valid until/);
     expect(src).not.toMatch(/from ['"]@\/integrations\/supabase/);
+  });
+
+  it("dashboard section and viewer expose Print PDF labels (AR + EN)", () => {
+    const section = read("src/components/workOrders/WorkOrderQuotationsSection.tsx");
+    const viewer = read("src/pages/QuotationViewer.tsx");
+    expect(section + viewer).toMatch(/طباعة PDF/);
+    expect(section + viewer).toMatch(/Print PDF/);
   });
 
   it("section is mounted in the work-order detail page", () => {
