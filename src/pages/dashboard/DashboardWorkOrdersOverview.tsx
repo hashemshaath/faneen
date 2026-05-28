@@ -27,6 +27,7 @@ import { UnifiedOperationsFeed } from "@/components/operations/UnifiedOperations
 import { OperationsBreadcrumbs } from "@/components/operations/OperationsBreadcrumbs";
 import { computeOperationalMetrics } from "@/modules/operations/metrics/computeOperationalMetrics";
 import { ProviderOperationalMetricsCards } from "@/components/workOrders/ProviderOperationalMetricsCards";
+import { ProviderConversionBreakdown } from "@/components/workOrders/ProviderConversionBreakdown";
 import {
   listBusinessActivityTimeline,
   type BusinessActivityEvent,
@@ -193,6 +194,8 @@ export default function DashboardWorkOrdersOverview() {
               isRTL={isRTL}
               recentActivityCount={activity.length}
             />
+
+            <ProviderConversionBreakdown metrics={opsMetrics} isRTL={isRTL} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <section className="lg:col-span-2 rounded-2xl border border-border/50 bg-card p-4 sm:p-5 space-y-3">
