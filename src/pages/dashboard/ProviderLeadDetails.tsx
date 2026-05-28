@@ -31,6 +31,7 @@ import {
   updateProviderLeadResponse,
   insertProviderLeadEvent,
 } from '@/modules/leads/services/mutations';
+import { CreateWorkOrderFromQuoteButton } from '@/components/workOrders/CreateWorkOrderFromQuoteButton';
 
 interface LeadDetailRow {
   id: string;
@@ -47,6 +48,7 @@ interface LeadDetailRow {
   contact_view_count: number;
   quote_request: {
     id: string;
+    ref_id: string | null;
     sector: string;
     city: string;
     district: string | null;
