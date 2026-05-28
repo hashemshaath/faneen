@@ -18,3 +18,8 @@ export { listWorkOrderComments } from "./services/listWorkOrderComments";
 export { addWorkOrderComment } from "./services/addWorkOrderComment";
 export { softDeleteWorkOrderTask } from "./services/softDeleteWorkOrderTask";
 export { softDeleteWorkOrder } from "./services/softDeleteWorkOrder";
+
+// BUSINESS-CORE-4 — shared lib helpers
+export * from "./lib/statusHelpers";
+export * from "./lib/source";
+export * from "./lib/kpis";
