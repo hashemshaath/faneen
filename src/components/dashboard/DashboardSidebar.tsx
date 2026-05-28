@@ -101,6 +101,7 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
       { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },
       { label: { ar: 'العمليات', en: 'Operations' }, url: '/dashboard/operations', icon: Activity },
+      { label: { ar: 'سجل العمليات', en: 'Operations Feed' }, url: '/dashboard/operations/feed', icon: Activity },
     ],
   },
   {
