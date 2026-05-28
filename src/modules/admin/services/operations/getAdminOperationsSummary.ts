@@ -1,6 +1,5 @@
-import { listAdminWorkOrders } from "./listAdminWorkOrders";
+import { listAdminWorkOrders, computeWorkOrderKpis } from "@/modules/workOrders";
 import { listAdminOperationalActivity } from "./listAdminOperationalActivity";
-import { computeWorkOrderKpis } from "@/modules/workOrders";
 
 /**
  * BUSINESS-ADMIN-1 — Optional aggregate summary for the Admin Operations
