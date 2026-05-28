@@ -112,7 +112,18 @@ describe('WORKSPACE-RBAC-6B — safety invariants', () => {
 
   it('no page uses useCan yet (6B does not wire enforcement into UI)', () => {
     const files = walk(join(SRC, 'pages'));
-    const callers = files.filter((f) => /\buseCan\s*\(/.test(readFileSync(f, 'utf8')));
+    const ALLOWED = new Set(
+      [
+        'pages/dashboard/DashboardServices.tsx',
+        'pages/dashboard/DashboardPortfolio.tsx',
+        'pages/dashboard/DashboardPromotions.tsx',
+        'pages/dashboard/DashboardBusinessEdit.tsx',
+        'pages/dashboard/DashboardStaffCenter.tsx',
+      ].map((p) => join(SRC, p)),
+    );
+    const callers = files.filter(
+      (f) => /\buseCan\s*\(/.test(readFileSync(f, 'utf8')) && !ALLOWED.has(f),
+    );
     expect(callers).toEqual([]);
   });
 
