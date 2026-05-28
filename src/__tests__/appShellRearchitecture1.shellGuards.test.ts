@@ -22,11 +22,19 @@ const SHELL_FILES = [
   'src/components/workspace/shell/RecentWorkspaceContext.tsx',
   'src/components/workspace/shell/QuickActionGrid.tsx',
   'src/components/workspace/shell/CommandPalette.tsx',
+  // APP-SHELL-2 additions:
+  'src/components/workspace/shell/SmartEntitySwitcher.tsx',
+  'src/components/workspace/shell/RecentWorkspaceFlows.tsx',
+  'src/components/workspace/shell/MobileWorkspaceActions.tsx',
   'src/hooks/useCommandPalette.ts',
   'src/hooks/useBreadcrumbs.ts',
+  'src/hooks/useWorkspaceState.ts',
+  'src/hooks/useWorkspaceContext.ts',
   'src/modules/workspace/shell/refRouteMap.ts',
   'src/modules/workspace/shell/recentContextStore.ts',
   'src/modules/workspace/shell/quickActions.ts',
+  'src/modules/workspace/shell/contextualQuickActions.ts',
+  'src/modules/workspace/state/workspaceStateStore.ts',
 ];
 
 const FORBIDDEN_IMPORT_PATTERNS = [
