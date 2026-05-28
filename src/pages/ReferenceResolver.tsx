@@ -21,6 +21,7 @@ import {
   lookupByReference,
   type ReferenceLookupRow,
 } from '@/modules/reference';
+import { getWorkOrderTaskByRefId } from '@/modules/workOrders';
 import { useNoIndex } from '@/hooks/useNoIndex';
 
 // Strict shape: 2–6 uppercase letters, hyphen, then alphanumerics/hyphens.
@@ -92,6 +93,23 @@ export default function ReferenceResolver() {
     if (safeRef.startsWith('WO-')) {
       setState({ status: 'redirect', to: `/dashboard/work-orders/${safeRef}` });
       return;
+    }
+    // BUSINESS-CORE-6 — TASK- ref_ids resolve to the parent work order
+    // detail route with the task highlight query param. The wrapper itself
+    // is RLS-gated; non-members will get a not_found.
+    if (safeRef.startsWith('TASK-')) {
+      let cancelledTask = false;
+      (async () => {
+        const { data, error } = await getWorkOrderTaskByRefId(safeRef);
+        if (cancelledTask) return;
+        if (error) { setState({ status: 'error' }); return; }
+        if (!data) { setState({ status: 'not_found' }); return; }
+        setState({
+          status: 'redirect',
+          to: `/dashboard/work-orders/${data.work_order_ref_id}?task=${data.task_ref_id}`,
+        });
+      })();
+      return () => { cancelledTask = true; };
     }
     let cancelled = false;
     setState({ status: 'loading' });
