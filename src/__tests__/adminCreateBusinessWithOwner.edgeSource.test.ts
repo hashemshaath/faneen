@@ -138,4 +138,11 @@ describe('ADMIN-BUSINESS-CREATE-OWNER UI integration (AdminBusinesses.tsx)', () 
     expect(src).not.toMatch(/toast\.[a-z]+\([^)]*owner_password/);
     expect(src).not.toMatch(/res\.owner\?\.password/);
   });
+
+  it('routes mutation errors through the localized error mapper', () => {
+    expect(src).toContain('mapAdminCreateBizError');
+    expect(src).toContain('adminCreateBusinessWithOwnerErrors');
+    // The raw error message must NOT be passed directly as the toast description
+    expect(src).not.toMatch(/description:\s*err\.message/);
+  });
 });
