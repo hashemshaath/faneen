@@ -52,7 +52,9 @@ describe("BUSINESS-CORE-7: detail page renders source_ref_id safely", () => {
 describe("BUSINESS-CORE-7: list page shows source_ref badge but never UUID", () => {
   const src = readFileSync(LIST, "utf8");
   it("renders ReferenceBadge for source_ref_id", () => {
-    expect(src).toMatch(/o\.source_ref_id\s*&&[\s\S]*ReferenceBadge/);
+    // BUSINESS-WORKFLOW-2: source_ref_id is now rendered via
+    // <WorkOrderSourceBadge> (which wraps ReferenceBadge internally).
+    expect(src).toMatch(/WorkOrderSourceBadge[\s\S]*sourceRefId=\{o\.source_ref_id\}/);
   });
   it("does not render o.source_id as primary label", () => {
     expect(src).not.toMatch(/>\s*\{o\.source_id\}\s*</);
