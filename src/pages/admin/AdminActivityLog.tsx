@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useCallback, useTransition } from 'react';
+import React, { useState, useMemo, useCallback, useTransition, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listProfiles } from '@/modules/users';
 import { Badge } from '@/components/ui/badge';
@@ -13,11 +14,12 @@ import {
   Activity, Search, Clock, Filter, Download, X,
   Shield, Settings, LogIn, Trash2, Edit, UserPlus, UserMinus,
   Ban, CheckCircle, AlertTriangle, FileText, ChevronDown, ChevronUp,
-  TrendingUp, Users, Zap, ArrowRight
+  TrendingUp, Users, Zap, ArrowRight, Printer, Radio, Calendar, ExternalLink, RefreshCw
 } from 'lucide-react';
-import { format, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
+import { format, isToday, isYesterday, isThisWeek, isThisMonth, subDays, startOfDay } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { BarChart, Bar, XAxis, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
 
 /* ─── Action Config ─── */
 type Bi = { ar: string; en: string };
@@ -115,6 +117,24 @@ const tx = {
   csvDesc: { ar: 'الوصف', en: 'Description' },
   csvDetails: { ar: 'التفاصيل', en: 'Details' },
   csvFile: { ar: 'سجل-النشاط', en: 'activity-log' },
+  // Extended labels
+  range: { ar: 'الفترة', en: 'Range' },
+  rangeAll: { ar: 'الكل', en: 'All time' },
+  range24h: { ar: 'آخر 24 ساعة', en: 'Last 24h' },
+  range7d: { ar: 'آخر 7 أيام', en: 'Last 7 days' },
+  range30d: { ar: 'آخر 30 يوم', en: 'Last 30 days' },
+  admin: { ar: 'المشرف', en: 'Admin' },
+  allAdmins: { ar: 'جميع المشرفين', en: 'All admins' },
+  entity: { ar: 'الكيان', en: 'Entity' },
+  allEntities: { ar: 'جميع الكيانات', en: 'All entities' },
+  loadMore: { ar: 'تحميل المزيد', en: 'Load more' },
+  liveOn: { ar: 'مباشر', en: 'Live' },
+  liveOff: { ar: 'إيقاف', en: 'Paused' },
+  print: { ar: 'طباعة', en: 'Print' },
+  refresh: { ar: 'تحديث', en: 'Refresh' },
+  chartTitle: { ar: 'النشاط خلال آخر 24 ساعة', en: 'Activity in the last 24 hours' },
+  chartEmpty: { ar: 'لا يوجد نشاط في هذه الفترة', en: 'No activity in this range' },
+  viewUser: { ar: 'فتح صفحة المستخدم', en: 'Open user page' },
   // Phrase builders (sentence templates)
   granted: { ar: (r: string, t: string) => `تم منح صلاحية "${r}" ${t ? `للمستخدم ${t}` : ''}`, en: (r: string, t: string) => `Granted role "${r}"${t ? ` to ${t}` : ''}` },
   revoked: { ar: (r: string, t: string) => `تم سحب صلاحية "${r}" ${t ? `من المستخدم ${t}` : ''}`, en: (r: string, t: string) => `Revoked role "${r}"${t ? ` from ${t}` : ''}` },
@@ -254,6 +274,7 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
   const detailItems = buildDetailItems(log.details, log.action, isRTL);
   const adminName = getProfileName(log.user_id);
   const hasDetails = detailItems.length > 0;
+  const targetUserId: string | undefined = log.details?.target_user_id;
 
   return (
     <div className="group relative flex gap-3 py-3.5 px-4 hover:bg-muted/20 transition-colors">
@@ -270,9 +291,28 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {/* Admin name */}
-            <p className="text-[11px] text-muted-foreground mb-0.5">{adminName}</p>
+            <p className="text-[11px] text-muted-foreground mb-0.5">
+              {log.user_id && log.user_id !== '00000000-0000-0000-0000-000000000000' ? (
+                <Link to={`/admin/users/${log.user_id}`} className="hover:underline hover:text-foreground transition-colors">
+                  {adminName}
+                </Link>
+              ) : (
+                <span>{adminName}</span>
+              )}
+            </p>
             {/* Summary */}
-            <p className="text-sm font-medium text-foreground leading-relaxed">{summary}</p>
+            <p className="text-sm font-medium text-foreground leading-relaxed">
+              {summary}
+              {targetUserId && (
+                <Link
+                  to={`/admin/users/${targetUserId}`}
+                  className="inline-flex items-center gap-1 ms-2 text-[10px] text-primary hover:underline align-middle"
+                  title={isRTL ? tx.viewUser.ar : tx.viewUser.en}
+                >
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              )}
+            </p>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0 pt-1">
@@ -326,19 +366,36 @@ LogItem.displayName = 'LogItem';
 const AdminActivityLog = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
+  const [entityFilter, setEntityFilter] = useState('all');
+  const [adminFilter, setAdminFilter] = useState('all');
+  const [rangeFilter, setRangeFilter] = useState<'all' | '24h' | '7d' | '30d'>('7d');
+  const [pageSize, setPageSize] = useState(200);
+  const [liveOn, setLiveOn] = useState(true);
   const [, startTransition] = useTransition();
 
-  const { data: logs, isLoading } = useQuery({
-    queryKey: ['admin-activity-log', actionFilter],
+  const sinceIso = useMemo(() => {
+    if (rangeFilter === 'all') return null;
+    const now = new Date();
+    if (rangeFilter === '24h') return subDays(now, 1).toISOString();
+    if (rangeFilter === '7d') return subDays(now, 7).toISOString();
+    return subDays(now, 30).toISOString();
+  }, [rangeFilter]);
+
+  const { data: logs, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ['admin-activity-log', actionFilter, entityFilter, adminFilter, rangeFilter, pageSize],
     queryFn: async () => {
       let query = supabase
         .from('admin_activity_log')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(200);
+        .limit(pageSize);
       if (actionFilter !== 'all') query = query.eq('action', actionFilter);
+      if (entityFilter !== 'all') query = query.eq('entity_type', entityFilter);
+      if (adminFilter !== 'all') query = query.eq('user_id', adminFilter);
+      if (sinceIso) query = query.gte('created_at', sinceIso);
       const { data, error } = await query;
       if (error) throw error;
       return data;
@@ -356,6 +413,18 @@ const AdminActivityLog = () => {
     },
   });
 
+  // Realtime: invalidate query on new inserts
+  useEffect(() => {
+    if (!liveOn) return;
+    const channel = supabase
+      .channel('admin-activity-log-stream')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_activity_log' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['admin-activity-log'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [liveOn, queryClient]);
+
   const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
 
   const getProfileName = useCallback((userId: string) => {
@@ -363,6 +432,19 @@ const AdminActivityLog = () => {
     const profile = profiles?.find(p => p.user_id === userId);
     return profile?.full_name || profile?.email || `${isRTL ? tx.user.ar : tx.user.en} #${userId.slice(0, 6)}`;
   }, [profiles, isRTL]);
+
+  // Unique admins for filter dropdown (from current page of logs)
+  const adminOptions = useMemo(() => {
+    if (!logs) return [];
+    const ids = Array.from(new Set(logs.map(l => l.user_id))).filter(Boolean);
+    return ids.map(id => ({ id, name: getProfileName(id) }));
+  }, [logs, getProfileName]);
+
+  // Unique entities for filter dropdown
+  const entityOptions = useMemo(() => {
+    if (!logs) return [];
+    return Array.from(new Set(logs.map(l => l.entity_type).filter(Boolean))) as string[];
+  }, [logs]);
 
   const filteredLogs = useMemo(() => {
     if (!logs) return [];
@@ -401,6 +483,32 @@ const AdminActivityLog = () => {
     return { total: logs.length, today: todayCount, uniqueAdmins, topAction };
   }, [logs]);
 
+  // Hourly buckets for last 24h chart
+  const chartData = useMemo(() => {
+    const now = new Date();
+    const buckets: { hour: string; count: number; key: number }[] = [];
+    for (let i = 23; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 60 * 60 * 1000);
+      buckets.push({
+        key: startOfDay(d).getTime() + d.getHours() * 3600000,
+        hour: format(d, 'HH', { locale: isRTL ? ar : enUS }),
+        count: 0,
+      });
+    }
+    if (logs) {
+      const since = now.getTime() - 24 * 60 * 60 * 1000;
+      logs.forEach(l => {
+        const t = new Date(l.created_at).getTime();
+        if (t < since) return;
+        const d = new Date(t);
+        const k = startOfDay(d).getTime() + d.getHours() * 3600000;
+        const b = buckets.find(x => x.key === k);
+        if (b) b.count += 1;
+      });
+    }
+    return buckets;
+  }, [logs, isRTL]);
+
   const exportToCSV = () => {
     if (!filteredLogs?.length) return;
     const headers = [
@@ -429,9 +537,14 @@ const AdminActivityLog = () => {
     URL.revokeObjectURL(url);
   };
 
+  const clearAllFilters = () => {
+    setSearchQuery(''); setActionFilter('all'); setEntityFilter('all'); setAdminFilter('all'); setRangeFilter('all');
+  };
+  const hasActiveFilters = !!searchQuery || actionFilter !== 'all' || entityFilter !== 'all' || adminFilter !== 'all' || rangeFilter !== 'all';
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 print:space-y-3">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
@@ -443,11 +556,32 @@ const AdminActivityLog = () => {
             </h1>
             <p className="text-muted-foreground text-sm mt-1">{isRTL ? tx.subtitle.ar : tx.subtitle.en}</p>
           </div>
-          <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
-            onClick={exportToCSV} disabled={!filteredLogs?.length}>
-            <Download className="w-3.5 h-3.5" />
-            {isRTL ? tx.exportCsv.ar : tx.exportCsv.en}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <Button
+              variant={liveOn ? 'default' : 'outline'} size="sm"
+              className="h-9 text-xs gap-1.5 rounded-xl"
+              onClick={() => setLiveOn(v => !v)}
+              aria-pressed={liveOn}
+            >
+              <Radio className={`w-3.5 h-3.5 ${liveOn ? 'animate-pulse' : ''}`} />
+              {liveOn ? (isRTL ? tx.liveOn.ar : tx.liveOn.en) : (isRTL ? tx.liveOff.ar : tx.liveOff.en)}
+            </Button>
+            <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
+              onClick={() => refetch()} disabled={isFetching}>
+              <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+              {isRTL ? tx.refresh.ar : tx.refresh.en}
+            </Button>
+            <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
+              onClick={() => window.print()} disabled={!filteredLogs?.length}>
+              <Printer className="w-3.5 h-3.5" />
+              {isRTL ? tx.print.ar : tx.print.en}
+            </Button>
+            <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
+              onClick={exportToCSV} disabled={!filteredLogs?.length}>
+              <Download className="w-3.5 h-3.5" />
+              {isRTL ? tx.exportCsv.ar : tx.exportCsv.en}
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -472,8 +606,35 @@ const AdminActivityLog = () => {
           ))}
         </div>
 
+        {/* Chart */}
+        <div className="rounded-2xl border border-border/30 bg-card p-4 print:hidden">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              {isRTL ? tx.chartTitle.ar : tx.chartTitle.en}
+            </p>
+          </div>
+          {chartData.every(d => d.count === 0) ? (
+            <p className="text-xs text-muted-foreground text-center py-8">{isRTL ? tx.chartEmpty.ar : tx.chartEmpty.en}</p>
+          ) : (
+            <div className="w-full h-32">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 6, right: 6, left: 6, bottom: 0 }}>
+                  <XAxis dataKey="hour" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} interval={2} />
+                  <ChartTooltip
+                    cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
+                    contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 12, fontSize: 12 }}
+                    formatter={(v: number) => [v, isRTL ? 'العمليات' : 'Operations']}
+                    labelFormatter={(l) => `${l}:00`}
+                  />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+
         {/* Filters */}
-        <div className="rounded-2xl border border-border/30 bg-card p-4">
+        <div className="rounded-2xl border border-border/30 bg-card p-4 print:hidden">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" style={{ insetInlineStart: '12px' }} />
@@ -490,8 +651,20 @@ const AdminActivityLog = () => {
                 </button>
               )}
             </div>
+            <Select value={rangeFilter} onValueChange={(v) => setRangeFilter(v as typeof rangeFilter)}>
+              <SelectTrigger className="w-full sm:w-[160px] h-10 rounded-xl">
+                <Calendar className="w-4 h-4 me-2 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">{isRTL ? tx.rangeAll.ar : tx.rangeAll.en}</SelectItem>
+                <SelectItem value="24h">{isRTL ? tx.range24h.ar : tx.range24h.en}</SelectItem>
+                <SelectItem value="7d">{isRTL ? tx.range7d.ar : tx.range7d.en}</SelectItem>
+                <SelectItem value="30d">{isRTL ? tx.range30d.ar : tx.range30d.en}</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={actionFilter} onValueChange={setActionFilter}>
-              <SelectTrigger className="w-full sm:w-[200px] h-10 rounded-xl">
+              <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl">
                 <Filter className="w-4 h-4 me-2 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>
@@ -507,14 +680,41 @@ const AdminActivityLog = () => {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={entityFilter} onValueChange={setEntityFilter}>
+              <SelectTrigger className="w-full sm:w-[170px] h-10 rounded-xl">
+                <FileText className="w-4 h-4 me-2 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">{isRTL ? tx.allEntities.ar : tx.allEntities.en}</SelectItem>
+                {entityOptions.map(e => (
+                  <SelectItem key={e} value={e}>{pick(entityLabels[e], isRTL, e)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={adminFilter} onValueChange={setAdminFilter}>
+              <SelectTrigger className="w-full sm:w-[200px] h-10 rounded-xl">
+                <Users className="w-4 h-4 me-2 text-muted-foreground" />
+                <SelectValue placeholder={isRTL ? tx.allAdmins.ar : tx.allAdmins.en} />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl max-h-72">
+                <SelectItem value="all">{isRTL ? tx.allAdmins.ar : tx.allAdmins.en}</SelectItem>
+                {adminOptions.map(a => (
+                  <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          {(searchQuery || actionFilter !== 'all') && (
+          {hasActiveFilters && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
               <span className="text-[11px] text-muted-foreground">{isRTL ? tx.results.ar : tx.results.en}: {filteredLogs.length}</span>
               {searchQuery && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setSearchQuery('')}>"{searchQuery}" <X className="w-2.5 h-2.5" /></Badge>}
               {actionFilter !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setActionFilter('all')}>{pick(actionConfig[actionFilter], isRTL, actionFilter)} <X className="w-2.5 h-2.5" /></Badge>}
+              {entityFilter !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setEntityFilter('all')}>{pick(entityLabels[entityFilter], isRTL, entityFilter)} <X className="w-2.5 h-2.5" /></Badge>}
+              {adminFilter !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setAdminFilter('all')}>{getProfileName(adminFilter)} <X className="w-2.5 h-2.5" /></Badge>}
+              {rangeFilter !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setRangeFilter('all')}>{rangeFilter} <X className="w-2.5 h-2.5" /></Badge>}
               <button className="text-[10px] text-primary hover:underline ms-auto"
-                onClick={() => { setSearchQuery(''); setActionFilter('all'); }}>
+                onClick={clearAllFilters}>
                 {isRTL ? tx.clearAll.ar : tx.clearAll.en}
               </button>
             </div>
@@ -561,6 +761,15 @@ const AdminActivityLog = () => {
                   </div>
                 </div>
               ))}
+              {logs && logs.length >= pageSize && (
+                <div className="p-4 text-center border-t border-border/20 print:hidden">
+                  <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl"
+                    onClick={() => setPageSize(p => p + 200)} disabled={isFetching}>
+                    {isFetching ? <RefreshCw className="w-3.5 h-3.5 animate-spin me-1.5" /> : null}
+                    {isRTL ? tx.loadMore.ar : tx.loadMore.en}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
