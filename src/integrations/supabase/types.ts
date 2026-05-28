@@ -11093,6 +11093,60 @@ export type Database = {
           },
         ]
       }
+      work_order_measurement_templates: {
+        Row: {
+          created_at: string
+          default_measurement_type: string
+          default_unit: string
+          description_ar: string | null
+          description_en: string | null
+          fields: Json
+          id: string
+          is_active: boolean
+          ref_id: string | null
+          sector_key: string
+          sort_order: number
+          template_key: string
+          title_ar: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_measurement_type?: string
+          default_unit?: string
+          description_ar?: string | null
+          description_en?: string | null
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          ref_id?: string | null
+          sector_key: string
+          sort_order?: number
+          template_key: string
+          title_ar: string
+          title_en: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_measurement_type?: string
+          default_unit?: string
+          description_ar?: string | null
+          description_en?: string | null
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          ref_id?: string | null
+          sector_key?: string
+          sort_order?: number
+          template_key?: string
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       work_order_measurements: {
         Row: {
           business_id: string
