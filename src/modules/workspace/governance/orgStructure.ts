@@ -62,7 +62,9 @@ export interface OrgInvariantViolation {
     | 'owner_not_primary_manager'
     | 'multiple_active_primary_managers'
     | 'no_active_primary_manager'
-    | 'inactive_staff_marked_primary';
+    | 'inactive_staff_marked_primary'
+    | 'owner_staff_inactive'
+    | 'owner_staff_role_changed';
   detail?: string;
 }
 
@@ -88,13 +90,23 @@ export function validateBusinessInvariants(
   if (!snapshot.owner_user_id) {
     out.push({ code: 'orphan_business_no_owner' });
   } else {
-    const ownerRow = active.find(
-      (s) => s.user_id === snapshot.owner_user_id && s.role === 'owner',
-    );
-    if (!ownerRow) {
+    // Look at ALL rows for the owner (including inactive / wrong role)
+    // so we can surface specific 9B-aligned failure modes.
+    const ownerAny = snapshot.staff.filter((s) => s.user_id === snapshot.owner_user_id);
+    const ownerActiveOwnerRole = ownerAny.find((s) => s.is_active && s.role === 'owner');
+    const ownerInactive = ownerAny.find((s) => !s.is_active && s.role === 'owner');
+    const ownerRoleChanged = ownerAny.find((s) => s.is_active && s.role !== 'owner');
+    if (!ownerActiveOwnerRole) {
       out.push({ code: 'owner_missing_active_staff_row' });
-    } else if (ownerRow.is_primary_manager !== true) {
-      out.push({ code: 'owner_not_primary_manager' });
+      if (ownerInactive) out.push({ code: 'owner_staff_inactive' });
+      if (ownerRoleChanged) {
+        out.push({ code: 'owner_staff_role_changed', detail: ownerRoleChanged.role ?? undefined });
+      }
+    } else if (ownerActiveOwnerRole.is_primary_manager !== true) {
+      // Option C: owner is not REQUIRED to be primary manager. This is
+      // a soft warning surfaced only when no other primary manager is
+      // active. Reported via 'no_active_primary_manager' below instead
+      // to keep diagnostics actionable.
     }
   }
 
