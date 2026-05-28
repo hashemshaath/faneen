@@ -68,11 +68,15 @@ function eventMatchesRef(ev: BusinessActivityEvent, query: string): boolean {
   return false;
 }
 
+const VALID_SOURCES = new Set<SourceFilter>(['all', 'work_order', 'contract', 'quote', 'lead', 'booking']);
+const VALID_ACTIONS = new Set<ActionFilter>(['all', 'created', 'updated', 'status_changed', 'converted']);
+
 export default function DashboardOperationsFeed() {
   useNoIndex();
   const { isRTL } = useLanguage();
   const { active_entity_id, isLoading: wsLoading } = useActiveWorkspace();
   const { isAdmin } = useAuth();
+  const [searchParams] = useSearchParams();
 
   const tx = useMemo(() => ({
     title: isRTL ? 'سجل العمليات' : 'Operations Feed',
