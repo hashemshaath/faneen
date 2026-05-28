@@ -17,6 +17,13 @@ const SHELL2_FILES = [
   'src/components/workspace/shell/SmartEntitySwitcher.tsx',
   'src/components/workspace/shell/RecentWorkspaceFlows.tsx',
   'src/components/workspace/shell/MobileWorkspaceActions.tsx',
+  // STABILIZATION-1 additions also live in the same UX-only band:
+  'src/modules/workspace/shell/shellTokens.ts',
+  'src/modules/workspace/shell/shellSpacing.ts',
+  'src/hooks/useWorkspacePreferences.ts',
+  'src/components/workspace/shell/WorkspacePageSkeleton.tsx',
+  'src/components/workspace/shell/WorkspaceSectionSkeleton.tsx',
+  'src/components/workspace/shell/WorkspaceScrollRestoration.tsx',
 ];
 
 const FORBIDDEN = [

@@ -22,7 +22,7 @@ export interface QuickActionGridProps {
   className?: string;
 }
 
-export const QuickActionGrid: React.FC<QuickActionGridProps> = ({ className }) => {
+const QuickActionGridImpl: React.FC<QuickActionGridProps> = ({ className }) => {
   const { isRTL } = useLanguage();
   const { isAdmin, isSuperAdmin, isProvider } = useAuth();
   const matrix = usePermissionMatrix();
@@ -110,4 +110,6 @@ export const QuickActionGrid: React.FC<QuickActionGridProps> = ({ className }) =
   );
 };
 
+export const QuickActionGrid = React.memo(QuickActionGridImpl);
+QuickActionGrid.displayName = 'QuickActionGrid';
 export default QuickActionGrid;

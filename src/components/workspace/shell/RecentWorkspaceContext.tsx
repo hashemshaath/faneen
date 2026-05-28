@@ -15,7 +15,7 @@ export interface RecentWorkspaceContextProps {
   className?: string;
 }
 
-export const RecentWorkspaceContext: React.FC<RecentWorkspaceContextProps> = ({ limit = 6, className }) => {
+const RecentWorkspaceContextImpl: React.FC<RecentWorkspaceContextProps> = ({ limit = 6, className }) => {
   const { isRTL } = useLanguage();
   const [entries, setEntries] = useState<RecentContextEntry[]>([]);
 
@@ -55,4 +55,6 @@ export const RecentWorkspaceContext: React.FC<RecentWorkspaceContextProps> = ({ 
   );
 };
 
+export const RecentWorkspaceContext = React.memo(RecentWorkspaceContextImpl);
+RecentWorkspaceContext.displayName = 'RecentWorkspaceContext';
 export default RecentWorkspaceContext;

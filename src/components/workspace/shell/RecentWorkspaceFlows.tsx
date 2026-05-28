@@ -31,7 +31,7 @@ export interface RecentWorkspaceFlowsProps {
   className?: string;
 }
 
-export const RecentWorkspaceFlows: React.FC<RecentWorkspaceFlowsProps> = ({ className }) => {
+const RecentWorkspaceFlowsImpl: React.FC<RecentWorkspaceFlowsProps> = ({ className }) => {
   const { isRTL } = useLanguage();
   const state = useWorkspaceState();
 
@@ -65,4 +65,6 @@ export const RecentWorkspaceFlows: React.FC<RecentWorkspaceFlowsProps> = ({ clas
   );
 };
 
+export const RecentWorkspaceFlows = React.memo(RecentWorkspaceFlowsImpl);
+RecentWorkspaceFlows.displayName = 'RecentWorkspaceFlows';
 export default RecentWorkspaceFlows;

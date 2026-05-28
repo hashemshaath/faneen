@@ -31,6 +31,8 @@ import { RecentWorkspaceFlows } from '@/components/workspace/shell/RecentWorkspa
 import { MobileWorkspaceActions } from '@/components/workspace/shell/MobileWorkspaceActions';
 import { useWorkspaceContext } from '@/hooks/useWorkspaceContext';
 import { useWorkspaceState } from '@/hooks/useWorkspaceState';
+import { WorkspaceScrollRestoration } from '@/components/workspace/shell/WorkspaceScrollRestoration';
+import { useWorkspacePreferences } from '@/hooks/useWorkspacePreferences';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -83,6 +85,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   // APP-SHELL-2 — context engine (records last_context/last_module) + recent route trail.
   useWorkspaceContext();
   const ws2 = useWorkspaceState();
+  const prefs = useWorkspacePreferences();
   React.useEffect(() => {
     ws2.pushRecentRoute({ path: location.pathname });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -284,7 +287,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
             </div>
           </header>
 
-          <main className="flex-1 p-3 sm:p-5 md:p-7 bg-background overflow-auto">
+          <main
+            className={`flex-1 bg-background overflow-auto ${prefs.compact_mode ? 'p-2 sm:p-3 md:p-4' : 'p-3 sm:p-5 md:p-7'}`}
+            data-compact-mode={prefs.compact_mode ? 'true' : 'false'}
+            data-reduced-motion={prefs.effective_reduced_motion ? 'true' : 'false'}
+          >
+            <WorkspaceScrollRestoration />
             <WorkspaceHeader rightSlot={<WorkspaceSearchLauncher />} className="-mx-3 sm:-mx-5 md:-mx-7 -mt-3 sm:-mt-5 md:-mt-7 mb-3" />
             <WorkspaceContextBar>
               <div className="flex items-center gap-3 min-w-0 overflow-hidden">
