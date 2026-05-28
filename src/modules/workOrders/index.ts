@@ -5,6 +5,8 @@
  */
 export * from "./types";
 export { listWorkOrdersForBusiness } from "./services/listWorkOrdersForBusiness";
+export { listAdminWorkOrders } from "./services/listAdminWorkOrders";
+export type { ListAdminWorkOrdersOptions } from "./services/listAdminWorkOrders";
 export { getWorkOrderById } from "./services/getWorkOrderById";
 export { getWorkOrderByRefId } from "./services/getWorkOrderByRefId";
 export { getWorkOrderTaskByRefId } from "./services/getWorkOrderTaskByRefId";
