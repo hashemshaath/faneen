@@ -36,6 +36,7 @@ const STORAGE_ALLOWED_PREFIXES = [
   'src/modules/files/',                             // canonical files module
   'src/modules/messaging/services/storage/',        // chat-attachments service
   'src/modules/contracts/services/attachments/',    // contract-attachments service
+  'src/modules/workOrders/services/',               // work-order private attachments (BUSINESS-WORKFLOW-5A)
   'src/lib/quoteRequests.ts',                       // canonical quote signed-URL helper
 ];
 
