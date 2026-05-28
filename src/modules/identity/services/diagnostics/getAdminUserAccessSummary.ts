@@ -6,6 +6,7 @@
  * to support triage without exposing raw PII.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { listOwnerBusinesses } from '@/modules/businesses/services/listOwnerBusinesses';
 
 export interface UserAccessSummary {
   user_id: string;
@@ -19,10 +20,10 @@ export interface UserAccessSummary {
 export async function getAdminUserAccessSummary(
   userId: string,
 ): Promise<{ data: UserAccessSummary | null; error: unknown }> {
-  const { data: owned, error: ownedErr } = await supabase
-    .from('businesses')
-    .select('id')
-    .eq('user_id', userId);
+  const { data: owned, error: ownedErr } = await listOwnerBusinesses<{ id: string }>({
+    userId,
+    select: 'id',
+  });
   if (ownedErr) return { data: null, error: ownedErr };
 
   const { data: staff, error: staffErr } = await supabase
