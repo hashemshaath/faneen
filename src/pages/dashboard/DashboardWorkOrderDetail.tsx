@@ -40,6 +40,8 @@ import {
   type WorkOrderStageRow,
   type WorkOrderTaskRow,
   type WorkOrderCommentRow,
+  type WorkOrderStatus,
+  type WorkOrderPriority,
 } from "@/modules/workOrders";
 
 /**
@@ -165,8 +167,8 @@ export default function DashboardWorkOrderDetail() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <ReferenceTag refId={wo.ref_id} isRTL={isRTL} />
               <div className="flex flex-wrap items-center gap-1.5">
-                <WorkOrderStatusBadge status={wo.status as never} isRTL={isRTL} />
-                <WorkOrderPriorityBadge priority={wo.priority as never} isRTL={isRTL} />
+                <WorkOrderStatusBadge status={wo.status as WorkOrderStatus} isRTL={isRTL} />
+                <WorkOrderPriorityBadge priority={wo.priority as WorkOrderPriority} isRTL={isRTL} />
                 <WorkOrderSourceBadge sourceType={wo.source_type} isRTL={isRTL} />
                 <WorkOrderAssigneeChip
                   assigneeUserId={wo.owner_user_id}
