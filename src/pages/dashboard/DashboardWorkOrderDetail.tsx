@@ -27,6 +27,8 @@ import { WorkOrderPriorityBadge } from "@/components/workOrders/WorkOrderPriorit
 import { WorkOrderSourceBadge } from "@/components/workOrders/WorkOrderSourceBadge";
 import { WorkOrderAssigneeChip } from "@/components/workOrders/WorkOrderAssigneeChip";
 import { WorkOrderActivityCard } from "@/components/workOrders/WorkOrderActivityCard";
+import { WorkOrderAttachmentsSection } from "@/components/workOrders/WorkOrderAttachmentsSection";
+import { WorkOrderMeasurementsSection } from "@/components/workOrders/WorkOrderMeasurementsSection";
 import {
   getWorkOrderByRefId,
   listWorkOrderStages,
