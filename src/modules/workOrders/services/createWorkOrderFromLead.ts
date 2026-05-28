@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/modules/identity/services/session/getCurrentUs
 import { supabase } from "@/integrations/supabase/client";
 import { createWorkOrder } from "./createWorkOrder";
 import { recordWorkOrderAudit } from "./recordWorkOrderAudit";
+import { recordBusinessSourceAudit } from "@/modules/businesses/notes";
 import type { WorkOrderRow, WorkOrderPriority } from "../types";
 
 export interface CreateWorkOrderFromLeadInput {
