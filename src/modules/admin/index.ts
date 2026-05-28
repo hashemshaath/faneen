@@ -39,6 +39,21 @@ export type {
   AdminReferenceInspectorBundle,
 } from './services/operations/getAdminReferenceSummary';
 
+// BUSINESS-ADMIN-4: per-entity admin enrichment wrappers (re-exports from
+// canonical domain modules — admin barrel is the single import surface).
+export { getAdminContractSummaryByRef } from '@/modules/contracts';
+export type { AdminContractSummary } from '@/modules/contracts';
+export { getAdminQuoteSummaryByRef } from '@/modules/quotes';
+export type { AdminQuoteSummary } from '@/modules/quotes';
+export { getAdminLeadSummaryByRef } from '@/modules/leads';
+export type { AdminLeadSummary } from '@/modules/leads';
+export { getAdminBookingSummaryByRef } from '@/modules/bookings';
+export type { AdminBookingSummary } from '@/modules/bookings';
+export { getAdminBusinessSummaryByRef } from '@/modules/businesses';
+export type { AdminBusinessSummary } from '@/modules/businesses';
+export { getAdminTaskSummaryByRef } from '@/modules/workOrders';
+export type { AdminTaskSummary } from '@/modules/workOrders';
+
 // BUSINESS-ADMIN-2: Admin Operational Notes wrappers (append-only, internal).
 export { listAdminOperationalNotes } from './services/notes/listAdminOperationalNotes';
 export type {
