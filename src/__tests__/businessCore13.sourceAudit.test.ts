@@ -140,7 +140,8 @@ describe("BUSINESS-CORE-13 — recordBusinessSourceAudit", () => {
       },
     });
     expect(insertSpy).toHaveBeenCalledTimes(1);
-    const payload = insertSpy.mock.calls[0]?.[0] as Record<string, unknown>;
+    const call = insertSpy.mock.calls[0] as unknown as [Record<string, unknown>];
+    const payload = call[0];
     expect(payload.entity_type).toBe("contract");
     expect(payload.action).toBe("contract.converted_to_work_order");
     const md = payload.metadata as Record<string, unknown>;
