@@ -27,6 +27,18 @@ export type { ListAdminWorkOrdersOptions } from '@/modules/workOrders';
 export { getAdminOperationsSummary } from './services/operations/getAdminOperationsSummary';
 export type { AdminOperationsSummary } from './services/operations/getAdminOperationsSummary';
 
+// BUSINESS-ADMIN-3: Admin Reference Inspector resolver.
+export {
+  getAdminReferenceSummary,
+  isOfficialAdminRef,
+  ADMIN_REF_OFFICIAL,
+} from './services/operations/getAdminReferenceSummary';
+export type {
+  AdminRefEntityType,
+  AdminReferenceSummary,
+  AdminReferenceInspectorBundle,
+} from './services/operations/getAdminReferenceSummary';
+
 // BUSINESS-ADMIN-2: Admin Operational Notes wrappers (append-only, internal).
 export { listAdminOperationalNotes } from './services/notes/listAdminOperationalNotes';
 export type {
