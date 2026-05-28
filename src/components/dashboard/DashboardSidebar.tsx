@@ -339,7 +339,7 @@ const adminBaseGroups: MenuGroup[] = [
  * exact match). This avoids highlighting both "Work Orders" and
  * "Operations Overview" when the URL is /dashboard/work-orders/overview,
  * and similar parent/child overlaps for /admin/operations/console and
- * /admin/ref/:refId.
+ * /admin/ref/<id>.
  */
 const resolveBestMatch = (pathname: string, urls: string[]): string | null => {
   // Strip query, normalise trailing slash
