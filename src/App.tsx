@@ -66,6 +66,7 @@ const DashboardWorkOrderDetail = lazyRetry(() => import("./pages/dashboard/Dashb
 const DashboardWarranties = lazyRetry(() => import("./pages/dashboard/DashboardWarranties"));
 const DashboardInstallments = lazyRetry(() => import("./pages/dashboard/DashboardInstallments"));
 const DashboardSettings = lazyRetry(() => import("./pages/dashboard/DashboardSettings"));
+const DashboardStaffCenter = lazyRetry(() => import("./pages/dashboard/DashboardStaffCenter"));
 const DashboardProfile = lazyRetry(() => import("./pages/dashboard/DashboardProfile"));
 const DashboardPromotions = lazyRetry(() => import("./pages/dashboard/DashboardPromotions"));
 const DashboardPrivateSectors = lazyRetry(() => import("./pages/dashboard/DashboardPrivateSectors"));
