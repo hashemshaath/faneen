@@ -1,5 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { LeadStatus } from '../components/LeadStatusBadge';
+import {
+  emitQuoteAudit,
+  readLeadRequestStatusSafe,
+} from '@/modules/quotes/services/emitQuoteAudit';
 
 // Lead mutation wrappers (R3D). All writes run under the caller's JWT and
 // rely on existing RLS policies — no service_role, no RLS bypass. Edge
@@ -25,11 +29,40 @@ export async function updateLeadRequestStatus(
   status: LeadStatus,
   extra?: LeadRequestExtraFields,
 ): Promise<void> {
+  // BUSINESS-CORE-15 — snapshot previous status BEFORE the write so the audit
+  // can record an accurate transition. Best-effort; never blocks the write.
+  let previousStatus: string | null = null;
+  try {
+    previousStatus = await readLeadRequestStatusSafe(id);
+  } catch {
+    previousStatus = null;
+  }
   const { error } = await supabase
     .from('lead_requests')
     .update({ status, ...(extra ?? {}) })
     .eq('id', id);
   if (error) throw error;
+  // BUSINESS-CORE-15 — emit a lifecycle event for the Unified Operations Feed.
+  // `quoted` (or any update carrying quote fields) is the provider-response
+  // event; everything else is a generic update. Audit is best-effort.
+  try {
+    const isResponse =
+      status === 'quoted' ||
+      (!!extra && (
+        extra.quote_amount !== undefined ||
+        extra.quote_currency !== undefined ||
+        extra.quote_note !== undefined ||
+        extra.quote_valid_until !== undefined
+      ));
+    await emitQuoteAudit({
+      leadRequestId: id,
+      action: isResponse ? 'quote.responded' : 'quote.updated',
+      previousStatus,
+      newStatus: status,
+    });
+  } catch {
+    /* never fail the mutation on audit error */
+  }
 }
 
 /**

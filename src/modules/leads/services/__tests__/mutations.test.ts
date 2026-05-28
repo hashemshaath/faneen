@@ -46,9 +46,15 @@ beforeEach(() => {
 describe('leads mutation service', () => {
   it('updateLeadRequestStatus updates lead_requests with status only', async () => {
     await updateLeadRequestStatus('l1', 'accepted');
-    expect(calls[0].table).toBe('lead_requests');
-    expect(calls[0].builder.update).toHaveBeenCalledWith({ status: 'accepted' });
-    expect(calls[0].builder.eq).toHaveBeenCalledWith('id', 'l1');
+    // BUSINESS-CORE-15 — audit emitter performs a pre-read against
+    // lead_requests, so the update call may not be calls[0]. Locate by
+    // the .update() invocation.
+    const updateCall = calls.find(
+      (c) => c.table === 'lead_requests' && c.builder.update.mock.calls.length > 0,
+    );
+    expect(updateCall).toBeDefined();
+    expect(updateCall!.builder.update).toHaveBeenCalledWith({ status: 'accepted' });
+    expect(updateCall!.builder.eq).toHaveBeenCalledWith('id', 'l1');
   });
 
   it('updateLeadRequestStatus merges quote extra fields exactly', async () => {
@@ -58,7 +64,11 @@ describe('leads mutation service', () => {
       quote_note: 'note',
       quote_valid_until: '2026-01-01',
     });
-    expect(calls[0].builder.update).toHaveBeenCalledWith({
+    const updateCall = calls.find(
+      (c) => c.table === 'lead_requests' && c.builder.update.mock.calls.length > 0,
+    );
+    expect(updateCall).toBeDefined();
+    expect(updateCall!.builder.update).toHaveBeenCalledWith({
       status: 'quoted',
       quote_amount: 1234,
       quote_currency: 'SAR',
