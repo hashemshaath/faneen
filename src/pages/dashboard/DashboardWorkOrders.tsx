@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, Plus, ClipboardList, AlertCircle, X, MessageSquare, ListChecks, CheckCircle2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Loader2, Plus, ClipboardList, AlertCircle, X, MessageSquare, ListChecks, CheckCircle2, Factory } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -178,9 +179,17 @@ export default function DashboardWorkOrders() {
           </h1>
           <p className="text-sm text-muted-foreground">{tx.subtitle}</p>
         </div>
-        <Button onClick={() => setShowCreate(true)} className="rounded-xl">
-          <Plus className="w-4 h-4 me-2" /> {tx.create}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" className="rounded-xl">
+            <Link to="/dashboard/work-orders/board">
+              <Factory className="w-4 h-4 me-2" />
+              {isRTL ? "لوحة الإنتاج" : "Production Board"}
+            </Link>
+          </Button>
+          <Button onClick={() => setShowCreate(true)} className="rounded-xl">
+            <Plus className="w-4 h-4 me-2" /> {tx.create}
+          </Button>
+        </div>
       </header>
 
       <div className="w-full sm:max-w-md">
