@@ -81,6 +81,7 @@ const AdminMembershipEvents = () => {
   });
 
   return (
+    <DashboardLayout>
     <div className="container px-4 py-6 max-w-6xl space-y-6">
       <MembershipLifecycleJobsPanel />
       <Card>
@@ -135,6 +136,7 @@ const AdminMembershipEvents = () => {
         </CardContent>
       </Card>
     </div>
+    </DashboardLayout>
   );
 };
 
