@@ -118,7 +118,7 @@ describe("BUSINESS-CORE-11 — Create Work Order from Booking", () => {
     mockBookingRow({
       id: bookingId,
       business_id: businessId,
-      ref_id: "some-invalid",
+      ref_id: "bad",
       client_name: null,
       notes: null,
       booking_date: "2026-05-28",

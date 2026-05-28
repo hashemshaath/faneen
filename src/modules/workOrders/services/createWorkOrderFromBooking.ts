@@ -53,7 +53,7 @@ export async function createWorkOrderFromBooking(
   }
 
   const resolvedBusinessId = input.businessId ?? booking.business_id;
-  if (input.businessId && input.businessId !== booking.business_id) {
+  if (input.businessId && booking.business_id && input.businessId !== booking.business_id) {
     return { data: null, error: new Error("business_id_mismatch") };
   }
 
