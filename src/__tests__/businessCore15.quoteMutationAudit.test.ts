@@ -10,6 +10,12 @@ vi.mock('@/modules/quotes/services/emitQuoteAudit', () => ({
   readLeadRequestStatusSafe: (...args: unknown[]) => readStatusMock(...args),
 }));
 
+const emitLeadStatusChangedMock = vi.fn();
+vi.mock('@/modules/leads/services/emitLeadAudit', () => ({
+  emitLeadStatusChanged: (...args: unknown[]) => emitLeadStatusChangedMock(...args),
+  emitLeadCreated: vi.fn(),
+}));
+
 const updateMock = vi.fn();
 const eqMock = vi.fn();
 const fromMock = vi.fn();
@@ -27,20 +33,22 @@ beforeEach(() => {
   fromMock.mockReset();
   updateMock.mockReset();
   eqMock.mockReset();
+  emitLeadStatusChangedMock.mockReset();
   fromMock.mockReturnValue({ update: updateMock });
   updateMock.mockReturnValue({ eq: eqMock });
   eqMock.mockResolvedValue({ data: null, error: null });
   emitMock.mockResolvedValue(undefined);
+  emitLeadStatusChangedMock.mockResolvedValue(undefined);
   readStatusMock.mockResolvedValue('new');
 });
 
 describe('BUSINESS-CORE-15 — quote mutation audit emission', () => {
-  it('emits quote.updated for non-quote status transitions', async () => {
+  it('routes non-quote status transitions to lead.status_changed (BC-16)', async () => {
     await updateLeadRequestStatus('l1', 'accepted');
     expect(readStatusMock).toHaveBeenCalledWith('l1');
-    expect(emitMock).toHaveBeenCalledWith({
+    expect(emitMock).not.toHaveBeenCalled();
+    expect(emitLeadStatusChangedMock).toHaveBeenCalledWith({
       leadRequestId: 'l1',
-      action: 'quote.updated',
       previousStatus: 'new',
       newStatus: 'accepted',
     });
@@ -63,6 +71,7 @@ describe('BUSINESS-CORE-15 — quote mutation audit emission', () => {
   it('emits quote.responded when quote fields are supplied even without quoted status', async () => {
     await updateLeadRequestStatus('l3', 'accepted', { quote_note: 'n' });
     expect(emitMock.mock.calls[0][0].action).toBe('quote.responded');
+    expect(emitLeadStatusChangedMock).not.toHaveBeenCalled();
   });
 
   it('does NOT emit when the underlying update errors', async () => {
