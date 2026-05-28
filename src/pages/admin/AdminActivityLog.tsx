@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useTransition, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -367,7 +367,6 @@ const AdminActivityLog = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
   const [entityFilter, setEntityFilter] = useState('all');
