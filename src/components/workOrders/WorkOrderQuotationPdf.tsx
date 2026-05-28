@@ -88,7 +88,7 @@ export function WorkOrderQuotationPdf({ data, isRTL }: Props) {
           ) : null}
           <div className="font-semibold text-base truncate">{businessName}</div>
         </div>
-        <div className={isRTL ? "text-left" : "text-right"}>
+        <div className="text-end">
           <div className="font-bold text-lg">{t.quotation}</div>
           <div className="text-[11px] mt-1">
             <span className="opacity-70">{t.number}:</span>{" "}
