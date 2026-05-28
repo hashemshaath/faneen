@@ -40,6 +40,27 @@ export { listWorkOrderAttachments } from "./services/listWorkOrderAttachments";
 export { insertWorkOrderAttachment } from "./services/insertWorkOrderAttachment";
 export type { InsertWorkOrderAttachmentInput } from "./services/insertWorkOrderAttachment";
 export { softDeleteWorkOrderAttachment } from "./services/softDeleteWorkOrderAttachment";
+// BUSINESS-WORKFLOW-5A — Private upload + signed preview pipeline.
+export { createWorkOrderAttachmentUploadPath } from "./services/createWorkOrderAttachmentUploadPath";
+export type { CreateWorkOrderAttachmentUploadPathInput } from "./services/createWorkOrderAttachmentUploadPath";
+export {
+  validateWorkOrderAttachmentFile,
+  WORK_ORDER_ATTACHMENT_MAX_BYTES,
+  WORK_ORDER_ATTACHMENT_ALLOWED_MIME,
+} from "./services/validateWorkOrderAttachmentFile";
+export type {
+  WorkOrderAttachmentValidationCode,
+  WorkOrderAttachmentValidationResult,
+} from "./services/validateWorkOrderAttachmentFile";
+export {
+  uploadWorkOrderAttachmentFile,
+  WORK_ORDER_ATTACHMENTS_BUCKET,
+} from "./services/uploadWorkOrderAttachmentFile";
+export {
+  createWorkOrderAttachmentSignedUrl,
+  WORK_ORDER_ATTACHMENT_SIGNED_URL_MAX_SECONDS,
+} from "./services/createWorkOrderAttachmentSignedUrl";
+export { getWorkOrderAttachmentPreviewUrl } from "./services/getWorkOrderAttachmentPreviewUrl";
 export { listWorkOrderMeasurements } from "./services/listWorkOrderMeasurements";
 export { insertWorkOrderMeasurement } from "./services/insertWorkOrderMeasurement";
 export type { InsertWorkOrderMeasurementInput } from "./services/insertWorkOrderMeasurement";
