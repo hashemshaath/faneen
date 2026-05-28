@@ -2155,6 +2155,102 @@ export type Database = {
           },
         ]
       }
+      business_team_members: {
+        Row: {
+          business_staff_id: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          joined_at: string
+          role_in_team: string
+          team_id: string
+        }
+        Insert: {
+          business_staff_id: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          joined_at?: string
+          role_in_team?: string
+          team_id: string
+        }
+        Update: {
+          business_staff_id?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          joined_at?: string
+          role_in_team?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_team_members_business_staff_id_fkey"
+            columns: ["business_staff_id"]
+            isOneToOne: false
+            referencedRelation: "business_staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "business_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_teams: {
+        Row: {
+          business_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          ref_id: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          ref_id?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          ref_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_teams_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_teams_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           account_manager_email: string | null
@@ -5440,6 +5536,63 @@ export type Database = {
           summary?: Json
         }
         Relationships: []
+      }
+      delegated_workspace_access: {
+        Row: {
+          business_id: string
+          created_at: string
+          delegated_by_user_id: string
+          delegated_to_user_id: string
+          expires_at: string
+          id: string
+          permissions: string[]
+          reason: string
+          revoked_at: string | null
+          revoked_by: string | null
+          starts_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          delegated_by_user_id: string
+          delegated_to_user_id: string
+          expires_at: string
+          id?: string
+          permissions?: string[]
+          reason: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          starts_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          delegated_by_user_id?: string
+          delegated_to_user_id?: string
+          expires_at?: string
+          id?: string
+          permissions?: string[]
+          reason?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delegated_workspace_access_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delegated_workspace_access_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_deliverability_alerts: {
         Row: {
@@ -10551,6 +10704,67 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_activity_sessions: {
+        Row: {
+          business_id: string
+          business_staff_id: string | null
+          ended_at: string | null
+          id: string
+          last_seen_at: string
+          metadata: Json
+          session_label: string | null
+          source: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          business_staff_id?: string | null
+          ended_at?: string | null
+          id?: string
+          last_seen_at?: string
+          metadata?: Json
+          session_label?: string | null
+          source?: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          business_staff_id?: string | null
+          ended_at?: string | null
+          id?: string
+          last_seen_at?: string
+          metadata?: Json
+          session_label?: string | null
+          source?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_activity_sessions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_activity_sessions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_activity_sessions_business_staff_id_fkey"
+            columns: ["business_staff_id"]
+            isOneToOne: false
+            referencedRelation: "business_staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -12521,6 +12735,10 @@ export type Database = {
         Args: { _prefix: string; _seq_name: string }
         Returns: string
       }
+      get_active_delegated_permissions: {
+        Args: { _business_id: string; _user_id: string }
+        Returns: string[]
+      }
       get_active_membership_limits: {
         Args: { _business_id?: string; _user_id: string }
         Returns: Json
@@ -12889,6 +13107,10 @@ export type Database = {
           p_subscription_id: string
         }
         Returns: Json
+      }
+      has_active_delegated_access: {
+        Args: { _business_id: string; _user_id: string }
+        Returns: boolean
       }
       has_admin_access: { Args: { _user_id: string }; Returns: boolean }
       has_business_permission: {
