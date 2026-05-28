@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useCallback, useTransition } from 'react';
+import React, { useState, useMemo, useCallback, useTransition, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listProfiles } from '@/modules/users';
 import { Badge } from '@/components/ui/badge';
@@ -13,11 +14,12 @@ import {
   Activity, Search, Clock, Filter, Download, X,
   Shield, Settings, LogIn, Trash2, Edit, UserPlus, UserMinus,
   Ban, CheckCircle, AlertTriangle, FileText, ChevronDown, ChevronUp,
-  TrendingUp, Users, Zap, ArrowRight
+  TrendingUp, Users, Zap, ArrowRight, Printer, Radio, Calendar, ExternalLink, RefreshCw
 } from 'lucide-react';
-import { format, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
+import { format, isToday, isYesterday, isThisWeek, isThisMonth, subDays, startOfDay } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { BarChart, Bar, XAxis, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
 
 /* ─── Action Config ─── */
 type Bi = { ar: string; en: string };
