@@ -146,7 +146,7 @@ const AdminIdentity: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
   usePageMeta({
-    title: isRTL ? 'مركز الحسابات والمنشآت | إدارة قِطاعات' : 'Identity Hub | Qitaat Admin',
+    title: isRTL ? 'مركز الهوية والكيانات | إدارة قِطاعات' : 'Identity & Entities Center | Qitaat Admin',
     noindex: true,
   });
   const { isSuperAdmin } = useAuth();
