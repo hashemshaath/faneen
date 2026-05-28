@@ -46,6 +46,8 @@ import { IdentityCommandPalette } from '@/components/admin/identity/IdentityComm
 import { IdentityActivityFeed } from '@/components/admin/identity/IdentityActivityFeed';
 import { IdentitySignupsChart } from '@/components/admin/identity/IdentitySignupsChart';
 import { IdentityIntegrityPanel } from '@/components/admin/identity/IdentityIntegrityPanel';
+import { IdentityDiagnosticsDeepPanel } from '@/components/admin/identity/IdentityDiagnosticsDeepPanel';
+import type { DiagnosticGroupId } from '@/lib/identity/computeIdentityDiagnostics';
 import { listProfiles } from '@/modules/users';
 import { listAllUserRoles } from '@/modules/identity';
 import { listAdminBusinesses } from '@/modules/businesses';
@@ -706,7 +708,20 @@ const AdminIdentity: React.FC = () => {
 
           {/* ─── Integrity & Duplicates tab ─── */}
           <TabsContent value="integrity" className="mt-5">
-            <IdentityIntegrityPanel isRTL={isRTL} />
+            <div className="space-y-6">
+              <IdentityDiagnosticsDeepPanel
+                isRTL={isRTL}
+                profiles={profiles.map(p => ({
+                  user_id: p.user_id, ref_id: p.ref_id, email: p.email, full_name: p.full_name,
+                }))}
+                businesses={businesses.map(b => ({
+                  id: b.id, user_id: b.user_id, ref_id: b.ref_id, name_ar: b.name_ar, name_en: b.name_en,
+                }))}
+                roles={roles.map(r => ({ user_id: r.user_id, role: r.role }))}
+                anchorGroup={(searchParams.get('group') as DiagnosticGroupId | null) ?? null}
+              />
+              <IdentityIntegrityPanel isRTL={isRTL} />
+            </div>
           </TabsContent>
 
           {/* ─── Activity log tab (admin_activity_log timeline) ─── */}
