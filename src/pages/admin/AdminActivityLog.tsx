@@ -274,6 +274,7 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
   const detailItems = buildDetailItems(log.details, log.action, isRTL);
   const adminName = getProfileName(log.user_id);
   const hasDetails = detailItems.length > 0;
+  const targetUserId: string | undefined = log.details?.target_user_id;
 
   return (
     <div className="group relative flex gap-3 py-3.5 px-4 hover:bg-muted/20 transition-colors">
@@ -290,9 +291,28 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {/* Admin name */}
-            <p className="text-[11px] text-muted-foreground mb-0.5">{adminName}</p>
+            <p className="text-[11px] text-muted-foreground mb-0.5">
+              {log.user_id && log.user_id !== '00000000-0000-0000-0000-000000000000' ? (
+                <Link to={`/admin/users/${log.user_id}`} className="hover:underline hover:text-foreground transition-colors">
+                  {adminName}
+                </Link>
+              ) : (
+                <span>{adminName}</span>
+              )}
+            </p>
             {/* Summary */}
-            <p className="text-sm font-medium text-foreground leading-relaxed">{summary}</p>
+            <p className="text-sm font-medium text-foreground leading-relaxed">
+              {summary}
+              {targetUserId && (
+                <Link
+                  to={`/admin/users/${targetUserId}`}
+                  className="inline-flex items-center gap-1 ms-2 text-[10px] text-primary hover:underline align-middle"
+                  title={isRTL ? tx.viewUser.ar : tx.viewUser.en}
+                >
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              )}
+            </p>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0 pt-1">
