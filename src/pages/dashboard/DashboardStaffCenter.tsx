@@ -507,7 +507,10 @@ const DashboardStaffCenter: React.FC = () => {
   const bi = useBi();
   const { user } = useAuth();
   const { businessId, loading } = useManagedBusinessId();
-  const canView = useCan('staff.view') || useCan('staff.manage') || useCan('entity.manage');
+  const canStaffView = useCan('staff.view');
+  const canStaffManage = useCan('staff.manage');
+  const canEntityManage = useCan('entity.manage');
+  const canView = canStaffView || canStaffManage || canEntityManage;
 
   return (
     <DashboardLayout>
