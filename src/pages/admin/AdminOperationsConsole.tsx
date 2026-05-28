@@ -478,27 +478,25 @@ export default function AdminOperationsConsole() {
                 : 'These pages are provider-scoped and depend on the active workspace.'}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <Link
-                to="/dashboard/work-orders"
-                className="rounded-xl border bg-card hover:bg-muted/50 transition-colors p-3 text-sm"
-              >
-                <div className="font-medium">{isRTL ? 'أوامر عمل المزوّد' : 'Provider Work Orders'}</div>
-                <div className="text-[11px] text-muted-foreground mt-0.5">/dashboard/work-orders</div>
-              </Link>
-              <Link
-                to="/dashboard/work-orders/overview"
-                className="rounded-xl border bg-card hover:bg-muted/50 transition-colors p-3 text-sm"
-              >
-                <div className="font-medium">{isRTL ? 'نظرة عامة على عمليات المزوّد' : 'Provider Operations Overview'}</div>
-                <div className="text-[11px] text-muted-foreground mt-0.5">/dashboard/work-orders/overview</div>
-              </Link>
-              <Link
-                to="/dashboard/operations/feed"
-                className="rounded-xl border bg-card hover:bg-muted/50 transition-colors p-3 text-sm"
-              >
-                <div className="font-medium">{isRTL ? 'موجز عمليات المزوّد' : 'Provider Operations Feed'}</div>
-                <div className="text-[11px] text-muted-foreground mt-0.5">/dashboard/operations/feed</div>
-              </Link>
+              {[
+                { to: '/dashboard/work-orders', label: isRTL ? 'أوامر عمل المزوّد' : 'Provider Work Orders', Icon: ClipboardList },
+                { to: '/dashboard/work-orders/overview', label: isRTL ? 'نظرة عامة على عمليات المزوّد' : 'Provider Operations Overview', Icon: TrendingUp },
+                { to: '/dashboard/operations/feed', label: isRTL ? 'موجز عمليات المزوّد' : 'Provider Operations Feed', Icon: Activity },
+              ].map(({ to, label, Icon }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="group rounded-xl border bg-card hover:bg-muted/50 hover:border-primary/40 transition-all p-3 text-sm hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                >
+                  <div className="flex items-center gap-2 font-medium">
+                    <span className="grid place-items-center w-7 h-7 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15">
+                      <Icon className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="truncate">{label}</span>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-1.5 tech-content truncate">{to}</div>
+                </Link>
+              ))}
             </div>
           </CardContent>
         </Card>
