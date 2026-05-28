@@ -24,6 +24,10 @@ export type OperationsFeedIconKey =
   | "task"
   | "comment"
   | "source"
+  | "status"
+  | "signed"
+  | "responded"
+  | "converted"
   | "generic";
 
 export type OperationsFeedTone =
@@ -100,6 +104,70 @@ const ACTIONS: Record<string, ActionDescriptor> = {
     icon: "source", tone: "accent",
     label: { ar: "أُنشئ من حجز موعد", en: "Created from booking" },
   },
+  // Contracts
+  "contract.created": {
+    icon: "created", tone: "success",
+    label: { ar: "تم إنشاء عقد", en: "Contract created" },
+  },
+  "contract.updated": {
+    icon: "updated", tone: "info",
+    label: { ar: "تم تحديث العقد", en: "Contract updated" },
+  },
+  "contract.status_changed": {
+    icon: "status", tone: "info",
+    label: { ar: "تم تغيير حالة العقد", en: "Contract status changed" },
+  },
+  "contract.signed": {
+    icon: "signed", tone: "success",
+    label: { ar: "تم توقيع العقد", en: "Contract signed" },
+  },
+  "contract.converted_to_work_order": {
+    icon: "converted", tone: "accent",
+    label: { ar: "تم تحويل العقد إلى أمر عمل", en: "Contract converted to work order" },
+  },
+  // Quotes
+  "quote.created": {
+    icon: "created", tone: "success",
+    label: { ar: "تم إنشاء طلب عرض سعر", en: "Quote request created" },
+  },
+  "quote.updated": {
+    icon: "updated", tone: "info",
+    label: { ar: "تم تحديث طلب عرض السعر", en: "Quote updated" },
+  },
+  "quote.responded": {
+    icon: "responded", tone: "info",
+    label: { ar: "تم الرد على طلب عرض السعر", en: "Quote responded" },
+  },
+  "quote.converted_to_work_order": {
+    icon: "converted", tone: "accent",
+    label: { ar: "تم تحويل عرض السعر إلى أمر عمل", en: "Quote converted to work order" },
+  },
+  // Leads
+  "lead.created": {
+    icon: "created", tone: "success",
+    label: { ar: "تم استلام طلب خدمة", en: "Lead created" },
+  },
+  "lead.status_changed": {
+    icon: "status", tone: "info",
+    label: { ar: "تم تغيير حالة طلب الخدمة", en: "Lead status changed" },
+  },
+  "lead.converted_to_work_order": {
+    icon: "converted", tone: "accent",
+    label: { ar: "تم تحويل طلب الخدمة إلى أمر عمل", en: "Lead converted to work order" },
+  },
+  // Bookings
+  "booking.created": {
+    icon: "created", tone: "success",
+    label: { ar: "تم إنشاء حجز", en: "Booking created" },
+  },
+  "booking.status_changed": {
+    icon: "status", tone: "info",
+    label: { ar: "تم تغيير حالة الحجز", en: "Booking status changed" },
+  },
+  "booking.converted_to_work_order": {
+    icon: "converted", tone: "accent",
+    label: { ar: "تم تحويل الحجز إلى أمر عمل", en: "Booking converted to work order" },
+  },
 };
 
 /** Sanitize a candidate ref string — only return it if it matches the official pattern. */
@@ -126,6 +194,7 @@ function pickSourceRef(metadata: Record<string, unknown> | null): string | null 
     safeRef(metadata.quote_ref_id) ??
     safeRef(metadata.lead_ref_id) ??
     safeRef(metadata.booking_ref_id) ??
+    safeRef(metadata.work_order_ref_id) ??
     null
   );
 }

@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/modules/identity/services/session/getCurrentUs
 import { supabase } from "@/integrations/supabase/client";
 import { createWorkOrder } from "./createWorkOrder";
 import { recordWorkOrderAudit } from "./recordWorkOrderAudit";
+import { recordBusinessSourceAudit } from "@/modules/businesses/notes";
 import type { WorkOrderRow, WorkOrderPriority } from "../types";
 
 export interface CreateWorkOrderFromBookingInput {
@@ -92,6 +93,19 @@ export async function createWorkOrderFromBooking(
       ref_id: wo.ref_id,
       booking_ref_id: sourceRefId,
       description: input.description ?? null,
+    },
+  });
+
+  await recordBusinessSourceAudit({
+    business_id: wo.business_id,
+    actor_id: uid,
+    entity_type: "booking",
+    entity_id: booking.id,
+    action: "booking.converted_to_work_order",
+    metadata: {
+      booking_ref_id: sourceRefId,
+      work_order_ref_id: wo.ref_id,
+      source_type: "booking",
     },
   });
 

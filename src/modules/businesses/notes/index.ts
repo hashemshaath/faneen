@@ -13,6 +13,14 @@ export type {
   BusinessActivityEvent,
   ListBusinessActivityTimelineOptions,
 } from "./services/listBusinessActivityTimeline";
+export {
+  recordBusinessSourceAudit,
+  sanitizeAuditMetadata,
+  FORBIDDEN_AUDIT_METADATA_KEYS,
+  type RecordBusinessSourceAuditInput,
+  type BusinessSourceEntityType,
+  type BusinessSourceAuditAction,
+} from "./services/recordBusinessSourceAudit";
 export type {
   BusinessInternalNote,
   BusinessInternalNoteInsert,
