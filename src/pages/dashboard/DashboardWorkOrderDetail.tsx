@@ -58,8 +58,7 @@ export default function DashboardWorkOrderDetail() {
   const { refId = "" } = useParams<{ refId: string }>();
   const [searchParams] = useSearchParams();
   const highlightTaskRef = searchParams.get("task");
-  const { user } = useAuth();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { isRTL } = useLanguage();
 
   usePageMeta({
