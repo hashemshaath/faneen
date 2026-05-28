@@ -148,7 +148,7 @@ function ErrorRetry({ message, onRetry }: { message: string; onRetry: () => void
       <span className="text-destructive">{message}</span>
       <Button size="sm" variant="outline" onClick={onRetry}>
         <RotateCw className="me-1 h-3.5 w-3.5" />
-        {message}
+        <Bi ar="إعادة" en="Retry" />
       </Button>
     </div>
   );
