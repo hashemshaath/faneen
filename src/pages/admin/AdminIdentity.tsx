@@ -515,7 +515,8 @@ const AdminIdentity: React.FC = () => {
             <TabsTrigger value="access-requests" className="rounded-xl gap-1.5 py-2"><KeyRound className="w-3.5 h-3.5" />{isRTL ? 'طلبات الانضمام' : 'Access requests'}</TabsTrigger>
             <TabsTrigger value="access-management" className="rounded-xl gap-1.5 py-2"><Shield className="w-3.5 h-3.5" />{isRTL ? 'إدارة الوصول' : 'Access control'}</TabsTrigger>
             <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'تحليلات' : 'Analytics'}</TabsTrigger>
-            <TabsTrigger value="integrity" className="rounded-xl gap-1.5 py-2"><ShieldAlert className="w-3.5 h-3.5" />{isRTL ? 'السلامة والتكرار' : 'Integrity'}</TabsTrigger>
+            <TabsTrigger value="integrity" className="rounded-xl gap-1.5 py-2"><Stethoscope className="w-3.5 h-3.5" />{isRTL ? 'التشخيصات' : 'Diagnostics'}</TabsTrigger>
+            <TabsTrigger value="activity" className="rounded-xl gap-1.5 py-2"><Activity className="w-3.5 h-3.5" />{isRTL ? 'سجل النشاط' : 'Activity'}</TabsTrigger>
           </TabsList>
 
           {/* Filters + Saved Views — only for analytics view that still consumes them */}
