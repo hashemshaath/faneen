@@ -15,6 +15,7 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import { createWorkOrderFromLead } from "@/modules/workOrders/services/createWorkOrderFromLead";
 import type { WorkOrderPriority, WorkOrderRow } from "@/modules/workOrders/types";
+import { useExistingWorkOrderForSource } from "@/hooks/useExistingWorkOrderForSource";
 
 interface Props {
   leadRequestId: string;
@@ -38,6 +39,27 @@ export function CreateWorkOrderFromLeadButton({
   const [priority, setPriority] = useState<WorkOrderPriority>("medium");
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState<WorkOrderRow | null>(null);
+
+  // BUSINESS-WORKFLOW-2 — duplicate prevention: if a WO already exists for
+  // this lead row, show "Open Work Order" instead of the create affordance.
+  const { workOrder: existing } = useExistingWorkOrderForSource({
+    sourceType: "lead",
+    sourceId: leadRequestId,
+    businessId,
+    enabled: !created,
+  });
+
+  if (!created && existing?.ref_id) {
+    return (
+      <Button asChild size="sm" variant="outline" className={className}>
+        <Link to={`/dashboard/work-orders/${existing.ref_id}`}>
+          <Wrench className="w-3.5 h-3.5 me-1.5" />
+          {isRTL ? "فتح أمر العمل" : "Open Work Order"}
+          <span className="tech-content ms-1">({existing.ref_id})</span>
+        </Link>
+      </Button>
+    );
+  }
 
   if (created?.ref_id) {
     return (
