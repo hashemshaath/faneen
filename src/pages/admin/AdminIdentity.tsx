@@ -45,6 +45,7 @@ import { IdentityAnalytics } from '@/components/admin/identity/IdentityAnalytics
 import { IdentityCommandPalette } from '@/components/admin/identity/IdentityCommandPalette';
 import { IdentityActivityFeed } from '@/components/admin/identity/IdentityActivityFeed';
 import { IdentitySignupsChart } from '@/components/admin/identity/IdentitySignupsChart';
+import { IdentityIntegrityPanel } from '@/components/admin/identity/IdentityIntegrityPanel';
 import { listProfiles } from '@/modules/users';
 import { listAllUserRoles } from '@/modules/identity';
 import { listAdminBusinesses } from '@/modules/businesses';
@@ -53,7 +54,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import {
   Users, Building2, Search, Command, Shield, Crown, ShieldCheck, Briefcase,
   TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, Plus,
-  UserPlus, Activity, ExternalLink, KeyRound, BarChart3,
+  UserPlus, Activity, ExternalLink, KeyRound, BarChart3, ShieldAlert,
 } from 'lucide-react';
 
 /* Lazy-loaded specialist admin pages, embedded inside Identity tabs. */
@@ -93,7 +94,8 @@ type View =
   | 'provider-review'
   | 'access-requests'
   | 'access-management'
-  | 'analytics';
+  | 'analytics'
+  | 'integrity';
 
 /* ─── KPI card ─── */
 const Kpi: React.FC<{
@@ -481,6 +483,7 @@ const AdminIdentity: React.FC = () => {
             <TabsTrigger value="access-requests" className="rounded-xl gap-1.5 py-2"><KeyRound className="w-3.5 h-3.5" />{isRTL ? 'طلبات الانضمام' : 'Access requests'}</TabsTrigger>
             <TabsTrigger value="access-management" className="rounded-xl gap-1.5 py-2"><Shield className="w-3.5 h-3.5" />{isRTL ? 'إدارة الوصول' : 'Access control'}</TabsTrigger>
             <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'تحليلات' : 'Analytics'}</TabsTrigger>
+            <TabsTrigger value="integrity" className="rounded-xl gap-1.5 py-2"><ShieldAlert className="w-3.5 h-3.5" />{isRTL ? 'السلامة والتكرار' : 'Integrity'}</TabsTrigger>
           </TabsList>
 
           {/* Filters + Saved Views — only for analytics view that still consumes them */}
@@ -666,6 +669,11 @@ const AdminIdentity: React.FC = () => {
               isRTL={isRTL}
               isLoading={isLoading}
             />
+          </TabsContent>
+
+          {/* ─── Integrity & Duplicates tab ─── */}
+          <TabsContent value="integrity" className="mt-5">
+            <IdentityIntegrityPanel isRTL={isRTL} />
           </TabsContent>
         </Tabs>
 
