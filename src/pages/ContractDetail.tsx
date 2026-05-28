@@ -67,6 +67,7 @@ import {
 } from '@/modules/contracts/constants/statusConfigs';
 import { sendTransactionalEmail }  from '@/modules/notifications/services/sendTransactionalEmail';
 import { getBusinessForContract } from '@/modules/businesses';
+import { CreateWorkOrderFromContractButton } from '@/components/workOrders/CreateWorkOrderFromContractButton';
 
 // ─── Phase 5E.2 — Safe source-lead summary card ───
 type SourceLeadSummary = {
