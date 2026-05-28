@@ -367,6 +367,7 @@ describe("BUSINESS-WORKFLOW-5D security posture", () => {
       "src/modules/workOrders/services/listWorkOrderQuotations.ts",
       "src/modules/workOrders/services/listQuotationItems.ts",
       "src/modules/workOrders/services/sendWorkOrderQuotation.ts",
+      "src/modules/workOrders/services/listWorkOrdersForBoard.ts",
     ]);
     const unexpected = offenders.filter((p) => !allowed.has(p));
     expect(unexpected).toEqual([]);
