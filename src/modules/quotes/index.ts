@@ -20,3 +20,6 @@ export * from './services/insertQuoteRequestEvent';
 // L-4 edge wrappers
 export * from './services/adminRevealLeadContact';
 export * from './services/matchQuoteRequest';
+// BUSINESS-ADMIN-4: admin-safe enrichment wrapper for QTE refs
+export { getAdminQuoteSummaryByRef } from './services/getAdminQuoteSummaryByRef';
+export type { AdminQuoteSummary } from './services/getAdminQuoteSummaryByRef';

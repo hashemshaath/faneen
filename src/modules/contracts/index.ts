@@ -51,6 +51,9 @@ export * from './services/installments';
 export * from './services/analytics';
 // WRAPPER-ISOLATION-BACKLOG-1: edge function wrapper
 export { analyzeContractDocument } from './services/analyzeContractDocument';
+// BUSINESS-ADMIN-4: admin-safe enrichment wrapper for CNT refs
+export { getAdminContractSummaryByRef } from './services/getAdminContractSummaryByRef';
+export type { AdminContractSummary } from './services/getAdminContractSummaryByRef';
 // types.ts is available at '@/modules/contracts/types' for consumers that
 // want type-only imports. Not re-exported here to avoid duplicate type
 // re-exports (all types are already reachable via the value exports above).
