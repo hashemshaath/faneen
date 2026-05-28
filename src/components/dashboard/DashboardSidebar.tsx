@@ -133,7 +133,7 @@ const providerGroups: MenuGroup[] = [
 // ══════════════════════════════════════════
 const userGroups: MenuGroup[] = [
   {
-    groupLabel: { ar: 'الرئيسية', en: 'Main' },
+    groupLabel: { ar: 'نظرة عامة', en: 'Overview' },
     icon: LayoutDashboard,
     items: [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
@@ -147,7 +147,14 @@ const userGroups: MenuGroup[] = [
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
       { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
+    ],
+  },
+  {
+    groupLabel: { ar: 'التواصل', en: 'Communication' },
+    icon: MessageSquare,
+    items: [
       { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
+      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
     ],
   },
   {
@@ -155,16 +162,14 @@ const userGroups: MenuGroup[] = [
     icon: Bookmark,
     items: [
       { label: { ar: 'المفضلة', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
-      { label: { ar: 'العمليات', en: 'Operations' }, url: '/dashboard/operations', icon: Activity },
     ],
   },
   {
-    groupLabel: { ar: 'الحساب', en: 'Account' },
+    groupLabel: { ar: 'الإعدادات', en: 'Settings' },
     icon: Settings,
     items: [
-      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
-      { label: { ar: 'تفضيلات التواصل', en: 'Communication' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الملف الشخصي', en: 'Profile' }, url: '/dashboard/profile', icon: User },
+      { label: { ar: 'تفضيلات التواصل', en: 'Communication Preferences' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
