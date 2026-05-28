@@ -13,7 +13,8 @@ export interface RecordWorkOrderAuditInput {
     | "work_order.comment_added"
     | "work_order.created_from_contract"
     | "work_order.created_from_quote"
-    | "work_order.created_from_lead";
+    | "work_order.created_from_lead"
+    | "work_order.created_from_booking";
   metadata?: Record<string, unknown>;
 }
 

@@ -14,6 +14,7 @@ export { createWorkOrder } from "./services/createWorkOrder";
 export { createWorkOrderFromContract } from "./services/createWorkOrderFromContract";
 export { createWorkOrderFromQuote } from "./services/createWorkOrderFromQuote";
 export { createWorkOrderFromLead } from "./services/createWorkOrderFromLead";
+export { createWorkOrderFromBooking } from "./services/createWorkOrderFromBooking";
 export { updateWorkOrder } from "./services/updateWorkOrder";
 export { recordWorkOrderAudit } from "./services/recordWorkOrderAudit";
 export { listWorkOrderStages } from "./services/listWorkOrderStages";
