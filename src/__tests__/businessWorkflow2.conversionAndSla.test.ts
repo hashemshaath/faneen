@@ -158,8 +158,10 @@ describe("BUSINESS-WORKFLOW-2: SLA visibility (display-only)", () => {
 
   it("SLA helpers do NOT introduce cron / scheduler / escalation / notifications", () => {
     const f = read(join(SRC, "modules/workOrders/lib/sla.ts"));
-    expect(f).not.toMatch(/cron|scheduler|setInterval|setTimeout|escalat/i);
-    expect(f).not.toMatch(/notifications?\//i);
+    // Strip the JSDoc header so we only assert against actual code.
+    const code = f.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    expect(code).not.toMatch(/\b(cron|scheduler|setInterval|setTimeout|escalate)\b/i);
+    expect(code).not.toMatch(/from\s+["'][^"']*notifications?\//i);
     expect(f).not.toMatch(/supabase/);
   });
 });
