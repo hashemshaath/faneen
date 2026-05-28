@@ -41,7 +41,9 @@ export type AdminNoteEntityType =
 
 export function isOfficialRef(ref: string | null | undefined): boolean {
   if (typeof ref !== 'string') return false;
-  return OFFICIAL_REF.test(ref.trim().toUpperCase());
+  // Reject lowercase / mixed-case raw inputs: callers must pass the canonical
+  // upper-case ref so we never silently rewrite user input.
+  return OFFICIAL_REF.test(ref.trim());
 }
 
 /** Throws when the supplied note text contains forbidden tokens/secrets. */
