@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Inbox, FileText, FileSignature, CalendarDays, ShieldCheck } from 'lucide-react';
 import {
@@ -6,7 +7,9 @@ import {
 import { pickMetricLabel } from '@/modules/operations/metrics/metricLabels';
 
 /**
- * BUSINESS-OPS-METRICS-3 — Provider-facing source conversion breakdown.
+ * BUSINESS-OPS-METRICS-4 — Provider-facing source conversion breakdown.
+ * Clickable cards deep-link to /dashboard/operations/feed with
+ * source+action query params pre-filled.
  *
  * Read-only compact cards showing how many work orders were converted
  * from each source type (lead, quote, contract, booking) within the
@@ -25,30 +28,39 @@ type SourceConfig = {
   key: 'ledToWo' | 'qteToWo' | 'cntToWo' | 'bkgToWo';
   icon: React.ReactNode;
   tone: string;
+  to: string;
 };
 
 function SourceChip({
-  value, label, icon, tone,
+  value, label, icon, tone, to, ariaLabel,
 }: {
   value: number;
   label: string;
   icon: React.ReactNode;
   tone: string;
+  to: string;
+  ariaLabel: string;
 }) {
   return (
-    <Card className="border-border/40 hover-lift">
-      <CardContent className="p-3 flex items-center gap-3">
-        <span className={`shrink-0 ${tone}`}>{icon}</span>
-        <div className="min-w-0 flex-1">
-          <div className="text-lg sm:text-xl font-semibold tabular-nums tech-content text-foreground">
-            {value}
+    <Link
+      to={to}
+      aria-label={ariaLabel}
+      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+    >
+      <Card className="border-border/40 hover-lift">
+        <CardContent className="p-3 flex items-center gap-3">
+          <span className={`shrink-0 ${tone}`}>{icon}</span>
+          <div className="min-w-0 flex-1">
+            <div className="text-lg sm:text-xl font-semibold tabular-nums tech-content text-foreground">
+              {value}
+            </div>
+            <div className="text-[11px] text-muted-foreground truncate" dir="auto">
+              {label}
+            </div>
           </div>
-          <div className="text-[11px] text-muted-foreground truncate" dir="auto">
-            {label}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
