@@ -30,6 +30,7 @@ import { WorkOrderActivityCard } from "@/components/workOrders/WorkOrderActivity
 import { WorkOrderAttachmentsSection } from "@/components/workOrders/WorkOrderAttachmentsSection";
 import { WorkOrderMeasurementsSection } from "@/components/workOrders/WorkOrderMeasurementsSection";
 import { WorkOrderBoqSection } from "@/components/workOrders/WorkOrderBoqSection";
+import { WorkOrderQuotationsSection } from "@/components/workOrders/WorkOrderQuotationsSection";
 import {
   getWorkOrderByRefId,
   listWorkOrderStages,
@@ -389,6 +390,12 @@ export default function DashboardWorkOrderDetail() {
           </div>
 
           <WorkOrderBoqSection
+            workOrderId={wo.id}
+            businessId={wo.business_id}
+            canManage={isAdmin || wo.owner_user_id === user?.id}
+          />
+
+          <WorkOrderQuotationsSection
             workOrderId={wo.id}
             businessId={wo.business_id}
             canManage={isAdmin || wo.owner_user_id === user?.id}

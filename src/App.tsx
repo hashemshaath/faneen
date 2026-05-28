@@ -40,6 +40,7 @@ const PublicSiteScan = lazyRetry(() => import("./pages/PublicSiteScan"));
 const PublicBarcodeResolve = lazyRetry(() => import("./pages/PublicBarcodeResolve"));
 const ReferenceResolver = lazyRetry(() => import("./pages/ReferenceResolver"));
 const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
+const QuotationViewer = lazyRetry(() => import("./pages/QuotationViewer"));
 const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
 const UsernameResolver = lazyRetry(() => import("./pages/UsernameResolver"));
 const Search = lazyRetry(() => import("./pages/Search"));
@@ -206,6 +207,7 @@ const AppRoutes = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<ProtectedRoute skipOnboarding><Onboarding /></ProtectedRoute>} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/q/:refId" element={<QuotationViewer />} />
           <Route path="/search" element={<Search />} />
           <Route path="/quote" element={<Quote />} />
           <Route path="/offers" element={<Offers />} />

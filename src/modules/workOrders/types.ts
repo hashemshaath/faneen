@@ -288,3 +288,107 @@ export interface WorkOrderBoqItemRow {
   updated_at: string;
   deleted_at: string | null;
 }
+
+/* ─────────────────────────────────────────────────────────────
+ * BUSINESS-WORKFLOW-5D — Quotations (snapshot from finalized BOQ)
+ * ───────────────────────────────────────────────────────────── */
+
+export type WorkOrderQuotationStatus =
+  | "draft"
+  | "sent"
+  | "viewed"
+  | "approved"
+  | "rejected"
+  | "expired";
+
+export const WORK_ORDER_QUOTATION_STATUSES: ReadonlyArray<WorkOrderQuotationStatus> = [
+  "draft",
+  "sent",
+  "viewed",
+  "approved",
+  "rejected",
+  "expired",
+];
+
+export interface WorkOrderQuotationRow {
+  id: string;
+  ref_id: string | null;
+  work_order_id: string;
+  boq_id: string;
+  business_id: string;
+  status: WorkOrderQuotationStatus;
+  quotation_number: string;
+  title: string;
+  notes: string | null;
+  subtotal: number;
+  tax: number;
+  total: number;
+  currency: string;
+  valid_until: string | null;
+  sent_at: string | null;
+  viewed_at: string | null;
+  approved_at: string | null;
+  rejected_at: string | null;
+  rejection_reason: string | null;
+  approval_token_hash: string | null;
+  pdf_attachment_id: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface WorkOrderQuotationItemRow {
+  id: string;
+  ref_id: string | null;
+  quotation_id: string;
+  boq_item_id: string | null;
+  item_type: WorkOrderBoqItemType;
+  title_ar: string;
+  title_en: string;
+  quantity: number;
+  unit: string;
+  unit_price: number;
+  total_price: number;
+  metadata: Record<string, unknown>;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+/** Public-facing payload returned by the tokenized client viewer RPC. */
+export interface PublicQuotationView {
+  ref_id: string;
+  status: WorkOrderQuotationStatus;
+  quotation_number: string;
+  title: string;
+  notes: string | null;
+  subtotal: number;
+  tax: number;
+  total: number;
+  currency: string;
+  valid_until: string | null;
+  sent_at: string | null;
+  viewed_at: string | null;
+  approved_at: string | null;
+  rejected_at: string | null;
+  rejection_reason: string | null;
+  items: Array<{
+    id: string;
+    ref_id: string | null;
+    item_type: WorkOrderBoqItemType;
+    title_ar: string;
+    title_en: string;
+    quantity: number;
+    unit: string;
+    unit_price: number;
+    total_price: number;
+    sort_order: number;
+  }>;
+  business: {
+    name?: string | null;
+    name_en?: string | null;
+    logo_url?: string | null;
+  };
+}

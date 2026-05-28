@@ -11365,6 +11365,184 @@ export type Database = {
           },
         ]
       }
+      work_order_quotation_items: {
+        Row: {
+          boq_item_id: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          item_type: string
+          metadata: Json
+          quantity: number
+          quotation_id: string
+          ref_id: string | null
+          sort_order: number
+          title_ar: string
+          title_en: string
+          total_price: number
+          unit: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          boq_item_id?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          item_type?: string
+          metadata?: Json
+          quantity?: number
+          quotation_id: string
+          ref_id?: string | null
+          sort_order?: number
+          title_ar: string
+          title_en: string
+          total_price?: number
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          boq_item_id?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          item_type?: string
+          metadata?: Json
+          quantity?: number
+          quotation_id?: string
+          ref_id?: string | null
+          sort_order?: number
+          title_ar?: string
+          title_en?: string
+          total_price?: number
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_quotation_items_boq_item_id_fkey"
+            columns: ["boq_item_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_boq_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_quotation_items_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_quotations: {
+        Row: {
+          approval_token_hash: string | null
+          approved_at: string | null
+          boq_id: string
+          business_id: string
+          created_at: string
+          created_by: string
+          currency: string
+          deleted_at: string | null
+          id: string
+          notes: string | null
+          pdf_attachment_id: string | null
+          quotation_number: string
+          ref_id: string | null
+          rejected_at: string | null
+          rejection_reason: string | null
+          sent_at: string | null
+          status: string
+          subtotal: number
+          tax: number
+          title: string
+          total: number
+          updated_at: string
+          valid_until: string | null
+          viewed_at: string | null
+          work_order_id: string
+        }
+        Insert: {
+          approval_token_hash?: string | null
+          approved_at?: string | null
+          boq_id: string
+          business_id: string
+          created_at?: string
+          created_by: string
+          currency?: string
+          deleted_at?: string | null
+          id?: string
+          notes?: string | null
+          pdf_attachment_id?: string | null
+          quotation_number: string
+          ref_id?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          sent_at?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number
+          title: string
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+          viewed_at?: string | null
+          work_order_id: string
+        }
+        Update: {
+          approval_token_hash?: string | null
+          approved_at?: string | null
+          boq_id?: string
+          business_id?: string
+          created_at?: string
+          created_by?: string
+          currency?: string
+          deleted_at?: string | null
+          id?: string
+          notes?: string | null
+          pdf_attachment_id?: string | null
+          quotation_number?: string
+          ref_id?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          sent_at?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number
+          title?: string
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+          viewed_at?: string | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_quotations_boq_id_fkey"
+            columns: ["boq_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_boqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_quotations_pdf_attachment_id_fkey"
+            columns: ["pdf_attachment_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_attachments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_quotations_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_order_sla_events: {
         Row: {
           business_id: string
@@ -12782,6 +12960,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      approve_quotation_by_token: {
+        Args: { _ref_id: string; _token: string }
+        Returns: Json
+      }
       archive_client_site: { Args: { _site_id: string }; Returns: Json }
       archive_expired_contract_pdf_exports: { Args: never; Returns: number }
       barcode_entity_prefix: { Args: { _entity_type: string }; Returns: string }
@@ -13478,6 +13660,10 @@ export type Database = {
         }[]
       }
       get_public_site_by_token: { Args: { _token: string }; Returns: Json }
+      get_quotation_by_token: {
+        Args: { _ref_id: string; _token: string }
+        Returns: Json
+      }
       get_review_authors: {
         Args: { _user_ids: string[] }
         Returns: {
@@ -14002,6 +14188,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      reject_quotation_by_token: {
+        Args: { _reason: string; _ref_id: string; _token: string }
+        Returns: Json
       }
       request_client_site_access: {
         Args: {
