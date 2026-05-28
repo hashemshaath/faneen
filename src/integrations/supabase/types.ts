@@ -11185,6 +11185,115 @@ export type Database = {
           },
         ]
       }
+      work_order_checklist_items: {
+        Row: {
+          checklist_id: string
+          completed: boolean
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          id: string
+          label: string
+          notes: string | null
+          ref_id: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          checklist_id: string
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          notes?: string | null
+          ref_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          checklist_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          ref_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_checklist_items_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_checklists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_checklists: {
+        Row: {
+          assigned_to_user_id: string | null
+          business_id: string
+          checklist_type: string
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          id: string
+          ref_id: string | null
+          sector_key: string | null
+          status: string
+          title: string
+          updated_at: string
+          work_order_id: string
+        }
+        Insert: {
+          assigned_to_user_id?: string | null
+          business_id: string
+          checklist_type: string
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          deleted_at?: string | null
+          id?: string
+          ref_id?: string | null
+          sector_key?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          work_order_id: string
+        }
+        Update: {
+          assigned_to_user_id?: string | null
+          business_id?: string
+          checklist_type?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          id?: string
+          ref_id?: string | null
+          sector_key?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_checklists_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_order_comments: {
         Row: {
           author_user_id: string
@@ -11358,6 +11467,50 @@ export type Database = {
           },
           {
             foreignKeyName: "work_order_measurements_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_pipeline_events: {
+        Row: {
+          actor_id: string
+          business_id: string
+          created_at: string
+          from_stage: string | null
+          id: string
+          notes: string | null
+          ref_id: string | null
+          to_stage: string
+          work_order_id: string
+        }
+        Insert: {
+          actor_id: string
+          business_id: string
+          created_at?: string
+          from_stage?: string | null
+          id?: string
+          notes?: string | null
+          ref_id?: string | null
+          to_stage: string
+          work_order_id: string
+        }
+        Update: {
+          actor_id?: string
+          business_id?: string
+          created_at?: string
+          from_stage?: string | null
+          id?: string
+          notes?: string | null
+          ref_id?: string | null
+          to_stage?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_pipeline_events_work_order_id_fkey"
             columns: ["work_order_id"]
             isOneToOne: false
             referencedRelation: "work_orders"
@@ -11604,6 +11757,59 @@ export type Database = {
         }
         Relationships: []
       }
+      work_order_stage_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by_user_id: string
+          assigned_to_user_id: string
+          business_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          ref_id: string | null
+          stage_key: string
+          unassigned_at: string | null
+          updated_at: string
+          work_order_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by_user_id: string
+          assigned_to_user_id: string
+          business_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          ref_id?: string | null
+          stage_key: string
+          unassigned_at?: string | null
+          updated_at?: string
+          work_order_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by_user_id?: string
+          assigned_to_user_id?: string
+          business_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          ref_id?: string | null
+          stage_key?: string
+          unassigned_at?: string | null
+          updated_at?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_stage_assignments_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_order_stages: {
         Row: {
           assigned_to_user_id: string | null
@@ -11742,6 +11948,7 @@ export type Database = {
           due_at: string | null
           id: string
           owner_user_id: string
+          pipeline_stage: string
           priority: string
           ref_id: string | null
           source_id: string | null
@@ -11763,6 +11970,7 @@ export type Database = {
           due_at?: string | null
           id?: string
           owner_user_id: string
+          pipeline_stage?: string
           priority?: string
           ref_id?: string | null
           source_id?: string | null
@@ -11784,6 +11992,7 @@ export type Database = {
           due_at?: string | null
           id?: string
           owner_user_id?: string
+          pipeline_stage?: string
           priority?: string
           ref_id?: string | null
           source_id?: string | null
@@ -14573,6 +14782,10 @@ export type Database = {
       }
       transfer_primary_manager: {
         Args: { _business_id: string; _reason?: string; _to_user_id: string }
+        Returns: Json
+      }
+      transition_work_order_pipeline_stage: {
+        Args: { _notes?: string; _to_stage: string; _work_order_id: string }
         Returns: Json
       }
       unsubscribe_newsletter: { Args: { p_email: string }; Returns: boolean }

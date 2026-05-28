@@ -398,3 +398,257 @@ export interface PublicQuotationView {
     logo_url?: string | null;
   };
 }
+
+/* ─────────────────────────────────────────────────────────────
+ * BUSINESS-WORKFLOW-6 — Production & Fabrication Pipeline.
+ * ───────────────────────────────────────────────────────────── */
+
+export type WorkOrderPipelineStageKey =
+  | "draft"
+  | "measured"
+  | "quoted"
+  | "approved"
+  | "engineering"
+  | "procurement"
+  | "fabrication"
+  | "qc"
+  | "ready"
+  | "installation"
+  | "completed"
+  | "cancelled";
+
+export const WORK_ORDER_PIPELINE_STAGE_KEYS: ReadonlyArray<WorkOrderPipelineStageKey> = [
+  "draft",
+  "measured",
+  "quoted",
+  "approved",
+  "engineering",
+  "procurement",
+  "fabrication",
+  "qc",
+  "ready",
+  "installation",
+  "completed",
+  "cancelled",
+];
+
+export const WORK_ORDER_PIPELINE_STAGE_LABELS: Record<
+  WorkOrderPipelineStageKey,
+  { ar: string; en: string }
+> = {
+  draft:        { ar: "مسودة",         en: "Draft" },
+  measured:     { ar: "تم القياس",     en: "Measured" },
+  quoted:       { ar: "بعرض سعر",      en: "Quoted" },
+  approved:     { ar: "معتمد",         en: "Approved" },
+  engineering:  { ar: "هندسة",         en: "Engineering" },
+  procurement:  { ar: "شراء",          en: "Procurement" },
+  fabrication:  { ar: "تصنيع",         en: "Fabrication" },
+  qc:           { ar: "فحص الجودة",    en: "QC" },
+  ready:        { ar: "جاهز",          en: "Ready" },
+  installation: { ar: "تركيب",         en: "Installation" },
+  completed:    { ar: "مكتمل",         en: "Completed" },
+  cancelled:    { ar: "ملغي",          en: "Cancelled" },
+};
+
+export type WorkOrderChecklistType =
+  | "fabrication"
+  | "installation"
+  | "qc"
+  | "delivery";
+
+export const WORK_ORDER_CHECKLIST_TYPES: ReadonlyArray<WorkOrderChecklistType> = [
+  "fabrication",
+  "installation",
+  "qc",
+  "delivery",
+];
+
+export type WorkOrderChecklistSectorKey =
+  | "kitchen"
+  | "aluminum"
+  | "glass"
+  | "steel"
+  | "wood"
+  | "generic";
+
+export const WORK_ORDER_CHECKLIST_SECTOR_KEYS: ReadonlyArray<WorkOrderChecklistSectorKey> = [
+  "kitchen",
+  "aluminum",
+  "glass",
+  "steel",
+  "wood",
+  "generic",
+];
+
+export type WorkOrderChecklistStatus = "open" | "completed" | "cancelled";
+
+export interface WorkOrderPipelineEventRow {
+  id: string;
+  ref_id: string | null;
+  work_order_id: string;
+  business_id: string;
+  from_stage: WorkOrderPipelineStageKey | null;
+  to_stage: WorkOrderPipelineStageKey;
+  actor_id: string;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface WorkOrderStageAssignmentRow {
+  id: string;
+  ref_id: string | null;
+  work_order_id: string;
+  business_id: string;
+  stage_key: WorkOrderPipelineStageKey;
+  assigned_to_user_id: string;
+  assigned_by_user_id: string;
+  assigned_at: string;
+  unassigned_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkOrderChecklistRow {
+  id: string;
+  ref_id: string | null;
+  work_order_id: string;
+  business_id: string;
+  checklist_type: WorkOrderChecklistType;
+  sector_key: WorkOrderChecklistSectorKey | null;
+  title: string;
+  status: WorkOrderChecklistStatus;
+  assigned_to_user_id: string | null;
+  created_by: string;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface WorkOrderChecklistItemRow {
+  id: string;
+  ref_id: string | null;
+  checklist_id: string;
+  label: string;
+  sort_order: number;
+  completed: boolean;
+  completed_by: string | null;
+  completed_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Sector-aware checklist presets used by `createWorkOrderChecklist` when
+ * `sectorKey` is supplied — they bootstrap a starter set of items per
+ * (sector, checklist_type) pair. Pure constants — no database hits.
+ */
+export const WORK_ORDER_CHECKLIST_PRESETS: Readonly<
+  Record<
+    WorkOrderChecklistSectorKey,
+    Partial<Record<WorkOrderChecklistType, ReadonlyArray<{ ar: string; en: string }>>>
+  >
+> = {
+  kitchen: {
+    fabrication: [
+      { ar: "تأكيد المقاسات النهائية", en: "Measurements confirmed" },
+      { ar: "اعتماد قائمة القص",       en: "Cutting list approved" },
+      { ar: "تجهيز سطح العمل",         en: "Countertop ready" },
+    ],
+    installation: [
+      { ar: "جدولة التركيب",           en: "Installation scheduled" },
+      { ar: "تركيب الخزائن السفلية",   en: "Base cabinets installed" },
+      { ar: "تركيب الخزائن العلوية",   en: "Wall cabinets installed" },
+      { ar: "تركيب سطح العمل",         en: "Countertop installed" },
+    ],
+    qc: [
+      { ar: "محاذاة الأبواب والأدراج", en: "Doors & drawers aligned" },
+      { ar: "اختبار الأدراج والإغلاق", en: "Soft-close tested" },
+    ],
+    delivery: [
+      { ar: "تنظيف الموقع",             en: "Site cleaned" },
+      { ar: "تسليم العميل",             en: "Client handover signed" },
+    ],
+  },
+  aluminum: {
+    fabrication: [
+      { ar: "قص البروفايل",            en: "Profile cutting" },
+      { ar: "تركيب الزجاج",            en: "Glass inserted" },
+      { ar: "تركيب الإكسسوارات",       en: "Accessories installed" },
+    ],
+    installation: [
+      { ar: "تثبيت الإطار",            en: "Frame anchored" },
+      { ar: "إحكام السيليكون",         en: "Silicone sealed" },
+    ],
+    qc: [
+      { ar: "اختبار الفتح والإغلاق",   en: "Open/close tested" },
+      { ar: "اختبار التسريب",           en: "Water-leak tested" },
+    ],
+    delivery: [
+      { ar: "تسليم العميل",             en: "Client handover signed" },
+    ],
+  },
+  glass: {
+    fabrication: [
+      { ar: "إتمام التقسية",            en: "Tempering completed" },
+      { ar: "إتمام تلميع الحواف",      en: "Edge polish completed" },
+    ],
+    installation: [
+      { ar: "تركيب الزجاج",             en: "Glass installed" },
+    ],
+    qc: [
+      { ar: "فحص خلو من الخدوش",        en: "Scratch-free verified" },
+    ],
+    delivery: [
+      { ar: "تسليم العميل",             en: "Client handover signed" },
+    ],
+  },
+  steel: {
+    fabrication: [
+      { ar: "إتمام اللحام",             en: "Welding completed" },
+      { ar: "إتمام الطلاء",             en: "Coating completed" },
+    ],
+    installation: [
+      { ar: "تثبيت الهيكل",             en: "Structure anchored" },
+    ],
+    qc: [
+      { ar: "فحص اللحامات",             en: "Welds inspected" },
+    ],
+    delivery: [
+      { ar: "تسليم العميل",             en: "Client handover signed" },
+    ],
+  },
+  wood: {
+    fabrication: [
+      { ar: "إتمام CNC",                en: "CNC completed" },
+      { ar: "إتمام لصق الحواف",         en: "Edge banding completed" },
+    ],
+    installation: [
+      { ar: "تثبيت القطع",              en: "Pieces installed" },
+    ],
+    qc: [
+      { ar: "فحص النهاية والتشطيب",      en: "Finish inspected" },
+    ],
+    delivery: [
+      { ar: "تسليم العميل",              en: "Client handover signed" },
+    ],
+  },
+  generic: {
+    fabrication: [
+      { ar: "بدء التصنيع",              en: "Fabrication started" },
+      { ar: "اكتمال التصنيع",           en: "Fabrication completed" },
+    ],
+    installation: [
+      { ar: "بدء التركيب",              en: "Installation started" },
+      { ar: "اكتمال التركيب",           en: "Installation completed" },
+    ],
+    qc: [
+      { ar: "فحص الجودة",                en: "QC passed" },
+    ],
+    delivery: [
+      { ar: "تسليم العميل",              en: "Client handover signed" },
+    ],
+  },
+};

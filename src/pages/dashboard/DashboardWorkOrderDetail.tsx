@@ -31,6 +31,7 @@ import { WorkOrderAttachmentsSection } from "@/components/workOrders/WorkOrderAt
 import { WorkOrderMeasurementsSection } from "@/components/workOrders/WorkOrderMeasurementsSection";
 import { WorkOrderBoqSection } from "@/components/workOrders/WorkOrderBoqSection";
 import { WorkOrderQuotationsSection } from "@/components/workOrders/WorkOrderQuotationsSection";
+import { WorkOrderPipelineSection } from "@/components/workOrders/WorkOrderPipelineSection";
 import {
   getWorkOrderByRefId,
   listWorkOrderStages,
@@ -50,6 +51,7 @@ import {
   type WorkOrderStatus,
   type WorkOrderPriority,
 } from "@/modules/workOrders";
+import type { WorkOrderPipelineStageKey } from "@/modules/workOrders";
 
 /**
  * BUSINESS-CORE-5 — Work Order detail page.
@@ -398,6 +400,14 @@ export default function DashboardWorkOrderDetail() {
           <WorkOrderQuotationsSection
             workOrderId={wo.id}
             businessId={wo.business_id}
+            canManage={isAdmin || wo.owner_user_id === user?.id}
+          />
+
+          <WorkOrderPipelineSection
+            workOrderId={wo.id}
+            businessId={wo.business_id}
+            currentStage={((wo as unknown as { pipeline_stage?: string }).pipeline_stage as WorkOrderPipelineStageKey) ?? "draft"}
+            workOrderStatus={wo.status}
             canManage={isAdmin || wo.owner_user_id === user?.id}
           />
 
