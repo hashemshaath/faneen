@@ -105,7 +105,10 @@ describe('canViewWorkspaceRoute — overrides', () => {
 describe('canViewWorkspaceRoute — viewer / least-privileged', () => {
   it('viewer does NOT see manage-level entity routes', () => {
     const manageRoutes = listWorkspaceRouteKeys().filter(
-      (k) => getWorkspaceRouteDescriptor(k)?.level === 'manage',
+      (k) => {
+        const d = getWorkspaceRouteDescriptor(k);
+        return d?.level === 'manage' && d.scope === 'entity';
+      },
     );
     expect(manageRoutes.length).toBeGreaterThan(0);
     for (const r of manageRoutes) {
