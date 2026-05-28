@@ -35,7 +35,7 @@ export async function updateWorkOrder(
     .update(patch as any)
     .eq("id", input.id)
     .select(
-      "id, ref_id, business_id, source_type, source_id, title, customer_name, customer_phone, status, current_stage_key, priority, owner_user_id, created_by_user_id, due_at, completed_at, created_at, updated_at, deleted_at",
+      "id, ref_id, business_id, source_type, source_id, source_ref_id, title, customer_name, customer_phone, status, current_stage_key, priority, owner_user_id, created_by_user_id, due_at, completed_at, created_at, updated_at, deleted_at",
     )
     .maybeSingle();
 
