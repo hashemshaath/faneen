@@ -10,8 +10,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Activity, Shield, ShieldCheck, UserPlus, Ban, CheckCircle2, Building2,
-  KeyRound, Crown, Edit3, RefreshCw, Trash2, AlertCircle, Users as UsersIcon,
+  Activity, Shield, UserPlus, Ban, CheckCircle2, Building2,
+  KeyRound, Crown, Edit3, RefreshCw, AlertCircle, Users as UsersIcon,
 } from 'lucide-react';
 
 interface AdminActivityRow {
