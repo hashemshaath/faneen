@@ -108,7 +108,10 @@ describe('BUSINESS-OPS-METRICS-4 — DashboardOperationsFeed query params', () =
   });
 
   it('initialises filters in a useEffect dependent on searchParams', () => {
-    expect(src).toMatch(/useEffect\([^)]*\{[\s\S]*?searchParams\.get\('source'\)[\s\S]*?\}, \[searchParams\]\)/);
+    expect(src).toContain('useEffect(() => {');
+    expect(src).toContain("searchParams.get('source')");
+    expect(src).toContain("searchParams.get('action')");
+    expect(src).toContain('}, [searchParams]);');
   });
 
   it('falls back safely when query params are invalid', () => {
