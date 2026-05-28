@@ -94,5 +94,18 @@ export async function createWorkOrderFromLead(
     },
   });
 
+  await recordBusinessSourceAudit({
+    business_id: wo.business_id,
+    actor_id: uid,
+    entity_type: "lead",
+    entity_id: lead.id,
+    action: "lead.converted_to_work_order",
+    metadata: {
+      lead_ref_id: sourceRefId,
+      work_order_ref_id: wo.ref_id,
+      source_type: "lead",
+    },
+  });
+
   return { data: wo, error: null };
 }
