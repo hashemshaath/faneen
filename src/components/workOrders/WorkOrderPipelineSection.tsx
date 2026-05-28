@@ -1,7 +1,7 @@
 /**
  * BUSINESS-WORKFLOW-6 — Production & Fabrication Pipeline section.
  *
- * Inline UI (no modals, no drag-drop, no kanban). Renders:
+ * Inline UI (no modals, no drag-drop, no board view). Renders:
  *   - Stage timeline with current-stage badge.
  *   - Forward-only stage transition buttons.
  *   - Per-checklist cards (fabrication / installation / qc / delivery) with
