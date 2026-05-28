@@ -28,7 +28,7 @@ import { WorkOrderActivityCard } from "@/components/workOrders/WorkOrderActivity
 /**
  * BUSINESS-CORE-4 — Unified Work Orders operations dashboard.
  * Read-only aggregation surface: KPI tiles + recent open list + activity.
- * No realtime, no cron, no automation.
+ * No realtime, no scheduled jobs, no automation.
  */
 export default function DashboardWorkOrdersOverview() {
   useNoIndex();
