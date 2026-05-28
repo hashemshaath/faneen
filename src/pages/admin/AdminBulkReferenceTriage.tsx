@@ -400,6 +400,131 @@ export default function AdminBulkReferenceTriage() {
           </CardContent>
         </Card>
 
+        {/* Toolbar: CSV export + Saved Sets (BUSINESS-ADMIN-6) */}
+        <Card className="border-border/40" data-testid="triage-toolbar">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <FolderOpen className="w-4 h-4 text-muted-foreground" />
+              {tx.savedSetsTitle}
+            </CardTitle>
+            <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3" /> {tx.savedHelper}
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="rounded-xl h-9"
+                onClick={onExportCsv}
+                disabled={rows.length === 0}
+                data-testid="triage-export-csv"
+              >
+                <Download className="w-3.5 h-3.5 me-1" /> {tx.exportCsv}
+              </Button>
+              <div className="flex items-center gap-1">
+                <Input
+                  value={setName}
+                  onChange={(e) => setSetName(e.target.value)}
+                  placeholder={tx.setNamePh}
+                  maxLength={SET_NAME_MAX}
+                  className="h-9 w-44 text-xs rounded-xl"
+                  aria-label={tx.setNamePh}
+                  data-testid="triage-set-name"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  className="rounded-xl h-9"
+                  onClick={onSaveSet}
+                  disabled={setName.trim().length === 0 || text.trim().length === 0}
+                  data-testid="triage-save-set"
+                >
+                  <Save className="w-3.5 h-3.5 me-1" /> {tx.saveSet}
+                </Button>
+              </div>
+              <span className="text-[10px] text-muted-foreground tech-content">
+                {savedSets.length}/{SAVED_SETS_MAX} · {REFS_PER_SET_MAX} max/set
+              </span>
+            </div>
+            {savedMsg ? (
+              <p
+                className={`text-[11px] ${savedMsg.tone === 'ok' ? 'text-emerald-600' : 'text-destructive'}`}
+                role="status"
+              >
+                {savedMsg.text}
+              </p>
+            ) : null}
+            {savedSets.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground">{tx.noSets}</p>
+            ) : (
+              <ul className="divide-y divide-border/30 rounded-xl border border-border/40" data-testid="triage-saved-sets">
+                {savedSets.map((s) => (
+                  <li key={s.id} className="flex flex-wrap items-center gap-2 px-2 py-1.5">
+                    {renamingId === s.id ? (
+                      <>
+                        <Input
+                          value={renameDraft}
+                          onChange={(e) => setRenameDraft(e.target.value)}
+                          maxLength={SET_NAME_MAX}
+                          className="h-8 w-44 text-xs rounded-xl"
+                          aria-label={tx.rename}
+                        />
+                        <Button size="sm" className="rounded-xl h-7 text-[11px]" onClick={commitRename}>
+                          {tx.rename}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="rounded-xl h-7 text-[11px]"
+                          onClick={() => { setRenamingId(null); setRenameDraft(''); }}
+                        >
+                          {tx.clear}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-xs font-medium truncate max-w-[14rem]" dir="auto">{s.name}</span>
+                        <span className="text-[10px] text-muted-foreground tech-content">
+                          {s.refs.length} {tx.refsInSet}
+                        </span>
+                        <div className="ms-auto flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-xl h-7 text-[11px]"
+                            onClick={() => onLoadSet(s)}
+                          >
+                            <FolderOpen className="w-3 h-3 me-1" /> {tx.load}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="rounded-xl h-7 text-[11px]"
+                            onClick={() => beginRename(s)}
+                          >
+                            <Pencil className="w-3 h-3 me-1" /> {tx.rename}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="rounded-xl h-7 text-[11px] text-destructive"
+                            onClick={() => onDeleteSet(s.id)}
+                          >
+                            <Trash2 className="w-3 h-3 me-1" /> {tx.del}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Rejected refs */}
         {result && result.invalid.length > 0 ? (
           <Card className="border-amber-500/30 bg-amber-500/5">
