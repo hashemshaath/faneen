@@ -11,6 +11,7 @@ export { getWorkOrderTaskByRefId } from "./services/getWorkOrderTaskByRefId";
 export type { GetWorkOrderTaskByRefIdResult } from "./services/getWorkOrderTaskByRefId";
 export { searchWorkOrders } from "./services/searchWorkOrders";
 export { createWorkOrder } from "./services/createWorkOrder";
+export { createWorkOrderFromContract } from "./services/createWorkOrderFromContract";
 export { updateWorkOrder } from "./services/updateWorkOrder";
 export { recordWorkOrderAudit } from "./services/recordWorkOrderAudit";
 export { listWorkOrderStages } from "./services/listWorkOrderStages";

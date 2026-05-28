@@ -67,6 +67,7 @@ import {
 } from '@/modules/contracts/constants/statusConfigs';
 import { sendTransactionalEmail }  from '@/modules/notifications/services/sendTransactionalEmail';
 import { getBusinessForContract } from '@/modules/businesses';
+import { CreateWorkOrderFromContractButton } from '@/components/workOrders/CreateWorkOrderFromContractButton';
 
 // ─── Phase 5E.2 — Safe source-lead summary card ───
 type SourceLeadSummary = {
@@ -1762,6 +1763,12 @@ const ContractDetail = () => {
             canOpenLead={user?.id === contract.provider_id}
           />
         )}
+        {/* BUSINESS-CORE-8 — Manual operational handoff: contract → work order */}
+        <CreateWorkOrderFromContractButton
+          contractId={contract.id}
+          defaultTitle={(isRTL ? contract.title_ar : (contract.title_en || contract.title_ar)) || contract.contract_number}
+          className="mb-5 sm:mb-6"
+        />
         {pdfDebugEnabled && pdfDiagnostics && (
           <div className="rounded-xl border border-border bg-card p-3 sm:p-4 mb-5 sm:mb-6 text-xs">
             <div className="flex items-center gap-2 font-semibold mb-3">
