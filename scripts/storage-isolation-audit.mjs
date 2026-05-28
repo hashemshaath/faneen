@@ -46,6 +46,7 @@ const ALLOWED_DIRS = [
   "src/modules/files/",
   "src/modules/messaging/services/storage/",
   "src/modules/contracts/services/attachments/",
+  "src/modules/workOrders/services/",
   "src/integrations/supabase/",
 ];
 const ALLOWED_FILES = new Set([

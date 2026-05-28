@@ -70,6 +70,8 @@ const INVENTORY: Record<string, Classification> = {
   'notify-customer-lead-update': 'notify',
   'get-revealed-contact': 'frontend',
   'admin-reveal-lead-contact': 'admin',
+  'admin-create-business-with-owner': 'admin',
+  'admin-update-user-email': 'admin',
 
   // --- contracts / amendments / SLA ---
   'notify-amendment-event': 'notify',
