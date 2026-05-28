@@ -60,11 +60,11 @@ const accountTypeLabels: Record<string, { ar: string; en: string }> = {
   company: { ar: 'مزود خدمة', en: 'Provider' },
   provider: { ar: 'مزود خدمة', en: 'Provider' },
   admin: { ar: 'مشرف', en: 'Admin' },
-  super_admin: { ar: 'مدير عام', en: 'Super Admin' },
+  super_admin: { ar: 'مدير المنصة', en: 'Super Admin' },
 };
 
 function getRoleBadge(isSuperAdmin: boolean, isAdmin: boolean, isProvider: boolean, isRTL: boolean) {
-  if (isSuperAdmin) return { label: isRTL ? 'مدير عام' : 'Super Admin', icon: ShieldAlert, color: 'text-destructive bg-destructive/10' };
+  if (isSuperAdmin) return { label: isRTL ? 'مدير المنصة' : 'Super Admin', icon: ShieldAlert, color: 'text-destructive bg-destructive/10' };
   if (isAdmin) return { label: isRTL ? 'مشرف' : 'Admin', icon: Shield, color: 'text-destructive bg-destructive/10' };
   if (isProvider) return { label: isRTL ? 'مزود خدمة' : 'Provider', icon: Crown, color: 'text-accent bg-accent/10' };
   return { label: isRTL ? 'مستخدم' : 'User', icon: User, color: 'text-muted-foreground bg-muted/50' };
