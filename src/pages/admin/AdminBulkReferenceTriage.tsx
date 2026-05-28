@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertCircle, CheckCircle2, ExternalLink, Loader2, ShieldCheck,
-  StickyNote, Search as SearchIcon,
+  StickyNote, Search as SearchIcon, Download, Save, FolderOpen, Trash2, Pencil,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -27,6 +28,19 @@ import {
   type AdminNoteEntityType,
 } from '@/modules/admin';
 import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
+import { downloadTriageCsv } from '@/lib/admin/triageCsv';
+import {
+  listSavedRefSets,
+  saveRefSet,
+  renameRefSet,
+  deleteRefSet,
+  refsToTextarea,
+  SAVED_SETS_MAX,
+  REFS_PER_SET_MAX,
+  SET_NAME_MAX,
+  type SavedRefSet,
+} from '@/lib/admin/savedRefSets';
+import { getCurrentUser } from '@/modules/identity/services/session/getCurrentUser';
 
 /**
  * BUSINESS-ADMIN-5 — Admin Bulk Reference Triage.
