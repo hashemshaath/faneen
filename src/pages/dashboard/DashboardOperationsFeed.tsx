@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, RefreshCw, AlertCircle, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Activity, RefreshCw, AlertCircle, Search, ArrowUpRight, ShieldCheck } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { useAuth } from '@/contexts/AuthContext';
+import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -69,6 +72,7 @@ export default function DashboardOperationsFeed() {
   useNoIndex();
   const { isRTL } = useLanguage();
   const { active_entity_id, isLoading: wsLoading } = useActiveWorkspace();
+  const { isAdmin } = useAuth();
 
   const tx = useMemo(() => ({
     title: isRTL ? 'سجل العمليات' : 'Operations Feed',
@@ -97,6 +101,11 @@ export default function DashboardOperationsFeed() {
     converted: isRTL ? 'تحويل إلى أمر عمل' : 'Converted to Work Order',
     showing: (n: number, t: number) =>
       isRTL ? `يعرض ${n} من ${t} حدثًا` : `Showing ${n} of ${t} events`,
+    crumbOps: isRTL ? 'العمليات' : 'Operations',
+    crumbFeed: isRTL ? 'سجل العمليات' : 'Operations Feed',
+    backOverview: isRTL ? 'نظرة عامة' : 'Overview',
+    openInspector: isRTL ? 'فتح في مستكشف المراجع' : 'Open in Admin Ref Inspector',
+    empty: isRTL ? 'لا توجد أحداث مطابقة للمرشحات.' : 'No events match the current filters.',
   }), [isRTL]);
 
   const [source, setSource] = useState<SourceFilter>('all');
@@ -134,7 +143,13 @@ export default function DashboardOperationsFeed() {
   if (!wsLoading && !active_entity_id) {
     return (
       <DashboardLayout>
-        <Card className="border-dashed border-2">
+        <OperationsBreadcrumbs
+          crumbs={[
+            { labelEn: tx.crumbOps, labelAr: tx.crumbOps, to: '/dashboard/work-orders' },
+            { labelEn: tx.crumbFeed, labelAr: tx.crumbFeed },
+          ]}
+        />
+        <Card className="border-dashed border-2 mt-3">
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
             {tx.needBiz}
           </CardContent>
@@ -143,9 +158,18 @@ export default function DashboardOperationsFeed() {
     );
   }
 
+  const trimmedQ = query.trim().toUpperCase();
+  const queryIsOfficialRef = OFFICIAL_REF.test(trimmedQ);
+
   return (
     <DashboardLayout>
       <div className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
+        <OperationsBreadcrumbs
+          crumbs={[
+            { labelEn: tx.crumbOps, labelAr: tx.crumbOps, to: '/dashboard/work-orders' },
+            { labelEn: tx.crumbFeed, labelAr: tx.crumbFeed },
+          ]}
+        />
         <div className="flex items-start justify-between gap-2">
           <div>
             <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
@@ -154,17 +178,25 @@ export default function DashboardOperationsFeed() {
             </h1>
             <p className="text-xs text-muted-foreground mt-1 max-w-2xl">{tx.subtitle}</p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="rounded-xl h-8"
-            onClick={() => void reload()}
-            aria-label={tx.refresh}
-          >
-            <RefreshCw className={`w-3.5 h-3.5 me-1 ${loading ? 'animate-spin' : ''}`} />
-            {tx.refresh}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm" className="rounded-xl h-8">
+              <Link to="/dashboard/work-orders/overview">
+                <ArrowUpRight className="w-3.5 h-3.5 me-1" />
+                {tx.backOverview}
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-xl h-8"
+              onClick={() => void reload()}
+              aria-label={tx.refresh}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 me-1 ${loading ? 'animate-spin' : ''}`} />
+              {tx.refresh}
+            </Button>
+          </div>
         </div>
 
         <Card className="border-border/40">
@@ -223,12 +255,33 @@ export default function DashboardOperationsFeed() {
           {tx.showing(filtered.length, events.length)}
         </p>
 
+        {isAdmin && queryIsOfficialRef && (
+          <div className="flex justify-end">
+            <Button asChild variant="outline" size="sm" className="rounded-xl h-8 gap-1.5">
+              <Link to={`/admin/ref/${trimmedQ}`}>
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span className="tech-content">{trimmedQ}</span>
+                <span>·</span>
+                <span>{tx.openInspector}</span>
+              </Link>
+            </Button>
+          </div>
+        )}
+
         {active_entity_id ? (
-          <UnifiedOperationsFeed
-            businessId={active_entity_id}
-            isRTL={isRTL}
-            initialEvents={filtered}
-          />
+          filtered.length === 0 && !loading && !error ? (
+            <Card className="border-dashed border-2 border-border/60">
+              <CardContent className="py-10 text-center text-xs text-muted-foreground">
+                {tx.empty}
+              </CardContent>
+            </Card>
+          ) : (
+            <UnifiedOperationsFeed
+              businessId={active_entity_id}
+              isRTL={isRTL}
+              initialEvents={filtered}
+            />
+          )
         ) : null}
       </div>
     </DashboardLayout>
