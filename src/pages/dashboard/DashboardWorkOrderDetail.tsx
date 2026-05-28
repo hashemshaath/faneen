@@ -374,6 +374,19 @@ export default function DashboardWorkOrderDetail() {
             )}
           </section>
 
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <WorkOrderAttachmentsSection
+              workOrderId={wo.id}
+              businessId={wo.business_id}
+              canManage={isAdmin || wo.owner_user_id === user?.id}
+            />
+            <WorkOrderMeasurementsSection
+              workOrderId={wo.id}
+              businessId={wo.business_id}
+              canManage={isAdmin || wo.owner_user_id === user?.id}
+            />
+          </div>
+
           <WorkOrderActivityCard businessId={wo.business_id} isRTL={isRTL} limit={50} />
         </>
       )}
