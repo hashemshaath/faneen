@@ -9,6 +9,7 @@
  * No bypass.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { getAdminBusinessById } from '@/modules/businesses/services/getAdminBusinessById';
 
 export interface CompanyAccessOwner {
   user_id: string;
@@ -36,11 +37,17 @@ export interface CompanyAccessDiagnostic {
 export async function getAdminCompanyAccessDiagnostic(
   businessId: string,
 ): Promise<{ data: CompanyAccessDiagnostic | null; error: unknown }> {
-  const { data: biz, error: bizErr } = await supabase
-    .from('businesses')
-    .select('id, ref_id, name_ar, name_en, user_id')
-    .eq('id', businessId)
-    .maybeSingle();
+  const { data: biz, error: bizErr } = await getAdminBusinessById<{
+    id: string;
+    ref_id: string | null;
+    name_ar: string | null;
+    name_en: string | null;
+    user_id: string | null;
+  }>({
+    id: businessId,
+    select: 'id, ref_id, name_ar, name_en, user_id',
+    terminal: 'maybeSingle',
+  });
   if (bizErr || !biz) return { data: null, error: bizErr };
 
   const { data: staff, error: staffErr } = await supabase
