@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ReferenceBadge } from "@/components/reference/ReferenceBadge";
+import { WorkOrderSearchInput } from "@/components/workOrders/WorkOrderSearchInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
@@ -154,6 +155,10 @@ export default function DashboardWorkOrders() {
           <Plus className="w-4 h-4 me-2" /> {tx.create}
         </Button>
       </header>
+
+      <div className="w-full sm:max-w-md">
+        <WorkOrderSearchInput businessId={businessId} isRTL={isRTL} />
+      </div>
 
       {error && (
         <div className="flex items-center gap-2 text-sm text-destructive">
