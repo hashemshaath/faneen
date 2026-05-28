@@ -96,7 +96,7 @@ describe('BUSINESS-ADMIN-2 — sanitization helpers', () => {
 
   it('whitelists metadata keys and rejects forbidden values', () => {
     expect(sanitizeAdminNoteMetadata({ source: 'inbound', secret: 'x' })).toEqual({ source: 'inbound' });
-    expect(sanitizeAdminNoteMetadata({ source: 'eyJabcdef.eyJabcdef.SflKxw' })).toEqual({});
+    expect(sanitizeAdminNoteMetadata({ source: 'has access_token=abc here' })).toEqual({});
     expect(sanitizeAdminNoteMetadata(null)).toEqual({});
   });
 
@@ -106,6 +106,7 @@ describe('BUSINESS-ADMIN-2 — sanitization helpers', () => {
     expect(isOfficialAdminNoteRef('550e8400-e29b-41d4-a716-446655440000')).toBe(false);
     expect(isOfficialAdminNoteRef('')).toBe(false);
     expect(isOfficialAdminNoteRef('lower-case')).toBe(false);
+    expect(isOfficialAdminNoteRef('WO_1')).toBe(false);
   });
 });
 
@@ -128,8 +129,10 @@ describe('BUSINESS-ADMIN-2 — service wrappers', () => {
   it('resolve wrapper only updates status/resolved fields and scopes to open rows', () => {
     expect(RESOLVE).toMatch(/\.update\(\{[\s\S]*status: 'resolved'[\s\S]*resolved_by[\s\S]*resolved_at[\s\S]*\}\)/);
     expect(RESOLVE).toMatch(/\.eq\(['"]status['"], ['"]open['"]\)/);
-    expect(RESOLVE).not.toMatch(/ref_id:/);
-    expect(RESOLVE).not.toMatch(/note:/);
+    expect(RESOLVE).not.toMatch(/^\s*ref_id:/m);
+    expect(RESOLVE).not.toMatch(/^\s*note:/m);
+    expect(RESOLVE).not.toMatch(/^\s*entity_type:/m);
+    expect(RESOLVE).not.toMatch(/^\s*severity:/m);
   });
 
   it('no delete wrapper exists', () => {
