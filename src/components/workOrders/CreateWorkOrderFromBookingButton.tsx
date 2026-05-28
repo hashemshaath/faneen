@@ -15,6 +15,7 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import { createWorkOrderFromBooking } from "@/modules/workOrders/services/createWorkOrderFromBooking";
 import type { WorkOrderPriority, WorkOrderRow } from "@/modules/workOrders/types";
+import { useExistingWorkOrderForSource } from "@/hooks/useExistingWorkOrderForSource";
 
 interface Props {
   bookingId: string;
@@ -38,6 +39,25 @@ export function CreateWorkOrderFromBookingButton({
   const [priority, setPriority] = useState<WorkOrderPriority>("medium");
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState<WorkOrderRow | null>(null);
+
+  const { workOrder: existing } = useExistingWorkOrderForSource({
+    sourceType: "booking",
+    sourceId: bookingId,
+    businessId,
+    enabled: !created,
+  });
+
+  if (!created && existing?.ref_id) {
+    return (
+      <Button asChild size="sm" variant="outline" className={className}>
+        <Link to={`/dashboard/work-orders/${existing.ref_id}`}>
+          <Wrench className="w-3.5 h-3.5 me-1.5" />
+          {isRTL ? "فتح أمر العمل" : "Open Work Order"}
+          <span className="tech-content ms-1">({existing.ref_id})</span>
+        </Link>
+      </Button>
+    );
+  }
 
   if (created?.ref_id) {
     return (
