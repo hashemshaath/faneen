@@ -209,13 +209,14 @@ const adminBaseGroups: MenuGroup[] = [
     // 1) Overview
     groupLabel: { ar: 'نظرة عامة', en: 'Overview' },
     icon: LayoutDashboard,
+    description: { ar: 'لوحات المراقبة والعمليات والمراجع', en: 'Dashboards, operations, and references' },
     items: [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: Activity },
       { label: { ar: 'تشغيل المهام', en: 'Cron Runs' }, url: '/admin/cron-runs', icon: CalendarClock },
-      { label: { ar: 'لوحة العمليات', en: 'Operations' }, url: '/admin/operations', icon: Activity },
+      { label: { ar: 'لوحة العمليات', en: 'Operations' }, url: '/admin/operations', icon: Activity, end: true },
       { label: { ar: 'مركز العمليات', en: 'Operations Console' }, url: '/admin/operations/console', icon: ShieldCheck },
-      { label: { ar: 'فحص المراجع المتعدد', en: 'Bulk Reference Triage' }, url: '/admin/ref/triage', icon: SearchIcon },
+      { label: { ar: 'فحص المراجع المتعدد', en: 'Bulk Reference Triage' }, url: '/admin/ref/triage', icon: SearchIcon, badge: { ar: 'دعم', en: 'Support', tone: 'support' } },
     ],
   },
   {
