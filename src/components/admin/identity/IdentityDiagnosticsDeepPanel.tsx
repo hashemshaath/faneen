@@ -9,7 +9,7 @@
  * Privacy:
  *   - `masked_email` values come from the server RPC already redacted.
  *   - Local `maskEmail` / `maskPhone` helpers are applied to anything else.
- *   - Synthetic phone-login emails (`@phone.qitaat.local`) are never rendered.
+ *   - Synthetic phone-login emails (the internal phone-auth domain) are never rendered.
  *   - No raw recovery tokens / auth metadata.
  *
  * Deep-link convention:
