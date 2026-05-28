@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Activity, RefreshCw, AlertCircle, Search, ArrowUpRight, ShieldCheck } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -68,11 +68,15 @@ function eventMatchesRef(ev: BusinessActivityEvent, query: string): boolean {
   return false;
 }
 
+const VALID_SOURCES = new Set<SourceFilter>(['all', 'work_order', 'contract', 'quote', 'lead', 'booking']);
+const VALID_ACTIONS = new Set<ActionFilter>(['all', 'created', 'updated', 'status_changed', 'converted']);
+
 export default function DashboardOperationsFeed() {
   useNoIndex();
   const { isRTL } = useLanguage();
   const { active_entity_id, isLoading: wsLoading } = useActiveWorkspace();
   const { isAdmin } = useAuth();
+  const [searchParams] = useSearchParams();
 
   const tx = useMemo(() => ({
     title: isRTL ? 'سجل العمليات' : 'Operations Feed',
@@ -114,6 +118,16 @@ export default function DashboardOperationsFeed() {
   const [events, setEvents] = useState<BusinessActivityEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Initialise filters from URL query params (safe fallback on invalid values).
+  useEffect(() => {
+    const src = searchParams.get('source') as SourceFilter;
+    const act = searchParams.get('action') as ActionFilter;
+    const ref = searchParams.get('ref');
+    if (src && VALID_SOURCES.has(src)) setSource(src);
+    if (act && VALID_ACTIONS.has(act)) setAction(act);
+    if (ref !== null) setQuery(ref);
+  }, [searchParams]);
 
   const reload = useCallback(async () => {
     if (!active_entity_id) return;

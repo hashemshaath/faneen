@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Inbox, FileText, FileSignature, CalendarDays, ShieldCheck } from 'lucide-react';
 import {
@@ -6,7 +7,9 @@ import {
 import { pickMetricLabel } from '@/modules/operations/metrics/metricLabels';
 
 /**
- * BUSINESS-OPS-METRICS-3 — Provider-facing source conversion breakdown.
+ * BUSINESS-OPS-METRICS-4 — Provider-facing source conversion breakdown.
+ * Clickable cards deep-link to /dashboard/operations/feed with
+ * source+action query params pre-filled.
  *
  * Read-only compact cards showing how many work orders were converted
  * from each source type (lead, quote, contract, booking) within the
@@ -25,30 +28,39 @@ type SourceConfig = {
   key: 'ledToWo' | 'qteToWo' | 'cntToWo' | 'bkgToWo';
   icon: React.ReactNode;
   tone: string;
+  to: string;
 };
 
 function SourceChip({
-  value, label, icon, tone,
+  value, label, icon, tone, to, ariaLabel,
 }: {
   value: number;
   label: string;
   icon: React.ReactNode;
   tone: string;
+  to: string;
+  ariaLabel: string;
 }) {
   return (
-    <Card className="border-border/40 hover-lift">
-      <CardContent className="p-3 flex items-center gap-3">
-        <span className={`shrink-0 ${tone}`}>{icon}</span>
-        <div className="min-w-0 flex-1">
-          <div className="text-lg sm:text-xl font-semibold tabular-nums tech-content text-foreground">
-            {value}
+    <Link
+      to={to}
+      aria-label={ariaLabel}
+      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+    >
+      <Card className="border-border/40 hover-lift">
+        <CardContent className="p-3 flex items-center gap-3">
+          <span className={`shrink-0 ${tone}`}>{icon}</span>
+          <div className="min-w-0 flex-1">
+            <div className="text-lg sm:text-xl font-semibold tabular-nums tech-content text-foreground">
+              {value}
+            </div>
+            <div className="text-[11px] text-muted-foreground truncate" dir="auto">
+              {label}
+            </div>
           </div>
-          <div className="text-[11px] text-muted-foreground truncate" dir="auto">
-            {label}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
@@ -59,25 +71,37 @@ export function ProviderConversionBreakdown({ metrics, isRTL }: Props) {
       key: 'ledToWo',
       icon: <Inbox className="w-5 h-5" aria-hidden="true" />,
       tone: 'text-blue-600 dark:text-blue-400',
+      to: '/dashboard/operations/feed?source=lead&action=converted',
     },
     {
       key: 'qteToWo',
       icon: <FileText className="w-5 h-5" aria-hidden="true" />,
       tone: 'text-amber-600 dark:text-amber-400',
+      to: '/dashboard/operations/feed?source=quote&action=converted',
     },
     {
       key: 'cntToWo',
       icon: <FileSignature className="w-5 h-5" aria-hidden="true" />,
       tone: 'text-emerald-600 dark:text-emerald-400',
+      to: '/dashboard/operations/feed?source=contract&action=converted',
     },
     {
       key: 'bkgToWo',
       icon: <CalendarDays className="w-5 h-5" aria-hidden="true" />,
       tone: 'text-violet-600 dark:text-violet-400',
+      to: '/dashboard/operations/feed?source=booking&action=converted',
     },
   ];
 
   const sectionLabel = isRTL ? 'تحويل المصادر إلى أوامر عمل' : 'Source conversions to Work Orders';
+
+  function chipAriaLabel(s: SourceConfig, value: number): string {
+    const label = L(s.key, isRTL);
+    if (isRTL) {
+      return `عرض ${value} ${label} في سجل العمليات`;
+    }
+    return `View ${value} ${label} in operations feed`;
+  }
 
   return (
     <section
@@ -115,6 +139,15 @@ export function ProviderConversionBreakdown({ metrics, isRTL }: Props) {
             label={L(s.key, isRTL)}
             icon={s.icon}
             tone={s.tone}
+            to={s.to}
+            ariaLabel={chipAriaLabel(s, s.key === 'ledToWo'
+              ? metrics.leadsQuotes.leadToWorkOrder
+              : s.key === 'qteToWo'
+                ? metrics.leadsQuotes.quoteToWorkOrder
+                : s.key === 'cntToWo'
+                  ? metrics.contracts.contractToWorkOrder
+                  : metrics.bookings.bookingToWorkOrder
+            )}
           />
         ))}
       </div>
