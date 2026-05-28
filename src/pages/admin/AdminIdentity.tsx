@@ -153,6 +153,16 @@ const AdminIdentity: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [, startTransition] = useTransition();
+  const queryClientForRefresh = (() => {
+    // Local accessor so the "Refresh diagnostics" CTA can invalidate queries
+    // without coupling the whole page to QueryClient context patterns above.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+      return require('@tanstack/react-query').useQueryClient?.();
+    } catch {
+      return null;
+    }
+  })();
 
   const view = (searchParams.get('view') as View) || 'overview';
   const setView = useCallback((v: View) => {
