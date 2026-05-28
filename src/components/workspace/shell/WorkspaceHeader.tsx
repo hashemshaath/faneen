@@ -35,7 +35,7 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({ rightSlot, cla
   const role = ws.active_role;
 
   const roleLabel = isSuperAdmin
-    ? (isRTL ? 'مدير عام' : 'Super Admin')
+    ? (isRTL ? 'مدير المنصة' : 'Super Admin')
     : isAdmin
       ? (isRTL ? 'مشرف' : 'Admin')
       : role === 'owner'
