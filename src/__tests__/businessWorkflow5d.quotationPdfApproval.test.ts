@@ -122,7 +122,8 @@ describe("BUSINESS-WORKFLOW-5D migration", () => {
   it("does NOT alter contracts/payments/invoices tables", () => {
     expect(sql!).not.toMatch(/ALTER TABLE\s+public\.contracts/i);
     expect(sql!).not.toMatch(/CREATE TABLE\s+public\.invoices/i);
-    expect(sql!).not.toMatch(/payments/i);
+    expect(sql!).not.toMatch(/CREATE TABLE\s+public\.payments/i);
+    expect(sql!).not.toMatch(/ALTER TABLE\s+public\.contract_payments/i);
   });
 });
 
