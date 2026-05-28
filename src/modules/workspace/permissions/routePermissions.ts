@@ -101,6 +101,10 @@ export const WORKSPACE_ROUTE_PERMISSIONS = {
   // User-only routes (no permission gate — visible to any authed user)
   '/dashboard/my-requests':                  { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/bookmarks':                    { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
+
+  // Admin-surfaced dashboard routes (linked from admin sidebar; not gated for workspace users)
+  '/dashboard/blog':                         { permissions: [],                                         scope: 'platform', sidebar: false, adminOverride: true,  ownerOverride: true,  level: 'manage' },
+  '/dashboard/profile-systems':              { permissions: [],                                         scope: 'platform', sidebar: false, adminOverride: true,  ownerOverride: true,  level: 'view'   },
 } as const satisfies Record<string, WorkspaceRouteDescriptor>;
 
 export type WorkspaceRouteKey = keyof typeof WORKSPACE_ROUTE_PERMISSIONS;
