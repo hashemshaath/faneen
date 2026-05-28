@@ -31,6 +31,7 @@ import {
   updateProviderLeadResponse,
   insertProviderLeadEvent,
 } from '@/modules/leads/services/mutations';
+import { CreateWorkOrderFromQuoteButton } from '@/components/workOrders/CreateWorkOrderFromQuoteButton';
 
 interface LeadDetailRow {
   id: string;
@@ -47,6 +48,7 @@ interface LeadDetailRow {
   contact_view_count: number;
   quote_request: {
     id: string;
+    ref_id: string | null;
     sector: string;
     city: string;
     district: string | null;
@@ -310,6 +312,16 @@ const ProviderLeadDetails: React.FC = () => {
               ? 'تم تحديث الفرصة كغير مناسبة.'
               : 'تمت متابعة هذه الفرصة.'}
           </CardContent></Card>
+        )}
+
+        {/* BUSINESS-CORE-9 — Create work order from quote request */}
+        {lead.provider_id && q.id && (
+          <CreateWorkOrderFromQuoteButton
+            quoteRequestId={q.id}
+            businessId={lead.provider_id}
+            defaultTitle={q.project_description}
+            quoteRefId={q.ref_id}
+          />
         )}
       </div>
 
