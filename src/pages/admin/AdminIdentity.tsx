@@ -188,19 +188,19 @@ const AdminIdentity: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [deferredSearch, setDeferredSearch] = useState('');
   const searchRef = useRef<HTMLInputElement | null>(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   const handleSearchChange = useCallback((val: string) => {
     setSearchTerm(val);
     startTransition(() => setDeferredSearch(val));
   }, []);
 
-  // ⌘K to focus search
+  // ⌘K to open command palette (preferred); fallback to search focus when palette already open
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        searchRef.current?.focus();
-        searchRef.current?.select();
+        setPaletteOpen(prev => !prev);
       }
     };
     window.addEventListener('keydown', onKey);
