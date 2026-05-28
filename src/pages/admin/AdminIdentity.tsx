@@ -45,6 +45,7 @@ import { IdentityAnalytics } from '@/components/admin/identity/IdentityAnalytics
 import { IdentityCommandPalette } from '@/components/admin/identity/IdentityCommandPalette';
 import { IdentityActivityFeed } from '@/components/admin/identity/IdentityActivityFeed';
 import { IdentitySignupsChart } from '@/components/admin/identity/IdentitySignupsChart';
+import { IdentityIntegrityPanel } from '@/components/admin/identity/IdentityIntegrityPanel';
 import { listProfiles } from '@/modules/users';
 import { listAllUserRoles } from '@/modules/identity';
 import { listAdminBusinesses } from '@/modules/businesses';
@@ -53,7 +54,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import {
   Users, Building2, Search, Command, Shield, Crown, ShieldCheck, Briefcase,
   TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, Plus,
-  UserPlus, Activity, ExternalLink, KeyRound, BarChart3,
+  UserPlus, Activity, ExternalLink, KeyRound, BarChart3, ShieldAlert,
 } from 'lucide-react';
 
 /* Lazy-loaded specialist admin pages, embedded inside Identity tabs. */
@@ -93,7 +94,8 @@ type View =
   | 'provider-review'
   | 'access-requests'
   | 'access-management'
-  | 'analytics';
+  | 'analytics'
+  | 'integrity';
 
 /* ─── KPI card ─── */
 const Kpi: React.FC<{
