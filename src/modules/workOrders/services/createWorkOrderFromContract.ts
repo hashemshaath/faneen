@@ -2,6 +2,7 @@ import { getContractById } from "@/modules/contracts/services/reads/getContractB
 import { getCurrentUser } from "@/modules/identity/services/session/getCurrentUser";
 import { createWorkOrder } from "./createWorkOrder";
 import { recordWorkOrderAudit } from "./recordWorkOrderAudit";
+import { recordBusinessSourceAudit } from "@/modules/businesses/notes";
 import type { WorkOrderRow, WorkOrderPriority } from "../types";
 
 export interface CreateWorkOrderFromContractInput {
@@ -98,6 +99,20 @@ export async function createWorkOrderFromContract(
       ref_id: wo.ref_id,
       contract_ref_id: sourceRefId,
       description: input.description ?? null,
+    },
+  });
+
+  // BUSINESS-CORE-13 — source-side lifecycle event for the unified feed.
+  await recordBusinessSourceAudit({
+    business_id: wo.business_id,
+    actor_id: uid,
+    entity_type: "contract",
+    entity_id: contract.id,
+    action: "contract.converted_to_work_order",
+    metadata: {
+      contract_ref_id: sourceRefId,
+      work_order_ref_id: wo.ref_id,
+      source_type: "contract",
     },
   });
 
