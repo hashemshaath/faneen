@@ -11048,6 +11048,143 @@ export type Database = {
           },
         ]
       }
+      work_order_boq_items: {
+        Row: {
+          boq_id: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          item_type: string
+          measurement_id: string | null
+          metadata: Json
+          quantity: number
+          ref_id: string | null
+          sort_order: number
+          title_ar: string
+          title_en: string
+          total_price: number
+          unit: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          boq_id: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          item_type?: string
+          measurement_id?: string | null
+          metadata?: Json
+          quantity?: number
+          ref_id?: string | null
+          sort_order?: number
+          title_ar: string
+          title_en: string
+          total_price?: number
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          boq_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          item_type?: string
+          measurement_id?: string | null
+          metadata?: Json
+          quantity?: number
+          ref_id?: string | null
+          sort_order?: number
+          title_ar?: string
+          title_en?: string
+          total_price?: number
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_boq_items_boq_id_fkey"
+            columns: ["boq_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_boqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_boq_items_measurement_id_fkey"
+            columns: ["measurement_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_measurements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_boqs: {
+        Row: {
+          business_id: string
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          finalized_at: string | null
+          finalized_by: string | null
+          id: string
+          notes: string | null
+          ref_id: string | null
+          status: string
+          subtotal: number
+          tax: number
+          title: string
+          total: number
+          updated_at: string
+          work_order_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          created_by: string
+          deleted_at?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          notes?: string | null
+          ref_id?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number
+          title: string
+          total?: number
+          updated_at?: string
+          work_order_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          notes?: string | null
+          ref_id?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number
+          title?: string
+          total?: number
+          updated_at?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_boqs_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_order_comments: {
         Row: {
           author_user_id: string
