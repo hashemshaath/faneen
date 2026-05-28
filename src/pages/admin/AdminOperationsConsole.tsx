@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/table';
 import { UnifiedOperationsFeed } from '@/components/operations/UnifiedOperationsFeed';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
+import { AdminOperationalNotesPanel } from '@/components/admin/AdminOperationalNotesPanel';
 import {
   listAdminOperationalActivity,
   listAdminWorkOrders,
@@ -436,6 +437,11 @@ export default function AdminOperationsConsole() {
             </CardContent>
           </Card>
         </div>
+
+        <AdminOperationalNotesPanel
+          scopedRefId={refIsOfficial && trimmedRef ? trimmedRef.toUpperCase() : undefined}
+          isRTL={isRTL}
+        />
       </div>
     </DashboardLayout>
   );
