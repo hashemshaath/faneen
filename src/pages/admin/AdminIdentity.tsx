@@ -346,66 +346,65 @@ const AdminIdentity: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-5 pb-12">
+      <div className="space-y-6 pb-12">
         {/* ─── Header ─── */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center shrink-0">
-              <Users className="w-6 h-6 text-primary" />
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="flex items-start gap-3 min-w-0 xl:max-w-[44%]">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-primary" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold font-heading">
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-2xl font-bold font-heading leading-tight truncate">
                 {isRTL ? 'مركز الهوية والكيانات' : 'Identity & Entities Center'}
               </h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">
                 {isRTL
-                  ? 'إدارة موحّدة للمستخدمين والمنشآت وعلاقات الملكية وتشخيصات الهوية في مكان واحد.'
-                  : 'Unified management for users, businesses, ownership relationships, and identity diagnostics in one place.'}
+                  ? 'إدارة موحّدة للمستخدمين والمنشآت وعلاقات الملكية وتشخيصات الهوية.'
+                  : 'Unified management for users, businesses, ownership and identity diagnostics.'}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap xl:justify-end xl:flex-nowrap">
             <Button
               variant="outline"
               size="sm"
-              className="rounded-xl gap-1.5"
+              className="rounded-xl gap-1.5 h-9"
               onClick={() => setPaletteOpen(true)}
               aria-label={isRTL ? 'فتح لوحة الأوامر' : 'Open command palette'}
             >
               <Command className="w-3.5 h-3.5" />
-              <span>{isRTL ? 'لوحة الأوامر' : 'Command'}</span>
-              <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0 rounded border border-border/40 bg-muted/40 text-[10px] font-mono">
+              <span className="hidden sm:inline">{isRTL ? 'الأوامر' : 'Command'}</span>
+              <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 rounded border border-border/40 bg-muted/40 text-[10px] font-mono">
                 <Command className="w-2.5 h-2.5" />K
               </kbd>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
-              <Link to="/admin/identity?view=integrity" aria-label={isRTL ? 'تحديث التشخيصات' : 'Refresh diagnostics'}>
-                <RefreshCw className="w-3.5 h-3.5" />{isRTL ? 'التشخيصات' : 'Diagnostics'}
-              </Link>
             </Button>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="rounded-xl gap-1.5"
+              className="rounded-xl gap-1.5 h-9"
               onClick={refreshDiagnostics}
               aria-label={isRTL ? 'تحديث البيانات' : 'Refresh data'}
             >
-              <RefreshCw className="w-3.5 h-3.5" />{isRTL ? 'تحديث' : 'Refresh'}
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>{isRTL ? 'تحديث' : 'Refresh'}</span>
             </Button>
-            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5 h-9">
               <Link to="/admin/identity?view=users&create=individual">
-                <UserPlus className="w-4 h-4" />{isRTL ? 'مستخدم جديد' : 'New user'}
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>{isRTL ? 'مستخدم' : 'User'}</span>
               </Link>
             </Button>
-            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5 h-9">
               <Link to="/admin/identity?view=businesses&create=owner" aria-label={isRTL ? 'إضافة/دعوة مالك' : 'Add or invite owner'}>
-                <UserPlus className="w-4 h-4" />{isRTL ? 'إضافة/دعوة مالك' : 'Add / invite owner'}
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>{isRTL ? 'دعوة مالك' : 'Invite owner'}</span>
               </Link>
             </Button>
-            <Button asChild size="sm" className="rounded-xl gap-1.5">
+            <Button asChild size="sm" className="rounded-xl gap-1.5 h-9">
               <Link to="/admin/identity?view=businesses">
-                <Plus className="w-4 h-4" />{isRTL ? 'إضافة منشأة' : 'Add business'}
+                <Plus className="w-3.5 h-3.5" />
+                <span>{isRTL ? 'منشأة جديدة' : 'New business'}</span>
               </Link>
             </Button>
           </div>
