@@ -267,7 +267,9 @@ describe("BUSINESS-WORKFLOW-5B security posture", () => {
       }
     };
     walk("src");
-    expect(offenders.sort()).toEqual([
+    // The auto-generated Supabase types file is allowed to reference the table.
+    const filtered = offenders.filter((p) => p !== "src/integrations/supabase/types.ts").sort();
+    expect(filtered).toEqual([
       "src/modules/workOrders/services/getMeasurementTemplateByKey.ts",
       "src/modules/workOrders/services/listMeasurementTemplates.ts",
     ]);
