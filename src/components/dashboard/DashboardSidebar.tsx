@@ -67,7 +67,7 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'التحليلات', en: 'Analytics' }, url: '/dashboard/analytics', icon: BarChart3 },
       { label: { ar: 'نظرة عامة على العمليات', en: 'Operations Overview' }, url: '/dashboard/work-orders/overview', icon: ClipboardList },
-      { label: { ar: 'سجل العمليات', en: 'Operations Feed' }, url: '/dashboard/operations/feed', icon: Activity },
+      { label: { ar: 'سجل العمليات', en: 'Operations Feed' }, url: '/dashboard/operations/feed', icon: Activity, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
     ],
   },
   {
@@ -98,8 +98,9 @@ const providerGroups: MenuGroup[] = [
   {
     groupLabel: { ar: 'العمليات', en: 'Operations' },
     icon: Activity,
+    description: { ar: 'إدارة أوامر العمل والعقود والضمانات', en: 'Work orders, contracts, and warranties' },
     items: [
-      { label: { ar: 'أوامر العمل', en: 'Work Orders' }, url: '/dashboard/work-orders', icon: ClipboardList },
+      { label: { ar: 'أوامر العمل', en: 'Work Orders' }, url: '/dashboard/work-orders', icon: ClipboardList, end: true, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
       { label: { ar: 'تحليلات العقود', en: 'Contract Analytics' }, url: '/dashboard/contract-analytics', icon: BarChart3 },
       { label: { ar: 'الضمانات', en: 'Warranties' }, url: '/dashboard/warranties', icon: Shield },
@@ -108,6 +109,7 @@ const providerGroups: MenuGroup[] = [
   {
     groupLabel: { ar: 'العضوية والفوترة', en: 'Membership & Billing' },
     icon: Crown,
+    description: { ar: 'الاشتراكات والرصيد والأقساط', en: 'Subscriptions, credits, and installments' },
     items: [
       { label: { ar: 'العضوية', en: 'Membership' }, url: '/membership', icon: Crown },
       { label: { ar: 'العضوية والرصيد', en: 'Provider Membership' }, url: '/dashboard/provider/membership', icon: Crown },
