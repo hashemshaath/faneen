@@ -151,9 +151,10 @@ describe("BUSINESS-WORKFLOW-7 forbidden surfaces", () => {
 describe("BUSINESS-WORKFLOW-7 module barrel exposes board surface", () => {
   it("exports board service + rules", () => {
     expect(BARREL_SRC).toMatch(/listWorkOrdersForBoard/);
-    expect(BARREL_SRC).toMatch(/BOARD_COLUMN_STAGES/);
-    expect(BARREL_SRC).toMatch(/getAllowedNextStages/);
-    expect(BARREL_SRC).toMatch(/isPipelineLocked/);
+    expect(BARREL_SRC).toMatch(/from\s+["']\.\/lib\/pipelineRules["']/);
+    expect(RULES_SRC).toMatch(/export\s+const\s+BOARD_COLUMN_STAGES/);
+    expect(RULES_SRC).toMatch(/export\s+function\s+getAllowedNextStages/);
+    expect(RULES_SRC).toMatch(/export\s+function\s+isPipelineLocked/);
   });
 
   it("board service does not bypass module boundaries", () => {
