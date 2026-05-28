@@ -12,7 +12,7 @@
  *    leaks a raw UUID even if one is passed in.
  */
 import React from 'react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { LanguageProvider, useLanguage } from '@/i18n/LanguageContext';
 import { WorkspaceCapabilityGate } from '@/components/workspace/WorkspaceCapabilityGate';
