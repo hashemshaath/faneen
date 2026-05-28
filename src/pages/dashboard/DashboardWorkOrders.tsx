@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ReferenceBadge } from "@/components/reference/ReferenceBadge";
 import { WorkOrderSearchInput } from "@/components/workOrders/WorkOrderSearchInput";
+import { WorkOrderSourceBadge } from "@/components/workOrders/WorkOrderSourceBadge";
+import { WorkOrderSlaBadge } from "@/components/workOrders/WorkOrderSlaBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
@@ -25,6 +27,7 @@ import {
   updateWorkOrderTask,
   listWorkOrderComments,
   addWorkOrderComment,
+  isOverdueRow,
   type WorkOrderRow,
   type WorkOrderStageRow,
   type WorkOrderTaskRow,
@@ -37,6 +40,7 @@ import {
 
 const STATUS_VALUES: WorkOrderStatus[] = ["draft", "active", "on_hold", "completed", "cancelled"];
 const PRIORITY_VALUES: WorkOrderPriority[] = ["low", "medium", "high", "urgent"];
+const SOURCE_VALUES = ["manual", "lead", "quote", "contract", "booking"] as const;
 const STAGE_STATUSES: WorkOrderStageStatus[] = ["pending", "active", "completed", "skipped"];
 const TASK_STATUSES: WorkOrderTaskStatus[] = ["todo", "in_progress", "blocked", "completed", "archived"];
 
@@ -57,6 +61,11 @@ export default function DashboardWorkOrders() {
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  // BUSINESS-WORKFLOW-2 — UI-only filters (status / priority / overdue / source_type)
+  const [statusFilter, setStatusFilter] = useState<WorkOrderStatus | "all">("all");
+  const [priorityFilter, setPriorityFilter] = useState<WorkOrderPriority | "all">("all");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [overdueOnly, setOverdueOnly] = useState(false);
 
   const tx = useMemo(
     () => ({
@@ -132,6 +141,19 @@ export default function DashboardWorkOrders() {
   }, [businessId, reload]);
 
   const selected = orders.find((o) => o.id === selectedId) ?? null;
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
+      if (statusFilter !== "all" && o.status !== statusFilter) return false;
+      if (priorityFilter !== "all" && (o.priority ?? "medium") !== priorityFilter) return false;
+      if (sourceFilter !== "all") {
+        const src = o.source_type ?? "manual";
+        if (src !== sourceFilter) return false;
+      }
+      if (overdueOnly && !isOverdueRow(o)) return false;
+      return true;
+    });
+  }, [orders, statusFilter, priorityFilter, sourceFilter, overdueOnly]);
 
   if (!businessId) {
     return (
