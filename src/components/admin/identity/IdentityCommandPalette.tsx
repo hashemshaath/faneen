@@ -9,8 +9,8 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Search, X, Users, Building2, Shield, Crown, ShieldCheck, KeyRound,
-  UserPlus, Sparkles, ArrowRight, Command, Briefcase, Activity, BarChart3,
+  Search, X, Building2, Shield, Crown, ShieldCheck, KeyRound,
+  UserPlus, Sparkles, ArrowRight, Briefcase, Activity, BarChart3,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
