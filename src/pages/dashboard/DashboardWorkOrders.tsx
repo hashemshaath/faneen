@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ReferenceBadge } from "@/components/reference/ReferenceBadge";
 import { WorkOrderSearchInput } from "@/components/workOrders/WorkOrderSearchInput";
+import { WorkOrderSourceBadge } from "@/components/workOrders/WorkOrderSourceBadge";
+import { WorkOrderSlaBadge } from "@/components/workOrders/WorkOrderSlaBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
@@ -25,6 +27,7 @@ import {
   updateWorkOrderTask,
   listWorkOrderComments,
   addWorkOrderComment,
+  isOverdueRow,
   type WorkOrderRow,
   type WorkOrderStageRow,
   type WorkOrderTaskRow,
@@ -37,6 +40,7 @@ import {
 
 const STATUS_VALUES: WorkOrderStatus[] = ["draft", "active", "on_hold", "completed", "cancelled"];
 const PRIORITY_VALUES: WorkOrderPriority[] = ["low", "medium", "high", "urgent"];
+const SOURCE_VALUES = ["manual", "lead", "quote", "contract", "booking"] as const;
 const STAGE_STATUSES: WorkOrderStageStatus[] = ["pending", "active", "completed", "skipped"];
 const TASK_STATUSES: WorkOrderTaskStatus[] = ["todo", "in_progress", "blocked", "completed", "archived"];
 
@@ -57,6 +61,11 @@ export default function DashboardWorkOrders() {
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  // BUSINESS-WORKFLOW-2 — UI-only filters (status / priority / overdue / source_type)
+  const [statusFilter, setStatusFilter] = useState<WorkOrderStatus | "all">("all");
+  const [priorityFilter, setPriorityFilter] = useState<WorkOrderPriority | "all">("all");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [overdueOnly, setOverdueOnly] = useState(false);
 
   const tx = useMemo(
     () => ({
@@ -133,6 +142,19 @@ export default function DashboardWorkOrders() {
 
   const selected = orders.find((o) => o.id === selectedId) ?? null;
 
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
+      if (statusFilter !== "all" && o.status !== statusFilter) return false;
+      if (priorityFilter !== "all" && (o.priority ?? "medium") !== priorityFilter) return false;
+      if (sourceFilter !== "all") {
+        const src = o.source_type ?? "manual";
+        if (src !== sourceFilter) return false;
+      }
+      if (overdueOnly && !isOverdueRow(o)) return false;
+      return true;
+    });
+  }, [orders, statusFilter, priorityFilter, sourceFilter, overdueOnly]);
+
   if (!businessId) {
     return (
       <DashboardLayout>
@@ -164,6 +186,61 @@ export default function DashboardWorkOrders() {
         <WorkOrderSearchInput businessId={businessId} isRTL={isRTL} />
       </div>
 
+      {/* BUSINESS-WORKFLOW-2 — UI-only filters */}
+      <div className="flex flex-wrap items-center gap-2" role="region" aria-label={isRTL ? "تصفية" : "Filters"}>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as WorkOrderStatus | "all")}>
+          <SelectTrigger className="w-[150px] h-9" aria-label={isRTL ? "تصفية الحالة" : "Status filter"}>
+            <SelectValue placeholder={isRTL ? "الحالة" : "Status"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{isRTL ? "كل الحالات" : "All statuses"}</SelectItem>
+            {STATUS_VALUES.map((s) => (
+              <SelectItem key={s} value={s}>{statusLabel(s)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as WorkOrderPriority | "all")}>
+          <SelectTrigger className="w-[150px] h-9" aria-label={isRTL ? "تصفية الأولوية" : "Priority filter"}>
+            <SelectValue placeholder={isRTL ? "الأولوية" : "Priority"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{isRTL ? "كل الأولويات" : "All priorities"}</SelectItem>
+            {PRIORITY_VALUES.map((p) => (
+              <SelectItem key={p} value={p}>{priorityLabel(p)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={sourceFilter} onValueChange={setSourceFilter}>
+          <SelectTrigger className="w-[160px] h-9" aria-label={isRTL ? "تصفية المصدر" : "Source filter"}>
+            <SelectValue placeholder={isRTL ? "المصدر" : "Source"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{isRTL ? "كل المصادر" : "All sources"}</SelectItem>
+            {SOURCE_VALUES.map((s) => (
+              <SelectItem key={s} value={s}>
+                {({
+                  manual: isRTL ? "يدوي" : "Manual",
+                  lead: isRTL ? "طلب" : "Lead",
+                  quote: isRTL ? "عرض" : "Quote",
+                  contract: isRTL ? "عقد" : "Contract",
+                  booking: isRTL ? "حجز" : "Booking",
+                } as Record<string, string>)[s]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          size="sm"
+          variant={overdueOnly ? "destructive" : "outline"}
+          className="h-9"
+          aria-pressed={overdueOnly}
+          onClick={() => setOverdueOnly((v) => !v)}
+        >
+          {isRTL ? "المتأخرة فقط" : "Overdue only"}
+        </Button>
+      </div>
+
       {error && (
         <div className="flex items-center gap-2 text-sm text-destructive">
           <AlertCircle className="w-4 h-4" /> <span>{error}</span>
@@ -193,11 +270,11 @@ export default function DashboardWorkOrders() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" /> {tx.loading}
             </div>
-          ) : orders.length === 0 ? (
+          ) : filteredOrders.length === 0 ? (
             <p className="text-sm text-muted-foreground">{tx.empty}</p>
           ) : (
             <ul className="space-y-2" aria-label={tx.title}>
-              {orders.map((o) => (
+              {filteredOrders.map((o) => (
                 <li key={o.id}>
                   <button
                     type="button"
@@ -212,6 +289,7 @@ export default function DashboardWorkOrders() {
                       <div className="flex items-center gap-1">
                         <Badge variant="outline">{statusLabel(o.status)}</Badge>
                         <Badge variant="secondary">{priorityLabel(o.priority)}</Badge>
+                        <WorkOrderSlaBadge row={o} isRTL={isRTL} />
                       </div>
                     </div>
                     <p className="mt-2 font-medium text-foreground line-clamp-1" dir="auto">
@@ -219,8 +297,11 @@ export default function DashboardWorkOrders() {
                     </p>
                     <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
                       <span>{new Date(o.updated_at).toLocaleString(isRTL ? "ar" : "en")}</span>
-                      {o.source_type && <span>· {o.source_type}</span>}
-                      {o.source_ref_id && <ReferenceBadge refId={o.source_ref_id} />}
+                      <WorkOrderSourceBadge
+                        sourceType={o.source_type ?? "manual"}
+                        sourceRefId={o.source_ref_id}
+                        isRTL={isRTL}
+                      />
                     </div>
                   </button>
                 </li>

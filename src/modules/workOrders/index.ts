@@ -28,6 +28,9 @@ export { listWorkOrderComments } from "./services/listWorkOrderComments";
 export { addWorkOrderComment } from "./services/addWorkOrderComment";
 export { softDeleteWorkOrderTask } from "./services/softDeleteWorkOrderTask";
 export { softDeleteWorkOrder } from "./services/softDeleteWorkOrder";
+// BUSINESS-WORKFLOW-2 — Duplicate-prevention lookup for source-to-WO conversion.
+export { getWorkOrderBySource } from "./services/getWorkOrderBySource";
+export type { GetWorkOrderBySourceInput } from "./services/getWorkOrderBySource";
 // BUSINESS-ADMIN-4: admin-safe enrichment wrapper for TASK refs
 export { getAdminTaskSummaryByRef } from "./services/getAdminTaskSummaryByRef";
 export type { AdminTaskSummary } from "./services/getAdminTaskSummaryByRef";
@@ -37,3 +40,5 @@ export * from "./lib/statusHelpers";
 export * from "./lib/source";
 export * from "./lib/kpis";
 export * from "./lib/useAssigneeNames";
+// BUSINESS-WORKFLOW-2 — display-only SLA helpers
+export * from "./lib/sla";
