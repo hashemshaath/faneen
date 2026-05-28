@@ -33,6 +33,7 @@ import { useWorkspaceContext } from '@/hooks/useWorkspaceContext';
 import { useWorkspaceState } from '@/hooks/useWorkspaceState';
 import { WorkspaceScrollRestoration } from '@/components/workspace/shell/WorkspaceScrollRestoration';
 import { useWorkspacePreferences } from '@/hooks/useWorkspacePreferences';
+import { useWorkspaceStateSelfHeal } from '@/hooks/useWorkspaceStateSelfHeal';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -84,6 +85,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
   // APP-SHELL-2 — context engine (records last_context/last_module) + recent route trail.
   useWorkspaceContext();
+  // CRITICAL-ENTITY-IDENTITY-ACCESS-FIX-1 Phase 1 — reconcile any stale
+  // active_entity_id against the user's RLS-scoped accessible entities.
+  useWorkspaceStateSelfHeal();
   const ws2 = useWorkspaceState();
   const prefs = useWorkspacePreferences();
   React.useEffect(() => {

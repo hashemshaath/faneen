@@ -14,3 +14,4 @@ export * from './services/session';
 export * from './services/account';
 export * from './services/invitations';
 export * from './services/adminActivity';
+export * from './services/diagnostics';
