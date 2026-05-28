@@ -16,7 +16,7 @@ const ACT = readFileSync(
   'utf8',
 );
 const WO = readFileSync(
-  resolve(__dirname, '../modules/admin/services/operations/listAdminWorkOrders.ts'),
+  resolve(__dirname, '../modules/workOrders/services/listAdminWorkOrders.ts'),
   'utf8',
 );
 const ADMIN_INDEX = readFileSync(
