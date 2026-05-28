@@ -56,15 +56,17 @@ interface MenuGroup {
 // ══════════════════════════════════════════
 const providerGroups: MenuGroup[] = [
   {
-    groupLabel: { ar: 'الرئيسية', en: 'Main' },
+    groupLabel: { ar: 'نظرة عامة', en: 'Overview' },
     icon: LayoutDashboard,
     items: [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'التحليلات', en: 'Analytics' }, url: '/dashboard/analytics', icon: BarChart3 },
+      { label: { ar: 'نظرة عامة على العمليات', en: 'Operations Overview' }, url: '/dashboard/work-orders/overview', icon: ClipboardList },
+      { label: { ar: 'سجل العمليات', en: 'Operations Feed' }, url: '/dashboard/operations/feed', icon: Activity },
     ],
   },
   {
-    groupLabel: { ar: 'إدارة الأعمال', en: 'Business' },
+    groupLabel: { ar: 'ملف المنشأة', en: 'Business Profile' },
     icon: Wrench,
     items: [
       { label: { ar: 'بيانات المنشأة', en: 'Business Profile' }, url: '/dashboard/business-edit', icon: Building2 },
@@ -72,17 +74,38 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'معرض الأعمال', en: 'Portfolio' }, url: '/dashboard/portfolio', icon: Image },
       { label: { ar: 'المشاريع', en: 'Projects' }, url: '/dashboard/projects', icon: FolderOpen },
       { label: { ar: 'العروض', en: 'Promotions' }, url: '/dashboard/promotions', icon: Megaphone },
+      { label: { ar: 'مناطق الخدمة', en: 'Service Areas' }, url: '/dashboard/provider/service-areas', icon: MapPin },
       { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/dashboard/private-sectors', icon: Layers },
+      { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },
       { label: { ar: 'شارة التوثيق', en: 'Verification Badge' }, url: '/dashboard/badge', icon: ShieldCheck },
     ],
   },
   {
-    groupLabel: { ar: 'العقود والمالية', en: 'Contracts & Finance' },
-    icon: FileText,
+    groupLabel: { ar: 'المبيعات والطلبات', en: 'Sales & Requests' },
+    icon: Inbox,
     items: [
+      { label: { ar: 'طلبات الخدمة', en: 'Service Requests' }, url: '/dashboard/leads', icon: Inbox },
+      { label: { ar: 'فرص عروض الأسعار', en: 'Quote Opportunities' }, url: '/dashboard/provider/leads', icon: Inbox },
+      { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
+      { label: { ar: 'العملاء', en: 'Clients' }, url: '/dashboard/clients', icon: Users },
+    ],
+  },
+  {
+    groupLabel: { ar: 'العمليات', en: 'Operations' },
+    icon: Activity,
+    items: [
+      { label: { ar: 'أوامر العمل', en: 'Work Orders' }, url: '/dashboard/work-orders', icon: ClipboardList },
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
       { label: { ar: 'تحليلات العقود', en: 'Contract Analytics' }, url: '/dashboard/contract-analytics', icon: BarChart3 },
       { label: { ar: 'الضمانات', en: 'Warranties' }, url: '/dashboard/warranties', icon: Shield },
+    ],
+  },
+  {
+    groupLabel: { ar: 'العضوية والفوترة', en: 'Membership & Billing' },
+    icon: Crown,
+    items: [
+      { label: { ar: 'العضوية', en: 'Membership' }, url: '/membership', icon: Crown },
+      { label: { ar: 'العضوية والرصيد', en: 'Provider Membership' }, url: '/dashboard/provider/membership', icon: Crown },
       { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
     ],
   },
@@ -90,28 +113,16 @@ const providerGroups: MenuGroup[] = [
     groupLabel: { ar: 'التواصل', en: 'Communication' },
     icon: MessageSquare,
     items: [
-      { label: { ar: 'طلبات الخدمة', en: 'Service Requests' }, url: '/dashboard/leads', icon: Inbox },
-      { label: { ar: 'فرص عروض الأسعار', en: 'Quote Opportunities' }, url: '/dashboard/provider/leads', icon: Inbox },
-      { label: { ar: 'مناطق الخدمة', en: 'Service Areas' }, url: '/dashboard/provider/service-areas', icon: MapPin },
-      { label: { ar: 'العضوية والرصيد', en: 'Membership & Credits' }, url: '/dashboard/provider/membership', icon: Crown },
-      { label: { ar: 'العملاء', en: 'Clients' }, url: '/dashboard/clients', icon: Users },
-      { label: { ar: 'أوامر العمل', en: 'Work Orders' }, url: '/dashboard/work-orders', icon: ClipboardList },
-      { label: { ar: 'نظرة عامة على العمليات', en: 'Operations Overview' }, url: '/dashboard/work-orders/overview', icon: ClipboardList },
       { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
-      { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
-      { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },
-      { label: { ar: 'العمليات', en: 'Operations' }, url: '/dashboard/operations', icon: Activity },
-      { label: { ar: 'سجل العمليات', en: 'Operations Feed' }, url: '/dashboard/operations/feed', icon: Activity },
+      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
     ],
   },
   {
-    groupLabel: { ar: 'الحساب', en: 'Account' },
+    groupLabel: { ar: 'الإعدادات', en: 'Settings' },
     icon: Settings,
     items: [
-      { label: { ar: 'العضوية', en: 'Membership' }, url: '/membership', icon: Crown },
-      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
-      { label: { ar: 'تفضيلات التواصل', en: 'Communication' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الملف الشخصي', en: 'Profile' }, url: '/dashboard/profile', icon: User },
+      { label: { ar: 'تفضيلات التواصل', en: 'Communication Preferences' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
@@ -122,7 +133,7 @@ const providerGroups: MenuGroup[] = [
 // ══════════════════════════════════════════
 const userGroups: MenuGroup[] = [
   {
-    groupLabel: { ar: 'الرئيسية', en: 'Main' },
+    groupLabel: { ar: 'نظرة عامة', en: 'Overview' },
     icon: LayoutDashboard,
     items: [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
@@ -136,7 +147,14 @@ const userGroups: MenuGroup[] = [
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
       { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
+    ],
+  },
+  {
+    groupLabel: { ar: 'التواصل', en: 'Communication' },
+    icon: MessageSquare,
+    items: [
       { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
+      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
     ],
   },
   {
@@ -144,16 +162,14 @@ const userGroups: MenuGroup[] = [
     icon: Bookmark,
     items: [
       { label: { ar: 'المفضلة', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
-      { label: { ar: 'العمليات', en: 'Operations' }, url: '/dashboard/operations', icon: Activity },
     ],
   },
   {
-    groupLabel: { ar: 'الحساب', en: 'Account' },
+    groupLabel: { ar: 'الإعدادات', en: 'Settings' },
     icon: Settings,
     items: [
-      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
-      { label: { ar: 'تفضيلات التواصل', en: 'Communication' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الملف الشخصي', en: 'Profile' }, url: '/dashboard/profile', icon: User },
+      { label: { ar: 'تفضيلات التواصل', en: 'Communication Preferences' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
@@ -192,6 +208,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'تشغيل المهام', en: 'Cron Runs' }, url: '/admin/cron-runs', icon: CalendarClock },
       { label: { ar: 'لوحة العمليات', en: 'Operations' }, url: '/admin/operations', icon: Activity },
       { label: { ar: 'مركز العمليات', en: 'Operations Console' }, url: '/admin/operations/console', icon: ShieldCheck },
+      { label: { ar: 'فحص المراجع المتعدد', en: 'Bulk Reference Triage' }, url: '/admin/ref/triage', icon: SearchIcon },
     ],
   },
   {
