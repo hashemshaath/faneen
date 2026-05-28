@@ -29,6 +29,7 @@ import { WorkOrderAssigneeChip } from "@/components/workOrders/WorkOrderAssignee
 import { WorkOrderActivityCard } from "@/components/workOrders/WorkOrderActivityCard";
 import { WorkOrderAttachmentsSection } from "@/components/workOrders/WorkOrderAttachmentsSection";
 import { WorkOrderMeasurementsSection } from "@/components/workOrders/WorkOrderMeasurementsSection";
+import { WorkOrderBoqSection } from "@/components/workOrders/WorkOrderBoqSection";
 import {
   getWorkOrderByRefId,
   listWorkOrderStages,
@@ -386,6 +387,12 @@ export default function DashboardWorkOrderDetail() {
               canManage={isAdmin || wo.owner_user_id === user?.id}
             />
           </div>
+
+          <WorkOrderBoqSection
+            workOrderId={wo.id}
+            businessId={wo.business_id}
+            canManage={isAdmin || wo.owner_user_id === user?.id}
+          />
 
           <WorkOrderActivityCard businessId={wo.business_id} isRTL={isRTL} limit={50} />
         </>
