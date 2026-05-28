@@ -708,6 +708,24 @@ const AdminIdentity: React.FC = () => {
           <TabsContent value="integrity" className="mt-5">
             <IdentityIntegrityPanel isRTL={isRTL} />
           </TabsContent>
+
+          {/* ─── Activity log tab (admin_activity_log timeline) ─── */}
+          <TabsContent value="activity" className="mt-5">
+            <div className="rounded-2xl border border-border/30 bg-card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-heading font-bold text-sm flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-info" />
+                  {isRTL ? 'سجل نشاط الإدارة' : 'Admin activity log'}
+                </h3>
+                <p className="text-[11px] text-muted-foreground">
+                  {isRTL
+                    ? 'آخر الإجراءات على الحسابات والمنشآت — للقراءة فقط.'
+                    : 'Most recent actions on accounts and entities — read-only.'}
+                </p>
+              </div>
+              <IdentityActivityFeed isRTL={isRTL} limit={50} />
+            </div>
+          </TabsContent>
         </Tabs>
 
         {/* ─── Footer hint ─── */}
