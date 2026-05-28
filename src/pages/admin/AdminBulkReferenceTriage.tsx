@@ -136,6 +136,27 @@ export default function AdminBulkReferenceTriage() {
     maxHit: isRTL
       ? `تم اقتطاع المدخلات إلى ${ADMIN_BULK_REF_MAX} مرجع.`
       : `Input truncated to ${ADMIN_BULK_REF_MAX} refs.`,
+    exportCsv: isRTL ? 'تصدير CSV' : 'Export CSV',
+    savedSetsTitle: isRTL ? 'مجموعات محفوظة' : 'Saved Sets',
+    savedHelper: isRTL
+      ? 'محفوظ محليًا لهذا الحساب الإداري'
+      : 'Saved locally for this admin account',
+    setNamePh: isRTL ? 'اسم المجموعة' : 'Set name',
+    saveSet: isRTL ? 'حفظ المجموعة' : 'Save Set',
+    load: isRTL ? 'تحميل' : 'Load',
+    rename: isRTL ? 'إعادة تسمية' : 'Rename',
+    del: isRTL ? 'حذف' : 'Delete',
+    noSets: isRTL ? 'لا توجد مجموعات محفوظة.' : 'No saved sets.',
+    errInvalidName: isRTL
+      ? `الاسم يجب أن يكون بين 1 و ${SET_NAME_MAX} حرفًا.`
+      : `Name must be 1-${SET_NAME_MAX} characters.`,
+    errNoValid: isRTL ? 'لا توجد مراجع صالحة لحفظها.' : 'No valid refs to save.',
+    errTooMany: isRTL
+      ? `الحد الأقصى ${SAVED_SETS_MAX} مجموعة محفوظة.`
+      : `Limit is ${SAVED_SETS_MAX} saved sets.`,
+    errStorage: isRTL ? 'تعذّر الحفظ محليًا.' : 'Local storage unavailable.',
+    setSavedOk: isRTL ? 'تم الحفظ.' : 'Saved.',
+    refsInSet: isRTL ? 'مرجع' : 'refs',
   }), [isRTL]);
 
   const [text, setText] = useState('');
@@ -151,6 +172,28 @@ export default function AdminBulkReferenceTriage() {
   const [submitting, setSubmitting] = useState(false);
   const [bulkReport, setBulkReport] =
     useState<{ ok: string[]; fail: { ref: string; msg: string }[] } | null>(null);
+
+  // Saved ref sets (localStorage, per-admin).
+  const [uid, setUid] = useState<string | null>(null);
+  const [savedSets, setSavedSets] = useState<SavedRefSet[]>([]);
+  const [setName, setSetName] = useState('');
+  const [savedMsg, setSavedMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    void getCurrentUser().then((res) => {
+      if (!active) return;
+      const id = res.data?.user?.id ?? null;
+      setUid(id);
+      setSavedSets(listSavedRefSets(id));
+    }).catch(() => {
+      if (!active) return;
+      setSavedSets(listSavedRefSets(null));
+    });
+    return () => { active = false; };
+  }, []);
 
   const runTriage = useCallback(async () => {
     setLoading(true);
@@ -224,6 +267,54 @@ export default function AdminBulkReferenceTriage() {
     setBulkReport({ ok, fail });
     setSubmitting(false);
   }, [rows, selected, noteText, noteSeverity, tx.noSelection]);
+
+  const onExportCsv = useCallback(() => {
+    if (rows.length === 0) return;
+    downloadTriageCsv(rows);
+  }, [rows]);
+
+  const onSaveSet = useCallback(() => {
+    setSavedMsg(null);
+    const res = saveRefSet({ uid, name: setName, rawRefs: text });
+    if (res.error === 'invalid_name') return setSavedMsg({ tone: 'err', text: tx.errInvalidName });
+    if (res.error === 'no_valid_refs') return setSavedMsg({ tone: 'err', text: tx.errNoValid });
+    if (res.error === 'too_many_sets') return setSavedMsg({ tone: 'err', text: tx.errTooMany });
+    if (res.error === 'storage_unavailable') return setSavedMsg({ tone: 'err', text: tx.errStorage });
+    setSavedSets(listSavedRefSets(uid));
+    setSetName('');
+    setSavedMsg({ tone: 'ok', text: tx.setSavedOk });
+  }, [uid, setName, text, tx]);
+
+  const onLoadSet = useCallback((s: SavedRefSet) => {
+    setText(refsToTextarea(s.refs));
+    setResult(null);
+    setSelected(new Set());
+    setBulkReport(null);
+    setSavedMsg(null);
+  }, []);
+
+  const onDeleteSet = useCallback((id: string) => {
+    deleteRefSet({ uid, id });
+    setSavedSets(listSavedRefSets(uid));
+    if (renamingId === id) setRenamingId(null);
+  }, [uid, renamingId]);
+
+  const beginRename = useCallback((s: SavedRefSet) => {
+    setRenamingId(s.id);
+    setRenameDraft(s.name);
+  }, []);
+
+  const commitRename = useCallback(() => {
+    if (!renamingId) return;
+    const res = renameRefSet({ uid, id: renamingId, newName: renameDraft });
+    if (res.error === 'invalid_name') {
+      setSavedMsg({ tone: 'err', text: tx.errInvalidName });
+      return;
+    }
+    setSavedSets(listSavedRefSets(uid));
+    setRenamingId(null);
+    setRenameDraft('');
+  }, [uid, renamingId, renameDraft, tx]);
 
   return (
     <DashboardLayout>
