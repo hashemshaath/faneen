@@ -68,13 +68,16 @@ describe('ORG-RBAC-STRUCTURE-7 — validateBusinessInvariants', () => {
     );
   });
 
-  it('flags owner_not_primary_manager when active owner row lacks the flag', () => {
+  it('Option C: owner without is_primary_manager is NOT a violation by itself', () => {
     const v = validateBusinessInvariants(snap({
       staff: [{ user_id: OWNER, role: 'owner', is_active: true, is_primary_manager: false }],
     }));
-    expect(v.map((x) => x.code)).toEqual(
-      expect.arrayContaining(['owner_not_primary_manager', 'no_active_primary_manager']),
-    );
+    // Owner staff row is healthy → no owner_* violation.
+    expect(v.map((x) => x.code)).not.toContain('owner_missing_active_staff_row');
+    expect(v.map((x) => x.code)).not.toContain('owner_staff_inactive');
+    expect(v.map((x) => x.code)).not.toContain('owner_staff_role_changed');
+    // But because nobody is primary manager, we surface no_active_primary_manager.
+    expect(v.map((x) => x.code)).toContain('no_active_primary_manager');
   });
 
   it('flags multiple_active_primary_managers', () => {
