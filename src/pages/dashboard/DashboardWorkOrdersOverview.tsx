@@ -195,6 +195,8 @@ export default function DashboardWorkOrdersOverview() {
               recentActivityCount={activity.length}
             />
 
+            <ProviderConversionBreakdown metrics={opsMetrics} isRTL={isRTL} />
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <section className="lg:col-span-2 rounded-2xl border border-border/50 bg-card p-4 sm:p-5 space-y-3">
                 <header className="flex items-center justify-between gap-2">
