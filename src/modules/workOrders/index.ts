@@ -115,6 +115,36 @@ export {
 export type { BoqTotals } from "./services/recomputeBoqTotals";
 export { finalizeBoq } from "./services/finalizeBoq";
 
+// BUSINESS-WORKFLOW-5D — Quotations (snapshot from finalized BOQ)
+export { createQuotationFromBoq } from "./services/createQuotationFromBoq";
+export type {
+  CreateQuotationFromBoqInput,
+  CreateQuotationFromBoqResult,
+} from "./services/createQuotationFromBoq";
+export { listWorkOrderQuotations } from "./services/listWorkOrderQuotations";
+export { listQuotationItems } from "./services/listQuotationItems";
+export {
+  sendWorkOrderQuotation,
+  generateQuotationApprovalToken,
+} from "./services/sendWorkOrderQuotation";
+export type {
+  SendWorkOrderQuotationInput,
+  SendWorkOrderQuotationResult,
+} from "./services/sendWorkOrderQuotation";
+export { getQuotationByToken } from "./services/getQuotationByToken";
+export { approveWorkOrderQuotation } from "./services/approveWorkOrderQuotation";
+export type { ApproveWorkOrderQuotationInput } from "./services/approveWorkOrderQuotation";
+export { rejectWorkOrderQuotation } from "./services/rejectWorkOrderQuotation";
+export type { RejectWorkOrderQuotationInput } from "./services/rejectWorkOrderQuotation";
+export {
+  generateQuotationPdfData,
+  generateQuotationPdfDataFromPublicView,
+} from "./services/generateQuotationPdfData";
+export type {
+  QuotationPdfData,
+  QuotationPdfLine,
+} from "./services/generateQuotationPdfData";
+
 // BUSINESS-CORE-4 — shared lib helpers
 export * from "./lib/statusHelpers";
 export * from "./lib/source";
