@@ -73,6 +73,7 @@ import { Link } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { parseMembershipLimitError } from '@/lib/membership-errors';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
+import { BusinessOwnerPanel } from '@/components/admin/BusinessOwnerPanel';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
