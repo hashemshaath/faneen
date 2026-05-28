@@ -9,3 +9,6 @@
 export * from './getAdminIdentityIntegrityReport';
 export * from './getAdminCompanyAccessDiagnostic';
 export * from './getAdminUserAccessSummary';
+export * from './getAdminIdentityDuplicatesReport';
+export * from './checkIdentityAvailability';
+export * from './syncProfileEmailFromAuth';
