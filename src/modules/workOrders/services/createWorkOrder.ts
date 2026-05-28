@@ -16,8 +16,21 @@ export interface CreateWorkOrderInput {
   priority?: WorkOrderPriority;
   source_type?: "lead" | "quote" | "contract" | "manual";
   source_id?: string | null;
+  /**
+   * Optional human-readable source reference (e.g. CNT-1000007, QTE-1000003).
+   * Must match `^[A-Z]{2,6}-[A-Z0-9]+$` — silently dropped otherwise so we
+   * never persist a fabricated ref derived from a UUID.
+   */
+  source_ref_id?: string | null;
   due_at?: string | null;
   seedDefaultStages?: boolean;
+}
+
+const SOURCE_REF_PATTERN = /^[A-Z]{2,6}-[A-Z0-9]+$/;
+function safeSourceRef(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const v = value.trim().toUpperCase();
+  return SOURCE_REF_PATTERN.test(v) ? v : null;
 }
 
 export async function createWorkOrder(
@@ -37,6 +50,7 @@ export async function createWorkOrder(
     priority: input.priority ?? "medium",
     source_type: input.source_type ?? "manual",
     source_id: input.source_id ?? null,
+    source_ref_id: safeSourceRef(input.source_ref_id),
     due_at: input.due_at ?? null,
     status: "draft",
   };
@@ -45,7 +59,7 @@ export async function createWorkOrder(
     .from("work_orders")
     .insert(payload)
     .select(
-      "id, ref_id, business_id, source_type, source_id, title, customer_name, customer_phone, status, current_stage_key, priority, owner_user_id, created_by_user_id, due_at, completed_at, created_at, updated_at, deleted_at",
+      "id, ref_id, business_id, source_type, source_id, source_ref_id, title, customer_name, customer_phone, status, current_stage_key, priority, owner_user_id, created_by_user_id, due_at, completed_at, created_at, updated_at, deleted_at",
     )
     .maybeSingle();
 
