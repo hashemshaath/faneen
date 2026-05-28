@@ -15,6 +15,8 @@ import {
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
+import { canViewWorkspaceRoute } from '@/modules/workspace/permissions/routePermissions';
 import { Separator } from '@/components/ui/separator';
 import {
   LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut,
@@ -425,7 +427,15 @@ const RenderGroups: React.FC<{
   closeMobile: () => void;
   isSuperAdmin?: boolean;
   pathname: string;
-}> = ({ groups, collapsed, isRTL, closeMobile, isSuperAdmin = false, pathname }) => {
+  isAdmin?: boolean;
+  workspace?: { active_role: string | null; permissions: string[] } | null;
+}> = ({ groups, collapsed, isRTL, closeMobile, isSuperAdmin = false, pathname, isAdmin = false, workspace = null }) => {
+  // ORG-RBAC-STRUCTURE-1 — Phase D
+  // Centralized visibility: admin override always wins; owner short-circuits;
+  // unmapped routes fall through to legacy (visible) behavior. RLS remains
+  // authoritative on the server.
+  const canView = (url: string): boolean =>
+    canViewWorkspaceRoute(url, { workspace, isAdmin: isAdmin || isSuperAdmin });
   // Compute best-match across ALL visible items in ALL groups, then
   // pass it down. This prevents two sidebar entries (e.g. "Work Orders"
   // and "Operations Overview") from both highlighting on a nested route.
@@ -433,6 +443,7 @@ const RenderGroups: React.FC<{
   for (const g of groups) {
     for (const it of g.items) {
       if (it.superAdminOnly && !isSuperAdmin) continue;
+      if (!canView(it.url)) continue;
       // For `end:true` items we still feed them into the resolver — the
       // longest-prefix rule already gives the correct exact-match winner.
       allUrls.push(it.url);
@@ -443,7 +454,9 @@ const RenderGroups: React.FC<{
   return (
   <div className="space-y-1">
     {groups.map((group, gi) => {
-      const visibleItems = group.items.filter(item => !item.superAdminOnly || isSuperAdmin);
+      const visibleItems = group.items.filter(
+        (item) => (!item.superAdminOnly || isSuperAdmin) && canView(item.url),
+      );
       if (visibleItems.length === 0) return null;
       return (
         <SidebarGroup key={group.groupLabel.en} className={gi > 0 && !collapsed ? 'mt-1.5 pt-1.5 border-t border-sidebar-border/60' : ''}>
@@ -481,6 +494,7 @@ export const DashboardSidebar: React.FC = () => {
   const collapsed = state === 'collapsed';
   const { language, setLanguage, isRTL } = useLanguage();
   const { signOut, isAdmin, isSuperAdmin, isProvider } = useAuth();
+  const workspace = useActiveWorkspace();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -524,7 +538,16 @@ export const DashboardSidebar: React.FC = () => {
         )}
 
         {/* ─── Role-based menu ─── */}
-        <RenderGroups groups={baseGroups} collapsed={collapsed} isRTL={isRTL} closeMobile={closeMobile} isSuperAdmin={isSuperAdmin} pathname={pathname} />
+        <RenderGroups
+          groups={baseGroups}
+          collapsed={collapsed}
+          isRTL={isRTL}
+          closeMobile={closeMobile}
+          isSuperAdmin={isSuperAdmin}
+          isAdmin={isAdmin}
+          workspace={{ active_role: workspace.active_role, permissions: workspace.permissions }}
+          pathname={pathname}
+        />
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3 space-y-1">
