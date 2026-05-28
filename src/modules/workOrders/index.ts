@@ -136,6 +136,12 @@ export { approveWorkOrderQuotation } from "./services/approveWorkOrderQuotation"
 export type { ApproveWorkOrderQuotationInput } from "./services/approveWorkOrderQuotation";
 export { rejectWorkOrderQuotation } from "./services/rejectWorkOrderQuotation";
 export type { RejectWorkOrderQuotationInput } from "./services/rejectWorkOrderQuotation";
+// BUSINESS-WORKFLOW-5E — Contract draft conversion from approved quotation.
+export { createContractDraftFromApprovedQuotation } from "./services/createContractDraftFromApprovedQuotation";
+export type {
+  CreateContractDraftFromApprovedQuotationInput,
+  CreateContractDraftFromApprovedQuotationResult,
+} from "./services/createContractDraftFromApprovedQuotation";
 export {
   generateQuotationPdfData,
   generateQuotationPdfDataFromPublicView,
