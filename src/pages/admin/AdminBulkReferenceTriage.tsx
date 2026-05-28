@@ -293,7 +293,7 @@ export default function AdminBulkReferenceTriage() {
     setSavedMsg(null);
   }, []);
 
-  const onDeleteSet = useCallback((id: string) => {
+  const onRemoveSet = useCallback((id: string) => {
     deleteRefSet({ uid, id });
     setSavedSets(listSavedRefSets(uid));
     if (renamingId === id) setRenamingId(null);
@@ -511,7 +511,7 @@ export default function AdminBulkReferenceTriage() {
                             size="sm"
                             variant="ghost"
                             className="rounded-xl h-7 text-[11px] text-destructive"
-                            onClick={() => onDeleteSet(s.id)}
+                            onClick={() => onRemoveSet(s.id)}
                           >
                             <Trash2 className="w-3 h-3 me-1" /> {tx.del}
                           </Button>
