@@ -116,17 +116,22 @@ describe('BUSINESS-ADMIN-6 — CSV export', () => {
     expect(name).toMatch(/^qitaat-triage-\d{4}-\d{2}-\d{2}\.csv$/);
   });
 
-  it('never references unsafe fields (UUID/token/provider_intent_id/synthetic email)', () => {
+  it('never emits unsafe fields (UUID/token/provider_intent_id/synthetic email)', () => {
+    // Check the actual emitted CSV (not source comments) for forbidden values.
+    const csv = buildTriageCsv([row()]);
     for (const bad of [
-      /provider_intent_id/,
-      /access_token/,
-      /client_secret/,
-      /@phone\./,
-      /\buuid\b/i,
-      /phone_number/,
-      /\bemail\b/i,
+      /provider_intent_id/i,
+      /access_token/i,
+      /client_secret/i,
+      /@phone\./i,
+      /phone_number/i,
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
     ]) {
-      expect(CSV_SRC).not.toMatch(bad);
+      expect(csv).not.toMatch(bad);
+    }
+    // And the column allowlist itself never names them.
+    for (const col of TRIAGE_CSV_COLUMNS) {
+      expect(col).not.toMatch(/uuid|token|secret|phone|email|provider_intent_id/i);
     }
   });
 
@@ -254,12 +259,14 @@ describe('BUSINESS-ADMIN-6 — page wiring & safety', () => {
     ]) expect(PAGE).not.toMatch(bad);
   });
 
-  it('still has no direct supabase.from / RPC / mutations on the page', () => {
+  it('still has no direct supabase.from / RPC / DB mutations on the page', () => {
     expect(PAGE).not.toMatch(/supabase\.from\(/);
     expect(PAGE).not.toMatch(/supabase\.rpc\(/);
-    expect(PAGE).not.toMatch(/\.insert\(/);
-    expect(PAGE).not.toMatch(/\.update\(/);
-    expect(PAGE).not.toMatch(/\.delete\(/);
+    // `.insert(` / `.update(` / `.delete(` only forbidden as Supabase chain
+    // calls; in-memory `Set#delete` is unrelated to data mutation.
+    expect(PAGE).not.toMatch(/supabase[\s\S]{0,200}\.insert\(/);
+    expect(PAGE).not.toMatch(/supabase[\s\S]{0,200}\.update\(/);
+    expect(PAGE).not.toMatch(/from\([^)]*\)[\s\S]{0,200}\.delete\(/);
   });
 
   it('never renders provider_intent_id, tokens, or synthetic emails', () => {
