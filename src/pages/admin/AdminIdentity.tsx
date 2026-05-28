@@ -349,6 +349,19 @@ const AdminIdentity: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl gap-1.5"
+              onClick={() => setPaletteOpen(true)}
+              aria-label={isRTL ? 'فتح لوحة الأوامر' : 'Open command palette'}
+            >
+              <Command className="w-3.5 h-3.5" />
+              <span>{isRTL ? 'لوحة الأوامر' : 'Command'}</span>
+              <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0 rounded border border-border/40 bg-muted/40 text-[10px] font-mono">
+                <Command className="w-2.5 h-2.5" />K
+              </kbd>
+            </Button>
             <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
               <Link to="/admin/identity?view=users&create=individual">
                 <UserPlus className="w-4 h-4" />{isRTL ? 'مستخدم جديد' : 'New user'}
