@@ -29,6 +29,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Layers, ShieldCheck, Activity, RotateCw, Plus, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Bi } from '@/components/common/Bilingual';
 import {
   listBusinessTeams,
   createBusinessTeam,
