@@ -21,6 +21,10 @@ import {
 } from '@/modules/businesses';
 import { getProfileByEmail } from '@/modules/users/services/getProfileByEmail';
 import { getProfileByRefId, searchProfilesByOr } from '@/modules/users';
+import {
+  adminCreateBusinessWithOwner,
+  type AdminCreateBusinessPayload,
+} from '@/modules/businesses/services/adminCreateBusinessWithOwner';
 import { nationalAddressLookup } from '@/modules/locations';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import { RegionCitySelector } from '@/components/forms/RegionCitySelector';
@@ -237,6 +241,13 @@ const AdminBusinesses = () => {
   // ── Create new business (admin) ──
   const [creatingBiz, setCreatingBiz] = useState(false);
   const emptyCreateForm = () => ({
+    // Owner mode: pick existing user, create a new account, or send invite
+    owner_mode: 'existing' as 'existing' | 'new' | 'invite',
+    owner_email: '',
+    owner_password: '',
+    owner_full_name: '',
+    owner_phone: '',
+    owner_position: '',
     owner_query: '',                  // email OR USR-XXXXX
     resolved_user_id: '' as string,
     resolved_owner_label: '' as string,
@@ -615,12 +626,6 @@ const AdminBusinesses = () => {
   /* ─── Create business mutation ─── */
   const createBizMutation = useMutation({
     mutationFn: async () => {
-      // Owner is optional — fallback to the current admin so the row satisfies user_id NOT NULL.
-      // Admin can reassign the real owner later from the edit panel / team tab.
-      const ownerId = createForm.resolved_user_id || user?.id;
-      if (!ownerId) {
-        throw new Error(isRTL ? 'تعذّر تحديد منشئ السجل' : 'Cannot determine record creator');
-      }
       if (!createForm.username || !createForm.username_ok) {
         throw new Error(isRTL ? 'اسم المستخدم غير صالح أو محجوز' : 'Username is invalid or taken');
       }
@@ -631,8 +636,10 @@ const AdminBusinesses = () => {
         ? toE164({ countryCode: createForm.phone_cc || '+966', national: createForm.phone_national })
         : null;
       const region = SA_REGIONS.find((r) => r.id === createForm.region_id);
-      const payload: Record<string, unknown> = {
-        user_id: ownerId,
+      const ownerMode = (createForm.owner_mode || 'existing') as 'existing' | 'new' | 'invite';
+
+      // Shared business payload used by both code paths
+      const bizCore: AdminCreateBusinessPayload = {
         username: createForm.username.trim().toLowerCase(),
         name_ar: createForm.name_ar.trim(),
         name_en: createForm.name_en?.trim() || null,
@@ -653,6 +660,44 @@ const AdminBusinesses = () => {
         additional_number: createForm.additional_number?.trim() || null,
         address: createForm.address?.trim() || null,
         address_en: createForm.address_en?.trim() || null,
+      };
+
+      // Path A — Create new auth user (or invite) via edge function
+      if (ownerMode === 'new' || ownerMode === 'invite') {
+        const email = (createForm.owner_email || '').trim().toLowerCase();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          throw new Error(isRTL ? 'بريد المسؤول غير صالح' : 'Invalid manager email');
+        }
+        if (ownerMode === 'new' && (createForm.owner_password || '').length < 8) {
+          throw new Error(isRTL ? 'كلمة المرور يجب ألا تقل عن 8 أحرف' : 'Password must be at least 8 characters');
+        }
+        const res = await adminCreateBusinessWithOwner({
+          owner: {
+            mode: ownerMode,
+            email,
+            password: ownerMode === 'new' ? createForm.owner_password : undefined,
+            full_name: (createForm.owner_full_name || createForm.name_ar || '').trim(),
+            phone: (createForm.owner_phone || '').trim() || undefined,
+            position: (createForm.owner_position || '').trim() || undefined,
+            auto_confirm: true,
+          },
+          business: bizCore,
+          redirect_to: `${window.location.origin}/auth/reset-password`,
+        });
+        if (!res.success || !res.business) {
+          throw new Error(res.error || (isRTL ? 'فشل الإنشاء' : 'Create failed'));
+        }
+        return res.business as unknown as Record<string, unknown>;
+      }
+
+      // Path B — Existing user (default). Falls back to current admin only if no picker.
+      const ownerId = createForm.resolved_user_id || user?.id;
+      if (!ownerId) {
+        throw new Error(isRTL ? 'تعذّر تحديد المالك' : 'Cannot determine owner');
+      }
+      const payload: Record<string, unknown> = {
+        ...bizCore,
+        user_id: ownerId,
         approval_status: 'approved',
         is_active: true,
       };
@@ -662,12 +707,25 @@ const AdminBusinesses = () => {
         terminal: 'single',
       });
       if (error) throw error;
-      await logAction('business_created', (data as any)?.id ?? '', { username: payload.username });
+      await logAction('business_created', (data as { id?: string } | null)?.id ?? '', { username: payload.username });
       return data as Record<string, unknown>;
     },
     onSuccess: (row) => {
       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
-      toast.success(isRTL ? 'تم إنشاء المنشأة' : 'Business created');
+      const mode = createForm.owner_mode;
+      toast.success(
+        isRTL
+          ? mode === 'invite'
+            ? 'تم إنشاء المنشأة وإرسال دعوة للمسؤول'
+            : mode === 'new'
+            ? 'تم إنشاء المنشأة وحساب المسؤول'
+            : 'تم إنشاء المنشأة'
+          : mode === 'invite'
+          ? 'Business created — invitation sent to manager'
+          : mode === 'new'
+          ? 'Business and manager account created'
+          : 'Business created',
+      );
       setCreatingBiz(false);
       setCreateForm(emptyCreateForm());
       if (row) openEdit(row);
@@ -1319,18 +1377,44 @@ const AdminBusinesses = () => {
                 <div className="flex items-center gap-2">
                   <User className="w-3.5 h-3.5 text-info" />
                   <Label className="text-xs font-semibold">
-                    {isRTL ? '١) المسؤول / المالك للمنشأة (اختياري)' : '1) Entity owner / responsible person (optional)'}
+                    {isRTL ? '١) المدير / المسؤول للمنشأة' : '1) Entity manager / responsible person'}
                   </Label>
                   <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
-                    {isRTL ? 'يمكن إسناده لاحقاً' : 'Can be assigned later'}
+                    {isRTL ? 'إلزامي' : 'Required'}
                   </span>
                 </div>
                 <p className="text-[10.5px] text-muted-foreground leading-relaxed">
                   {isRTL
-                    ? 'يمكنك إنشاء المنشأة الآن دون مالك ثم إسناد مالك/مدير لاحقاً من تبويب الفريق. إذا تركته فارغاً سيُسجَّل الإنشاء باسم حسابك الإداري مؤقتاً. ابحث بالاسم، البريد، اسم المستخدم، أو معرّف USR-XXXXXXX.'
-                    : 'You can create the entity now without an owner and assign one later from the team tab. If left empty, your admin account is recorded as the temporary creator. Search by name, email, username, or USR-XXXXXXX.'}
+                    ? 'اختر طريقة ربط المدير المسؤول عن هذه المنشأة: مستخدم موجود مسبقاً، إنشاء حساب جديد فوراً ببيانات دخول، أو إرسال دعوة بالبريد ليُعيّن المسؤول كلمة مروره بنفسه.'
+                    : 'Choose how to bind the manager for this entity: pick an existing user, create a brand-new account with credentials immediately, or send an email invite so the manager sets their own password.'}
                 </p>
-                {createForm.resolved_user_id ? (
+
+                {/* Owner mode tabs (existing / new / invite) */}
+                <div className="grid grid-cols-3 gap-1 rounded-xl border border-border/40 bg-card p-1">
+                  {([
+                    { id: 'existing', ar: 'مستخدم موجود', en: 'Existing user' },
+                    { id: 'new',      ar: 'إنشاء حساب', en: 'New account' },
+                    { id: 'invite',   ar: 'دعوة بالبريد', en: 'Email invite' },
+                  ] as const).map((opt) => {
+                    const active = (createForm.owner_mode || 'existing') === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setCField('owner_mode', opt.id)}
+                        className={`h-9 rounded-lg text-[11px] font-medium transition-all ${
+                          active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'
+                        }`}
+                      >
+                        {isRTL ? opt.ar : opt.en}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Mode: Existing user picker */}
+                {(createForm.owner_mode || 'existing') === 'existing' && (
+                  createForm.resolved_user_id ? (
                   <div className="flex items-center justify-between gap-2 rounded-lg border border-success/40 bg-success/10 px-3 py-2">
                     <div className="flex items-center gap-2 min-w-0">
                       <CheckCircle className="w-4 h-4 text-success shrink-0" />
@@ -1402,6 +1486,64 @@ const AdminBusinesses = () => {
                         <AlertTriangle className="w-3 h-3" /> {createForm.owner_error}
                       </p>
                     )}
+                  </div>
+                ))}
+
+                {/* Mode: Create new account */}
+                {createForm.owner_mode === 'new' && (
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'الاسم الكامل للمسؤول' : 'Manager full name'}</Label>
+                      <Input value={createForm.owner_full_name} onChange={(e) => setCField('owner_full_name', e.target.value)} dir="auto" className="h-10 rounded-xl" placeholder={isRTL ? 'مثال: محمد العتيبي' : 'e.g. Mohammed Al-Otaibi'} />
+                    </div>
+                    <div>
+                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'المنصب' : 'Position'}</Label>
+                      <Input value={createForm.owner_position} onChange={(e) => setCField('owner_position', e.target.value)} dir="auto" className="h-10 rounded-xl" placeholder={isRTL ? 'مدير عام' : 'General Manager'} />
+                    </div>
+                    <div>
+                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'البريد (تسجيل الدخول)' : 'Email (login)'}</Label>
+                      <Input value={createForm.owner_email} onChange={(e) => setCField('owner_email', e.target.value.toLowerCase().trim())} dir="ltr" type="email" className="h-10 rounded-xl tech-content" placeholder="manager@company.com" />
+                    </div>
+                    <div>
+                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'كلمة المرور (8+ أحرف)' : 'Password (8+ chars)'}</Label>
+                      <Input value={createForm.owner_password} onChange={(e) => setCField('owner_password', e.target.value)} dir="ltr" type="text" className="h-10 rounded-xl tech-content" placeholder="Tmp@2026!" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'الجوال (اختياري)' : 'Mobile (optional)'}</Label>
+                      <Input value={createForm.owner_phone} onChange={(e) => setCField('owner_phone', e.target.value)} dir="ltr" className="h-10 rounded-xl tech-content" placeholder="+9665XXXXXXXX" />
+                    </div>
+                    <p className="sm:col-span-2 text-[10.5px] text-info bg-info/5 border border-info/20 rounded-lg px-3 py-2">
+                      {isRTL
+                        ? 'سيتم إنشاء حساب جديد فوراً ببريد وكلمة المرور المُدخلَين، وسيكون هو مالك المنشأة. شارك بيانات الدخول مع المسؤول عبر قناة آمنة.'
+                        : 'A new account will be created instantly with the email and password provided, and will own this entity. Share login credentials with the manager via a secure channel.'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Mode: Email invite */}
+                {createForm.owner_mode === 'invite' && (
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'الاسم الكامل للمسؤول' : 'Manager full name'}</Label>
+                      <Input value={createForm.owner_full_name} onChange={(e) => setCField('owner_full_name', e.target.value)} dir="auto" className="h-10 rounded-xl" />
+                    </div>
+                    <div>
+                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'المنصب' : 'Position'}</Label>
+                      <Input value={createForm.owner_position} onChange={(e) => setCField('owner_position', e.target.value)} dir="auto" className="h-10 rounded-xl" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'البريد (سيُرسل عليه رابط التفعيل)' : 'Email (activation link will be sent here)'}</Label>
+                      <Input value={createForm.owner_email} onChange={(e) => setCField('owner_email', e.target.value.toLowerCase().trim())} dir="ltr" type="email" className="h-10 rounded-xl tech-content" placeholder="manager@company.com" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label className="text-[10.5px] text-muted-foreground">{isRTL ? 'الجوال (اختياري)' : 'Mobile (optional)'}</Label>
+                      <Input value={createForm.owner_phone} onChange={(e) => setCField('owner_phone', e.target.value)} dir="ltr" className="h-10 rounded-xl tech-content" placeholder="+9665XXXXXXXX" />
+                    </div>
+                    <p className="sm:col-span-2 text-[10.5px] text-accent bg-accent/5 border border-accent/20 rounded-lg px-3 py-2">
+                      {isRTL
+                        ? 'سيتم إنشاء الحساب وإرسال رابط تعيين كلمة المرور للمسؤول على بريده ليُكمل التفعيل بنفسه.'
+                        : 'The account will be created and a set-password link will be emailed to the manager so they can complete activation themselves.'}
+                    </p>
                   </div>
                 )}
               </div>
