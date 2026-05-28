@@ -61,6 +61,6 @@ export async function transitionWorkOrderStage(
     },
   );
   if (error) return { data: null, error };
-  const payload = (data ?? null) as TransitionWorkOrderStageResult | null;
+  const payload = (data ?? null) as unknown as TransitionWorkOrderStageResult | null;
   return { data: payload, error: null };
 }
