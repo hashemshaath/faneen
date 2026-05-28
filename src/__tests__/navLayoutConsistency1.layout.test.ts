@@ -67,9 +67,10 @@ describe('NAV-LAYOUT-CONSISTENCY-1 — Provider Operations Shortcuts card', () =
     expect(src).toMatch(/اختصارات عمليات المزود/);
   });
   it('links to the three provider operations pages', () => {
-    expect(src).toMatch(/to="\/dashboard\/work-orders"/);
-    expect(src).toMatch(/to="\/dashboard\/work-orders\/overview"/);
-    expect(src).toMatch(/to="\/dashboard\/operations\/feed"/);
+    // Accept both literal JSX (`to="…"`) and data-array (`to: '…'`) forms.
+    expect(src).toMatch(/to=("|')\/dashboard\/work-orders\1|to:\s*'\/dashboard\/work-orders'/);
+    expect(src).toMatch(/to=("|')\/dashboard\/work-orders\/overview\1|to:\s*'\/dashboard\/work-orders\/overview'/);
+    expect(src).toMatch(/to=("|')\/dashboard\/operations\/feed\1|to:\s*'\/dashboard\/operations\/feed'/);
   });
   it('includes the workspace-scope helper text', () => {
     expect(src).toMatch(/provider-scoped and depend on the active workspace|تعتمد على مساحة العمل النشطة/);
