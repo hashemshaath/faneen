@@ -30,6 +30,9 @@ const ALLOWED_DIR_PREFIXES = [
   // Tests and audits (this file references the forbidden patterns by name).
   'src/__tests__/rtlLtrDirectionAudit.test.ts',
   'src/__tests__/rtlLtrCentralAudit.test.ts',
+  // Sidebar test asserts the forbidden patterns are absent; literal strings
+  // referencing `before:left-0` / `before:right-0` appear by name.
+  'src/__tests__/navUiPolish1.sidebar.test.ts',
 ];
 
 const isAllowed = (rel: string) =>
