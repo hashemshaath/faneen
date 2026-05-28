@@ -35,6 +35,18 @@ export type { GetWorkOrderBySourceInput } from "./services/getWorkOrderBySource"
 export { getAdminTaskSummaryByRef } from "./services/getAdminTaskSummaryByRef";
 export type { AdminTaskSummary } from "./services/getAdminTaskSummaryByRef";
 
+// BUSINESS-WORKFLOW-4 — Attachments & Measurements
+export { listWorkOrderAttachments } from "./services/listWorkOrderAttachments";
+export { insertWorkOrderAttachment } from "./services/insertWorkOrderAttachment";
+export type { InsertWorkOrderAttachmentInput } from "./services/insertWorkOrderAttachment";
+export { softDeleteWorkOrderAttachment } from "./services/softDeleteWorkOrderAttachment";
+export { listWorkOrderMeasurements } from "./services/listWorkOrderMeasurements";
+export { insertWorkOrderMeasurement } from "./services/insertWorkOrderMeasurement";
+export type { InsertWorkOrderMeasurementInput } from "./services/insertWorkOrderMeasurement";
+export { updateWorkOrderMeasurement } from "./services/updateWorkOrderMeasurement";
+export type { UpdateWorkOrderMeasurementPatch } from "./services/updateWorkOrderMeasurement";
+export { softDeleteWorkOrderMeasurement } from "./services/softDeleteWorkOrderMeasurement";
+
 // BUSINESS-CORE-4 — shared lib helpers
 export * from "./lib/statusHelpers";
 export * from "./lib/source";
