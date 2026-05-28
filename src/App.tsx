@@ -274,6 +274,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/contracts" element={<ProtectedRoute><DashboardContracts /></ProtectedRoute>} />
           <Route path="/dashboard/work-orders" element={<ProtectedRoute><DashboardWorkOrders /></ProtectedRoute>} />
           <Route path="/dashboard/work-orders/overview" element={<ProtectedRoute><DashboardWorkOrdersOverview /></ProtectedRoute>} />
+          <Route path="/dashboard/work-orders/board" element={<ProtectedRoute><ProductionBoardPage /></ProtectedRoute>} />
           <Route path="/dashboard/work-orders/:refId" element={<ProtectedRoute><DashboardWorkOrderDetail /></ProtectedRoute>} />
           <Route path="/dashboard/messages" element={<ProtectedRoute><DashboardMessages /></ProtectedRoute>} />
           <Route path="/dashboard/bookmarks" element={<ProtectedRoute><DashboardBookmarks /></ProtectedRoute>} />
