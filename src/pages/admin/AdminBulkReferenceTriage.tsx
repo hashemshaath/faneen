@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertCircle, CheckCircle2, ExternalLink, Loader2, ShieldCheck,
-  StickyNote, Search as SearchIcon,
+  StickyNote, Search as SearchIcon, Download, Save, FolderOpen, Trash2, Pencil,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -27,6 +28,19 @@ import {
   type AdminNoteEntityType,
 } from '@/modules/admin';
 import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
+import { downloadTriageCsv } from '@/lib/admin/triageCsv';
+import {
+  listSavedRefSets,
+  saveRefSet,
+  renameRefSet,
+  deleteRefSet,
+  refsToTextarea,
+  SAVED_SETS_MAX,
+  REFS_PER_SET_MAX,
+  SET_NAME_MAX,
+  type SavedRefSet,
+} from '@/lib/admin/savedRefSets';
+import { getCurrentUser } from '@/modules/identity/services/session/getCurrentUser';
 
 /**
  * BUSINESS-ADMIN-5 — Admin Bulk Reference Triage.
@@ -122,6 +136,27 @@ export default function AdminBulkReferenceTriage() {
     maxHit: isRTL
       ? `تم اقتطاع المدخلات إلى ${ADMIN_BULK_REF_MAX} مرجع.`
       : `Input truncated to ${ADMIN_BULK_REF_MAX} refs.`,
+    exportCsv: isRTL ? 'تصدير CSV' : 'Export CSV',
+    savedSetsTitle: isRTL ? 'مجموعات محفوظة' : 'Saved Sets',
+    savedHelper: isRTL
+      ? 'محفوظ محليًا لهذا الحساب الإداري'
+      : 'Saved locally for this admin account',
+    setNamePh: isRTL ? 'اسم المجموعة' : 'Set name',
+    saveSet: isRTL ? 'حفظ المجموعة' : 'Save Set',
+    load: isRTL ? 'تحميل' : 'Load',
+    rename: isRTL ? 'إعادة تسمية' : 'Rename',
+    del: isRTL ? 'حذف' : 'Delete',
+    noSets: isRTL ? 'لا توجد مجموعات محفوظة.' : 'No saved sets.',
+    errInvalidName: isRTL
+      ? `الاسم يجب أن يكون بين 1 و ${SET_NAME_MAX} حرفًا.`
+      : `Name must be 1-${SET_NAME_MAX} characters.`,
+    errNoValid: isRTL ? 'لا توجد مراجع صالحة لحفظها.' : 'No valid refs to save.',
+    errTooMany: isRTL
+      ? `الحد الأقصى ${SAVED_SETS_MAX} مجموعة محفوظة.`
+      : `Limit is ${SAVED_SETS_MAX} saved sets.`,
+    errStorage: isRTL ? 'تعذّر الحفظ محليًا.' : 'Local storage unavailable.',
+    setSavedOk: isRTL ? 'تم الحفظ.' : 'Saved.',
+    refsInSet: isRTL ? 'مرجع' : 'refs',
   }), [isRTL]);
 
   const [text, setText] = useState('');
@@ -137,6 +172,28 @@ export default function AdminBulkReferenceTriage() {
   const [submitting, setSubmitting] = useState(false);
   const [bulkReport, setBulkReport] =
     useState<{ ok: string[]; fail: { ref: string; msg: string }[] } | null>(null);
+
+  // Saved ref sets (localStorage, per-admin).
+  const [uid, setUid] = useState<string | null>(null);
+  const [savedSets, setSavedSets] = useState<SavedRefSet[]>([]);
+  const [setName, setSetName] = useState('');
+  const [savedMsg, setSavedMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    void getCurrentUser().then((res) => {
+      if (!active) return;
+      const id = res.data?.user?.id ?? null;
+      setUid(id);
+      setSavedSets(listSavedRefSets(id));
+    }).catch(() => {
+      if (!active) return;
+      setSavedSets(listSavedRefSets(null));
+    });
+    return () => { active = false; };
+  }, []);
 
   const runTriage = useCallback(async () => {
     setLoading(true);
@@ -210,6 +267,54 @@ export default function AdminBulkReferenceTriage() {
     setBulkReport({ ok, fail });
     setSubmitting(false);
   }, [rows, selected, noteText, noteSeverity, tx.noSelection]);
+
+  const onExportCsv = useCallback(() => {
+    if (rows.length === 0) return;
+    downloadTriageCsv(rows);
+  }, [rows]);
+
+  const onSaveSet = useCallback(() => {
+    setSavedMsg(null);
+    const res = saveRefSet({ uid, name: setName, rawRefs: text });
+    if (res.error === 'invalid_name') return setSavedMsg({ tone: 'err', text: tx.errInvalidName });
+    if (res.error === 'no_valid_refs') return setSavedMsg({ tone: 'err', text: tx.errNoValid });
+    if (res.error === 'too_many_sets') return setSavedMsg({ tone: 'err', text: tx.errTooMany });
+    if (res.error === 'storage_unavailable') return setSavedMsg({ tone: 'err', text: tx.errStorage });
+    setSavedSets(listSavedRefSets(uid));
+    setSetName('');
+    setSavedMsg({ tone: 'ok', text: tx.setSavedOk });
+  }, [uid, setName, text, tx]);
+
+  const onLoadSet = useCallback((s: SavedRefSet) => {
+    setText(refsToTextarea(s.refs));
+    setResult(null);
+    setSelected(new Set());
+    setBulkReport(null);
+    setSavedMsg(null);
+  }, []);
+
+  const onRemoveSet = useCallback((id: string) => {
+    deleteRefSet({ uid, id });
+    setSavedSets(listSavedRefSets(uid));
+    if (renamingId === id) setRenamingId(null);
+  }, [uid, renamingId]);
+
+  const beginRename = useCallback((s: SavedRefSet) => {
+    setRenamingId(s.id);
+    setRenameDraft(s.name);
+  }, []);
+
+  const commitRename = useCallback(() => {
+    if (!renamingId) return;
+    const res = renameRefSet({ uid, id: renamingId, newName: renameDraft });
+    if (res.error === 'invalid_name') {
+      setSavedMsg({ tone: 'err', text: tx.errInvalidName });
+      return;
+    }
+    setSavedSets(listSavedRefSets(uid));
+    setRenamingId(null);
+    setRenameDraft('');
+  }, [uid, renamingId, renameDraft, tx]);
 
   return (
     <DashboardLayout>
@@ -292,6 +397,131 @@ export default function AdminBulkReferenceTriage() {
                 <AlertCircle className="w-3.5 h-3.5" /> {error}
               </p>
             ) : null}
+          </CardContent>
+        </Card>
+
+        {/* Toolbar: CSV export + Saved Sets (BUSINESS-ADMIN-6) */}
+        <Card className="border-border/40" data-testid="triage-toolbar">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <FolderOpen className="w-4 h-4 text-muted-foreground" />
+              {tx.savedSetsTitle}
+            </CardTitle>
+            <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3" /> {tx.savedHelper}
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="rounded-xl h-9"
+                onClick={onExportCsv}
+                disabled={rows.length === 0}
+                data-testid="triage-export-csv"
+              >
+                <Download className="w-3.5 h-3.5 me-1" /> {tx.exportCsv}
+              </Button>
+              <div className="flex items-center gap-1">
+                <Input
+                  value={setName}
+                  onChange={(e) => setSetName(e.target.value)}
+                  placeholder={tx.setNamePh}
+                  maxLength={SET_NAME_MAX}
+                  className="h-9 w-44 text-xs rounded-xl"
+                  aria-label={tx.setNamePh}
+                  data-testid="triage-set-name"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  className="rounded-xl h-9"
+                  onClick={onSaveSet}
+                  disabled={setName.trim().length === 0 || text.trim().length === 0}
+                  data-testid="triage-save-set"
+                >
+                  <Save className="w-3.5 h-3.5 me-1" /> {tx.saveSet}
+                </Button>
+              </div>
+              <span className="text-[10px] text-muted-foreground tech-content">
+                {savedSets.length}/{SAVED_SETS_MAX} · {REFS_PER_SET_MAX} max/set
+              </span>
+            </div>
+            {savedMsg ? (
+              <p
+                className={`text-[11px] ${savedMsg.tone === 'ok' ? 'text-emerald-600' : 'text-destructive'}`}
+                role="status"
+              >
+                {savedMsg.text}
+              </p>
+            ) : null}
+            {savedSets.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground">{tx.noSets}</p>
+            ) : (
+              <ul className="divide-y divide-border/30 rounded-xl border border-border/40" data-testid="triage-saved-sets">
+                {savedSets.map((s) => (
+                  <li key={s.id} className="flex flex-wrap items-center gap-2 px-2 py-1.5">
+                    {renamingId === s.id ? (
+                      <>
+                        <Input
+                          value={renameDraft}
+                          onChange={(e) => setRenameDraft(e.target.value)}
+                          maxLength={SET_NAME_MAX}
+                          className="h-8 w-44 text-xs rounded-xl"
+                          aria-label={tx.rename}
+                        />
+                        <Button size="sm" className="rounded-xl h-7 text-[11px]" onClick={commitRename}>
+                          {tx.rename}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="rounded-xl h-7 text-[11px]"
+                          onClick={() => { setRenamingId(null); setRenameDraft(''); }}
+                        >
+                          {tx.clear}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-xs font-medium truncate max-w-[14rem]" dir="auto">{s.name}</span>
+                        <span className="text-[10px] text-muted-foreground tech-content">
+                          {s.refs.length} {tx.refsInSet}
+                        </span>
+                        <div className="ms-auto flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-xl h-7 text-[11px]"
+                            onClick={() => onLoadSet(s)}
+                          >
+                            <FolderOpen className="w-3 h-3 me-1" /> {tx.load}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="rounded-xl h-7 text-[11px]"
+                            onClick={() => beginRename(s)}
+                          >
+                            <Pencil className="w-3 h-3 me-1" /> {tx.rename}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="rounded-xl h-7 text-[11px] text-destructive"
+                            onClick={() => onRemoveSet(s.id)}
+                          >
+                            <Trash2 className="w-3 h-3 me-1" /> {tx.del}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
 
