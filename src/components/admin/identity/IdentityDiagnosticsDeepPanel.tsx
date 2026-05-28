@@ -285,7 +285,7 @@ const DiagnosticCard: React.FC<{
       </div>
 
       {group.records.length > 0 && (
-        <ul className="space-y-1.5 mb-3 max-h-56 overflow-auto pr-1">
+        <ul className="space-y-1.5 mb-3 max-h-56 overflow-auto pe-1">
           {group.records.slice(0, 10).map((r) => (
             <li key={r.key} className="flex items-center gap-2 rounded-lg bg-muted/30 border border-border/30 px-2 py-1.5">
               <div className="flex-1 min-w-0">

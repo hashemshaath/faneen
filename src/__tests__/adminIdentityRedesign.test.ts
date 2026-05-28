@@ -29,12 +29,12 @@ describe('ADMIN-IDENTITY-REDESIGN-1 page header & subtitle', () => {
 
 describe('ADMIN-IDENTITY-REDESIGN-1 header quick actions', () => {
   it('exposes Add business CTA', () => {
-    expect(src).toContain('إضافة منشأة');
-    expect(src).toContain('Add business');
+    expect(src).toContain('منشأة جديدة');
+    expect(src).toContain('New business');
   });
   it('exposes Add / invite owner CTA', () => {
-    expect(src).toContain('إضافة/دعوة مالك');
-    expect(src).toContain('Add / invite owner');
+    expect(src).toContain('دعوة مالك');
+    expect(src).toContain('Invite owner');
   });
   it('exposes a Refresh action wired to invalidateQueries', () => {
     expect(src).toMatch(/refreshDiagnostics/);
