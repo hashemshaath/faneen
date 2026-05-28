@@ -30,3 +30,6 @@ export * from './services/listRecentLeadsForBusiness';
 
 // EF-2 edge function wrappers
 export * from './services/getRevealedContact';
+// BUSINESS-ADMIN-4: admin-safe enrichment wrapper for LED/LR refs
+export { getAdminLeadSummaryByRef } from './services/getAdminLeadSummaryByRef';
+export type { AdminLeadSummary } from './services/getAdminLeadSummaryByRef';

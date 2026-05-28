@@ -106,3 +106,7 @@ export type {
   FindBusinessDuplicateCandidatesOptions,
   FindBusinessDuplicateCandidatesKind,
 } from './services/findBusinessDuplicateCandidates';
+
+// BUSINESS-ADMIN-4: admin-safe enrichment wrapper for ENT/BIZ refs
+export { getAdminBusinessSummaryByRef } from './services/getAdminBusinessSummaryByRef';
+export type { AdminBusinessSummary } from './services/getAdminBusinessSummaryByRef';

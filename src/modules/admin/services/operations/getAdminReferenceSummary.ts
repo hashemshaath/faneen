@@ -2,6 +2,12 @@ import { lookupByReference } from "@/modules/reference/services/lookupByReferenc
 import { listAdminWorkOrders } from "@/modules/workOrders";
 import { listAdminOperationalActivity } from "./listAdminOperationalActivity";
 import type { BusinessActivityEvent } from "@/modules/businesses/notes";
+import { getAdminContractSummaryByRef } from "@/modules/contracts";
+import { getAdminQuoteSummaryByRef } from "@/modules/quotes";
+import { getAdminLeadSummaryByRef } from "@/modules/leads";
+import { getAdminBookingSummaryByRef } from "@/modules/bookings";
+import { getAdminBusinessSummaryByRef } from "@/modules/businesses";
+import { getAdminTaskSummaryByRef } from "@/modules/workOrders";
 
 /**
  * BUSINESS-ADMIN-3 — Admin Reference Inspector resolver.
@@ -61,6 +67,11 @@ export function isOfficialAdminRef(input: string): boolean {
   if (r.length === 0) return false;
   if (UUID_SHAPE.test(r)) return false;
   return ADMIN_REF_OFFICIAL.test(r);
+}
+
+function prefixOf(ref: string): string {
+  const i = ref.indexOf("-");
+  return i > 0 ? ref.slice(0, i).toUpperCase() : "";
 }
 
 /** Map server entity_type → narrow union we render. */
@@ -188,6 +199,78 @@ export async function getAdminReferenceSummary(input: {
       created_at: null,
       updated_at: null,
     };
+  }
+
+  // BUSINESS-ADMIN-4 — Per-entity enrichment dispatched by official prefix.
+  // Each wrapper is admin-safe, read-only, and only returns sanitized fields.
+  const prefix = prefixOf(refId);
+  type EnrichResult = {
+    label?: string | null;
+    status?: string | null;
+    priority?: string | null;
+    business_ref_id?: string | null;
+    source_ref_id?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+    canonical_route?: string | null;
+    entity_type?: AdminRefEntityType;
+  };
+  let enriched: EnrichResult | null = null;
+  try {
+    if (prefix === "CNT") {
+      const r = await getAdminContractSummaryByRef({ refId });
+      enriched = r.data;
+    } else if (prefix === "QTE") {
+      const r = await getAdminQuoteSummaryByRef({ refId });
+      enriched = r.data;
+    } else if (prefix === "LED" || prefix === "LR") {
+      const r = await getAdminLeadSummaryByRef({ refId });
+      enriched = r.data;
+    } else if (prefix === "BKG" || prefix === "BK") {
+      const r = await getAdminBookingSummaryByRef({ refId });
+      enriched = r.data;
+    } else if (prefix === "ENT" || prefix === "BIZ") {
+      const r = await getAdminBusinessSummaryByRef({ refId });
+      enriched = r.data;
+    } else if (prefix === "TASK") {
+      const r = await getAdminTaskSummaryByRef({ refId });
+      enriched = r.data;
+    }
+  } catch {
+    // Never throw on enrichment failure; fall back to lookup row.
+    enriched = null;
+  }
+
+  if (enriched) {
+    if (!summary) {
+      summary = {
+        ref_id: refId,
+        entity_type: enriched.entity_type ?? "unknown",
+        canonical_route: enriched.canonical_route ?? null,
+        label: enriched.label ?? null,
+        status: enriched.status ?? null,
+        priority: enriched.priority ?? null,
+        business_ref_id: enriched.business_ref_id ?? null,
+        source_ref_id: enriched.source_ref_id ?? null,
+        created_at: enriched.created_at ?? null,
+        updated_at: enriched.updated_at ?? null,
+      };
+    } else {
+      summary.label = enriched.label ?? summary.label;
+      summary.status = enriched.status ?? summary.status;
+      summary.priority = enriched.priority ?? summary.priority;
+      summary.business_ref_id = enriched.business_ref_id ?? summary.business_ref_id;
+      summary.created_at = enriched.created_at ?? summary.created_at;
+      summary.updated_at = enriched.updated_at ?? summary.updated_at;
+      if (enriched.canonical_route) summary.canonical_route = enriched.canonical_route;
+      if (
+        enriched.source_ref_id &&
+        ADMIN_REF_OFFICIAL.test(enriched.source_ref_id)
+      ) {
+        summary.source_ref_id = enriched.source_ref_id;
+        relatedSet.add(enriched.source_ref_id);
+      }
+    }
   }
 
   // WO enrichment: when the matching work-order row is available, fold
