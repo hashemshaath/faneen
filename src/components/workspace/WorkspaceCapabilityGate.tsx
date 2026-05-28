@@ -27,26 +27,23 @@ export interface WorkspaceCapabilityGateProps {
   children: React.ReactNode;
   mode?: WorkspaceCapabilityGateMode;
   fallback?: React.ReactNode;
-  /** Optional override for the active workspace (mainly for tests). */
+  /**
+   * Optional override for the active workspace. When provided, the gate does
+   * NOT call `useActiveWorkspace`, which keeps it usable in tests and in
+   * trees that don't have a QueryClientProvider.
+   */
   workspaceOverride?: WorkspaceCapabilityLike;
 }
 
-export const WorkspaceCapabilityGate: React.FC<WorkspaceCapabilityGateProps> = ({
-  capability,
-  children,
-  mode = 'hide',
-  fallback = null,
-  workspaceOverride,
-}) => {
-  const ws = useActiveWorkspace();
-  const workspace: WorkspaceCapabilityLike = workspaceOverride ?? {
-    active_role: ws.active_role,
-    permissions: ws.permissions,
-  };
+function renderGate(
+  workspace: WorkspaceCapabilityLike,
+  capability: string,
+  mode: WorkspaceCapabilityGateMode,
+  children: React.ReactNode,
+  fallback: React.ReactNode,
+): React.ReactElement {
   const allowed = hasCapability(workspace, capability);
-
   if (allowed) return <>{children}</>;
-
   if (mode === 'readOnly') {
     return (
       <>
@@ -59,6 +56,43 @@ export const WorkspaceCapabilityGate: React.FC<WorkspaceCapabilityGateProps> = (
     return <RestrictedWorkspaceCard capability={capability} />;
   }
   return <>{fallback}</>;
+}
+
+/** Internal: pulls the workspace from context. Separated so the override
+ *  path can skip the hook entirely (tests, no-QueryClient trees). */
+const ConnectedGate: React.FC<Omit<WorkspaceCapabilityGateProps, 'workspaceOverride'>> = ({
+  capability,
+  children,
+  mode = 'hide',
+  fallback = null,
+}) => {
+  const ws = useActiveWorkspace();
+  const workspace: WorkspaceCapabilityLike = {
+    active_role: ws.active_role,
+    permissions: ws.permissions,
+  };
+  return renderGate(workspace, capability, mode, children, fallback);
+};
+
+export const WorkspaceCapabilityGate: React.FC<WorkspaceCapabilityGateProps> = (props) => {
+  if (props.workspaceOverride) {
+    return renderGate(
+      props.workspaceOverride,
+      props.capability,
+      props.mode ?? 'hide',
+      props.children,
+      props.fallback ?? null,
+    );
+  }
+  return (
+    <ConnectedGate
+      capability={props.capability}
+      mode={props.mode}
+      fallback={props.fallback}
+    >
+      {props.children}
+    </ConnectedGate>
+  );
 };
 
 export default WorkspaceCapabilityGate;
