@@ -8,10 +8,9 @@ import { listProfilesByUserIds } from "@/modules/users";
  *   - `full_name`: profile.full_name when present
  *   - `ref_id`:    profile.ref_id (USR-*) when present
  *
- * The hook intentionally never surfaces synthetic auth identifiers
- * (`*@phone.qitaat.local`) or raw auth emails — callers should fall back
- * to a generic localized "User" label and the official ref_id when the
- * full name is missing.
+ * The hook intentionally never surfaces synthetic auth identifiers or raw
+ * auth emails — callers should fall back to a generic localized "User"
+ * label and the official ref_id when the full name is missing.
  */
 export interface AssigneeLabel {
   full_name: string | null;
