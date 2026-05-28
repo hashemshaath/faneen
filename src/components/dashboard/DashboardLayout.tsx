@@ -27,6 +27,10 @@ import { WorkspaceContextBar } from '@/components/workspace/shell/WorkspaceConte
 import { WorkspaceSearchLauncher } from '@/components/workspace/shell/WorkspaceSearchLauncher';
 import { RecentWorkspaceContext } from '@/components/workspace/shell/RecentWorkspaceContext';
 import { CommandPalette } from '@/components/workspace/shell/CommandPalette';
+import { RecentWorkspaceFlows } from '@/components/workspace/shell/RecentWorkspaceFlows';
+import { MobileWorkspaceActions } from '@/components/workspace/shell/MobileWorkspaceActions';
+import { useWorkspaceContext } from '@/hooks/useWorkspaceContext';
+import { useWorkspaceState } from '@/hooks/useWorkspaceState';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -75,6 +79,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarUploading, setAvatarUploading] = React.useState(false);
+
+  // APP-SHELL-2 — context engine (records last_context/last_module) + recent route trail.
+  useWorkspaceContext();
+  const ws2 = useWorkspaceState();
+  React.useEffect(() => {
+    ws2.pushRecentRoute({ path: location.pathname });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const currentPage = breadcrumbMap[location.pathname];
   const pageTitle = currentPage ? (isRTL ? currentPage.ar : currentPage.en) : '';
@@ -275,10 +287,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           <main className="flex-1 p-3 sm:p-5 md:p-7 bg-background overflow-auto">
             <WorkspaceHeader rightSlot={<WorkspaceSearchLauncher />} className="-mx-3 sm:-mx-5 md:-mx-7 -mt-3 sm:-mt-5 md:-mt-7 mb-3" />
             <WorkspaceContextBar>
-              <RecentWorkspaceContext />
+              <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+                <RecentWorkspaceContext />
+                <RecentWorkspaceFlows />
+              </div>
             </WorkspaceContextBar>
             {children}
             <CommandPalette />
+            <MobileWorkspaceActions />
           </main>
         </div>
       </div>
