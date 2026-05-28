@@ -136,6 +136,7 @@ const Membership = lazyRetry(() => import("./pages/Membership"));
 const MembershipInvoice = lazyRetry(() => import("./pages/MembershipInvoice"));
 const MembershipPaymentReturn = lazyRetry(() => import("./pages/MembershipPaymentReturn"));
 const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardOperations"));
+const DashboardOperationsFeed = lazyRetry(() => import("./pages/dashboard/DashboardOperationsFeed"));
 const DashboardAiCenter = lazyRetry(() => import("./pages/dashboard/DashboardAiCenter"));
 const DashboardLeads = lazyRetry(() => import("./pages/dashboard/DashboardLeads"));
 const DashboardClients = lazyRetry(() => import("./pages/dashboard/DashboardClients"));
