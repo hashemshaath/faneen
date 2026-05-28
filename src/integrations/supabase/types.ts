@@ -12078,6 +12078,19 @@ export type Database = {
           total_runs_7d: number
         }[]
       }
+      admin_identity_integrity_report: {
+        Args: never
+        Returns: {
+          has_business: boolean
+          has_profile: boolean
+          has_role: boolean
+          masked_email: string
+          mismatch_type: string
+          recommended_action: string
+          synthetic_or_test: boolean
+          user_id: string
+        }[]
+      }
       admin_issue_successor_barcode: {
         Args: { _reason?: string; _transferred_barcode_id: string }
         Returns: Json
