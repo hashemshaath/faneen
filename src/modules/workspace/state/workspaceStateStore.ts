@@ -53,6 +53,27 @@ export interface WorkspaceContextSnapshot {
   source: 'route' | 'switcher' | 'recovery' | 'unknown';
 }
 
+/**
+ * APP-SHELL-STABILIZATION-1 — UI-only workspace preferences.
+ * Persist in the same envelope; default values applied during sanitize.
+ */
+export type EntityViewMode = 'list' | 'grid' | 'compact';
+
+export interface WorkspacePreferences {
+  compact_mode: boolean;
+  reduced_motion: boolean;
+  preferred_entity_view: EntityViewMode;
+  /** Map of section-id → collapsed boolean. */
+  collapsed_sections: Record<string, boolean>;
+}
+
+export const DEFAULT_PREFERENCES: WorkspacePreferences = {
+  compact_mode: false,
+  reduced_motion: false,
+  preferred_entity_view: 'list',
+  collapsed_sections: {},
+};
+
 export interface WorkspaceStateV1 {
   v: 1;
   active_entity_id: string | null;
@@ -63,6 +84,7 @@ export interface WorkspaceStateV1 {
   recent_searches: RecentSearchEntry[];
   last_module: string | null;
   last_context: WorkspaceContextSnapshot | null;
+  preferences: WorkspacePreferences;
 }
 
 function emptyState(): WorkspaceStateV1 {
@@ -76,6 +98,7 @@ function emptyState(): WorkspaceStateV1 {
     recent_searches: [],
     last_module: null,
     last_context: null,
+    preferences: { ...DEFAULT_PREFERENCES, collapsed_sections: {} },
   };
 }
 
@@ -141,6 +164,26 @@ function sanitize(raw: unknown): WorkspaceStateV1 {
       }
     : null;
 
+  const prefRaw = raw.preferences;
+  const validView: EntityViewMode[] = ['list', 'grid', 'compact'];
+  const collapsedRaw = isObj(prefRaw) && isObj(prefRaw.collapsed_sections)
+    ? prefRaw.collapsed_sections as Record<string, unknown>
+    : {};
+  const collapsed_sections: Record<string, boolean> = {};
+  for (const [k, v] of Object.entries(collapsedRaw)) {
+    if (typeof v === 'boolean') collapsed_sections[k] = v;
+  }
+  const preferences: WorkspacePreferences = isObj(prefRaw)
+    ? {
+        compact_mode: typeof prefRaw.compact_mode === 'boolean' ? prefRaw.compact_mode : false,
+        reduced_motion: typeof prefRaw.reduced_motion === 'boolean' ? prefRaw.reduced_motion : false,
+        preferred_entity_view: validView.includes(prefRaw.preferred_entity_view as EntityViewMode)
+          ? (prefRaw.preferred_entity_view as EntityViewMode)
+          : 'list',
+        collapsed_sections,
+      }
+    : { ...DEFAULT_PREFERENCES, collapsed_sections: {} };
+
   return {
     ...base,
     active_entity_id: typeof raw.active_entity_id === 'string' ? raw.active_entity_id : null,
@@ -151,6 +194,7 @@ function sanitize(raw: unknown): WorkspaceStateV1 {
     recent_searches,
     last_module: typeof raw.last_module === 'string' ? raw.last_module : null,
     last_context,
+    preferences,
   };
 }
 
@@ -245,5 +289,40 @@ export function pushRecentSearch(query: string): WorkspaceStateV1 {
     const filtered = p.recent_searches.filter((e) => e.query !== q);
     const next: RecentSearchEntry = { query: q, searched_at: Date.now() };
     return { ...p, recent_searches: [next, ...filtered].slice(0, MAX_RECENT_SEARCHES) };
+  });
+}
+
+// ---------- Preference mutators (APP-SHELL-STABILIZATION-1) ----------
+
+export function setPreference<K extends keyof WorkspacePreferences>(
+  key: K,
+  value: WorkspacePreferences[K],
+): WorkspaceStateV1 {
+  return updateWorkspaceState((p) => ({
+    ...p,
+    preferences: { ...p.preferences, [key]: value },
+  }));
+}
+
+export function setSectionCollapsed(sectionId: string, collapsed: boolean): WorkspaceStateV1 {
+  return updateWorkspaceState((p) => ({
+    ...p,
+    preferences: {
+      ...p.preferences,
+      collapsed_sections: { ...p.preferences.collapsed_sections, [sectionId]: collapsed },
+    },
+  }));
+}
+
+export function toggleSectionCollapsed(sectionId: string): WorkspaceStateV1 {
+  return updateWorkspaceState((p) => {
+    const current = !!p.preferences.collapsed_sections[sectionId];
+    return {
+      ...p,
+      preferences: {
+        ...p.preferences,
+        collapsed_sections: { ...p.preferences.collapsed_sections, [sectionId]: !current },
+      },
+    };
   });
 }
