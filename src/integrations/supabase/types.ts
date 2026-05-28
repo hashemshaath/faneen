@@ -10915,6 +10915,7 @@ export type Database = {
           priority: string
           ref_id: string | null
           source_id: string | null
+          source_ref_id: string | null
           source_type: string | null
           status: string
           title: string
@@ -10935,6 +10936,7 @@ export type Database = {
           priority?: string
           ref_id?: string | null
           source_id?: string | null
+          source_ref_id?: string | null
           source_type?: string | null
           status?: string
           title: string
@@ -10955,6 +10957,7 @@ export type Database = {
           priority?: string
           ref_id?: string | null
           source_id?: string | null
+          source_ref_id?: string | null
           source_type?: string | null
           status?: string
           title?: string

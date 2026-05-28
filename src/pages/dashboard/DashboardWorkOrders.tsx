@@ -213,10 +213,11 @@ export default function DashboardWorkOrders() {
                     <p className="mt-2 font-medium text-foreground line-clamp-1" dir="auto">
                       {o.title}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(o.updated_at).toLocaleString(isRTL ? "ar" : "en")}
-                      {o.source_type ? ` · ${o.source_type}` : ""}
-                    </p>
+                    <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+                      <span>{new Date(o.updated_at).toLocaleString(isRTL ? "ar" : "en")}</span>
+                      {o.source_type && <span>· {o.source_type}</span>}
+                      {o.source_ref_id && <ReferenceBadge refId={o.source_ref_id} />}
+                    </div>
                   </button>
                 </li>
               ))}
