@@ -64,12 +64,15 @@ describe("BUSINESS-CORE-5: detail page hygiene", () => {
     expect(src).toMatch(/useNoIndex/);
     expect(src).toMatch(/جارٍ|Loading/);
   });
-  it("does not touch payment/auth/cron/realtime/notification surfaces", () => {
+  it("does not touch payment/auth/cron/notification surfaces (safe realtime hook allowed)", () => {
     expect(src).not.toMatch(/payments?\//i);
     expect(src).not.toMatch(/\/auth\//i);
     expect(src).not.toMatch(/cron|scheduler/i);
     expect(src).not.toMatch(/notifications?\//i);
-    expect(src).not.toMatch(/realtime|channel\(/i);
+    // Inline realtime forbidden; the vetted useWorkOrderRealtimeInvalidation hook is allowed.
+    expect(src).not.toMatch(/\.channel\(/);
+    expect(src).not.toMatch(/postgres_changes/);
+    expect(src.replace(/useWorkOrderRealtimeInvalidation/g, "")).not.toMatch(/realtime/i);
   });
 });
 

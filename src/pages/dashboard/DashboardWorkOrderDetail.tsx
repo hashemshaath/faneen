@@ -36,6 +36,7 @@ import { HealthBadge } from "@/components/health/HealthBadge";
 import { RelatedReferencesPanel } from "@/components/reference/RelatedReferencesPanel";
 import { UnifiedTimeline } from "@/components/timeline/UnifiedTimeline";
 import { workOrderHealth } from "@/modules/health";
+import { useWorkOrderRealtimeInvalidation } from "@/hooks/useWorkOrderRealtimeInvalidation";
 import {
   getWorkOrderByRefId,
   listWorkOrderStages,
@@ -144,6 +145,13 @@ export default function DashboardWorkOrderDetail() {
   }, [refId, tx.errLoad]);
 
   useEffect(() => { void load(); }, [load]);
+
+  // Workflow change-stream: invalidate + refetch on DB changes.
+  useWorkOrderRealtimeInvalidation({
+    businessId: wo?.business_id ?? null,
+    workOrderId: wo?.id ?? null,
+    onChange: () => { void load(); },
+  });
 
   // Scroll the highlighted task into view once data is loaded.
   useEffect(() => {

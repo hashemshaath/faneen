@@ -15,6 +15,7 @@ import { RelatedReferencesPanel } from "@/components/reference/RelatedReferences
 import { UnifiedTimeline } from "@/components/timeline/UnifiedTimeline";
 import { DiagnosticsCard } from "@/components/dashboard/DiagnosticsCard";
 import { computeProcurementDiagnostics } from "@/modules/analytics/diagnostics";
+import { useWorkOrderRealtimeInvalidation } from "@/hooks/useWorkOrderRealtimeInvalidation";
 import {
   awardRfqQuote,
   closeRfq,
@@ -174,6 +175,12 @@ export default function DashboardProcurementDetail() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Workflow change-stream: invalidate + refetch on DB changes.
+  useWorkOrderRealtimeInvalidation({
+    businessId: request?.business_id ?? null,
+    onChange: () => { void load(); },
+  });
 
   const onSelectRfq = useCallback(
     async (rfqId: string) => {

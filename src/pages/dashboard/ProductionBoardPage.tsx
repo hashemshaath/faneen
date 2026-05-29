@@ -48,6 +48,7 @@ import { DiagnosticsCard } from "@/components/dashboard/DiagnosticsCard";
 import { HealthBadge } from "@/components/health/HealthBadge";
 import { workOrderHealth } from "@/modules/health";
 import { computeWorkOrderDiagnostics } from "@/modules/analytics/diagnostics";
+import { useWorkOrderRealtimeInvalidation } from "@/hooks/useWorkOrderRealtimeInvalidation";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import { useAuth } from "@/contexts/AuthContext";
@@ -237,6 +238,9 @@ export default function ProductionBoardPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Workflow change-stream: invalidate + refetch on DB changes.
+  useWorkOrderRealtimeInvalidation({ businessId, onChange: () => { void load(); } });
 
   /* ─── Index helpers ─── */
   const quotationByWo = useMemo(() => {
