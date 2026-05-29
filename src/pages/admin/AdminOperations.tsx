@@ -22,6 +22,8 @@ import {
   Bell,
   Inbox,
   ServerOff,
+  Download,
+  Printer,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
@@ -51,6 +53,7 @@ import type {
   PreviewSlaSweepResult,
   SafeActionSample,
 } from '@/modules/operations/services/previewSlaSweepForAdmin';
+import { buildCsv, downloadCsv, printCurrentView, tsStamp } from '@/lib/admin/exportUtils';
 
 /** Mask an idempotency key to its trailing bucket suffix for safe display. */
 export function maskIdempotencyKey(key: string | undefined): string {
