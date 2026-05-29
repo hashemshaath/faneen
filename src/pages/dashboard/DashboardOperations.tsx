@@ -13,11 +13,15 @@ import { Progress } from '@/components/ui/progress';
 import {
   Activity, FileText, FolderOpen, Star, CreditCard, Shield, Wrench, Search,
   Calendar, Clock, TrendingUp, Filter, BarChart3, Zap, ArrowUpRight, ArrowDownRight,
-  ChevronDown, ChevronUp, Eye,
+  ChevronDown, ChevronUp, Eye, Download, RefreshCw, Sparkles,
 } from 'lucide-react';
 import { formatDistanceToNow, format, isThisWeek, isToday, isThisMonth } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { BentoTile } from '@/components/dashboard/overview/BentoTile';
+import { useQueryClient } from '@tanstack/react-query';
+import { cn } from '@/lib/utils';
+import '@/styles/dashboard-emerald.css';
 
 const typeIcons: Record<string, React.ElementType> = {
   contract: FileText, project: FolderOpen, review: Star,
