@@ -45,6 +45,7 @@ import { listManagedBusinessesForUser } from '@/modules/businesses';
 import { listBusinessStaffByBusiness } from '@/modules/businesses/services/listBusinessStaffByBusiness';
 import { useTransferPrimaryManagerMutation } from '@/hooks/useTransferPrimaryManagerMutation';
 import { mapTransferPrimaryManagerCode } from '@/modules/businesses/services/transferPrimaryManagerMessages';
+import { AccessTimeline } from '@/components/identity/AccessTimeline';
 import {
   validateDelegatedAccessDraft,
   DELEGATED_ACCESS_MAX_DAYS,
@@ -645,6 +646,7 @@ const DashboardStaffCenter: React.FC = () => {
             <TeamsSection businessId={businessId} userId={user!.id} />
             <DelegatedAccessSection businessId={businessId} userId={user!.id} />
             <ActivitySessionsSection businessId={businessId} />
+            <AccessTimeline businessId={businessId} />
           </div>
         )}
       </div>

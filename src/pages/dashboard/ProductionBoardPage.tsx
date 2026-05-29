@@ -43,6 +43,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { KpiStrip } from "@/components/dashboard/KpiCard";
+import { DiagnosticsCard } from "@/components/dashboard/DiagnosticsCard";
+import { HealthBadge } from "@/components/health/HealthBadge";
+import { workOrderHealth } from "@/modules/health";
+import { computeWorkOrderDiagnostics } from "@/modules/analytics/diagnostics";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import { useAuth } from "@/contexts/AuthContext";
@@ -552,6 +557,46 @@ export default function ProductionBoardPage() {
           ))}
         </section>
 
+        {/* BUSINESS-FINISHING-2A — standardized KPI strip + diagnostics */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <KpiStrip
+            className="lg:col-span-2"
+            items={[
+              { label: tx.activeCount, value: metrics.active, tone: 'info' },
+              { label: tx.overdue, value: metrics.overdue, tone: metrics.overdue > 0 ? 'danger' : 'neutral' },
+              { label: tx.unassigned, value: metrics.unassignedCount, tone: metrics.unassignedCount > 0 ? 'warning' : 'neutral' },
+              {
+                label: tx.bottleneck,
+                value: metrics.bottleneckCount,
+                hint: metrics.bottleneck
+                  ? (isRTL
+                      ? WORK_ORDER_PIPELINE_STAGE_LABELS[metrics.bottleneck].ar
+                      : WORK_ORDER_PIPELINE_STAGE_LABELS[metrics.bottleneck].en)
+                  : undefined,
+                tone: metrics.bottleneckCount > 0 ? 'warning' : 'neutral',
+              },
+            ]}
+          />
+          <DiagnosticsCard
+            title={isRTL ? 'تشخيص أوامر العمل' : 'Work order diagnostics'}
+            entries={(() => {
+              const d = computeWorkOrderDiagnostics(
+                orders.map((o) => ({
+                  id: o.id,
+                  status: o.status,
+                  owner_user_id: o.owner_user_id ?? null,
+                  due_at: o.due_at ?? null,
+                })),
+              );
+              return [
+                { key: 'missingAssignee', label: isRTL ? 'بدون مُكلَّف' : 'Missing assignee', count: d.missingAssignee },
+                { key: 'missingDueDate', label: isRTL ? 'بدون تاريخ تسليم' : 'Missing due date', count: d.missingDueDate },
+                { key: 'overdue', label: isRTL ? 'متأخر' : 'Overdue', count: d.overdue },
+              ];
+            })()}
+          />
+        </div>
+
         {/* Secondary metrics */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div className="rounded-xl border border-border/30 bg-card p-3 flex items-center gap-3">
@@ -940,6 +985,10 @@ function BoardCard({
         >
           {isRTL ? PRIORITY_LABELS[order.priority].ar : PRIORITY_LABELS[order.priority].en}
         </Badge>
+        <HealthBadge
+          kind="work_order"
+          value={workOrderHealth(order.status, order.due_at)}
+        />
       </header>
 
       {order.customer_name && (

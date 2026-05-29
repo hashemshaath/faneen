@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { KpiStrip } from "@/components/dashboard/KpiCard";
+import { DiagnosticsCard } from "@/components/dashboard/DiagnosticsCard";
 import {
   createProcurementRequest,
   listProcurementRequests,
@@ -144,6 +146,42 @@ export default function DashboardProcurement() {
           {error && <p className="text-sm text-destructive">{error}</p>}
         </CardContent>
       </Card>
+
+      {/* BUSINESS-FINISHING-2A — KPI strip + diagnostics from already-loaded rows */}
+      {items.length > 0 && (() => {
+        const open = items.filter((i) => i.status === 'requested' || i.status === 'rfq_sent').length;
+        const awarded = items.filter((i) => i.status === 'awarded').length;
+        const quoted = items.filter((i) => i.status === 'quoted').length;
+        const drafts = items.filter((i) => i.status === 'draft').length;
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <KpiStrip
+              className="lg:col-span-2"
+              items={[
+                { label: isRTL ? 'مفتوحة' : 'Open', value: open, tone: 'info' },
+                { label: isRTL ? 'تم الترسية' : 'Awarded', value: awarded, tone: 'success' },
+                { label: isRTL ? 'مُسعّرة' : 'Quoted', value: quoted, tone: 'neutral' },
+                { label: isRTL ? 'مسودات' : 'Drafts', value: drafts, tone: 'neutral' },
+              ]}
+            />
+            <DiagnosticsCard
+              title={isRTL ? 'تشخيص المشتريات' : 'Procurement diagnostics'}
+              entries={[
+                {
+                  key: 'drafts',
+                  label: isRTL ? 'مسودات بدون إرسال' : 'Drafts not sent',
+                  count: drafts,
+                },
+                {
+                  key: 'awaitingQuote',
+                  label: isRTL ? 'بانتظار العروض' : 'Awaiting quotes',
+                  count: open,
+                },
+              ]}
+            />
+          </div>
+        );
+      })()}
 
       {items.length === 0 && !loading ? (
         <p className="text-muted-foreground text-center py-10">{tx.empty}</p>

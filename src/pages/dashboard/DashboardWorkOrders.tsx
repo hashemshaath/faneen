@@ -12,6 +12,8 @@ import { WorkOrderSearchInput } from "@/components/workOrders/WorkOrderSearchInp
 import { WorkOrderSourceBadge } from "@/components/workOrders/WorkOrderSourceBadge";
 import { WorkOrderSlaBadge } from "@/components/workOrders/WorkOrderSlaBadge";
 import { WorkOrderSlaSummaryCards } from "@/components/workOrders/WorkOrderSlaSummaryCards";
+import { HealthBadge } from "@/components/health/HealthBadge";
+import { workOrderHealth } from "@/modules/health";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
@@ -318,6 +320,10 @@ export default function DashboardWorkOrders() {
                         <Badge variant="outline">{statusLabel(o.status)}</Badge>
                         <Badge variant="secondary">{priorityLabel(o.priority)}</Badge>
                         <WorkOrderSlaBadge row={o} isRTL={isRTL} />
+                        <HealthBadge
+                          kind="work_order"
+                          value={workOrderHealth(o.status, (o as { due_at?: string | null }).due_at ?? null)}
+                        />
                       </div>
                     </div>
                     <p className="mt-2 font-medium text-foreground line-clamp-1" dir="auto">
