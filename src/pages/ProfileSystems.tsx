@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -16,8 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import {
   Layers, Search, Thermometer, Volume2, Shield,
-  Eye, Ruler, Filter, Scale, X, SlidersHorizontal,
+  Eye, Ruler, Filter, Scale, X, SlidersHorizontal, Sparkles, Award,
+  ArrowUpDown, RotateCcw,
 } from 'lucide-react';
+import { fmtNum } from '@/lib/format';
 
 const categoryOptions = [
   { value: 'all', ar: 'الكل', en: 'All' },
@@ -28,6 +30,38 @@ const categoryOptions = [
   { value: 'wood', ar: 'الخشب', en: 'Wood' },
   { value: 'upvc', ar: 'UPVC', en: 'UPVC' },
 ];
+
+type SortKey = 'recommended' | 'views' | 'name' | 'thermal' | 'sound' | 'strength';
+const sortOptions: { value: SortKey; ar: string; en: string }[] = [
+  { value: 'recommended', ar: 'موصى به', en: 'Recommended' },
+  { value: 'views', ar: 'الأكثر مشاهدة', en: 'Most viewed' },
+  { value: 'name', ar: 'الاسم', en: 'Name' },
+  { value: 'thermal', ar: 'العزل الحراري', en: 'Thermal rating' },
+  { value: 'sound', ar: 'العزل الصوتي', en: 'Sound rating' },
+  { value: 'strength', ar: 'التحمل', en: 'Strength' },
+];
+
+const recLevels = ['premium', 'recommended', 'standard'] as const;
+type RecLevel = typeof recLevels[number];
+
+interface ProfileSystemRow {
+  id: string;
+  slug: string;
+  name_ar: string;
+  name_en: string | null;
+  category: string | null;
+  profile_type: string | null;
+  cover_image_url: string | null;
+  logo_url: string | null;
+  thermal_insulation_rating: number | null;
+  sound_insulation_rating: number | null;
+  strength_rating: number | null;
+  max_height_mm: number | null;
+  available_colors: string[] | null;
+  recommendation_level: string | null;
+  views_count: number | null;
+  sort_order: number | null;
+}
 
 const recommendationLabels: Record<string, { ar: string; en: string; color: string }> = {
   premium: { ar: 'احترافي', en: 'Premium', color: 'bg-gold text-primary-foreground' },
@@ -49,7 +83,7 @@ const RatingBar = ({ value, max = 10, label, icon: Icon }: { value: number; max?
       <div className="flex-1 h-1.5 sm:h-2 bg-muted rounded-full overflow-hidden">
         <div className={`h-full bg-gradient-to-r ${getColor()} rounded-full transition-all`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="font-heading font-bold text-muted-foreground w-6 sm:w-8 text-end">{value}</span>
+      <span className="font-heading font-bold text-muted-foreground w-6 sm:w-8 text-end tabular-nums tech-content">{value}</span>
     </div>
   );
 };
@@ -61,9 +95,16 @@ const ProfileSystems = () => {
     description: language === 'ar' ? 'تعرف على أنظمة قطاعات الألمنيوم والحديد المختلفة ومواصفاتها وتقييماتها.' : 'Learn about different aluminum and iron profile systems, specifications and ratings.',
   });
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('all');
-  const [minInsulation, setMinInsulation] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get('q') ?? '');
+  const [category, setCategory] = useState(searchParams.get('cat') ?? 'all');
+  const [minThermal, setMinThermal] = useState(Number(searchParams.get('thermal') ?? 0));
+  const [minSound, setMinSound] = useState(Number(searchParams.get('sound') ?? 0));
+  const [minStrength, setMinStrength] = useState(Number(searchParams.get('strength') ?? 0));
+  const [recFilter, setRecFilter] = useState<RecLevel[]>(
+    (searchParams.get('rec')?.split(',').filter((v): v is RecLevel => recLevels.includes(v as RecLevel))) ?? []
+  );
+  const [sort, setSort] = useState<SortKey>(((searchParams.get('sort') as SortKey) ?? 'recommended'));
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -79,7 +120,7 @@ const ProfileSystems = () => {
     }
   }, [compareIds, navigate]);
 
-  const { data: profiles = [], isLoading } = useQuery({
+  const { data: profiles = [], isLoading } = useQuery<ProfileSystemRow[]>({
     queryKey: ['public-profile-systems'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -88,21 +129,80 @@ const ProfileSystems = () => {
         .eq('status', 'published')
         .order('sort_order');
       if (error) throw error;
-      return data;
+      return (data ?? []) as ProfileSystemRow[];
     },
   });
 
-  const filtered = profiles.filter((p: any) => {
-    if (category !== 'all' && p.category !== category) return false;
-    if (minInsulation > 0 && (p.thermal_insulation_rating || 0) < minInsulation) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return p.name_ar?.toLowerCase().includes(q) || p.name_en?.toLowerCase().includes(q);
-    }
-    return true;
-  });
+  // Persist filters in URL (replace, so back stays usable).
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (search.trim()) next.set('q', search.trim());
+    if (category !== 'all') next.set('cat', category);
+    if (minThermal > 0) next.set('thermal', String(minThermal));
+    if (minSound > 0) next.set('sound', String(minSound));
+    if (minStrength > 0) next.set('strength', String(minStrength));
+    if (recFilter.length) next.set('rec', recFilter.join(','));
+    if (sort !== 'recommended') next.set('sort', sort);
+    setSearchParams(next, { replace: true });
+  }, [search, category, minThermal, minSound, minStrength, recFilter, sort, setSearchParams]);
 
-  const activeFilters = (category !== 'all' ? 1 : 0) + (minInsulation > 0 ? 1 : 0);
+  // Live counts per category over the full published set (always-on stats strip).
+  const categoryCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    profiles.forEach((p) => map.set(p.category ?? '', (map.get(p.category ?? '') ?? 0) + 1));
+    return map;
+  }, [profiles]);
+
+  const toggleRec = useCallback((lvl: RecLevel) => {
+    setRecFilter((prev) => prev.includes(lvl) ? prev.filter((x) => x !== lvl) : [...prev, lvl]);
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const list = profiles.filter((p) => {
+      if (category !== 'all' && p.category !== category) return false;
+      if (minThermal > 0 && (p.thermal_insulation_rating ?? 0) < minThermal) return false;
+      if (minSound > 0 && (p.sound_insulation_rating ?? 0) < minSound) return false;
+      if (minStrength > 0 && (p.strength_rating ?? 0) < minStrength) return false;
+      if (recFilter.length && !recFilter.includes((p.recommendation_level ?? 'standard') as RecLevel)) return false;
+      if (q) {
+        const hit = (p.name_ar ?? '').toLowerCase().includes(q) || (p.name_en ?? '').toLowerCase().includes(q);
+        if (!hit) return false;
+      }
+      return true;
+    });
+    const sorted = [...list];
+    const dir = (n: number | null | undefined) => n ?? 0;
+    switch (sort) {
+      case 'views': sorted.sort((a, b) => dir(b.views_count) - dir(a.views_count)); break;
+      case 'name': sorted.sort((a, b) => (language === 'ar' ? (a.name_ar || '').localeCompare(b.name_ar || '', 'ar') : (a.name_en || a.name_ar || '').localeCompare(b.name_en || b.name_ar || '', 'en'))); break;
+      case 'thermal': sorted.sort((a, b) => dir(b.thermal_insulation_rating) - dir(a.thermal_insulation_rating)); break;
+      case 'sound': sorted.sort((a, b) => dir(b.sound_insulation_rating) - dir(a.sound_insulation_rating)); break;
+      case 'strength': sorted.sort((a, b) => dir(b.strength_rating) - dir(a.strength_rating)); break;
+      default: /* recommended: keep sort_order from DB */ break;
+    }
+    return sorted;
+  }, [profiles, category, minThermal, minSound, minStrength, recFilter, search, sort, language]);
+
+  const activeFilters =
+    (category !== 'all' ? 1 : 0) +
+    (minThermal > 0 ? 1 : 0) +
+    (minSound > 0 ? 1 : 0) +
+    (minStrength > 0 ? 1 : 0) +
+    recFilter.length +
+    (sort !== 'recommended' ? 1 : 0);
+
+  const resetAll = useCallback(() => {
+    setSearch(''); setCategory('all');
+    setMinThermal(0); setMinSound(0); setMinStrength(0);
+    setRecFilter([]); setSort('recommended');
+  }, []);
+
+  // Quick lookup for the floating compare bar thumbnails.
+  const selectedProfiles = useMemo(
+    () => compareIds.map((id) => profiles.find((p) => p.id === id)).filter((p): p is ProfileSystemRow => !!p),
+    [compareIds, profiles]
+  );
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -131,33 +231,88 @@ const ProfileSystems = () => {
           <div className="flex gap-2 mb-2 sm:mb-0">
             <div className="relative flex-1">
               <Search className="absolute top-2.5 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={isRTL ? 'ابحث عن قطاع...' : 'Search profiles...'} className="ps-10 bg-card h-10 text-sm" />
+              <Input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={isRTL ? 'ابحث عن قطاع...' : 'Search profiles...'}
+                className="ps-10 bg-card h-10 text-sm"
+                aria-label={isRTL ? 'بحث في القطاعات' : 'Search profiles'}
+              />
             </div>
             <Button
               variant="outline"
               size="icon"
               className="sm:hidden bg-card h-10 w-10 shrink-0 relative"
               onClick={() => setShowFilters(!showFilters)}
+              aria-label={isRTL ? 'الفلاتر' : 'Filters'}
+              aria-expanded={showFilters}
             >
               <SlidersHorizontal className="w-4 h-4" />
               {activeFilters > 0 && (
-                <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-accent text-accent-foreground text-[9px] flex items-center justify-center font-bold">{activeFilters}</span>
+                <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-accent text-accent-foreground text-[9px] flex items-center justify-center font-bold tabular-nums">{activeFilters}</span>
               )}
             </Button>
           </div>
 
           {/* Filters - collapsible on mobile */}
-          <div className={`grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 bg-primary-foreground/5 p-3 sm:p-4 rounded-xl mt-2 transition-all ${showFilters ? 'block' : 'hidden sm:grid'}`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 bg-primary-foreground/5 p-3 sm:p-4 rounded-xl mt-2 transition-all ${showFilters ? 'block' : 'hidden sm:grid'}`}>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="bg-card h-10 text-sm"><Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 me-1 shrink-0" /><SelectValue /></SelectTrigger>
               <SelectContent>
                 {categoryOptions.map(c => <SelectItem key={c.value} value={c.value}>{language === 'ar' ? c.ar : c.en}</SelectItem>)}
               </SelectContent>
             </Select>
-            <div className="flex items-center gap-2 sm:col-span-2">
-              <Thermometer className="w-4 h-4 text-primary-foreground/60 shrink-0" />
-              <span className="text-xs text-primary-foreground/60 whitespace-nowrap">{isRTL ? 'عزل ≥' : 'Insul ≥'} {minInsulation}</span>
-              <Slider value={[minInsulation]} onValueChange={v => setMinInsulation(v[0])} max={10} step={1} className="flex-1" />
+            <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
+              <SelectTrigger className="bg-card h-10 text-sm"><ArrowUpDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 me-1 shrink-0" /><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {sortOptions.map(s => <SelectItem key={s.value} value={s.value}>{language === 'ar' ? s.ar : s.en}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-1.5 bg-card rounded-md px-2 h-10">
+              <Thermometer className="w-4 h-4 text-warning shrink-0" />
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap tabular-nums tech-content">≥ {fmtNum(minThermal)}</span>
+              <Slider value={[minThermal]} onValueChange={v => setMinThermal(v[0])} max={10} step={1} className="flex-1" aria-label={isRTL ? 'حد العزل الحراري' : 'Min thermal'} />
+            </div>
+            <div className="flex items-center gap-1.5 bg-card rounded-md px-2 h-10">
+              <Volume2 className="w-4 h-4 text-sky-500 shrink-0" />
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap tabular-nums tech-content">≥ {fmtNum(minSound)}</span>
+              <Slider value={[minSound]} onValueChange={v => setMinSound(v[0])} max={10} step={1} className="flex-1" aria-label={isRTL ? 'حد العزل الصوتي' : 'Min sound'} />
+            </div>
+            <div className="flex items-center gap-1.5 bg-card rounded-md px-2 h-10">
+              <Shield className="w-4 h-4 text-success shrink-0" />
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap tabular-nums tech-content">≥ {fmtNum(minStrength)}</span>
+              <Slider value={[minStrength]} onValueChange={v => setMinStrength(v[0])} max={10} step={1} className="flex-1" aria-label={isRTL ? 'حد التحمل' : 'Min strength'} />
+            </div>
+            {/* Recommendation chips + reset */}
+            <div className="flex flex-wrap items-center gap-1.5 lg:col-span-3" role="group" aria-label={isRTL ? 'مستوى التوصية' : 'Recommendation level'}>
+              {recLevels.map((lvl) => {
+                const meta = recommendationLabels[lvl];
+                const active = recFilter.includes(lvl);
+                const Icon = lvl === 'premium' ? Award : lvl === 'recommended' ? Sparkles : Layers;
+                return (
+                  <button
+                    key={lvl}
+                    type="button"
+                    onClick={() => toggleRec(lvl)}
+                    aria-pressed={active}
+                    className={`inline-flex items-center gap-1 h-8 px-2.5 rounded-full text-[11px] font-medium transition-all border ${active ? `${meta.color} border-transparent shadow-sm` : 'bg-card/80 text-primary-foreground/80 border-primary-foreground/15 hover:bg-card'}`}
+                  >
+                    <Icon className="w-3 h-3" />
+                    {language === 'ar' ? meta.ar : meta.en}
+                  </button>
+                );
+              })}
+              {activeFilters > 0 && (
+                <button
+                  type="button"
+                  onClick={resetAll}
+                  className="ms-auto inline-flex items-center gap-1 h-8 px-2.5 rounded-full text-[11px] font-medium text-primary-foreground/80 hover:text-primary-foreground bg-primary-foreground/10 hover:bg-primary-foreground/15 transition-colors"
+                  aria-label={isRTL ? 'إعادة ضبط الفلاتر' : 'Reset filters'}
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  {isRTL ? 'إعادة ضبط' : 'Reset'}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -186,22 +341,70 @@ const ProfileSystems = () => {
 
       {/* ═══ Results ═══ */}
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-6xl">
-        <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
-          {filtered.length} {isRTL ? 'قطاع' : 'profiles'}
-        </p>
+        {/* Live insights strip — per-category counters with live totals. */}
+        {profiles.length > 0 && (
+          <div
+            className="mb-3 sm:mb-4 flex items-center gap-2 overflow-x-auto no-scrollbar"
+            role="region"
+            aria-label={isRTL ? 'إحصائيات حسب الفئة' : 'Counts by category'}
+          >
+            {categoryOptions.filter(c => c.value !== 'all' || true).map((c) => {
+              const n = c.value === 'all' ? profiles.length : (categoryCounts.get(c.value) ?? 0);
+              if (c.value !== 'all' && n === 0) return null;
+              const active = category === c.value;
+              return (
+                <button
+                  key={c.value}
+                  onClick={() => setCategory(c.value)}
+                  className={`shrink-0 inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[11px] font-medium border transition-all ${active ? 'bg-accent text-accent-foreground border-transparent shadow-sm' : 'bg-card text-muted-foreground border-border hover:text-foreground'}`}
+                >
+                  <span>{language === 'ar' ? c.ar : c.en}</span>
+                  <span className={`tabular-nums tech-content text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-accent-foreground/15' : 'bg-muted'}`}>{fmtNum(n)}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            <span className="tabular-nums tech-content font-semibold text-foreground">{fmtNum(filtered.length)}</span>{' '}
+            {isRTL ? `من ${fmtNum(profiles.length)} قطاع` : `of ${fmtNum(profiles.length)} profiles`}
+          </p>
+          {activeFilters > 0 && (
+            <button onClick={resetAll} className="text-[11px] sm:text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+              <RotateCcw className="w-3 h-3" />
+              {isRTL ? 'مسح الفلاتر' : 'Clear filters'}
+            </button>
+          )}
+        </div>
 
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-64 rounded-xl" />)}</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-14 sm:py-20 text-muted-foreground">
             <Layers className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 opacity-30" />
-            <p className="font-heading font-bold text-sm sm:text-base mb-1">{isRTL ? 'لا توجد قطاعات مطابقة' : 'No matching profiles'}</p>
-            <p className="text-xs sm:text-sm">{isRTL ? 'جرّب تغيير معايير البحث' : 'Try adjusting your filters'}</p>
+            <p className="font-heading font-bold text-sm sm:text-base mb-1">
+              {profiles.length === 0
+                ? (isRTL ? 'لا توجد قطاعات منشورة بعد' : 'No published profiles yet')
+                : (isRTL ? 'لا توجد قطاعات مطابقة' : 'No matching profiles')}
+            </p>
+            <p className="text-xs sm:text-sm">
+              {profiles.length === 0
+                ? (isRTL ? 'سيتمّ عرض القطاعات هنا فور نشرها من قبل الإدارة' : 'Profiles will appear here once published')
+                : (isRTL ? 'جرّب تغيير معايير البحث' : 'Try adjusting your filters')}
+            </p>
+            {activeFilters > 0 && (
+              <Button variant="outline" size="sm" className="mt-4" onClick={resetAll}>
+                <RotateCcw className="w-3.5 h-3.5 me-1" />
+                {isRTL ? 'إعادة ضبط' : 'Reset'}
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
-            {filtered.map((p: any) => {
-              const rec = recommendationLabels[p.recommendation_level] || recommendationLabels.standard;
+            {filtered.map((p) => {
+              const rec = recommendationLabels[p.recommendation_level ?? 'standard'] || recommendationLabels.standard;
               const isSelected = compareIds.includes(p.id);
               return (
                 <Link key={p.id} to={`/profile-systems/${p.slug}`}>
@@ -219,7 +422,10 @@ const ProfileSystems = () => {
                         {language === 'ar' ? rec.ar : rec.en}
                       </Badge>
                       <Badge variant="outline" className="absolute top-2 end-2 text-[9px] sm:text-[10px] bg-background/80 backdrop-blur-sm">
-                        {categoryOptions.find(c => c.value === p.category)?.[language] || p.category}
+                        {(() => {
+                          const co = categoryOptions.find(c => c.value === p.category);
+                          return co ? (language === 'ar' ? co.ar : co.en) : (p.category ?? '');
+                        })()}
                       </Badge>
                     </div>
 
@@ -239,25 +445,25 @@ const ProfileSystems = () => {
 
                       {/* Rating bars */}
                       <div className="space-y-1 sm:space-y-1.5">
-                        <RatingBar value={p.thermal_insulation_rating || 0} label={isRTL ? 'حراري' : 'Thermal'} icon={Thermometer} />
-                        <RatingBar value={p.sound_insulation_rating || 0} label={isRTL ? 'صوتي' : 'Sound'} icon={Volume2} />
-                        <RatingBar value={p.strength_rating || 0} label={isRTL ? 'التحمل' : 'Strength'} icon={Shield} />
+                        <RatingBar value={p.thermal_insulation_rating ?? 0} label={isRTL ? 'حراري' : 'Thermal'} icon={Thermometer} />
+                        <RatingBar value={p.sound_insulation_rating ?? 0} label={isRTL ? 'صوتي' : 'Sound'} icon={Volume2} />
+                        <RatingBar value={p.strength_rating ?? 0} label={isRTL ? 'التحمل' : 'Strength'} icon={Shield} />
                       </div>
 
                       {/* Meta tags */}
-                      <div className="flex flex-wrap gap-1.5 text-[9px] sm:text-[10px] text-muted-foreground">
+                      <div className="flex flex-wrap gap-1.5 text-[9px] sm:text-[10px] text-muted-foreground tech-content">
                         {p.max_height_mm && (
                           <span className="flex items-center gap-0.5 bg-muted px-1.5 sm:px-2 py-0.5 rounded-full">
-                            <Ruler className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{p.max_height_mm}mm
+                            <Ruler className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{fmtNum(p.max_height_mm)}mm
                           </span>
                         )}
-                        {p.available_colors?.length > 0 && (
+                        {(p.available_colors?.length ?? 0) > 0 && (
                           <span className="bg-muted px-1.5 sm:px-2 py-0.5 rounded-full">
-                            {p.available_colors.length} {isRTL ? 'لون' : 'colors'}
+                            {fmtNum(p.available_colors?.length ?? 0)} {isRTL ? 'لون' : 'colors'}
                           </span>
                         )}
                         <span className="flex items-center gap-0.5 bg-muted px-1.5 sm:px-2 py-0.5 rounded-full">
-                          <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{p.views_count}
+                          <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{fmtNum(p.views_count ?? 0)}
                         </span>
                       </div>
 
@@ -267,6 +473,7 @@ const ProfileSystems = () => {
                         variant={isSelected ? 'default' : 'outline'}
                         className="w-full text-[10px] sm:text-xs h-8 sm:h-9"
                         onClick={(e) => toggleCompare(p.id, e)}
+                        aria-pressed={isSelected}
                       >
                         <Scale className="w-3 h-3 me-1" />
                         {isSelected ? (isRTL ? 'تم الاختيار ✓' : 'Selected ✓') : (isRTL ? 'أضف للمقارنة' : 'Compare')}
@@ -279,20 +486,42 @@ const ProfileSystems = () => {
           </div>
         )}
 
-        {/* Floating compare bar */}
-        {compareIds.length >= 2 && (
-          <div className="fixed bottom-4 sm:bottom-6 inset-x-3 sm:inset-x-auto sm:start-1/2 sm:-translate-x-1/2 z-50 bg-primary text-primary-foreground px-4 sm:px-6 py-3 rounded-2xl sm:rounded-full shadow-lg flex items-center justify-between sm:justify-center gap-2 sm:gap-3 animate-in slide-in-from-bottom-4">
-            <div className="flex items-center gap-2">
-              <Scale className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="font-medium text-xs sm:text-sm">
-                {compareIds.length} {isRTL ? 'قطاعات' : 'selected'}
+        {/* Floating compare bar with thumbnails of selected profiles */}
+        {compareIds.length >= 1 && (
+          <div
+            className="fixed bottom-4 sm:bottom-6 inset-x-3 sm:inset-x-auto sm:start-1/2 sm:-translate-x-1/2 z-50 bg-primary text-primary-foreground px-3 sm:px-5 py-2.5 rounded-2xl shadow-2xl flex items-center justify-between sm:justify-start gap-3 animate-in slide-in-from-bottom-4 border border-primary-foreground/10 backdrop-blur"
+            role="region"
+            aria-label={isRTL ? 'شريط المقارنة' : 'Compare bar'}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <Scale className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+              <div className="flex -space-x-2 rtl:space-x-reverse">
+                {selectedProfiles.slice(0, 4).map((p) => (
+                  <div key={p.id} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full ring-2 ring-primary bg-muted overflow-hidden shrink-0">
+                    {p.cover_image_url ? (
+                      <img src={p.cover_image_url} alt={p.name_ar} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full grid place-items-center"><Layers className="w-3 h-3 text-muted-foreground" /></div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <span className="font-medium text-xs sm:text-sm tabular-nums tech-content whitespace-nowrap">
+                {fmtNum(compareIds.length)}<span className="opacity-60">/4</span>
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="hero" onClick={goCompare} className="text-xs h-8 sm:h-9">
+            <div className="flex items-center gap-2 ms-auto">
+              <Button
+                size="sm"
+                variant="hero"
+                onClick={goCompare}
+                disabled={compareIds.length < 2}
+                className="text-xs h-8 sm:h-9 disabled:opacity-50"
+                title={compareIds.length < 2 ? (isRTL ? 'اختر قطاعَين على الأقل' : 'Select at least 2') : undefined}
+              >
                 {isRTL ? 'قارن الآن' : 'Compare'}
               </Button>
-              <button onClick={() => setCompareIds([])} className="text-primary-foreground/60 hover:text-primary-foreground p-1">
+              <button onClick={() => setCompareIds([])} className="text-primary-foreground/60 hover:text-primary-foreground p-1" aria-label={isRTL ? 'مسح الاختيار' : 'Clear selection'}>
                 <X className="w-4 h-4" />
               </button>
             </div>
