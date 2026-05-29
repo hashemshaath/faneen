@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
-import { Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, UserPlus, Send, User } from 'lucide-react';
+import { Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, UserPlus, User } from 'lucide-react';
 import { Ticket, FileText, AtSign } from 'lucide-react';
 import { PhoneField, toE164 } from '@/components/forms/PhoneField';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
@@ -87,7 +87,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
       }
     } catch { /* storage unavailable — non-blocking */ }
     setRegisterType(id === 'create-entity' ? 'business' : 'individual');
-    setStep('details');
+    // For business intent collect business data FIRST, then manager account.
+    // For individual / invite / request-access go straight to personal details.
+    setStep(id === 'create-entity' ? 'business-details' : 'details');
   };
 
   // Persist intent-specific payload right before signup so /onboarding can pick it up.
@@ -305,10 +307,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-heading font-bold text-2xl text-foreground tracking-tight">
-              {isRTL ? 'أدخل بياناتك' : 'Your details'}
+              {registerType === 'business'
+                ? (isRTL ? 'بيانات مدير الحساب' : 'Account manager details')
+                : (isRTL ? 'أدخل بياناتك' : 'Your details')}
             </h2>
             <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">
-              {isRTL ? 'خطوة 2 من 2' : 'Step 2 of 2'}
+              {registerType === 'business'
+                ? (isRTL ? 'خطوة 3 من 3' : 'Step 3 of 3')
+                : (isRTL ? 'خطوة 2 من 2' : 'Step 2 of 2')}
             </span>
           </div>
           <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
@@ -432,26 +438,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             )}
           </div>
 
-          {registerType === 'business' ? (
-            <Button onClick={() => setStep('business-details')} disabled={!isFormValid} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
-              {t('auth.next')}
-              <BackArrow className="w-4 h-4 ms-2 rotate-180" />
-            </Button>
-          ) : (
-            <Button onClick={handleRegister} disabled={loading || !isFormValid} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
-              {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-              {loading ? t('common.loading') : (isRTL ? 'إنشاء الحساب' : 'Create account')}
-            </Button>
-          )}
+          <Button onClick={handleRegister} disabled={loading || !isFormValid || (registerType === 'business' && !usernameOk)} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
+            {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+            {loading ? t('common.loading') : (isRTL ? 'إنشاء الحساب' : 'Create account')}
+          </Button>
         </div>
-        <button onClick={() => setStep('type')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <button onClick={() => setStep(registerType === 'business' ? 'business-details' : 'type')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <BackArrow className="w-4 h-4" /> {t('auth.back')}
         </button>
       </div>
     );
   }
 
-  // ─── Step: Business Details ───
+  // ─── Step: Business Details (collected BEFORE manager account) ───
   return (
     <div className="space-y-6">
       <div className="space-y-3">
@@ -460,14 +459,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             {isRTL ? 'بيانات المنشأة' : 'Business details'}
           </h2>
           <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">
-            {isRTL ? 'الخطوة الأخيرة' : 'Final step'}
+            {isRTL ? 'خطوة 2 من 3' : 'Step 2 of 3'}
           </span>
         </div>
         <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-          <div className="bg-primary h-full rounded-full" style={{ width: '100%' }} />
+          <div className="bg-primary h-full rounded-full" style={{ width: '66%' }} />
         </div>
         <p className="text-sm text-muted-foreground">
-          {isRTL ? 'يمكنك إكمال بقية بيانات المنشأة (الموقع، القدرات، الفروع) بعد التحقق من البريد.' : 'You can complete the rest (location, capabilities, branches) after email verification.'}
+          {isRTL ? 'سجّل بيانات المنشأة أولاً، ثم بيانات مدير الحساب في الخطوة التالية.' : 'Register the business data first, then the account manager in the next step.'}
         </p>
       </div>
       <div className="space-y-4">
@@ -487,13 +486,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
           onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
           placeholder="my-business"
         />
-        <Button onClick={handleRegister} disabled={loading || !businessName.trim() || !usernameOk} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
-          {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-          {loading ? t('common.loading') : (isRTL ? 'إنشاء حساب المنشأة' : 'Create business account')}
-          {!loading && <Send className="w-4 h-4 ms-2" />}
+        <Button onClick={() => setStep('details')} disabled={!businessName.trim() || !usernameOk} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
+          {isRTL ? 'متابعة إلى بيانات المدير' : 'Continue to manager details'}
+          <BackArrow className="w-4 h-4 ms-2 rotate-180" />
         </Button>
       </div>
-      <button onClick={() => setStep('details')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+      <button onClick={() => setStep('type')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <BackArrow className="w-4 h-4" /> {t('auth.back')}
       </button>
     </div>
