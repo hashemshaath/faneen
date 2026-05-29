@@ -28,7 +28,7 @@ function formatExpiry(iso: string, locale: 'ar' | 'en'): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   try {
-    return d.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US', {
+    return d.toLocaleString(locale === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', {
       dateStyle: 'medium',
       timeStyle: 'short',
     });

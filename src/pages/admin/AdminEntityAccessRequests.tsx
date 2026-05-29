@@ -247,7 +247,7 @@ const AdminEntityAccessRequests: React.FC = () => {
                       </p>
                     )}
                     <p className="text-[10px] text-muted-foreground tech-content">
-                      {new Date(r.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                      {new Date(r.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                     </p>
                   </div>
                   {r.status === 'pending' && (

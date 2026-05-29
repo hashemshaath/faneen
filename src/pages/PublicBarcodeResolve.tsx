@@ -220,7 +220,7 @@ const ResolvedCard: React.FC<ResolvedCardProps> = ({ data, isRTL }) => {
     const fmtDate = (d: string | null) => {
       if (!d) return '—';
       try {
-        return new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-GB', {
+        return new Date(d).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-GB', {
           year: 'numeric', month: 'short', day: 'numeric',
         });
       } catch { return d; }

@@ -225,7 +225,7 @@ export const PublicUserProfile: React.FC = () => {
               <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
                 <Calendar className="w-3.5 h-3.5" />
                 {t('عضو منذ', 'Member since')}{' '}
-                {new Date(data.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', {
+                {new Date(data.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', {
                   year: 'numeric',
                   month: 'long',
                 })}

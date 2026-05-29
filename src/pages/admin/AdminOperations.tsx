@@ -85,7 +85,7 @@ function StatBlock({ label, value, tone = 'default' }: {
 function formatTime(iso: string | undefined, isRTL: boolean): string {
   if (!iso) return '—';
   try {
-    return new Date(iso).toLocaleString(isRTL ? 'ar-SA' : 'en-US', {
+    return new Date(iso).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
       dateStyle: 'medium', timeStyle: 'medium',
     });
   } catch {

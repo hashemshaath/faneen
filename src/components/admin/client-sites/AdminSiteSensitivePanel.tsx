@@ -81,7 +81,7 @@ const CHANNEL_LABELS: Record<Channel, { ar: string; en: string }> = {
 
 const fmtDate = (iso: string, isRTL: boolean): string => {
   try {
-    return new Date(iso).toLocaleString(isRTL ? 'ar-SA' : 'en-US', {
+    return new Date(iso).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
       year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
     });
   } catch { return iso; }

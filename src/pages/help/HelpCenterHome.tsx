@@ -99,7 +99,7 @@ const HelpCenterHome: React.FC = () => {
   const formattedLatest = useMemo(() => {
     if (!latestUpdate) return '';
     try {
-      return new Intl.DateTimeFormat(language === 'ar' ? 'ar-SA' : 'en-GB', {
+      return new Intl.DateTimeFormat(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-GB', {
         day: '2-digit', month: 'short', year: 'numeric',
       }).format(new Date(latestUpdate));
     } catch { return ''; }
@@ -335,7 +335,7 @@ const HelpCenterHome: React.FC = () => {
             </CardContent></Card>
             <Card className="rounded-xl"><CardContent className="p-4">
               <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{isRTL ? 'إجمالي المشاهدات' : 'Total views'}</div>
-              <div className="text-2xl font-heading font-black tech-content">{stats.totalViews.toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US')}</div>
+              <div className="text-2xl font-heading font-black tech-content">{stats.totalViews.toLocaleString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US')}</div>
             </CardContent></Card>
             <Card className="rounded-xl"><CardContent className="p-4">
               <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{isRTL ? 'آخر تحديث' : 'Last updated'}</div>

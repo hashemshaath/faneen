@@ -3,7 +3,7 @@
  *
  * Project policy: ALL numeric values rendered in the UI must use Latin (English)
  * digits, even when the active language is Arabic. Use `fmtNum` / `fmtDate` /
- * `fmtDateTime` instead of calling `toLocaleString` directly with `'ar-SA'`.
+ * `fmtDateTime` instead of calling `toLocaleString` directly with `'ar-SA-u-nu-latn'`.
  */
 
 const AR_LATIN = 'ar-SA-u-nu-latn';

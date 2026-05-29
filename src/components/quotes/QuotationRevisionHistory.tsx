@@ -59,7 +59,7 @@ export const QuotationRevisionHistory: React.FC<QuotationRevisionHistoryProps> =
               <span className="font-mono tech-content w-10">v{r.version}</span>
               <span className="flex-1 truncate">{r.action}</span>
               <span className="text-[10px] text-muted-foreground tech-content">
-                {new Date(r.createdAt).toLocaleString(isRTL ? 'ar-SA' : 'en-US', {
+                {new Date(r.createdAt).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
                   dateStyle: 'medium', timeStyle: 'short',
                 })}
               </span>

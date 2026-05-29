@@ -26,7 +26,7 @@ const SectorsHub: React.FC = () => {
         '@type': 'WebPage',
         name: 'القطاعات',
         url: 'https://qitaat.com/sectors',
-        inLanguage: 'ar-SA',
+        inLanguage: 'ar-SA-u-nu-latn',
         description:
           'استكشف قطاعات الخدمات في منصة قطاعات، وابحث عن مزودي خدمات الألمنيوم، الحديد، الخشب، الزجاج، الستانلس ستيل، والتصنيع والتركيب.',
       });

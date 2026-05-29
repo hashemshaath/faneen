@@ -199,7 +199,7 @@ export const SORT_OPTIONS: ReadonlyArray<{ key: SortKey; ar: string; en: string 
 export function formatDate(iso: string | null | undefined, isRTL: boolean): string {
   if (!iso) return '—';
   try {
-    return new Date(iso).toLocaleString(isRTL ? 'ar-SA' : 'en-US', {
+    return new Date(iso).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
       year: 'numeric', month: 'short', day: 'numeric',
       hour: '2-digit', minute: '2-digit',
     });

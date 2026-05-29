@@ -47,7 +47,7 @@ function summarizeMeta(meta: Record<string, unknown> | null): Array<[string, str
 
 function formatAbs(iso: string, isRTL: boolean): string {
   try {
-    return new Date(iso).toLocaleString(isRTL ? 'ar-SA' : 'en-US', {
+    return new Date(iso).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
       dateStyle: 'medium',
       timeStyle: 'short',
     });
