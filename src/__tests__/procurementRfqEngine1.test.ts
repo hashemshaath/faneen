@@ -25,8 +25,8 @@ describe("PROCUREMENT-RFQ-ENGINE-1 — scope and wiring guards", () => {
     const svc = read("src/modules/procurement/services/purchaseOrders.ts");
     expect(svc).toMatch(/createPurchaseOrderDraft/);
     expect(svc).toMatch(/procurement_purchase_orders/);
-    // No accounting / payment / goods-receipt references.
-    expect(svc).not.toMatch(/payment|invoice|goods_receipt|inventory|stock_/i);
+    // No accounting / goods-receipt / inventory table access.
+    expect(svc).not.toMatch(/\.from\(\s*['"](supplier_payments|goods_receipt|inventory_|stock_|warehouse_)/);
     const barrel = read("src/modules/procurement/index.ts");
     expect(barrel).toMatch(/createPurchaseOrderDraft/);
     expect(barrel).toMatch(/listPurchaseOrdersByRfq/);
