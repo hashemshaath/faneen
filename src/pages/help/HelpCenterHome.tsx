@@ -399,8 +399,8 @@ const HelpCenterHome: React.FC = () => {
                       <CardTitle className="text-lg">{pickTitle(c, language)}</CardTitle>
                       <div className="flex items-center gap-1.5">
                         <Badge variant="secondary" className="text-[10px]">{c.audience}</Badge>
-                        <Badge variant="outline" className="text-[10px] tech-content">
-                          {countsByCategory.get(c.id) ?? 0}
+                        <Badge variant="outline" className="text-[10px] num-tabular">
+                          {fmtNum(countsByCategory.get(c.id) ?? 0)}
                         </Badge>
                       </div>
                     </div>
@@ -489,7 +489,7 @@ const HelpCenterHome: React.FC = () => {
                   aria-label={`${isRTL ? 'بحث عن' : 'Search'} ${k}`}
                 >
                   <span className="me-1">{k}</span>
-                  <span className="text-[10px] text-muted-foreground tech-content">({n})</span>
+                  <span className="text-[10px] text-muted-foreground num-tabular">({fmtNum(n)})</span>
                 </button>
               ))}
             </div>
@@ -508,8 +508,8 @@ const HelpCenterHome: React.FC = () => {
               <span className="flex items-center gap-2 font-semibold">
                 <Library className="w-4 h-4 text-primary" />
                 {isRTL ? 'تصفّح كل المقالات' : 'Browse all articles'}
-                <Badge variant="outline" className="ms-1 text-[10px] tech-content">
-                  {audienceFilteredArticles.length}
+                <Badge variant="outline" className="ms-1 text-[10px] num-tabular">
+                  {fmtNum(audienceFilteredArticles.length)}
                 </Badge>
               </span>
               <span className="text-xs text-muted-foreground">
@@ -525,7 +525,7 @@ const HelpCenterHome: React.FC = () => {
                         <Link to={`/help/category/${cat.slug}`} className="hover:underline">
                           {pickTitle(cat, language)}
                         </Link>
-                        <Badge variant="outline" className="text-[10px] tech-content">{items.length}</Badge>
+                        <Badge variant="outline" className="text-[10px] num-tabular">{fmtNum(items.length)}</Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -547,7 +547,7 @@ const HelpCenterHome: React.FC = () => {
                               to={`/help/category/${cat.slug}`}
                               className="text-xs text-primary hover:underline"
                             >
-                              {isRTL ? `عرض الكل (${items.length}) ←` : `View all (${items.length}) →`}
+                              {isRTL ? `عرض الكل (${fmtNum(items.length)}) ←` : `View all (${fmtNum(items.length)}) →`}
                             </Link>
                           </li>
                         )}
