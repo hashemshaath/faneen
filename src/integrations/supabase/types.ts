@@ -8663,6 +8663,45 @@ export type Database = {
         }
         Relationships: []
       }
+      operations_observability_log: {
+        Row: {
+          alerts: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          ref_id: string | null
+          run_day: string | null
+          run_type: string
+          score: number
+          status: string
+          summary: Json
+        }
+        Insert: {
+          alerts?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          ref_id?: string | null
+          run_day?: string | null
+          run_type: string
+          score: number
+          status: string
+          summary?: Json
+        }
+        Update: {
+          alerts?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          ref_id?: string | null
+          run_day?: string | null
+          run_type?: string
+          score?: number
+          status?: string
+          summary?: Json
+        }
+        Relationships: []
+      }
       password_reset_log: {
         Row: {
           created_at: string
@@ -15958,6 +15997,10 @@ export type Database = {
         Returns: boolean
       }
       rotate_client_site_qr_token: { Args: { _site_id: string }; Returns: Json }
+      run_operations_observability_check: {
+        Args: { _run_type?: string }
+        Returns: Json
+      }
       search_contract_clients: {
         Args: { _q: string }
         Returns: {
