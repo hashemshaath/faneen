@@ -15,6 +15,7 @@ import { RelatedReferencesPanel } from "@/components/reference/RelatedReferences
 import { UnifiedTimeline } from "@/components/timeline/UnifiedTimeline";
 import { DiagnosticsCard } from "@/components/dashboard/DiagnosticsCard";
 import { computeProcurementDiagnostics } from "@/modules/analytics/diagnostics";
+import { useWorkOrderRealtimeInvalidation } from "@/hooks/useWorkOrderRealtimeInvalidation";
 import {
   awardRfqQuote,
   closeRfq,
