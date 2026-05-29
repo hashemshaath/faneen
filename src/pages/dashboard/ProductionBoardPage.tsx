@@ -326,10 +326,8 @@ export default function ProductionBoardPage() {
     let qcBlocked = 0;
     let awaitingApproval = 0;
     let completedWeek = 0;
-    const stageCounts: Record<string, number> = {};
 
     for (const o of orders) {
-      stageCounts[o.pipeline_stage] = (stageCounts[o.pipeline_stage] ?? 0) + 1;
       const isClosed = o.status === "completed" || o.status === "cancelled";
       if (!isClosed) active += 1;
       if (isOverdueRow(o as never, now)) overdue += 1;
@@ -351,19 +349,17 @@ export default function ProductionBoardPage() {
       }
     }
 
-    // Bottleneck = stage with most items in non-terminal lanes.
-    const lane = BOARD_COLUMN_STAGES.filter(
-      (s) => s !== "completed" && s !== "ready",
+    // Pure helper covers stage counts, bottleneck, overload, unassigned, workload.
+    const capacity = computeBoardCapacity(
+      orders.map((o) => ({
+        id: o.id,
+        pipeline_stage: o.pipeline_stage,
+        status: o.status,
+        due_at: o.due_at,
+      })),
+      assignments,
+      now,
     );
-    let bottleneck: WorkOrderPipelineStageKey | null = null;
-    let bottleneckCount = 0;
-    for (const s of lane) {
-      const n = stageCounts[s] ?? 0;
-      if (n > bottleneckCount) {
-        bottleneck = s;
-        bottleneckCount = n;
-      }
-    }
 
     return {
       active,
@@ -372,11 +368,15 @@ export default function ProductionBoardPage() {
       qcBlocked,
       awaitingApproval,
       completedWeek,
-      stageCounts,
-      bottleneck,
-      bottleneckCount,
+      stageCounts: capacity.stageCounts,
+      overdueByStage: capacity.overdueByStage,
+      overloadedStages: capacity.overloadedStages,
+      bottleneck: capacity.bottleneck,
+      bottleneckCount: capacity.bottleneckCount,
+      unassignedCount: capacity.unassignedCount,
+      operatorWorkload: capacity.operatorWorkload,
     };
-  }, [orders]);
+  }, [orders, assignments]);
 
   /* ─── Actions ─── */
   const onMove = useCallback(
@@ -390,12 +390,12 @@ export default function ProductionBoardPage() {
       });
       setBusyId(null);
       if (err) {
-        setError(tx.errMove);
+        setError(mapTransitionError(err, isRTL ? "ar" : "en"));
         return;
       }
       await load();
     },
-    [busyId, load, tx.errMove],
+    [busyId, load, isRTL],
   );
 
   const onAssign = useCallback(
@@ -417,6 +417,28 @@ export default function ProductionBoardPage() {
         return;
       }
       setAssignTargetUserId("");
+      await load();
+    },
+    [user, busyId, load, tx.errAssign],
+  );
+
+  const onUnassign = useCallback(
+    async (o: BoardWorkOrderRow) => {
+      if (!user) return;
+      if (busyId) return;
+      setBusyId(o.id);
+      setError(null);
+      const { error: err } = await unassignWorkOrderStage({
+        workOrderId: o.id,
+        businessId: o.business_id,
+        stageKey: o.pipeline_stage,
+        actorUserId: user.id,
+      });
+      setBusyId(null);
+      if (err) {
+        setError(tx.errAssign);
+        return;
+      }
       await load();
     },
     [user, busyId, load, tx.errAssign],
