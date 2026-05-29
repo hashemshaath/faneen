@@ -146,7 +146,7 @@ export default function DashboardWorkOrderDetail() {
 
   useEffect(() => { void load(); }, [load]);
 
-  // BUSINESS-WORKFLOW-REALTIME-1: invalidate + refetch on DB changes.
+  // Workflow change-stream: invalidate + refetch on DB changes.
   useWorkOrderRealtimeInvalidation({
     businessId: wo?.business_id ?? null,
     workOrderId: wo?.id ?? null,

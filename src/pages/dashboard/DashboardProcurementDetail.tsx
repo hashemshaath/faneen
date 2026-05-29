@@ -176,7 +176,7 @@ export default function DashboardProcurementDetail() {
     void load();
   }, [load]);
 
-  // BUSINESS-WORKFLOW-REALTIME-1: invalidate + refetch on DB changes.
+  // Workflow change-stream: invalidate + refetch on DB changes.
   useWorkOrderRealtimeInvalidation({
     businessId: request?.business_id ?? null,
     onChange: () => { void load(); },
