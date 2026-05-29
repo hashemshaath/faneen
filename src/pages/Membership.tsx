@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,17 +27,20 @@ import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
 import { CurrentSubscriptionCard } from '@/components/membership/CurrentSubscriptionCard';
 import { MembershipPaymentStatus } from '@/components/membership/MembershipPaymentStatus';
-import { MembershipPaymentHistory } from '@/components/membership/MembershipPaymentHistory';
 import { PlanCard } from '@/components/membership/PlanCard';
-import { FeatureComparisonTable } from '@/components/membership/FeatureComparisonTable';
 import { PromoCodeRedeem } from '@/components/membership/PromoCodeRedeem';
 import { RenewalStatusBanner } from '@/components/membership/RenewalStatusBanner';
 import { MembershipKeysManager } from '@/components/membership/MembershipKeysManager';
-import { MembershipBenefits } from '@/components/membership/MembershipBenefits';
-import { MembershipFAQ } from '@/components/membership/MembershipFAQ';
 import { MembershipTrustStrip } from '@/components/membership/MembershipTrustStrip';
 import { MembershipPlanRecommender } from '@/components/membership/MembershipPlanRecommender';
-import { MembershipTestimonials } from '@/components/membership/MembershipTestimonials';
+import { SubscribeStepper } from '@/components/membership/SubscribeStepper';
+
+// Below-the-fold sections — lazy to keep the initial bundle lean.
+const FeatureComparisonTable = lazy(() => import('@/components/membership/FeatureComparisonTable').then((m) => ({ default: m.FeatureComparisonTable })));
+const MembershipBenefits = lazy(() => import('@/components/membership/MembershipBenefits').then((m) => ({ default: m.MembershipBenefits })));
+const MembershipFAQ = lazy(() => import('@/components/membership/MembershipFAQ').then((m) => ({ default: m.MembershipFAQ })));
+const MembershipTestimonials = lazy(() => import('@/components/membership/MembershipTestimonials').then((m) => ({ default: m.MembershipTestimonials })));
+const MembershipPaymentHistory = lazy(() => import('@/components/membership/MembershipPaymentHistory').then((m) => ({ default: m.MembershipPaymentHistory })));
 import { track } from '@/lib/analytics-events';
 import { Button } from '@/components/ui/button';
 import { ensureDraftBusiness } from '@/lib/ensure-business';
