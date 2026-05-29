@@ -19,6 +19,10 @@ import {
   FileText,
   ScrollText,
   CalendarClock,
+  ClipboardCheck,
+  ShieldCheck,
+  Star,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,6 +37,13 @@ import {
   confirmAppointment,
   requestAppointmentReschedule,
 } from '@/modules/installationAppointments';
+import {
+  customerConfirmCompletion,
+  customerReportProjectIssue,
+  customerSubmitFeedback,
+  customerSubmitNps,
+  classifyNps,
+} from '@/modules/projectClosure';
 
 const MILESTONE_ORDER: CustomerMilestoneKey[] = [
   'quotation_sent',
@@ -59,6 +70,23 @@ export default function CustomerProjectPortal() {
   const [aptError, setAptError] = useState<string | null>(null);
   const [showReschedule, setShowReschedule] = useState(false);
   const [rescheduleNote, setRescheduleNote] = useState('');
+
+  // Closure interactions
+  const [closureBusy, setClosureBusy] = useState(false);
+  const [closureError, setClosureError] = useState<string | null>(null);
+  const [showIssue, setShowIssue] = useState(false);
+  const [issueText, setIssueText] = useState('');
+
+  // Feedback
+  const [fbBusy, setFbBusy] = useState(false);
+  const [fbError, setFbError] = useState<string | null>(null);
+  const [fbRating, setFbRating] = useState(0);
+  const [fbText, setFbText] = useState('');
+
+  // NPS
+  const [npsBusy, setNpsBusy] = useState(false);
+  const [npsError, setNpsError] = useState<string | null>(null);
+  const [npsScore, setNpsScore] = useState<number | null>(null);
 
   const tx = useMemo(
     () => ({
@@ -94,6 +122,42 @@ export default function CustomerProjectPortal() {
         reschedule_requested: isRTL ? 'طلب إعادة جدولة' : 'Reschedule requested',
         completed: isRTL ? 'مكتمل' : 'Completed',
         cancelled: isRTL ? 'ملغى' : 'Cancelled',
+      } as Record<string, string>,
+      closureTitle: isRTL ? 'حالة الاكتمال' : 'Completion status',
+      closureRef: isRTL ? 'رقم الإنهاء' : 'Closure',
+      closureCompletion: isRTL ? 'تاريخ الاكتمال' : 'Completion date',
+      closureConfirmed: isRTL ? 'تاريخ التأكيد' : 'Confirmed on',
+      confirmCompletion: isRTL ? 'تأكيد الاستلام' : 'Confirm delivery',
+      reportIssue: isRTL ? 'الإبلاغ عن ملاحظة' : 'Report an issue',
+      issuePlaceholder: isRTL ? 'اشرح الملاحظة باختصار' : 'Briefly describe the concern',
+      submitIssue: isRTL ? 'إرسال الملاحظة' : 'Submit',
+      issueReported: isRTL ? 'تم استلام ملاحظتك.' : 'Your concern was received.',
+      closureActionError: isRTL ? 'تعذّر إرسال الإجراء.' : 'Could not submit the action.',
+      closureStatusLabels: {
+        pending_customer_confirmation: isRTL ? 'بانتظار تأكيدك' : 'Awaiting your confirmation',
+        issue_reported: isRTL ? 'تم استلام ملاحظتك' : 'Your concern was reported',
+        customer_confirmed: isRTL ? 'تم التأكيد' : 'Confirmed',
+        warranty_started: isRTL ? 'بدأ الضمان' : 'Warranty started',
+        closed: isRTL ? 'مغلق' : 'Closed',
+      } as Record<string, string>,
+      evidenceTitle: isRTL ? 'صور التسليم' : 'Delivery photos',
+      warrantyTitle: isRTL ? 'الضمان' : 'Warranty',
+      warrantyStart: isRTL ? 'بداية الضمان' : 'Start',
+      warrantyEnd: isRTL ? 'نهاية الضمان' : 'End',
+      warrantyStatus: isRTL ? 'الحالة' : 'Status',
+      feedbackTitle: isRTL ? 'تقييمك' : 'Your feedback',
+      feedbackRating: isRTL ? 'التقييم' : 'Rating',
+      feedbackPlaceholder: isRTL ? 'شاركنا ملاحظاتك (اختياري)' : 'Share any comment (optional)',
+      submitFeedback: isRTL ? 'إرسال التقييم' : 'Submit feedback',
+      feedbackThanks: isRTL ? 'شكراً لتقييمك.' : 'Thank you for your feedback.',
+      npsTitle: isRTL ? 'ما مدى احتمالية أن تنصحنا للآخرين؟' : 'How likely are you to recommend us?',
+      npsScale: isRTL ? '0 = غير محتمل · 10 = أكيد' : '0 = unlikely · 10 = very likely',
+      submitNps: isRTL ? 'إرسال' : 'Submit',
+      npsThanks: isRTL ? 'شكراً لمشاركتك.' : 'Thanks for sharing.',
+      npsLabels: {
+        promoter: isRTL ? 'مروّج' : 'Promoter',
+        passive: isRTL ? 'محايد' : 'Passive',
+        detractor: isRTL ? 'منتقد' : 'Detractor',
       } as Record<string, string>,
       confLabels: {
         pending: isRTL ? 'بانتظار التأكيد' : 'Pending',
