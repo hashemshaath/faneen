@@ -2,7 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Download, ShieldCheck, Star, MapPin, Building2, Sparkles } from 'lucide-react';
-import { formatNumber } from '@/lib/format';
+import { fmtNum } from '@/lib/format';
 
 type B = {
   id: string;
@@ -77,34 +77,34 @@ export const SearchInsightsBar: React.FC<Props> = ({ businesses, totalDirectory 
     {
       icon: Building2,
       label: isRTL ? 'النتائج' : 'Results',
-      value: formatNumber(stats.count),
+      value: fmtNum(stats.count),
       hint: typeof totalDirectory === 'number' && totalDirectory > 0
-        ? `/ ${formatNumber(totalDirectory)}`
+        ? `/ ${fmtNum(totalDirectory)}`
         : undefined,
       tone: 'text-foreground',
     },
     {
       icon: ShieldCheck,
       label: isRTL ? 'موثّق' : 'Verified',
-      value: formatNumber(stats.verified),
+      value: fmtNum(stats.verified),
       tone: 'text-emerald-600 dark:text-emerald-400',
     },
     {
       icon: Star,
       label: isRTL ? 'متوسّط التقييم' : 'Avg rating',
-      value: stats.avg ? formatNumber(stats.avg, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) : '—',
+      value: stats.avg ? fmtNum(stats.avg, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) : '—',
       tone: 'text-amber-600 dark:text-amber-400',
     },
     {
       icon: MapPin,
       label: isRTL ? 'مدن' : 'Cities',
-      value: formatNumber(stats.cities),
+      value: fmtNum(stats.cities),
       tone: 'text-sky-600 dark:text-sky-400',
     },
     {
       icon: Sparkles,
       label: isRTL ? 'لديها عروض' : 'With offers',
-      value: formatNumber(stats.withOffers),
+      value: fmtNum(stats.withOffers),
       tone: 'text-fuchsia-600 dark:text-fuchsia-400',
     },
   ];
