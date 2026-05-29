@@ -5,7 +5,7 @@
  * procurement tables and invalidates the registered React Query keys.
  *
  * Hard constraints (enforced by tests):
- *  - postgres_changes only (no Broadcast, no Presence, no realtime.messages)
+ *  - postgres_changes only (no realtime broadcast/presence/messages channels)
  *  - no direct supabase.from / mutation from realtime callbacks
  *  - channel scoped per business: `qitaat-workflow-{businessId}`
  *  - no subscription when businessId is missing
