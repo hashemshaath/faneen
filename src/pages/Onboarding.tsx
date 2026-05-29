@@ -22,6 +22,13 @@ import { SectorPicker } from '@/components/onboarding/SectorPicker';
 import { ONBOARDING_SECTORS, type SectorId } from '@/data/onboarding-sectors';
 import { SA_REGIONS, type SaRegionId } from '@/data/sa-regions';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  uploadPrivateDocument,
+  uploadPublicImage,
+  getPublicImageUrl,
+  BUSINESS_DOCUMENTS_BUCKET,
+  BUSINESS_ASSETS_BUCKET,
+} from '@/modules/files';
 import { updateOnboardingProgress } from '@/modules/users';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
 import {
