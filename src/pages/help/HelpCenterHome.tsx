@@ -29,7 +29,16 @@ const HelpCenterHome: React.FC = () => {
     description: isRTL ? 'دليلك للبدء، الإجابات السريعة، وإعداد التقارير.' : 'Your guide for getting started, quick answers, and reports.',
     canonical: 'https://qitaat.com/help',
   });
-  const { data: cats0 = [] } = useQuery({ queryKey: ['help', 'categories'], queryFn: listHelpCategories });
+  const [q, setQ] = useState('');
+
+  const { data: cats = [] } = useQuery({ queryKey: ['help', 'categories'], queryFn: listHelpCategories });
+  const { data: popular = [] } = useQuery({ queryKey: ['help', 'popular'], queryFn: () => listPopularArticles(6) });
+  const { data: results = [] } = useQuery({
+    queryKey: ['help', 'search', q],
+    queryFn: () => searchHelpArticles({ q, limit: 12 }),
+    enabled: q.trim().length > 1,
+  });
+
   useMultiJsonLd([
     {
       '@context': 'https://schema.org',
@@ -45,22 +54,13 @@ const HelpCenterHome: React.FC = () => {
       name: isRTL ? 'مركز مساعدة قِطاعات' : 'Qitaat Help Center',
       url: 'https://qitaat.com/help',
       inLanguage: language === 'ar' ? 'ar' : 'en',
-      hasPart: cats0.slice(0, 50).map((c) => ({
+      hasPart: cats.slice(0, 50).map((c) => ({
         '@type': 'WebPage',
         name: language === 'ar' ? c.title_ar : c.title_en,
         url: `https://qitaat.com/help/category/${c.slug}`,
       })),
     },
   ]);
-  const [q, setQ] = useState('');
-
-  const { data: cats = [] } = useQuery({ queryKey: ['help', 'categories'], queryFn: listHelpCategories });
-  const { data: popular = [] } = useQuery({ queryKey: ['help', 'popular'], queryFn: () => listPopularArticles(6) });
-  const { data: results = [] } = useQuery({
-    queryKey: ['help', 'search', q],
-    queryFn: () => searchHelpArticles({ q, limit: 12 }),
-    enabled: q.trim().length > 1,
-  });
 
   // Best-effort search analytics (debounced via stable query result reference)
   useEffect(() => {
