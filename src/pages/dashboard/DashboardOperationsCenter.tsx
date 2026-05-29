@@ -12,7 +12,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { listWorkOrdersForBusiness } from '@/modules/workOrders/services/listWorkOrdersForBusiness';
 import { listRfqs } from '@/modules/procurement/services/rfqs';
-import { computeProductionMetrics } from '@/modules/analytics';
+import {
+  computeProductionMetrics,
+  computeRevenuePipeline,
+  computeCycleTimes,
+} from '@/modules/analytics';
+import { listContractsForRole, type ContractRow } from '@/modules/contracts/services/list';
+import {
+  runDataIntegrityChecks,
+  INTEGRITY_LABELS,
+  type IntegrityKey,
+} from '@/modules/health/dataIntegrity';
 import {
   computeWorkOrderDiagnostics,
   computeProcurementDiagnostics,
@@ -48,6 +58,7 @@ const OperationsCenter = () => {
   const [feedback, setFeedback] = useState<CustomerFeedbackRow[]>([]);
   const [npsRows, setNpsRows] = useState<CustomerNpsResponseRow[]>([]);
   const [warranties, setWarranties] = useState<WorkOrderWarrantyRow[]>([]);
+  const [contracts, setContracts] = useState<ContractRow[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -64,6 +75,12 @@ const OperationsCenter = () => {
         listCustomerNpsForBusiness(businessId, 200),
         listWarrantiesForBusiness(businessId, 200),
       ]);
+      let ctr: ContractRow[] = [];
+      try {
+        ctr = await listContractsForRole({ userId: businessId, role: 'provider' });
+      } catch {
+        ctr = [];
+      }
       if (cancelled) return;
       setWorkOrders(wo.data ?? []);
       setRfqs(rf.data ?? []);
@@ -72,6 +89,7 @@ const OperationsCenter = () => {
       setFeedback(fb.data ?? []);
       setNpsRows(np.data ?? []);
       setWarranties(wr.data ?? []);
+      setContracts(ctr);
       setLoading(false);
     })().catch(() => setLoading(false));
     return () => { cancelled = true; };
@@ -128,6 +146,89 @@ const OperationsCenter = () => {
 
   const nps = useMemo(() => computeNpsScore(npsRows), [npsRows]);
 
+  const revenue = useMemo(
+    () => computeRevenuePipeline({
+      contracts: contracts.map((c) => ({ id: c.id, status: c.status })),
+      quotations: [],
+    }),
+    [contracts],
+  );
+
+  const cycles = useMemo(
+    () => computeCycleTimes({
+      contracts: contracts.map((c) => ({
+        id: c.id,
+        status: c.status,
+        created_at: c.created_at,
+        start_date: c.start_date ?? null,
+        activated_at: (c as unknown as { activated_at?: string | null }).activated_at ?? null,
+      })),
+      quotations: [],
+      workOrders: workOrders.map((w) => ({
+        id: w.id,
+        status: w.status,
+        created_at: w.created_at,
+        completed_at: w.completed_at ?? null,
+      })),
+      appointments: appointments.map((a) => ({
+        id: a.id,
+        status: a.status,
+        scheduled_at: a.scheduled_at ?? null,
+        confirmed_at: (a as unknown as { confirmed_at?: string | null }).confirmed_at ?? null,
+      })),
+    }),
+    [contracts, workOrders, appointments],
+  );
+
+  const integrity = useMemo(() => {
+    const report = runDataIntegrityChecks({
+      contracts: contracts.map((c) => ({ id: c.id, ref_id: c.ref_id, status: c.status })),
+      workOrders: workOrders.map((w) => ({
+        id: w.id,
+        ref_id: w.ref_id ?? null,
+        contract_id: w.contract_id ?? null,
+        due_at: w.due_at ?? null,
+        pipeline_stage: w.current_stage_key ?? null,
+        status: w.status,
+      })),
+      quotations: [],
+      closures: closures.map((c) => ({
+        id: c.id,
+        ref_id: c.ref_id ?? null,
+        work_order_id: c.work_order_id,
+        status: c.closure_status,
+      })),
+      warranties: warranties.map((w) => ({
+        id: w.id,
+        ref_id: w.ref_id ?? null,
+        work_order_id: w.work_order_id,
+        status: w.status,
+        expires_at: w.end_date ?? null,
+      })),
+      appointments: appointments.map((a) => ({
+        id: a.id,
+        ref_id: a.ref_id ?? null,
+        work_order_id: a.work_order_id ?? null,
+        status: a.status,
+      })),
+      rfqs: [],
+      rfqSuppliers: [],
+      rfqQuotes: [],
+      purchaseOrders: [],
+      trackingLinks: [],
+    });
+    // Only surface checks we can reliably compute with loaded data.
+    const reliable: IntegrityKey[] = [
+      'contracts_without_work_orders',
+      'completed_work_orders_without_closure',
+      'closures_without_warranty',
+      'work_orders_without_due_date',
+      'installation_without_confirmation',
+      'expired_warranties',
+    ];
+    return reliable.map((k) => ({ key: k, count: report.findings[k].length, tone: report.summary.find((s) => s.key === k)?.tone ?? 'slate' }));
+  }, [contracts, workOrders, closures, warranties, appointments]);
+
   return (
     <div className="container mx-auto px-4 py-6 space-y-6" data-testid="operations-center">
       <header>
@@ -136,6 +237,34 @@ const OperationsCenter = () => {
           Executive view of contracts, production, and procurement health.
         </p>
       </header>
+
+      <Card data-testid="revenue-pipeline-section">
+        <CardHeader><CardTitle>Revenue pipeline · مسار الإيراد</CardTitle></CardHeader>
+        <CardContent>
+          <KpiStrip
+            items={[
+              { label: 'Open quotations', value: revenue.openQuotations, tone: 'info' },
+              { label: 'Approved quotations', value: revenue.approvedQuotations, tone: 'success' },
+              { label: 'Draft contracts', value: revenue.draftContracts, tone: 'warning' },
+              { label: 'Active contracts', value: revenue.activeContracts, tone: 'success' },
+            ]}
+          />
+        </CardContent>
+      </Card>
+
+      <Card data-testid="cycle-times-section">
+        <CardHeader><CardTitle>Cycle times (days) · أزمنة الدورة</CardTitle></CardHeader>
+        <CardContent>
+          <KpiStrip
+            items={[
+              { label: 'Quotation approval', value: cycles.avgQuotationApprovalDays, tone: 'info' },
+              { label: 'Contract conversion', value: cycles.avgContractConversionDays, tone: 'info' },
+              { label: 'Work order completion', value: cycles.avgWorkOrderCompletionDays, tone: 'info' },
+              { label: 'Installation confirmation', value: cycles.avgInstallationConfirmationDays, tone: 'info' },
+            ]}
+          />
+        </CardContent>
+      </Card>
 
       <Card data-testid="production-section">
         <CardHeader><CardTitle>Production · الإنتاج</CardTitle></CardHeader>
@@ -233,6 +362,22 @@ const OperationsCenter = () => {
               { label: 'Warranty expiring 30d', value: closure.alertWarrantyExpiringSoon, tone: closure.alertWarrantyExpiringSoon ? 'warning' : 'neutral' },
             ]}
           />
+        </CardContent>
+      </Card>
+
+      <Card data-testid="data-integrity-section">
+        <CardHeader><CardTitle>Data integrity · سلامة البيانات</CardTitle></CardHeader>
+        <CardContent>
+          <KpiStrip
+            items={integrity.map((i) => ({
+              label: INTEGRITY_LABELS[i.key].en,
+              value: i.count,
+              tone: i.count === 0 ? 'success' : i.tone === 'red' ? 'danger' : i.tone === 'amber' ? 'warning' : 'info',
+            }))}
+          />
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Read-only diagnostics. Findings are derived from loaded data only.
+          </p>
         </CardContent>
       </Card>
 
