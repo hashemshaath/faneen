@@ -90,6 +90,7 @@ const AdminCronRuns = () => {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [statusFilter, setStatusFilter] = useState<'all' | 'ok' | 'fail'>('all');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [live, setLive] = useState(false);
 
   const sinceIso = useMemo(
     () => new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString(),
@@ -192,6 +193,74 @@ const AdminCronRuns = () => {
     if (statusFilter === 'ok') return rows.filter(r => r.ok === true);
     return rows.filter(r => r.ok === false);
   }, [rows, statusFilter]);
+
+  // ── Realtime: auto-refresh runs + health when new cron rows arrive.
+  useRealtimeInvalidate({
+    channel: 'admin-cron-runs',
+    table: 'cron_run_logs',
+    queryKeys: [
+      ['admin-cron-runs', jobFilter],
+      ['admin-cron-health', windowDays],
+    ],
+    enabled: live,
+  });
+
+  // ── Hourly distribution chart (last 24h, bucketed).
+  const hourly = useMemo(() => {
+    const buckets: Array<{ hour: string; ok: number; failed: number; total: number }> = [];
+    const now = Date.now();
+    for (let i = 23; i >= 0; i--) {
+      const t = new Date(now - i * 60 * 60 * 1000);
+      buckets.push({
+        hour: `${String(t.getHours()).padStart(2, '0')}:00`,
+        ok: 0, failed: 0, total: 0,
+      });
+    }
+    for (const r of rows) {
+      const ts = new Date(r.started_at).getTime();
+      const hoursAgo = Math.floor((now - ts) / (60 * 60 * 1000));
+      if (hoursAgo < 0 || hoursAgo > 23) continue;
+      const slot = buckets[23 - hoursAgo];
+      if (!slot) continue;
+      slot.total += 1;
+      if (r.ok === true) slot.ok += 1;
+      else if (r.ok === false) slot.failed += 1;
+    }
+    return buckets;
+  }, [rows]);
+
+  // ── Export helpers
+  function exportHealthCsv() {
+    const headers = ['Job', 'Function', 'Success rate %', 'Total runs', 'OK', 'Failed', 'Avg duration (ms)', 'Last run', 'Last failed'];
+    const data = sortedHealth.map((r) => [
+      r.job_name,
+      r.function_name,
+      Number(r.success_rate ?? 0).toFixed(1),
+      Number(r.total_runs ?? 0),
+      Number(r.ok_runs ?? 0),
+      Number(r.failed_runs ?? 0),
+      r.avg_duration_ms != null ? Number(r.avg_duration_ms).toFixed(0) : '',
+      r.last_run_at ?? '',
+      r.last_failed_at ?? '',
+    ]);
+    downloadCsv(`cron-health-${windowDays}d-${tsStamp()}`, buildCsv(headers, data));
+  }
+
+  function exportRunsCsv() {
+    const headers = ['Job', 'Function', 'Status', 'OK', 'Started at', 'Finished at', 'Duration (ms)', 'Error code', 'Error message'];
+    const data = filteredRuns.map((r) => [
+      r.job_name,
+      r.function_name,
+      r.status ?? '',
+      r.ok == null ? '' : r.ok ? 'true' : 'false',
+      r.started_at,
+      r.finished_at ?? '',
+      r.duration_ms ?? '',
+      r.error_code ?? '',
+      r.error_message ?? '',
+    ]);
+    downloadCsv(`cron-runs-${tsStamp()}`, buildCsv(headers, data));
+  }
 
   function toggleSort(k: SortKey) {
     if (sortKey === k) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
