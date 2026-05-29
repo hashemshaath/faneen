@@ -1,75 +1,78 @@
-# BUSINESS-WORKFLOW-PROCUREMENT-2 — RFQ Lifecycle & Award
+## HELP-CENTER-FOUNDATION-1 — Implementation Plan
 
-Builds on PROCUREMENT-1 (tables + services + list/detail pages already exist). Closes the gap between "draft request" and "awarded supplier" without adding inventory, supplier payments, cron jobs, or an external supplier portal.
+A foundation phase to ship the full Help Center domain. Out of scope: inventory, accounting, supplier portal/payments, WhatsApp/SMS, AI chatbot (foundation only — links to articles).
 
-## Goals
-1. Move a procurement request through its full internal lifecycle.
-2. Let business managers create RFQs, invite suppliers, capture quotes manually, compare, and award one.
-3. Wire the award back to the originating work order as a structured event (no PO module yet).
-4. Add notifications for key transitions (RFQ sent, quote received, quote awarded).
-5. Keep strict business isolation; no UI → table access; full audits + tests green.
+### A. Domain module
+Create `src/modules/helpCenter/` with barrel exports:
+- `articles.ts` — CRUD + search wrappers (no page-level supabase access)
+- `categories.ts`
+- `search.ts` — `searchHelpArticles({ q, audience, locale })` covering title/summary/keywords/category in AR+EN (ilike + tsvector fallback, no external engine)
+- `issueReports.ts`
+- `featureRequests.ts`
+- `contextualHelp.ts` — `HelpLauncher` registry of `{ pageKey -> articleSlugs[] }`
+- `analytics.ts` — pure `computeHelpMetrics(rows)`
+- `index.ts` barrel
 
-## Scope
+### B. Database migration
+Create tables with `PREFIX-NNNNNNN` ref_id sequences (HCAT, HELP, ISS, REQ):
+- `help_categories` — slug, audience enum (provider/customer/admin/general), title/desc AR+EN, sort_order, is_active
+- `help_articles` — category_id FK, slug, audience, status (draft/published), title/summary/content AR+EN, keywords[], counters, created_by/updated_by
+- `help_issue_reports` — business_id, reporter_user_id (nullable), page_key, issue_type enum, priority enum, title, description, screenshot_url, status enum
+- `help_feature_requests` — business_id, user_id, category, title, description, votes_count, status enum
 
-### A. Data layer (single migration)
-- Add columns:
-  - `procurement_rfqs.expires_at timestamptz`, `sent_at timestamptz`, `awarded_quote_id uuid` (nullable, FK to supplier_quotes).
-  - `procurement_supplier_quotes.status` enum-like text check (`pending`, `submitted`, `shortlisted`, `awarded`, `rejected`), `submitted_at`, `rejection_reason`.
-  - `procurement_requests.awarded_at`, `linked_work_order_event_id` (nullable).
-- New table `procurement_rfq_invitations` (rfq_id, supplier_id, invited_at, responded_at, status). Auto-numbering not needed.
-- Validation trigger: cannot set `awarded_quote_id` unless that quote belongs to the RFQ and is `submitted` or `shortlisted`. Awarding flips request → `awarded`, RFQ → `closed`, quote → `awarded`, siblings → `rejected`.
-- RLS: same business-scope helpers as PROCUREMENT-1; `GRANT` block in same migration; service_role full.
+RLS (no anon):
+- categories/articles published → authenticated SELECT; admin full
+- issue_reports/feature_requests → INSERT by authenticated; SELECT own row (`reporter_user_id = auth.uid()` / `user_id = auth.uid()`); admin full via `has_admin_access()`
+- GRANTs: authenticated CRUD where allowed, service_role ALL, no anon grants
 
-### B. Service layer (`src/modules/procurement/services/*`)
-- `invitations.ts`: `listInvitationsByRfq`, `inviteSuppliersToRfq`, `markInvitationResponded`.
-- Extend `rfqs.ts`: `sendRfq` (draft → sent, stamps `sent_at`), `closeRfq`, `awardRfqQuote` (single RPC call to a SECURITY DEFINER fn that performs the atomic flip).
-- Extend `supplierQuotes.ts`: `submitQuote`, `shortlistQuote`, `rejectQuote`.
-- Pure helper `services/awardEligibility.ts`: given a quote + RFQ, return `{ eligible, reason }`. Unit-tested.
-- Barrel `index.ts` re-exports.
+Sequences + `gen_ref_id()` triggers for each ref_id field.
 
-### C. UI (no new top-level routes)
-On `DashboardProcurementDetail.tsx`:
-- **RFQ panel**: status pill, "Send RFQ" button (draft only), "Close RFQ", expiry display.
-- **Suppliers panel**: inline supplier picker (multi-select from existing `procurement_suppliers` for current business) + "Invite" inline form (no dialog). Shows invitation status per supplier.
-- **Quotes panel**: existing comparison table + per-row inline actions: Shortlist, Reject, Award. "Award" expands an inline confirmation strip (NOT a dialog) per the no-popup rule.
-- **Award result strip**: after award, shows awarded supplier + amount + link back to work order.
+### C. Routes
+Public:
+- `/help` → HelpCenterHome
+- `/help/category/:slug` → HelpCategoryPage
+- `/help/article/:slug` → HelpArticlePage
+- `/help/report-issue` → ReportIssuePage (useNoIndex)
+- `/help/feature-request` → FeatureRequestPage (useNoIndex)
 
-All bilingual via `<Bi>` / `useBi()`; logical CSS (`ms-`/`me-`/`text-start`); h-12 inputs, rounded-xl, IBM Plex Sans Arabic.
+Dashboard / Admin:
+- `/dashboard/help` → user view of own submissions + KB shortcut
+- `/admin/help` → Admin Help Center (manage categories, articles, issues, requests)
 
-### D. Work-order integration
-- On award: insert a `work_order_events` row of kind `procurement_awarded` with `{ rfq_id, supplier_id, quote_id, total_amount, currency }` payload. Store the event id back on `procurement_requests.linked_work_order_event_id`.
-- Read path on the work-order detail page already renders generic events — no UI change needed there, just verify it renders the new kind label (i18n string added).
+Sitemap generator: add `/help`, dynamic category + article slugs (published only). Skip report/request pages.
 
-### E. Notifications
-- Reuse existing notification service to emit:
-  - `procurement.rfq_sent` → request owner.
-  - `procurement.quote_submitted` → request owner.
-  - `procurement.quote_awarded` → request owner + (later) supplier.
-- Add the 3 keys to the notifications kind map; no new notification card type needed (use generic info card).
+### D-I. Pages & UX
+- **HelpCenterHome** — Hero + big search box (AR/EN placeholder), category grid (General, Providers, Customers, Operations, Contracts, Work Orders, Production, Procurement, Customer Portal, Admin), popular articles (top views_count), contact support card
+- **HelpArticlePage** — title, summary, category breadcrumb, content (markdown render via existing renderer), last updated, helpful / not helpful buttons → increment counters via RPC
+- **ReportIssuePage** — inline form (NO MODAL): issue_type, priority, current page auto-detected from `location.pathname`, title, description, screenshot URL. Returns ISS- ref id inline.
+- **FeatureRequestPage** — inline form: category, title, description → returns REQ- id
+- **HelpLauncher** — small "?" button component for page headers; takes `pageKey`, looks up registry, opens dropdown of relevant article links. Wire into: Work Order Detail, Procurement, Contracts, Customer Portal admin pages, Admin pages (Identity/Publishing/Diagnostics)
 
-### F. Tests
-- `awardEligibility.test.ts` — happy path + 5 rejection reasons.
-- `transitions.test.ts` — extend with sent/closed/awarded transitions.
-- `isolation.test.ts` — extend: new pages still don't import `supabase.from('procurement_*')` directly.
-- New `invitations.service.test.ts` — mock supabase chain.
+### J. Starter knowledge base
+Seed 75+ articles via migration insert across all listed categories with bilingual title/summary/content/keywords. Topics: business creation, publishing, BOQ, RFQ, quotations→contracts, customer tracking, warranty start, etc.
 
-### G. Audits & docs
-- Extend `scripts/procurement-isolation-audit.mjs` to cover `procurement_rfq_invitations`.
-- Update `docs/workflow-architecture.md` and `docs/work-order-lifecycle.md` with the award → event hop.
-- Update `docs/deferred-backlog.md`: explicitly defer (a) external supplier portal, (b) PO generation, (c) supplier payments, (d) RFQ expiry cron.
+### K. Admin Help Management
+`/admin/help` tabs: Categories | Articles | Issues | Requests. Filters by status/audience/category. Inline edit (no modals). Uses wrappers only.
 
-## Out of scope (explicit)
-- External/public supplier portal or magic-link supplier responses.
-- Purchase order generation, supplier payments, supplier-side auth.
-- Cron-based RFQ auto-expiry (manual close only this phase).
-- Realtime subscriptions for quote updates (poll via React Query, like existing pages).
-- Inventory module.
+### L. Analytics
+`computeHelpMetrics(articles, issues, requests, searches)` → article views, helpful ratio, open vs resolved issues, feature request counts by status, top searched topics. Render cards in admin dashboard.
 
-## Validation gates
-- `bunx tsc --noEmit` clean.
-- `bunx vitest run` 100% green (current 4547+ baseline preserved).
-- `procurement-isolation-audit`, `storage-isolation-audit`, `identity-isolation-audit`, `credits-isolation-audit`, `broken-links-audit`, `rtl-audit`, `sitemap-integrity-audit` all pass.
-- Manual route check: `/dashboard/procurement` and `/dashboard/procurement/:id` render with new panels in RTL + LTR.
+### M. Security
+Verify: no anon RLS access to issue/feature tables; no UUIDs rendered (use ref_id); no PII in customer-facing surfaces; no `supabase.from` in pages (only wrappers); zero references to inventory/accounting/supplier portal/whatsapp/sms.
 
-## Final report will include
-PASS/FAIL · migration summary · new services · UI changes · WO integration · notification keys · audit + test results · deferred items.
+### N. Tests
+`src/tests/helpCenterFoundation1.test.ts` — guards for: migration objects exist, RLS deny-anon, routes registered, wrappers exported, search returns AR+EN matches, viewer increments counters, contextual registry has entries for required page keys, issue/feature submission returns ref_id, analytics helper math, no direct DB access in pages (regex scan), no out-of-scope module imports.
+
+### O. Validation
+- `bunx tsc --noEmit`
+- `bunx vitest run`
+- Audits: broken-links, sitemap-integrity, identity/businesses/contracts/procurement isolation, storage, notifications, transactional-email, edge-functions, RTL central + direction.
+
+### Final report
+PASS/FAIL across schema, routes, articles seeded count, contextual help coverage map, issue/feature flows, admin management, analytics, security review, tests added, validation results, next phase recommendation (Help Center v1.1: AI assistant + chatbot using Lovable AI on top of articles).
+
+---
+
+**Scope estimate**: ~25 new files (module + 7 pages + components + tests + docs), 1 large migration with seed inserts, sitemap + route registry edits. No new external deps.
+
+Confirm to proceed and I'll ship it end-to-end.
