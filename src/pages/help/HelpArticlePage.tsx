@@ -19,6 +19,7 @@ import {
 } from '@/modules/helpCenter';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
+import { fmtNum, fmtDate } from '@/lib/format';
 
 const HelpArticlePage: React.FC = () => {
   const { slug = '' } = useParams();
@@ -233,15 +234,16 @@ const HelpArticlePage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground mb-6 border-b border-border pb-4">
             <span className="inline-flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              {isRTL ? `~${readingMinutes} دقيقة قراءة` : `~${readingMinutes} min read`}
+              <span className="num-tabular">~{fmtNum(readingMinutes)}</span>{' '}
+              {isRTL ? 'دقيقة قراءة' : 'min read'}
             </span>
-            <span className="inline-flex items-center gap-1.5 tech-content">
+            <span className="inline-flex items-center gap-1.5 num-tabular">
               <Eye className="w-3.5 h-3.5" />
-              {article.views_count ?? 0}
+              {fmtNum(article.views_count ?? 0)}
             </span>
-            <span className="tech-content">
+            <span className="num-tabular">
               {isRTL ? 'آخر تحديث: ' : 'Last updated: '}
-              {new Date(article.updated_at).toLocaleDateString(language === 'ar' ? 'ar' : 'en')}
+              {fmtDate(article.updated_at, isRTL)}
             </span>
             <div className="ms-auto flex items-center gap-1.5 print:hidden">
               <Button
