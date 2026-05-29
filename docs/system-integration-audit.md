@@ -39,7 +39,7 @@ the P1 isolation backlog before promoting the “Phase 2 hardening” gate.
   `/terms`, `/privacy`, `/showcase`, `/membership`,
   `/membership/payment/return`,
   `/membership/payments/:paymentIntentId/invoice`, `/r/:refId`,
-  `/q/:barcode_code`, `/s/:token`, `/v/b/:username`, `/v/c/:number`,
+  `/q/:code`, `/s/:token`, `/v/b/:username`, `/v/c/:number`,
   `/u/:username`.
 - Auth/onboarding: `/auth`, `/onboarding`, `/reset-password`,
   `/invite/:token`, `/staff-invite/:token`, `/join-as-provider`,
