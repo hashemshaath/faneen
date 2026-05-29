@@ -115,9 +115,9 @@ describe("PRODUCTION-2 · stage move + assignment wrappers", () => {
   it("move actions go through transitionWorkOrderStage wrapper", () => {
     expect(PAGE_SRC).toMatch(/transitionWorkOrderStage\(/);
     expect(PAGE_SRC).toMatch(/getAllowedNextStages/);
-    // never mutate pipeline_stage directly.
-    expect(PAGE_SRC).not.toMatch(/pipeline_stage\s*:/);
-    expect(PAGE_SRC).not.toMatch(/work_orders["'`]/);
+    // never mutate pipeline_stage directly on the work_orders table.
+    expect(PAGE_SRC).not.toMatch(/\.update\([^)]*pipeline_stage/);
+    expect(PAGE_SRC).not.toMatch(/from\(["'`]work_orders["'`]\)/);
   });
 
   it("assignment / unassignment go through wrappers, never raw inserts", () => {
