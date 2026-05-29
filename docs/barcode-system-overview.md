@@ -6,7 +6,7 @@ The unified barcode system assigns a single permanent public code — `barcode_c
 
 - **Permanent** — once assigned, the code follows the entity for life
 - **Public-shareable** — safe to print on stickers, invoices, and marketing material
-- **Type-agnostic** — a single `/q/:barcode_code` route resolves any supported entity
+- **Type-agnostic** — a single `/q/:code` route resolves any supported entity
 - **Traceable** — every scan is logged in `barcode_events` with counter increments
 
 ## barcode_code vs scan_token
