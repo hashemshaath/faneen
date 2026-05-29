@@ -8,6 +8,9 @@ const useFeatureGateMock = vi.fn();
 vi.mock('@/hooks/useFeatureGate', () => ({
   useFeatureGate: (...args: unknown[]) => useFeatureGateMock(...args),
 }));
+vi.mock('@/hooks/useDirection', () => ({
+  useDirection: () => ({ isRTL: true, direction: 'rtl' }),
+}));
 
 import { FeatureGate, RequireFeature } from '@/components/membership/FeatureGate';
 
