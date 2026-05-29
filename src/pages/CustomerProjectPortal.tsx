@@ -566,6 +566,275 @@ export default function CustomerProjectPortal() {
 
             {/* Last updated */}
             {snapshot.updated_at && (
+              <></>
+            )}
+
+            {/* Completion / Closure */}
+            {snapshot.closure && (
+              <section
+                className="rounded-2xl border bg-card p-5 shadow-sm"
+                data-testid="customer-portal-closure"
+              >
+                <div className="text-sm font-medium mb-3 flex items-center gap-2">
+                  <ClipboardCheck className="w-4 h-4" /> {tx.closureTitle}
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <div className="text-xs text-muted-foreground">{tx.closureRef}</div>
+                    <div className="tech-content">{snapshot.closure.ref_id}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">{tx.status}</div>
+                    <div>{tx.closureStatusLabels[snapshot.closure.status] ?? snapshot.closure.status}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">{tx.closureCompletion}</div>
+                    <div className="tech-content">{snapshot.closure.completion_date}</div>
+                  </div>
+                  {snapshot.closure.confirmed_at && (
+                    <div>
+                      <div className="text-xs text-muted-foreground">{tx.closureConfirmed}</div>
+                      <div className="tech-content">
+                        {new Date(snapshot.closure.confirmed_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {snapshot.closure.issue_reported_at && snapshot.closure.issue_text && (
+                  <div className="mt-3 rounded-xl border bg-amber-50 dark:bg-amber-950/20 p-2 text-xs flex gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 mt-0.5 text-amber-600 shrink-0" />
+                    <div>
+                      <div className="font-medium">{tx.issueReported}</div>
+                      <p className="whitespace-pre-wrap" dir="auto">{snapshot.closure.issue_text}</p>
+                    </div>
+                  </div>
+                )}
+
+                {snapshot.closure.status === 'pending_customer_confirmation' && (
+                  <div className="mt-3 space-y-2">
+                    {!showIssue ? (
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          className="rounded-xl"
+                          onClick={() => void onConfirmCompletion()}
+                          disabled={closureBusy}
+                          data-testid="customer-confirm-completion"
+                        >
+                          {closureBusy ? <Loader2 className="w-3.5 h-3.5 me-1 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5 me-1" />}
+                          {tx.confirmCompletion}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-xl"
+                          onClick={() => setShowIssue(true)}
+                          disabled={closureBusy}
+                          data-testid="customer-report-issue"
+                        >
+                          {tx.reportIssue}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2" data-testid="customer-issue-form">
+                        <Textarea
+                          dir="auto"
+                          placeholder={tx.issuePlaceholder}
+                          value={issueText}
+                          onChange={(e) => setIssueText(e.target.value.slice(0, 2000))}
+                          className="rounded-xl min-h-[80px]"
+                          aria-label={tx.issuePlaceholder}
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => { setShowIssue(false); setIssueText(''); }} disabled={closureBusy}>
+                            {tx.cancel}
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="rounded-xl"
+                            onClick={() => void onReportIssue()}
+                            disabled={closureBusy || !issueText.trim()}
+                            data-testid="customer-issue-submit"
+                          >
+                            {closureBusy ? <Loader2 className="w-3.5 h-3.5 me-1 animate-spin" /> : null}
+                            {tx.submitIssue}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    {closureError && <div className="text-xs text-destructive">{closureError}</div>}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Delivery evidence */}
+            {snapshot.delivery_evidence && snapshot.delivery_evidence.length > 0 && (
+              <section
+                className="rounded-2xl border bg-card p-5 shadow-sm"
+                data-testid="customer-portal-evidence"
+              >
+                <div className="text-sm font-medium mb-3">{tx.evidenceTitle}</div>
+                <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {snapshot.delivery_evidence.map((e) => (
+                    <li key={e.ref_id} className="rounded-xl border overflow-hidden">
+                      {e.image_url && (
+                        <img
+                          src={e.image_url}
+                          alt={(isRTL ? e.caption_ar : e.caption_en) ?? ''}
+                          className="w-full h-28 object-cover"
+                          loading="lazy"
+                        />
+                      )}
+                      {(e.caption_ar || e.caption_en) && (
+                        <div className="p-2 text-xs" dir="auto">
+                          {isRTL ? (e.caption_ar || e.caption_en) : (e.caption_en || e.caption_ar)}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {/* Warranty */}
+            {snapshot.warranty && (
+              <section
+                className="rounded-2xl border bg-card p-5 shadow-sm"
+                data-testid="customer-portal-warranty"
+              >
+                <div className="text-sm font-medium mb-3 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4" /> {tx.warrantyTitle}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                  <div>
+                    <div className="text-xs text-muted-foreground">{tx.closureRef}</div>
+                    <div className="tech-content">{snapshot.warranty.ref_id}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">{tx.warrantyStart}</div>
+                    <div className="tech-content">{snapshot.warranty.start_date}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">{tx.warrantyEnd}</div>
+                    <div className="tech-content">{snapshot.warranty.end_date}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">{tx.warrantyStatus}</div>
+                    <div className={snapshot.warranty.status === 'active' ? 'text-emerald-600' : 'text-muted-foreground'}>
+                      {snapshot.warranty.status}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Feedback */}
+            {snapshot.closure && (snapshot.closure.status === 'customer_confirmed' || snapshot.closure.status === 'warranty_started' || snapshot.closure.status === 'closed') && (
+              <section
+                className="rounded-2xl border bg-card p-5 shadow-sm"
+                data-testid="customer-portal-feedback"
+              >
+                <div className="text-sm font-medium mb-3 flex items-center gap-2">
+                  <Star className="w-4 h-4" /> {tx.feedbackTitle}
+                </div>
+                {snapshot.feedback_submitted ? (
+                  <div className="text-sm text-emerald-600">{tx.feedbackThanks}</div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1" role="radiogroup" aria-label={tx.feedbackRating}>
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          role="radio"
+                          aria-checked={fbRating === n}
+                          onClick={() => setFbRating(n)}
+                          className={`h-9 w-9 rounded-full border flex items-center justify-center ${fbRating >= n ? 'bg-amber-50 border-amber-400 text-amber-600' : 'text-muted-foreground'}`}
+                          data-testid={`feedback-star-${n}`}
+                        >
+                          <Star className={`w-4 h-4 ${fbRating >= n ? 'fill-current' : ''}`} />
+                        </button>
+                      ))}
+                    </div>
+                    <Textarea
+                      dir="auto"
+                      placeholder={tx.feedbackPlaceholder}
+                      value={fbText}
+                      onChange={(e) => setFbText(e.target.value.slice(0, 2000))}
+                      className="rounded-xl min-h-[80px]"
+                      aria-label={tx.feedbackPlaceholder}
+                    />
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        className="rounded-xl"
+                        onClick={() => void onSubmitFeedback()}
+                        disabled={fbBusy || fbRating < 1}
+                        data-testid="customer-feedback-submit"
+                      >
+                        {fbBusy ? <Loader2 className="w-3.5 h-3.5 me-1 animate-spin" /> : null}
+                        {tx.submitFeedback}
+                      </Button>
+                    </div>
+                    {fbError && <div className="text-xs text-destructive">{fbError}</div>}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* NPS */}
+            {snapshot.closure && (snapshot.closure.status === 'customer_confirmed' || snapshot.closure.status === 'warranty_started' || snapshot.closure.status === 'closed') && (
+              <section
+                className="rounded-2xl border bg-card p-5 shadow-sm"
+                data-testid="customer-portal-nps"
+              >
+                <div className="text-sm font-medium mb-1">{tx.npsTitle}</div>
+                <div className="text-xs text-muted-foreground mb-3">{tx.npsScale}</div>
+                {snapshot.nps_submitted ? (
+                  <div className="text-sm text-emerald-600">{tx.npsThanks}</div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-1" role="radiogroup" aria-label={tx.npsTitle}>
+                      {Array.from({ length: 11 }, (_, i) => i).map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          role="radio"
+                          aria-checked={npsScore === n}
+                          onClick={() => setNpsScore(n)}
+                          className={`h-9 w-9 rounded-full border tech-content text-xs ${npsScore === n ? 'bg-primary text-primary-foreground border-primary' : ''}`}
+                          data-testid={`nps-${n}`}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                    {npsScore != null && (
+                      <div className="text-xs text-muted-foreground">
+                        {tx.npsLabels[classifyNps(npsScore)]}
+                      </div>
+                    )}
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        className="rounded-xl"
+                        onClick={() => void onSubmitNps()}
+                        disabled={npsBusy || npsScore == null}
+                        data-testid="customer-nps-submit"
+                      >
+                        {npsBusy ? <Loader2 className="w-3.5 h-3.5 me-1 animate-spin" /> : null}
+                        {tx.submitNps}
+                      </Button>
+                    </div>
+                    {npsError && <div className="text-xs text-destructive">{npsError}</div>}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {snapshot.updated_at && (
               <div className="text-xs text-muted-foreground text-center">
                 {tx.lastUpdated}:{' '}
                 <span className="tech-content">
