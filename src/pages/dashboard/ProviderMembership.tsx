@@ -5,13 +5,16 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { listProviderSubscriptionsForCurrentUser } from '@/modules/memberships';
 import { listProviderCreditTransactionsForBusinesses } from '@/modules/credits';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Crown, Wallet, Calendar, Activity, Sparkles } from 'lucide-react';
+import { Crown, Wallet, Calendar, Activity, Sparkles, ArrowUpRight, TrendingUp, Download } from 'lucide-react';
 import { PROVIDER_COMMERCIAL_CONFIG } from '@/lib/providerCommercialConfig';
 import { trackEvent } from '@/lib/analytics';
+import { cn } from '@/lib/utils';
 
 interface SubRow {
   id: string;
