@@ -1,13 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-const addComment = vi.fn(async () => ({ data: { id: 'c1' }, error: null }));
-const notifyFaf = vi.fn();
+const addComment = vi.fn(async (..._a: unknown[]) => ({ data: { id: 'c1' }, error: null }));
+const notifyFaf = vi.fn((..._a: unknown[]) => undefined);
 
 vi.mock('@/modules/workOrders', () => ({
-  addWorkOrderComment: (...a: unknown[]) => addComment(...a),
+  addWorkOrderComment: (...a: unknown[]) => addComment.apply(null, a),
 }));
 vi.mock('@/modules/notifications', () => ({
-  createNotificationFireAndForget: (...a: unknown[]) => notifyFaf(...a),
+  createNotificationFireAndForget: (...a: unknown[]) => notifyFaf.apply(null, a),
 }));
 vi.mock('../services/rfqs', () => ({
   getRfqById: vi.fn(async () => ({
