@@ -247,6 +247,46 @@ export default function CustomerProjectPortal() {
     await load();
   }, [snapshot, refId, token, rescheduleNote, tx.aptError, load]);
 
+  const onConfirmCompletion = useCallback(async () => {
+    if (!refId) return;
+    setClosureBusy(true); setClosureError(null);
+    const res = await customerConfirmCompletion({ trackingRef: refId, token });
+    setClosureBusy(false);
+    if (!res.ok) { setClosureError(tx.closureActionError); return; }
+    await load();
+  }, [refId, token, tx.closureActionError, load]);
+
+  const onReportIssue = useCallback(async () => {
+    if (!refId) return;
+    setClosureBusy(true); setClosureError(null);
+    const res = await customerReportProjectIssue({ trackingRef: refId, token, text: issueText });
+    setClosureBusy(false);
+    if (!res.ok) { setClosureError(tx.closureActionError); return; }
+    setShowIssue(false); setIssueText('');
+    await load();
+  }, [refId, token, issueText, tx.closureActionError, load]);
+
+  const onSubmitFeedback = useCallback(async () => {
+    if (!refId || fbRating < 1) return;
+    setFbBusy(true); setFbError(null);
+    const res = await customerSubmitFeedback({
+      trackingRef: refId, token, rating: fbRating, text: fbText || null,
+    });
+    setFbBusy(false);
+    if (!res.ok) { setFbError(tx.closureActionError); return; }
+    setFbText('');
+    await load();
+  }, [refId, token, fbRating, fbText, tx.closureActionError, load]);
+
+  const onSubmitNps = useCallback(async () => {
+    if (!refId || npsScore == null) return;
+    setNpsBusy(true); setNpsError(null);
+    const res = await customerSubmitNps({ trackingRef: refId, token, score: npsScore });
+    setNpsBusy(false);
+    if (!res.ok) { setNpsError(tx.closureActionError); return; }
+    await load();
+  }, [refId, token, npsScore, tx.closureActionError, load]);
+
   const businessName = useMemo(() => {
     if (!snapshot) return '';
     return (
