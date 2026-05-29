@@ -4,3 +4,5 @@ export * from './recommendations';
 export * from './searchLogs';
 export * from './aiAnswers';
 export * from './analytics';
+export * from './contentGaps';
+export * from './assistantLogs';

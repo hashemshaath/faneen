@@ -6158,6 +6158,7 @@ export type Database = {
           content_en: string | null
           created_at: string
           created_by: string | null
+          created_from_gap_id: string | null
           helpful_count: number
           id: string
           keywords: string[]
@@ -6180,6 +6181,7 @@ export type Database = {
           content_en?: string | null
           created_at?: string
           created_by?: string | null
+          created_from_gap_id?: string | null
           helpful_count?: number
           id?: string
           keywords?: string[]
@@ -6202,6 +6204,7 @@ export type Database = {
           content_en?: string | null
           created_at?: string
           created_by?: string | null
+          created_from_gap_id?: string | null
           helpful_count?: number
           id?: string
           keywords?: string[]
@@ -6225,7 +6228,47 @@ export type Database = {
             referencedRelation: "help_categories"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "help_articles_created_from_gap_id_fkey"
+            columns: ["created_from_gap_id"]
+            isOneToOne: false
+            referencedRelation: "help_content_gaps"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      help_assistant_logs: {
+        Row: {
+          audience: Database["public"]["Enums"]["help_audience"] | null
+          confidence: number | null
+          created_at: string
+          event: string
+          id: string
+          page_key: string | null
+          query_normalized: string | null
+          sources_count: number
+        }
+        Insert: {
+          audience?: Database["public"]["Enums"]["help_audience"] | null
+          confidence?: number | null
+          created_at?: string
+          event: string
+          id?: string
+          page_key?: string | null
+          query_normalized?: string | null
+          sources_count?: number
+        }
+        Update: {
+          audience?: Database["public"]["Enums"]["help_audience"] | null
+          confidence?: number | null
+          created_at?: string
+          event?: string
+          id?: string
+          page_key?: string | null
+          query_normalized?: string | null
+          sources_count?: number
+        }
+        Relationships: []
       }
       help_categories: {
         Row: {
@@ -6271,6 +6314,71 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      help_content_gaps: {
+        Row: {
+          audience: Database["public"]["Enums"]["help_audience"] | null
+          created_article_id: string | null
+          created_at: string
+          dedupe_key: string
+          frequency: number
+          id: string
+          last_query: string
+          page_key: string | null
+          query_normalized: string
+          ref_id: string | null
+          status: Database["public"]["Enums"]["help_content_gap_status"]
+          submitted_by: string | null
+          suggested_title_ar: string | null
+          suggested_title_en: string | null
+          updated_at: string
+          zero_result_count: number
+        }
+        Insert: {
+          audience?: Database["public"]["Enums"]["help_audience"] | null
+          created_article_id?: string | null
+          created_at?: string
+          dedupe_key: string
+          frequency?: number
+          id?: string
+          last_query: string
+          page_key?: string | null
+          query_normalized: string
+          ref_id?: string | null
+          status?: Database["public"]["Enums"]["help_content_gap_status"]
+          submitted_by?: string | null
+          suggested_title_ar?: string | null
+          suggested_title_en?: string | null
+          updated_at?: string
+          zero_result_count?: number
+        }
+        Update: {
+          audience?: Database["public"]["Enums"]["help_audience"] | null
+          created_article_id?: string | null
+          created_at?: string
+          dedupe_key?: string
+          frequency?: number
+          id?: string
+          last_query?: string
+          page_key?: string | null
+          query_normalized?: string
+          ref_id?: string | null
+          status?: Database["public"]["Enums"]["help_content_gap_status"]
+          submitted_by?: string | null
+          suggested_title_ar?: string | null
+          suggested_title_en?: string | null
+          updated_at?: string
+          zero_result_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_content_gaps_created_article_id_fkey"
+            columns: ["created_article_id"]
+            isOneToOne: false
+            referencedRelation: "help_articles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       help_feature_requests: {
         Row: {
@@ -15973,6 +16081,17 @@ export type Database = {
         Args: { _business_id: string }
         Returns: Database["public"]["Enums"]["business_approval_status"]
       }
+      submit_help_content_gap: {
+        Args: {
+          _audience?: Database["public"]["Enums"]["help_audience"]
+          _page_key?: string
+          _query: string
+          _query_normalized: string
+          _suggested_title_ar?: string
+          _suggested_title_en?: string
+        }
+        Returns: string
+      }
       submit_private_sector: {
         Args: { _id: string }
         Returns: {
@@ -16227,6 +16346,12 @@ export type Database = {
         | "disputed"
       help_article_status: "draft" | "published"
       help_audience: "general" | "provider" | "customer" | "admin"
+      help_content_gap_status:
+        | "new"
+        | "reviewing"
+        | "article_planned"
+        | "article_created"
+        | "ignored"
       help_feature_status:
         | "new"
         | "reviewing"
@@ -16464,6 +16589,13 @@ export const Constants = {
       ],
       help_article_status: ["draft", "published"],
       help_audience: ["general", "provider", "customer", "admin"],
+      help_content_gap_status: [
+        "new",
+        "reviewing",
+        "article_planned",
+        "article_created",
+        "ignored",
+      ],
       help_feature_status: [
         "new",
         "reviewing",

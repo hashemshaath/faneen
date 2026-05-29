@@ -31,6 +31,11 @@ import {
   computeContentGaps,
   computeArticleQuality,
   adminListSearchLogs,
+  adminListContentGaps,
+  updateContentGapStatus,
+  createDraftArticleFromGap,
+  type HelpContentGapRow,
+  type HelpContentGapStatus,
   type HelpArticle,
   type HelpCategory,
   type HelpIssueReport,
@@ -41,6 +46,7 @@ import {
 
 const ISSUE_STATUSES: HelpIssueStatus[] = ['open', 'reviewing', 'planned', 'resolved', 'closed'];
 const FEATURE_STATUSES: HelpFeatureStatus[] = ['new', 'reviewing', 'planned', 'in_progress', 'completed', 'rejected'];
+const GAP_STATUSES: HelpContentGapStatus[] = ['new', 'reviewing', 'article_planned', 'article_created', 'ignored'];
 
 const AdminHelpCenter: React.FC = () => {
   useNoIndex();
@@ -52,6 +58,7 @@ const AdminHelpCenter: React.FC = () => {
   const { data: issues = [] } = useQuery({ queryKey: ['admin', 'help', 'issues'], queryFn: () => listHelpIssueReports({}) });
   const { data: features = [] } = useQuery({ queryKey: ['admin', 'help', 'features'], queryFn: () => listHelpFeatureRequests({}) });
   const { data: searchLogs = [] } = useQuery({ queryKey: ['admin', 'help', 'search-logs'], queryFn: () => adminListSearchLogs(1000) });
+  const { data: contentGaps = [] } = useQuery({ queryKey: ['admin', 'help', 'content-gaps'], queryFn: () => adminListContentGaps(200) });
 
   const invalidate = (k: string) => qc.invalidateQueries({ queryKey: ['admin', 'help', k] });
 
@@ -59,6 +66,17 @@ const AdminHelpCenter: React.FC = () => {
   const catM = useMutation({ mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) => updateHelpCategory(id, { is_active }), onSuccess: () => invalidate('categories') });
   const issueM = useMutation({ mutationFn: ({ id, status }: { id: string; status: HelpIssueStatus }) => updateHelpIssueReportStatus(id, status), onSuccess: () => invalidate('issues') });
   const featM = useMutation({ mutationFn: ({ id, status }: { id: string; status: HelpFeatureStatus }) => updateHelpFeatureRequestStatus(id, status), onSuccess: () => invalidate('features') });
+  const gapStatusM = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: HelpContentGapStatus }) => updateContentGapStatus(id, status),
+    onSuccess: () => invalidate('content-gaps'),
+  });
+  const gapDraftM = useMutation({
+    mutationFn: (gap: HelpContentGapRow) => createDraftArticleFromGap(gap),
+    onSuccess: () => {
+      invalidate('content-gaps');
+      invalidate('articles');
+    },
+  });
 
   const metrics = useMemo(() => computeHelpMetrics(articles, issues, features), [articles, issues, features]);
   const intel = useMemo(() => computeHelpIntelligenceMetrics(articles, issues, features, searchLogs), [articles, issues, features, searchLogs]);
@@ -106,6 +124,7 @@ const AdminHelpCenter: React.FC = () => {
             <TabsTrigger value="categories" className="gap-1.5"><FolderTree className="size-3.5" />{isRTL ? 'الفئات' : 'Categories'}</TabsTrigger>
             <TabsTrigger value="issues" className="gap-1.5"><AlertTriangle className="size-3.5" />{isRTL ? 'البلاغات' : 'Issues'}</TabsTrigger>
             <TabsTrigger value="features" className="gap-1.5"><Lightbulb className="size-3.5" />{isRTL ? 'الطلبات' : 'Requests'}</TabsTrigger>
+            <TabsTrigger value="gaps" className="gap-1.5"><Lightbulb className="size-3.5" />{isRTL ? 'فجوات المحتوى' : 'Content Gaps'}</TabsTrigger>
             <TabsTrigger value="metrics" className="gap-1.5"><BarChart3 className="size-3.5" />{isRTL ? 'المقاييس' : 'Metrics'}</TabsTrigger>
           </TabsList>
 
@@ -260,6 +279,49 @@ const AdminHelpCenter: React.FC = () => {
                   ))}
                   {filteredFeatures.length === 0 && <div className="text-sm text-muted-foreground p-3">{isRTL ? 'لا طلبات' : 'No requests'}</div>}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Content Gaps */}
+          <TabsContent value="gaps">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{isRTL ? 'فجوات المحتوى المُبلّغ عنها' : 'Reported content gaps'}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {contentGaps.map((g) => (
+                  <div key={g.id} className="border border-border rounded-lg p-3 flex items-start gap-3 flex-wrap" data-testid="admin-content-gap-row">
+                    <Badge variant="outline" className="tech-content">{g.ref_id ?? '—'}</Badge>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium truncate" dir="auto">
+                        {isRTL ? (g.suggested_title_ar || g.last_query) : (g.suggested_title_en || g.last_query)}
+                      </div>
+                      <div className="text-xs text-muted-foreground tech-content">
+                        {g.page_key ?? '—'} · {g.audience ?? 'any'} · ×{g.frequency} · {isRTL ? 'بدون نتائج' : 'zero'} {g.zero_result_count}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate" dir="auto">“{g.last_query}”</div>
+                    </div>
+                    <Select value={g.status} onValueChange={(v) => gapStatusM.mutate({ id: g.id, status: v as HelpContentGapStatus })}>
+                      <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {GAP_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={g.status === 'article_created' || gapDraftM.isPending}
+                      onClick={() => gapDraftM.mutate(g)}
+                      data-testid="admin-create-draft-from-gap"
+                    >
+                      {isRTL ? 'إنشاء مسودة' : 'Create draft article'}
+                    </Button>
+                  </div>
+                ))}
+                {contentGaps.length === 0 && (
+                  <div className="text-sm text-muted-foreground p-3">{isRTL ? 'لا فجوات مُبلّغ عنها بعد' : 'No reported gaps yet'}</div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
