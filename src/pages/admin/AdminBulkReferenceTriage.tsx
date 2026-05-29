@@ -426,6 +426,18 @@ export default function AdminBulkReferenceTriage() {
               >
                 <Download className="w-3.5 h-3.5 me-1" /> {tx.exportCsv}
               </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="rounded-xl h-9"
+                onClick={printCurrentView}
+                disabled={rows.length === 0}
+                data-testid="triage-print"
+                title={isRTL ? 'طباعة' : 'Print'}
+              >
+                <Printer className="w-3.5 h-3.5 me-1" /> {isRTL ? 'طباعة' : 'Print'}
+              </Button>
               <div className="flex items-center gap-1">
                 <Input
                   value={setName}
