@@ -20,7 +20,7 @@ The unified barcode system assigns a single permanent public code — `barcode_c
 | Stored in DB | `barcode_registry.barcode_code` (plain text, safe to display) | `qr_token_hash` (one-way hash only) |
 | Can be guessed? | No — sequential but high-offset (starts at 100,000/year) | No — random |
 
-## /q/:barcode_code vs /s/:token
+## /q/:code vs /s/:token
 
 | | `/q/:barcode_code` | `/s/:token` |
 |---|---|---|
