@@ -176,6 +176,12 @@ export default function DashboardProcurementDetail() {
     void load();
   }, [load]);
 
+  // BUSINESS-WORKFLOW-REALTIME-1: invalidate + refetch on postgres_changes.
+  useWorkOrderRealtimeInvalidation({
+    businessId: request?.business_id ?? null,
+    onChange: () => { void load(); },
+  });
+
   const onSelectRfq = useCallback(
     async (rfqId: string) => {
       setActiveRfqId(rfqId);
