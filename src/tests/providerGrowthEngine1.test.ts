@@ -217,4 +217,91 @@ describe('PROVIDER-GROWTH-ENGINE-1', () => {
       expect(growthRequired).toEqual(['contact', 'name', 'sectors', 'username']);
     });
   });
+
+  /* ─────────── Part C — PublishReadinessPanel integration ─────────── */
+  describe('PublishReadinessPanel integration (Part C)', () => {
+    const SRC = resolve(process.cwd(), 'src');
+    const panel = readFileSync(
+      resolve(SRC, 'components/admin/PublishReadinessPanel.tsx'),
+      'utf8',
+    );
+
+    it('imports growth helpers', () => {
+      expect(panel).toContain("from '@/modules/growth/providerGrowth'");
+      expect(panel).toContain('computeProviderProfileScore');
+      expect(panel).toContain('computeProviderSeoScore');
+      expect(panel).toContain('mapProfileActionToHelpLink');
+    });
+
+    it('renders profile and SEO scores', () => {
+      expect(panel).toMatch(/data-testid="growth-scores"/);
+      expect(panel).toMatch(/Profile score|جودة الملف/);
+      expect(panel).toMatch(/SEO score|SEO/);
+    });
+
+    it('renders Required / Recommended / Optional groups', () => {
+      expect(panel).toContain('data-testid="readiness-required"');
+      expect(panel).toContain('data-testid="readiness-recommended"');
+      expect(panel).toContain('data-testid="readiness-optional"');
+    });
+
+    it('renders Help Center links for missing items via the mapping helper', () => {
+      expect(panel).toContain('data-testid="next-best-actions"');
+      expect(panel).toContain('data-testid="help-link"');
+      expect(panel).toContain('mapProfileActionToHelpLink(');
+    });
+
+    it('keeps publish blockers authoritative — recommended/optional do NOT block publishing', () => {
+      // The published-blocker math still derives from `items` (required-only),
+      // not from growth's recommended/optional sets.
+      expect(panel).toContain('items.filter((i) => i.required && !i.ok)');
+      // The "Cannot publish" copy is gated by `blockers.length > 0` only.
+      expect(panel).toMatch(/blockers\.length\s*>\s*0/);
+      // Recommended is explicitly labelled non-blocking.
+      expect(panel).toMatch(/non-blocking|لا يمنع النشر/);
+    });
+
+    it('does not introduce auto-publish, hidden publish triggers, or scope creep', () => {
+      const forbidden = [
+        'autoPublish', 'auto_publish', 'forcePublish',
+        '.update(', '.insert(', '.upsert(', // panel must remain presentational
+        '@/modules/inventory', '@/modules/accounting',
+        'supplier-portal', 'supplier_payments',
+        'whatsapp', 'WhatsApp', 'twilio',
+      ];
+      for (const bad of forbidden) {
+        expect(panel.includes(bad), `PublishReadinessPanel must not contain "${bad}"`).toBe(false);
+      }
+    });
+
+    it('preserves the businesses_public visibility rule (is_active && published && !is_demo)', () => {
+      // Source of truth stays in computePublicVisibility.
+      expect(panel).toContain("approval_status === 'published'");
+      expect(panel).toContain('is_active === false');
+      expect(panel).toContain('is_demo === true');
+    });
+
+    it('does not add any direct supabase.from calls', () => {
+      expect(panel.includes('supabase.from')).toBe(false);
+      expect(panel.includes('@/integrations/supabase/client')).toBe(false);
+    });
+
+    it('growth required-field set is a subset of panel publish blockers', () => {
+      const score = computeProviderProfileScore({});
+      const growthRequired = new Set(score.missingRequired.map((f) => f.key));
+      // Panel publish blockers include: name, username, sectors, contact, is_active, not_demo
+      const panelRequired = new Set(['name', 'username', 'sectors', 'contact', 'is_active', 'not_demo']);
+      for (const k of growthRequired) {
+        expect(panelRequired.has(k), `growth key "${k}" must exist as a panel publish blocker`).toBe(true);
+      }
+    });
+
+    it('exposes mapProfileActionToHelpLink as a stable alias of helpLinkForKey', async () => {
+      const mod = await import('@/modules/growth/providerGrowth');
+      expect(mod.mapProfileActionToHelpLink).toBe(mod.helpLinkForKey);
+      expect(mod.mapProfileActionToHelpLink('logo')).toMatch(/^\/help/);
+      expect(mod.mapProfileActionToHelpLink('username-approval')).toMatch(/^\/help/);
+      expect(mod.mapProfileActionToHelpLink(undefined)).toMatch(/^\/help/);
+    });
+  });
 });
