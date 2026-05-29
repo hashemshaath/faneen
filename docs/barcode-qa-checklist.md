@@ -49,7 +49,7 @@ Use this list to validate the unified barcode system end-to-end after any relate
 ## Client Sites checks
 - [ ] Admin inline detail shows `BarcodeWidget` for sites with active barcodes
 - [ ] Sites without barcodes show a plain `site_ref` fallback row
-- [ ] QR in widget opens `/q/:barcode_code`
+- [ ] QR in widget opens `/q/:code`
 - [ ] Download PNG works
 - [ ] Print sticker works
 - [ ] Copy button works
