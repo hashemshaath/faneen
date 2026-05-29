@@ -168,10 +168,10 @@ export async function awardRfqQuote(
         .eq('id', (quote as { supplier_id: string }).supplier_id)
         .maybeSingle();
       const { data: lineItems } = await listQuoteItemsByQuote(quoteId);
-      const totals = calculateQuoteTotals(lineItems ?? []);
+      const lineSum = calculateQuoteTotals(lineItems ?? []);
       const subtotal =
-        totals.totalPrice > 0
-          ? totals.totalPrice
+        lineSum > 0
+          ? lineSum
           : Number((quote as { total_amount: number | null }).total_amount ?? 0);
       await createPurchaseOrderDraft({
         business_id: (quote as { business_id: string }).business_id,
