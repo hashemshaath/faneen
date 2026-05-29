@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { getHelpCategoryBySlug, listPublishedArticles } from '@/modules/helpCenter';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { BookOpen, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { fmtNum } from '@/lib/format';
 
 const HelpCategoryPage: React.FC = () => {
   const { slug = '' } = useParams();
@@ -93,7 +94,8 @@ const HelpCategoryPage: React.FC = () => {
             </div>
             {description && <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{description}</p>}
             <div className="text-xs text-muted-foreground mt-2">
-              {isRTL ? `${filtered.length} مقالة` : `${filtered.length} articles`}
+              <span className="num-tabular">{fmtNum(filtered.length)}</span>{' '}
+              {isRTL ? 'مقالة' : 'articles'}
             </div>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -126,9 +128,9 @@ const HelpCategoryPage: React.FC = () => {
                 <BookOpen className="w-5 h-5 text-primary mb-2" />
                 <div className="font-semibold mb-1">{language === 'ar' ? a.title_ar : a.title_en}</div>
                 <div className="text-xs text-muted-foreground line-clamp-2">{language === 'ar' ? a.summary_ar : a.summary_en}</div>
-                <div className="flex items-center gap-3 mt-3 text-[11px] text-muted-foreground tech-content">
-                  <span>{a.views_count ?? 0} {isRTL ? 'مشاهدة' : 'views'}</span>
-                  {(a.helpful_count ?? 0) > 0 && <span>{a.helpful_count} 👍</span>}
+                <div className="flex items-center gap-3 mt-3 text-[11px] text-muted-foreground">
+                  <span><span className="num-tabular">{fmtNum(a.views_count ?? 0)}</span> {isRTL ? 'مشاهدة' : 'views'}</span>
+                  {(a.helpful_count ?? 0) > 0 && <span className="num-tabular">{fmtNum(a.helpful_count)} 👍</span>}
                 </div>
               </CardContent></Card>
             </Link>
