@@ -9,6 +9,7 @@ import { SearchResults, type ViewMode } from '@/components/search/SearchResults'
 import { ActiveFilterChips } from '@/components/search/ActiveFilterChips';
 import { RecentlyViewedStrip } from '@/components/search/RecentlyViewedStrip';
 import { SavedSearchesBar } from '@/components/search/SavedSearchesBar';
+import { SearchInsightsBar } from '@/components/search/SearchInsightsBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   useDebouncedValue,
@@ -370,6 +371,28 @@ const SearchPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [setSearchParams]);
 
+  // Keyboard hotkeys: "/" focuses the header search input; "Escape" clears all
+  // filters when something is active. Ignored while typing in inputs.
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      const tag = t?.tagName;
+      const typing = tag === 'INPUT' || tag === 'TEXTAREA' || (t?.isContentEditable ?? false);
+      if (e.key === '/' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const input = document.querySelector<HTMLInputElement>('header input[type="search"], header input[type="text"]');
+        if (input) {
+          e.preventDefault();
+          input.focus();
+          input.select();
+        }
+      } else if (e.key === 'Escape' && !typing && (hasActiveFilters || query.trim() || selectedTags.length > 0)) {
+        clearFilters();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [hasActiveFilters, query, selectedTags.length, clearFilters]);
+
   return (
     <div className="min-h-screen bg-background">
       <SearchHeader
@@ -420,6 +443,11 @@ const SearchPage = () => {
           hasContext={!!showChips}
           totalResults={deferredFiltered.length}
           onApply={handleApplySavedSearch}
+        />
+
+        <SearchInsightsBar
+          businesses={deferredFiltered}
+          totalDirectory={businesses?.length ?? 0}
         />
 
         <RecentlyViewedStrip businesses={businesses} />
