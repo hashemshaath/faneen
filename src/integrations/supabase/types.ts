@@ -5537,6 +5537,99 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_feedback: {
+        Row: {
+          business_id: string
+          closure_id: string
+          created_at: string
+          feedback_text: string | null
+          id: string
+          rating: number
+          ref_id: string
+          work_order_id: string
+          would_recommend: boolean | null
+        }
+        Insert: {
+          business_id: string
+          closure_id: string
+          created_at?: string
+          feedback_text?: string | null
+          id?: string
+          rating: number
+          ref_id?: string
+          work_order_id: string
+          would_recommend?: boolean | null
+        }
+        Update: {
+          business_id?: string
+          closure_id?: string
+          created_at?: string
+          feedback_text?: string | null
+          id?: string
+          rating?: number
+          ref_id?: string
+          work_order_id?: string
+          would_recommend?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_feedback_closure_id_fkey"
+            columns: ["closure_id"]
+            isOneToOne: true
+            referencedRelation: "project_closures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_feedback_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_nps_responses: {
+        Row: {
+          business_id: string
+          closure_id: string | null
+          created_at: string
+          id: string
+          score: number
+          work_order_id: string
+        }
+        Insert: {
+          business_id: string
+          closure_id?: string | null
+          created_at?: string
+          id?: string
+          score: number
+          work_order_id: string
+        }
+        Update: {
+          business_id?: string
+          closure_id?: string | null
+          created_at?: string
+          id?: string
+          score?: number
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_nps_responses_closure_id_fkey"
+            columns: ["closure_id"]
+            isOneToOne: false
+            referencedRelation: "project_closures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_nps_responses_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_project_notifications: {
         Row: {
           action_url: string | null
@@ -9732,6 +9825,122 @@ export type Database = {
           },
         ]
       }
+      project_closures: {
+        Row: {
+          business_id: string
+          closure_status: string
+          completion_date: string
+          confirmed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          issue_reported_at: string | null
+          issue_text: string | null
+          ref_id: string
+          updated_at: string
+          warranty_end_date: string | null
+          warranty_start_date: string | null
+          work_order_id: string
+        }
+        Insert: {
+          business_id: string
+          closure_status?: string
+          completion_date?: string
+          confirmed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issue_reported_at?: string | null
+          issue_text?: string | null
+          ref_id?: string
+          updated_at?: string
+          warranty_end_date?: string | null
+          warranty_start_date?: string | null
+          work_order_id: string
+        }
+        Update: {
+          business_id?: string
+          closure_status?: string
+          completion_date?: string
+          confirmed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issue_reported_at?: string | null
+          issue_text?: string | null
+          ref_id?: string
+          updated_at?: string
+          warranty_end_date?: string | null
+          warranty_start_date?: string | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_closures_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: true
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_delivery_evidence: {
+        Row: {
+          attachment_id: string | null
+          business_id: string
+          caption_ar: string | null
+          caption_en: string | null
+          closure_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_customer_visible: boolean
+          public_image_url: string | null
+          ref_id: string
+        }
+        Insert: {
+          attachment_id?: string | null
+          business_id: string
+          caption_ar?: string | null
+          caption_en?: string | null
+          closure_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_customer_visible?: boolean
+          public_image_url?: string | null
+          ref_id?: string
+        }
+        Update: {
+          attachment_id?: string | null
+          business_id?: string
+          caption_ar?: string | null
+          caption_en?: string | null
+          closure_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_customer_visible?: boolean
+          public_image_url?: string | null
+          ref_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_delivery_evidence_attachment_id_fkey"
+            columns: ["attachment_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_attachments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_delivery_evidence_closure_id_fkey"
+            columns: ["closure_id"]
+            isOneToOne: false
+            referencedRelation: "project_closures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_images: {
         Row: {
           caption_ar: string | null
@@ -12584,6 +12793,66 @@ export type Database = {
           },
         ]
       }
+      work_order_warranties: {
+        Row: {
+          business_id: string
+          closure_id: string | null
+          created_at: string
+          end_date: string
+          id: string
+          notes: string | null
+          ref_id: string
+          start_date: string
+          status: string
+          updated_at: string
+          warranty_type: string
+          work_order_id: string
+        }
+        Insert: {
+          business_id: string
+          closure_id?: string | null
+          created_at?: string
+          end_date: string
+          id?: string
+          notes?: string | null
+          ref_id?: string
+          start_date: string
+          status?: string
+          updated_at?: string
+          warranty_type?: string
+          work_order_id: string
+        }
+        Update: {
+          business_id?: string
+          closure_id?: string | null
+          created_at?: string
+          end_date?: string
+          id?: string
+          notes?: string | null
+          ref_id?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+          warranty_type?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_warranties_closure_id_fkey"
+            columns: ["closure_id"]
+            isOneToOne: false
+            referencedRelation: "project_closures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_warranties_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: true
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_orders: {
         Row: {
           business_id: string
@@ -13322,6 +13591,31 @@ export type Database = {
       }
       _gen_client_site_qr_token: { Args: never; Returns: string }
       _membership_free_defaults: { Args: never; Returns: Json }
+      _resolve_customer_tracking_link: {
+        Args: { _token: string; _tracking_ref: string }
+        Returns: {
+          business_id: string
+          contract_id: string | null
+          created_at: string
+          created_by: string | null
+          customer_email: string | null
+          expires_at: string | null
+          id: string
+          last_viewed_at: string | null
+          quotation_id: string | null
+          ref_id: string
+          revoked_at: string | null
+          token_hash: string
+          view_count: number
+          work_order_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "customer_tracking_links"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       ab_assign_variant: {
         Args: { p_experiment_key: string; p_visitor_id: string }
         Returns: Json
@@ -13413,6 +13707,17 @@ export type Database = {
         }[]
       }
       accept_staff_invitation: { Args: { _token: string }; Returns: Json }
+      add_project_delivery_evidence: {
+        Args: {
+          _attachment_id?: string
+          _caption_ar?: string
+          _caption_en?: string
+          _closure_id: string
+          _is_customer_visible?: boolean
+          _public_image_url?: string
+        }
+        Returns: Json
+      }
       admin_add_client_site_operations_note: {
         Args: { _category: string; _note: string; _site_id: string }
         Returns: Json
@@ -14212,6 +14517,10 @@ export type Database = {
         Args: { _lead_id: string }
         Returns: string
       }
+      create_project_closure: {
+        Args: { _completion_date?: string; _work_order_id: string }
+        Returns: Json
+      }
       create_temporary_login_code: {
         Args: { _identifier: string; _purpose?: string; _user_id?: string }
         Returns: Json
@@ -14221,6 +14530,14 @@ export type Database = {
         Args: { _apt_ref: string; _token: string; _tracking_ref: string }
         Returns: boolean
       }
+      customer_confirm_project_completion: {
+        Args: { _token: string; _tracking_ref: string }
+        Returns: boolean
+      }
+      customer_report_project_issue: {
+        Args: { _text: string; _token: string; _tracking_ref: string }
+        Returns: boolean
+      }
       customer_request_appointment_reschedule: {
         Args: {
           _apt_ref: string
@@ -14228,6 +14545,20 @@ export type Database = {
           _token: string
           _tracking_ref: string
         }
+        Returns: boolean
+      }
+      customer_submit_feedback: {
+        Args: {
+          _rating: number
+          _text?: string
+          _token: string
+          _tracking_ref: string
+          _would_recommend?: boolean
+        }
+        Returns: Json
+      }
+      customer_submit_nps: {
+        Args: { _score: number; _token: string; _tracking_ref: string }
         Returns: boolean
       }
       delete_email: {
@@ -15362,6 +15693,15 @@ export type Database = {
       }
       split_phone_cc: { Args: { _phone: string }; Returns: string }
       split_phone_nat: { Args: { _phone: string }; Returns: string }
+      start_work_order_warranty: {
+        Args: {
+          _closure_id: string
+          _months?: number
+          _notes?: string
+          _warranty_type?: string
+        }
+        Returns: Json
+      }
       submit_business_for_review: {
         Args: { _business_id: string }
         Returns: Database["public"]["Enums"]["business_approval_status"]
