@@ -217,6 +217,11 @@ export const authService = {
       vat_number?: string;
       website?: string;
       name_en?: string;
+      email?: string;
+      region?: string;
+      region_en?: string;
+      logo_url?: string;
+      cr_document_url?: string;
     },
   ) {
     const sanitizedName = sanitizeInput(businessName);
@@ -242,6 +247,11 @@ export const authService = {
         ...(extras?.unified_number ? { unified_number: sanitizeInput(extras.unified_number) } : {}),
         ...(extras?.vat_number ? { vat_number: sanitizeInput(extras.vat_number) } : {}),
         ...(extras?.website ? { website: sanitizeInput(extras.website) } : {}),
+        ...(extras?.email ? { email: sanitizeInput(extras.email).toLowerCase() } : {}),
+        ...(extras?.region ? { region: sanitizeInput(extras.region) } : {}),
+        ...(extras?.region_en ? { region_en: sanitizeInput(extras.region_en) } : {}),
+        ...(extras?.logo_url ? { logo_url: extras.logo_url } : {}),
+        ...(extras?.cr_document_url ? { cr_document_url: extras.cr_document_url, cr_document_uploaded_at: new Date().toISOString() } : {}),
       },
       terminal: 'none',
     });
