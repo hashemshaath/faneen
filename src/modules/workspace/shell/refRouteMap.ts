@@ -14,6 +14,14 @@ export const REF_PREFIXES = [
   'BKG',
   'TEAM',
   'STF',
+  // BUSINESS-FINISHING-1 Phase A — workflow object prefixes.
+  'BOQ',
+  'RFQ',
+  'PO',
+  'WOQ',
+  'CONTRACT',
+  'QUOTE',
+  'NOTE',
 ] as const;
 
 export type RefPrefix = typeof REF_PREFIXES[number];
@@ -27,6 +35,14 @@ const PREFIX_TO_ROUTE: Record<RefPrefix, (ref: string) => string> = {
   BKG:  (ref) => `/dashboard/bookings?ref=${encodeURIComponent(ref)}`,
   TEAM: (ref) => `/dashboard/settings/staff?ref=${encodeURIComponent(ref)}`,
   STF:  (ref) => `/dashboard/settings/staff?ref=${encodeURIComponent(ref)}`,
+  // Workflow refs route to their owning surface; the page reads `?ref=…`.
+  BOQ:      (ref) => `/dashboard/work-orders?ref=${encodeURIComponent(ref)}`,
+  RFQ:      (ref) => `/dashboard/procurement?ref=${encodeURIComponent(ref)}`,
+  PO:       (ref) => `/dashboard/procurement?ref=${encodeURIComponent(ref)}`,
+  WOQ:      (ref) => `/dashboard/work-orders?ref=${encodeURIComponent(ref)}`,
+  CONTRACT: (ref) => `/dashboard/contracts?ref=${encodeURIComponent(ref)}`,
+  QUOTE:    (ref) => `/dashboard/provider/leads?ref=${encodeURIComponent(ref)}`,
+  NOTE:     (ref) => `/dashboard/operations/feed?ref=${encodeURIComponent(ref)}`,
 };
 
 const REF_PATTERN = /^([A-Z]{2,8})-([0-9A-Z]{3,16})$/i;
