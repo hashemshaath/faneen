@@ -6150,6 +6150,218 @@ export type Database = {
           },
         ]
       }
+      help_articles: {
+        Row: {
+          audience: Database["public"]["Enums"]["help_audience"]
+          category_id: string | null
+          content_ar: string | null
+          content_en: string | null
+          created_at: string
+          created_by: string | null
+          helpful_count: number
+          id: string
+          keywords: string[]
+          not_helpful_count: number
+          ref_id: string | null
+          slug: string
+          status: Database["public"]["Enums"]["help_article_status"]
+          summary_ar: string | null
+          summary_en: string | null
+          title_ar: string
+          title_en: string
+          updated_at: string
+          updated_by: string | null
+          views_count: number
+        }
+        Insert: {
+          audience?: Database["public"]["Enums"]["help_audience"]
+          category_id?: string | null
+          content_ar?: string | null
+          content_en?: string | null
+          created_at?: string
+          created_by?: string | null
+          helpful_count?: number
+          id?: string
+          keywords?: string[]
+          not_helpful_count?: number
+          ref_id?: string | null
+          slug: string
+          status?: Database["public"]["Enums"]["help_article_status"]
+          summary_ar?: string | null
+          summary_en?: string | null
+          title_ar: string
+          title_en: string
+          updated_at?: string
+          updated_by?: string | null
+          views_count?: number
+        }
+        Update: {
+          audience?: Database["public"]["Enums"]["help_audience"]
+          category_id?: string | null
+          content_ar?: string | null
+          content_en?: string | null
+          created_at?: string
+          created_by?: string | null
+          helpful_count?: number
+          id?: string
+          keywords?: string[]
+          not_helpful_count?: number
+          ref_id?: string | null
+          slug?: string
+          status?: Database["public"]["Enums"]["help_article_status"]
+          summary_ar?: string | null
+          summary_en?: string | null
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+          updated_by?: string | null
+          views_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_articles_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "help_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      help_categories: {
+        Row: {
+          audience: Database["public"]["Enums"]["help_audience"]
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          is_active: boolean
+          ref_id: string | null
+          slug: string
+          sort_order: number
+          title_ar: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: Database["public"]["Enums"]["help_audience"]
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          ref_id?: string | null
+          slug: string
+          sort_order?: number
+          title_ar: string
+          title_en: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: Database["public"]["Enums"]["help_audience"]
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          ref_id?: string | null
+          slug?: string
+          sort_order?: number
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      help_feature_requests: {
+        Row: {
+          business_id: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          ref_id: string | null
+          status: Database["public"]["Enums"]["help_feature_status"]
+          title: string
+          updated_at: string
+          user_id: string | null
+          votes_count: number
+        }
+        Insert: {
+          business_id?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          ref_id?: string | null
+          status?: Database["public"]["Enums"]["help_feature_status"]
+          title: string
+          updated_at?: string
+          user_id?: string | null
+          votes_count?: number
+        }
+        Update: {
+          business_id?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          ref_id?: string | null
+          status?: Database["public"]["Enums"]["help_feature_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+          votes_count?: number
+        }
+        Relationships: []
+      }
+      help_issue_reports: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          issue_type: Database["public"]["Enums"]["help_issue_type"]
+          page_key: string | null
+          priority: Database["public"]["Enums"]["help_issue_priority"]
+          ref_id: string | null
+          reporter_user_id: string | null
+          screenshot_url: string | null
+          status: Database["public"]["Enums"]["help_issue_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          issue_type?: Database["public"]["Enums"]["help_issue_type"]
+          page_key?: string | null
+          priority?: Database["public"]["Enums"]["help_issue_priority"]
+          ref_id?: string | null
+          reporter_user_id?: string | null
+          screenshot_url?: string | null
+          status?: Database["public"]["Enums"]["help_issue_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          issue_type?: Database["public"]["Enums"]["help_issue_type"]
+          page_key?: string | null
+          priority?: Database["public"]["Enums"]["help_issue_priority"]
+          ref_id?: string | null
+          reporter_user_id?: string | null
+          screenshot_url?: string | null
+          status?: Database["public"]["Enums"]["help_issue_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       installation_appointments: {
         Row: {
           business_id: string
@@ -14167,6 +14379,11 @@ export type Database = {
         Args: { _site_id: string }
         Returns: Json
       }
+      bump_help_article_helpful: {
+        Args: { _helpful: boolean; _slug: string }
+        Returns: undefined
+      }
+      bump_help_article_view: { Args: { _slug: string }; Returns: undefined }
       bump_migration_epoch: { Args: { _reason?: string }; Returns: number }
       calculate_contract_line_item_total: {
         Args: {
@@ -15958,6 +16175,30 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "disputed"
+      help_article_status: "draft" | "published"
+      help_audience: "general" | "provider" | "customer" | "admin"
+      help_feature_status:
+        | "new"
+        | "reviewing"
+        | "planned"
+        | "in_progress"
+        | "completed"
+        | "rejected"
+      help_issue_priority: "low" | "medium" | "high" | "critical"
+      help_issue_status:
+        | "open"
+        | "reviewing"
+        | "planned"
+        | "resolved"
+        | "closed"
+      help_issue_type:
+        | "bug"
+        | "ui"
+        | "performance"
+        | "data"
+        | "security"
+        | "content"
+        | "other"
       maintenance_priority: "low" | "medium" | "high" | "urgent"
       maintenance_status:
         | "submitted"
@@ -16170,6 +16411,27 @@ export const Constants = {
         "completed",
         "cancelled",
         "disputed",
+      ],
+      help_article_status: ["draft", "published"],
+      help_audience: ["general", "provider", "customer", "admin"],
+      help_feature_status: [
+        "new",
+        "reviewing",
+        "planned",
+        "in_progress",
+        "completed",
+        "rejected",
+      ],
+      help_issue_priority: ["low", "medium", "high", "critical"],
+      help_issue_status: ["open", "reviewing", "planned", "resolved", "closed"],
+      help_issue_type: [
+        "bug",
+        "ui",
+        "performance",
+        "data",
+        "security",
+        "content",
+        "other",
       ],
       maintenance_priority: ["low", "medium", "high", "urgent"],
       maintenance_status: [
