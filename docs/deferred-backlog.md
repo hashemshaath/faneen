@@ -1,6 +1,6 @@
 # Deferred Backlog
 
-_Last refreshed: APP-CODEBASE-CLEANUP-STABILIZE-2._
+_Last refreshed: APP-STABILITY-CONTRACTS-PROCUREMENT-HARDENING-1._
 
 Features intentionally deferred so the current production-stability baseline
 stays small and auditable. **Nothing here blocks production.** Each item lists
@@ -44,3 +44,27 @@ via the corresponding isolation audits and the green vitest baseline (see
 - Inventory stock movement linkage on award
 - Supplier payments / invoicing
 - Public supplier portal (token-scoped quote submission)
+
+## HARDENING-1 confirmation
+
+The current baseline is **contract / quantity / measurement driven**.
+Pricing flows through contracts and measurements; procurement is a
+sourcing tool for material/service quotes only. The following are
+actively guarded as deferred by
+`src/__tests__/appStabilityContractsProcurementHardening.test.ts`:
+
+- No `src/modules/inventory` module.
+- No `inventory_*` / `stock_*` / `warehouse_*` table access from
+  procurement services.
+- No `/inventory` or `/dashboard/inventory` routes.
+- No `supplier_payments` / `procurement_supplier_payments` table access
+  anywhere in `src/`.
+- No public `/supplier`, `/supplier-portal`, or `/portal/supplier` route.
+- No `PublicSupplierPortal` / `SupplierPortal` page file.
+- Procurement award handoff (`awardHandoff.ts`) makes no direct
+  Supabase table or RPC calls into work-order stages, inventory, stock,
+  or supplier payments — only the approved `addWorkOrderComment` +
+  `notifyProcurementEvent` wrappers.
+
+Re-opening any of these requires removing the corresponding guard test
+in the same change, which forces an explicit phase decision.

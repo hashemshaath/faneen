@@ -73,3 +73,14 @@ Lead ─▶ Quote Request ─▶ Quotation ─▶ E-Signature ─▶ Contract Dr
 - Inventory stock movements
 - Supplier payments
 - Public supplier portal access
+
+## APP-STABILITY-CONTRACTS-PROCUREMENT-HARDENING-1 — Scope guards
+
+The platform pricing engine remains **contract / quantity / measurement
+driven**. Procurement is a sourcing tool for material and service
+quotes — it does not feed inventory, does not generate supplier
+payments, and does not expose a public supplier portal. These
+boundaries are now enforced by
+`src/__tests__/appStabilityContractsProcurementHardening.test.ts`
+(10 static-source guards). Re-opening any of them must remove the
+matching guard in the same change.
