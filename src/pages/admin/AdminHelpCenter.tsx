@@ -31,6 +31,11 @@ import {
   computeContentGaps,
   computeArticleQuality,
   adminListSearchLogs,
+  adminListContentGaps,
+  updateContentGapStatus,
+  createDraftArticleFromGap,
+  type HelpContentGapRow,
+  type HelpContentGapStatus,
   type HelpArticle,
   type HelpCategory,
   type HelpIssueReport,
@@ -41,6 +46,7 @@ import {
 
 const ISSUE_STATUSES: HelpIssueStatus[] = ['open', 'reviewing', 'planned', 'resolved', 'closed'];
 const FEATURE_STATUSES: HelpFeatureStatus[] = ['new', 'reviewing', 'planned', 'in_progress', 'completed', 'rejected'];
+const GAP_STATUSES: HelpContentGapStatus[] = ['new', 'reviewing', 'article_planned', 'article_created', 'ignored'];
 
 const AdminHelpCenter: React.FC = () => {
   useNoIndex();
@@ -52,6 +58,7 @@ const AdminHelpCenter: React.FC = () => {
   const { data: issues = [] } = useQuery({ queryKey: ['admin', 'help', 'issues'], queryFn: () => listHelpIssueReports({}) });
   const { data: features = [] } = useQuery({ queryKey: ['admin', 'help', 'features'], queryFn: () => listHelpFeatureRequests({}) });
   const { data: searchLogs = [] } = useQuery({ queryKey: ['admin', 'help', 'search-logs'], queryFn: () => adminListSearchLogs(1000) });
+  const { data: contentGaps = [] } = useQuery({ queryKey: ['admin', 'help', 'content-gaps'], queryFn: () => adminListContentGaps(200) });
 
   const invalidate = (k: string) => qc.invalidateQueries({ queryKey: ['admin', 'help', k] });
 
@@ -59,6 +66,17 @@ const AdminHelpCenter: React.FC = () => {
   const catM = useMutation({ mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) => updateHelpCategory(id, { is_active }), onSuccess: () => invalidate('categories') });
   const issueM = useMutation({ mutationFn: ({ id, status }: { id: string; status: HelpIssueStatus }) => updateHelpIssueReportStatus(id, status), onSuccess: () => invalidate('issues') });
   const featM = useMutation({ mutationFn: ({ id, status }: { id: string; status: HelpFeatureStatus }) => updateHelpFeatureRequestStatus(id, status), onSuccess: () => invalidate('features') });
+  const gapStatusM = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: HelpContentGapStatus }) => updateContentGapStatus(id, status),
+    onSuccess: () => invalidate('content-gaps'),
+  });
+  const gapDraftM = useMutation({
+    mutationFn: (gap: HelpContentGapRow) => createDraftArticleFromGap(gap),
+    onSuccess: () => {
+      invalidate('content-gaps');
+      invalidate('articles');
+    },
+  });
 
   const metrics = useMemo(() => computeHelpMetrics(articles, issues, features), [articles, issues, features]);
   const intel = useMemo(() => computeHelpIntelligenceMetrics(articles, issues, features, searchLogs), [articles, issues, features, searchLogs]);
@@ -106,6 +124,7 @@ const AdminHelpCenter: React.FC = () => {
             <TabsTrigger value="categories" className="gap-1.5"><FolderTree className="size-3.5" />{isRTL ? 'الفئات' : 'Categories'}</TabsTrigger>
             <TabsTrigger value="issues" className="gap-1.5"><AlertTriangle className="size-3.5" />{isRTL ? 'البلاغات' : 'Issues'}</TabsTrigger>
             <TabsTrigger value="features" className="gap-1.5"><Lightbulb className="size-3.5" />{isRTL ? 'الطلبات' : 'Requests'}</TabsTrigger>
+            <TabsTrigger value="gaps" className="gap-1.5"><Lightbulb className="size-3.5" />{isRTL ? 'فجوات المحتوى' : 'Content Gaps'}</TabsTrigger>
             <TabsTrigger value="metrics" className="gap-1.5"><BarChart3 className="size-3.5" />{isRTL ? 'المقاييس' : 'Metrics'}</TabsTrigger>
           </TabsList>
 
