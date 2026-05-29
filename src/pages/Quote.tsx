@@ -224,7 +224,7 @@ const Quote: React.FC = () => {
       '@type': 'WebPage',
       name: 'اطلب عرض سعر',
       url: 'https://qitaat.com/quote',
-      inLanguage: 'ar-SA',
+      inLanguage: 'ar-SA-u-nu-latn',
       description: 'صفحة إرسال طلب عرض سعر لمشاريع الصناعات الخفيفة عبر قطاعات.',
     },
     {

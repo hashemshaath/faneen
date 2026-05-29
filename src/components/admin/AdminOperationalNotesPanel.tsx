@@ -45,7 +45,7 @@ function severityTone(sev: AdminNoteSeverity): string {
 
 function formatDateTime(iso: string, isRTL: boolean): string {
   try {
-    return new Date(iso).toLocaleString(isRTL ? 'ar-SA' : 'en-US', {
+    return new Date(iso).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
       year: 'numeric', month: 'short', day: '2-digit',
       hour: '2-digit', minute: '2-digit',
     });

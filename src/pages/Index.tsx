@@ -104,7 +104,7 @@ const Index = () => {
           alternateName: s.nameEn,
           description: s.desc,
           serviceType: s.name,
-          inLanguage: 'ar-SA',
+          inLanguage: 'ar-SA-u-nu-latn',
           category: s.nameEn,
           areaServed: { '@type': 'Country', name: 'Saudi Arabia' },
           provider: { '@type': 'Organization', name: 'قِطاعات Qitaat', url: 'https://qitaat.com' },

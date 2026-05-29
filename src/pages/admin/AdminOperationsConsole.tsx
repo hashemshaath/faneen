@@ -196,7 +196,7 @@ export default function AdminOperationsConsole() {
   function formatDate(iso: string | null | undefined): string {
     if (!iso) return '—';
     try {
-      return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+      return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
         year: 'numeric', month: 'short', day: '2-digit',
       });
     } catch { return iso; }

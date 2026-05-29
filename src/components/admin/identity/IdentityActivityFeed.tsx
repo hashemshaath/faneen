@@ -81,7 +81,7 @@ function relTime(iso: string, isRTL: boolean): string {
   if (hr < 24) return isRTL ? `منذ ${hr} س` : `${hr}h ago`;
   const day = Math.floor(hr / 24);
   if (day < 30) return isRTL ? `منذ ${day} ي` : `${day}d ago`;
-  return new Date(iso).toLocaleDateString(isRTL ? 'ar' : 'en');
+  return new Date(iso).toLocaleDateString(isRTL ? 'ar-u-nu-latn' : 'en');
 }
 
 export const IdentityActivityFeed: React.FC<Props> = ({ isRTL, limit = 20, className }) => {

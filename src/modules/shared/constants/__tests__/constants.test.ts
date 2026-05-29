@@ -11,7 +11,7 @@ describe('SA constants', () => {
   it('exposes ISO code, currency, locale, timezone', () => {
     expect(SA_COUNTRY_CODE).toBe('SA');
     expect(SA_CURRENCY).toBe('SAR');
-    expect(SA_LOCALE).toBe('ar-SA');
+    expect(SA_LOCALE).toBe('ar-SA-u-nu-latn');
     expect(SA_TIMEZONE).toBe('Asia/Riyadh');
   });
 });

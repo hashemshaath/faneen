@@ -496,6 +496,28 @@
   }
 
   /* ============================================================
+     Numeric display primitives — always Latin digits, polished.
+     Use .num-display for hero/stat numbers, .num-tabular for inline
+     tabular numerics in tables and lists.
+     ============================================================ */
+  .num-display {
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-family: 'Space Grotesk', 'IBM Plex Sans Arabic', ui-sans-serif, system-ui, sans-serif;
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1, 'ss01' 1;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .num-tabular {
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+  }
+
+  /* ============================================================
      Brand Identity v1.0 — May 2026
      Card status accents (industrial spec, section 6).
      Use .card-verified / .card-urgent / .card-featured for

@@ -47,7 +47,7 @@ function summarizeMeta(meta: Record<string, unknown> | null): Array<[string, str
 
 function formatAbs(iso: string, isRTL: boolean): string {
   try {
-    return new Date(iso).toLocaleString(isRTL ? 'ar-SA' : 'en-US', {
+    return new Date(iso).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
       dateStyle: 'medium',
       timeStyle: 'short',
     });
@@ -59,7 +59,7 @@ function formatRel(iso: string, isRTL: boolean, now: number = Date.now()): strin
   if (Number.isNaN(t)) return '';
   const diff = Math.round((t - now) / 1000);
   const abs = Math.abs(diff);
-  const rtf = new Intl.RelativeTimeFormat(isRTL ? 'ar' : 'en', { numeric: 'auto' });
+  const rtf = new Intl.RelativeTimeFormat(isRTL ? 'ar-u-nu-latn' : 'en', { numeric: 'auto' });
   if (abs < 60) return rtf.format(Math.round(diff), 'second');
   if (abs < 3600) return rtf.format(Math.round(diff / 60), 'minute');
   if (abs < 86400) return rtf.format(Math.round(diff / 3600), 'hour');

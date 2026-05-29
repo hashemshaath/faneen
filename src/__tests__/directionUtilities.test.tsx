@@ -11,7 +11,7 @@ import { ReferenceText } from '@/components/ui/reference-text';
 describe('direction.ts pure helpers', () => {
   it('getDirection maps ar/he/fa/ur to rtl', () => {
     for (const lang of RTL_LANGS) expect(getDirection(lang)).toBe('rtl');
-    expect(getDirection('ar-SA')).toBe('rtl');
+    expect(getDirection('ar-SA-u-nu-latn')).toBe('rtl');
     expect(getDirection('he_IL')).toBe('rtl');
   });
   it('getDirection maps everything else to ltr', () => {
@@ -25,7 +25,7 @@ describe('direction.ts pure helpers', () => {
   });
   it('getDocumentLang returns ar | en only', () => {
     expect(getDocumentLang('ar')).toBe('ar');
-    expect(getDocumentLang('ar-SA')).toBe('ar');
+    expect(getDocumentLang('ar-SA-u-nu-latn')).toBe('ar');
     expect(getDocumentLang('en-US')).toBe('en');
     expect(getDocumentLang('fr')).toBe('en');
   });

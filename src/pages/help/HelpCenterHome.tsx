@@ -25,6 +25,7 @@ import {
   type HelpAudience,
 } from '@/modules/helpCenter';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { fmtNum, fmtDate } from '@/lib/format';
 
 const pickTitle = (a: HelpArticle | HelpCategory, lang: 'ar' | 'en') => (lang === 'ar' ? a.title_ar : a.title_en);
 const pickDesc = (c: HelpCategory, lang: 'ar' | 'en') => (lang === 'ar' ? c.description_ar : c.description_en) ?? '';
@@ -96,14 +97,10 @@ const HelpCenterHome: React.FC = () => {
     if (allArticles.length === 0) return null;
     return allArticles.reduce((max, a) => (a.updated_at > max ? a.updated_at : max), allArticles[0].updated_at);
   }, [allArticles]);
-  const formattedLatest = useMemo(() => {
-    if (!latestUpdate) return '';
-    try {
-      return new Intl.DateTimeFormat(language === 'ar' ? 'ar-SA' : 'en-GB', {
-        day: '2-digit', month: 'short', year: 'numeric',
-      }).format(new Date(latestUpdate));
-    } catch { return ''; }
-  }, [latestUpdate, language]);
+  const formattedLatest = useMemo(
+    () => (latestUpdate ? fmtDate(latestUpdate, isRTL, { day: '2-digit', month: 'short', year: 'numeric' }) : ''),
+    [latestUpdate, isRTL],
+  );
 
   // Keyword cloud (top 18 keywords by frequency, audience-aware)
   const topKeywords = useMemo(() => {
@@ -325,21 +322,21 @@ const HelpCenterHome: React.FC = () => {
         {/* Stats strip */}
         <section className="container pt-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card className="rounded-xl"><CardContent className="p-4">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{isRTL ? 'الأقسام' : 'Categories'}</div>
-              <div className="text-2xl font-heading font-black tech-content">{stats.categories}</div>
+            <Card className="rounded-xl hover-lift"><CardContent className="p-5">
+              <div className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mb-2 font-semibold">{isRTL ? 'الأقسام' : 'Categories'}</div>
+              <div className="num-display text-4xl md:text-5xl text-foreground">{fmtNum(stats.categories)}</div>
             </CardContent></Card>
-            <Card className="rounded-xl"><CardContent className="p-4">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{isRTL ? 'المقالات' : 'Articles'}</div>
-              <div className="text-2xl font-heading font-black tech-content">{stats.articles}</div>
+            <Card className="rounded-xl hover-lift"><CardContent className="p-5">
+              <div className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mb-2 font-semibold">{isRTL ? 'المقالات' : 'Articles'}</div>
+              <div className="num-display text-4xl md:text-5xl text-foreground">{fmtNum(stats.articles)}</div>
             </CardContent></Card>
-            <Card className="rounded-xl"><CardContent className="p-4">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{isRTL ? 'إجمالي المشاهدات' : 'Total views'}</div>
-              <div className="text-2xl font-heading font-black tech-content">{stats.totalViews.toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US')}</div>
+            <Card className="rounded-xl hover-lift"><CardContent className="p-5">
+              <div className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mb-2 font-semibold">{isRTL ? 'إجمالي المشاهدات' : 'Total views'}</div>
+              <div className="num-display text-4xl md:text-5xl text-primary">{fmtNum(stats.totalViews)}</div>
             </CardContent></Card>
-            <Card className="rounded-xl"><CardContent className="p-4">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{isRTL ? 'آخر تحديث' : 'Last updated'}</div>
-              <div className="text-sm font-semibold tech-content mt-2">{formattedLatest || '—'}</div>
+            <Card className="rounded-xl hover-lift"><CardContent className="p-5">
+              <div className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mb-2 font-semibold">{isRTL ? 'آخر تحديث' : 'Last updated'}</div>
+              <div className="num-tabular text-base font-semibold mt-3">{formattedLatest || '—'}</div>
             </CardContent></Card>
           </div>
         </section>
@@ -402,8 +399,8 @@ const HelpCenterHome: React.FC = () => {
                       <CardTitle className="text-lg">{pickTitle(c, language)}</CardTitle>
                       <div className="flex items-center gap-1.5">
                         <Badge variant="secondary" className="text-[10px]">{c.audience}</Badge>
-                        <Badge variant="outline" className="text-[10px] tech-content">
-                          {countsByCategory.get(c.id) ?? 0}
+                        <Badge variant="outline" className="text-[10px] num-tabular">
+                          {fmtNum(countsByCategory.get(c.id) ?? 0)}
                         </Badge>
                       </div>
                     </div>
@@ -454,10 +451,10 @@ const HelpCenterHome: React.FC = () => {
                     <BookOpen className="w-5 h-5 text-primary mb-3" />
                     <div className="font-semibold mb-1">{pickTitle(a, language)}</div>
                     <div className="text-xs text-muted-foreground line-clamp-2">{language === 'ar' ? a.summary_ar : a.summary_en}</div>
-                    <div className="flex items-center gap-3 mt-3 text-[11px] text-muted-foreground tech-content">
-                      <span>{a.views_count ?? 0} {isRTL ? 'مشاهدة' : 'views'}</span>
+                    <div className="flex items-center gap-3 mt-3 text-[11px] text-muted-foreground">
+                      <span><span className="num-tabular">{fmtNum(a.views_count ?? 0)}</span> {isRTL ? 'مشاهدة' : 'views'}</span>
                       {(a.helpful_count ?? 0) + (a.not_helpful_count ?? 0) > 0 && (
-                        <span>
+                        <span className="num-tabular">
                           {Math.round(((a.helpful_count ?? 0) / ((a.helpful_count ?? 0) + (a.not_helpful_count ?? 0))) * 100)}% 👍
                         </span>
                       )}
@@ -492,7 +489,7 @@ const HelpCenterHome: React.FC = () => {
                   aria-label={`${isRTL ? 'بحث عن' : 'Search'} ${k}`}
                 >
                   <span className="me-1">{k}</span>
-                  <span className="text-[10px] text-muted-foreground tech-content">({n})</span>
+                  <span className="text-[10px] text-muted-foreground num-tabular">({fmtNum(n)})</span>
                 </button>
               ))}
             </div>
@@ -511,8 +508,8 @@ const HelpCenterHome: React.FC = () => {
               <span className="flex items-center gap-2 font-semibold">
                 <Library className="w-4 h-4 text-primary" />
                 {isRTL ? 'تصفّح كل المقالات' : 'Browse all articles'}
-                <Badge variant="outline" className="ms-1 text-[10px] tech-content">
-                  {audienceFilteredArticles.length}
+                <Badge variant="outline" className="ms-1 text-[10px] num-tabular">
+                  {fmtNum(audienceFilteredArticles.length)}
                 </Badge>
               </span>
               <span className="text-xs text-muted-foreground">
@@ -528,7 +525,7 @@ const HelpCenterHome: React.FC = () => {
                         <Link to={`/help/category/${cat.slug}`} className="hover:underline">
                           {pickTitle(cat, language)}
                         </Link>
-                        <Badge variant="outline" className="text-[10px] tech-content">{items.length}</Badge>
+                        <Badge variant="outline" className="text-[10px] num-tabular">{fmtNum(items.length)}</Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -550,7 +547,7 @@ const HelpCenterHome: React.FC = () => {
                               to={`/help/category/${cat.slug}`}
                               className="text-xs text-primary hover:underline"
                             >
-                              {isRTL ? `عرض الكل (${items.length}) ←` : `View all (${items.length}) →`}
+                              {isRTL ? `عرض الكل (${fmtNum(items.length)}) ←` : `View all (${fmtNum(items.length)}) →`}
                             </Link>
                           </li>
                         )}

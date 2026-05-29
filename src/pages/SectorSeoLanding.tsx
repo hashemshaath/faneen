@@ -55,7 +55,7 @@ const SectorSeoLanding: React.FC = () => {
         '@type': 'WebPage',
         name: sector.h1,
         url: pageUrl,
-        inLanguage: 'ar-SA',
+        inLanguage: 'ar-SA-u-nu-latn',
         description: sector.metaDescription,
       });
       const bc = buildBreadcrumbList([

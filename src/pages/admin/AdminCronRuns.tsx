@@ -43,7 +43,7 @@ interface CronRunRow {
 
 function formatDate(iso: string, isRTL: boolean): string {
   try {
-    return new Date(iso).toLocaleString(isRTL ? 'ar-SA' : 'en-US', {
+    return new Date(iso).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
       dateStyle: 'medium',
       timeStyle: 'medium',
     });

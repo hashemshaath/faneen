@@ -349,9 +349,9 @@ const DashboardAccountDiagnostics: React.FC = () => {
               <dl>
                 <Row k="user.id" v={user?.id ?? '—'} mono />
                 <Row k="user.email" v={user?.email ?? '—'} mono />
-                <Row k="last_sign_in_at" v={user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString(rtl ? 'ar-SA' : 'en-US') : '—'} />
-                <Row k="expires_at" v={session?.expires_at ? new Date(session.expires_at * 1000).toLocaleString(rtl ? 'ar-SA' : 'en-US') : '—'} />
-                <Row k={rtl ? 'محدّث في' : 'Refreshed at'} v={refreshedAt.toLocaleTimeString(rtl ? 'ar-SA' : 'en-US')} />
+                <Row k="last_sign_in_at" v={user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString(rtl ? 'ar-SA-u-nu-latn' : 'en-US') : '—'} />
+                <Row k="expires_at" v={session?.expires_at ? new Date(session.expires_at * 1000).toLocaleString(rtl ? 'ar-SA-u-nu-latn' : 'en-US') : '—'} />
+                <Row k={rtl ? 'محدّث في' : 'Refreshed at'} v={refreshedAt.toLocaleTimeString(rtl ? 'ar-SA-u-nu-latn' : 'en-US')} />
               </dl>
               )}
             </CardContent>
