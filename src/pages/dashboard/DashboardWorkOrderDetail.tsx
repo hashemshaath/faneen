@@ -36,6 +36,7 @@ import { HealthBadge } from "@/components/health/HealthBadge";
 import { RelatedReferencesPanel } from "@/components/reference/RelatedReferencesPanel";
 import { CustomerTrackingCard } from "@/components/workOrders/CustomerTrackingCard";
 import { InstallationAppointmentCard } from "@/components/workOrders/InstallationAppointmentCard";
+import { ProjectClosureCard } from "@/components/workOrders/ProjectClosureCard";
 import { UnifiedTimeline } from "@/components/timeline/UnifiedTimeline";
 import { workOrderHealth } from "@/modules/health";
 import { useWorkOrderRealtimeInvalidation } from "@/hooks/useWorkOrderRealtimeInvalidation";
@@ -437,6 +438,12 @@ export default function DashboardWorkOrderDetail() {
 
           <InstallationAppointmentCard
             workOrderId={wo.id}
+            canManage={isAdmin || wo.owner_user_id === user?.id}
+          />
+
+          <ProjectClosureCard
+            workOrderId={wo.id}
+            workOrderStatus={wo.status}
             canManage={isAdmin || wo.owner_user_id === user?.id}
           />
 
