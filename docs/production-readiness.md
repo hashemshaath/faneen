@@ -1,6 +1,6 @@
 # Production Readiness
 
-_Last refreshed: APP-STABILITY-CLEANUP-SECURITY-1._
+_Last refreshed: APP-STABILITY-CONTRACTS-PROCUREMENT-HARDENING-1._
 
 Snapshot of the gating signals used to declare the codebase production-stable.
 Re-run every command below before promoting a new feature phase.
@@ -30,7 +30,7 @@ Re-run every command below before promoting a new feature phase.
 ## Current baseline (APP-STABILITY-CLEANUP-SECURITY-1)
 
 - TypeScript: PASS.
-- Vitest: PASS — 4569 / 4569.
+- Vitest: PASS — 4603 / 4603 (HARDENING-1 baseline; +10 scope-boundary guards).
 - All isolation audits: PASS.
 - Public `/q/:code` route unified through `QSlugDispatcher` — eliminates
   the previous shadowing between `QuotationViewer` (`?t=<token>`) and
@@ -38,6 +38,15 @@ Re-run every command below before promoting a new feature phase.
 - `robots-sitemap-sync-audit` and `jsonld-snapshot-audit` are green
   again after restoring `Disallow: /q/` in the edge `robots` function
   and pruning the stale `TopProvidersSection.tsx` snapshot entry.
+- Contract / quantity / measurement remains the system's pricing
+  source-of-truth. Procurement is integrated read/write through
+  `src/modules/procurement/services/**` only; award handoff is bounded
+  to a work-order timeline comment + in-app notifications (no stock,
+  no payments, no stage mutation).
+- HARDENING-1 added `src/__tests__/appStabilityContractsProcurementHardening.test.ts`
+  to guard the deferred boundaries: no inventory module, no supplier
+  payments tables, no public supplier portal route, no `/q/*` route
+  shadowing, no inventory/payment access from the award handoff.
 
 ## Documented invariants
 
