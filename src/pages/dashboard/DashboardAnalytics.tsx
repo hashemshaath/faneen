@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listContractsForProviderOrBusiness } from '@/modules/contracts';
 import { listServicesByBusiness } from '@/modules/catalog';
@@ -12,22 +12,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BarChart3, TrendingUp, DollarSign, Users, FileText, Star,
   CalendarClock, Eye, ArrowUpRight, ArrowDownRight, Minus,
-  PieChart as PieChartIcon, Activity,
+  PieChart as PieChartIcon, Activity, Download, RefreshCw, Sparkles, Briefcase,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
-  LineChart, Line,
 } from 'recharts';
 import { cn } from '@/lib/utils';
 import { format, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, eachMonthOfInterval } from 'date-fns';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { ProviderLeadAnalytics } from '@/components/dashboard/ProviderLeadAnalytics';
 import { ProviderTipsCard } from '@/components/dashboard/ProviderTipsCard';
+import { BentoTile } from '@/components/dashboard/overview/BentoTile';
+import '@/styles/dashboard-emerald.css';
 
 // Brand-aligned chart palette — sourced from central design tokens.
 const CHART_COLORS = [
@@ -275,77 +275,302 @@ const DashboardAnalytics = () => {
     }));
   }, [analytics]);
 
-  const periodOptions = [
-    { value: '7d', label: isRTL ? '7 أيام' : '7 days' },
-    { value: '30d', label: isRTL ? '30 يوم' : '30 days' },
-    { value: '90d', label: isRTL ? '90 يوم' : '90 days' },
-    { value: '12m', label: isRTL ? '12 شهر' : '12 months' },
+  const periodOptions: { value: Period; label: string }[] = [
+    { value: '7d', label: isRTL ? '7 أيام' : '7d' },
+    { value: '30d', label: isRTL ? '30 يوم' : '30d' },
+    { value: '90d', label: isRTL ? '90 يوم' : '90d' },
+    { value: '12m', label: isRTL ? '12 شهر' : '12m' },
   ];
+
+  // Previous-period comparison fetch (for trend deltas).
+  const prevRange = useMemo(() => {
+    const { startDate, endDate } = dateRange;
+    const span = endDate.getTime() - startDate.getTime();
+    const prevEnd = new Date(startDate.getTime() - 1);
+    const prevStart = new Date(prevEnd.getTime() - span);
+    return { start: prevStart.toISOString(), end: prevEnd.toISOString() };
+  }, [dateRange]);
+
+  const { data: prevAnalytics } = useQuery({
+    queryKey: ['provider-analytics-prev', business?.id, period],
+    queryFn: async () => {
+      if (!business) return null;
+      const [contracts, bookings, reviews] = await Promise.all([
+        listContractsForProviderOrBusiness<{ id: string; status: string; total_amount: number | null; created_at: string }>({
+          userId: user!.id,
+          businessId: business.id,
+          select: 'id, status, total_amount, created_at',
+          gteCreatedAt: prevRange.start,
+        }).then((r) => ({ data: (r.data ?? []).filter((c) => c.created_at <= prevRange.end) })),
+        supabase.from('bookings').select('id, status, created_at')
+          .eq('business_id', business.id)
+          .gte('created_at', prevRange.start).lte('created_at', prevRange.end),
+        supabase.from('reviews').select('id, rating, created_at')
+          .eq('business_id', business.id)
+          .gte('created_at', prevRange.start).lte('created_at', prevRange.end),
+      ]);
+      const cs = contracts.data ?? [];
+      const revenue = cs.filter((c) => ['completed', 'active'].includes(c.status))
+        .reduce((s, c) => s + Number(c.total_amount || 0), 0);
+      const ratings = (reviews.data ?? []);
+      return {
+        revenue,
+        contracts: cs.length,
+        bookings: (bookings.data ?? []).length,
+        avgRating: ratings.length ? ratings.reduce((s, r) => s + r.rating, 0) / ratings.length : 0,
+      };
+    },
+    enabled: !!business,
+    staleTime: 60000,
+  });
+
+  const trend = (curr: number, prev: number | undefined): { up?: boolean; label: string } | undefined => {
+    if (prev === undefined || prev === null) return undefined;
+    if (prev === 0 && curr === 0) return { up: undefined, label: '0%' };
+    if (prev === 0) return { up: true, label: '+∞' };
+    const pct = ((curr - prev) / prev) * 100;
+    const sign = pct > 0 ? '+' : '';
+    return { up: pct >= 0, label: `${sign}${pct.toFixed(0)}%` };
+  };
+
+  const qc = useQueryClient();
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(() => new Date());
+  const refetchAll = async () => {
+    await qc.invalidateQueries({ queryKey: ['provider-analytics'] });
+    await qc.invalidateQueries({ queryKey: ['provider-analytics-prev'] });
+    setLastRefreshed(new Date());
+  };
+
+  const downloadCsv = () => {
+    if (!analytics || !stats) return;
+    const rows: string[] = [];
+    rows.push(['Metric', 'Value'].join(','));
+    rows.push(['Revenue', String(stats.totalRevenue)].join(','));
+    rows.push(['Contracts (total)', String(stats.totalContracts)].join(','));
+    rows.push(['Contracts (active)', String(stats.activeContracts)].join(','));
+    rows.push(['Contracts (completed)', String(stats.completedContracts)].join(','));
+    rows.push(['Bookings (total)', String(stats.totalBookings)].join(','));
+    rows.push(['Bookings (confirmed)', String(stats.confirmedBookings)].join(','));
+    rows.push(['Bookings (completed)', String(stats.completedBookings)].join(','));
+    rows.push(['Bookings (cancelled)', String(stats.cancelledBookings)].join(','));
+    rows.push(['Reviews (total)', String(stats.totalReviews)].join(','));
+    rows.push(['Rating (avg)', String(stats.avgRating)].join(','));
+    rows.push(['Projects', String(stats.projectsCount)].join(','));
+    rows.push(['Services', String(stats.servicesCount)].join(','));
+    rows.push('');
+    rows.push(['Date', 'Revenue', 'Contracts'].join(','));
+    revenueChartData.forEach((d) => rows.push([d.date, String(d.revenue), String(d.count)].join(',')));
+    const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qitaat-analytics-${period}-${format(new Date(), 'yyyyMMdd-HHmm')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Smart insight (best chart day / conversion ratio)
+  const insight = useMemo(() => {
+    if (!analytics || !stats) return null;
+    const best = revenueChartData.reduce((m, d) => (d.revenue > m.revenue ? d : m), { date: '', revenue: 0, count: 0 });
+    const convRate = stats.totalBookings > 0
+      ? Math.round((stats.completedBookings / stats.totalBookings) * 100)
+      : 0;
+    return { bestDate: best.date, bestRevenue: best.revenue, convRate };
+  }, [analytics, stats, revenueChartData]);
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="font-heading text-xl font-bold text-foreground sm:text-2xl">
-              <BarChart3 className="inline-block w-6 h-6 me-2 text-accent" />
-              {isRTL ? 'التحليلات والإحصائيات' : 'Analytics & Insights'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isRTL ? 'نظرة شاملة على أداء منشأتك' : 'Comprehensive performance overview'}
-            </p>
+      <div className="dash-emerald space-y-6">
+        {/* Hero header */}
+        <div className="dash-hero p-5 sm:p-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between relative">
+            <div className="space-y-2">
+              <span className="dash-hero-chip inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold">
+                <Sparkles className="w-3 h-3" />
+                {isRTL ? 'مركز التحليلات الاحترافي' : 'Pro Analytics Center'}
+              </span>
+              <h1 className="ds-h2 flex items-center gap-2">
+                <BarChart3 className="w-6 h-6" />
+                {isRTL ? 'التحليلات والإحصائيات' : 'Analytics & Insights'}
+              </h1>
+              <p className="dash-hero-sub text-sm max-w-xl">
+                {isRTL
+                  ? 'لوحة احترافية بمؤشرات أداء حية، مقارنات بين الفترات، وتصدير فوري للبيانات.'
+                  : 'Pro dashboard with live KPIs, period-over-period comparisons, and instant CSV export.'}
+              </p>
+              <p className="dash-hero-sub text-[11px] tech-content opacity-80">
+                {isRTL ? 'آخر تحديث' : 'Updated'} · {format(lastRefreshed, 'HH:mm:ss')}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Segmented period selector */}
+              <div className="inline-flex rounded-full bg-white/10 border border-white/20 p-1 backdrop-blur-sm">
+                {periodOptions.map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => setPeriod(o.value)}
+                    className={cn(
+                      'rounded-full px-3 py-1.5 text-xs font-semibold transition tech-content',
+                      period === o.value
+                        ? 'bg-white text-emerald-900 shadow'
+                        : 'text-white/80 hover:text-white',
+                    )}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="dash-hero-chip h-9 rounded-full"
+                onClick={refetchAll}
+              >
+                <RefreshCw className={cn('w-3.5 h-3.5 me-1.5', isLoading && 'animate-spin')} />
+                {isRTL ? 'تحديث' : 'Refresh'}
+              </Button>
+              <Button
+                size="sm"
+                className="dash-hero-gold h-9 rounded-full"
+                onClick={downloadCsv}
+                disabled={!stats}
+              >
+                <Download className="w-3.5 h-3.5 me-1.5" />
+                {isRTL ? 'تصدير CSV' : 'Export CSV'}
+              </Button>
+            </div>
           </div>
-          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {periodOptions.map(o => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         {isLoading || !stats ? (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+          <div className="dash-bento">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <Skeleton key={i} className="h-28 rounded-2xl" />
+            ))}
           </div>
         ) : (
           <>
-            {/* KPI Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { icon: DollarSign, label: isRTL ? 'الإيرادات' : 'Revenue', value: `${stats.totalRevenue.toLocaleString()}`, sub: isRTL ? 'ر.س' : 'SAR', color: 'bg-success/10 text-success' },
-                { icon: FileText, label: isRTL ? 'العقود' : 'Contracts', value: stats.totalContracts, sub: `${stats.activeContracts} ${isRTL ? 'نشط' : 'active'}`, color: 'bg-accent/10 text-accent' },
-                { icon: CalendarClock, label: isRTL ? 'الحجوزات' : 'Bookings', value: stats.totalBookings, sub: `${stats.confirmedBookings} ${isRTL ? 'مؤكد' : 'confirmed'}`, color: 'bg-info/10 text-info' },
-                { icon: Star, label: isRTL ? 'التقييم' : 'Rating', value: stats.avgRating, sub: `${stats.totalReviews} ${isRTL ? 'تقييم' : 'reviews'}`, color: 'bg-warning/10 text-warning' },
-                { icon: Eye, label: isRTL ? 'المشاريع' : 'Projects', value: stats.projectsCount, color: 'bg-secondary/10 text-secondary' },
-                { icon: Activity, label: isRTL ? 'الخدمات' : 'Services', value: stats.servicesCount, color: 'bg-primary/10 text-primary' },
-                { icon: Users, label: isRTL ? 'حجوزات مكتملة' : 'Completed', value: stats.completedBookings, color: 'bg-success/10 text-success' },
-                { icon: TrendingUp, label: isRTL ? 'عقود مكتملة' : 'Done Contracts', value: stats.completedContracts, color: 'bg-accent/10 text-accent' },
-              ].map((s, i) => (
-                <Card key={i} className="border-border/40">
-                  <CardContent className="p-3 sm:p-4">
-                    <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center mb-2', s.color)}>
-                      <s.icon className="w-4 h-4" />
-                    </div>
-                    <p className="text-lg sm:text-xl font-bold leading-none tech-content">{s.value}</p>
-                    {s.sub && <p className="text-[9px] text-muted-foreground mt-0.5">{s.sub}</p>}
-                    <p className="text-[10px] text-muted-foreground mt-1">{s.label}</p>
-                  </CardContent>
-                </Card>
-              ))}
+            {/* Smart insight strip */}
+            {insight && (
+              <Card className="border-[hsl(var(--de-gold))]/40 bg-gradient-to-br from-[hsl(var(--de-emerald))]/5 to-[hsl(var(--de-gold))]/5">
+                <CardContent className="p-4 flex flex-wrap items-center gap-4">
+                  <span className="inline-flex w-10 h-10 items-center justify-center rounded-xl bg-[hsl(var(--de-gold))]/20 text-[hsl(var(--de-emerald-deep))]">
+                    <Sparkles className="w-5 h-5" />
+                  </span>
+                  <div className="flex-1 min-w-[200px]">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      {isRTL ? 'رؤية ذكية' : 'Smart Insight'}
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {insight.bestDate ? (
+                        isRTL
+                          ? `أعلى يوم إيراد كان ${insight.bestDate} بمبلغ ${insight.bestRevenue.toLocaleString()} ر.س`
+                          : `Top revenue day was ${insight.bestDate} with ${insight.bestRevenue.toLocaleString()} SAR`
+                      ) : isRTL ? 'لا توجد إيرادات في هذه الفترة بعد' : 'No revenue in this period yet'}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[11px] text-muted-foreground">
+                      {isRTL ? 'معدل الإنجاز' : 'Completion Rate'}
+                    </p>
+                    <p className="text-2xl font-bold tech-content text-[hsl(var(--de-emerald))]">
+                      {insight.convRate}%
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Bento KPI grid */}
+            <div className="dash-bento">
+              <BentoTile
+                variant="feature"
+                icon={DollarSign}
+                label={isRTL ? 'إجمالي الإيرادات' : 'Total Revenue'}
+                value={
+                  <>
+                    {stats.totalRevenue.toLocaleString()}{' '}
+                    <span className="text-base font-normal text-muted-foreground">{isRTL ? 'ر.س' : 'SAR'}</span>
+                  </>
+                }
+                sub={`${stats.activeContracts + stats.completedContracts} ${isRTL ? 'عقد مُولِّد' : 'earning contracts'}`}
+                trend={trend(stats.totalRevenue, prevAnalytics?.revenue)}
+                accent="gold"
+              />
+              <BentoTile
+                icon={FileText}
+                label={isRTL ? 'العقود' : 'Contracts'}
+                value={stats.totalContracts}
+                sub={`${stats.activeContracts} ${isRTL ? 'نشط' : 'active'} · ${stats.completedContracts} ${isRTL ? 'مكتمل' : 'done'}`}
+                trend={trend(stats.totalContracts, prevAnalytics?.contracts)}
+              />
+              <BentoTile
+                icon={CalendarClock}
+                label={isRTL ? 'الحجوزات' : 'Bookings'}
+                value={stats.totalBookings}
+                sub={`${stats.confirmedBookings} ${isRTL ? 'مؤكد' : 'confirmed'}`}
+                trend={trend(stats.totalBookings, prevAnalytics?.bookings)}
+              />
+              <BentoTile
+                icon={Star}
+                label={isRTL ? 'متوسط التقييم' : 'Avg. Rating'}
+                value={stats.avgRating}
+                sub={`${stats.totalReviews} ${isRTL ? 'تقييم' : 'reviews'}`}
+                trend={prevAnalytics ? trend(Number(stats.avgRating), prevAnalytics.avgRating) : undefined}
+                accent="gold"
+              />
+              <BentoTile
+                icon={Briefcase}
+                label={isRTL ? 'المشاريع' : 'Projects'}
+                value={stats.projectsCount}
+              />
+              <BentoTile
+                icon={Activity}
+                label={isRTL ? 'الخدمات النشطة' : 'Active Services'}
+                value={stats.servicesCount}
+              />
+              <BentoTile
+                icon={Users}
+                label={isRTL ? 'حجوزات مكتملة' : 'Completed Bookings'}
+                value={stats.completedBookings}
+              />
+              <BentoTile
+                icon={TrendingUp}
+                label={isRTL ? 'عقود مكتملة' : 'Done Contracts'}
+                value={stats.completedContracts}
+              />
             </div>
 
             {/* Revenue Chart */}
-            <Card className="border-border/40">
+            <Card className="border-border/40 shadow-elev-1">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-heading flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-success" />
-                  {isRTL ? 'الإيرادات' : 'Revenue'}
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-heading flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-[hsl(var(--de-emerald))]" />
+                    {isRTL ? 'تطور الإيرادات' : 'Revenue Trend'}
+                  </CardTitle>
+                  {prevAnalytics && (
+                    <Badge variant="outline" className="text-[10px] font-semibold gap-1">
+                      {(() => {
+                        const t = trend(stats.totalRevenue, prevAnalytics.revenue);
+                        if (!t) return null;
+                        const Icon = t.up === undefined ? Minus : t.up ? ArrowUpRight : ArrowDownRight;
+                        return (
+                          <>
+                            <Icon className="w-3 h-3" />
+                            <span className="tech-content">{t.label}</span>
+                            <span className="text-muted-foreground">
+                              {isRTL ? 'مقابل السابق' : 'vs prev'}
+                            </span>
+                          </>
+                        );
+                      })()}
+                    </Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="h-[250px]">
@@ -353,15 +578,15 @@ const DashboardAnalytics = () => {
                     <AreaChart data={revenueChartData}>
                       <defs>
                         <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0} />
+                          <stop offset="5%" stopColor="hsl(var(--de-emerald))" stopOpacity={0.45} />
+                          <stop offset="95%" stopColor="hsl(var(--de-emerald))" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                       <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
                       <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
                       <Tooltip contentStyle={tooltipStyle} />
-                      <Area type="monotone" dataKey="revenue" stroke="hsl(var(--accent))" fill="url(#revGrad)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="revenue" stroke="hsl(var(--de-emerald))" fill="url(#revGrad)" strokeWidth={2.5} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
