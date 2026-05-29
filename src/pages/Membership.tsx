@@ -36,6 +36,8 @@ import { MembershipKeysManager } from '@/components/membership/MembershipKeysMan
 import { MembershipBenefits } from '@/components/membership/MembershipBenefits';
 import { MembershipFAQ } from '@/components/membership/MembershipFAQ';
 import { MembershipTrustStrip } from '@/components/membership/MembershipTrustStrip';
+import { MembershipPlanRecommender } from '@/components/membership/MembershipPlanRecommender';
+import { MembershipTestimonials } from '@/components/membership/MembershipTestimonials';
 import { track } from '@/lib/analytics-events';
 import { Button } from '@/components/ui/button';
 import { ensureDraftBusiness } from '@/lib/ensure-business';
