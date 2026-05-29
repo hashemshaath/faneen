@@ -175,7 +175,7 @@ export const HelpLauncher: React.FC<HelpLauncherProps> = ({ pageKey }) => {
 
             {/* Smart panel body — its own border/shadow disabled by wrapping */}
             <div className="bg-popover">
-              <SmartHelpPanel pageKey={pageKey} onNavigate={() => setOpen(false)} />
+              <SmartHelpPanel pageKey={pageKey} onNavigate={() => setOpen(false)} embedded />
             </div>
           </div>
         </div>
