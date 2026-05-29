@@ -43,6 +43,8 @@
     "edge-memberships-isolation-audit": "node scripts/edge-memberships-isolation-audit.mjs"
     ,
     "operations-isolation-audit": "node scripts/operations-isolation-audit.mjs"
+    ,
+    "procurement-isolation-audit": "node scripts/procurement-isolation-audit.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

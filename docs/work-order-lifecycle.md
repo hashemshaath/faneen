@@ -51,6 +51,13 @@ draft ─▶ measuring ─▶ priced ─▶ quoted ─▶ signed ─▶ in_produ
 - Flags overdue stages and writes notifications via
   `src/modules/notifications/`.
 
+### 7. Procurement (optional link)
+- Work orders may spawn `procurement_requests` (see
+  `src/modules/procurement/`).
+- Procurement does NOT yet create inventory movements or supplier payments.
+- Cancelling a procurement request never mutates the parent work-order
+  state machine.
+
 ## Privacy & security
 
 - All work-order tables are RLS-scoped to the owning business +

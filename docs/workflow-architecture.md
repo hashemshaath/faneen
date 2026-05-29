@@ -35,6 +35,7 @@ Lead ─▶ Quote Request ─▶ Quotation ─▶ E-Signature ─▶ Contract Dr
 | SLA processor      | `src/modules/operations/`               | Cron-driven; see `docs/edge-cron-inventory.md`. |
 | Notifications      | `src/modules/notifications/`            | 14 rich card types; industry-specific logic. |
 | Files / Storage    | `src/modules/files/`                    | All buckets routed through canonical wrappers. |
+| Procurement / RFQ  | `src/modules/procurement/`              | Request → RFQ → supplier quote → award. Inventory & supplier payments deferred. |
 
 ## Cross-cutting invariants
 
@@ -53,6 +54,7 @@ Lead ─▶ Quote Request ─▶ Quotation ─▶ E-Signature ─▶ Contract Dr
 ## Related docs
 
 - `docs/work-order-lifecycle.md`
+- `src/modules/procurement/README.md`
 - `docs/contracts-system-overview.md`
 - `docs/contract-pricing-engine.md`
 - `docs/contracts-rpc-reference.md`
