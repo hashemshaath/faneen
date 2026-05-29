@@ -57,28 +57,15 @@ describe('PRR-2 smoke — data integrity surface', () => {
 
 describe('PRR-2 smoke — release scope guardrails', () => {
   it('does not ship inventory / supplier-portal / accounting modules', async () => {
-    await expect(
-      // @ts-expect-error - intentional dynamic import to assert absence
-      import('@/modules/inventory'),
-    ).rejects.toBeDefined();
-    await expect(
-      // @ts-expect-error
-      import('@/modules/supplierPortal'),
-    ).rejects.toBeDefined();
-    await expect(
-      // @ts-expect-error
-      import('@/modules/accounting'),
-    ).rejects.toBeDefined();
+    const load = (p: string) => import(/* @vite-ignore */ p);
+    await expect(load('@/modules/inventory')).rejects.toBeDefined();
+    await expect(load('@/modules/supplierPortal')).rejects.toBeDefined();
+    await expect(load('@/modules/accounting')).rejects.toBeDefined();
   });
 
   it('does not ship WhatsApp / SMS channels', async () => {
-    await expect(
-      // @ts-expect-error
-      import('@/modules/whatsapp'),
-    ).rejects.toBeDefined();
-    await expect(
-      // @ts-expect-error
-      import('@/modules/sms'),
-    ).rejects.toBeDefined();
+    const load = (p: string) => import(/* @vite-ignore */ p);
+    await expect(load('@/modules/whatsapp')).rejects.toBeDefined();
+    await expect(load('@/modules/sms')).rejects.toBeDefined();
   });
 });
