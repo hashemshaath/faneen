@@ -36,6 +36,11 @@ function lazyRetry<T extends ComponentType<any>>(
 }
 
 const Auth = lazyRetry(() => import("./pages/Auth"));
+const HelpCenterHome = lazyRetry(() => import("./pages/help/HelpCenterHome"));
+const HelpCategoryPage = lazyRetry(() => import("./pages/help/HelpCategoryPage"));
+const HelpArticlePage = lazyRetry(() => import("./pages/help/HelpArticlePage"));
+const ReportIssuePage = lazyRetry(() => import("./pages/help/ReportIssuePage"));
+const FeatureRequestPage = lazyRetry(() => import("./pages/help/FeatureRequestPage"));
 const PublicSiteScan = lazyRetry(() => import("./pages/PublicSiteScan"));
 const PublicBarcodeResolve = lazyRetry(() => import("./pages/PublicBarcodeResolve"));
 const ReferenceResolver = lazyRetry(() => import("./pages/ReferenceResolver"));
@@ -254,6 +259,11 @@ const AppRoutes = () => (
           />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/help" element={<HelpCenterHome />} />
+          <Route path="/help/category/:slug" element={<HelpCategoryPage />} />
+          <Route path="/help/article/:slug" element={<HelpArticlePage />} />
+          <Route path="/help/report-issue" element={<ProtectedRoute><ReportIssuePage /></ProtectedRoute>} />
+          <Route path="/help/feature-request" element={<ProtectedRoute><FeatureRequestPage /></ProtectedRoute>} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/forbidden" element={<Forbidden />} />
