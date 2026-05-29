@@ -46,6 +46,19 @@ export interface CustomerProjectSnapshot {
     status: string;
     signed_at: string | null;
   } | null;
+  installation?: {
+    appointment_ref: string;
+    date: string;
+    time_window: string | null;
+    status:
+      | 'scheduled'
+      | 'confirmed'
+      | 'reschedule_requested'
+      | 'completed'
+      | 'cancelled';
+    confirmation_status: 'pending' | 'confirmed' | 'reschedule_requested';
+    customer_note: string | null;
+  } | null;
   milestones: CustomerMilestone[];
 }
 

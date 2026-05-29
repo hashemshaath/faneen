@@ -18,7 +18,10 @@ import {
   Building2,
   FileText,
   ScrollText,
+  CalendarClock,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
@@ -26,6 +29,10 @@ import {
   type CustomerProjectSnapshot,
   type CustomerMilestoneKey,
 } from '@/modules/customerTracking';
+import {
+  confirmAppointment,
+  requestAppointmentReschedule,
+} from '@/modules/installationAppointments';
 
 const MILESTONE_ORDER: CustomerMilestoneKey[] = [
   'quotation_sent',
@@ -48,6 +55,10 @@ export default function CustomerProjectPortal() {
   const [snapshot, setSnapshot] = useState<CustomerProjectSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [aptBusy, setAptBusy] = useState(false);
+  const [aptError, setAptError] = useState<string | null>(null);
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [rescheduleNote, setRescheduleNote] = useState('');
 
   const tx = useMemo(
     () => ({
@@ -66,6 +77,29 @@ export default function CustomerProjectPortal() {
       quotation: isRTL ? 'عرض السعر' : 'Quotation',
       contract: isRTL ? 'العقد' : 'Contract',
       noDocs: isRTL ? 'لا توجد مستندات متاحة بعد.' : 'No documents available yet.',
+      installationTitle: isRTL ? 'موعد التركيب' : 'Installation Appointment',
+      installationDateLabel: isRTL ? 'التاريخ' : 'Date',
+      timeWindow: isRTL ? 'الفترة الزمنية' : 'Time window',
+      aptStatus: isRTL ? 'حالة الموعد' : 'Appointment status',
+      aptConfirmation: isRTL ? 'تأكيدك' : 'Your confirmation',
+      confirm: isRTL ? 'تأكيد الموعد' : 'Confirm appointment',
+      requestReschedule: isRTL ? 'طلب إعادة جدولة' : 'Request reschedule',
+      sendRequest: isRTL ? 'إرسال الطلب' : 'Send request',
+      cancel: isRTL ? 'إلغاء' : 'Cancel',
+      noteHint: isRTL ? 'اشرح سبب طلب التعديل (اختياري)' : 'Optional note to explain the request',
+      aptError: isRTL ? 'تعذّر تنفيذ الإجراء.' : 'Action failed.',
+      aptStatusLabels: {
+        scheduled: isRTL ? 'مجدول' : 'Scheduled',
+        confirmed: isRTL ? 'تم التأكيد' : 'Confirmed',
+        reschedule_requested: isRTL ? 'طلب إعادة جدولة' : 'Reschedule requested',
+        completed: isRTL ? 'مكتمل' : 'Completed',
+        cancelled: isRTL ? 'ملغى' : 'Cancelled',
+      } as Record<string, string>,
+      confLabels: {
+        pending: isRTL ? 'بانتظار التأكيد' : 'Pending',
+        confirmed: isRTL ? 'مؤكد' : 'Confirmed',
+        reschedule_requested: isRTL ? 'تم طلب إعادة الجدولة' : 'Reschedule requested',
+      } as Record<string, string>,
       stageLabels: {
         draft: isRTL ? 'مسودة' : 'Draft',
         measured: isRTL ? 'قياسات' : 'Measurements',
@@ -117,6 +151,37 @@ export default function CustomerProjectPortal() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const onConfirmApt = useCallback(async () => {
+    if (!snapshot?.installation || !refId) return;
+    setAptBusy(true);
+    setAptError(null);
+    const res = await confirmAppointment({
+      trackingRef: refId,
+      token,
+      appointmentRef: snapshot.installation.appointment_ref,
+    });
+    setAptBusy(false);
+    if (!res.ok) { setAptError(tx.aptError); return; }
+    await load();
+  }, [snapshot, refId, token, tx.aptError, load]);
+
+  const onSubmitReschedule = useCallback(async () => {
+    if (!snapshot?.installation || !refId) return;
+    setAptBusy(true);
+    setAptError(null);
+    const res = await requestAppointmentReschedule({
+      trackingRef: refId,
+      token,
+      appointmentRef: snapshot.installation.appointment_ref,
+      note: rescheduleNote,
+    });
+    setAptBusy(false);
+    if (!res.ok) { setAptError(tx.aptError); return; }
+    setShowReschedule(false);
+    setRescheduleNote('');
+    await load();
+  }, [snapshot, refId, token, rescheduleNote, tx.aptError, load]);
 
   const businessName = useMemo(() => {
     if (!snapshot) return '';
@@ -296,6 +361,104 @@ export default function CustomerProjectPortal() {
                 </ul>
               )}
             </section>
+
+            {/* Installation Appointment */}
+            {snapshot.installation && (
+              <section
+                className="rounded-2xl border bg-card p-5 shadow-sm"
+                data-testid="customer-portal-installation"
+              >
+                <div className="text-sm font-medium mb-3 flex items-center gap-2">
+                  <CalendarClock className="w-4 h-4" /> {tx.installationTitle}
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <div className="text-xs text-muted-foreground">{tx.installationDateLabel}</div>
+                    <div className="tech-content">{snapshot.installation.date}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">{tx.timeWindow}</div>
+                    <div>{snapshot.installation.time_window || '—'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">{tx.aptStatus}</div>
+                    <div>{tx.aptStatusLabels[snapshot.installation.status] ?? snapshot.installation.status}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">{tx.aptConfirmation}</div>
+                    <div>
+                      {tx.confLabels[snapshot.installation.confirmation_status]
+                        ?? snapshot.installation.confirmation_status}
+                    </div>
+                  </div>
+                </div>
+
+                {snapshot.installation.status !== 'completed' &&
+                  snapshot.installation.status !== 'cancelled' && (
+                    <div className="mt-3 space-y-2">
+                      {!showReschedule && (
+                        <div className="flex flex-wrap gap-2">
+                          {snapshot.installation.confirmation_status !== 'confirmed' && (
+                            <Button
+                              size="sm"
+                              className="rounded-xl"
+                              onClick={() => void onConfirmApt()}
+                              disabled={aptBusy}
+                              data-testid="customer-confirm-appointment"
+                            >
+                              {aptBusy ? <Loader2 className="w-3.5 h-3.5 me-1 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5 me-1" />}
+                              {tx.confirm}
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-xl"
+                            onClick={() => setShowReschedule(true)}
+                            disabled={aptBusy}
+                            data-testid="customer-request-reschedule"
+                          >
+                            {tx.requestReschedule}
+                          </Button>
+                        </div>
+                      )}
+                      {showReschedule && (
+                        <div className="space-y-2" data-testid="customer-reschedule-form">
+                          <Textarea
+                            dir="auto"
+                            placeholder={tx.noteHint}
+                            value={rescheduleNote}
+                            onChange={(e) => setRescheduleNote(e.target.value.slice(0, 1000))}
+                            className="rounded-xl min-h-[80px]"
+                            aria-label={tx.noteHint}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => { setShowReschedule(false); setRescheduleNote(''); }}
+                              disabled={aptBusy}
+                            >
+                              {tx.cancel}
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="rounded-xl"
+                              onClick={() => void onSubmitReschedule()}
+                              disabled={aptBusy}
+                              data-testid="customer-reschedule-submit"
+                            >
+                              {aptBusy ? <Loader2 className="w-3.5 h-3.5 me-1 animate-spin" /> : null}
+                              {tx.sendRequest}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      {aptError && <div className="text-xs text-destructive">{aptError}</div>}
+                    </div>
+                  )}
+              </section>
+            )}
 
             {/* Last updated */}
             {snapshot.updated_at && (

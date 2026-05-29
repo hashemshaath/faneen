@@ -27,6 +27,11 @@ export const CUSTOMER_PROJECT_EVENT_TYPES = [
   'work_order.ready_for_installation',
   'work_order.installation_scheduled',
   'work_order.completed',
+  // Installation appointments
+  'installation.scheduled',
+  'installation.confirmed',
+  'installation.reschedule_requested',
+  'installation.completed',
   // Attachments — only when explicitly customer-visible
   'customer_visible_attachment_added',
 ] as const;
@@ -44,6 +49,10 @@ export const WIRED_CUSTOMER_PROJECT_EVENT_TYPES = [
   'quotation.approved',
   'work_order.created',
   'work_order.completed',
+  'installation.scheduled',
+  'installation.confirmed',
+  'installation.reschedule_requested',
+  'installation.completed',
 ] as const satisfies ReadonlyArray<CustomerProjectEventType>;
 
 export type WiredCustomerProjectEventType =

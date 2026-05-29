@@ -17,6 +17,11 @@ import {
   computeWorkOrderDiagnostics,
   computeProcurementDiagnostics,
 } from '@/modules/analytics/diagnostics';
+import {
+  computeInstallationMetrics,
+  listInstallationAppointmentsForBusiness,
+  type InstallationAppointmentRow,
+} from '@/modules/installationAppointments';
 import { useNoIndex } from '@/hooks/useNoIndex';
 
 const OperationsCenter = () => {
@@ -26,6 +31,7 @@ const OperationsCenter = () => {
   const businessId = activeBusinessId ?? user?.id ?? '';
   const [workOrders, setWorkOrders] = useState<any[]>([]);
   const [rfqs, setRfqs] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<InstallationAppointmentRow[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -33,13 +39,15 @@ const OperationsCenter = () => {
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const [wo, rf] = await Promise.all([
+      const [wo, rf, ap] = await Promise.all([
         listWorkOrdersForBusiness({ businessId, limit: 200 }),
         listRfqs({ businessId, limit: 200 }),
+        listInstallationAppointmentsForBusiness({ businessId, limit: 200 }),
       ]);
       if (cancelled) return;
       setWorkOrders(wo.data ?? []);
       setRfqs(rf.data ?? []);
+      setAppointments(ap.data ?? []);
       setLoading(false);
     })().catch(() => setLoading(false));
     return () => { cancelled = true; };
@@ -84,6 +92,11 @@ const OperationsCenter = () => {
     [rfqs],
   );
 
+  const installation = useMemo(
+    () => computeInstallationMetrics(appointments),
+    [appointments],
+  );
+
   return (
     <div className="container mx-auto px-4 py-6 space-y-6" data-testid="operations-center">
       <header>
@@ -117,6 +130,33 @@ const OperationsCenter = () => {
               { label: 'Overdue WOs', value: woDiag.overdue, tone: woDiag.overdue ? 'danger' : 'neutral' },
               { label: 'RFQ no quotes', value: procDiag.rfqWithoutSupplierQuote, tone: procDiag.rfqWithoutSupplierQuote ? 'warning' : 'neutral' },
               { label: 'Awarded no PO', value: procDiag.awardedWithoutPo, tone: procDiag.awardedWithoutPo ? 'warning' : 'neutral' },
+            ]}
+          />
+        </CardContent>
+      </Card>
+
+      <Card data-testid="installations-section">
+        <CardHeader><CardTitle>Installations · التركيبات</CardTitle></CardHeader>
+        <CardContent>
+          <KpiStrip
+            items={[
+              { label: 'Scheduled', value: installation.scheduled, tone: 'info' },
+              { label: 'Awaiting confirmation', value: installation.awaitingConfirmation, tone: installation.awaitingConfirmation ? 'warning' : 'neutral' },
+              { label: 'Reschedule requests', value: installation.rescheduleRequests, tone: installation.rescheduleRequests ? 'warning' : 'neutral' },
+              { label: 'Completed', value: installation.completed, tone: 'success' },
+            ]}
+          />
+        </CardContent>
+      </Card>
+
+      <Card data-testid="installation-alerts-section">
+        <CardHeader><CardTitle>Installation alerts · تنبيهات التركيب</CardTitle></CardHeader>
+        <CardContent>
+          <KpiStrip
+            items={[
+              { label: 'Within 24h unconfirmed', value: installation.alertWithin24hUnconfirmed, tone: installation.alertWithin24hUnconfirmed ? 'danger' : 'neutral' },
+              { label: 'Overdue', value: installation.alertOverdue, tone: installation.alertOverdue ? 'danger' : 'neutral' },
+              { label: 'Reschedule awaiting action', value: installation.alertRescheduleAwaitingAction, tone: installation.alertRescheduleAwaitingAction ? 'warning' : 'neutral' },
             ]}
           />
         </CardContent>
