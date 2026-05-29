@@ -6,7 +6,7 @@
 |---|---|---|
 | 1 | `barcode_registry`, `barcode_events`, `barcode_entity_links` tables + backfill (101 entities) | PASS |
 | 2 | Auto-create triggers + entity links backfill (52 safe links) | PASS |
-| 3 | `resolve_barcode` RPC + public `/q/:barcode_code` route | PASS |
+| 3 | `resolve_barcode` RPC + public `/q/:code` route | PASS |
 | 4 | `/admin/barcode-registry` admin monitoring page | PASS |
 | 5 | `BarcodeWidget` + `BarcodePrintCard` + copy/print/download | PASS |
 | 6 | `get_entity_barcode_code` RPC + widget integration in Client Sites, ContractDetail, ExecutionSiteSection | PASS |
@@ -40,7 +40,7 @@
 
 | Route | Component | Access |
 |---|---|---|
-| `/q/:barcode_code` | `PublicBarcodeResolve.tsx` | Public (noindex) |
+| `/q/:code` | `PublicBarcodeResolve.tsx` | Public (noindex) |
 | `/admin/barcode-registry` | `AdminBarcodeRegistry.tsx` | Admin only |
 
 ## Components created
@@ -84,7 +84,7 @@ Old integrations that called `verify_contract_number` + `hash` should update to 
 1. **Lead backfill deferred** — `lead` entities are not backfilled with barcodes. New leads created after Phase 2 will receive a barcode via trigger.
 2. **Customer-owner links deferred** — `customer` profiles are backfilled but `barcode_entity_links` primary links for some pre-Phase 2 customers may be missing. Auto-create trigger covers all new inserts.
 3. **Freeze / transfer actions not implemented** — `frozen_at`, `archived_at`, `transferred_at`, `transfer_from_user_id`, `transfer_to_user_id` exist in schema but have no admin UI controls yet.
-4. **First real /q scan monitoring** — while QA passed with synthetic scans, the first production traffic to `/q/:barcode_code` should be monitored for:
+4. **First real /q scan monitoring** — while QA passed with synthetic scans, the first production traffic to `/q/:code` should be monitored for:
    - Unexpected `scan_count` spikes
    - Error rates in `resolve_barcode`
    - Event log volume

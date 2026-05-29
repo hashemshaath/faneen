@@ -2,7 +2,7 @@
 
 Internal reference for the privacy and access-control posture of the unified barcode system. Pair with `docs/barcode-system-overview.md`.
 
-## 1. What /q/:barcode_code exposes
+## 1. What /q/:code exposes
 
 On a successful scan of an `active` barcode:
 
@@ -10,7 +10,7 @@ On a successful scan of an `active` barcode:
 - `contract`: contract number, status, provider name (if approved/active), created date
 - `business`: business name, username, verified status, public profile path
 
-## 2. What /q/:barcode_code never exposes
+## 2. What /q/:code never exposes
 
 - `current_scan_token_hash` or any raw scan token
 - `qr_token_hash` or legacy QR token
@@ -90,5 +90,5 @@ The following are **never** returned by any barcode RPC or rendered in any barco
 ## 9. robots.txt and indexing
 
 - `Disallow: /q/` is present in `public/robots.txt`
-- `/q/:barcode_code` pages set `<meta name="robots" content="noindex,nofollow">`
+- `/q/:code` pages set `<meta name="robots" content="noindex,nofollow">`
 - Route is absent from `sitemap.xml`

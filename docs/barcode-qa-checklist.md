@@ -49,7 +49,7 @@ Use this list to validate the unified barcode system end-to-end after any relate
 ## Client Sites checks
 - [ ] Admin inline detail shows `BarcodeWidget` for sites with active barcodes
 - [ ] Sites without barcodes show a plain `site_ref` fallback row
-- [ ] QR in widget opens `/q/:barcode_code`
+- [ ] QR in widget opens `/q/:code`
 - [ ] Download PNG works
 - [ ] Print sticker works
 - [ ] Copy button works
@@ -58,7 +58,7 @@ Use this list to validate the unified barcode system end-to-end after any relate
 - [ ] Contract detail shows `BarcodeWidget` in header when active barcode exists
 - [ ] Contract PDF includes "كود العقد" identifier
 - [ ] Contract PDF includes "كود المشروع" identifier when execution site has barcode
-- [ ] Contract PDF QR encodes `/q/<contract_barcode_code>` (not `/v/c/`)
+- [ ] Contract PDF QR encodes `/q/<contract_barcode>` (not `/v/c/`)
 - [ ] PDF QR fallback to `/v/c/` only when contract has no barcode
 
 ## VerifyContract checks

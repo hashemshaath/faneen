@@ -6,7 +6,7 @@ The unified barcode system assigns a single permanent public code — `barcode_c
 
 - **Permanent** — once assigned, the code follows the entity for life
 - **Public-shareable** — safe to print on stickers, invoices, and marketing material
-- **Type-agnostic** — a single `/q/:barcode_code` route resolves any supported entity
+- **Type-agnostic** — a single `/q/:code` route resolves any supported entity
 - **Traceable** — every scan is logged in `barcode_events` with counter increments
 
 ## barcode_code vs scan_token
@@ -15,14 +15,14 @@ The unified barcode system assigns a single permanent public code — `barcode_c
 |---|---|---|
 | Format | `PREFIX-YYYY-NNNNNN` (e.g. `LOC-2026-100001`) | Random opaque string |
 | Lifetime | Permanent; survives rotation/revoke | Rotatable; revocable |
-| Public route | `/q/:barcode_code` | `/s/:token` |
+| Public route | `/q/:code` | `/s/:token` |
 | Use case | Printed stickers, invoices, business cards | Time-bound QR campaigns |
 | Stored in DB | `barcode_registry.barcode_code` (plain text, safe to display) | `qr_token_hash` (one-way hash only) |
 | Can be guessed? | No — sequential but high-offset (starts at 100,000/year) | No — random |
 
-## /q/:barcode_code vs /s/:token
+## /q/:code vs /s/:token
 
-| | `/q/:barcode_code` | `/s/:token` |
+| | `/q/:code` | `/s/:token` |
 |---|---|---|
 | Entity scope | Sites, contracts, businesses | Client sites only |
 | What it returns | Public verification card (name, city, type, status) | Site summary subject to visibility rules |
@@ -63,7 +63,7 @@ Entity types marked "No" in the resolver column return `unavailable` on `/q/` re
 
 ### Public
 - The `barcode_code` string itself (safe to print and share)
-- The `/q/:barcode_code` page for `client_site`, `contract`, and `business`
+- The `/q/:code` page for `client_site`, `contract`, and `business`
 - Scan count and last-scanned timestamp (aggregated, no actor identity)
 - Contract verification metadata (status, provider name, hash prefix)
 

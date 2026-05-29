@@ -2,9 +2,8 @@
  * APP-STABILITY-CLEANUP-SECURITY-1
  *
  * Tiny dispatcher for `/q/:code`. Two distinct public flows previously
- * collided on the same path:
- *  - `/q/:refId?t=<token>` → tokenized quotation viewer (BUSINESS-WORKFLOW-5D).
- *  - `/q/:barcode_code`    → public barcode resolver (Phase 3).
+ * collided on separate `/q/:refId` and `/q/:barcode_code` routes.
+ * They are now unified under `/q/:code` and disambiguated by `?t=`.
  *
  * React Router picks the first matching `<Route>`, which silently shadowed
  * the barcode resolver. This dispatcher disambiguates by presence of `?t=`.

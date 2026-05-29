@@ -1,5 +1,5 @@
 /**
- * Phase 3 — Unified barcode resolver at /q/:barcode_code.
+ * Phase 3 — Unified barcode resolver at /q/:code.
  *
  * Hard rules (mirror /s/:token):
  *  - anon-callable RPC; no address / phone / map / coords / token / hash ever rendered.
