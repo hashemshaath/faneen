@@ -6,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import type {
   ProjectClosureRow,
   ProjectDeliveryEvidenceRow,
+  CustomerFeedbackRow,
+  CustomerNpsResponseRow,
   WorkOrderWarrantyRow,
 } from '../types';
 
@@ -134,4 +136,71 @@ export async function listWarrantyByWorkOrder(
     data: (data as unknown as WorkOrderWarrantyRow | null) ?? null,
     error: null,
   };
+}
+
+/** Lightweight list helpers for the Operations Center. */
+export async function listProjectClosuresForBusiness(
+  businessId: string,
+  limit = 200,
+): Promise<{ data: ProjectClosureRow[]; error: Error | null }> {
+  if (!businessId) return { data: [], error: new Error('missing_business') };
+  const { data, error } = await supabase
+    .from('project_closures')
+    .select(
+      'id, ref_id, business_id, work_order_id, closure_status, completion_date, confirmed_at, issue_reported_at, issue_text, warranty_start_date, warranty_end_date, created_at, updated_at',
+    )
+    .eq('business_id', businessId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) return { data: [], error: new Error('list_failed') };
+  return { data: (data as unknown as ProjectClosureRow[]) ?? [], error: null };
+}
+
+export async function listCustomerFeedbackForBusiness(
+  businessId: string,
+  limit = 200,
+): Promise<{ data: CustomerFeedbackRow[]; error: Error | null }> {
+  if (!businessId) return { data: [], error: new Error('missing_business') };
+  const { data, error } = await supabase
+    .from('customer_feedback')
+    .select(
+      'id, ref_id, business_id, work_order_id, closure_id, rating, feedback_text, would_recommend, created_at',
+    )
+    .eq('business_id', businessId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) return { data: [], error: new Error('list_failed') };
+  return { data: (data as unknown as CustomerFeedbackRow[]) ?? [], error: null };
+}
+
+export async function listCustomerNpsForBusiness(
+  businessId: string,
+  limit = 200,
+): Promise<{ data: CustomerNpsResponseRow[]; error: Error | null }> {
+  if (!businessId) return { data: [], error: new Error('missing_business') };
+  const { data, error } = await supabase
+    .from('customer_nps_responses')
+    .select('id, business_id, work_order_id, closure_id, score, created_at')
+    .eq('business_id', businessId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) return { data: [], error: new Error('list_failed') };
+  return { data: (data as unknown as CustomerNpsResponseRow[]) ?? [], error: null };
+}
+
+export async function listWarrantiesForBusiness(
+  businessId: string,
+  limit = 200,
+): Promise<{ data: WorkOrderWarrantyRow[]; error: Error | null }> {
+  if (!businessId) return { data: [], error: new Error('missing_business') };
+  const { data, error } = await supabase
+    .from('work_order_warranties')
+    .select(
+      'id, ref_id, business_id, work_order_id, closure_id, start_date, end_date, warranty_type, notes, status, created_at, updated_at',
+    )
+    .eq('business_id', businessId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) return { data: [], error: new Error('list_failed') };
+  return { data: (data as unknown as WorkOrderWarrantyRow[]) ?? [], error: null };
 }
