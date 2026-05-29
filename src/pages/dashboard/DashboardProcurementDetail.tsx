@@ -133,9 +133,17 @@ export default function DashboardProcurementDetail() {
       setInvitations(invs ?? []);
       const { data: ri } = await listRfqItemsByRfq(next);
       setRfqItems(ri ?? []);
-      const { data: qi } = await listQuoteItemsByRfq(next);
+      const { data: qi } = await listQuoteItemsByRfq(next, req.business_id);
       setQuoteItems(qi ?? []);
-      setMatrix(compareQuotesWithLineItems(ri ?? [], quotes ?? [], qi ?? []));
+      setMatrix(
+        compareQuotesWithLineItems(
+          ri ?? [],
+          (quotes ?? []).map((q) => ({
+            quote: q,
+            items: (qi ?? []).filter((it) => it.quote_id === q.id),
+          })),
+        ),
+      );
       const { data: pos } = await listPurchaseOrdersByRfq(next);
       setPurchaseOrders(pos ?? []);
     } else {
@@ -165,13 +173,22 @@ export default function DashboardProcurementDetail() {
       setInvitations(invs ?? []);
       const { data: ri } = await listRfqItemsByRfq(rfqId);
       setRfqItems(ri ?? []);
-      const { data: qi } = await listQuoteItemsByRfq(rfqId);
+      const businessId = found?.business_id ?? request?.business_id ?? '';
+      const { data: qi } = await listQuoteItemsByRfq(rfqId, businessId);
       setQuoteItems(qi ?? []);
-      setMatrix(compareQuotesWithLineItems(ri ?? [], data ?? [], qi ?? []));
+      setMatrix(
+        compareQuotesWithLineItems(
+          ri ?? [],
+          (data ?? []).map((q) => ({
+            quote: q,
+            items: (qi ?? []).filter((it) => it.quote_id === q.id),
+          })),
+        ),
+      );
       const { data: pos } = await listPurchaseOrdersByRfq(rfqId);
       setPurchaseOrders(pos ?? []);
     },
-    [rfqs],
+    [rfqs, request?.business_id],
   );
 
   const onCreateRfq = useCallback(async () => {
