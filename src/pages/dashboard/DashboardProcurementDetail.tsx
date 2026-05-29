@@ -517,6 +517,122 @@ export default function DashboardProcurementDetail() {
           {error && <p className="text-sm text-destructive mt-3">{error}</p>}
         </CardContent>
       </Card>
+
+      {activeRfqId && rfqItems.length > 0 && (
+        <Card data-testid="proc-line-matrix-card">
+          <CardHeader>
+            <CardTitle className="text-base">{tx.lineMatrix}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm" data-testid="proc-line-matrix-table">
+                <thead className="text-muted-foreground text-start">
+                  <tr>
+                    <th className="py-2 pe-3">{tx.item}</th>
+                    <th className="py-2 pe-3 text-end">{tx.qty}</th>
+                    <th className="py-2 pe-3">{tx.unit}</th>
+                    {scored.map((q) => {
+                      const supName =
+                        suppliers.find((s) => s.id === q.supplier_id)?.name ?? q.supplier_id.slice(0, 6);
+                      return (
+                        <th key={q.id} className="py-2 pe-3 text-end">
+                          <span dir="auto">{supName}</span>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rfqItems.map((ri) => {
+                    // Compute best unit price per row.
+                    const cells = scored.map((q) => {
+                      const li = quoteItems.find(
+                        (it) => it.quote_id === q.id && it.rfq_item_id === ri.id,
+                      );
+                      return { quoteId: q.id, line: li ?? null };
+                    });
+                    const bestUnit = cells
+                      .map((c) => c.line?.unit_price)
+                      .filter((v): v is number => typeof v === "number" && v >= 0)
+                      .reduce<number | null>((a, b) => (a === null || b < a ? b : a), null);
+                    return (
+                      <tr key={ri.id} className="border-t align-top">
+                        <td className="py-2 pe-3" dir="auto">{ri.name}</td>
+                        <td className="py-2 pe-3 text-end tech-content">{ri.quantity}</td>
+                        <td className="py-2 pe-3 tech-content">{ri.unit ?? ""}</td>
+                        {cells.map((c) => {
+                          if (!c.line || c.line.unit_price == null) {
+                            return (
+                              <td key={c.quoteId} className="py-2 pe-3 text-end text-muted-foreground tech-content">
+                                {tx.missing}
+                              </td>
+                            );
+                          }
+                          const isBest = bestUnit !== null && c.line.unit_price === bestUnit;
+                          return (
+                            <td
+                              key={c.quoteId}
+                              className={`py-2 pe-3 text-end tech-content ${isBest ? "text-emerald-600 font-semibold" : ""}`}
+                            >
+                              {c.line.unit_price}
+                              {isBest && <span className="ms-1 text-[10px]">★ {tx.best}</span>}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                  <tr className="border-t font-medium">
+                    <td className="py-2 pe-3" colSpan={3}>{tx.poTotal}</td>
+                    {scored.map((q) => {
+                      const m = matrix.find((mm) => mm.quote_id === q.id);
+                      const total = m?.computed_total ?? q.total_amount ?? 0;
+                      return (
+                        <td key={q.id} className="py-2 pe-3 text-end tech-content">
+                          {total} {q.currency}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeRfqId && (
+        <Card data-testid="proc-po-drafts-card">
+          <CardHeader>
+            <CardTitle className="text-base">{tx.poDrafts}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {purchaseOrders.length === 0 ? (
+              <p className="text-muted-foreground text-sm">{tx.noPoDrafts}</p>
+            ) : (
+              <ul className="space-y-2">
+                {purchaseOrders.map((po) => (
+                  <li
+                    key={po.id}
+                    className="flex items-center justify-between gap-3 rounded-xl border bg-card p-3"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-medium tech-content">{po.po_number ?? po.id.slice(0, 8)}</div>
+                      <div className="text-xs text-muted-foreground" dir="auto">{po.supplier_name}</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="secondary">{po.status}</Badge>
+                      <span className="tech-content text-sm">
+                        {po.total} {po.currency}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
