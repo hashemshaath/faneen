@@ -30,6 +30,30 @@ import { fmtNum, fmtDate } from '@/lib/format';
 const pickTitle = (a: HelpArticle | HelpCategory, lang: 'ar' | 'en') => (lang === 'ar' ? a.title_ar : a.title_en);
 const pickDesc = (c: HelpCategory, lang: 'ar' | 'en') => (lang === 'ar' ? c.description_ar : c.description_en) ?? '';
 
+// Arabic translations for common English keywords surfaced in the topic cloud
+const KEYWORD_AR: Record<string, string> = {
+  create: 'إنشاء', edit: 'تعديل', delete: 'حذف', update: 'تحديث',
+  export: 'تصدير', import: 'استيراد', print: 'طباعة', share: 'مشاركة',
+  search: 'بحث', filter: 'تصفية', sort: 'فرز', confirm: 'تأكيد',
+  pdf: 'PDF', boq: 'جدول كميات', rfq: 'طلب عرض سعر', quote: 'عرض سعر',
+  quotation: 'عرض سعر', contract: 'عقد', invoice: 'فاتورة', payment: 'دفع',
+  stages: 'مراحل', stage: 'مرحلة', milestone: 'مرحلة', timeline: 'الجدول الزمني',
+  intro: 'مقدمة', overview: 'نظرة عامة', settings: 'الإعدادات', profile: 'الملف الشخصي',
+  business: 'ملف شركة', company: 'شركة', provider: 'مزوّد الخدمة', customer: 'العميل',
+  admin: 'المشرف', user: 'المستخدم', users: 'المستخدمون', account: 'الحساب',
+  login: 'تسجيل الدخول', signup: 'إنشاء حساب', password: 'كلمة المرور',
+  notification: 'تنبيه', notifications: 'التنبيهات', message: 'رسالة', messages: 'الرسائل',
+  review: 'تقييم', reviews: 'التقييمات', rating: 'تقييم',
+  project: 'مشروع', projects: 'المشاريع', service: 'خدمة', services: 'الخدمات',
+  catalog: 'الكتالوج', sector: 'قطاع', sectors: 'القطاعات', category: 'القسم',
+  branch: 'فرع', branches: 'الفروع', staff: 'الموظفون', team: 'الفريق',
+  upload: 'رفع', download: 'تنزيل', image: 'صورة', file: 'ملف',
+  warranty: 'ضمان', booking: 'حجز', report: 'تقرير', reports: 'التقارير',
+  dashboard: 'لوحة التحكم', analytics: 'التحليلات', stats: 'الإحصائيات',
+  membership: 'العضوية', subscription: 'الاشتراك', billing: 'الفوترة',
+};
+const translateKeywordToAr = (k: string): string => KEYWORD_AR[k] ?? k;
+
 const HelpCenterHome: React.FC = () => {
   const { isRTL, language } = useLanguage();
   usePageMeta({
