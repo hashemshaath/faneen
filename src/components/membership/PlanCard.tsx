@@ -1,12 +1,26 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Loader2, Zap, Send, TrendingUp } from 'lucide-react';
+import { Check, Sparkles, Loader2, Zap, Send, TrendingUp, ArrowDownCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { tierIcons, tierGradients } from '@/lib/membership-tiers';
+import { PlanFeatureTabs } from './PlanFeatureTabs';
+
+interface PlanCardPlan {
+  id: string;
+  tier: string;
+  name_ar: string | null;
+  name_en: string | null;
+  description_ar: string | null;
+  description_en: string | null;
+  price_monthly: number;
+  price_yearly: number;
+  features?: unknown;
+  limits?: unknown;
+}
 
 interface PlanCardProps {
-  plan: any;
+  plan: PlanCardPlan;
   billingCycle: 'monthly' | 'yearly';
   isRTL: boolean;
   language: string;
@@ -14,7 +28,7 @@ interface PlanCardProps {
   isUpgrade: boolean;
   isDowngrade: boolean;
   isSubscribing: boolean;
-  onSubscribe: (plan) => void;
+  onSubscribe: (plan: { id: string; tier: string }) => void;
   featured?: boolean;
   className?: string;
   highlighted?: boolean;
@@ -27,7 +41,6 @@ export const PlanCard = React.memo(({
   const Icon = tierIcons[plan.tier] || Zap;
   const gradient = tierGradients[plan.tier] || tierGradients.free;
   const price = billingCycle === 'monthly' ? plan.price_monthly : plan.price_yearly;
-  const features = Array.isArray(plan.features) ? plan.features : [];
   const isPremium = plan.tier === 'premium' || featured;
   const monthlyEq = billingCycle === 'yearly' && plan.price_yearly > 0 ? Math.round(plan.price_yearly / 12) : null;
   const savingPct = (plan.price_monthly > 0 && plan.price_yearly > 0)
@@ -48,7 +61,6 @@ export const PlanCard = React.memo(({
       highlighted && 'ring-4 ring-accent ring-offset-2 ring-offset-background animate-pulse',
       className,
     )}>
-      {/* Premium glow background */}
       {isPremium && (
         <div aria-hidden className="absolute inset-0 -z-10 opacity-60">
           <div className="absolute -top-20 start-1/2 -translate-x-1/2 w-40 h-40 rounded-full bg-accent/20 blur-3xl" />
@@ -113,36 +125,25 @@ export const PlanCard = React.memo(({
         )}
       </div>
 
-      <ul className="space-y-2.5 mb-6 flex-1">
-        {features.map((feat: string, i: number) => (
-          <li key={i} className="flex items-start gap-2 text-xs sm:text-[13px]">
-            <div className={cn(
-              'w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5',
-              isPremium ? 'bg-accent/20' : 'bg-success/10'
-            )}>
-              <Check className={cn('w-2.5 h-2.5', isPremium ? 'text-accent' : 'text-success')} strokeWidth={3} />
-            </div>
-            <span className="text-foreground/85 leading-relaxed">{feat}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="mb-6 flex-1">
+        <PlanFeatureTabs limits={plan.limits} isRTL={isRTL} emphasized={isPremium} />
+      </div>
 
       <Button
         onClick={() => onSubscribe(plan)}
         variant={isPremium ? 'hero' : isCurrentPlan ? 'outline' : 'default'}
         size="lg"
         className={cn('w-full gap-1.5 transition-all font-semibold', isUpgrade && !isCurrentPlan && !isPremium && 'bg-accent text-accent-foreground hover:bg-accent/90')}
-        disabled={!!isCurrentPlan || isSubscribing || isDowngrade}
-        title={isDowngrade ? (isRTL ? 'لا يمكن طلب باقة أقل من باقتك الحالية' : 'Cannot request a plan lower than your current one') : undefined}
+        disabled={!!isCurrentPlan || isSubscribing}
       >
         {isSubscribing ? (
           <><Loader2 className="w-4 h-4 animate-spin" />{isRTL ? 'جارٍ التفعيل...' : 'Activating...'}</>
         ) : isCurrentPlan ? (
           <><Check className="w-4 h-4" />{isRTL ? 'خطتك الحالية' : 'Current Plan'}</>
         ) : isUpgrade ? (
-          <><Send className="w-4 h-4" />{isRTL ? 'طلب الترقية الآن' : 'Request Upgrade'}</>
+          <><Send className="w-4 h-4" />{isRTL ? 'ترقية الآن' : 'Upgrade Now'}</>
         ) : isDowngrade ? (
-          <>{isRTL ? 'غير متاح (باقة أقل)' : 'Unavailable (lower plan)'}</>
+          <><ArrowDownCircle className="w-4 h-4" />{isRTL ? 'الانتقال لهذه الباقة' : 'Switch to this plan'}</>
         ) : (
           <><Send className="w-4 h-4" />{isRTL ? 'ابدأ الآن' : 'Get Started'}</>
         )}
