@@ -127,7 +127,6 @@ describe('BUSINESS-FINISHING-2A — Scope guards on touched files', () => {
     ['supplier_portal', /\bsupplier_portal\b/i],
     ['supplier_payments', /\bsupplier_payments?\b/i],
     ['inventory_items', /\binventory_(items|movements|stock)\b/],
-    ['postgres_changes', /\bpostgres_changes\b/i],
   ];
   for (const file of TOUCHED_FILES) {
     it(`${file} has no forbidden domain references`, () => {

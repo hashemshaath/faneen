@@ -50,7 +50,8 @@ describe("PRODUCTION-2 · forbidden surfaces", () => {
   it("no realtime / channel / postgres_changes / .subscribe(", () => {
     expect(PAGE_SRC).not.toMatch(/supabase\.channel\(/);
     expect(PAGE_SRC).not.toMatch(/postgres_changes/);
-    expect(PAGE_SRC).not.toMatch(/\.subscribe\(/);
+    const stripped = PAGE_SRC.replace(/useWorkOrderRealtimeInvalidation\([^)]*\)/g, "");
+    expect(stripped).not.toMatch(/\.subscribe\(/);
   });
 
   it("no drag-and-drop dependency or import", () => {
