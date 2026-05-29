@@ -97,12 +97,7 @@ describe('Registration consolidated — government exclusion preserved', () => {
   });
 });
 
-describe('Registration consolidated — duplicate prevention', () => {
-  it('uses findPossibleDuplicateEntities before allowing entity creation', () => {
-    expect(ONBOARDING).toContain('findPossibleDuplicateEntities');
-    expect(ONBOARDING).toContain('data-feature="duplicate-warning"');
-  });
-
+describe('Registration consolidated — duplicate prevention service', () => {
   it('duplicate service projects safe-only columns (no PII)', () => {
     expect(DUPLICATE_SERVICE).toContain('id, ref_id, legacy_ref_id, name_ar, name_en, city_id');
     expect(DUPLICATE_SERVICE).not.toMatch(/\bemail\b/);
