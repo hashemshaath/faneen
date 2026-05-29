@@ -33,7 +33,8 @@ export interface RecordWorkOrderAuditInput {
     | "work_order.checklist_created"
     | "work_order.checklist_completed"
     | "work_order.checklist_item_updated"
-    | "work_order.operator_assigned";
+    | "work_order.operator_assigned"
+    | "work_order.operator_unassigned";
   metadata?: Record<string, unknown>;
 }
 

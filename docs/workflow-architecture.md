@@ -84,3 +84,26 @@ boundaries are now enforced by
 `src/__tests__/appStabilityContractsProcurementHardening.test.ts`
 (10 static-source guards). Re-opening any of them must remove the
 matching guard in the same change.
+
+## BUSINESS-WORKFLOW-PRODUCTION-2 — Production Board (Kanban + WIP)
+
+- The Production Board (`/dashboard/work-orders/board`) is a **display
+  and control layer only**. It does not own state — it reads via
+  `listWorkOrdersForBoard` and mutates exclusively through the approved
+  wrappers `transitionWorkOrderStage`, `assignWorkOrderStageUser`, and
+  `unassignWorkOrderStage`.
+- **Stage transitions remain RPC-enforced** by the SECURITY DEFINER
+  `transition_work_order_pipeline_stage`. Board buttons reflect the
+  forward-only rules from `pipelineRules.ts`; server-side rejection codes
+  (`forward_only`, `work_order_locked`, `cannot_skip_to_completed`,
+  `not_authorized`) are mapped to bilingual safe messages via
+  `mapTransitionError`.
+- **WIP limits are client-side advisory only** (`WIP_LIMITS` in
+  `src/modules/workOrders/lib/wipLimits.ts` — engineering 10, procurement
+  10, fabrication 15, qc 8, ready 20, installation 12). There is no DB
+  schema and no transition rejection based on them.
+- **Capacity/bottleneck metrics** are pure functions in
+  `boardCapacity.ts` — per-stage counts, overdue-by-stage, overloaded
+  stages, bottleneck, operator workload, unassigned count.
+- **Realtime and drag/drop remain deferred** (`BUSINESS-WORKFLOW-REALTIME-1`).
+  The board polls on demand via Refresh.

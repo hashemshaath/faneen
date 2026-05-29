@@ -51,18 +51,24 @@ import {
   listWorkOrdersForBoard,
   transitionWorkOrderStage,
   assignWorkOrderStageUser,
+  unassignWorkOrderStage,
   BOARD_COLUMN_STAGES,
   WORK_ORDER_PIPELINE_STAGE_LABELS,
   getAllowedNextStages,
   isPipelineLocked,
   isOverdueRow,
   useAssigneeNames,
+  WIP_LIMITS,
+  getWipStatus,
+  computeBoardCapacity,
+  mapTransitionError,
   type WorkOrderPipelineStageKey,
   type WorkOrderPriority,
   type BoardWorkOrderRow,
   type BoardAssignmentRow,
   type BoardQuotationSummary,
   type BoardChecklistSummary,
+  type WipStatus,
 } from "@/modules/workOrders";
 import { listBusinessStaffByBusiness } from "@/modules/businesses/services/listBusinessStaffByBusiness";
 
@@ -127,6 +133,9 @@ export default function ProductionBoardPage() {
   // Inline side panel (no modal) — drives assignment composer.
   const [openCardId, setOpenCardId] = useState<string | null>(null);
   const [assignTargetUserId, setAssignTargetUserId] = useState<string>("");
+  // Density + layout mode (display-only, persisted in component state).
+  const [density, setDensity] = useState<"comfortable" | "compact">("comfortable");
+  const [stackedMode, setStackedMode] = useState(false);
 
   const tx = useMemo(
     () => ({
@@ -180,6 +189,17 @@ export default function ProductionBoardPage() {
       pickOperator: isRTL ? "اختر مشغّلًا..." : "Pick operator...",
       stage: isRTL ? "المرحلة" : "Stage",
       priority: isRTL ? "الأولوية" : "Priority",
+      density: isRTL ? "الكثافة" : "Density",
+      densityCompact: isRTL ? "مدمج" : "Compact",
+      densityComfortable: isRTL ? "مريح" : "Comfortable",
+      layoutKanban: isRTL ? "أعمدة" : "Columns",
+      layoutStacked: isRTL ? "متتالٍ" : "Stacked",
+      unassigned: isRTL ? "بدون إسناد" : "Unassigned",
+      wipOk: isRTL ? "ضمن الحد" : "Within limit",
+      wipWarning: isRTL ? "اقتراب من الحد" : "Near limit",
+      wipDanger: isRTL ? "تجاوز الحد" : "Over limit (overloaded)",
+      wipLimitNone: isRTL ? "بدون حد" : "No limit",
+      overdueHere: isRTL ? "متأخر هنا" : "Overdue here",
     }),
     [isRTL],
   );
@@ -306,10 +326,8 @@ export default function ProductionBoardPage() {
     let qcBlocked = 0;
     let awaitingApproval = 0;
     let completedWeek = 0;
-    const stageCounts: Record<string, number> = {};
 
     for (const o of orders) {
-      stageCounts[o.pipeline_stage] = (stageCounts[o.pipeline_stage] ?? 0) + 1;
       const isClosed = o.status === "completed" || o.status === "cancelled";
       if (!isClosed) active += 1;
       if (isOverdueRow(o as never, now)) overdue += 1;
@@ -331,19 +349,17 @@ export default function ProductionBoardPage() {
       }
     }
 
-    // Bottleneck = stage with most items in non-terminal lanes.
-    const lane = BOARD_COLUMN_STAGES.filter(
-      (s) => s !== "completed" && s !== "ready",
+    // Pure helper covers stage counts, bottleneck, overload, unassigned, workload.
+    const capacity = computeBoardCapacity(
+      orders.map((o) => ({
+        id: o.id,
+        pipeline_stage: o.pipeline_stage,
+        status: o.status,
+        due_at: o.due_at,
+      })),
+      assignments,
+      now,
     );
-    let bottleneck: WorkOrderPipelineStageKey | null = null;
-    let bottleneckCount = 0;
-    for (const s of lane) {
-      const n = stageCounts[s] ?? 0;
-      if (n > bottleneckCount) {
-        bottleneck = s;
-        bottleneckCount = n;
-      }
-    }
 
     return {
       active,
@@ -352,11 +368,15 @@ export default function ProductionBoardPage() {
       qcBlocked,
       awaitingApproval,
       completedWeek,
-      stageCounts,
-      bottleneck,
-      bottleneckCount,
+      stageCounts: capacity.stageCounts,
+      overdueByStage: capacity.overdueByStage,
+      overloadedStages: capacity.overloadedStages,
+      bottleneck: capacity.bottleneck,
+      bottleneckCount: capacity.bottleneckCount,
+      unassignedCount: capacity.unassignedCount,
+      operatorWorkload: capacity.operatorWorkload,
     };
-  }, [orders]);
+  }, [orders, assignments]);
 
   /* ─── Actions ─── */
   const onMove = useCallback(
@@ -370,12 +390,12 @@ export default function ProductionBoardPage() {
       });
       setBusyId(null);
       if (err) {
-        setError(tx.errMove);
+        setError(mapTransitionError(err, isRTL ? "ar" : "en"));
         return;
       }
       await load();
     },
-    [busyId, load, tx.errMove],
+    [busyId, load, isRTL],
   );
 
   const onAssign = useCallback(
@@ -397,6 +417,28 @@ export default function ProductionBoardPage() {
         return;
       }
       setAssignTargetUserId("");
+      await load();
+    },
+    [user, busyId, load, tx.errAssign],
+  );
+
+  const onUnassign = useCallback(
+    async (o: BoardWorkOrderRow) => {
+      if (!user) return;
+      if (busyId) return;
+      setBusyId(o.id);
+      setError(null);
+      const { error: err } = await unassignWorkOrderStage({
+        workOrderId: o.id,
+        businessId: o.business_id,
+        stageKey: o.pipeline_stage,
+        actorUserId: user.id,
+      });
+      setBusyId(null);
+      if (err) {
+        setError(tx.errAssign);
+        return;
+      }
       await load();
     },
     [user, busyId, load, tx.errAssign],
@@ -434,6 +476,46 @@ export default function ProductionBoardPage() {
             <p className="text-sm text-muted-foreground mt-1">{tx.subtitle}</p>
           </div>
           <div className="flex items-center gap-2">
+            <div className="hidden sm:inline-flex rounded-xl border border-border/40 overflow-hidden" role="group" aria-label={tx.density}>
+              <button
+                type="button"
+                onClick={() => setDensity("comfortable")}
+                className={`h-9 px-2 text-[11px] ${density === "comfortable" ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
+                aria-pressed={density === "comfortable"}
+                data-testid="density-comfortable"
+              >
+                {tx.densityComfortable}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDensity("compact")}
+                className={`h-9 px-2 text-[11px] border-s border-border/40 ${density === "compact" ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
+                aria-pressed={density === "compact"}
+                data-testid="density-compact"
+              >
+                {tx.densityCompact}
+              </button>
+            </div>
+            <div className="inline-flex rounded-xl border border-border/40 overflow-hidden lg:hidden" role="group" aria-label="layout">
+              <button
+                type="button"
+                onClick={() => setStackedMode(false)}
+                className={`h-9 px-2 text-[11px] ${!stackedMode ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
+                aria-pressed={!stackedMode}
+                data-testid="layout-kanban"
+              >
+                {tx.layoutKanban}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStackedMode(true)}
+                className={`h-9 px-2 text-[11px] border-s border-border/40 ${stackedMode ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
+                aria-pressed={stackedMode}
+                data-testid="layout-stacked"
+              >
+                {tx.layoutStacked}
+              </button>
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -471,7 +553,7 @@ export default function ProductionBoardPage() {
         </section>
 
         {/* Secondary metrics */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div className="rounded-xl border border-border/30 bg-card p-3 flex items-center gap-3">
             <Gauge className="w-4 h-4 text-warning" />
             <div className="min-w-0">
@@ -485,6 +567,13 @@ export default function ProductionBoardPage() {
                     } · ${metrics.bottleneckCount}`
                   : "—"}
               </p>
+            </div>
+          </div>
+          <div className="rounded-xl border border-border/30 bg-card p-3 flex items-center gap-3" data-testid="metric-unassigned">
+            <UserMinus className="w-4 h-4 text-warning" />
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground">{tx.unassigned}</p>
+              <p className="text-sm font-semibold tech-content">{metrics.unassignedCount}</p>
             </div>
           </div>
           <div className="rounded-xl border border-border/30 bg-card p-3 flex items-center gap-3">
@@ -623,7 +712,7 @@ export default function ProductionBoardPage() {
 
         {/* Board */}
         <section
-          className="overflow-x-auto no-scrollbar pb-2"
+          className={stackedMode ? "pb-2" : "overflow-x-auto no-scrollbar pb-2"}
           aria-label={tx.title}
           data-testid="production-board"
         >
@@ -636,13 +725,38 @@ export default function ProductionBoardPage() {
               {tx.empty}
             </div>
           ) : (
-            <ol className="flex gap-3 min-w-max" role="list">
+            <ol
+              className={
+                stackedMode
+                  ? "flex flex-col gap-3"
+                  : "flex gap-3 min-w-max"
+              }
+              role="list"
+              data-testid={stackedMode ? "board-list-stacked" : "board-list-kanban"}
+            >
               {columns.map(({ stage, items }) => {
                 const isTerminal = stage === "completed";
+                const wip = getWipStatus(stage, items.length);
+                const wipTone: Record<WipStatus, string> = {
+                  none: "text-muted-foreground border-border/40",
+                  ok: "text-success border-success/30",
+                  warning: "text-warning border-warning/40 bg-warning/5",
+                  danger: "text-destructive border-destructive/40 bg-destructive/5",
+                };
+                const wipLabelByStatus: Record<WipStatus, string> = {
+                  none: tx.wipLimitNone,
+                  ok: tx.wipOk,
+                  warning: tx.wipWarning,
+                  danger: tx.wipDanger,
+                };
                 return (
                   <li
                     key={stage}
-                    className="w-[280px] sm:w-[300px] shrink-0 rounded-2xl border border-border/30 bg-muted/20 p-2 flex flex-col"
+                    className={
+                      stackedMode
+                        ? "w-full rounded-2xl border border-border/30 bg-muted/20 p-2 flex flex-col"
+                        : "w-[280px] sm:w-[300px] shrink-0 rounded-2xl border border-border/30 bg-muted/20 p-2 flex flex-col"
+                    }
                     aria-label={
                       isRTL
                         ? WORK_ORDER_PIPELINE_STAGE_LABELS[stage].ar
@@ -657,9 +771,25 @@ export default function ProductionBoardPage() {
                             ? WORK_ORDER_PIPELINE_STAGE_LABELS[stage].ar
                             : WORK_ORDER_PIPELINE_STAGE_LABELS[stage].en}
                         </span>
-                        <Badge variant="outline" className="text-[10px] tech-content">
-                          {items.length}
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] tech-content ${wipTone[wip.status]}`}
+                          title={wipLabelByStatus[wip.status]}
+                          data-testid={`wip-badge-${stage}`}
+                          data-wip-status={wip.status}
+                        >
+                          {wip.limit ? `${items.length} / ${wip.limit}` : items.length}
                         </Badge>
+                        {metrics.overdueByStage[stage] > 0 && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] text-destructive border-destructive/30"
+                            title={tx.overdueHere}
+                          >
+                            <Clock className="w-3 h-3 me-0.5" />
+                            {metrics.overdueByStage[stage]}
+                          </Badge>
+                        )}
                       </div>
                       {isTerminal && (
                         <Badge variant="outline" className="text-[10px] gap-1">
@@ -667,6 +797,22 @@ export default function ProductionBoardPage() {
                         </Badge>
                       )}
                     </header>
+                    {wip.status === "warning" && (
+                      <p
+                        className="text-[10px] text-warning px-2"
+                        data-testid={`wip-warning-${stage}`}
+                      >
+                        {tx.wipWarning}
+                      </p>
+                    )}
+                    {wip.status === "danger" && (
+                      <p
+                        className="text-[10px] text-destructive px-2 font-semibold"
+                        data-testid={`wip-danger-${stage}`}
+                      >
+                        {tx.wipDanger}
+                      </p>
+                    )}
                     <div className="space-y-2 min-h-[60px]" data-testid={`board-cards-${stage}`}>
                       {items.length === 0 ? (
                         <p className="text-[11px] text-muted-foreground text-center py-3">
@@ -679,6 +825,7 @@ export default function ProductionBoardPage() {
                             order={o}
                             tx={tx}
                             isRTL={isRTL}
+                            density={density}
                             quotation={quotationByWo.get(o.id)}
                             checklist={checklistByWo.get(o.id)}
                             assignment={currentStageAssignment(o.id, o.pipeline_stage)}
@@ -690,6 +837,7 @@ export default function ProductionBoardPage() {
                             }
                             onMove={onMove}
                             onAssign={onAssign}
+                            onUnassign={onUnassign}
                             staff={staff}
                             assignTargetUserId={assignTargetUserId}
                             setAssignTargetUserId={setAssignTargetUserId}
@@ -713,6 +861,7 @@ interface CardProps {
   order: BoardWorkOrderRow;
   tx: Record<string, string>;
   isRTL: boolean;
+  density: "comfortable" | "compact";
   quotation?: BoardQuotationSummary;
   checklist?: BoardChecklistSummary;
   assignment?: BoardAssignmentRow;
@@ -722,6 +871,7 @@ interface CardProps {
   onToggleOpen: () => void;
   onMove: (o: BoardWorkOrderRow, to: WorkOrderPipelineStageKey) => Promise<void>;
   onAssign: (o: BoardWorkOrderRow, userId: string) => Promise<void>;
+  onUnassign: (o: BoardWorkOrderRow) => Promise<void>;
   staff: StaffMember[];
   assignTargetUserId: string;
   setAssignTargetUserId: (v: string) => void;
@@ -731,6 +881,7 @@ function BoardCard({
   order,
   tx,
   isRTL,
+  density,
   quotation,
   checklist,
   assignment,
@@ -740,6 +891,7 @@ function BoardCard({
   onToggleOpen,
   onMove,
   onAssign,
+  onUnassign,
   staff,
   assignTargetUserId,
   setAssignTargetUserId,
@@ -763,7 +915,12 @@ function BoardCard({
   return (
     <article
       data-testid={`board-card-${order.id}`}
-      className="rounded-xl border border-border/40 bg-card p-3 space-y-2 hover-lift"
+      className={
+        density === "compact"
+          ? "rounded-xl border border-border/40 bg-card p-2 space-y-1 hover-lift"
+          : "rounded-xl border border-border/40 bg-card p-3 space-y-2 hover-lift"
+      }
+      data-density={density}
     >
       <header className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -946,6 +1103,21 @@ function BoardCard({
                 <UserPlus className="w-3 h-3" />
                 {tx.save}
               </Button>
+              {assignment && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => void onUnassign(order)}
+                  className="h-8 text-[11px] rounded-lg gap-1"
+                  data-testid={`unassign-${order.id}`}
+                  aria-label={tx.unassign}
+                  title={tx.unassign}
+                >
+                  <UserMinus className="w-3 h-3" />
+                </Button>
+              )}
             </div>
           )}
           {/* Show all allowed-next stages as buttons (back not allowed — forward only) */}

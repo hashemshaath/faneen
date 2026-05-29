@@ -166,6 +166,8 @@ export {
   listWorkOrderStageAssignments,
 } from "./services/assignWorkOrderStageUser";
 export type { AssignWorkOrderStageUserInput } from "./services/assignWorkOrderStageUser";
+export { unassignWorkOrderStage } from "./services/unassignWorkOrderStage";
+export type { UnassignWorkOrderStageInput } from "./services/unassignWorkOrderStage";
 export { listWorkOrderPipelineEvents } from "./services/listWorkOrderPipelineEvents";
 export {
   listWorkOrderChecklists,
@@ -192,6 +194,10 @@ export * from "./lib/useAssigneeNames";
 export * from "./lib/sla";
 // BUSINESS-WORKFLOW-7 — Production board rules + listing
 export * from "./lib/pipelineRules";
+// BUSINESS-WORKFLOW-PRODUCTION-2 — WIP limits, capacity metrics, safe error mapping
+export * from "./lib/wipLimits";
+export * from "./lib/boardCapacity";
+export * from "./lib/transitionErrors";
 export { listWorkOrdersForBoard } from "./services/listWorkOrdersForBoard";
 export type {
   ListWorkOrdersForBoardOptions,
