@@ -59,6 +59,34 @@ export interface CustomerProjectSnapshot {
     confirmation_status: 'pending' | 'confirmed' | 'reschedule_requested';
     customer_note: string | null;
   } | null;
+  closure?: {
+    ref_id: string;
+    status:
+      | 'pending_customer_confirmation'
+      | 'issue_reported'
+      | 'customer_confirmed'
+      | 'warranty_started'
+      | 'closed';
+    completion_date: string;
+    confirmed_at: string | null;
+    issue_reported_at: string | null;
+    issue_text: string | null;
+  } | null;
+  warranty?: {
+    ref_id: string;
+    start_date: string;
+    end_date: string;
+    warranty_type: string;
+    status: 'active' | 'expired' | 'void';
+  } | null;
+  delivery_evidence?: Array<{
+    ref_id: string;
+    image_url: string;
+    caption_ar: string | null;
+    caption_en: string | null;
+  }>;
+  feedback_submitted?: boolean;
+  nps_submitted?: boolean;
   milestones: CustomerMilestone[];
 }
 

@@ -159,6 +159,34 @@ export const CUSTOMER_EVENT_COPY: Record<CustomerProjectEventType, CustomerEvent
     bodyAr: 'يمكنك مراجعة المرفقات المتاحة من خلال الرابط الآمن.',
     bodyEn: 'You can review the available attachments through your secure link.',
   },
+  'project.completed': {
+    titleAr: 'تم اكتمال المشروع وبانتظار تأكيدك',
+    titleEn: 'Your project is complete and awaits your confirmation',
+    bodyAr: 'تم اكتمال مشروعك. يرجى تأكيد الاستلام من خلال الرابط الآمن.',
+    bodyEn: 'Your project is complete. Please confirm delivery using the secure link.',
+    emailTemplate: 'customer-project-completed',
+  },
+  'project.confirmed': {
+    titleAr: 'تم تأكيد اكتمال المشروع',
+    titleEn: 'Project completion confirmed',
+    bodyAr: 'شكراً لتأكيد اكتمال المشروع.',
+    bodyEn: 'Thank you for confirming project completion.',
+    emailTemplate: 'customer-project-confirmed',
+  },
+  'feedback.received': {
+    titleAr: 'شكراً لملاحظاتك',
+    titleEn: 'Thank you for your feedback',
+    bodyAr: 'استلمنا تقييمك. شكراً لمساعدتنا على التحسن.',
+    bodyEn: 'We received your feedback. Thank you for helping us improve.',
+    emailTemplate: 'customer-thank-you-feedback',
+  },
+  'warranty.started': {
+    titleAr: 'بدأ سريان الضمان',
+    titleEn: 'Your warranty has started',
+    bodyAr: 'تم تفعيل ضمان مشروعك. يمكنك مراجعة التفاصيل عبر الرابط الآمن.',
+    bodyEn: 'Your project warranty is now active. Details are available through the secure link.',
+    emailTemplate: 'customer-warranty-started',
+  },
 };
 
 export function getCustomerEventCopy(event: CustomerProjectEventType): CustomerEventCopy {

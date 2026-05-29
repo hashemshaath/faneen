@@ -64,6 +64,10 @@ import { template as customerInstallationScheduled } from './customer-installati
 import { template as customerInstallationConfirmed } from './customer-installation-confirmed.tsx'
 import { template as customerInstallationRescheduleRequested } from './customer-installation-reschedule-requested.tsx'
 import { template as customerInstallationCompleted } from './customer-installation-completed.tsx'
+import { template as customerProjectCompleted } from './customer-project-completed.tsx'
+import { template as customerProjectConfirmed } from './customer-project-confirmed.tsx'
+import { template as customerWarrantyStarted } from './customer-warranty-started.tsx'
+import { template as customerThankYouFeedback } from './customer-thank-you-feedback.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-confirmation': bookingConfirmation,
@@ -121,4 +125,8 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'customer-installation-confirmed': customerInstallationConfirmed,
   'customer-installation-reschedule-requested': customerInstallationRescheduleRequested,
   'customer-installation-completed': customerInstallationCompleted,
+  'customer-project-completed': customerProjectCompleted,
+  'customer-project-confirmed': customerProjectConfirmed,
+  'customer-warranty-started': customerWarrantyStarted,
+  'customer-thank-you-feedback': customerThankYouFeedback,
 }
