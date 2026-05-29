@@ -93,10 +93,12 @@ describe("APP-STABILITY-CONTRACTS-PROCUREMENT-HARDENING-1 — scope boundaries",
     const handoff = read("src/modules/procurement/services/awardHandoff.ts");
 
     it("does not touch work_order_stages, inventory, or payments tables", () => {
-      expect(handoff).not.toMatch(/work_order_stages/);
-      expect(handoff).not.toMatch(/inventory_/);
-      expect(handoff).not.toMatch(/supplier_payments/);
-      expect(handoff).not.toMatch(/stock_/);
+      // Allow narrative comments mentioning these names; forbid actual usage
+      // (table reads/writes or RPC invocations).
+      expect(handoff).not.toMatch(/\.from\(\s*['"]work_order_stages/);
+      expect(handoff).not.toMatch(/\.from\(\s*['"](inventory_|stock_|warehouse_)/);
+      expect(handoff).not.toMatch(/\.from\(\s*['"](supplier_payments|procurement_supplier_payments)/);
+      expect(handoff).not.toMatch(/\.rpc\(\s*['"](inventory_|stock_|supplier_payment)/);
     });
 
     it("only routes through approved wrappers (addWorkOrderComment + notifyProcurementEvent)", () => {
