@@ -16,26 +16,6 @@
       }
     }
   ],
-  "src/components/home/TopProvidersSection.tsx": [
-    {
-      "@type": "ItemList",
-      "requiredFields": ["@context", "@type", "name", "numberOfItems", "itemListElement"],
-      "optionalFields": ["description", "url"],
-      "nestedTypes": {
-        "itemListElement": {
-          "@type": "ListItem",
-          "requiredFields": ["position", "url", "item"],
-          "nestedTypes": {
-            "item": {
-              "@type": "LocalBusiness",
-              "requiredFields": ["@id", "name", "url", "priceRange"],
-              "optionalFields": ["image", "serviceType", "address", "areaServed", "aggregateRating", "memberOf"]
-            }
-          }
-        }
-      }
-    }
-  ],
   "src/pages/BusinessProfile.tsx": [
     {
       "@type": "LocalBusiness",

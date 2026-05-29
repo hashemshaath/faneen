@@ -43,6 +43,7 @@ Disallow: /unsubscribe
 Disallow: /profile/settings
 Disallow: /add-business/success
 Disallow: /s/
+Disallow: /q/
 
 User-agent: Googlebot
 Allow: /
