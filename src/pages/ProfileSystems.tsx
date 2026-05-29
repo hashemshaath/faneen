@@ -315,6 +315,17 @@ const ProfileSystems = () => {
 
   usePageMeta({ title: seoTitle, description: seoDesc, canonical });
 
+  // Page-view telemetry — fires once per category/route change.
+  useEffect(() => {
+    try {
+      track.profileSystemsVisit({
+        category_slug: routeCategory ?? category,
+        language,
+      });
+    } catch { /* never break the page on analytics */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeCategory, language]);
+
   const jsonLd = useMemo(() => {
     const blocks: Record<string, unknown>[] = [];
     blocks.push({
