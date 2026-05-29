@@ -158,6 +158,7 @@ const AdminHelpCenter: React.FC = () => {
                         {a.views_count} {isRTL ? 'مشاهدة' : 'views'} · 👍 {a.helpful_count} / 👎 {a.not_helpful_count}
                       </div>
                       <Badge variant={a.status === 'published' ? 'default' : 'secondary'}>{a.status}</Badge>
+                      <Badge variant="outline" className="tech-content">Q {computeArticleQuality(a).score}</Badge>
                       <Button size="sm" variant="outline" onClick={() => publishM.mutate({ id: a.id, publish: a.status !== 'published' })} disabled={publishM.isPending}>
                         {a.status === 'published' ? (isRTL ? 'إلغاء النشر' : 'Unpublish') : (isRTL ? 'نشر' : 'Publish')}
                       </Button>
