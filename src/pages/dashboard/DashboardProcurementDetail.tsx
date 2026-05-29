@@ -7,7 +7,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Loader2, Plus, RefreshCw, Trophy } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
-import useNoIndex from "@/hooks/useNoIndex";
+import { useNoIndex } from "@/hooks/useNoIndex";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
