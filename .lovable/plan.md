@@ -1,136 +1,75 @@
-# APP-SHELL-REARCHITECTURE-1 — Unified Adaptive Workspace Shell
+# BUSINESS-WORKFLOW-PROCUREMENT-2 — RFQ Lifecycle & Award
 
-Additive UX architecture phase. Wraps the existing `DashboardLayout` with workspace-aware primitives. **Zero changes** to routes, RLS, auth, payments, membership, realtime, cron, or business logic.
+Builds on PROCUREMENT-1 (tables + services + list/detail pages already exist). Closes the gap between "draft request" and "awarded supplier" without adding inventory, supplier payments, cron jobs, or an external supplier portal.
 
-## Guardrails
+## Goals
+1. Move a procurement request through its full internal lifecycle.
+2. Let business managers create RFQs, invite suppliers, capture quotes manually, compare, and award one.
+3. Wire the award back to the originating work order as a structured event (no PO module yet).
+4. Add notifications for key transitions (RFQ sent, quote received, quote awarded).
+5. Keep strict business isolation; no UI → table access; full audits + tests green.
 
-- `DashboardLayout` stays canonical. New primitives mount **inside** it.
-- No `supabase.from(...)` inside any shell primitive. Workspace data comes from existing hooks (`useActiveWorkspace`, `useAuth`, `useVisibilityEngine`).
-- No new routes, no renamed routes, no removed sidebar items.
-- Existing tests (NAV-LAYOUT-CONSISTENCY-1, ORG-RBAC-STRUCTURE-*) must remain green.
-- All localStorage keys prefixed `qitaat_shell_*`.
+## Scope
 
-## 1. Workspace Header System
+### A. Data layer (single migration)
+- Add columns:
+  - `procurement_rfqs.expires_at timestamptz`, `sent_at timestamptz`, `awarded_quote_id uuid` (nullable, FK to supplier_quotes).
+  - `procurement_supplier_quotes.status` enum-like text check (`pending`, `submitted`, `shortlisted`, `awarded`, `rejected`), `submitted_at`, `rejection_reason`.
+  - `procurement_requests.awarded_at`, `linked_work_order_event_id` (nullable).
+- New table `procurement_rfq_invitations` (rfq_id, supplier_id, invited_at, responded_at, status). Auto-numbering not needed.
+- Validation trigger: cannot set `awarded_quote_id` unless that quote belongs to the RFQ and is `submitted` or `shortlisted`. Awarding flips request → `awarded`, RFQ → `closed`, quote → `awarded`, siblings → `rejected`.
+- RLS: same business-scope helpers as PROCUREMENT-1; `GRANT` block in same migration; service_role full.
 
-Create `src/components/workspace/shell/`:
-- `WorkspaceHeader.tsx` — business/entity label, active role badge, quick actions slot, breadcrumbs slot, compact mode under `md`. Pure presentation; data via `useActiveWorkspace` + `useAuth`.
-- `WorkspaceContextBar.tsx` — sticky bar (`top-14`), collapsible (state in `qitaat_shell_ctxbar_open`), permission-aware via `usePermissionMatrix`.
-- `useBreadcrumbs.ts` — derives crumbs from `useLocation` + route descriptors in `WORKSPACE_ROUTE_PERMISSIONS`.
+### B. Service layer (`src/modules/procurement/services/*`)
+- `invitations.ts`: `listInvitationsByRfq`, `inviteSuppliersToRfq`, `markInvitationResponded`.
+- Extend `rfqs.ts`: `sendRfq` (draft → sent, stamps `sent_at`), `closeRfq`, `awardRfqQuote` (single RPC call to a SECURITY DEFINER fn that performs the atomic flip).
+- Extend `supplierQuotes.ts`: `submitQuote`, `shortlistQuote`, `rejectQuote`.
+- Pure helper `services/awardEligibility.ts`: given a quote + RFQ, return `{ eligible, reason }`. Unit-tested.
+- Barrel `index.ts` re-exports.
 
-Mount inside `DashboardLayout` behind a feature flag prop `enableWorkspaceShell` (default `true`); flag is local to the layout so we can A/B fall back without route changes.
+### C. UI (no new top-level routes)
+On `DashboardProcurementDetail.tsx`:
+- **RFQ panel**: status pill, "Send RFQ" button (draft only), "Close RFQ", expiry display.
+- **Suppliers panel**: inline supplier picker (multi-select from existing `procurement_suppliers` for current business) + "Invite" inline form (no dialog). Shows invitation status per supplier.
+- **Quotes panel**: existing comparison table + per-row inline actions: Shortlist, Reject, Award. "Award" expands an inline confirmation strip (NOT a dialog) per the no-popup rule.
+- **Award result strip**: after award, shows awarded supplier + amount + link back to work order.
 
-## 2. Adaptive Sidebar (refactor, non-breaking)
+All bilingual via `<Bi>` / `useBi()`; logical CSS (`ms-`/`me-`/`text-start`); h-12 inputs, rounded-xl, IBM Plex Sans Arabic.
 
-Split `DashboardSidebar.tsx` internals into co-located primitives under `src/components/dashboard/sidebar/`:
-- `SidebarSection.tsx`, `SidebarItem.tsx`, `SidebarGroup.tsx`, `SidebarWorkspaceSwitcher.tsx`.
+### D. Work-order integration
+- On award: insert a `work_order_events` row of kind `procurement_awarded` with `{ rfq_id, supplier_id, quote_id, total_amount, currency }` payload. Store the event id back on `procurement_requests.linked_work_order_event_id`.
+- Read path on the work-order detail page already renders generic events — no UI change needed there, just verify it renders the new kind label (i18n string added).
 
-Behavior:
-- Auto-hide empty groups via existing `useVisibleSidebarGroups`.
-- Collapsed state persisted in `qitaat_shell_sidebar_collapsed` and per-group `qitaat_shell_sidebar_group_{key}`.
-- Badge counter slot (rendered only when caller supplies a count; no fetch).
-- Public API of `DashboardSidebar` unchanged — internal refactor only.
+### E. Notifications
+- Reuse existing notification service to emit:
+  - `procurement.rfq_sent` → request owner.
+  - `procurement.quote_submitted` → request owner.
+  - `procurement.quote_awarded` → request owner + (later) supplier.
+- Add the 3 keys to the notifications kind map; no new notification card type needed (use generic info card).
 
-## 3. Global Command Palette
+### F. Tests
+- `awardEligibility.test.ts` — happy path + 5 rejection reasons.
+- `transitions.test.ts` — extend with sent/closed/awarded transitions.
+- `isolation.test.ts` — extend: new pages still don't import `supabase.from('procurement_*')` directly.
+- New `invitations.service.test.ts` — mock supabase chain.
 
-Create:
-- `src/components/workspace/shell/CommandPalette.tsx` (uses existing `cmdk` via `@/components/ui/command`).
-- `src/hooks/useCommandPalette.ts` — open/close + `⌘K` / `Ctrl+K` (reuses pattern from `useGlobalSearch` but does not break it; new shortcut is `⌘K` when palette mounted, falls back to global search otherwise via priority check).
+### G. Audits & docs
+- Extend `scripts/procurement-isolation-audit.mjs` to cover `procurement_rfq_invitations`.
+- Update `docs/workflow-architecture.md` and `docs/work-order-lifecycle.md` with the award → event hop.
+- Update `docs/deferred-backlog.md`: explicitly defer (a) external supplier portal, (b) PO generation, (c) supplier payments, (d) RFQ expiry cron.
 
-Content sources (all in-memory, no network):
-- Visible routes from `useVisibleRoutes`.
-- Recent refs from `RecentWorkspaceContext` store.
-- Static action registry filtered by `usePermissionMatrix`.
+## Out of scope (explicit)
+- External/public supplier portal or magic-link supplier responses.
+- Purchase order generation, supplier payments, supplier-side auth.
+- Cron-based RFQ auto-expiry (manual close only this phase).
+- Realtime subscriptions for quote updates (poll via React Query, like existing pages).
+- Inventory module.
 
-Mounted once inside `DashboardLayout`.
+## Validation gates
+- `bunx tsc --noEmit` clean.
+- `bunx vitest run` 100% green (current 4547+ baseline preserved).
+- `procurement-isolation-audit`, `storage-isolation-audit`, `identity-isolation-audit`, `credits-isolation-audit`, `broken-links-audit`, `rtl-audit`, `sitemap-integrity-audit` all pass.
+- Manual route check: `/dashboard/procurement` and `/dashboard/procurement/:id` render with new panels in RTL + LTR.
 
-## 4. Workspace Search Launcher
-
-- `src/components/workspace/shell/WorkspaceSearchLauncher.tsx` — button + input that detects ref prefixes (`WO-`, `TASK-`, `CNT-`, `QTE-`, `LED-`, `BKG-`, `TEAM-`, `STF-`) and routes to the existing reference resolver / search pages. No DB calls.
-- Ref → route map in `src/modules/workspace/shell/refRouteMap.ts`.
-
-## 5. Recent Context Dock
-
-- `src/components/workspace/shell/RecentWorkspaceContext.tsx` + `src/modules/workspace/shell/recentContextStore.ts`.
-- LocalStorage key `qitaat_shell_recent_v1`, capped at 20 entries, schema-versioned.
-- Hook `useRecordRecentContext(ref, label, path)` callable from pages later (no page edits this phase beyond minimal wiring on work-order/contract detail if trivial — otherwise deferred).
-
-## 6. Quick Actions System
-
-- `src/components/workspace/shell/QuickActionGrid.tsx`.
-- Action registry `src/modules/workspace/shell/quickActions.ts` with filters: role (`admin`/`provider`/`user`), permission key, route-context predicate.
-- Examples wired: Create Work Order, Operations Feed, Staff Center, Bulk Reference Triage, Operations Console, Contracts, Leads — all link to existing routes.
-
-## 7. Mobile UX
-
-In `DashboardLayout` + new shell:
-- Body scroll lock when offcanvas sidebar open (`overflow-hidden` on `<html>`).
-- `env(safe-area-inset-*)` padding on header + sticky action rows.
-- 44px min touch targets (reuse `h-ctrl-md`).
-- `useIsMobile` drives compact header + bottom-sheet command palette via existing `Drawer`.
-
-## 8. Layout consistency
-
-Audit + ensure these already-wrapped pages get the new header/context bar automatically (because they use `DashboardLayout`):
-- `admin/*`, `dashboard/work-orders/*`, `dashboard/settings/staff`, operations/triage/reference inspector pages.
-
-No new wrapping required if `DashboardLayout` already wraps them (NAV-LAYOUT-CONSISTENCY-1 already enforces this). New test extends that guard to assert no page renders `WorkspaceHeader` directly (it must come from `DashboardLayout`).
-
-## 9. Tests (new file per concern under `src/__tests__/`)
-
-- `appShellRearchitecture1.commandPalette.test.tsx` — ⌘K opens/closes, fuzzy match, permission filter.
-- `appShellRearchitecture1.sidebarPersistence.test.tsx` — localStorage restore + group collapse.
-- `appShellRearchitecture1.quickActions.test.tsx` — role + permission filtering.
-- `appShellRearchitecture1.recentContext.test.ts` — store cap, versioning, dedupe.
-- `appShellRearchitecture1.refRouteMap.test.ts` — prefix → route resolution.
-- `appShellRearchitecture1.noDuplicateShell.test.ts` — source scan: no page imports `WorkspaceHeader` or `WorkspaceContextBar` directly.
-- `appShellRearchitecture1.noDirectDb.test.ts` — source scan: shell primitives contain no `supabase.from` / `.rpc(`.
-- `appShellRearchitecture1.noForbiddenImports.test.ts` — shell files do not import payments/membership/realtime/cron modules.
-- `appShellRearchitecture1.mobileShell.test.tsx` — offcanvas + scroll lock.
-
-## 10. Validation
-
-`tsc`, full vitest, `broken-links-audit`, NAV-LAYOUT-CONSISTENCY-1, identity/businesses/operations isolation audits.
-
-## Files created
-
-```
-src/components/workspace/shell/
-  WorkspaceHeader.tsx
-  WorkspaceContextBar.tsx
-  CommandPalette.tsx
-  WorkspaceSearchLauncher.tsx
-  RecentWorkspaceContext.tsx
-  QuickActionGrid.tsx
-  index.ts
-src/components/dashboard/sidebar/
-  SidebarSection.tsx
-  SidebarItem.tsx
-  SidebarGroup.tsx
-  SidebarWorkspaceSwitcher.tsx
-  index.ts
-src/hooks/useCommandPalette.ts
-src/hooks/useBreadcrumbs.ts
-src/modules/workspace/shell/
-  quickActions.ts
-  refRouteMap.ts
-  recentContextStore.ts
-  index.ts
-src/__tests__/appShellRearchitecture1.*.test.{ts,tsx}  (9 files)
-```
-
-## Files modified
-
-- `src/components/dashboard/DashboardLayout.tsx` — mount header/context bar/palette/launcher.
-- `src/components/dashboard/DashboardSidebar.tsx` — delegate to new sidebar primitives (behavior preserved).
-- `src/modules/workspace/permissions/index.ts` — re-export new helpers if needed.
-
-## Out of scope / deferred
-
-- Wiring `useRecordRecentContext` into every detail page (separate phase).
-- Server-backed search (Phase 2 of search).
-- Badge counters fetching live data.
-- Workspace switcher actually switching businesses (UI only, action deferred to staff-center phase).
-
-## Risk
-
-Low. All additive; flagged mount points; refactor preserves `DashboardSidebar` public API; new tests prevent regressions in shell duplication and DB access from shell.
+## Final report will include
+PASS/FAIL · migration summary · new services · UI changes · WO integration · notification keys · audit + test results · deferred items.

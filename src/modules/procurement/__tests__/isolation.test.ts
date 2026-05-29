@@ -9,6 +9,7 @@ const TABLES = [
   'procurement_rfqs',
   'procurement_suppliers',
   'procurement_supplier_quotes',
+  'procurement_rfq_invitations',
 ];
 const ALLOWED = [
   'src/modules/procurement/services/',
@@ -73,11 +74,19 @@ describe('procurement isolation', () => {
       'updateProcurementRequestStatus',
       'createRfqFromRequest',
       'listRfqs',
+      'sendRfq',
+      'closeRfq',
+      'awardRfqQuote',
       'createSupplier',
       'listSuppliers',
       'submitSupplierQuote',
       'listSupplierQuotesByRfq',
       'awardSupplierQuote',
+      'shortlistQuote',
+      'rejectQuote',
+      'listInvitationsByRfq',
+      'inviteSuppliersToRfq',
+      'evaluateAwardEligibility',
       'compareSupplierQuotes',
     ]) {
       expect(barrel).toContain(name);

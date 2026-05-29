@@ -8619,6 +8619,7 @@ export type Database = {
       }
       procurement_requests: {
         Row: {
+          awarded_at: string | null
           business_id: string
           created_at: string
           created_by: string
@@ -8631,6 +8632,7 @@ export type Database = {
           work_order_id: string | null
         }
         Insert: {
+          awarded_at?: string | null
           business_id: string
           created_at?: string
           created_by: string
@@ -8643,6 +8645,7 @@ export type Database = {
           work_order_id?: string | null
         }
         Update: {
+          awarded_at?: string | null
           business_id?: string
           created_at?: string
           created_by?: string
@@ -8664,37 +8667,103 @@ export type Database = {
           },
         ]
       }
-      procurement_rfqs: {
+      procurement_rfq_invitations: {
         Row: {
           business_id: string
           created_at: string
-          created_by: string
-          due_at: string | null
           id: string
-          procurement_request_id: string
-          rfq_number: string | null
+          invited_at: string
+          invited_by: string
+          responded_at: string | null
+          rfq_id: string
           status: string
+          supplier_id: string
           updated_at: string
         }
         Insert: {
           business_id: string
           created_at?: string
-          created_by: string
-          due_at?: string | null
           id?: string
-          procurement_request_id: string
-          rfq_number?: string | null
+          invited_at?: string
+          invited_by: string
+          responded_at?: string | null
+          rfq_id: string
           status?: string
+          supplier_id: string
           updated_at?: string
         }
         Update: {
           business_id?: string
           created_at?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string
+          responded_at?: string | null
+          rfq_id?: string
+          status?: string
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_rfq_invitations_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_rfqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_rfq_invitations_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procurement_rfqs: {
+        Row: {
+          awarded_quote_id: string | null
+          business_id: string
+          closed_at: string | null
+          created_at: string
+          created_by: string
+          due_at: string | null
+          expires_at: string | null
+          id: string
+          procurement_request_id: string
+          rfq_number: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          awarded_quote_id?: string | null
+          business_id: string
+          closed_at?: string | null
+          created_at?: string
+          created_by: string
+          due_at?: string | null
+          expires_at?: string | null
+          id?: string
+          procurement_request_id: string
+          rfq_number?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          awarded_quote_id?: string | null
+          business_id?: string
+          closed_at?: string | null
+          created_at?: string
           created_by?: string
           due_at?: string | null
+          expires_at?: string | null
           id?: string
           procurement_request_id?: string
           rfq_number?: string | null
+          sent_at?: string | null
           status?: string
           updated_at?: string
         }
@@ -8716,6 +8785,7 @@ export type Database = {
           id: string
           lead_time_days: number | null
           notes: string | null
+          rejection_reason: string | null
           rfq_id: string
           status: string
           submitted_at: string | null
@@ -8730,6 +8800,7 @@ export type Database = {
           id?: string
           lead_time_days?: number | null
           notes?: string | null
+          rejection_reason?: string | null
           rfq_id: string
           status?: string
           submitted_at?: string | null
@@ -8744,6 +8815,7 @@ export type Database = {
           id?: string
           lead_time_days?: number | null
           notes?: string | null
+          rejection_reason?: string | null
           rfq_id?: string
           status?: string
           submitted_at?: string | null
@@ -14491,6 +14563,7 @@ export type Database = {
         }[]
       }
       process_work_order_sla_due_items: { Args: never; Returns: Json }
+      procurement_award_quote: { Args: { _quote_id: string }; Returns: string }
       provider_clients_list: {
         Args: {
           _filter?: string

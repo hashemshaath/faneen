@@ -3,7 +3,7 @@ import type { ProcurementRfqRow, ProcurementRfqStatus } from '../types';
 import { updateProcurementRequestStatus } from './procurementRequests';
 
 const SELECT =
-  'id, business_id, procurement_request_id, rfq_number, status, due_at, created_by, created_at, updated_at';
+  'id, business_id, procurement_request_id, rfq_number, status, due_at, expires_at, sent_at, closed_at, awarded_quote_id, created_by, created_at, updated_at';
 
 export interface CreateRfqInput {
   business_id: string;
@@ -86,4 +86,60 @@ export async function updateRfqStatus(
     .select(SELECT)
     .maybeSingle();
   return { data: (data as ProcurementRfqRow | null) ?? null, error };
+}
+
+/**
+ * Sends a draft RFQ. Stamps `sent_at`, sets status to `sent`, and best-effort
+ * cascades the parent request from `requested` → `rfq_sent`.
+ */
+export async function sendRfq(
+  id: string,
+  options?: { expires_at?: string | null },
+): Promise<{ data: ProcurementRfqRow | null; error: unknown }> {
+  const { data, error } = await supabase
+    .from('procurement_rfqs')
+    .update({
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+      ...(options?.expires_at !== undefined ? { expires_at: options.expires_at } : {}),
+    })
+    .eq('id', id)
+    .eq('status', 'draft')
+    .select(SELECT)
+    .maybeSingle();
+  if (data) {
+    await updateProcurementRequestStatus({
+      id: data.procurement_request_id,
+      from: 'requested',
+      to: 'rfq_sent',
+    });
+  }
+  return { data: (data as ProcurementRfqRow | null) ?? null, error };
+}
+
+export async function closeRfq(
+  id: string,
+): Promise<{ data: ProcurementRfqRow | null; error: unknown }> {
+  const { data, error } = await supabase
+    .from('procurement_rfqs')
+    .update({ status: 'closed', closed_at: new Date().toISOString() })
+    .eq('id', id)
+    .in('status', ['draft', 'sent'])
+    .select(SELECT)
+    .maybeSingle();
+  return { data: (data as ProcurementRfqRow | null) ?? null, error };
+}
+
+/**
+ * Atomic award via SECURITY DEFINER RPC. The RPC performs all status flips
+ * (winner → awarded, siblings → rejected, RFQ → closed, request → awarded).
+ */
+export async function awardRfqQuote(
+  quoteId: string,
+): Promise<{ data: { quote_id: string } | null; error: unknown }> {
+  const { data, error } = await supabase.rpc('procurement_award_quote', {
+    _quote_id: quoteId,
+  });
+  if (error) return { data: null, error };
+  return { data: { quote_id: (data as string | null) ?? quoteId }, error: null };
 }

@@ -4,7 +4,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, Plus, RefreshCw, Trophy } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, RefreshCw, Send, Trophy, X, CheckCheck, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useNoIndex } from "@/hooks/useNoIndex";
@@ -12,14 +12,25 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  awardSupplierQuote,
+  awardRfqQuote,
+  closeRfq,
   compareSupplierQuotes,
   createRfqFromRequest,
+  evaluateAwardEligibility,
   getProcurementRequestById,
+  getRfqById,
+  inviteSuppliersToRfq,
+  listInvitationsByRfq,
   listRfqs,
   listSupplierQuotesByRfq,
+  listSuppliers,
+  rejectQuote,
+  sendRfq,
+  shortlistQuote,
+  type ProcurementRfqInvitationRow,
   type ProcurementRequestRow,
   type ProcurementRfqRow,
+  type ProcurementSupplierRow,
   type ScoredQuote,
 } from "@/modules/procurement";
 
@@ -32,7 +43,12 @@ export default function DashboardProcurementDetail() {
   const [request, setRequest] = useState<ProcurementRequestRow | null>(null);
   const [rfqs, setRfqs] = useState<ProcurementRfqRow[]>([]);
   const [activeRfqId, setActiveRfqId] = useState<string | null>(null);
+  const [activeRfq, setActiveRfq] = useState<ProcurementRfqRow | null>(null);
   const [scored, setScored] = useState<ScoredQuote[]>([]);
+  const [suppliers, setSuppliers] = useState<ProcurementSupplierRow[]>([]);
+  const [invitations, setInvitations] = useState<ProcurementRfqInvitationRow[]>([]);
+  const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>([]);
+  const [awardConfirmId, setAwardConfirmId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +72,23 @@ export default function DashboardProcurementDetail() {
       notFound: isRTL ? "لم يتم العثور على الطلب." : "Request not found.",
       errLoad: isRTL ? "تعذر التحميل." : "Failed to load.",
       errAward: isRTL ? "تعذر منح العرض." : "Failed to award quote.",
+      sendRfq: isRTL ? "إرسال RFQ" : "Send RFQ",
+      closeRfq: isRTL ? "إغلاق RFQ" : "Close RFQ",
+      shortlist: isRTL ? "إدراج" : "Shortlist",
+      shortlisted: isRTL ? "مُدرَج" : "Shortlisted",
+      reject: isRTL ? "رفض" : "Reject",
+      rejected: isRTL ? "مرفوض" : "Rejected",
+      confirmAward: isRTL ? "تأكيد المنح" : "Confirm award",
+      cancel: isRTL ? "إلغاء" : "Cancel",
+      suppliersTitle: isRTL ? "الموردون والدعوات" : "Suppliers & Invitations",
+      invite: isRTL ? "دعوة" : "Invite",
+      selectSuppliers: isRTL ? "اختر موردين لدعوتهم لهذا الـ RFQ" : "Select suppliers to invite to this RFQ",
+      invited: isRTL ? "تمت الدعوة" : "Invited",
+      responded: isRTL ? "تم الرد" : "Responded",
+      noSuppliers: isRTL ? "لا يوجد موردون نشطون." : "No active suppliers.",
+      notEligible: isRTL ? "لا يمكن منح هذا العرض الآن." : "This quote cannot be awarded right now.",
+      sentAt: isRTL ? "أُرسل في" : "Sent",
+      expiresAt: isRTL ? "تنتهي في" : "Expires",
     }),
     [isRTL],
   );
@@ -78,11 +111,17 @@ export default function DashboardProcurementDetail() {
     setRfqs(rfqList ?? []);
     const next = (rfqList ?? [])[0]?.id ?? null;
     setActiveRfqId(next);
+    setActiveRfq((rfqList ?? [])[0] ?? null);
+    const { data: sup } = await listSuppliers({ businessId: req.business_id });
+    setSuppliers(sup ?? []);
     if (next) {
       const { data: quotes } = await listSupplierQuotesByRfq(next);
       setScored(compareSupplierQuotes(quotes ?? []));
+      const { data: invs } = await listInvitationsByRfq(next);
+      setInvitations(invs ?? []);
     } else {
       setScored([]);
+      setInvitations([]);
     }
     setLoading(false);
   }, [id, tx.errLoad]);
@@ -91,11 +130,19 @@ export default function DashboardProcurementDetail() {
     void load();
   }, [load]);
 
-  const onSelectRfq = useCallback(async (rfqId: string) => {
-    setActiveRfqId(rfqId);
-    const { data } = await listSupplierQuotesByRfq(rfqId);
-    setScored(compareSupplierQuotes(data ?? []));
-  }, []);
+  const onSelectRfq = useCallback(
+    async (rfqId: string) => {
+      setActiveRfqId(rfqId);
+      setAwardConfirmId(null);
+      const found = rfqs.find((r) => r.id === rfqId) ?? null;
+      setActiveRfq(found);
+      const { data } = await listSupplierQuotesByRfq(rfqId);
+      setScored(compareSupplierQuotes(data ?? []));
+      const { data: invs } = await listInvitationsByRfq(rfqId);
+      setInvitations(invs ?? []);
+    },
+    [rfqs],
+  );
 
   const onCreateRfq = useCallback(async () => {
     if (!request || !user?.id) return;
@@ -110,18 +157,80 @@ export default function DashboardProcurementDetail() {
     await load();
   }, [request, user?.id, load]);
 
-  const onAward = useCallback(
+  const onSendRfq = useCallback(async () => {
+    if (!activeRfqId) return;
+    setBusy(true);
+    const { error: err } = await sendRfq(activeRfqId);
+    setBusy(false);
+    if (err) setError(tx.errLoad);
+    await load();
+  }, [activeRfqId, load, tx.errLoad]);
+
+  const onCloseRfq = useCallback(async () => {
+    if (!activeRfqId) return;
+    setBusy(true);
+    await closeRfq(activeRfqId);
+    setBusy(false);
+    await load();
+  }, [activeRfqId, load]);
+
+  const onInvite = useCallback(async () => {
+    if (!activeRfqId || !request || !user?.id || selectedSupplierIds.length === 0) return;
+    setBusy(true);
+    await inviteSuppliersToRfq({
+      business_id: request.business_id,
+      rfq_id: activeRfqId,
+      supplier_ids: selectedSupplierIds,
+      invited_by: user.id,
+    });
+    setSelectedSupplierIds([]);
+    setBusy(false);
+    await load();
+  }, [activeRfqId, request, user?.id, selectedSupplierIds, load]);
+
+  const onShortlist = useCallback(
     async (quoteId: string) => {
       setBusy(true);
-      const { error: err } = await awardSupplierQuote(quoteId);
+      await shortlistQuote(quoteId);
       setBusy(false);
+      await load();
+    },
+    [load],
+  );
+
+  const onReject = useCallback(
+    async (quoteId: string) => {
+      setBusy(true);
+      await rejectQuote(quoteId);
+      setBusy(false);
+      await load();
+    },
+    [load],
+  );
+
+  const onConfirmAward = useCallback(
+    async (quoteId: string) => {
+      if (!activeRfq) return;
+      const quoteRow = scored.find((q) => q.id === quoteId);
+      const eligibility = evaluateAwardEligibility(quoteRow ?? null, activeRfq);
+      if (!eligibility.eligible) {
+        setError(tx.notEligible);
+        return;
+      }
+      setBusy(true);
+      const { error: err } = await awardRfqQuote(quoteId);
+      setBusy(false);
+      setAwardConfirmId(null);
       if (err) {
         setError(tx.errAward);
         return;
       }
+      // Refetch RFQ so awarded_quote_id propagates
+      const { data: freshRfq } = await getRfqById(activeRfq.id);
+      if (freshRfq) setActiveRfq(freshRfq);
       await load();
     },
-    [load, tx.errAward],
+    [activeRfq, scored, load, tx.errAward, tx.notEligible],
   );
 
   if (loading && !request) {
@@ -175,6 +284,7 @@ export default function DashboardProcurementDetail() {
           {rfqs.length === 0 ? (
             <p className="text-muted-foreground text-sm">{tx.noRfqs}</p>
           ) : (
+            <>
             <ul className="flex flex-wrap gap-2">
               {rfqs.map((r) => (
                 <li key={r.id}>
@@ -189,9 +299,89 @@ export default function DashboardProcurementDetail() {
                 </li>
               ))}
             </ul>
+            {activeRfq && (
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+                {activeRfq.sent_at && (
+                  <span className="text-muted-foreground">
+                    {tx.sentAt}: <span className="tech-content">{new Date(activeRfq.sent_at).toLocaleDateString()}</span>
+                  </span>
+                )}
+                {activeRfq.expires_at && (
+                  <span className="text-muted-foreground">
+                    {tx.expiresAt}: <span className="tech-content">{new Date(activeRfq.expires_at).toLocaleDateString()}</span>
+                  </span>
+                )}
+                <div className="ms-auto flex items-center gap-2">
+                  {activeRfq.status === "draft" && (
+                    <Button size="sm" onClick={onSendRfq} disabled={busy}>
+                      <Send className="h-4 w-4" />
+                      <span className="ms-2">{tx.sendRfq}</span>
+                    </Button>
+                  )}
+                  {(activeRfq.status === "draft" || activeRfq.status === "sent") && (
+                    <Button size="sm" variant="outline" onClick={onCloseRfq} disabled={busy}>
+                      <X className="h-4 w-4" />
+                      <span className="ms-2">{tx.closeRfq}</span>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+            </>
           )}
         </CardContent>
       </Card>
+
+      {activeRfqId && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{tx.suppliersTitle}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {suppliers.length === 0 ? (
+              <p className="text-muted-foreground text-sm">{tx.noSuppliers}</p>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">{tx.selectSuppliers}</p>
+                <ul className="flex flex-wrap gap-2">
+                  {suppliers.map((s) => {
+                    const invited = invitations.some((i) => i.supplier_id === s.id);
+                    const selected = selectedSupplierIds.includes(s.id);
+                    return (
+                      <li key={s.id}>
+                        <Button
+                          size="sm"
+                          variant={selected ? "default" : invited ? "secondary" : "outline"}
+                          onClick={() =>
+                            setSelectedSupplierIds((cur) =>
+                              cur.includes(s.id) ? cur.filter((x) => x !== s.id) : [...cur, s.id],
+                            )
+                          }
+                          disabled={invited}
+                          title={invited ? tx.invited : undefined}
+                        >
+                          {s.name}
+                          {invited && <span className="ms-2 text-xs opacity-70">{tx.invited}</span>}
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    onClick={onInvite}
+                    disabled={busy || selectedSupplierIds.length === 0}
+                  >
+                    <Send className="h-4 w-4" />
+                    <span className="ms-2">{tx.invite} ({selectedSupplierIds.length})</span>
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -215,7 +405,7 @@ export default function DashboardProcurementDetail() {
                 </thead>
                 <tbody>
                   {scored.map((q) => (
-                    <tr key={q.id} className="border-t">
+                    <tr key={q.id} className="border-t align-top">
                       <td className="py-2 pe-3">{q.rank}</td>
                       <td className="py-2 pe-3 tech-content">{q.supplier_id.slice(0, 8)}</td>
                       <td className="py-2 pe-3 tech-content">
@@ -224,15 +414,41 @@ export default function DashboardProcurementDetail() {
                       <td className="py-2 pe-3 tech-content">{q.lead_time_days ?? "—"}</td>
                       <td className="py-2 pe-3 tech-content">{q.score}</td>
                       <td className="py-2 pe-3">
-                        {q.status === "selected" ? (
+                        {q.status === "awarded" || q.status === "selected" ? (
                           <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white">
                             <Trophy className="h-3 w-3 me-1" />
                             {tx.awarded}
                           </Badge>
+                        ) : awardConfirmId === q.id ? (
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" onClick={() => void onConfirmAward(q.id)} disabled={busy}>
+                              <CheckCheck className="h-4 w-4" />
+                              <span className="ms-2">{tx.confirmAward}</span>
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => setAwardConfirmId(null)}>
+                              {tx.cancel}
+                            </Button>
+                          </div>
                         ) : (
-                          <Button size="sm" variant="outline" onClick={() => void onAward(q.id)} disabled={busy}>
-                            {tx.award}
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            {q.status === "shortlisted" ? (
+                              <Badge variant="secondary">
+                                <Star className="h-3 w-3 me-1" />
+                                {tx.shortlisted}
+                              </Badge>
+                            ) : (
+                              <Button size="sm" variant="outline" onClick={() => void onShortlist(q.id)} disabled={busy}>
+                                <Star className="h-4 w-4" />
+                                <span className="ms-2">{tx.shortlist}</span>
+                              </Button>
+                            )}
+                            <Button size="sm" onClick={() => setAwardConfirmId(q.id)} disabled={busy}>
+                              {tx.award}
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => void onReject(q.id)} disabled={busy}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
                         )}
                       </td>
                     </tr>

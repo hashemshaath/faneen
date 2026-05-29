@@ -22,6 +22,9 @@ export {
   listRfqs,
   getRfqById,
   updateRfqStatus,
+  sendRfq,
+  closeRfq,
+  awardRfqQuote,
 } from './services/rfqs';
 export type { CreateRfqInput, ListRfqsOptions } from './services/rfqs';
 export {
@@ -37,6 +40,8 @@ export {
   submitSupplierQuote,
   listSupplierQuotesByRfq,
   awardSupplierQuote,
+  shortlistQuote,
+  rejectQuote,
 } from './services/supplierQuotes';
 export type {
   SubmitSupplierQuoteInput,
@@ -44,3 +49,14 @@ export type {
 } from './services/supplierQuotes';
 export { compareSupplierQuotes } from './services/quoteComparison';
 export type { ScoredQuote } from './services/quoteComparison';
+export {
+  listInvitationsByRfq,
+  inviteSuppliersToRfq,
+  markInvitationResponded,
+} from './services/invitations';
+export type { InviteSuppliersInput } from './services/invitations';
+export { evaluateAwardEligibility } from './services/awardEligibility';
+export type {
+  AwardEligibility,
+  AwardRejectionReason,
+} from './services/awardEligibility';

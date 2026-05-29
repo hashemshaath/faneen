@@ -28,6 +28,7 @@ const TABLES = [
   'procurement_rfqs',
   'procurement_suppliers',
   'procurement_supplier_quotes',
+  'procurement_rfq_invitations',
 ];
 const TABLE_PATTERN = new RegExp(
   `\\.from\\(\\s*['"](?:${TABLES.join('|')})['"]\\s*\\)`,

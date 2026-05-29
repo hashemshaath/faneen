@@ -7,7 +7,7 @@ import { updateProcurementRequestStatus } from './procurementRequests';
 import { getRfqById } from './rfqs';
 
 const SELECT =
-  'id, business_id, rfq_id, supplier_id, status, total_amount, currency, lead_time_days, notes, submitted_at, created_at, updated_at';
+  'id, business_id, rfq_id, supplier_id, status, total_amount, currency, lead_time_days, notes, submitted_at, rejection_reason, created_at, updated_at';
 
 export interface SubmitSupplierQuoteInput {
   business_id: string;
@@ -101,4 +101,34 @@ export async function awardSupplierQuote(
     });
   }
   return { selected: (selected as ProcurementSupplierQuoteRow | null) ?? null, error: null };
+}
+
+export async function shortlistQuote(
+  id: string,
+): Promise<{ data: ProcurementSupplierQuoteRow | null; error: unknown }> {
+  const { data, error } = await supabase
+    .from('procurement_supplier_quotes')
+    .update({ status: 'shortlisted' satisfies ProcurementSupplierQuoteStatus })
+    .eq('id', id)
+    .eq('status', 'submitted')
+    .select(SELECT)
+    .maybeSingle();
+  return { data: (data as ProcurementSupplierQuoteRow | null) ?? null, error };
+}
+
+export async function rejectQuote(
+  id: string,
+  reason?: string | null,
+): Promise<{ data: ProcurementSupplierQuoteRow | null; error: unknown }> {
+  const { data, error } = await supabase
+    .from('procurement_supplier_quotes')
+    .update({
+      status: 'rejected' satisfies ProcurementSupplierQuoteStatus,
+      rejection_reason: reason ?? null,
+    })
+    .eq('id', id)
+    .in('status', ['submitted', 'shortlisted'])
+    .select(SELECT)
+    .maybeSingle();
+  return { data: (data as ProcurementSupplierQuoteRow | null) ?? null, error };
 }
