@@ -176,7 +176,7 @@ export default function DashboardProcurementDetail() {
     void load();
   }, [load]);
 
-  // BUSINESS-WORKFLOW-REALTIME-1: invalidate + refetch on postgres_changes.
+  // BUSINESS-WORKFLOW-REALTIME-1: invalidate + refetch on realtime DB events.
   useWorkOrderRealtimeInvalidation({
     businessId: request?.business_id ?? null,
     onChange: () => { void load(); },

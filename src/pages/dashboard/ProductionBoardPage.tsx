@@ -239,7 +239,7 @@ export default function ProductionBoardPage() {
     void load();
   }, [load]);
 
-  // BUSINESS-WORKFLOW-REALTIME-1: invalidate + refetch on postgres_changes.
+  // BUSINESS-WORKFLOW-REALTIME-1: invalidate + refetch on realtime DB events.
   useWorkOrderRealtimeInvalidation({ businessId, onChange: () => { void load(); } });
 
   /* ─── Index helpers ─── */
