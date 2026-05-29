@@ -41,7 +41,7 @@ export function rankHelpArticles(input: RankInput): RankedHelpArticle[] {
 
       if (qTokens.length > 0) {
         const hay = normalizeQuery(`${a.title_ar} ${a.title_en} ${a.summary_ar ?? ''} ${a.summary_en ?? ''} ${(a.keywords ?? []).join(' ')} ${a.slug}`);
-        const hayTokens = new Set(tokenize(hay));
+        const hayTokens: Set<string> = new Set<string>(tokenize(hay));
         let matches = 0;
         for (const t of qTokens) {
           if (hayTokens.has(t)) { matches += 1; continue; }
