@@ -203,7 +203,7 @@ export default function DashboardProcurementDetail() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="text-muted-foreground text-left rtl:text-right">
+                <thead className="text-muted-foreground text-start">
                   <tr>
                     <th className="py-2 pe-3">#</th>
                     <th className="py-2 pe-3">{tx.supplier}</th>
