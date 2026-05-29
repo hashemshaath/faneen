@@ -22,6 +22,8 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { RelatedReferencesPanel } from '@/components/reference/RelatedReferencesPanel';
+import { UnifiedTimeline } from '@/components/timeline/UnifiedTimeline';
 import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
 import type { ArabicFontDiagnostics } from '@/lib/pdf-arabic-font';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
@@ -2444,6 +2446,32 @@ const ContractDetail = () => {
 
         {/* ─── Lock Banner ─── */}
         {isContractLocked && <ContractLockBanner isRTL={isRTL} />}
+
+        {/* BUSINESS-FINISHING-2A — operational visibility */}
+        {contract.business_id && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5 sm:mb-6">
+            <RelatedReferencesPanel
+              className="lg:col-span-1"
+              entries={[
+                { label: { ar: 'العقد', en: 'Contract' }, refId: (contract as unknown as { ref_id?: string | null }).ref_id ?? null },
+                { label: { ar: 'المصدر', en: 'Source' }, refId: (contract as unknown as { source_lead_ref_id?: string | null }).source_lead_ref_id ?? null },
+              ]}
+            />
+            <UnifiedTimeline
+              className="lg:col-span-2"
+              businessId={contract.business_id}
+              limit={30}
+              filter={(e) => {
+                const refId = (contract as unknown as { ref_id?: string | null }).ref_id;
+                return (
+                  (refId && e.metadata?.ref_id === refId) ||
+                  e.entity_id === contract.id ||
+                  e.entity_type === 'contract'
+                );
+              }}
+            />
+          </div>
+        )}
 
         {/* ─── Tabs ─── */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
