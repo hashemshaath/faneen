@@ -96,14 +96,31 @@ const DashboardAnalytics = () => {
     return { start: start.toISOString(), end: end.toISOString(), startDate: start, endDate: end };
   }, [period]);
 
-  // Fetch all analytics data
-  const { data: analytics, isLoading } = useQuery({
+  // Previous-period range (for trend deltas) — computed alongside main range
+  // so we can fetch current + previous data in a single batched query.
+  const prevRange = useMemo(() => {
+    const { startDate, endDate } = dateRange;
+    const span = endDate.getTime() - startDate.getTime();
+    const prevEnd = new Date(startDate.getTime() - 1);
+    const prevStart = new Date(prevEnd.getTime() - span);
+    return { start: prevStart.toISOString(), end: prevEnd.toISOString() };
+  }, [dateRange]);
+
+  // Fetch current + previous + entity counts in ONE batched query.
+  // Reduces React Query overhead (1 query instead of 2) and parallelizes all
+  // 9 Supabase calls. Aggressive caching keeps the page snappy on revisit.
+  const { data: bundle, isLoading } = useQuery({
     queryKey: ['provider-analytics', business?.id, period],
     queryFn: async () => {
       if (!business) return null;
       const { start } = dateRange;
+      const prevStart = prevRange.start;
+      const prevEnd = prevRange.end;
 
-      const [contracts, bookings, reviews, services, projects, portfolio] = await Promise.all([
+      const [
+        contracts, bookings, reviews, services, projects, portfolio,
+        prevContracts, prevBookings, prevReviews,
+      ] = await Promise.all([
         listContractsForProviderOrBusiness<{ id: string; status: string; total_amount: number | null; created_at: string; currency_code: string | null }>({
           userId: user!.id,
           businessId: business.id,
@@ -126,7 +143,25 @@ const DashboardAnalytics = () => {
           .eq('business_id', business.id),
         supabase.from('portfolio_items').select('id')
           .eq('business_id', business.id),
+        listContractsForProviderOrBusiness<{ id: string; status: string; total_amount: number | null; created_at: string }>({
+          userId: user!.id,
+          businessId: business.id,
+          select: 'id, status, total_amount, created_at',
+          gteCreatedAt: prevStart,
+        }).then((r) => ({ data: (r.data ?? []).filter((c) => c.created_at <= prevEnd) })),
+        supabase.from('bookings').select('id, status, created_at')
+          .eq('business_id', business.id)
+          .gte('created_at', prevStart).lte('created_at', prevEnd),
+        supabase.from('reviews').select('id, rating, created_at')
+          .eq('business_id', business.id)
+          .gte('created_at', prevStart).lte('created_at', prevEnd),
       ]);
+
+      const prevContractsArr = prevContracts.data ?? [];
+      const prevReviewsArr = prevReviews.data ?? [];
+      const prevRevenue = prevContractsArr
+        .filter((c) => ['completed', 'active'].includes(c.status))
+        .reduce((s, c) => s + Number(c.total_amount || 0), 0);
 
       return {
         contracts: contracts.data || [],
@@ -135,11 +170,27 @@ const DashboardAnalytics = () => {
         servicesCount: services.data?.length || 0,
         projectsCount: projects.data?.length || 0,
         portfolioCount: portfolio.data?.length || 0,
+        prev: {
+          revenue: prevRevenue,
+          contracts: prevContractsArr.length,
+          bookings: (prevBookings.data ?? []).length,
+          avgRating: prevReviewsArr.length
+            ? prevReviewsArr.reduce((s, r) => s + r.rating, 0) / prevReviewsArr.length
+            : 0,
+        },
       };
     },
     enabled: !!business,
-    staleTime: 60000,
+    // Aggressive caching: 5 min fresh, 30 min in cache.
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    placeholderData: keepPreviousData,
   });
+
+  const analytics = bundle;
+  const prevAnalytics = bundle?.prev;
 
   // Computed stats
   const stats = useMemo(() => {
@@ -284,48 +335,6 @@ const DashboardAnalytics = () => {
     { value: '12m', label: isRTL ? '12 شهر' : '12m' },
   ];
 
-  // Previous-period comparison fetch (for trend deltas).
-  const prevRange = useMemo(() => {
-    const { startDate, endDate } = dateRange;
-    const span = endDate.getTime() - startDate.getTime();
-    const prevEnd = new Date(startDate.getTime() - 1);
-    const prevStart = new Date(prevEnd.getTime() - span);
-    return { start: prevStart.toISOString(), end: prevEnd.toISOString() };
-  }, [dateRange]);
-
-  const { data: prevAnalytics } = useQuery({
-    queryKey: ['provider-analytics-prev', business?.id, period],
-    queryFn: async () => {
-      if (!business) return null;
-      const [contracts, bookings, reviews] = await Promise.all([
-        listContractsForProviderOrBusiness<{ id: string; status: string; total_amount: number | null; created_at: string }>({
-          userId: user!.id,
-          businessId: business.id,
-          select: 'id, status, total_amount, created_at',
-          gteCreatedAt: prevRange.start,
-        }).then((r) => ({ data: (r.data ?? []).filter((c) => c.created_at <= prevRange.end) })),
-        supabase.from('bookings').select('id, status, created_at')
-          .eq('business_id', business.id)
-          .gte('created_at', prevRange.start).lte('created_at', prevRange.end),
-        supabase.from('reviews').select('id, rating, created_at')
-          .eq('business_id', business.id)
-          .gte('created_at', prevRange.start).lte('created_at', prevRange.end),
-      ]);
-      const cs = contracts.data ?? [];
-      const revenue = cs.filter((c) => ['completed', 'active'].includes(c.status))
-        .reduce((s, c) => s + Number(c.total_amount || 0), 0);
-      const ratings = (reviews.data ?? []);
-      return {
-        revenue,
-        contracts: cs.length,
-        bookings: (bookings.data ?? []).length,
-        avgRating: ratings.length ? ratings.reduce((s, r) => s + r.rating, 0) / ratings.length : 0,
-      };
-    },
-    enabled: !!business,
-    staleTime: 60000,
-  });
-
   const trend = (curr: number, prev: number | undefined): { up?: boolean; label: string } | undefined => {
     if (prev === undefined || prev === null) return undefined;
     if (prev === 0 && curr === 0) return { up: undefined, label: '0%' };
@@ -339,7 +348,6 @@ const DashboardAnalytics = () => {
   const [lastRefreshed, setLastRefreshed] = useState<Date>(() => new Date());
   const refetchAll = async () => {
     await qc.invalidateQueries({ queryKey: ['provider-analytics'] });
-    await qc.invalidateQueries({ queryKey: ['provider-analytics-prev'] });
     setLastRefreshed(new Date());
   };
 
