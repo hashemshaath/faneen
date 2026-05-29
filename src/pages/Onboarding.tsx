@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { ImageUpload } from '@/components/ui/image-upload';
 import { toast } from 'sonner';
 import {
   User, Building2, Phone, Check, Loader2, CheckCircle2, ArrowLeft, ArrowRight,
