@@ -29,6 +29,7 @@ import { sendTransactionalEmail } from '@/modules/notifications/services/sendTra
 import { createNotification } from '@/modules/notifications/services/createNotification';
 import { ReferenceTag } from '@/components/reference/ReferenceTag';
 import { PublishReadinessPanel } from '@/components/admin/PublishReadinessPanel';
+import { AdminProviderGrowthPanel } from '@/components/admin/AdminProviderGrowthPanel';
 
 type ApprovalStatus =
   | 'draft' | 'submitted' | 'under_review'
@@ -336,6 +337,11 @@ export default function AdminProviderReview() {
             ))}
           </TabsList>
         </Tabs>
+
+        <AdminProviderGrowthPanel
+          providers={(rows ?? []).map((r) => ({ ...r, id: r.id }))}
+          onSelectProvider={(id) => { setStatusFilter('all'); setSelectedId(id); }}
+        />
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
           {/* List */}

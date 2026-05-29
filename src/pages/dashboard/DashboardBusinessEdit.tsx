@@ -39,6 +39,7 @@ import { BusinessInternalNotesCard } from '@/components/business/BusinessInterna
 import { validateBusinessForm, issuesByKey, errorCount } from '@/components/dashboard/business-edit/validation';
 import { ValidationBanner, FieldError } from '@/components/dashboard/business-edit/ValidationBanner';
 import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
+import { ProviderGrowthCard } from '@/components/growth/ProviderGrowthCard';
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
 import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
@@ -432,6 +433,8 @@ const DashboardBusinessEdit: React.FC = () => {
         </header>
 
         <ValidationBanner issues={validationIssues} isRTL={isRTL} />
+
+        <ProviderGrowthCard business={form} />
 
         <Tabs defaultValue="identity" className="w-full">
           <TabsList className="w-full flex flex-wrap h-auto justify-start gap-1 bg-muted/40 p-1 rounded-xl">
