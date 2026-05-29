@@ -41,6 +41,7 @@ const PublicBarcodeResolve = lazyRetry(() => import("./pages/PublicBarcodeResolv
 const ReferenceResolver = lazyRetry(() => import("./pages/ReferenceResolver"));
 const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
 const QuotationViewer = lazyRetry(() => import("./pages/QuotationViewer"));
+const CustomerProjectPortal = lazyRetry(() => import("./pages/CustomerProjectPortal"));
 const QSlugDispatcher = lazyRetry(() => import("./pages/QSlugDispatcher"));
 const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
 const UsernameResolver = lazyRetry(() => import("./pages/UsernameResolver"));
