@@ -297,7 +297,7 @@ const AdminCronRuns = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 print:hidden">
               <div className="inline-flex items-center rounded-xl bg-white/10 backdrop-blur ring-1 ring-white/20 p-1">
                 {[7, 30, 90].map((d) => (
                   <button
@@ -314,6 +314,37 @@ const AdminCronRuns = () => {
                   </button>
                 ))}
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-white/10 text-white border-white/25 hover:bg-white/20 hover:text-white backdrop-blur"
+                onClick={() => setLive(v => !v)}
+                title={isRTL ? 'تحديث لحظي' : 'Live updates'}
+              >
+                <Radio className={`h-4 w-4 me-2 ${live ? 'text-success animate-pulse' : ''}`} />
+                {live ? (isRTL ? 'مباشر' : 'Live') : (isRTL ? 'متوقف' : 'Paused')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-white/10 text-white border-white/25 hover:bg-white/20 hover:text-white backdrop-blur"
+                onClick={exportHealthCsv}
+                disabled={healthRows.length === 0}
+                title={isRTL ? 'تصدير صحة المهام CSV' : 'Export health CSV'}
+              >
+                <Download className="h-4 w-4 me-2" />
+                CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-white/10 text-white border-white/25 hover:bg-white/20 hover:text-white backdrop-blur"
+                onClick={printCurrentView}
+                title={isRTL ? 'طباعة' : 'Print'}
+              >
+                <Printer className="h-4 w-4 me-2" />
+                {isRTL ? 'طباعة' : 'Print'}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
