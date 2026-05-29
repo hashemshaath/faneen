@@ -1062,7 +1062,7 @@ const UnifiedFeed: React.FC<{
                     <Detail label={isRTL ? 'معرّف داخلي' : 'Ref ID'} value={p.ref_id || '—'} mono />
                     <Detail label={isRTL ? 'النوع' : 'Type'} value={p.account_type || '—'} />
                     <Detail label={isRTL ? 'العضوية' : 'Membership'} value={p.membership_tier || 'free'} />
-                    <Detail label={isRTL ? 'تاريخ الإنشاء' : 'Created'} value={new Date(p.created_at).toLocaleDateString(isRTL ? 'ar' : 'en')} />
+                    <Detail label={isRTL ? 'تاريخ الإنشاء' : 'Created'} value={new Date(p.created_at).toLocaleDateString(isRTL ? 'ar-u-nu-latn' : 'en')} />
                     <Detail label={isRTL ? 'هاتف موثّق' : 'Phone verified'} value={p.phone_verified ? '✓' : '—'} />
                     <Detail label={isRTL ? 'مكتمل التسجيل' : 'Onboarded'} value={p.is_onboarded ? '✓' : '—'} />
                     <Detail label={isRTL ? 'الأدوار' : 'Roles'} value={userRoles.map(r => r.role).join(', ') || (isRTL ? 'لا يوجد' : 'none')} />

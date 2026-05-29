@@ -42,7 +42,7 @@ export const IdentitySignupsChart: React.FC<Props> = ({ profiles, businesses, is
       const d = new Date(key);
       out.push({
         day: key,
-        label: d.toLocaleDateString(isRTL ? 'ar' : 'en', { day: '2-digit', month: 'short' }),
+        label: d.toLocaleDateString(isRTL ? 'ar-u-nu-latn' : 'en', { day: '2-digit', month: 'short' }),
         users: userMap.get(key) ?? 0,
         businesses: bizMap.get(key) ?? 0,
       });
