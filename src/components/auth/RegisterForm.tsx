@@ -307,10 +307,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-heading font-bold text-2xl text-foreground tracking-tight">
-              {isRTL ? 'أدخل بياناتك' : 'Your details'}
+              {registerType === 'business'
+                ? (isRTL ? 'بيانات مدير الحساب' : 'Account manager details')
+                : (isRTL ? 'أدخل بياناتك' : 'Your details')}
             </h2>
             <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">
-              {isRTL ? 'خطوة 2 من 2' : 'Step 2 of 2'}
+              {registerType === 'business'
+                ? (isRTL ? 'خطوة 3 من 3' : 'Step 3 of 3')
+                : (isRTL ? 'خطوة 2 من 2' : 'Step 2 of 2')}
             </span>
           </div>
           <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
