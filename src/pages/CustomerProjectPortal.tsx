@@ -564,11 +564,6 @@ export default function CustomerProjectPortal() {
               </section>
             )}
 
-            {/* Last updated */}
-            {snapshot.updated_at && (
-              <></>
-            )}
-
             {/* Completion / Closure */}
             {snapshot.closure && (
               <section
