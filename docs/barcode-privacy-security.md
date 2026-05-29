@@ -10,7 +10,7 @@ On a successful scan of an `active` barcode:
 - `contract`: contract number, status, provider name (if approved/active), created date
 - `business`: business name, username, verified status, public profile path
 
-## 2. What /q/:barcode_code never exposes
+## 2. What /q/:code never exposes
 
 - `current_scan_token_hash` or any raw scan token
 - `qr_token_hash` or legacy QR token
