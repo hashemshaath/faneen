@@ -235,45 +235,92 @@ const DashboardOperations = () => {
     setVisibleCount(c => c + 30);
   }, []);
 
+  const qc = useQueryClient();
+  const refresh = () => qc.invalidateQueries({ queryKey: ['operations-log'] });
+
+  const downloadCsv = useCallback(() => {
+    if (!filtered.length) return;
+    const rows: string[] = [];
+    rows.push(['Ref', 'Entity', 'Operation', 'Title', 'Status', 'Date'].join(','));
+    filtered.forEach((op) => {
+      const title = (language === 'ar' ? op.title_ar : (op.title_en || op.title_ar)) || '';
+      rows.push([
+        op.ref_id ?? '',
+        op.entity_type ?? '',
+        op.operation_type ?? '',
+        `"${String(title).replace(/"/g, '""')}"`,
+        op.status ?? '',
+        op.created_at ?? '',
+      ].join(','));
+    });
+    const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qitaat-operations-${format(new Date(), 'yyyyMMdd-HHmm')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [filtered, language]);
+
   return (
     <DashboardLayout>
-      <div className="space-y-4">
-        {/* Header */}
-        <div>
-          <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-            <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
-            {isRTL ? 'سجل العمليات' : 'Operations Log'}
-          </h1>
-          <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
-            {isRTL ? 'تتبع جميع نشاطاتك وعملياتك في مكان واحد' : 'Track all your activities and operations in one place'}
-          </p>
+      <div className="dash-emerald space-y-5">
+        {/* Hero header */}
+        <div className="dash-hero p-5 sm:p-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <span className="dash-hero-chip inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold">
+                <Sparkles className="w-3 h-3" />
+                {isRTL ? 'سجل النشاط الاحترافي' : 'Pro Activity Log'}
+              </span>
+              <h1 className="ds-h2 flex items-center gap-2">
+                <Activity className="w-6 h-6" />
+                {isRTL ? 'سجل العمليات' : 'Operations Log'}
+              </h1>
+              <p className="dash-hero-sub text-sm max-w-xl">
+                {isRTL
+                  ? 'تتبع كل عملياتك، فلاتر ذكية، وتصدير CSV فوري.'
+                  : 'Track all your activity with smart filters and instant CSV export.'}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="ghost" className="dash-hero-chip h-9 rounded-full" onClick={refresh}>
+                <RefreshCw className={cn('w-3.5 h-3.5 me-1.5', isLoading && 'animate-spin')} />
+                {isRTL ? 'تحديث' : 'Refresh'}
+              </Button>
+              <Button size="sm" className="dash-hero-gold h-9 rounded-full" onClick={downloadCsv} disabled={!filtered.length}>
+                <Download className="w-3.5 h-3.5 me-1.5" />
+                {isRTL ? 'تصدير CSV' : 'Export CSV'}
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-          {[
-            { label: isRTL ? 'إجمالي العمليات' : 'Total', value: stats.total, icon: Activity, color: 'text-accent bg-accent/10', trend: null },
-            { label: isRTL ? 'اليوم' : 'Today', value: stats.today, icon: Zap, color: 'text-success dark:text-success bg-success/10', trend: stats.today > 0 ? 'up' : null },
-            { label: isRTL ? 'هذا الأسبوع' : 'This Week', value: stats.thisWeek, icon: TrendingUp, color: 'text-info dark:text-info bg-info/10', trend: null },
-            { label: isRTL ? 'هذا الشهر' : 'This Month', value: stats.thisMonth, icon: Calendar, color: 'text-secondary dark:text-secondary bg-secondary/10', trend: null },
-          ].map((stat, i) => (
-            <Card key={i} className="border-border/40 bg-card/50 overflow-hidden">
-              <CardContent className="p-2.5 sm:p-3">
-                <div className="flex items-center gap-2">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${stat.color}`}>
-                    <stat.icon className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-lg sm:text-xl font-bold flex items-center gap-1">
-                      <span className="tech-content">{stat.value}</span>
-                      {stat.trend === 'up' && <ArrowUpRight className="w-3 h-3 text-success" />}
-                    </p>
-                    <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">{stat.label}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        {/* Bento KPI tiles */}
+        <div className="dash-bento">
+          <BentoTile
+            icon={Activity}
+            label={isRTL ? 'إجمالي العمليات' : 'Total Operations'}
+            value={stats.total}
+            sub={stats.topEntity ? `${isRTL ? 'الأعلى:' : 'Top:'} ${entityLabels[stats.topEntity[0]]?.[isRTL ? 'ar' : 'en'] || stats.topEntity[0]}` : undefined}
+            accent="gold"
+          />
+          <BentoTile
+            icon={Zap}
+            label={isRTL ? 'اليوم' : 'Today'}
+            value={stats.today}
+            trend={stats.today > 0 ? { up: true, label: isRTL ? 'نشط' : 'Active' } : undefined}
+          />
+          <BentoTile
+            icon={TrendingUp}
+            label={isRTL ? 'هذا الأسبوع' : 'This Week'}
+            value={stats.thisWeek}
+          />
+          <BentoTile
+            icon={Calendar}
+            label={isRTL ? 'هذا الشهر' : 'This Month'}
+            value={stats.thisMonth}
+          />
         </div>
 
         {/* Entity Breakdown Mini Chart */}
