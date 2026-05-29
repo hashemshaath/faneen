@@ -16,12 +16,16 @@ import {
 import {
   Loader2, RefreshCw, Activity, AlertCircle, CheckCircle2, XCircle,
   CalendarClock, Search, Timer, Gauge, ListChecks, ChevronDown, Zap, Database,
+  Download, Printer, Radio, BarChart3,
 } from 'lucide-react';
 import {
   listCronRunLogs,
   getCronRunHealth,
   type CronRunHealthRow,
 } from '@/modules/system/services/cronRuns';
+import { buildCsv, downloadCsv, printCurrentView, tsStamp } from '@/lib/admin/exportUtils';
+import { useRealtimeInvalidate } from '@/hooks/useRealtimeInvalidate';
+import { BarChart, Bar, XAxis, Tooltip as ChartTooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface CronRunRow {
   id: string;
@@ -86,6 +90,7 @@ const AdminCronRuns = () => {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [statusFilter, setStatusFilter] = useState<'all' | 'ok' | 'fail'>('all');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [live, setLive] = useState(false);
 
   const sinceIso = useMemo(
     () => new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString(),
@@ -189,6 +194,74 @@ const AdminCronRuns = () => {
     return rows.filter(r => r.ok === false);
   }, [rows, statusFilter]);
 
+  // ── Realtime: auto-refresh runs + health when new cron rows arrive.
+  useRealtimeInvalidate({
+    channel: 'admin-cron-runs',
+    table: 'cron_run_logs',
+    queryKeys: [
+      ['admin-cron-runs', jobFilter],
+      ['admin-cron-health', windowDays],
+    ],
+    enabled: live,
+  });
+
+  // ── Hourly distribution chart (last 24h, bucketed).
+  const hourly = useMemo(() => {
+    const buckets: Array<{ hour: string; ok: number; failed: number; total: number }> = [];
+    const now = Date.now();
+    for (let i = 23; i >= 0; i--) {
+      const t = new Date(now - i * 60 * 60 * 1000);
+      buckets.push({
+        hour: `${String(t.getHours()).padStart(2, '0')}:00`,
+        ok: 0, failed: 0, total: 0,
+      });
+    }
+    for (const r of rows) {
+      const ts = new Date(r.started_at).getTime();
+      const hoursAgo = Math.floor((now - ts) / (60 * 60 * 1000));
+      if (hoursAgo < 0 || hoursAgo > 23) continue;
+      const slot = buckets[23 - hoursAgo];
+      if (!slot) continue;
+      slot.total += 1;
+      if (r.ok === true) slot.ok += 1;
+      else if (r.ok === false) slot.failed += 1;
+    }
+    return buckets;
+  }, [rows]);
+
+  // ── Export helpers
+  function exportHealthCsv() {
+    const headers = ['Job', 'Function', 'Success rate %', 'Total runs', 'OK', 'Failed', 'Avg duration (ms)', 'Last run', 'Last failed'];
+    const data = sortedHealth.map((r) => [
+      r.job_name,
+      r.function_name,
+      Number(r.success_rate ?? 0).toFixed(1),
+      Number(r.total_runs ?? 0),
+      Number(r.ok_runs ?? 0),
+      Number(r.failed_runs ?? 0),
+      r.avg_duration_ms != null ? Number(r.avg_duration_ms).toFixed(0) : '',
+      r.last_run_at ?? '',
+      r.last_failed_at ?? '',
+    ]);
+    downloadCsv(`cron-health-${windowDays}d-${tsStamp()}`, buildCsv(headers, data));
+  }
+
+  function exportRunsCsv() {
+    const headers = ['Job', 'Function', 'Status', 'OK', 'Started at', 'Finished at', 'Duration (ms)', 'Error code', 'Error message'];
+    const data = filteredRuns.map((r) => [
+      r.job_name,
+      r.function_name,
+      r.status ?? '',
+      r.ok == null ? '' : r.ok ? 'true' : 'false',
+      r.started_at,
+      r.finished_at ?? '',
+      r.duration_ms ?? '',
+      r.error_code ?? '',
+      r.error_message ?? '',
+    ]);
+    downloadCsv(`cron-runs-${tsStamp()}`, buildCsv(headers, data));
+  }
+
   function toggleSort(k: SortKey) {
     if (sortKey === k) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
     else { setSortKey(k); setSortDir(k === 'job' ? 'asc' : 'desc'); }
@@ -224,7 +297,7 @@ const AdminCronRuns = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 print:hidden">
               <div className="inline-flex items-center rounded-xl bg-white/10 backdrop-blur ring-1 ring-white/20 p-1">
                 {[7, 30, 90].map((d) => (
                   <button
@@ -241,6 +314,37 @@ const AdminCronRuns = () => {
                   </button>
                 ))}
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-white/10 text-white border-white/25 hover:bg-white/20 hover:text-white backdrop-blur"
+                onClick={() => setLive(v => !v)}
+                title={isRTL ? 'تحديث لحظي' : 'Live updates'}
+              >
+                <Radio className={`h-4 w-4 me-2 ${live ? 'text-success animate-pulse' : ''}`} />
+                {live ? (isRTL ? 'مباشر' : 'Live') : (isRTL ? 'متوقف' : 'Paused')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-white/10 text-white border-white/25 hover:bg-white/20 hover:text-white backdrop-blur"
+                onClick={exportHealthCsv}
+                disabled={healthRows.length === 0}
+                title={isRTL ? 'تصدير صحة المهام CSV' : 'Export health CSV'}
+              >
+                <Download className="h-4 w-4 me-2" />
+                CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-white/10 text-white border-white/25 hover:bg-white/20 hover:text-white backdrop-blur"
+                onClick={printCurrentView}
+                title={isRTL ? 'طباعة' : 'Print'}
+              >
+                <Printer className="h-4 w-4 me-2" />
+                {isRTL ? 'طباعة' : 'Print'}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -288,6 +392,43 @@ const AdminCronRuns = () => {
             sub={`${health.jobsObserved} ${isRTL ? 'مهام مرصودة' : 'jobs tracked'}`}
           />
         </div>
+
+        {/* Hourly distribution (24h) */}
+        <Card className="overflow-hidden print:hidden">
+          <CardHeader className="pb-3 border-b border-border/60 bg-muted/30">
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              {isRTL ? 'توزيع التشغيلات — آخر 24 ساعة' : 'Run distribution — last 24h'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="h-44 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={hourly} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                  <XAxis dataKey="hour" tick={{ fontSize: 10 }} interval={2} />
+                  <ChartTooltip
+                    cursor={{ fill: 'hsl(var(--muted) / 0.4)' }}
+                    contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }}
+                  />
+                  <Bar dataKey="total" radius={[4, 4, 0, 0]}>
+                    {hourly.map((b, i) => (
+                      <Cell
+                        key={i}
+                        fill={
+                          b.failed > 0
+                            ? 'hsl(var(--destructive))'
+                            : b.total > 0
+                              ? 'hsl(var(--primary))'
+                              : 'hsl(var(--muted))'
+                        }
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Job health */}
         <Card className="overflow-hidden">
@@ -439,6 +580,16 @@ const AdminCronRuns = () => {
                     </button>
                   ))}
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-xs"
+                  onClick={exportRunsCsv}
+                  disabled={filteredRuns.length === 0}
+                >
+                  <Download className="h-3.5 w-3.5 me-1" />
+                  CSV
+                </Button>
               </div>
             </div>
           </CardHeader>

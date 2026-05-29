@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   AlertCircle, CheckCircle2, ExternalLink, Loader2, ShieldCheck,
   StickyNote, Search as SearchIcon, Download, Save, FolderOpen, Trash2, Pencil,
+  Printer,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -29,6 +30,7 @@ import {
 } from '@/modules/admin';
 import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
 import { downloadTriageCsv } from '@/lib/admin/triageCsv';
+import { printCurrentView } from '@/lib/admin/exportUtils';
 import {
   listSavedRefSets,
   saveRefSet,
@@ -423,6 +425,18 @@ export default function AdminBulkReferenceTriage() {
                 data-testid="triage-export-csv"
               >
                 <Download className="w-3.5 h-3.5 me-1" /> {tx.exportCsv}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="rounded-xl h-9"
+                onClick={printCurrentView}
+                disabled={rows.length === 0}
+                data-testid="triage-print"
+                title={isRTL ? 'طباعة' : 'Print'}
+              >
+                <Printer className="w-3.5 h-3.5 me-1" /> {isRTL ? 'طباعة' : 'Print'}
               </Button>
               <div className="flex items-center gap-1">
                 <Input
