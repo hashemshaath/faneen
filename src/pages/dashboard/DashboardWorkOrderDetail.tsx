@@ -400,6 +400,7 @@ export default function DashboardWorkOrderDetail() {
             workOrderId={wo.id}
             businessId={wo.business_id}
             canManage={isAdmin || wo.owner_user_id === user?.id}
+            workOrderRefId={wo.ref_id}
           />
 
           <WorkOrderQuotationsSection
