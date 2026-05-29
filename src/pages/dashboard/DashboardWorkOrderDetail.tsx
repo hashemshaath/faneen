@@ -32,6 +32,10 @@ import { WorkOrderMeasurementsSection } from "@/components/workOrders/WorkOrderM
 import { WorkOrderBoqSection } from "@/components/workOrders/WorkOrderBoqSection";
 import { WorkOrderQuotationsSection } from "@/components/workOrders/WorkOrderQuotationsSection";
 import { WorkOrderPipelineSection } from "@/components/workOrders/WorkOrderPipelineSection";
+import { HealthBadge } from "@/components/health/HealthBadge";
+import { RelatedReferencesPanel } from "@/components/reference/RelatedReferencesPanel";
+import { UnifiedTimeline } from "@/components/timeline/UnifiedTimeline";
+import { workOrderHealth } from "@/modules/health";
 import {
   getWorkOrderByRefId,
   listWorkOrderStages,
@@ -225,6 +229,7 @@ export default function DashboardWorkOrderDetail() {
               <ReferenceTag refId={wo.ref_id} isRTL={isRTL} />
               <div className="flex flex-wrap items-center gap-1.5">
                 <WorkOrderStatusBadge status={wo.status as WorkOrderStatus} isRTL={isRTL} />
+                <HealthBadge kind="work_order" value={workOrderHealth(wo.status, wo.due_at)} />
                 <WorkOrderPriorityBadge priority={wo.priority as WorkOrderPriority} isRTL={isRTL} />
                 <WorkOrderSourceBadge sourceType={wo.source_type} isRTL={isRTL} />
                 {wo.source_ref_id && (
@@ -412,6 +417,22 @@ export default function DashboardWorkOrderDetail() {
           />
 
           <WorkOrderActivityCard businessId={wo.business_id} isRTL={isRTL} limit={50} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <RelatedReferencesPanel
+              className="lg:col-span-1"
+              entries={[
+                { label: { ar: 'أمر العمل', en: 'Work Order' }, refId: wo.ref_id },
+                { label: { ar: 'المصدر', en: 'Source' }, refId: wo.source_ref_id },
+              ]}
+            />
+            <UnifiedTimeline
+              className="lg:col-span-2"
+              businessId={wo.business_id}
+              limit={30}
+              filter={(e) => e.metadata?.ref_id === wo.ref_id || e.entity_id === wo.id}
+            />
+          </div>
         </>
       )}
     </main>
