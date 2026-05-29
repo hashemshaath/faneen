@@ -8,7 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, BookOpen, MessageSquare, Lightbulb, ArrowRight, LifeBuoy, Clock, TrendingUp, Loader2, X } from 'lucide-react';
+import {
+  Search, BookOpen, MessageSquare, Lightbulb, ArrowRight, LifeBuoy,
+  Clock, TrendingUp, Loader2, X, Bookmark, Library, Tag, Sparkles, FileText,
+} from 'lucide-react';
 import {
   listHelpCategories,
   listPopularArticles,
@@ -16,6 +19,7 @@ import {
   logHelpSearch,
   listPublishedArticles,
   readRecentlyViewedSlugs,
+  readHelpBookmarks,
   type HelpArticle,
   type HelpCategory,
   type HelpAudience,
@@ -34,6 +38,8 @@ const HelpCenterHome: React.FC = () => {
   });
   const [q, setQ] = useState('');
   const [audience, setAudience] = useState<HelpAudience | 'all'>('all');
+  const [trendTab, setTrendTab] = useState<'popular' | 'recent' | 'helpful'>('popular');
+  const [browseAllOpen, setBrowseAllOpen] = useState(false);
   const searchRef = React.useRef<HTMLInputElement>(null);
 
   const { data: cats = [] } = useQuery({ queryKey: ['help', 'categories'], queryFn: listHelpCategories });
@@ -58,6 +64,62 @@ const HelpCenterHome: React.FC = () => {
         .slice(0, 4),
     [recentSlugs, allArticles],
   );
+
+  const bookmarkSlugs = useMemo(() => readHelpBookmarks(), []);
+  const bookmarkedArticles = useMemo(
+    () =>
+      bookmarkSlugs
+        .map((s) => allArticles.find((a) => a.slug === s))
+        .filter((a): a is HelpArticle => Boolean(a))
+        .slice(0, 6),
+    [bookmarkSlugs, allArticles],
+  );
+
+  // Per-category article counts (audience-filtered)
+  const audienceFilteredArticles = useMemo(
+    () => (audience === 'all'
+      ? allArticles
+      : allArticles.filter((a) => a.audience === audience || a.audience === 'general')),
+    [allArticles, audience],
+  );
+  const countsByCategory = useMemo(() => {
+    const map = new Map<string, number>();
+    audienceFilteredArticles.forEach((a) => {
+      if (!a.category_id) return;
+      map.set(a.category_id, (map.get(a.category_id) ?? 0) + 1);
+    });
+    return map;
+  }, [audienceFilteredArticles]);
+
+  // Freshness: latest update across articles
+  const latestUpdate = useMemo(() => {
+    if (allArticles.length === 0) return null;
+    return allArticles.reduce((max, a) => (a.updated_at > max ? a.updated_at : max), allArticles[0].updated_at);
+  }, [allArticles]);
+  const formattedLatest = useMemo(() => {
+    if (!latestUpdate) return '';
+    try {
+      return new Intl.DateTimeFormat(language === 'ar' ? 'ar-SA' : 'en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric',
+      }).format(new Date(latestUpdate));
+    } catch { return ''; }
+  }, [latestUpdate, language]);
+
+  // Keyword cloud (top 18 keywords by frequency, audience-aware)
+  const topKeywords = useMemo(() => {
+    const counts = new Map<string, number>();
+    audienceFilteredArticles.forEach((a) => {
+      (a.keywords ?? []).forEach((k) => {
+        const key = String(k).trim().toLowerCase();
+        if (!key || key.length < 2) return;
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      });
+    });
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 18)
+      .map(([k, n]) => ({ k, n }));
+  }, [audienceFilteredArticles]);
 
   useMultiJsonLd([
     {
@@ -106,17 +168,60 @@ const HelpCenterHome: React.FC = () => {
     () => (audience === 'all' ? cats : cats.filter((c) => c.audience === audience || c.audience === 'general')),
     [cats, audience],
   );
-  const filteredPopular = useMemo(
-    () => (audience === 'all' ? popular : popular.filter((a) => a.audience === audience || a.audience === 'general')),
-    [popular, audience],
-  );
+  const trendingArticles = useMemo(() => {
+    const base = audienceFilteredArticles;
+    if (trendTab === 'recent') {
+      return [...base].sort((a, b) => b.updated_at.localeCompare(a.updated_at)).slice(0, 6);
+    }
+    if (trendTab === 'helpful') {
+      return [...base]
+        .map((a) => {
+          const votes = (a.helpful_count ?? 0) + (a.not_helpful_count ?? 0);
+          const ratio = votes > 0 ? (a.helpful_count ?? 0) / votes : 0;
+          return { a, score: ratio * 100 + Math.log1p(a.views_count ?? 0) };
+        })
+        .sort((x, y) => y.score - x.score)
+        .slice(0, 6)
+        .map((x) => x.a);
+    }
+    // popular (server-ranked by views, then audience-filter)
+    const popFiltered = audience === 'all'
+      ? popular
+      : popular.filter((a) => a.audience === audience || a.audience === 'general');
+    return popFiltered.slice(0, 6);
+  }, [trendTab, audienceFilteredArticles, popular, audience]);
 
+  // Stats
+  const stats = useMemo(() => ({
+    categories: filteredCats.length,
+    articles: audienceFilteredArticles.length,
+    totalViews: audienceFilteredArticles.reduce((sum, a) => sum + (a.views_count ?? 0), 0),
+  }), [filteredCats.length, audienceFilteredArticles]);
+
+  // Only include "admin" chip if admin-audience content actually exists
+  const hasAdminContent = useMemo(
+    () => allArticles.some((a) => a.audience === 'admin') || cats.some((c) => c.audience === 'admin'),
+    [allArticles, cats],
+  );
   const audienceChips: Array<{ key: HelpAudience | 'all'; label_ar: string; label_en: string }> = [
     { key: 'all', label_ar: 'الكل', label_en: 'All' },
     { key: 'provider', label_ar: 'مزوّدو الخدمات', label_en: 'Providers' },
     { key: 'customer', label_ar: 'العملاء', label_en: 'Customers' },
     { key: 'general', label_ar: 'عام', label_en: 'General' },
+    ...(hasAdminContent ? [{ key: 'admin' as const, label_ar: 'المشرفون', label_en: 'Admins' }] : []),
   ];
+
+  // Articles grouped by category for the "Browse all" index
+  const articlesByCategory = useMemo(() => {
+    const groups: Array<{ cat: HelpCategory; items: HelpArticle[] }> = [];
+    filteredCats.forEach((c) => {
+      const items = audienceFilteredArticles
+        .filter((a) => a.category_id === c.id)
+        .sort((a, b) => (language === 'ar' ? a.title_ar.localeCompare(b.title_ar, 'ar') : a.title_en.localeCompare(b.title_en)));
+      if (items.length > 0) groups.push({ cat: c, items });
+    });
+    return groups;
+  }, [filteredCats, audienceFilteredArticles, language]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -217,6 +322,50 @@ const HelpCenterHome: React.FC = () => {
           </div>
         </section>
 
+        {/* Stats strip */}
+        <section className="container pt-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card className="rounded-xl"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{isRTL ? 'الأقسام' : 'Categories'}</div>
+              <div className="text-2xl font-heading font-black tech-content">{stats.categories}</div>
+            </CardContent></Card>
+            <Card className="rounded-xl"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{isRTL ? 'المقالات' : 'Articles'}</div>
+              <div className="text-2xl font-heading font-black tech-content">{stats.articles}</div>
+            </CardContent></Card>
+            <Card className="rounded-xl"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{isRTL ? 'إجمالي المشاهدات' : 'Total views'}</div>
+              <div className="text-2xl font-heading font-black tech-content">{stats.totalViews.toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US')}</div>
+            </CardContent></Card>
+            <Card className="rounded-xl"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{isRTL ? 'آخر تحديث' : 'Last updated'}</div>
+              <div className="text-sm font-semibold tech-content mt-2">{formattedLatest || '—'}</div>
+            </CardContent></Card>
+          </div>
+        </section>
+
+        {/* Bookmarks */}
+        {bookmarkedArticles.length > 0 && (
+          <section className="container pt-10">
+            <div className="flex items-center gap-2 mb-4">
+              <Bookmark className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                {isRTL ? 'محفوظاتك' : 'Your bookmarks'}
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {bookmarkedArticles.map((a) => (
+                <Link key={a.id} to={`/help/article/${a.slug}`} className="hover-lift">
+                  <Card className="rounded-xl h-full"><CardContent className="p-4 flex items-start gap-3">
+                    <Bookmark className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <div className="text-sm font-semibold line-clamp-2">{pickTitle(a, language)}</div>
+                  </CardContent></Card>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {recentArticles.length > 0 && (
           <section className="container pt-10">
             <div className="flex items-center gap-2 mb-4">
@@ -251,7 +400,12 @@ const HelpCenterHome: React.FC = () => {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">{pickTitle(c, language)}</CardTitle>
-                      <Badge variant="secondary" className="text-[10px]">{c.audience}</Badge>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="secondary" className="text-[10px]">{c.audience}</Badge>
+                        <Badge variant="outline" className="text-[10px] tech-content">
+                          {countsByCategory.get(c.id) ?? 0}
+                        </Badge>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -269,12 +423,31 @@ const HelpCenterHome: React.FC = () => {
         </section>
 
         <section className="container py-12">
-          <h2 className="text-2xl font-heading font-bold mb-6 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            {isRTL ? 'الأكثر رواجًا' : 'Trending now'}
-          </h2>
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <h2 className="text-2xl font-heading font-bold flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              {isRTL ? 'مختارات' : 'Highlights'}
+            </h2>
+            <div className="inline-flex rounded-xl border border-border bg-background p-1 text-xs">
+              {([
+                { key: 'popular', ar: 'الأكثر مشاهدة', en: 'Most viewed' },
+                { key: 'recent', ar: 'الأحدث', en: 'Most recent' },
+                { key: 'helpful', ar: 'الأكثر إفادة', en: 'Most helpful' },
+              ] as const).map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setTrendTab(t.key)}
+                  className={`px-3 h-8 rounded-lg font-medium transition-colors ${
+                    trendTab === t.key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  {isRTL ? t.ar : t.en}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredPopular.map((a) => (
+            {trendingArticles.map((a) => (
               <Link key={a.id} to={`/help/article/${a.slug}`} className="hover-lift">
                 <Card className="rounded-xl h-full">
                   <CardContent className="p-5">
@@ -293,8 +466,102 @@ const HelpCenterHome: React.FC = () => {
                 </Card>
               </Link>
             ))}
+            {trendingArticles.length === 0 && (
+              <div className="col-span-full text-center text-sm text-muted-foreground py-8">
+                {isRTL ? 'لا يوجد محتوى مطابق لهذا التصفية.' : 'No content matches this filter.'}
+              </div>
+            )}
           </div>
         </section>
+
+        {/* Topic cloud */}
+        {topKeywords.length > 0 && (
+          <section className="container py-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Tag className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                {isRTL ? 'مواضيع شائعة' : 'Popular topics'}
+              </h2>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {topKeywords.map(({ k, n }) => (
+                <button
+                  key={k}
+                  onClick={() => setQ(k)}
+                  className="px-3 h-8 rounded-full text-xs border border-border bg-background hover:bg-muted transition-colors"
+                  aria-label={`${isRTL ? 'بحث عن' : 'Search'} ${k}`}
+                >
+                  <span className="me-1">{k}</span>
+                  <span className="text-[10px] text-muted-foreground tech-content">({n})</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Browse all index */}
+        {articlesByCategory.length > 0 && (
+          <section className="container py-8">
+            <button
+              type="button"
+              onClick={() => setBrowseAllOpen((v) => !v)}
+              className="w-full flex items-center justify-between gap-3 p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted transition-colors"
+              aria-expanded={browseAllOpen}
+            >
+              <span className="flex items-center gap-2 font-semibold">
+                <Library className="w-4 h-4 text-primary" />
+                {isRTL ? 'تصفّح كل المقالات' : 'Browse all articles'}
+                <Badge variant="outline" className="ms-1 text-[10px] tech-content">
+                  {audienceFilteredArticles.length}
+                </Badge>
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {browseAllOpen ? (isRTL ? 'إخفاء' : 'Hide') : (isRTL ? 'عرض' : 'Show')}
+              </span>
+            </button>
+            {browseAllOpen && (
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {articlesByCategory.map(({ cat, items }) => (
+                  <Card key={cat.id} className="rounded-xl">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center justify-between">
+                        <Link to={`/help/category/${cat.slug}`} className="hover:underline">
+                          {pickTitle(cat, language)}
+                        </Link>
+                        <Badge variant="outline" className="text-[10px] tech-content">{items.length}</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-1.5">
+                        {items.slice(0, 12).map((a) => (
+                          <li key={a.id}>
+                            <Link
+                              to={`/help/article/${a.slug}`}
+                              className="text-sm hover:text-primary hover:underline flex items-start gap-2"
+                            >
+                              <FileText className="w-3.5 h-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                              <span className="line-clamp-1">{pickTitle(a, language)}</span>
+                            </Link>
+                          </li>
+                        ))}
+                        {items.length > 12 && (
+                          <li>
+                            <Link
+                              to={`/help/category/${cat.slug}`}
+                              className="text-xs text-primary hover:underline"
+                            >
+                              {isRTL ? `عرض الكل (${items.length}) ←` : `View all (${items.length}) →`}
+                            </Link>
+                          </li>
+                        )}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         <section className="container py-12 grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link to="/help/report-issue" className="hover-lift">

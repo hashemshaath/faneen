@@ -6,7 +6,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ThumbsUp, ThumbsDown, Clock, Share2, Link2, Printer, ChevronRight, ChevronLeft, List, Eye } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Clock, Share2, Link2, Printer, ChevronRight, ChevronLeft, List, Eye, Bookmark, BookmarkCheck } from 'lucide-react';
 import {
   bumpArticleHelpful,
   bumpArticleView,
@@ -14,6 +14,8 @@ import {
   listPublishedArticles,
   findRelatedArticles,
   pushRecentlyViewedSlug,
+  isHelpBookmarked,
+  toggleHelpBookmark,
 } from '@/modules/helpCenter';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
@@ -25,12 +27,14 @@ const HelpArticlePage: React.FC = () => {
   const [feedbackNote, setFeedbackNote] = useState('');
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [bookmarked, setBookmarked] = useState(false);
   const { data: article } = useQuery({ queryKey: ['help', 'article', slug], queryFn: () => getArticleBySlug(slug), enabled: !!slug });
 
   useEffect(() => {
     if (article?.slug) {
       void bumpArticleView(article.slug);
       pushRecentlyViewedSlug(article.slug);
+      setBookmarked(isHelpBookmarked(article.slug));
     }
   }, [article?.slug]);
 
@@ -184,6 +188,16 @@ const HelpArticlePage: React.FC = () => {
 
   const onPrint = () => window.print();
 
+  const onToggleBookmark = () => {
+    const now = toggleHelpBookmark(article.slug);
+    setBookmarked(now);
+    toast.success(
+      now
+        ? (isRTL ? 'تمت الإضافة للمحفوظات' : 'Added to bookmarks')
+        : (isRTL ? 'تمت الإزالة من المحفوظات' : 'Removed from bookmarks'),
+    );
+  };
+
   const submitFeedbackNote = () => {
     // Best-effort: persist locally and notify; analytics persistence can hook in later.
     try {
@@ -230,6 +244,15 @@ const HelpArticlePage: React.FC = () => {
               {new Date(article.updated_at).toLocaleDateString(language === 'ar' ? 'ar' : 'en')}
             </span>
             <div className="ms-auto flex items-center gap-1.5 print:hidden">
+              <Button
+                size="sm"
+                variant={bookmarked ? 'default' : 'ghost'}
+                onClick={onToggleBookmark}
+                aria-label={isRTL ? 'حفظ' : 'Bookmark'}
+                aria-pressed={bookmarked}
+              >
+                {bookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+              </Button>
               <Button size="sm" variant="ghost" onClick={onShare} aria-label={isRTL ? 'مشاركة' : 'Share'}>
                 <Share2 className="w-4 h-4" />
               </Button>

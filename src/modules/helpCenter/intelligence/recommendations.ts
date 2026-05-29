@@ -73,3 +73,31 @@ export function pushRecentlyViewedSlug(slug: string): void {
     window.localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT)));
   } catch { /* ignore */ }
 }
+
+const BOOKMARKS_KEY = 'qitaat_help_bookmarks_v1';
+const MAX_BOOKMARKS = 50;
+
+export function readHelpBookmarks(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(BOOKMARKS_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((s) => typeof s === 'string').slice(0, MAX_BOOKMARKS) : [];
+  } catch { return []; }
+}
+
+export function isHelpBookmarked(slug: string): boolean {
+  return readHelpBookmarks().includes(slug);
+}
+
+export function toggleHelpBookmark(slug: string): boolean {
+  if (typeof window === 'undefined' || !slug) return false;
+  try {
+    const current = readHelpBookmarks();
+    const exists = current.includes(slug);
+    const next = exists ? current.filter((s) => s !== slug) : [slug, ...current].slice(0, MAX_BOOKMARKS);
+    window.localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(next));
+    return !exists;
+  } catch { return false; }
+}
