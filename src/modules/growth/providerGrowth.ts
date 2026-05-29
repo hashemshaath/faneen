@@ -418,3 +418,9 @@ export function helpLinkForKey(key: string | undefined): string {
   };
   return map[key] ?? '/help';
 }
+
+/**
+ * Public alias used by PublishReadinessPanel and growth UIs.
+ * Maps a profile/SEO action key to an existing Help Center route.
+ */
+export const mapProfileActionToHelpLink = helpLinkForKey;
