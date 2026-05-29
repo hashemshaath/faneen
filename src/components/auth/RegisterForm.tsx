@@ -87,7 +87,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
       }
     } catch { /* storage unavailable — non-blocking */ }
     setRegisterType(id === 'create-entity' ? 'business' : 'individual');
-    setStep('details');
+    // For business intent collect business data FIRST, then manager account.
+    // For individual / invite / request-access go straight to personal details.
+    setStep(id === 'create-entity' ? 'business-details' : 'details');
   };
 
   // Persist intent-specific payload right before signup so /onboarding can pick it up.
