@@ -235,6 +235,7 @@ export const SearchResults = ({
           </Button>
         </div>
         )
+      )
       ) : isSplit ? (
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="lg:w-1/2 space-y-3 max-h-[600px] overflow-y-auto pe-1 no-scrollbar">
