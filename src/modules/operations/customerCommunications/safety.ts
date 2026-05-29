@@ -11,6 +11,9 @@ export const SAFE_ACTION_URL_PREFIXES = [
   'https://qitaat.com/q/',
   'https://www.qitaat.com/q/',
   '/q/',
+  'https://qitaat.com/client/',
+  'https://www.qitaat.com/client/',
+  '/client/',
 ] as const;
 
 const UUID_RE = /\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b/;
