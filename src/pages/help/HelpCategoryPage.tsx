@@ -6,7 +6,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { getHelpCategoryBySlug, listPublishedArticles } from '@/modules/helpCenter';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { BookOpen } from 'lucide-react';
 
 const HelpCategoryPage: React.FC = () => {
@@ -19,7 +19,41 @@ const HelpCategoryPage: React.FC = () => {
     enabled: !!category?.id,
   });
   const title = category ? (language === 'ar' ? category.title_ar : category.title_en) : '';
-  usePageMeta({ title: `${title} | ${isRTL ? 'مركز المساعدة' : 'Help Center'} | Qitaat` });
+  const description = category
+    ? ((language === 'ar' ? category.description_ar : category.description_en) ?? '')
+    : '';
+  usePageMeta({
+    title: `${title} | ${isRTL ? 'مركز المساعدة' : 'Help Center'} | Qitaat`,
+    description: description || (isRTL ? 'تصفّح مقالات هذا القسم في مركز مساعدة قِطاعات.' : 'Browse articles in this Qitaat Help Center category.'),
+    canonical: category ? `https://qitaat.com/help/category/${category.slug}` : undefined,
+  });
+
+  useMultiJsonLd(
+    category
+      ? [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: isRTL ? 'الرئيسية' : 'Home', item: 'https://qitaat.com/' },
+              { '@type': 'ListItem', position: 2, name: isRTL ? 'مركز المساعدة' : 'Help Center', item: 'https://qitaat.com/help' },
+              { '@type': 'ListItem', position: 3, name: title, item: `https://qitaat.com/help/category/${category.slug}` },
+            ],
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            name: title,
+            itemListElement: articles.slice(0, 50).map((a, i) => ({
+              '@type': 'ListItem',
+              position: i + 1,
+              url: `https://qitaat.com/help/article/${a.slug}`,
+              name: language === 'ar' ? a.title_ar : a.title_en,
+            })),
+          },
+        ]
+      : null,
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
