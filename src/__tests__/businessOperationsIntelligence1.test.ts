@@ -73,7 +73,16 @@ describe('event allow-list', () => {
   });
   it('wired list is the safe low-risk subset', () => {
     expect([...WIRED_CUSTOMER_PROJECT_EVENT_TYPES].sort()).toEqual(
-      ['quotation.approved', 'quotation.sent', 'work_order.completed', 'work_order.created'],
+      [
+        'installation.completed',
+        'installation.confirmed',
+        'installation.reschedule_requested',
+        'installation.scheduled',
+        'quotation.approved',
+        'quotation.sent',
+        'work_order.completed',
+        'work_order.created',
+      ],
     );
     for (const evt of WIRED_CUSTOMER_PROJECT_EVENT_TYPES) {
       expect(CUSTOMER_PROJECT_EVENT_TYPES).toContain(evt);
