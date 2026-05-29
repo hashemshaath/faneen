@@ -91,6 +91,8 @@ const Onboarding = () => {
 
   // Documents
   const [logoUrl, setLogoUrl] = useState<string>('');
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [crDocPath, setCrDocPath] = useState<string>('');
   const [crDocName, setCrDocName] = useState<string>('');
   const [crUploading, setCrUploading] = useState(false);
@@ -359,6 +361,41 @@ const Onboarding = () => {
     } finally {
       setCrUploading(false);
       if (crInputRef.current) crInputRef.current.value = '';
+    }
+  };
+
+  // ─── Logo upload (public bucket: business-assets) ───
+  // Strict: JPEG/PNG only, max 4 MB per file.
+  const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !createdBusinessId) return;
+    const allowed = ['image/jpeg', 'image/png'];
+    if (!allowed.includes(file.type)) {
+      toast.error(isRTL ? 'الصيغة المسموحة للشعار: JPEG، PNG' : 'Allowed logo formats: JPEG, PNG');
+      if (logoInputRef.current) logoInputRef.current.value = '';
+      return;
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error(isRTL ? 'حد أقصى 4 ميجا للملف' : 'Max 4 MB per file');
+      if (logoInputRef.current) logoInputRef.current.value = '';
+      return;
+    }
+    setLogoUploading(true);
+    try {
+      const ext = file.type === 'image/png' ? 'png' : 'jpg';
+      const path = `${createdBusinessId}/logo-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('business-assets').upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('business-assets').getPublicUrl(path);
+      setLogoUrl(pub.publicUrl);
+      toast.success(isRTL ? 'تم رفع الشعار' : 'Logo uploaded');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message
+        : (isRTL ? 'فشل رفع الشعار' : 'Logo upload failed'));
+    } finally {
+      setLogoUploading(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
     }
   };
 
