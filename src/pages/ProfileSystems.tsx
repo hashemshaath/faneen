@@ -396,11 +396,11 @@ const ProfileSystems = () => {
                   role="listbox"
                   aria-label={isRTL ? 'اقتراحات البحث' : 'Search suggestions'}
                 >
-                  {suggestions.map((s) => (
+                  {suggestions.map((s, idx) => (
                     <button
                       key={s.key}
                       type="button"
-                      onMouseDown={(e) => { e.preventDefault(); s.onSelect(); }}
+                      onMouseDown={(e) => { e.preventDefault(); onSuggestionSelect(s, idx); }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-start hover:bg-muted transition-colors"
                       role="option"
                       aria-selected={false}
