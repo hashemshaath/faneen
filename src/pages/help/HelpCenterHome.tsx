@@ -17,7 +17,7 @@ import {
   type HelpArticle,
   type HelpCategory,
 } from '@/modules/helpCenter';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 
 const pickTitle = (a: HelpArticle | HelpCategory, lang: 'ar' | 'en') => (lang === 'ar' ? a.title_ar : a.title_en);
 const pickDesc = (c: HelpCategory, lang: 'ar' | 'en') => (lang === 'ar' ? c.description_ar : c.description_en) ?? '';
@@ -27,6 +27,7 @@ const HelpCenterHome: React.FC = () => {
   usePageMeta({
     title: isRTL ? 'مركز المساعدة | قِطاعات' : 'Help Center | Qitaat',
     description: isRTL ? 'دليلك للبدء، الإجابات السريعة، وإعداد التقارير.' : 'Your guide for getting started, quick answers, and reports.',
+    canonical: 'https://qitaat.com/help',
   });
   const [q, setQ] = useState('');
 
@@ -37,6 +38,29 @@ const HelpCenterHome: React.FC = () => {
     queryFn: () => searchHelpArticles({ q, limit: 12 }),
     enabled: q.trim().length > 1,
   });
+
+  useMultiJsonLd([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: isRTL ? 'الرئيسية' : 'Home', item: 'https://qitaat.com/' },
+        { '@type': 'ListItem', position: 2, name: isRTL ? 'مركز المساعدة' : 'Help Center', item: 'https://qitaat.com/help' },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: isRTL ? 'مركز مساعدة قِطاعات' : 'Qitaat Help Center',
+      url: 'https://qitaat.com/help',
+      inLanguage: language === 'ar' ? 'ar' : 'en',
+      hasPart: cats.slice(0, 50).map((c) => ({
+        '@type': 'WebPage',
+        name: language === 'ar' ? c.title_ar : c.title_en,
+        url: `https://qitaat.com/help/category/${c.slug}`,
+      })),
+    },
+  ]);
 
   // Best-effort search analytics (debounced via stable query result reference)
   useEffect(() => {

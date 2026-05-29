@@ -15,7 +15,7 @@ import {
   findRelatedArticles,
   pushRecentlyViewedSlug,
 } from '@/modules/helpCenter';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 
 const HelpArticlePage: React.FC = () => {
   const { slug = '' } = useParams();
@@ -38,7 +38,49 @@ const HelpArticlePage: React.FC = () => {
 
   const related = article ? findRelatedArticles(article, pool, 5) : [];
 
-  usePageMeta({ title: article ? `${language === 'ar' ? article.title_ar : article.title_en} | Qitaat` : 'Help | Qitaat' });
+  const articleTitle = article ? (language === 'ar' ? article.title_ar : article.title_en) : '';
+  const articleSummary = article
+    ? ((language === 'ar' ? article.summary_ar : article.summary_en) ?? '').slice(0, 300)
+    : '';
+
+  usePageMeta({
+    title: article ? `${articleTitle} | Qitaat` : 'Help | Qitaat',
+    description: articleSummary || (isRTL ? 'مقالة في مركز مساعدة قِطاعات.' : 'Qitaat Help Center article.'),
+    canonical: article ? `https://qitaat.com/help/article/${article.slug}` : undefined,
+    ogType: 'article',
+  });
+
+  useMultiJsonLd(
+    article
+      ? [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: articleTitle,
+            description: articleSummary,
+            inLanguage: language === 'ar' ? 'ar' : 'en',
+            datePublished: article.updated_at,
+            dateModified: article.updated_at,
+            mainEntityOfPage: `https://qitaat.com/help/article/${article.slug}`,
+            author: { '@type': 'Organization', name: 'Qitaat' },
+            publisher: {
+              '@type': 'Organization',
+              name: 'Qitaat',
+              logo: { '@type': 'ImageObject', url: 'https://qitaat.com/logo.png' },
+            },
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: isRTL ? 'الرئيسية' : 'Home', item: 'https://qitaat.com/' },
+              { '@type': 'ListItem', position: 2, name: isRTL ? 'مركز المساعدة' : 'Help Center', item: 'https://qitaat.com/help' },
+              { '@type': 'ListItem', position: 3, name: articleTitle, item: `https://qitaat.com/help/article/${article.slug}` },
+            ],
+          },
+        ]
+      : null,
+  );
 
   if (!article) {
     return (
@@ -49,7 +91,7 @@ const HelpArticlePage: React.FC = () => {
     );
   }
 
-  const title = language === 'ar' ? article.title_ar : article.title_en;
+  const title = articleTitle;
   const summary = language === 'ar' ? article.summary_ar : article.summary_en;
   const content = language === 'ar' ? article.content_ar : article.content_en;
 

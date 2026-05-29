@@ -15,7 +15,7 @@ const BASE = "https://qitaat.com";
 // don't leak the internal Supabase Functions host in robots/sitemap output.
 const FUNC = `${BASE}/functions/v1/sitemap`;
 
-const TYPES = ["static", "businesses", "blog", "categories", "cities", "profiles", "projects", "sectors", "services", "brands"] as const;
+const TYPES = ["static", "businesses", "blog", "categories", "cities", "profiles", "projects", "sectors", "services", "brands", "help"] as const;
 type SitemapType = (typeof TYPES)[number];
 
 function esc(s: string) {
@@ -186,6 +186,38 @@ Deno.serve(async (req) => {
             lastmod: toDate(b.updated_at),
             changefreq: "weekly",
             priority: "0.7",
+          }));
+        }
+      }
+    } else if (type === "help") {
+      // Help Center: index home, every published category, and every published article.
+      entries.push(entry(`${BASE}/help`, { lastmod: today, changefreq: "weekly", priority: "0.7" }));
+      const { data: cats, error: catErr } = await supabase
+        .from("help_categories")
+        .select("slug, updated_at")
+        .limit(1000);
+      if (catErr) console.error("help categories sitemap error:", catErr.message);
+      if (cats) {
+        for (const c of cats) {
+          entries.push(entry(`${BASE}/help/category/${encodeURIComponent(c.slug)}`, {
+            lastmod: toDate((c as { updated_at?: string | null }).updated_at ?? null),
+            changefreq: "weekly",
+            priority: "0.6",
+          }));
+        }
+      }
+      const { data: arts, error: artErr } = await supabase
+        .from("help_articles")
+        .select("slug, updated_at")
+        .eq("status", "published")
+        .limit(10000);
+      if (artErr) console.error("help articles sitemap error:", artErr.message);
+      if (arts) {
+        for (const a of arts) {
+          entries.push(entry(`${BASE}/help/article/${encodeURIComponent(a.slug)}`, {
+            lastmod: toDate(a.updated_at),
+            changefreq: "monthly",
+            priority: "0.6",
           }));
         }
       }
