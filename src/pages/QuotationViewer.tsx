@@ -24,7 +24,10 @@ import { WorkOrderQuotationPdf } from "@/components/workOrders/WorkOrderQuotatio
 
 export default function QuotationViewer() {
   useNoIndex();
-  const { refId } = useParams<{ refId: string }>();
+  // APP-STABILITY-CLEANUP-SECURITY-1: route param is `code` (dispatched
+  // from /q/:code). Accept legacy `refId` too for external callers.
+  const rawParams = useParams<{ code?: string; refId?: string }>();
+  const refId = rawParams.code ?? rawParams.refId;
   const [params] = useSearchParams();
   const token = params.get("t") ?? "";
   const { isRTL } = useLanguage();

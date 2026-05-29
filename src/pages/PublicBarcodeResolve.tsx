@@ -36,8 +36,10 @@ const PublicBarcodeResolve: React.FC = () => {
   const bi = useBi();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
-  const { barcode_code: rawCode } = useParams<{ barcode_code: string }>();
-  const code = (rawCode ?? '').trim();
+  // APP-STABILITY-CLEANUP-SECURITY-1: route param is `code` (dispatched
+  // from /q/:code). Accept legacy `barcode_code` name too.
+  const params = useParams<{ code?: string; barcode_code?: string }>();
+  const code = (params.code ?? params.barcode_code ?? '').trim();
 
   const { data, isLoading } = useQuery({
     queryKey: ['resolve-barcode', code],
