@@ -559,12 +559,30 @@ const ProfileSystems = () => {
             <span className="tabular-nums tech-content font-semibold text-foreground">{fmtNum(filtered.length)}</span>{' '}
             {isRTL ? `من ${fmtNum(profiles.length)} قطاع` : `of ${fmtNum(profiles.length)} profiles`}
           </p>
-          {activeFilters > 0 && (
-            <button onClick={resetAll} className="text-[11px] sm:text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-              <RotateCcw className="w-3 h-3" />
-              {isRTL ? 'مسح الفلاتر' : 'Clear filters'}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCSV}
+              disabled={filtered.length === 0}
+              className="sm:hidden text-[11px] inline-flex items-center gap-1 px-2 h-7 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground disabled:opacity-50"
+              aria-label={isRTL ? 'تنزيل CSV' : 'Download CSV'}
+            >
+              <FileDown className="w-3 h-3" /> CSV
             </button>
-          )}
+            <button
+              onClick={handlePDF}
+              disabled={filtered.length === 0 || exporting === 'pdf'}
+              className="sm:hidden text-[11px] inline-flex items-center gap-1 px-2 h-7 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground disabled:opacity-50"
+              aria-label={isRTL ? 'تنزيل PDF' : 'Download PDF'}
+            >
+              <FileText className="w-3 h-3" /> PDF
+            </button>
+            {activeFilters > 0 && (
+              <button onClick={resetAll} className="text-[11px] sm:text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+                <RotateCcw className="w-3 h-3" />
+                {isRTL ? 'مسح الفلاتر' : 'Clear filters'}
+              </button>
+            )}
+          </div>
         </div>
 
         {isLoading ? (
