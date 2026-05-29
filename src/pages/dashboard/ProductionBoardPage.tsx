@@ -985,6 +985,10 @@ function BoardCard({
         >
           {isRTL ? PRIORITY_LABELS[order.priority].ar : PRIORITY_LABELS[order.priority].en}
         </Badge>
+        <HealthBadge
+          kind="work_order"
+          value={workOrderHealth(order.status, order.due_at)}
+        />
       </header>
 
       {order.customer_name && (
