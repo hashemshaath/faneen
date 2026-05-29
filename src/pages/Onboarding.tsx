@@ -356,8 +356,12 @@ const Onboarding = () => {
     try {
       const ext = file.name.split('.').pop()?.toLowerCase() || 'bin';
       const path = `cr/${createdBusinessId}/cr-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from('business-documents').upload(path, file, { upsert: true, contentType: file.type });
+      const { error: upErr } = await uploadPrivateDocument({
+        bucket: BUSINESS_DOCUMENTS_BUCKET,
+        path,
+        file,
+        options: { upsert: true, contentType: file.type },
+      });
       if (upErr) throw upErr;
       setCrDocPath(path);
       setCrDocName(file.name);
@@ -391,10 +395,14 @@ const Onboarding = () => {
     try {
       const ext = file.type === 'image/png' ? 'png' : 'jpg';
       const path = `${createdBusinessId}/logo-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from('business-assets').upload(path, file, { upsert: true, contentType: file.type });
+      const { error: upErr } = await uploadPublicImage({
+        bucket: BUSINESS_ASSETS_BUCKET,
+        path,
+        file,
+        options: { upsert: true, contentType: file.type },
+      });
       if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from('business-assets').getPublicUrl(path);
+      const { data: pub } = getPublicImageUrl({ bucket: BUSINESS_ASSETS_BUCKET, path });
       setLogoUrl(pub.publicUrl);
       toast.success(isRTL ? 'تم رفع الشعار' : 'Logo uploaded');
     } catch (err) {
