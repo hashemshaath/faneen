@@ -283,6 +283,49 @@ const AdminHelpCenter: React.FC = () => {
             </Card>
           </TabsContent>
 
+          {/* Content Gaps */}
+          <TabsContent value="gaps">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{isRTL ? 'فجوات المحتوى المُبلّغ عنها' : 'Reported content gaps'}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {contentGaps.map((g) => (
+                  <div key={g.id} className="border border-border rounded-lg p-3 flex items-start gap-3 flex-wrap" data-testid="admin-content-gap-row">
+                    <Badge variant="outline" className="tech-content">{g.ref_id ?? '—'}</Badge>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium truncate" dir="auto">
+                        {isRTL ? (g.suggested_title_ar || g.last_query) : (g.suggested_title_en || g.last_query)}
+                      </div>
+                      <div className="text-xs text-muted-foreground tech-content">
+                        {g.page_key ?? '—'} · {g.audience ?? 'any'} · ×{g.frequency} · {isRTL ? 'بدون نتائج' : 'zero'} {g.zero_result_count}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate" dir="auto">“{g.last_query}”</div>
+                    </div>
+                    <Select value={g.status} onValueChange={(v) => gapStatusM.mutate({ id: g.id, status: v as HelpContentGapStatus })}>
+                      <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {GAP_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={g.status === 'article_created' || gapDraftM.isPending}
+                      onClick={() => gapDraftM.mutate(g)}
+                      data-testid="admin-create-draft-from-gap"
+                    >
+                      {isRTL ? 'إنشاء مسودة' : 'Create draft article'}
+                    </Button>
+                  </div>
+                ))}
+                {contentGaps.length === 0 && (
+                  <div className="text-sm text-muted-foreground p-3">{isRTL ? 'لا فجوات مُبلّغ عنها بعد' : 'No reported gaps yet'}</div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Metrics */}
           <TabsContent value="metrics">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
