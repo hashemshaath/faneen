@@ -24,12 +24,16 @@ export function useRealtimeInvalidate(opts: {
     if (!enabled) return;
     const sub = supabase
       .channel(channel)
-      // @ts-expect-error -- postgres_changes payload typing is loose on supabase-js v2.
-      .on('postgres_changes', { event, schema, table }, () => {
+      .on(
+        // postgres_changes is loosely typed in supabase-js v2.
+        'postgres_changes' as unknown as 'system',
+        { event, schema, table } as never,
+        () => {
         for (const k of opts.queryKeys) {
           qc.invalidateQueries({ queryKey: k as unknown[] });
         }
-      })
+      },
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(sub);
