@@ -239,7 +239,7 @@ export default function ProductionBoardPage() {
     void load();
   }, [load]);
 
-  // BUSINESS-WORKFLOW-REALTIME-1: invalidate + refetch on realtime DB events.
+  // BUSINESS-WORKFLOW-REALTIME-1: invalidate + refetch on DB changes.
   useWorkOrderRealtimeInvalidation({ businessId, onChange: () => { void load(); } });
 
   /* ─── Index helpers ─── */
