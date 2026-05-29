@@ -77,14 +77,12 @@ export const MembershipPlanRecommender: React.FC<Props> = ({ isRTL, onApply }) =
     { v: 'enterprise', ar: 'دعم مخصص ومتعدد الفروع', en: 'Multi-branch & support' },
   ];
 
-  const OptionGroup = <T extends string>({
-    options, value, onChange, label,
-  }: {
-    options: { v: T; ar: string; en: string }[];
-    value: T | null;
-    onChange: (v: T) => void;
-    label: string;
-  }) => (
+  const renderGroup = (
+    options: { v: string; ar: string; en: string }[],
+    value: string | null,
+    onChange: (v: string) => void,
+    label: string,
+  ) => (
     <div>
       <p className="text-xs font-semibold text-foreground/80 mb-2">{label}</p>
       <div className="flex flex-wrap gap-2">
@@ -160,24 +158,9 @@ export const MembershipPlanRecommender: React.FC<Props> = ({ isRTL, onApply }) =
           </Button>
         </div>
 
-        <OptionGroup
-          options={SizeOpts}
-          value={size}
-          onChange={setSize}
-          label={isRTL ? '١. حجم منشأتك؟' : '1. Business size?'}
-        />
-        <OptionGroup
-          options={VolumeOpts}
-          value={volume}
-          onChange={setVolume}
-          label={isRTL ? '٢. كم عقدًا تتوقّع شهريًا؟' : '2. Expected monthly contracts?'}
-        />
-        <OptionGroup
-          options={PriorityOpts}
-          value={priority}
-          onChange={setPriority}
-          label={isRTL ? '٣. أهم أولوية لك؟' : '3. Top priority?'}
-        />
+        {renderGroup(SizeOpts, size, (v) => setSize(v as SizeAnswer), isRTL ? '١. حجم منشأتك؟' : '1. Business size?')}
+        {renderGroup(VolumeOpts, volume, (v) => setVolume(v as VolumeAnswer), isRTL ? '٢. كم عقدًا تتوقّع شهريًا؟' : '2. Expected monthly contracts?')}
+        {renderGroup(PriorityOpts, priority, (v) => setPriority(v as PriorityAnswer), isRTL ? '٣. أهم أولوية لك؟' : '3. Top priority?')}
 
         {complete && (
           <div className="rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 flex flex-wrap items-center gap-3 animate-fade-in">
