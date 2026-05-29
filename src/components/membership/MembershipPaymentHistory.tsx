@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Clock, AlertTriangle, RotateCcw, Receipt, History, FileText } from 'lucide-react';
+import { CheckCircle2, Clock, AlertTriangle, RotateCcw, Receipt, History, FileText, Download, Filter } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { listMembershipPaymentIntentsForSubscription } from '@/modules/memberships';
 
 /**
@@ -41,14 +42,16 @@ const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString() : '�
 const fmtDateTime = (d: string | null) => (d ? new Date(d).toLocaleString() : '—');
 
 export const MembershipPaymentHistory: React.FC<Props> = ({ subscriptionId, isRTL }) => {
+  const [filter, setFilter] = useState<'all' | Status>('all');
+  const [limit, setLimit] = useState<number>(10);
   const { data: intents, isLoading } = useQuery({
-    queryKey: ['membership-payment-history', subscriptionId],
+    queryKey: ['membership-payment-history', subscriptionId, limit],
     enabled: !!subscriptionId,
     queryFn: async () => {
       const { data, error } = await listMembershipPaymentIntentsForSubscription<PaymentIntentSafeRow>({
         subscriptionId: subscriptionId as string,
         select: SAFE_SELECT,
-        limit: 10,
+        limit,
       });
       if (error) throw error;
       return data ?? [];
@@ -58,24 +61,106 @@ export const MembershipPaymentHistory: React.FC<Props> = ({ subscriptionId, isRT
   if (!subscriptionId || isLoading) return null;
 
   const rows = intents ?? [];
+  const filteredRows = useMemo(
+    () => (filter === 'all' ? rows : rows.filter((r) => r.status === filter)),
+    [rows, filter],
+  );
   const title = isRTL ? 'سجل المدفوعات' : 'Payment history';
   const emptyText = isRTL ? 'لا يوجد سجل مدفوعات بعد.' : 'No payment history yet.';
+
+  const filterOptions: { v: 'all' | Status; ar: string; en: string }[] = [
+    { v: 'all', ar: 'الكل', en: 'All' },
+    { v: 'succeeded', ar: 'مدفوعة', en: 'Paid' },
+    { v: 'refunded', ar: 'مستردة', en: 'Refunded' },
+    { v: 'failed', ar: 'فاشلة', en: 'Failed' },
+    { v: 'created', ar: 'قيد الانتظار', en: 'Pending' },
+  ];
+
+  const exportCsv = () => {
+    const header = ['Reference', 'Status', 'Amount', 'Currency', 'Invoice ID', 'Created at', 'Confirmed at'];
+    const lines = [header.join(',')];
+    filteredRows.forEach((r) => {
+      lines.push([
+        r.ref_id ?? '',
+        r.status,
+        r.amount ?? '',
+        r.currency ?? '',
+        r.invoice_id ?? '',
+        r.created_at,
+        r.confirmed_at ?? '',
+      ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','));
+    });
+    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qitaat-payments-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <Card className="max-w-2xl mx-auto mb-8 border-border bg-card">
       <CardContent className="p-4 sm:p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-            <History className="w-4 h-4 text-foreground" />
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+              <History className="w-4 h-4 text-foreground" />
+            </div>
+            <h3 className="font-heading font-bold text-sm">{title}</h3>
+            <Badge variant="outline" className="text-[10px] h-5 tech-content">
+              {filteredRows.length}
+            </Badge>
           </div>
-          <h3 className="font-heading font-bold text-sm">{title}</h3>
+          {rows.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-[11px] gap-1"
+              onClick={exportCsv}
+              aria-label={isRTL ? 'تصدير CSV' : 'Export CSV'}
+            >
+              <Download className="w-3 h-3" />
+              CSV
+            </Button>
+          )}
         </div>
+
+        {rows.length > 0 && (
+          <div className="flex items-center gap-2 mb-3 overflow-x-auto no-scrollbar">
+            <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            {filterOptions.map((o) => {
+              const count = o.v === 'all' ? rows.length : rows.filter((r) => r.status === o.v).length;
+              const active = filter === o.v;
+              return (
+                <button
+                  key={o.v}
+                  type="button"
+                  onClick={() => setFilter(o.v)}
+                  className={
+                    'shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ' +
+                    (active
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border/60 bg-background hover:bg-muted text-foreground/80')
+                  }
+                >
+                  {isRTL ? o.ar : o.en}
+                  <span className="ms-1 tech-content opacity-70">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">{emptyText}</p>
+        ) : filteredRows.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {isRTL ? 'لا توجد عمليات مطابقة للتصفية.' : 'No payments match this filter.'}
+          </p>
         ) : (
           <div className="space-y-3">
-            {rows.map((intent) => {
+            {filteredRows.map((intent) => {
               const status = intent.status;
               const refundedAt = readRefundedAt(intent.metadata);
               const { label, tone } = describeStatus(status, isRTL);
@@ -149,6 +234,19 @@ export const MembershipPaymentHistory: React.FC<Props> = ({ subscriptionId, isRT
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {rows.length >= limit && (
+          <div className="mt-4 text-center">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-[11px]"
+              onClick={() => setLimit((n) => n + 10)}
+            >
+              {isRTL ? 'عرض المزيد' : 'Load more'}
+            </Button>
           </div>
         )}
       </CardContent>
