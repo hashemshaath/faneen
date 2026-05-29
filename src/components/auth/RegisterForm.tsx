@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
-import { Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, UserPlus, Send, User } from 'lucide-react';
+import { Building2, Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, UserPlus, User } from 'lucide-react';
 import { Ticket, FileText, AtSign } from 'lucide-react';
 import { PhoneField, toE164 } from '@/components/forms/PhoneField';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
