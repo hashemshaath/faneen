@@ -712,7 +712,7 @@ export default function ProductionBoardPage() {
 
         {/* Board */}
         <section
-          className="overflow-x-auto no-scrollbar pb-2"
+          className={stackedMode ? "pb-2" : "overflow-x-auto no-scrollbar pb-2"}
           aria-label={tx.title}
           data-testid="production-board"
         >
@@ -725,13 +725,38 @@ export default function ProductionBoardPage() {
               {tx.empty}
             </div>
           ) : (
-            <ol className="flex gap-3 min-w-max" role="list">
+            <ol
+              className={
+                stackedMode
+                  ? "flex flex-col gap-3"
+                  : "flex gap-3 min-w-max"
+              }
+              role="list"
+              data-testid={stackedMode ? "board-list-stacked" : "board-list-kanban"}
+            >
               {columns.map(({ stage, items }) => {
                 const isTerminal = stage === "completed";
+                const wip = getWipStatus(stage, items.length);
+                const wipTone: Record<WipStatus, string> = {
+                  none: "text-muted-foreground border-border/40",
+                  ok: "text-success border-success/30",
+                  warning: "text-warning border-warning/40 bg-warning/5",
+                  danger: "text-destructive border-destructive/40 bg-destructive/5",
+                };
+                const wipLabelByStatus: Record<WipStatus, string> = {
+                  none: tx.wipLimitNone,
+                  ok: tx.wipOk,
+                  warning: tx.wipWarning,
+                  danger: tx.wipDanger,
+                };
                 return (
                   <li
                     key={stage}
-                    className="w-[280px] sm:w-[300px] shrink-0 rounded-2xl border border-border/30 bg-muted/20 p-2 flex flex-col"
+                    className={
+                      stackedMode
+                        ? "w-full rounded-2xl border border-border/30 bg-muted/20 p-2 flex flex-col"
+                        : "w-[280px] sm:w-[300px] shrink-0 rounded-2xl border border-border/30 bg-muted/20 p-2 flex flex-col"
+                    }
                     aria-label={
                       isRTL
                         ? WORK_ORDER_PIPELINE_STAGE_LABELS[stage].ar
@@ -746,9 +771,25 @@ export default function ProductionBoardPage() {
                             ? WORK_ORDER_PIPELINE_STAGE_LABELS[stage].ar
                             : WORK_ORDER_PIPELINE_STAGE_LABELS[stage].en}
                         </span>
-                        <Badge variant="outline" className="text-[10px] tech-content">
-                          {items.length}
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] tech-content ${wipTone[wip.status]}`}
+                          title={wipLabelByStatus[wip.status]}
+                          data-testid={`wip-badge-${stage}`}
+                          data-wip-status={wip.status}
+                        >
+                          {wip.limit ? `${items.length} / ${wip.limit}` : items.length}
                         </Badge>
+                        {metrics.overdueByStage[stage] > 0 && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] text-destructive border-destructive/30"
+                            title={tx.overdueHere}
+                          >
+                            <Clock className="w-3 h-3 me-0.5" />
+                            {metrics.overdueByStage[stage]}
+                          </Badge>
+                        )}
                       </div>
                       {isTerminal && (
                         <Badge variant="outline" className="text-[10px] gap-1">
@@ -756,6 +797,22 @@ export default function ProductionBoardPage() {
                         </Badge>
                       )}
                     </header>
+                    {wip.status === "warning" && (
+                      <p
+                        className="text-[10px] text-warning px-2"
+                        data-testid={`wip-warning-${stage}`}
+                      >
+                        {tx.wipWarning}
+                      </p>
+                    )}
+                    {wip.status === "danger" && (
+                      <p
+                        className="text-[10px] text-destructive px-2 font-semibold"
+                        data-testid={`wip-danger-${stage}`}
+                      >
+                        {tx.wipDanger}
+                      </p>
+                    )}
                     <div className="space-y-2 min-h-[60px]" data-testid={`board-cards-${stage}`}>
                       {items.length === 0 ? (
                         <p className="text-[11px] text-muted-foreground text-center py-3">
@@ -768,6 +825,7 @@ export default function ProductionBoardPage() {
                             order={o}
                             tx={tx}
                             isRTL={isRTL}
+                            density={density}
                             quotation={quotationByWo.get(o.id)}
                             checklist={checklistByWo.get(o.id)}
                             assignment={currentStageAssignment(o.id, o.pipeline_stage)}
@@ -779,6 +837,7 @@ export default function ProductionBoardPage() {
                             }
                             onMove={onMove}
                             onAssign={onAssign}
+                            onUnassign={onUnassign}
                             staff={staff}
                             assignTargetUserId={assignTargetUserId}
                             setAssignTargetUserId={setAssignTargetUserId}
