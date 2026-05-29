@@ -8617,6 +8617,193 @@ export type Database = {
           },
         ]
       }
+      procurement_requests: {
+        Row: {
+          business_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          needed_by: string | null
+          status: string
+          title: string
+          updated_at: string
+          work_order_id: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          needed_by?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          needed_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_requests_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procurement_rfqs: {
+        Row: {
+          business_id: string
+          created_at: string
+          created_by: string
+          due_at: string | null
+          id: string
+          procurement_request_id: string
+          rfq_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          created_by: string
+          due_at?: string | null
+          id?: string
+          procurement_request_id: string
+          rfq_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          created_by?: string
+          due_at?: string | null
+          id?: string
+          procurement_request_id?: string
+          rfq_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_rfqs_procurement_request_id_fkey"
+            columns: ["procurement_request_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procurement_supplier_quotes: {
+        Row: {
+          business_id: string
+          created_at: string
+          currency: string
+          id: string
+          lead_time_days: number | null
+          notes: string | null
+          rfq_id: string
+          status: string
+          submitted_at: string | null
+          supplier_id: string
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          lead_time_days?: number | null
+          notes?: string | null
+          rfq_id: string
+          status?: string
+          submitted_at?: string | null
+          supplier_id: string
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          lead_time_days?: number | null
+          notes?: string | null
+          rfq_id?: string
+          status?: string
+          submitted_at?: string | null
+          supplier_id?: string
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_supplier_quotes_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_rfqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_supplier_quotes_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procurement_suppliers: {
+        Row: {
+          business_id: string
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profile_activity_log: {
         Row: {
           changed_at: string
