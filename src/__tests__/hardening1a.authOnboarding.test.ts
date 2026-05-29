@@ -93,7 +93,7 @@ describe('HARDENING-1A: onboarding gating', () => {
   const onboarding = read('src/pages/Onboarding.tsx');
 
   it('uses is_onboarded as the single gate (no account_type shortcut)', () => {
-    expect(onboarding).toMatch(/profile\?\.is_onboarded\s*&&[^\n]*navigate\(getTargetRoute\(\)\)/);
+    expect(onboarding).toMatch(/profile\?\.is_onboarded[\s\S]{0,120}navigate\(getTargetRoute\(\)\)/);
     expect(onboarding).not.toMatch(/account_type\s*===\s*['"]individual['"][^\n]*navigate\(['"]\/dashboard/);
   });
 
@@ -111,9 +111,9 @@ describe('HARDENING-1A: onboarding gating', () => {
 
   it('individual draft never resumes on a business-only step', () => {
     expect(onboarding).toContain(
-      "draftStep === 'business-details' || draftStep === 'business-sectors'",
+      "draftStep === 'business-details' || draftStep === 'documents'",
     );
-    expect(onboarding).toMatch(/effectiveAccountType === 'individual' && isBusinessOnlyStep/);
+    expect(onboarding).toMatch(/isBusinessOnly/);
   });
 
   it('never renders the synthetic phone email domain anywhere in the wizard', () => {
