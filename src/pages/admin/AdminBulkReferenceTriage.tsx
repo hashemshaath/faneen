@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   AlertCircle, CheckCircle2, ExternalLink, Loader2, ShieldCheck,
   StickyNote, Search as SearchIcon, Download, Save, FolderOpen, Trash2, Pencil,
+  Printer,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -29,6 +30,7 @@ import {
 } from '@/modules/admin';
 import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
 import { downloadTriageCsv } from '@/lib/admin/triageCsv';
+import { printCurrentView } from '@/lib/admin/exportUtils';
 import {
   listSavedRefSets,
   saveRefSet,
