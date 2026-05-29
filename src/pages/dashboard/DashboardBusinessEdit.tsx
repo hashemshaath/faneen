@@ -434,6 +434,8 @@ const DashboardBusinessEdit: React.FC = () => {
 
         <ValidationBanner issues={validationIssues} isRTL={isRTL} />
 
+        <ProviderGrowthCard business={form} />
+
         <Tabs defaultValue="identity" className="w-full">
           <TabsList className="w-full flex flex-wrap h-auto justify-start gap-1 bg-muted/40 p-1 rounded-xl">
             <TabsTrigger value="identity" className="gap-1.5"><Building2 className="w-3.5 h-3.5" />{t(isRTL, 'الهوية والوصف', 'Identity & About')}</TabsTrigger>
