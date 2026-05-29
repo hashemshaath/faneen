@@ -223,17 +223,56 @@ export default function AdminOperationsConsole() {
               <ShieldCheck className="w-3 h-3" /> {tx.safe}
             </p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="rounded-xl h-8"
-            onClick={() => void reload()}
-            aria-label={tx.refresh}
-          >
-            <RefreshCw className={`w-3.5 h-3.5 me-1 ${loading ? 'animate-spin' : ''}`} />
-            {tx.refresh}
-          </Button>
+          <div className="flex items-center gap-2 print:hidden">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-xl h-8"
+              onClick={() => {
+                const headers = ['Ref', 'Title', 'Status', 'Priority', 'Due', 'Created', 'Business ID'];
+                const rows = orders.map((o) => [
+                  o.ref_id ?? '',
+                  o.title ?? '',
+                  o.status ?? '',
+                  o.priority ?? '',
+                  o.due_at ?? '',
+                  o.created_at ?? '',
+                  o.business_id ?? '',
+                ]);
+                downloadCsv(`ops-console-work-orders-${tsStamp()}`, buildCsv(headers, rows));
+              }}
+              disabled={orders.length === 0}
+              aria-label="Export CSV"
+              data-testid="export-wo-csv"
+            >
+              <Download className="w-3.5 h-3.5 me-1" />
+              CSV
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-xl h-8"
+              onClick={printCurrentView}
+              aria-label={isRTL ? 'طباعة' : 'Print'}
+              data-testid="print-console"
+            >
+              <Printer className="w-3.5 h-3.5 me-1" />
+              {isRTL ? 'طباعة' : 'Print'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-xl h-8"
+              onClick={() => void reload()}
+              aria-label={tx.refresh}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 me-1 ${loading ? 'animate-spin' : ''}`} />
+              {tx.refresh}
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
