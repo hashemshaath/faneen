@@ -48,7 +48,7 @@ export type PublicVisibility = {
 export function computePublicVisibility(b: ReadinessBusiness): PublicVisibility {
   const url = b.username ? `/${b.username}` : null;
   if (b.is_demo === true) {
-    return { visible: false, status: 'demo-hidden', url, ar: '', en: '', reasonAr: 'حساب تجريبي مُستبعد من العرض العام.', reasonEn: 'Demo account excluded from public listings.' } as PublicVisibility;
+    return { visible: false, status: 'demo-hidden', url, reasonAr: 'حساب تجريبي مُستبعد من العرض العام.', reasonEn: 'Demo account excluded from public listings.' };
   }
   if (b.is_active === false) {
     return { visible: false, status: 'inactive', url, reasonAr: 'الحساب موقوف، غير ظاهر للعموم.', reasonEn: 'Account inactive — hidden from public.' };
