@@ -27,6 +27,11 @@ interface SmartHelpPanelProps {
   pageKey: string;
   audience?: HelpAudience;
   onNavigate?: () => void;
+  /**
+   * When true, omits the outer card chrome (border/shadow/width). Use when
+   * the panel is rendered inside another shell (e.g. HelpLauncher).
+   */
+  embedded?: boolean;
 }
 
 const Section: React.FC<{ title: string; items: HelpArticle[]; lang: 'ar' | 'en'; onNavigate?: () => void }> = ({ title, items, lang, onNavigate }) => {
@@ -49,7 +54,7 @@ const Section: React.FC<{ title: string; items: HelpArticle[]; lang: 'ar' | 'en'
   );
 };
 
-const SmartHelpPanel: React.FC<SmartHelpPanelProps> = ({ pageKey, audience, onNavigate }) => {
+const SmartHelpPanel: React.FC<SmartHelpPanelProps> = ({ pageKey, audience, onNavigate, embedded = false }) => {
   const { isRTL, language } = useLanguage();
   const lang: 'ar' | 'en' = language === 'ar' ? 'ar' : 'en';
 
@@ -125,8 +130,12 @@ const SmartHelpPanel: React.FC<SmartHelpPanelProps> = ({ pageKey, audience, onNa
     }
   };
 
+  const shellClass = embedded
+    ? 'max-h-[60vh] overflow-auto'
+    : 'w-80 max-w-[90vw] max-h-[70vh] overflow-auto rounded-xl border border-border bg-popover text-popover-foreground shadow-lg';
+
   return (
-    <div className="w-80 max-w-[90vw] max-h-[70vh] overflow-auto rounded-xl border border-border bg-popover text-popover-foreground shadow-lg">
+    <div className={shellClass}>
       <form onSubmit={handleAsk} className="p-2 border-b border-border">
         <label htmlFor="help-assistant-input" className="sr-only">{askPlaceholder}</label>
         <div className="flex items-center gap-1.5">
