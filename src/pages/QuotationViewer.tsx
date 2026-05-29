@@ -1,5 +1,5 @@
 /**
- * BUSINESS-WORKFLOW-5D — Public tokenized quotation viewer (`/q/:refId?t=…`).
+ * BUSINESS-WORKFLOW-5D — Public tokenized quotation viewer (`/q/:code?t=…`).
  *
  * No dashboard auth required if the token is valid. Read-only. Approve /
  * reject inline via the SECURITY DEFINER RPCs. Mobile-friendly. No modals.
