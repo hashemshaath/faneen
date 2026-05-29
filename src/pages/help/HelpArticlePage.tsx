@@ -7,7 +7,14 @@ import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
-import { bumpArticleHelpful, bumpArticleView, getArticleBySlug } from '@/modules/helpCenter';
+import {
+  bumpArticleHelpful,
+  bumpArticleView,
+  getArticleBySlug,
+  listPublishedArticles,
+  findRelatedArticles,
+  pushRecentlyViewedSlug,
+} from '@/modules/helpCenter';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
 const HelpArticlePage: React.FC = () => {
@@ -16,7 +23,20 @@ const HelpArticlePage: React.FC = () => {
   const [voted, setVoted] = useState<null | boolean>(null);
   const { data: article } = useQuery({ queryKey: ['help', 'article', slug], queryFn: () => getArticleBySlug(slug), enabled: !!slug });
 
-  useEffect(() => { if (article?.slug) { void bumpArticleView(article.slug); } }, [article?.slug]);
+  useEffect(() => {
+    if (article?.slug) {
+      void bumpArticleView(article.slug);
+      pushRecentlyViewedSlug(article.slug);
+    }
+  }, [article?.slug]);
+
+  const { data: pool = [] } = useQuery({
+    queryKey: ['help', 'all-published'],
+    queryFn: () => listPublishedArticles({ limit: 500 }),
+    staleTime: 5 * 60_000,
+  });
+
+  const related = article ? findRelatedArticles(article, pool, 5) : [];
 
   usePageMeta({ title: article ? `${language === 'ar' ? article.title_ar : article.title_en} | Qitaat` : 'Help | Qitaat' });
 
@@ -60,6 +80,19 @@ const HelpArticlePage: React.FC = () => {
             <div className="text-sm text-muted-foreground">{isRTL ? 'شكرًا لتقييمك!' : 'Thanks for your feedback!'}</div>
           )}
         </CardContent></Card>
+
+        {related.length > 0 && (
+          <Card className="rounded-xl mt-6"><CardContent className="p-6">
+            <div className="font-semibold mb-3">{isRTL ? 'مقالات ذات صلة' : 'Related articles'}</div>
+            <div className="grid gap-2">
+              {related.map((r) => (
+                <Link key={r.id} to={`/help/article/${r.slug}`} className="block px-3 py-2 rounded-lg hover:bg-muted text-sm" dir="auto">
+                  {language === 'ar' ? r.title_ar : r.title_en}
+                </Link>
+              ))}
+            </div>
+          </CardContent></Card>
+        )}
       </main>
       <Footer />
     </div>

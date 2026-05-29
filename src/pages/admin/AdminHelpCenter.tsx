@@ -27,6 +27,10 @@ import {
   listHelpFeatureRequests,
   updateHelpFeatureRequestStatus,
   computeHelpMetrics,
+  computeHelpIntelligenceMetrics,
+  computeContentGaps,
+  computeArticleQuality,
+  adminListSearchLogs,
   type HelpArticle,
   type HelpCategory,
   type HelpIssueReport,
@@ -47,6 +51,7 @@ const AdminHelpCenter: React.FC = () => {
   const { data: categories = [] } = useQuery({ queryKey: ['admin', 'help', 'categories'], queryFn: adminListAllCategories });
   const { data: issues = [] } = useQuery({ queryKey: ['admin', 'help', 'issues'], queryFn: () => listHelpIssueReports({}) });
   const { data: features = [] } = useQuery({ queryKey: ['admin', 'help', 'features'], queryFn: () => listHelpFeatureRequests({}) });
+  const { data: searchLogs = [] } = useQuery({ queryKey: ['admin', 'help', 'search-logs'], queryFn: () => adminListSearchLogs(1000) });
 
   const invalidate = (k: string) => qc.invalidateQueries({ queryKey: ['admin', 'help', k] });
 
@@ -56,6 +61,12 @@ const AdminHelpCenter: React.FC = () => {
   const featM = useMutation({ mutationFn: ({ id, status }: { id: string; status: HelpFeatureStatus }) => updateHelpFeatureRequestStatus(id, status), onSuccess: () => invalidate('features') });
 
   const metrics = useMemo(() => computeHelpMetrics(articles, issues, features), [articles, issues, features]);
+  const intel = useMemo(() => computeHelpIntelligenceMetrics(articles, issues, features, searchLogs), [articles, issues, features, searchLogs]);
+  const gaps = useMemo(() => computeContentGaps(searchLogs), [searchLogs]);
+  const qualityList = useMemo(
+    () => articles.map((a) => ({ a, q: computeArticleQuality(a) })).sort((x, y) => x.q.score - y.q.score),
+    [articles],
+  );
 
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<string>('all');
@@ -147,6 +158,7 @@ const AdminHelpCenter: React.FC = () => {
                         {a.views_count} {isRTL ? 'مشاهدة' : 'views'} · 👍 {a.helpful_count} / 👎 {a.not_helpful_count}
                       </div>
                       <Badge variant={a.status === 'published' ? 'default' : 'secondary'}>{a.status}</Badge>
+                      <Badge variant="outline" className="tech-content">Q {computeArticleQuality(a).score}</Badge>
                       <Button size="sm" variant="outline" onClick={() => publishM.mutate({ id: a.id, publish: a.status !== 'published' })} disabled={publishM.isPending}>
                         {a.status === 'published' ? (isRTL ? 'إلغاء النشر' : 'Unpublish') : (isRTL ? 'نشر' : 'Publish')}
                       </Button>
@@ -274,6 +286,81 @@ const AdminHelpCenter: React.FC = () => {
                 {metrics.topViewed.length === 0 && <div className="text-sm text-muted-foreground">—</div>}
               </CardContent>
             </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+              <Card>
+                <CardHeader><CardTitle className="text-base">{isRTL ? 'الأكثر بحثًا' : 'Top searched'}</CardTitle></CardHeader>
+                <CardContent className="space-y-1">
+                  {intel.topSearched.map((t) => (
+                    <div key={t.term} className="flex items-center justify-between text-sm">
+                      <span className="truncate" dir="auto">{t.term}</span>
+                      <span className="tech-content text-muted-foreground">{t.count}</span>
+                    </div>
+                  ))}
+                  {intel.topSearched.length === 0 && <div className="text-sm text-muted-foreground">—</div>}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="text-base">{isRTL ? 'بحث بدون نتائج' : 'Zero-result searches'}</CardTitle></CardHeader>
+                <CardContent className="space-y-1">
+                  {intel.zeroResultSearches.map((t) => (
+                    <div key={t.term} className="flex items-center justify-between text-sm">
+                      <span className="truncate" dir="auto">{t.term}</span>
+                      <span className="tech-content text-muted-foreground">{t.count}</span>
+                    </div>
+                  ))}
+                  {intel.zeroResultSearches.length === 0 && <div className="text-sm text-muted-foreground">—</div>}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="text-base">{isRTL ? 'الأكثر إفادة' : 'Top helpful'}</CardTitle></CardHeader>
+                <CardContent className="space-y-1">
+                  {intel.topHelpfulArticles.map((a) => (
+                    <div key={a.slug} className="flex items-center justify-between text-sm">
+                      <span className="truncate">{isRTL ? a.title_ar : a.title_en}</span>
+                      <span className="tech-content text-muted-foreground">{Math.round(a.ratio * 100)}% · {a.votes}</span>
+                    </div>
+                  ))}
+                  {intel.topHelpfulArticles.length === 0 && <div className="text-sm text-muted-foreground">—</div>}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="text-base">{isRTL ? 'الأقل إفادة' : 'Least helpful'}</CardTitle></CardHeader>
+                <CardContent className="space-y-1">
+                  {intel.leastHelpfulArticles.map((a) => (
+                    <div key={a.slug} className="flex items-center justify-between text-sm">
+                      <span className="truncate">{isRTL ? a.title_ar : a.title_en}</span>
+                      <span className="tech-content text-muted-foreground">{Math.round(a.ratio * 100)}% · {a.votes}</span>
+                    </div>
+                  ))}
+                  {intel.leastHelpfulArticles.length === 0 && <div className="text-sm text-muted-foreground">—</div>}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="text-base">{isRTL ? 'فجوات المحتوى المقترحة' : 'Content gaps'}</CardTitle></CardHeader>
+                <CardContent className="space-y-1">
+                  {gaps.map((g) => (
+                    <div key={g.term} className="flex items-center justify-between text-sm gap-2">
+                      <span className="truncate" dir="auto">{g.suggestedTitle}</span>
+                      <span className="tech-content text-muted-foreground">×{g.frequency}</span>
+                    </div>
+                  ))}
+                  {gaps.length === 0 && <div className="text-sm text-muted-foreground">{isRTL ? 'لا فجوات حتى الآن' : 'No gaps yet'}</div>}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="text-base">{isRTL ? 'مقالات تحتاج تحسينًا' : 'Articles needing improvement'}</CardTitle></CardHeader>
+                <CardContent className="space-y-1">
+                  {qualityList.slice(0, 10).map(({ a, q }) => (
+                    <div key={a.slug} className="flex items-center justify-between text-sm gap-2">
+                      <span className="truncate">{isRTL ? a.title_ar : a.title_en}</span>
+                      <span className="tech-content text-muted-foreground">{q.score}/100</span>
+                    </div>
+                  ))}
+                  {qualityList.length === 0 && <div className="text-sm text-muted-foreground">—</div>}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

@@ -6362,6 +6362,56 @@ export type Database = {
         }
         Relationships: []
       }
+      help_search_logs: {
+        Row: {
+          audience: Database["public"]["Enums"]["help_audience"] | null
+          business_id: string | null
+          created_at: string
+          id: string
+          page_key: string | null
+          query: string
+          query_normalized: string
+          ref_id: string | null
+          results_count: number
+          selected_article_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          audience?: Database["public"]["Enums"]["help_audience"] | null
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          page_key?: string | null
+          query: string
+          query_normalized: string
+          ref_id?: string | null
+          results_count?: number
+          selected_article_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          audience?: Database["public"]["Enums"]["help_audience"] | null
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          page_key?: string | null
+          query?: string
+          query_normalized?: string
+          ref_id?: string | null
+          results_count?: number
+          selected_article_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_search_logs_selected_article_id_fkey"
+            columns: ["selected_article_id"]
+            isOneToOne: false
+            referencedRelation: "help_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       installation_appointments: {
         Row: {
           business_id: string

@@ -6,3 +6,4 @@ export * from './issueReports';
 export * from './featureRequests';
 export * from './contextualHelp';
 export * from './analytics';
+export * from './intelligence';
