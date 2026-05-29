@@ -10,7 +10,7 @@ Audience: product ops, support staff, and business managers using the Qitaat das
 3. Results show: code, entity type, status, visibility, scan count, linked entities, events
 
 ### In the URL bar
-- Any valid `/q/:barcode_code` URL can be tested directly (e.g. `/q/LOC-2026-100001`)
+- Any valid `/q/:code` URL can be tested directly (e.g. `/q/LOC-2026-100001`)
 - Invalid, revoked, or non-existent codes show the same generic "unavailable" page
 
 ## 2. Copy / print / download a barcode
