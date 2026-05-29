@@ -15,6 +15,10 @@ import { Crown, Wallet, Calendar, Activity, Sparkles, ArrowUpRight, TrendingUp, 
 import { PROVIDER_COMMERCIAL_CONFIG } from '@/lib/providerCommercialConfig';
 import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
+import {
+  buildProviderCreditsCsv,
+  providerCreditsCsvFilename,
+} from '@/lib/provider-credits-csv';
 
 interface SubRow {
   id: string;
@@ -134,23 +138,12 @@ const ProviderMembership: React.FC = () => {
   // Export CSV of credit log
   const exportCsv = () => {
     const rows = filteredTx;
-    const header = ['date', 'type', 'reason', 'amount', 'balance_after', 'lead_id'];
-    const lines = [header.join(',')];
-    for (const t of rows) {
-      lines.push([
-        new Date(t.created_at).toISOString(),
-        t.type,
-        (REASON_LABEL[t.reason] ?? t.reason).replace(/,/g, ' '),
-        String(t.amount),
-        String(t.balance_after),
-        t.quote_request_lead_id ?? '',
-      ].join(','));
-    }
-    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const body = buildProviderCreditsCsv(rows, REASON_LABEL);
+    const blob = new Blob(['\uFEFF' + body], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `provider-credits-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = providerCreditsCsvFilename();
     a.click();
     URL.revokeObjectURL(url);
     trackEvent('provider_membership_credits_csv_exported', { rows: rows.length });
