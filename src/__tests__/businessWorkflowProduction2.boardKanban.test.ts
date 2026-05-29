@@ -161,15 +161,22 @@ describe("PRODUCTION-2 · WIP limit constants + helpers", () => {
 describe("PRODUCTION-2 · pure capacity metrics", () => {
   it("computes per-stage counts and detects overload + bottleneck", () => {
     // 11 engineering rows → over limit (10).
-    const rows = Array.from({ length: 11 }, (_, i) => ({
+    const rows: Array<{
+      id: string;
+      pipeline_stage:
+        | "engineering"
+        | "fabrication";
+      status: string;
+      due_at: string | null;
+    }> = Array.from({ length: 11 }, (_, i) => ({
       id: `wo-${i}`,
-      pipeline_stage: "engineering" as const,
+      pipeline_stage: "engineering",
       status: "active",
       due_at: null,
     }));
     rows.push({
       id: "wo-x",
-      pipeline_stage: "fabrication" as const,
+      pipeline_stage: "fabrication",
       status: "active",
       due_at: null,
     });
