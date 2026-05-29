@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -18,7 +18,6 @@ import {
   type HelpCategory,
 } from '@/modules/helpCenter';
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { useEffect } from 'react';
 
 const pickTitle = (a: HelpArticle | HelpCategory, lang: 'ar' | 'en') => (lang === 'ar' ? a.title_ar : a.title_en);
 const pickDesc = (c: HelpCategory, lang: 'ar' | 'en') => (lang === 'ar' ? c.description_ar : c.description_en) ?? '';
