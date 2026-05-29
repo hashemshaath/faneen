@@ -84,7 +84,7 @@ Old integrations that called `verify_contract_number` + `hash` should update to 
 1. **Lead backfill deferred** — `lead` entities are not backfilled with barcodes. New leads created after Phase 2 will receive a barcode via trigger.
 2. **Customer-owner links deferred** — `customer` profiles are backfilled but `barcode_entity_links` primary links for some pre-Phase 2 customers may be missing. Auto-create trigger covers all new inserts.
 3. **Freeze / transfer actions not implemented** — `frozen_at`, `archived_at`, `transferred_at`, `transfer_from_user_id`, `transfer_to_user_id` exist in schema but have no admin UI controls yet.
-4. **First real /q scan monitoring** — while QA passed with synthetic scans, the first production traffic to `/q/:barcode_code` should be monitored for:
+4. **First real /q scan monitoring** — while QA passed with synthetic scans, the first production traffic to `/q/:code` should be monitored for:
    - Unexpected `scan_count` spikes
    - Error rates in `resolve_barcode`
    - Event log volume
