@@ -90,5 +90,5 @@ The following are **never** returned by any barcode RPC or rendered in any barco
 ## 9. robots.txt and indexing
 
 - `Disallow: /q/` is present in `public/robots.txt`
-- `/q/:barcode_code` pages set `<meta name="robots" content="noindex,nofollow">`
+- `/q/:code` pages set `<meta name="robots" content="noindex,nofollow">`
 - Route is absent from `sitemap.xml`
