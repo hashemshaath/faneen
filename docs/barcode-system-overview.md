@@ -15,7 +15,7 @@ The unified barcode system assigns a single permanent public code — `barcode_c
 |---|---|---|
 | Format | `PREFIX-YYYY-NNNNNN` (e.g. `LOC-2026-100001`) | Random opaque string |
 | Lifetime | Permanent; survives rotation/revoke | Rotatable; revocable |
-| Public route | `/q/:barcode_code` | `/s/:token` |
+| Public route | `/q/:code` | `/s/:token` |
 | Use case | Printed stickers, invoices, business cards | Time-bound QR campaigns |
 | Stored in DB | `barcode_registry.barcode_code` (plain text, safe to display) | `qr_token_hash` (one-way hash only) |
 | Can be guessed? | No — sequential but high-offset (starts at 100,000/year) | No — random |
