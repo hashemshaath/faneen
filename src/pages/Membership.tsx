@@ -275,12 +275,8 @@ const Membership = () => {
         },
       )
       .subscribe();
-    const interval = window.setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: ['my-business-membership'] });
-    }, 60_000);
     return () => {
       supabase.removeChannel(channel);
-      window.clearInterval(interval);
     };
   }, [businessId, queryClient]);
 
