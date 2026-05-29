@@ -883,10 +883,44 @@ const Onboarding = () => {
               {isRTL ? 'لوجو / شعار المنشأة' : 'Business Logo'}
               <span className="text-muted-foreground ms-1">({isRTL ? 'اختياري' : 'optional'})</span>
             </Label>
-            <ImageUpload bucket="business-assets" folder={createdBusinessId ?? undefined}
-              value={logoUrl} onChange={setLogoUrl} onRemove={() => setLogoUrl('')}
-              aspectRatio="square" maxSizeMB={4}
-              placeholder={isRTL ? 'اضغط لرفع الشعار (JPEG / PNG)' : 'Click to upload logo (JPEG / PNG)'} />
+            <input ref={logoInputRef} type="file" accept="image/jpeg,image/png"
+              onChange={handleLogoFileChange} className="hidden" />
+            {logoUrl ? (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img src={logoUrl} alt="logo"
+                    className="w-14 h-14 rounded-lg object-cover border border-border/60 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-foreground truncate">
+                      {isRTL ? 'تم رفع الشعار' : 'Logo uploaded'}
+                    </p>
+                    <button type="button" onClick={() => logoInputRef.current?.click()}
+                      className="text-[11px] text-emerald-600 hover:underline">
+                      {isRTL ? 'تغيير الصورة' : 'Change image'}
+                    </button>
+                  </div>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => setLogoUrl('')}
+                  aria-label={isRTL ? 'حذف' : 'Remove'}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => logoInputRef.current?.click()}
+                disabled={logoUploading || !createdBusinessId}
+                className="w-full rounded-xl border-2 border-dashed border-border hover:border-emerald-500/50 transition-all p-6 flex flex-col items-center justify-center gap-2 disabled:opacity-50">
+                {logoUploading
+                  ? <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+                  : <Upload className="w-6 h-6 text-muted-foreground" />}
+                <p className="text-sm font-medium text-foreground">
+                  {logoUploading ? (isRTL ? 'جاري الرفع...' : 'Uploading…')
+                                : (isRTL ? 'اضغط لرفع الشعار' : 'Click to upload logo')}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {isRTL ? 'JPEG / PNG — حد أقصى 4 ميجا' : 'JPEG / PNG — max 4 MB'}
+                </p>
+              </button>
+            )}
             <p className="text-[11px] text-muted-foreground">
               {isRTL ? 'الصيغ المسموحة: JPEG، PNG — حد أقصى 4 ميجا.'
                      : 'Allowed formats: JPEG, PNG — max 4 MB.'}
