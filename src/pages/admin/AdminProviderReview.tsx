@@ -29,6 +29,7 @@ import { sendTransactionalEmail } from '@/modules/notifications/services/sendTra
 import { createNotification } from '@/modules/notifications/services/createNotification';
 import { ReferenceTag } from '@/components/reference/ReferenceTag';
 import { PublishReadinessPanel } from '@/components/admin/PublishReadinessPanel';
+import { AdminProviderGrowthPanel } from '@/components/admin/AdminProviderGrowthPanel';
 
 type ApprovalStatus =
   | 'draft' | 'submitted' | 'under_review'
