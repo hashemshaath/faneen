@@ -5603,6 +5603,65 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_tracking_links: {
+        Row: {
+          business_id: string
+          contract_id: string | null
+          created_at: string
+          created_by: string | null
+          customer_email: string | null
+          expires_at: string | null
+          id: string
+          last_viewed_at: string | null
+          quotation_id: string | null
+          ref_id: string
+          revoked_at: string | null
+          token_hash: string
+          view_count: number
+          work_order_id: string | null
+        }
+        Insert: {
+          business_id: string
+          contract_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_email?: string | null
+          expires_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          quotation_id?: string | null
+          ref_id?: string
+          revoked_at?: string | null
+          token_hash: string
+          view_count?: number
+          work_order_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          contract_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_email?: string | null
+          expires_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          quotation_id?: string | null
+          ref_id?: string
+          revoked_at?: string | null
+          token_hash?: string
+          view_count?: number
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_tracking_links_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delegated_workspace_access: {
         Row: {
           business_id: string
@@ -14037,6 +14096,14 @@ export type Database = {
         }
         Returns: string
       }
+      create_customer_tracking_link: {
+        Args: {
+          _customer_email?: string
+          _expires_at?: string
+          _work_order_id: string
+        }
+        Returns: Json
+      }
       create_notification: {
         Args: {
           _action_url?: string
@@ -14220,6 +14287,10 @@ export type Database = {
           last_rerun_at: string
           reason: string
         }[]
+      }
+      get_customer_project_snapshot: {
+        Args: { _ref_id: string; _token: string }
+        Returns: Json
       }
       get_email_deliverability_stats: {
         Args: { _window_minutes?: number }
@@ -15069,6 +15140,10 @@ export type Database = {
         Returns: Json
       }
       revoke_client_site_qr_token: { Args: { _site_id: string }; Returns: Json }
+      revoke_customer_tracking_link: {
+        Args: { _ref_id: string }
+        Returns: boolean
+      }
       revoke_invite_key: {
         Args: { _key_id: string; _reason?: string }
         Returns: boolean
