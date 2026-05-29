@@ -6057,6 +6057,78 @@ export type Database = {
           },
         ]
       }
+      installation_appointments: {
+        Row: {
+          business_id: string
+          completed_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          created_by: string | null
+          customer_confirmation_status: string
+          customer_note: string | null
+          customer_tracking_link_id: string | null
+          id: string
+          internal_note: string | null
+          ref_id: string
+          scheduled_date: string
+          status: string
+          time_window: string | null
+          updated_at: string
+          work_order_id: string
+        }
+        Insert: {
+          business_id: string
+          completed_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_confirmation_status?: string
+          customer_note?: string | null
+          customer_tracking_link_id?: string | null
+          id?: string
+          internal_note?: string | null
+          ref_id?: string
+          scheduled_date: string
+          status?: string
+          time_window?: string | null
+          updated_at?: string
+          work_order_id: string
+        }
+        Update: {
+          business_id?: string
+          completed_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_confirmation_status?: string
+          customer_note?: string | null
+          customer_tracking_link_id?: string | null
+          id?: string
+          internal_note?: string | null
+          ref_id?: string
+          scheduled_date?: string
+          status?: string
+          time_window?: string | null
+          updated_at?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installation_appointments_customer_tracking_link_id_fkey"
+            columns: ["customer_tracking_link_id"]
+            isOneToOne: false
+            referencedRelation: "customer_tracking_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "installation_appointments_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       installment_payments: {
         Row: {
           amount: number
@@ -13909,6 +13981,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      cancel_installation_appointment: {
+        Args: { _ref_id: string }
+        Returns: boolean
+      }
       cancel_subscription: {
         Args: { _subscription_id: string }
         Returns: undefined
@@ -14021,6 +14097,10 @@ export type Database = {
         Args: { _invite_id: string }
         Returns: string
       }
+      complete_installation_appointment: {
+        Args: { _ref_id: string }
+        Returns: boolean
+      }
       compute_business_onboarding_completion: {
         Args: { _business_id: string }
         Returns: number
@@ -14104,6 +14184,16 @@ export type Database = {
         }
         Returns: Json
       }
+      create_installation_appointment: {
+        Args: {
+          _customer_tracking_link_id?: string
+          _internal_note?: string
+          _scheduled_date: string
+          _time_window?: string
+          _work_order_id: string
+        }
+        Returns: Json
+      }
       create_notification: {
         Args: {
           _action_url?: string
@@ -14127,6 +14217,19 @@ export type Database = {
         Returns: Json
       }
       csag_site_summary: { Args: { _site_id: string }; Returns: Json }
+      customer_confirm_appointment: {
+        Args: { _apt_ref: string; _token: string; _tracking_ref: string }
+        Returns: boolean
+      }
+      customer_request_appointment_reschedule: {
+        Args: {
+          _apt_ref: string
+          _note?: string
+          _token: string
+          _tracking_ref: string
+        }
+        Returns: boolean
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -15430,6 +15533,15 @@ export type Database = {
           _patch: Json
         }
         Returns: Json
+      }
+      update_installation_appointment: {
+        Args: {
+          _internal_note?: string
+          _ref_id: string
+          _scheduled_date?: string
+          _time_window?: string
+        }
+        Returns: boolean
       }
       update_site_section_visibility: {
         Args: {
