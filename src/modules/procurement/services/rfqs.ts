@@ -3,6 +3,9 @@ import type { ProcurementRfqRow, ProcurementRfqStatus } from '../types';
 import { updateProcurementRequestStatus } from './procurementRequests';
 import { executeAwardHandoff } from './awardHandoff';
 import { notifyProcurementEvent } from './procurementNotifications';
+import { createPurchaseOrderDraft } from './purchaseOrders';
+import { calculateQuoteTotals } from './quoteComparisonLineItems';
+import { listQuoteItemsByQuote } from './supplierQuoteItems';
 
 const SELECT =
   'id, business_id, procurement_request_id, rfq_number, status, due_at, expires_at, sent_at, closed_at, awarded_quote_id, created_by, created_at, updated_at';
@@ -148,6 +151,45 @@ export async function awardRfqQuote(
     _quote_id: quoteId,
   });
   if (error) return { data: null, error };
+  // Best-effort: materialise a PO draft for the awarded quote.
+  // Idempotent on `supplier_quote_id` UNIQUE — re-awarding is safe.
+  try {
+    const { data: quote } = await supabase
+      .from('procurement_supplier_quotes')
+      .select(
+        'id, business_id, rfq_id, supplier_id, total_amount, currency',
+      )
+      .eq('id', quoteId)
+      .maybeSingle();
+    if (quote) {
+      const { data: supplier } = await supabase
+        .from('procurement_suppliers')
+        .select('id, name')
+        .eq('id', (quote as { supplier_id: string }).supplier_id)
+        .maybeSingle();
+      const { data: lineItems } = await listQuoteItemsByQuote(quoteId);
+      const totals = calculateQuoteTotals(lineItems ?? []);
+      const subtotal =
+        totals.totalPrice > 0
+          ? totals.totalPrice
+          : Number((quote as { total_amount: number | null }).total_amount ?? 0);
+      await createPurchaseOrderDraft({
+        business_id: (quote as { business_id: string }).business_id,
+        rfq_id: (quote as { rfq_id: string }).rfq_id,
+        supplier_quote_id: quoteId,
+        supplier_id: (quote as { supplier_id: string }).supplier_id,
+        supplier_name:
+          (supplier as { name?: string } | null)?.name ?? 'Supplier',
+        created_by: options?.actor_user_id ?? (quote as { business_id: string }).business_id,
+        subtotal,
+        tax: 0,
+        total: subtotal,
+        currency: (quote as { currency?: string }).currency ?? 'SAR',
+      });
+    }
+  } catch {
+    /* swallow — award already succeeded atomically */
+  }
   // Best-effort handoff (work-order timeline comment + in-app notifications).
   // Failures here MUST NOT bubble up — awarding already succeeded atomically.
   if (options?.rfq_id) {
