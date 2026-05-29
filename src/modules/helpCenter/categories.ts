@@ -29,3 +29,18 @@ export async function adminListAllCategories(): Promise<HelpCategory[]> {
   if (error) throw error;
   return (data ?? []) as HelpCategory[];
 }
+
+export interface UpdateHelpCategoryInput {
+  is_active?: boolean;
+  sort_order?: number;
+  audience?: 'general' | 'provider' | 'customer' | 'admin';
+  title_ar?: string;
+  title_en?: string;
+  description_ar?: string | null;
+  description_en?: string | null;
+}
+
+export async function updateHelpCategory(id: string, patch: UpdateHelpCategoryInput): Promise<void> {
+  const { error } = await supabase.from('help_categories').update(patch).eq('id', id);
+  if (error) throw error;
+}

@@ -48,3 +48,6 @@ export async function adminUpdateIssueStatus(id: string, status: HelpIssueStatus
   const { error } = await supabase.from('help_issue_reports').update({ status }).eq('id', id);
   if (error) throw error;
 }
+
+export const listHelpIssueReports = adminListAllIssueReports;
+export const updateHelpIssueReportStatus = adminUpdateIssueStatus;

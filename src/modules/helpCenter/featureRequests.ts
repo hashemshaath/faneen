@@ -42,3 +42,6 @@ export async function adminUpdateFeatureStatus(id: string, status: HelpFeatureSt
   const { error } = await supabase.from('help_feature_requests').update({ status }).eq('id', id);
   if (error) throw error;
 }
+
+export const listHelpFeatureRequests = adminListAllFeatureRequests;
+export const updateHelpFeatureRequestStatus = adminUpdateFeatureStatus;
