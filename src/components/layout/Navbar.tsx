@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { PrefetchLink } from "@/components/PrefetchLink";
-import { Search, Megaphone, Scale, Layers, FolderOpen, BookOpen, Menu, X, User, LogOut, ShieldAlert, Shield, ChevronDown, Bell } from "lucide-react";
+import { Search, Megaphone, Scale, Layers, FolderOpen, BookOpen, Menu, X, User, LogOut, ShieldAlert, Shield, ChevronDown, Bell, LifeBuoy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,6 +59,7 @@ export const Navbar = () => {
     { to: '/compare', label: language === 'ar' ? 'المقارنة' : 'Compare', icon: Scale },
     { to: '/profile-systems', label: language === 'ar' ? 'القطاعات' : 'Profiles', icon: Layers },
     { to: '/blog', label: language === 'ar' ? 'المدونة' : 'Blog', icon: BookOpen },
+    { to: '/help', label: language === 'ar' ? 'مركز المساعدة' : 'Help Center', icon: LifeBuoy },
   ];
 
   const allLinks = [...mainLinks, ...moreLinks];
