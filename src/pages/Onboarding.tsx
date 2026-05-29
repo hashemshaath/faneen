@@ -28,10 +28,10 @@ import { UsernamePicker } from '@/components/common/UsernamePicker';
 import {
   readDraft, saveDraft, clearDraft, pullRemoteDraft, syncDraftToServer,
 } from '@/lib/onboarding-draft';
+import { createEntityAccessRequest } from '@/modules/entities/services/access';
 import {
-  createEntityAccessRequest, getBusinessIdByRefOrLegacyRef,
-} from '@/modules/entities/services/access';
-import { getOwnerBusiness, updateBusinessById } from '@/modules/businesses';
+  getOwnerBusiness, updateBusinessById, getBusinessIdByRefOrLegacyRef,
+} from '@/modules/businesses';
 import { EntityVerificationStatusBadge } from '@/components/entities/EntityVerificationStatusBadge';
 
 // ──────────────────────────────────────────────────────────────────────────
