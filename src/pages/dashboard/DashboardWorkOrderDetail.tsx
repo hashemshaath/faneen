@@ -36,6 +36,7 @@ import { HealthBadge } from "@/components/health/HealthBadge";
 import { RelatedReferencesPanel } from "@/components/reference/RelatedReferencesPanel";
 import { UnifiedTimeline } from "@/components/timeline/UnifiedTimeline";
 import { workOrderHealth } from "@/modules/health";
+import { useWorkOrderRealtimeInvalidation } from "@/hooks/useWorkOrderRealtimeInvalidation";
 import {
   getWorkOrderByRefId,
   listWorkOrderStages,
