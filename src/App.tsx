@@ -41,6 +41,9 @@ const HelpCategoryPage = lazyRetry(() => import("./pages/help/HelpCategoryPage")
 const HelpArticlePage = lazyRetry(() => import("./pages/help/HelpArticlePage"));
 const ReportIssuePage = lazyRetry(() => import("./pages/help/ReportIssuePage"));
 const FeatureRequestPage = lazyRetry(() => import("./pages/help/FeatureRequestPage"));
+const AdminHelpCenter = lazyRetry(() => import("./pages/admin/AdminHelpCenter"));
+const DashboardHelpCenter = lazyRetry(() => import("./pages/dashboard/DashboardHelpCenter"));
+const HelpLauncherFloating = lazy(() => import("./components/help/HelpLauncherFloating"));
 const PublicSiteScan = lazyRetry(() => import("./pages/PublicSiteScan"));
 const PublicBarcodeResolve = lazyRetry(() => import("./pages/PublicBarcodeResolve"));
 const ReferenceResolver = lazyRetry(() => import("./pages/ReferenceResolver"));
@@ -264,6 +267,8 @@ const AppRoutes = () => (
           <Route path="/help/article/:slug" element={<HelpArticlePage />} />
           <Route path="/help/report-issue" element={<ProtectedRoute><ReportIssuePage /></ProtectedRoute>} />
           <Route path="/help/feature-request" element={<ProtectedRoute><FeatureRequestPage /></ProtectedRoute>} />
+          <Route path="/dashboard/help" element={<ProtectedRoute><DashboardHelpCenter /></ProtectedRoute>} />
+          <Route path="/admin/help" element={<ProtectedRoute requireAdmin><AdminHelpCenter /></ProtectedRoute>} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/forbidden" element={<Forbidden />} />
@@ -402,6 +407,9 @@ const AppRoutes = () => (
       </Suspense>
       <Suspense fallback={null}>
         <BuildVersionWatcher />
+      </Suspense>
+      <Suspense fallback={null}>
+        <HelpLauncherFloating />
       </Suspense>
     </AppDirectionShell>
   </BrowserRouter>

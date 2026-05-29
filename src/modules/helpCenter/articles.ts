@@ -56,3 +56,24 @@ export async function adminUpdateArticleStatus(id: string, status: 'draft' | 'pu
   const { error } = await supabase.from('help_articles').update({ status }).eq('id', id);
   if (error) throw error;
 }
+
+export const listHelpArticles = adminListAllArticles;
+export const publishHelpArticle = (id: string) => adminUpdateArticleStatus(id, 'published');
+export const unpublishHelpArticle = (id: string) => adminUpdateArticleStatus(id, 'draft');
+
+export interface UpdateHelpArticleInput {
+  title_ar?: string;
+  title_en?: string;
+  summary_ar?: string | null;
+  summary_en?: string | null;
+  content_ar?: string | null;
+  content_en?: string | null;
+  status?: 'draft' | 'published';
+  category_id?: string | null;
+  audience?: 'general' | 'provider' | 'customer' | 'admin';
+}
+
+export async function updateHelpArticle(id: string, patch: UpdateHelpArticleInput): Promise<void> {
+  const { error } = await supabase.from('help_articles').update(patch).eq('id', id);
+  if (error) throw error;
+}
