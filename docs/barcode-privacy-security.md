@@ -2,7 +2,7 @@
 
 Internal reference for the privacy and access-control posture of the unified barcode system. Pair with `docs/barcode-system-overview.md`.
 
-## 1. What /q/:barcode_code exposes
+## 1. What /q/:code exposes
 
 On a successful scan of an `active` barcode:
 
