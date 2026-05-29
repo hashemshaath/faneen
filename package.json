@@ -45,6 +45,8 @@
     "operations-isolation-audit": "node scripts/operations-isolation-audit.mjs"
     ,
     "procurement-isolation-audit": "node scripts/procurement-isolation-audit.mjs"
+    ,
+    "seo:post-deploy": "node scripts/seo-post-deploy-verify.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
