@@ -581,6 +581,14 @@ export function WorkOrderQuotationsSection({
                   <WorkOrderQuotationPdf data={pdfData} isRTL={isRTL} />
                 </div>
               )}
+
+              {/* BUSINESS-FINISHING-2A — read-only revision history */}
+              {activeQuotation.ref_id && (
+                <QuotationRevisionHistory
+                  businessId={businessId}
+                  quotationRefId={activeQuotation.ref_id}
+                />
+              )}
             </div>
           )}
         </>
