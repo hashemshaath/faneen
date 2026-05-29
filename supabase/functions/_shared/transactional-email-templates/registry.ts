@@ -56,6 +56,10 @@ import { template as clientContractInvite } from './client-contract-invite.tsx'
 import { template as clientInviteReminder } from './client-invite-reminder.tsx'
 import { template as clientInviteAccepted } from './client-invite-accepted.tsx'
 import { template as businessStaffInvitation } from './business-staff-invitation.tsx'
+import { template as customerQuotationReady } from './customer-quotation-ready.tsx'
+import { template as customerQuotationApproved } from './customer-quotation-approved.tsx'
+import { template as customerWorkOrderCreated } from './customer-work-order-created.tsx'
+import { template as customerWorkOrderCompleted } from './customer-work-order-completed.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-confirmation': bookingConfirmation,
@@ -105,4 +109,8 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'client-invite-reminder': clientInviteReminder,
   'client-invite-accepted': clientInviteAccepted,
   'business-staff-invitation': businessStaffInvitation,
+  'customer-quotation-ready': customerQuotationReady,
+  'customer-quotation-approved': customerQuotationApproved,
+  'customer-work-order-created': customerWorkOrderCreated,
+  'customer-work-order-completed': customerWorkOrderCompleted,
 }
