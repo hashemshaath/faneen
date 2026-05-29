@@ -231,6 +231,7 @@ const AppRoutes = () => (
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/profile-systems" element={<ProfileSystems />} />
           <Route path="/profile-systems/:slug" element={<ProfileSystemDetail />} />
+          <Route path="/profile-systems/category/:cat" element={<ProfileSystems />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/categories/:slug" element={<Categories />} />
           <Route path="/sectors" element={<SectorsHub />} />
