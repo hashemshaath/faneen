@@ -30,6 +30,8 @@ describe('APP-SHELL-1 — refRouteMap', () => {
   });
 
   it('listRefPrefixes contains exactly the documented prefixes', () => {
-    expect([...listRefPrefixes()].sort()).toEqual(['BKG', 'CNT', 'LED', 'QTE', 'STF', 'TASK', 'TEAM', 'WO']);
+    expect([...listRefPrefixes()].sort()).toEqual(
+      ['BKG', 'BOQ', 'CNT', 'CONTRACT', 'LED', 'NOTE', 'PO', 'QTE', 'QUOTE', 'RFQ', 'STF', 'TASK', 'TEAM', 'WO', 'WOQ'].sort(),
+    );
   });
 });
