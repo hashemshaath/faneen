@@ -275,12 +275,107 @@ const DashboardAnalytics = () => {
     }));
   }, [analytics]);
 
-  const periodOptions = [
-    { value: '7d', label: isRTL ? '7 أيام' : '7 days' },
-    { value: '30d', label: isRTL ? '30 يوم' : '30 days' },
-    { value: '90d', label: isRTL ? '90 يوم' : '90 days' },
-    { value: '12m', label: isRTL ? '12 شهر' : '12 months' },
+  const periodOptions: { value: Period; label: string }[] = [
+    { value: '7d', label: isRTL ? '7 أيام' : '7d' },
+    { value: '30d', label: isRTL ? '30 يوم' : '30d' },
+    { value: '90d', label: isRTL ? '90 يوم' : '90d' },
+    { value: '12m', label: isRTL ? '12 شهر' : '12m' },
   ];
+
+  // Previous-period comparison fetch (for trend deltas).
+  const prevRange = useMemo(() => {
+    const { startDate, endDate } = dateRange;
+    const span = endDate.getTime() - startDate.getTime();
+    const prevEnd = new Date(startDate.getTime() - 1);
+    const prevStart = new Date(prevEnd.getTime() - span);
+    return { start: prevStart.toISOString(), end: prevEnd.toISOString() };
+  }, [dateRange]);
+
+  const { data: prevAnalytics } = useQuery({
+    queryKey: ['provider-analytics-prev', business?.id, period],
+    queryFn: async () => {
+      if (!business) return null;
+      const [contracts, bookings, reviews] = await Promise.all([
+        listContractsForProviderOrBusiness<{ id: string; status: string; total_amount: number | null; created_at: string }>({
+          userId: user!.id,
+          businessId: business.id,
+          select: 'id, status, total_amount, created_at',
+          gteCreatedAt: prevRange.start,
+        }).then((r) => ({ data: (r.data ?? []).filter((c) => c.created_at <= prevRange.end) })),
+        supabase.from('bookings').select('id, status, created_at')
+          .eq('business_id', business.id)
+          .gte('created_at', prevRange.start).lte('created_at', prevRange.end),
+        supabase.from('reviews').select('id, rating, created_at')
+          .eq('business_id', business.id)
+          .gte('created_at', prevRange.start).lte('created_at', prevRange.end),
+      ]);
+      const cs = contracts.data ?? [];
+      const revenue = cs.filter((c) => ['completed', 'active'].includes(c.status))
+        .reduce((s, c) => s + Number(c.total_amount || 0), 0);
+      const ratings = (reviews.data ?? []);
+      return {
+        revenue,
+        contracts: cs.length,
+        bookings: (bookings.data ?? []).length,
+        avgRating: ratings.length ? ratings.reduce((s, r) => s + r.rating, 0) / ratings.length : 0,
+      };
+    },
+    enabled: !!business,
+    staleTime: 60000,
+  });
+
+  const trend = (curr: number, prev: number | undefined): { up?: boolean; label: string } | undefined => {
+    if (prev === undefined || prev === null) return undefined;
+    if (prev === 0 && curr === 0) return { up: undefined, label: '0%' };
+    if (prev === 0) return { up: true, label: '+∞' };
+    const pct = ((curr - prev) / prev) * 100;
+    const sign = pct > 0 ? '+' : '';
+    return { up: pct >= 0, label: `${sign}${pct.toFixed(0)}%` };
+  };
+
+  const queryClient = (useQuery as unknown as { _qc?: never }); // placeholder, real refetch below
+  const refetchAll = () => {
+    // Trigger react-query refetch by invalidating: simplest via window event
+    window.dispatchEvent(new CustomEvent('qitaat:analytics-refresh'));
+  };
+
+  const downloadCsv = () => {
+    if (!analytics || !stats) return;
+    const rows: string[] = [];
+    rows.push(['Metric', 'Value'].join(','));
+    rows.push(['Revenue', String(stats.totalRevenue)].join(','));
+    rows.push(['Contracts (total)', String(stats.totalContracts)].join(','));
+    rows.push(['Contracts (active)', String(stats.activeContracts)].join(','));
+    rows.push(['Contracts (completed)', String(stats.completedContracts)].join(','));
+    rows.push(['Bookings (total)', String(stats.totalBookings)].join(','));
+    rows.push(['Bookings (confirmed)', String(stats.confirmedBookings)].join(','));
+    rows.push(['Bookings (completed)', String(stats.completedBookings)].join(','));
+    rows.push(['Bookings (cancelled)', String(stats.cancelledBookings)].join(','));
+    rows.push(['Reviews (total)', String(stats.totalReviews)].join(','));
+    rows.push(['Rating (avg)', String(stats.avgRating)].join(','));
+    rows.push(['Projects', String(stats.projectsCount)].join(','));
+    rows.push(['Services', String(stats.servicesCount)].join(','));
+    rows.push('');
+    rows.push(['Date', 'Revenue', 'Contracts'].join(','));
+    revenueChartData.forEach((d) => rows.push([d.date, String(d.revenue), String(d.count)].join(',')));
+    const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qitaat-analytics-${period}-${format(new Date(), 'yyyyMMdd-HHmm')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Smart insight (best chart day / conversion ratio)
+  const insight = useMemo(() => {
+    if (!analytics || !stats) return null;
+    const best = revenueChartData.reduce((m, d) => (d.revenue > m.revenue ? d : m), { date: '', revenue: 0, count: 0 });
+    const convRate = stats.totalBookings > 0
+      ? Math.round((stats.completedBookings / stats.totalBookings) * 100)
+      : 0;
+    return { bestDate: best.date, bestRevenue: best.revenue, convRate };
+  }, [analytics, stats, revenueChartData]);
 
   return (
     <DashboardLayout>
