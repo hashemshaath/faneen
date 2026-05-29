@@ -27,6 +27,10 @@ import {
   listHelpFeatureRequests,
   updateHelpFeatureRequestStatus,
   computeHelpMetrics,
+  computeHelpIntelligenceMetrics,
+  computeContentGaps,
+  computeArticleQuality,
+  adminListSearchLogs,
   type HelpArticle,
   type HelpCategory,
   type HelpIssueReport,
@@ -47,6 +51,7 @@ const AdminHelpCenter: React.FC = () => {
   const { data: categories = [] } = useQuery({ queryKey: ['admin', 'help', 'categories'], queryFn: adminListAllCategories });
   const { data: issues = [] } = useQuery({ queryKey: ['admin', 'help', 'issues'], queryFn: () => listHelpIssueReports({}) });
   const { data: features = [] } = useQuery({ queryKey: ['admin', 'help', 'features'], queryFn: () => listHelpFeatureRequests({}) });
+  const { data: searchLogs = [] } = useQuery({ queryKey: ['admin', 'help', 'search-logs'], queryFn: () => adminListSearchLogs(1000) });
 
   const invalidate = (k: string) => qc.invalidateQueries({ queryKey: ['admin', 'help', k] });
 
@@ -56,6 +61,12 @@ const AdminHelpCenter: React.FC = () => {
   const featM = useMutation({ mutationFn: ({ id, status }: { id: string; status: HelpFeatureStatus }) => updateHelpFeatureRequestStatus(id, status), onSuccess: () => invalidate('features') });
 
   const metrics = useMemo(() => computeHelpMetrics(articles, issues, features), [articles, issues, features]);
+  const intel = useMemo(() => computeHelpIntelligenceMetrics(articles, issues, features, searchLogs), [articles, issues, features, searchLogs]);
+  const gaps = useMemo(() => computeContentGaps(searchLogs), [searchLogs]);
+  const qualityList = useMemo(
+    () => articles.map((a) => ({ a, q: computeArticleQuality(a) })).sort((x, y) => x.q.score - y.q.score),
+    [articles],
+  );
 
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<string>('all');
