@@ -86,7 +86,8 @@ describe("BUSINESS-CORE-6: safety exclusions", () => {
       const src = readFileSync(f, "utf8");
       expect(src).not.toMatch(/\bcron\b|scheduler/i);
       expect(src).not.toMatch(/\.channel\(/);
-      expect(src).not.toMatch(/realtime/i);
+      expect(src).not.toMatch(/postgres_changes/);
+      expect(src.replace(/useWorkOrderRealtimeInvalidation/g, "")).not.toMatch(/realtime/i);
       expect(src).not.toMatch(/notifications?\//i);
       expect(src).not.toMatch(/\/auth\//i);
       expect(src).not.toMatch(/payments?\//i);

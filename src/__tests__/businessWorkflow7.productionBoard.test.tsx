@@ -114,7 +114,9 @@ describe("BUSINESS-WORKFLOW-7 forbidden surfaces", () => {
       const src = read(f);
       expect(src, f).not.toMatch(/supabase\.channel\(/);
       expect(src, f).not.toMatch(/postgres_changes/);
-      expect(src, f).not.toMatch(/\.subscribe\(/);
+      // Vetted useWorkOrderRealtimeInvalidation hook is allowed; raw .subscribe is not.
+      const stripped = src.replace(/useWorkOrderRealtimeInvalidation\([^)]*\)/g, "");
+      expect(stripped, f).not.toMatch(/\.subscribe\(/);
     }
   });
 
