@@ -47,7 +47,7 @@ the P1 isolation backlog before promoting the “Phase 2 hardening” gate.
 - Dashboard / admin groups are mounted under guarded `<ProtectedRoute>`
   trees.
 - Resolver routes (`/r/:refId`, `/v/b/:username`, `/v/c/:number`,
-  `/q/:barcode_code`, `/s/:token`) all map to existing pages.
+  `/q/:code`, `/s/:token`) all map to existing pages.
 - No duplicate path strings detected (147 unique).
 - No `/dashboard/membership` (legacy broken path) — guarded by 4 source
   tests.
