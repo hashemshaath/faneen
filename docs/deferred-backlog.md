@@ -11,7 +11,7 @@ the trigger phase that may pick it up.
 | # | Item | Trigger / phase | Notes |
 |---|------|-----------------|-------|
 | 1 | Procurement / RFQ module | `BUSINESS-WORKFLOW-PROCUREMENT-1` | Distinct module under `src/modules/procurement/`. Needs RFQ schema + supplier scoping. |
-| 1b | Procurement: Supplier portal + line-item RFQs | `BUSINESS-WORKFLOW-PROCUREMENT-2` | Foundation shipped in PROCUREMENT-1 (request → RFQ → supplier quote → award). Supplier-facing portal, multi-line items, attachments still deferred. |
+| 1b | Procurement: Supplier portal + line-item RFQs | `BUSINESS-WORKFLOW-PROCUREMENT-3` | PROCUREMENT-2 added RFQ lifecycle (send/close), supplier invitations, shortlist/reject/award via atomic RPC `procurement_award_quote`. Still deferred: external supplier portal, multi-line items, attachments, RFQ expiry cron, notifications for RFQ events, work-order pipeline event hop on award. |
 | 1c | Procurement: Supplier payments | `BUSINESS-WORKFLOW-PROCUREMENT-PAYMENTS-1` | Payments to suppliers explicitly out of scope until the payments phase. |
 | 1d | Procurement: Inventory link | `BUSINESS-WORKFLOW-INVENTORY-1` | Awarded quotes do not yet create stock movements. |
 | 2 | Inventory module | `BUSINESS-WORKFLOW-INVENTORY-1` | Stock, locations, movements. Tightly coupled to procurement. |
