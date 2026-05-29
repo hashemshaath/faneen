@@ -46,12 +46,19 @@ interface SearchResultsProps {
   onDidYouMeanClick?: (term: string) => void;
   sortBy?: SortKey;
   onSortChange?: (s: SortKey) => void;
+  /**
+   * True when the directory itself has zero publicly visible providers
+   * (not just "filters returned nothing"). Used to show an informative
+   * empty state explaining the publication workflow instead of a generic
+   * "no results" copy.
+   */
+  directoryIsEmpty?: boolean;
 }
 
 export const SearchResults = ({
   businesses, isLoading, viewMode, onViewModeChange, totalCount, onClearFilters,
   currentPage, totalPages, itemsPerPage, onPageChange, didYouMean, onDidYouMeanClick,
-  sortBy, onSortChange,
+  sortBy, onSortChange, directoryIsEmpty,
 }: SearchResultsProps) => {
   const { t, isRTL } = useLanguage();
 
