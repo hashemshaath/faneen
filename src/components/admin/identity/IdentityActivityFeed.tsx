@@ -8,6 +8,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { listProfilesByUserIds } from '@/modules/users/services/listProfilesByUserIds';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Activity, Shield, UserPlus, Ban, CheckCircle2, Building2,
@@ -99,10 +100,10 @@ export const IdentityActivityFeed: React.FC<Props> = ({ isRTL, limit = 20, class
       const actorIds = Array.from(new Set(list.map(r => r.user_id))).filter(Boolean);
       const actors = new Map<string, ActorLite>();
       if (actorIds.length > 0) {
-        const { data: profs } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, avatar_url')
-          .in('user_id', actorIds);
+        const { data: profs } = await listProfilesByUserIds<ActorLite>({
+          userIds: actorIds,
+          select: 'user_id, full_name, avatar_url',
+        });
         (profs ?? []).forEach(p => actors.set(p.user_id, p as ActorLite));
       }
       return { rows: list, actors };
