@@ -302,7 +302,7 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
       {activeBoq && (
         <RelatedReferencesPanel
           entries={[
-            { label: { ar: 'أمر العمل', en: 'Work Order' }, refId: (workOrderId as unknown as string) ? undefined : undefined },
+            { label: { ar: 'أمر العمل', en: 'Work Order' }, refId: workOrderRefId ?? null },
             { label: { ar: 'الكشف', en: 'BOQ' }, refId: activeBoq.ref_id },
           ]}
         />
