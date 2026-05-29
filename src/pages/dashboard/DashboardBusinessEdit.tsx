@@ -390,34 +390,45 @@ const DashboardBusinessEdit: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto space-y-6 pb-24">
-        {/* Header */}
-        <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {t(isRTL, 'تعديل بيانات المنشأة', 'Edit Business Profile')}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1.5">
-              {t(isRTL, 'حدّث جميع بيانات منشأتك من مكان واحد — التعديلات تُنشر فور الحفظ.',
-                'Update every detail of your business in one place — saved changes go live immediately.')}
-            </p>
-            <div className="flex flex-wrap items-center gap-2 mt-3">
-              <Badge variant="outline" className={statusTone}><ShieldCheck className="w-3 h-3 me-1" />{status}</Badge>
-              {form.ref_id && <Badge variant="outline" className="font-mono tech-content"><Hash className="w-3 h-3 me-1" />{form.ref_id}</Badge>}
-              <Badge variant="outline">{t(isRTL, 'الجاهزية:', 'Readiness:')} <span className="tech-content ms-1">{completionPct}%</span></Badge>
-              {form.username && (
-                <Link to={`/${form.username}`} className="text-xs text-primary hover:underline inline-flex items-center gap-1" target="_blank" rel="noreferrer">
-                  {t(isRTL, 'عرض الصفحة العامة', 'View public page')}<ExternalLink className="w-3 h-3" />
-                </Link>
-              )}
+      <div className="max-w-5xl mx-auto space-y-6 pb-24 pt-4 scroll-mt-32">
+        {/* Hero header — elevated card so the sticky workspace-context bar
+            above it never visually overlaps the title. */}
+        <header
+          className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-emerald-500/10 via-background to-background shadow-sm"
+        >
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 sm:p-6">
+            <div className="min-w-0 flex items-start gap-3">
+              <div className="hidden sm:flex w-11 h-11 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 items-center justify-center shrink-0">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
+                  {t(isRTL, 'تعديل بيانات المنشأة', 'Edit Business Profile')}
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1.5">
+                  {t(isRTL, 'حدّث جميع بيانات منشأتك من مكان واحد — التعديلات تُنشر فور الحفظ.',
+                    'Update every detail of your business in one place — saved changes go live immediately.')}
+                </p>
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  <Badge variant="outline" className={statusTone}><ShieldCheck className="w-3 h-3 me-1" />{status}</Badge>
+                  {form.ref_id && <Badge variant="outline" className="font-mono tech-content"><Hash className="w-3 h-3 me-1" />{form.ref_id}</Badge>}
+                  <Badge variant="outline">{t(isRTL, 'الجاهزية:', 'Readiness:')} <span className="tech-content ms-1">{completionPct}%</span></Badge>
+                  {form.username && (
+                    <Link to={`/${form.username}`} className="text-xs text-primary hover:underline inline-flex items-center gap-1" target="_blank" rel="noreferrer">
+                      {t(isRTL, 'عرض الصفحة العامة', 'View public page')}<ExternalLink className="w-3 h-3" />
+                    </Link>
+                  )}
+                </div>
+              </div>
             </div>
+            <PermissionHint permission="entity.manage">
+              <Button onClick={handleSave} disabled={saving || !dirty} className="gap-1.5 self-start sm:self-auto shrink-0">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {t(isRTL, 'حفظ التغييرات', 'Save changes')}
+              </Button>
+            </PermissionHint>
           </div>
-          <PermissionHint permission="entity.manage">
-            <Button onClick={handleSave} disabled={saving || !dirty} className="gap-1.5 self-start sm:self-auto">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {t(isRTL, 'حفظ التغييرات', 'Save changes')}
-            </Button>
-          </PermissionHint>
         </header>
 
         <ValidationBanner issues={validationIssues} isRTL={isRTL} />
