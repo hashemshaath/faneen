@@ -118,10 +118,10 @@ const finding = (
   reason: IntegrityKey,
 ): IntegrityFinding => ({ id, ref: ref ?? '', reason });
 
-const toSet = <T extends { [k: string]: unknown }>(rows: T[], key: keyof T): Set<string> => {
+const toSet = <T>(rows: readonly T[], key: keyof T): Set<string> => {
   const s = new Set<string>();
   for (const r of rows) {
-    const v = r[key];
+    const v = r[key] as unknown;
     if (typeof v === 'string' && v.length > 0) s.add(v);
   }
   return s;
