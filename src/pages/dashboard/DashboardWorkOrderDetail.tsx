@@ -146,6 +146,13 @@ export default function DashboardWorkOrderDetail() {
 
   useEffect(() => { void load(); }, [load]);
 
+  // BUSINESS-WORKFLOW-REALTIME-1: invalidate + refetch on postgres_changes.
+  useWorkOrderRealtimeInvalidation({
+    businessId: wo?.business_id ?? null,
+    workOrderId: wo?.id ?? null,
+    onChange: () => { void load(); },
+  });
+
   // Scroll the highlighted task into view once data is loaded.
   useEffect(() => {
     if (!highlightTaskRef || tasks.length === 0) return;
