@@ -36,6 +36,8 @@ import { MembershipKeysManager } from '@/components/membership/MembershipKeysMan
 import { MembershipBenefits } from '@/components/membership/MembershipBenefits';
 import { MembershipFAQ } from '@/components/membership/MembershipFAQ';
 import { MembershipTrustStrip } from '@/components/membership/MembershipTrustStrip';
+import { MembershipPlanRecommender } from '@/components/membership/MembershipPlanRecommender';
+import { MembershipTestimonials } from '@/components/membership/MembershipTestimonials';
 import { track } from '@/lib/analytics-events';
 import { Button } from '@/components/ui/button';
 import { ensureDraftBusiness } from '@/lib/ensure-business';
@@ -68,6 +70,15 @@ const Membership = () => {
   const [pendingDowngrade, setPendingDowngrade] = useState<{ id: string; tier: string } | null>(null);
   const [pendingUpgrade, setPendingUpgrade] = useState<{ id: string; tier: string } | null>(null);
   const [showReviewNotes, setShowReviewNotes] = useState(false);
+  const [highlightedTier, setHighlightedTier] = useState<string | null>(null);
+
+  const handleRecommenderApply = (tier: string) => {
+    setHighlightedTier(tier);
+    requestAnimationFrame(() => {
+      document.getElementById(`plan-card-${tier}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    window.setTimeout(() => setHighlightedTier(null), 3500);
+  };
 
   // Per-ref_id dismissal of the auto-created draft banner. Persisted in
   // localStorage so a brand-new draft (different ref_id) shows the banner
@@ -1022,28 +1033,43 @@ const Membership = () => {
           />
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
-          {plans.map((plan) => {
-            const planTierIndex = tierOrder.indexOf(plan.tier);
-            const isCurrentPlan = !!(currentTier === plan.tier && mySubscription);
-            const isUpgrade = planTierIndex > currentTierIndex;
-            const isDowngrade = planTierIndex < currentTierIndex && planTierIndex > 0;
+        <MembershipPlanRecommender isRTL={isRTL} onApply={handleRecommenderApply} />
 
-            return (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
-                billingCycle={billingCycle}
-                isRTL={isRTL}
-                language={language}
-                isCurrentPlan={isCurrentPlan}
-                isUpgrade={isUpgrade}
-                isDowngrade={isDowngrade}
-                isSubscribing={subscribingPlanId === plan.id}
-                onSubscribe={handleSubscribe}
-              />
-            );
-          })}
+        {/* Asymmetric bento: Premium spans 2 cols + 2 rows (featured),
+            others fill remaining cells on lg. Stacks cleanly on mobile. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-4 max-w-6xl mx-auto auto-rows-fr">
+          {[...plans]
+            .sort((a, b) => {
+              // Premium first so it occupies the top-left big tile.
+              if (a.tier === 'premium') return -1;
+              if (b.tier === 'premium') return 1;
+              return tierOrder.indexOf(a.tier) - tierOrder.indexOf(b.tier);
+            })
+            .map((plan) => {
+              const planTierIndex = tierOrder.indexOf(plan.tier);
+              const isCurrentPlan = !!(currentTier === plan.tier && mySubscription);
+              const isUpgrade = planTierIndex > currentTierIndex;
+              const isDowngrade = planTierIndex < currentTierIndex && planTierIndex > 0;
+              const isFeatured = plan.tier === 'premium';
+
+              return (
+                <PlanCard
+                  key={plan.id}
+                  plan={plan}
+                  billingCycle={billingCycle}
+                  isRTL={isRTL}
+                  language={language}
+                  isCurrentPlan={isCurrentPlan}
+                  isUpgrade={isUpgrade}
+                  isDowngrade={isDowngrade}
+                  isSubscribing={subscribingPlanId === plan.id}
+                  onSubscribe={handleSubscribe}
+                  featured={isFeatured}
+                  highlighted={highlightedTier === plan.tier}
+                  className={isFeatured ? 'lg:col-span-2 lg:row-span-2' : ''}
+                />
+              );
+            })}
         </div>
 
         <FeatureComparisonTable isRTL={isRTL} />
@@ -1051,6 +1077,8 @@ const Membership = () => {
         <MembershipBenefits isRTL={isRTL} />
 
         <MembershipTrustStrip isRTL={isRTL} />
+
+        <MembershipTestimonials isRTL={isRTL} />
 
         <MembershipFAQ isRTL={isRTL} />
 

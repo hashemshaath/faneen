@@ -15,28 +15,38 @@ interface PlanCardProps {
   isDowngrade: boolean;
   isSubscribing: boolean;
   onSubscribe: (plan) => void;
+  featured?: boolean;
+  className?: string;
+  highlighted?: boolean;
 }
 
 export const PlanCard = React.memo(({
   plan, billingCycle, isRTL, language, isCurrentPlan, isUpgrade, isDowngrade, isSubscribing, onSubscribe,
+  featured = false, className, highlighted = false,
 }: PlanCardProps) => {
   const Icon = tierIcons[plan.tier] || Zap;
   const gradient = tierGradients[plan.tier] || tierGradients.free;
   const price = billingCycle === 'monthly' ? plan.price_monthly : plan.price_yearly;
   const features = Array.isArray(plan.features) ? plan.features : [];
-  const isPremium = plan.tier === 'premium';
+  const isPremium = plan.tier === 'premium' || featured;
   const monthlyEq = billingCycle === 'yearly' && plan.price_yearly > 0 ? Math.round(plan.price_yearly / 12) : null;
   const savingPct = (plan.price_monthly > 0 && plan.price_yearly > 0)
     ? Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100)
     : 0;
 
   return (
-    <div className={cn(
-      'relative rounded-2xl border p-5 sm:p-6 flex flex-col transition-all duration-300 hover-lift group overflow-hidden',
+    <div
+      id={`plan-card-${plan.tier}`}
+      data-plan-tier={plan.tier}
+      className={cn(
+      'relative rounded-2xl border flex flex-col transition-all duration-300 hover-lift group overflow-hidden scroll-mt-28',
+      featured ? 'p-6 sm:p-8' : 'p-5 sm:p-6',
       isPremium
-        ? 'border-accent/40 bg-gradient-to-b from-accent/5 to-card shadow-[0_10px_40px_-15px_hsl(var(--accent)/0.4)] md:scale-[1.04] md:-my-1'
+        ? 'border-accent/40 bg-gradient-to-b from-accent/5 to-card shadow-[0_10px_40px_-15px_hsl(var(--accent)/0.4)]'
         : 'border-border/60 bg-card hover:border-accent/30 hover:shadow-lg',
-      isCurrentPlan && 'ring-2 ring-accent/40 ring-offset-2 ring-offset-background'
+      isCurrentPlan && 'ring-2 ring-accent/40 ring-offset-2 ring-offset-background',
+      highlighted && 'ring-4 ring-accent ring-offset-2 ring-offset-background animate-pulse',
+      className,
     )}>
       {/* Premium glow background */}
       {isPremium && (
@@ -60,20 +70,24 @@ export const PlanCard = React.memo(({
         </div>
       )}
 
-      <div className={cn('w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-4 shadow-md ring-1 ring-white/10 transition-transform group-hover:scale-110 group-hover:rotate-3', gradient)}>
-        <Icon className="w-6 h-6 text-white drop-shadow" />
+      <div className={cn(
+        'rounded-2xl bg-gradient-to-br flex items-center justify-center mb-4 shadow-md ring-1 ring-white/10 transition-transform group-hover:scale-110 group-hover:rotate-3',
+        featured ? 'w-16 h-16' : 'w-12 h-12',
+        gradient,
+      )}>
+        <Icon className={cn('text-white drop-shadow', featured ? 'w-8 h-8' : 'w-6 h-6')} />
       </div>
 
-      <h3 className="font-heading font-bold text-xl mb-1.5 text-foreground">
+      <h3 className={cn('font-heading font-bold mb-1.5 text-foreground', featured ? 'text-2xl sm:text-3xl' : 'text-xl')}>
         {language === 'ar' ? plan.name_ar : plan.name_en}
       </h3>
-      <p className="text-xs text-muted-foreground mb-5 line-clamp-2 leading-relaxed min-h-[2.4em]">
+      <p className={cn('text-muted-foreground mb-5 leading-relaxed', featured ? 'text-sm line-clamp-3 min-h-[3.6em]' : 'text-xs line-clamp-2 min-h-[2.4em]')}>
         {language === 'ar' ? plan.description_ar : plan.description_en}
       </p>
 
       <div className="mb-5 pb-5 border-b border-border/40">
         <div className="flex items-baseline gap-1.5 flex-wrap">
-          <span className="font-heading font-bold text-3xl sm:text-4xl text-foreground tracking-tight">
+          <span className={cn('font-heading font-bold text-foreground tracking-tight', featured ? 'text-5xl sm:text-6xl' : 'text-3xl sm:text-4xl')}>
             {price === 0 ? (isRTL ? 'مجاناً' : 'Free') : (
               <span className="tech-content">{price.toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
             )}
