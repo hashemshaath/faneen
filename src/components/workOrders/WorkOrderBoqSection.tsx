@@ -44,6 +44,8 @@ interface Props {
   workOrderId: string;
   businessId: string;
   canManage: boolean;
+  /** Optional WO ref id (e.g. WO-1000001) — surfaced in related references. */
+  workOrderRefId?: string | null;
 }
 
 function fmt2(n: number | null | undefined): string {
@@ -51,7 +53,7 @@ function fmt2(n: number | null | undefined): string {
   return v.toFixed(2);
 }
 
-export function WorkOrderBoqSection({ workOrderId, businessId, canManage }: Props) {
+export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOrderRefId }: Props) {
   const { user } = useAuth();
   const { isRTL } = useLanguage();
 
