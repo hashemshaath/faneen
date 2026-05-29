@@ -434,26 +434,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             )}
           </div>
 
-          {registerType === 'business' ? (
-            <Button onClick={() => setStep('business-details')} disabled={!isFormValid} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
-              {t('auth.next')}
-              <BackArrow className="w-4 h-4 ms-2 rotate-180" />
-            </Button>
-          ) : (
-            <Button onClick={handleRegister} disabled={loading || !isFormValid} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
-              {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-              {loading ? t('common.loading') : (isRTL ? 'إنشاء الحساب' : 'Create account')}
-            </Button>
-          )}
+          <Button onClick={handleRegister} disabled={loading || !isFormValid || (registerType === 'business' && !usernameOk)} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
+            {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+            {loading ? t('common.loading') : (isRTL ? 'إنشاء الحساب' : 'Create account')}
+          </Button>
         </div>
-        <button onClick={() => setStep('type')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <button onClick={() => setStep(registerType === 'business' ? 'business-details' : 'type')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <BackArrow className="w-4 h-4" /> {t('auth.back')}
         </button>
       </div>
     );
   }
 
-  // ─── Step: Business Details ───
+  // ─── Step: Business Details (collected BEFORE manager account) ───
   return (
     <div className="space-y-6">
       <div className="space-y-3">
@@ -462,14 +455,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             {isRTL ? 'بيانات المنشأة' : 'Business details'}
           </h2>
           <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">
-            {isRTL ? 'الخطوة الأخيرة' : 'Final step'}
+            {isRTL ? 'خطوة 2 من 3' : 'Step 2 of 3'}
           </span>
         </div>
         <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-          <div className="bg-primary h-full rounded-full" style={{ width: '100%' }} />
+          <div className="bg-primary h-full rounded-full" style={{ width: '66%' }} />
         </div>
         <p className="text-sm text-muted-foreground">
-          {isRTL ? 'يمكنك إكمال بقية بيانات المنشأة (الموقع، القدرات، الفروع) بعد التحقق من البريد.' : 'You can complete the rest (location, capabilities, branches) after email verification.'}
+          {isRTL ? 'سجّل بيانات المنشأة أولاً، ثم بيانات مدير الحساب في الخطوة التالية.' : 'Register the business data first, then the account manager in the next step.'}
         </p>
       </div>
       <div className="space-y-4">
@@ -489,13 +482,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
           onValidChange={(s) => setUsernameOk(s.isValid && s.isAvailable)}
           placeholder="my-business"
         />
-        <Button onClick={handleRegister} disabled={loading || !businessName.trim() || !usernameOk} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
-          {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-          {loading ? t('common.loading') : (isRTL ? 'إنشاء حساب المنشأة' : 'Create business account')}
-          {!loading && <Send className="w-4 h-4 ms-2" />}
+        <Button onClick={() => setStep('details')} disabled={!businessName.trim() || !usernameOk} className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20" variant="hero">
+          {isRTL ? 'متابعة إلى بيانات المدير' : 'Continue to manager details'}
+          <BackArrow className="w-4 h-4 ms-2 rotate-180" />
         </Button>
       </div>
-      <button onClick={() => setStep('details')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+      <button onClick={() => setStep('type')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <BackArrow className="w-4 h-4" /> {t('auth.back')}
       </button>
     </div>
