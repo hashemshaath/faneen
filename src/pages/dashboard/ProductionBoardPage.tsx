@@ -861,6 +861,7 @@ interface CardProps {
   order: BoardWorkOrderRow;
   tx: Record<string, string>;
   isRTL: boolean;
+  density: "comfortable" | "compact";
   quotation?: BoardQuotationSummary;
   checklist?: BoardChecklistSummary;
   assignment?: BoardAssignmentRow;
@@ -870,6 +871,7 @@ interface CardProps {
   onToggleOpen: () => void;
   onMove: (o: BoardWorkOrderRow, to: WorkOrderPipelineStageKey) => Promise<void>;
   onAssign: (o: BoardWorkOrderRow, userId: string) => Promise<void>;
+  onUnassign: (o: BoardWorkOrderRow) => Promise<void>;
   staff: StaffMember[];
   assignTargetUserId: string;
   setAssignTargetUserId: (v: string) => void;
@@ -879,6 +881,7 @@ function BoardCard({
   order,
   tx,
   isRTL,
+  density,
   quotation,
   checklist,
   assignment,
@@ -888,6 +891,7 @@ function BoardCard({
   onToggleOpen,
   onMove,
   onAssign,
+  onUnassign,
   staff,
   assignTargetUserId,
   setAssignTargetUserId,
