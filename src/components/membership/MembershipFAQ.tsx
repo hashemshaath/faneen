@@ -1,5 +1,7 @@
+import React, { useMemo, useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface Props { isRTL: boolean }
 
@@ -30,9 +32,23 @@ const faqs = [
   },
 ];
 
-export const MembershipFAQ = ({ isRTL }: Props) => (
+export const MembershipFAQ = ({ isRTL }: Props) => {
+  const [query, setQuery] = useState('');
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return faqs.map((f, i) => ({ ...f, _idx: i }));
+    return faqs
+      .map((f, i) => ({ ...f, _idx: i }))
+      .filter((f) => {
+        const t = isRTL ? f.ar : f.en;
+        return t.q.toLowerCase().includes(q) || t.a.toLowerCase().includes(q);
+      });
+  }, [query, isRTL]);
+
+  return (
   <section className="max-w-3xl mx-auto mt-16 sm:mt-20" aria-labelledby="membership-faq-title">
-    <div className="text-center mb-8">
+    <div className="text-center mb-6">
       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium mb-3">
         <HelpCircle className="w-3.5 h-3.5" />
         {isRTL ? 'الأسئلة الشائعة' : 'FAQ'}
@@ -41,11 +57,42 @@ export const MembershipFAQ = ({ isRTL }: Props) => (
         {isRTL ? 'أسئلة قد تخطر ببالك' : 'Questions you might have'}
       </h2>
     </div>
+
+    <div className="relative mb-4">
+      <Search className="w-4 h-4 text-muted-foreground absolute top-1/2 -translate-y-1/2 start-3 pointer-events-none" />
+      <Input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={isRTL ? 'ابحث في الأسئلة الشائعة...' : 'Search FAQs...'}
+        dir="auto"
+        className="ps-9 pe-9 h-11 rounded-xl bg-card"
+        aria-label={isRTL ? 'بحث' : 'Search'}
+      />
+      {query && (
+        <button
+          type="button"
+          onClick={() => setQuery('')}
+          className="absolute top-1/2 -translate-y-1/2 end-2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          aria-label={isRTL ? 'مسح' : 'Clear'}
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+
+    {filtered.length === 0 ? (
+      <div className="rounded-2xl border border-border/60 bg-card p-8 text-center">
+        <p className="text-sm text-muted-foreground">
+          {isRTL ? 'لم نعثر على نتائج مطابقة. جرّب كلمة مختلفة.' : 'No matching questions. Try a different keyword.'}
+        </p>
+      </div>
+    ) : (
     <Accordion type="single" collapsible className="rounded-2xl border border-border/60 bg-card overflow-hidden divide-y divide-border/40">
-      {faqs.map((f, i) => {
+      {filtered.map((f) => {
         const t = isRTL ? f.ar : f.en;
         return (
-          <AccordionItem key={i} value={`item-${i}`} className="border-0 px-5">
+          <AccordionItem key={f._idx} value={`item-${f._idx}`} className="border-0 px-5">
             <AccordionTrigger className="text-start text-sm font-semibold hover:no-underline py-4">
               {t.q}
             </AccordionTrigger>
@@ -56,5 +103,7 @@ export const MembershipFAQ = ({ isRTL }: Props) => (
         );
       })}
     </Accordion>
+    )}
   </section>
-);
+  );
+};
