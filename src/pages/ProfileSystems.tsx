@@ -370,11 +370,63 @@ const ProfileSystems = () => {
               <Input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
                 placeholder={isRTL ? 'ابحث عن قطاع...' : 'Search profiles...'}
                 className="ps-10 bg-card h-10 text-sm"
                 aria-label={isRTL ? 'بحث في القطاعات' : 'Search profiles'}
+                aria-autocomplete="list"
+                aria-expanded={searchFocused && suggestions.length > 0}
+                role="combobox"
               />
+              {searchFocused && suggestions.length > 0 && (
+                <div
+                  className="absolute z-30 mt-1 inset-x-0 bg-card border border-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1"
+                  role="listbox"
+                  aria-label={isRTL ? 'اقتراحات البحث' : 'Search suggestions'}
+                >
+                  {suggestions.map((s) => (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); s.onSelect(); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-start hover:bg-muted transition-colors"
+                      role="option"
+                      aria-selected={false}
+                    >
+                      {s.kind === 'profile' ? <Layers className="w-3.5 h-3.5 text-accent shrink-0" /> :
+                        s.kind === 'category' ? <Filter className="w-3.5 h-3.5 text-primary shrink-0" /> :
+                        <SlidersHorizontal className="w-3.5 h-3.5 text-warning shrink-0" />}
+                      <span className="flex-1 text-xs sm:text-sm text-foreground truncate">{s.label}</span>
+                      {s.sub && <span className="text-[10px] sm:text-[11px] text-muted-foreground shrink-0">{s.sub}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+            {/* Export actions */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="bg-card h-10 w-10 shrink-0 hidden sm:inline-flex"
+              onClick={handleCSV}
+              disabled={filtered.length === 0}
+              title={isRTL ? 'تنزيل CSV' : 'Download CSV'}
+              aria-label={isRTL ? 'تنزيل النتائج كملف CSV' : 'Download results as CSV'}
+            >
+              <FileDown className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="bg-card h-10 w-10 shrink-0 hidden sm:inline-flex"
+              onClick={handlePDF}
+              disabled={filtered.length === 0 || exporting === 'pdf'}
+              title={isRTL ? 'تنزيل PDF' : 'Download PDF'}
+              aria-label={isRTL ? 'تنزيل النتائج كملف PDF' : 'Download results as PDF'}
+            >
+              <FileText className={`w-4 h-4 ${exporting === 'pdf' ? 'animate-pulse' : ''}`} />
+            </Button>
             <Button
               variant="outline"
               size="icon"
