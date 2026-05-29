@@ -27,11 +27,19 @@ import {
   rejectQuote,
   sendRfq,
   shortlistQuote,
+  listRfqItemsByRfq,
+  listQuoteItemsByRfq,
+  compareQuotesWithLineItems,
+  listPurchaseOrdersByRfq,
   type ProcurementRfqInvitationRow,
   type ProcurementRequestRow,
   type ProcurementRfqRow,
   type ProcurementSupplierRow,
   type ScoredQuote,
+  type ProcurementRfqItemRow,
+  type ProcurementSupplierQuoteItemRow,
+  type ProcurementPurchaseOrderRow,
+  type QuoteComparisonResult,
 } from "@/modules/procurement";
 
 export default function DashboardProcurementDetail() {
@@ -45,6 +53,10 @@ export default function DashboardProcurementDetail() {
   const [activeRfqId, setActiveRfqId] = useState<string | null>(null);
   const [activeRfq, setActiveRfq] = useState<ProcurementRfqRow | null>(null);
   const [scored, setScored] = useState<ScoredQuote[]>([]);
+  const [rfqItems, setRfqItems] = useState<ProcurementRfqItemRow[]>([]);
+  const [quoteItems, setQuoteItems] = useState<ProcurementSupplierQuoteItemRow[]>([]);
+  const [matrix, setMatrix] = useState<QuoteComparisonResult[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<ProcurementPurchaseOrderRow[]>([]);
   const [suppliers, setSuppliers] = useState<ProcurementSupplierRow[]>([]);
   const [invitations, setInvitations] = useState<ProcurementRfqInvitationRow[]>([]);
   const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>([]);
@@ -119,9 +131,20 @@ export default function DashboardProcurementDetail() {
       setScored(compareSupplierQuotes(quotes ?? []));
       const { data: invs } = await listInvitationsByRfq(next);
       setInvitations(invs ?? []);
+      const { data: ri } = await listRfqItemsByRfq(next);
+      setRfqItems(ri ?? []);
+      const { data: qi } = await listQuoteItemsByRfq(next);
+      setQuoteItems(qi ?? []);
+      setMatrix(compareQuotesWithLineItems(ri ?? [], quotes ?? [], qi ?? []));
+      const { data: pos } = await listPurchaseOrdersByRfq(next);
+      setPurchaseOrders(pos ?? []);
     } else {
       setScored([]);
       setInvitations([]);
+      setRfqItems([]);
+      setQuoteItems([]);
+      setMatrix([]);
+      setPurchaseOrders([]);
     }
     setLoading(false);
   }, [id, tx.errLoad]);
@@ -140,6 +163,13 @@ export default function DashboardProcurementDetail() {
       setScored(compareSupplierQuotes(data ?? []));
       const { data: invs } = await listInvitationsByRfq(rfqId);
       setInvitations(invs ?? []);
+      const { data: ri } = await listRfqItemsByRfq(rfqId);
+      setRfqItems(ri ?? []);
+      const { data: qi } = await listQuoteItemsByRfq(rfqId);
+      setQuoteItems(qi ?? []);
+      setMatrix(compareQuotesWithLineItems(ri ?? [], data ?? [], qi ?? []));
+      const { data: pos } = await listPurchaseOrdersByRfq(rfqId);
+      setPurchaseOrders(pos ?? []);
     },
     [rfqs],
   );
