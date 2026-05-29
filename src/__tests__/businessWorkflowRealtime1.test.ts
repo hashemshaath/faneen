@@ -5,6 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { QueryClient as QC } from '@tanstack/react-query';
 
 const ROOT = process.cwd();
 const read = (rel: string) => readFileSync(join(ROOT, rel), 'utf8');
@@ -151,7 +152,7 @@ describe('BUSINESS-WORKFLOW-REALTIME-1 runtime', () => {
     );
     const qc = new QueryClient();
     const wrapper = ({ children }: { children: React.ReactNode }) =>
-      ((QueryClientProvider as unknown) as (props: { client: QueryClient; children: React.ReactNode }) => JSX.Element)(
+      ((QueryClientProvider as unknown) as (props: { client: QC; children: React.ReactNode }) => JSX.Element)(
         { client: qc, children },
       );
     renderHook(() => useWorkOrderRealtimeInvalidation({ businessId: null }), { wrapper });
@@ -167,7 +168,7 @@ describe('BUSINESS-WORKFLOW-REALTIME-1 runtime', () => {
     const qc = new QueryClient();
     const spy = vi.spyOn(qc, 'invalidateQueries');
     const wrapper = ({ children }: { children: React.ReactNode }) =>
-      ((QueryClientProvider as unknown) as (props: { client: QueryClient; children: React.ReactNode }) => JSX.Element)(
+      ((QueryClientProvider as unknown) as (props: { client: QC; children: React.ReactNode }) => JSX.Element)(
         { client: qc, children },
       );
     const onChange = vi.fn();
