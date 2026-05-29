@@ -909,96 +909,34 @@ const Membership = () => {
           />
         )}
 
-        {user && <PromoCodeRedeem isRTL={isRTL} businessId={myBusiness?.id ?? null} />}
-
-        {pendingUpgrade && myBusiness && (() => {
-          const biz = myBusiness as { id: string; ref_id?: string | null; name_ar?: string | null; name_en?: string | null };
-          const bizName = (isRTL ? biz.name_ar : biz.name_en) || biz.name_ar || biz.name_en || (isRTL ? 'منشأتك' : 'Your business');
-          const planLabel = pendingUpgrade.tier.charAt(0).toUpperCase() + pendingUpgrade.tier.slice(1);
+        {(() => {
+          if (!user || !myBusiness) return null;
+          const pending = pendingUpgrade || pendingDowngrade;
+          if (!pending) return null;
+          const mode: 'upgrade' | 'downgrade' = pendingUpgrade ? 'upgrade' : 'downgrade';
+          const plan = plans.find((p) => p.id === pending.id);
+          if (!plan) return null;
           return (
-            <div
-              id="upgrade-confirm-card"
-              className="max-w-3xl mx-auto mb-6 rounded-xl border border-primary/30 bg-primary/5 px-4 py-4"
-              role="region"
-              aria-label={isRTL ? 'تأكيد طلب الترقية' : 'Confirm upgrade request'}
-            >
-              <div className="flex items-start gap-2 mb-3">
-                <Shield className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-foreground">
-                    {isRTL ? 'تأكيد طلب الترقية' : 'Confirm upgrade request'}
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {isRTL
-                      ? 'سيتم ربط الترقية بالمنشأة المعروضة أدناه فقط. يُرجى مراجعة البيانات قبل الإرسال.'
-                      : 'The upgrade will be bound to the business shown below only. Please review before sending.'}
-                  </p>
-                </div>
-              </div>
-              <div className="rounded-lg border border-border/60 bg-background/60 px-3 py-2.5 mb-3 space-y-1.5">
-                <div className="flex items-center gap-2 text-sm">
-                  <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                  <span className="font-medium text-foreground truncate" dir="auto">{bizName}</span>
-                </div>
-                {biz.ref_id && (
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-muted-foreground">{isRTL ? 'الرقم المرجعي:' : 'Reference:'}</span>
-                    <span className="tech-content font-mono font-semibold text-foreground">{biz.ref_id}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-muted-foreground">{isRTL ? 'الباقة المطلوبة:' : 'Requested plan:'}</span>
-                  <span className="font-semibold text-foreground capitalize">{planLabel}</span>
-                  <span className="text-muted-foreground">·</span>
-                  <span className="text-muted-foreground">{billingCycle === 'yearly' ? (isRTL ? 'سنوي' : 'Yearly') : (isRTL ? 'شهري' : 'Monthly')}</span>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  className="h-8 text-xs gap-1.5"
-                  onClick={confirmUpgrade}
-                  disabled={checkoutMutation.isPending || !biz.ref_id}
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  {isRTL ? 'المتابعة للدفع' : 'Continue to payment'}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 text-xs gap-1.5"
-                  onClick={() => { setPendingUpgrade(null); setSubscribingPlanId(null); }}
-                >
-                  <Undo2 className="w-3.5 h-3.5" />
-                  {isRTL ? 'إلغاء' : 'Cancel'}
-                </Button>
-              </div>
-            </div>
+            <SubscribeStepper
+              mode={mode}
+              plan={plan as unknown as React.ComponentProps<typeof SubscribeStepper>['plan']}
+              business={myBusiness as React.ComponentProps<typeof SubscribeStepper>['business']}
+              billingCycle={billingCycle}
+              setBillingCycle={setBillingCycle}
+              isRTL={isRTL}
+              isSubmitting={checkoutMutation.isPending || subscribeMutation.isPending}
+              onConfirm={mode === 'upgrade' ? confirmUpgrade : confirmDowngrade}
+              onCancel={() => {
+                setPendingUpgrade(null);
+                setPendingDowngrade(null);
+                setSubscribingPlanId(null);
+              }}
+            />
           );
         })()}
-        {pendingDowngrade && (
-          <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3">
-            <p className="text-sm text-foreground leading-relaxed mb-3 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-              {pendingDowngrade.tier === 'free'
-                ? (isRTL
-                    ? 'سيؤدي الانتقال للباقة المجانية إلى تقليل المزايا والحدود المتاحة.'
-                    : 'Switching to the Free plan will reduce your benefits and limits.')
-                : (isRTL
-                    ? 'سيؤدي خفض الباقة إلى تقليل بعض المزايا والحدود المتاحة.'
-                    : 'Downgrading will reduce some of your benefits and limits.')}
-            </p>
-            <div className="flex gap-2">
-              <Button size="sm" variant="destructive" className="h-8 text-xs gap-1.5" onClick={confirmDowngrade} disabled={subscribeMutation.isPending}>
-                <Check className="w-3.5 h-3.5" />
-                {isRTL ? 'تأكيد خفض الباقة' : 'Confirm downgrade'}
-              </Button>
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={() => setPendingDowngrade(null)}>
-                <Undo2 className="w-3.5 h-3.5" />
-                {isRTL ? 'إلغاء' : 'Cancel'}
-              </Button>
-            </div>
-          </div>
+
+        {user && !pendingUpgrade && !pendingDowngrade && (
+          <PromoCodeRedeem isRTL={isRTL} businessId={myBusiness?.id ?? null} />
         )}
 
         {user && mySubscription && (
