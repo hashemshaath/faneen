@@ -1,78 +1,87 @@
-## HELP-CENTER-FOUNDATION-1 — Implementation Plan
 
-A foundation phase to ship the full Help Center domain. Out of scope: inventory, accounting, supplier portal/payments, WhatsApp/SMS, AI chatbot (foundation only — links to articles).
+# إعادة تصميم منظومة العضويات
 
-### A. Domain module
-Create `src/modules/helpCenter/` with barrel exports:
-- `articles.ts` — CRUD + search wrappers (no page-level supabase access)
-- `categories.ts`
-- `search.ts` — `searchHelpArticles({ q, audience, locale })` covering title/summary/keywords/category in AR+EN (ilike + tsvector fallback, no external engine)
-- `issueReports.ts`
-- `featureRequests.ts`
-- `contextualHelp.ts` — `HelpLauncher` registry of `{ pageKey -> articleSlugs[] }`
-- `analytics.ts` — pure `computeHelpMetrics(rows)`
-- `index.ts` barrel
-
-### B. Database migration
-Create tables with `PREFIX-NNNNNNN` ref_id sequences (HCAT, HELP, ISS, REQ):
-- `help_categories` — slug, audience enum (provider/customer/admin/general), title/desc AR+EN, sort_order, is_active
-- `help_articles` — category_id FK, slug, audience, status (draft/published), title/summary/content AR+EN, keywords[], counters, created_by/updated_by
-- `help_issue_reports` — business_id, reporter_user_id (nullable), page_key, issue_type enum, priority enum, title, description, screenshot_url, status enum
-- `help_feature_requests` — business_id, user_id, category, title, description, votes_count, status enum
-
-RLS (no anon):
-- categories/articles published → authenticated SELECT; admin full
-- issue_reports/feature_requests → INSERT by authenticated; SELECT own row (`reporter_user_id = auth.uid()` / `user_id = auth.uid()`); admin full via `has_admin_access()`
-- GRANTs: authenticated CRUD where allowed, service_role ALL, no anon grants
-
-Sequences + `gen_ref_id()` triggers for each ref_id field.
-
-### C. Routes
-Public:
-- `/help` → HelpCenterHome
-- `/help/category/:slug` → HelpCategoryPage
-- `/help/article/:slug` → HelpArticlePage
-- `/help/report-issue` → ReportIssuePage (useNoIndex)
-- `/help/feature-request` → FeatureRequestPage (useNoIndex)
-
-Dashboard / Admin:
-- `/dashboard/help` → user view of own submissions + KB shortcut
-- `/admin/help` → Admin Help Center (manage categories, articles, issues, requests)
-
-Sitemap generator: add `/help`, dynamic category + article slugs (published only). Skip report/request pages.
-
-### D-I. Pages & UX
-- **HelpCenterHome** — Hero + big search box (AR/EN placeholder), category grid (General, Providers, Customers, Operations, Contracts, Work Orders, Production, Procurement, Customer Portal, Admin), popular articles (top views_count), contact support card
-- **HelpArticlePage** — title, summary, category breadcrumb, content (markdown render via existing renderer), last updated, helpful / not helpful buttons → increment counters via RPC
-- **ReportIssuePage** — inline form (NO MODAL): issue_type, priority, current page auto-detected from `location.pathname`, title, description, screenshot URL. Returns ISS- ref id inline.
-- **FeatureRequestPage** — inline form: category, title, description → returns REQ- id
-- **HelpLauncher** — small "?" button component for page headers; takes `pageKey`, looks up registry, opens dropdown of relevant article links. Wire into: Work Order Detail, Procurement, Contracts, Customer Portal admin pages, Admin pages (Identity/Publishing/Diagnostics)
-
-### J. Starter knowledge base
-Seed 75+ articles via migration insert across all listed categories with bilingual title/summary/content/keywords. Topics: business creation, publishing, BOQ, RFQ, quotations→contracts, customer tracking, warranty start, etc.
-
-### K. Admin Help Management
-`/admin/help` tabs: Categories | Articles | Issues | Requests. Filters by status/audience/category. Inline edit (no modals). Uses wrappers only.
-
-### L. Analytics
-`computeHelpMetrics(articles, issues, requests, searches)` → article views, helpful ratio, open vs resolved issues, feature request counts by status, top searched topics. Render cards in admin dashboard.
-
-### M. Security
-Verify: no anon RLS access to issue/feature tables; no UUIDs rendered (use ref_id); no PII in customer-facing surfaces; no `supabase.from` in pages (only wrappers); zero references to inventory/accounting/supplier portal/whatsapp/sms.
-
-### N. Tests
-`src/tests/helpCenterFoundation1.test.ts` — guards for: migration objects exist, RLS deny-anon, routes registered, wrappers exported, search returns AR+EN matches, viewer increments counters, contextual registry has entries for required page keys, issue/feature submission returns ref_id, analytics helper math, no direct DB access in pages (regex scan), no out-of-scope module imports.
-
-### O. Validation
-- `bunx tsc --noEmit`
-- `bunx vitest run`
-- Audits: broken-links, sitemap-integrity, identity/businesses/contracts/procurement isolation, storage, notifications, transactional-email, edge-functions, RTL central + direction.
-
-### Final report
-PASS/FAIL across schema, routes, articles seeded count, contextual help coverage map, issue/feature flows, admin management, analytics, security review, tests added, validation results, next phase recommendation (Help Center v1.1: AI assistant + chatbot using Lovable AI on top of articles).
+النطاق ضخم جداً (≈5,000 سطر بين الصفحة العامة، لوحة المزوّد، 4 شاشات أدمن، و20+ مكوّن). تنفيذ كل ذلك دفعة واحدة محفوف بالأخطاء وسيكلّفك كثيراً من الرصيد. أقترح تقسيمه على **3 مراحل** متتابعة، ونبدأ الآن بالمرحلة الأولى — وهي الأهم تجارياً (تجربة المستخدم النهائي + سرعة الاشتراك).
 
 ---
 
-**Scope estimate**: ~25 new files (module + 7 pages + components + tests + docs), 1 large migration with seed inserts, sitemap + route registry edits. No new external deps.
+## المرحلة 1 — الصفحة العامة `/membership` (نُنفّذها الآن)
 
-Confirm to proceed and I'll ship it end-to-end.
+### أ. إعادة التصميم البصري الكامل
+- **Hero جديد**: عنوان مكثّف + Trust strip مدمج + مبدّل (شهري / سنوي بخصم) كأزرار segment أنيقة.
+- **بطاقات الباقات (PlanCard v2)**:
+  - تصميم Apple-like، `rounded-2xl`، ظل ناعم، حد متدرّج للباقة الموصى بها.
+  - **تبويبات داخل كل بطاقة**: «الظهور والوصول» · «التحليلات» · «أدوات الذكاء» · «الدعم» — تعرض المزايا الفعلية المرتبطة بهذه الباقة من قاعدة البيانات (`membership_plans.features` + `plan_feature_matrix`).
+  - شارة «الباقة الحالية» / «الأعلى قيمة» / «موصى به».
+  - زر CTA واحد ذكي يتغيّر نصه حسب الحالة (اشترك / ترقّى / الباقة الحالية / تخفيض).
+- **جدول مقارنة مطوي** (`<details>` افتراضياً مغلق + Lazy import) لتسريع التحميل الأولي.
+- إعادة ترتيب الأقسام: Hero → Recommender → Plans → Compare (مطوي) → FAQ → Trust.
+
+### ب. تبسيط الاشتراك — معالج خطوتين (Stepper inline)
+بدلاً من الانتقالات المتعددة والتأكيدات المنفصلة (downgrade/upgrade/checkout) نستخدم **قسم Stepper شفّاف يظهر مكان البطاقات** عند الضغط على «اشترك»:
+
+```
+[الخطوة 1: المراجعة]                 [الخطوة 2: الدفع/التفعيل]
+─ الباقة المختارة + ميزاتها         ─ ملخص الفاتورة (شامل ضريبة 15%)
+─ المنشأة المرتبطة (ref_id)         ─ زر «ادفع الآن» → Moyasar
+─ مبدّل شهري/سنوي                   ─ أو «طلب ترقية يدوية» للحالات الخاصة
+─ كود خصم (اختياري)                 ─ بعد النجاح: شاشة تأكيد كاملة
+```
+
+- يلتزم بقاعدة المشروع: **لا Dialogs/Popups**، كل شيء inline داخل نفس الصفحة (يستبدل قائمة البطاقات أثناء العملية).
+- زر «رجوع» في كل خطوة.
+- للتخفيض (downgrade): خطوة تأكيد inline توضّح متى سيُطبَّق التغيير.
+
+### ج. التحقق من ظهور المزايا حسب الباقة (DB → UI)
+- قراءة `membership_plans.features` (JSONB) و `plan_feature_matrix` لبناء التبويبات ديناميكياً.
+- مراجعة `FeatureGate.tsx` للتأكد أن المنع/السماح يتطابق مع البيانات.
+- لو وُجدت ميزات بدون mapping في الـ matrix → تنبيه في console (dev only).
+
+### د. تحسين الأداء
+- `lazyRetry` لجدول المقارنة، Testimonials، FAQ، Payment History.
+- دمج استعلامي `my-business-membership` و `my-subscription` في React Query batch.
+- إزالة polling الـ60 ثانية واستخدام Realtime فقط (موجود مسبقاً).
+- `useMemo` للـ JSON-LD، `React.memo` لبطاقات الباقات.
+- استبدال أيقونات lucide غير المستخدمة (تقليل bundle).
+
+### هـ. المسارات والروابط
+- إبقاء `/membership` و `/membership/invoice/:id` و `/membership/payment-return` كما هي.
+- إصلاح أي رابط مكسور داخل المكوّنات، توحيد الـ deep links (`#upgrade-requests`, `#compare`).
+- تحديث sitemap لو لزم.
+
+### و. SEO
+- إبقاء JSON-LD الحالي (Breadcrumb + FAQPage + Product/AggregateOffer) مع تحسين الأوصاف.
+- `usePageMeta` بنصوص مُحسّنة.
+
+---
+
+## المرحلة 2 — لوحة المزوّد `/dashboard/provider/membership`
+- إعادة استخدام مكوّنات المرحلة 1 (PlanCard v2 + Stepper) داخل قشرة Dashboard.
+- إضافة لوحة «استخدام الباقة» (Quotes used / Leads used / Storage) من DB.
+- تنبيهات الاقتراب من الحد الأقصى.
+
+## المرحلة 3 — شاشات الأدمن (4 صفحات، 2,741 سطراً)
+- **بدون إعادة تصميم كامل** (هي أدوات تشغيلية، التصميم الحالي وظيفي).
+- مراجعة + توحيد رؤوس الجداول والفلاتر بنمط `dashboard-standard`.
+- إصلاح أي bugs، تحسين الفلاتر/البحث، أزرار pivot بين الشاشات الأربع.
+
+---
+
+## ملاحظات تقنية مهمة
+- لا تغييرات في schema الـ DB في المرحلة 1 إلا لو اكتشفنا نقصاً في `plan_feature_matrix` — حينها migration صغيرة لإضافة الميزات الناقصة (data only via insert tool).
+- TypeScript صفر `any` (يلتزم بسياسة المشروع).
+- RTL/LTR كامل، استخدام `<Bi>` و `useBi()` بدلاً من inline ternaries.
+- استخدام design tokens فقط (لا ألوان مباشرة).
+
+---
+
+## الملفات المتوقّع تعديلها في المرحلة 1
+- `src/pages/Membership.tsx` (إعادة بناء جوهرية ~30% أقصر)
+- `src/components/membership/PlanCard.tsx` (إعادة بناء مع تبويبات)
+- `src/components/membership/MembershipHeader.tsx` (Hero محسّن)
+- `src/components/membership/FeatureComparisonTable.tsx` (lazy + تطوير)
+- **جديد**: `src/components/membership/SubscribeStepper.tsx`
+- **جديد**: `src/components/membership/PlanFeatureTabs.tsx`
+- **جديد**: `src/lib/membership-features.ts` (موحّد لقراءة المزايا من DB)
+
+هل أبدأ بتنفيذ **المرحلة 1**؟ (الموافقة هنا = تنفيذ المرحلة 1 فقط، ثم نقرر المرحلة 2 لاحقاً).
