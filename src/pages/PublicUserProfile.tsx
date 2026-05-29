@@ -81,18 +81,52 @@ export const PublicUserProfile: React.FC = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <div className="flex-1 flex items-center justify-center px-4">
-          <Card className="max-w-md w-full">
-            <CardContent className="p-8 text-center space-y-3">
-              <h1 className="text-lg font-bold">
-                {t('لم يتم العثور على الحساب', 'Profile not found')}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                @{username}{' '}
-                {t('غير موجود أو غير متاح للعرض.', 'does not exist or is not available.')}
-              </p>
-              <Button asChild variant="outline" size="sm">
-                <Link to="/">{t('العودة للرئيسية', 'Back to home')}</Link>
-              </Button>
+          <Card className="max-w-lg w-full overflow-hidden">
+            <div
+              className="h-20 w-full"
+              style={{
+                background:
+                  'radial-gradient(120% 100% at 100% 0%, hsl(var(--primary) / 0.18) 0%, transparent 55%), linear-gradient(135deg, hsl(var(--primary) / 0.7), hsl(var(--primary) / 0.35))',
+              }}
+              aria-hidden
+            />
+            <CardContent className="p-6 sm:p-8 text-center space-y-4 -mt-10">
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-background border-4 border-background shadow-md flex items-center justify-center text-2xl font-bold text-primary">
+                @
+              </div>
+              <div className="space-y-1.5">
+                <h1 className="text-lg sm:text-xl font-bold">
+                  {t('الصفحة غير متاحة', 'This page is unavailable')}
+                </h1>
+                <p className="text-sm text-muted-foreground" dir="auto">
+                  <span className="tech-content font-semibold">@{username}</span>{' '}
+                  {t(
+                    'قد يكون الحساب غير موجود، أو خاصًا، أو لا يزال قيد المراجعة قبل النشر.',
+                    'may not exist, be private, or still awaiting publication review.',
+                  )}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/40 bg-muted/20 p-3 text-start text-xs text-muted-foreground space-y-1.5">
+                <p className="font-semibold text-foreground">
+                  {t('لماذا قد لا تظهر الصفحة؟', 'Why might this page not show?')}
+                </p>
+                <ul className="space-y-1">
+                  <li>• {t('النشاط التجاري لم يُعتمد للنشر بعد.', 'The business is not yet approved for publication.')}</li>
+                  <li>• {t('اسم المستخدم تمت إعادة تسميته أو حذفه.', 'The username has been renamed or removed.')}</li>
+                  <li>• {t('الحساب شخصي وليس مفتوحًا للعرض العام.', 'The account is private and not publicly visible.')}</li>
+                </ul>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                <Button asChild variant="default" size="sm">
+                  <Link to="/search">{t('تصفح المزودين', 'Browse providers')}</Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/auth">{t('تسجيل الدخول', 'Sign in')}</Link>
+                </Button>
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/">{t('العودة للرئيسية', 'Back to home')}</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
