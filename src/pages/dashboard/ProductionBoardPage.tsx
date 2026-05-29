@@ -553,7 +553,7 @@ export default function ProductionBoardPage() {
         </section>
 
         {/* Secondary metrics */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div className="rounded-xl border border-border/30 bg-card p-3 flex items-center gap-3">
             <Gauge className="w-4 h-4 text-warning" />
             <div className="min-w-0">
@@ -567,6 +567,13 @@ export default function ProductionBoardPage() {
                     } · ${metrics.bottleneckCount}`
                   : "—"}
               </p>
+            </div>
+          </div>
+          <div className="rounded-xl border border-border/30 bg-card p-3 flex items-center gap-3" data-testid="metric-unassigned">
+            <UserMinus className="w-4 h-4 text-warning" />
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground">{tx.unassigned}</p>
+              <p className="text-sm font-semibold tech-content">{metrics.unassignedCount}</p>
             </div>
           </div>
           <div className="rounded-xl border border-border/30 bg-card p-3 flex items-center gap-3">
