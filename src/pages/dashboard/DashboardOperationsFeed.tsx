@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Activity, RefreshCw, AlertCircle, Search, ArrowUpRight, ShieldCheck } from 'lucide-react';
+import { Activity, RefreshCw, AlertCircle, Search, ArrowUpRight, ShieldCheck, Sparkles, Download } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
@@ -19,6 +19,8 @@ import {
   type BusinessActivityEvent,
 } from '@/modules/businesses/notes';
 import { OFFICIAL_REF } from '@/components/operations/normalizeOperationsFeed';
+import '@/styles/dashboard-emerald.css';
+import { cn } from '@/lib/utils';
 
 /**
  * BUSINESS-CORE-18 — Per-business Operations Feed page.
@@ -177,39 +179,45 @@ export default function DashboardOperationsFeed() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="dash-emerald space-y-5" dir={isRTL ? 'rtl' : 'ltr'}>
         <OperationsBreadcrumbs
           crumbs={[
             { labelEn: tx.crumbOps, labelAr: tx.crumbOps, to: '/dashboard/work-orders' },
             { labelEn: tx.crumbFeed, labelAr: tx.crumbFeed },
           ]}
         />
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-              <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-accent" aria-hidden="true" />
-              {tx.title}
-            </h1>
-            <p className="text-xs text-muted-foreground mt-1 max-w-2xl">{tx.subtitle}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm" className="rounded-xl h-8">
-              <Link to="/dashboard/work-orders/overview">
-                <ArrowUpRight className="w-3.5 h-3.5 me-1" />
-                {tx.backOverview}
-              </Link>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="rounded-xl h-8"
-              onClick={() => void reload()}
-              aria-label={tx.refresh}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 me-1 ${loading ? 'animate-spin' : ''}`} />
-              {tx.refresh}
-            </Button>
+        {/* Hero header */}
+        <div className="dash-hero p-5 sm:p-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-2">
+              <span className="dash-hero-chip inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold">
+                <Sparkles className="w-3 h-3" />
+                {isRTL ? 'موحَّد — جميع المصادر' : 'Unified — All sources'}
+              </span>
+              <h1 className="ds-h2 flex items-center gap-2">
+                <Activity className="w-6 h-6" aria-hidden="true" />
+                {tx.title}
+              </h1>
+              <p className="dash-hero-sub text-xs max-w-2xl">{tx.subtitle}</p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button asChild variant="ghost" size="sm" className="dash-hero-chip h-9 rounded-full">
+                <Link to="/dashboard/work-orders/overview">
+                  <ArrowUpRight className="w-3.5 h-3.5 me-1" />
+                  {tx.backOverview}
+                </Link>
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="dash-hero-gold h-9 rounded-full"
+                onClick={() => void reload()}
+                aria-label={tx.refresh}
+              >
+                <RefreshCw className={cn('w-3.5 h-3.5 me-1', loading && 'animate-spin')} />
+                {tx.refresh}
+              </Button>
+            </div>
           </div>
         </div>
 
