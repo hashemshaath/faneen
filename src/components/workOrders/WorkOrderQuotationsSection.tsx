@@ -47,6 +47,9 @@ import {
   type WorkOrderQuotationStatus,
 } from "@/modules/workOrders";
 import { WorkOrderQuotationPdf } from "./WorkOrderQuotationPdf";
+import { HealthBadge } from "@/components/health/HealthBadge";
+import { quotationHealth } from "@/modules/health";
+import { QuotationRevisionHistory } from "@/components/quotes/QuotationRevisionHistory";
 
 interface Props {
   workOrderId: string;
@@ -417,6 +420,10 @@ export function WorkOrderQuotationsSection({
                   >
                     {statusLabel(q.status)}
                   </Badge>
+                  <HealthBadge
+                    kind="quotation"
+                    value={quotationHealth(q.status, (q as { expires_at?: string | null }).expires_at ?? null)}
+                  />
                 </button>
               );
             })}
