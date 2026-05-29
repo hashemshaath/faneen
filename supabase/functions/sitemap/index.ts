@@ -166,6 +166,11 @@ Deno.serve(async (req) => {
           entries.push(entry(`${BASE}/profile-systems/${encodeURIComponent(p.slug)}`, { lastmod: toDate(p.updated_at), changefreq: "monthly", priority: "0.6" }));
         }
       }
+      // Per-category SEO landing pages for /profile-systems.
+      const profileCategories = ["aluminum", "kitchen", "iron", "glass", "wood", "upvc"];
+      for (const c of profileCategories) {
+        entries.push(entry(`${BASE}/profile-systems/category/${c}`, { lastmod: today, changefreq: "weekly", priority: "0.75" }));
+      }
     } else if (type === "projects") {
       const { data } = await supabase.from("projects").select("id, updated_at").eq("status", "published").order("created_at", { ascending: false }).limit(10000);
       if (data) {
