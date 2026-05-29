@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity, AlertCircle, ClipboardList, GitBranch, RefreshCw,
-  Search, ShieldCheck, TrendingUp, ExternalLink,
+  Search, ShieldCheck, TrendingUp, ExternalLink, Download, Printer,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -32,6 +32,7 @@ import {
 import { computeWorkOrderKpis, type WorkOrderRow } from '@/modules/workOrders';
 import { computeOperationalMetrics } from '@/modules/operations/metrics/computeOperationalMetrics';
 import type { BusinessActivityEvent } from '@/modules/businesses/notes';
+import { buildCsv, downloadCsv, printCurrentView, tsStamp } from '@/lib/admin/exportUtils';
 
 /**
  * BUSINESS-ADMIN-1 — Admin Operational Console.
