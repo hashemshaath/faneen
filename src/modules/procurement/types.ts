@@ -14,8 +14,17 @@ export type ProcurementSupplierStatus = 'active' | 'inactive';
 export type ProcurementSupplierQuoteStatus =
   | 'draft'
   | 'submitted'
+  | 'shortlisted'
   | 'selected'
+  | 'awarded'
   | 'rejected';
+
+export type ProcurementInvitationStatus =
+  | 'invited'
+  | 'viewed'
+  | 'responded'
+  | 'declined'
+  | 'expired';
 
 export interface ProcurementRequestRow {
   id: string;
@@ -37,6 +46,10 @@ export interface ProcurementRfqRow {
   rfq_number: string | null;
   status: ProcurementRfqStatus;
   due_at: string | null;
+  expires_at: string | null;
+  sent_at: string | null;
+  closed_at: string | null;
+  awarded_quote_id: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -65,6 +78,20 @@ export interface ProcurementSupplierQuoteRow {
   lead_time_days: number | null;
   notes: string | null;
   submitted_at: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcurementRfqInvitationRow {
+  id: string;
+  business_id: string;
+  rfq_id: string;
+  supplier_id: string;
+  status: ProcurementInvitationStatus;
+  invited_at: string;
+  responded_at: string | null;
+  invited_by: string;
   created_at: string;
   updated_at: string;
 }
