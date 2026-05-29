@@ -393,6 +393,43 @@ const AdminCronRuns = () => {
           />
         </div>
 
+        {/* Hourly distribution (24h) */}
+        <Card className="overflow-hidden print:hidden">
+          <CardHeader className="pb-3 border-b border-border/60 bg-muted/30">
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              {isRTL ? 'توزيع التشغيلات — آخر 24 ساعة' : 'Run distribution — last 24h'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="h-44 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={hourly} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                  <XAxis dataKey="hour" tick={{ fontSize: 10 }} interval={2} />
+                  <ChartTooltip
+                    cursor={{ fill: 'hsl(var(--muted) / 0.4)' }}
+                    contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }}
+                  />
+                  <Bar dataKey="total" radius={[4, 4, 0, 0]}>
+                    {hourly.map((b, i) => (
+                      <Cell
+                        key={i}
+                        fill={
+                          b.failed > 0
+                            ? 'hsl(var(--destructive))'
+                            : b.total > 0
+                              ? 'hsl(var(--primary))'
+                              : 'hsl(var(--muted))'
+                        }
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Job health */}
         <Card className="overflow-hidden">
           <CardHeader className="pb-3 border-b border-border/60 bg-muted/30">
@@ -543,6 +580,16 @@ const AdminCronRuns = () => {
                     </button>
                   ))}
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-xs"
+                  onClick={exportRunsCsv}
+                  disabled={filteredRuns.length === 0}
+                >
+                  <Download className="h-3.5 w-3.5 me-1" />
+                  CSV
+                </Button>
               </div>
             </div>
           </CardHeader>
