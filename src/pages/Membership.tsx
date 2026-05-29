@@ -964,10 +964,12 @@ const Membership = () => {
         )}
 
         {user && mySubscription && (
-          <MembershipPaymentHistory
-            isRTL={isRTL}
-            subscriptionId={(mySubscription as { id?: string }).id ?? null}
-          />
+          <Suspense fallback={null}>
+            <MembershipPaymentHistory
+              isRTL={isRTL}
+              subscriptionId={(mySubscription as { id?: string }).id ?? null}
+            />
+          </Suspense>
         )}
 
         <MembershipPlanRecommender isRTL={isRTL} onApply={handleRecommenderApply} />
