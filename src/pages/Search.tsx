@@ -388,6 +388,7 @@ const SearchPage = () => {
             onDidYouMeanClick={(term) => handleQueryChange(term)}
             sortBy={filters.sortBy}
             onSortChange={(s) => handleFilterChange('sortBy', s)}
+            directoryIsEmpty={!isLoading && (businesses?.length ?? 0) === 0}
           />
         </div>
       </div>

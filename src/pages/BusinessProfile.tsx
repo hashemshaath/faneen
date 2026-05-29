@@ -401,6 +401,26 @@ const BusinessProfile = () => {
       />
 
       <div className="pt-12 sm:pt-14">
+        {business.approval_status !== 'published' && (
+          <div
+            className="border-b border-warning/30 bg-warning/10 text-warning-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="container-app flex flex-col gap-1 py-2.5 text-xs sm:flex-row sm:items-center sm:justify-between sm:text-sm">
+              <p className="font-semibold text-warning">
+                {isRTL
+                  ? '⚠️ معاينة فقط — هذا الملف غير منشور بعد ولا يظهر للعملاء.'
+                  : '⚠️ Preview only — this profile is not yet published and is hidden from customers.'}
+              </p>
+              <span className="text-[11px] text-muted-foreground">
+                {isRTL
+                  ? `الحالة: ${business.approval_status}`
+                  : `Status: ${business.approval_status}`}
+              </span>
+            </div>
+          </div>
+        )}
         <BusinessProfileHeader
           business={business}
           onContact={() => handleContactClick("header")}

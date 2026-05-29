@@ -46,12 +46,19 @@ interface SearchResultsProps {
   onDidYouMeanClick?: (term: string) => void;
   sortBy?: SortKey;
   onSortChange?: (s: SortKey) => void;
+  /**
+   * True when the directory itself has zero publicly visible providers
+   * (not just "filters returned nothing"). Used to show an informative
+   * empty state explaining the publication workflow instead of a generic
+   * "no results" copy.
+   */
+  directoryIsEmpty?: boolean;
 }
 
 export const SearchResults = ({
   businesses, isLoading, viewMode, onViewModeChange, totalCount, onClearFilters,
   currentPage, totalPages, itemsPerPage, onPageChange, didYouMean, onDidYouMeanClick,
-  sortBy, onSortChange,
+  sortBy, onSortChange, directoryIsEmpty,
 }: SearchResultsProps) => {
   const { t, isRTL } = useLanguage();
 
@@ -138,6 +145,48 @@ export const SearchResults = ({
       {isLoading ? (
         <SearchResultsSkeleton viewMode={viewMode} />
       ) : businesses.length === 0 ? (
+        directoryIsEmpty ? (
+        <div className="text-center py-16 sm:py-24">
+          <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-4 sm:mb-6 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center">
+            <SearchIcon className="w-10 h-10 sm:w-12 sm:h-12 text-primary/60" />
+          </div>
+          <h3 className="font-heading font-bold text-lg sm:text-xl text-foreground mb-2">
+            {isRTL ? 'لا يوجد مزودو خدمات منشورون بعد' : 'No published providers yet'}
+          </h3>
+          <p className="text-sm text-muted-foreground font-body mb-5 max-w-md mx-auto leading-relaxed">
+            {isRTL
+              ? 'الدليل يعرض فقط المزودين المعتمدين والمنشورين رسميًا. الحسابات قيد المراجعة أو المسودات لا تظهر هنا لحماية جودة النتائج.'
+              : 'The directory only shows officially approved and published providers. Draft or pending accounts are hidden to keep results trustworthy.'}
+          </p>
+          <div className="max-w-md mx-auto mb-6 rounded-2xl border border-border/30 bg-card/50 p-4 text-start space-y-2">
+            <p className="text-xs font-semibold text-foreground">
+              {isRTL ? 'هل تملك نشاطًا تجاريًا؟' : 'Own a business?'}
+            </p>
+            <ul className="text-xs text-muted-foreground space-y-1.5">
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                {isRTL ? 'سجّل دخولك وأكمل ملف نشاطك بالكامل.' : 'Sign in and complete your business profile.'}
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                {isRTL ? 'أرسل طلب النشر للمراجعة من فريق قِطاعات.' : 'Submit it for review by the Qitaat team.'}
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                {isRTL ? 'بمجرد الاعتماد سيظهر نشاطك في نتائج البحث.' : 'Once approved your business appears here automatically.'}
+              </li>
+            </ul>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Button asChild variant="default" className="rounded-xl">
+              <a href="/dashboard">{isRTL ? 'الذهاب إلى لوحة التحكم' : 'Go to dashboard'}</a>
+            </Button>
+            <Button asChild variant="outline" className="rounded-xl">
+              <a href="/auth">{isRTL ? 'تسجيل الدخول' : 'Sign in'}</a>
+            </Button>
+          </div>
+        </div>
+        ) : (
         <div className="text-center py-16 sm:py-24">
           <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-4 sm:mb-6 rounded-full bg-gradient-to-br from-accent/10 to-muted/30 dark:from-accent/5 dark:to-muted/15 flex items-center justify-center">
             <SearchIcon className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground/20" />
@@ -185,7 +234,9 @@ export const SearchResults = ({
             {t('search.clear_filters')}
           </Button>
         </div>
-      ) : isSplit ? (
+        )
+      )
+      : isSplit ? (
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="lg:w-1/2 space-y-3 max-h-[600px] overflow-y-auto pe-1 no-scrollbar">
             {businesses.map((b, i) => (
