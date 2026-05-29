@@ -10,6 +10,8 @@ const TABLES = [
   'procurement_suppliers',
   'procurement_supplier_quotes',
   'procurement_rfq_invitations',
+  'procurement_rfq_items',
+  'procurement_supplier_quote_items',
 ];
 const ALLOWED = [
   'src/modules/procurement/services/',
@@ -43,6 +45,13 @@ describe('procurement isolation', () => {
 
   it('quoteComparison.ts has no Supabase import', () => {
     const f = path.join(SRC, 'modules/procurement/services/quoteComparison.ts');
+    const src = fs.readFileSync(f, 'utf8');
+    expect(src).not.toMatch(/@\/integrations\/supabase\/client/);
+    expect(src).not.toMatch(/@supabase\/supabase-js/);
+  });
+
+  it('quoteComparisonLineItems.ts has no Supabase import', () => {
+    const f = path.join(SRC, 'modules/procurement/services/quoteComparisonLineItems.ts');
     const src = fs.readFileSync(f, 'utf8');
     expect(src).not.toMatch(/@\/integrations\/supabase\/client/);
     expect(src).not.toMatch(/@supabase\/supabase-js/);
@@ -88,6 +97,16 @@ describe('procurement isolation', () => {
       'inviteSuppliersToRfq',
       'evaluateAwardEligibility',
       'compareSupplierQuotes',
+      'createRfqItem',
+      'updateRfqItem',
+      'deleteRfqItem',
+      'listRfqItemsByRfq',
+      'submitQuoteItems',
+      'listQuoteItemsByQuote',
+      'compareQuotesWithLineItems',
+      'calculateQuoteTotals',
+      'notifyProcurementEvent',
+      'executeAwardHandoff',
     ]) {
       expect(barrel).toContain(name);
     }

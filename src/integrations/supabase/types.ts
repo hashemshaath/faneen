@@ -8721,6 +8721,66 @@ export type Database = {
           },
         ]
       }
+      procurement_rfq_items: {
+        Row: {
+          business_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          procurement_request_id: string | null
+          quantity: number
+          rfq_id: string
+          sort_order: number
+          target_price: number | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          procurement_request_id?: string | null
+          quantity?: number
+          rfq_id: string
+          sort_order?: number
+          target_price?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          procurement_request_id?: string | null
+          quantity?: number
+          rfq_id?: string
+          sort_order?: number
+          target_price?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_rfq_items_procurement_request_id_fkey"
+            columns: ["procurement_request_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_rfq_items_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_rfqs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       procurement_rfqs: {
         Row: {
           awarded_quote_id: string | null
@@ -8773,6 +8833,60 @@ export type Database = {
             columns: ["procurement_request_id"]
             isOneToOne: false
             referencedRelation: "procurement_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procurement_supplier_quote_items: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          quantity: number
+          quote_id: string
+          rfq_item_id: string
+          total_price: number | null
+          unit_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quantity?: number
+          quote_id: string
+          rfq_item_id: string
+          total_price?: number | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quantity?: number
+          quote_id?: string
+          rfq_item_id?: string
+          total_price?: number | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_supplier_quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_supplier_quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_supplier_quote_items_rfq_item_id_fkey"
+            columns: ["rfq_item_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_rfq_items"
             referencedColumns: ["id"]
           },
         ]

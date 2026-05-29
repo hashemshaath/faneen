@@ -128,3 +128,32 @@ export const PROCUREMENT_SUPPLIER_PUBLIC_FIELDS = [
   'created_at',
   'updated_at',
 ] as const;
+
+// BUSINESS-WORKFLOW-PROCUREMENT-3 — Line items.
+export interface ProcurementRfqItemRow {
+  id: string;
+  business_id: string;
+  rfq_id: string;
+  procurement_request_id: string | null;
+  name: string;
+  description: string | null;
+  quantity: number;
+  unit: string | null;
+  target_price: number | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcurementSupplierQuoteItemRow {
+  id: string;
+  business_id: string;
+  quote_id: string;
+  rfq_item_id: string;
+  unit_price: number | null;
+  quantity: number;
+  total_price: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}

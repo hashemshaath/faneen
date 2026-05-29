@@ -60,3 +60,45 @@ export type {
   AwardEligibility,
   AwardRejectionReason,
 } from './services/awardEligibility';
+// BUSINESS-WORKFLOW-PROCUREMENT-3 — RFQ line items
+export {
+  createRfqItem,
+  updateRfqItem,
+  deleteRfqItem,
+  listRfqItemsByRfq,
+  reorderRfqItems,
+} from './services/rfqItems';
+export type {
+  CreateRfqItemInput,
+  UpdateRfqItemPatch,
+  ReorderRfqItemEntry,
+} from './services/rfqItems';
+// BUSINESS-WORKFLOW-PROCUREMENT-3 — Supplier quote line items
+export {
+  submitQuoteItems,
+  listQuoteItemsByQuote,
+  listQuoteItemsByRfq,
+  calculateLineTotal,
+} from './services/supplierQuoteItems';
+export type { SubmitQuoteItemInput } from './services/supplierQuoteItems';
+// BUSINESS-WORKFLOW-PROCUREMENT-3 — Line-item-aware comparison
+export {
+  compareQuotesWithLineItems,
+  calculateQuoteTotals,
+} from './services/quoteComparisonLineItems';
+export type {
+  QuoteComparisonInput,
+  QuoteComparisonResult,
+  LineItemRecommendationReason,
+} from './services/quoteComparisonLineItems';
+// BUSINESS-WORKFLOW-PROCUREMENT-3 — Notifications
+export {
+  notifyProcurementEvent,
+} from './services/procurementNotifications';
+export type {
+  ProcurementNotificationEvent,
+  ProcurementNotificationInput,
+} from './services/procurementNotifications';
+// BUSINESS-WORKFLOW-PROCUREMENT-3 — Award pipeline handoff
+export { executeAwardHandoff } from './services/awardHandoff';
+export type { AwardHandoffInput } from './services/awardHandoff';
