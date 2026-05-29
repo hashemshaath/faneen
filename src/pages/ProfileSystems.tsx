@@ -23,6 +23,8 @@ import {
 import { fmtNum } from '@/lib/format';
 import { exportProfilesCSV, exportProfilesPDF } from '@/lib/profile-systems-export';
 import { toast } from 'sonner';
+import { buildProfileSuggestions, type ProfileSuggestion } from '@/lib/profile-systems-suggestions';
+import { track } from '@/lib/analytics-events';
 
 const categoryOptions = [
   { value: 'all', ar: 'الكل', en: 'All' },
@@ -217,63 +219,72 @@ const ProfileSystems = () => {
   );
 
   // ── Auto-suggestions: profile names + matching categories + spec hints ──
-  const suggestions = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q || q.length < 1) return [] as Array<{ key: string; kind: 'profile' | 'category' | 'spec'; label: string; sub?: string; onSelect: () => void }>;
-    const out: Array<{ key: string; kind: 'profile' | 'category' | 'spec'; label: string; sub?: string; onSelect: () => void }> = [];
-    categoryOptions.filter((c) => c.value !== 'all').forEach((c) => {
-      if (c.ar.toLowerCase().includes(q) || c.en.toLowerCase().includes(q) || c.value.includes(q)) {
-        const n = categoryCounts.get(c.value) ?? 0;
-        out.push({
-          key: `cat-${c.value}`, kind: 'category',
-          label: language === 'ar' ? c.ar : c.en,
-          sub: `${fmtNum(n)} ${isRTL ? 'قطاع' : 'profiles'}`,
-          onSelect: () => { setCategory(c.value); setSearch(''); setSearchFocused(false); },
-        });
-      }
-    });
-    profiles.forEach((p) => {
-      const hay = `${p.name_ar ?? ''} ${p.name_en ?? ''}`.toLowerCase();
-      if (hay.includes(q)) {
-        const co = categoryOptions.find((c) => c.value === p.category);
-        out.push({
-          key: `p-${p.id}`, kind: 'profile',
-          label: language === 'ar' ? (p.name_ar || p.name_en || '') : (p.name_en || p.name_ar || ''),
-          sub: co ? (language === 'ar' ? co.ar : co.en) : (p.category ?? ''),
-          onSelect: () => { setSearchFocused(false); navigate(`/profile-systems/${p.slug}`); },
-        });
-      }
-    });
-    // Spec/property hints: thermal / sound / strength
-    const specHints: Array<{ kw: string[]; label: string; apply: () => void }> = [
-      { kw: ['ther', 'حرار', 'عزل حراري'], label: isRTL ? 'عزل حراري ≥ 7' : 'Thermal ≥ 7', apply: () => setMinThermal(7) },
-      { kw: ['sound', 'صوت', 'عزل صوتي'], label: isRTL ? 'عزل صوتي ≥ 7' : 'Sound ≥ 7', apply: () => setMinSound(7) },
-      { kw: ['stren', 'تحمل', 'قوة'], label: isRTL ? 'تحمل ≥ 7' : 'Strength ≥ 7', apply: () => setMinStrength(7) },
-      { kw: ['premium', 'احتر'], label: isRTL ? 'احترافي فقط' : 'Premium only', apply: () => setRecFilter(['premium']) },
-    ];
-    specHints.forEach((h, i) => {
-      if (h.kw.some((k) => q.includes(k))) {
-        out.push({
-          key: `sp-${i}`, kind: 'spec', label: h.label,
-          sub: isRTL ? 'تطبيق فلتر' : 'Apply filter',
-          onSelect: () => { h.apply(); setSearch(''); setSearchFocused(false); },
-        });
-      }
-    });
-    return out.slice(0, 8);
-  }, [search, profiles, categoryCounts, language, isRTL, navigate]);
+  const suggestions = useMemo(
+    () => buildProfileSuggestions(profiles, search, {
+      language: language === 'ar' ? 'ar' : 'en',
+      categories: categoryOptions,
+      categoryCounts,
+      limit: 8,
+    }),
+    [profiles, search, language, categoryCounts],
+  );
+
+  // Apply a suggestion + fire analytics. Kept here so the builder stays pure.
+  const onSuggestionSelect = useCallback((s: ProfileSuggestion, rank: number) => {
+    try {
+      track.profileSystemsSuggestionClick({
+        suggestion_kind: s.kind,
+        suggestion_rank: rank,
+        query_length: search.trim().length,
+        language,
+      });
+    } catch { /* analytics must never break UX */ }
+    setSearchFocused(false);
+    if (s.kind === 'profile' && s.slug) {
+      navigate(`/profile-systems/${s.slug}`);
+      return;
+    }
+    if (s.kind === 'category' && s.categoryValue) {
+      setCategory(s.categoryValue);
+      setSearch('');
+      return;
+    }
+    if (s.kind === 'spec' && s.specKey) {
+      if (s.specKey === 'thermal') setMinThermal(7);
+      else if (s.specKey === 'sound') setMinSound(7);
+      else if (s.specKey === 'strength') setMinStrength(7);
+      else if (s.specKey === 'premium') setRecFilter(['premium']);
+      setSearch('');
+    }
+  }, [navigate, search, language]);
 
   // ── Export handlers ──
   const handleCSV = useCallback(() => {
     if (filtered.length === 0) return;
     exportProfilesCSV(filtered, language === 'ar' ? 'ar' : 'en');
+    try {
+      track.profileSystemsExport({
+        export_format: 'csv',
+        results_count: filtered.length,
+        category_slug: category,
+        language,
+      });
+    } catch { /* swallow */ }
     toast.success(isRTL ? 'تم تنزيل ملف CSV' : 'CSV downloaded');
-  }, [filtered, language, isRTL]);
+  }, [filtered, language, isRTL, category]);
   const handlePDF = useCallback(async () => {
     if (filtered.length === 0) return;
     try {
       setExporting('pdf');
       await exportProfilesPDF(filtered, language === 'ar' ? 'ar' : 'en');
+      try {
+        track.profileSystemsExport({
+          export_format: 'pdf',
+          results_count: filtered.length,
+          category_slug: category,
+          language,
+        });
+      } catch { /* swallow */ }
       toast.success(isRTL ? 'تم تنزيل ملف PDF' : 'PDF downloaded');
     } catch (err) {
       toast.error(isRTL ? 'تعذّر إنشاء PDF' : 'Failed to generate PDF');
@@ -281,7 +292,7 @@ const ProfileSystems = () => {
     } finally {
       setExporting(null);
     }
-  }, [filtered, language, isRTL]);
+  }, [filtered, language, isRTL, category]);
 
   // ── SEO: per-category titles, descriptions and JSON-LD ──
   const activeCatMeta = useMemo(
@@ -303,6 +314,17 @@ const ProfileSystems = () => {
     : 'https://qitaat.com/profile-systems';
 
   usePageMeta({ title: seoTitle, description: seoDesc, canonical });
+
+  // Page-view telemetry — fires once per category/route change.
+  useEffect(() => {
+    try {
+      track.profileSystemsVisit({
+        category_slug: routeCategory ?? category,
+        language,
+      });
+    } catch { /* never break the page on analytics */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeCategory, language]);
 
   const jsonLd = useMemo(() => {
     const blocks: Record<string, unknown>[] = [];
@@ -385,11 +407,11 @@ const ProfileSystems = () => {
                   role="listbox"
                   aria-label={isRTL ? 'اقتراحات البحث' : 'Search suggestions'}
                 >
-                  {suggestions.map((s) => (
+                  {suggestions.map((s, idx) => (
                     <button
                       key={s.key}
                       type="button"
-                      onMouseDown={(e) => { e.preventDefault(); s.onSelect(); }}
+                      onMouseDown={(e) => { e.preventDefault(); onSuggestionSelect(s, idx); }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-start hover:bg-muted transition-colors"
                       role="option"
                       aria-selected={false}

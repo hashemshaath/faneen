@@ -81,6 +81,12 @@ export type QitaatEvent =
   // Service Requests (Phase SR-3B) — quote flow.
   | "service_request_quoted";
 
+/** Additional Qitaat events appended for profile systems analytics. */
+export type QitaatExtraEvent =
+  | "profile_systems_visit"
+  | "profile_systems_export"
+  | "profile_systems_suggestion_click";
+
 /** Allow-listed parameters. Anything not in this set is dropped. */
 export type AllowedParam =
   | "page_location"
@@ -135,7 +141,17 @@ export type AllowedParam =
   | "first_touch"
   | "last_touch";
 
+/** Extra allow-listed parameters for profile-systems analytics. PII-free. */
+export type ExtraAllowedParam =
+  | "export_format"
+  | "suggestion_kind"
+  | "query_length"
+  | "suggestion_rank";
+
 export type EventPayload = Partial<Record<AllowedParam, string | number | boolean>>;
+
+/** Combined payload accepted by trackEvent (extra params are sanitized identically). */
+export type ExtendedEventPayload = Partial<Record<AllowedParam | ExtraAllowedParam, string | number | boolean>>;
 
 const ALLOWED: ReadonlySet<AllowedParam> = new Set<AllowedParam>([
   "page_location",
@@ -184,6 +200,13 @@ const ALLOWED: ReadonlySet<AllowedParam> = new Set<AllowedParam>([
   "last_touch",
 ]);
 
+const EXTRA_ALLOWED: ReadonlySet<ExtraAllowedParam> = new Set<ExtraAllowedParam>([
+  "export_format",
+  "suggestion_kind",
+  "query_length",
+  "suggestion_rank",
+]);
+
 /** Looks like an email or phone number — used as a defensive PII guard. */
 const PII_RE =
   /(\b[\w.+-]+@[\w-]+\.[\w.-]+\b)|(\+?\d[\d\s\-()]{6,}\d)/;
@@ -202,9 +225,9 @@ function sanitizeValue(v: unknown): string | number | boolean | undefined {
 
 function sanitize(payload: EventPayload): Record<string, string | number | boolean> {
   const out: Record<string, string | number | boolean> = {};
-  for (const key of Object.keys(payload) as AllowedParam[]) {
-    if (!ALLOWED.has(key)) continue;
-    const v = sanitizeValue(payload[key]);
+  for (const key of Object.keys(payload) as (AllowedParam | ExtraAllowedParam)[]) {
+    if (!ALLOWED.has(key as AllowedParam) && !EXTRA_ALLOWED.has(key as ExtraAllowedParam)) continue;
+    const v = sanitizeValue((payload as Record<string, unknown>)[key]);
     if (v !== undefined) out[key] = v;
   }
   return out;
@@ -246,11 +269,11 @@ function shouldDedupe(key: string): boolean {
  * Auto-injects `page_location`, `page_title`, `language`.
  * No-op when GTM/dataLayer is not initialized.
  */
-export function trackEvent(event: QitaatEvent, payload: EventPayload = {}): void {
+export function trackEvent(event: QitaatEvent | QitaatExtraEvent, payload: ExtendedEventPayload = {}): void {
   const dl = getDataLayer();
   if (!dl) return; // GTM disabled — silently skip.
 
-  const clean = { ...autoContext(), ...sanitize(payload) };
+  const clean = { ...autoContext(), ...sanitize(payload as EventPayload) };
   const dedupeKey = `${event}|${JSON.stringify(clean)}`;
   if (shouldDedupe(dedupeKey)) return;
   dl.push({ event, ...clean });
@@ -292,6 +315,10 @@ export const track = {
   supplierLeadSubmitted: (p: EventPayload = {}) => trackEvent("supplier_lead_submitted", p),
   supplierPhoneRevealed: (p: EventPayload = {}) => trackEvent("supplier_phone_revealed", p),
   supplierEmailRevealed: (p: EventPayload = {}) => trackEvent("supplier_email_revealed", p),
+  // Profile Systems telemetry
+  profileSystemsVisit: (p: ExtendedEventPayload = {}) => trackEvent("profile_systems_visit", p),
+  profileSystemsExport: (p: ExtendedEventPayload = {}) => trackEvent("profile_systems_export", p),
+  profileSystemsSuggestionClick: (p: ExtendedEventPayload = {}) => trackEvent("profile_systems_suggestion_click", p),
 };
 
 // Extra wrappers (Phase 3)
