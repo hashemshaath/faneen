@@ -13,6 +13,10 @@ export {
   getProjectClosureByWorkOrder,
   listDeliveryEvidenceForClosure,
   listWarrantyByWorkOrder,
+  listProjectClosuresForBusiness,
+  listCustomerFeedbackForBusiness,
+  listCustomerNpsForBusiness,
+  listWarrantiesForBusiness,
 } from './services/providerActions';
 
 export {
