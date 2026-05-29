@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listContractsForProviderOrBusiness } from '@/modules/contracts';
 import { listServicesByBusiness } from '@/modules/catalog';
@@ -333,10 +333,12 @@ const DashboardAnalytics = () => {
     return { up: pct >= 0, label: `${sign}${pct.toFixed(0)}%` };
   };
 
-  const queryClient = (useQuery as unknown as { _qc?: never }); // placeholder, real refetch below
-  const refetchAll = () => {
-    // Trigger react-query refetch by invalidating: simplest via window event
-    window.dispatchEvent(new CustomEvent('qitaat:analytics-refresh'));
+  const qc = useQueryClient();
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(() => new Date());
+  const refetchAll = async () => {
+    await qc.invalidateQueries({ queryKey: ['provider-analytics'] });
+    await qc.invalidateQueries({ queryKey: ['provider-analytics-prev'] });
+    setLastRefreshed(new Date());
   };
 
   const downloadCsv = () => {
