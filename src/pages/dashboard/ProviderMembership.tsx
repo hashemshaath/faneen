@@ -109,17 +109,97 @@ const ProviderMembership: React.FC = () => {
   }, [txQuery.data, filter]);
   const launch = !PROVIDER_COMMERCIAL_CONFIG.requireCreditForContactReveal;
 
+  // Period progress (% elapsed in current billing window)
+  const periodProgress = useMemo(() => {
+    if (!sub?.current_period_start || !sub?.current_period_end) return null;
+    const start = new Date(sub.current_period_start).getTime();
+    const end = new Date(sub.current_period_end).getTime();
+    const now = Date.now();
+    if (end <= start) return null;
+    const pct = Math.max(0, Math.min(100, Math.round(((now - start) / (end - start)) * 100)));
+    const daysLeft = Math.max(0, Math.ceil((end - now) / 86400000));
+    return { pct, daysLeft };
+  }, [sub?.current_period_start, sub?.current_period_end]);
+
+  // Credit usage gauge (based on monthly grant vs current balance)
+  const creditGauge = useMemo(() => {
+    if (!sub?.plan?.lead_credits_per_month) return null;
+    const max = sub.plan.lead_credits_per_month;
+    const balance = sub.lead_credits_balance;
+    const used = Math.max(0, max - balance);
+    const pct = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
+    return { used, max, balance, pct };
+  }, [sub?.plan?.lead_credits_per_month, sub?.lead_credits_balance]);
+
+  // Export CSV of credit log
+  const exportCsv = () => {
+    const rows = filteredTx;
+    const header = ['date', 'type', 'reason', 'amount', 'balance_after', 'lead_id'];
+    const lines = [header.join(',')];
+    for (const t of rows) {
+      lines.push([
+        new Date(t.created_at).toISOString(),
+        t.type,
+        (REASON_LABEL[t.reason] ?? t.reason).replace(/,/g, ' '),
+        String(t.amount),
+        String(t.balance_after),
+        t.quote_request_lead_id ?? '',
+      ].join(','));
+    }
+    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `provider-credits-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    trackEvent('provider_membership_credits_csv_exported', { rows: rows.length });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-5 max-w-5xl">
-        <div>
-          <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-            <Crown className="h-5 w-5 text-primary" /> العضوية والرصيد
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            تابع خطة منشأتك ورصيد فرص التواصل المتاح لك في قطاعات.
-          </p>
-        </div>
+        {/* Hero */}
+        <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-background to-background overflow-hidden relative">
+          <CardContent className="p-5 sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                  <Crown className="h-5 w-5" />
+                </div>
+                <div>
+                  <h1 className="font-heading font-bold text-xl sm:text-2xl leading-tight">
+                    العضوية والرصيد
+                  </h1>
+                  <p className="text-sm text-muted-foreground mt-1 max-w-xl">
+                    تابع خطة منشأتك، رصيد فرص التواصل، وحركات الإضافة والاستهلاك في مكان واحد.
+                  </p>
+                  {sub?.plan && (
+                    <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                      <Badge variant="outline" className="text-[11px] h-6 px-2 gap-1 border-primary/30 text-primary bg-primary/5">
+                        <Crown className="w-3 h-3" /> {sub.plan.name_ar}
+                      </Badge>
+                      <Badge variant="outline" className="text-[11px] h-6 px-2 gap-1 border-border">
+                        <Wallet className="w-3 h-3" /> الرصيد: <span className="tech-content">{sub.lead_credits_balance}</span>
+                      </Badge>
+                      {periodProgress && (
+                        <Badge variant="outline" className="text-[11px] h-6 px-2 gap-1 border-border">
+                          <Calendar className="w-3 h-3" /> <span className="tech-content">{periodProgress.daysLeft}</span> يوم متبقي
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <Button asChild size="sm" className="h-9 gap-1.5">
+                <Link to="/membership" onClick={() => trackEvent('provider_membership_upgrade_cta_clicked')}>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                  ترقية الباقة
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {launch && (
           <Card className="border-primary/30 bg-primary/5">
@@ -145,18 +225,66 @@ const ProviderMembership: React.FC = () => {
             لا توجد عضوية مفعّلة لمنشأتك حاليًا. تواصل مع فريق قطاعات لتفعيلها.
           </CardContent></Card>
         ) : (
+          <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <InfoCard icon={<Crown className="h-4 w-4" />} label="الخطة الحالية" value={sub.plan?.name_ar ?? '—'} hint={sub.plan?.description_ar ?? undefined} />
             <InfoCard icon={<Wallet className="h-4 w-4" />} label="رصيد فرص التواصل" value={String(sub.lead_credits_balance)} />
             <InfoCard icon={<Activity className="h-4 w-4" />} label="حالة الاشتراك" value={STATUS_LABEL[sub.status] ?? sub.status} />
             <InfoCard icon={<Calendar className="h-4 w-4" />} label="بداية الفترة" value={fmtDate(sub.current_period_start)} hint={sub.current_period_end ? `تنتهي: ${fmtDate(sub.current_period_end)}` : undefined} />
           </div>
+
+          {/* Gauges: credit usage + period progress */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {creditGauge && (
+              <Card>
+                <CardContent className="p-4 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold flex items-center gap-1.5">
+                      <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                      استهلاك رصيد فرص التواصل (هذا الشهر)
+                    </p>
+                    <span className="text-[11px] text-muted-foreground tech-content">
+                      {creditGauge.used} / {creditGauge.max}
+                    </span>
+                  </div>
+                  <Progress
+                    value={creditGauge.pct}
+                    className={cn('h-2', creditGauge.pct >= 90 && '[&>div]:bg-destructive', creditGauge.pct >= 70 && creditGauge.pct < 90 && '[&>div]:bg-warning')}
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    المتبقي: <span className="tech-content font-medium text-foreground">{creditGauge.balance}</span> فرصة من أصل <span className="tech-content">{creditGauge.max}</span> شهريًا.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+            {periodProgress && (
+              <Card>
+                <CardContent className="p-4 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 text-primary" />
+                      تقدم الفترة الحالية
+                    </p>
+                    <span className="text-[11px] text-muted-foreground tech-content">{periodProgress.pct}%</span>
+                  </div>
+                  <Progress value={periodProgress.pct} className="h-2" />
+                  <p className="text-[11px] text-muted-foreground">
+                    تنتهي الفترة خلال <span className="tech-content font-medium text-foreground">{periodProgress.daysLeft}</span> يوم — {fmtDate(sub.current_period_end)}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+          </>
         )}
 
         <Card><CardContent className="p-5 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-heading font-semibold text-base">سجل الرصيد</h2>
-            <div className="flex flex-wrap gap-1">
+            <div>
+              <h2 className="font-heading font-semibold text-base">سجل الرصيد</h2>
+              <p className="text-[11px] text-muted-foreground mt-0.5">جميع حركات الإضافة والاستهلاك على رصيد فرص التواصل.</p>
+            </div>
+            <div className="flex flex-wrap gap-1 items-center">
               {([
                 ['all', 'الكل'], ['grant', 'إضافة'], ['consume', 'استخدام'],
                 ['refund', 'استرجاع'], ['adjustment', 'تعديل'],
@@ -166,6 +294,16 @@ const ProviderMembership: React.FC = () => {
                   {l}
                 </button>
               ))}
+              <Button
+                type="button"
+                onClick={exportCsv}
+                disabled={filteredTx.length === 0}
+                size="sm"
+                variant="outline"
+                className="h-7 text-[11px] gap-1.5 ms-1"
+              >
+                <Download className="h-3 w-3" /> CSV
+              </Button>
             </div>
           </div>
           {txQuery.isLoading ? (
