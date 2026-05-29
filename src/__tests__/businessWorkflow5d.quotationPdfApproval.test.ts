@@ -325,10 +325,17 @@ describe("BUSINESS-WORKFLOW-5D UI", () => {
     expect(src).not.toMatch(/<AlertDialog[\s>]/);
   });
 
-  it("public route /q/:refId is wired in App.tsx", () => {
+  it("public /q/:code route is wired in App.tsx via QSlugDispatcher (APP-STABILITY-CLEANUP-SECURITY-1)", () => {
     const app = read("src/App.tsx");
+    // QuotationViewer is reachable through the dispatcher (lazy import remains).
     expect(app).toMatch(/QuotationViewer/);
-    expect(app).toMatch(/path="\/q\/:refId"/);
+    // Single unified public q route, dispatched to avoid shadowing the
+    // barcode resolver that previously sat at the same path.
+    expect(app).toMatch(/path="\/q\/:code"/);
+    expect(app).toMatch(/QSlugDispatcher/);
+    // Guard against regressing to the two overlapping routes.
+    expect(app).not.toMatch(/path="\/q\/:refId"/);
+    expect(app).not.toMatch(/path="\/q\/:barcode_code"/);
   });
 });
 

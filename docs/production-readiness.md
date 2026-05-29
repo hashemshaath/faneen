@@ -1,6 +1,6 @@
 # Production Readiness
 
-_Last refreshed: APP-CODEBASE-CLEANUP-STABILIZE-2._
+_Last refreshed: APP-STABILITY-CLEANUP-SECURITY-1._
 
 Snapshot of the gating signals used to declare the codebase production-stable.
 Re-run every command below before promoting a new feature phase.
@@ -23,19 +23,27 @@ Re-run every command below before promoting a new feature phase.
 | Credits (client) | `node scripts/credits-isolation-audit.mjs` | 0 violations |
 | Credits (edge) | `node scripts/edge-credits-isolation-audit.mjs` | 0 violations |
 | Broken links | `node scripts/broken-links-audit.mjs` | 0 violations |
+| Robots ↔ sitemap sync | `node scripts/robots-sitemap-sync-audit.mjs` | 0 violations |
+| JSON-LD snapshots | `node scripts/jsonld-snapshot-audit.mjs` | 0 violations |
+| Sitemap integrity | `node scripts/sitemap-integrity-audit.mjs` | 0 violations |
 
-## Current baseline (STABILIZE-2)
+## Current baseline (APP-STABILITY-CLEANUP-SECURITY-1)
 
 - TypeScript: PASS.
-- Vitest: PASS (full suite green after stale registration + storage tests refreshed).
+- Vitest: PASS — 4569 / 4569.
 - All isolation audits: PASS.
-- Onboarding storage calls moved out of `src/pages/` and into
-  `@/modules/files` wrappers (no allow-list widening).
+- Public `/q/:code` route unified through `QSlugDispatcher` — eliminates
+  the previous shadowing between `QuotationViewer` (`?t=<token>`) and
+  `PublicBarcodeResolve` (no token). See `docs/workflow-route-matrix.md`.
+- `robots-sitemap-sync-audit` and `jsonld-snapshot-audit` are green
+  again after restoring `Disallow: /q/` in the edge `robots` function
+  and pruning the stale `TopProvidersSection.tsx` snapshot entry.
 
 ## Documented invariants
 
 - See `docs/workflow-architecture.md` for the end-to-end pipeline.
 - See `docs/work-order-lifecycle.md` for the work-order stack.
+- See `docs/workflow-route-matrix.md` for the public/private/admin route matrix.
 - See `docs/deferred-backlog.md` for what is intentionally _not_ shipped yet.
 - See `docs/credits-architecture.md` for the credits client/server contract.
 - See `src/modules/edge-functions-boundary.md` for edge-function rules.
