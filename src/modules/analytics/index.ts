@@ -194,3 +194,6 @@ export function computeQuotationMetrics(
     expiryRate: expired / total,
   };
 }
+
+// COMMERCIAL-LAUNCH-FINAL-1 Part B — Executive KPI helpers
+export * from './executiveKpis';
