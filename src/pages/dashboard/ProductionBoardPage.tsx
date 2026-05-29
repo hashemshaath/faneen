@@ -915,7 +915,12 @@ function BoardCard({
   return (
     <article
       data-testid={`board-card-${order.id}`}
-      className="rounded-xl border border-border/40 bg-card p-3 space-y-2 hover-lift"
+      className={
+        density === "compact"
+          ? "rounded-xl border border-border/40 bg-card p-2 space-y-1 hover-lift"
+          : "rounded-xl border border-border/40 bg-card p-3 space-y-2 hover-lift"
+      }
+      data-density={density}
     >
       <header className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -1098,6 +1103,21 @@ function BoardCard({
                 <UserPlus className="w-3 h-3" />
                 {tx.save}
               </Button>
+              {assignment && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => void onUnassign(order)}
+                  className="h-8 text-[11px] rounded-lg gap-1"
+                  data-testid={`unassign-${order.id}`}
+                  aria-label={tx.unassign}
+                  title={tx.unassign}
+                >
+                  <UserMinus className="w-3 h-3" />
+                </Button>
+              )}
             </div>
           )}
           {/* Show all allowed-next stages as buttons (back not allowed — forward only) */}
