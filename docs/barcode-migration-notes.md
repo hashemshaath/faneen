@@ -40,7 +40,7 @@
 
 | Route | Component | Access |
 |---|---|---|
-| `/q/:barcode_code` | `PublicBarcodeResolve.tsx` | Public (noindex) |
+| `/q/:code` | `PublicBarcodeResolve.tsx` | Public (noindex) |
 | `/admin/barcode-registry` | `AdminBarcodeRegistry.tsx` | Admin only |
 
 ## Components created
