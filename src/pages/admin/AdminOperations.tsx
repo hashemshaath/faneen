@@ -540,11 +540,41 @@ const AdminOperations = () => {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 print:hidden">
           <span className="text-xs text-muted-foreground" data-testid="last-success-time">
             {bi('آخر معاينة ناجحة:', 'Last successful preview:')}{' '}
             <span className="tech-content">{formatTime(lastGoodIso, isRTL)}</span>
           </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!data || data.sampleActions.length === 0}
+            data-testid="export-samples-csv"
+            onClick={() => {
+              if (!data) return;
+              const headers = ['Kind', 'Condition', 'Severity', 'Entity ID', 'Idempotency (masked)'];
+              const rows = data.sampleActions.map((s) => [
+                s.kind,
+                s.conditionCode,
+                s.severity ?? '',
+                s.entityId,
+                maskIdempotencyKey(s.idempotencyKey),
+              ]);
+              downloadCsv(`ops-preview-samples-${tsStamp()}`, buildCsv(headers, rows));
+            }}
+          >
+            <Download className="w-4 h-4 me-2" />
+            CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={printCurrentView}
+            data-testid="print-preview"
+          >
+            <Printer className="w-4 h-4 me-2" />
+            {bi('طباعة', 'Print')}
+          </Button>
           <Button
             variant="outline"
             size="sm"
