@@ -22,6 +22,18 @@ import {
   listInstallationAppointmentsForBusiness,
   type InstallationAppointmentRow,
 } from '@/modules/installationAppointments';
+import {
+  computeClosureMetrics,
+  computeNpsScore,
+  listProjectClosuresForBusiness,
+  listCustomerFeedbackForBusiness,
+  listCustomerNpsForBusiness,
+  listWarrantiesForBusiness,
+  type ProjectClosureRow,
+  type CustomerFeedbackRow,
+  type CustomerNpsResponseRow,
+  type WorkOrderWarrantyRow,
+} from '@/modules/projectClosure';
 import { useNoIndex } from '@/hooks/useNoIndex';
 
 const OperationsCenter = () => {
@@ -32,6 +44,10 @@ const OperationsCenter = () => {
   const [workOrders, setWorkOrders] = useState<any[]>([]);
   const [rfqs, setRfqs] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<InstallationAppointmentRow[]>([]);
+  const [closures, setClosures] = useState<ProjectClosureRow[]>([]);
+  const [feedback, setFeedback] = useState<CustomerFeedbackRow[]>([]);
+  const [npsRows, setNpsRows] = useState<CustomerNpsResponseRow[]>([]);
+  const [warranties, setWarranties] = useState<WorkOrderWarrantyRow[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -39,15 +55,23 @@ const OperationsCenter = () => {
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const [wo, rf, ap] = await Promise.all([
+      const [wo, rf, ap, cl, fb, np, wr] = await Promise.all([
         listWorkOrdersForBusiness({ businessId, limit: 200 }),
         listRfqs({ businessId, limit: 200 }),
         listInstallationAppointmentsForBusiness({ businessId, limit: 200 }),
+        listProjectClosuresForBusiness(businessId, 200),
+        listCustomerFeedbackForBusiness(businessId, 200),
+        listCustomerNpsForBusiness(businessId, 200),
+        listWarrantiesForBusiness(businessId, 200),
       ]);
       if (cancelled) return;
       setWorkOrders(wo.data ?? []);
       setRfqs(rf.data ?? []);
       setAppointments(ap.data ?? []);
+      setClosures(cl.data ?? []);
+      setFeedback(fb.data ?? []);
+      setNpsRows(np.data ?? []);
+      setWarranties(wr.data ?? []);
       setLoading(false);
     })().catch(() => setLoading(false));
     return () => { cancelled = true; };
@@ -96,6 +120,13 @@ const OperationsCenter = () => {
     () => computeInstallationMetrics(appointments),
     [appointments],
   );
+
+  const closure = useMemo(
+    () => computeClosureMetrics({ closures, feedback, nps: npsRows, warranties }),
+    [closures, feedback, npsRows, warranties],
+  );
+
+  const nps = useMemo(() => computeNpsScore(npsRows), [npsRows]);
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6" data-testid="operations-center">
@@ -169,6 +200,37 @@ const OperationsCenter = () => {
             items={[
               { label: 'Open RFQs', value: rfqs.filter((r) => r.status === 'sent' || r.status === 'draft').length, tone: 'info' },
               { label: 'Awarded', value: rfqs.filter((r) => r.awarded_quote_id || r.status === 'awarded').length, tone: 'success' },
+            ]}
+          />
+        </CardContent>
+      </Card>
+
+      <Card data-testid="closures-section">
+        <CardHeader><CardTitle>Project closure · إنهاء المشاريع</CardTitle></CardHeader>
+        <CardContent>
+          <KpiStrip
+            items={[
+              { label: 'Pending confirmation', value: closure.pendingConfirmation, tone: closure.pendingConfirmation ? 'warning' : 'neutral' },
+              { label: 'Issues reported', value: closure.issuesReported, tone: closure.issuesReported ? 'danger' : 'neutral' },
+              { label: 'Feedback received', value: closure.feedbackReceived, tone: 'info' },
+              { label: 'Average rating', value: closure.averageRating, tone: 'info' },
+              { label: 'Active warranties', value: closure.activeWarranties, tone: 'success' },
+              { label: 'Expired warranties', value: closure.expiredWarranties, tone: 'neutral' },
+              { label: 'NPS score', value: nps.score, tone: 'info' },
+            ]}
+          />
+        </CardContent>
+      </Card>
+
+      <Card data-testid="closures-alerts-section">
+        <CardHeader><CardTitle>Closure alerts · تنبيهات الإنهاء</CardTitle></CardHeader>
+        <CardContent>
+          <KpiStrip
+            items={[
+              { label: 'Unconfirmed > 7d', value: closure.alertNotConfirmed7d, tone: closure.alertNotConfirmed7d ? 'danger' : 'neutral' },
+              { label: 'Low ratings (≤2)', value: closure.alertLowRating, tone: closure.alertLowRating ? 'warning' : 'neutral' },
+              { label: 'NPS detractors', value: closure.alertNpsDetractors, tone: closure.alertNpsDetractors ? 'warning' : 'neutral' },
+              { label: 'Warranty expiring 30d', value: closure.alertWarrantyExpiringSoon, tone: closure.alertWarrantyExpiringSoon ? 'warning' : 'neutral' },
             ]}
           />
         </CardContent>
