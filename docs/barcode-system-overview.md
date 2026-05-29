@@ -63,7 +63,7 @@ Entity types marked "No" in the resolver column return `unavailable` on `/q/` re
 
 ### Public
 - The `barcode_code` string itself (safe to print and share)
-- The `/q/:barcode_code` page for `client_site`, `contract`, and `business`
+- The `/q/:code` page for `client_site`, `contract`, and `business`
 - Scan count and last-scanned timestamp (aggregated, no actor identity)
 - Contract verification metadata (status, provider name, hash prefix)
 
