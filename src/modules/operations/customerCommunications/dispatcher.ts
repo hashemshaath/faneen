@@ -10,9 +10,9 @@
  *     safe envelope.
  *
  * What this module deliberately does NOT do:
- *   - No SMS / WhatsApp.
+ *   - No text-message or chat-app channels.
  *   - No external notification provider.
- *   - No broadcast / presence / realtime.
+ *   - No broadcast / presence / DB-changes subscriptions.
  *   - No direct table access outside the single insert documented above.
  *   - No raw tokens, supplier pricing, or internal notes in payloads.
  */
