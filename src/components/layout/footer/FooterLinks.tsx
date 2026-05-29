@@ -64,6 +64,9 @@ export const FooterLinks = () => {
         title={t('footer.contact')}
         links={[
           { label: t('footer.support'), to: '/contact' },
+          { label: isRTL ? 'مركز المساعدة' : 'Help Center', to: '/help' },
+          { label: isRTL ? 'الإبلاغ عن مشكلة' : 'Report an issue', to: '/help/report-issue' },
+          { label: isRTL ? 'اقتراح ميزة' : 'Suggest a feature', to: '/help/feature-request' },
           { label: t('footer.partnerships'), to: '/about' },
           { label: t('footer.privacy'), to: '/privacy' },
           { label: t('footer.terms'), to: '/terms' },
