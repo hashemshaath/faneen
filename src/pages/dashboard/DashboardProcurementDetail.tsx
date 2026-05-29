@@ -11,6 +11,10 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { RelatedReferencesPanel } from "@/components/reference/RelatedReferencesPanel";
+import { UnifiedTimeline } from "@/components/timeline/UnifiedTimeline";
+import { DiagnosticsCard } from "@/components/dashboard/DiagnosticsCard";
+import { computeProcurementDiagnostics } from "@/modules/analytics/diagnostics";
 import {
   awardRfqQuote,
   closeRfq,
@@ -632,6 +636,57 @@ export default function DashboardProcurementDetail() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {activeRfq && request && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <RelatedReferencesPanel
+            className="lg:col-span-1"
+            entries={[
+              { label: { ar: 'RFQ', en: 'RFQ' }, refId: activeRfq.rfq_number },
+              ...purchaseOrders.map((po) => ({
+                label: { ar: 'أمر شراء', en: 'PO' },
+                refId: po.po_number,
+              })),
+            ]}
+          />
+          <UnifiedTimeline
+            className="lg:col-span-2"
+            businessId={request.business_id}
+            limit={30}
+            filter={(e) =>
+              e.entity_id === activeRfq.id ||
+              (typeof e.metadata?.ref_id === 'string' && e.metadata.ref_id === activeRfq.rfq_number)
+            }
+          />
+          <DiagnosticsCard
+            className="lg:col-span-3"
+            title={isRTL ? 'ملاحظات المشتريات' : 'Procurement diagnostics'}
+            entries={(() => {
+              const d = computeProcurementDiagnostics([
+                {
+                  rfq_id: activeRfq.id,
+                  status: activeRfq.status,
+                  awarded_quote_id: activeRfq.awarded_quote_id,
+                  supplier_quote_count: scored.length,
+                  po_count: purchaseOrders.length,
+                },
+              ]);
+              return [
+                {
+                  key: 'rfq-no-quote',
+                  label: isRTL ? 'RFQ بدون عروض موردين' : 'RFQ without supplier quote',
+                  count: d.rfqWithoutSupplierQuote,
+                },
+                {
+                  key: 'awarded-no-po',
+                  label: isRTL ? 'تمت الترسية دون أمر شراء' : 'Awarded without PO',
+                  count: d.awardedWithoutPo,
+                },
+              ];
+            })()}
+          />
+        </div>
       )}
     </div>
   );
