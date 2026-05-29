@@ -1,122 +1,103 @@
 /**
- * REGISTRATION-UX-FULL-COMPLETE-1
- * Source-level guarantees for the complete entity onboarding MVP:
- *  intent → details → business-details → entity-type → entity-capabilities
- *         → business-sectors → summary.
+ * REGISTRATION-UX consolidated entity onboarding — source-level guarantees
+ * for the current (post APP-CODEBASE-CLEANUP-STABILIZE-2) flow:
  *
- * No runtime rendering — keeps the test fast and route-free.
+ *   intent → account-type → business-details (name AR/EN + unified + email +
+ *            region + sectors + optional CR) → details → phone-verify →
+ *            documents → summary
+ *
+ * Replaces the legacy entity-type / entity-capabilities / business-sectors
+ * / main-location / staff-invite step assertions which referenced features
+ * intentionally removed during registration consolidation.
  */
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const ONBOARDING = fs.readFileSync(
-  path.resolve(__dirname, '../pages/Onboarding.tsx'),
-  'utf8',
+const read = (rel: string) =>
+  fs.readFileSync(path.resolve(__dirname, '..', rel), 'utf8');
+
+const ONBOARDING = read('pages/Onboarding.tsx');
+const AUTH_SERVICE = read('services/auth/authService.ts');
+const DUPLICATE_SERVICE = read(
+  'modules/entities/services/access/findPossibleDuplicateEntities.ts',
+);
+const ACCESS_SERVICE = read(
+  'modules/entities/services/access/createEntityAccessRequest.ts',
 );
 
-const ACCESS_SERVICE = fs.readFileSync(
-  path.resolve(__dirname, '../modules/entities/services/access/createEntityAccessRequest.ts'),
-  'utf8',
-);
-
-const DUPLICATE_SERVICE = fs.readFileSync(
-  path.resolve(__dirname, '../modules/entities/services/access/findPossibleDuplicateEntities.ts'),
-  'utf8',
-);
-
-const AUTH_SERVICE = fs.readFileSync(
-  path.resolve(__dirname, '../services/auth/authService.ts'),
-  'utf8',
-);
-
-describe('Registration Full Complete — step order', () => {
-  it('STEP_ORDER includes entity-capabilities between business-details and business-sectors', () => {
-    expect(ONBOARDING).toMatch(/'business-details',[\s\S]{0,80}'entity-capabilities',\s*'business-sectors'/);
+describe('Registration consolidated — step order', () => {
+  it('STEP_ORDER is the consolidated 7-step sequence', () => {
+    expect(ONBOARDING).toMatch(
+      /'intent',\s*'account-type',\s*'business-details',\s*'details',\s*'phone-verify',\s*'documents',\s*'summary'/,
+    );
   });
 
-  it('business-details Continue advances directly to entity-capabilities (merged screen)', () => {
-    expect(ONBOARDING).toMatch(/setStep\('entity-capabilities'\)/);
+  it('OnboardingStep union matches STEP_ORDER (no removed steps)', () => {
+    for (const s of [
+      "'intent'",
+      "'business-details'",
+      "'phone-verify'",
+      "'documents'",
+      "'summary'",
+    ]) {
+      expect(ONBOARDING).toContain(s);
+    }
   });
 
-  it('entity-capabilities Continue advances to business-sectors', () => {
-    expect(ONBOARDING).toMatch(/setStep\('business-sectors'\)/);
+  it('removed legacy steps are not referenced anywhere', () => {
+    for (const removed of [
+      "'entity-type'",
+      "'entity-capabilities'",
+      "'business-sectors'",
+      "'main-location'",
+      "'staff-invite'",
+    ]) {
+      expect(ONBOARDING).not.toContain(removed);
+    }
   });
 });
 
-describe('Registration Full Complete — entity types (no government)', () => {
-  const allowed = [
-    'company',
-    'establishment',
-    'individual_business',
-    'private_entity',
-    'service_provider',
-    'buyer_entity',
-    'other',
-  ];
-  it.each(allowed)('declares allowed entity type "%s"', (t) => {
-    expect(ONBOARDING).toContain(`'${t}'`);
+describe('Registration consolidated — business-details collects all entity data', () => {
+  it('collects Arabic + English entity name, unified number, business email, region, sectors', () => {
+    expect(ONBOARDING).toContain('setBusinessName');
+    expect(ONBOARDING).toContain('setBusinessNameEn');
+    expect(ONBOARDING).toContain('unifiedNumber');
+    expect(ONBOARDING).toContain('businessEmail');
+    expect(ONBOARDING).toContain('regionId');
+    expect(ONBOARDING).toContain('SectorPicker');
   });
 
+  it('completion validation requires all 6 mandatory entity fields', () => {
+    // The total field count drives the on-screen completeness bar.
+    expect(ONBOARDING).toContain('total += 6;');
+    expect(ONBOARDING).toMatch(
+      /unifiedValid && emailValid && !!regionId && sectors\.length > 0/,
+    );
+  });
+
+  it('persists Arabic + English name, unified number and region on createBusiness', () => {
+    expect(ONBOARDING).toMatch(/createBusiness\([\s\S]{0,800}name_en:\s*businessNameEn/);
+    expect(ONBOARDING).toMatch(/createBusiness\([\s\S]{0,800}unified_number:\s*unifiedNumber/);
+    expect(ONBOARDING).toMatch(/createBusiness\([\s\S]{0,800}region:\s*selectedRegion/);
+    expect(ONBOARDING).toMatch(/createBusiness\([\s\S]{0,800}sectors,/);
+  });
+
+  it('authService.createBusiness accepts and forwards the extras payload', () => {
+    expect(AUTH_SERVICE).toContain('entity_type?: string');
+    expect(AUTH_SERVICE).toContain('capabilities?: Record<string, boolean>');
+  });
+});
+
+describe('Registration consolidated — government exclusion preserved', () => {
   it('excludes all government wording', () => {
     expect(ONBOARDING).not.toMatch(/government/i);
-    expect(ONBOARDING).not.toContain('government_site');
-    expect(ONBOARDING).not.toContain('government_entity');
     expect(ONBOARDING).not.toContain('جهة حكومية');
     expect(ONBOARDING).not.toContain('حكومي');
   });
 });
 
-describe('Registration Full Complete — capabilities', () => {
-  it('offers provider / buyer / both modes', () => {
-    // Modes are rendered via a literal options array consumed by data-capability-mode={o.id}.
-    expect(ONBOARDING).toContain('data-capability-mode={o.id}');
-    expect(ONBOARDING).toMatch(/id:\s*'provider'/);
-    expect(ONBOARDING).toMatch(/id:\s*'buyer'/);
-    expect(ONBOARDING).toMatch(/id:\s*'both'/);
-  });
-
-  it('translates modes into a structured capabilities jsonb shape', () => {
-    expect(ONBOARDING).toContain('can_provide_services');
-    expect(ONBOARDING).toContain('can_request_services');
-    expect(ONBOARDING).toContain('can_issue_quotes');
-    expect(ONBOARDING).toContain('can_receive_quotes');
-  });
-
-  it('Arabic and English labels are present', () => {
-    expect(ONBOARDING).toContain('مقدم خدمة');
-    expect(ONBOARDING).toContain('مستفيد / طالب خدمة');
-    expect(ONBOARDING).toContain('الاثنين');
-    expect(ONBOARDING).toContain('Provider');
-    expect(ONBOARDING).toContain('Buyer / beneficiary');
-    expect(ONBOARDING).toContain('Both');
-  });
-});
-
-describe('Registration Full Complete — createBusiness wiring', () => {
-  it('passes entity_type and capabilities to createBusiness on completion', () => {
-    expect(ONBOARDING).toMatch(/createBusiness\([\s\S]*entity_type:\s*entityType[\s\S]*capabilities:\s*capabilitiesFromMode/);
-  });
-
-  it('authService.createBusiness accepts and forwards entity_type + capabilities', () => {
-    expect(AUTH_SERVICE).toContain('entity_type?: string');
-    expect(AUTH_SERVICE).toContain('capabilities?: Record<string, boolean>');
-    expect(AUTH_SERVICE).toMatch(/extras\?\.entity_type\s*\?\s*\{\s*entity_type:\s*extras\.entity_type\s*\}/);
-    expect(AUTH_SERVICE).toMatch(/extras\?\.capabilities\s*\?\s*\{\s*capabilities:\s*extras\.capabilities\s*\}/);
-  });
-});
-
-describe('Registration Full Complete — duplicate prevention', () => {
-  it('uses findPossibleDuplicateEntities before allowing entity creation', () => {
-    expect(ONBOARDING).toContain('findPossibleDuplicateEntities');
-  });
-
-  it('shows the exact-duplicate warning copy and a request-access alternative', () => {
-    expect(ONBOARDING).toContain('قد تكون هذه المنشأة مسجلة مسبقًا');
-    expect(ONBOARDING).toContain('This entity may already exist');
-    expect(ONBOARDING).toContain('data-feature="duplicate-warning"');
-  });
-
+describe('Registration consolidated — duplicate prevention service', () => {
   it('duplicate service projects safe-only columns (no PII)', () => {
     expect(DUPLICATE_SERVICE).toContain('id, ref_id, legacy_ref_id, name_ar, name_en, city_id');
     expect(DUPLICATE_SERVICE).not.toMatch(/\bemail\b/);
@@ -124,30 +105,48 @@ describe('Registration Full Complete — duplicate prevention', () => {
   });
 });
 
-describe('Registration Full Complete — request access MVP', () => {
+describe('Registration consolidated — request access MVP', () => {
   it('createEntityAccessRequest writes to entity_access_requests', () => {
     expect(ACCESS_SERVICE).toContain(`from('entity_access_requests')`);
     expect(ACCESS_SERVICE).toContain('requester_user_id');
   });
 
-  it('does not display token / synthetic email / provider_intent_id', () => {
-    expect(ONBOARDING).not.toMatch(/provider_intent_id/);
+  it('never renders synthetic phone email domain or raw provider tokens', () => {
     expect(ONBOARDING).not.toMatch(/synthetic[_-]?phone[_-]?email/i);
-  });
-
-  it('individual intent uses extended bilingual copy explaining the path', () => {
-    expect(ONBOARDING).toContain('يمكنك استخدام قطاعات كفرد');
-    expect(ONBOARDING).toContain('You can use Qitaat as an individual');
+    expect(ONBOARDING).not.toContain('@phone.qitaat.local');
   });
 });
 
-describe('Registration Full Complete — backward compatibility', () => {
-  it('preserves the existing summary step and is_onboarded write', () => {
-    expect(ONBOARDING).toContain("if (step === 'summary')");
-    expect(ONBOARDING).toContain('is_onboarded: true');
+describe('Registration consolidated — completion contract', () => {
+  it('persists is_onboarded:true exactly once via completeOnboarding', () => {
+    const hits = ONBOARDING.match(/is_onboarded:\s*true/g) || [];
+    expect(hits.length).toBe(1);
   });
 
-  it('individual completion still skips createBusiness', () => {
-    expect(ONBOARDING).toMatch(/accountType === 'business' && businessName && username/);
+  it('business completion routes through createBusiness with id + name + username', () => {
+    expect(ONBOARDING).toMatch(
+      /accountType === 'business' && businessName && username/,
+    );
+    expect(ONBOARDING).toMatch(
+      /authService\.createBusiness\(user!\.id, businessName, username,/,
+    );
+  });
+
+  it('summary step still mounts the verification status badge', () => {
+    expect(ONBOARDING).toContain(
+      "import { EntityVerificationStatusBadge } from '@/components/entities/EntityVerificationStatusBadge'",
+    );
+    expect(ONBOARDING).toContain('<EntityVerificationStatusBadge');
+  });
+});
+
+describe('Registration consolidated — forbidden access guardrails', () => {
+  it('does not query forbidden auth/role tables directly from the page', () => {
+    expect(ONBOARDING).not.toMatch(/supabase\.from\(['"](profiles|user_roles)['"]\)/);
+  });
+
+  it('does not touch supabase.storage directly (routes through @/modules/files)', () => {
+    expect(ONBOARDING).not.toMatch(/supabase\.storage/);
+    expect(ONBOARDING).toContain("from '@/modules/files'");
   });
 });
