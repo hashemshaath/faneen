@@ -1,6 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { ProcurementRfqRow, ProcurementRfqStatus } from '../types';
 import { updateProcurementRequestStatus } from './procurementRequests';
+import { executeAwardHandoff } from './awardHandoff';
+import { notifyProcurementEvent } from './procurementNotifications';
 
 const SELECT =
   'id, business_id, procurement_request_id, rfq_number, status, due_at, expires_at, sent_at, closed_at, awarded_quote_id, created_by, created_at, updated_at';
@@ -136,10 +138,33 @@ export async function closeRfq(
  */
 export async function awardRfqQuote(
   quoteId: string,
+  options?: {
+    actor_user_id?: string | null;
+    notify_user_ids?: ReadonlyArray<string>;
+    rfq_id?: string | null;
+  },
 ): Promise<{ data: { quote_id: string } | null; error: unknown }> {
   const { data, error } = await supabase.rpc('procurement_award_quote', {
     _quote_id: quoteId,
   });
   if (error) return { data: null, error };
+  // Best-effort handoff (work-order timeline comment + in-app notifications).
+  // Failures here MUST NOT bubble up — awarding already succeeded atomically.
+  if (options?.rfq_id) {
+    try {
+      await executeAwardHandoff({
+        quote_id: quoteId,
+        rfq_id: options.rfq_id,
+        actor_user_id: options.actor_user_id ?? null,
+        notify_user_ids: options.notify_user_ids,
+      });
+    } catch {
+      /* swallow */
+    }
+  } else if (options?.notify_user_ids) {
+    for (const uid of options.notify_user_ids) {
+      notifyProcurementEvent({ user_id: uid, event: 'quote_awarded', quote_id: quoteId });
+    }
+  }
   return { data: { quote_id: (data as string | null) ?? quoteId }, error: null };
 }
