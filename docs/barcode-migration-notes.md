@@ -6,7 +6,7 @@
 |---|---|---|
 | 1 | `barcode_registry`, `barcode_events`, `barcode_entity_links` tables + backfill (101 entities) | PASS |
 | 2 | Auto-create triggers + entity links backfill (52 safe links) | PASS |
-| 3 | `resolve_barcode` RPC + public `/q/:barcode_code` route | PASS |
+| 3 | `resolve_barcode` RPC + public `/q/:code` route | PASS |
 | 4 | `/admin/barcode-registry` admin monitoring page | PASS |
 | 5 | `BarcodeWidget` + `BarcodePrintCard` + copy/print/download | PASS |
 | 6 | `get_entity_barcode_code` RPC + widget integration in Client Sites, ContractDetail, ExecutionSiteSection | PASS |
