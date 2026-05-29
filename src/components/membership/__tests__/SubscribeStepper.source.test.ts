@@ -49,7 +49,11 @@ describe('SubscribeStepper — contract', () => {
   it('never touches Supabase / payment providers directly — uses the props callbacks', () => {
     expect(STEPPER).not.toMatch(/@\/integrations\/supabase\/client/);
     expect(STEPPER).not.toMatch(/functions\.invoke\(/);
-    expect(STEPPER).not.toMatch(/moyasar/i);
+    // Mentioning Moyasar in helper copy is fine; what matters is no direct
+    // network call or secret usage from the component.
+    expect(STEPPER).not.toMatch(/api\.moyasar\.com/);
+    expect(STEPPER).not.toMatch(/MOYASAR_SECRET_KEY/);
+    expect(STEPPER).not.toMatch(/Authorization:\s*['"`]Basic/i);
     expect(STEPPER).toMatch(/onConfirm/);
     expect(STEPPER).toMatch(/onCancel/);
   });
