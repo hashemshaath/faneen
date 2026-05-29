@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useMultiJsonLd } from '@/hooks/usePageMeta';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -17,9 +18,11 @@ import { Slider } from '@/components/ui/slider';
 import {
   Layers, Search, Thermometer, Volume2, Shield,
   Eye, Ruler, Filter, Scale, X, SlidersHorizontal, Sparkles, Award,
-  ArrowUpDown, RotateCcw,
+  ArrowUpDown, RotateCcw, FileDown, FileText,
 } from 'lucide-react';
 import { fmtNum } from '@/lib/format';
+import { exportProfilesCSV, exportProfilesPDF } from '@/lib/profile-systems-export';
+import { toast } from 'sonner';
 
 const categoryOptions = [
   { value: 'all', ar: 'الكل', en: 'All' },
@@ -90,14 +93,15 @@ const RatingBar = ({ value, max = 10, label, icon: Icon }: { value: number; max?
 
 const ProfileSystems = () => {
   const { isRTL, language } = useLanguage();
-  usePageMeta({
-    title: language === 'ar' ? 'أنظمة القطاعات - قطاعات الألمنيوم والحديد | قِطاعات' : 'Profile Systems - Aluminum & Iron Profiles | Qitaat',
-    description: language === 'ar' ? 'تعرف على أنظمة قطاعات الألمنيوم والحديد المختلفة ومواصفاتها وتقييماتها.' : 'Learn about different aluminum and iron profile systems, specifications and ratings.',
-  });
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { cat: catParam } = useParams<{ cat?: string }>();
+  const routeCategory = useMemo(
+    () => (catParam && categoryOptions.some((c) => c.value === catParam) ? catParam : null),
+    [catParam],
+  );
   const [search, setSearch] = useState(searchParams.get('q') ?? '');
-  const [category, setCategory] = useState(searchParams.get('cat') ?? 'all');
+  const [category, setCategory] = useState(routeCategory ?? searchParams.get('cat') ?? 'all');
   const [minThermal, setMinThermal] = useState(Number(searchParams.get('thermal') ?? 0));
   const [minSound, setMinSound] = useState(Number(searchParams.get('sound') ?? 0));
   const [minStrength, setMinStrength] = useState(Number(searchParams.get('strength') ?? 0));
@@ -107,6 +111,13 @@ const ProfileSystems = () => {
   const [sort, setSort] = useState<SortKey>(((searchParams.get('sort') as SortKey) ?? 'recommended'));
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [exporting, setExporting] = useState<'pdf' | null>(null);
+
+  // Keep state in sync when the user navigates between category routes.
+  useEffect(() => {
+    if (routeCategory && routeCategory !== category) setCategory(routeCategory);
+  }, [routeCategory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleCompare = useCallback((id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -137,14 +148,15 @@ const ProfileSystems = () => {
   useEffect(() => {
     const next = new URLSearchParams();
     if (search.trim()) next.set('q', search.trim());
-    if (category !== 'all') next.set('cat', category);
+    // On a /category/:cat route, the category is in the path — don't duplicate in query.
+    if (!routeCategory && category !== 'all') next.set('cat', category);
     if (minThermal > 0) next.set('thermal', String(minThermal));
     if (minSound > 0) next.set('sound', String(minSound));
     if (minStrength > 0) next.set('strength', String(minStrength));
     if (recFilter.length) next.set('rec', recFilter.join(','));
     if (sort !== 'recommended') next.set('sort', sort);
     setSearchParams(next, { replace: true });
-  }, [search, category, minThermal, minSound, minStrength, recFilter, sort, setSearchParams]);
+  }, [search, category, minThermal, minSound, minStrength, recFilter, sort, setSearchParams, routeCategory]);
 
   // Live counts per category over the full published set (always-on stats strip).
   const categoryCounts = useMemo(() => {
@@ -193,16 +205,140 @@ const ProfileSystems = () => {
     (sort !== 'recommended' ? 1 : 0);
 
   const resetAll = useCallback(() => {
-    setSearch(''); setCategory('all');
+    setSearch(''); if (!routeCategory) setCategory('all');
     setMinThermal(0); setMinSound(0); setMinStrength(0);
     setRecFilter([]); setSort('recommended');
-  }, []);
+  }, [routeCategory]);
 
   // Quick lookup for the floating compare bar thumbnails.
   const selectedProfiles = useMemo(
     () => compareIds.map((id) => profiles.find((p) => p.id === id)).filter((p): p is ProfileSystemRow => !!p),
     [compareIds, profiles]
   );
+
+  // ── Auto-suggestions: profile names + matching categories + spec hints ──
+  const suggestions = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q || q.length < 1) return [] as Array<{ key: string; kind: 'profile' | 'category' | 'spec'; label: string; sub?: string; onSelect: () => void }>;
+    const out: Array<{ key: string; kind: 'profile' | 'category' | 'spec'; label: string; sub?: string; onSelect: () => void }> = [];
+    categoryOptions.filter((c) => c.value !== 'all').forEach((c) => {
+      if (c.ar.toLowerCase().includes(q) || c.en.toLowerCase().includes(q) || c.value.includes(q)) {
+        const n = categoryCounts.get(c.value) ?? 0;
+        out.push({
+          key: `cat-${c.value}`, kind: 'category',
+          label: language === 'ar' ? c.ar : c.en,
+          sub: `${fmtNum(n)} ${isRTL ? 'قطاع' : 'profiles'}`,
+          onSelect: () => { setCategory(c.value); setSearch(''); setSearchFocused(false); },
+        });
+      }
+    });
+    profiles.forEach((p) => {
+      const hay = `${p.name_ar ?? ''} ${p.name_en ?? ''}`.toLowerCase();
+      if (hay.includes(q)) {
+        const co = categoryOptions.find((c) => c.value === p.category);
+        out.push({
+          key: `p-${p.id}`, kind: 'profile',
+          label: language === 'ar' ? (p.name_ar || p.name_en || '') : (p.name_en || p.name_ar || ''),
+          sub: co ? (language === 'ar' ? co.ar : co.en) : (p.category ?? ''),
+          onSelect: () => { setSearchFocused(false); navigate(`/profile-systems/${p.slug}`); },
+        });
+      }
+    });
+    // Spec/property hints: thermal / sound / strength
+    const specHints: Array<{ kw: string[]; label: string; apply: () => void }> = [
+      { kw: ['ther', 'حرار', 'عزل حراري'], label: isRTL ? 'عزل حراري ≥ 7' : 'Thermal ≥ 7', apply: () => setMinThermal(7) },
+      { kw: ['sound', 'صوت', 'عزل صوتي'], label: isRTL ? 'عزل صوتي ≥ 7' : 'Sound ≥ 7', apply: () => setMinSound(7) },
+      { kw: ['stren', 'تحمل', 'قوة'], label: isRTL ? 'تحمل ≥ 7' : 'Strength ≥ 7', apply: () => setMinStrength(7) },
+      { kw: ['premium', 'احتر'], label: isRTL ? 'احترافي فقط' : 'Premium only', apply: () => setRecFilter(['premium']) },
+    ];
+    specHints.forEach((h, i) => {
+      if (h.kw.some((k) => q.includes(k))) {
+        out.push({
+          key: `sp-${i}`, kind: 'spec', label: h.label,
+          sub: isRTL ? 'تطبيق فلتر' : 'Apply filter',
+          onSelect: () => { h.apply(); setSearch(''); setSearchFocused(false); },
+        });
+      }
+    });
+    return out.slice(0, 8);
+  }, [search, profiles, categoryCounts, language, isRTL, navigate]);
+
+  // ── Export handlers ──
+  const handleCSV = useCallback(() => {
+    if (filtered.length === 0) return;
+    exportProfilesCSV(filtered, language === 'ar' ? 'ar' : 'en');
+    toast.success(isRTL ? 'تم تنزيل ملف CSV' : 'CSV downloaded');
+  }, [filtered, language, isRTL]);
+  const handlePDF = useCallback(async () => {
+    if (filtered.length === 0) return;
+    try {
+      setExporting('pdf');
+      await exportProfilesPDF(filtered, language === 'ar' ? 'ar' : 'en');
+      toast.success(isRTL ? 'تم تنزيل ملف PDF' : 'PDF downloaded');
+    } catch (err) {
+      toast.error(isRTL ? 'تعذّر إنشاء PDF' : 'Failed to generate PDF');
+      console.error(err);
+    } finally {
+      setExporting(null);
+    }
+  }, [filtered, language, isRTL]);
+
+  // ── SEO: per-category titles, descriptions and JSON-LD ──
+  const activeCatMeta = useMemo(
+    () => routeCategory ? categoryOptions.find((c) => c.value === routeCategory) ?? null : null,
+    [routeCategory],
+  );
+  const seoTitle = activeCatMeta
+    ? (isRTL
+      ? `أنظمة قطاعات ${activeCatMeta.ar} — مواصفات وتقييمات | قِطاعات`
+      : `${activeCatMeta.en} Profile Systems — Specs & Ratings | Qitaat`)
+    : (isRTL ? 'دليل القطاعات والأنظمة — مواصفات ومقارنات | قِطاعات' : 'Profile Systems Guide — Specs & Comparison | Qitaat');
+  const seoDesc = activeCatMeta
+    ? (isRTL
+      ? `استكشف أنظمة قطاعات ${activeCatMeta.ar} المتوفرة في السوق السعودي مع تقييمات العزل الحراري والصوتي والتحمل والمقارنة بين الأنظمة.`
+      : `Explore ${activeCatMeta.en.toLowerCase()} profile systems with thermal, sound and strength ratings, available colors, and side-by-side comparison.`)
+    : (isRTL ? 'تعرف على أنظمة قطاعات الألمنيوم والحديد والزجاج والخشب ومواصفاتها وتقييماتها وقارن بينها.' : 'Browse aluminum, iron, glass and wood profile systems with specifications, ratings and comparison.');
+  const canonical = activeCatMeta
+    ? `https://qitaat.com/profile-systems/category/${activeCatMeta.value}`
+    : 'https://qitaat.com/profile-systems';
+
+  usePageMeta({ title: seoTitle, description: seoDesc, canonical });
+
+  const jsonLd = useMemo(() => {
+    const blocks: Record<string, unknown>[] = [];
+    blocks.push({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: isRTL ? 'الرئيسية' : 'Home', item: 'https://qitaat.com/' },
+        { '@type': 'ListItem', position: 2, name: isRTL ? 'أنظمة القطاعات' : 'Profile Systems', item: 'https://qitaat.com/profile-systems' },
+        ...(activeCatMeta ? [{ '@type': 'ListItem', position: 3, name: isRTL ? activeCatMeta.ar : activeCatMeta.en, item: canonical }] : []),
+      ],
+    });
+    blocks.push({
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: seoTitle,
+      description: seoDesc,
+      url: canonical,
+      inLanguage: isRTL ? 'ar-SA' : 'en',
+    });
+    if (filtered.length) {
+      blocks.push({
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        numberOfItems: filtered.length,
+        itemListElement: filtered.slice(0, 30).map((p, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          url: `https://qitaat.com/profile-systems/${p.slug}`,
+          name: isRTL ? (p.name_ar || p.name_en || '') : (p.name_en || p.name_ar || ''),
+        })),
+      });
+    }
+    return blocks;
+  }, [filtered, activeCatMeta, isRTL, seoTitle, seoDesc, canonical]);
+  useMultiJsonLd(jsonLd);
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
