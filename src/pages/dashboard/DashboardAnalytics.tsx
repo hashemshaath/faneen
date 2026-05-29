@@ -12,22 +12,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BarChart3, TrendingUp, DollarSign, Users, FileText, Star,
   CalendarClock, Eye, ArrowUpRight, ArrowDownRight, Minus,
-  PieChart as PieChartIcon, Activity,
+  PieChart as PieChartIcon, Activity, Download, RefreshCw, Sparkles, Briefcase,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
-  LineChart, Line,
 } from 'recharts';
 import { cn } from '@/lib/utils';
 import { format, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, eachMonthOfInterval } from 'date-fns';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { ProviderLeadAnalytics } from '@/components/dashboard/ProviderLeadAnalytics';
 import { ProviderTipsCard } from '@/components/dashboard/ProviderTipsCard';
+import { BentoTile } from '@/components/dashboard/overview/BentoTile';
+import '@/styles/dashboard-emerald.css';
 
 // Brand-aligned chart palette — sourced from central design tokens.
 const CHART_COLORS = [
