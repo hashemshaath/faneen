@@ -133,6 +133,9 @@ export default function ProductionBoardPage() {
   // Inline side panel (no modal) — drives assignment composer.
   const [openCardId, setOpenCardId] = useState<string | null>(null);
   const [assignTargetUserId, setAssignTargetUserId] = useState<string>("");
+  // Density + layout mode (display-only, persisted in component state).
+  const [density, setDensity] = useState<"comfortable" | "compact">("comfortable");
+  const [stackedMode, setStackedMode] = useState(false);
 
   const tx = useMemo(
     () => ({
@@ -186,6 +189,17 @@ export default function ProductionBoardPage() {
       pickOperator: isRTL ? "اختر مشغّلًا..." : "Pick operator...",
       stage: isRTL ? "المرحلة" : "Stage",
       priority: isRTL ? "الأولوية" : "Priority",
+      density: isRTL ? "الكثافة" : "Density",
+      densityCompact: isRTL ? "مدمج" : "Compact",
+      densityComfortable: isRTL ? "مريح" : "Comfortable",
+      layoutKanban: isRTL ? "أعمدة" : "Columns",
+      layoutStacked: isRTL ? "متتالٍ" : "Stacked",
+      unassigned: isRTL ? "بدون إسناد" : "Unassigned",
+      wipOk: isRTL ? "ضمن الحد" : "Within limit",
+      wipWarning: isRTL ? "اقتراب من الحد" : "Near limit",
+      wipDanger: isRTL ? "تجاوز الحد" : "Over limit (overloaded)",
+      wipLimitNone: isRTL ? "بدون حد" : "No limit",
+      overdueHere: isRTL ? "متأخر هنا" : "Overdue here",
     }),
     [isRTL],
   );
