@@ -264,6 +264,7 @@ const AppRoutes = () => (
           <Route path="/staff-invite/:token" element={<StaffInviteAccept />} />
           <Route path="/s/:token" element={<PublicSiteScan />} />
           <Route path="/q/:code" element={<QSlugDispatcher />} />
+          <Route path="/client/:refId" element={<CustomerProjectPortal />} />
           <Route path="/r/:refId" element={<ReferenceResolver />} />
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/for-providers" element={<ForProviders />} />
