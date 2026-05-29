@@ -40,3 +40,7 @@ the trigger phase that may pick it up.
 The deferred items above are confirmed **not present** in the current build
 via the corresponding isolation audits and the green vitest baseline (see
 `docs/production-readiness.md`).
+## Procurement-3 deferred
+- Inventory stock movement linkage on award
+- Supplier payments / invoicing
+- Public supplier portal (token-scoped quote submission)

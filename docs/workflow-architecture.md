@@ -60,3 +60,16 @@ Lead ─▶ Quote Request ─▶ Quotation ─▶ E-Signature ─▶ Contract Dr
 - `docs/contracts-rpc-reference.md`
 - `docs/deferred-backlog.md`
 - `docs/production-readiness.md`
+## BUSINESS-WORKFLOW-PROCUREMENT-3 — Line-Item RFQs, Notifications, Award Handoff
+
+- **RFQ line items**: `procurement_rfq_items` (name, qty, unit, target_price, sort_order). CRUD via `createRfqItem`/`updateRfqItem`/`deleteRfqItem`/`listRfqItemsByRfq`/`reorderRfqItems`.
+- **Supplier quote line items**: `procurement_supplier_quote_items` (unit_price, qty, total_price). Service: `submitQuoteItems`, `listQuoteItemsByQuote`, `listQuoteItemsByRfq`, `calculateLineTotal`.
+- **Line-item comparison**: pure helper `compareQuotesWithLineItems` (no Supabase). Sorts by completeness DESC → effective total ASC → lead ASC → submitted ASC. Surfaces `missing_items` / `no_total` warnings and reason codes (`lowest_total`, `fastest_lead_time`, `most_complete`).
+- **Notifications**: `notifyProcurementEvent` wraps `createNotificationFireAndForget`. Bilingual generic content, no supplier PII, never throws, no SMS/email/push/WhatsApp.
+- **Award pipeline hop**: `awardRfqQuote` invokes the atomic `procurement_award_quote` RPC then best-effort calls `executeAwardHandoff` which posts a work-order comment via `addWorkOrderComment` (approved wrapper) and fans out `quote_awarded` notifications. No WO stage mutation, no inventory, no payments.
+- **Idempotency**: `procurement_award_quote` returns successfully when re-awarding the same already-winning quote; awarding a different quote after one is awarded raises `rfq_already_awarded`.
+
+### Deferred
+- Inventory stock movements
+- Supplier payments
+- Public supplier portal access
