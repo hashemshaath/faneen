@@ -34,6 +34,7 @@ import { WorkOrderQuotationsSection } from "@/components/workOrders/WorkOrderQuo
 import { WorkOrderPipelineSection } from "@/components/workOrders/WorkOrderPipelineSection";
 import { HealthBadge } from "@/components/health/HealthBadge";
 import { RelatedReferencesPanel } from "@/components/reference/RelatedReferencesPanel";
+import { CustomerTrackingCard } from "@/components/workOrders/CustomerTrackingCard";
 import { UnifiedTimeline } from "@/components/timeline/UnifiedTimeline";
 import { workOrderHealth } from "@/modules/health";
 import { useWorkOrderRealtimeInvalidation } from "@/hooks/useWorkOrderRealtimeInvalidation";
@@ -426,6 +427,12 @@ export default function DashboardWorkOrderDetail() {
           />
 
           <WorkOrderActivityCard businessId={wo.business_id} isRTL={isRTL} limit={50} />
+
+          <CustomerTrackingCard
+            workOrderId={wo.id}
+            customerEmail={null}
+            canManage={isAdmin || wo.owner_user_id === user?.id}
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <RelatedReferencesPanel
