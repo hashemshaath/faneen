@@ -29,6 +29,8 @@ const TABLES = [
   'procurement_suppliers',
   'procurement_supplier_quotes',
   'procurement_rfq_invitations',
+  'procurement_rfq_items',
+  'procurement_supplier_quote_items',
 ];
 const TABLE_PATTERN = new RegExp(
   `\\.from\\(\\s*['"](?:${TABLES.join('|')})['"]\\s*\\)`,
@@ -86,6 +88,18 @@ if (fs.existsSync(pureFile)) {
       /from\s+['"]@supabase\/supabase-js['"]/.test(src)) {
     pureViolations.push({ file: 'src/modules/procurement/services/quoteComparison.ts',
       reason: 'Pure helper must not import Supabase' });
+  }
+}
+
+const pureFile2 = path.join(ROOT, 'src/modules/procurement/services/quoteComparisonLineItems.ts');
+if (fs.existsSync(pureFile2)) {
+  const src = fs.readFileSync(pureFile2, 'utf8');
+  if (/from\s+['"]@\/integrations\/supabase\/client['"]/.test(src) ||
+      /from\s+['"]@supabase\/supabase-js['"]/.test(src)) {
+    pureViolations.push({
+      file: 'src/modules/procurement/services/quoteComparisonLineItems.ts',
+      reason: 'Pure helper must not import Supabase',
+    });
   }
 }
 
