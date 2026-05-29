@@ -102,3 +102,20 @@ export type {
 // BUSINESS-WORKFLOW-PROCUREMENT-3 — Award pipeline handoff
 export { executeAwardHandoff } from './services/awardHandoff';
 export type { AwardHandoffInput } from './services/awardHandoff';
+// PROCUREMENT-RFQ-ENGINE-1 — BOQ → RFQ
+export { createProcurementRfqFromBoq } from './services/createRfqFromBoq';
+export type {
+  CreateRfqFromBoqInput,
+  CreateRfqFromBoqResult,
+} from './services/createRfqFromBoq';
+// PROCUREMENT-RFQ-ENGINE-1 — Purchase Order drafts
+export {
+  createPurchaseOrderDraft,
+  getPurchaseOrderByQuote,
+  listPurchaseOrdersByRfq,
+} from './services/purchaseOrders';
+export type { CreatePurchaseOrderDraftInput } from './services/purchaseOrders';
+export type {
+  ProcurementPurchaseOrderRow,
+  ProcurementPurchaseOrderStatus,
+} from './types';
