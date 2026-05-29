@@ -476,6 +476,46 @@ export default function ProductionBoardPage() {
             <p className="text-sm text-muted-foreground mt-1">{tx.subtitle}</p>
           </div>
           <div className="flex items-center gap-2">
+            <div className="hidden sm:inline-flex rounded-xl border border-border/40 overflow-hidden" role="group" aria-label={tx.density}>
+              <button
+                type="button"
+                onClick={() => setDensity("comfortable")}
+                className={`h-9 px-2 text-[11px] ${density === "comfortable" ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
+                aria-pressed={density === "comfortable"}
+                data-testid="density-comfortable"
+              >
+                {tx.densityComfortable}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDensity("compact")}
+                className={`h-9 px-2 text-[11px] border-s border-border/40 ${density === "compact" ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
+                aria-pressed={density === "compact"}
+                data-testid="density-compact"
+              >
+                {tx.densityCompact}
+              </button>
+            </div>
+            <div className="inline-flex rounded-xl border border-border/40 overflow-hidden lg:hidden" role="group" aria-label="layout">
+              <button
+                type="button"
+                onClick={() => setStackedMode(false)}
+                className={`h-9 px-2 text-[11px] ${!stackedMode ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
+                aria-pressed={!stackedMode}
+                data-testid="layout-kanban"
+              >
+                {tx.layoutKanban}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStackedMode(true)}
+                className={`h-9 px-2 text-[11px] border-s border-border/40 ${stackedMode ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
+                aria-pressed={stackedMode}
+                data-testid="layout-stacked"
+              >
+                {tx.layoutStacked}
+              </button>
+            </div>
             <Button
               variant="outline"
               size="sm"
