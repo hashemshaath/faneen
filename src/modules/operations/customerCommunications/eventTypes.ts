@@ -32,6 +32,11 @@ export const CUSTOMER_PROJECT_EVENT_TYPES = [
   'installation.confirmed',
   'installation.reschedule_requested',
   'installation.completed',
+  // Project closure / feedback / warranty
+  'project.completed',
+  'project.confirmed',
+  'feedback.received',
+  'warranty.started',
   // Attachments — only when explicitly customer-visible
   'customer_visible_attachment_added',
 ] as const;
@@ -53,6 +58,11 @@ export const WIRED_CUSTOMER_PROJECT_EVENT_TYPES = [
   'installation.confirmed',
   'installation.reschedule_requested',
   'installation.completed',
+  // Low-risk customer-facing closure events. `feedback.received` is
+  // intentionally NOT wired to a customer email (kept internal-only).
+  'project.completed',
+  'project.confirmed',
+  'warranty.started',
 ] as const satisfies ReadonlyArray<CustomerProjectEventType>;
 
 export type WiredCustomerProjectEventType =
