@@ -577,14 +577,10 @@ export default function AdminProviderReview() {
                     }}
                   />
 
-                  {/* Actions */}
-                  <div className="flex flex-wrap gap-2">
-                  </div>
-
                   {/* Publish readiness + public visibility */}
                   <PublishReadinessPanel business={selected} isRTL={isRTL} />
 
-                  {/* Actions (continued) */}
+                  {/* Actions */}
                   <div className="flex flex-wrap gap-2">
                     <Button
                       size="sm"
