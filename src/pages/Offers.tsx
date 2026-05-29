@@ -44,8 +44,10 @@ const Offers = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from('promotions')
-        .select('*, businesses(id, name_ar, name_en, username, logo_url, rating_avg, is_verified, membership_tier)')
+        .select('*, businesses!inner(id, name_ar, name_en, username, logo_url, rating_avg, is_verified, membership_tier, approval_status, is_active)')
         .eq('is_active', true)
+        .eq('businesses.approval_status', 'approved')
+        .eq('businesses.is_active', true)
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: false });
       return data ?? [];
