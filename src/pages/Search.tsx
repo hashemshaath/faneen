@@ -8,6 +8,7 @@ import { SearchFilters } from '@/components/search/SearchFilters';
 import { SearchResults, type ViewMode } from '@/components/search/SearchResults';
 import { ActiveFilterChips } from '@/components/search/ActiveFilterChips';
 import { RecentlyViewedStrip } from '@/components/search/RecentlyViewedStrip';
+import { SavedSearchesBar } from '@/components/search/SavedSearchesBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   useDebouncedValue,
@@ -310,6 +311,65 @@ const SearchPage = () => {
 
   const showChips = hasActiveFilters || query.trim() || selectedTags.length > 0;
 
+  // Build a clean querystring representation of the current search (sorted keys for stable equality)
+  const currentQs = useMemo(() => {
+    const params = new URLSearchParams();
+    if (query.trim()) params.set('q', query.trim());
+    if (filters.categoryId !== 'all') params.set('category', filters.categoryId);
+    if (filters.cityId !== 'all') params.set('city', filters.cityId);
+    if (filters.minRating > 0) params.set('rating', String(filters.minRating));
+    if (filters.verifiedOnly) params.set('verified', 'true');
+    if (filters.sortBy && filters.sortBy !== 'rating') params.set('sort', filters.sortBy);
+    if (filters.priceMin > 0) params.set('price_min', String(filters.priceMin));
+    if (filters.priceMax > 0) params.set('price_max', String(filters.priceMax));
+    if (filters.serviceCategoryId && filters.serviceCategoryId !== 'all') params.set('serviceCategory', filters.serviceCategoryId);
+    if (favoritesOnly) params.set('fav', '1');
+    if (selectedTags.length > 0) params.set('tags', selectedTags.join(','));
+    // Stable order
+    const sorted = [...params.entries()].sort(([a], [b]) => a.localeCompare(b));
+    return new URLSearchParams(sorted).toString();
+  }, [query, filters, favoritesOnly, selectedTags]);
+
+  // Friendly auto-name: "ألمنيوم — الرياض — 4★" / "ألومنيوم — Riyadh — Verified"
+  const suggestedName = useMemo(() => {
+    const parts: string[] = [];
+    if (query.trim()) parts.push(`"${query.trim()}"`);
+    if (filters.categoryId !== 'all' && categories) {
+      const cat = categories.find((c) => c.id === filters.categoryId);
+      if (cat) parts.push(isRTL ? cat.name_ar : (cat.name_en || cat.name_ar));
+    }
+    if (filters.cityId !== 'all' && cities) {
+      const city = cities.find((c) => c.id === filters.cityId);
+      if (city) parts.push(isRTL ? city.name_ar : (city.name_en || city.name_ar));
+    }
+    if (filters.minRating > 0) parts.push(`${filters.minRating}★`);
+    if (filters.verifiedOnly) parts.push(isRTL ? 'موثّق' : 'Verified');
+    if (favoritesOnly) parts.push(isRTL ? 'المفضّلة' : 'Favorites');
+    return parts.join(' — ') || (isRTL ? 'بحث محفوظ' : 'Saved search');
+  }, [query, filters, categories, cities, favoritesOnly, isRTL]);
+
+  const handleApplySavedSearch = useCallback((qs: string) => {
+    const sp = new URLSearchParams(qs);
+    const next: SearchFilterValues = {
+      categoryId: sp.get('category') || 'all',
+      cityId: sp.get('city') || 'all',
+      minRating: Number(sp.get('rating')) || 0,
+      verifiedOnly: sp.get('verified') === 'true',
+      sortBy: (sp.get('sort') as SearchFilterValues['sortBy']) || 'rating',
+      priceMin: Number(sp.get('price_min')) || 0,
+      priceMax: Number(sp.get('price_max')) || 0,
+      serviceCategoryId: sp.get('serviceCategory') || 'all',
+    };
+    setFilters(next);
+    setQuery(sp.get('q') || '');
+    setFavoritesOnly(sp.get('fav') === '1');
+    const tags = sp.get('tags');
+    setSelectedTags(tags ? tags.split(',').filter(Boolean) : []);
+    setCurrentPage(1);
+    setSearchParams(sp, { replace: false });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [setSearchParams]);
+
   return (
     <div className="min-h-screen bg-background">
       <SearchHeader
@@ -353,6 +413,14 @@ const SearchPage = () => {
             onClearAll={clearFilters}
           />
         )}
+
+        <SavedSearchesBar
+          currentQs={currentQs}
+          suggestedName={suggestedName}
+          hasContext={!!showChips}
+          totalResults={deferredFiltered.length}
+          onApply={handleApplySavedSearch}
+        />
 
         <RecentlyViewedStrip businesses={businesses} />
 
