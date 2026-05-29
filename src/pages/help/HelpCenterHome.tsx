@@ -107,8 +107,9 @@ const HelpCenterHome: React.FC = () => {
     const counts = new Map<string, number>();
     audienceFilteredArticles.forEach((a) => {
       (a.keywords ?? []).forEach((k) => {
-        const key = String(k).trim().toLowerCase();
-        if (!key || key.length < 2) return;
+        const raw = String(k).trim().toLowerCase();
+        if (!raw || raw.length < 2) return;
+        const key = isRTL ? translateKeywordToAr(raw) : raw;
         counts.set(key, (counts.get(key) ?? 0) + 1);
       });
     });
@@ -116,7 +117,7 @@ const HelpCenterHome: React.FC = () => {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 18)
       .map(([k, n]) => ({ k, n }));
-  }, [audienceFilteredArticles]);
+  }, [audienceFilteredArticles, isRTL]);
 
   useMultiJsonLd([
     {
