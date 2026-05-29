@@ -5537,6 +5537,72 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_project_notifications: {
+        Row: {
+          action_url: string | null
+          body_ar: string
+          body_en: string
+          business_id: string
+          channel: string
+          contract_id: string | null
+          created_at: string
+          customer_email: string | null
+          customer_phone: string | null
+          event_type: string
+          id: string
+          idempotency_key: string
+          quotation_id: string | null
+          ref_id: string
+          sent_at: string | null
+          status: string
+          title_ar: string
+          title_en: string
+          work_order_id: string | null
+        }
+        Insert: {
+          action_url?: string | null
+          body_ar?: string
+          body_en?: string
+          business_id: string
+          channel: string
+          contract_id?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          event_type: string
+          id?: string
+          idempotency_key: string
+          quotation_id?: string | null
+          ref_id?: string
+          sent_at?: string | null
+          status?: string
+          title_ar: string
+          title_en: string
+          work_order_id?: string | null
+        }
+        Update: {
+          action_url?: string | null
+          body_ar?: string
+          body_en?: string
+          business_id?: string
+          channel?: string
+          contract_id?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          event_type?: string
+          id?: string
+          idempotency_key?: string
+          quotation_id?: string | null
+          ref_id?: string
+          sent_at?: string | null
+          status?: string
+          title_ar?: string
+          title_en?: string
+          work_order_id?: string | null
+        }
+        Relationships: []
+      }
       delegated_workspace_access: {
         Row: {
           business_id: string
