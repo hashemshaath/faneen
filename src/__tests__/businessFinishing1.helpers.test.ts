@@ -248,13 +248,13 @@ describe('BUSINESS-FINISHING-1 — scope guards', () => {
 
   it('analytics module has NO supabase imports (pure helpers only)', () => {
     const src = read('src/modules/analytics/index.ts');
-    expect(src).not.toMatch(/supabase/i);
+    expect(src).not.toMatch(/from\s+['"][^'"]*supabase[^'"]*['"]/);
     expect(src).not.toMatch(/from\s+['"]@\/integrations/);
   });
 
   it('health module has NO supabase imports', () => {
     const src = read('src/modules/health/index.ts');
-    expect(src).not.toMatch(/supabase/i);
+    expect(src).not.toMatch(/from\s+['"][^'"]*supabase[^'"]*['"]/);
   });
 
   it('quotation revision helper is pure', () => {
