@@ -122,9 +122,12 @@ describe('PDAR-1 — transactional email templates safety', () => {
 
   it.each(tplFiles)('%s contains no raw UUID and no raw token literal', (f) => {
     const src = read(path.join(tplDir, f));
-    expect(src, 'raw UUID literal').not.toMatch(
-      /["'][0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}["']/i,
-    );
+    // Allow the documented all-zero UUID placeholder used inside previewData blocks.
+    const uuidRe = /["']([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})["']/gi;
+    const realUuids = Array.from(src.matchAll(uuidRe))
+      .map((m) => m[1])
+      .filter((u) => u.replace(/[-0]/g, '') !== '');
+    expect(realUuids, 'non-placeholder UUID literal').toEqual([]);
     // Templates must never embed the raw token query (?t=...) — only signed/ref URLs.
     expect(src).not.toMatch(/token_hash/);
   });
