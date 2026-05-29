@@ -34,6 +34,7 @@ windows, and decorations.
 - [Contact](https://qitaat.com/contact): Reach the Qitaat team for support and partnerships.
 - [Privacy](https://qitaat.com/privacy): Privacy policy and data handling.
 - [Terms](https://qitaat.com/terms): Terms of service and platform rules.
+- [Help Center](https://qitaat.com/help): Bilingual knowledge base covering providers, contracts, RFQs, work orders, procurement and customer experience.
 
 ## Data
 Business listings include: name (Arabic/English), description, services,
