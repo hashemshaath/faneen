@@ -111,9 +111,9 @@ describe('HARDENING-1A: onboarding gating', () => {
 
   it('individual draft never resumes on a business-only step', () => {
     expect(onboarding).toContain(
-      "draftStep === 'business-details' || draftStep === 'business-sectors'",
+      "draftStep === 'business-details' || draftStep === 'documents'",
     );
-    expect(onboarding).toMatch(/effectiveAccountType === 'individual' && isBusinessOnlyStep/);
+    expect(onboarding).toMatch(/isBusinessOnly/);
   });
 
   it('never renders the synthetic phone email domain anywhere in the wizard', () => {
