@@ -22,7 +22,7 @@ The unified barcode system assigns a single permanent public code — `barcode_c
 
 ## /q/:code vs /s/:token
 
-| | `/q/:barcode_code` | `/s/:token` |
+| | `/q/:code` | `/s/:token` |
 |---|---|---|
 | Entity scope | Sites, contracts, businesses | Client sites only |
 | What it returns | Public verification card (name, city, type, status) | Site summary subject to visibility rules |
