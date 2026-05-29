@@ -21,6 +21,8 @@ import {
   type PublicQuotationView,
 } from "@/modules/workOrders";
 import { WorkOrderQuotationPdf } from "@/components/workOrders/WorkOrderQuotationPdf";
+import { HealthBadge } from "@/components/health/HealthBadge";
+import { quotationHealth } from "@/modules/health";
 
 export default function QuotationViewer() {
   useNoIndex();
@@ -170,6 +172,11 @@ export default function QuotationViewer() {
 
             {/* Action bar */}
             <div className="flex flex-wrap items-center justify-end gap-2 print:hidden">
+              <HealthBadge
+                kind="quotation"
+                value={quotationHealth(view.status, view.valid_until)}
+                className="me-auto"
+              />
               <Button
                 type="button" size="sm" variant="outline"
                 className="rounded-xl h-10"

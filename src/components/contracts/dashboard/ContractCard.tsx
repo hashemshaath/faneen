@@ -13,6 +13,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import type { Database } from '@/integrations/supabase/types';
 import { getContractStatusMeta } from '@/lib/contract-statuses';
 import { getContractHealth, getDaysRemaining } from './contract-helpers';
+import { HealthBadge } from '@/components/health/HealthBadge';
+import { contractHealth } from '@/modules/health';
 import { getContractNextActionSummary, type NextActionTone } from '@/lib/contract-approval-timeline';
 import { Clock } from 'lucide-react';
 
@@ -143,6 +145,7 @@ export const ContractCard = React.memo(({
                   <StatusIcon className="w-3 h-3" aria-hidden="true" />
                   {isRTL ? cfg.label_ar : cfg.label_en}
                 </Badge>
+                <HealthBadge kind="contract" value={contractHealth(c.status, c.end_date)} />
                 {locked && (
                   <Badge variant="outline" className="text-[10px] gap-1 px-1.5 h-5 border-warning/60 text-warning bg-warning/5">
                     <Shield className="w-3 h-3" aria-hidden="true" />

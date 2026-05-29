@@ -47,6 +47,7 @@ import { IdentityActivityFeed } from '@/components/admin/identity/IdentityActivi
 import { IdentitySignupsChart } from '@/components/admin/identity/IdentitySignupsChart';
 import { IdentityIntegrityPanel } from '@/components/admin/identity/IdentityIntegrityPanel';
 import { IdentityDiagnosticsDeepPanel } from '@/components/admin/identity/IdentityDiagnosticsDeepPanel';
+import { PermissionMatrix } from '@/components/identity/PermissionMatrix';
 import type { DiagnosticGroupId } from '@/lib/identity/computeIdentityDiagnostics';
 import { listProfiles } from '@/modules/users';
 import { listAllUserRoles } from '@/modules/identity';
@@ -720,6 +721,7 @@ const AdminIdentity: React.FC = () => {
                 anchorGroup={(searchParams.get('group') as DiagnosticGroupId | null) ?? null}
               />
               <IdentityIntegrityPanel isRTL={isRTL} />
+              <PermissionMatrix />
             </div>
           </TabsContent>
 
