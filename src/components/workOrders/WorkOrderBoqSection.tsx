@@ -37,6 +37,7 @@ import {
   type WorkOrderBoqRow,
   type WorkOrderBoqItemRow,
 } from "@/modules/workOrders";
+import { RelatedReferencesPanel } from "@/components/reference/RelatedReferencesPanel";
 import { createProcurementRfqFromBoq } from "@/modules/procurement";
 
 interface Props {
@@ -294,6 +295,15 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage }: Prop
         <div className="flex items-center gap-2 text-xs text-destructive">
           <AlertCircle className="w-3.5 h-3.5" /> {error}
         </div>
+      )}
+
+      {activeBoq && (
+        <RelatedReferencesPanel
+          entries={[
+            { label: { ar: 'أمر العمل', en: 'Work Order' }, refId: (workOrderId as unknown as string) ? undefined : undefined },
+            { label: { ar: 'الكشف', en: 'BOQ' }, refId: activeBoq.ref_id },
+          ]}
+        />
       )}
 
       {/* Inline generate form */}
