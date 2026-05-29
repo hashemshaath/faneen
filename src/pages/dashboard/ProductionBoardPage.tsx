@@ -43,6 +43,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { KpiStrip } from "@/components/dashboard/KpiCard";
+import { DiagnosticsCard } from "@/components/dashboard/DiagnosticsCard";
+import { HealthBadge } from "@/components/health/HealthBadge";
+import { workOrderHealth } from "@/modules/health";
+import { computeWorkOrderDiagnostics } from "@/modules/analytics/diagnostics";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import { useAuth } from "@/contexts/AuthContext";
