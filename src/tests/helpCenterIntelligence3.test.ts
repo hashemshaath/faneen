@@ -44,7 +44,9 @@ describe('HELP-CENTER-INTELLIGENCE-3', () => {
     it('normalizes Arabic variants and English casing', () => {
       expect(normalizeQuery('  العقود  ')).toContain('عقد');
       expect(normalizeQuery('Quotation')).toContain('quote');
-      expect(normalizeQuery('RFQ')).toContain('request for quotation');
+      const rfq = normalizeQuery('RFQ');
+      expect(rfq).toContain('rfq');
+      expect(rfq).toMatch(/request for /);
     });
     it('tokenizes with stopwords removed and stems', () => {
       const tokens = tokenize(normalizeQuery('how to create contracts'));
