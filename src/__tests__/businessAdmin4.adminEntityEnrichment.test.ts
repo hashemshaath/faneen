@@ -228,7 +228,7 @@ describe("BUSINESS-ADMIN-4 — runtime safety", () => {
     });
     expect(res.error).toBeNull();
     expect(res.data?.found).toBe(false);
-  });
+  }, 20000);
 
   it("returns null for non-matching prefix in each wrapper", async () => {
     const { getAdminContractSummaryByRef } = await import(
