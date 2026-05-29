@@ -16,12 +16,21 @@ export const REF_PREFIXES = [
   'STF',
   // BUSINESS-FINISHING-1 Phase A — workflow object prefixes.
   'BOQ',
+  'BOQI',
   'RFQ',
   'PO',
   'WOQ',
   'CONTRACT',
   'QUOTE',
   'NOTE',
+  // CUSTOMER-EXPERIENCE-2 / 3 — customer lifecycle prefixes.
+  'APT',
+  'CLS',
+  'WAR',
+  'FDB',
+  'CPN',
+  'CTL',
+  'PDE',
 ] as const;
 
 export type RefPrefix = typeof REF_PREFIXES[number];
@@ -37,12 +46,23 @@ const PREFIX_TO_ROUTE: Record<RefPrefix, (ref: string) => string> = {
   STF:  (ref) => `/dashboard/settings/staff?ref=${encodeURIComponent(ref)}`,
   // Workflow refs route to their owning surface; the page reads `?ref=…`.
   BOQ:      (ref) => `/dashboard/work-orders?ref=${encodeURIComponent(ref)}`,
+  BOQI:     (ref) => `/dashboard/work-orders?ref=${encodeURIComponent(ref)}`,
   RFQ:      (ref) => `/dashboard/procurement?ref=${encodeURIComponent(ref)}`,
   PO:       (ref) => `/dashboard/procurement?ref=${encodeURIComponent(ref)}`,
   WOQ:      (ref) => `/dashboard/work-orders?ref=${encodeURIComponent(ref)}`,
   CONTRACT: (ref) => `/dashboard/contracts?ref=${encodeURIComponent(ref)}`,
   QUOTE:    (ref) => `/dashboard/provider/leads?ref=${encodeURIComponent(ref)}`,
   NOTE:     (ref) => `/dashboard/operations/feed?ref=${encodeURIComponent(ref)}`,
+  // Customer lifecycle: appointments, closures, warranties, feedback,
+  // customer portal links (CPN), and customer tracking links (CTL) all
+  // surface on the Work Order detail (Operations Center side panel).
+  APT:  (ref) => `/dashboard/work-orders?ref=${encodeURIComponent(ref)}`,
+  CLS:  (ref) => `/dashboard/work-orders?ref=${encodeURIComponent(ref)}`,
+  WAR:  (ref) => `/dashboard/work-orders?ref=${encodeURIComponent(ref)}`,
+  FDB:  (ref) => `/dashboard/operations/feed?ref=${encodeURIComponent(ref)}`,
+  CPN:  (ref) => `/dashboard/operations/feed?ref=${encodeURIComponent(ref)}`,
+  CTL:  (ref) => `/dashboard/work-orders?ref=${encodeURIComponent(ref)}`,
+  PDE:  (ref) => `/dashboard/work-orders?ref=${encodeURIComponent(ref)}`,
 };
 
 const REF_PATTERN = /^([A-Z]{2,8})-([0-9A-Z]{3,16})$/i;
