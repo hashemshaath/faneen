@@ -65,6 +65,8 @@ const DashboardWorkOrders = lazyRetry(() => import("./pages/dashboard/DashboardW
 const DashboardWorkOrdersOverview = lazyRetry(() => import("./pages/dashboard/DashboardWorkOrdersOverview"));
 const ProductionBoardPage = lazyRetry(() => import("./pages/dashboard/ProductionBoardPage"));
 const DashboardWorkOrderDetail = lazyRetry(() => import("./pages/dashboard/DashboardWorkOrderDetail"));
+const DashboardProcurement = lazyRetry(() => import("./pages/dashboard/DashboardProcurement"));
+const DashboardProcurementDetail = lazyRetry(() => import("./pages/dashboard/DashboardProcurementDetail"));
 const DashboardWarranties = lazyRetry(() => import("./pages/dashboard/DashboardWarranties"));
 const DashboardInstallments = lazyRetry(() => import("./pages/dashboard/DashboardInstallments"));
 const DashboardSettings = lazyRetry(() => import("./pages/dashboard/DashboardSettings"));
@@ -276,6 +278,8 @@ const AppRoutes = () => (
           <Route path="/dashboard/work-orders/overview" element={<ProtectedRoute><DashboardWorkOrdersOverview /></ProtectedRoute>} />
           <Route path="/dashboard/work-orders/board" element={<ProtectedRoute><ProductionBoardPage /></ProtectedRoute>} />
           <Route path="/dashboard/work-orders/:refId" element={<ProtectedRoute><DashboardWorkOrderDetail /></ProtectedRoute>} />
+          <Route path="/dashboard/procurement" element={<ProtectedRoute><DashboardProcurement /></ProtectedRoute>} />
+          <Route path="/dashboard/procurement/:id" element={<ProtectedRoute><DashboardProcurementDetail /></ProtectedRoute>} />
           <Route path="/dashboard/messages" element={<ProtectedRoute><DashboardMessages /></ProtectedRoute>} />
           <Route path="/dashboard/bookmarks" element={<ProtectedRoute><DashboardBookmarks /></ProtectedRoute>} />
           <Route path="/dashboard/notifications" element={<ProtectedRoute><DashboardNotifications /></ProtectedRoute>} />
