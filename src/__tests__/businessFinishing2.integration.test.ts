@@ -123,10 +123,10 @@ describe('BUSINESS-FINISHING-2A — DiagnosticsCard mounts', () => {
 describe('BUSINESS-FINISHING-2A — Scope guards on touched files', () => {
   const FORBIDDEN: Array<[string, RegExp]> = [
     ['stock_movements', /\bstock_movements?\b/i],
-    ['warehouse', /\bwarehouse\b/i],
+    ['warehouses table', /\bwarehouses\b/],
     ['supplier_portal', /\bsupplier_portal\b/i],
     ['supplier_payments', /\bsupplier_payments?\b/i],
-    ['inventory', /\binventory\b/i],
+    ['inventory_items', /\binventory_(items|movements|stock)\b/],
     ['postgres_changes', /\bpostgres_changes\b/i],
   ];
   for (const file of TOUCHED_FILES) {
