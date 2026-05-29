@@ -173,8 +173,8 @@ const OperationsCenter = () => {
       appointments: appointments.map((a) => ({
         id: a.id,
         status: a.status,
-        scheduled_at: a.scheduled_at ?? null,
-        confirmed_at: (a as unknown as { confirmed_at?: string | null }).confirmed_at ?? null,
+        scheduled_at: a.scheduled_date ?? null,
+        confirmed_at: a.confirmed_at ?? null,
       })),
     }),
     [contracts, workOrders, appointments],
@@ -182,7 +182,7 @@ const OperationsCenter = () => {
 
   const integrity = useMemo(() => {
     const report = runDataIntegrityChecks({
-      contracts: contracts.map((c) => ({ id: c.id, ref_id: c.ref_id, status: c.status })),
+      contracts: contracts.map((c) => ({ id: c.id, ref_id: c.contract_number ?? null, status: c.status })),
       workOrders: workOrders.map((w) => ({
         id: w.id,
         ref_id: w.ref_id ?? null,
