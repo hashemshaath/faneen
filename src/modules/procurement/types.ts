@@ -55,6 +55,11 @@ export interface ProcurementRfqRow {
   updated_at: string;
 }
 
+// PROCUREMENT-RFQ-ENGINE-1 — Optional BOQ source link (idempotency key).
+export interface ProcurementRfqRowWithSource extends ProcurementRfqRow {
+  source_boq_id: string | null;
+}
+
 export interface ProcurementSupplierRow {
   id: string;
   business_id: string;
@@ -154,6 +159,27 @@ export interface ProcurementSupplierQuoteItemRow {
   quantity: number;
   total_price: number | null;
   notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// PROCUREMENT-RFQ-ENGINE-1 — Purchase Order draft (no payments, no GR).
+export type ProcurementPurchaseOrderStatus = 'draft' | 'issued' | 'cancelled';
+
+export interface ProcurementPurchaseOrderRow {
+  id: string;
+  business_id: string;
+  rfq_id: string;
+  supplier_quote_id: string;
+  supplier_id: string;
+  supplier_name: string;
+  po_number: string | null;
+  status: ProcurementPurchaseOrderStatus;
+  subtotal: number;
+  tax: number;
+  total: number;
+  currency: string;
+  created_by: string;
   created_at: string;
   updated_at: string;
 }

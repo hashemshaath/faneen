@@ -27,11 +27,19 @@ import {
   rejectQuote,
   sendRfq,
   shortlistQuote,
+  listRfqItemsByRfq,
+  listQuoteItemsByRfq,
+  compareQuotesWithLineItems,
+  listPurchaseOrdersByRfq,
   type ProcurementRfqInvitationRow,
   type ProcurementRequestRow,
   type ProcurementRfqRow,
   type ProcurementSupplierRow,
   type ScoredQuote,
+  type ProcurementRfqItemRow,
+  type ProcurementSupplierQuoteItemRow,
+  type ProcurementPurchaseOrderRow,
+  type QuoteComparisonResult,
 } from "@/modules/procurement";
 
 export default function DashboardProcurementDetail() {
@@ -45,6 +53,10 @@ export default function DashboardProcurementDetail() {
   const [activeRfqId, setActiveRfqId] = useState<string | null>(null);
   const [activeRfq, setActiveRfq] = useState<ProcurementRfqRow | null>(null);
   const [scored, setScored] = useState<ScoredQuote[]>([]);
+  const [rfqItems, setRfqItems] = useState<ProcurementRfqItemRow[]>([]);
+  const [quoteItems, setQuoteItems] = useState<ProcurementSupplierQuoteItemRow[]>([]);
+  const [matrix, setMatrix] = useState<QuoteComparisonResult[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<ProcurementPurchaseOrderRow[]>([]);
   const [suppliers, setSuppliers] = useState<ProcurementSupplierRow[]>([]);
   const [invitations, setInvitations] = useState<ProcurementRfqInvitationRow[]>([]);
   const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>([]);
@@ -86,6 +98,16 @@ export default function DashboardProcurementDetail() {
       invited: isRTL ? "تمت الدعوة" : "Invited",
       responded: isRTL ? "تم الرد" : "Responded",
       noSuppliers: isRTL ? "لا يوجد موردون نشطون." : "No active suppliers.",
+      lineMatrix: isRTL ? "مصفوفة المقارنة (بنود)" : "Line-item Comparison Matrix",
+      item: isRTL ? "البند" : "Item",
+      qty: isRTL ? "الكمية" : "Qty",
+      unit: isRTL ? "الوحدة" : "Unit",
+      best: isRTL ? "الأفضل" : "Best",
+      missing: isRTL ? "—" : "—",
+      noLineItems: isRTL ? "لا توجد بنود RFQ." : "No RFQ line items.",
+      poDrafts: isRTL ? "أوامر شراء (مسودة)" : "Purchase Order Drafts",
+      noPoDrafts: isRTL ? "لا توجد مسودات." : "No drafts yet.",
+      poTotal: isRTL ? "الإجمالي" : "Total",
       notEligible: isRTL ? "لا يمكن منح هذا العرض الآن." : "This quote cannot be awarded right now.",
       sentAt: isRTL ? "أُرسل في" : "Sent",
       expiresAt: isRTL ? "تنتهي في" : "Expires",
@@ -119,9 +141,28 @@ export default function DashboardProcurementDetail() {
       setScored(compareSupplierQuotes(quotes ?? []));
       const { data: invs } = await listInvitationsByRfq(next);
       setInvitations(invs ?? []);
+      const { data: ri } = await listRfqItemsByRfq(next);
+      setRfqItems(ri ?? []);
+      const { data: qi } = await listQuoteItemsByRfq(next, req.business_id);
+      setQuoteItems(qi ?? []);
+      setMatrix(
+        compareQuotesWithLineItems(
+          ri ?? [],
+          (quotes ?? []).map((q) => ({
+            quote: q,
+            items: (qi ?? []).filter((it) => it.quote_id === q.id),
+          })),
+        ),
+      );
+      const { data: pos } = await listPurchaseOrdersByRfq(next);
+      setPurchaseOrders(pos ?? []);
     } else {
       setScored([]);
       setInvitations([]);
+      setRfqItems([]);
+      setQuoteItems([]);
+      setMatrix([]);
+      setPurchaseOrders([]);
     }
     setLoading(false);
   }, [id, tx.errLoad]);
@@ -140,8 +181,24 @@ export default function DashboardProcurementDetail() {
       setScored(compareSupplierQuotes(data ?? []));
       const { data: invs } = await listInvitationsByRfq(rfqId);
       setInvitations(invs ?? []);
+      const { data: ri } = await listRfqItemsByRfq(rfqId);
+      setRfqItems(ri ?? []);
+      const businessId = found?.business_id ?? request?.business_id ?? '';
+      const { data: qi } = await listQuoteItemsByRfq(rfqId, businessId);
+      setQuoteItems(qi ?? []);
+      setMatrix(
+        compareQuotesWithLineItems(
+          ri ?? [],
+          (data ?? []).map((q) => ({
+            quote: q,
+            items: (qi ?? []).filter((it) => it.quote_id === q.id),
+          })),
+        ),
+      );
+      const { data: pos } = await listPurchaseOrdersByRfq(rfqId);
+      setPurchaseOrders(pos ?? []);
     },
-    [rfqs],
+    [rfqs, request?.business_id],
   );
 
   const onCreateRfq = useCallback(async () => {
@@ -460,6 +517,122 @@ export default function DashboardProcurementDetail() {
           {error && <p className="text-sm text-destructive mt-3">{error}</p>}
         </CardContent>
       </Card>
+
+      {activeRfqId && rfqItems.length > 0 && (
+        <Card data-testid="proc-line-matrix-card">
+          <CardHeader>
+            <CardTitle className="text-base">{tx.lineMatrix}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm" data-testid="proc-line-matrix-table">
+                <thead className="text-muted-foreground text-start">
+                  <tr>
+                    <th className="py-2 pe-3">{tx.item}</th>
+                    <th className="py-2 pe-3 text-end">{tx.qty}</th>
+                    <th className="py-2 pe-3">{tx.unit}</th>
+                    {scored.map((q) => {
+                      const supName =
+                        suppliers.find((s) => s.id === q.supplier_id)?.name ?? q.supplier_id.slice(0, 6);
+                      return (
+                        <th key={q.id} className="py-2 pe-3 text-end">
+                          <span dir="auto">{supName}</span>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rfqItems.map((ri) => {
+                    // Compute best unit price per row.
+                    const cells = scored.map((q) => {
+                      const li = quoteItems.find(
+                        (it) => it.quote_id === q.id && it.rfq_item_id === ri.id,
+                      );
+                      return { quoteId: q.id, line: li ?? null };
+                    });
+                    const bestUnit = cells
+                      .map((c) => c.line?.unit_price)
+                      .filter((v): v is number => typeof v === "number" && v >= 0)
+                      .reduce<number | null>((a, b) => (a === null || b < a ? b : a), null);
+                    return (
+                      <tr key={ri.id} className="border-t align-top">
+                        <td className="py-2 pe-3" dir="auto">{ri.name}</td>
+                        <td className="py-2 pe-3 text-end tech-content">{ri.quantity}</td>
+                        <td className="py-2 pe-3 tech-content">{ri.unit ?? ""}</td>
+                        {cells.map((c) => {
+                          if (!c.line || c.line.unit_price == null) {
+                            return (
+                              <td key={c.quoteId} className="py-2 pe-3 text-end text-muted-foreground tech-content">
+                                {tx.missing}
+                              </td>
+                            );
+                          }
+                          const isBest = bestUnit !== null && c.line.unit_price === bestUnit;
+                          return (
+                            <td
+                              key={c.quoteId}
+                              className={`py-2 pe-3 text-end tech-content ${isBest ? "text-emerald-600 font-semibold" : ""}`}
+                            >
+                              {c.line.unit_price}
+                              {isBest && <span className="ms-1 text-[10px]">★ {tx.best}</span>}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                  <tr className="border-t font-medium">
+                    <td className="py-2 pe-3" colSpan={3}>{tx.poTotal}</td>
+                    {scored.map((q) => {
+                      const m = matrix.find((mm) => mm.quote_id === q.id);
+                      const total = m?.computed_total ?? q.total_amount ?? 0;
+                      return (
+                        <td key={q.id} className="py-2 pe-3 text-end tech-content">
+                          {total} {q.currency}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeRfqId && (
+        <Card data-testid="proc-po-drafts-card">
+          <CardHeader>
+            <CardTitle className="text-base">{tx.poDrafts}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {purchaseOrders.length === 0 ? (
+              <p className="text-muted-foreground text-sm">{tx.noPoDrafts}</p>
+            ) : (
+              <ul className="space-y-2">
+                {purchaseOrders.map((po) => (
+                  <li
+                    key={po.id}
+                    className="flex items-center justify-between gap-3 rounded-xl border bg-card p-3"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-medium tech-content">{po.po_number ?? po.id.slice(0, 8)}</div>
+                      <div className="text-xs text-muted-foreground" dir="auto">{po.supplier_name}</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="secondary">{po.status}</Badge>
+                      <span className="tech-content text-sm">
+                        {po.total} {po.currency}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

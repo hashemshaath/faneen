@@ -13,7 +13,9 @@ import {
   Sparkles,
   Lock,
   CheckCircle2,
+  ShoppingCart,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +37,7 @@ import {
   type WorkOrderBoqRow,
   type WorkOrderBoqItemRow,
 } from "@/modules/workOrders";
+import { createProcurementRfqFromBoq } from "@/modules/procurement";
 
 interface Props {
   workOrderId: string;
@@ -63,6 +66,7 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage }: Prop
   const [sector, setSector] = useState<BoqSectorKey>("aluminum");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
+  const [rfqRefId, setRfqRefId] = useState<{ rfqId: string; rfqNumber: string | null } | null>(null);
 
   const tx = useMemo(
     () => ({
@@ -108,6 +112,10 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage }: Prop
       itemTypeService: isRTL ? "خدمة" : "Service",
       itemTypeFabrication: isRTL ? "تصنيع" : "Fabrication",
       saving: isRTL ? "جارٍ الحفظ…" : "Saving…",
+      createRfq: isRTL ? "إنشاء طلب عروض (RFQ) من الجدول" : "Create RFQ from BOQ",
+      rfqCreated: isRTL ? "تم إنشاء RFQ" : "RFQ created",
+      errCreateRfq: isRTL ? "تعذّر إنشاء RFQ." : "Failed to create RFQ.",
+      openRfq: isRTL ? "فتح RFQ" : "Open RFQ",
     }),
     [isRTL],
   );
@@ -235,6 +243,25 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage }: Prop
     if (err || !data) { setError(tx.errFinalize); return; }
     setBoqs((prev) => prev.map((b) => (b.id === data.id ? data : b)));
   }, [user, activeBoq, isFinalized, tx.errFinalize]);
+
+  const onCreateRfqFromBoq = useCallback(async () => {
+    if (!user || !activeBoq || activeBoq.status !== "finalized") return;
+    setBusy(true);
+    setError(null);
+    const { rfq, error: err } = await createProcurementRfqFromBoq({
+      boq_id: activeBoq.id,
+      work_order_id: workOrderId,
+      business_id: businessId,
+      created_by: user.id,
+      title: activeBoq.title,
+    });
+    setBusy(false);
+    if (err || !rfq) {
+      setError(tx.errCreateRfq);
+      return;
+    }
+    setRfqRefId({ rfqId: rfq.id, rfqNumber: rfq.rfq_number });
+  }, [user, activeBoq, workOrderId, businessId, tx.errCreateRfq]);
 
   /* ─── Render ─── */
   return (
@@ -386,9 +413,30 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage }: Prop
                   )}
                 </div>
                 {isFinalized ? (
-                  <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-600">
-                    <Lock className="w-3 h-3 me-1" /> {tx.finalized}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-600">
+                      <Lock className="w-3 h-3 me-1" /> {tx.finalized}
+                    </Badge>
+                    {canManage && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="rounded-xl h-9"
+                        onClick={() => void onCreateRfqFromBoq()}
+                        disabled={busy}
+                        data-testid="wo-boq-create-rfq"
+                        aria-label={tx.createRfq}
+                      >
+                        {busy ? (
+                          <Loader2 className="w-3.5 h-3.5 me-1 animate-spin" />
+                        ) : (
+                          <ShoppingCart className="w-3.5 h-3.5 me-1" />
+                        )}
+                        {tx.createRfq}
+                      </Button>
+                    )}
+                  </div>
                 ) : canManage ? (
                   <Button
                     type="button"
@@ -407,6 +455,22 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage }: Prop
                   </Button>
                 ) : null}
               </div>
+
+              {rfqRefId && (
+                <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-xs">
+                  <ShoppingCart className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="text-emerald-700 dark:text-emerald-400">
+                    {tx.rfqCreated}
+                    {rfqRefId.rfqNumber ? `: ${rfqRefId.rfqNumber}` : ""}
+                  </span>
+                  <Link
+                    to={`/dashboard/procurement`}
+                    className="ms-auto text-primary hover:underline"
+                  >
+                    {tx.openRfq}
+                  </Link>
+                </div>
+              )}
 
               {/* Items table */}
               {items.length === 0 ? (

@@ -34,7 +34,11 @@ export interface RecordWorkOrderAuditInput {
     | "work_order.checklist_completed"
     | "work_order.checklist_item_updated"
     | "work_order.operator_assigned"
-    | "work_order.operator_unassigned";
+    | "work_order.operator_unassigned"
+    | "procurement.rfq_created_from_boq"
+    | "procurement.quote_recorded"
+    | "procurement.quote_awarded"
+    | "procurement.po_draft_created";
   metadata?: Record<string, unknown>;
 }
 
