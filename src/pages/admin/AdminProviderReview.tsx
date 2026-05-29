@@ -28,6 +28,7 @@ import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
 import { ReferenceTag } from '@/components/reference/ReferenceTag';
+import { PublishReadinessPanel } from '@/components/admin/PublishReadinessPanel';
 
 type ApprovalStatus =
   | 'draft' | 'submitted' | 'under_review'
@@ -118,6 +119,8 @@ interface ProviderRow {
   cr_legal_entity: string | null;
   cr_issue_date: string | null;
   cr_expiry_date: string | null;
+  is_active: boolean | null;
+  is_demo: boolean | null;
 }
 
 export default function AdminProviderReview() {
@@ -141,7 +144,7 @@ export default function AdminProviderReview() {
       const filters: ListAdminBusinessesFilter[] = [];
       if (statusFilter !== 'all') filters.push({ column: 'approval_status', op: 'eq', value: statusFilter });
       const { data, error } = await listAdminBusinesses({
-        select: 'id,ref_id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,sectors,sub_services,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date',
+        select: 'id,ref_id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,sectors,sub_services,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date,is_active,is_demo',
         orderBy: [
           { column: 'submitted_at', ascending: false, nullsFirst: false },
           { column: 'created_at', ascending: false },
