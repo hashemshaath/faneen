@@ -384,6 +384,10 @@ const DashboardServices: React.FC = () => {
                 {isRTL ? 'تعديل القطاعات والخدمات' : 'Edit sectors & services'}
               </Link>
             </Button>
+            <Button variant="outline" onClick={() => setPickerOpen((v) => !v)} className="rounded-xl">
+              <ListPlus className="h-4 w-4 me-2" />
+              {isRTL ? 'إضافة من الكتالوج' : 'Pick from catalog'}
+            </Button>
             <Button onClick={() => setReqOpen((v) => !v)} className="rounded-xl">
               <Plus className="h-4 w-4 me-2" />
               {isRTL ? 'طلب إضافة خدمة جديدة' : 'Request a new service'}
@@ -397,6 +401,55 @@ const DashboardServices: React.FC = () => {
           <StatCard icon={<Sparkles className="h-4 w-4 text-success" />} label={isRTL ? 'الخدمات النشطة' : 'Active'} value={stats.active} />
           <StatCard icon={<Inbox className="h-4 w-4 text-warning" />} label={isRTL ? 'طلبات قيد المراجعة' : 'Pending requests'} value={stats2.pending} />
         </section>
+
+        {/* Inline catalog picker — bidirectional sync with business-edit */}
+        {pickerOpen && businessId && (
+          <Card className="border-primary/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ListPlus className="h-4 w-4 text-primary" />
+                {isRTL ? 'اختر خدمات من الكتالوج' : 'Pick services from the catalog'}
+              </CardTitle>
+              <CardDescription>
+                {isRTL
+                  ? 'أي إضافة هنا تنعكس فوراً في صفحة بيانات المنشأة، وأي إزالة من هناك تنعكس هنا.'
+                  : 'Adding here updates your business profile instantly. Removals propagate both ways.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 max-h-[28rem] overflow-y-auto no-scrollbar">
+              {ONBOARDING_SECTORS
+                .filter((s) => businessSectors.length === 0 || businessSectors.includes(s.id))
+                .map((sector) => (
+                <div key={sector.id} className="rounded-lg border border-border/60 p-2.5">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h4 className="text-sm font-semibold">{isRTL ? sector.name_ar : sector.name_en}</h4>
+                    <span className="text-[10px] text-muted-foreground">{sector.subServices.length}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {sector.subServices.map((sub) => {
+                      const selected = subServiceIds.includes(sub.id);
+                      return (
+                        <button
+                          key={sub.id}
+                          onClick={() => selected ? removeSubMut.mutate(sub.id) : addSubMut.mutate(sub.id)}
+                          disabled={addSubMut.isPending || removeSubMut.isPending}
+                          className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+                            selected
+                              ? 'border-primary/40 bg-primary/10 text-primary'
+                              : 'border-border/60 bg-card hover:bg-accent/5'
+                          }`}
+                        >
+                          {selected ? <Check className="h-3 w-3 inline me-1" /> : <Plus className="h-3 w-3 inline me-1" />}
+                          {isRTL ? sub.name_ar : sub.name_en}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Request form (inline, no popup) */}
         {reqOpen && (
