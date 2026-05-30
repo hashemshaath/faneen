@@ -9,6 +9,7 @@ import {
   FileText,
   Download,
   ShieldCheck,
+  History,
 } from 'lucide-react';
 
 export interface ContractTabsHeaderProps {
@@ -23,6 +24,7 @@ export interface ContractTabsHeaderProps {
     amendments: number;
     exports?: number;
     pdfAnalysis?: number;
+    history?: number;
   };
 }
 
@@ -40,6 +42,7 @@ export function ContractTabsHeader({ isRTL, counts }: ContractTabsHeaderProps) {
     { value: 'notes', icon: StickyNote, label: isRTL ? 'الملاحظات' : 'Notes', count: counts.notes },
     { value: 'attachments', icon: Paperclip, label: isRTL ? 'المرفقات' : 'Attachments', count: counts.attachments },
     { value: 'amendments', icon: FileText, label: isRTL ? 'الملاحق' : 'Amendments', count: counts.amendments },
+    { value: 'history', icon: History, label: isRTL ? 'السجل الكامل' : 'Full History', count: counts.history ?? 0 },
     { value: 'exports', icon: Download, label: isRTL ? 'سجل التصدير' : 'Export History', count: counts.exports ?? 0 },
     { value: 'pdf-analysis', icon: ShieldCheck, label: isRTL ? 'تحليل التصدير' : 'Analysis Log', count: counts.pdfAnalysis ?? 0 },
   ];
