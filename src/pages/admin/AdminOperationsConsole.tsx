@@ -284,6 +284,8 @@ export default function AdminOperationsConsole() {
 
         <AdminOperationalMetricsCards metrics={metrics} isRTL={isRTL} />
 
+        <AdminBrandOpsCard />
+
         <Card className="border-border/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
