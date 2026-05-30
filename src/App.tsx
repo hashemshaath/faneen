@@ -407,6 +407,9 @@ const AppRoutes = () => (
           <Route path="/admin/contracts" element={<ProtectedRoute requireAdmin><AdminContracts /></ProtectedRoute>} />
           <Route path="/admin/contracts/create" element={<ProtectedRoute requireAdmin><AdminContractCreate /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute requireAdmin><AdminReports /></ProtectedRoute>} />
+          <Route path="/dashboard/rfq" element={<ProtectedRoute><DashboardRfq /></ProtectedRoute>} />
+          <Route path="/dashboard/rfq/inbox" element={<ProtectedRoute><DashboardRfqInbox /></ProtectedRoute>} />
+          <Route path="/dashboard/loyalty" element={<ProtectedRoute><DashboardLoyalty /></ProtectedRoute>} />
 
           <Route path="/:username" element={<UsernameResolver />} />
           <Route path="*" element={<NotFound />} />
