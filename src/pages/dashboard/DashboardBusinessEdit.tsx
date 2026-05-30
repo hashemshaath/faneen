@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import {
   Building2, Save, Phone, Mail, Globe, MapPin, ShieldCheck, Layers,
   FileText, Image as ImageIcon, Loader2, ExternalLink, AlertTriangle,
-  User, Hash, UserCog,
+  User, Hash, UserCog, CheckCircle2, Sparkles,
 } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -348,9 +348,50 @@ const DashboardBusinessEdit: React.FC = () => {
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   }, [form]);
 
+  // Per-tab missing/incomplete counters so the user can see at a glance
+  // which sections still need attention without scrolling through everything.
+  const tabMissing = useMemo(() => {
+    if (!form) return { basic: 0, contact: 0, location: 0, sectors: 0, legal: 0 };
+    return {
+      basic:
+        (!form.name_ar ? 1 : 0) +
+        (!form.logo_url ? 1 : 0) +
+        (!form.short_description_ar ? 1 : 0) +
+        (!form.description_ar ? 1 : 0),
+      contact:
+        (!(form.phone || form.mobile) ? 1 : 0) +
+        (!form.email ? 1 : 0) +
+        (!form.account_manager_name ? 1 : 0),
+      location:
+        (!form.city_id ? 1 : 0) +
+        (!form.address ? 1 : 0) +
+        (form.latitude == null || form.longitude == null ? 1 : 0),
+      sectors:
+        ((form.sectors?.length ?? 0) === 0 ? 1 : 0) +
+        ((form.sub_services?.length ?? 0) === 0 ? 1 : 0),
+      legal:
+        (!(form.national_id || form.unified_number) ? 1 : 0) +
+        (!form.vat_number ? 1 : 0),
+    };
+  }, [form]);
+
   // WORKSPACE-RBAC-6E — shadow parity check (observability only, no enforcement).
   // Hook must run unconditionally before any early returns below.
   usePermissionParity('entity.manage');
+
+  // Keyboard shortcut: Cmd/Ctrl+S to save while editing.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        if (!dirty || saving) return;
+        e.preventDefault();
+        void handleSave();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dirty, saving, form]);
 
   if (isLoading) {
     return (
@@ -389,6 +430,20 @@ const DashboardBusinessEdit: React.FC = () => {
   const status = (form.approval_status ?? 'draft') as keyof typeof statusToneMap;
   const statusTone = statusToneMap[status] ?? statusToneMap.draft;
 
+  // Conic-gradient readiness ring — fluid visual signal alongside the % chip.
+  const ringStyle: React.CSSProperties = {
+    background: `conic-gradient(hsl(var(--primary)) ${completionPct * 3.6}deg, hsl(var(--muted)) 0deg)`,
+  };
+
+  const tabBadge = (n: number) =>
+    n > 0 ? (
+      <span className="ms-1 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-warning/15 text-warning text-[10px] font-bold px-1 tech-content">
+        {n}
+      </span>
+    ) : (
+      <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+    );
+
   return (
     <DashboardLayout>
       <div className="max-w-5xl mx-auto space-y-6 pb-24 pt-4 scroll-mt-32">
@@ -400,8 +455,19 @@ const DashboardBusinessEdit: React.FC = () => {
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400" />
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 sm:p-6">
             <div className="min-w-0 flex items-start gap-3">
-              <div className="hidden sm:flex w-11 h-11 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 items-center justify-center shrink-0">
-                <Building2 className="w-5 h-5" />
+              {/* Completion ring with logo / icon center */}
+              <div
+                className="hidden sm:flex w-14 h-14 rounded-full items-center justify-center shrink-0"
+                style={ringStyle}
+                aria-label={t(isRTL, `الجاهزية ${completionPct}%`, `Readiness ${completionPct}%`)}
+              >
+                <div className="w-11 h-11 rounded-full bg-background flex items-center justify-center overflow-hidden">
+                  {form.logo_url ? (
+                    <img src={form.logo_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <Building2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  )}
+                </div>
               </div>
               <div className="min-w-0">
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
@@ -414,7 +480,19 @@ const DashboardBusinessEdit: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-2 mt-3">
                   <Badge variant="outline" className={statusTone}><ShieldCheck className="w-3 h-3 me-1" />{status}</Badge>
                   {form.ref_id && <Badge variant="outline" className="font-mono tech-content"><Hash className="w-3 h-3 me-1" />{form.ref_id}</Badge>}
-                  <Badge variant="outline">{t(isRTL, 'الجاهزية:', 'Readiness:')} <span className="tech-content ms-1">{completionPct}%</span></Badge>
+                  <Badge
+                    variant="outline"
+                    className={
+                      completionPct >= 90
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                        : completionPct >= 60
+                          ? 'border-info/30 bg-info/10 text-info'
+                          : 'border-warning/30 bg-warning/10 text-warning'
+                    }
+                  >
+                    <Sparkles className="w-3 h-3 me-1" />
+                    {t(isRTL, 'الجاهزية:', 'Readiness:')}<span className="tech-content ms-1">{completionPct}%</span>
+                  </Badge>
                   {form.username && (
                     <Link to={`/${form.username}`} className="text-xs text-primary hover:underline inline-flex items-center gap-1" target="_blank" rel="noreferrer">
                       {t(isRTL, 'عرض الصفحة العامة', 'View public page')}<ExternalLink className="w-3 h-3" />
@@ -430,28 +508,39 @@ const DashboardBusinessEdit: React.FC = () => {
               </Button>
             </PermissionHint>
           </div>
+          {/* Slim completion progress bar at the bottom of the hero */}
+          <div className="h-1.5 w-full bg-muted/60">
+            <div
+              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-[width] duration-500"
+              style={{ width: `${completionPct}%` }}
+              role="progressbar"
+              aria-valuenow={completionPct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            />
+          </div>
         </header>
 
         <ValidationBanner issues={validationIssues} isRTL={isRTL} />
 
         <ProviderGrowthCard business={form} />
 
-        <Tabs defaultValue="identity" className="w-full">
-          <TabsList className="w-full flex flex-wrap h-auto justify-start gap-1 bg-muted/40 p-1 rounded-xl">
-            <TabsTrigger value="identity" className="gap-1.5"><Building2 className="w-3.5 h-3.5" />{t(isRTL, 'الهوية والوصف', 'Identity & About')}</TabsTrigger>
-            <TabsTrigger value="contact" className="gap-1.5"><Phone className="w-3.5 h-3.5" />{t(isRTL, 'التواصل والمدير', 'Contact & Manager')}</TabsTrigger>
-            <TabsTrigger value="location" className="gap-1.5"><MapPin className="w-3.5 h-3.5" />{t(isRTL, 'الموقع', 'Location')}</TabsTrigger>
-            <TabsTrigger value="sectors" className="gap-1.5"><Layers className="w-3.5 h-3.5" />{t(isRTL, 'القطاعات', 'Sectors')}</TabsTrigger>
-            <TabsTrigger value="legal" className="gap-1.5"><ShieldCheck className="w-3.5 h-3.5" />{t(isRTL, 'البيانات النظامية', 'Legal & Tax')}</TabsTrigger>
+        <Tabs defaultValue="basic" className="w-full">
+          <TabsList className="sticky top-16 z-20 w-full flex flex-wrap h-auto justify-start gap-1 bg-background/85 backdrop-blur border border-border/40 p-1.5 rounded-xl shadow-sm">
+            <TabsTrigger value="basic" className="gap-1.5"><Building2 className="w-3.5 h-3.5" />{t(isRTL, 'البيانات الأساسية', 'Basic Info')}{tabBadge(tabMissing.basic)}</TabsTrigger>
+            <TabsTrigger value="contact" className="gap-1.5"><Phone className="w-3.5 h-3.5" />{t(isRTL, 'التواصل والمدير', 'Contact & Manager')}{tabBadge(tabMissing.contact)}</TabsTrigger>
+            <TabsTrigger value="location" className="gap-1.5"><MapPin className="w-3.5 h-3.5" />{t(isRTL, 'الموقع', 'Location')}{tabBadge(tabMissing.location)}</TabsTrigger>
+            <TabsTrigger value="sectors" className="gap-1.5"><Layers className="w-3.5 h-3.5" />{t(isRTL, 'القطاعات', 'Sectors')}{tabBadge(tabMissing.sectors)}</TabsTrigger>
+            <TabsTrigger value="legal" className="gap-1.5"><ShieldCheck className="w-3.5 h-3.5" />{t(isRTL, 'البيانات النظامية', 'Legal & Tax')}{tabBadge(tabMissing.legal)}</TabsTrigger>
             <TabsTrigger value="team" className="gap-1.5"><User className="w-3.5 h-3.5" />{t(isRTL, 'المفوّضون', 'Representatives')}</TabsTrigger>
             <TabsTrigger value="system" className="gap-1.5"><FileText className="w-3.5 h-3.5" />{t(isRTL, 'سجل ونظام', 'System & Audit')}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="identity" className="space-y-6 mt-4">
+          <TabsContent value="basic" className="space-y-6 mt-4">
             {/* Identity */}
             <Card>
           <CardHeader>
-            <CardTitle className={sectionTitle}><Building2 className="w-4 h-4 text-primary" />{t(isRTL, 'الهوية', 'Identity')}</CardTitle>
+            <CardTitle className={sectionTitle}><Building2 className="w-4 h-4 text-primary" />{t(isRTL, 'بيانات المنشأة', 'Business Details')}</CardTitle>
             <CardDescription>{t(isRTL, 'الاسم التجاري والشعار وصورة الغلاف.', 'Trade name, logo and cover image.')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -810,10 +899,14 @@ const DashboardBusinessEdit: React.FC = () => {
 
         {/* Sticky save bar */}
         <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-xl border border-border bg-background/95 backdrop-blur px-4 py-3 shadow-[var(--elev-2)]">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
             {dirty
               ? (<><AlertTriangle className="w-3.5 h-3.5 text-warning" />{t(isRTL, 'لديك تغييرات غير محفوظة', 'You have unsaved changes')}</>)
-              : (<><ImageIcon className="w-3.5 h-3.5" />{t(isRTL, 'لا توجد تغييرات معلّقة', 'No pending changes')}</>)}
+              : (<><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />{t(isRTL, 'كل التغييرات محفوظة', 'All changes saved')}</>)}
+            <span className="hidden sm:inline opacity-60">·</span>
+            <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 h-5 rounded border border-border bg-muted/50 text-[10px] tech-content">
+              {navigator.platform.toLowerCase().includes('mac') ? '⌘' : 'Ctrl'}+S
+            </kbd>
           </div>
           <PermissionHint permission="entity.manage">
             <Button onClick={handleSave} disabled={saving || !dirty || hasErrors} className="gap-1.5">
