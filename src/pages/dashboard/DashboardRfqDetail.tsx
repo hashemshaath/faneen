@@ -53,7 +53,7 @@ const DashboardRfqDetail: React.FC = () => {
             setEvents((prev) => [
               {
                 id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                kind: 'new_quote',
+                kind: 'new_quote' as const,
                 at: Date.now(),
                 amount: newQ?.amount,
                 currency: newQ?.currency,
@@ -75,7 +75,7 @@ const DashboardRfqDetail: React.FC = () => {
               setEvents((prev) => [
                 {
                   id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                  kind: 'price_change',
+                  kind: 'price_change' as const,
                   at: Date.now(),
                   amount: newQ.amount,
                   previousAmount: oldQ.amount,
