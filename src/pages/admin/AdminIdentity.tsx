@@ -49,13 +49,21 @@ import {
   RefreshCw, Stethoscope, MapPin, ArrowUpRight,
 } from 'lucide-react';
 
-/** Legacy `?view=...` deep-links → standalone management routes. */
+/**
+ * Legacy `?view=...` deep-links → standalone management routes.
+ * Keys here forward to dedicated pages; unknown / hub-native keys
+ * (`overview`, `integrity`, `activity`) intentionally fall through
+ * and render the Account Center hub.
+ */
 const VIEW_REDIRECTS: Record<string, string> = {
   users:              '/admin/users',
   businesses:         '/admin/businesses',
   'provider-review':  '/admin/provider-review',
   'access-requests':  '/admin/entity-access-requests',
   'access-management':'/admin/access-management',
+  memberships:        '/admin/memberships',
+  analytics:          '/admin/provider-analytics',
+  locations:          '/admin/locations',
 };
 
 type Profile = Tables<'profiles'>;
