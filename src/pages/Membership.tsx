@@ -1032,19 +1032,44 @@ const Membership = () => {
           <MembershipKeysManager isRTL={isRTL} businessId={myBusiness.id} />
         )}
 
-        <div className="max-w-3xl mx-auto mt-16 sm:mt-20 text-center rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/5 via-card to-primary/5 p-8 sm:p-10">
-          <h3 className="font-heading font-bold text-xl sm:text-2xl text-foreground mb-2">
-            {isRTL ? 'جاهز للارتقاء بأعمالك؟' : 'Ready to grow your business?'}
-          </h3>
-          <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-            {isRTL
-              ? 'انضم لمئات المنشآت التي تثق بقطاعات لتنمية أعمالها في القطاع الصناعي.'
-              : 'Join hundreds of businesses that trust Qitaat to grow in the industrial sector.'}
-          </p>
-          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-            <Shield className="w-3.5 h-3.5" />
-            {isRTL ? 'جميع الخطط تشمل حماية كاملة للبيانات والخصوصية' : 'All plans include full data protection and privacy'}
-          </p>
+        <div className="relative max-w-5xl mx-auto mt-16 sm:mt-24 rounded-3xl overflow-hidden bg-slate-900 dark:bg-slate-950 p-10 sm:p-14 text-center">
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-32 end-0 w-72 h-72 rounded-full bg-primary/20 blur-3xl" />
+            <div className="absolute -bottom-32 start-0 w-72 h-72 rounded-full bg-accent/10 blur-3xl" />
+          </div>
+          <div className="relative z-10 space-y-7">
+            <h2 className="font-heading font-bold text-3xl sm:text-4xl text-white">
+              {isRTL ? 'جاهز للارتقاء بأعمالك؟' : 'Ready to grow your business?'}
+            </h2>
+            <p className="text-slate-300 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
+              {isRTL
+                ? 'انضم لمئات المنشآت التي تثق بقطاعات لتنمية أعمالها في القطاع الصناعي.'
+                : 'Join hundreds of businesses that trust Qitaat to grow in the industrial sector.'}
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <Button
+                size="lg"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 px-8 font-bold w-full sm:w-auto"
+                onClick={() => {
+                  document.querySelector('[data-plan-tier="premium"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+              >
+                {isRTL ? 'اشترك الآن' : 'Subscribe now'}
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white rounded-xl h-12 px-8 font-bold w-full sm:w-auto"
+              >
+                <Link to="/contact">{isRTL ? 'تحدث مع المبيعات' : 'Talk to sales'}</Link>
+              </Button>
+            </div>
+            <p className="text-slate-400 text-xs flex items-center justify-center gap-1.5 pt-2">
+              <Shield className="w-3.5 h-3.5" />
+              {isRTL ? 'جميع الخطط تشمل حماية كاملة للبيانات والخصوصية' : 'All plans include full data protection and privacy'}
+            </p>
+          </div>
         </div>
       </div>
       <Footer />
