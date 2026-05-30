@@ -39,6 +39,12 @@ import {
 } from "@/modules/workOrders";
 import { RelatedReferencesPanel } from "@/components/reference/RelatedReferencesPanel";
 import { createProcurementRfqFromBoq } from "@/modules/procurement";
+import { ApprovedBrandPicker } from "@/components/brands/ApprovedBrandPicker";
+import { listApprovedBrandsByIds } from "@/modules/brands";
+import {
+  describeBrandLock,
+  type BrandLock,
+} from "@/modules/brands/lib/brandSelectionRules";
 
 interface Props {
   workOrderId: string;
@@ -70,6 +76,11 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [rfqRefId, setRfqRefId] = useState<{ rfqId: string; rfqNumber: string | null } | null>(null);
+
+  // RFQ-BRAND-PICKER-1C — resolved approved-brand labels for items in view.
+  const [brandLabels, setBrandLabels] = useState<
+    Record<string, { name_ar: string; name_en: string; ref_id: string | null; slug: string }>
+  >({});
 
   const tx = useMemo(
     () => ({
@@ -119,6 +130,13 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
       rfqCreated: isRTL ? "تم إنشاء RFQ" : "RFQ created",
       errCreateRfq: isRTL ? "تعذّر إنشاء RFQ." : "Failed to create RFQ.",
       openRfq: isRTL ? "فتح RFQ" : "Open RFQ",
+      brand: isRTL ? "العلامة التجارية" : "Brand",
+      brandLock: isRTL ? "نمط الالتزام" : "Brand lock",
+      lockExact: isRTL ? "مطابق" : "Exact",
+      lockPreferred: isRTL ? "مفضّل" : "Preferred",
+      lockFlexible: isRTL ? "مرن" : "Flexible",
+      brandUnavailable: isRTL ? "العلامة غير متاحة" : "Brand unavailable",
+      noBrand: isRTL ? "بدون علامة" : "No brand",
     }),
     [isRTL],
   );
@@ -157,6 +175,39 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
     if (activeBoqId) void loadItems(activeBoqId);
     else setItems([]);
   }, [activeBoqId, loadItems]);
+
+  // Resolve approved-brand labels for any brand_id referenced in current items.
+  useEffect(() => {
+    const ids = Array.from(
+      new Set(items.map((i) => i.brand_id).filter((x): x is string => Boolean(x))),
+    );
+    const missing = ids.filter((id) => !brandLabels[id]);
+    if (missing.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await listApprovedBrandsByIds(missing);
+        if (cancelled) return;
+        setBrandLabels((prev) => {
+          const next = { ...prev };
+          for (const r of rows) {
+            next[r.id] = {
+              name_ar: r.name_ar,
+              name_en: r.name_en,
+              ref_id: r.ref_id ?? null,
+              slug: r.slug,
+            };
+          }
+          return next;
+        });
+      } catch {
+        /* swallow — UI falls back to "Brand unavailable" label */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [items, brandLabels]);
 
   const activeBoq = useMemo(
     () => boqs.find((b) => b.id === activeBoqId) ?? null,
@@ -203,7 +254,12 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
   const onPriceChange = useCallback(
     async (
       item: WorkOrderBoqItemRow,
-      patch: { quantity?: number; unit_price?: number },
+      patch: {
+        quantity?: number;
+        unit_price?: number;
+        brand_id?: string | null;
+        brand_lock?: BrandLock | null;
+      },
     ) => {
       if (isFinalized) return;
       // Optimistic local update for instant totals
@@ -214,6 +270,14 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
                 ...it,
                 quantity: patch.quantity ?? it.quantity,
                 unit_price: patch.unit_price ?? it.unit_price,
+                brand_id:
+                  patch.brand_id === undefined ? it.brand_id : patch.brand_id,
+                brand_lock:
+                  patch.brand_id === null
+                    ? null
+                    : patch.brand_lock === undefined
+                      ? it.brand_lock
+                      : patch.brand_lock,
               }
             : it,
         ),
