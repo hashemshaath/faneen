@@ -21,16 +21,16 @@ export async function upsertPrimaryAddress(
   const { ownerType, ownerId, fields } = options;
   const addressType: AddressType = options.addressType ?? fields.address_type ?? 'national_address';
 
-  // Find existing primary for (owner, type)
-  const { data: existing, error: findErr } = await supabase
+  // Find existing primary for (owner, type). Cast to break deep generic inference.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sb: any = supabase;
+  const { data: existing, error: findErr } = await sb
     .from('addresses')
     .select('id')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .eq('owner_type', ownerType as any)
+    .eq('owner_type', ownerType)
     .eq('owner_id', ownerId)
     .eq('is_primary', true)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .eq('address_type' as any, addressType)
+    .eq('address_type', addressType)
     .maybeSingle();
 
   if (findErr) return { data: null, error: findErr };
@@ -47,7 +47,7 @@ export async function upsertPrimaryAddress(
   };
 
   if (existing?.id) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('addresses')
       .update(payload)
       .eq('id', existing.id)
@@ -56,7 +56,7 @@ export async function upsertPrimaryAddress(
     return { data: data as AddressRow | null, error };
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('addresses')
     .insert(payload)
     .select('*')
