@@ -48,9 +48,11 @@ export interface BoqItemDraft {
   unit_price: number;
   metadata: Record<string, unknown>;
   sort_order: number;
-  /** RFQ-BRAND-PICKER-1C — generator NEVER auto-assigns brands. Always null. */
-  brand_id: null;
-  brand_lock: null;
+  /** RFQ-BRAND-PICKER-1C — generator NEVER auto-assigns brands.
+   *  Field is optional in the draft type; persisted as null in
+   *  createBoqFromMeasurements (see brand_id/brand_lock mapping). */
+  brand_id?: null;
+  brand_lock?: null;
 }
 
 export interface GenerateBoqItemsInput {
