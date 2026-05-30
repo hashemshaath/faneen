@@ -478,6 +478,33 @@ const DashboardBusinessCompletion: React.FC = () => {
                 )}
               </section>
 
+              {/* Quick navigation summary */}
+              <section className="rounded-2xl border border-border bg-card p-5">
+                <p className="text-sm font-semibold text-foreground mb-3">
+                  {isRTL ? 'روابط سريعة' : 'Quick links'}
+                </p>
+                <div className="space-y-1.5">
+                  {[
+                    { to: '/dashboard/contracts', ar: 'العقود', en: 'Contracts', Icon: FileText },
+                    { to: '/dashboard/leads', ar: 'طلبات الخدمة', en: 'Service requests', Icon: Inbox },
+                    { to: '/dashboard/portfolio', ar: 'معرض الأعمال', en: 'Portfolio', Icon: ImageIcon },
+                    { to: '/dashboard/messages', ar: 'الرسائل', en: 'Messages', Icon: Sparkles },
+                  ].map((l) => (
+                    <Link
+                      key={l.to}
+                      to={l.to}
+                      className="flex items-center justify-between gap-2 px-2 py-2 rounded-lg hover:bg-muted/50 transition-colors text-xs text-foreground"
+                    >
+                      <span className="flex items-center gap-2">
+                        <l.Icon className="w-3.5 h-3.5 text-muted-foreground" />
+                        {isRTL ? l.ar : l.en}
+                      </span>
+                      <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ${isRTL ? 'rotate-180' : ''}`} />
+                    </Link>
+                  ))}
+                </div>
+              </section>
+
               {/* Approval timeline */}
               <section className="rounded-2xl border border-border bg-card p-5">
                 <p className="text-sm font-semibold text-foreground mb-4">
