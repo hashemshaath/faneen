@@ -133,6 +133,10 @@ export const InvitationsPanel: React.FC<Props> = ({
       toast.error(isRTL ? 'أدخل بريدًا إلكترونيًا صحيحًا' : 'Enter a valid email address');
       return;
     }
+    if (!sendEmail && !sendInApp) {
+      toast.error(isRTL ? 'اختر طريقة إرسال واحدة على الأقل' : 'Pick at least one delivery method');
+      return;
+    }
     if (!user) return;
     setSending(true);
     try {
@@ -161,24 +165,66 @@ export const InvitationsPanel: React.FC<Props> = ({
       });
       if (profile?.full_name) inviterName = profile.full_name;
 
-      const { error: emailError } = await sendTransactionalEmail({
-        templateName: 'business-staff-invitation',
-        recipientEmail: trimmed,
-        idempotencyKey: `staff-invite-${inserted?.id ?? token}`,
-        templateData: {
-          recipientEmail: trimmed,
-          businessName: isRTL ? (businessNameAr ?? businessNameEn ?? '') : (businessNameEn ?? businessNameAr ?? ''),
-          inviterName,
-          roleAr: STAFF_ROLE_META[role].ar,
-          roleEn: STAFF_ROLE_META[role].en,
-          acceptUrl: acceptUrlFor(token),
-          expiryDate: expiresAt.slice(0, 10),
-        },
-      });
-      if (emailError) throw emailError;
+      const deliveredVia: string[] = [];
 
-      toast.success(isRTL ? 'تم إرسال الدعوة بالبريد الإلكتروني' : 'Invitation email sent');
+      if (sendEmail) {
+        const { error: emailError } = await sendTransactionalEmail({
+          templateName: 'business-staff-invitation',
+          recipientEmail: trimmed,
+          idempotencyKey: `staff-invite-${inserted?.id ?? token}`,
+          templateData: {
+            recipientEmail: trimmed,
+            businessName: isRTL ? (businessNameAr ?? businessNameEn ?? '') : (businessNameEn ?? businessNameAr ?? ''),
+            inviterName,
+            roleAr: STAFF_ROLE_META[role].ar,
+            roleEn: STAFF_ROLE_META[role].en,
+            acceptUrl: acceptUrlFor(token),
+            expiryDate: expiresAt.slice(0, 10),
+          },
+        });
+        if (emailError) throw emailError;
+        deliveredVia.push(isRTL ? 'البريد' : 'email');
+      }
+
+      // In-app notification — only possible if we resolved the recipient to a profile
+      if (sendInApp) {
+        let recipientUserId = picked?.user_id ?? null;
+        if (!recipientUserId) {
+          const { data: profileRow } = await supabase
+            .from('profiles')
+            .select('user_id')
+            .ilike('email', trimmed)
+            .maybeSingle();
+          recipientUserId = (profileRow as { user_id: string } | null)?.user_id ?? null;
+        }
+        if (recipientUserId) {
+          const nameForBody = isRTL ? (businessNameAr ?? businessNameEn ?? '') : (businessNameEn ?? businessNameAr ?? '');
+          await supabase.from('notifications').insert({
+            user_id: recipientUserId,
+            notification_type: 'business_staff_invitation',
+            title_ar: 'دعوة للانضمام كمفوّض',
+            title_en: 'Staff invitation',
+            body_ar: `تمت دعوتك للانضمام إلى ${nameForBody} بدور ${STAFF_ROLE_META[role].ar}.`,
+            body_en: `You have been invited to join ${nameForBody} as ${STAFF_ROLE_META[role].en}.`,
+            reference_id: inserted?.id ?? null,
+            reference_type: 'business_staff_invitation',
+            action_url: `/staff-invite/${token}`,
+          });
+          deliveredVia.push(isRTL ? 'المنصة' : 'in-app');
+        } else if (!sendEmail) {
+          toast.warning(isRTL
+            ? 'لم يتم العثور على حساب مرتبط بهذا البريد — لم يتم إرسال إشعار داخل المنصة.'
+            : 'No platform account matches this email — no in-app notification was sent.');
+        }
+      }
+
+      toast.success(
+        isRTL
+          ? `تم إنشاء الدعوة وإرسالها عبر: ${deliveredVia.join(' + ') || 'لا شيء'}`
+          : `Invitation created and delivered via: ${deliveredVia.join(' + ') || 'none'}`,
+      );
       setEmail('');
+      setPicked(null);
       qc.invalidateQueries({ queryKey: ['business-invitations', businessId] });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
