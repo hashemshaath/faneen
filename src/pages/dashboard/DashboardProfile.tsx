@@ -35,9 +35,6 @@ import { cn } from '@/lib/utils';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
 
-type RefRow = { id: string; name_ar: string; name_en: string };
-type CityRow = RefRow & { country_id: string };
-
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
 const DashboardProfile: React.FC = () => {
@@ -73,8 +70,6 @@ const DashboardProfile: React.FC = () => {
     phone: '',
     avatar_url: '',
     preferred_language: 'ar' as 'ar' | 'en',
-    country_id: '' as string | null,
-    city_id: '' as string | null,
     national_id: '',
     national_id_type: '' as '' | 'saudi' | 'iqama',
     vat_number: '',
@@ -100,12 +95,13 @@ const DashboardProfile: React.FC = () => {
       full_name_ar: profile.full_name_ar ?? '',
       full_name_en: profile.full_name_en ?? '',
       username: profile.username ?? '',
-      email: profile.email ?? '',
+      // Unified email — prefer the authenticated login email so that
+      // "profile email" and "login email" are always one and the same.
+      // Fall back to the stored profile email (e.g. synthetic phone signup).
+      email: (isSyntheticPhoneEmail(user?.email) ? (profile.email ?? '') : (user?.email ?? profile.email ?? '')),
       phone: profile.phone ?? '',
       avatar_url: profile.avatar_url ?? '',
       preferred_language: (profile.preferred_language as 'ar' | 'en') ?? 'ar',
-      country_id: profile.country_id ?? null,
-      city_id: profile.city_id ?? null,
       national_id: profile.national_id ?? '',
       national_id_type: (profile.national_id_type as 'saudi' | 'iqama' | null) ?? '',
       vat_number: profile.vat_number ?? '',
@@ -119,7 +115,7 @@ const DashboardProfile: React.FC = () => {
       address_line: profile.address_line ?? '',
     });
     setUsernameOk(true);
-  }, [profile]);
+  }, [profile, user?.email]);
 
   // Owner business (for "view as provider" link)
   const { data: business } = useQuery({
