@@ -842,7 +842,8 @@ const AdminQuoteBrandPreference: React.FC<{ quote: AdminQuoteRow }> = ({ quote }
   const notes = quote.brand_notes;
   const enabled = ids.length > 0 || !!mode || !!notes;
 
-  const { data: brands } = useQuery({
+  type BrandRow = Awaited<ReturnType<typeof listApprovedBrandsByIds>>[number];
+  const { data: brands } = useQuery<BrandRow[]>({
     queryKey: ['admin-quote-brands', quote.id, ids.join(',')],
     queryFn: () => listApprovedBrandsByIds(ids),
     enabled: ids.length > 0,
