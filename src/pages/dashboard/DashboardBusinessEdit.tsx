@@ -324,6 +324,9 @@ const DashboardBusinessEdit: React.FC = () => {
         national_id: form.national_id || null, unified_number: form.unified_number || null,
         vat_number: form.vat_number || null,
         cr_legal_entity: form.cr_legal_entity || null,
+        cr_owner_name: form.cr_owner_name || null,
+        cr_issue_date: form.cr_issue_date || null,
+        cr_expiry_date: form.cr_expiry_date || null,
         account_manager_name: form.account_manager_name || null,
         account_manager_phone: form.account_manager_phone || null,
         account_manager_email: form.account_manager_email || null,
@@ -921,6 +924,90 @@ const DashboardBusinessEdit: React.FC = () => {
                 qc.invalidateQueries({ queryKey: ['business-edit', user?.id] });
               }}
             />
+          </CardContent>
+        </Card>
+
+        {/* Editable legal identifiers — CR / Unified 700 / VAT / Owner / Issue & Expiry */}
+        <Card>
+          <CardHeader>
+            <CardTitle className={sectionTitle}>
+              <Hash className="w-4 h-4 text-primary" />
+              {t(isRTL, 'البيانات النظامية', 'Legal identifiers')}
+            </CardTitle>
+            <CardDescription>
+              {t(isRTL,
+                'يمكنك تعديل هذه الحقول يدويًا، وسيتم حفظها مع باقي البيانات.',
+                'You can edit these fields manually — they are saved with the rest of the form.')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className={grid2}>
+              <div>
+                <Label className={fieldLabel}>{t(isRTL, 'رقم السجل التجاري', 'Commercial Registration (CR)')}</Label>
+                <Input
+                  dir="ltr"
+                  className="mt-1 tech-content"
+                  placeholder="1010XXXXXX"
+                  value={form.national_id ?? ''}
+                  onChange={(e) => update('national_id', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label className={fieldLabel}>{t(isRTL, 'الرقم الموحّد (700)', 'Unified number (700)')}</Label>
+                <Input
+                  dir="ltr"
+                  className="mt-1 tech-content"
+                  placeholder="7000000000"
+                  value={form.unified_number ?? ''}
+                  onChange={(e) => update('unified_number', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label className={fieldLabel}>{t(isRTL, 'الرقم الضريبي', 'VAT number')}</Label>
+                <Input
+                  dir="ltr"
+                  className="mt-1 tech-content"
+                  placeholder="3000000000003"
+                  value={form.vat_number ?? ''}
+                  onChange={(e) => update('vat_number', e.target.value)}
+                />
+                <FieldError issue={issueMap.vat_number} isRTL={isRTL} />
+              </div>
+              <div>
+                <Label className={fieldLabel}>{t(isRTL, 'اسم المالك', 'Owner name')}</Label>
+                <Input
+                  dir="auto"
+                  className="mt-1"
+                  value={form.cr_owner_name ?? ''}
+                  onChange={(e) => update('cr_owner_name', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label className={fieldLabel}>{t(isRTL, 'تاريخ الإصدار', 'Issue date')}</Label>
+                <Input
+                  dir="ltr"
+                  type="date"
+                  className="mt-1 tech-content"
+                  value={form.cr_issue_date ?? ''}
+                  onChange={(e) => update('cr_issue_date', e.target.value || null)}
+                />
+              </div>
+              <div>
+                <Label className={fieldLabel}>{t(isRTL, 'تاريخ الانتهاء', 'Expiry date')}</Label>
+                <Input
+                  dir="ltr"
+                  type="date"
+                  className="mt-1 tech-content"
+                  value={form.cr_expiry_date ?? ''}
+                  onChange={(e) => update('cr_expiry_date', e.target.value || null)}
+                />
+              </div>
+            </div>
+            <FieldHint>
+              {t(isRTL,
+                'يمكن تعبئة هذه الحقول تلقائيًا برفع وثيقة السجل التجاري في القسم العلوي، أو إدخالها يدويًا هنا.',
+                'These fields can be auto-filled by uploading the CR document above, or entered manually here.')}
+            </FieldHint>
           </CardContent>
         </Card>
 
