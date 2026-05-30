@@ -142,3 +142,43 @@ describe('BRANDS-GOVERNANCE-3 — scope discipline', () => {
     expect(src).not.toMatch(/supplier_portal/i);
   });
 });
+
+describe('BRANDS-GOVERNANCE-3 — closeout guards', () => {
+  const APP = read('src/App.tsx');
+  it('/:username catch-all is registered after /brands routes (no shadowing)', () => {
+    const brandsIdx = APP.indexOf('path="/brands"');
+    const slugIdx = APP.indexOf('path="/brands/:slug"');
+    const userIdx = APP.indexOf('path="/:username"');
+    expect(brandsIdx).toBeGreaterThan(-1);
+    expect(slugIdx).toBeGreaterThan(-1);
+    expect(userIdx).toBeGreaterThan(brandsIdx);
+    expect(userIdx).toBeGreaterThan(slugIdx);
+  });
+  it('legacy private-sectors routes remain accessible', () => {
+    expect(APP).toContain('path="/private-sectors"');
+    expect(APP).toContain('path="/private-sectors/:slug"');
+  });
+  it('sitemap function never queries brand_catalog directly (only brands_public)', () => {
+    const src = read('supabase/functions/sitemap/index.ts');
+    expect(src).not.toMatch(/from\(['"]brand_catalog['"]\)/);
+    expect(src).toMatch(/brands_public/);
+  });
+  it('sitemap function does not expose admin/request brand routes', () => {
+    const src = read('supabase/functions/sitemap/index.ts');
+    expect(src).not.toMatch(/\/admin\/brand/);
+    expect(src).not.toMatch(/brand-requests/);
+  });
+  it('public brand pages do not import the raw supabase client', () => {
+    for (const p of ['src/pages/BrandsCatalog.tsx', 'src/pages/BrandDetail.tsx']) {
+      const src = read(p);
+      expect(src, p).not.toMatch(/@\/integrations\/supabase\/client/);
+    }
+  });
+  it('public BrandDetail never renders pending/draft/rejected brands (relies on brands_public)', () => {
+    const src = read('src/pages/BrandDetail.tsx');
+    // public page must not branch on non-approved statuses
+    expect(src).not.toMatch(/status\s*===\s*['"]pending['"]/);
+    expect(src).not.toMatch(/status\s*===\s*['"]rejected['"]/);
+    expect(src).not.toMatch(/status\s*===\s*['"]draft['"]/);
+  });
+});
