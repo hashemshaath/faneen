@@ -863,8 +863,63 @@ const DashboardBusinessEdit: React.FC = () => {
 
           </TabsContent>
         </Tabs>
+          </div>
 
-        <Separator />
+          {/* ========== SECONDARY: helper sidebar ========== */}
+          <aside className="lg:col-span-4 xl:col-span-3 space-y-4 min-w-0">
+            <div className="lg:sticky lg:top-16 space-y-4">
+              {/* Readiness — small ring + progress, moved out of the hero */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                      style={ringStyle}
+                      aria-label={t(isRTL, `الجاهزية ${completionPct}%`, `Readiness ${completionPct}%`)}
+                    >
+                      <div className="w-9 h-9 rounded-full bg-background flex items-center justify-center overflow-hidden">
+                        {form.logo_url ? (
+                          <img src={form.logo_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Building2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {t(isRTL, 'اكتمال البيانات', 'Profile readiness')}
+                        </span>
+                        <span className="text-sm font-bold tech-content">{completionPct}%</span>
+                      </div>
+                      <div className="h-1.5 mt-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-[width] duration-500"
+                          style={{ width: `${completionPct}%` }}
+                          role="progressbar"
+                          aria-valuenow={completionPct}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Soft validation suggestions (warnings only). Errors stay
+                  inline in the main column where the fix happens. */}
+              {!hasErrors && validationIssues.length > 0 && (
+                <ValidationBanner issues={validationIssues} isRTL={isRTL} />
+              )}
+
+              {/* Growth & tips — secondary helper, not priority */}
+              <ProviderGrowthCard business={form} />
+            </div>
+          </aside>
+        </div>
+
+        <Separator className="my-6" />
 
         {/* Sticky save bar */}
         <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-xl border border-border bg-background/95 backdrop-blur px-4 py-3 shadow-[var(--elev-2)]">
