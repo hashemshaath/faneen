@@ -83,11 +83,17 @@ export {
   reviewSupplierQuoteItemBrandEquivalence,
   listQuoteItemsWithBrandReview,
   sanitizeProposedBrandName,
+  sanitizeBrandReviewNote,
+  reopenSupplierQuoteItemBrandReview,
+  computePersistedBrandClassification,
+  mapBrandReviewError,
 } from './services/supplierQuoteItems';
 export type {
   SubmitQuoteItemInput,
   UpdateProposedBrandInput,
   ReviewBrandEquivalenceInput,
+  PersistBrandClassificationContext,
+  PersistedBrandClassification,
 } from './services/supplierQuoteItems';
 // RFQ-BRAND-PICKER-1E — pure brand equivalence helper
 export {
