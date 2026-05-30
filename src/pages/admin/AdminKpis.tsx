@@ -82,11 +82,11 @@ export default function AdminKpis() {
             .lte('created_at', toIso),
           supabase
             .from('businesses')
-            .select('id,created_at,status')
+            .select('id,created_at')
             .gte('created_at', fromIso)
             .lte('created_at', toIso),
           supabase
-            .from('membership_payments')
+            .from('membership_payment_intents')
             .select('amount,created_at,status')
             .gte('created_at', fromIso)
             .lte('created_at', toIso),
@@ -96,14 +96,17 @@ export default function AdminKpis() {
 
         const contracts = (contractsRes.data ?? []) as Array<{ id: string; status: string | null; total_amount: number | null; created_at: string }>;
         const users = (usersRes.data ?? []) as Array<{ id: string; created_at: string }>;
-        const biz = (bizRes.data ?? []) as Array<{ id: string; created_at: string; status: string | null }>;
+        const biz = (bizRes.data ?? []) as Array<{ id: string; created_at: string }>;
         const payments = (paymentsRes.data ?? []) as Array<{ amount: number | null; created_at: string; status: string | null }>;
 
         const gmv = contracts.reduce((s, c) => s + Number(c.total_amount ?? 0), 0);
         const mrr = payments
-          .filter((p) => (p.status ?? '').toLowerCase() === 'paid' || (p.status ?? '').toLowerCase() === 'completed')
+          .filter((p) => {
+            const s = (p.status ?? '').toLowerCase();
+            return s === 'paid' || s === 'completed' || s === 'succeeded' || s === 'confirmed';
+          })
           .reduce((s, p) => s + Number(p.amount ?? 0), 0);
-        const activeBusinesses = biz.filter((b) => (b.status ?? '').toLowerCase() === 'active').length;
+        const activeBusinesses = biz.length;
         const completed = contracts.filter((c) => (c.status ?? '') === 'completed').length;
         const cancelled_ = contracts.filter((c) => (c.status ?? '') === 'cancelled').length;
         const total = contracts.length || 1;
