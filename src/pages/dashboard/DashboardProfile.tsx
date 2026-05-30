@@ -140,29 +140,6 @@ const DashboardProfile: React.FC = () => {
     staleTime: 60_000,
   });
 
-  // Reference data
-  const { data: countries = [] } = useQuery({
-    queryKey: ['ref-countries'],
-    queryFn: async () => {
-      const { data } = await supabase.from('countries').select('id, name_ar, name_en').order('name_en');
-      return (data ?? []) as RefRow[];
-    },
-    staleTime: 5 * 60_000,
-  });
-  const { data: cities = [] } = useQuery({
-    queryKey: ['ref-cities', form.country_id],
-    queryFn: async () => {
-      if (!form.country_id) return [] as CityRow[];
-      const { data } = await supabase.from('cities')
-        .select('id, name_ar, name_en, country_id')
-        .eq('country_id', form.country_id)
-        .order('name_en');
-      return (data ?? []) as CityRow[];
-    },
-    enabled: !!form.country_id,
-    staleTime: 5 * 60_000,
-  });
-
   // Dirty + completeness
   const dirty = useMemo(() => {
     if (!profile) return false;
@@ -175,8 +152,6 @@ const DashboardProfile: React.FC = () => {
       [form.phone, profile.phone ?? ''],
       [form.avatar_url, profile.avatar_url ?? ''],
       [form.preferred_language, (profile.preferred_language as 'ar' | 'en') ?? 'ar'],
-      [form.country_id, profile.country_id ?? null],
-      [form.city_id, profile.city_id ?? null],
       [form.national_id, profile.national_id ?? ''],
       [form.national_id_type, (profile.national_id_type ?? '')],
       [form.vat_number, profile.vat_number ?? ''],
@@ -199,8 +174,6 @@ const DashboardProfile: React.FC = () => {
       !!form.username,
       !!form.email.trim(),
       !!form.phone.trim(),
-      !!form.country_id,
-      !!form.city_id,
       !!form.national_id.trim(),
       !!(form.district.trim() || form.address_line.trim() || form.short_national_address.trim()),
     ];
