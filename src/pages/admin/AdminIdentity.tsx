@@ -19,7 +19,7 @@
  * shortcuts and bookmarks keep working.
  */
 import React, { useState, useMemo, useEffect, useRef, useTransition, useCallback } from 'react';
-import { Link, useSearchParams, useNavigate, Navigate } from 'react-router-dom';
+import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -127,7 +127,6 @@ const AdminIdentity: React.FC = () => {
   });
   const { isSuperAdmin } = useAuth();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const [, startTransition] = useTransition();
   const queryClient = useQueryClient();
 
