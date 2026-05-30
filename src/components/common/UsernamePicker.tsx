@@ -51,6 +51,13 @@ export interface UsernamePickerProps {
     /** Raw machine token (e.g. `taken`, `username_unavailable`) — surfaced inline. */
     rawCode?: string | null;
   } | null;
+  /**
+   * The username the owner already has saved. When the current `value`
+   * matches it (case-insensitive), the picker shows a "Reserved for you"
+   * state instead of "Available" — so users understand the name is
+   * already booked under their account.
+   */
+  currentUsername?: string | null;
 }
 
 /** Sanitize as the user types — keep input strict but forgiving. */
@@ -102,13 +109,14 @@ function reasonMessage(reason: UsernameCheckReason | null, isRTL: boolean): stri
   return isRTL ? ar[reason] : en[reason];
 }
 
-type Status = 'idle' | 'invalid' | 'checking' | 'available' | 'taken';
+type Status = 'idle' | 'invalid' | 'checking' | 'available' | 'taken' | 'reserved';
 
 export const UsernamePicker: React.FC<UsernamePickerProps> = ({
   value, onChange, onValidChange, excludeUserId = null,
   isRTL = false, label, required, placeholder = 'my-handle',
   hidePreview = false, className, autoFocus,
   serverError = null,
+  currentUsername = null,
 }) => {
   const [status, setStatus] = useState<Status>('idle');
   const [reason, setReason] = useState<UsernameCheckReason | null>(null);
@@ -155,6 +163,15 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
       return;
     }
 
+    // ── Reserved for the current owner (no debounce, no network) ──
+    if (currentUsername && value.toLowerCase() === currentUsername.toLowerCase()) {
+      setStatus('reserved');
+      setReason(null);
+      setCachedSuggestions([]);
+      onValidChangeRef.current?.({ value, isValid: true, isAvailable: true });
+      return;
+    }
+
     setStatus('checking');
     setReason(null);
 
@@ -194,7 +211,7 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
     return () => {
       if (aborter.current) window.clearTimeout(aborter.current);
     };
-  }, [value, excludeUserId, serverError]);
+  }, [value, excludeUserId, serverError, currentUsername]);
 
   // Prefer cached suggestions (from server failure or last live check); fall back to live for any 'taken'.
   const suggestions = status === 'taken'
@@ -210,6 +227,7 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
     switch (status) {
       case 'checking':  return <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" aria-hidden />;
       case 'available': return <Check className="w-4 h-4 text-success" aria-hidden />;
+      case 'reserved':  return <Check className="w-4 h-4 text-primary" aria-hidden />;
       case 'taken':
       case 'invalid':   return <X className="w-4 h-4 text-destructive" aria-hidden />;
       default:          return null;
@@ -239,6 +257,12 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
           <Badge variant="outline" className="border-success/40 text-success text-[10px] h-5 px-1.5 gap-1">
             <Check className="w-3 h-3" />
             {isRTL ? 'متاح' : 'Available'}
+          </Badge>
+        )}
+        {status === 'reserved' && (
+          <Badge variant="outline" className="border-primary/40 text-primary text-[10px] h-5 px-1.5 gap-1">
+            <Check className="w-3 h-3" />
+            {isRTL ? 'تم حجزه لك' : 'Reserved for you'}
           </Badge>
         )}
         {(status === 'taken' || status === 'invalid') && reason && (
