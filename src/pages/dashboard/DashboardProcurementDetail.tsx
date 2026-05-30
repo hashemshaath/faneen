@@ -85,6 +85,8 @@ export default function DashboardProcurementDetail() {
   const [brandLabels, setBrandLabels] = useState<
     Record<string, { name_ar: string; name_en: string; ref_id: string | null; slug: string }>
   >({});
+  // RFQ-BRAND-PICKER-1F — disable approve/reject buttons while a review is in flight.
+  const [reviewingLineId, setReviewingLineId] = useState<string | null>(null);
 
   const tx = useMemo(
     () => ({
@@ -327,11 +329,17 @@ export default function DashboardProcurementDetail() {
   const onReviewBrandEquivalence = useCallback(
     async (line: ProcurementSupplierQuoteItemRow, decision: 'approved' | 'rejected') => {
       if (!user?.id) return;
+      // RFQ-BRAND-PICKER-1F — guard double-submits + restrict to pending only.
+      if (line.brand_review_status !== 'pending') return;
+      if (reviewingLineId) return;
+      setReviewingLineId(line.id);
       const { data, error: err } = await reviewSupplierQuoteItemBrandEquivalence(line.id, {
         decision,
         reviewer_id: user.id,
       });
+      setReviewingLineId(null);
       if (err || !data) {
+        // Never surface raw DB errors — use a generic localized message.
         setError(tx.errLoad);
         return;
       }
@@ -344,7 +352,7 @@ export default function DashboardProcurementDetail() {
         rfq_id: activeRfqId,
       });
     },
-    [user?.id, tx.errLoad, activeRfqId],
+    [user?.id, tx.errLoad, activeRfqId, reviewingLineId],
   );
 
   const onCreateRfq = useCallback(async () => {
@@ -861,6 +869,8 @@ export default function DashboardProcurementDetail() {
                                     <button
                                       type="button"
                                       onClick={() => void onReviewBrandEquivalence(c.line!, 'approved')}
+                                      disabled={reviewingLineId === c.line.id}
+                                      data-testid="proc-quote-item-brand-approve"
                                       className="rounded-full border border-emerald-300 px-2 py-0.5 text-[10px] text-emerald-700 hover:bg-emerald-50"
                                     >
                                       {tx.approveBrand}
@@ -868,6 +878,8 @@ export default function DashboardProcurementDetail() {
                                     <button
                                       type="button"
                                       onClick={() => void onReviewBrandEquivalence(c.line!, 'rejected')}
+                                      disabled={reviewingLineId === c.line.id}
+                                      data-testid="proc-quote-item-brand-reject"
                                       className="rounded-full border border-rose-300 px-2 py-0.5 text-[10px] text-rose-700 hover:bg-rose-50"
                                     >
                                       {tx.rejectBrand}

@@ -8,6 +8,8 @@ import type {
   BrandMatchStatus,
   BrandReviewStatus,
 } from '../types';
+import type { BrandLock } from '@/modules/brands/lib/brandSelectionRules';
+import { classifyBrandEquivalence } from './brandEquivalence';
 
 const SELECT =
   'id, business_id, quote_id, rfq_item_id, unit_price, quantity, total_price, notes, ' +
@@ -30,6 +32,69 @@ export function sanitizeProposedBrandName(raw: unknown): string | null {
   return cleaned.slice(0, PROPOSED_BRAND_NAME_MAX);
 }
 
+/**
+ * RFQ-BRAND-PICKER-1F — sanitize free-text review notes the same way as
+ * proposed brand names (strip control chars, collapse whitespace, cap length).
+ */
+export function sanitizeBrandReviewNote(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const cleaned = raw
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001F\u007F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned) return null;
+  return cleaned.slice(0, REVIEW_NOTE_MAX);
+}
+
+/**
+ * RFQ-BRAND-PICKER-1F — fail-safe brand classification used at persist time.
+ * When the caller supplies enough context (requested_brand_id + lock) we
+ * compute `brand_match_status` + an initial `brand_review_status`
+ * deterministically. When context is missing we DO NOT guess — we keep the
+ * caller-supplied value or leave it null.
+ */
+export interface PersistBrandClassificationContext {
+  requested_brand_id?: string | null;
+  brand_lock?: BrandLock | null;
+  proposed_brand_id?: string | null;
+  proposed_brand_name?: string | null;
+  /** Optional caller-supplied fallback when no context is available. */
+  fallback_match_status?: BrandMatchStatus | null;
+  /** Optional caller-supplied fallback review status. */
+  fallback_review_status?: BrandReviewStatus;
+}
+
+export interface PersistedBrandClassification {
+  brand_match_status: BrandMatchStatus | null;
+  brand_review_status: BrandReviewStatus;
+}
+
+export function computePersistedBrandClassification(
+  ctx: PersistBrandClassificationContext,
+): PersistedBrandClassification {
+  const hasContext =
+    ctx.requested_brand_id !== undefined && ctx.brand_lock !== undefined;
+  if (!hasContext) {
+    // No requested-brand context → never auto-claim a match. Fall back to
+    // caller-supplied status or null/not_required.
+    return {
+      brand_match_status: ctx.fallback_match_status ?? null,
+      brand_review_status: ctx.fallback_review_status ?? 'not_required',
+    };
+  }
+  const result = classifyBrandEquivalence({
+    requested_brand_id: ctx.requested_brand_id ?? null,
+    brand_lock: (ctx.brand_lock ?? null) as BrandLock | null,
+    proposed_brand_id: ctx.proposed_brand_id ?? null,
+    proposed_brand_name: ctx.proposed_brand_name ?? null,
+  });
+  return {
+    brand_match_status: result.brandMatchStatus,
+    brand_review_status: result.reviewRequired ? 'pending' : 'not_required',
+  };
+}
+
 export interface SubmitQuoteItemInput {
   business_id: string;
   quote_id: string;
@@ -45,6 +110,14 @@ export interface SubmitQuoteItemInput {
   brand_match_status?: BrandMatchStatus | null;
   /** RFQ-BRAND-PICKER-1E — initial review status (defaults to 'not_required'). */
   brand_review_status?: BrandReviewStatus;
+  /**
+   * RFQ-BRAND-PICKER-1F — optional RFQ-side context. When provided we
+   * auto-classify match + review status using `classifyBrandEquivalence`
+   * (caller-supplied `brand_match_status` becomes the fallback only when
+   * no context is supplied).
+   */
+  requested_brand_id?: string | null;
+  brand_lock?: BrandLock | null;
 }
 
 /** Computes `total_price` from unit_price * quantity when unit_price is given. */
@@ -79,6 +152,14 @@ export async function submitQuoteItems(
   const rows = inputs.map((i) => {
     const proposed_brand_id = i.proposed_brand_id ?? null;
     const proposed_brand_name = sanitizeProposedBrandName(i.proposed_brand_name);
+    const cls = computePersistedBrandClassification({
+      requested_brand_id: i.requested_brand_id,
+      brand_lock: i.brand_lock,
+      proposed_brand_id,
+      proposed_brand_name,
+      fallback_match_status: i.brand_match_status ?? null,
+      fallback_review_status: i.brand_review_status,
+    });
     return {
       business_id: i.business_id,
       quote_id: i.quote_id,
@@ -89,8 +170,8 @@ export async function submitQuoteItems(
       notes: i.notes ?? null,
       proposed_brand_id,
       proposed_brand_name,
-      brand_match_status: i.brand_match_status ?? null,
-      brand_review_status: i.brand_review_status ?? 'not_required',
+      brand_match_status: cls.brand_match_status,
+      brand_review_status: cls.brand_review_status,
     };
   });
   const { data, error } = await supabase
@@ -113,6 +194,12 @@ export interface UpdateProposedBrandInput {
    * helper says a human must look at it.
    */
   brand_review_status?: Extract<BrandReviewStatus, 'not_required' | 'pending'>;
+  /**
+   * RFQ-BRAND-PICKER-1F — when both are provided, recompute match status
+   * + review status server-side instead of trusting the caller.
+   */
+  requested_brand_id?: string | null;
+  brand_lock?: BrandLock | null;
 }
 
 /**
@@ -125,7 +212,6 @@ export async function updateSupplierQuoteItemProposedBrand(
   input: UpdateProposedBrandInput,
 ): Promise<{ data: ProcurementSupplierQuoteItemRow | null; error: unknown }> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patch: Record<string, any> = {};
   if (input.proposed_brand_id !== undefined) {
     patch.proposed_brand_id = input.proposed_brand_id;
@@ -135,11 +221,33 @@ export async function updateSupplierQuoteItemProposedBrand(
   if (input.proposed_brand_name !== undefined) {
     patch.proposed_brand_name = sanitizeProposedBrandName(input.proposed_brand_name);
   }
-  if (input.brand_match_status !== undefined) {
-    patch.brand_match_status = input.brand_match_status;
-  }
-  if (input.brand_review_status !== undefined) {
-    patch.brand_review_status = input.brand_review_status;
+  const hasCtx =
+    input.requested_brand_id !== undefined && input.brand_lock !== undefined;
+  if (hasCtx) {
+    // RFQ-BRAND-PICKER-1F — recompute deterministically; never trust caller.
+    const cls = computePersistedBrandClassification({
+      requested_brand_id: input.requested_brand_id,
+      brand_lock: input.brand_lock,
+      proposed_brand_id:
+        input.proposed_brand_id !== undefined
+          ? input.proposed_brand_id
+          : null,
+      proposed_brand_name:
+        input.proposed_brand_name !== undefined
+          ? sanitizeProposedBrandName(input.proposed_brand_name)
+          : null,
+    });
+    patch.brand_match_status = cls.brand_match_status;
+    // Never auto-reopen an already-decided review from this path.
+    patch.brand_review_status =
+      cls.brand_review_status === 'pending' ? 'pending' : 'not_required';
+  } else {
+    if (input.brand_match_status !== undefined) {
+      patch.brand_match_status = input.brand_match_status;
+    }
+    if (input.brand_review_status !== undefined) {
+      patch.brand_review_status = input.brand_review_status;
+    }
   }
   if (Object.keys(patch).length === 0) {
     return { data: null, error: new Error('empty_patch') };
@@ -152,7 +260,7 @@ export async function updateSupplierQuoteItemProposedBrand(
     .maybeSingle();
   return {
     data: (data as unknown as ProcurementSupplierQuoteItemRow | null) ?? null,
-    error,
+    error: mapBrandReviewError(error),
   };
 }
 
@@ -160,6 +268,23 @@ export interface ReviewBrandEquivalenceInput {
   decision: 'approved' | 'rejected';
   reviewer_id: string;
   note?: string | null;
+}
+
+/**
+ * RFQ-BRAND-PICKER-1F — map opaque Postgres errors raised by the
+ * `tg_psqi_validate_brand_review_transition` trigger to a stable code so
+ * callers / UI never render raw DB messages.
+ */
+export function mapBrandReviewError(err: unknown): unknown {
+  if (!err || typeof err !== 'object') return err;
+  const msg = (err as { message?: string }).message ?? '';
+  if (/Invalid brand_review_status transition/i.test(msg)) {
+    return new Error('brand_review_transition_invalid');
+  }
+  if (/check_violation/i.test(msg) && /brand_review/i.test(msg)) {
+    return new Error('brand_review_transition_invalid');
+  }
+  return err;
 }
 
 /**
@@ -178,10 +303,7 @@ export async function reviewSupplierQuoteItemBrandEquivalence(
   if (!input.reviewer_id) {
     return { data: null, error: new Error('reviewer_required') };
   }
-  const note =
-    typeof input.note === 'string'
-      ? input.note.replace(/\s+/g, ' ').trim().slice(0, REVIEW_NOTE_MAX) || null
-      : null;
+  const note = sanitizeBrandReviewNote(input.note);
   const patch = {
     brand_review_status: input.decision,
     brand_match_status:
@@ -198,7 +320,36 @@ export async function reviewSupplierQuoteItemBrandEquivalence(
     .maybeSingle();
   return {
     data: (data as unknown as ProcurementSupplierQuoteItemRow | null) ?? null,
-    error,
+    error: mapBrandReviewError(error),
+  };
+}
+
+/**
+ * RFQ-BRAND-PICKER-1F — explicit override helper to move an already-decided
+ * (approved / rejected) review back to `pending`. Without calling this,
+ * UI/service callers cannot reopen a finalized review.
+ *
+ * `brand_reviewed_by` / `brand_reviewed_at` are intentionally cleared so
+ * audit fields only reflect the most recent finalized decision.
+ */
+export async function reopenSupplierQuoteItemBrandReview(
+  itemId: string,
+): Promise<{ data: ProcurementSupplierQuoteItemRow | null; error: unknown }> {
+  const patch = {
+    brand_review_status: 'pending' as const,
+    brand_reviewed_by: null,
+    brand_reviewed_at: null,
+    brand_review_note: null,
+  };
+  const { data, error } = await supabase
+    .from('procurement_supplier_quote_items')
+    .update(patch as never)
+    .eq('id', itemId)
+    .select(SELECT)
+    .maybeSingle();
+  return {
+    data: (data as unknown as ProcurementSupplierQuoteItemRow | null) ?? null,
+    error: mapBrandReviewError(error),
   };
 }
 
