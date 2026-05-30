@@ -185,8 +185,10 @@ export type Database = {
           additional_number: string | null
           address: string | null
           address_en: string | null
+          address_type: string
           building_number: string | null
           city_id: string | null
+          country_code: string
           country_id: string | null
           created_at: string
           created_by: string | null
@@ -194,9 +196,12 @@ export type Database = {
           district_en: string | null
           id: string
           is_primary: boolean
+          is_verified: boolean
           label: string | null
           latitude: number | null
           longitude: number | null
+          national_address_raw: Json | null
+          national_address_source: string | null
           owner_id: string
           owner_type: string
           post_code: string | null
@@ -207,14 +212,17 @@ export type Database = {
           street_name: string | null
           street_name_en: string | null
           updated_at: string
+          updated_by: string | null
           verified_at: string | null
         }
         Insert: {
           additional_number?: string | null
           address?: string | null
           address_en?: string | null
+          address_type?: string
           building_number?: string | null
           city_id?: string | null
+          country_code?: string
           country_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -222,9 +230,12 @@ export type Database = {
           district_en?: string | null
           id?: string
           is_primary?: boolean
+          is_verified?: boolean
           label?: string | null
           latitude?: number | null
           longitude?: number | null
+          national_address_raw?: Json | null
+          national_address_source?: string | null
           owner_id: string
           owner_type: string
           post_code?: string | null
@@ -235,14 +246,17 @@ export type Database = {
           street_name?: string | null
           street_name_en?: string | null
           updated_at?: string
+          updated_by?: string | null
           verified_at?: string | null
         }
         Update: {
           additional_number?: string | null
           address?: string | null
           address_en?: string | null
+          address_type?: string
           building_number?: string | null
           city_id?: string | null
+          country_code?: string
           country_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -250,9 +264,12 @@ export type Database = {
           district_en?: string | null
           id?: string
           is_primary?: boolean
+          is_verified?: boolean
           label?: string | null
           latitude?: number | null
           longitude?: number | null
+          national_address_raw?: Json | null
+          national_address_source?: string | null
           owner_id?: string
           owner_type?: string
           post_code?: string | null
@@ -263,6 +280,7 @@ export type Database = {
           street_name?: string | null
           street_name_en?: string | null
           updated_at?: string
+          updated_by?: string | null
           verified_at?: string | null
         }
         Relationships: []
@@ -5920,6 +5938,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      districts: {
+        Row: {
+          city: string
+          city_ar: string | null
+          city_en: string | null
+          country_code: string
+          created_at: string
+          district_ar: string
+          district_en: string | null
+          id: string
+          is_active: boolean
+          region: string
+          region_ar: string | null
+          region_en: string | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          city: string
+          city_ar?: string | null
+          city_en?: string | null
+          country_code?: string
+          created_at?: string
+          district_ar: string
+          district_en?: string | null
+          id?: string
+          is_active?: boolean
+          region: string
+          region_ar?: string | null
+          region_en?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string
+          city_ar?: string | null
+          city_en?: string | null
+          country_code?: string
+          created_at?: string
+          district_ar?: string
+          district_en?: string | null
+          id?: string
+          is_active?: boolean
+          region?: string
+          region_ar?: string | null
+          region_en?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       email_deliverability_alerts: {
         Row: {
@@ -15339,6 +15408,19 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      ensure_district: {
+        Args: {
+          _city: string
+          _city_en?: string
+          _country_code: string
+          _district_ar: string
+          _district_en?: string
+          _region: string
+          _region_en?: string
+          _source?: string
+        }
+        Returns: string
       }
       expire_client_invitations: { Args: never; Returns: Json }
       find_auth_user_email_by_identifier: {
