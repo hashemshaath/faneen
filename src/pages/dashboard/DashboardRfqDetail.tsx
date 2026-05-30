@@ -149,7 +149,7 @@ const DashboardRfqDetail: React.FC = () => {
                       )}
                     </div>
                     {!awarded && !accepted && (
-                      <Button onClick={() => acceptQuote && acceptMut.mutate(q.id)} disabled={acceptMut.isPending} className="h-11 rounded-xl">
+                      <Button onClick={() => acceptMut.mutate(q.id)} disabled={acceptMut.isPending} className="h-11 rounded-xl">
                         <Check className="w-4 h-4 me-2" />
                         <Bi ar="اعتماد العرض" en="Accept Quote" />
                       </Button>
