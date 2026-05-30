@@ -315,7 +315,7 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
       </div>
 
       {/* Rules checklist — only show while typing or on invalid */}
-      {(status === 'invalid' || (value.length > 0 && status !== 'available')) && (
+      {(status === 'invalid' || (value.length > 0 && status !== 'available' && status !== 'reserved')) && (
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
           {rules.map((r) => (
             <li key={r.id} className={cn(
