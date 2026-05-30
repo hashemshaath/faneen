@@ -9,6 +9,9 @@ import { supabase } from '@/integrations/supabase/client';
 export interface ListEntityAccessRequestsOptions {
   status?: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'all';
   limit?: number;
+  offset?: number;
+  /** When true, returns a `count` of matching rows (exact). */
+  withCount?: boolean;
 }
 
 export interface EntityAccessRequestListRow {
@@ -38,14 +41,18 @@ const SAFE_SELECT =
 
 export async function listEntityAccessRequests(
   options: ListEntityAccessRequestsOptions = {},
-): Promise<{ data: EntityAccessRequestListRow[]; error: unknown }> {
-  const { status = 'pending', limit = 100 } = options;
+): Promise<{ data: EntityAccessRequestListRow[]; count: number | null; error: unknown }> {
+  const { status = 'pending', limit = 100, offset = 0, withCount = false } = options;
   let q = supabase
     .from('entity_access_requests')
-    .select(SAFE_SELECT)
+    .select(SAFE_SELECT, withCount ? { count: 'exact' } : undefined)
     .order('created_at', { ascending: false })
-    .limit(limit);
+    .range(offset, offset + Math.max(0, limit - 1));
   if (status !== 'all') q = q.eq('status', status);
-  const { data, error } = await q;
-  return { data: (data as unknown as EntityAccessRequestListRow[]) ?? [], error };
+  const { data, error, count } = await q;
+  return {
+    data: (data as unknown as EntityAccessRequestListRow[]) ?? [],
+    count: count ?? null,
+    error,
+  };
 }

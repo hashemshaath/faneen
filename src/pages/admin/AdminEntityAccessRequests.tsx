@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -12,12 +12,14 @@ import { Input } from '@/components/ui/input';
 import {
   Loader2, Check, X, Mail, Building2, RefreshCw, UserPlus,
   Clock, CheckCircle2, XCircle, Inbox, Filter, Search as SearchIcon,
-  Download, ArrowUpDown, ExternalLink, CheckCheck,
+  Download, ArrowUpDown, ExternalLink, CheckCheck, ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   listEntityAccessRequests,
   reviewEntityAccessRequest,
+  countEntityAccessRequests,
+  type AccessRequestStatusCounts,
   type EntityAccessRequestListRow,
 } from '@/modules/entities/services/access';
 
@@ -28,6 +30,10 @@ import {
  */
 type StatusFilter = 'pending' | 'approved' | 'rejected' | 'all';
 type SortOrder = 'newest' | 'oldest';
+
+const PAGE_SIZE = 25;
+const STATUS_VALUES: StatusFilter[] = ['pending', 'approved', 'rejected', 'all'];
+const SORT_VALUES: SortOrder[] = ['newest', 'oldest'];
 
 const STATUS_LABEL: Record<string, { ar: string; en: string }> = {
   pending: { ar: 'قيد المراجعة', en: 'Pending' },
@@ -49,26 +55,81 @@ const AdminEntityAccessRequests: React.FC = () => {
   usePageMeta({ title: isRTL ? 'طلبات الانضمام للمنشآت' : 'Entity Access Requests', noindex: true });
   useNoIndex();
 
+  // Persist filter, search query, and sort in the URL so navigating away and
+  // back (or sharing the link with a teammate) restores the exact view.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialStatus = (searchParams.get('status') ?? 'pending') as StatusFilter;
+  const initialQuery = searchParams.get('q') ?? '';
+  const initialSort = (searchParams.get('sort') ?? 'newest') as SortOrder;
+
   const [rows, setRows] = useState<EntityAccessRequestListRow[]>([]);
-  const [allRows, setAllRows] = useState<EntityAccessRequestListRow[]>([]);
+  const [counts, setCounts] = useState<AccessRequestStatusCounts>({
+    pending: 0, approved: 0, rejected: 0, cancelled: 0, total: 0,
+  });
+  const [totalForFilter, setTotalForFilter] = useState<number>(0);
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState<StatusFilter>('pending');
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [filter, setFilterState] = useState<StatusFilter>(
+    STATUS_VALUES.includes(initialStatus) ? initialStatus : 'pending',
+  );
   const [acting, setActing] = useState<string | null>(null);
-  const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<SortOrder>('newest');
+  const [query, setQueryState] = useState(initialQuery);
+  const [sort, setSortState] = useState<SortOrder>(
+    SORT_VALUES.includes(initialSort) ? initialSort : 'newest',
+  );
   const [bulkRunning, setBulkRunning] = useState(false);
+
+  // Sync state changes back into URL params (without spamming history).
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (filter !== 'pending') next.set('status', filter); else next.delete('status');
+    if (query) next.set('q', query); else next.delete('q');
+    if (sort !== 'newest') next.set('sort', sort); else next.delete('sort');
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, query, sort]);
+
+  const setFilter = (next: StatusFilter) => {
+    // The search query is intentionally preserved across status switches.
+    setFilterState(next);
+  };
+  const setQuery = (next: string) => setQueryState(next);
+  const setSort = (next: SortOrder | ((s: SortOrder) => SortOrder)) => {
+    setSortState((prev) => (typeof next === 'function' ? next(prev) : next));
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [filtered, all] = await Promise.all([
-      listEntityAccessRequests({ status: filter }),
-      filter === 'all' ? Promise.resolve({ data: [], error: null }) : listEntityAccessRequests({ status: 'all' }),
+    const [page, countsRes] = await Promise.all([
+      listEntityAccessRequests({ status: filter, limit: PAGE_SIZE, offset: 0, withCount: true }),
+      countEntityAccessRequests(),
     ]);
-    if (filtered.error) toast.error(isRTL ? 'تعذّر تحميل الطلبات' : 'Could not load requests');
-    setRows(filtered.data);
-    setAllRows(filter === 'all' ? filtered.data : all.data);
+    if (page.error) toast.error(isRTL ? 'تعذّر تحميل الطلبات' : 'Could not load requests');
+    setRows(page.data);
+    setTotalForFilter(page.count ?? page.data.length);
+    setCounts(countsRes);
     setLoading(false);
   }, [filter, isRTL]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || rows.length >= totalForFilter) return;
+    setLoadingMore(true);
+    const next = await listEntityAccessRequests({
+      status: filter,
+      limit: PAGE_SIZE,
+      offset: rows.length,
+    });
+    if (next.error) {
+      toast.error(isRTL ? 'تعذّر تحميل المزيد' : 'Could not load more');
+    } else {
+      // Dedupe defensively in case of overlapping rows.
+      setRows((prev) => {
+        const seen = new Set(prev.map((r) => r.id));
+        return prev.concat(next.data.filter((r) => !seen.has(r.id)));
+      });
+    }
+    setLoadingMore(false);
+  }, [filter, isRTL, loadingMore, rows.length, totalForFilter]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -97,14 +158,6 @@ const AdminEntityAccessRequests: React.FC = () => {
     });
     return sorted;
   }, [rows, query, sort]);
-
-  const counts = useMemo(() => {
-    const c = { pending: 0, approved: 0, rejected: 0, cancelled: 0, total: allRows.length };
-    for (const r of allRows) {
-      if (r.status in c) (c as Record<string, number>)[r.status] += 1;
-    }
-    return c;
-  }, [allRows]);
 
   // Pending rows that already have a linked entity → safe to bulk-approve.
   const bulkApprovable = useMemo(
@@ -328,7 +381,10 @@ const AdminEntityAccessRequests: React.FC = () => {
             <Badge variant="outline" className="text-[10px]">
               {isRTL ? (filters.find(f => f.id === filter)?.ar ?? '') : (filters.find(f => f.id === filter)?.en ?? '')}
             </Badge>
-            <span className="tech-content">• {visibleRows.length}/{rows.length}</span>
+            <span className="tech-content">
+              • {visibleRows.length}/{rows.length}
+              {totalForFilter > rows.length && ` (${isRTL ? 'من أصل' : 'of'} ${totalForFilter})`}
+            </span>
           </div>
         </div>
 
@@ -444,6 +500,29 @@ const AdminEntityAccessRequests: React.FC = () => {
             );
           })}
           </ul>
+        )}
+
+        {/* Pagination footer — Load more */}
+        {!loading && rows.length < totalForFilter && visibleRows.length > 0 && (
+          <div className="flex flex-col items-center gap-1.5 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="rounded-xl gap-1.5 min-w-[180px]"
+            >
+              {loadingMore
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <ChevronDown className="w-3.5 h-3.5" />}
+              {isRTL
+                ? `تحميل المزيد (${totalForFilter - rows.length})`
+                : `Load more (${totalForFilter - rows.length})`}
+            </Button>
+            <p className="text-[10px] text-muted-foreground tech-content">
+              {rows.length} / {totalForFilter}
+            </p>
+          </div>
         )}
       </div>
     </DashboardLayout>
