@@ -309,3 +309,107 @@ export async function findPossibleDuplicateBrands(payload: {
     return a.includes(nAr) || nAr.includes(a) || (!!nEn && (e.includes(nEn) || nEn.includes(e)));
   });
 }
+
+// ----------------------- PROVIDER ⇄ SERVICE LINKS -----------------------
+
+/**
+ * Links between a business_service and a brand. Used by ServiceBrandsPicker.
+ */
+export async function listServiceBrandLinks(businessServiceId: string) {
+  const { data, error } = await sb
+    .from('business_service_brands')
+    .select(
+      'id, brand_id, brand:brand_catalog!business_service_brands_brand_id_fkey(id, ref_id, name_ar, name_en, logo_url, website, sector_id, is_active, status)',
+    )
+    .eq('business_service_id', businessServiceId);
+  if (error) throw error;
+  return (data ?? []) as Array<{
+    id: string;
+    brand_id: string;
+    brand: (Pick<Brand, 'id' | 'ref_id' | 'name_ar' | 'name_en' | 'logo_url' | 'website' | 'sector_id' | 'status'> & { is_active: boolean }) | null;
+  }>;
+}
+
+/**
+ * Search approved brands only (uses brands_public view). Optional sector filter.
+ */
+export async function searchApprovedBrandsForPicker(args: {
+  sectorId: string | null;
+  q: string;
+  limit?: number;
+}) {
+  let q = sb
+    .from('brands_public')
+    .select('id, ref_id, name_ar, name_en, logo_url, website, sector_id')
+    .order('name_ar', { ascending: true })
+    .limit(args.limit ?? 40);
+  if (args.sectorId) q = q.or(`sector_id.eq.${args.sectorId},sector_id.is.null`);
+  const term = args.q.trim();
+  if (term) q = q.or(`name_ar.ilike.%${term}%,name_en.ilike.%${term}%`);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as Array<
+    Pick<Brand, 'id' | 'ref_id' | 'name_ar' | 'name_en' | 'logo_url' | 'website' | 'sector_id'>
+  >;
+}
+
+export async function linkBrandToService(args: {
+  businessServiceId: string;
+  businessId: string;
+  brandId: string;
+}) {
+  const { error } = await sb
+    .from('business_service_brands')
+    .insert({
+      business_service_id: args.businessServiceId,
+      business_id: args.businessId,
+      brand_id: args.brandId,
+    });
+  if (error) throw error;
+}
+
+export async function unlinkBrandFromService(linkId: string) {
+  const { error } = await sb.from('business_service_brands').delete().eq('id', linkId);
+  if (error) throw error;
+}
+
+/**
+ * Provider quick-request from the inline ServiceBrandsPicker.
+ * Creates a brand_addition_request bound to the business_service and returns the row.
+ * The caller may then create a support ticket and call attachTicketRefToBrandRequest.
+ */
+export async function createServiceBrandRequest(payload: {
+  businessId: string;
+  userId: string;
+  businessServiceId: string;
+  sectorId: string | null;
+  name_ar: string;
+  name_en?: string | null;
+  website?: string | null;
+}) {
+  const { data, error } = await sb
+    .from('brand_addition_requests')
+    .insert({
+      request_type: 'create_brand',
+      business_id: payload.businessId,
+      user_id: payload.userId,
+      business_service_id: payload.businessServiceId,
+      sector_id: payload.sectorId,
+      name_ar: payload.name_ar,
+      name_en: payload.name_en ?? null,
+      website: payload.website ?? null,
+      status: 'pending',
+    })
+    .select('id, ref_id')
+    .single();
+  if (error) throw error;
+  return data as { id: string; ref_id: string | null };
+}
+
+export async function attachTicketRefToBrandRequest(requestId: string, ticketRefId: string) {
+  const { error } = await sb
+    .from('brand_addition_requests')
+    .update({ ticket_ref_id: ticketRefId })
+    .eq('id', requestId);
+  if (error) throw error;
+}

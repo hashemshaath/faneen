@@ -1,101 +1,91 @@
-# BRANDS-GOVERNANCE-1 — Phased Plan
+# BRANDS-GOVERNANCE-2 — Audit Report & Phased Plan
 
-This is a large, governance-heavy task. I'll execute it in strict phases — **audit first**, **decide second**, **migrate third**, **build UI last** — and stop for your approval between Phase 1 (audit report) and Phase 2 (migrations), because the entire downstream design depends on the audit findings.
+## 1) Re-audit of shipped V1
 
-## Phase 1 — System & Database Audit (read-only, no code changes)
+### Tables present (confirmed in DB)
+- `brand_catalog` — full set: `id, ref_id, name_ar, name_en, slug, logo_url, website, sector_id, is_active, created_by, created_at, updated_at, description_ar/en, country_of_origin_code/name_ar/name_en, brand_owner_company, founded_year, is_local, is_verified, status, verification_status, source, submitted_by, approved_by, …`
+- `brand_manufacturing_countries` — present
+- `brand_sector_links` — present
+- `brand_audit_logs` — `brand_id, brand_request_id, provider_brand_link_id, actor_id, action, old_values, new_values, created_at`
+- `business_service_brands` — extended (PBL- ref_id, relationship_type, authorization fields)
+- `brand_addition_requests` — extended: `request_type, brand_id, proposed_country_of_origin_code, proposed_manufacturing_countries (jsonb), proposed_sector_ids/service_ids, relationship_type, documents (jsonb), notes, admin_notes`
+- `sectors` registry — present
+- `brands_public` view — correctly filters `WHERE status='approved'` ✅
 
-I will spawn parallel investigations to produce an audit report covering:
+### RPCs present
+`admin_approve_brand(_brand_id)`, `admin_reject_brand(_brand_id,_reason)`, `admin_archive_brand(_brand_id)`, `admin_merge_brands(_source_id,_target_id)`, `admin_approve_provider_brand_link(_link_id)`, `admin_reject_provider_brand_link(_link_id,_reason)`, `approve_brand_addition_request(p_request_id,p_admin_note)`, `reject_brand_addition_request(p_request_id,p_reason)`, ref_id triggers.
 
-1. **Sectors / services taxonomy** — discover canonical tables (`service_catalog`, `categories`, `business_services`, `businesses.sub_services`, `onboarding-sectors.ts`, etc.), their fields (ar/en, slug, ref_id presence), and how providers currently attach to them.
-2. **Ref-ID system** — confirm `next_ref_id()` generator, existing prefixes from `docs/reference-id-architecture.md` (USR, ENT, LED, QTE, CRN, TKT…), sequence pattern (start 1000, 7 digits), trigger vs. app generation. Propose **BRD-**, **BRQ-**, **PBL-** only if no existing prefix fits.
-3. **Notifications** — locate `src/modules/notifications/*`, `createNotification`, event-naming convention, bilingual template pattern, recipient resolution. Reuse, do not fork.
-4. **Operations / admin review queues** — inspect `AdminServiceRequests.tsx`, `help_feature_requests`, `brand_addition_requests` (already created last turn!), SLA log, operations observability. Decide whether to **extend the existing `brand_addition_requests`/`brand_catalog` tables from the previous migration** instead of creating parallel ones.
-5. **Permissions / RLS** — `user_roles`, `has_role`, admin vs. provider scopes, `business_staff` membership.
-6. **Provider/business model** — confirm `businesses` is canonical (it is), FK target for provider links.
+### Routes wired
+- `/admin/brands` ✅
+- `/dashboard/brands` ✅
+- `/brands`, `/brands/:slug` exist BUT are the **legacy private-sectors pages** (use `listSpecializations` / `listDistributors`, not `brand_catalog`). Not yet wired to the new registry.
+- `/admin/brands/:id` ❌ missing
+- `/admin/brand-requests` ❌ missing (AdminServiceRequests covers service requests, not brand requests yet — needs verification)
 
-**Output:** a written audit report posted in chat, plus the concrete architecture decisions table the spec requires (canonical sector table, ref_id generator, brand prefix, notification service, operations queue, RLS strategy).
+### Direct Supabase access for brand tables outside the service layer
+Only **1 file**: `src/components/dashboard/ServiceBrandsPicker.tsx` — 7 direct calls to `business_service_brands`, `brand_catalog`, `brand_addition_requests`.
+All other access goes through `src/modules/brands/services/brandsService.ts` ✅.
 
-⚠️ **Critical finding I already know:** in the previous turn we created `brand_catalog`, `business_service_brands`, and `brand_addition_requests`. The new spec wants a much richer `brands` registry (manufacturing countries, sector/service links, claim/merge/duplicate workflow, audit log, BRD-/BRQ- ref_ids). I will recommend **evolving** the existing tables rather than creating a parallel `brands` table — most likely by:
-- Renaming/extending `brand_catalog` → keep table name, add the missing columns (`name_en`, `slug`, `country_of_origin_*`, `status`, `verification_status`, `submitted_by`, `approved_by`, `merged_into_brand_id`, `metadata`, `ref_id` with BRD- prefix).
-- Renaming/extending `brand_addition_requests` → add `request_type`, `proposed_*`, `documents`, `admin_notes`, `ref_id` with BRQ- prefix.
-- Keeping `business_service_brands` as the provider↔brand link, extending it into `provider_brand_links` semantics (relationship_type, authorization_status, documents, ref_id PBL-).
+### 🔴 CRITICAL FINDINGS
 
-This avoids duplicate tables and keeps the work consistent with last turn's migration.
+1. **Pending/rejected brands are publicly readable.**
+   Policy `brand_catalog_select_public` is `USING (true)` — anyone querying `from('brand_catalog')` sees draft/pending/rejected/archived rows. Only `brands_public` view filters. Violates the constraint *"Do not expose pending/rejected brands publicly"*.
 
-## Phase 2 — Architecture decision (stop for your approval)
+2. **`business_service_brands` is fully publicly readable** (`bsb_select_public USING (true)`) — exposes provider→pending-brand links too.
 
-I'll post the decision table and the proposed migration outline. **You approve before I write any SQL.** This is mandatory because the spec explicitly forbids guessing table names and duplicating taxonomy.
+3. **`brand_addition_requests` INSERT policy requires `business_id` to match a business owned by the user** — blocks new `request_type='create'` flows where no business is attached yet, and blocks user-only flows (duplicate reports). Needs softening (e.g. `user_id = auth.uid() AND (business_id IS NULL OR owned-by-user)`).
 
-## Phase 3 — Database migrations (after approval)
+4. **Missing notification events** — current `brandsService` emits ~9; spec requires 11 (missing `brand_request_in_review`, `brand_request_needs_more_info`, possibly `brand_archived`, `brand_merged`).
 
-In a single migration file:
-- Extend `brand_catalog` to full `brands` spec (statuses: draft/pending/in_review/approved/rejected/archived/merged; verification: unverified/claimed/verified/official).
-- New `brand_manufacturing_countries`.
-- New `brand_sector_links` → FK to the canonical sector table found in audit.
-- New `brand_service_links` → FK to the canonical service table found in audit.
-- Extend `business_service_brands` → `provider_brand_links` shape (relationship_type, authorization_status, dates, document url, reviewed_by/_at, rejection_reason, ref_id).
-- Extend `brand_addition_requests` → full `brand_requests` shape (request_type, proposed_*, documents jsonb, admin_notes).
-- Reuse existing generic audit/activity log if suitable; otherwise add minimal `brand_audit_logs`.
-- Sequences + `BEFORE INSERT` triggers for BRD-/BRQ-/PBL- ref_ids, following the platform's existing 7-digit start-at-1000 pattern.
-- GRANTs (anon SELECT only on approved-brand-safe surfaces via views), RLS policies per the spec's matrix.
-- Public views: `brands_public`, `provider_brand_links_public` that filter to `status='approved'` and exclude PII / pending rows.
+5. **No isolation audit test, no service tests** for the brands module.
 
-## Phase 4 — Services layer
-
-`src/modules/brands/services/` with every function listed in the spec (list/search/get/admin CRUD/approve/reject/archive/merge, manufacturing countries, sector/service links, provider links, requests, duplicate detection). Helpers in `src/modules/brands/helpers/`. No page/component touches Supabase brand tables directly — enforced by a new isolation audit script `scripts/brands-isolation-audit.mjs`.
-
-## Phase 5 — Admin UI
-
-- `/admin/brands` — list + filters + bulk actions.
-- `/admin/brands/:id` — basic info, origin & manufacturing, sectors/services, provider relationships, requests/history, audit log.
-- `/admin/brand-requests` — review queue for all 5 request types, with duplicate-detection panel on approval.
-- Wire into existing admin sidebar/navigation (`AdminTabsContext`, sidebar groups). Update `src/test/adminSidebarLinks.test.ts`.
-
-## Phase 6 — Provider UI
-
-- `/dashboard/brands` — my approved brands, pending requests, search catalog, request new brand, request provider↔brand link with relationship type + authorization document upload (reuses existing storage bucket).
-- Replace the current `ServiceBrandsPicker` flow to call the new request services so everything funnels through one approval pipeline. Old `brand_addition_requests` rows are migrated in-place.
-
-## Phase 7 — Public / directory integration
-
-- Provider profile: "العلامات التجارية المعتمدة" section showing approved links only.
-- Sector / service pages: brand filter chip (approved brands only, country-of-origin badge).
-- Optional `/brands/:slug` public page — included if scope allows, otherwise deferred with reason.
-- Quote/RFQ buyer brand picker — **deferred** to next phase (explicitly listed as optional in spec) to keep this PR reviewable; noted in deferred items.
-
-## Phase 8 — Notifications & operations integration
-
-All 13 events from the spec wired through existing `createNotification` with bilingual ar/en templates. Admin/operations queue badges hooked into existing operations center counts. No new email logic — reuse existing transactional email wrapper only where needed (request approved/rejected).
-
-## Phase 9 — Duplicate detection
-
-`findPossibleDuplicateBrands` helper: normalizes Arabic name (strip شركة / مصنع / للتجارة / للصناعة / ألمنيوم / زجاج prefixes, normalize alef/yaa/taa marbuta), normalizes English name (lowercase, strip Co./Ltd.), compares against `name_ar`, `name_en`, and `slug` with trigram similarity (`pg_trgm`). Surfaced in admin approval screen.
-
-## Phase 10 — Tests & validation
-
-- Service-layer tests for each major flow (create → approve → link → merge).
-- Notification tests for each event.
-- Isolation audit script + CI hook.
-- Guard test: no duplicate sector/service tables, ref_id is DB-generated, no direct brand table access outside services.
-- Run `bunx vitest run` + existing sector/provider/notification/RLS isolation audits.
-
-## Phase 11 — Final report
-
-I'll deliver the 22-point report the spec demands (PASS/FAIL, audit results, decisions, migrations, RLS, prefixes with example IDs, services, UI, notifications, duplicate method, tests, direct-access count before→after, validation results, deferred items, next phase recommendation).
+### Other audit notes
+- `sectors` registry duplicates nothing destructively — old TS data still used in pages; sync is one-way (TS → DB).
+- No `updated_at` triggers verified on the new tables — needs confirmation.
+- No `pg_trgm` index for duplicate detection; current normalization is JS-only.
 
 ---
 
-## Technical notes
+## 2) Phased plan (proposed)
 
-- **Ref-ID generation:** reuses existing `next_ref_id(prefix text)` pattern. Sequences `brand_ref_seq`, `brand_request_ref_seq`, `provider_brand_link_ref_seq` starting at 1000000, 7-digit zero-padded → `BRD-1000001`, `BRQ-1000001`, `PBL-1000001`.
-- **Sector/service FKs:** will be set after audit confirms canonical tables. Most likely `service_catalog.id` for services; sectors live in `onboarding-sectors.ts` (TS data, not a DB table) — if no DB sector table exists this is a finding I'll surface in Phase 1 and we'll decide whether to (a) introduce a `sectors` table now or (b) store sector as a `text` slug FK to the TS source. **Defaulting to introducing a real `sectors` table** if missing, to keep brand_sector_links sound.
-- **Public exposure:** all anon reads go through `brands_public` / `provider_brand_links_public` views; raw tables get no anon grant. Matches `docs/database-inventory.md` posture.
-- **Migration safety:** existing `brand_catalog` / `brand_addition_requests` rows from last turn are preserved via `ALTER TABLE` + backfill (set status='approved' for any pre-existing rows admins have already accepted, 'pending' otherwise, generate ref_ids for all).
+Given the scope (12 sections, new pages, tests, RLS rewrites), I propose 3 phases. Each phase is independently shippable and reviewable.
+
+### Phase A — Security + Isolation hardening (do first, blocking)
+1. **Migration** — fix RLS:
+   - `brand_catalog_select_public`: restrict to `status='approved'` for non-admins; admins see all.
+   - `business_service_brands` public read: only when linked brand is `approved`.
+   - Soften `brr_insert_owner` to allow user-only requests (no business required).
+   - Add `updated_at` triggers where missing.
+2. **Refactor** `ServiceBrandsPicker.tsx` → use `brandsService` exclusively. Drop 7 direct calls.
+3. **Isolation audit test** `src/modules/brands/services/__tests__/brandsIsolationAudit.test.ts` — greps source for forbidden direct access outside allowed paths. Fails CI if regressed.
+4. **TypeScript triage** — run `tsc --noEmit`, categorize errors (A/B/C/D), fix A+B.
+
+### Phase B — Admin workflow completion
+5. **`/admin/brands/:id` detail page** — 7 sections per spec (header, basic, mfg countries, sector links, provider relationships, requests/history, audit log) + actions (approve/reject/archive/merge/edit), all via `brandsService`.
+6. **Brand requests queue** — audit `AdminServiceRequests`; if it doesn't cover brand requests, build `/admin/brand-requests` (filters, duplicate warnings, approve/reject/needs_more_info, admin notes).
+7. **Notifications** — add the 2–3 missing events, ensure bilingual titles/bodies + payload metadata, document recipient/link rules.
+8. **Ops Center** — pending counts + review links (no new SLA engine).
+
+### Phase C — Provider QA + data quality + tests
+9. **`/dashboard/brands` QA** — empty states, hide raw enums, ensure pending vs approved separation, document upload if available.
+10. **Duplicate detection** — extend Arabic/English normalization helpers (prefixes/legal suffixes/tatweel), surface candidate matches in admin review UI.
+11. **Service tests** — `brandsService.test.ts` + `brandHelpers.test.ts` covering listings, RPC dispatch, request creation, normalization.
+12. **Final validation** — `tsc --noEmit`, `vitest run`, manual checklist (15 items from spec §12).
 
 ---
 
-## What I need from you
+## 3) Technical notes
 
-**Approve this phased approach.** I'll then start Phase 1 (audit only, no code changes) and come back with the audit report + concrete architecture decisions for your sign-off before touching the database.
+- All new admin/provider DB writes route through `brandsService` — pages must not import `supabase` for brand tables.
+- Reuse `has_admin_access(auth.uid())` for admin gating; never re-implement.
+- Use existing `createNotification` only; do not add a parallel system.
+- Keep `ref_id` generation server-side (triggers `set_brand_ref_id`, `set_brand_request_ref_id`); never construct in frontend.
+- Do not delete the legacy `/brands` pages in this scope — they map to private-sectors, not brand registry. A separate decision is needed about whether to merge or keep both.
 
-If you'd rather skip the audit pause and have me run audit → decisions → migration in a single shot using my current understanding (with the risk of one rework cycle if I get a table name wrong), say "go straight through" and I will.
+---
+
+## 4) Confirmation needed before implementation
+
+1. **Approve Phase A first** (security + isolation + tsc triage), then I report and you green-light B and C separately? Or run A→B→C straight through in one large turn?
+2. **Legacy `/brands` & `/brands/:slug` pages** — leave untouched (they serve private-sectors content), or unify with the new brand registry? Recommend leaving untouched in this scope.
+3. **TypeScript pre-existing errors** — if `tsc --noEmit` reveals unrelated errors, fix only brand-related ones and document the rest? (matches spec rule)

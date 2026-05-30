@@ -17,23 +17,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  listServiceBrandLinks,
+  searchApprovedBrandsForPicker,
+  linkBrandToService,
+  unlinkBrandFromService,
+  createServiceBrandRequest,
+  attachTicketRefToBrandRequest,
+} from '@/modules/brands';
 
-interface Brand {
-  id: string;
-  ref_id: string | null;
-  name_ar: string;
-  name_en: string | null;
-  logo_url: string | null;
-  website: string | null;
-  sector_id: string | null;
-  is_active: boolean;
-}
-
-interface Link {
-  id: string;
-  brand_id: string;
-  brand: Brand | null;
-}
+type Brand = Awaited<ReturnType<typeof searchApprovedBrandsForPicker>>[number];
+type Link = Awaited<ReturnType<typeof listServiceBrandLinks>>[number];
 
 export interface ServiceBrandsPickerProps {
   businessServiceId: string;
@@ -55,14 +49,7 @@ export const ServiceBrandsPicker: React.FC<ServiceBrandsPickerProps> = ({
   const linksKey = ['service-brand-links', businessServiceId];
   const { data: links = [] } = useQuery({
     queryKey: linksKey,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('business_service_brands')
-        .select('id, brand_id, brand:brand_catalog!business_service_brands_brand_id_fkey(id, ref_id, name_ar, name_en, logo_url, website, sector_id, is_active)')
-        .eq('business_service_id', businessServiceId);
-      if (error) throw error;
-      return ((data ?? []) as unknown) as Link[];
-    },
+    queryFn: () => listServiceBrandLinks(businessServiceId),
     staleTime: 60_000,
   });
 
@@ -70,40 +57,23 @@ export const ServiceBrandsPicker: React.FC<ServiceBrandsPickerProps> = ({
 
   const { data: catalog = [], isFetching: searching } = useQuery({
     queryKey: ['brand-catalog-search', sectorId, search, open],
-    queryFn: async () => {
-      if (!open) return [] as Brand[];
-      let q = supabase
-        .from('brand_catalog')
-        .select('id, ref_id, name_ar, name_en, logo_url, website, sector_id, is_active')
-        .eq('is_active', true)
-        .order('name_ar', { ascending: true })
-        .limit(40);
-      if (sectorId) q = q.or(`sector_id.eq.${sectorId},sector_id.is.null`);
-      if (search.trim()) q = q.or(`name_ar.ilike.%${search}%,name_en.ilike.%${search}%`);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []) as Brand[];
-    },
+    queryFn: () =>
+      open
+        ? searchApprovedBrandsForPicker({ sectorId, q: search })
+        : Promise.resolve([] as Brand[]),
     enabled: open,
     staleTime: 30_000,
   });
 
   const linkMut = useMutation({
-    mutationFn: async (brandId: string) => {
-      const { error } = await supabase
-        .from('business_service_brands')
-        .insert({ business_service_id: businessServiceId, business_id: businessId, brand_id: brandId });
-      if (error) throw error;
-    },
+    mutationFn: (brandId: string) =>
+      linkBrandToService({ businessServiceId, businessId, brandId }),
     onSuccess: () => qc.invalidateQueries({ queryKey: linksKey }),
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
   const unlinkMut = useMutation({
-    mutationFn: async (linkId: string) => {
-      const { error } = await supabase.from('business_service_brands').delete().eq('id', linkId);
-      if (error) throw error;
-    },
+    mutationFn: (linkId: string) => unlinkBrandFromService(linkId),
     onSuccess: () => qc.invalidateQueries({ queryKey: linksKey }),
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
@@ -111,21 +81,15 @@ export const ServiceBrandsPicker: React.FC<ServiceBrandsPickerProps> = ({
   const requestMut = useMutation({
     mutationFn: async () => {
       if (!reqForm.name_ar.trim()) throw new Error(isRTL ? 'الاسم بالعربي مطلوب' : 'Arabic name required');
-      const { data: inserted, error: e1 } = await supabase
-        .from('brand_addition_requests')
-        .insert({
-          business_id: businessId,
-          user_id: userId,
-          business_service_id: businessServiceId,
-          sector_id: sectorId,
-          name_ar: reqForm.name_ar.trim(),
-          name_en: reqForm.name_en.trim() || null,
-          website: reqForm.website.trim() || null,
-        })
-        .select('id, ref_id')
-        .single();
-      if (e1) throw e1;
-      const req = inserted as { id: string; ref_id: string | null };
+      const req = await createServiceBrandRequest({
+        businessId,
+        userId,
+        businessServiceId,
+        sectorId,
+        name_ar: reqForm.name_ar.trim(),
+        name_en: reqForm.name_en.trim() || null,
+        website: reqForm.website.trim() || null,
+      });
 
       const title = isRTL
         ? `طلب إضافة علامة تجارية: ${reqForm.name_ar}`
@@ -139,7 +103,7 @@ export const ServiceBrandsPicker: React.FC<ServiceBrandsPickerProps> = ({
       if (e2) throw e2;
 
       if (ticket?.ref_id) {
-        await supabase.from('brand_addition_requests').update({ ticket_ref_id: ticket.ref_id }).eq('id', req.id);
+        await attachTicketRefToBrandRequest(req.id, ticket.ref_id as string);
       }
       return req;
     },
