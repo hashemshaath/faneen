@@ -16,6 +16,7 @@ import { AuthDivider } from './AuthDivider';
 import { AuthErrorHelpLinks } from './AuthErrorHelpLinks';
 import { FieldError } from './FieldError';
 import { PhoneInput } from './PhoneInput';
+import { AuthTrustStrip } from './AuthTrustStrip';
 import { trackLoginSuccess, trackLoginFailed, categorizeReason, track } from '@/lib/analytics-events';
 
 type Method = 'phone' | 'email';
@@ -329,6 +330,8 @@ export const IdentitySignInForm: React.FC<Props> = ({ onForgotPassword, onAdvanc
             : 'By continuing, you agree to our Terms and Privacy Policy.'}
         </p>
       </div>
+
+      <AuthTrustStrip context="login" />
     </div>
   );
 };
