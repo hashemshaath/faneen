@@ -77,22 +77,20 @@ const DashboardProfile: React.FC = () => {
     national_id: '',
     national_id_type: '' as '' | 'saudi' | 'iqama',
     vat_number: '',
-    short_national_address: '',
-    region_name: '',
-    district: '',
-    street: '',
-    building_number: '',
-    additional_number: '',
-    postal_code: '',
-    address_line: '',
   });
   const [usernameOk, setUsernameOk] = useState(true); // empty username is acceptable for individuals
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [splLoading, setSplLoading] = useState(false);
-  // Auto-compose the detailed address line from structured fields unless
-  // the user has edited the line manually (or pulled it from SPL).
-  const [addressLineManual, setAddressLineManual] = useState(false);
+
+  // ADDRESS-GOVERNANCE-1: single source of truth for the national address.
+  // The component is controlled; persistence goes through `upsertPrimaryAddress`.
+  const [address, setAddress] = useState<NationalAddressValue>({
+    short_address: null, region: null, region_en: null, city_id: null,
+    district: null, district_en: null, street_name: null, street_name_en: null,
+    building_number: null, additional_number: null, post_code: null,
+    address: null, address_en: null, address_manual: false,
+  });
+  const [addressInitial, setAddressInitial] = useState<NationalAddressValue | null>(null);
 
   // Seed form from profile
   useEffect(() => {
@@ -112,43 +110,28 @@ const DashboardProfile: React.FC = () => {
       national_id: profile.national_id ?? '',
       national_id_type: (profile.national_id_type as 'saudi' | 'iqama' | null) ?? '',
       vat_number: profile.vat_number ?? '',
-      short_national_address: profile.short_national_address ?? '',
-      region_name: profile.region_name ?? '',
-      district: profile.district ?? '',
-      street: profile.street ?? '',
-      building_number: profile.building_number ?? '',
-      additional_number: profile.additional_number ?? '',
-      postal_code: profile.postal_code ?? '',
-      address_line: profile.address_line ?? '',
     });
     setUsernameOk(true);
-    // If the saved line differs from a fresh compose, treat as manual so we
-    // don't overwrite the user's existing detail on first render.
-    setAddressLineManual(!!(profile.address_line ?? '').trim());
+    // Seed address from legacy flat columns (one-time per profile load).
+    const seeded: NationalAddressValue = {
+      short_address: profile.short_national_address ?? null,
+      region: profile.region_name ?? null,
+      region_en: null,
+      city_id: (profile as { city_id?: string | null }).city_id ?? null,
+      district: profile.district ?? null,
+      district_en: null,
+      street_name: profile.street ?? null,
+      street_name_en: null,
+      building_number: profile.building_number ?? null,
+      additional_number: profile.additional_number ?? null,
+      post_code: profile.postal_code ?? null,
+      address: profile.address_line ?? null,
+      address_en: profile.address_line ?? null,
+      address_manual: !!(profile.address_line ?? '').trim(),
+    };
+    setAddress(seeded);
+    setAddressInitial(seeded);
   }, [profile, user?.email]);
-
-  // Auto-compose the detailed address line whenever the structured parts
-  // change — unless the user has manually edited it (or it came from SPL,
-  // which marks the line as manual to preserve the API's official text).
-  useEffect(() => {
-    if (addressLineManual) return;
-    const composed = composeAddressLine(
-      {
-        district: form.district,
-        street: form.street,
-        building_number: form.building_number,
-        additional_number: form.additional_number,
-        postal_code: form.postal_code,
-        region_name: form.region_name,
-      },
-      isRTL,
-    );
-    setForm((f) => (f.address_line === composed ? f : { ...f, address_line: composed }));
-  }, [
-    addressLineManual, isRTL,
-    form.district, form.street, form.building_number,
-    form.additional_number, form.postal_code, form.region_name,
-  ]);
 
   // Owner business (for "view as provider" link)
   const { data: business } = useQuery({
