@@ -19,6 +19,7 @@ export const contextualHelpRegistry: Record<string, string[]> = {
   'admin.provider-review': ['how-publishing-works', 'readiness-checklist', 'approve-providers'],
   'admin.diagnostics': ['diagnostics', 'identity-overview'],
   'admin.operations-center': ['overview', 'data-integrity', 'cycle-times', 'revenue'],
+  'dashboard.operations-center': ['overview', 'data-integrity', 'cycle-times', 'revenue'],
   'admin.help': ['overview', 'identity-overview'],
 };
 
