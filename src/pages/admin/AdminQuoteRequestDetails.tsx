@@ -18,6 +18,8 @@ import {
   adminRevealLeadContact,
   matchQuoteRequest,
 } from '@/modules/quotes';
+import { listApprovedBrandsByIds } from '@/modules/brands';
+import { describeBrandPreference } from '@/modules/brands/lib/brandSelectionRules';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
