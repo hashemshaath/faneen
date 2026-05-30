@@ -591,7 +591,7 @@ export default function AdminProviderReview() {
                         )}
                         {selected.user_id && (
                           <Link
-                            to={`/admin/identity?focus=${selected.user_id}`}
+                            to={`/admin/users/${selected.user_id}`}
                             className="mt-0.5 ms-2 inline-flex items-center gap-1 text-xs text-info hover:underline"
                             title={isRTL ? 'فتح حساب المالك' : 'Open owner account'}
                           >
