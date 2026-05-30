@@ -99,7 +99,7 @@ type DelegationRow = {
 type ActivitySessionRow = {
   id: string;
   source?: string | null;
-  last_activity_at?: string | null;
+  last_seen_at?: string | null;
   business_staff_id?: string | null;
 };
 
@@ -600,7 +600,7 @@ function ActivitySessionsSection({ businessId }: { businessId: string }) {
     setError(null);
     const { data, error: e } = await listStaffActivitySessions({
       businessId,
-      select: 'id, source, last_activity_at, business_staff_id',
+      select: 'id, source, last_seen_at, business_staff_id',
       limit: 50,
     });
     if (e) setError(bi('تعذر تحميل الجلسات', 'Failed to load sessions'));
@@ -625,7 +625,7 @@ function ActivitySessionsSection({ businessId }: { businessId: string }) {
                 {s.source ?? 'system'}
               </span>
               <span className="tech-content text-xs text-muted-foreground">
-                {s.last_activity_at ? new Date(s.last_activity_at).toISOString().replace('T', ' ').slice(0, 16) : '—'}
+                {s.last_seen_at ? new Date(s.last_seen_at).toISOString().replace('T', ' ').slice(0, 16) : '—'}
               </span>
             </li>
           ))}
