@@ -638,6 +638,7 @@ export default function DashboardProcurementDetail() {
                     <th className="py-2 pe-3">{tx.item}</th>
                     <th className="py-2 pe-3 text-end">{tx.qty}</th>
                     <th className="py-2 pe-3">{tx.unit}</th>
+                    <th className="py-2 pe-3">{tx.brand}</th>
                     {scored.map((q) => {
                       const supName =
                         suppliers.find((s) => s.id === q.supplier_id)?.name ?? q.supplier_id.slice(0, 6);
@@ -662,11 +663,96 @@ export default function DashboardProcurementDetail() {
                       .map((c) => c.line?.unit_price)
                       .filter((v): v is number => typeof v === "number" && v >= 0)
                       .reduce<number | null>((a, b) => (a === null || b < a ? b : a), null);
+                    const isDraft = activeRfq?.status === 'draft';
+                    const brandLabel = ri.requested_brand_id
+                      ? brandLabels[ri.requested_brand_id]
+                        ? isRTL
+                          ? brandLabels[ri.requested_brand_id].name_ar
+                          : brandLabels[ri.requested_brand_id].name_en
+                        : tx.brandUnavailable
+                      : null;
                     return (
                       <tr key={ri.id} className="border-t align-top">
                         <td className="py-2 pe-3" dir="auto">{ri.name}</td>
                         <td className="py-2 pe-3 text-end tech-content">{ri.quantity}</td>
                         <td className="py-2 pe-3 tech-content">{ri.unit ?? ""}</td>
+                        <td
+                          className="py-2 pe-3 align-top min-w-[180px]"
+                          data-testid="proc-rfq-item-brand"
+                        >
+                          {isDraft ? (
+                            <div className="space-y-1">
+                              <ApprovedBrandPicker
+                                mode="single"
+                                value={ri.requested_brand_id ?? null}
+                                onChange={(v) => {
+                                  if (v === null) {
+                                    void onPatchItemBrand(ri, {
+                                      requested_brand_id: null,
+                                      brand_lock: null,
+                                    });
+                                  } else if (v !== ri.requested_brand_id) {
+                                    void onPatchItemBrand(ri, {
+                                      requested_brand_id: v,
+                                      brand_lock: ri.brand_lock ?? 'preferred',
+                                    });
+                                  }
+                                }}
+                              />
+                              {ri.requested_brand_id && (
+                                <div
+                                  className="flex flex-wrap items-center gap-1"
+                                  role="radiogroup"
+                                  aria-label={tx.brandLock}
+                                  data-testid="proc-rfq-item-brand-lock"
+                                >
+                                  {(['exact', 'preferred', 'flexible'] as const).map((lk) => {
+                                    const active = (ri.brand_lock ?? 'preferred') === lk;
+                                    const lkLabel =
+                                      lk === 'exact'
+                                        ? tx.lockExact
+                                        : lk === 'preferred'
+                                          ? tx.lockPreferred
+                                          : tx.lockFlexible;
+                                    return (
+                                      <button
+                                        key={lk}
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={active}
+                                        onClick={() => {
+                                          if (!active) {
+                                            void onPatchItemBrand(ri, { brand_lock: lk });
+                                          }
+                                        }}
+                                        className={`rounded-full border px-2 py-0.5 text-[10px] transition-colors ${
+                                          active
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'border-border/40 hover:bg-accent/5 text-muted-foreground'
+                                        }`}
+                                        title={describeBrandLock(lk, isRTL ? 'ar' : 'en')}
+                                      >
+                                        {lkLabel}
+                                      </button>
+                                    );
+                                  })}
+                                  <span
+                                    className="ms-1 text-[10px] text-muted-foreground"
+                                    dir="auto"
+                                  >
+                                    {describeBrandLock(ri.brand_lock ?? 'preferred', isRTL ? 'ar' : 'en')}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[11px]" dir="auto">
+                              {brandLabel ?? (
+                                <span className="text-muted-foreground">{tx.noBrand}</span>
+                              )}
+                            </span>
+                          )}
+                        </td>
                         {cells.map((c) => {
                           if (!c.line || c.line.unit_price == null) {
                             return (
