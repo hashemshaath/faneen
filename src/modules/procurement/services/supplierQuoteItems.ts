@@ -95,7 +95,7 @@ export async function submitQuoteItems(
   });
   const { data, error } = await supabase
     .from('procurement_supplier_quote_items')
-    .upsert(rows, { onConflict: 'quote_id,rfq_item_id' })
+    .upsert(rows as never, { onConflict: 'quote_id,rfq_item_id' })
     .select(SELECT);
   return {
     data: (data as unknown as ProcurementSupplierQuoteItemRow[] | null) ?? null,
@@ -146,7 +146,7 @@ export async function updateSupplierQuoteItemProposedBrand(
   }
   const { data, error } = await supabase
     .from('procurement_supplier_quote_items')
-    .update(patch)
+    .update(patch as never)
     .eq('id', itemId)
     .select(SELECT)
     .maybeSingle();
@@ -192,7 +192,7 @@ export async function reviewSupplierQuoteItemBrandEquivalence(
   };
   const { data, error } = await supabase
     .from('procurement_supplier_quote_items')
-    .update(patch)
+    .update(patch as never)
     .eq('id', itemId)
     .select(SELECT)
     .maybeSingle();
