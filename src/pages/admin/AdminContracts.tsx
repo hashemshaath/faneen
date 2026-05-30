@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getContractStatusMeta, type ContractStatus } from '@/lib/contract-statuses';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 interface AdminContractRow {
   id: string;
@@ -62,7 +63,8 @@ export default function AdminContracts() {
   }, [data, search]);
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-6 max-w-6xl">
+    <DashboardLayout>
+      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-6xl">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div className="flex items-center gap-3">
           <div className="rounded-xl bg-accent/10 p-2"><FileText className="w-5 h-5 text-accent" /></div>
@@ -150,6 +152,7 @@ export default function AdminContracts() {
           })}
         </ul>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
