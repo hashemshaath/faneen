@@ -14,7 +14,11 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness, updateBusinessById, listBusinessesByIds } from '@/modules/businesses';
-import { nationalAddressLookup } from '@/modules/locations';
+import {
+  NationalAddressForm,
+  upsertPrimaryAddress,
+  type NationalAddressValue,
+} from '@/modules/addresses';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -44,16 +48,8 @@ import { ProviderGrowthCard } from '@/components/growth/ProviderGrowthCard';
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
 import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
-import {
-  SA_REGIONS,
-  findRegionByLabel,
-  findRegionForCity,
-  getRegionById,
-  type SaRegionId,
-} from '@/data/sa-regions';
 
 interface RefRow { id: string; name_ar: string; name_en: string }
-interface CityRow extends RefRow { country_id: string }
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 const sectionTitle = 'flex items-center gap-2 text-base font-semibold text-foreground';
