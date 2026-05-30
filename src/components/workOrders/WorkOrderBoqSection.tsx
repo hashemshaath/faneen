@@ -186,7 +186,13 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
     let cancelled = false;
     (async () => {
       try {
-        const rows = await listApprovedBrandsByIds(missing);
+        const rows = (await listApprovedBrandsByIds(missing)) as Array<{
+          id: string;
+          ref_id: string | null;
+          name_ar: string;
+          name_en: string;
+          slug: string;
+        }>;
         if (cancelled) return;
         setBrandLabels((prev) => {
           const next = { ...prev };
