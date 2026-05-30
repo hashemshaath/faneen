@@ -16,7 +16,10 @@ export type ProcurementNotificationEvent =
   | 'quote_selected'
   | 'quote_rejected'
   | 'rfq_closed'
-  | 'quote_awarded';
+  | 'quote_awarded'
+  | 'brand_equivalent_proposed'
+  | 'brand_equivalent_approved'
+  | 'brand_equivalent_rejected';
 
 export interface ProcurementNotificationInput {
   user_id: string;
@@ -71,6 +74,24 @@ const BILINGUAL: Record<
     title_en: 'Procurement awarded',
     body_ar: 'تم منح أحد عروض الموردين بنجاح.',
     body_en: 'A supplier quote has been awarded successfully.',
+  },
+  brand_equivalent_proposed: {
+    title_ar: 'تم اقتراح علامة بديلة',
+    title_en: 'Equivalent brand proposed',
+    body_ar: 'اقترح مورد علامة بديلة على أحد بنود طلب العروض، بانتظار المراجعة.',
+    body_en: 'A supplier proposed an equivalent brand on an RFQ line — review pending.',
+  },
+  brand_equivalent_approved: {
+    title_ar: 'تمت الموافقة على العلامة البديلة',
+    title_en: 'Equivalent brand approved',
+    body_ar: 'تمت الموافقة على علامة بديلة مقترحة لأحد بنود طلب العروض.',
+    body_en: 'An equivalent brand proposal has been approved.',
+  },
+  brand_equivalent_rejected: {
+    title_ar: 'تم رفض العلامة البديلة',
+    title_en: 'Equivalent brand rejected',
+    body_ar: 'تم رفض علامة بديلة مقترحة لأحد بنود طلب العروض.',
+    body_en: 'An equivalent brand proposal has been rejected.',
   },
 };
 
