@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Building2, Check, ChevronDown, Crown, Users } from 'lucide-react';
+import { Building2, Check, ChevronDown, Crown, Users, ShieldCheck } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -59,6 +59,11 @@ export const ActiveBusinessSwitcher: React.FC = () => {
     return isRTL ? (b.name_ar ?? b.name_en ?? '—') : (b.name_en ?? b.name_ar ?? '—');
   };
 
+  const roleLabel = (b: BusinessOption): string =>
+    b.source === 'owner'
+      ? (isRTL ? 'مالك' : 'Owner')
+      : (isRTL ? 'موظف / مفوّض' : 'Staff');
+
   const handlePick = (id: string) => {
     if (id === activeBusinessId) return;
     setActiveBusinessId(id);
@@ -74,12 +79,21 @@ export const ActiveBusinessSwitcher: React.FC = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="hidden md:inline-flex items-center gap-2 h-9 px-2.5 rounded-full border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30 max-w-[220px]"
-          title={isRTL ? 'تبديل المنشأة النشطة' : 'Switch active business'}
+          className="hidden md:inline-flex items-center gap-2 h-9 px-2.5 rounded-full border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30 max-w-[280px]"
+          title={isRTL
+            ? 'تبديل المنشأة النشطة — يُحفظ اختيارك تلقائيًا'
+            : 'Switch active business — your choice is saved automatically'}
         >
           <Building2 className="w-3.5 h-3.5 text-primary shrink-0" />
-          <span className="text-xs font-semibold text-foreground truncate">
-            {displayName(active)}
+          <span className="flex flex-col items-start leading-tight min-w-0">
+            <span className="text-xs font-semibold text-foreground truncate max-w-[160px]">
+              {displayName(active)}
+            </span>
+            {active && (
+              <span className="text-[9px] text-muted-foreground truncate max-w-[160px]">
+                {isRTL ? 'دورك: ' : 'Your role: '}{roleLabel(active)}
+              </span>
+            )}
           </span>
           {businesses.length > 1 && (
             <Badge variant="outline" className="h-4 px-1 text-[10px] tech-content shrink-0">
@@ -93,6 +107,14 @@ export const ActiveBusinessSwitcher: React.FC = () => {
         <DropdownMenuLabel className="text-[11px] text-muted-foreground font-medium">
           {isRTL ? 'المنشأة النشطة • دورك فيها' : 'Active business • your role'}
         </DropdownMenuLabel>
+        <div className="px-2 pb-1.5 flex items-start gap-1.5 text-[10px] text-muted-foreground leading-snug">
+          <ShieldCheck className="w-3 h-3 mt-0.5 text-emerald-600 shrink-0" />
+          <span>
+            {isRTL
+              ? 'يُحفظ اختيارك تلقائيًا على هذا الجهاز للانتقال السريع في المرة القادمة.'
+              : 'Your choice is saved automatically on this device for faster switching next time.'}
+          </span>
+        </div>
         <DropdownMenuSeparator />
         {businesses.map((b) => {
           const selected = b.id === activeBusinessId;
@@ -115,10 +137,13 @@ export const ActiveBusinessSwitcher: React.FC = () => {
                 <p className="text-[10px] text-muted-foreground mt-0.5">
                   {isRTL ? 'دورك: ' : 'Your role: '}
                   <span className="font-semibold text-foreground">
-                    {b.source === 'owner'
-                      ? (isRTL ? 'مالك' : 'Owner')
-                      : (isRTL ? 'موظف / مفوّض' : 'Staff')}
+                    {roleLabel(b)}
                   </span>
+                  {selected && (
+                    <span className="ms-1 text-emerald-600">
+                      {isRTL ? '• نشطة الآن' : '• Active now'}
+                    </span>
+                  )}
                 </p>
               </div>
               {selected && <Check className="w-4 h-4 text-emerald-600 shrink-0" />}

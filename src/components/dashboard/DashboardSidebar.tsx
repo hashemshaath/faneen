@@ -553,6 +553,31 @@ export const DashboardSidebar: React.FC = () => {
           </div>
         )}
 
+        {/* Active workspace context — clarifies role inside current business */}
+        {!isAdmin && !collapsed && workspace.active_entity_id && (() => {
+          const activeEntity = workspace.entities.find(e => e.entity_id === workspace.active_entity_id);
+          if (!activeEntity) return null;
+          const role = workspace.active_role;
+          const roleLabel = role === 'owner'
+            ? (isRTL ? 'مالك' : 'Owner')
+            : role === 'manager' || role === 'business_manager'
+              ? (isRTL ? 'مدير' : 'Manager')
+              : role
+                ? (isRTL ? 'موظف' : 'Staff')
+                : (isRTL ? 'مزود خدمة' : 'Provider');
+          const name = (isRTL ? activeEntity.name_ar : activeEntity.name_en) || activeEntity.name_ar || activeEntity.name_en || '—';
+          return (
+            <div className="mx-3 mt-2 mb-1 px-3 py-2 rounded-lg bg-primary/5 border border-primary/15">
+              <p className="text-[9px] uppercase tracking-wide text-sidebar-foreground/55 mb-0.5">
+                {isRTL ? 'تتصفح الآن كـ' : 'You are browsing as'}
+              </p>
+              <p className="text-[11px] font-bold text-sidebar-foreground leading-tight truncate" dir="auto">
+                {roleLabel} <span className="text-sidebar-foreground/55 font-normal">{isRTL ? 'في' : 'in'}</span> {name}
+              </p>
+            </div>
+          );
+        })()}
+
         {/* Quick Create — five always-visible shortcuts */}
         <SidebarQuickCreate
           collapsed={collapsed}

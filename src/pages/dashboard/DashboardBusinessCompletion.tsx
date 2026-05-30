@@ -334,17 +334,32 @@ const DashboardBusinessCompletion: React.FC = () => {
         {/* Page header */}
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">
-              {isRTL ? 'لوحة التحكم • بيانات المنشأة' : 'Dashboard • Business profile'}
+            <div className="flex items-center gap-2 mb-1.5">
+              <Badge variant="outline" className="h-5 px-1.5 text-[10px] gap-1 border-primary/30 text-primary bg-primary/5">
+                <Building2 className="w-2.5 h-2.5" />
+                {isRTL ? 'صفحة بيانات المنشأة' : 'Business entity page'}
+              </Badge>
+              <span className="text-[10px] text-muted-foreground">
+                {isRTL ? '— ليست بيانات حسابك الشخصي' : '— not your personal account'}
+              </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {isRTL ? 'إكمال ملف المنشأة' : 'Complete your business profile'}
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight" dir="auto">
+              {business
+                ? ((isRTL ? business.name_ar : business.name_en) || business.name_ar || business.name_en || (isRTL ? 'منشأة بدون اسم' : 'Unnamed entity'))
+                : (isRTL ? 'إكمال ملف المنشأة' : 'Complete your business profile')}
             </h1>
             <p className="text-sm text-muted-foreground mt-1.5 max-w-xl">
               {isRTL
-                ? 'هذه الصفحة تخصّ بيانات المنشأة فقط — وليست بيانات حسابك الشخصي. كل خطوة تُكملها ترفع جاهزيتك وفرص ظهورك.'
-                : 'This page is for your business entity — not your personal account. Every step you complete raises readiness and visibility.'}
+                ? 'إكمال ملف هذه المنشأة — كل خطوة تُكملها ترفع جاهزيتك وفرص ظهورك في نتائج البحث.'
+                : 'Complete this business profile — every step raises readiness and visibility in search results.'}
             </p>
+            {business?.ref_id && (
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-muted-foreground">
+                <span>{isRTL ? 'معرّف المنشأة:' : 'Entity ID:'}</span>
+                <span className="tech-content font-mono font-semibold text-foreground">{business.ref_id}</span>
+                <CopyButton value={business.ref_id} size="xs" />
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate('/dashboard')}>
