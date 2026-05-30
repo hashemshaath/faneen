@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/accordion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  MapPin, Star, Trash2, Loader2, Building2, Globe, Map as MapIcon,
+  MapPin, Star, Loader2, Building2, Globe, Map as MapIcon,
   Search, Check, Save, X, AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -266,13 +266,14 @@ const ProviderServiceAreas: React.FC = () => {
         if (error) throw error;
       }
       for (const row of toInsert) {
-        const { error } = await insertServiceArea({
+        const payload: Parameters<typeof insertServiceArea>[0] = {
           business_id: activeBiz,
-          country_id: countryId || undefined,
           city: row.city,
           district: row.district,
           is_primary: false,
-        });
+        };
+        if (countryId) (payload as { country_id?: string }).country_id = countryId;
+        const { error } = await insertServiceArea(payload);
         if (error) throw error;
       }
       // Apply primary (city-level)
