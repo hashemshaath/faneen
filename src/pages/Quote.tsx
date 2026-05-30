@@ -727,6 +727,87 @@ const Quote: React.FC = () => {
                         </ul>
                       )}
                     </div>
+                    {/* RFQ-BRAND-PICKER-1B — optional brand preference (header-level) */}
+                    <div className="pt-4 border-t border-border/50 space-y-4" data-testid="brand-preference-section">
+                      <div>
+                        <Label>
+                          <Bi
+                            ar="العلامات التجارية المفضّلة (اختياري)"
+                            en="Preferred brands (optional)"
+                          />
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          <Bi
+                            ar="يمكنك اختيار علامات تجارية معتمدة إذا كان مشروعك يتطلب مواد أو منتجات محددة."
+                            en="You can select preferred brands if your project requires specific materials or products."
+                          />
+                        </p>
+                        <div className="mt-3">
+                          <ApprovedBrandPicker
+                            mode="multi"
+                            value={form.preferredBrandIds}
+                            onChange={(v) => update('preferredBrandIds', v)}
+                            sectorId={null}
+                            placeholder={bi('ابحث عن علامة معتمدة…', 'Search approved brands…')}
+                          />
+                        </div>
+                      </div>
+                      {form.preferredBrandIds.length > 0 && (
+                        <>
+                          <div>
+                            <div className="text-sm font-semibold text-foreground mb-2">
+                              <Bi ar="درجة التفضيل" en="Preference level" />
+                            </div>
+                            <ChoiceGrid
+                              name={bi('درجة التفضيل', 'Preference level')}
+                              cols="sm:grid-cols-3"
+                              options={[
+                                { value: 'exact',     ar: 'محددة فقط',        en: 'Specific only' },
+                                { value: 'preferred', ar: 'مفضّلة مع بدائل',  en: 'Preferred (alternatives OK)' },
+                                { value: 'flexible',  ar: 'أي علامة مناسبة',  en: 'Any suitable brand' },
+                              ]}
+                              value={form.brandPreferenceMode}
+                              onChange={(v) => update('brandPreferenceMode', v as BrandPreferenceMode)}
+                            />
+                            {form.brandPreferenceMode === 'exact' && (
+                              <p className="mt-2 text-xs text-amber-700 dark:text-amber-400 flex items-start gap-1.5">
+                                <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                                <Bi
+                                  ar="سيقتصر المزودون على تقديم عروض بالعلامات المحددة فقط."
+                                  en="Suppliers/providers may only quote the selected brands."
+                                />
+                              </p>
+                            )}
+                            {(form.brandPreferenceMode === 'preferred' || form.brandPreferenceMode === 'flexible') && (
+                              <p className="mt-2 text-xs text-muted-foreground">
+                                <Bi
+                                  ar="قد يتم اقتراح بدائل معتمدة."
+                                  en="Alternatives may be proposed."
+                                />
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            <Label htmlFor="q-brand-notes">
+                              <Bi ar="ملاحظات حول العلامات (اختياري)" en="Brand notes (optional)" />
+                            </Label>
+                            <Textarea
+                              id="q-brand-notes"
+                              dir="auto"
+                              rows={3}
+                              className="mt-1.5"
+                              maxLength={2000}
+                              value={form.brandNotes}
+                              onChange={(e) => update('brandNotes', e.target.value)}
+                              placeholder={bi(
+                                'مثال: مواصفات الزجاج المُعتمدة، نوع البروفايل المطلوب، إلخ.',
+                                'e.g. approved glass spec, required profile type, etc.',
+                              )}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 )}
 
