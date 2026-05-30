@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getContractStatusMeta } from '@/lib/contract-statuses';
+import { getContractStatusMeta, type ContractStatus } from '@/lib/contract-statuses';
 
 interface AdminContractRow {
   id: string;
@@ -44,7 +44,7 @@ export default function AdminContracts() {
         .select('id, contract_number, title_ar, title_en, status, total_amount, currency_code, provider_id, client_id, created_at, start_date, end_date')
         .order('created_at', { ascending: false })
         .limit(200);
-      if (status !== 'all') q = q.eq('status', status as AdminContractRow['status']);
+      if (status !== 'all') q = q.eq('status', status as ContractStatus);
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as AdminContractRow[];
