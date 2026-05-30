@@ -7293,6 +7293,98 @@ export type Database = {
         }
         Relationships: []
       }
+      loyalty_redemptions: {
+        Row: {
+          created_at: string
+          fulfilled_at: string | null
+          id: string
+          points_spent: number
+          redemption_code: string | null
+          reward_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          points_spent: number
+          redemption_code?: string | null
+          reward_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          points_spent?: number
+          redemption_code?: string | null
+          reward_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_rewards: {
+        Row: {
+          created_at: string
+          currency_code: string | null
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          is_active: boolean
+          points_cost: number
+          reward_type: string
+          sort_order: number
+          stock: number | null
+          title_ar: string
+          title_en: string
+          updated_at: string
+          value_amount: number | null
+        }
+        Insert: {
+          created_at?: string
+          currency_code?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          points_cost: number
+          reward_type?: string
+          sort_order?: number
+          stock?: number | null
+          title_ar: string
+          title_en: string
+          updated_at?: string
+          value_amount?: number | null
+        }
+        Update: {
+          created_at?: string
+          currency_code?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          points_cost?: number
+          reward_type?: string
+          sort_order?: number
+          stock?: number | null
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+          value_amount?: number | null
+        }
+        Relationships: []
+      }
       maintenance_requests: {
         Row: {
           client_id: string
@@ -16074,6 +16166,7 @@ export type Database = {
         Returns: undefined
       }
       record_email_open: { Args: { _message_id: string }; Returns: undefined }
+      redeem_loyalty_reward: { Args: { _reward_id: string }; Returns: string }
       redeem_promo_code: {
         Args: { _business_id?: string; _code: string }
         Returns: {
