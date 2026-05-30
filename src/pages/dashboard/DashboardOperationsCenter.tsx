@@ -45,6 +45,16 @@ import {
   type WorkOrderWarrantyRow,
 } from '@/modules/projectClosure';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { Button } from '@/components/ui/button';
+import {
+  computeSystemHealthSnapshot,
+  computeDataIntegrityMetrics,
+  computeOperationsMetrics,
+  summarizeIntegrityReport,
+  listObservabilityLogs,
+  runObservabilityCheck,
+  type ObservabilityLogRow,
+} from '@/modules/observability';
 
 const OperationsCenter = () => {
   useNoIndex();
@@ -60,6 +70,33 @@ const OperationsCenter = () => {
   const [warranties, setWarranties] = useState<WorkOrderWarrantyRow[]>([]);
   const [contracts, setContracts] = useState<ContractRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [obsLogs, setObsLogs] = useState<ObservabilityLogRow[]>([]);
+  const [runningCheck, setRunningCheck] = useState(false);
+  const [runError, setRunError] = useState<string | null>(null);
+
+  const refreshObsLogs = async () => {
+    const { data } = await listObservabilityLogs({ limit: 10 });
+    setObsLogs(data);
+  };
+
+  useEffect(() => { refreshObsLogs().catch(() => undefined); }, []);
+
+  const handleRunCheck = async () => {
+    setRunningCheck(true);
+    setRunError(null);
+    try {
+      const { error } = await runObservabilityCheck({ runType: 'manual_check' });
+      if (error) {
+        setRunError(error.message || 'Failed to run observability check.');
+      } else {
+        await refreshObsLogs();
+      }
+    } catch (e) {
+      setRunError(e instanceof Error ? e.message : 'Failed to run observability check.');
+    } finally {
+      setRunningCheck(false);
+    }
+  };
 
   useEffect(() => {
     if (!businessId) return;
@@ -229,6 +266,32 @@ const OperationsCenter = () => {
     return reliable.map((k) => ({ key: k, count: report.findings[k].length, tone: report.summary.find((s) => s.key === k)?.tone ?? 'slate' }));
   }, [contracts, workOrders, closures, warranties, appointments]);
 
+  const healthSnapshot = useMemo(() => {
+    const integrity = computeDataIntegrityMetrics(
+      summarizeIntegrityReport(
+        integrityRows().map((i) => ({
+          key: i.key as never,
+          label_ar: '',
+          label_en: '',
+          count: i.count,
+          tone: (i.tone as 'red' | 'amber' | 'slate'),
+        })),
+      ),
+    );
+    const operations = computeOperationsMetrics({
+      overdueWorkOrders: production.overdueCount,
+      pendingCustomerConfirmations: closure.pendingConfirmation,
+      awardedRfqsWithoutPo: procDiag.awardedWithoutPo,
+    });
+    return computeSystemHealthSnapshot({ integrity, operations });
+    // integrityRows recomputed inline; deps drive recompute
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [integrity, production.overdueCount, closure.pendingConfirmation, procDiag.awardedWithoutPo]);
+
+  function integrityRows() { return integrity; }
+
+  const lastRun = obsLogs[0] ?? null;
+
   return (
     <div className="container mx-auto px-4 py-6 space-y-6" data-testid="operations-center">
       <header>
@@ -237,6 +300,91 @@ const OperationsCenter = () => {
           Executive view of contracts, production, and procurement health.
         </p>
       </header>
+
+      <Card data-testid="system-health-section">
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
+          <CardTitle>System health · صحة النظام</CardTitle>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRunCheck}
+            disabled={runningCheck}
+            data-testid="run-observability-check"
+          >
+            {runningCheck ? 'Running…' : 'Run check now · تشغيل فحص الآن'}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <KpiStrip
+            items={[
+              {
+                label: 'Score',
+                value: healthSnapshot.score,
+                tone: healthSnapshot.status === 'critical' ? 'danger' : healthSnapshot.status === 'warning' ? 'warning' : 'success',
+              },
+              {
+                label: 'Status',
+                value: healthSnapshot.status,
+                tone: healthSnapshot.status === 'critical' ? 'danger' : healthSnapshot.status === 'warning' ? 'warning' : 'success',
+              },
+              {
+                label: 'Last run',
+                value: lastRun ? new Date(lastRun.created_at).toLocaleString() : '—',
+                tone: 'info',
+              },
+              {
+                label: 'Alerts (last run)',
+                value: lastRun ? (Array.isArray(lastRun.alerts) ? lastRun.alerts.length : 0) : 0,
+                tone: lastRun && Array.isArray(lastRun.alerts) && lastRun.alerts.length > 0 ? 'warning' : 'neutral',
+              },
+            ]}
+          />
+          {runError && (
+            <p className="mt-2 text-xs text-destructive" role="alert">{runError}</p>
+          )}
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Read-only check. Runs the admin-gated observability RPC and appends to the history below.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card data-testid="observability-history-section">
+        <CardHeader><CardTitle>Observability history · سجل المراقبة</CardTitle></CardHeader>
+        <CardContent>
+          {obsLogs.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No observability runs yet. Use “Run check now” above to create the first entry.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-start text-xs text-muted-foreground">
+                    <th className="py-2 pe-3 text-start">Ref</th>
+                    <th className="py-2 pe-3 text-start">Run type</th>
+                    <th className="py-2 pe-3 text-start">Status</th>
+                    <th className="py-2 pe-3 text-start">Score</th>
+                    <th className="py-2 pe-3 text-start">Alerts</th>
+                    <th className="py-2 pe-3 text-start">When</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {obsLogs.map((row) => (
+                    <tr key={row.id} className="border-t border-border/60">
+                      <td className="py-2 pe-3 font-mono text-xs">{row.ref_id ?? '—'}</td>
+                      <td className="py-2 pe-3">{row.run_type}</td>
+                      <td className="py-2 pe-3">{row.status}</td>
+                      <td className="py-2 pe-3">{row.score}</td>
+                      <td className="py-2 pe-3">{Array.isArray(row.alerts) ? row.alerts.length : 0}</td>
+                      <td className="py-2 pe-3 text-muted-foreground">{new Date(row.created_at).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card data-testid="revenue-pipeline-section">
         <CardHeader><CardTitle>Revenue pipeline · مسار الإيراد</CardTitle></CardHeader>
