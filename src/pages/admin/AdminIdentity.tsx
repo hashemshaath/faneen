@@ -122,7 +122,7 @@ const AdminIdentity: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
   usePageMeta({
-    title: isRTL ? 'مركز الهوية والكيانات | إدارة قِطاعات' : 'Identity & Entities Center | Qitaat Admin',
+    title: isRTL ? 'المستخدمون والمنشآت | إدارة قِطاعات' : 'Users & Businesses | Qitaat Admin',
     noindex: true,
   });
   const { isSuperAdmin } = useAuth();
@@ -331,7 +331,7 @@ const AdminIdentity: React.FC = () => {
             </div>
             <div className="min-w-0">
               <h1 className="text-xl md:text-2xl font-bold font-heading leading-tight">
-                {isRTL ? 'مركز الهوية والكيانات' : 'Identity & Entities Center'}
+                {isRTL ? 'المستخدمون والمنشآت' : 'Users & Businesses'}
               </h1>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                 {isRTL
