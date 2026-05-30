@@ -1,28 +1,25 @@
 /**
- * AdminIdentity — Unified identity & accounts hub.
+ * AdminIdentity — Identity & Entities statistics hub.
  *
- * Merges the previously separate /admin/users and /admin/businesses screens
- * into a single command center, while preserving every existing capability
- * by linking deep actions back to the battle-tested specialist pages.
+ * Pure overview surface: combined KPIs, charts, recent activity, unified
+ * ⌘K search, and a single navigation grid that routes admins to the
+ * dedicated management pages — never embeds them. This keeps the page
+ * fast, focused, and easy to scan.
  *
- * Feature inventory (kept available, see destination):
- *  - User CRUD, ban/unban, roles, password, bulk            → /admin/users
- *  - Business CRUD, verify, tiers, branches, services       → /admin/businesses
- *  - Provider approval review                               → /admin/provider-review
- *  - Memberships, payments, events                          → /admin/memberships*
- *  - Access management & RLS roles                          → /admin/access-management
+ * Dedicated management destinations:
+ *  - Users (CRUD, ban, roles, password, bulk)   → /admin/users
+ *  - Businesses (CRUD, verify, tiers, branches) → /admin/businesses
+ *  - Provider approval review                   → /admin/provider-review
+ *  - Access requests                            → /admin/entity-access-requests
+ *  - Access management & RLS roles              → /admin/access-management
+ *  - Memberships, payments, events              → /admin/memberships*
  *
- * This shell adds:
- *  - Combined KPIs spanning both entities
- *  - Unified ⌘K search (users + businesses + ref_ids)
- *  - Bidirectional cross-links via <EntityLink />
- *  - Single navigation surface for non-technical admins
- *
- * Security: requireAdmin for the shell. PII rows respect existing maskEmail /
- * maskPhone behaviour from the specialist pages.
+ * Legacy `?view=users|businesses|provider-review|access-requests|access-management`
+ * deep-links are redirected to the standalone routes so existing sidebar
+ * shortcuts and bookmarks keep working.
  */
-import React, { useState, useMemo, useEffect, useRef, useTransition, useCallback, Suspense, lazy } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect, useRef, useTransition, useCallback } from 'react';
+import { Link, useSearchParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -34,21 +31,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { AdminEmbeddedContext } from '@/contexts/AdminTabsContext';
-import { Loader2 } from 'lucide-react';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { DirectionalIcon } from '@/components/ui/directional-icon';
 import { EntityLink } from '@/components/admin/identity/EntityLink';
-import { IdentityFilters, EMPTY_FILTERS, type IdentityFilterState, type SavedView } from '@/components/admin/identity/IdentityFilters';
-import { IdentityAnalytics } from '@/components/admin/identity/IdentityAnalytics';
 import { IdentityCommandPalette } from '@/components/admin/identity/IdentityCommandPalette';
 import { IdentityActivityFeed } from '@/components/admin/identity/IdentityActivityFeed';
 import { IdentitySignupsChart } from '@/components/admin/identity/IdentitySignupsChart';
-import { IdentityIntegrityPanel } from '@/components/admin/identity/IdentityIntegrityPanel';
-import { IdentityDiagnosticsDeepPanel } from '@/components/admin/identity/IdentityDiagnosticsDeepPanel';
-import { PermissionMatrix } from '@/components/identity/PermissionMatrix';
-import type { DiagnosticGroupId } from '@/lib/identity/computeIdentityDiagnostics';
 import { listProfiles } from '@/modules/users';
 import { listAllUserRoles } from '@/modules/identity';
 import { listAdminBusinesses } from '@/modules/businesses';
@@ -57,22 +45,18 @@ import type { Tables } from '@/integrations/supabase/types';
 import {
   Users, Building2, Search, Command, Shield, Crown, ShieldCheck, Briefcase,
   TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, Plus,
-  UserPlus, Activity, ExternalLink, KeyRound, BarChart3, ShieldAlert,
-  RefreshCw, Stethoscope,
+  UserPlus, Activity, ExternalLink, KeyRound, BarChart3,
+  RefreshCw, Stethoscope, MapPin, ArrowUpRight,
 } from 'lucide-react';
 
-/* Lazy-loaded specialist admin pages, embedded inside Identity tabs. */
-const EmbeddedUsers              = lazy(() => import('./AdminUsers'));
-const EmbeddedBusinesses         = lazy(() => import('./AdminBusinesses'));
-const EmbeddedProviderReview     = lazy(() => import('./AdminProviderReview'));
-const EmbeddedAccessRequests     = lazy(() => import('./AdminEntityAccessRequests'));
-const EmbeddedAccessManagement   = lazy(() => import('./AdminAccessManagement'));
-
-const PanelFallback: React.FC = () => (
-  <div className="flex items-center justify-center py-20 text-muted-foreground">
-    <Loader2 className="w-5 h-5 animate-spin" />
-  </div>
-);
+/** Legacy `?view=...` deep-links → standalone management routes. */
+const VIEW_REDIRECTS: Record<string, string> = {
+  users:              '/admin/users',
+  businesses:         '/admin/businesses',
+  'provider-review':  '/admin/provider-review',
+  'access-requests':  '/admin/entity-access-requests',
+  'access-management':'/admin/access-management',
+};
 
 type Profile = Tables<'profiles'>;
 type UserRole = Tables<'user_roles'>;
@@ -90,17 +74,6 @@ interface BizRow {
   membership_tier: string;
   created_at: string;
 }
-
-type View =
-  | 'overview'
-  | 'users'
-  | 'businesses'
-  | 'provider-review'
-  | 'access-requests'
-  | 'access-management'
-  | 'analytics'
-  | 'integrity'
-  | 'activity';
 
 /* ─── KPI card ─── */
 const Kpi: React.FC<{
