@@ -133,24 +133,29 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
   // Auto-compose the detailed line unless the user is editing it manually.
   useEffect(() => {
     if (value.address_manual) return;
-    const composed = buildAddressLine({
-      region: value.region, district: value.district,
-      street_name: value.street_name, building_number: value.building_number,
+    const base = {
+      region: value.region, region_en: value.region_en,
+      district: value.district, district_en: value.district_en,
+      street_name: value.street_name, street_name_en: value.street_name_en,
+      building_number: value.building_number,
       additional_number: value.additional_number, post_code: value.post_code,
-    }, isRTL ? 'ar' : 'en');
-    if (composed !== (value.address ?? '')) {
+    };
+    const composedAr = buildAddressLine(base, 'ar');
+    const composedEn = buildAddressLine(base, 'en');
+    if (composedAr !== (value.address ?? '') || composedEn !== (value.address_en ?? '')) {
       onChange({
         ...value,
-        address: composed || null,
-        // mirror to address_en so DB has both
-        address_en: composed || null,
+        address: composedAr || null,
+        address_en: composedEn || null,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     value.address_manual, isRTL,
-    value.region, value.district, value.street_name, value.building_number,
-    value.additional_number, value.post_code,
+    value.region, value.region_en,
+    value.district, value.district_en,
+    value.street_name, value.street_name_en,
+    value.building_number, value.additional_number, value.post_code,
   ]);
 
   // ── SPL lookup ──────────────────────────────────────────────────────────
@@ -366,15 +371,27 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
       {/* Street + structured */}
       {showStructured && (
         <div className="grid sm:grid-cols-3 gap-4">
-          <div className="sm:col-span-3">
-            <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع', 'Street')}</Label>
+          <div className="sm:col-span-3 grid sm:grid-cols-2 gap-3">
+            <div>
+            <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع (عربي)', 'Street (Arabic)')}</Label>
             <Input
               value={value.street_name ?? ''}
               onChange={(e) => patch({ street_name: e.target.value || null })}
-              dir="auto"
+              dir="rtl"
               className="mt-1 h-11 rounded-xl"
               maxLength={160}
             />
+            </div>
+            <div>
+            <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع (إنجليزي)', 'Street (English)')}</Label>
+            <Input
+              value={value.street_name_en ?? ''}
+              onChange={(e) => patch({ street_name_en: e.target.value || null })}
+              dir="ltr"
+              className="mt-1 h-11 rounded-xl"
+              maxLength={160}
+            />
+            </div>
           </div>
           <div>
             <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'رقم المبنى', 'Building number')}</Label>
@@ -416,7 +433,7 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
       <div>
         <div className="flex items-center justify-between gap-2">
           <Label className="text-xs font-medium text-muted-foreground">
-            {t(isRTL, 'العنوان التفصيلي', 'Detailed address line')}
+            {t(isRTL, 'العنوان التفصيلي (عربي وإنجليزي)', 'Detailed address (Arabic & English)')}
           </Label>
           {value.address_manual && (
             <button
@@ -428,14 +445,30 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
             </button>
           )}
         </div>
-        <Input
-          value={value.address ?? ''}
-          onChange={(e) => onChange({ ...value, address: e.target.value, address_en: e.target.value, address_manual: true })}
-          dir="auto"
-          className="mt-1 h-11 rounded-xl"
-          placeholder={t(isRTL, 'يتم توليده تلقائيًا من حقول العنوان أعلاه', 'Auto-generated from the address fields above')}
-          maxLength={250}
-        />
+        <div className="mt-1 grid sm:grid-cols-2 gap-2">
+          <div>
+            <span className="text-[10px] text-muted-foreground">{t(isRTL, 'عربي', 'Arabic')}</span>
+            <Input
+              value={value.address ?? ''}
+              onChange={(e) => onChange({ ...value, address: e.target.value, address_manual: true })}
+              dir="rtl"
+              className="h-11 rounded-xl"
+              placeholder={t(isRTL, 'يتم توليده تلقائيًا', 'Auto-generated')}
+              maxLength={250}
+            />
+          </div>
+          <div>
+            <span className="text-[10px] text-muted-foreground">{t(isRTL, 'إنجليزي', 'English')}</span>
+            <Input
+              value={value.address_en ?? ''}
+              onChange={(e) => onChange({ ...value, address_en: e.target.value, address_manual: true })}
+              dir="ltr"
+              className="h-11 rounded-xl"
+              placeholder={t(isRTL, 'Auto-generated', 'Auto-generated')}
+              maxLength={250}
+            />
+          </div>
+        </div>
         <p className="text-[10px] text-muted-foreground mt-1">
           {value.address_manual
             ? t(isRTL, 'يدوي — لن يتم استبداله. اضغط "إعادة التوليد" لإرجاعه إلى التوليد التلقائي.',
