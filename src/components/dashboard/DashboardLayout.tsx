@@ -171,7 +171,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     return <Navigate to="/auth" replace />;
   }
 
-  const initial = (profile?.full_name || user.email || '?').charAt(0).toUpperCase();
+  const displayName = getProfileDisplayName(
+    profile ? { ...profile, email: user.email ?? profile.email } : { email: user.email },
+    isRTL ? 'ar' : 'en',
+  );
+  const initial = (displayName || '?').charAt(0).toUpperCase();
   const roleBadge = getRoleBadge(isSuperAdmin, isAdmin, isProvider, isRTL);
   const accountLabel = isSuperAdmin
     ? accountTypeLabels.super_admin
@@ -265,7 +269,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                       </div>
                       <div className="hidden sm:flex flex-col items-start min-w-0">
                         <span className="text-xs font-semibold text-foreground truncate max-w-[120px] leading-tight">
-                          {profile?.full_name || (isRTL ? 'مستخدم' : 'User')}
+                          {displayName || (isRTL ? 'مستخدم' : 'User')}
                         </span>
                         <span className="text-[10px] text-muted-foreground leading-tight">
                           {isRTL ? accountLabel?.ar : accountLabel?.en}
@@ -291,7 +295,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-sm text-foreground truncate">{profile?.full_name || (isRTL ? 'مستخدم' : 'User')}</p>
+                          <p className="font-semibold text-sm text-foreground truncate">{displayName || (isRTL ? 'مستخدم' : 'User')}</p>
                           <div className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${roleBadge.color}`}>
                             <roleBadge.icon className="w-2.5 h-2.5" />{roleBadge.label}
                           </div>
