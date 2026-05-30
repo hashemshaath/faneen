@@ -36,6 +36,7 @@ import {
   listQuoteItemsByRfq,
   compareQuotesWithLineItems,
   listPurchaseOrdersByRfq,
+  updateRfqItem,
   type ProcurementRfqInvitationRow,
   type ProcurementRequestRow,
   type ProcurementRfqRow,
@@ -46,6 +47,12 @@ import {
   type ProcurementPurchaseOrderRow,
   type QuoteComparisonResult,
 } from "@/modules/procurement";
+import { ApprovedBrandPicker } from "@/components/brands/ApprovedBrandPicker";
+import { listApprovedBrandsByIds } from "@/modules/brands";
+import {
+  describeBrandLock,
+  type BrandLock,
+} from "@/modules/brands/lib/brandSelectionRules";
 
 export default function DashboardProcurementDetail() {
   useNoIndex();
@@ -69,6 +76,10 @@ export default function DashboardProcurementDetail() {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // RFQ-BRAND-PICKER-1D — resolved approved-brand labels for line items.
+  const [brandLabels, setBrandLabels] = useState<
+    Record<string, { name_ar: string; name_en: string; ref_id: string | null; slug: string }>
+  >({});
 
   const tx = useMemo(
     () => ({
@@ -116,6 +127,13 @@ export default function DashboardProcurementDetail() {
       notEligible: isRTL ? "لا يمكن منح هذا العرض الآن." : "This quote cannot be awarded right now.",
       sentAt: isRTL ? "أُرسل في" : "Sent",
       expiresAt: isRTL ? "تنتهي في" : "Expires",
+      brand: isRTL ? "العلامة" : "Brand",
+      brandLock: isRTL ? "نمط الالتزام" : "Brand lock",
+      lockExact: isRTL ? "مطابق" : "Exact",
+      lockPreferred: isRTL ? "مفضّل" : "Preferred",
+      lockFlexible: isRTL ? "مرن" : "Flexible",
+      brandUnavailable: isRTL ? "العلامة غير متاحة" : "Brand unavailable",
+      noBrand: isRTL ? "بدون علامة" : "No brand",
     }),
     [isRTL],
   );
@@ -210,6 +228,84 @@ export default function DashboardProcurementDetail() {
       setPurchaseOrders(pos ?? []);
     },
     [rfqs, request?.business_id],
+  );
+
+  // RFQ-BRAND-PICKER-1D — resolve approved-brand labels for items in view.
+  useEffect(() => {
+    const ids = Array.from(
+      new Set(rfqItems.map((i) => i.requested_brand_id).filter((x): x is string => Boolean(x))),
+    );
+    const missing = ids.filter((id) => !brandLabels[id]);
+    if (missing.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = (await listApprovedBrandsByIds(missing)) as Array<{
+          id: string;
+          ref_id: string | null;
+          name_ar: string;
+          name_en: string;
+          slug: string;
+        }>;
+        if (cancelled) return;
+        setBrandLabels((prev) => {
+          const next = { ...prev };
+          for (const r of rows) {
+            next[r.id] = {
+              name_ar: r.name_ar,
+              name_en: r.name_en,
+              ref_id: r.ref_id ?? null,
+              slug: r.slug,
+            };
+          }
+          return next;
+        });
+      } catch {
+        /* swallow — UI falls back to "Brand unavailable" */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [rfqItems, brandLabels]);
+
+  // RFQ-BRAND-PICKER-1D — patch a line item's brand fields.
+  const onPatchItemBrand = useCallback(
+    async (
+      item: ProcurementRfqItemRow,
+      patch: { requested_brand_id?: string | null; brand_lock?: BrandLock | null },
+    ) => {
+      if (!activeRfq || activeRfq.status !== 'draft') return;
+      setRfqItems((prev) =>
+        prev.map((it) =>
+          it.id === item.id
+            ? {
+                ...it,
+                requested_brand_id:
+                  patch.requested_brand_id === undefined
+                    ? it.requested_brand_id
+                    : patch.requested_brand_id,
+                brand_lock:
+                  patch.requested_brand_id === null
+                    ? null
+                    : patch.brand_lock === undefined
+                      ? it.brand_lock
+                      : patch.brand_lock,
+              }
+            : it,
+        ),
+      );
+      const { error: err } = await updateRfqItem(item.id, patch);
+      if (err) {
+        setError(tx.errLoad);
+        // Reload items to reset to server state.
+        if (activeRfqId) {
+          const { data: ri } = await listRfqItemsByRfq(activeRfqId);
+          setRfqItems(ri ?? []);
+        }
+      }
+    },
+    [activeRfq, activeRfqId, tx.errLoad],
   );
 
   const onCreateRfq = useCallback(async () => {
@@ -542,6 +638,7 @@ export default function DashboardProcurementDetail() {
                     <th className="py-2 pe-3">{tx.item}</th>
                     <th className="py-2 pe-3 text-end">{tx.qty}</th>
                     <th className="py-2 pe-3">{tx.unit}</th>
+                    <th className="py-2 pe-3">{tx.brand}</th>
                     {scored.map((q) => {
                       const supName =
                         suppliers.find((s) => s.id === q.supplier_id)?.name ?? q.supplier_id.slice(0, 6);
@@ -566,11 +663,96 @@ export default function DashboardProcurementDetail() {
                       .map((c) => c.line?.unit_price)
                       .filter((v): v is number => typeof v === "number" && v >= 0)
                       .reduce<number | null>((a, b) => (a === null || b < a ? b : a), null);
+                    const isDraft = activeRfq?.status === 'draft';
+                    const brandLabel = ri.requested_brand_id
+                      ? brandLabels[ri.requested_brand_id]
+                        ? isRTL
+                          ? brandLabels[ri.requested_brand_id].name_ar
+                          : brandLabels[ri.requested_brand_id].name_en
+                        : tx.brandUnavailable
+                      : null;
                     return (
                       <tr key={ri.id} className="border-t align-top">
                         <td className="py-2 pe-3" dir="auto">{ri.name}</td>
                         <td className="py-2 pe-3 text-end tech-content">{ri.quantity}</td>
                         <td className="py-2 pe-3 tech-content">{ri.unit ?? ""}</td>
+                        <td
+                          className="py-2 pe-3 align-top min-w-[180px]"
+                          data-testid="proc-rfq-item-brand"
+                        >
+                          {isDraft ? (
+                            <div className="space-y-1">
+                              <ApprovedBrandPicker
+                                mode="single"
+                                value={ri.requested_brand_id ?? null}
+                                onChange={(v) => {
+                                  if (v === null) {
+                                    void onPatchItemBrand(ri, {
+                                      requested_brand_id: null,
+                                      brand_lock: null,
+                                    });
+                                  } else if (v !== ri.requested_brand_id) {
+                                    void onPatchItemBrand(ri, {
+                                      requested_brand_id: v,
+                                      brand_lock: ri.brand_lock ?? 'preferred',
+                                    });
+                                  }
+                                }}
+                              />
+                              {ri.requested_brand_id && (
+                                <div
+                                  className="flex flex-wrap items-center gap-1"
+                                  role="radiogroup"
+                                  aria-label={tx.brandLock}
+                                  data-testid="proc-rfq-item-brand-lock"
+                                >
+                                  {(['exact', 'preferred', 'flexible'] as const).map((lk) => {
+                                    const active = (ri.brand_lock ?? 'preferred') === lk;
+                                    const lkLabel =
+                                      lk === 'exact'
+                                        ? tx.lockExact
+                                        : lk === 'preferred'
+                                          ? tx.lockPreferred
+                                          : tx.lockFlexible;
+                                    return (
+                                      <button
+                                        key={lk}
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={active}
+                                        onClick={() => {
+                                          if (!active) {
+                                            void onPatchItemBrand(ri, { brand_lock: lk });
+                                          }
+                                        }}
+                                        className={`rounded-full border px-2 py-0.5 text-[10px] transition-colors ${
+                                          active
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'border-border/40 hover:bg-accent/5 text-muted-foreground'
+                                        }`}
+                                        title={describeBrandLock(lk, isRTL ? 'ar' : 'en')}
+                                      >
+                                        {lkLabel}
+                                      </button>
+                                    );
+                                  })}
+                                  <span
+                                    className="ms-1 text-[10px] text-muted-foreground"
+                                    dir="auto"
+                                  >
+                                    {describeBrandLock(ri.brand_lock ?? 'preferred', isRTL ? 'ar' : 'en')}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[11px]" dir="auto">
+                              {brandLabel ?? (
+                                <span className="text-muted-foreground">{tx.noBrand}</span>
+                              )}
+                            </span>
+                          )}
+                        </td>
                         {cells.map((c) => {
                           if (!c.line || c.line.unit_price == null) {
                             return (
@@ -594,7 +776,7 @@ export default function DashboardProcurementDetail() {
                     );
                   })}
                   <tr className="border-t font-medium">
-                    <td className="py-2 pe-3" colSpan={3}>{tx.poTotal}</td>
+                    <td className="py-2 pe-3" colSpan={4}>{tx.poTotal}</td>
                     {scored.map((q) => {
                       const m = matrix.find((mm) => mm.quote_id === q.id);
                       const total = m?.computed_total ?? q.total_amount ?? 0;

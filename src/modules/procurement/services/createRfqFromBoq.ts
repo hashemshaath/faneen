@@ -109,6 +109,11 @@ export async function createProcurementRfqFromBoq(
       unit: it.unit ?? null,
       target_price: Number.isFinite(it.unit_price) && it.unit_price > 0 ? Number(it.unit_price) : null,
       sort_order: it.sort_order ?? copied,
+      // RFQ-BRAND-PICKER-1D — copy approved brand requirement from the BOQ
+      // line. Approved-brand validation trigger on procurement_rfq_items
+      // will block insert if the brand became invalid post-BOQ.
+      requested_brand_id: it.brand_id ?? null,
+      brand_lock: it.brand_id ? (it.brand_lock ?? null) : null,
     });
     if (!liErr) copied++;
   }

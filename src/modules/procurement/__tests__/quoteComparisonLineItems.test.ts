@@ -22,6 +22,8 @@ function rfqItem(id: string, sort = 0): ProcurementRfqItemRow {
     unit: null,
     target_price: null,
     sort_order: sort,
+    requested_brand_id: null,
+    brand_lock: null,
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
   };
