@@ -579,7 +579,7 @@ export async function adminApproveBrandRequestRpc(args: {
       p_admin_note: args.adminNote ?? null,
     });
     if (error) throw error;
-    const row = data as BrandRequest;
+    const row = data as unknown as { brand_id?: string | null; approved_brand_id?: string | null };
     approvedBrandId = row?.brand_id ?? row?.approved_brand_id ?? null;
 
     // Optional: attach sector links if the requester listed them
