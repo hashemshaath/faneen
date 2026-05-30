@@ -68,6 +68,7 @@ type StaffRow = {
   is_active?: boolean | null;
   is_primary_manager?: boolean | null;
   display_name?: string | null;
+  email?: string | null;
 };
 
 type TeamRow = {
@@ -98,7 +99,7 @@ type DelegationRow = {
 type ActivitySessionRow = {
   id: string;
   source?: string | null;
-  last_activity_at?: string | null;
+  last_seen_at?: string | null;
   business_staff_id?: string | null;
 };
 
@@ -197,11 +198,35 @@ function StaffOverview({ businessId }: { businessId: string }) {
     setError(null);
     const { data, error: e } = await listBusinessStaffByBusiness<StaffRow>({
       businessId,
-      select: 'id, user_id, ref_id, role, is_active, is_primary_manager, display_name',
+      select: 'id, user_id, ref_id, role, is_active, is_primary_manager',
       includeInactive: true,
     });
-    if (e) setError(bi('تعذر تحميل الموظفين', 'Failed to load staff'));
-    else setRows((data ?? []) as StaffRow[]);
+    if (e) {
+      setError(bi('تعذر تحميل الموظفين', 'Failed to load staff'));
+      return;
+    }
+    const baseRows = (data ?? []) as StaffRow[];
+    const userIds = Array.from(
+      new Set(baseRows.map((r) => r.user_id).filter((v): v is string => !!v)),
+    );
+    if (userIds.length === 0) {
+      setRows(baseRows);
+      return;
+    }
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, full_name, email')
+      .in('user_id', userIds);
+    const byUser = new Map(
+      ((profiles ?? []) as Array<{ user_id: string; full_name: string | null; email: string | null }>)
+        .map((p) => [p.user_id, p]),
+    );
+    setRows(
+      baseRows.map((r) => {
+        const p = r.user_id ? byUser.get(r.user_id) : null;
+        return { ...r, display_name: p?.full_name ?? null, email: p?.email ?? null };
+      }),
+    );
   }, [businessId, bi]);
 
   useEffect(() => { void load(); }, [load]);
@@ -249,7 +274,10 @@ function StaffOverview({ businessId }: { businessId: string }) {
                     <span className="font-medium">
                       {r.display_name ?? bi('عضو فريق', 'Staff member')}
                     </span>
-                    {r.ref_id ? <span className="tech-content text-xs text-muted-foreground">{r.ref_id}</span> : null}
+                    <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                      {r.ref_id ? <span className="tech-content">{r.ref_id}</span> : null}
+                      {r.email ? <span className="tech-content">· {r.email}</span> : null}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     {isPM ? (
@@ -572,7 +600,7 @@ function ActivitySessionsSection({ businessId }: { businessId: string }) {
     setError(null);
     const { data, error: e } = await listStaffActivitySessions({
       businessId,
-      select: 'id, source, last_activity_at, business_staff_id',
+      select: 'id, source, last_seen_at, business_staff_id',
       limit: 50,
     });
     if (e) setError(bi('تعذر تحميل الجلسات', 'Failed to load sessions'));
@@ -597,7 +625,7 @@ function ActivitySessionsSection({ businessId }: { businessId: string }) {
                 {s.source ?? 'system'}
               </span>
               <span className="tech-content text-xs text-muted-foreground">
-                {s.last_activity_at ? new Date(s.last_activity_at).toISOString().replace('T', ' ').slice(0, 16) : '—'}
+                {s.last_seen_at ? new Date(s.last_seen_at).toISOString().replace('T', ' ').slice(0, 16) : '—'}
               </span>
             </li>
           ))}
