@@ -20,7 +20,6 @@ import {
   ADMIN_REF_OFFICIAL,
   type AdminReferenceInspectorBundle,
 } from '@/modules/admin';
-import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
 
 /**
  * BUSINESS-ADMIN-3 — Admin Reference Inspector.
