@@ -15054,6 +15054,22 @@ export type Database = {
         Returns: undefined
       }
       categorize_email_link: { Args: { _url: string }; Returns: string }
+      check_business_cr_duplicates: {
+        Args: {
+          _exclude_business_id: string
+          _national_id?: string
+          _unified_number?: string
+          _vat_number?: string
+        }
+        Returns: {
+          field: string
+          id: string
+          name_ar: string
+          name_en: string
+          ref_id: string
+          value: string
+        }[]
+      }
       check_email_deliverability: { Args: never; Returns: undefined }
       check_email_registered: { Args: { _email: string }; Returns: boolean }
       check_password_reset_rate_limit: {
