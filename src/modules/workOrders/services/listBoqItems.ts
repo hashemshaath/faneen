@@ -9,7 +9,7 @@ export async function listBoqItems(options: {
   const { data, error } = await supabase
     .from("work_order_boq_items")
     .select(
-      "id, ref_id, boq_id, measurement_id, item_type, title_ar, title_en, quantity, unit, unit_price, total_price, metadata, sort_order, created_at, updated_at, deleted_at",
+      "id, ref_id, boq_id, measurement_id, item_type, title_ar, title_en, quantity, unit, unit_price, total_price, metadata, sort_order, brand_id, brand_lock, created_at, updated_at, deleted_at",
     )
     .eq("boq_id", options.boqId)
     .is("deleted_at", null)
