@@ -86,6 +86,9 @@ const DashboardProfile: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [splLoading, setSplLoading] = useState(false);
+  // Auto-compose the detailed address line from structured fields unless
+  // the user has edited the line manually (or pulled it from SPL).
+  const [addressLineManual, setAddressLineManual] = useState(false);
 
   // Seed form from profile
   useEffect(() => {
@@ -115,6 +118,9 @@ const DashboardProfile: React.FC = () => {
       address_line: profile.address_line ?? '',
     });
     setUsernameOk(true);
+    // If the saved line differs from a fresh compose, treat as manual so we
+    // don't overwrite the user's existing detail on first render.
+    setAddressLineManual(!!(profile.address_line ?? '').trim());
   }, [profile, user?.email]);
 
   // Owner business (for "view as provider" link)
