@@ -74,6 +74,10 @@ interface AdminQuoteRow {
   metadata: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+  // RFQ-BRAND-PICKER-1B — optional brand preference
+  preferred_brand_ids: string[] | null;
+  brand_preference_mode: string | null;
+  brand_notes: string | null;
 }
 
 interface FileRow {
