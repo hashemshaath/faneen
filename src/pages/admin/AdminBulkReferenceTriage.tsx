@@ -322,13 +322,6 @@ export default function AdminBulkReferenceTriage() {
   return (
     <DashboardLayout>
       <div className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
-        <OperationsBreadcrumbs
-          homeTo="/admin"
-          crumbs={[
-            { labelEn: 'Operations', labelAr: 'العمليات', to: '/admin/operations/console' },
-            { labelEn: 'Bulk Reference Triage', labelAr: 'فحص المراجع المتعدد' },
-          ]}
-        />
         <AdminOpsQuickLinks />
         <div>
           <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
