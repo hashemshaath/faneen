@@ -16,7 +16,7 @@ import {
   Building2, Check, Circle, Clock, AlertTriangle, ShieldCheck, Send,
   MapPin, Phone, FileText, Layers, Image as ImageIcon, ArrowRight,
   Sparkles, TrendingUp, ExternalLink, Eye, Zap, ChevronRight, Lightbulb,
-  CalendarClock, Target, Award,
+  CalendarClock, Target, Award, Inbox,
 } from 'lucide-react';
 
 type ApprovalStatus = 'draft' | 'submitted' | 'under_review' | 'needs_changes' | 'rejected' | 'approved' | 'published';
