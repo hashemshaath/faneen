@@ -273,17 +273,18 @@ export const NationalAddressForm: React.FC<NationalAddressFormProps> = ({
             type="button"
             variant="outline"
             onClick={lookupShortAddress}
-            disabled={splLoading || (value.short_address ?? '').length !== 8}
+            disabled={splLoading}
+            title={t(isRTL, 'اختياري — لتعبئة الحقول تلقائياً', 'Optional — to auto-fill the fields')}
             className="h-11 rounded-xl gap-1.5 shrink-0"
           >
             {splLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-            {t(isRTL, 'استدعاء', 'Lookup')}
+            {t(isRTL, 'استدعاء (اختياري)', 'Lookup (optional)')}
           </Button>
         </div>
         <p className="text-[10px] text-muted-foreground mt-1">
           {t(isRTL,
-            '4 أحرف ثم 4 أرقام. سنقوم بتعبئة المنطقة والمدينة والحي تلقائيًا.',
-            '4 letters + 4 digits. We will auto-fill region, city and district.')}
+            'يمكنك إدخاله وحفظه يدوياً، أو الضغط على "استدعاء" لتعبئة المنطقة والمدينة والحي تلقائياً (اختياري).',
+            'You can type and save it manually, or click "Lookup" to auto-fill region, city and district (optional).')}
         </p>
       </div>
 
