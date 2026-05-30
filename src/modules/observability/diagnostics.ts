@@ -6,11 +6,11 @@
  *
  * No DB calls here.
  */
-import type { IntegritySummaryItem } from '@/modules/health/dataIntegrity';
+import type { IntegritySummary } from '@/modules/health/dataIntegrity';
 import type { DataIntegrityInputSummary } from './metrics';
 
 export function summarizeIntegrityReport(
-  summary: IntegritySummaryItem[],
+  summary: IntegritySummary[],
 ): DataIntegrityInputSummary {
   let red = 0;
   let amber = 0;
