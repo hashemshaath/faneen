@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  User, Mail, Phone, Globe, MapPin, Hash, Save, Loader2, Camera,
+  User, Mail, Phone, Globe, Hash, Save, Loader2, Camera,
   ShieldCheck, ExternalLink, Building2, Crown, AtSign, Languages,
   AlertCircle, ArrowLeft, Settings as SettingsIcon, Copy, Check,
   IdCard, Receipt, MapPinned, Search,
@@ -30,7 +30,7 @@ import { updateProfile } from '@/modules/users';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
 import { nationalAddressLookup } from '@/modules/locations';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
-import { getDisplayEmail, isSyntheticPhoneEmail } from '@/lib/auth-email';
+import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { cn } from '@/lib/utils';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
