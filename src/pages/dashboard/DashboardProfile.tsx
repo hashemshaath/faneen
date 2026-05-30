@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  User, Mail, Phone, Globe, MapPin, Hash, Save, Loader2, Camera,
+  User, Mail, Phone, Globe, Hash, Save, Loader2, Camera,
   ShieldCheck, ExternalLink, Building2, Crown, AtSign, Languages,
   AlertCircle, ArrowLeft, Settings as SettingsIcon, Copy, Check,
   IdCard, Receipt, MapPinned, Search,
@@ -30,13 +30,10 @@ import { updateProfile } from '@/modules/users';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
 import { nationalAddressLookup } from '@/modules/locations';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
-import { getDisplayEmail, isSyntheticPhoneEmail } from '@/lib/auth-email';
+import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { cn } from '@/lib/utils';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
-
-type RefRow = { id: string; name_ar: string; name_en: string };
-type CityRow = RefRow & { country_id: string };
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
@@ -73,8 +70,6 @@ const DashboardProfile: React.FC = () => {
     phone: '',
     avatar_url: '',
     preferred_language: 'ar' as 'ar' | 'en',
-    country_id: '' as string | null,
-    city_id: '' as string | null,
     national_id: '',
     national_id_type: '' as '' | 'saudi' | 'iqama',
     vat_number: '',
@@ -100,12 +95,13 @@ const DashboardProfile: React.FC = () => {
       full_name_ar: profile.full_name_ar ?? '',
       full_name_en: profile.full_name_en ?? '',
       username: profile.username ?? '',
-      email: profile.email ?? '',
+      // Unified email — prefer the authenticated login email so that
+      // "profile email" and "login email" are always one and the same.
+      // Fall back to the stored profile email (e.g. synthetic phone signup).
+      email: (isSyntheticPhoneEmail(user?.email) ? (profile.email ?? '') : (user?.email ?? profile.email ?? '')),
       phone: profile.phone ?? '',
       avatar_url: profile.avatar_url ?? '',
       preferred_language: (profile.preferred_language as 'ar' | 'en') ?? 'ar',
-      country_id: profile.country_id ?? null,
-      city_id: profile.city_id ?? null,
       national_id: profile.national_id ?? '',
       national_id_type: (profile.national_id_type as 'saudi' | 'iqama' | null) ?? '',
       vat_number: profile.vat_number ?? '',
@@ -119,7 +115,7 @@ const DashboardProfile: React.FC = () => {
       address_line: profile.address_line ?? '',
     });
     setUsernameOk(true);
-  }, [profile]);
+  }, [profile, user?.email]);
 
   // Owner business (for "view as provider" link)
   const { data: business } = useQuery({
@@ -144,29 +140,6 @@ const DashboardProfile: React.FC = () => {
     staleTime: 60_000,
   });
 
-  // Reference data
-  const { data: countries = [] } = useQuery({
-    queryKey: ['ref-countries'],
-    queryFn: async () => {
-      const { data } = await supabase.from('countries').select('id, name_ar, name_en').order('name_en');
-      return (data ?? []) as RefRow[];
-    },
-    staleTime: 5 * 60_000,
-  });
-  const { data: cities = [] } = useQuery({
-    queryKey: ['ref-cities', form.country_id],
-    queryFn: async () => {
-      if (!form.country_id) return [] as CityRow[];
-      const { data } = await supabase.from('cities')
-        .select('id, name_ar, name_en, country_id')
-        .eq('country_id', form.country_id)
-        .order('name_en');
-      return (data ?? []) as CityRow[];
-    },
-    enabled: !!form.country_id,
-    staleTime: 5 * 60_000,
-  });
-
   // Dirty + completeness
   const dirty = useMemo(() => {
     if (!profile) return false;
@@ -179,8 +152,6 @@ const DashboardProfile: React.FC = () => {
       [form.phone, profile.phone ?? ''],
       [form.avatar_url, profile.avatar_url ?? ''],
       [form.preferred_language, (profile.preferred_language as 'ar' | 'en') ?? 'ar'],
-      [form.country_id, profile.country_id ?? null],
-      [form.city_id, profile.city_id ?? null],
       [form.national_id, profile.national_id ?? ''],
       [form.national_id_type, (profile.national_id_type ?? '')],
       [form.vat_number, profile.vat_number ?? ''],
@@ -203,8 +174,6 @@ const DashboardProfile: React.FC = () => {
       !!form.username,
       !!form.email.trim(),
       !!form.phone.trim(),
-      !!form.country_id,
-      !!form.city_id,
       !!form.national_id.trim(),
       !!(form.district.trim() || form.address_line.trim() || form.short_national_address.trim()),
     ];
@@ -248,8 +217,6 @@ const DashboardProfile: React.FC = () => {
           phone: form.phone.trim() || '',
           avatar_url: form.avatar_url || null,
           preferred_language: form.preferred_language,
-          country_id: form.country_id,
-          city_id: form.city_id,
           national_id: nid || null,
           national_id_type: nid ? (nid[0] === '1' ? 'saudi' : 'iqama') : null,
           vat_number: vat || null,
@@ -264,6 +231,19 @@ const DashboardProfile: React.FC = () => {
         },
       });
       if (error) throw error;
+      // Unified email: when the user changes the visible email and it
+      // differs from the auth/login email, push the update to auth.users
+      // as well so "profile email" and "login email" stay one and the
+      // same. Skip for synthetic phone-signup accounts.
+      const newEmail = form.email.trim();
+      if (
+        newEmail
+        && !isSyntheticPhoneEmail(user.email)
+        && newEmail.toLowerCase() !== (user.email ?? '').toLowerCase()
+      ) {
+        const { error: authErr } = await supabase.auth.updateUser({ email: newEmail });
+        if (authErr) throw authErr;
+      }
     },
     onMutate: () => setSaving(true),
     onSettled: () => setSaving(false),
@@ -564,7 +544,7 @@ const DashboardProfile: React.FC = () => {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-xs font-medium text-muted-foreground">
-                      {t(isRTL, 'البريد الإلكتروني للملف', 'Profile email')}
+                      {t(isRTL, 'البريد الإلكتروني', 'Email address')}
                     </Label>
                     <div className="relative mt-1">
                       <Mail className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60"
@@ -577,6 +557,7 @@ const DashboardProfile: React.FC = () => {
                         style={{ paddingInlineStart: '38px' }}
                         placeholder="name@example.com"
                         maxLength={255}
+                        disabled={isSyntheticPhoneEmail(user?.email)}
                       />
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1 flex items-start gap-1">
@@ -585,12 +566,9 @@ const DashboardProfile: React.FC = () => {
                         ? t(isRTL,
                             'هذا البريد للعرض فقط. تسجيل الدخول يتم عبر رقم الجوال.',
                             'This email is for display only. You sign in with your phone number.')
-                        : (
-                          <span>
-                            {t(isRTL, 'بريد تسجيل الدخول:', 'Login email:')}{' '}
-                            <span className="tech-content font-medium">{user?.email}</span>
-                          </span>
-                        )}
+                        : t(isRTL,
+                            'بريد موحّد للملف الشخصي وتسجيل الدخول. أي تغيير يتطلب تأكيدًا عبر بريدك الحالي.',
+                            'Unified email for profile and login. Any change requires confirmation via your current email.')}
                     </p>
                   </div>
                   <div>
@@ -807,46 +785,17 @@ const DashboardProfile: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Location & Preferences */}
+            {/* Preferences — country/city removed (already captured by the
+                National Address card above). Only the UI language remains. */}
             <Card>
               <CardContent className="p-4 sm:p-5 space-y-4">
                 <header className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  <h2 className="text-sm font-bold">{t(isRTL, 'الموقع والتفضيلات', 'Location & preferences')}</h2>
+                  <Languages className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-bold">{t(isRTL, 'التفضيلات', 'Preferences')}</h2>
                 </header>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الدولة', 'Country')}</Label>
-                    <Select
-                      value={form.country_id ?? ''}
-                      onValueChange={(v) => setForm((f) => ({ ...f, country_id: v || null, city_id: null }))}
-                    >
-                      <SelectTrigger className="mt-1 h-11 rounded-xl"><SelectValue placeholder={t(isRTL, 'اختر الدولة', 'Select country')} /></SelectTrigger>
-                      <SelectContent>
-                        {countries.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'المدينة', 'City')}</Label>
-                    <Select
-                      value={form.city_id ?? ''}
-                      onValueChange={(v) => setForm((f) => ({ ...f, city_id: v || null }))}
-                      disabled={!form.country_id || cities.length === 0}
-                    >
-                      <SelectTrigger className="mt-1 h-11 rounded-xl"><SelectValue placeholder={t(isRTL, 'اختر المدينة', 'Select city')} /></SelectTrigger>
-                      <SelectContent>
-                        {cities.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
                     <Label className="text-xs font-medium text-muted-foreground">
-                      <Languages className="w-3 h-3 inline me-1" />
                       {t(isRTL, 'اللغة المفضلة', 'Preferred language')}
                     </Label>
                     <Select
@@ -880,21 +829,12 @@ const DashboardProfile: React.FC = () => {
                 />
                 <Row
                   icon={isSyntheticPhoneEmail(user?.email) ? <Phone className="w-3.5 h-3.5" /> : <Mail className="w-3.5 h-3.5" />}
-                  label={isSyntheticPhoneEmail(user?.email) ? t(isRTL, 'رقم الدخول', 'Login phone') : t(isRTL, 'بريد الدخول', 'Login email')}
+                  label={isSyntheticPhoneEmail(user?.email) ? t(isRTL, 'رقم الدخول', 'Login phone') : t(isRTL, 'البريد الإلكتروني', 'Email')}
                   value={
                     <span className="tech-content truncate max-w-[180px] inline-block align-middle">
                       {isSyntheticPhoneEmail(user?.email)
                         ? (user?.phone ? `+${user.phone}` : (profile?.phone || '—'))
                         : (user?.email ?? '—')}
-                    </span>
-                  }
-                />
-                <Row
-                  icon={<Mail className="w-3.5 h-3.5" />}
-                  label={t(isRTL, 'البريد الرسمي', 'Profile email')}
-                  value={
-                    <span className="tech-content truncate max-w-[180px] inline-block align-middle">
-                      {getDisplayEmail({ authEmail: user?.email, profileEmail: profile?.email }) ?? '—'}
                     </span>
                   }
                 />
