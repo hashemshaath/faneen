@@ -41,6 +41,9 @@ const ROUTE_LABELS: Record<string, { ar: string; en: string }> = {
   '/admin/reports': { ar: 'مركز التقارير', en: 'Reports Center' },
   '/admin/contracts': { ar: 'إدارة العقود', en: 'Manage Contracts' },
   '/admin/contracts/create': { ar: 'إنشاء عقد جديد', en: 'Create Contract' },
+  '/dashboard/rfq': { ar: 'طلبات عروض الأسعار', en: 'Requests for Quotes' },
+  '/dashboard/rfq/inbox': { ar: 'صندوق طلبات الأسعار', en: 'RFQ Inbox' },
+  '/dashboard/loyalty': { ar: 'نقاط الولاء', en: 'Loyalty Points' },
 };
 
 function labelFor(path: string, isRTL: boolean): string {

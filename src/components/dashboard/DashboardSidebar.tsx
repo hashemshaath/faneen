@@ -94,6 +94,8 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'فرص عروض الأسعار', en: 'Quote Opportunities' }, url: '/dashboard/provider/leads', icon: Inbox },
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
       { label: { ar: 'العملاء', en: 'Clients' }, url: '/dashboard/clients', icon: Users },
+      { label: { ar: 'طلبات عروض الأسعار', en: 'RFQs' }, url: '/dashboard/rfq', icon: FileText, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
+      { label: { ar: 'صندوق طلبات الأسعار', en: 'RFQ Inbox' }, url: '/dashboard/rfq/inbox', icon: Inbox },
     ],
   },
   {
@@ -115,6 +117,7 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'العضوية', en: 'Membership' }, url: '/membership', icon: Crown },
       { label: { ar: 'العضوية والرصيد', en: 'Provider Membership' }, url: '/dashboard/provider/membership', icon: Crown },
       { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
+      { label: { ar: 'نقاط الولاء', en: 'Loyalty Points' }, url: '/dashboard/loyalty', icon: Star, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
     ],
   },
   {
