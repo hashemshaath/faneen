@@ -38,6 +38,9 @@ const ROUTE_LABELS: Record<string, { ar: string; en: string }> = {
   '/dashboard/notifications': { ar: 'الإشعارات', en: 'Notifications' },
   '/dashboard/settings': { ar: 'الإعدادات', en: 'Settings' },
   '/dashboard/settings/staff': { ar: 'مركز الموظفين', en: 'Staff Center' },
+  '/admin/reports': { ar: 'مركز التقارير', en: 'Reports Center' },
+  '/admin/contracts': { ar: 'إدارة العقود', en: 'Manage Contracts' },
+  '/admin/contracts/create': { ar: 'إنشاء عقد جديد', en: 'Create Contract' },
 };
 
 function labelFor(path: string, isRTL: boolean): string {

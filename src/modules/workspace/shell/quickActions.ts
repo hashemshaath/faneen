@@ -76,6 +76,27 @@ export const QUICK_ACTIONS: readonly QuickActionDefinition[] = [
     audiences: ['admin'],
     icon: 'Database',
   },
+  {
+    id: 'admin-reports',
+    label: { ar: 'مركز التقارير', en: 'Reports Center' },
+    to: '/admin/reports',
+    audiences: ['admin'],
+    icon: 'BarChart3',
+  },
+  {
+    id: 'admin-contracts',
+    label: { ar: 'إدارة العقود', en: 'Manage Contracts' },
+    to: '/admin/contracts',
+    audiences: ['admin'],
+    icon: 'FileText',
+  },
+  {
+    id: 'admin-contract-create',
+    label: { ar: 'إنشاء عقد جديد', en: 'Create Contract' },
+    to: '/admin/contracts/create',
+    audiences: ['admin'],
+    icon: 'FilePlus',
+  },
 ];
 
 export interface QuickActionFilterCtx {
