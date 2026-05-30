@@ -15638,6 +15638,15 @@ export type Database = {
           sample_count: number
         }[]
       }
+      grant_loyalty_points: {
+        Args: {
+          _points: number
+          _reason: string
+          _reference_id?: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       grant_monthly_provider_credit: {
         Args: {
           p_amount: number

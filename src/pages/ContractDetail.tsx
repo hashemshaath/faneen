@@ -30,6 +30,7 @@ import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { ContractFullHistory } from '@/modules/contracts/components/ContractFullHistory';
 import { ContractCounterOffersPanel } from '@/modules/contracts/components/ContractCounterOffersPanel';
+import { ContractVersionDiff } from '@/modules/contracts/components/ContractVersionDiff';
 import { mapContractLockError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { approveAmendment, rejectAmendment, cancelAmendment, applyAmendment } from '@/modules/contracts/services/amendments';
@@ -3350,6 +3351,11 @@ const ContractDetail = () => {
               }
               currentUserId={user?.id ?? null}
             />
+          </TabsContent>
+
+          {/* ── Version Diff Viewer ── */}
+          <TabsContent value="versions">
+            <ContractVersionDiff contractId={contract.id} />
           </TabsContent>
         </Tabs>
       </div>
