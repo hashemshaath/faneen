@@ -586,7 +586,18 @@ export default function AdminProviderReview() {
                             className="mt-0.5 inline-flex items-center gap-1 text-xs text-accent tech-content hover:underline"
                           >
                             <Globe className="h-3 w-3" /> qitaat.com/{selected.username}
+                            <ExternalLink className="h-2.5 w-2.5" />
                           </a>
+                        )}
+                        {selected.user_id && (
+                          <Link
+                            to={`/admin/identity?focus=${selected.user_id}`}
+                            className="mt-0.5 ms-2 inline-flex items-center gap-1 text-xs text-info hover:underline"
+                            title={isRTL ? 'فتح حساب المالك' : 'Open owner account'}
+                          >
+                            <UsersIcon className="h-3 w-3" />
+                            {isRTL ? 'حساب المالك' : 'Owner account'}
+                          </Link>
                         )}
                       </div>
                     </div>
@@ -815,7 +826,10 @@ export default function AdminProviderReview() {
                       {isRTL ? 'رفض' : 'Reject'}
                     </Button>
                     <Button asChild size="sm" variant="ghost">
-                      <Link to="/admin/businesses">{isRTL ? 'إدارة كاملة' : 'Full admin'}</Link>
+                      <Link to={`/admin/identity?view=businesses&focus=${selected.id}`} className="gap-1">
+                        <Building2 className="h-3.5 w-3.5" />
+                        {isRTL ? 'إدارة كاملة' : 'Full admin'}
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>
