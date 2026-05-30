@@ -303,10 +303,7 @@ export async function reviewSupplierQuoteItemBrandEquivalence(
   if (!input.reviewer_id) {
     return { data: null, error: new Error('reviewer_required') };
   }
-  const note =
-    typeof input.note === 'string'
-      ? input.note.replace(/\s+/g, ' ').trim().slice(0, REVIEW_NOTE_MAX) || null
-      : null;
+  const note = sanitizeBrandReviewNote(input.note);
   const patch = {
     brand_review_status: input.decision,
     brand_match_status:
@@ -323,7 +320,36 @@ export async function reviewSupplierQuoteItemBrandEquivalence(
     .maybeSingle();
   return {
     data: (data as unknown as ProcurementSupplierQuoteItemRow | null) ?? null,
-    error,
+    error: mapBrandReviewError(error),
+  };
+}
+
+/**
+ * RFQ-BRAND-PICKER-1F — explicit override helper to move an already-decided
+ * (approved / rejected) review back to `pending`. Without calling this,
+ * UI/service callers cannot reopen a finalized review.
+ *
+ * `brand_reviewed_by` / `brand_reviewed_at` are intentionally cleared so
+ * audit fields only reflect the most recent finalized decision.
+ */
+export async function reopenSupplierQuoteItemBrandReview(
+  itemId: string,
+): Promise<{ data: ProcurementSupplierQuoteItemRow | null; error: unknown }> {
+  const patch = {
+    brand_review_status: 'pending' as const,
+    brand_reviewed_by: null,
+    brand_reviewed_at: null,
+    brand_review_note: null,
+  };
+  const { data, error } = await supabase
+    .from('procurement_supplier_quote_items')
+    .update(patch as never)
+    .eq('id', itemId)
+    .select(SELECT)
+    .maybeSingle();
+  return {
+    data: (data as unknown as ProcurementSupplierQuoteItemRow | null) ?? null,
+    error: mapBrandReviewError(error),
   };
 }
 
