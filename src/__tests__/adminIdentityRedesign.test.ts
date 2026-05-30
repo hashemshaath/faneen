@@ -10,8 +10,8 @@ const bizSrc = readFileSync(BIZ, 'utf8');
 
 describe('ADMIN-IDENTITY-REDESIGN-1 page header & subtitle', () => {
   it('renders the new bilingual title', () => {
-    expect(src).toContain('مركز الهوية والكيانات');
-    expect(src).toContain('Identity & Entities Center');
+    expect(src).toContain('المستخدمون والمنشآت');
+    expect(src).toContain('Users & Businesses');
   });
   it('renders a subtitle mentioning users, businesses, ownership, diagnostics', () => {
     expect(src).toContain('المستخدمين');

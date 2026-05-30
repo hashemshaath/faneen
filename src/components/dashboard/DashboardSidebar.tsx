@@ -232,7 +232,7 @@ const adminBaseGroups: MenuGroup[] = [
     //    "Users & Access" + "Businesses & Providers" which duplicated
     //    the Account Center destination and fragmented the journey
     //    between a user and the businesses they manage.
-    groupLabel: { ar: 'الهويات والمنشآت', en: 'Identities & Entities' },
+    groupLabel: { ar: 'المستخدمون والمنشآت', en: 'Users & Businesses' },
     icon: Users,
     items: [
       // People

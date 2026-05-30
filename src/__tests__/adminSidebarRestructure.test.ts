@@ -8,7 +8,7 @@ import { resolve } from 'node:path';
  * Enforces the consolidated admin sidebar structure:
  *  - exactly 9 groups (8 admin + Account) after merging
  *    "Users & Access" + "Businesses & Providers" into
- *    "Identities & Entities"
+ *    "Users & Businesses"
  *  - no duplicate hrefs across the admin menu
  *  - approved AR/EN group labels present
  *  - no duplicate "مراجعة المزودين" / "إدارة الوصول"
@@ -31,7 +31,7 @@ const ADMIN_BLOCK = (() => {
 
 const APPROVED_GROUPS: Array<{ ar: string; en: string }> = [
   { ar: 'نظرة عامة', en: 'Overview' },
-  { ar: 'الهويات والمنشآت', en: 'Identities & Entities' },
+  { ar: 'المستخدمون والمنشآت', en: 'Users & Businesses' },
   { ar: 'الطلبات والعقود', en: 'Requests & Contracts' },
   { ar: 'العضويات والمدفوعات', en: 'Memberships & Payments' },
   { ar: 'التواصل', en: 'Communications' },
