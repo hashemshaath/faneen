@@ -110,6 +110,14 @@ export interface SubmitQuoteItemInput {
   brand_match_status?: BrandMatchStatus | null;
   /** RFQ-BRAND-PICKER-1E — initial review status (defaults to 'not_required'). */
   brand_review_status?: BrandReviewStatus;
+  /**
+   * RFQ-BRAND-PICKER-1F — optional RFQ-side context. When provided we
+   * auto-classify match + review status using `classifyBrandEquivalence`
+   * (caller-supplied `brand_match_status` becomes the fallback only when
+   * no context is supplied).
+   */
+  requested_brand_id?: string | null;
+  brand_lock?: BrandLock | null;
 }
 
 /** Computes `total_price` from unit_price * quantity when unit_price is given. */
@@ -144,6 +152,14 @@ export async function submitQuoteItems(
   const rows = inputs.map((i) => {
     const proposed_brand_id = i.proposed_brand_id ?? null;
     const proposed_brand_name = sanitizeProposedBrandName(i.proposed_brand_name);
+    const cls = computePersistedBrandClassification({
+      requested_brand_id: i.requested_brand_id,
+      brand_lock: i.brand_lock,
+      proposed_brand_id,
+      proposed_brand_name,
+      fallback_match_status: i.brand_match_status ?? null,
+      fallback_review_status: i.brand_review_status,
+    });
     return {
       business_id: i.business_id,
       quote_id: i.quote_id,
@@ -154,8 +170,8 @@ export async function submitQuoteItems(
       notes: i.notes ?? null,
       proposed_brand_id,
       proposed_brand_name,
-      brand_match_status: i.brand_match_status ?? null,
-      brand_review_status: i.brand_review_status ?? 'not_required',
+      brand_match_status: cls.brand_match_status,
+      brand_review_status: cls.brand_review_status,
     };
   });
   const { data, error } = await supabase
