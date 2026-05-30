@@ -20,7 +20,6 @@ import {
   ADMIN_REF_OFFICIAL,
   type AdminReferenceInspectorBundle,
 } from '@/modules/admin';
-import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
 
 /**
  * BUSINESS-ADMIN-3 — Admin Reference Inspector.
@@ -131,14 +130,6 @@ export default function AdminReferenceInspector() {
   return (
     <DashboardLayout>
       <div className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
-        <OperationsBreadcrumbs
-          homeTo="/admin"
-          crumbs={[
-            { labelEn: 'Operations', labelAr: 'العمليات', to: '/admin/operations/console' },
-            { labelEn: 'Reference Inspector', labelAr: 'مستكشف المراجع', to: '/admin/ref/triage' },
-            { labelEn: refValid ? refId : 'Invalid', labelAr: refValid ? refId : 'غير صالح' },
-          ]}
-        />
         <div className="flex items-start justify-between gap-2 flex-wrap">
           <div>
             <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">

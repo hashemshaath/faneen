@@ -212,23 +212,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   // Admin context: render permanent orange top strip per brand spec §15.
   const isAdminContext = location.pathname.startsWith('/admin');
 
-  // Build a small breadcrumb trail for admin pages so users always see
-  // their position within the admin tree, regardless of which page lands them.
-  const adminCrumbs = React.useMemo(() => {
-    if (!isAdminContext) return [] as Array<{ path: string; label: string }>;
-    const parts = location.pathname.split('/').filter(Boolean); // ['admin', 'x', 'y']
-    const acc: Array<{ path: string; label: string }> = [];
-    let cur = '';
-    for (const p of parts) {
-      cur += `/${p}`;
-      const meta = breadcrumbMap[cur];
-      const label = meta
-        ? (isRTL ? meta.ar : meta.en)
-        : p.replace(/-/g, ' ');
-      acc.push({ path: cur, label });
-    }
-    return acc;
-  }, [isAdminContext, location.pathname, isRTL]);
+  // Breadcrumbs are rendered globally by <WorkspaceHeader /> via
+  // useBreadcrumbs(). Do NOT render a second admin-only breadcrumb here —
+  // it caused a duplicate trail (e.g. "Admin / Operations" appearing twice)
+  // on /admin/* pages.
 
   return (
     <SidebarProvider>
@@ -369,34 +356,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           >
             <WorkspaceScrollRestoration />
             <WorkspaceHeader rightSlot={<WorkspaceSearchLauncher />} className="-mx-3 sm:-mx-5 md:-mx-7 -mt-3 sm:-mt-5 md:-mt-7 mb-3" />
-            {isAdminContext && adminCrumbs.length > 0 && (
-              <nav
-                aria-label={isRTL ? 'مسار التنقل' : 'Breadcrumb'}
-                className="mb-3 text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap"
-              >
-                {adminCrumbs.map((crumb, idx) => {
-                  const isLast = idx === adminCrumbs.length - 1;
-                  return (
-                    <React.Fragment key={crumb.path}>
-                      {isLast ? (
-                        <span className="text-foreground font-medium truncate max-w-[180px]" aria-current="page">
-                          {crumb.label}
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => navigate(crumb.path)}
-                          className="hover:text-foreground transition-colors truncate max-w-[140px]"
-                        >
-                          {crumb.label}
-                        </button>
-                      )}
-                      {!isLast && <span className="text-muted-foreground/50">/</span>}
-                    </React.Fragment>
-                  );
-                })}
-              </nav>
-            )}
             {/* Workspace context bar is provider-oriented (active business/branch
                 + recent flows). Admins/super-admins do not operate as a business,
                 so the bar would be empty/misleading inside /admin/*. Hide it. */}

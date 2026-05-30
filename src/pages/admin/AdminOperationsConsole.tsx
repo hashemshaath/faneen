@@ -21,7 +21,6 @@ import { UnifiedOperationsFeed } from '@/components/operations/UnifiedOperations
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { AdminOperationalNotesPanel } from '@/components/admin/AdminOperationalNotesPanel';
 import { AdminOperationalMetricsCards } from '@/components/admin/AdminOperationalMetricsCards';
-import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
 import { AdminOpsQuickLinks } from '@/components/admin/AdminOpsQuickLinks';
 import {
   listAdminOperationalActivity,
@@ -206,13 +205,6 @@ export default function AdminOperationsConsole() {
   return (
     <DashboardLayout>
       <div className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
-        <OperationsBreadcrumbs
-          homeTo="/admin"
-          crumbs={[
-            { labelEn: 'Operations', labelAr: 'العمليات', to: '/admin/operations' },
-            { labelEn: 'Console', labelAr: 'مركز العمليات' },
-          ]}
-        />
         <AdminOpsQuickLinks />
         <div className="flex items-start justify-between gap-2">
           <div>
