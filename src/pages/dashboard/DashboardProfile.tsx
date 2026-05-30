@@ -835,17 +835,39 @@ const DashboardProfile: React.FC = () => {
                 </div>
 
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    {t(isRTL, 'العنوان التفصيلي', 'Detailed address line')}
-                  </Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      {t(isRTL, 'العنوان التفصيلي', 'Detailed address line')}
+                    </Label>
+                    {addressLineManual && (
+                      <button
+                        type="button"
+                        onClick={() => setAddressLineManual(false)}
+                        className="text-[10px] text-primary hover:underline"
+                      >
+                        {t(isRTL, 'إعادة التوليد تلقائيًا', 'Auto-generate again')}
+                      </button>
+                    )}
+                  </div>
                   <Input
                     value={form.address_line}
-                    onChange={(e) => setForm((f) => ({ ...f, address_line: e.target.value }))}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setAddressLineManual(true);
+                      setForm((f) => ({ ...f, address_line: v }));
+                    }}
                     dir="auto"
                     className="mt-1 h-11 rounded-xl"
-                    placeholder={t(isRTL, 'مثال: حي الياسمين، شارع الأمير سلطان', 'e.g. Al Yasmin, Prince Sultan St.')}
+                    placeholder={t(isRTL, 'يتم توليده تلقائيًا من حقول العنوان أعلاه', 'Auto-generated from the address fields above')}
                     maxLength={250}
                   />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {addressLineManual
+                      ? t(isRTL, 'يدوي — لن يتم استبداله. اضغط "إعادة التوليد" لإرجاعه إلى التوليد التلقائي.',
+                           'Manual — won\'t be overwritten. Click "Auto-generate" to revert.')
+                      : t(isRTL, 'يُحدَّث تلقائيًا عند تغيير أي حقل من حقول العنوان أعلاه.',
+                           'Updates automatically when any address field above changes.')}
+                  </p>
                 </div>
               </CardContent>
             </Card>
