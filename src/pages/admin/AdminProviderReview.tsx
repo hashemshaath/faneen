@@ -380,7 +380,7 @@ export default function AdminProviderReview() {
                 {isRTL ? 'تحديث' : 'Refresh'}
               </Button>
               <Button asChild size="sm" variant="outline" className="gap-1.5 rounded-xl h-10">
-                <Link to="/admin/identity?view=businesses">
+                <Link to="/admin/businesses">
                   <Building2 className="h-4 w-4" />
                   {isRTL ? 'كل المنشآت' : 'All Businesses'}
                 </Link>
@@ -826,7 +826,7 @@ export default function AdminProviderReview() {
                       {isRTL ? 'رفض' : 'Reject'}
                     </Button>
                     <Button asChild size="sm" variant="ghost">
-                      <Link to={`/admin/identity?view=businesses&focus=${selected.id}`} className="gap-1">
+                      <Link to={`/admin/businesses?focus=${selected.id}`} className="gap-1">
                         <Building2 className="h-3.5 w-3.5" />
                         {isRTL ? 'إدارة كاملة' : 'Full admin'}
                       </Link>
