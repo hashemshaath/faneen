@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -10,16 +10,22 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { CopyButton } from '@/components/ui/copy-button';
+import { useToast } from '@/hooks/use-toast';
 import {
   Building2, Check, Circle, Clock, AlertTriangle, ShieldCheck, Send,
   MapPin, Phone, FileText, Layers, Image as ImageIcon, ArrowRight,
+  Sparkles, TrendingUp, ExternalLink, Eye, Zap, ChevronRight, Lightbulb,
+  CalendarClock, Target, Award,
 } from 'lucide-react';
 
-type ApprovalStatus = 'draft' | 'submitted' | 'under_review' | 'needs_changes' | 'rejected' | 'approved';
+type ApprovalStatus = 'draft' | 'submitted' | 'under_review' | 'needs_changes' | 'rejected' | 'approved' | 'published';
 
 interface BusinessRow {
   id: string;
   ref_id: string | null;
+  username: string | null;
   approval_status: ApprovalStatus | null;
   onboarding_completion: number | null;
   approval_notes: string | null;
@@ -40,6 +46,8 @@ interface BusinessRow {
   sub_services: string[] | null;
   national_id: string | null;
   unified_number: string | null;
+  updated_at?: string | null;
+  submitted_at?: string | null;
 }
 
 interface ChecklistItem {
