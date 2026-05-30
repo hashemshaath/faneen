@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Bi } from '@/components/i18n/Bi';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { Bi } from '@/components/common/Bilingual';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { Handshake, Check, X, Send, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import {
