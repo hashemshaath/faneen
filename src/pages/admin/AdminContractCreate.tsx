@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import { adminCreateContractOnBehalf } from '@/modules/contracts/services/auditTrail';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 /**
  * Admin-only: creates a draft contract between two other users. The
@@ -71,7 +72,8 @@ export default function AdminContractCreate() {
   const canSubmit = providerId && clientId && titleAr.trim() && !adminIsParty && !providerEqClient && !mutation.isPending;
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-6 max-w-3xl">
+    <DashboardLayout>
+      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-3xl">
       <div className="flex items-center gap-3 mb-6">
         <Button asChild variant="ghost" size="sm" className="gap-1">
           <Link to="/admin/contracts"><ArrowLeft className="w-4 h-4" />{isRTL ? 'رجوع' : 'Back'}</Link>
@@ -166,6 +168,7 @@ export default function AdminContractCreate() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
