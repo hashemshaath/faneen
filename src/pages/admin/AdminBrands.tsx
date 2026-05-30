@@ -73,7 +73,7 @@ const AdminBrands: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button asChild variant="outline"><Link to="/admin/service-requests"><Inbox className="w-4 h-4 me-2" />{isRTL ? 'طلبات العلامات' : 'Brand requests'}</Link></Button>
+            <Button asChild variant="outline"><Link to="/admin/brand-requests"><Inbox className="w-4 h-4 me-2" />{isRTL ? 'طلبات العلامات' : 'Brand requests'}</Link></Button>
           </div>
         </div>
 
