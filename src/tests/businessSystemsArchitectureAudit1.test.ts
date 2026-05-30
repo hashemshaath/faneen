@@ -43,7 +43,7 @@ describe('BUSINESS-SYSTEMS-ARCHITECTURE-AUDIT-1 — Phase K guards', () => {
       'Contracts',
       'Work Orders',
       'Procurement',
-      'Installation Appts',
+      'Installation Appointments',
       'Project Closure',
       'Warranty',
       'Feedback & NPS',
