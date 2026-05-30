@@ -446,87 +446,56 @@ const DashboardBusinessEdit: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto space-y-6 pb-24 pt-4 scroll-mt-32">
-        {/* Hero header — elevated card so the sticky workspace-context bar
-            above it never visually overlaps the title. */}
-        <header
-          className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-emerald-500/10 via-background to-background shadow-sm"
-        >
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400" />
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 sm:p-6">
-            <div className="min-w-0 flex items-start gap-3">
-              {/* Completion ring with logo / icon center */}
-              <div
-                className="hidden sm:flex w-14 h-14 rounded-full items-center justify-center shrink-0"
-                style={ringStyle}
-                aria-label={t(isRTL, `الجاهزية ${completionPct}%`, `Readiness ${completionPct}%`)}
-              >
-                <div className="w-11 h-11 rounded-full bg-background flex items-center justify-center overflow-hidden">
-                  {form.logo_url ? (
-                    <img src={form.logo_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <Building2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  )}
-                </div>
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
-                  {t(isRTL, 'تعديل بيانات المنشأة', 'Edit Business Profile')}
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1.5">
-                  {t(isRTL, 'حدّث جميع بيانات منشأتك من مكان واحد — التعديلات تُنشر فور الحفظ.',
-                    'Update every detail of your business in one place — saved changes go live immediately.')}
-                </p>
-                <div className="flex flex-wrap items-center gap-2 mt-3">
-                  <Badge variant="outline" className={statusTone}><ShieldCheck className="w-3 h-3 me-1" />{status}</Badge>
-                  {form.ref_id && <Badge variant="outline" className="font-mono tech-content"><Hash className="w-3 h-3 me-1" />{form.ref_id}</Badge>}
-                  <Badge
-                    variant="outline"
-                    className={
-                      completionPct >= 90
-                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                        : completionPct >= 60
-                          ? 'border-info/30 bg-info/10 text-info'
-                          : 'border-warning/30 bg-warning/10 text-warning'
-                    }
-                  >
-                    <Sparkles className="w-3 h-3 me-1" />
-                    {t(isRTL, 'الجاهزية:', 'Readiness:')}<span className="tech-content ms-1">{completionPct}%</span>
-                  </Badge>
-                  {form.username && (
-                    <Link to={`/${form.username}`} className="text-xs text-primary hover:underline inline-flex items-center gap-1" target="_blank" rel="noreferrer">
-                      {t(isRTL, 'عرض الصفحة العامة', 'View public page')}<ExternalLink className="w-3 h-3" />
-                    </Link>
-                  )}
-                </div>
-              </div>
+      <div className="max-w-7xl mx-auto pb-24 pt-4 scroll-mt-32">
+        {/* Compact header — title + status + save. The big visuals
+            (readiness ring, growth tips, validation summary) move to the
+            secondary helper column so the form itself stays the priority. */}
+        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground leading-tight">
+              {t(isRTL, 'تعديل بيانات المنشأة', 'Edit Business Profile')}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <Badge variant="outline" className={statusTone}>
+                <ShieldCheck className="w-3 h-3 me-1" />{status}
+              </Badge>
+              {form.ref_id && (
+                <Badge variant="outline" className="font-mono tech-content">
+                  <Hash className="w-3 h-3 me-1" />{form.ref_id}
+                </Badge>
+              )}
+              {form.username && (
+                <Link
+                  to={`/${form.username}`}
+                  className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t(isRTL, 'عرض الصفحة العامة', 'View public page')}
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              )}
             </div>
-            <PermissionHint permission="entity.manage">
-              <Button onClick={handleSave} disabled={saving || !dirty} className="gap-1.5 self-start sm:self-auto shrink-0">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {t(isRTL, 'حفظ التغييرات', 'Save changes')}
-              </Button>
-            </PermissionHint>
           </div>
-          {/* Slim completion progress bar at the bottom of the hero */}
-          <div className="h-1.5 w-full bg-muted/60">
-            <div
-              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-[width] duration-500"
-              style={{ width: `${completionPct}%` }}
-              role="progressbar"
-              aria-valuenow={completionPct}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            />
-          </div>
+          <PermissionHint permission="entity.manage">
+            <Button onClick={handleSave} disabled={saving || !dirty} className="gap-1.5 self-start sm:self-auto shrink-0">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {t(isRTL, 'حفظ التغييرات', 'Save changes')}
+            </Button>
+          </PermissionHint>
         </header>
 
-        <ValidationBanner issues={validationIssues} isRTL={isRTL} />
+        {/* Two-column layout: form (primary) + helper sidebar (secondary).
+            On mobile, the helper collapses below the form. */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* ========== PRIMARY: form ========== */}
+          <div className="lg:col-span-8 xl:col-span-9 space-y-6 min-w-0">
+            {/* Inline, compact error summary — only when there are real errors.
+                Soft suggestions move to the sidebar to avoid noise. */}
+            {hasErrors && <ValidationBanner issues={validationIssues} isRTL={isRTL} />}
 
-        <ProviderGrowthCard business={form} />
-
-        <Tabs defaultValue="basic" className="w-full">
-          <TabsList className="sticky top-16 z-20 w-full flex flex-wrap h-auto justify-start gap-1 bg-background/85 backdrop-blur border border-border/40 p-1.5 rounded-xl shadow-sm">
+            <Tabs defaultValue="basic" className="w-full">
+            <TabsList className="sticky top-16 z-20 w-full flex flex-wrap h-auto justify-start gap-1 bg-background/85 backdrop-blur border border-border/40 p-1.5 rounded-xl shadow-sm">
             <TabsTrigger value="basic" className="gap-1.5"><Building2 className="w-3.5 h-3.5" />{t(isRTL, 'البيانات الأساسية', 'Basic Info')}{tabBadge(tabMissing.basic)}</TabsTrigger>
             <TabsTrigger value="contact" className="gap-1.5"><Phone className="w-3.5 h-3.5" />{t(isRTL, 'التواصل والمدير', 'Contact & Manager')}{tabBadge(tabMissing.contact)}</TabsTrigger>
             <TabsTrigger value="location" className="gap-1.5"><MapPin className="w-3.5 h-3.5" />{t(isRTL, 'الموقع', 'Location')}{tabBadge(tabMissing.location)}</TabsTrigger>
@@ -894,8 +863,63 @@ const DashboardBusinessEdit: React.FC = () => {
 
           </TabsContent>
         </Tabs>
+          </div>
 
-        <Separator />
+          {/* ========== SECONDARY: helper sidebar ========== */}
+          <aside className="lg:col-span-4 xl:col-span-3 space-y-4 min-w-0">
+            <div className="lg:sticky lg:top-16 space-y-4">
+              {/* Readiness — small ring + progress, moved out of the hero */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                      style={ringStyle}
+                      aria-label={t(isRTL, `الجاهزية ${completionPct}%`, `Readiness ${completionPct}%`)}
+                    >
+                      <div className="w-9 h-9 rounded-full bg-background flex items-center justify-center overflow-hidden">
+                        {form.logo_url ? (
+                          <img src={form.logo_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Building2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {t(isRTL, 'اكتمال البيانات', 'Profile readiness')}
+                        </span>
+                        <span className="text-sm font-bold tech-content">{completionPct}%</span>
+                      </div>
+                      <div className="h-1.5 mt-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-[width] duration-500"
+                          style={{ width: `${completionPct}%` }}
+                          role="progressbar"
+                          aria-valuenow={completionPct}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Soft validation suggestions (warnings only). Errors stay
+                  inline in the main column where the fix happens. */}
+              {!hasErrors && validationIssues.length > 0 && (
+                <ValidationBanner issues={validationIssues} isRTL={isRTL} />
+              )}
+
+              {/* Growth & tips — secondary helper, not priority */}
+              <ProviderGrowthCard business={form} />
+            </div>
+          </aside>
+        </div>
+
+        <Separator className="my-6" />
 
         {/* Sticky save bar */}
         <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-xl border border-border bg-background/95 backdrop-blur px-4 py-3 shadow-[var(--elev-2)]">
