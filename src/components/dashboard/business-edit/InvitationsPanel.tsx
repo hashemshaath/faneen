@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   Mail, Send, Loader2, Copy, Trash2, Clock, CheckCircle2, XCircle, RotateCw,
+  Search, Bell, AtSign,
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -21,6 +23,13 @@ import {
 import { STAFF_ROLE_META, type StaffRole } from './types';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
+
+interface ProfileSuggestion {
+  user_id: string;
+  email: string | null;
+  username: string | null;
+  full_name: string | null;
+}
 
 interface InvitationRow {
   id: string;
