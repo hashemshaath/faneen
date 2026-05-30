@@ -45,5 +45,6 @@ export interface AddressFields {
   verified_at?: string | null;
   is_verified?: boolean;
   national_address_source?: string | null;
-  national_address_raw?: Record<string, unknown> | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  national_address_raw?: any | null;
 }
