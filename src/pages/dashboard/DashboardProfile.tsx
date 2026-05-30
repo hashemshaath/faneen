@@ -198,7 +198,7 @@ const DashboardProfile: React.FC = () => {
 
   const completion = useMemo(() => {
     const checks = [
-      !!form.full_name.trim(),
+      !!(form.full_name_ar.trim() || form.full_name_en.trim()),
       !!form.avatar_url,
       !!form.username,
       !!form.email.trim(),
@@ -241,7 +241,7 @@ const DashboardProfile: React.FC = () => {
       const { error } = await updateProfile({
         userId: user.id,
         values: {
-          full_name: form.full_name.trim() || null,
+          full_name: (form.full_name_ar.trim() || form.full_name_en.trim() || form.full_name.trim()) || null,
           full_name_ar: form.full_name_ar.trim() || null,
           full_name_en: form.full_name_en.trim() || null,
           username: form.username ? form.username : null,
