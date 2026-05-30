@@ -231,6 +231,19 @@ const DashboardProfile: React.FC = () => {
         },
       });
       if (error) throw error;
+      // Unified email: when the user changes the visible email and it
+      // differs from the auth/login email, push the update to auth.users
+      // as well so "profile email" and "login email" stay one and the
+      // same. Skip for synthetic phone-signup accounts.
+      const newEmail = form.email.trim();
+      if (
+        newEmail
+        && !isSyntheticPhoneEmail(user.email)
+        && newEmail.toLowerCase() !== (user.email ?? '').toLowerCase()
+      ) {
+        const { error: authErr } = await supabase.auth.updateUser({ email: newEmail });
+        if (authErr) throw authErr;
+      }
     },
     onMutate: () => setSaving(true),
     onSettled: () => setSaving(false),
@@ -531,7 +544,7 @@ const DashboardProfile: React.FC = () => {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-xs font-medium text-muted-foreground">
-                      {t(isRTL, 'البريد الإلكتروني للملف', 'Profile email')}
+                      {t(isRTL, 'البريد الإلكتروني', 'Email address')}
                     </Label>
                     <div className="relative mt-1">
                       <Mail className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60"
@@ -544,6 +557,7 @@ const DashboardProfile: React.FC = () => {
                         style={{ paddingInlineStart: '38px' }}
                         placeholder="name@example.com"
                         maxLength={255}
+                        disabled={isSyntheticPhoneEmail(user?.email)}
                       />
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1 flex items-start gap-1">
@@ -552,12 +566,9 @@ const DashboardProfile: React.FC = () => {
                         ? t(isRTL,
                             'هذا البريد للعرض فقط. تسجيل الدخول يتم عبر رقم الجوال.',
                             'This email is for display only. You sign in with your phone number.')
-                        : (
-                          <span>
-                            {t(isRTL, 'بريد تسجيل الدخول:', 'Login email:')}{' '}
-                            <span className="tech-content font-medium">{user?.email}</span>
-                          </span>
-                        )}
+                        : t(isRTL,
+                            'بريد موحّد للملف الشخصي وتسجيل الدخول. أي تغيير يتطلب تأكيدًا عبر بريدك الحالي.',
+                            'Unified email for profile and login. Any change requires confirmation via your current email.')}
                     </p>
                   </div>
                   <div>
@@ -818,21 +829,12 @@ const DashboardProfile: React.FC = () => {
                 />
                 <Row
                   icon={isSyntheticPhoneEmail(user?.email) ? <Phone className="w-3.5 h-3.5" /> : <Mail className="w-3.5 h-3.5" />}
-                  label={isSyntheticPhoneEmail(user?.email) ? t(isRTL, 'رقم الدخول', 'Login phone') : t(isRTL, 'بريد الدخول', 'Login email')}
+                  label={isSyntheticPhoneEmail(user?.email) ? t(isRTL, 'رقم الدخول', 'Login phone') : t(isRTL, 'البريد الإلكتروني', 'Email')}
                   value={
                     <span className="tech-content truncate max-w-[180px] inline-block align-middle">
                       {isSyntheticPhoneEmail(user?.email)
                         ? (user?.phone ? `+${user.phone}` : (profile?.phone || '—'))
                         : (user?.email ?? '—')}
-                    </span>
-                  }
-                />
-                <Row
-                  icon={<Mail className="w-3.5 h-3.5" />}
-                  label={t(isRTL, 'البريد الرسمي', 'Profile email')}
-                  value={
-                    <span className="tech-content truncate max-w-[180px] inline-block align-middle">
-                      {getDisplayEmail({ authEmail: user?.email, profileEmail: profile?.email }) ?? '—'}
                     </span>
                   }
                 />
