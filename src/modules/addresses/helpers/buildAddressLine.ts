@@ -20,11 +20,21 @@ export function buildAddressLine(
   const post = (a.post_code ?? '').toString().trim();
 
   const seg: string[] = [];
-  if (district && district.trim()) {
-    seg.push(isAr ? `حي ${district.trim()}` : `${district.trim()} District`);
+  const dTrim = (district ?? '').trim();
+  if (dTrim) {
+    if (isAr) {
+      seg.push(/^حي\s/.test(dTrim) ? dTrim : `حي ${dTrim}`);
+    } else {
+      seg.push(/district$/i.test(dTrim) ? dTrim : `${dTrim} District`);
+    }
   }
-  if (street && street.trim()) {
-    seg.push(isAr ? `شارع ${street.trim()}` : `${street.trim()} St.`);
+  const sTrim = (street ?? '').trim();
+  if (sTrim) {
+    if (isAr) {
+      seg.push(/^شارع\s/.test(sTrim) ? sTrim : `شارع ${sTrim}`);
+    } else {
+      seg.push(/\b(st\.?|street|road|rd\.?|ave\.?|avenue)\b/i.test(sTrim) ? sTrim : `${sTrim} St.`);
+    }
   }
   if (b || x) {
     const lbl = isAr ? 'مبنى' : 'Bldg';
