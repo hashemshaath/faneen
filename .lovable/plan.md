@@ -1,139 +1,101 @@
-## NAVIGATION-ARCHITECTURE-REBUILD-1 — خطة التنفيذ
+# BRANDS-GOVERNANCE-1 — Phased Plan
 
-نطاق ضخم يلامس التنقّل، التوثيق، الصلاحيات، العلامة، والاختبارات. سأنفّذه على دفعات مع الحفاظ الصارم على المسارات والميزات.
+This is a large, governance-heavy task. I'll execute it in strict phases — **audit first**, **decide second**, **migrate third**, **build UI last** — and stop for your approval between Phase 1 (audit report) and Phase 2 (migrations), because the entire downstream design depends on the audit findings.
 
----
+## Phase 1 — System & Database Audit (read-only, no code changes)
 
-### المرحلة 1 — جرد وتدقيق (Read-only)
+I will spawn parallel investigations to produce an audit report covering:
 
-**A. جرد الصفحات** → `docs/navigation-page-inventory.md`
-- استخراج كل `<Route>` من `src/App.tsx` (≈162 مسار) ومطابقتها بملفات `src/pages/**`.
-- لكل صفحة: `route, title, purpose, audience, frequency, current location, recommended location, classification`.
-- تصنيف: Core Daily / Weekly / Monthly / Admin Only / Rare / Legacy / Hidden Utility.
+1. **Sectors / services taxonomy** — discover canonical tables (`service_catalog`, `categories`, `business_services`, `businesses.sub_services`, `onboarding-sectors.ts`, etc.), their fields (ar/en, slug, ref_id presence), and how providers currently attach to them.
+2. **Ref-ID system** — confirm `next_ref_id()` generator, existing prefixes from `docs/reference-id-architecture.md` (USR, ENT, LED, QTE, CRN, TKT…), sequence pattern (start 1000, 7 digits), trigger vs. app generation. Propose **BRD-**, **BRQ-**, **PBL-** only if no existing prefix fits.
+3. **Notifications** — locate `src/modules/notifications/*`, `createNotification`, event-naming convention, bilingual template pattern, recipient resolution. Reuse, do not fork.
+4. **Operations / admin review queues** — inspect `AdminServiceRequests.tsx`, `help_feature_requests`, `brand_addition_requests` (already created last turn!), SLA log, operations observability. Decide whether to **extend the existing `brand_addition_requests`/`brand_catalog` tables from the previous migration** instead of creating parallel ones.
+5. **Permissions / RLS** — `user_roles`, `has_role`, admin vs. provider scopes, `business_staff` membership.
+6. **Provider/business model** — confirm `businesses` is canonical (it is), FK target for provider links.
 
-**B. تدقيق الـ Sidebar الحالي** → `docs/sidebar-audit.md`
-- تحليل `DashboardSidebar.tsx` (مجموعات/تسميات/أيقونات/ترتيب/visibility/role rules).
-- إبراز: تكرار، تسميات مشوّشة، صفحات في مكان خاطئ، صفحات مخفية مهمة، نهايات ميتة، عمق نقرات > 2.
+**Output:** a written audit report posted in chat, plus the concrete architecture decisions table the spec requires (canonical sector table, ref_id generator, brand prefix, notification service, operations queue, RLS strategy).
 
-**H. سلامة المسارات** — تثبيت قاعدة: **صفر تغييرات على `path=` أو ملفات الصفحات**. كل العمل في طبقة القائمة فقط. سأشغّل `scripts/broken-links-audit.mjs` و `src/test/adminSidebarLinks.test.ts` بعد كل دفعة.
+⚠️ **Critical finding I already know:** in the previous turn we created `brand_catalog`, `business_service_brands`, and `brand_addition_requests`. The new spec wants a much richer `brands` registry (manufacturing countries, sector/service links, claim/merge/duplicate workflow, audit log, BRD-/BRQ- ref_ids). I will recommend **evolving** the existing tables rather than creating a parallel `brands` table — most likely by:
+- Renaming/extending `brand_catalog` → keep table name, add the missing columns (`name_en`, `slug`, `country_of_origin_*`, `status`, `verification_status`, `submitted_by`, `approved_by`, `merged_into_brand_id`, `metadata`, `ref_id` with BRD- prefix).
+- Renaming/extending `brand_addition_requests` → add `request_type`, `proposed_*`, `documents`, `admin_notes`, `ref_id` with BRQ- prefix.
+- Keeping `business_service_brands` as the provider↔brand link, extending it into `provider_brand_links` semantics (relationship_type, authorization_status, documents, ref_id PBL-).
 
----
+This avoids duplicate tables and keeps the work consistent with last turn's migration.
 
-### المرحلة 2 — معمارية المعلومات الجديدة (Part C)
+## Phase 2 — Architecture decision (stop for your approval)
 
-تكييف الهيكل المقترح مع المسارات الفعلية، عبر ملف واحد `src/components/dashboard/navigation/menuArchitecture.ts` يحدّد:
+I'll post the decision table and the proposed migration outline. **You approve before I write any SQL.** This is mandatory because the spec explicitly forbids guessing table names and duplicating taxonomy.
 
-```text
-الرئيسية         → /dashboard, /dashboard/operations-center
-المبيعات والعملاء → /dashboard/leads, /dashboard/customers, /dashboard/quotes, /dashboard/follow-ups
-العقود والتنفيذ   → /dashboard/contracts, /dashboard/work-orders, /dashboard/boq,
-                    /dashboard/measurements, /dashboard/attachments
-التشغيل والإنتاج  → /dashboard/work-orders/board, /dashboard/production-stages,
-                    /dashboard/schedules, /dashboard/installations
-المشتريات        → /dashboard/procurement, /dashboard/rfqs, /dashboard/suppliers, /dashboard/purchase-orders
-الجودة والعميل   → /dashboard/tracking, /dashboard/appointments, /dashboard/closeout,
-                    /dashboard/warranty, /dashboard/reviews
-النمو والتسويق   → /dashboard/provider-growth, /sectors, /dashboard/seo, /dashboard/analytics
-الإدارة (admin)  → /admin/businesses, /admin/users, /admin/access-management, /admin/identity, …
-المساعدة         → /dashboard/help, /dashboard/report-issue, /dashboard/feature-request
-الإعدادات        → /dashboard/business-edit, /dashboard/branding, /dashboard/notifications, /dashboard/settings
-```
+## Phase 3 — Database migrations (after approval)
 
-المسارات غير الموجودة فعلياً ستُحذف من المقترح أو تُربط بأقرب صفحة قائمة. لن أُنشئ صفحات جديدة.
+In a single migration file:
+- Extend `brand_catalog` to full `brands` spec (statuses: draft/pending/in_review/approved/rejected/archived/merged; verification: unverified/claimed/verified/official).
+- New `brand_manufacturing_countries`.
+- New `brand_sector_links` → FK to the canonical sector table found in audit.
+- New `brand_service_links` → FK to the canonical service table found in audit.
+- Extend `business_service_brands` → `provider_brand_links` shape (relationship_type, authorization_status, dates, document url, reviewed_by/_at, rejection_reason, ref_id).
+- Extend `brand_addition_requests` → full `brand_requests` shape (request_type, proposed_*, documents jsonb, admin_notes).
+- Reuse existing generic audit/activity log if suitable; otherwise add minimal `brand_audit_logs`.
+- Sequences + `BEFORE INSERT` triggers for BRD-/BRQ-/PBL- ref_ids, following the platform's existing 7-digit start-at-1000 pattern.
+- GRANTs (anon SELECT only on approved-brand-safe surfaces via views), RLS policies per the spec's matrix.
+- Public views: `brands_public`, `provider_brand_links_public` that filter to `status='approved'` and exclude PII / pending rows.
 
----
+## Phase 4 — Services layer
 
-### المرحلة 3 — تجربة القائمة (Part D)
+`src/modules/brands/services/` with every function listed in the spec (list/search/get/admin CRUD/approve/reject/archive/merge, manufacturing countries, sector/service links, provider links, requests, duplicate detection). Helpers in `src/modules/brands/helpers/`. No page/component touches Supabase brand tables directly — enforced by a new isolation audit script `scripts/brands-isolation-audit.mjs`.
 
-- رأس مجموعات أنظف + أيقونات موحّدة (Lucide).
-- Collapse/expand مع تذكّر الحالة في `localStorage:qitaat_sidebar_groups_v1`.
-- **المفضّلة** عبر hook جديد `useSidebarFavorites` (تخزين `qitaat_sidebar_favs_v1`، حدّ 8).
-- **آخر الصفحات** عبر hook `useRecentRoutes` (آخر 5، تخزين `qitaat_sidebar_recent_v1`).
-- شريط **Quick Create** في رأس الـ Sidebar (عقد، عرض سعر، أمر عمل، RFQ، بلاغ) — كل زر `Link` لمسار قائم.
-- ظهور **Global Search** (Cmd/Ctrl+K) دائماً في رأس الـ Sidebar.
+## Phase 5 — Admin UI
 
----
+- `/admin/brands` — list + filters + bulk actions.
+- `/admin/brands/:id` — basic info, origin & manufacturing, sectors/services, provider relationships, requests/history, audit log.
+- `/admin/brand-requests` — review queue for all 5 request types, with duplicate-detection panel on approval.
+- Wire into existing admin sidebar/navigation (`AdminTabsContext`, sidebar groups). Update `src/test/adminSidebarLinks.test.ts`.
 
-### المرحلة 4 — صلاحيات (Part E)
+## Phase 6 — Provider UI
 
-- مصفوفة في `menuArchitecture.ts`: `roles: Role[]` لكل مجموعة وبند.
-- استخدام `useAuth` + `useCan` الحاليين — صفر تعديل على RLS أو منطق الصلاحيات.
-- إخفاء المجموعات الفارغة بعد فلترة الأدوار.
+- `/dashboard/brands` — my approved brands, pending requests, search catalog, request new brand, request provider↔brand link with relationship type + authorization document upload (reuses existing storage bucket).
+- Replace the current `ServiceBrandsPicker` flow to call the new request services so everything funnels through one approval pipeline. Old `brand_addition_requests` rows are migrated in-place.
 
----
+## Phase 7 — Public / directory integration
 
-### المرحلة 5 — العلامة (Part F)
+- Provider profile: "العلامات التجارية المعتمدة" section showing approved links only.
+- Sector / service pages: brand filter chip (approved brands only, country-of-origin badge).
+- Optional `/brands/:slug` public page — included if scope allows, otherwise deferred with reason.
+- Quote/RFQ buyer brand picker — **deferred** to next phase (explicitly listed as optional in spec) to keep this PR reviewable; noted in deferred items.
 
-- `SidebarBrand` component يدعم: شعار افتراضي، شعار المنشأة النشطة (من `useActiveBusiness`)، fallback، dark-mode variant، compact icon-only mode.
-- لا تغيير على الـ Favicon أو `index.html`.
+## Phase 8 — Notifications & operations integration
 
----
+All 13 events from the spec wired through existing `createNotification` with bilingual ar/en templates. Admin/operations queue badges hooked into existing operations center counts. No new email logic — reuse existing transactional email wrapper only where needed (request approved/rejected).
 
-### المرحلة 6 — صقل الصفحات (Part G)
+## Phase 9 — Duplicate detection
 
-- جرد top-30 الأكثر استخداماً من Core Daily/Weekly.
-- لكل صفحة فحص فقط (لا تعديل): title, subtitle, breadcrumbs, loading, empty, error, help, related, health badges, next actions.
-- النتائج في `docs/page-polish-repairs.md` كقائمة إصلاحات مرتبة بالأولوية. **التنفيذ خارج نطاق هذه الجولة** — يُترك كـ backlog ما لم يُطلب صراحة.
+`findPossibleDuplicateBrands` helper: normalizes Arabic name (strip شركة / مصنع / للتجارة / للصناعة / ألمنيوم / زجاج prefixes, normalize alef/yaa/taa marbuta), normalizes English name (lowercase, strip Co./Ltd.), compares against `name_ar`, `name_en`, and `slug` with trigram similarity (`pg_trgm`). Surfaced in admin approval screen.
 
----
+## Phase 10 — Tests & validation
 
-### المرحلة 7 — التنفيذ (Part I)
+- Service-layer tests for each major flow (create → approve → link → merge).
+- Notification tests for each event.
+- Isolation audit script + CI hook.
+- Guard test: no duplicate sector/service tables, ref_id is DB-generated, no direct brand table access outside services.
+- Run `bunx vitest run` + existing sector/provider/notification/RLS isolation audits.
 
-- ملف جديد: `src/components/dashboard/navigation/menuArchitecture.ts` (المصدر الوحيد للحقيقة).
-- إعادة كتابة `DashboardSidebar.tsx` ليستهلك المعمارية الجديدة، مع الحفاظ على نفس API الخارجي.
-- مكوّنات صغيرة: `SidebarBrand`, `SidebarQuickCreate`, `SidebarFavorites`, `SidebarRecent`, `SidebarGroupCollapsible`.
-- **شرط صلب**: كل `url` في القائمة يجب أن يطابق `path=` في `App.tsx` — يفرضه `adminSidebarLinks.test.ts` الحالي.
+## Phase 11 — Final report
 
----
-
-### المرحلة 8 — اختبارات (Part J)
-
-`src/__tests__/navigationArchitectureRebuild1.test.ts` يغطّي:
-- كل رابط في `menuArchitecture` موجود في `App.tsx`.
-- لا تكرار `url` عبر القائمة.
-- مجموعات admin محميّة بـ `requireAdmin`/`requireSuperAdmin`.
-- فلترة الأدوار تعطي مخرجات متوقّعة لكل role.
-- Quick Create يحوي 5 إجراءات بمسارات صالحة.
-- Favorites/Recent hooks تحفظ وتسترجع من localStorage بحدود صحيحة.
-- branding component يقع لـ fallback عند غياب شعار المنشأة.
-- لا روابط `/admin/identity?view=...` متبقّية بعد التنظيف.
+I'll deliver the 22-point report the spec demands (PASS/FAIL, audit results, decisions, migrations, RLS, prefixes with example IDs, services, UI, notifications, duplicate method, tests, direct-access count before→after, validation results, deferred items, next phase recommendation).
 
 ---
 
-### المرحلة 9 — التحقق (Part K)
+## Technical notes
 
-تشغيل بالتوازي:
-- `bunx vitest run` (الحزمة الكاملة)
-- `node scripts/broken-links-audit.mjs`
-- `node scripts/profiles-isolation-audit.mjs`, `notifications-isolation-audit.mjs`, `procurement-isolation-audit.mjs`, `messaging-isolation-audit.mjs`
-- اختبارات RTL: `src/i18n/__tests__/LanguageContext.test.tsx`, `src/lib/__tests__/direction.test.ts`
-- التحقق البصري السريع على `/dashboard` و `/admin/identity` و `/admin/businesses`.
-
-`tsc` يجريه الـ harness تلقائياً — لن أشغّله يدوياً.
+- **Ref-ID generation:** reuses existing `next_ref_id(prefix text)` pattern. Sequences `brand_ref_seq`, `brand_request_ref_seq`, `provider_brand_link_ref_seq` starting at 1000000, 7-digit zero-padded → `BRD-1000001`, `BRQ-1000001`, `PBL-1000001`.
+- **Sector/service FKs:** will be set after audit confirms canonical tables. Most likely `service_catalog.id` for services; sectors live in `onboarding-sectors.ts` (TS data, not a DB table) — if no DB sector table exists this is a finding I'll surface in Phase 1 and we'll decide whether to (a) introduce a `sectors` table now or (b) store sector as a `text` slug FK to the TS source. **Defaulting to introducing a real `sectors` table** if missing, to keep brand_sector_links sound.
+- **Public exposure:** all anon reads go through `brands_public` / `provider_brand_links_public` views; raw tables get no anon grant. Matches `docs/database-inventory.md` posture.
+- **Migration safety:** existing `brand_catalog` / `brand_addition_requests` rows from last turn are preserved via `ALTER TABLE` + backfill (set status='approved' for any pre-existing rows admins have already accepted, 'pending' otherwise, generate ref_ids for all).
 
 ---
 
-### التقرير النهائي
+## What I need from you
 
-ملخّص في الردّ الأخير: ما تم نقله، ما تغيّرت تسميته، تحسينات العلامة، تغييرات الظهور حسب الدور، نتائج التحقق، فرص متبقّية.
+**Approve this phased approach.** I'll then start Phase 1 (audit only, no code changes) and come back with the audit report + concrete architecture decisions for your sign-off before touching the database.
 
----
-
-### قيود صلبة (لن أكسرها)
-
-- ❌ لا تغيير على أي `<Route path=...>` في `App.tsx`.
-- ❌ لا حذف صفحات أو ميزات.
-- ❌ لا تعديل على RLS / policies / edge functions.
-- ❌ لا dialogs/popups (سياسة المشروع — كل شيء inline).
-- ❌ لا تغيير `sitemap.xml` أو `robots.txt` (لا مسارات عامة جديدة).
-- ✅ كل التغييرات في طبقة العرض: `src/components/dashboard/**` + ملفات توثيق + اختبارات.
-
----
-
-### الحجم المتوقّع
-
-- ملفات جديدة: ~7 (architecture + 4 components + hook + test + 3 docs).
-- ملفات معدّلة: 1–2 (`DashboardSidebar.tsx`، ربما `DashboardLayout.tsx` لأجل brand slot).
-- لا migrations.
-
-هل أبدأ التنفيذ من المرحلة 1 (الجرد والتدقيق)، أم تريد تعديل النطاق أولاً (مثلاً تخطّي Part G أو تأجيل Branding)؟
+If you'd rather skip the audit pause and have me run audit → decisions → migration in a single shot using my current understanding (with the risk of one rework cycle if I get a table name wrong), say "go straight through" and I will.
