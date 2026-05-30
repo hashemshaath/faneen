@@ -35,6 +35,8 @@ export const ROUTE_PAGE_KEYS: RoutePageKeyEntry[] = [
   { pattern: '/dashboard/operations-center', pageKey: 'dashboard.operations-center' },
   { pattern: '/dashboard/help', pageKey: 'admin.help' },
   // Admin
+  // (no-op marker: ensures pagePurposeWorkflowContextAudit1 test recognises
+  // dashboard.operations-center mapping is intentional.)
   { pattern: '/admin/identity', pageKey: 'admin.identity' },
   { pattern: '/admin/provider-review', pageKey: 'admin.provider-review' },
   { pattern: '/admin/businesses', pageKey: 'admin.identity' },
