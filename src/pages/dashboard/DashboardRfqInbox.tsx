@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Inbox, Send, ArrowUp, ArrowDown } from 'lucide-react';
+import { Inbox, Send, ArrowUp, ArrowDown, Download, Wallet, TrendingUp, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { listOpenRfqs, createQuote } from '@/modules/rfq/services';
 
@@ -144,6 +144,45 @@ const DashboardRfqInbox: React.FC = () => {
     [filtered, currentPage, perPage],
   );
 
+  // Quick KPIs over filtered set
+  const kpis = useMemo(() => {
+    const budgets = filtered
+      .map((r) => r.budget_max ?? r.budget_min ?? null)
+      .filter((v): v is number => typeof v === 'number' && v > 0);
+    const total = budgets.reduce((a, b) => a + b, 0);
+    const avg = budgets.length ? Math.round(total / budgets.length) : 0;
+    const max = budgets.length ? Math.max(...budgets) : 0;
+    return { count: filtered.length, avg, max, total };
+  }, [filtered]);
+
+  const exportCsv = () => {
+    if (!filtered.length) {
+      toast.info(isRTL ? 'لا توجد بيانات للتصدير' : 'Nothing to export');
+      return;
+    }
+    const header = ['ref_id', 'title', 'industry', 'budget_min', 'budget_max', 'currency', 'created_at'];
+    const escape = (v: unknown): string => {
+      const s = v === null || v === undefined ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = filtered.map((r) =>
+      [r.ref_id, r.title, r.industry, r.budget_min ?? '', r.budget_max ?? '', r.currency, r.created_at]
+        .map(escape)
+        .join(','),
+    );
+    const csv = '\uFEFF' + [header.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rfq-inbox-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(isRTL ? 'تم تصدير CSV' : 'CSV exported');
+  };
+
   const resetFilters = () => {
     setIndustry(DEFAULT_FILTERS.industry);
     setSearch(DEFAULT_FILTERS.search);
@@ -258,11 +297,55 @@ const DashboardRfqInbox: React.FC = () => {
                 ? `${filtered.length} نتيجة`
                 : `${filtered.length} result${filtered.length === 1 ? '' : 's'}`}
             </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportCsv}
+              className="h-8 rounded-lg gap-1.5"
+              title={isRTL ? 'تصدير CSV' : 'Export CSV'}
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="text-xs">CSV</span>
+            </Button>
             <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 rounded-lg">
               {isRTL ? 'إعادة التعيين' : 'Reset'}
             </Button>
           </div>
         </div>
+
+        {/* KPI strip */}
+        {!isLoading && filtered.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card><CardContent className="p-4 flex items-center gap-3">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              <div>
+                <div className="text-[11px] text-muted-foreground">{isRTL ? 'الطلبات' : 'Requests'}</div>
+                <div className="font-bold tech-content">{kpis.count}</div>
+              </div>
+            </CardContent></Card>
+            <Card><CardContent className="p-4 flex items-center gap-3">
+              <Wallet className="w-5 h-5 text-emerald-600" />
+              <div>
+                <div className="text-[11px] text-muted-foreground">{isRTL ? 'متوسط الميزانية' : 'Avg budget'}</div>
+                <div className="font-bold tech-content">{kpis.avg.toLocaleString()}</div>
+              </div>
+            </CardContent></Card>
+            <Card><CardContent className="p-4 flex items-center gap-3">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
+              <div>
+                <div className="text-[11px] text-muted-foreground">{isRTL ? 'أعلى ميزانية' : 'Max budget'}</div>
+                <div className="font-bold tech-content">{kpis.max.toLocaleString()}</div>
+              </div>
+            </CardContent></Card>
+            <Card><CardContent className="p-4 flex items-center gap-3">
+              <Inbox className="w-5 h-5 text-orange-600" />
+              <div>
+                <div className="text-[11px] text-muted-foreground">{isRTL ? 'القيمة الإجمالية' : 'Total value'}</div>
+                <div className="font-bold tech-content">{kpis.total.toLocaleString()}</div>
+              </div>
+            </CardContent></Card>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="space-y-3">{[0, 1, 2].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
