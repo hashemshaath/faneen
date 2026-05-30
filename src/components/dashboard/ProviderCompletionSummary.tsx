@@ -30,7 +30,7 @@ export function ProviderCompletionSummary() {
     if (needsAttention) {
       return {
         label: language === 'ar' ? 'مراجعة الملاحظات' : 'Review feedback',
-        to: '/dashboard/settings',
+        to: '/dashboard/business-completion',
         variant: 'default' as const,
         icon: MessageSquareWarning,
       };
@@ -53,7 +53,7 @@ export function ProviderCompletionSummary() {
     }
     return {
       label: language === 'ar' ? 'إكمال الملف' : 'Complete profile',
-      to: '/dashboard/settings',
+      to: '/dashboard/business-completion',
       variant: 'default' as const,
       icon: Sparkles,
     };
