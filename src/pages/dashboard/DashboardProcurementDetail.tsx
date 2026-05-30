@@ -869,6 +869,8 @@ export default function DashboardProcurementDetail() {
                                     <button
                                       type="button"
                                       onClick={() => void onReviewBrandEquivalence(c.line!, 'approved')}
+                                      disabled={reviewingLineId === c.line.id}
+                                      data-testid="proc-quote-item-brand-approve"
                                       className="rounded-full border border-emerald-300 px-2 py-0.5 text-[10px] text-emerald-700 hover:bg-emerald-50"
                                     >
                                       {tx.approveBrand}
@@ -876,6 +878,8 @@ export default function DashboardProcurementDetail() {
                                     <button
                                       type="button"
                                       onClick={() => void onReviewBrandEquivalence(c.line!, 'rejected')}
+                                      disabled={reviewingLineId === c.line.id}
+                                      data-testid="proc-quote-item-brand-reject"
                                       className="rounded-full border border-rose-300 px-2 py-0.5 text-[10px] text-rose-700 hover:bg-rose-50"
                                     >
                                       {tx.rejectBrand}
