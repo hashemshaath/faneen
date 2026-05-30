@@ -37,6 +37,10 @@ import {
   compareQuotesWithLineItems,
   listPurchaseOrdersByRfq,
   updateRfqItem,
+  reviewSupplierQuoteItemBrandEquivalence,
+  classifyBrandEquivalence,
+  resolveEffectiveBrandMatchStatus,
+  notifyProcurementEvent,
   type ProcurementRfqInvitationRow,
   type ProcurementRequestRow,
   type ProcurementRfqRow,
@@ -46,6 +50,7 @@ import {
   type ProcurementSupplierQuoteItemRow,
   type ProcurementPurchaseOrderRow,
   type QuoteComparisonResult,
+  type BrandMatchStatus,
 } from "@/modules/procurement";
 import { ApprovedBrandPicker } from "@/components/brands/ApprovedBrandPicker";
 import { listApprovedBrandsByIds } from "@/modules/brands";
@@ -134,6 +139,16 @@ export default function DashboardProcurementDetail() {
       lockFlexible: isRTL ? "مرن" : "Flexible",
       brandUnavailable: isRTL ? "العلامة غير متاحة" : "Brand unavailable",
       noBrand: isRTL ? "بدون علامة" : "No brand",
+      // RFQ-BRAND-PICKER-1E
+      matchExact: isRTL ? "مطابق" : "Exact",
+      matchEquivalent: isRTL ? "بديل معتمد" : "Approved equivalent",
+      matchProposed: isRTL ? "بديل مقترح" : "Equivalent proposed",
+      matchPending: isRTL ? "بانتظار المراجعة" : "Pending review",
+      matchRejected: isRTL ? "بديل مرفوض" : "Rejected equivalent",
+      matchMismatch: isRTL ? "غير متوافق" : "Mismatch",
+      matchNoBrand: isRTL ? "بدون علامة" : "No brand",
+      approveBrand: isRTL ? "موافقة" : "Approve",
+      rejectBrand: isRTL ? "رفض" : "Reject",
     }),
     [isRTL],
   );
