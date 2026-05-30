@@ -230,10 +230,10 @@ const adminBaseGroups: MenuGroup[] = [
     groupLabel: { ar: 'المستخدمون والوصول', en: 'Users & Access' },
     icon: Users,
     items: [
+      // Consolidated: /admin/identity hosts users, admin team, disabled and
+      // businesses as internal tabs. Surfacing each tab in the sidebar made
+      // the menu noisy and duplicated the same destination 4 times.
       { label: { ar: 'مركز الحسابات', en: 'Account Center' }, url: '/admin/identity', icon: Users, end: true },
-      { label: { ar: 'المستخدمون', en: 'Users' }, url: '/admin/identity?view=users', icon: User },
-      { label: { ar: 'فريق الإدارة', en: 'Admin Team' }, url: '/admin/identity?view=staff', icon: Crown, superAdminOnly: true },
-      { label: { ar: 'حسابات معطّلة', en: 'Disabled Accounts' }, url: '/admin/identity?view=disabled', icon: ShieldAlert },
       { label: { ar: 'طلبات الانضمام', en: 'Access Requests' }, url: '/admin/entity-access-requests', icon: UserPlus },
       { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: Shield, superAdminOnly: true },
     ],
@@ -243,6 +243,9 @@ const adminBaseGroups: MenuGroup[] = [
     groupLabel: { ar: 'المنشآت والمزودون', en: 'Businesses & Providers' },
     icon: Building2,
     items: [
+      // Businesses tab lives inside Account Center; we surface a direct
+      // shortcut to it here since it's the operational entry point for the
+      // providers group.
       { label: { ar: 'المنشآت والكيانات', en: 'Businesses & Entities' }, url: '/admin/identity?view=businesses', icon: Building2 },
       { label: { ar: 'مراجعة المزودين', en: 'Provider Review' }, url: '/admin/provider-review', icon: ShieldCheck },
       { label: { ar: 'تحليلات المزودين', en: 'Provider Analytics' }, url: '/admin/provider-analytics', icon: TrendingUp },
