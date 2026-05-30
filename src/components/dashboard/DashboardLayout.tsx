@@ -269,11 +269,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                         <span className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 bg-success border-2 border-card rounded-full" />
                       </div>
                       <div className="hidden sm:flex flex-col items-start min-w-0">
-                        <span className="text-xs font-semibold text-foreground truncate max-w-[120px] leading-tight">
+                        <span className="text-[9px] uppercase tracking-wide text-muted-foreground/70 leading-none">
+                          {isRTL ? 'حسابي' : 'My account'}
+                        </span>
+                        <span className="text-xs font-semibold text-foreground truncate max-w-[140px] leading-tight mt-0.5">
                           {displayName || (isRTL ? 'مستخدم' : 'User')}
                         </span>
                         <span className="text-[10px] text-muted-foreground leading-tight">
-                          {isRTL ? accountLabel?.ar : accountLabel?.en}
+                          {isRTL ? `نوع الحساب: ${accountLabel?.ar}` : `Account: ${accountLabel?.en}`}
                         </span>
                       </div>
                       <ChevronDown className="w-3.5 h-3.5 text-muted-foreground hidden sm:block" />
@@ -296,9 +299,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
                         </div>
                         <div className="min-w-0 flex-1">
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground/80 leading-none mb-1">
+                            {isRTL ? 'حسابي الشخصي' : 'My personal account'}
+                          </p>
                           <p className="font-semibold text-sm text-foreground truncate">{displayName || (isRTL ? 'مستخدم' : 'User')}</p>
-                          <div className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${roleBadge.color}`}>
-                            <roleBadge.icon className="w-2.5 h-2.5" />{roleBadge.label}
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="text-[10px] text-muted-foreground">
+                              {isRTL ? 'نوع الحساب:' : 'Account type:'}
+                            </span>
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${roleBadge.color}`}>
+                              <roleBadge.icon className="w-2.5 h-2.5" />{roleBadge.label}
+                            </span>
                           </div>
                         </div>
                       </div>

@@ -91,7 +91,7 @@ export const ActiveBusinessSwitcher: React.FC = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align={isRTL ? 'start' : 'end'} sideOffset={8} className="w-72 p-1">
         <DropdownMenuLabel className="text-[11px] text-muted-foreground font-medium">
-          {isRTL ? 'المنشأة النشطة' : 'Active business'}
+          {isRTL ? 'المنشأة النشطة • دورك فيها' : 'Active business • your role'}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {businesses.map((b) => {
@@ -108,11 +108,17 @@ export const ActiveBusinessSwitcher: React.FC = () => {
                   : <Users className="w-3.5 h-3.5 text-primary" />}
               </div>
               <div className="flex-1 min-w-0">
+                <p className="text-[9px] uppercase tracking-wide text-muted-foreground/70 leading-none mb-0.5">
+                  {isRTL ? 'المنشأة' : 'Business'}
+                </p>
                 <p className="text-xs font-semibold text-foreground truncate">{displayName(b)}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {b.source === 'owner'
-                    ? (isRTL ? 'مالك' : 'Owner')
-                    : (isRTL ? 'موظف/مفوّض' : 'Staff')}
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {isRTL ? 'دورك: ' : 'Your role: '}
+                  <span className="font-semibold text-foreground">
+                    {b.source === 'owner'
+                      ? (isRTL ? 'مالك' : 'Owner')
+                      : (isRTL ? 'موظف / مفوّض' : 'Staff')}
+                  </span>
                 </p>
               </div>
               {selected && <Check className="w-4 h-4 text-emerald-600 shrink-0" />}
