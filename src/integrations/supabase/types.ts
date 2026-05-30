@@ -3826,6 +3826,103 @@ export type Database = {
           },
         ]
       }
+      contract_counter_offers: {
+        Row: {
+          contract_id: string
+          created_at: string
+          field_label_ar: string | null
+          field_label_en: string | null
+          field_path: string
+          id: string
+          message: string | null
+          new_value: Json
+          old_value: Json | null
+          proposer_id: string
+          responded_at: string | null
+          responded_by: string | null
+          response_message: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          field_label_ar?: string | null
+          field_label_en?: string | null
+          field_path: string
+          id?: string
+          message?: string | null
+          new_value: Json
+          old_value?: Json | null
+          proposer_id: string
+          responded_at?: string | null
+          responded_by?: string | null
+          response_message?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          field_label_ar?: string | null
+          field_label_en?: string | null
+          field_path?: string
+          id?: string
+          message?: string | null
+          new_value?: Json
+          old_value?: Json | null
+          proposer_id?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          response_message?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_counter_offers_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_expiry_alerts_log: {
+        Row: {
+          contract_id: string
+          created_at: string
+          days_before: number
+          id: string
+          notified_at: string
+          recipients: Json
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          days_before: number
+          id?: string
+          notified_at?: string
+          recipients?: Json
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          days_before?: number
+          id?: string
+          notified_at?: string
+          recipients?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_expiry_alerts_log_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_line_items: {
         Row: {
           boq_group_key: string | null

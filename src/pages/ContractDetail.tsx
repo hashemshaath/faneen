@@ -29,6 +29,7 @@ import type { ArabicFontDiagnostics } from '@/lib/pdf-arabic-font';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { ContractFullHistory } from '@/modules/contracts/components/ContractFullHistory';
+import { ContractCounterOffersPanel } from '@/modules/contracts/components/ContractCounterOffersPanel';
 import { mapContractLockError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { approveAmendment, rejectAmendment, cancelAmendment, applyAmendment } from '@/modules/contracts/services/amendments';
@@ -2499,6 +2500,7 @@ const ContractDetail = () => {
               amendments: amendments?.length || 0,
               exports: 0,
               pdfAnalysis: 0,
+              counterOffers: 0,
             }}
           />
 
@@ -3336,6 +3338,18 @@ const ContractDetail = () => {
           {/* ── Full History (Unified audit timeline) ── */}
           <TabsContent value="history">
             <ContractFullHistory contractId={contract.id} />
+          </TabsContent>
+
+          {/* ── Counter Offers (party-to-party negotiation) ── */}
+          <TabsContent value="counter-offers">
+            <ContractCounterOffersPanel
+              contractId={contract.id}
+              canPropose={
+                (contract.status === 'draft' || contract.status === 'pending_approval') &&
+                (isClient || isProvider)
+              }
+              currentUserId={user?.id ?? null}
+            />
           </TabsContent>
         </Tabs>
       </div>
