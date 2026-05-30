@@ -105,6 +105,7 @@ const DashboardServices: React.FC = () => {
 
   const businessId = business?.id ?? null;
   const subServiceIds: string[] = useMemo(() => business?.sub_services ?? [], [business]);
+  const businessSectors: string[] = useMemo(() => (business as { sectors?: string[] } | null)?.sectors ?? [], [business]);
 
   const { data: services = [], isLoading: loadingSvc } = useQuery({
     queryKey: ['business-services-sync', businessId],
@@ -154,6 +155,7 @@ const DashboardServices: React.FC = () => {
       return {
         subId,
         isCustom,
+        sectorId: catalog?.sector_id ?? null,
         sectorLabel: catalog ? (isRTL ? catalog.sector_name_ar : catalog.sector_name_en) : null,
         name_ar: row?.name_ar ?? catalog?.name_ar ?? (isRTL ? 'خدمة مخصّصة' : 'Custom service'),
         name_en: row?.name_en ?? catalog?.name_en ?? 'Custom service',
