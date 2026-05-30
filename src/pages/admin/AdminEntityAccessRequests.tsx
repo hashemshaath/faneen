@@ -381,7 +381,10 @@ const AdminEntityAccessRequests: React.FC = () => {
             <Badge variant="outline" className="text-[10px]">
               {isRTL ? (filters.find(f => f.id === filter)?.ar ?? '') : (filters.find(f => f.id === filter)?.en ?? '')}
             </Badge>
-            <span className="tech-content">• {visibleRows.length}/{rows.length}</span>
+            <span className="tech-content">
+              • {visibleRows.length}/{rows.length}
+              {totalForFilter > rows.length && ` (${isRTL ? 'من أصل' : 'of'} ${totalForFilter})`}
+            </span>
           </div>
         </div>
 
@@ -497,6 +500,29 @@ const AdminEntityAccessRequests: React.FC = () => {
             );
           })}
           </ul>
+        )}
+
+        {/* Pagination footer — Load more */}
+        {!loading && rows.length < totalForFilter && visibleRows.length > 0 && (
+          <div className="flex flex-col items-center gap-1.5 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="rounded-xl gap-1.5 min-w-[180px]"
+            >
+              {loadingMore
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <ChevronDown className="w-3.5 h-3.5" />}
+              {isRTL
+                ? `تحميل المزيد (${totalForFilter - rows.length})`
+                : `Load more (${totalForFilter - rows.length})`}
+            </Button>
+            <p className="text-[10px] text-muted-foreground tech-content">
+              {rows.length} / {totalForFilter}
+            </p>
+          </div>
         )}
       </div>
     </DashboardLayout>
