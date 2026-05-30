@@ -22,6 +22,7 @@ import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { AdminOperationalNotesPanel } from '@/components/admin/AdminOperationalNotesPanel';
 import { AdminOperationalMetricsCards } from '@/components/admin/AdminOperationalMetricsCards';
 import { AdminOpsQuickLinks } from '@/components/admin/AdminOpsQuickLinks';
+import { AdminBrandOpsCard } from '@/components/admin/AdminBrandOpsCard';
 import {
   listAdminOperationalActivity,
   listAdminWorkOrders,
