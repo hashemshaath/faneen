@@ -350,56 +350,133 @@ export default function AdminProviderReview() {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="font-heading text-2xl font-bold">
-              {isRTL ? 'مراجعة ملفات المزودين' : 'Provider Review'}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {isRTL
-                ? 'موافقة، طلب تعديلات، رفض، أو نشر ملفات المزودين قبل الظهور للجمهور.'
-                : 'Approve, request changes, reject, or publish provider profiles.'}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {isSuperAdmin && (
-              <>
-                <Button asChild size="sm" className="gap-2 rounded-xl h-10">
+        {/* ─────── Header ─────── */}
+        <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card to-card/60 p-4 md:p-5 shadow-[var(--elev-1)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-success/10 text-success">
+                  <ShieldCheck className="h-5 w-5" />
+                </span>
+                <h1 className="font-heading text-xl md:text-2xl font-bold">
+                  {isRTL ? 'مراجعة ملفات المزودين' : 'Provider Review'}
+                </h1>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {isRTL
+                  ? 'موافقة، طلب تعديلات، رفض، أو نشر ملفات المزودين قبل الظهور للجمهور.'
+                  : 'Approve, request changes, reject, or publish provider profiles.'}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => { refetch(); qc.invalidateQueries({ queryKey: ['admin-provider-review', 'counts'] }); }}
+                disabled={isFetching}
+                className="gap-1.5 rounded-xl h-10"
+              >
+                <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                {isRTL ? 'تحديث' : 'Refresh'}
+              </Button>
+              <Button asChild size="sm" variant="outline" className="gap-1.5 rounded-xl h-10">
+                <Link to="/admin/identity?view=businesses">
+                  <Building2 className="h-4 w-4" />
+                  {isRTL ? 'كل المنشآت' : 'All Businesses'}
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="gap-1.5 rounded-xl h-10">
+                <Link to="/admin/provider-analytics">
+                  <Eye className="h-4 w-4" />
+                  {isRTL ? 'التحليلات' : 'Analytics'}
+                </Link>
+              </Button>
+              {isSuperAdmin && (
+                <Button asChild size="sm" className="gap-1.5 rounded-xl h-10">
                   <Link to="/admin/users?create=provider">
                     <UserPlus className="h-4 w-4" />
-                    {isRTL ? 'إنشاء مزود جديد' : 'New Provider'}
+                    {isRTL ? 'مزود جديد' : 'New Provider'}
                   </Link>
                 </Button>
-                <Button asChild size="sm" variant="outline" className="gap-2 rounded-xl h-10">
-                  <Link to="/admin/users">
-                    <UsersIcon className="h-4 w-4" />
-                    {isRTL ? 'إدارة المستخدمين' : 'Manage Users'}
-                  </Link>
-                </Button>
-              </>
-            )}
+              )}
+            </div>
           </div>
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" style={{ insetInlineStart: '12px' }} />
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={isRTL ? 'بحث بالاسم أو اسم المستخدم' : 'Search by name or username'}
-              dir="auto"
-              style={{ paddingInlineStart: '36px' }}
-            />
+
+          {/* KPI strip — clickable status filters */}
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+            {STATUSES.filter((s) => s.value !== 'all').map((s) => {
+              const key = s.value as ApprovalStatus;
+              const n = statusCounts?.[key] ?? 0;
+              const active = statusFilter === key;
+              return (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => { setStatusFilter(key); setSelectedId(null); }}
+                  className={`group rounded-xl border p-2.5 text-start transition-all hover-lift ${
+                    active ? 'border-accent bg-accent/5 shadow-sm' : 'border-border/60 bg-card hover:border-accent/40'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge className={`${TONE[key]} text-[10px] px-1.5 py-0`}>{language === 'ar' ? s.ar : s.en}</Badge>
+                  </div>
+                  <div className="mt-1.5 font-heading text-xl font-bold tabular-nums tech-content">{n}</div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <Tabs value={statusFilter} onValueChange={(v) => { setStatusFilter(v as ApprovalStatus | 'all'); setSelectedId(null); }}>
-          <TabsList className="flex h-auto flex-wrap justify-start gap-1 bg-muted/40 p-1">
-            {STATUSES.map((s) => (
-              <TabsTrigger key={s.value} value={s.value} className="text-xs">
-                {language === 'ar' ? s.ar : s.en}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        {/* ─────── Toolbar: tabs + search + sort ─────── */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <Tabs
+            value={statusFilter}
+            onValueChange={(v) => { setStatusFilter(v as ApprovalStatus | 'all'); setSelectedId(null); }}
+            className="min-w-0 flex-1"
+          >
+            <TabsList className="flex h-auto flex-wrap justify-start gap-1 bg-muted/40 p-1">
+              {STATUSES.map((s) => {
+                const n = statusCounts?.[s.value] ?? (s.value === 'all' ? 0 : 0);
+                return (
+                  <TabsTrigger key={s.value} value={s.value} className="gap-1.5 text-xs">
+                    <span>{language === 'ar' ? s.ar : s.en}</span>
+                    {statusCounts && (
+                      <span className="rounded-md bg-background/70 px-1.5 py-0 text-[10px] tabular-nums tech-content text-muted-foreground">
+                        {n}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
+
+          <div className="flex items-center gap-2">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" style={{ insetInlineStart: '12px' }} />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={isRTL ? 'بحث بالاسم، المعرّف، اسم المستخدم' : 'Search name, ref, username'}
+                dir="auto"
+                className="h-10"
+                style={{ paddingInlineStart: '36px' }}
+              />
+            </div>
+            <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+              <SelectTrigger className="h-10 w-[170px] gap-1.5">
+                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="submitted_desc">{isRTL ? 'الأحدث إرسالاً' : 'Newest submitted'}</SelectItem>
+                <SelectItem value="submitted_asc">{isRTL ? 'الأقدم إرسالاً' : 'Oldest submitted'}</SelectItem>
+                <SelectItem value="completion_desc">{isRTL ? 'الأعلى اكتمالاً' : 'Highest completion'}</SelectItem>
+                <SelectItem value="name_asc">{isRTL ? 'الاسم (أ–ي)' : 'Name (A–Z)'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         <AdminProviderGrowthPanel
           providers={(rows ?? []).map((r) => ({ ...r, id: r.id }))}
