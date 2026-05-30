@@ -216,7 +216,7 @@ const AdminServiceRequests: React.FC = () => {
                     </Badge>
                     {r.ref_id && <span className="tech-content text-[11px] text-muted-foreground">{r.ref_id}</span>}
                     {r.ticket_ref_id && (
-                      <Link to="/admin/help-center" className="tech-content text-[11px] text-primary hover:underline inline-flex items-center gap-1">
+                      <Link to="/admin/help" className="tech-content text-[11px] text-primary hover:underline inline-flex items-center gap-1">
                         {r.ticket_ref_id}<ExternalLink className="h-3 w-3" />
                       </Link>
                     )}
