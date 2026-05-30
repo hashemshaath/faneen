@@ -14179,6 +14179,21 @@ export type Database = {
         Args: { _lead_id: string }
         Returns: string
       }
+      admin_create_contract_on_behalf: {
+        Args: {
+          _client_id: string
+          _currency_code?: string
+          _description_ar?: string
+          _description_en?: string
+          _end_date?: string
+          _provider_id: string
+          _start_date?: string
+          _title_ar: string
+          _title_en?: string
+          _total_amount?: number
+        }
+        Returns: string
+      }
       admin_freeze_barcode: {
         Args: { _barcode_id: string; _reason?: string }
         Returns: Json
@@ -15105,6 +15120,10 @@ export type Database = {
           ref_id: string
           user_id: string
         }[]
+      }
+      get_contract_full_audit_trail: {
+        Args: { _contract_id: string }
+        Returns: Json
       }
       get_contract_source_lead_summary: {
         Args: { _contract_id: string }
