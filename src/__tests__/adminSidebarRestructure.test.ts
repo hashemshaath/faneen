@@ -6,7 +6,9 @@ import { resolve } from 'node:path';
  * ADMIN-SIDEBAR-UX-RESTRUCTURE-2 guards.
  *
  * Enforces the consolidated admin sidebar structure:
- *  - exactly 10 groups (9 admin + Account)
+ *  - exactly 9 groups (8 admin + Account) after merging
+ *    "Users & Access" + "Businesses & Providers" into
+ *    "Identities & Entities"
  *  - no duplicate hrefs across the admin menu
  *  - approved AR/EN group labels present
  *  - no duplicate "مراجعة المزودين" / "إدارة الوصول"
@@ -29,8 +31,7 @@ const ADMIN_BLOCK = (() => {
 
 const APPROVED_GROUPS: Array<{ ar: string; en: string }> = [
   { ar: 'نظرة عامة', en: 'Overview' },
-  { ar: 'المستخدمون والوصول', en: 'Users & Access' },
-  { ar: 'المنشآت والمزودون', en: 'Businesses & Providers' },
+  { ar: 'الهويات والمنشآت', en: 'Identities & Entities' },
   { ar: 'الطلبات والعقود', en: 'Requests & Contracts' },
   { ar: 'العضويات والمدفوعات', en: 'Memberships & Payments' },
   { ar: 'التواصل', en: 'Communications' },
