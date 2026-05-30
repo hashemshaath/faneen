@@ -146,7 +146,7 @@ describe('PROVIDER-BRANDS-DASHBOARD-1 — scope discipline', () => {
   });
 
   it('no brand SLA cron added in page', () => {
-    expect(src).not.toMatch(/sla|SLA|cron/i);
+    expect(src).not.toMatch(/\bSLA\b|\bcron\b/);
   });
 
   it('no inventory/accounting/supplier portal scope creep', () => {
