@@ -253,7 +253,8 @@ const adminBaseGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'طلبات العملاء', en: 'Customer Requests' }, url: '/admin/lead-requests', icon: Inbox },
       { label: { ar: 'تشغيل عروض الأسعار', en: 'Quote Operations' }, url: '/admin/quote-operations', icon: Activity },
-      { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
+      { label: { ar: 'إدارة العقود', en: 'Contracts Admin' }, url: '/admin/contracts', icon: FileText },
+      { label: { ar: 'إنشاء عقد بالنيابة', en: 'Create on Behalf' }, url: '/admin/contracts/create', icon: FileText },
       { label: { ar: 'قوالب العقود', en: 'Contract Templates' }, url: '/admin/contract-templates', icon: FileText },
       { label: { ar: 'سجل تصدير العقود', en: 'Contract Export Audit' }, url: '/admin/pdf-exports', icon: FileText },
     ],
