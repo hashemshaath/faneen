@@ -10302,6 +10302,7 @@ export type Database = {
       }
       procurement_rfq_items: {
         Row: {
+          brand_lock: string | null
           business_id: string
           created_at: string
           description: string | null
@@ -10309,6 +10310,7 @@ export type Database = {
           name: string
           procurement_request_id: string | null
           quantity: number
+          requested_brand_id: string | null
           rfq_id: string
           sort_order: number
           target_price: number | null
@@ -10316,6 +10318,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          brand_lock?: string | null
           business_id: string
           created_at?: string
           description?: string | null
@@ -10323,6 +10326,7 @@ export type Database = {
           name: string
           procurement_request_id?: string | null
           quantity?: number
+          requested_brand_id?: string | null
           rfq_id: string
           sort_order?: number
           target_price?: number | null
@@ -10330,6 +10334,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          brand_lock?: string | null
           business_id?: string
           created_at?: string
           description?: string | null
@@ -10337,6 +10342,7 @@ export type Database = {
           name?: string
           procurement_request_id?: string | null
           quantity?: number
+          requested_brand_id?: string | null
           rfq_id?: string
           sort_order?: number
           target_price?: number | null
@@ -10349,6 +10355,20 @@ export type Database = {
             columns: ["procurement_request_id"]
             isOneToOne: false
             referencedRelation: "procurement_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_rfq_items_requested_brand_id_fkey"
+            columns: ["requested_brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_rfq_items_requested_brand_id_fkey"
+            columns: ["requested_brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands_public"
             referencedColumns: ["id"]
           },
           {
@@ -10423,8 +10443,11 @@ export type Database = {
         Row: {
           business_id: string
           created_at: string
+          equivalence_notes: string | null
           id: string
+          is_equivalent: boolean
           notes: string | null
+          proposed_brand_id: string | null
           quantity: number
           quote_id: string
           rfq_item_id: string
@@ -10435,8 +10458,11 @@ export type Database = {
         Insert: {
           business_id: string
           created_at?: string
+          equivalence_notes?: string | null
           id?: string
+          is_equivalent?: boolean
           notes?: string | null
+          proposed_brand_id?: string | null
           quantity?: number
           quote_id: string
           rfq_item_id: string
@@ -10447,8 +10473,11 @@ export type Database = {
         Update: {
           business_id?: string
           created_at?: string
+          equivalence_notes?: string | null
           id?: string
+          is_equivalent?: boolean
           notes?: string | null
+          proposed_brand_id?: string | null
           quantity?: number
           quote_id?: string
           rfq_item_id?: string
@@ -10457,6 +10486,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "procurement_supplier_quote_items_proposed_brand_id_fkey"
+            columns: ["proposed_brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_supplier_quote_items_proposed_brand_id_fkey"
+            columns: ["proposed_brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "procurement_supplier_quote_items_quote_id_fkey"
             columns: ["quote_id"]
@@ -12216,6 +12259,8 @@ export type Database = {
       quote_requests: {
         Row: {
           approx_dimensions: string | null
+          brand_notes: string | null
+          brand_preference_mode: string | null
           budget_amount: number | null
           budget_note: string | null
           city: string
@@ -12230,6 +12275,7 @@ export type Database = {
           id: string
           location_id: string | null
           metadata: Json
+          preferred_brand_ids: string[] | null
           preferred_contact_method: string
           project_description: string
           quantity: string | null
@@ -12245,6 +12291,8 @@ export type Database = {
         }
         Insert: {
           approx_dimensions?: string | null
+          brand_notes?: string | null
+          brand_preference_mode?: string | null
           budget_amount?: number | null
           budget_note?: string | null
           city: string
@@ -12259,6 +12307,7 @@ export type Database = {
           id?: string
           location_id?: string | null
           metadata?: Json
+          preferred_brand_ids?: string[] | null
           preferred_contact_method: string
           project_description: string
           quantity?: string | null
@@ -12274,6 +12323,8 @@ export type Database = {
         }
         Update: {
           approx_dimensions?: string | null
+          brand_notes?: string | null
+          brand_preference_mode?: string | null
           budget_amount?: number | null
           budget_note?: string | null
           city?: string
@@ -12288,6 +12339,7 @@ export type Database = {
           id?: string
           location_id?: string | null
           metadata?: Json
+          preferred_brand_ids?: string[] | null
           preferred_contact_method?: string
           project_description?: string
           quantity?: string | null
@@ -13325,6 +13377,8 @@ export type Database = {
       work_order_boq_items: {
         Row: {
           boq_id: string
+          brand_id: string | null
+          brand_lock: string | null
           created_at: string
           deleted_at: string | null
           id: string
@@ -13343,6 +13397,8 @@ export type Database = {
         }
         Insert: {
           boq_id: string
+          brand_id?: string | null
+          brand_lock?: string | null
           created_at?: string
           deleted_at?: string | null
           id?: string
@@ -13361,6 +13417,8 @@ export type Database = {
         }
         Update: {
           boq_id?: string
+          brand_id?: string | null
+          brand_lock?: string | null
           created_at?: string
           deleted_at?: string | null
           id?: string
@@ -13383,6 +13441,20 @@ export type Database = {
             columns: ["boq_id"]
             isOneToOne: false
             referencedRelation: "work_order_boqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_boq_items_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_boq_items_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands_public"
             referencedColumns: ["id"]
           },
           {
@@ -17822,6 +17894,10 @@ export type Database = {
       }
       user_can_manage_business: {
         Args: { _business_id: string }
+        Returns: boolean
+      }
+      validate_brand_id_approved: {
+        Args: { _brand_id: string }
         Returns: boolean
       }
       validate_contract_line_item_price: {
