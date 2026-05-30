@@ -367,6 +367,13 @@ const Quote: React.FC = () => {
         ? 'after-quotes'
         : form.budgetMode === 'no' ? 'no-budget' : null,
       metadata: { locale: isRTL ? 'ar' : 'en' },
+      preferred_brand_ids: form.preferredBrandIds.length ? form.preferredBrandIds : null,
+      brand_preference_mode: form.preferredBrandIds.length && form.brandPreferenceMode
+        ? form.brandPreferenceMode
+        : null,
+      brand_notes: form.preferredBrandIds.length && form.brandNotes.trim()
+        ? form.brandNotes.trim()
+        : null,
     };
 
     try {
