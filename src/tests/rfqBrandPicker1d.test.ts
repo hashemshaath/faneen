@@ -138,7 +138,11 @@ describe('RFQ-BRAND-PICKER-1D — Scope discipline (downstream not wired)', () =
 
   it('supplier proposed_brand_id is not referenced in UI or services', () => {
     const offenders = rgInDir('src', /proposed_brand_id/).filter(
-      (m) => !m.includes('/tests/') && !m.includes('/__tests__/'),
+      (m) =>
+        !m.includes('/tests/') &&
+        !m.includes('/__tests__/') &&
+        // Generated Supabase types reflect the 1A schema and are not "wiring".
+        m !== 'src/integrations/supabase/types.ts',
     );
     expect(offenders).toEqual([]);
   });
