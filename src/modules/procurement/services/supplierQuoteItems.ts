@@ -194,6 +194,12 @@ export interface UpdateProposedBrandInput {
    * helper says a human must look at it.
    */
   brand_review_status?: Extract<BrandReviewStatus, 'not_required' | 'pending'>;
+  /**
+   * RFQ-BRAND-PICKER-1F — when both are provided, recompute match status
+   * + review status server-side instead of trusting the caller.
+   */
+  requested_brand_id?: string | null;
+  brand_lock?: BrandLock | null;
 }
 
 /**
@@ -206,7 +212,6 @@ export async function updateSupplierQuoteItemProposedBrand(
   input: UpdateProposedBrandInput,
 ): Promise<{ data: ProcurementSupplierQuoteItemRow | null; error: unknown }> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patch: Record<string, any> = {};
   if (input.proposed_brand_id !== undefined) {
     patch.proposed_brand_id = input.proposed_brand_id;
@@ -216,11 +221,33 @@ export async function updateSupplierQuoteItemProposedBrand(
   if (input.proposed_brand_name !== undefined) {
     patch.proposed_brand_name = sanitizeProposedBrandName(input.proposed_brand_name);
   }
-  if (input.brand_match_status !== undefined) {
-    patch.brand_match_status = input.brand_match_status;
-  }
-  if (input.brand_review_status !== undefined) {
-    patch.brand_review_status = input.brand_review_status;
+  const hasCtx =
+    input.requested_brand_id !== undefined && input.brand_lock !== undefined;
+  if (hasCtx) {
+    // RFQ-BRAND-PICKER-1F — recompute deterministically; never trust caller.
+    const cls = computePersistedBrandClassification({
+      requested_brand_id: input.requested_brand_id,
+      brand_lock: input.brand_lock,
+      proposed_brand_id:
+        input.proposed_brand_id !== undefined
+          ? input.proposed_brand_id
+          : null,
+      proposed_brand_name:
+        input.proposed_brand_name !== undefined
+          ? sanitizeProposedBrandName(input.proposed_brand_name)
+          : null,
+    });
+    patch.brand_match_status = cls.brand_match_status;
+    // Never auto-reopen an already-decided review from this path.
+    patch.brand_review_status =
+      cls.brand_review_status === 'pending' ? 'pending' : 'not_required';
+  } else {
+    if (input.brand_match_status !== undefined) {
+      patch.brand_match_status = input.brand_match_status;
+    }
+    if (input.brand_review_status !== undefined) {
+      patch.brand_review_status = input.brand_review_status;
+    }
   }
   if (Object.keys(patch).length === 0) {
     return { data: null, error: new Error('empty_patch') };
@@ -233,7 +260,7 @@ export async function updateSupplierQuoteItemProposedBrand(
     .maybeSingle();
   return {
     data: (data as unknown as ProcurementSupplierQuoteItemRow | null) ?? null,
-    error,
+    error: mapBrandReviewError(error),
   };
 }
 
