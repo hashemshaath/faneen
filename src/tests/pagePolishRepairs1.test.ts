@@ -16,7 +16,7 @@ const TARGET_PAGES: Array<{ label: string; path: string }> = [
   { label: "DashboardOperationsCenter", path: "src/pages/dashboard/DashboardOperationsCenter.tsx" },
   { label: "DashboardWorkOrders", path: "src/pages/dashboard/DashboardWorkOrders.tsx" },
   { label: "DashboardWorkOrderDetail", path: "src/pages/dashboard/DashboardWorkOrderDetail.tsx" },
-  { label: "ProductionBoardPage", path: "src/components/ProductionBoardPage.tsx" },
+  { label: "ProductionBoardPage", path: "src/pages/dashboard/ProductionBoardPage.tsx" },
   { label: "DashboardProcurement", path: "src/pages/dashboard/DashboardProcurement.tsx" },
   { label: "DashboardProcurementDetail", path: "src/pages/dashboard/DashboardProcurementDetail.tsx" },
   { label: "DashboardContracts", path: "src/pages/dashboard/DashboardContracts.tsx" },
