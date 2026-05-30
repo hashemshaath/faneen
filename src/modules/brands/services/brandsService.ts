@@ -11,12 +11,18 @@ import type {
 } from '../types';
 import { normalizeArabicBrandName, normalizeEnglishBrandName, generateBrandSlugCandidate } from '../helpers/labels';
 
+// Generated Supabase types lag behind the brands governance migration —
+// we cast through `unknown` for the new columns until types refresh.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Loose = any;
+const sb: Loose = supabase;
+
 // ------------------------- PUBLIC / PROVIDER READ ------------------------
 
 export async function listApprovedBrands(filters?: {
   sectorId?: string; countryCode?: string; q?: string; limit?: number;
 }) {
-  let q = supabase.from('brands_public').select('*').order('name_ar', { ascending: true });
+  let q = sb.from('brands_public').select('*').order('name_ar', { ascending: true });
   if (filters?.sectorId)    q = q.eq('sector_id', filters.sectorId);
   if (filters?.countryCode) q = q.eq('country_of_origin_code', filters.countryCode);
   if (filters?.q) {
@@ -30,7 +36,7 @@ export async function listApprovedBrands(filters?: {
 }
 
 export async function getBrandBySlug(slug: string) {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('brands_public').select('*').eq('slug', slug).maybeSingle();
   if (error) throw error;
   return data as Brand | null;
@@ -41,7 +47,7 @@ export async function getBrandBySlug(slug: string) {
 export async function adminListBrands(filters?: {
   status?: BrandStatus | 'all'; sectorId?: string; q?: string;
 }) {
-  let q = supabase.from('brand_catalog').select('*').order('created_at', { ascending: false });
+  let q = sb.from('brand_catalog').select('*').order('created_at', { ascending: false });
   if (filters?.status && filters.status !== 'all') q = q.eq('status', filters.status);
   if (filters?.sectorId) q = q.eq('sector_id', filters.sectorId);
   if (filters?.q) {
@@ -54,7 +60,7 @@ export async function adminListBrands(filters?: {
 }
 
 export async function adminGetBrand(id: string) {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('brand_catalog').select('*').eq('id', id).maybeSingle();
   if (error) throw error;
   return data as Brand | null;
@@ -64,7 +70,7 @@ export async function adminGetBrand(id: string) {
 
 export async function adminCreateBrand(payload: Partial<Brand> & { name_ar: string }) {
   const slug = payload.slug || generateBrandSlugCandidate(payload.name_en ?? null, payload.name_ar);
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('brand_catalog')
     .insert({ ...payload, slug, status: payload.status ?? 'approved', source: payload.source ?? 'admin' })
     .select('*').single();
@@ -73,7 +79,7 @@ export async function adminCreateBrand(payload: Partial<Brand> & { name_ar: stri
 }
 
 export async function adminUpdateBrand(id: string, patch: Partial<Brand>) {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('brand_catalog').update(patch).eq('id', id).select('*').single();
   if (error) throw error;
   return data as Brand;
@@ -105,7 +111,7 @@ export async function adminMergeBrands(sourceId: string, targetId: string) {
 // ------------------------- MANUFACTURING COUNTRIES -----------------------
 
 export async function listBrandManufacturingCountries(brandId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('brand_manufacturing_countries').select('*').eq('brand_id', brandId);
   if (error) throw error;
   return (data ?? []) as BrandManufacturingCountry[];
@@ -115,9 +121,9 @@ export async function setBrandManufacturingCountries(
   brandId: string,
   countries: Array<Omit<BrandManufacturingCountry, 'id' | 'brand_id'>>,
 ) {
-  await supabase.from('brand_manufacturing_countries').delete().eq('brand_id', brandId);
+  await sb.from('brand_manufacturing_countries').delete().eq('brand_id', brandId);
   if (countries.length === 0) return;
-  const { error } = await supabase
+  const { error } = await sb
     .from('brand_manufacturing_countries')
     .insert(countries.map((c) => ({ ...c, brand_id: brandId })));
   if (error) throw error;
@@ -126,19 +132,19 @@ export async function setBrandManufacturingCountries(
 // ----------------------------- SECTOR LINKS -----------------------------
 
 export async function listBrandSectors(brandId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('brand_sector_links').select('*').eq('brand_id', brandId);
   if (error) throw error;
   return (data ?? []) as BrandSectorLink[];
 }
 
 export async function setBrandSectors(brandId: string, sectorIds: string[], primary?: string) {
-  await supabase.from('brand_sector_links').delete().eq('brand_id', brandId);
+  await sb.from('brand_sector_links').delete().eq('brand_id', brandId);
   if (sectorIds.length === 0) return;
   const rows = sectorIds.map((sid) => ({
     brand_id: brandId, sector_id: sid, is_primary: sid === primary,
   }));
-  const { error } = await supabase.from('brand_sector_links').insert(rows);
+  const { error } = await sb.from('brand_sector_links').insert(rows);
   if (error) throw error;
 }
 
@@ -159,7 +165,7 @@ export async function createBrandRequest(payload: {
   notes?: string | null;
   sector_id?: string | null;
 }) {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('brand_addition_requests')
     .insert({
       request_type: payload.request_type,
@@ -183,7 +189,7 @@ export async function createBrandRequest(payload: {
 }
 
 export async function listMyBrandRequests(userId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('brand_addition_requests')
     .select('*').eq('user_id', userId)
     .order('created_at', { ascending: false });
@@ -195,7 +201,7 @@ export async function adminListBrandRequests(filters?: {
   status?: 'pending' | 'approved' | 'rejected' | 'all';
   request_type?: BrandRequestType | 'all';
 }) {
-  let q = supabase
+  let q = sb
     .from('brand_addition_requests').select('*').order('created_at', { ascending: false });
   if (filters?.status && filters.status !== 'all') q = q.eq('status', filters.status);
   if (filters?.request_type && filters.request_type !== 'all') q = q.eq('request_type', filters.request_type);
@@ -206,7 +212,7 @@ export async function adminListBrandRequests(filters?: {
 
 export async function adminApproveBrandRequest(requestId: string) {
   // Resolve request and either create the brand or attach to an existing one.
-  const { data: req, error: e1 } = await supabase
+  const { data: req, error: e1 } = await sb
     .from('brand_addition_requests').select('*').eq('id', requestId).single();
   if (e1) throw e1;
 
@@ -228,7 +234,7 @@ export async function adminApproveBrandRequest(requestId: string) {
     }
   }
 
-  const { error: e2 } = await supabase
+  const { error: e2 } = await sb
     .from('brand_addition_requests')
     .update({
       status: 'approved',
@@ -256,11 +262,11 @@ export async function adminApproveBrandRequest(requestId: string) {
 }
 
 export async function adminRejectBrandRequest(requestId: string, reason: string) {
-  const { data: req, error: e1 } = await supabase
+  const { data: req, error: e1 } = await sb
     .from('brand_addition_requests').select('user_id, name_ar, ref_id').eq('id', requestId).single();
   if (e1) throw e1;
 
-  const { error } = await supabase
+  const { error } = await sb
     .from('brand_addition_requests')
     .update({ status: 'rejected', reject_reason: reason, reviewed_at: new Date().toISOString() })
     .eq('id', requestId);
@@ -292,12 +298,12 @@ export async function findPossibleDuplicateBrands(payload: {
   let or = `name_ar.ilike.%${term}%`;
   if (enTerm) or += `,name_en.ilike.%${enTerm}%`;
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('brand_catalog').select('id, ref_id, name_ar, name_en, slug, status')
     .or(or).limit(20);
   if (error) throw error;
 
-  return (data ?? []).filter((row) => {
+  return ((data ?? []) as Array<Pick<Brand, 'id' | 'ref_id' | 'name_ar' | 'name_en' | 'slug' | 'status'>>).filter((row) => {
     const a = normalizeArabicBrandName(row.name_ar ?? '');
     const e = normalizeEnglishBrandName(row.name_en ?? '');
     return a.includes(nAr) || nAr.includes(a) || (!!nEn && (e.includes(nEn) || nEn.includes(e)));
