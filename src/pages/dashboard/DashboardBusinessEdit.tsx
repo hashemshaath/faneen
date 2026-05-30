@@ -712,7 +712,11 @@ const DashboardBusinessEdit: React.FC = () => {
                   className="tech-content uppercase"
                   placeholder="RRRD2402"
                   value={shortAddress}
-                  onChange={(e) => setShortAddress(e.target.value.toUpperCase())}
+                  onChange={(e) => {
+                    const v = e.target.value.toUpperCase();
+                    setShortAddress(v);
+                    update('short_address', v || null);
+                  }}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleShortAddressLookup(); } }}
                   maxLength={8}
                 />
