@@ -28,6 +28,16 @@ the trigger phase that may pick it up.
 | H1 | Migrate remaining legacy `supabase.from` calls in pages to `src/modules/.../services/*` | Gradual, per `mem://tech/refactoring-policy`. |
 | H2 | Author missing edge-function logs README per domain | Tracked alongside isolation audits. |
 
+## Brands Governance (deferred from BRANDS-GOVERNANCE-3)
+
+| # | Item | Trigger / phase | Notes |
+|---|------|-----------------|-------|
+| B1 | RFQ brand picker | `BRANDS-RFQ-1` | Requires explicit RFQ↔brand relation model (allowed brands per line, replacements policy, quote evaluation impact). |
+| B2 | Provider `/dashboard/brands` linked-brands panel | `BRANDS-PROVIDER-UX-1` | Service layer (`listMyProviderBrandLinks`) ready; UI panel pending. |
+| B3 | Help Center article bodies for brand pageKeys | `HELP-CONTENT-BRANDS` | Mappings exist; long-form content authoring pending. |
+| B4 | Brand request aging SLA + observability cron | `BRANDS-OPS-SLA-1` | Needs ops-defined SLA thresholds and escalation routing before implementation. |
+| B5 | Extended duplicate detection (phonetic + cross-language) | `BRANDS-DEDUP-2` | Current detection is normalized-name match only. |
+
 ## Out of scope until explicitly re-opened
 
 - Payment provider switches.
