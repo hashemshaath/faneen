@@ -125,7 +125,10 @@ const DashboardBusinessEdit: React.FC = () => {
   // the active entity in the workspace switcher).
   useEffect(() => {
     if (!business) return;
-    if (!form || form.id !== business.id) setForm(business);
+    if (!form || form.id !== business.id) {
+      setForm(business);
+      if (business.short_address) setShortAddress(business.short_address.toUpperCase());
+    }
   }, [business, form]);
 
   const { data: countries = [] } = useQuery({
