@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -7,9 +8,11 @@ import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/Mayb
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import {
   Loader2, Check, X, Mail, Building2, RefreshCw, UserPlus,
-  Clock, CheckCircle2, XCircle, Inbox, Filter,
+  Clock, CheckCircle2, XCircle, Inbox, Filter, Search as SearchIcon,
+  Download, ArrowUpDown, ExternalLink, CheckCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -24,6 +27,7 @@ import {
  * `requireAdmin`). Safe fields only — no requester email/phone, no tokens.
  */
 type StatusFilter = 'pending' | 'approved' | 'rejected' | 'all';
+type SortOrder = 'newest' | 'oldest';
 
 const STATUS_LABEL: Record<string, { ar: string; en: string }> = {
   pending: { ar: 'قيد المراجعة', en: 'Pending' },
@@ -50,6 +54,9 @@ const AdminEntityAccessRequests: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<StatusFilter>('pending');
   const [acting, setActing] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<SortOrder>('newest');
+  const [bulkRunning, setBulkRunning] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -65,6 +72,32 @@ const AdminEntityAccessRequests: React.FC = () => {
 
   useEffect(() => { void load(); }, [load]);
 
+  // Client-side search + sort over the already-fetched, status-filtered rows.
+  const visibleRows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? rows.filter((r) => {
+          const tb = r.target_business;
+          const hay = [
+            r.ref_id,
+            r.target_ref ?? '',
+            tb?.ref_id ?? '',
+            tb?.legacy_ref_id ?? '',
+            tb?.name_ar ?? '',
+            tb?.name_en ?? '',
+            r.message ?? '',
+          ].join(' ').toLowerCase();
+          return hay.includes(q);
+        })
+      : rows;
+    const sorted = [...filtered].sort((a, b) => {
+      const da = new Date(a.created_at).getTime();
+      const db = new Date(b.created_at).getTime();
+      return sort === 'newest' ? db - da : da - db;
+    });
+    return sorted;
+  }, [rows, query, sort]);
+
   const counts = useMemo(() => {
     const c = { pending: 0, approved: 0, rejected: 0, cancelled: 0, total: allRows.length };
     for (const r of allRows) {
@@ -72,6 +105,43 @@ const AdminEntityAccessRequests: React.FC = () => {
     }
     return c;
   }, [allRows]);
+
+  // Pending rows that already have a linked entity → safe to bulk-approve.
+  const bulkApprovable = useMemo(
+    () => visibleRows.filter((r) => r.status === 'pending' && !!r.target_business_id),
+    [visibleRows],
+  );
+
+  const exportCsv = useCallback(() => {
+    const header = ['ref_id', 'status', 'target_ref', 'entity_ref', 'entity_name', 'message', 'created_at'];
+    const esc = (s: unknown) => {
+      const v = (s ?? '').toString().replace(/"/g, '""');
+      return `"${v}"`;
+    };
+    const lines = [header.join(',')].concat(
+      visibleRows.map((r) => {
+        const tb = r.target_business;
+        return [
+          esc(r.ref_id),
+          esc(r.status),
+          esc(r.target_ref ?? ''),
+          esc(tb?.ref_id ?? tb?.legacy_ref_id ?? ''),
+          esc(tb?.name_en ?? tb?.name_ar ?? ''),
+          esc((r.message ?? '').replace(/\s+/g, ' ')),
+          esc(r.created_at),
+        ].join(',');
+      }),
+    );
+    const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `entity-access-requests-${filter}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, [visibleRows, filter]);
 
   const onReview = async (row: EntityAccessRequestListRow, action: 'approve' | 'reject') => {
     if (!user) return;
@@ -100,6 +170,29 @@ const AdminEntityAccessRequests: React.FC = () => {
       setActing(null);
     }
   };
+
+  const onBulkApprove = useCallback(async () => {
+    if (!user || bulkApprovable.length === 0) return;
+    setBulkRunning(true);
+    let ok = 0;
+    let fail = 0;
+    for (const r of bulkApprovable) {
+      const res = await reviewEntityAccessRequest({
+        requestId: r.id,
+        reviewerUserId: user.id,
+        action: 'approve',
+      });
+      if (res.ok) ok += 1; else fail += 1;
+    }
+    setBulkRunning(false);
+    if (ok > 0) {
+      toast.success(isRTL ? `تمت الموافقة على ${ok} طلب` : `Approved ${ok} request(s)`);
+    }
+    if (fail > 0) {
+      toast.error(isRTL ? `تعذّر تنفيذ ${fail} طلب` : `${fail} request(s) failed`);
+    }
+    await load();
+  }, [user, bulkApprovable, isRTL, load]);
 
   if (!isAdmin && !isSuperAdmin) {
     return (
@@ -138,10 +231,41 @@ const AdminEntityAccessRequests: React.FC = () => {
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={load} disabled={loading} className="rounded-xl gap-1.5">
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            {isRTL ? 'تحديث' : 'Refresh'}
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportCsv}
+              disabled={loading || visibleRows.length === 0}
+              className="rounded-xl gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" />
+              {isRTL ? 'تصدير CSV' : 'Export CSV'}
+            </Button>
+            {filter === 'pending' && (
+              <Button
+                variant="hero"
+                size="sm"
+                onClick={onBulkApprove}
+                disabled={bulkRunning || bulkApprovable.length === 0}
+                className="rounded-xl gap-1.5"
+                title={
+                  bulkApprovable.length === 0
+                    ? (isRTL ? 'لا توجد طلبات قابلة للموافقة الجماعية' : 'No bulk-approvable requests')
+                    : undefined
+                }
+              >
+                {bulkRunning
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <CheckCheck className="w-3.5 h-3.5" />}
+                {isRTL ? `موافقة جماعية (${bulkApprovable.length})` : `Bulk approve (${bulkApprovable.length})`}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={load} disabled={loading} className="rounded-xl gap-1.5">
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              {isRTL ? 'تحديث' : 'Refresh'}
+            </Button>
+          </div>
         </div>
 
         {/* KPI cards (also act as filters) */}
@@ -175,14 +299,37 @@ const AdminEntityAccessRequests: React.FC = () => {
           })}
         </div>
 
-        {/* Filter pills (compact secondary control) */}
-        <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
-          <Filter className="w-3.5 h-3.5" />
-          <span>{isRTL ? 'عرض:' : 'Showing:'}</span>
-          <Badge variant="outline" className="text-[10px]">
-            {isRTL ? (filters.find(f => f.id === filter)?.ar ?? '') : (filters.find(f => f.id === filter)?.en ?? '')}
-          </Badge>
-          <span className="tech-content">• {rows.length}</span>
+        {/* Search + sort + active filter pill */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative flex-1 min-w-[220px] max-w-md">
+            <SearchIcon className="absolute top-1/2 -translate-y-1/2 start-3 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            <Input
+              dir="auto"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={isRTL ? 'ابحث برقم الطلب، اسم المنشأة، أو الرسالة…' : 'Search by ref, entity name, or message…'}
+              className="ps-9 h-9 rounded-xl text-xs"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setSort((s) => (s === 'newest' ? 'oldest' : 'newest'))}
+            className="rounded-xl gap-1.5 h-9"
+          >
+            <ArrowUpDown className="w-3.5 h-3.5" />
+            {sort === 'newest'
+              ? (isRTL ? 'الأحدث أولاً' : 'Newest first')
+              : (isRTL ? 'الأقدم أولاً' : 'Oldest first')}
+          </Button>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Filter className="w-3.5 h-3.5" />
+            <Badge variant="outline" className="text-[10px]">
+              {isRTL ? (filters.find(f => f.id === filter)?.ar ?? '') : (filters.find(f => f.id === filter)?.en ?? '')}
+            </Badge>
+            <span className="tech-content">• {visibleRows.length}/{rows.length}</span>
+          </div>
         </div>
 
         {/* List */}
@@ -190,23 +337,32 @@ const AdminEntityAccessRequests: React.FC = () => {
           <div className="space-y-2">
             {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
           </div>
-        ) : rows.length === 0 ? (
+        ) : visibleRows.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border/60 bg-card p-12 text-center">
             <div className="w-14 h-14 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-3">
               <Inbox className="w-7 h-7 text-muted-foreground" />
             </div>
             <p className="text-sm font-semibold text-foreground">
-              {isRTL ? 'لا توجد طلبات في هذه القائمة' : 'No requests in this view'}
+              {query
+                ? (isRTL ? 'لا نتائج مطابقة للبحث' : 'No matching results')
+                : (isRTL ? 'لا توجد طلبات في هذه القائمة' : 'No requests in this view')}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              {isRTL
-                ? 'ستظهر طلبات الانضمام الجديدة هنا فور إرسالها من المستخدمين.'
-                : 'New join requests will appear here as soon as users submit them.'}
+              {query
+                ? (isRTL ? 'جرّب تعديل كلمات البحث أو امسح الحقل.' : 'Try adjusting the search or clear the field.')
+                : (isRTL
+                  ? 'ستظهر طلبات الانضمام الجديدة هنا فور إرسالها من المستخدمين.'
+                  : 'New join requests will appear here as soon as users submit them.')}
             </p>
+            {query && (
+              <Button variant="outline" size="sm" onClick={() => setQuery('')} className="mt-3 rounded-xl">
+                {isRTL ? 'مسح البحث' : 'Clear search'}
+              </Button>
+            )}
           </div>
         ) : (
           <ul className="space-y-2" data-feature="admin-access-requests-list">
-          {rows.map((r) => {
+          {visibleRows.map((r) => {
             const label = STATUS_LABEL[r.status] ?? { ar: r.status, en: r.status };
             const statusCls = STATUS_STYLE[r.status] ?? 'bg-muted text-muted-foreground border-border';
             const tb = r.target_business;
@@ -215,12 +371,22 @@ const AdminEntityAccessRequests: React.FC = () => {
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="tech-content text-[11px] font-semibold text-foreground">
+                      <Link
+                        to={`/admin/ref/${encodeURIComponent(r.ref_id)}`}
+                        className="tech-content text-[11px] font-semibold text-foreground hover:text-primary inline-flex items-center gap-1"
+                        title={isRTL ? 'فتح في مستكشف المراجع' : 'Open in Reference Inspector'}
+                      >
                         {r.ref_id}
-                      </span>
+                        <ExternalLink className="w-3 h-3 opacity-60" />
+                      </Link>
                       <Badge variant="outline" className={`text-[10px] ${statusCls}`}>
                         {isRTL ? label.ar : label.en}
                       </Badge>
+                      {r.status === 'pending' && !r.target_business_id && (
+                        <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning border-warning/30">
+                          {isRTL ? 'يحتاج ربط منشأة' : 'Needs linking'}
+                        </Badge>
+                      )}
                     </div>
                     {tb ? (
                       <p className="text-sm text-foreground flex items-center gap-1.5">
