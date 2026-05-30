@@ -267,6 +267,7 @@ const DashboardServices: React.FC = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['my-business-services-page'] });
+      qc.invalidateQueries({ queryKey: ['business-edit'] });
       toast.success(isRTL ? 'تمت الإضافة' : 'Added');
     },
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
@@ -285,6 +286,7 @@ const DashboardServices: React.FC = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['my-business-services-page'] });
       qc.invalidateQueries({ queryKey: ['business-services-sync', businessId] });
+      qc.invalidateQueries({ queryKey: ['business-edit'] });
       toast.success(isRTL ? 'تم الحذف' : 'Removed');
     },
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
