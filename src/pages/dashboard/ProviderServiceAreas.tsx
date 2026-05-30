@@ -301,65 +301,6 @@ const ProviderServiceAreas: React.FC = () => {
     },
   });
 
-  const addArea = useMutation({
-    mutationFn: async () => {
-      if (!activeBiz) throw new Error('no business');
-      const c = city.trim();
-      if (c.length < 2) throw new Error('city too short');
-      // If marking primary, clear others first
-      if (isPrimary) {
-        await clearPrimaryServiceAreasForBusiness(activeBiz);
-      }
-      const { error } = await insertServiceArea({
-        business_id: activeBiz,
-        city: c,
-        district: district.trim() || null,
-        is_primary: isPrimary,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success('تمت إضافة منطقة الخدمة');
-      setCity(''); setDistrict(''); setIsPrimary(false);
-      qc.invalidateQueries({ queryKey: ['service-areas', activeBiz] });
-      trackEvent('provider_service_area_added', { business_id: activeBiz });
-      void pingProviderActive(true);
-    },
-    onError: (e: unknown) => {
-      const msg = e instanceof Error ? e.message : '';
-      if (msg.includes('duplicate') || msg.includes('unique')) toast.error('هذه المنطقة مضافة مسبقًا');
-      else if (msg === 'city too short') toast.error('أدخل اسم مدينة صحيح');
-      else toast.error('تعذر إضافة المنطقة');
-    },
-  });
-
-  const removeArea = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await deleteServiceAreaById(id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success('تم حذف المنطقة');
-      qc.invalidateQueries({ queryKey: ['service-areas', activeBiz] });
-      trackEvent('provider_service_area_removed', { business_id: activeBiz });
-      void pingProviderActive(true);
-    },
-    onError: () => toast.error('تعذر الحذف'),
-  });
-
-  const setPrimary = useMutation({
-    mutationFn: async (id: string) => {
-      await clearPrimaryServiceAreasForBusiness(activeBiz);
-      const { error } = await setServiceAreaPrimaryById(id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['service-areas', activeBiz] });
-      void pingProviderActive(true);
-    },
-    onError: () => toast.error('تعذر التحديث'),
-  });
-
   if (loadingBiz) {
     return <DashboardLayout><Skeleton className="h-40 max-w-2xl" /></DashboardLayout>;
   }
