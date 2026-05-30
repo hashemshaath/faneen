@@ -690,8 +690,7 @@ const DashboardBusinessCompletion: React.FC = () => {
           </div>
         )}
       </main>
-      <Footer />
-    </div>
+    </DashboardLayout>
   );
 };
 
