@@ -16,6 +16,8 @@ import { uploadQuoteRequestFile } from '@/modules/quotes/services/uploadQuoteReq
 import { createQuoteRequestFileRecord } from '@/modules/quotes/services/createQuoteRequestFileRecord';
 import { useAuth } from '@/contexts/AuthContext';
 import { resolveQuoteSectorFromUrl } from '@/lib/sectors-seo';
+import { ApprovedBrandPicker } from '@/components/brands/ApprovedBrandPicker';
+import type { BrandPreferenceMode } from '@/modules/brands/lib/brandSelectionRules';
 import {
   CheckCircle2, ChevronLeft, ChevronRight, Upload, X,
   ShieldCheck, ListChecks, MapPin, Layers, Image as ImageIcon, AlertCircle,
@@ -48,6 +50,10 @@ interface QuoteForm {
   email: string;
   clientType: ClientType | '';
   contactPref: ContactPref | '';
+  // RFQ-BRAND-PICKER-1B — optional header-level brand preference
+  preferredBrandIds: string[];
+  brandPreferenceMode: BrandPreferenceMode | '';
+  brandNotes: string;
 }
 
 const DRAFT_KEY = 'qitaat_quote_draft_v1';
@@ -57,6 +63,7 @@ const emptyForm: QuoteForm = {
   description: '', measurements: '', quantity: '', files: [],
   timeline: '', budgetMode: '', budget: '',
   name: '', phone: '', email: '', clientType: '', contactPref: '',
+  preferredBrandIds: [], brandPreferenceMode: '', brandNotes: '',
 };
 
 const SECTORS: { value: Sector; ar: string; en: string }[] = [
