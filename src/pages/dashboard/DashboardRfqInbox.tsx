@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,17 +22,84 @@ const INDUSTRIES = [
   { key: 'steel', ar: 'الحديد', en: 'Steel' },
 ] as const;
 
+type SortKey =
+  | 'newest'
+  | 'oldest'
+  | 'budget_max_desc'
+  | 'budget_max_asc'
+  | 'budget_min_asc';
+
+const SORTS: ReadonlyArray<{ key: SortKey; ar: string; en: string }> = [
+  { key: 'newest', ar: 'الأحدث', en: 'Newest' },
+  { key: 'oldest', ar: 'الأقدم', en: 'Oldest' },
+  { key: 'budget_max_desc', ar: 'الميزانية: الأعلى', en: 'Budget: highest' },
+  { key: 'budget_max_asc', ar: 'الميزانية: الأقل', en: 'Budget: lowest' },
+  { key: 'budget_min_asc', ar: 'السعر الأدنى للميزانية', en: 'Min budget ↑' },
+];
+
+const FILTERS_STORAGE_KEY = 'qitaat_rfq_inbox_filters_v1';
+
+interface PersistedFilters {
+  industry: string;
+  search: string;
+  minBudget: string;
+  maxBudget: string;
+  sort: SortKey;
+  perPage: number;
+}
+
+const DEFAULT_FILTERS: PersistedFilters = {
+  industry: 'all',
+  search: '',
+  minBudget: '',
+  maxBudget: '',
+  sort: 'newest',
+  perPage: 10,
+};
+
+function loadFilters(): PersistedFilters {
+  try {
+    const raw = localStorage.getItem(FILTERS_STORAGE_KEY);
+    if (!raw) return DEFAULT_FILTERS;
+    const parsed = JSON.parse(raw) as Partial<PersistedFilters>;
+    return { ...DEFAULT_FILTERS, ...parsed };
+  } catch {
+    return DEFAULT_FILTERS;
+  }
+}
+
 const DashboardRfqInbox: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const qc = useQueryClient();
+  const initial = useMemo(loadFilters, []);
   const [openId, setOpenId] = useState<string | null>(null);
   const [quote, setQuote] = useState({ amount: '', delivery_days: '', message: '' });
-  const [industry, setIndustry] = useState<string>('all');
-  const [search, setSearch] = useState('');
-  const [minBudget, setMinBudget] = useState('');
-  const [maxBudget, setMaxBudget] = useState('');
+  const [industry, setIndustry] = useState<string>(initial.industry);
+  const [search, setSearch] = useState(initial.search);
+  const [minBudget, setMinBudget] = useState(initial.minBudget);
+  const [maxBudget, setMaxBudget] = useState(initial.maxBudget);
+  const [sort, setSort] = useState<SortKey>(initial.sort);
+  const [page, setPage] = useState(1);
+  const perPage = initial.perPage;
+
+  // Persist filters to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        FILTERS_STORAGE_KEY,
+        JSON.stringify({ industry, search, minBudget, maxBudget, sort, perPage }),
+      );
+    } catch {
+      // ignore quota errors
+    }
+  }, [industry, search, minBudget, maxBudget, sort, perPage]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [industry, search, minBudget, maxBudget, sort]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['rfq-open'],
@@ -43,14 +110,45 @@ const DashboardRfqInbox: React.FC = () => {
     const q = search.trim().toLowerCase();
     const minB = minBudget ? Number(minBudget) : null;
     const maxB = maxBudget ? Number(maxBudget) : null;
-    return (data ?? []).filter((rfq) => {
+    const matched = (data ?? []).filter((rfq) => {
       if (industry !== 'all' && rfq.industry !== industry) return false;
       if (q && !rfq.title.toLowerCase().includes(q) && !(rfq.description ?? '').toLowerCase().includes(q)) return false;
       if (minB !== null && (rfq.budget_max ?? rfq.budget_min ?? 0) < minB) return false;
       if (maxB !== null && (rfq.budget_min ?? rfq.budget_max ?? Infinity) > maxB) return false;
       return true;
     });
-  }, [data, industry, search, minBudget, maxBudget]);
+    const sorted = [...matched].sort((a, b) => {
+      switch (sort) {
+        case 'oldest':
+          return a.created_at.localeCompare(b.created_at);
+        case 'budget_max_desc':
+          return (b.budget_max ?? -Infinity) - (a.budget_max ?? -Infinity);
+        case 'budget_max_asc':
+          return (a.budget_max ?? Infinity) - (b.budget_max ?? Infinity);
+        case 'budget_min_asc':
+          return (a.budget_min ?? Infinity) - (b.budget_min ?? Infinity);
+        case 'newest':
+        default:
+          return b.created_at.localeCompare(a.created_at);
+      }
+    });
+    return sorted;
+  }, [data, industry, search, minBudget, maxBudget, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const currentPage = Math.min(page, totalPages);
+  const paged = useMemo(
+    () => filtered.slice((currentPage - 1) * perPage, currentPage * perPage),
+    [filtered, currentPage, perPage],
+  );
+
+  const resetFilters = () => {
+    setIndustry(DEFAULT_FILTERS.industry);
+    setSearch(DEFAULT_FILTERS.search);
+    setMinBudget(DEFAULT_FILTERS.minBudget);
+    setMaxBudget(DEFAULT_FILTERS.maxBudget);
+    setSort(DEFAULT_FILTERS.sort);
+  };
 
   const submit = useMutation({
     mutationFn: (rfqId: string) => createQuote({
@@ -117,6 +215,33 @@ const DashboardRfqInbox: React.FC = () => {
           </CardContent>
         </Card>
 
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold">
+              {isRTL ? 'ترتيب:' : 'Sort:'}
+            </span>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+              className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+            >
+              {SORTS.map((s) => (
+                <option key={s.key} value={s.key}>{isRTL ? s.ar : s.en}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <span className="tech-content">
+              {isRTL
+                ? `${filtered.length} نتيجة`
+                : `${filtered.length} result${filtered.length === 1 ? '' : 's'}`}
+            </span>
+            <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 rounded-lg">
+              {isRTL ? 'إعادة التعيين' : 'Reset'}
+            </Button>
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="space-y-3">{[0, 1, 2].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
         ) : !filtered.length ? (
@@ -125,7 +250,7 @@ const DashboardRfqInbox: React.FC = () => {
           </CardContent></Card>
         ) : (
           <div className="grid gap-3">
-            {filtered.map(rfq => (
+            {paged.map(rfq => (
               <Card key={rfq.id}>
                 <CardContent className="p-5 space-y-3">
                   <div className="flex items-start justify-between gap-3">
@@ -187,6 +312,32 @@ const DashboardRfqInbox: React.FC = () => {
                 </CardContent>
               </Card>
             ))}
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="h-9 rounded-lg"
+                >
+                  {isRTL ? 'السابق' : 'Previous'}
+                </Button>
+                <span className="text-sm tech-content text-muted-foreground">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  className="h-9 rounded-lg"
+                >
+                  {isRTL ? 'التالي' : 'Next'}
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

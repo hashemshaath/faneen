@@ -37,7 +37,29 @@ const DashboardRfqDetail: React.FC = () => {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'rfq_quotes', filter: `rfq_id=eq.${id}` },
-        () => {
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newQ = payload.new as { amount?: number; currency?: string } | null;
+            toast.success(
+              isRTL ? 'وصل عرض سعر جديد' : 'New quote received',
+              {
+                description: newQ?.amount != null
+                  ? `${Number(newQ.amount).toLocaleString()} ${newQ.currency ?? ''}`
+                  : undefined,
+              },
+            );
+          } else if (payload.eventType === 'UPDATE') {
+            const oldQ = payload.old as { amount?: number } | null;
+            const newQ = payload.new as { amount?: number; currency?: string } | null;
+            if (oldQ?.amount != null && newQ?.amount != null && oldQ.amount !== newQ.amount) {
+              toast(
+                isRTL ? 'تم تعديل سعر أحد العروض' : 'A quote price was updated',
+                {
+                  description: `${Number(oldQ.amount).toLocaleString()} → ${Number(newQ.amount).toLocaleString()} ${newQ.currency ?? ''}`,
+                },
+              );
+            }
+          }
           qc.invalidateQueries({ queryKey: ['rfq-quotes', id] });
           qc.invalidateQueries({ queryKey: ['rfq', id] });
         },
@@ -46,7 +68,7 @@ const DashboardRfqDetail: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id, qc]);
+  }, [id, qc, isRTL]);
 
   const acceptMut = useMutation({
     mutationFn: (quoteId: string) => acceptQuote(quoteId, id!),
