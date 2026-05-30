@@ -85,6 +85,8 @@ export default function DashboardProcurementDetail() {
   const [brandLabels, setBrandLabels] = useState<
     Record<string, { name_ar: string; name_en: string; ref_id: string | null; slug: string }>
   >({});
+  // RFQ-BRAND-PICKER-1F — disable approve/reject buttons while a review is in flight.
+  const [reviewingLineId, setReviewingLineId] = useState<string | null>(null);
 
   const tx = useMemo(
     () => ({
