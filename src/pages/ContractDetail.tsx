@@ -3352,6 +3352,11 @@ const ContractDetail = () => {
               currentUserId={user?.id ?? null}
             />
           </TabsContent>
+
+          {/* ── Version Diff Viewer ── */}
+          <TabsContent value="versions">
+            <ContractVersionDiff contractId={contract.id} />
+          </TabsContent>
         </Tabs>
       </div>
 
