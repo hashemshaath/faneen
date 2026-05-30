@@ -94,8 +94,15 @@ describe('BUSINESS-FINISHING-2A — Revision + Access timelines', () => {
   it('AccessTimeline mounts in Staff Center', () => {
     expect(read('src/pages/dashboard/DashboardStaffCenter.tsx')).toMatch(/AccessTimeline/);
   });
-  it('PermissionMatrix mounts in AdminIdentity', () => {
-    expect(read('src/pages/admin/AdminIdentity.tsx')).toMatch(/PermissionMatrix/);
+  it('AdminIdentity routes role/permission management to /admin/access-management (overview-only hub)', () => {
+    // PLATFORM-GREEN-BUILD-2: AdminIdentity was intentionally refactored
+    // into a pure overview + navigation hub. Role + permission matrix
+    // editing now lives at the dedicated /admin/access-management route,
+    // and AdminIdentity must surface that route rather than embedding
+    // the PermissionMatrix component inline.
+    const src = read('src/pages/admin/AdminIdentity.tsx');
+    expect(src).toMatch(/\/admin\/access-management/);
+    expect(src).not.toMatch(/<PermissionMatrix/);
   });
 });
 
