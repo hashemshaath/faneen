@@ -257,6 +257,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'إنشاء عقد بالنيابة', en: 'Create on Behalf' }, url: '/admin/contracts/create', icon: FileText },
       { label: { ar: 'قوالب العقود', en: 'Contract Templates' }, url: '/admin/contract-templates', icon: FileText },
       { label: { ar: 'سجل تصدير العقود', en: 'Contract Export Audit' }, url: '/admin/pdf-exports', icon: FileText },
+      { label: { ar: 'مركز التقارير', en: 'Reports Center' }, url: '/admin/reports', icon: BarChart3 },
     ],
   },
   {
