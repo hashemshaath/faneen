@@ -776,7 +776,7 @@ export default function DashboardProcurementDetail() {
                     );
                   })}
                   <tr className="border-t font-medium">
-                    <td className="py-2 pe-3" colSpan={3}>{tx.poTotal}</td>
+                    <td className="py-2 pe-3" colSpan={4}>{tx.poTotal}</td>
                     {scored.map((q) => {
                       const m = matrix.find((mm) => mm.quote_id === q.id);
                       const total = m?.computed_total ?? q.total_amount ?? 0;
