@@ -801,6 +801,42 @@ export default function DashboardProcurementDetail() {
                             );
                           }
                           const isBest = bestUnit !== null && c.line.unit_price === bestUnit;
+                          // RFQ-BRAND-PICKER-1E — compute effective brand match status for badge.
+                          const computedMatch: BrandMatchStatus =
+                            c.line.brand_match_status ??
+                            classifyBrandEquivalence({
+                              requested_brand_id: ri.requested_brand_id,
+                              brand_lock: ri.brand_lock,
+                              proposed_brand_id: c.line.proposed_brand_id,
+                              proposed_brand_name: c.line.proposed_brand_name,
+                            }).brandMatchStatus;
+                          const effective =
+                            resolveEffectiveBrandMatchStatus(
+                              computedMatch,
+                              c.line.brand_review_status,
+                            ) ?? computedMatch;
+                          const matchLabel: Record<BrandMatchStatus, string> = {
+                            exact_match: tx.matchExact,
+                            approved_equivalent: tx.matchEquivalent,
+                            proposed_equivalent: tx.matchProposed,
+                            pending_review: tx.matchPending,
+                            rejected_equivalent: tx.matchRejected,
+                            mismatch: tx.matchMismatch,
+                            no_brand: tx.matchNoBrand,
+                          };
+                          const matchTone: Record<BrandMatchStatus, string> = {
+                            exact_match: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                            approved_equivalent: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                            proposed_equivalent: 'bg-amber-50 text-amber-700 border-amber-200',
+                            pending_review: 'bg-amber-50 text-amber-700 border-amber-200',
+                            rejected_equivalent: 'bg-rose-50 text-rose-700 border-rose-200',
+                            mismatch: 'bg-rose-50 text-rose-700 border-rose-200',
+                            no_brand: 'bg-muted text-muted-foreground border-border/40',
+                          };
+                          const showReview =
+                            c.line.brand_review_status === 'pending' ||
+                            effective === 'pending_review' ||
+                            effective === 'mismatch';
                           return (
                             <td
                               key={c.quoteId}
@@ -808,6 +844,37 @@ export default function DashboardProcurementDetail() {
                             >
                               {c.line.unit_price}
                               {isBest && <span className="ms-1 text-[10px]">★ {tx.best}</span>}
+                              <div
+                                className="mt-1 flex flex-col items-end gap-1"
+                                data-testid="proc-quote-item-brand"
+                              >
+                                <span
+                                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] ${matchTone[effective]}`}
+                                  dir="auto"
+                                  data-testid="proc-quote-item-brand-badge"
+                                  data-status={effective}
+                                >
+                                  {matchLabel[effective]}
+                                </span>
+                                {showReview && c.line.brand_review_status === 'pending' && (
+                                  <div className="flex items-center gap-1" data-testid="proc-quote-item-brand-review">
+                                    <button
+                                      type="button"
+                                      onClick={() => void onReviewBrandEquivalence(c.line!, 'approved')}
+                                      className="rounded-full border border-emerald-300 px-2 py-0.5 text-[10px] text-emerald-700 hover:bg-emerald-50"
+                                    >
+                                      {tx.approveBrand}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => void onReviewBrandEquivalence(c.line!, 'rejected')}
+                                      className="rounded-full border border-rose-300 px-2 py-0.5 text-[10px] text-rose-700 hover:bg-rose-50"
+                                    >
+                                      {tx.rejectBrand}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             </td>
                           );
                         })}
