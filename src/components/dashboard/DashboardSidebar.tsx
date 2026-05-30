@@ -226,30 +226,27 @@ const adminBaseGroups: MenuGroup[] = [
     ],
   },
   {
-    // 2) Users & Access
-    groupLabel: { ar: 'المستخدمون والوصول', en: 'Users & Access' },
+    // 2) Identities & Entities — unified hub for users, admin team,
+    //    disabled accounts, businesses, providers, access requests,
+    //    access management, and locations. Previously split across
+    //    "Users & Access" + "Businesses & Providers" which duplicated
+    //    the Account Center destination and fragmented the journey
+    //    between a user and the businesses they manage.
+    groupLabel: { ar: 'الهويات والمنشآت', en: 'Identities & Entities' },
     icon: Users,
     items: [
-      // Consolidated: /admin/identity hosts users, admin team, disabled and
-      // businesses as internal tabs. Surfacing each tab in the sidebar made
-      // the menu noisy and duplicated the same destination 4 times.
+      // People
       { label: { ar: 'مركز الحسابات', en: 'Account Center' }, url: '/admin/identity', icon: Users, end: true },
+      // Entities (direct shortcut to the Businesses tab in Account Center)
+      { label: { ar: 'المنشآت والكيانات', en: 'Businesses & Entities' }, url: '/admin/identity?view=businesses', icon: Building2 },
+      // Access lifecycle
       { label: { ar: 'طلبات الانضمام', en: 'Access Requests' }, url: '/admin/entity-access-requests', icon: UserPlus },
       { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: Shield, superAdminOnly: true },
-    ],
-  },
-  {
-    // 3) Businesses & Providers
-    groupLabel: { ar: 'المنشآت والمزودون', en: 'Businesses & Providers' },
-    icon: Building2,
-    items: [
-      // Businesses tab lives inside Account Center; we surface a direct
-      // shortcut to it here since it's the operational entry point for the
-      // providers group.
-      { label: { ar: 'المنشآت والكيانات', en: 'Businesses & Entities' }, url: '/admin/identity?view=businesses', icon: Building2 },
+      // Provider operations
       { label: { ar: 'مراجعة المزودين', en: 'Provider Review' }, url: '/admin/provider-review', icon: ShieldCheck },
       { label: { ar: 'تحليلات المزودين', en: 'Provider Analytics' }, url: '/admin/provider-analytics', icon: TrendingUp },
       { label: { ar: 'صفحة هبوط المزودين', en: 'Provider Landing Page' }, url: '/admin/provider-landing', icon: Gauge },
+      // Geographic context
       { label: { ar: 'مركز المواقع', en: 'Locations Center' }, url: '/admin/locations', icon: MapPin },
     ],
   },
