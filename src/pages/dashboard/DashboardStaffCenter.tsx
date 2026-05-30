@@ -13,6 +13,7 @@
  * forbidden in this file (enforced by tests).
  */
 import React, { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -27,9 +28,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, Layers, ShieldCheck, Activity, RotateCw, Plus, XCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Users, Layers, ShieldCheck, Activity, RotateCw, Plus, XCircle,
+  UserCheck, UserCog, Mail, Crown, Building2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Bi } from '@/components/common/Bilingual';
+import { supabase } from '@/integrations/supabase/client';
 import {
   listBusinessTeams,
   createBusinessTeam,
@@ -46,6 +52,7 @@ import { listBusinessStaffByBusiness } from '@/modules/businesses/services/listB
 import { useTransferPrimaryManagerMutation } from '@/hooks/useTransferPrimaryManagerMutation';
 import { mapTransferPrimaryManagerCode } from '@/modules/businesses/services/transferPrimaryManagerMessages';
 import { AccessTimeline } from '@/components/identity/AccessTimeline';
+import { RepresentativesSection } from '@/components/dashboard/business-edit/RepresentativesSection';
 import {
   validateDelegatedAccessDraft,
   DELEGATED_ACCESS_MAX_DAYS,
