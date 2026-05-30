@@ -18,6 +18,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { canViewWorkspaceRoute } from '@/modules/workspace/permissions/routePermissions';
 import { Separator } from '@/components/ui/separator';
+import { SidebarBrand } from '@/components/dashboard/navigation/SidebarBrand';
+import { SidebarQuickCreate } from '@/components/dashboard/navigation/SidebarQuickCreate';
+import { SidebarFavorites } from '@/components/dashboard/navigation/SidebarFavorites';
+import { SidebarRecent } from '@/components/dashboard/navigation/SidebarRecent';
 import {
   LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut,
   Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare,
@@ -513,21 +517,24 @@ export const DashboardSidebar: React.FC = () => {
   // Admin gets admin-specific base menu, not user/provider menu
   const baseGroups = isAdmin ? adminBaseGroups : (isProvider ? providerGroups : userGroups);
 
+  // Build a url → label lookup once per render. Favorites and Recent
+  // resolve their display label from this so renames stay in sync and
+  // unknown URLs are silently dropped from those sections.
+  const labelLookup = React.useMemo(() => {
+    const m = new Map<string, { ar: string; en: string }>();
+    for (const g of baseGroups) {
+      for (const it of g.items) m.set(it.url, it.label);
+    }
+    return m;
+  }, [baseGroups]);
+
+  const audience: 'provider' | 'admin' | 'user' = isAdmin ? 'admin' : isProvider ? 'provider' : 'user';
+
   return (
     <Sidebar collapsible="icon" side={isRTL ? 'right' : 'left'}>
       <SidebarContent>
-        {/* Logo */}
-        <div className="p-4 sm:p-5 flex items-center gap-3 border-b border-sidebar-border">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg shrink-0 shadow-md shadow-primary/20">
-            ق
-          </div>
-          {!collapsed && (
-            <div className="min-w-0">
-              <h1 className="font-heading font-bold text-lg leading-none text-sidebar-foreground">قِطاعات</h1>
-              <span className="text-[10px] text-accent/80 font-medium tracking-wider">Qitaat</span>
-            </div>
-          )}
-        </div>
+        {/* Brand mark (supports active business logo + fallback) */}
+        <SidebarBrand collapsed={collapsed} isRTL={isRTL} />
 
         {/* Admin badge */}
         {isAdmin && !collapsed && (
@@ -545,6 +552,28 @@ export const DashboardSidebar: React.FC = () => {
             <ShieldAlert className="w-4 h-4 text-accent" />
           </div>
         )}
+
+        {/* Quick Create — five always-visible shortcuts */}
+        <SidebarQuickCreate
+          collapsed={collapsed}
+          isRTL={isRTL}
+          audience={audience}
+          closeMobile={closeMobile}
+        />
+
+        {/* Pinned favorites + recently visited */}
+        <SidebarFavorites
+          collapsed={collapsed}
+          isRTL={isRTL}
+          labelLookup={labelLookup}
+          closeMobile={closeMobile}
+        />
+        <SidebarRecent
+          collapsed={collapsed}
+          isRTL={isRTL}
+          labelLookup={labelLookup}
+          closeMobile={closeMobile}
+        />
 
         {/* ─── Role-based menu ─── */}
         <RenderGroups
