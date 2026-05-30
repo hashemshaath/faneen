@@ -32,17 +32,23 @@ interface Props {
   isRTL: boolean;
   businessNameAr?: string | null;
   businessNameEn?: string | null;
+  /**
+   * When true, force manage-mode regardless of owner check (e.g. on the
+   * Staff Center where access is gated by `staff.manage` permission).
+   */
+  canManageOverride?: boolean;
 }
 
 /** Authorized representatives (مفوضون) editor. Owner / admin only. */
 export const RepresentativesSection: React.FC<Props> = ({
   businessId, ownerUserId, isRTL, businessNameAr = null, businessNameEn = null,
+  canManageOverride = false,
 }) => {
   const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
 
   const isOwner = user?.id === ownerUserId;
-  const canManage = isOwner || isAdmin;
+  const canManage = isOwner || isAdmin || canManageOverride;
 
   const [refIdInput, setRefIdInput] = useState('');
   const [newRole, setNewRole] = useState<StaffRole>('viewer');
