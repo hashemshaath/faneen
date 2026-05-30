@@ -10441,6 +10441,11 @@ export type Database = {
       }
       procurement_supplier_quote_items: {
         Row: {
+          brand_match_status: string | null
+          brand_review_note: string | null
+          brand_review_status: string
+          brand_reviewed_at: string | null
+          brand_reviewed_by: string | null
           business_id: string
           created_at: string
           equivalence_notes: string | null
@@ -10448,6 +10453,7 @@ export type Database = {
           is_equivalent: boolean
           notes: string | null
           proposed_brand_id: string | null
+          proposed_brand_name: string | null
           quantity: number
           quote_id: string
           rfq_item_id: string
@@ -10456,6 +10462,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          brand_match_status?: string | null
+          brand_review_note?: string | null
+          brand_review_status?: string
+          brand_reviewed_at?: string | null
+          brand_reviewed_by?: string | null
           business_id: string
           created_at?: string
           equivalence_notes?: string | null
@@ -10463,6 +10474,7 @@ export type Database = {
           is_equivalent?: boolean
           notes?: string | null
           proposed_brand_id?: string | null
+          proposed_brand_name?: string | null
           quantity?: number
           quote_id: string
           rfq_item_id: string
@@ -10471,6 +10483,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          brand_match_status?: string | null
+          brand_review_note?: string | null
+          brand_review_status?: string
+          brand_reviewed_at?: string | null
+          brand_reviewed_by?: string | null
           business_id?: string
           created_at?: string
           equivalence_notes?: string | null
@@ -10478,6 +10495,7 @@ export type Database = {
           is_equivalent?: boolean
           notes?: string | null
           proposed_brand_id?: string | null
+          proposed_brand_name?: string | null
           quantity?: number
           quote_id?: string
           rfq_item_id?: string
