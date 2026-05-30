@@ -25,9 +25,9 @@ function renderWithTabs(ui: React.ReactNode) {
 }
 
 describe('ContractTabsHeader', () => {
-  it('renders 9 tabs', () => {
+  it('renders 10 tabs', () => {
     renderWithTabs(<ContractTabsHeader isRTL={false} counts={fullCounts} />);
-    expect(screen.getAllByRole('tab')).toHaveLength(9);
+    expect(screen.getAllByRole('tab')).toHaveLength(10);
   });
 
   it('renders English labels when isRTL=false', () => {
