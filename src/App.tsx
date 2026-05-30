@@ -87,6 +87,7 @@ const DashboardProfile = lazyRetry(() => import("./pages/dashboard/DashboardProf
 const DashboardPromotions = lazyRetry(() => import("./pages/dashboard/DashboardPromotions"));
 const DashboardPrivateSectors = lazyRetry(() => import("./pages/dashboard/DashboardPrivateSectors"));
 const AdminPrivateSectors = lazyRetry(() => import("./pages/admin/AdminPrivateSectors"));
+const AdminServiceRequests = lazyRetry(() => import("./pages/admin/AdminServiceRequests"));
 const BrandsCatalog = lazyRetry(() => import("./pages/BrandsCatalog"));
 const BrandDetail = lazyRetry(() => import("./pages/BrandDetail"));
 const DashboardProjects = lazyRetry(() => import("./pages/dashboard/DashboardProjects"));
@@ -332,6 +333,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/promotions" element={<ProtectedRoute requireProvider><DashboardPromotions /></ProtectedRoute>} />
           <Route path="/dashboard/private-sectors" element={<ProtectedRoute requireProvider><DashboardPrivateSectors /></ProtectedRoute>} />
           <Route path="/admin/private-sectors" element={<ProtectedRoute requireAdmin><AdminPrivateSectors /></ProtectedRoute>} />
+          <Route path="/admin/service-requests" element={<ProtectedRoute requireAdmin><AdminServiceRequests /></ProtectedRoute>} />
           <Route path="/dashboard/projects" element={<ProtectedRoute requireProvider><DashboardProjects /></ProtectedRoute>} />
           <Route path="/dashboard/operations" element={<ProtectedRoute><DashboardOperations /></ProtectedRoute>} />
           <Route path="/dashboard/operations/feed" element={<ProtectedRoute><DashboardOperationsFeed /></ProtectedRoute>} />
