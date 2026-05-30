@@ -279,10 +279,29 @@ const DashboardBusinessEdit: React.FC = () => {
         account_manager_phone: form.account_manager_phone || null,
         account_manager_email: form.account_manager_email || null,
         account_manager_position: form.account_manager_position || null,
-        sectors: form.sectors ?? [], sub_services: form.sub_services ?? [],
+        sectors: form.sectors ?? [],
       };
       const { error: updateError } = await updateBusinessById({ id: form.id, values: payload });
       if (updateError) throw updateError;
+
+      // Bidirectional sync — diff sub_services and apply via RPCs so that
+      // `business_services` rows are created/cleaned to match /dashboard/services.
+      const initialSubs: string[] = (business?.sub_services ?? []) as string[];
+      const nextSubs: string[] = (form.sub_services ?? []) as string[];
+      const toAdd = nextSubs.filter((s) => !initialSubs.includes(s));
+      const toRemove = initialSubs.filter((s) => !nextSubs.includes(s));
+      for (const subId of toAdd) {
+        const { error: addErr } = await supabase.rpc('add_business_sub_service', {
+          p_business_id: form.id, p_sub_service_id: subId,
+        });
+        if (addErr) throw addErr;
+      }
+      for (const subId of toRemove) {
+        const { error: rmErr } = await supabase.rpc('remove_business_sub_service', {
+          p_business_id: form.id, p_sub_service_id: subId,
+        });
+        if (rmErr) throw rmErr;
+      }
 
       // Persist the National Address (single write path).
       const hasAddress = !!(
@@ -319,6 +338,9 @@ const DashboardBusinessEdit: React.FC = () => {
       qc.invalidateQueries({ queryKey: ['business-edit', user.id] });
       qc.invalidateQueries({ queryKey: ['business-completion', user.id] });
       qc.invalidateQueries({ queryKey: ['business', form.username] });
+      // Keep /dashboard/services in sync with the changes above.
+      qc.invalidateQueries({ queryKey: ['my-business-services-page'] });
+      qc.invalidateQueries({ queryKey: ['business-services-sync', form.id] });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       toast.error(t(isRTL, `تعذّر الحفظ: ${message}`, `Save failed: ${message}`));
