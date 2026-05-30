@@ -8,6 +8,8 @@ import type {
   BrandMatchStatus,
   BrandReviewStatus,
 } from '../types';
+import type { BrandLock } from '@/modules/brands/lib/brandSelectionRules';
+import { classifyBrandEquivalence } from './brandEquivalence';
 
 const SELECT =
   'id, business_id, quote_id, rfq_item_id, unit_price, quantity, total_price, notes, ' +
@@ -28,6 +30,69 @@ export function sanitizeProposedBrandName(raw: unknown): string | null {
     .trim();
   if (!cleaned) return null;
   return cleaned.slice(0, PROPOSED_BRAND_NAME_MAX);
+}
+
+/**
+ * RFQ-BRAND-PICKER-1F — sanitize free-text review notes the same way as
+ * proposed brand names (strip control chars, collapse whitespace, cap length).
+ */
+export function sanitizeBrandReviewNote(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const cleaned = raw
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001F\u007F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned) return null;
+  return cleaned.slice(0, REVIEW_NOTE_MAX);
+}
+
+/**
+ * RFQ-BRAND-PICKER-1F — fail-safe brand classification used at persist time.
+ * When the caller supplies enough context (requested_brand_id + lock) we
+ * compute `brand_match_status` + an initial `brand_review_status`
+ * deterministically. When context is missing we DO NOT guess — we keep the
+ * caller-supplied value or leave it null.
+ */
+export interface PersistBrandClassificationContext {
+  requested_brand_id?: string | null;
+  brand_lock?: BrandLock | null;
+  proposed_brand_id?: string | null;
+  proposed_brand_name?: string | null;
+  /** Optional caller-supplied fallback when no context is available. */
+  fallback_match_status?: BrandMatchStatus | null;
+  /** Optional caller-supplied fallback review status. */
+  fallback_review_status?: BrandReviewStatus;
+}
+
+export interface PersistedBrandClassification {
+  brand_match_status: BrandMatchStatus | null;
+  brand_review_status: BrandReviewStatus;
+}
+
+export function computePersistedBrandClassification(
+  ctx: PersistBrandClassificationContext,
+): PersistedBrandClassification {
+  const hasContext =
+    ctx.requested_brand_id !== undefined && ctx.brand_lock !== undefined;
+  if (!hasContext) {
+    // No requested-brand context → never auto-claim a match. Fall back to
+    // caller-supplied status or null/not_required.
+    return {
+      brand_match_status: ctx.fallback_match_status ?? null,
+      brand_review_status: ctx.fallback_review_status ?? 'not_required',
+    };
+  }
+  const result = classifyBrandEquivalence({
+    requested_brand_id: ctx.requested_brand_id ?? null,
+    brand_lock: (ctx.brand_lock ?? null) as BrandLock | null,
+    proposed_brand_id: ctx.proposed_brand_id ?? null,
+    proposed_brand_name: ctx.proposed_brand_name ?? null,
+  });
+  return {
+    brand_match_status: result.brandMatchStatus,
+    brand_review_status: result.reviewRequired ? 'pending' : 'not_required',
+  };
 }
 
 export interface SubmitQuoteItemInput {
