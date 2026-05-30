@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { buildCsv, downloadCsv, defaultRange, type DateRange } from '@/lib/admin-reports-csv';
 import { Download, FileSpreadsheet, Loader2, FileText, Users, Building2, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 type ReportKey = 'contracts' | 'users' | 'businesses' | 'revenue';
 
@@ -114,7 +115,7 @@ export default function AdminReports() {
   const [busy, setBusy] = useState<ReportKey | null>(null);
   const [counts, setCounts] = useState<Partial<Record<ReportKey, number>>>({});
 
-  const handleExport = async (def: ReportDef) => {
+  const handleExport = async (def: ReportDef, format: 'csv' | 'xlsx' = 'csv') => {
     setBusy(def.key);
     try {
       const { rows, headers } = await def.fetch(range);
@@ -123,9 +124,16 @@ export default function AdminReports() {
         setCounts((c) => ({ ...c, [def.key]: 0 }));
         return;
       }
-      const csv = buildCsv(rows, headers);
       const stamp = new Date().toISOString().slice(0, 10);
-      downloadCsv(`${def.key}_${range.from}_${range.to}_${stamp}.csv`, csv);
+      if (format === 'csv') {
+        const csv = buildCsv(rows, headers);
+        downloadCsv(`${def.key}_${range.from}_${range.to}_${stamp}.csv`, csv);
+      } else {
+        const ws = XLSX.utils.json_to_sheet(rows, { header: [...headers] });
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, def.key.slice(0, 30));
+        XLSX.writeFile(wb, `${def.key}_${range.from}_${range.to}_${stamp}.xlsx`);
+      }
       setCounts((c) => ({ ...c, [def.key]: rows.length }));
       toast.success(
         isRTL ? `تم تصدير ${rows.length} سجل` : `Exported ${rows.length} rows`,
@@ -218,18 +226,25 @@ export default function AdminReports() {
                       isRTL ? `آخر تصدير: ${count} سجل` : `Last export: ${count} rows`
                     ) : ''}
                   </span>
-                  <Button
-                    onClick={() => handleExport(def)}
-                    disabled={isBusy}
-                    className="h-10 rounded-xl"
-                  >
-                    {isBusy ? (
-                      <Loader2 className="w-4 h-4 mx-2 animate-spin" />
-                    ) : (
-                      <Download className="w-4 h-4 mx-2" />
-                    )}
-                    <Bi ar="تصدير CSV" en="Export CSV" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleExport(def, 'csv')}
+                      disabled={isBusy}
+                      variant="outline"
+                      className="h-10 rounded-xl"
+                    >
+                      {isBusy ? <Loader2 className="w-4 h-4 mx-2 animate-spin" /> : <Download className="w-4 h-4 mx-2" />}
+                      CSV
+                    </Button>
+                    <Button
+                      onClick={() => handleExport(def, 'xlsx')}
+                      disabled={isBusy}
+                      className="h-10 rounded-xl"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 mx-2" />
+                      XLSX
+                    </Button>
+                  </div>
                 </div>
               </Card>
             );
