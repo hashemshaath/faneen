@@ -2500,6 +2500,7 @@ const ContractDetail = () => {
               amendments: amendments?.length || 0,
               exports: 0,
               pdfAnalysis: 0,
+              counterOffers: 0,
             }}
           />
 
