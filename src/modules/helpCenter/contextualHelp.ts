@@ -25,6 +25,19 @@ export const contextualHelpRegistry: Record<string, string[]> = {
   'admin.operations-center': ['overview', 'data-integrity', 'cycle-times', 'revenue'],
   'dashboard.operations-center': ['overview', 'data-integrity', 'cycle-times', 'revenue'],
   'admin.help': ['overview', 'identity-overview'],
+  // BUSINESS-SYSTEMS-ARCHITECTURE-AUDIT-1 — Phase J safe repairs
+  'dashboard.leads': ['lead-credits', 'create-quote', 'how-publishing-works'],
+  'dashboard.installations': ['what-is-wo', 'wo-production', 'tracking-link'],
+  'dashboard.closures': ['contract-lifecycle', 'warranty-start', 'tracking-link'],
+  'dashboard.feedback': ['tracking-link', 'support'],
+  'dashboard.bookings': ['create-business', 'edit-business'],
+  'dashboard.messages': ['support', 'identity-overview'],
+  'dashboard.notifications': ['support', 'overview'],
+  'dashboard.provider-growth': ['how-publishing-works', 'completeness', 'lead-credits'],
+  'dashboard.membership': ['how-publishing-works', 'lead-credits'],
+  'dashboard.customer-experience': ['tracking-link', 'what-you-see'],
+  'customer.feedback': ['tracking-link', 'support'],
+  'customer.warranty-claim': ['warranty-start', 'file-claim', 'coverage'],
 };
 
 export function getContextualArticles(pageKey: string): string[] {
