@@ -181,16 +181,21 @@ describe('RFQ-BRAND-PICKER-1A — scope discipline (no live wiring this phase)',
     return out;
   }
 
-  it('ApprovedBrandPicker only wired in approved 1B surfaces (Quote.tsx); no BOQ/procurement/supplier wiring', () => {
+  it('ApprovedBrandPicker only wired in approved 1B+1C surfaces; no procurement/supplier wiring', () => {
     const matches = rgInDir('src', /ApprovedBrandPicker/);
-    // 1B intentionally wires the picker into the customer RFQ form (Quote.tsx).
-    // BOQ / procurement / supplier-quote surfaces remain deferred to 1C+.
+    // 1B wires the picker into the customer RFQ form (Quote.tsx).
+    // 1C wires the picker into the BOQ items section (WorkOrderBoqSection.tsx).
+    // procurement / supplier-quote surfaces remain deferred to 1D+.
+    const allowed = new Set<string>([
+      'src/pages/Quote.tsx',
+      'src/components/workOrders/WorkOrderBoqSection.tsx',
+    ]);
     const offenders = matches.filter(
       (m) =>
         !m.endsWith('ApprovedBrandPicker.tsx') &&
         !m.includes('/tests/') &&
         !m.includes('/__tests__/') &&
-        m !== 'src/pages/Quote.tsx',
+        !allowed.has(m),
     );
     expect(offenders).toEqual([]);
   });
