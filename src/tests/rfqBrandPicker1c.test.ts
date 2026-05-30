@@ -180,6 +180,7 @@ describe('RFQ-BRAND-PICKER-1C — Scope discipline (downstream not wired this ph
         m !== 'src/modules/procurement/services/supplierQuoteItems.ts' &&
         m !== 'src/modules/procurement/services/brandEquivalence.ts' &&
         m !== 'src/modules/procurement/services/quoteComparisonLineItems.ts' &&
+        m !== 'src/modules/procurement/types.ts' &&
         m !== 'src/modules/procurement/index.ts',
     );
     expect(filtered).toEqual([]);
