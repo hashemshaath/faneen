@@ -98,7 +98,7 @@ export async function submitQuoteItems(
     .upsert(rows, { onConflict: 'quote_id,rfq_item_id' })
     .select(SELECT);
   return {
-    data: (data as ProcurementSupplierQuoteItemRow[] | null) ?? null,
+    data: (data as unknown as ProcurementSupplierQuoteItemRow[] | null) ?? null,
     error,
   };
 }
@@ -125,6 +125,7 @@ export async function updateSupplierQuoteItemProposedBrand(
   input: UpdateProposedBrandInput,
 ): Promise<{ data: ProcurementSupplierQuoteItemRow | null; error: unknown }> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patch: Record<string, any> = {};
   if (input.proposed_brand_id !== undefined) {
     patch.proposed_brand_id = input.proposed_brand_id;
@@ -150,7 +151,7 @@ export async function updateSupplierQuoteItemProposedBrand(
     .select(SELECT)
     .maybeSingle();
   return {
-    data: (data as ProcurementSupplierQuoteItemRow | null) ?? null,
+    data: (data as unknown as ProcurementSupplierQuoteItemRow | null) ?? null,
     error,
   };
 }
@@ -196,7 +197,7 @@ export async function reviewSupplierQuoteItemBrandEquivalence(
     .select(SELECT)
     .maybeSingle();
   return {
-    data: (data as ProcurementSupplierQuoteItemRow | null) ?? null,
+    data: (data as unknown as ProcurementSupplierQuoteItemRow | null) ?? null,
     error,
   };
 }
@@ -217,7 +218,7 @@ export async function listQuoteItemsWithBrandReview(
     .eq('brand_review_status', reviewStatus)
     .order('updated_at', { ascending: false });
   return {
-    data: (data as ProcurementSupplierQuoteItemRow[] | null) ?? null,
+    data: (data as unknown as ProcurementSupplierQuoteItemRow[] | null) ?? null,
     error,
   };
 }
@@ -231,7 +232,7 @@ export async function listQuoteItemsByQuote(
     .eq('quote_id', quoteId)
     .order('created_at', { ascending: true });
   return {
-    data: (data as ProcurementSupplierQuoteItemRow[] | null) ?? null,
+    data: (data as unknown as ProcurementSupplierQuoteItemRow[] | null) ?? null,
     error,
   };
 }
@@ -254,7 +255,7 @@ export async function listQuoteItemsByRfq(
     .select(SELECT)
     .in('quote_id', ids);
   return {
-    data: (data as ProcurementSupplierQuoteItemRow[] | null) ?? null,
+    data: (data as unknown as ProcurementSupplierQuoteItemRow[] | null) ?? null,
     error,
   };
 }
