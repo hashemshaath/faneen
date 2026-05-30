@@ -6,7 +6,7 @@ import {
   User, Mail, Phone, Globe, Hash, Save, Loader2, Camera,
   ShieldCheck, ExternalLink, Building2, Crown, AtSign, Languages,
   AlertCircle, ArrowLeft, Settings as SettingsIcon, Copy, Check,
-  IdCard, Receipt, MapPinned, Search,
+  IdCard, Receipt,
 } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -28,7 +28,11 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import { supabase } from '@/integrations/supabase/client';
 import { updateProfile } from '@/modules/users';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
-import { nationalAddressLookup } from '@/modules/locations';
+import {
+  NationalAddressForm,
+  upsertPrimaryAddress,
+  type NationalAddressValue,
+} from '@/modules/addresses';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { cn } from '@/lib/utils';
@@ -36,39 +40,6 @@ import { UsernamePicker } from '@/components/common/UsernamePicker';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
-
-/**
- * Compose a professional, human-readable detailed address line from the
- * structured National Address fields. Empty parts are skipped, separators
- * are Arabic commas, and building/additional numbers collapse into one
- * "مبنى {b}/{a}" segment when both exist.
- */
-function composeAddressLine(
-  parts: {
-    district?: string; street?: string;
-    building_number?: string; additional_number?: string;
-    postal_code?: string; region_name?: string;
-  },
-  isRTL: boolean,
-): string {
-  const seg: string[] = [];
-  const district = (parts.district ?? '').trim();
-  const street = (parts.street ?? '').trim();
-  const b = (parts.building_number ?? '').trim();
-  const a = (parts.additional_number ?? '').trim();
-  const post = (parts.postal_code ?? '').trim();
-  const region = (parts.region_name ?? '').trim();
-  if (district) seg.push(isRTL ? `حي ${district}` : `${district} District`);
-  if (street) seg.push(isRTL ? `شارع ${street}` : `${street} St.`);
-  if (b || a) {
-    const bldg = isRTL ? 'مبنى' : 'Bldg';
-    seg.push(b && a ? `${bldg} ${b}/${a}` : `${bldg} ${b || a}`);
-  }
-  if (region && post) seg.push(`${region} ${post}`);
-  else if (region) seg.push(region);
-  else if (post) seg.push(post);
-  return seg.join(isRTL ? '، ' : ', ');
-}
 
 const DashboardProfile: React.FC = () => {
   useNoIndex();
