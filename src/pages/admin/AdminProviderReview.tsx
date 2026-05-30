@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   ShieldCheck, ShieldAlert, Search, CheckCircle2, XCircle, Eye,
   AlertCircle, Loader2, Send, Globe, Tag, Lock, UserPlus, Users as UsersIcon,
+  ArrowUpDown, Building2, ExternalLink, Clock, RefreshCw,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { listAdminBusinesses, type ListAdminBusinessesFilter } from '@/modules/businesses';
+import { listAdminBusinesses, countBusinesses, type ListAdminBusinessesFilter } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { maskEmail, maskPhone } from '@/lib/masking';
@@ -20,6 +21,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { getSectorById, type SectorId } from '@/data/onboarding-sectors';
 import { trackProviderApproved, trackProviderRejected, trackProviderNeedsChanges } from '@/lib/analytics-events';
@@ -36,6 +39,8 @@ type ApprovalStatus =
   | 'approved' | 'rejected' | 'needs_changes' | 'published';
 
 type UsernameStatus = 'pending' | 'approved' | 'rejected';
+
+type SortKey = 'submitted_desc' | 'submitted_asc' | 'completion_desc' | 'name_asc';
 
 const STATUSES: { value: ApprovalStatus | 'all'; ar: string; en: string }[] = [
   { value: 'all',           ar: 'الكل',           en: 'All' },
@@ -138,8 +143,9 @@ export default function AdminProviderReview() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('submitted_desc');
 
-  const { data: rows, isLoading } = useQuery({
+  const { data: rows, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['admin-provider-review', statusFilter],
     queryFn: async () => {
       const filters: ListAdminBusinessesFilter[] = [];
@@ -158,20 +164,77 @@ export default function AdminProviderReview() {
     },
   });
 
+  // ── Per-status counts (drives KPI strip + tab badges). One light
+  //    head-only count per status — runs in parallel. Refreshes
+  //    whenever the main list mutates (same query-key prefix).
+  const COUNT_STATUSES: ApprovalStatus[] = [
+    'submitted', 'under_review', 'needs_changes', 'approved', 'published', 'rejected', 'draft',
+  ];
+  const { data: statusCounts } = useQuery({
+    queryKey: ['admin-provider-review', 'counts'],
+    queryFn: async () => {
+      const entries = await Promise.all(
+        COUNT_STATUSES.map(async (s) => {
+          const { count } = await countBusinesses({
+            select: 'id',
+            filters: [{ column: 'approval_status', op: 'eq', value: s }],
+          });
+          return [s, count ?? 0] as const;
+        }),
+      );
+      const map: Record<string, number> = {};
+      let total = 0;
+      for (const [s, n] of entries) { map[s] = n; total += n; }
+      map.all = total;
+      return map;
+    },
+    staleTime: 30_000,
+  });
+
   const filtered = useMemo(() => {
     const list = rows ?? [];
-    if (!searchTerm.trim()) return list;
-    const t = searchTerm.toLowerCase();
-    return list.filter((r) =>
-      [r.name_ar, r.name_en, r.username, r.email, r.phone]
-        .some((f) => f?.toLowerCase().includes(t))
+    const t = searchTerm.trim().toLowerCase();
+    const searched = !t ? list : list.filter((r) =>
+      [r.name_ar, r.name_en, r.username, r.email, r.phone, r.ref_id]
+        .some((f) => f?.toLowerCase().includes(t)),
     );
-  }, [rows, searchTerm]);
+    const sorted = [...searched].sort((a, b) => {
+      switch (sortKey) {
+        case 'submitted_asc': {
+          const av = a.submitted_at ?? a.created_at;
+          const bv = b.submitted_at ?? b.created_at;
+          return new Date(av).getTime() - new Date(bv).getTime();
+        }
+        case 'completion_desc':
+          return (b.onboarding_completion ?? 0) - (a.onboarding_completion ?? 0);
+        case 'name_asc': {
+          const an = (language === 'ar' ? a.name_ar : a.name_en) ?? '';
+          const bn = (language === 'ar' ? b.name_ar : b.name_en) ?? '';
+          return an.localeCompare(bn, language === 'ar' ? 'ar' : 'en');
+        }
+        case 'submitted_desc':
+        default: {
+          const av = a.submitted_at ?? a.created_at;
+          const bv = b.submitted_at ?? b.created_at;
+          return new Date(bv).getTime() - new Date(av).getTime();
+        }
+      }
+    });
+    return sorted;
+  }, [rows, searchTerm, sortKey, language]);
 
   const selected = useMemo(
     () => filtered.find((r) => r.id === selectedId) ?? null,
     [filtered, selectedId],
   );
+
+  // Auto-select first row when filter/sort changes and nothing is selected.
+  useEffect(() => {
+    if (!selectedId && filtered.length > 0) {
+      setSelectedId(filtered[0].id);
+      setNotes(filtered[0].approval_notes ?? '');
+    }
+  }, [filtered, selectedId]);
 
   const approvalMutation = useMutation({
     mutationFn: async (vars: { id: string; status: ApprovalStatus; notes?: string }) => {
@@ -287,56 +350,133 @@ export default function AdminProviderReview() {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="font-heading text-2xl font-bold">
-              {isRTL ? 'مراجعة ملفات المزودين' : 'Provider Review'}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {isRTL
-                ? 'موافقة، طلب تعديلات، رفض، أو نشر ملفات المزودين قبل الظهور للجمهور.'
-                : 'Approve, request changes, reject, or publish provider profiles.'}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {isSuperAdmin && (
-              <>
-                <Button asChild size="sm" className="gap-2 rounded-xl h-10">
+        {/* ─────── Header ─────── */}
+        <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card to-card/60 p-4 md:p-5 shadow-[var(--elev-1)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-success/10 text-success">
+                  <ShieldCheck className="h-5 w-5" />
+                </span>
+                <h1 className="font-heading text-xl md:text-2xl font-bold">
+                  {isRTL ? 'مراجعة ملفات المزودين' : 'Provider Review'}
+                </h1>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {isRTL
+                  ? 'موافقة، طلب تعديلات، رفض، أو نشر ملفات المزودين قبل الظهور للجمهور.'
+                  : 'Approve, request changes, reject, or publish provider profiles.'}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => { refetch(); qc.invalidateQueries({ queryKey: ['admin-provider-review', 'counts'] }); }}
+                disabled={isFetching}
+                className="gap-1.5 rounded-xl h-10"
+              >
+                <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                {isRTL ? 'تحديث' : 'Refresh'}
+              </Button>
+              <Button asChild size="sm" variant="outline" className="gap-1.5 rounded-xl h-10">
+                <Link to="/admin/identity?view=businesses">
+                  <Building2 className="h-4 w-4" />
+                  {isRTL ? 'كل المنشآت' : 'All Businesses'}
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="gap-1.5 rounded-xl h-10">
+                <Link to="/admin/provider-analytics">
+                  <Eye className="h-4 w-4" />
+                  {isRTL ? 'التحليلات' : 'Analytics'}
+                </Link>
+              </Button>
+              {isSuperAdmin && (
+                <Button asChild size="sm" className="gap-1.5 rounded-xl h-10">
                   <Link to="/admin/users?create=provider">
                     <UserPlus className="h-4 w-4" />
-                    {isRTL ? 'إنشاء مزود جديد' : 'New Provider'}
+                    {isRTL ? 'مزود جديد' : 'New Provider'}
                   </Link>
                 </Button>
-                <Button asChild size="sm" variant="outline" className="gap-2 rounded-xl h-10">
-                  <Link to="/admin/users">
-                    <UsersIcon className="h-4 w-4" />
-                    {isRTL ? 'إدارة المستخدمين' : 'Manage Users'}
-                  </Link>
-                </Button>
-              </>
-            )}
+              )}
+            </div>
           </div>
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" style={{ insetInlineStart: '12px' }} />
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={isRTL ? 'بحث بالاسم أو اسم المستخدم' : 'Search by name or username'}
-              dir="auto"
-              style={{ paddingInlineStart: '36px' }}
-            />
+
+          {/* KPI strip — clickable status filters */}
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+            {STATUSES.filter((s) => s.value !== 'all').map((s) => {
+              const key = s.value as ApprovalStatus;
+              const n = statusCounts?.[key] ?? 0;
+              const active = statusFilter === key;
+              return (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => { setStatusFilter(key); setSelectedId(null); }}
+                  className={`group rounded-xl border p-2.5 text-start transition-all hover-lift ${
+                    active ? 'border-accent bg-accent/5 shadow-sm' : 'border-border/60 bg-card hover:border-accent/40'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge className={`${TONE[key]} text-[10px] px-1.5 py-0`}>{language === 'ar' ? s.ar : s.en}</Badge>
+                  </div>
+                  <div className="mt-1.5 font-heading text-xl font-bold tabular-nums tech-content">{n}</div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <Tabs value={statusFilter} onValueChange={(v) => { setStatusFilter(v as ApprovalStatus | 'all'); setSelectedId(null); }}>
-          <TabsList className="flex h-auto flex-wrap justify-start gap-1 bg-muted/40 p-1">
-            {STATUSES.map((s) => (
-              <TabsTrigger key={s.value} value={s.value} className="text-xs">
-                {language === 'ar' ? s.ar : s.en}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        {/* ─────── Toolbar: tabs + search + sort ─────── */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <Tabs
+            value={statusFilter}
+            onValueChange={(v) => { setStatusFilter(v as ApprovalStatus | 'all'); setSelectedId(null); }}
+            className="min-w-0 flex-1"
+          >
+            <TabsList className="flex h-auto flex-wrap justify-start gap-1 bg-muted/40 p-1">
+              {STATUSES.map((s) => {
+                const n = statusCounts?.[s.value] ?? (s.value === 'all' ? 0 : 0);
+                return (
+                  <TabsTrigger key={s.value} value={s.value} className="gap-1.5 text-xs">
+                    <span>{language === 'ar' ? s.ar : s.en}</span>
+                    {statusCounts && (
+                      <span className="rounded-md bg-background/70 px-1.5 py-0 text-[10px] tabular-nums tech-content text-muted-foreground">
+                        {n}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
+
+          <div className="flex items-center gap-2">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" style={{ insetInlineStart: '12px' }} />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={isRTL ? 'بحث بالاسم، المعرّف، اسم المستخدم' : 'Search name, ref, username'}
+                dir="auto"
+                className="h-10"
+                style={{ paddingInlineStart: '36px' }}
+              />
+            </div>
+            <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+              <SelectTrigger className="h-10 w-[170px] gap-1.5">
+                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="submitted_desc">{isRTL ? 'الأحدث إرسالاً' : 'Newest submitted'}</SelectItem>
+                <SelectItem value="submitted_asc">{isRTL ? 'الأقدم إرسالاً' : 'Oldest submitted'}</SelectItem>
+                <SelectItem value="completion_desc">{isRTL ? 'الأعلى اكتمالاً' : 'Highest completion'}</SelectItem>
+                <SelectItem value="name_asc">{isRTL ? 'الاسم (أ–ي)' : 'Name (A–Z)'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         <AdminProviderGrowthPanel
           providers={(rows ?? []).map((r) => ({ ...r, id: r.id }))}
@@ -345,7 +485,7 @@ export default function AdminProviderReview() {
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
           {/* List */}
-          <Card>
+          <Card className="lg:max-h-[calc(100vh-260px)] lg:overflow-hidden lg:flex lg:flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">
                 {isRTL ? 'القائمة' : 'List'}{' '}
@@ -354,7 +494,7 @@ export default function AdminProviderReview() {
                 </Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 lg:overflow-y-auto lg:flex-1">
               {isLoading && Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
@@ -367,6 +507,7 @@ export default function AdminProviderReview() {
               {filtered.map((r) => {
                 const status = (r.approval_status ?? 'draft') as ApprovalStatus;
                 const active = selectedId === r.id;
+                const completion = r.onboarding_completion ?? 0;
                 return (
                   <button
                     key={r.id}
@@ -390,10 +531,19 @@ export default function AdminProviderReview() {
                             {STATUSES.find((s) => s.value === status)?.[language === 'ar' ? 'ar' : 'en']}
                           </Badge>
                         </div>
-                        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground tech-content">
+                        <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground tech-content">
                           {r.ref_id && <span className="font-mono">{r.ref_id}</span>}
-                          {r.username && <span>@{r.username}</span>}
-                          <span>{r.onboarding_completion ?? 0}%</span>
+                          {r.username && <span className="truncate">@{r.username}</span>}
+                          {r.submitted_at && (
+                            <span className="inline-flex items-center gap-0.5">
+                              <Clock className="h-2.5 w-2.5" />
+                              {new Date(r.submitted_at).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <Progress value={completion} className="h-1 flex-1" />
+                          <span className="text-[10px] tabular-nums tech-content text-muted-foreground">{completion}%</span>
                         </div>
                       </div>
                     </div>
@@ -404,7 +554,7 @@ export default function AdminProviderReview() {
           </Card>
 
           {/* Detail */}
-          <Card>
+          <Card className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-260px)] lg:overflow-y-auto">
             {!selected ? (
               <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center text-sm text-muted-foreground">
                 <Eye className="h-8 w-8 opacity-50" />
@@ -436,7 +586,18 @@ export default function AdminProviderReview() {
                             className="mt-0.5 inline-flex items-center gap-1 text-xs text-accent tech-content hover:underline"
                           >
                             <Globe className="h-3 w-3" /> qitaat.com/{selected.username}
+                            <ExternalLink className="h-2.5 w-2.5" />
                           </a>
+                        )}
+                        {selected.user_id && (
+                          <Link
+                            to={`/admin/identity?focus=${selected.user_id}`}
+                            className="mt-0.5 ms-2 inline-flex items-center gap-1 text-xs text-info hover:underline"
+                            title={isRTL ? 'فتح حساب المالك' : 'Open owner account'}
+                          >
+                            <UsersIcon className="h-3 w-3" />
+                            {isRTL ? 'حساب المالك' : 'Owner account'}
+                          </Link>
                         )}
                       </div>
                     </div>
@@ -665,7 +826,10 @@ export default function AdminProviderReview() {
                       {isRTL ? 'رفض' : 'Reject'}
                     </Button>
                     <Button asChild size="sm" variant="ghost">
-                      <Link to="/admin/businesses">{isRTL ? 'إدارة كاملة' : 'Full admin'}</Link>
+                      <Link to={`/admin/identity?view=businesses&focus=${selected.id}`} className="gap-1">
+                        <Building2 className="h-3.5 w-3.5" />
+                        {isRTL ? 'إدارة كاملة' : 'Full admin'}
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>
