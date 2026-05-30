@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { getProfileDisplayName } from '@/modules/profiles/utils/displayName';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ShieldAlert, Shield, Crown, Settings, LogOut, Mail, Lock, Camera, User, ChevronDown, Phone, CheckCircle2 } from 'lucide-react';
 import {
