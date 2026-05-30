@@ -146,7 +146,8 @@ describe('RFQ-BRAND-PICKER-1C — Scope discipline (downstream not wired this ph
   });
 
   it('supplier-quote UI is not wired to proposed_brand_id yet', () => {
-    // No file should reference proposed_brand_id in UI/service code (1A schema only).
+    // RFQ-BRAND-PICKER-1E intentionally wires the proposed brand fields into the
+    // procurement detail page + supplierQuoteItems service. Allowlist only those.
     const offenders: string[] = [];
     function walk(dir: string) {
       let entries: import('node:fs').Dirent[] = [];
@@ -172,7 +173,15 @@ describe('RFQ-BRAND-PICKER-1C — Scope discipline (downstream not wired this ph
     walk('src/components');
     walk('src/modules');
     const filtered = offenders.filter(
-      (m) => !m.includes('/tests/') && !m.includes('/__tests__/'),
+      (m) =>
+        !m.includes('/tests/') &&
+        !m.includes('/__tests__/') &&
+        m !== 'src/pages/dashboard/DashboardProcurementDetail.tsx' &&
+        m !== 'src/modules/procurement/services/supplierQuoteItems.ts' &&
+        m !== 'src/modules/procurement/services/brandEquivalence.ts' &&
+        m !== 'src/modules/procurement/services/quoteComparisonLineItems.ts' &&
+        m !== 'src/modules/procurement/types.ts' &&
+        m !== 'src/modules/procurement/index.ts',
     );
     expect(filtered).toEqual([]);
   });

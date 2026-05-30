@@ -68,6 +68,13 @@ function qItem(
     quantity: qty,
     total_price: unit_price == null ? null : unit_price * qty,
     notes: null,
+    proposed_brand_id: null,
+    proposed_brand_name: null,
+    brand_match_status: null,
+    brand_review_status: 'not_required',
+    brand_reviewed_by: null,
+    brand_reviewed_at: null,
+    brand_review_note: null,
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
   };

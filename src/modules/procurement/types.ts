@@ -163,9 +163,37 @@ export interface ProcurementSupplierQuoteItemRow {
   quantity: number;
   total_price: number | null;
   notes: string | null;
+  /** RFQ-BRAND-PICKER-1E — supplier proposed brand (approved-catalog id). */
+  proposed_brand_id: string | null;
+  /** RFQ-BRAND-PICKER-1E — free-text fallback when not in approved catalog. */
+  proposed_brand_name: string | null;
+  /** RFQ-BRAND-PICKER-1E — match outcome vs requested RFQ brand. */
+  brand_match_status: BrandMatchStatus | null;
+  /** RFQ-BRAND-PICKER-1E — internal equivalence review workflow state. */
+  brand_review_status: BrandReviewStatus;
+  brand_reviewed_by: string | null;
+  brand_reviewed_at: string | null;
+  brand_review_note: string | null;
   created_at: string;
   updated_at: string;
 }
+
+/** RFQ-BRAND-PICKER-1E — supplier brand match outcome. */
+export type BrandMatchStatus =
+  | 'exact_match'
+  | 'proposed_equivalent'
+  | 'no_brand'
+  | 'mismatch'
+  | 'pending_review'
+  | 'approved_equivalent'
+  | 'rejected_equivalent';
+
+/** RFQ-BRAND-PICKER-1E — internal equivalence review workflow state. */
+export type BrandReviewStatus =
+  | 'not_required'
+  | 'pending'
+  | 'approved'
+  | 'rejected';
 
 // PROCUREMENT-RFQ-ENGINE-1 — Purchase Order draft (no payments, no GR).
 export type ProcurementPurchaseOrderStatus = 'draft' | 'issued' | 'cancelled';

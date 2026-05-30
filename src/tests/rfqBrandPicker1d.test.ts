@@ -137,19 +137,27 @@ describe('RFQ-BRAND-PICKER-1D — Scope discipline (downstream not wired)', () =
   }
 
   it('supplier proposed_brand_id is not referenced in UI or services', () => {
+    // RFQ-BRAND-PICKER-1E ships the supplier proposed brand wiring. Allowlist
+    // only the deliberately-wired surfaces and the pure helper/index.
     const offenders = rgInDir('src', /proposed_brand_id/).filter(
       (m) =>
         !m.includes('/tests/') &&
         !m.includes('/__tests__/') &&
-        // Generated Supabase types reflect the 1A schema and are not "wiring".
-        m !== 'src/integrations/supabase/types.ts',
+        m !== 'src/integrations/supabase/types.ts' &&
+        m !== 'src/modules/procurement/services/supplierQuoteItems.ts' &&
+        m !== 'src/modules/procurement/services/brandEquivalence.ts' &&
+        m !== 'src/modules/procurement/services/quoteComparisonLineItems.ts' &&
+        m !== 'src/modules/procurement/index.ts' &&
+        m !== 'src/modules/procurement/types.ts' &&
+        m !== 'src/pages/dashboard/DashboardProcurementDetail.tsx',
     );
     expect(offenders).toEqual([]);
   });
 
-  it('supplierQuoteItems service is not yet wired with brand fields', () => {
+  it('supplierQuoteItems service stays clear of unrelated brand wiring', () => {
     const sqi = read('src/modules/procurement/services/supplierQuoteItems.ts');
-    expect(sqi).not.toMatch(/proposed_brand_id/);
+    // 1E only adds proposed brand + review fields; legacy `is_equivalent`
+    // column from 1A schema stays unused at the service layer.
     expect(sqi).not.toMatch(/is_equivalent/);
   });
 

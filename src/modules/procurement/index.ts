@@ -79,8 +79,28 @@ export {
   listQuoteItemsByQuote,
   listQuoteItemsByRfq,
   calculateLineTotal,
+  updateSupplierQuoteItemProposedBrand,
+  reviewSupplierQuoteItemBrandEquivalence,
+  listQuoteItemsWithBrandReview,
+  sanitizeProposedBrandName,
 } from './services/supplierQuoteItems';
-export type { SubmitQuoteItemInput } from './services/supplierQuoteItems';
+export type {
+  SubmitQuoteItemInput,
+  UpdateProposedBrandInput,
+  ReviewBrandEquivalenceInput,
+} from './services/supplierQuoteItems';
+// RFQ-BRAND-PICKER-1E — pure brand equivalence helper
+export {
+  classifyBrandEquivalence,
+  resolveEffectiveBrandMatchStatus,
+  brandWarningForLine,
+} from './services/brandEquivalence';
+export type {
+  BrandEquivalenceInput,
+  BrandEquivalenceResult,
+  BrandEquivalenceReason,
+} from './services/brandEquivalence';
+export type { BrandMatchStatus, BrandReviewStatus } from './types';
 // BUSINESS-WORKFLOW-PROCUREMENT-3 — Line-item-aware comparison
 export {
   compareQuotesWithLineItems,
