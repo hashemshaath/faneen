@@ -284,6 +284,10 @@ export interface WorkOrderBoqItemRow {
   total_price: number;
   metadata: Record<string, unknown>;
   sort_order: number;
+  /** RFQ-BRAND-PICKER-1C — optional approved brand reference. */
+  brand_id: string | null;
+  /** RFQ-BRAND-PICKER-1C — exact | preferred | flexible (null when no brand). */
+  brand_lock: 'exact' | 'preferred' | 'flexible' | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

@@ -39,6 +39,12 @@ import {
 } from "@/modules/workOrders";
 import { RelatedReferencesPanel } from "@/components/reference/RelatedReferencesPanel";
 import { createProcurementRfqFromBoq } from "@/modules/procurement";
+import { ApprovedBrandPicker } from "@/components/brands/ApprovedBrandPicker";
+import { listApprovedBrandsByIds } from "@/modules/brands";
+import {
+  describeBrandLock,
+  type BrandLock,
+} from "@/modules/brands/lib/brandSelectionRules";
 
 interface Props {
   workOrderId: string;
@@ -70,6 +76,11 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [rfqRefId, setRfqRefId] = useState<{ rfqId: string; rfqNumber: string | null } | null>(null);
+
+  // RFQ-BRAND-PICKER-1C — resolved approved-brand labels for items in view.
+  const [brandLabels, setBrandLabels] = useState<
+    Record<string, { name_ar: string; name_en: string; ref_id: string | null; slug: string }>
+  >({});
 
   const tx = useMemo(
     () => ({
@@ -119,6 +130,13 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
       rfqCreated: isRTL ? "تم إنشاء RFQ" : "RFQ created",
       errCreateRfq: isRTL ? "تعذّر إنشاء RFQ." : "Failed to create RFQ.",
       openRfq: isRTL ? "فتح RFQ" : "Open RFQ",
+      brand: isRTL ? "العلامة التجارية" : "Brand",
+      brandLock: isRTL ? "نمط الالتزام" : "Brand lock",
+      lockExact: isRTL ? "مطابق" : "Exact",
+      lockPreferred: isRTL ? "مفضّل" : "Preferred",
+      lockFlexible: isRTL ? "مرن" : "Flexible",
+      brandUnavailable: isRTL ? "العلامة غير متاحة" : "Brand unavailable",
+      noBrand: isRTL ? "بدون علامة" : "No brand",
     }),
     [isRTL],
   );
@@ -157,6 +175,45 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
     if (activeBoqId) void loadItems(activeBoqId);
     else setItems([]);
   }, [activeBoqId, loadItems]);
+
+  // Resolve approved-brand labels for any brand_id referenced in current items.
+  useEffect(() => {
+    const ids = Array.from(
+      new Set(items.map((i) => i.brand_id).filter((x): x is string => Boolean(x))),
+    );
+    const missing = ids.filter((id) => !brandLabels[id]);
+    if (missing.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = (await listApprovedBrandsByIds(missing)) as Array<{
+          id: string;
+          ref_id: string | null;
+          name_ar: string;
+          name_en: string;
+          slug: string;
+        }>;
+        if (cancelled) return;
+        setBrandLabels((prev) => {
+          const next = { ...prev };
+          for (const r of rows) {
+            next[r.id] = {
+              name_ar: r.name_ar,
+              name_en: r.name_en,
+              ref_id: r.ref_id ?? null,
+              slug: r.slug,
+            };
+          }
+          return next;
+        });
+      } catch {
+        /* swallow — UI falls back to "Brand unavailable" label */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [items, brandLabels]);
 
   const activeBoq = useMemo(
     () => boqs.find((b) => b.id === activeBoqId) ?? null,
@@ -203,7 +260,12 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
   const onPriceChange = useCallback(
     async (
       item: WorkOrderBoqItemRow,
-      patch: { quantity?: number; unit_price?: number },
+      patch: {
+        quantity?: number;
+        unit_price?: number;
+        brand_id?: string | null;
+        brand_lock?: BrandLock | null;
+      },
     ) => {
       if (isFinalized) return;
       // Optimistic local update for instant totals
@@ -214,6 +276,14 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
                 ...it,
                 quantity: patch.quantity ?? it.quantity,
                 unit_price: patch.unit_price ?? it.unit_price,
+                brand_id:
+                  patch.brand_id === undefined ? it.brand_id : patch.brand_id,
+                brand_lock:
+                  patch.brand_id === null
+                    ? null
+                    : patch.brand_lock === undefined
+                      ? it.brand_lock
+                      : patch.brand_lock,
               }
             : it,
         ),
@@ -497,6 +567,7 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
                       <tr>
                         <th className="px-2 py-1 text-start">{tx.itemTitle}</th>
                         <th className="px-2 py-1 text-start">{tx.type}</th>
+                        <th className="px-2 py-1 text-start">{tx.brand}</th>
                         <th className="px-2 py-1 text-end">{tx.qty}</th>
                         <th className="px-2 py-1 text-start">{tx.unit}</th>
                         <th className="px-2 py-1 text-end">{tx.unitPrice}</th>
@@ -504,7 +575,15 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
                       </tr>
                     </thead>
                     <tbody>
-                      {items.map((it) => (
+                      {items.map((it) => {
+                        const brandLabel = it.brand_id
+                          ? (brandLabels[it.brand_id]
+                              ? isRTL
+                                ? brandLabels[it.brand_id].name_ar
+                                : brandLabels[it.brand_id].name_en
+                              : tx.brandUnavailable)
+                          : null;
+                        return (
                         <tr key={it.id} className="border-t border-border/30">
                           <td className="px-2 py-1.5" dir="auto">
                             {isRTL ? it.title_ar : it.title_en}
@@ -513,6 +592,77 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
                             <Badge variant="outline" className="text-[9px]">
                               {typeLabel(it.item_type)}
                             </Badge>
+                          </td>
+                          <td className="px-2 py-1.5 align-top min-w-[180px]" data-testid="wo-boq-item-brand">
+                            {isFinalized ? (
+                              <span className="text-[11px]" dir="auto">
+                                {brandLabel ?? <span className="text-muted-foreground">{tx.noBrand}</span>}
+                              </span>
+                            ) : (
+                              <div className="space-y-1">
+                                <ApprovedBrandPicker
+                                  mode="single"
+                                  value={it.brand_id ?? null}
+                                  onChange={(v) => {
+                                    if (v === null) {
+                                      void onPriceChange(it, {
+                                        brand_id: null,
+                                        brand_lock: null,
+                                      });
+                                    } else if (v !== it.brand_id) {
+                                      // Default lock to 'preferred' when a brand is freshly picked
+                                      // and no lock is set yet.
+                                      void onPriceChange(it, {
+                                        brand_id: v,
+                                        brand_lock: it.brand_lock ?? "preferred",
+                                      });
+                                    }
+                                  }}
+                                />
+                                {it.brand_id && (
+                                  <div
+                                    className="flex flex-wrap items-center gap-1"
+                                    role="radiogroup"
+                                    aria-label={tx.brandLock}
+                                    data-testid="wo-boq-item-brand-lock"
+                                  >
+                                    {(["exact", "preferred", "flexible"] as const).map((lk) => {
+                                      const active = (it.brand_lock ?? "preferred") === lk;
+                                      const lkLabel =
+                                        lk === "exact"
+                                          ? tx.lockExact
+                                          : lk === "preferred"
+                                            ? tx.lockPreferred
+                                            : tx.lockFlexible;
+                                      return (
+                                        <button
+                                          key={lk}
+                                          type="button"
+                                          role="radio"
+                                          aria-checked={active}
+                                          onClick={() => {
+                                            if (!active) {
+                                              void onPriceChange(it, { brand_lock: lk });
+                                            }
+                                          }}
+                                          className={`rounded-full border px-2 py-0.5 text-[10px] transition-colors ${
+                                            active
+                                              ? "border-primary bg-primary/10 text-primary"
+                                              : "border-border/40 hover:bg-accent/5 text-muted-foreground"
+                                          }`}
+                                          title={describeBrandLock(lk, isRTL ? "ar" : "en")}
+                                        >
+                                          {lkLabel}
+                                        </button>
+                                      );
+                                    })}
+                                    <span className="ms-1 text-[10px] text-muted-foreground" dir="auto">
+                                      {describeBrandLock(it.brand_lock ?? "preferred", isRTL ? "ar" : "en")}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </td>
                           <td className="px-2 py-1.5 text-end tech-content">
                             {isFinalized ? (
@@ -561,7 +711,8 @@ export function WorkOrderBoqSection({ workOrderId, businessId, canManage, workOr
                             {fmt2(it.quantity * it.unit_price)}
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

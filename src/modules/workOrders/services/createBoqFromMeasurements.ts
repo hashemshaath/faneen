@@ -84,13 +84,16 @@ export async function createBoqFromMeasurements(
       total_price: 0,
       metadata: d.metadata,
       sort_order: d.sort_order,
+      // RFQ-BRAND-PICKER-1C — generated items NEVER auto-assign a brand.
+      brand_id: null,
+      brand_lock: null,
     }));
     const { data: itemRows, error: itemErr } = await supabase
       .from("work_order_boq_items")
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .insert(payload as any)
       .select(
-        "id, ref_id, boq_id, measurement_id, item_type, title_ar, title_en, quantity, unit, unit_price, total_price, metadata, sort_order, created_at, updated_at, deleted_at",
+        "id, ref_id, boq_id, measurement_id, item_type, title_ar, title_en, quantity, unit, unit_price, total_price, metadata, sort_order, brand_id, brand_lock, created_at, updated_at, deleted_at",
       );
     if (!itemErr && itemRows) items = itemRows as WorkOrderBoqItemRow[];
   }
