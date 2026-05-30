@@ -262,6 +262,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'سجل تصدير العقود', en: 'Contract Export Audit' }, url: '/admin/pdf-exports', icon: FileText },
       { label: { ar: 'مركز التقارير', en: 'Reports Center' }, url: '/admin/reports', icon: BarChart3 },
       { label: { ar: 'لوحة المؤشرات المتقدمة', en: 'Advanced KPIs' }, url: '/admin/kpis', icon: BarChart3 },
+      { label: { ar: 'سجل التدقيق الموحّد', en: 'Unified Audit Log' }, url: '/admin/audit-log', icon: ShieldAlert },
     ],
   },
   {
