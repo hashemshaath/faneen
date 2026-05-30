@@ -74,6 +74,43 @@ export const InvitationsPanel: React.FC<Props> = ({
   const [sending, setSending] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  // Search by email or username from the central profiles table
+  const [search, setSearch] = useState('');
+  const [suggestions, setSuggestions] = useState<ProfileSuggestion[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [picked, setPicked] = useState<ProfileSuggestion | null>(null);
+
+  // Delivery channels — at least one must be selected
+  const [sendEmail, setSendEmail] = useState(true);
+  const [sendInApp, setSendInApp] = useState(true);
+
+  useEffect(() => {
+    const q = search.trim();
+    if (q.length < 3) { setSuggestions([]); return; }
+    let cancelled = false;
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      const like = `%${q}%`;
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_id, email, username, full_name')
+        .or(`email.ilike.${like},username.ilike.${like},full_name.ilike.${like}`)
+        .limit(6);
+      if (!cancelled) {
+        setSuggestions((data ?? []) as ProfileSuggestion[]);
+        setSearching(false);
+      }
+    }, 250);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [search]);
+
+  const choosePick = (p: ProfileSuggestion) => {
+    setPicked(p);
+    if (p.email) setEmail(p.email);
+    setSearch('');
+    setSuggestions([]);
+  };
+
   const { data: invitations = [], isLoading } = useQuery({
     queryKey: ['business-invitations', businessId],
     enabled: !!businessId && canManage,
