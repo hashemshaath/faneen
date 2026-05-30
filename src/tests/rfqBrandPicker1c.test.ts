@@ -136,7 +136,9 @@ describe('RFQ-BRAND-PICKER-1C — Scope discipline (downstream not wired this ph
     const filtered = offenders.filter(
       (m) =>
         !m.includes('/tests/') &&
-        !m.includes('/__tests__/'),
+        !m.includes('/__tests__/') &&
+        // RFQ-BRAND-PICKER-1D wires the picker into the procurement detail page.
+        m !== 'src/pages/dashboard/DashboardProcurementDetail.tsx',
     );
     // Only the BOQ section (1C) and Quote.tsx (1B) may import it — neither lives in
     // dashboard/procurement/components-procurement trees.
