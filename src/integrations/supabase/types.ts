@@ -1283,17 +1283,27 @@ export type Database = {
       }
       brand_addition_requests: {
         Row: {
+          admin_notes: string | null
           approved_brand_id: string | null
+          brand_id: string | null
           business_id: string
           business_service_id: string | null
           created_at: string
           description: string | null
+          documents: Json
           id: string
           logo_url: string | null
           name_ar: string
           name_en: string | null
+          notes: string | null
+          proposed_country_of_origin_code: string | null
+          proposed_manufacturing_countries: Json
+          proposed_sector_ids: string[]
+          proposed_service_ids: string[]
           ref_id: string | null
           reject_reason: string | null
+          relationship_type: string | null
+          request_type: string
           reviewed_at: string | null
           reviewed_by: string | null
           sector_id: string | null
@@ -1304,17 +1314,27 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          admin_notes?: string | null
           approved_brand_id?: string | null
+          brand_id?: string | null
           business_id: string
           business_service_id?: string | null
           created_at?: string
           description?: string | null
+          documents?: Json
           id?: string
           logo_url?: string | null
           name_ar: string
           name_en?: string | null
+          notes?: string | null
+          proposed_country_of_origin_code?: string | null
+          proposed_manufacturing_countries?: Json
+          proposed_sector_ids?: string[]
+          proposed_service_ids?: string[]
           ref_id?: string | null
           reject_reason?: string | null
+          relationship_type?: string | null
+          request_type?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
           sector_id?: string | null
@@ -1325,17 +1345,27 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          admin_notes?: string | null
           approved_brand_id?: string | null
+          brand_id?: string | null
           business_id?: string
           business_service_id?: string | null
           created_at?: string
           description?: string | null
+          documents?: Json
           id?: string
           logo_url?: string | null
           name_ar?: string
           name_en?: string | null
+          notes?: string | null
+          proposed_country_of_origin_code?: string | null
+          proposed_manufacturing_countries?: Json
+          proposed_sector_ids?: string[]
+          proposed_service_ids?: string[]
           ref_id?: string | null
           reject_reason?: string | null
+          relationship_type?: string | null
+          request_type?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
           sector_id?: string | null
@@ -1346,6 +1376,20 @@ export type Database = {
           website?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "brand_addition_requests_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_addition_requests_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "brand_addition_requests_business_id_fkey"
             columns: ["business_id"]
@@ -1369,50 +1413,281 @@ export type Database = {
           },
         ]
       }
+      brand_audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          brand_id: string | null
+          brand_request_id: string | null
+          created_at: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          provider_brand_link_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          brand_id?: string | null
+          brand_request_id?: string | null
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          provider_brand_link_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          brand_id?: string | null
+          brand_request_id?: string | null
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          provider_brand_link_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_audit_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_audit_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_audit_logs_brand_request_id_fkey"
+            columns: ["brand_request_id"]
+            isOneToOne: false
+            referencedRelation: "brand_addition_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_audit_logs_provider_brand_link_id_fkey"
+            columns: ["provider_brand_link_id"]
+            isOneToOne: false
+            referencedRelation: "business_service_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_catalog: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
+          brand_owner_company: string | null
+          country_of_origin_code: string | null
+          country_of_origin_name_ar: string | null
+          country_of_origin_name_en: string | null
           created_at: string
           created_by: string | null
+          description_ar: string | null
+          description_en: string | null
+          founded_year: number | null
           id: string
           is_active: boolean
+          is_local: boolean
+          is_verified: boolean
           logo_url: string | null
+          merged_into_brand_id: string | null
+          metadata: Json
           name_ar: string
           name_en: string | null
           ref_id: string | null
+          rejection_reason: string | null
           sector_id: string | null
           slug: string | null
+          source: string
+          status: string
+          submitted_by: string | null
           updated_at: string
+          verification_status: string
           website: string | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          brand_owner_company?: string | null
+          country_of_origin_code?: string | null
+          country_of_origin_name_ar?: string | null
+          country_of_origin_name_en?: string | null
           created_at?: string
           created_by?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          founded_year?: number | null
           id?: string
           is_active?: boolean
+          is_local?: boolean
+          is_verified?: boolean
           logo_url?: string | null
+          merged_into_brand_id?: string | null
+          metadata?: Json
           name_ar: string
           name_en?: string | null
           ref_id?: string | null
+          rejection_reason?: string | null
           sector_id?: string | null
           slug?: string | null
+          source?: string
+          status?: string
+          submitted_by?: string | null
           updated_at?: string
+          verification_status?: string
           website?: string | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          brand_owner_company?: string | null
+          country_of_origin_code?: string | null
+          country_of_origin_name_ar?: string | null
+          country_of_origin_name_en?: string | null
           created_at?: string
           created_by?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          founded_year?: number | null
           id?: string
           is_active?: boolean
+          is_local?: boolean
+          is_verified?: boolean
           logo_url?: string | null
+          merged_into_brand_id?: string | null
+          metadata?: Json
           name_ar?: string
           name_en?: string | null
           ref_id?: string | null
+          rejection_reason?: string | null
           sector_id?: string | null
           slug?: string | null
+          source?: string
+          status?: string
+          submitted_by?: string | null
           updated_at?: string
+          verification_status?: string
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "brand_catalog_merged_into_brand_id_fkey"
+            columns: ["merged_into_brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_catalog_merged_into_brand_id_fkey"
+            columns: ["merged_into_brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_manufacturing_countries: {
+        Row: {
+          brand_id: string
+          country_code: string
+          country_name_ar: string | null
+          country_name_en: string | null
+          created_at: string
+          id: string
+          manufacturing_type: string
+          notes_ar: string | null
+          notes_en: string | null
+        }
+        Insert: {
+          brand_id: string
+          country_code: string
+          country_name_ar?: string | null
+          country_name_en?: string | null
+          created_at?: string
+          id?: string
+          manufacturing_type?: string
+          notes_ar?: string | null
+          notes_en?: string | null
+        }
+        Update: {
+          brand_id?: string
+          country_code?: string
+          country_name_ar?: string | null
+          country_name_en?: string | null
+          created_at?: string
+          id?: string
+          manufacturing_type?: string
+          notes_ar?: string | null
+          notes_en?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_manufacturing_countries_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_manufacturing_countries_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_sector_links: {
+        Row: {
+          brand_id: string
+          created_at: string
+          id: string
+          is_primary: boolean
+          sector_id: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          sector_id: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          sector_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_sector_links_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sector_links_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sector_links_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       business_audit_log: {
         Row: {
@@ -1942,28 +2217,61 @@ export type Database = {
       }
       business_service_brands: {
         Row: {
+          authorization_document_url: string | null
+          authorization_ends_at: string | null
+          authorization_starts_at: string | null
+          authorization_status: string
           brand_id: string
           business_id: string
           business_service_id: string
           created_at: string
           id: string
+          ref_id: string | null
+          rejection_reason: string | null
+          relationship_type: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           sort_order: number
+          submitted_by: string | null
+          updated_at: string
         }
         Insert: {
+          authorization_document_url?: string | null
+          authorization_ends_at?: string | null
+          authorization_starts_at?: string | null
+          authorization_status?: string
           brand_id: string
           business_id: string
           business_service_id: string
           created_at?: string
           id?: string
+          ref_id?: string | null
+          rejection_reason?: string | null
+          relationship_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sort_order?: number
+          submitted_by?: string | null
+          updated_at?: string
         }
         Update: {
+          authorization_document_url?: string | null
+          authorization_ends_at?: string | null
+          authorization_starts_at?: string | null
+          authorization_status?: string
           brand_id?: string
           business_id?: string
           business_service_id?: string
           created_at?: string
           id?: string
+          ref_id?: string | null
+          rejection_reason?: string | null
+          relationship_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sort_order?: number
+          submitted_by?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -1971,6 +2279,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_brands_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands_public"
             referencedColumns: ["id"]
           },
           {
@@ -12300,6 +12615,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sectors: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           created_at: string
@@ -13992,6 +14340,72 @@ export type Database = {
       }
     }
     Views: {
+      brands_public: {
+        Row: {
+          brand_owner_company: string | null
+          country_of_origin_code: string | null
+          country_of_origin_name_ar: string | null
+          country_of_origin_name_en: string | null
+          created_at: string | null
+          description_ar: string | null
+          description_en: string | null
+          founded_year: number | null
+          id: string | null
+          is_local: boolean | null
+          is_verified: boolean | null
+          logo_url: string | null
+          name_ar: string | null
+          name_en: string | null
+          ref_id: string | null
+          sector_id: string | null
+          slug: string | null
+          verification_status: string | null
+          website: string | null
+        }
+        Insert: {
+          brand_owner_company?: string | null
+          country_of_origin_code?: string | null
+          country_of_origin_name_ar?: string | null
+          country_of_origin_name_en?: string | null
+          created_at?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          founded_year?: number | null
+          id?: string | null
+          is_local?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          name_ar?: string | null
+          name_en?: string | null
+          ref_id?: string | null
+          sector_id?: string | null
+          slug?: string | null
+          verification_status?: string | null
+          website?: string | null
+        }
+        Update: {
+          brand_owner_company?: string | null
+          country_of_origin_code?: string | null
+          country_of_origin_name_ar?: string | null
+          country_of_origin_name_en?: string | null
+          created_at?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          founded_year?: number | null
+          id?: string | null
+          is_local?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          name_ar?: string | null
+          name_en?: string | null
+          ref_id?: string | null
+          sector_id?: string | null
+          slug?: string | null
+          verification_status?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       business_branches_public: {
         Row: {
           address: string | null
@@ -14805,9 +15219,119 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_approve_brand: {
+        Args: { _brand_id: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          brand_owner_company: string | null
+          country_of_origin_code: string | null
+          country_of_origin_name_ar: string | null
+          country_of_origin_name_en: string | null
+          created_at: string
+          created_by: string | null
+          description_ar: string | null
+          description_en: string | null
+          founded_year: number | null
+          id: string
+          is_active: boolean
+          is_local: boolean
+          is_verified: boolean
+          logo_url: string | null
+          merged_into_brand_id: string | null
+          metadata: Json
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          rejection_reason: string | null
+          sector_id: string | null
+          slug: string | null
+          source: string
+          status: string
+          submitted_by: string | null
+          updated_at: string
+          verification_status: string
+          website: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "brand_catalog"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_approve_provider_brand_link: {
+        Args: { _link_id: string }
+        Returns: {
+          authorization_document_url: string | null
+          authorization_ends_at: string | null
+          authorization_starts_at: string | null
+          authorization_status: string
+          brand_id: string
+          business_id: string
+          business_service_id: string
+          created_at: string
+          id: string
+          ref_id: string | null
+          rejection_reason: string | null
+          relationship_type: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sort_order: number
+          submitted_by: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "business_service_brands"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_archive_barcode: {
         Args: { _barcode_id: string; _reason?: string }
         Returns: Json
+      }
+      admin_archive_brand: {
+        Args: { _brand_id: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          brand_owner_company: string | null
+          country_of_origin_code: string | null
+          country_of_origin_name_ar: string | null
+          country_of_origin_name_en: string | null
+          created_at: string
+          created_by: string | null
+          description_ar: string | null
+          description_en: string | null
+          founded_year: number | null
+          id: string
+          is_active: boolean
+          is_local: boolean
+          is_verified: boolean
+          logo_url: string | null
+          merged_into_brand_id: string | null
+          metadata: Json
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          rejection_reason: string | null
+          sector_id: string | null
+          slug: string | null
+          source: string
+          status: string
+          submitted_by: string | null
+          updated_at: string
+          verification_status: string
+          website: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "brand_catalog"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_barcode_registry_summary: { Args: never; Returns: Json }
       admin_bulk_set_business_active: {
@@ -15068,6 +15592,47 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_merge_brands: {
+        Args: { _source_id: string; _target_id: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          brand_owner_company: string | null
+          country_of_origin_code: string | null
+          country_of_origin_name_ar: string | null
+          country_of_origin_name_en: string | null
+          created_at: string
+          created_by: string | null
+          description_ar: string | null
+          description_en: string | null
+          founded_year: number | null
+          id: string
+          is_active: boolean
+          is_local: boolean
+          is_verified: boolean
+          logo_url: string | null
+          merged_into_brand_id: string | null
+          metadata: Json
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          rejection_reason: string | null
+          sector_id: string | null
+          slug: string | null
+          source: string
+          status: string
+          submitted_by: string | null
+          updated_at: string
+          verification_status: string
+          website: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "brand_catalog"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_reassign_business_owner: {
         Args: {
           _business_id: string
@@ -15075,6 +15640,75 @@ export type Database = {
           _reason?: string
         }
         Returns: Json
+      }
+      admin_reject_brand: {
+        Args: { _brand_id: string; _reason: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          brand_owner_company: string | null
+          country_of_origin_code: string | null
+          country_of_origin_name_ar: string | null
+          country_of_origin_name_en: string | null
+          created_at: string
+          created_by: string | null
+          description_ar: string | null
+          description_en: string | null
+          founded_year: number | null
+          id: string
+          is_active: boolean
+          is_local: boolean
+          is_verified: boolean
+          logo_url: string | null
+          merged_into_brand_id: string | null
+          metadata: Json
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          rejection_reason: string | null
+          sector_id: string | null
+          slug: string | null
+          source: string
+          status: string
+          submitted_by: string | null
+          updated_at: string
+          verification_status: string
+          website: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "brand_catalog"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_reject_provider_brand_link: {
+        Args: { _link_id: string; _reason: string }
+        Returns: {
+          authorization_document_url: string | null
+          authorization_ends_at: string | null
+          authorization_starts_at: string | null
+          authorization_status: string
+          brand_id: string
+          business_id: string
+          business_service_id: string
+          created_at: string
+          id: string
+          ref_id: string | null
+          rejection_reason: string | null
+          relationship_type: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sort_order: number
+          submitted_by: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "business_service_brands"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_restore_barcode: {
         Args: { _barcode_id: string; _reason?: string }
@@ -15190,17 +15824,27 @@ export type Database = {
       approve_brand_addition_request: {
         Args: { p_admin_note?: string; p_request_id: string }
         Returns: {
+          admin_notes: string | null
           approved_brand_id: string | null
+          brand_id: string | null
           business_id: string
           business_service_id: string | null
           created_at: string
           description: string | null
+          documents: Json
           id: string
           logo_url: string | null
           name_ar: string
           name_en: string | null
+          notes: string | null
+          proposed_country_of_origin_code: string | null
+          proposed_manufacturing_countries: Json
+          proposed_sector_ids: string[]
+          proposed_service_ids: string[]
           ref_id: string | null
           reject_reason: string | null
+          relationship_type: string | null
+          request_type: string
           reviewed_at: string | null
           reviewed_by: string | null
           sector_id: string | null
@@ -16613,17 +17257,27 @@ export type Database = {
       reject_brand_addition_request: {
         Args: { p_reason: string; p_request_id: string }
         Returns: {
+          admin_notes: string | null
           approved_brand_id: string | null
+          brand_id: string | null
           business_id: string
           business_service_id: string | null
           created_at: string
           description: string | null
+          documents: Json
           id: string
           logo_url: string | null
           name_ar: string
           name_en: string | null
+          notes: string | null
+          proposed_country_of_origin_code: string | null
+          proposed_manufacturing_countries: Json
+          proposed_sector_ids: string[]
+          proposed_service_ids: string[]
           ref_id: string | null
           reject_reason: string | null
+          relationship_type: string | null
+          request_type: string
           reviewed_at: string | null
           reviewed_by: string | null
           sector_id: string | null
