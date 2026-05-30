@@ -636,8 +636,11 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 function ServiceTile({
-  sectorLabel, isCustom, name, nameAr, nameEn, row, isRTL, saving, onToggle, onSave,
+  businessId, userId, sectorId, sectorLabel, isCustom, name, nameAr, nameEn, row, isRTL, saving, onToggle, onSave, onRemove, removing,
 }: {
+  businessId: string;
+  userId: string;
+  sectorId: string | null;
   sectorLabel: string | null;
   isCustom: boolean;
   name: string;
@@ -648,6 +651,8 @@ function ServiceTile({
   saving: boolean;
   onToggle: (next: boolean) => void;
   onSave: (payload: { description_ar: string | null; description_en: string | null; price_from: number | null; price_to: number | null; currency_code: string; is_active: boolean }) => void;
+  onRemove: () => void;
+  removing: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({
@@ -674,6 +679,22 @@ function ServiceTile({
           <Switch checked={isActive} onCheckedChange={onToggle} aria-label="active" />
           <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setEditing((v) => !v)}>
             {editing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={() => {
+              if (window.confirm(isRTL
+                ? 'سيتم إزالة هذه الخدمة من ملف المنشأة وحذف بياناتها (السعر/الوصف). متابعة؟'
+                : 'This will remove the service from your business profile and delete its pricing/description. Continue?')) {
+                onRemove();
+              }
+            }}
+            disabled={removing}
+            aria-label="remove"
+          >
+            {removing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
           </Button>
         </div>
       </div>
