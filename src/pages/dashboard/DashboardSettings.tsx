@@ -569,6 +569,7 @@ const DashboardSettings = () => {
                       onChange={(v) => setProfileForm(p => ({ ...p, username: v }))}
                       onValidChange={({ isValid, isAvailable }) => setUsernameOk(isValid && isAvailable)}
                       excludeUserId={user?.id}
+                      currentUsername={profile?.username ?? null}
                       isRTL={isRTL}
                       label={isRTL ? 'اسم المستخدم (Handle)' : 'Username (handle)'}
                     />

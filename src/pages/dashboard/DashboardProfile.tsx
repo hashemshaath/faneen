@@ -37,6 +37,39 @@ import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneFie
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
+/**
+ * Compose a professional, human-readable detailed address line from the
+ * structured National Address fields. Empty parts are skipped, separators
+ * are Arabic commas, and building/additional numbers collapse into one
+ * "مبنى {b}/{a}" segment when both exist.
+ */
+function composeAddressLine(
+  parts: {
+    district?: string; street?: string;
+    building_number?: string; additional_number?: string;
+    postal_code?: string; region_name?: string;
+  },
+  isRTL: boolean,
+): string {
+  const seg: string[] = [];
+  const district = (parts.district ?? '').trim();
+  const street = (parts.street ?? '').trim();
+  const b = (parts.building_number ?? '').trim();
+  const a = (parts.additional_number ?? '').trim();
+  const post = (parts.postal_code ?? '').trim();
+  const region = (parts.region_name ?? '').trim();
+  if (district) seg.push(isRTL ? `حي ${district}` : `${district} District`);
+  if (street) seg.push(isRTL ? `شارع ${street}` : `${street} St.`);
+  if (b || a) {
+    const bldg = isRTL ? 'مبنى' : 'Bldg';
+    seg.push(b && a ? `${bldg} ${b}/${a}` : `${bldg} ${b || a}`);
+  }
+  if (region && post) seg.push(`${region} ${post}`);
+  else if (region) seg.push(region);
+  else if (post) seg.push(post);
+  return seg.join(isRTL ? '، ' : ', ');
+}
+
 const DashboardProfile: React.FC = () => {
   useNoIndex();
   const navigate = useNavigate();
@@ -86,6 +119,9 @@ const DashboardProfile: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [splLoading, setSplLoading] = useState(false);
+  // Auto-compose the detailed address line from structured fields unless
+  // the user has edited the line manually (or pulled it from SPL).
+  const [addressLineManual, setAddressLineManual] = useState(false);
 
   // Seed form from profile
   useEffect(() => {
@@ -115,7 +151,33 @@ const DashboardProfile: React.FC = () => {
       address_line: profile.address_line ?? '',
     });
     setUsernameOk(true);
+    // If the saved line differs from a fresh compose, treat as manual so we
+    // don't overwrite the user's existing detail on first render.
+    setAddressLineManual(!!(profile.address_line ?? '').trim());
   }, [profile, user?.email]);
+
+  // Auto-compose the detailed address line whenever the structured parts
+  // change — unless the user has manually edited it (or it came from SPL,
+  // which marks the line as manual to preserve the API's official text).
+  useEffect(() => {
+    if (addressLineManual) return;
+    const composed = composeAddressLine(
+      {
+        district: form.district,
+        street: form.street,
+        building_number: form.building_number,
+        additional_number: form.additional_number,
+        postal_code: form.postal_code,
+        region_name: form.region_name,
+      },
+      isRTL,
+    );
+    setForm((f) => (f.address_line === composed ? f : { ...f, address_line: composed }));
+  }, [
+    addressLineManual, isRTL,
+    form.district, form.street, form.building_number,
+    form.additional_number, form.postal_code, form.region_name,
+  ]);
 
   // Owner business (for "view as provider" link)
   const { data: business } = useQuery({
@@ -371,6 +433,8 @@ const DashboardProfile: React.FC = () => {
         postal_code: a.post_code ?? f.postal_code,
         address_line: (isRTL ? a.address_ar : a.address_en) ?? a.address_ar ?? a.address_en ?? f.address_line,
       }));
+      // The SPL line is the official text — keep it as-is.
+      setAddressLineManual(true);
       toast.success(t(isRTL, 'تم تعبئة العنوان', 'Address filled in'));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Error');
@@ -528,6 +592,7 @@ const DashboardProfile: React.FC = () => {
                   onChange={(v) => setForm((f) => ({ ...f, username: v }))}
                   onValidChange={(s) => setUsernameOk(form.username === '' ? true : s.isValid && s.isAvailable)}
                   excludeUserId={user?.id ?? null}
+                  currentUsername={profile?.username ?? null}
                   placeholder={t(isRTL, 'مثال: ahmad-aluminum', 'e.g. ahmad-aluminum')}
                 />
               </CardContent>
@@ -770,17 +835,39 @@ const DashboardProfile: React.FC = () => {
                 </div>
 
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    {t(isRTL, 'العنوان التفصيلي', 'Detailed address line')}
-                  </Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      {t(isRTL, 'العنوان التفصيلي', 'Detailed address line')}
+                    </Label>
+                    {addressLineManual && (
+                      <button
+                        type="button"
+                        onClick={() => setAddressLineManual(false)}
+                        className="text-[10px] text-primary hover:underline"
+                      >
+                        {t(isRTL, 'إعادة التوليد تلقائيًا', 'Auto-generate again')}
+                      </button>
+                    )}
+                  </div>
                   <Input
                     value={form.address_line}
-                    onChange={(e) => setForm((f) => ({ ...f, address_line: e.target.value }))}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setAddressLineManual(true);
+                      setForm((f) => ({ ...f, address_line: v }));
+                    }}
                     dir="auto"
                     className="mt-1 h-11 rounded-xl"
-                    placeholder={t(isRTL, 'مثال: حي الياسمين، شارع الأمير سلطان', 'e.g. Al Yasmin, Prince Sultan St.')}
+                    placeholder={t(isRTL, 'يتم توليده تلقائيًا من حقول العنوان أعلاه', 'Auto-generated from the address fields above')}
                     maxLength={250}
                   />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {addressLineManual
+                      ? t(isRTL, 'يدوي — لن يتم استبداله. اضغط "إعادة التوليد" لإرجاعه إلى التوليد التلقائي.',
+                           'Manual — won\'t be overwritten. Click "Auto-generate" to revert.')
+                      : t(isRTL, 'يُحدَّث تلقائيًا عند تغيير أي حقل من حقول العنوان أعلاه.',
+                           'Updates automatically when any address field above changes.')}
+                  </p>
                 </div>
               </CardContent>
             </Card>

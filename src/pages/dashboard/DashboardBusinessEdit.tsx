@@ -586,6 +586,7 @@ const DashboardBusinessEdit: React.FC = () => {
                 value={form.username ?? ''}
                 onChange={(v) => update('username', v)}
                 excludeUserId={user?.id ?? null}
+                currentUsername={business?.username ?? null}
                 placeholder="my-business"
               />
               <FieldHint>
