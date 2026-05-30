@@ -22,6 +22,7 @@ import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { AdminOperationalNotesPanel } from '@/components/admin/AdminOperationalNotesPanel';
 import { AdminOperationalMetricsCards } from '@/components/admin/AdminOperationalMetricsCards';
 import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
+import { AdminOpsQuickLinks } from '@/components/admin/AdminOpsQuickLinks';
 import {
   listAdminOperationalActivity,
   listAdminWorkOrders,
@@ -212,6 +213,7 @@ export default function AdminOperationsConsole() {
             { labelEn: 'Console', labelAr: 'مركز العمليات' },
           ]}
         />
+        <AdminOpsQuickLinks />
         <div className="flex items-start justify-between gap-2">
           <div>
             <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
