@@ -764,6 +764,16 @@ function ServiceTile({
           </div>
         </div>
       )}
+
+      {row && userId && (
+        <ServiceBrandsPicker
+          businessServiceId={row.id}
+          businessId={businessId}
+          userId={userId}
+          sectorId={sectorId}
+          isRTL={isRTL}
+        />
+      )}
     </div>
   );
 }
