@@ -89,6 +89,8 @@ const DashboardPrivateSectors = lazyRetry(() => import("./pages/dashboard/Dashbo
 const AdminPrivateSectors = lazyRetry(() => import("./pages/admin/AdminPrivateSectors"));
 const AdminServiceRequests = lazyRetry(() => import("./pages/admin/AdminServiceRequests"));
 const AdminBrands = lazyRetry(() => import("./pages/admin/AdminBrands"));
+const AdminBrandDetail = lazyRetry(() => import("./pages/admin/AdminBrandDetail"));
+const AdminBrandRequests = lazyRetry(() => import("./pages/admin/AdminBrandRequests"));
 const DashboardBrands = lazyRetry(() => import("./pages/dashboard/DashboardBrands"));
 const BrandsCatalog = lazyRetry(() => import("./pages/BrandsCatalog"));
 const BrandDetail = lazyRetry(() => import("./pages/BrandDetail"));
