@@ -22,7 +22,7 @@ export const WorkspaceContextBar: React.FC<WorkspaceContextBarProps> = ({ childr
   return (
     <div
       data-testid="workspace-context-bar"
-      className={`sticky top-14 z-[5] border-b border-border/20 bg-background/85 backdrop-blur-sm [&:not(:has([data-ctxbar-body]>*))]:hidden ${className ?? ''}`}
+      className={`relative z-[1] border-b border-border/20 bg-background/85 backdrop-blur-sm mb-3 [&:not(:has([data-ctxbar-body]>*))]:hidden ${className ?? ''}`}
     >
       <div className="flex items-center gap-2 px-3 sm:px-6 py-1.5">
         <div
