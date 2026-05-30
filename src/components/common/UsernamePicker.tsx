@@ -115,6 +115,10 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
   const [cachedSuggestions, setCachedSuggestions] = useState<string[]>([]);
   const lastChecked = useRef<string>('');
   const aborter = useRef<number | null>(null);
+  // Stabilize onValidChange so the validation effect doesn't re-run
+  // on every parent render (which caused continuous re-checking).
+  const onValidChangeRef = useRef(onValidChange);
+  useEffect(() => { onValidChangeRef.current = onValidChange; }, [onValidChange]);
 
   // Rule checklist memo
   const rules = useMemo(() => ([
@@ -135,7 +139,7 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
     if (serverError && serverError.forValue === value && value) {
       setStatus(serverError.reason === 'taken' ? 'taken' : 'invalid');
       setReason(serverError.reason);
-      onValidChange?.({ value, isValid: false, isAvailable: false });
+      onValidChangeRef.current?.({ value, isValid: false, isAvailable: false });
       if (serverError.reason === 'taken') {
         setCachedSuggestions((prev) => (prev.length ? prev : suggestionsFor(value)));
       }
@@ -147,7 +151,7 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
       setStatus(value ? 'invalid' : 'idle');
       setReason(value ? (local.reason ?? null) : null);
       setCachedSuggestions([]);
-      onValidChange?.({ value, isValid: false, isAvailable: false });
+      onValidChangeRef.current?.({ value, isValid: false, isAvailable: false });
       return;
     }
 
@@ -169,7 +173,7 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
           setStatus('available');
           setReason(null);
           setCachedSuggestions([]);
-          onValidChange?.({ value: candidate, isValid: true, isAvailable: true });
+          onValidChangeRef.current?.({ value: candidate, isValid: true, isAvailable: true });
         } else {
           setStatus(payload.reason === 'taken' ? 'taken' : 'invalid');
           setReason(payload.reason ?? 'taken');
@@ -178,19 +182,19 @@ export const UsernamePicker: React.FC<UsernamePickerProps> = ({
           } else {
             setCachedSuggestions([]);
           }
-          onValidChange?.({ value: candidate, isValid: false, isAvailable: false });
+          onValidChangeRef.current?.({ value: candidate, isValid: false, isAvailable: false });
         }
       } catch {
         setStatus('invalid');
         setReason('network');
-        onValidChange?.({ value: candidate, isValid: false, isAvailable: false });
+        onValidChangeRef.current?.({ value: candidate, isValid: false, isAvailable: false });
       }
     }, FIELD_DEBOUNCE_MS);
 
     return () => {
       if (aborter.current) window.clearTimeout(aborter.current);
     };
-  }, [value, excludeUserId, onValidChange, serverError]);
+  }, [value, excludeUserId, serverError]);
 
   // Prefer cached suggestions (from server failure or last live check); fall back to live for any 'taken'.
   const suggestions = status === 'taken'
