@@ -171,6 +171,22 @@ const AdminServiceRequests: React.FC = () => {
           </div>
         </header>
 
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="py-3 flex items-center justify-between gap-3 flex-wrap">
+            <div className="text-sm flex items-center gap-2">
+              <Inbox className="h-4 w-4 text-primary" />
+              {isRTL
+                ? 'طلبات العلامات التجارية تُدار في قائمة منفصلة.'
+                : 'Brand addition requests are reviewed in a dedicated queue.'}
+            </div>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/admin/brand-requests">
+                {isRTL ? 'فتح طلبات العلامات' : 'Open brand requests'}
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
         {isLoading && (
           <div className="space-y-3"><Skeleton className="h-24 w-full" /><Skeleton className="h-24 w-full" /></div>
         )}
