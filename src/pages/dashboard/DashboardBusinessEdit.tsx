@@ -184,18 +184,16 @@ const DashboardBusinessEdit: React.FC = () => {
   };
 
   const handleAutofillAddress = (data: ReverseGeocodeResult) => {
-    setForm((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        region: data.region_ar || prev.region,
-        region_en: data.region_en || prev.region_en,
-        district: data.district_ar || prev.district,
-        district_en: data.district_en || prev.district_en,
-        address: data.address_ar || prev.address,
-        address_en: data.address_en || prev.address_en,
-      };
-    });
+    setAddress((prev) => ({
+      ...prev,
+      region: data.region_ar || prev.region,
+      region_en: data.region_en || prev.region_en,
+      district: data.district_ar || prev.district,
+      district_en: data.district_en || prev.district_en,
+      address: data.address_ar || prev.address,
+      address_en: data.address_en || prev.address_en,
+      address_manual: true,
+    }));
     setDirty(true);
   };
 
@@ -264,14 +262,10 @@ const DashboardBusinessEdit: React.FC = () => {
         customer_service_phone: form.customer_service_phone || null,
         email: form.email || null, website: form.website || null,
         contact_person: form.contact_person || null,
-        country_id: form.country_id || null, city_id: form.city_id || null,
-        region: form.region || null, region_en: form.region_en || null,
-        district: form.district || null, district_en: form.district_en || null,
-        address: form.address || null, address_en: form.address_en || null,
-        street_name: form.street_name || null, street_name_en: form.street_name_en || null,
-        building_number: form.building_number || null, additional_number: form.additional_number || null,
+        country_id: form.country_id || null,
+        // Address columns are intentionally OMITTED — written via
+        // `upsertPrimaryAddress` and mirrored by the legacy sync trigger.
         latitude: form.latitude ?? null, longitude: form.longitude ?? null,
-        short_address: (form.short_address ?? shortAddress)?.trim().toUpperCase() || null,
         floor_number: form.floor_number || null,
         unit_number: form.unit_number || null,
         unit_type: form.unit_type || null,
@@ -289,6 +283,35 @@ const DashboardBusinessEdit: React.FC = () => {
       };
       const { error: updateError } = await updateBusinessById({ id: form.id, values: payload });
       if (updateError) throw updateError;
+
+      // Persist the National Address (single write path).
+      const hasAddress = !!(
+        address.short_address || address.region || address.district || address.city_id
+        || address.street_name || address.building_number || address.address
+      );
+      if (hasAddress) {
+        const { error: addrErr } = await upsertPrimaryAddress({
+          ownerType: 'business', ownerId: form.id,
+          addressType: 'national_address',
+          fields: {
+            short_address: (address.short_address ?? '').trim().toUpperCase() || null,
+            region: address.region ?? null, region_en: address.region_en ?? null,
+            city_id: address.city_id ?? null,
+            country_id: form.country_id ?? null,
+            district: address.district ?? null, district_en: address.district_en ?? null,
+            street_name: address.street_name ?? null, street_name_en: address.street_name_en ?? null,
+            building_number: address.building_number ?? null,
+            additional_number: address.additional_number ?? null,
+            post_code: address.post_code ?? null,
+            address: address.address ?? null, address_en: address.address_en ?? null,
+            latitude: form.latitude ?? null, longitude: form.longitude ?? null,
+            source: address.address_manual ? 'spl' : 'manual',
+          },
+        });
+        if (addrErr) throw addrErr;
+        setAddressInitial(address);
+      }
+
       if (!hasErrors) {
         toast.success(t(isRTL, 'تم حفظ التعديلات بنجاح', 'Changes saved successfully'));
       }
