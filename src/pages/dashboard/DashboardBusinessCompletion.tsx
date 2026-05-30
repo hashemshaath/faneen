@@ -327,9 +327,8 @@ const DashboardBusinessCompletion: React.FC = () => {
   })();
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container px-4 py-8 sm:py-12 max-w-6xl">
+    <DashboardLayout>
+      <main className="container px-4 py-6 sm:py-8 max-w-6xl">
         {/* Page header */}
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
