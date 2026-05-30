@@ -311,6 +311,39 @@ const DashboardBusinessCompletion: React.FC = () => {
     ? new Date(business.updated_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' })
     : null;
 
+  // Recent activity — latest contracts & service requests for this business.
+  const { data: recent } = useQuery({
+    queryKey: ['business-recent-activity', business?.id],
+    enabled: !!business?.id,
+    staleTime: 60_000,
+    queryFn: async () => {
+      if (!business?.id) return { contracts: [], requests: [] };
+      const [contractsRes, requestsRes] = await Promise.all([
+        supabase
+          .from('contracts')
+          .select('id, contract_number, title_ar, title_en, status, total_amount, currency_code, created_at')
+          .eq('business_id', business.id)
+          .order('created_at', { ascending: false })
+          .limit(4),
+        supabase
+          .from('lead_requests')
+          .select('id, ref_id, subject, status, created_at')
+          .eq('business_id', business.id)
+          .order('created_at', { ascending: false })
+          .limit(4),
+      ]);
+      return {
+        contracts: contractsRes.data ?? [],
+        requests: requestsRes.data ?? [],
+      };
+    },
+  });
+
+  const fmtDate = (iso?: string | null) =>
+    iso ? new Date(iso).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { day: '2-digit', month: 'short' }) : '';
+  const fmtMoney = (n?: number | null, c?: string | null) =>
+    n != null ? `${Number(n).toLocaleString(isRTL ? 'ar-SA' : 'en-US')} ${c ?? 'SAR'}` : '';
+
   // Approval timeline steps — purely visual.
   const timelineSteps: Array<{ key: ApprovalStatus | 'start'; ar: string; en: string }> = [
     { key: 'draft', ar: 'مسودة', en: 'Draft' },
@@ -712,6 +745,97 @@ const DashboardBusinessCompletion: React.FC = () => {
                     ? 'أضف الرقم الموحّد لفتح شارة "موثّق" بعد المراجعة.'
                     : 'Add the unified number to unlock the "Verified" badge after review.'}</li>
                 </ul>
+              </section>
+
+              {/* Recent activity — latest contracts & requests */}
+              <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Contracts */}
+                <article className="rounded-2xl border border-border bg-card p-5">
+                  <header className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      <p className="text-sm font-semibold text-foreground">
+                        {isRTL ? 'آخر العقود' : 'Latest contracts'}
+                      </p>
+                    </div>
+                    <Link to="/dashboard/contracts" className="text-[11px] text-primary inline-flex items-center gap-0.5 hover:gap-1.5 transition-all">
+                      {isRTL ? 'عرض الكل' : 'View all'}
+                      <ChevronRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
+                    </Link>
+                  </header>
+                  {recent?.contracts?.length ? (
+                    <ul className="space-y-2">
+                      {recent.contracts.map((c) => (
+                        <li key={c.id}>
+                          <Link
+                            to={`/dashboard/contracts/${c.id}`}
+                            className="flex items-center justify-between gap-2 px-2 py-2 rounded-lg hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold text-foreground truncate" dir="auto">
+                                {(isRTL ? c.title_ar : c.title_en) || c.title_ar || c.title_en || c.contract_number}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground tech-content font-mono">
+                                {c.contract_number} · {fmtDate(c.created_at)}
+                              </p>
+                            </div>
+                            <span className="text-[11px] font-semibold text-foreground tech-content shrink-0">
+                              {fmtMoney(c.total_amount as number, c.currency_code)}
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-muted-foreground text-center py-4">
+                      {isRTL ? 'لا توجد عقود بعد.' : 'No contracts yet.'}
+                    </p>
+                  )}
+                </article>
+
+                {/* Service requests */}
+                <article className="rounded-2xl border border-border bg-card p-5">
+                  <header className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Inbox className="w-4 h-4 text-primary" />
+                      <p className="text-sm font-semibold text-foreground">
+                        {isRTL ? 'آخر الطلبات' : 'Latest requests'}
+                      </p>
+                    </div>
+                    <Link to="/dashboard/leads" className="text-[11px] text-primary inline-flex items-center gap-0.5 hover:gap-1.5 transition-all">
+                      {isRTL ? 'عرض الكل' : 'View all'}
+                      <ChevronRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
+                    </Link>
+                  </header>
+                  {recent?.requests?.length ? (
+                    <ul className="space-y-2">
+                      {recent.requests.map((r) => (
+                        <li key={r.id}>
+                          <Link
+                            to={`/dashboard/leads/${r.id}`}
+                            className="flex items-center justify-between gap-2 px-2 py-2 rounded-lg hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold text-foreground truncate" dir="auto">
+                                {r.subject || (isRTL ? 'طلب بدون عنوان' : 'Untitled request')}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground tech-content font-mono">
+                                {r.ref_id ?? ''} · {fmtDate(r.created_at)}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0">
+                              {r.status ?? '—'}
+                            </Badge>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-muted-foreground text-center py-4">
+                      {isRTL ? 'لا توجد طلبات بعد.' : 'No requests yet.'}
+                    </p>
+                  )}
+                </article>
               </section>
             </div>
           </div>
