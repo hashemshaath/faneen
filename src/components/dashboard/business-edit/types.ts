@@ -47,6 +47,12 @@ export interface BusinessRow {
   latitude: number | null;
   longitude: number | null;
 
+  // Approved business-address extras (added 2026-05)
+  short_address: string | null;
+  floor_number: string | null;
+  unit_number: string | null;
+  unit_type: string | null;
+
   // Legal
   national_id: string | null;        // CR
   unified_number: string | null;
