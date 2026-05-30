@@ -271,6 +271,23 @@ export interface ReviewBrandEquivalenceInput {
 }
 
 /**
+ * RFQ-BRAND-PICKER-1F — map opaque Postgres errors raised by the
+ * `tg_psqi_validate_brand_review_transition` trigger to a stable code so
+ * callers / UI never render raw DB messages.
+ */
+export function mapBrandReviewError(err: unknown): unknown {
+  if (!err || typeof err !== 'object') return err;
+  const msg = (err as { message?: string }).message ?? '';
+  if (/Invalid brand_review_status transition/i.test(msg)) {
+    return new Error('brand_review_transition_invalid');
+  }
+  if (/check_violation/i.test(msg) && /brand_review/i.test(msg)) {
+    return new Error('brand_review_transition_invalid');
+  }
+  return err;
+}
+
+/**
  * RFQ-BRAND-PICKER-1E — manager/admin equivalence review.
  * The DB trigger enforces that the item is currently `pending` (or already
  * approved/rejected → must be re-set to `pending` via the helper above before
