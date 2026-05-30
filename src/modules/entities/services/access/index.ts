@@ -12,3 +12,5 @@ export { listEntityAccessRequests } from './listEntityAccessRequests';
 export type { ListEntityAccessRequestsOptions, EntityAccessRequestListRow } from './listEntityAccessRequests';
 export { reviewEntityAccessRequest } from './reviewEntityAccessRequest';
 export type { ReviewEntityAccessRequestOptions } from './reviewEntityAccessRequest';
+export { countEntityAccessRequests } from './countEntityAccessRequests';
+export type { AccessRequestStatusCounts } from './countEntityAccessRequests';
