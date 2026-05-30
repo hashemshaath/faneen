@@ -485,7 +485,7 @@ export default function AdminProviderReview() {
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
           {/* List */}
-          <Card>
+          <Card className="lg:max-h-[calc(100vh-260px)] lg:overflow-hidden lg:flex lg:flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">
                 {isRTL ? 'القائمة' : 'List'}{' '}
@@ -494,7 +494,7 @@ export default function AdminProviderReview() {
                 </Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 lg:overflow-y-auto lg:flex-1">
               {isLoading && Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
@@ -507,6 +507,7 @@ export default function AdminProviderReview() {
               {filtered.map((r) => {
                 const status = (r.approval_status ?? 'draft') as ApprovalStatus;
                 const active = selectedId === r.id;
+                const completion = r.onboarding_completion ?? 0;
                 return (
                   <button
                     key={r.id}
@@ -530,10 +531,19 @@ export default function AdminProviderReview() {
                             {STATUSES.find((s) => s.value === status)?.[language === 'ar' ? 'ar' : 'en']}
                           </Badge>
                         </div>
-                        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground tech-content">
+                        <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground tech-content">
                           {r.ref_id && <span className="font-mono">{r.ref_id}</span>}
-                          {r.username && <span>@{r.username}</span>}
-                          <span>{r.onboarding_completion ?? 0}%</span>
+                          {r.username && <span className="truncate">@{r.username}</span>}
+                          {r.submitted_at && (
+                            <span className="inline-flex items-center gap-0.5">
+                              <Clock className="h-2.5 w-2.5" />
+                              {new Date(r.submitted_at).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <Progress value={completion} className="h-1 flex-1" />
+                          <span className="text-[10px] tabular-nums tech-content text-muted-foreground">{completion}%</span>
                         </div>
                       </div>
                     </div>
@@ -544,7 +554,7 @@ export default function AdminProviderReview() {
           </Card>
 
           {/* Detail */}
-          <Card>
+          <Card className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-260px)] lg:overflow-y-auto">
             {!selected ? (
               <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center text-sm text-muted-foreground">
                 <Eye className="h-8 w-8 opacity-50" />
