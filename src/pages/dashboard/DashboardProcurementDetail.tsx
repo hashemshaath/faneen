@@ -230,6 +230,84 @@ export default function DashboardProcurementDetail() {
     [rfqs, request?.business_id],
   );
 
+  // RFQ-BRAND-PICKER-1D — resolve approved-brand labels for items in view.
+  useEffect(() => {
+    const ids = Array.from(
+      new Set(rfqItems.map((i) => i.requested_brand_id).filter((x): x is string => Boolean(x))),
+    );
+    const missing = ids.filter((id) => !brandLabels[id]);
+    if (missing.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = (await listApprovedBrandsByIds(missing)) as Array<{
+          id: string;
+          ref_id: string | null;
+          name_ar: string;
+          name_en: string;
+          slug: string;
+        }>;
+        if (cancelled) return;
+        setBrandLabels((prev) => {
+          const next = { ...prev };
+          for (const r of rows) {
+            next[r.id] = {
+              name_ar: r.name_ar,
+              name_en: r.name_en,
+              ref_id: r.ref_id ?? null,
+              slug: r.slug,
+            };
+          }
+          return next;
+        });
+      } catch {
+        /* swallow — UI falls back to "Brand unavailable" */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [rfqItems, brandLabels]);
+
+  // RFQ-BRAND-PICKER-1D — patch a line item's brand fields.
+  const onPatchItemBrand = useCallback(
+    async (
+      item: ProcurementRfqItemRow,
+      patch: { requested_brand_id?: string | null; brand_lock?: BrandLock | null },
+    ) => {
+      if (!activeRfq || activeRfq.status !== 'draft') return;
+      setRfqItems((prev) =>
+        prev.map((it) =>
+          it.id === item.id
+            ? {
+                ...it,
+                requested_brand_id:
+                  patch.requested_brand_id === undefined
+                    ? it.requested_brand_id
+                    : patch.requested_brand_id,
+                brand_lock:
+                  patch.requested_brand_id === null
+                    ? null
+                    : patch.brand_lock === undefined
+                      ? it.brand_lock
+                      : patch.brand_lock,
+              }
+            : it,
+        ),
+      );
+      const { error: err } = await updateRfqItem(item.id, patch);
+      if (err) {
+        setError(tx.errLoad);
+        // Reload items to reset to server state.
+        if (activeRfqId) {
+          const { data: ri } = await listRfqItemsByRfq(activeRfqId);
+          setRfqItems(ri ?? []);
+        }
+      }
+    },
+    [activeRfq, activeRfqId, tx.errLoad],
+  );
+
   const onCreateRfq = useCallback(async () => {
     if (!request || !user?.id) return;
     setBusy(true);
