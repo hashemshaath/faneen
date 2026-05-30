@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { KpiStrip } from "@/components/dashboard/KpiCard";
 import { DiagnosticsCard } from "@/components/dashboard/DiagnosticsCard";
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import {
   createProcurementRequest,
   listProcurementRequests,
@@ -184,7 +185,32 @@ export default function DashboardProcurement() {
       })()}
 
       {items.length === 0 && !loading ? (
-        <p className="text-muted-foreground text-center py-10">{tx.empty}</p>
+        <DashboardEmptyState
+          data-testid="procurement-empty"
+          icon={<ShoppingCart className="h-8 w-8" aria-hidden />}
+          title={tx.empty}
+          description={
+            isRTL
+              ? "ابدأ بإنشاء طلب شراء جديد، أو حوّل عناصر BOQ من أمر عمل قائم إلى طلب عروض."
+              : "Create your first purchase request, or convert BOQ items from an existing work order into an RFQ."
+          }
+          primaryAction={
+            <Button size="sm" onClick={() => void load()} disabled={loading}>
+              <RefreshCw className="h-4 w-4" />
+              <span className="ms-2">{tx.refresh}</span>
+            </Button>
+          }
+          secondaryAction={
+            <Link
+              to="/dashboard/work-orders"
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {isRTL ? "الذهاب إلى أوامر العمل" : "Go to work orders"}
+            </Link>
+          }
+          helpHref="/dashboard/help"
+          helpLabel={isRTL ? "مركز المساعدة" : "Help Center"}
+        />
       ) : (
         <ul className="space-y-2">
           {items.map((it) => (
