@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -9,9 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Bi } from '@/components/common/Bilingual';
-import { ArrowLeft, Check, Trophy, Clock, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Check, Trophy, Clock, MessageSquare, Radio } from 'lucide-react';
 import { toast } from 'sonner';
 import { getRfq, listQuotesForRfq, acceptQuote } from '@/modules/rfq/services';
+import { supabase } from '@/integrations/supabase/client';
 
 type SortKey = 'amount_asc' | 'amount_desc' | 'delivery_asc' | 'newest';
 
@@ -28,6 +29,24 @@ const DashboardRfqDetail: React.FC = () => {
     queryFn: () => listQuotesForRfq(id!),
     enabled: !!id,
   });
+
+  useEffect(() => {
+    if (!id) return;
+    const channel = supabase
+      .channel(`rfq-quotes-${id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'rfq_quotes', filter: `rfq_id=eq.${id}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ['rfq-quotes', id] });
+          qc.invalidateQueries({ queryKey: ['rfq', id] });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, qc]);
 
   const acceptMut = useMutation({
     mutationFn: (quoteId: string) => acceptQuote(quoteId, id!),
@@ -69,6 +88,11 @@ const DashboardRfqDetail: React.FC = () => {
           <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
           <Bi ar="عودة لطلباتي" en="Back to my RFQs" />
         </Link>
+
+        <div className="inline-flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400">
+          <Radio className="w-3 h-3 animate-pulse" />
+          <Bi ar="التحديثات لحظية" en="Live updates" />
+        </div>
 
         {!rfq ? (
           <Skeleton className="h-32 rounded-xl" />
