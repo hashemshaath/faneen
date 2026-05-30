@@ -607,9 +607,70 @@ function ActivitySessionsSection({ businessId }: { businessId: string }) {
   );
 }
 
+/** Hero KPIs strip — pulls real counts from business_staff + invitations. */
+function StaffKpiStrip({ businessId }: { businessId: string }) {
+  const bi = useBi();
+
+  const { data: staffStats } = useQuery({
+    queryKey: ['staff-center-kpi-staff', businessId],
+    queryFn: async () => {
+      const { data } = await listBusinessStaffByBusiness<{
+        id: string; is_active: boolean; role: string; is_primary_manager: boolean;
+      }>({
+        businessId,
+        select: 'id, is_active, role, is_primary_manager',
+        includeInactive: true,
+      });
+      const rows = (data ?? []) as Array<{ is_active: boolean; role: string; is_primary_manager: boolean }>;
+      return {
+        total: rows.length,
+        active: rows.filter((r) => r.is_active).length,
+        frozen: rows.filter((r) => !r.is_active).length,
+        owners: rows.filter((r) => r.role === 'owner').length,
+        primary: rows.find((r) => r.is_primary_manager) ? 1 : 0,
+      };
+    },
+  });
+
+  const { data: invitesPending = 0 } = useQuery({
+    queryKey: ['staff-center-kpi-invites', businessId],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('business_staff_invitations')
+        .select('id', { count: 'exact', head: true })
+        .eq('business_id', businessId)
+        .eq('status', 'pending');
+      return count ?? 0;
+    },
+  });
+
+  const cards = [
+    { icon: Users,     label: bi('إجمالي الفريق', 'Total members'),       value: staffStats?.total ?? '—',  tone: 'text-primary' },
+    { icon: UserCheck, label: bi('نشِطون', 'Active'),                      value: staffStats?.active ?? '—', tone: 'text-emerald-600' },
+    { icon: XCircle,   label: bi('موقوفون', 'Frozen'),                     value: staffStats?.frozen ?? '—', tone: 'text-muted-foreground' },
+    { icon: Crown,     label: bi('مالك / مدير أساسي', 'Owner / primary'),  value: staffStats?.primary ?? 0,  tone: 'text-amber-600' },
+    { icon: Mail,      label: bi('دعوات معلّقة', 'Pending invites'),       value: invitesPending,            tone: 'text-info' },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+      {cards.map((c, i) => (
+        <div key={i} className="rounded-xl border border-border bg-card p-3 hover-lift">
+          <div className={`flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground`}>
+            <c.icon className={`h-3.5 w-3.5 ${c.tone}`} />
+            {c.label}
+          </div>
+          <div className="mt-1 text-2xl font-bold tracking-tight tech-content">{c.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const DashboardStaffCenter: React.FC = () => {
   useNoIndex();
   const { language } = useLanguage();
+  const isRTL = language === 'ar';
   const bi = useBi();
   const { user } = useAuth();
   const { businessId, loading } = useManagedBusinessId();
@@ -617,20 +678,57 @@ const DashboardStaffCenter: React.FC = () => {
   const canStaffManage = useCan('staff.manage');
   const canEntityManage = useCan('entity.manage');
   const canView = canStaffView || canStaffManage || canEntityManage;
+  const canManage = canStaffManage || canEntityManage;
+
+  // Resolve business owner + name for the consolidated representatives section.
+  const { data: businessMeta } = useQuery({
+    queryKey: ['staff-center-business-meta', businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('businesses')
+        .select('id, name_ar, name_en, user_id')
+        .eq('id', businessId!)
+        .maybeSingle();
+      return data as { id: string; name_ar: string | null; name_en: string | null; user_id: string } | null;
+    },
+  });
 
   return (
     <DashboardLayout>
-      <div className="mx-auto w-full max-w-5xl space-y-6 p-4 lg:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-        <header className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">
-            {bi('الموظفون والفرق', 'Staff & Teams')}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {bi(
-              'إدارة الموظفين والفرق والوصول المفوّض داخل المنشأة. الصلاحيات الفعلية تُطبَّق من قِبَل الخادم.',
-              'Manage staff, teams and delegated access for this entity. Authoritative permissions are enforced server-side.',
-            )}
-          </p>
+      <div className="mx-auto w-full max-w-6xl space-y-5 p-4 lg:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+        {/* Hero header */}
+        <header className="rounded-2xl border border-border bg-gradient-to-br from-primary/5 via-background to-background p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
+                <UserCog className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight">
+                  {bi('مركز الموظفين والصلاحيات', 'Staff & Permissions Center')}
+                </h1>
+                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                  {bi(
+                    'مكان واحد لإدارة جميع الموظفين والمفوّضين، تعيين الأدوار، تحديد ما يمكنهم رؤيته وإضافته وتعديله في كل قسم، إيقاف أو تجميد أو حذف، ونقل صلاحيات المالك.',
+                    'A single place to manage all staff and representatives, assign roles, control what each can view, add and edit per section, freeze or remove access, and transfer owner privileges.',
+                  )}
+                </p>
+                {businessMeta && (
+                  <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Building2 className="h-3.5 w-3.5" />
+                    <span className="font-medium text-foreground" dir="auto">
+                      {isRTL ? (businessMeta.name_ar ?? businessMeta.name_en) : (businessMeta.name_en ?? businessMeta.name_ar)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <Badge variant="outline" className={canManage ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700' : 'border-muted-foreground/30 bg-muted text-muted-foreground'}>
+              <ShieldCheck className="me-1 h-3.5 w-3.5" />
+              {canManage ? bi('وضع الإدارة', 'Manage mode') : bi('عرض فقط', 'Read only')}
+            </Badge>
+          </div>
         </header>
 
         {loading ? (
@@ -648,13 +746,68 @@ const DashboardStaffCenter: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4">
-            <StaffOverview businessId={businessId} />
-            <TeamsSection businessId={businessId} userId={user!.id} />
-            <DelegatedAccessSection businessId={businessId} userId={user!.id} />
-            <ActivitySessionsSection businessId={businessId} />
-            <AccessTimeline businessId={businessId} />
-          </div>
+          <>
+            <StaffKpiStrip businessId={businessId} />
+
+            <Tabs defaultValue="members" className="w-full">
+              <TabsList className="w-full justify-start overflow-x-auto rounded-xl bg-muted/50 p-1">
+                <TabsTrigger value="members" className="gap-1.5">
+                  <Users className="h-4 w-4" />
+                  {bi('الفريق والصلاحيات', 'Members & permissions')}
+                </TabsTrigger>
+                <TabsTrigger value="ownership" className="gap-1.5">
+                  <Crown className="h-4 w-4" />
+                  {bi('المالك والإسناد', 'Ownership & transfer')}
+                </TabsTrigger>
+                <TabsTrigger value="teams" className="gap-1.5">
+                  <Layers className="h-4 w-4" />
+                  {bi('الفرق', 'Teams')}
+                </TabsTrigger>
+                <TabsTrigger value="delegated" className="gap-1.5">
+                  <ShieldCheck className="h-4 w-4" />
+                  {bi('الوصول المفوّض', 'Delegated access')}
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="gap-1.5">
+                  <Activity className="h-4 w-4" />
+                  {bi('النشاط والسجل', 'Activity & log')}
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Unified members + permissions surface */}
+              <TabsContent value="members" className="mt-4 space-y-4">
+                {businessMeta ? (
+                  <RepresentativesSection
+                    businessId={businessMeta.id}
+                    ownerUserId={businessMeta.user_id}
+                    isRTL={isRTL}
+                    businessNameAr={businessMeta.name_ar}
+                    businessNameEn={businessMeta.name_en}
+                    canManageOverride={canManage}
+                  />
+                ) : (
+                  <Skeleton className="h-40 w-full" />
+                )}
+              </TabsContent>
+
+              {/* Ownership / primary-manager transfer surface */}
+              <TabsContent value="ownership" className="mt-4 space-y-4">
+                <StaffOverview businessId={businessId} />
+              </TabsContent>
+
+              <TabsContent value="teams" className="mt-4 space-y-4">
+                <TeamsSection businessId={businessId} userId={user!.id} />
+              </TabsContent>
+
+              <TabsContent value="delegated" className="mt-4 space-y-4">
+                <DelegatedAccessSection businessId={businessId} userId={user!.id} />
+              </TabsContent>
+
+              <TabsContent value="activity" className="mt-4 space-y-4">
+                <ActivitySessionsSection businessId={businessId} />
+                <AccessTimeline businessId={businessId} />
+              </TabsContent>
+            </Tabs>
+          </>
         )}
       </div>
     </DashboardLayout>
