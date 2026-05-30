@@ -154,6 +154,7 @@ const AdminContracts = lazyRetry(() => import("./pages/admin/AdminContracts"));
 const AdminContractCreate = lazyRetry(() => import("./pages/admin/AdminContractCreate"));
 const AdminReports = lazyRetry(() => import("./pages/admin/AdminReports"));
 const AdminKpis = lazyRetry(() => import("./pages/admin/AdminKpis"));
+const AdminAuditLog = lazyRetry(() => import("./pages/admin/AdminAuditLog"));
 const DashboardRfq = lazyRetry(() => import("./pages/dashboard/DashboardRfq"));
 const DashboardRfqInbox = lazyRetry(() => import("./pages/dashboard/DashboardRfqInbox"));
 const DashboardLoyalty = lazyRetry(() => import("./pages/dashboard/DashboardLoyalty"));
@@ -409,6 +410,7 @@ const AppRoutes = () => (
           <Route path="/admin/contracts/create" element={<ProtectedRoute requireAdmin><AdminContractCreate /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute requireAdmin><AdminReports /></ProtectedRoute>} />
           <Route path="/admin/kpis" element={<ProtectedRoute requireAdmin><AdminKpis /></ProtectedRoute>} />
+          <Route path="/admin/audit-log" element={<ProtectedRoute requireAdmin><AdminAuditLog /></ProtectedRoute>} />
           <Route path="/dashboard/rfq" element={<ProtectedRoute><DashboardRfq /></ProtectedRoute>} />
           <Route path="/dashboard/rfq/inbox" element={<ProtectedRoute><DashboardRfqInbox /></ProtectedRoute>} />
           <Route path="/dashboard/loyalty" element={<ProtectedRoute><DashboardLoyalty /></ProtectedRoute>} />
