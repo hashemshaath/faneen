@@ -38,6 +38,7 @@ import { AuditLogPanel } from '@/components/dashboard/business-edit/AuditLogPane
 import { BusinessInternalNotesCard } from '@/components/business/BusinessInternalNotesCard';
 import { validateBusinessForm, issuesByKey, errorCount } from '@/components/dashboard/business-edit/validation';
 import { ValidationBanner, FieldError } from '@/components/dashboard/business-edit/ValidationBanner';
+import { FieldHint } from '@/components/dashboard/business-edit/FieldHint';
 import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
 import { ProviderGrowthCard } from '@/components/growth/ProviderGrowthCard';
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
@@ -520,6 +521,11 @@ const DashboardBusinessEdit: React.FC = () => {
               onChangeAr={(v) => update('name_ar', v)} onChangeEn={(v) => update('name_en', v)}
               placeholderAr="مثال: شركة قطاعات الصناعية" placeholderEn="e.g. Qitaat Industrial Co."
             />
+            <FieldHint>
+              {t(isRTL,
+                'اكتب الاسم التجاري المسجَّل بالضبط كما يظهر في السجل التجاري. تجنّب الاختصارات أو الأسماء التسويقية.',
+                'Use the exact registered trade name from your CR. Avoid abbreviations or marketing nicknames.')}
+            </FieldHint>
             <div>
               <UsernamePicker
                 isRTL={isRTL}
@@ -530,6 +536,11 @@ const DashboardBusinessEdit: React.FC = () => {
                 excludeUserId={user?.id ?? null}
                 placeholder="my-business"
               />
+              <FieldHint>
+                {t(isRTL,
+                  'حروف إنجليزية صغيرة وأرقام وشرطة فقط. سيظهر كرابط دائم: qitaat.com/your-name — لا يمكن تغييره كثيرًا.',
+                  'Lowercase letters, numbers and hyphens only. Becomes your permanent URL: qitaat.com/your-name — avoid frequent changes.')}
+              </FieldHint>
             </div>
             <div className={grid2}>
               <div>
@@ -540,6 +551,11 @@ const DashboardBusinessEdit: React.FC = () => {
                   onRemove={() => update('logo_url', null)}
                   aspectRatio="square" className="mt-1"
                   placeholder={t(isRTL, 'ارفع شعار المنشأة', 'Upload business logo')} />
+                <FieldHint>
+                  {t(isRTL,
+                    'مربع 512×512 بكسل على الأقل، خلفية واضحة، PNG أو WebP. تجنّب الصور المنسوخة من وسائل التواصل.',
+                    'Square ≥ 512×512px, clean background, PNG or WebP. Avoid screenshots from social media.')}
+                </FieldHint>
               </div>
               <div>
                 <Label className={fieldLabel}>{t(isRTL, 'صورة الغلاف', 'Cover image')}</Label>
@@ -549,6 +565,11 @@ const DashboardBusinessEdit: React.FC = () => {
                   onRemove={() => update('cover_url', null)}
                   aspectRatio="video" className="mt-1"
                   placeholder={t(isRTL, 'ارفع صورة الغلاف', 'Upload cover image')} />
+                <FieldHint>
+                  {t(isRTL,
+                    'نسبة 16:9، يفضّل صورة لمصنعك أو معرضك. لا تضع رقم هاتف أو نصوص داخل الصورة.',
+                    '16:9 ratio, ideally a photo of your workshop or showroom. Don\'t embed phone numbers or text in the image.')}
+                </FieldHint>
               </div>
             </div>
           </CardContent>
@@ -565,10 +586,20 @@ const DashboardBusinessEdit: React.FC = () => {
               label={{ ar: 'نبذة مختصرة', en: 'Short description' }}
               valueAr={form.short_description_ar ?? ''} valueEn={form.short_description_en ?? ''}
               onChangeAr={(v) => update('short_description_ar', v)} onChangeEn={(v) => update('short_description_en', v)} />
+            <FieldHint>
+              {t(isRTL,
+                'سطر واحد يظهر في نتائج البحث والبطاقات. ركّز على تخصصك (مثل: تصنيع وتركيب واجهات الألمنيوم).',
+                'A single line shown in search results and cards. Lead with your specialty (e.g. Aluminum facade fabrication & installation).')}
+            </FieldHint>
             <BilingualField isRTL={isRTL} multiline rows={6}
               label={{ ar: 'الوصف الكامل', en: 'Full description' }}
               valueAr={form.description_ar ?? ''} valueEn={form.description_en ?? ''}
               onChangeAr={(v) => update('description_ar', v)} onChangeEn={(v) => update('description_en', v)} />
+            <FieldHint>
+              {t(isRTL,
+                'اشرح خبرتك وأهم المشاريع والقطاعات التي تخدمها. لا تكرّر اسم المنشأة ولا تضع روابط خارجية.',
+                'Describe your expertise, flagship projects, and sectors served. Don\'t repeat your business name or paste external links.')}
+            </FieldHint>
           </CardContent>
         </Card>
 
@@ -591,6 +622,11 @@ const DashboardBusinessEdit: React.FC = () => {
               <div>
                 <PhoneField value={parsePhoneValue(form.mobile)} onChange={(v) => update('mobile', toE164(v))} label={t(isRTL, 'الجوال', 'Mobile')} optional />
                 <FieldError issue={issueMap.mobile} isRTL={isRTL} />
+                <FieldHint>
+                  {t(isRTL,
+                    'رقم نشط على واتساب يفضَّل. سيظهر في زر "تواصل" للعملاء.',
+                    'Preferably WhatsApp-enabled. Shown to customers in the "Contact" button.')}
+                </FieldHint>
               </div>
               <div>
                 <PhoneField value={parsePhoneValue(form.customer_service_phone)} onChange={(v) => update('customer_service_phone', toE164(v))} label={t(isRTL, 'هاتف خدمة العملاء', 'Customer service phone')} optional />
@@ -598,10 +634,20 @@ const DashboardBusinessEdit: React.FC = () => {
               </div>
               <div><Label className={fieldLabel}><Mail className="w-3 h-3 inline me-1" />{t(isRTL, 'البريد الإلكتروني', 'Email')}</Label>
                 <Input type="email" dir="ltr" className="mt-1" value={form.email ?? ''} onChange={(e) => update('email', e.target.value)} />
-                <FieldError issue={issueMap.email} isRTL={isRTL} /></div>
+                <FieldError issue={issueMap.email} isRTL={isRTL} />
+                <FieldHint>
+                  {t(isRTL,
+                    'بريد العمل العام (مثل info@yourcompany.com). تجنّب بريد شخصي على Gmail/Hotmail.',
+                    'A public business email (e.g. info@yourcompany.com). Avoid personal Gmail/Hotmail addresses.')}
+                </FieldHint>
+              </div>
               <div><Label className={fieldLabel}><Globe className="w-3 h-3 inline me-1" />{t(isRTL, 'الموقع الإلكتروني', 'Website')}</Label>
                 <Input type="url" dir="ltr" className="mt-1" value={form.website ?? ''} onChange={(e) => update('website', e.target.value)} placeholder="https://" />
-                <FieldError issue={issueMap.website} isRTL={isRTL} /></div>
+                <FieldError issue={issueMap.website} isRTL={isRTL} />
+                <FieldHint>
+                  {t(isRTL, 'اختياري — يبدأ بـ https:// ويعمل على متصفح حقيقي.', 'Optional — must start with https:// and load in a real browser.')}
+                </FieldHint>
+              </div>
               <div><Label className={fieldLabel}><User className="w-3 h-3 inline me-1" />{t(isRTL, 'الشخص المسؤول للتواصل', 'Public contact person')}</Label>
                 <Input dir="auto" className="mt-1" value={form.contact_person ?? ''} onChange={(e) => update('contact_person', e.target.value)} /></div>
             </div>
@@ -628,6 +674,11 @@ const DashboardBusinessEdit: React.FC = () => {
                 <Input type="email" dir="ltr" className="mt-1" value={form.account_manager_email ?? ''} onChange={(e) => update('account_manager_email', e.target.value)} />
                 <FieldError issue={issueMap.account_manager_email} isRTL={isRTL} /></div>
             </div>
+            <FieldHint>
+              {t(isRTL,
+                'هذه البيانات للتواصل الداخلي مع فريق قِطاعات فقط — لا تظهر للعملاء على الصفحة العامة.',
+                'Used only for internal contact by the Qitaat team — not shown publicly on your profile.')}
+            </FieldHint>
           </CardContent>
         </Card>
 
