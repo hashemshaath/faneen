@@ -2294,6 +2294,7 @@ export type Database = {
           district_en: string | null
           email: string | null
           entity_type: string | null
+          floor_number: string | null
           id: string
           is_active: boolean
           is_demo: boolean
@@ -2320,6 +2321,7 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           sectors: string[]
+          short_address: string | null
           short_description_ar: string | null
           short_description_en: string | null
           street_name: string | null
@@ -2328,6 +2330,8 @@ export type Database = {
           submitted_at: string | null
           timezone: string | null
           unified_number: string | null
+          unit_number: string | null
+          unit_type: string | null
           updated_at: string
           user_id: string
           username: string
@@ -2377,6 +2381,7 @@ export type Database = {
           district_en?: string | null
           email?: string | null
           entity_type?: string | null
+          floor_number?: string | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
@@ -2403,6 +2408,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           sectors?: string[]
+          short_address?: string | null
           short_description_ar?: string | null
           short_description_en?: string | null
           street_name?: string | null
@@ -2411,6 +2417,8 @@ export type Database = {
           submitted_at?: string | null
           timezone?: string | null
           unified_number?: string | null
+          unit_number?: string | null
+          unit_type?: string | null
           updated_at?: string
           user_id: string
           username: string
@@ -2460,6 +2468,7 @@ export type Database = {
           district_en?: string | null
           email?: string | null
           entity_type?: string | null
+          floor_number?: string | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
@@ -2486,6 +2495,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           sectors?: string[]
+          short_address?: string | null
           short_description_ar?: string | null
           short_description_en?: string | null
           street_name?: string | null
@@ -2494,6 +2504,8 @@ export type Database = {
           submitted_at?: string | null
           timezone?: string | null
           unified_number?: string | null
+          unit_number?: string | null
+          unit_type?: string | null
           updated_at?: string
           user_id?: string
           username?: string

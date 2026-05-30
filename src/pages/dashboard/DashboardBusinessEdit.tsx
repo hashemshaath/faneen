@@ -125,7 +125,10 @@ const DashboardBusinessEdit: React.FC = () => {
   // the active entity in the workspace switcher).
   useEffect(() => {
     if (!business) return;
-    if (!form || form.id !== business.id) setForm(business);
+    if (!form || form.id !== business.id) {
+      setForm(business);
+      if (business.short_address) setShortAddress(business.short_address.toUpperCase());
+    }
   }, [business, form]);
 
   const { data: countries = [] } = useQuery({
@@ -223,6 +226,7 @@ const DashboardBusinessEdit: React.FC = () => {
       const a = res.address;
       setForm((prev) => prev ? {
         ...prev,
+        short_address: shortAddress.trim().toUpperCase(),
         region: a.region_ar ?? prev.region,
         region_en: a.region_en ?? prev.region_en,
         district: a.district_ar ?? prev.district,
@@ -313,8 +317,13 @@ const DashboardBusinessEdit: React.FC = () => {
         street_name: form.street_name || null, street_name_en: form.street_name_en || null,
         building_number: form.building_number || null, additional_number: form.additional_number || null,
         latitude: form.latitude ?? null, longitude: form.longitude ?? null,
+        short_address: (form.short_address ?? shortAddress)?.trim().toUpperCase() || null,
+        floor_number: form.floor_number || null,
+        unit_number: form.unit_number || null,
+        unit_type: form.unit_type || null,
         national_id: form.national_id || null, unified_number: form.unified_number || null,
         vat_number: form.vat_number || null,
+        cr_legal_entity: form.cr_legal_entity || null,
         account_manager_name: form.account_manager_name || null,
         account_manager_phone: form.account_manager_phone || null,
         account_manager_email: form.account_manager_email || null,
@@ -704,7 +713,11 @@ const DashboardBusinessEdit: React.FC = () => {
                   className="tech-content uppercase"
                   placeholder="RRRD2402"
                   value={shortAddress}
-                  onChange={(e) => setShortAddress(e.target.value.toUpperCase())}
+                  onChange={(e) => {
+                    const v = e.target.value.toUpperCase();
+                    setShortAddress(v);
+                    update('short_address', v || null);
+                  }}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleShortAddressLookup(); } }}
                   maxLength={8}
                 />
@@ -780,11 +793,50 @@ const DashboardBusinessEdit: React.FC = () => {
                 <Input dir="ltr" className="mt-1 tech-content" value={form.building_number ?? ''} onChange={(e) => update('building_number', e.target.value)} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'الرقم الإضافي', 'Additional number')}</Label>
                 <Input dir="ltr" className="mt-1 tech-content" value={form.additional_number ?? ''} onChange={(e) => update('additional_number', e.target.value)} /></div>
+              <div><Label className={fieldLabel}>{t(isRTL, 'رقم الدور', 'Floor number')}</Label>
+                <Input dir="ltr" className="mt-1 tech-content" placeholder={t(isRTL, 'مثال: 3', 'e.g. 3')} value={form.floor_number ?? ''} onChange={(e) => update('floor_number', e.target.value)} /></div>
+              <div><Label className={fieldLabel}>{t(isRTL, 'رقم الوحدة', 'Unit number')}</Label>
+                <Input dir="ltr" className="mt-1 tech-content" placeholder={t(isRTL, 'مثال: 12', 'e.g. 12')} value={form.unit_number ?? ''} onChange={(e) => update('unit_number', e.target.value)} /></div>
+              <div className="sm:col-span-2">
+                <Label className={fieldLabel}>{t(isRTL, 'نوع الوحدة', 'Unit type')}</Label>
+                <select
+                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  value={form.unit_type ?? ''}
+                  onChange={(e) => update('unit_type', e.target.value || null)}
+                >
+                  <option value="">{t(isRTL, 'اختر نوع الوحدة', 'Select unit type')}</option>
+                  <option value="office">{t(isRTL, 'مكتب', 'Office')}</option>
+                  <option value="showroom">{t(isRTL, 'معرض', 'Showroom')}</option>
+                  <option value="office_showroom">{t(isRTL, 'مكتب / معرض', 'Office / Showroom')}</option>
+                  <option value="warehouse">{t(isRTL, 'مستودع', 'Warehouse')}</option>
+                  <option value="apartment">{t(isRTL, 'شقة', 'Apartment')}</option>
+                  <option value="villa">{t(isRTL, 'فيلا', 'Villa')}</option>
+                  <option value="factory">{t(isRTL, 'مصنع', 'Factory')}</option>
+                  <option value="other">{t(isRTL, 'أخرى', 'Other')}</option>
+                </select>
+              </div>
               <div><Label className={fieldLabel}>{t(isRTL, 'خط العرض (Latitude)', 'Latitude')}</Label>
                 <Input dir="ltr" type="number" step="0.00000001" className="mt-1 tech-content" value={form.latitude ?? ''} onChange={(e) => update('latitude', e.target.value === '' ? null : Number(e.target.value))} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'خط الطول (Longitude)', 'Longitude')}</Label>
                 <Input dir="ltr" type="number" step="0.00000001" className="mt-1 tech-content" value={form.longitude ?? ''} onChange={(e) => update('longitude', e.target.value === '' ? null : Number(e.target.value))} /></div>
             </div>
+
+            {/* Composed address preview — concatenates the typed fields into a single line for confirmation */}
+            {(() => {
+              const parts = isRTL
+                ? [form.street_name, form.district, form.region, form.short_address]
+                : [form.street_name_en, form.district_en, form.region_en, form.short_address];
+              const composed = parts.map((p) => (p ?? '').toString().trim()).filter(Boolean).join(' - ');
+              if (!composed) return null;
+              return (
+                <div className="rounded-xl border border-dashed border-border bg-muted/20 p-3">
+                  <div className="text-[11px] font-medium text-muted-foreground mb-1">
+                    {t(isRTL, 'معاينة العنوان المركّب', 'Composed address preview')}
+                  </div>
+                  <div className="text-sm font-medium text-foreground" dir="auto">{composed}</div>
+                </div>
+              );
+            })()}
 
             <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
               <div className="flex items-center justify-between">
@@ -869,6 +921,50 @@ const DashboardBusinessEdit: React.FC = () => {
                 qc.invalidateQueries({ queryKey: ['business-edit', user?.id] });
               }}
             />
+          </CardContent>
+        </Card>
+
+        {/* Manual legal-entity selector — independent of CR scan */}
+        <Card>
+          <CardHeader>
+            <CardTitle className={sectionTitle}>
+              <FileText className="w-4 h-4 text-primary" />
+              {t(isRTL, 'الكيان القانوني', 'Legal entity')}
+            </CardTitle>
+            <CardDescription>
+              {t(
+                isRTL,
+                'اختر النوع القانوني للمنشأة. يتم تعبئته تلقائيًا عند استيراد السجل التجاري، ويمكنك تعديله يدويًا.',
+                'Pick the legal entity type. It is auto-filled from the CR import, and can be adjusted manually.',
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Label className={fieldLabel}>{t(isRTL, 'النوع القانوني', 'Entity type')}</Label>
+            <select
+              className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              value={form.cr_legal_entity ?? ''}
+              onChange={(e) => update('cr_legal_entity', e.target.value || null)}
+            >
+              <option value="">{t(isRTL, 'اختر من القائمة', 'Select from list')}</option>
+              <option value="sole_proprietorship">{t(isRTL, 'مؤسسة فردية', 'Sole proprietorship')}</option>
+              <option value="llc">{t(isRTL, 'شركة ذات مسؤولية محدودة', 'Limited Liability Company (LLC)')}</option>
+              <option value="single_person_llc">{t(isRTL, 'شركة شخص واحد', 'Single-person company')}</option>
+              <option value="closed_joint_stock">{t(isRTL, 'شركة مساهمة مقفلة', 'Closed joint-stock company')}</option>
+              <option value="public_joint_stock">{t(isRTL, 'شركة مساهمة عامة', 'Public joint-stock company')}</option>
+              <option value="simple_partnership">{t(isRTL, 'شركة تضامن', 'General partnership')}</option>
+              <option value="limited_partnership">{t(isRTL, 'شركة توصية بسيطة', 'Limited partnership')}</option>
+              <option value="professional_company">{t(isRTL, 'شركة مهنية', 'Professional company')}</option>
+              <option value="foreign_branch">{t(isRTL, 'فرع شركة أجنبية', 'Foreign company branch')}</option>
+              <option value="non_profit">{t(isRTL, 'منشأة غير ربحية', 'Non-profit entity')}</option>
+              <option value="government">{t(isRTL, 'جهة حكومية', 'Government entity')}</option>
+              <option value="other">{t(isRTL, 'أخرى', 'Other')}</option>
+            </select>
+            <FieldHint>
+              {t(isRTL,
+                'يظهر النوع القانوني في الصفحة العامة وفي العقود والفواتير.',
+                'The legal entity is shown on your public profile and on contracts/invoices.')}
+            </FieldHint>
           </CardContent>
         </Card>
 

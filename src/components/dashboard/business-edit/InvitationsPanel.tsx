@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   Mail, Send, Loader2, Copy, Trash2, Clock, CheckCircle2, XCircle, RotateCw,
+  Search, Bell, AtSign,
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -21,6 +23,13 @@ import {
 import { STAFF_ROLE_META, type StaffRole } from './types';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
+
+interface ProfileSuggestion {
+  user_id: string;
+  email: string | null;
+  username: string | null;
+  full_name: string | null;
+}
 
 interface InvitationRow {
   id: string;
@@ -65,6 +74,43 @@ export const InvitationsPanel: React.FC<Props> = ({
   const [sending, setSending] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  // Search by email or username from the central profiles table
+  const [search, setSearch] = useState('');
+  const [suggestions, setSuggestions] = useState<ProfileSuggestion[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [picked, setPicked] = useState<ProfileSuggestion | null>(null);
+
+  // Delivery channels — at least one must be selected
+  const [sendEmail, setSendEmail] = useState(true);
+  const [sendInApp, setSendInApp] = useState(true);
+
+  useEffect(() => {
+    const q = search.trim();
+    if (q.length < 3) { setSuggestions([]); return; }
+    let cancelled = false;
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      const like = `%${q}%`;
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_id, email, username, full_name')
+        .or(`email.ilike.${like},username.ilike.${like},full_name.ilike.${like}`)
+        .limit(6);
+      if (!cancelled) {
+        setSuggestions((data ?? []) as ProfileSuggestion[]);
+        setSearching(false);
+      }
+    }, 250);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [search]);
+
+  const choosePick = (p: ProfileSuggestion) => {
+    setPicked(p);
+    if (p.email) setEmail(p.email);
+    setSearch('');
+    setSuggestions([]);
+  };
+
   const { data: invitations = [], isLoading } = useQuery({
     queryKey: ['business-invitations', businessId],
     enabled: !!businessId && canManage,
@@ -85,6 +131,10 @@ export const InvitationsPanel: React.FC<Props> = ({
     const trimmed = email.trim().toLowerCase();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       toast.error(isRTL ? 'أدخل بريدًا إلكترونيًا صحيحًا' : 'Enter a valid email address');
+      return;
+    }
+    if (!sendEmail && !sendInApp) {
+      toast.error(isRTL ? 'اختر طريقة إرسال واحدة على الأقل' : 'Pick at least one delivery method');
       return;
     }
     if (!user) return;
@@ -115,24 +165,66 @@ export const InvitationsPanel: React.FC<Props> = ({
       });
       if (profile?.full_name) inviterName = profile.full_name;
 
-      const { error: emailError } = await sendTransactionalEmail({
-        templateName: 'business-staff-invitation',
-        recipientEmail: trimmed,
-        idempotencyKey: `staff-invite-${inserted?.id ?? token}`,
-        templateData: {
-          recipientEmail: trimmed,
-          businessName: isRTL ? (businessNameAr ?? businessNameEn ?? '') : (businessNameEn ?? businessNameAr ?? ''),
-          inviterName,
-          roleAr: STAFF_ROLE_META[role].ar,
-          roleEn: STAFF_ROLE_META[role].en,
-          acceptUrl: acceptUrlFor(token),
-          expiryDate: expiresAt.slice(0, 10),
-        },
-      });
-      if (emailError) throw emailError;
+      const deliveredVia: string[] = [];
 
-      toast.success(isRTL ? 'تم إرسال الدعوة بالبريد الإلكتروني' : 'Invitation email sent');
+      if (sendEmail) {
+        const { error: emailError } = await sendTransactionalEmail({
+          templateName: 'business-staff-invitation',
+          recipientEmail: trimmed,
+          idempotencyKey: `staff-invite-${inserted?.id ?? token}`,
+          templateData: {
+            recipientEmail: trimmed,
+            businessName: isRTL ? (businessNameAr ?? businessNameEn ?? '') : (businessNameEn ?? businessNameAr ?? ''),
+            inviterName,
+            roleAr: STAFF_ROLE_META[role].ar,
+            roleEn: STAFF_ROLE_META[role].en,
+            acceptUrl: acceptUrlFor(token),
+            expiryDate: expiresAt.slice(0, 10),
+          },
+        });
+        if (emailError) throw emailError;
+        deliveredVia.push(isRTL ? 'البريد' : 'email');
+      }
+
+      // In-app notification — only possible if we resolved the recipient to a profile
+      if (sendInApp) {
+        let recipientUserId = picked?.user_id ?? null;
+        if (!recipientUserId) {
+          const { data: profileRow } = await supabase
+            .from('profiles')
+            .select('user_id')
+            .ilike('email', trimmed)
+            .maybeSingle();
+          recipientUserId = (profileRow as { user_id: string } | null)?.user_id ?? null;
+        }
+        if (recipientUserId) {
+          const nameForBody = isRTL ? (businessNameAr ?? businessNameEn ?? '') : (businessNameEn ?? businessNameAr ?? '');
+          await supabase.from('notifications').insert({
+            user_id: recipientUserId,
+            notification_type: 'business_staff_invitation',
+            title_ar: 'دعوة للانضمام كمفوّض',
+            title_en: 'Staff invitation',
+            body_ar: `تمت دعوتك للانضمام إلى ${nameForBody} بدور ${STAFF_ROLE_META[role].ar}.`,
+            body_en: `You have been invited to join ${nameForBody} as ${STAFF_ROLE_META[role].en}.`,
+            reference_id: inserted?.id ?? null,
+            reference_type: 'business_staff_invitation',
+            action_url: `/staff-invite/${token}`,
+          });
+          deliveredVia.push(isRTL ? 'المنصة' : 'in-app');
+        } else if (!sendEmail) {
+          toast.warning(isRTL
+            ? 'لم يتم العثور على حساب مرتبط بهذا البريد — لم يتم إرسال إشعار داخل المنصة.'
+            : 'No platform account matches this email — no in-app notification was sent.');
+        }
+      }
+
+      toast.success(
+        isRTL
+          ? `تم إنشاء الدعوة وإرسالها عبر: ${deliveredVia.join(' + ') || 'لا شيء'}`
+          : `Invitation created and delivered via: ${deliveredVia.join(' + ') || 'none'}`,
+      );
       setEmail('');
+      setPicked(null);
       qc.invalidateQueries({ queryKey: ['business-invitations', businessId] });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -209,7 +301,57 @@ export const InvitationsPanel: React.FC<Props> = ({
     <div className="rounded-xl border border-dashed border-border bg-muted/10 p-3 space-y-3">
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
         <Mail className="w-4 h-4 text-primary" />
-        {isRTL ? 'دعوة عبر البريد الإلكتروني' : 'Invite via email'}
+        {isRTL ? 'دعوة مفوّض جديد' : 'Invite a representative'}
+      </div>
+
+      {/* Search by email or username — picks a registered user when found */}
+      <div className="space-y-1.5 relative">
+        <Label className="text-xs font-medium text-muted-foreground">
+          {isRTL ? 'البحث بالبريد الإلكتروني أو اسم المستخدم' : 'Search by email or username'}
+        </Label>
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 absolute top-1/2 -translate-y-1/2 start-2.5 text-muted-foreground pointer-events-none" />
+          <Input
+            dir="auto"
+            className="ps-8"
+            placeholder={isRTL ? 'مثال: ahmed@example.com أو @ahmed' : 'e.g. ahmed@example.com or @ahmed'}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        {searching && (
+          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            {isRTL ? 'جارٍ البحث…' : 'Searching…'}
+          </p>
+        )}
+        {suggestions.length > 0 && (
+          <ul className="absolute z-10 left-0 right-0 mt-1 max-h-56 overflow-auto rounded-lg border border-border bg-popover shadow-md divide-y divide-border">
+            {suggestions.map((s) => (
+              <li key={s.user_id}>
+                <button
+                  type="button"
+                  onClick={() => choosePick(s)}
+                  className="w-full text-start px-3 py-2 hover:bg-muted/50 flex items-center gap-2"
+                >
+                  <AtSign className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium truncate">{s.full_name || s.username || s.email}</div>
+                    <div className="text-[11px] text-muted-foreground tech-content truncate">
+                      {s.email}{s.username ? ` · @${s.username}` : ''}
+                    </div>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {picked && (
+          <div className="text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3" />
+            {isRTL ? 'تم تحديد:' : 'Selected:'} <span className="tech-content">{picked.email || picked.username}</span>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-2 sm:grid-cols-[1fr_160px_auto] sm:items-end">
@@ -241,6 +383,30 @@ export const InvitationsPanel: React.FC<Props> = ({
           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           {isRTL ? 'إرسال' : 'Send'}
         </Button>
+      </div>
+
+      {/* Delivery channels */}
+      <div className="rounded-lg border border-border bg-card p-2.5">
+        <div className="text-[11px] font-medium text-muted-foreground mb-1.5">
+          {isRTL ? 'طريقة الإرسال' : 'Delivery method'}
+        </div>
+        <div className="flex flex-wrap gap-4">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <Checkbox checked={sendEmail} onCheckedChange={(v) => setSendEmail(!!v)} />
+            <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+            {isRTL ? 'بريد إلكتروني' : 'Email'}
+          </label>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <Checkbox checked={sendInApp} onCheckedChange={(v) => setSendInApp(!!v)} />
+            <Bell className="w-3.5 h-3.5 text-muted-foreground" />
+            {isRTL ? 'إشعار داخل المنصة' : 'In-app notification'}
+          </label>
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-1.5">
+          {isRTL
+            ? 'الإشعار داخل المنصة يصل فقط إذا كان للمستلم حساب مسجّل بنفس البريد. الرسائل النصية وإشعارات التطبيق ستتوفر قريبًا.'
+            : 'In-app notifications require the recipient to have a registered account with the same email. SMS and push notifications are coming soon.'}
+        </p>
       </div>
 
       {/* Invitation list */}
