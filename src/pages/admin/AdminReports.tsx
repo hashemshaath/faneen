@@ -54,13 +54,13 @@ const REPORTS: ReportDef[] = [
     async fetch(range) {
       const { data, error } = await supabase
         .from('profiles')
-        .select('ref_id, email, display_name, account_type, created_at, country_id')
+        .select('ref_id, email, full_name, account_type, created_at, country_id')
         .gte('created_at', `${range.from}T00:00:00Z`)
         .lte('created_at', `${range.to}T23:59:59Z`)
         .order('created_at', { ascending: false })
         .limit(5000);
       if (error) throw error;
-      const headers = ['ref_id','email','display_name','account_type','created_at','country_id'] as const;
+      const headers = ['ref_id','email','full_name','account_type','created_at','country_id'] as const;
       return { rows: (data ?? []) as Record<string, unknown>[], headers };
     },
   },
@@ -74,13 +74,13 @@ const REPORTS: ReportDef[] = [
     async fetch(range) {
       const { data, error } = await supabase
         .from('businesses')
-        .select('ref_id, name_ar, name_en, verified, is_active, created_at, owner_id')
+        .select('ref_id, name_ar, name_en, approval_status, created_at, owner_id')
         .gte('created_at', `${range.from}T00:00:00Z`)
         .lte('created_at', `${range.to}T23:59:59Z`)
         .order('created_at', { ascending: false })
         .limit(5000);
       if (error) throw error;
-      const headers = ['ref_id','name_ar','name_en','verified','is_active','created_at','owner_id'] as const;
+      const headers = ['ref_id','name_ar','name_en','approval_status','created_at','owner_id'] as const;
       return { rows: (data ?? []) as Record<string, unknown>[], headers };
     },
   },
