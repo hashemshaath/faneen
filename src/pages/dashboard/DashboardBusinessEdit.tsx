@@ -924,6 +924,50 @@ const DashboardBusinessEdit: React.FC = () => {
           </CardContent>
         </Card>
 
+        {/* Manual legal-entity selector — independent of CR scan */}
+        <Card>
+          <CardHeader>
+            <CardTitle className={sectionTitle}>
+              <FileText className="w-4 h-4 text-primary" />
+              {t(isRTL, 'الكيان القانوني', 'Legal entity')}
+            </CardTitle>
+            <CardDescription>
+              {t(
+                isRTL,
+                'اختر النوع القانوني للمنشأة. يتم تعبئته تلقائيًا عند استيراد السجل التجاري، ويمكنك تعديله يدويًا.',
+                'Pick the legal entity type. It is auto-filled from the CR import, and can be adjusted manually.',
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Label className={fieldLabel}>{t(isRTL, 'النوع القانوني', 'Entity type')}</Label>
+            <select
+              className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              value={form.cr_legal_entity ?? ''}
+              onChange={(e) => update('cr_legal_entity', e.target.value || null)}
+            >
+              <option value="">{t(isRTL, 'اختر من القائمة', 'Select from list')}</option>
+              <option value="sole_proprietorship">{t(isRTL, 'مؤسسة فردية', 'Sole proprietorship')}</option>
+              <option value="llc">{t(isRTL, 'شركة ذات مسؤولية محدودة', 'Limited Liability Company (LLC)')}</option>
+              <option value="single_person_llc">{t(isRTL, 'شركة شخص واحد', 'Single-person company')}</option>
+              <option value="closed_joint_stock">{t(isRTL, 'شركة مساهمة مقفلة', 'Closed joint-stock company')}</option>
+              <option value="public_joint_stock">{t(isRTL, 'شركة مساهمة عامة', 'Public joint-stock company')}</option>
+              <option value="simple_partnership">{t(isRTL, 'شركة تضامن', 'General partnership')}</option>
+              <option value="limited_partnership">{t(isRTL, 'شركة توصية بسيطة', 'Limited partnership')}</option>
+              <option value="professional_company">{t(isRTL, 'شركة مهنية', 'Professional company')}</option>
+              <option value="foreign_branch">{t(isRTL, 'فرع شركة أجنبية', 'Foreign company branch')}</option>
+              <option value="non_profit">{t(isRTL, 'منشأة غير ربحية', 'Non-profit entity')}</option>
+              <option value="government">{t(isRTL, 'جهة حكومية', 'Government entity')}</option>
+              <option value="other">{t(isRTL, 'أخرى', 'Other')}</option>
+            </select>
+            <FieldHint>
+              {t(isRTL,
+                'يظهر النوع القانوني في الصفحة العامة وفي العقود والفواتير.',
+                'The legal entity is shown on your public profile and on contracts/invoices.')}
+            </FieldHint>
+          </CardContent>
+        </Card>
+
         {/* Representatives */}
           </TabsContent>
 
