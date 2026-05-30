@@ -23,3 +23,58 @@ navigation layer.
 - Audit health badges across `Contracts`, `Work Orders`, `Procurement` for consistent thresholds.
 
 Tracked separately from this PR.
+
+---
+
+## PAGE-POLISH-REPAIRS-1 — completed (presentation only)
+
+Scope: presentation-layer polish for the top 10 highest-impact pages.
+No routes, RLS, or schema changed. No domains added.
+
+Target pages locked under invariants in
+`src/tests/pagePolishRepairs1.test.ts`:
+
+- DashboardOperationsCenter
+- DashboardWorkOrders
+- DashboardWorkOrderDetail
+- ProductionBoardPage
+- DashboardProcurement
+- DashboardProcurementDetail
+- DashboardContracts
+- ContractDetail
+- DashboardBusinessEdit
+- AdminProviderReview
+
+Shipped:
+- New shared primitive `src/components/dashboard/DashboardEmptyState.tsx`
+  (icon + title + description + primary/secondary CTA + help link).
+- Polished empty state on `DashboardProcurement` (card-style with CTAs
+  and Help Center link instead of bare text).
+- Test suite `src/tests/pagePolishRepairs1.test.ts` locking:
+  - all 10 target pages still exist
+  - no inventory/accounting/supplier-portal imports introduced
+  - no physical RTL classes (`text-left/right`, `ml-*/mr-*`, `pl-*/pr-*`)
+  - every page renders a heading or PageHeader
+  - list pages keep an empty signal and a loading signal
+  - detail pages keep `RelatedReferencesPanel` mounted
+  - work-order pages keep `HealthBadge` mounted
+  - no `/admin/identity?view=` legacy deep-links re-introduced
+
+## PAGE-POLISH-REPAIRS-1 — deferred backlog
+
+Carried forward, intentionally out of scope for this phase:
+
+- `DashboardOperationsCenter` — finalize section ordering hint banner
+  (health → KPIs → alerts → diagnostics → integrity).
+- `DashboardWorkOrderDetail` — confirm single timeline (audit for
+  accidental dual timeline mounts on tab switches).
+- `ProductionBoardPage` — header WIP/overdue/unassigned ribbon polish.
+- `DashboardContracts` — adopt `DashboardEmptyState` in place of the
+  bespoke `ContractEmptyState` once visual parity is signed off.
+- `ContractDetail` — explicit "admin-not-a-party" banner for admin-created
+  contracts; verify parties summary on mobile.
+- `DashboardBusinessEdit` — promote publish-readiness summary above the
+  long-form profile form on first paint.
+- `AdminProviderReview` — collapse `PublishReadinessPanel` +
+  `AdminProviderGrowthPanel` overlap into a single ordered column.
+- Standardize loading skeletons (mix of `Skeleton` + spinners remains).
