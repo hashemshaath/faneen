@@ -485,31 +485,17 @@ const DashboardProfile: React.FC = () => {
               <CardContent className="p-4 sm:p-5 space-y-4">
                 <header className="flex items-center gap-2">
                   <User className="w-4 h-4 text-primary" />
-                  <h2 className="text-sm font-bold">{t(isRTL, 'الهوية', 'Identity')}</h2>
+                  <h2 className="text-sm font-bold">{t(isRTL, 'البيانات الشخصية', 'Personal data')}</h2>
                 </header>
-
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    {t(isRTL, 'الاسم الكامل', 'Full name')} <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    value={form.full_name}
-                    onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
-                    dir="auto"
-                    className="mt-1 h-11 rounded-xl"
-                    placeholder={t(isRTL, 'اكتب اسمك الكامل', 'Enter your full name')}
-                    maxLength={120}
-                  />
-                </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-xs font-medium text-muted-foreground">
-                      {t(isRTL, 'الاسم بالعربية', 'Arabic name')}
+                      {t(isRTL, 'الاسم الكامل بالعربية', 'Full name (Arabic)')} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       value={form.full_name_ar}
-                      onChange={(e) => setForm((f) => ({ ...f, full_name_ar: e.target.value }))}
+                      onChange={(e) => setForm((f) => ({ ...f, full_name_ar: e.target.value, full_name: e.target.value }))}
                       dir="rtl"
                       lang="ar"
                       className="mt-1 h-11 rounded-xl"
@@ -519,7 +505,7 @@ const DashboardProfile: React.FC = () => {
                   </div>
                   <div>
                     <Label className="text-xs font-medium text-muted-foreground">
-                      {t(isRTL, 'الاسم بالإنجليزية', 'English name')}
+                      {t(isRTL, 'الاسم الكامل بالإنجليزية', 'Full name (English)')}
                     </Label>
                     <Input
                       value={form.full_name_en}
