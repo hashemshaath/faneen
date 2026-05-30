@@ -28,7 +28,6 @@ import {
   type AdminNoteSeverity,
   type AdminNoteEntityType,
 } from '@/modules/admin';
-import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
 import { AdminOpsQuickLinks } from '@/components/admin/AdminOpsQuickLinks';
 import { downloadTriageCsv } from '@/lib/admin/triageCsv';
 import { printCurrentView } from '@/lib/admin/exportUtils';
