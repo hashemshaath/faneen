@@ -28,6 +28,7 @@ import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
 import type { ArabicFontDiagnostics } from '@/lib/pdf-arabic-font';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
+import { ContractFullHistory } from '@/modules/contracts/components/ContractFullHistory';
 import { mapContractLockError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { approveAmendment, rejectAmendment, cancelAmendment, applyAmendment } from '@/modules/contracts/services/amendments';
@@ -1675,6 +1676,17 @@ const ContractDetail = () => {
               <Button variant="heroOutline" size="sm" className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={() => window.print()}>
                 <Printer className="w-3.5 h-3.5" />{isRTL ? 'طباعة' : 'Print'}
               </Button>
+              {contract.contract_number && contract.document_hash && (
+                <Button
+                  variant="heroOutline"
+                  size="sm"
+                  className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1"
+                  onClick={() => window.open(`/v/c/${contract.contract_number}?h=${contract.document_hash!.slice(0, 16)}`, '_blank', 'noopener')}
+                  title={isRTL ? 'فتح صفحة التحقق العامة' : 'Open public verification page'}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />{isRTL ? 'تحقق عام' : 'Verify'}
+                </Button>
+              )}
               <Button variant="heroOutline" size="sm" className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={shareContract}>
                 <Share2 className="w-3.5 h-3.5" />
               </Button>
@@ -3319,6 +3331,11 @@ const ContractDetail = () => {
           {/* ── PDF Analysis Log (PDF-AR4) ── */}
           <TabsContent value="pdf-analysis">
             <ContractPdfAnalysisLog contractId={contract.id} isRTL={isRTL} />
+          </TabsContent>
+
+          {/* ── Full History (Unified audit timeline) ── */}
+          <TabsContent value="history">
+            <ContractFullHistory contractId={contract.id} />
           </TabsContent>
         </Tabs>
       </div>
