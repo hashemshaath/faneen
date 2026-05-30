@@ -9,12 +9,21 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Bi } from '@/components/common/Bilingual';
-import { ArrowLeft, Check, Trophy, Clock, MessageSquare, Radio } from 'lucide-react';
+import { ArrowLeft, Check, Trophy, Clock, MessageSquare, Radio, Activity, Trash2, Plus, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { getRfq, listQuotesForRfq, acceptQuote } from '@/modules/rfq/services';
 import { supabase } from '@/integrations/supabase/client';
 
 type SortKey = 'amount_asc' | 'amount_desc' | 'delivery_asc' | 'newest';
+
+interface LiveEvent {
+  id: string;
+  kind: 'new_quote' | 'price_change';
+  at: number;
+  amount?: number;
+  previousAmount?: number;
+  currency?: string;
+}
 
 const DashboardRfqDetail: React.FC = () => {
   useNoIndex();
@@ -22,6 +31,7 @@ const DashboardRfqDetail: React.FC = () => {
   const { isRTL } = useLanguage();
   const qc = useQueryClient();
   const [sort, setSort] = useState<SortKey>('amount_asc');
+  const [events, setEvents] = useState<LiveEvent[]>([]);
 
   const { data: rfq } = useQuery({ queryKey: ['rfq', id], queryFn: () => getRfq(id!), enabled: !!id });
   const { data: quotes, isLoading } = useQuery({
@@ -40,6 +50,16 @@ const DashboardRfqDetail: React.FC = () => {
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const newQ = payload.new as { amount?: number; currency?: string } | null;
+            setEvents((prev) => [
+              {
+                id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                kind: 'new_quote' as const,
+                at: Date.now(),
+                amount: newQ?.amount,
+                currency: newQ?.currency,
+              },
+              ...prev,
+            ].slice(0, 20));
             toast.success(
               isRTL ? 'وصل عرض سعر جديد' : 'New quote received',
               {
@@ -52,6 +72,17 @@ const DashboardRfqDetail: React.FC = () => {
             const oldQ = payload.old as { amount?: number } | null;
             const newQ = payload.new as { amount?: number; currency?: string } | null;
             if (oldQ?.amount != null && newQ?.amount != null && oldQ.amount !== newQ.amount) {
+              setEvents((prev) => [
+                {
+                  id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                  kind: 'price_change' as const,
+                  at: Date.now(),
+                  amount: newQ.amount,
+                  previousAmount: oldQ.amount,
+                  currency: newQ.currency,
+                },
+                ...prev,
+              ].slice(0, 20));
               toast(
                 isRTL ? 'تم تعديل سعر أحد العروض' : 'A quote price was updated',
                 {
@@ -115,6 +146,80 @@ const DashboardRfqDetail: React.FC = () => {
           <Radio className="w-3 h-3 animate-pulse" />
           <Bi ar="التحديثات لحظية" en="Live updates" />
         </div>
+
+        <Card className="border-dashed">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">
+                  <Bi ar="آخر التحديثات اللحظية" en="Recent live updates" />
+                </span>
+                {events.length > 0 && (
+                  <Badge variant="secondary" className="tech-content">{events.length}</Badge>
+                )}
+              </div>
+              {events.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEvents([])}
+                  className="h-8 rounded-lg"
+                >
+                  <Trash2 className="w-3.5 h-3.5 me-1.5" />
+                  <Bi ar="مسح السجل" en="Clear" />
+                </Button>
+              )}
+            </div>
+            {events.length === 0 ? (
+              <div className="text-xs text-muted-foreground text-center py-3">
+                <Bi
+                  ar="لا توجد تحديثات حتى الآن. ستظهر العروض الجديدة وتعديلات الأسعار هنا فور وصولها."
+                  en="No updates yet. New quotes and price changes will appear here in real time."
+                />
+              </div>
+            ) : (
+              <ul className="space-y-2 max-h-56 overflow-auto no-scrollbar">
+                {events.map((ev) => (
+                  <li
+                    key={ev.id}
+                    className="flex items-center justify-between gap-3 text-sm border rounded-lg px-3 py-2 bg-muted/30"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      {ev.kind === 'new_quote' ? (
+                        <Plus className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                      ) : (
+                        <Pencil className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                      )}
+                      <span className="truncate">
+                        {ev.kind === 'new_quote' ? (
+                          <Bi ar="عرض جديد" en="New quote" />
+                        ) : (
+                          <Bi ar="تعديل سعر" en="Price updated" />
+                        )}
+                        {ev.amount != null && (
+                          <span className="tech-content text-muted-foreground ms-2">
+                            {ev.previousAmount != null
+                              ? `${Number(ev.previousAmount).toLocaleString()} → ${Number(ev.amount).toLocaleString()}`
+                              : Number(ev.amount).toLocaleString()}
+                            {ev.currency ? ` ${ev.currency}` : ''}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground tech-content flex-shrink-0">
+                      {new Date(ev.at).toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
 
         {!rfq ? (
           <Skeleton className="h-32 rounded-xl" />

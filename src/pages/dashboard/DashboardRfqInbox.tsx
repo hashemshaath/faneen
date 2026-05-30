@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Inbox, Send } from 'lucide-react';
+import { Inbox, Send, ArrowUp, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { listOpenRfqs, createQuote } from '@/modules/rfq/services';
 
@@ -22,29 +22,24 @@ const INDUSTRIES = [
   { key: 'steel', ar: 'الحديد', en: 'Steel' },
 ] as const;
 
-type SortKey =
-  | 'newest'
-  | 'oldest'
-  | 'budget_max_desc'
-  | 'budget_max_asc'
-  | 'budget_min_asc';
+type SortField = 'date' | 'budget_max' | 'budget_min';
+type SortDir = 'asc' | 'desc';
 
-const SORTS: ReadonlyArray<{ key: SortKey; ar: string; en: string }> = [
-  { key: 'newest', ar: 'الأحدث', en: 'Newest' },
-  { key: 'oldest', ar: 'الأقدم', en: 'Oldest' },
-  { key: 'budget_max_desc', ar: 'الميزانية: الأعلى', en: 'Budget: highest' },
-  { key: 'budget_max_asc', ar: 'الميزانية: الأقل', en: 'Budget: lowest' },
-  { key: 'budget_min_asc', ar: 'السعر الأدنى للميزانية', en: 'Min budget ↑' },
+const SORT_FIELDS: ReadonlyArray<{ key: SortField; ar: string; en: string }> = [
+  { key: 'date', ar: 'تاريخ النشر', en: 'Date posted' },
+  { key: 'budget_max', ar: 'الحد الأعلى للميزانية', en: 'Max budget' },
+  { key: 'budget_min', ar: 'الحد الأدنى للميزانية', en: 'Min budget' },
 ];
 
-const FILTERS_STORAGE_KEY = 'qitaat_rfq_inbox_filters_v1';
+const FILTERS_STORAGE_KEY = 'qitaat_rfq_inbox_filters_v2';
 
 interface PersistedFilters {
   industry: string;
   search: string;
   minBudget: string;
   maxBudget: string;
-  sort: SortKey;
+  sortField: SortField;
+  sortDir: SortDir;
   perPage: number;
 }
 
@@ -53,7 +48,8 @@ const DEFAULT_FILTERS: PersistedFilters = {
   search: '',
   minBudget: '',
   maxBudget: '',
-  sort: 'newest',
+  sortField: 'date',
+  sortDir: 'desc',
   perPage: 10,
 };
 
@@ -80,7 +76,8 @@ const DashboardRfqInbox: React.FC = () => {
   const [search, setSearch] = useState(initial.search);
   const [minBudget, setMinBudget] = useState(initial.minBudget);
   const [maxBudget, setMaxBudget] = useState(initial.maxBudget);
-  const [sort, setSort] = useState<SortKey>(initial.sort);
+  const [sortField, setSortField] = useState<SortField>(initial.sortField);
+  const [sortDir, setSortDir] = useState<SortDir>(initial.sortDir);
   const [page, setPage] = useState(1);
   const perPage = initial.perPage;
 
@@ -89,17 +86,17 @@ const DashboardRfqInbox: React.FC = () => {
     try {
       localStorage.setItem(
         FILTERS_STORAGE_KEY,
-        JSON.stringify({ industry, search, minBudget, maxBudget, sort, perPage }),
+        JSON.stringify({ industry, search, minBudget, maxBudget, sortField, sortDir, perPage }),
       );
     } catch {
       // ignore quota errors
     }
-  }, [industry, search, minBudget, maxBudget, sort, perPage]);
+  }, [industry, search, minBudget, maxBudget, sortField, sortDir, perPage]);
 
   // Reset to first page when filters change
   useEffect(() => {
     setPage(1);
-  }, [industry, search, minBudget, maxBudget, sort]);
+  }, [industry, search, minBudget, maxBudget, sortField, sortDir]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['rfq-open'],
@@ -117,23 +114,28 @@ const DashboardRfqInbox: React.FC = () => {
       if (maxB !== null && (rfq.budget_min ?? rfq.budget_max ?? Infinity) > maxB) return false;
       return true;
     });
-    const sorted = [...matched].sort((a, b) => {
-      switch (sort) {
-        case 'oldest':
-          return a.created_at.localeCompare(b.created_at);
-        case 'budget_max_desc':
-          return (b.budget_max ?? -Infinity) - (a.budget_max ?? -Infinity);
-        case 'budget_max_asc':
-          return (a.budget_max ?? Infinity) - (b.budget_max ?? Infinity);
-        case 'budget_min_asc':
-          return (a.budget_min ?? Infinity) - (b.budget_min ?? Infinity);
-        case 'newest':
+    const dirMul = sortDir === 'asc' ? 1 : -1;
+    // Sentinel pushes nulls to the end regardless of direction
+    const NULL_SENTINEL = sortDir === 'asc' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+    const valueOf = (rfq: typeof matched[number]): number => {
+      switch (sortField) {
+        case 'budget_max':
+          return rfq.budget_max ?? NULL_SENTINEL;
+        case 'budget_min':
+          return rfq.budget_min ?? NULL_SENTINEL;
+        case 'date':
         default:
-          return b.created_at.localeCompare(a.created_at);
+          return new Date(rfq.created_at).getTime();
       }
+    };
+    const sorted = [...matched].sort((a, b) => {
+      const va = valueOf(a);
+      const vb = valueOf(b);
+      if (va === vb) return b.created_at.localeCompare(a.created_at); // stable tie-break: newest first
+      return (va - vb) * dirMul;
     });
     return sorted;
-  }, [data, industry, search, minBudget, maxBudget, sort]);
+  }, [data, industry, search, minBudget, maxBudget, sortField, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const currentPage = Math.min(page, totalPages);
@@ -147,7 +149,8 @@ const DashboardRfqInbox: React.FC = () => {
     setSearch(DEFAULT_FILTERS.search);
     setMinBudget(DEFAULT_FILTERS.minBudget);
     setMaxBudget(DEFAULT_FILTERS.maxBudget);
-    setSort(DEFAULT_FILTERS.sort);
+    setSortField(DEFAULT_FILTERS.sortField);
+    setSortDir(DEFAULT_FILTERS.sortDir);
   };
 
   const submit = useMutation({
@@ -218,17 +221,36 @@ const DashboardRfqInbox: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-semibold">
-              {isRTL ? 'ترتيب:' : 'Sort:'}
+              {isRTL ? 'ترتيب حسب:' : 'Sort by:'}
             </span>
             <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value as SortField)}
               className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+              aria-label={isRTL ? 'حقل الترتيب' : 'Sort field'}
             >
-              {SORTS.map((s) => (
+              {SORT_FIELDS.map((s) => (
                 <option key={s.key} value={s.key}>{isRTL ? s.ar : s.en}</option>
               ))}
             </select>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+              className="h-10 rounded-lg gap-1.5"
+              aria-label={isRTL ? 'اتجاه الترتيب' : 'Sort direction'}
+              title={
+                sortDir === 'asc'
+                  ? (isRTL ? 'تصاعدي' : 'Ascending')
+                  : (isRTL ? 'تنازلي' : 'Descending')
+              }
+            >
+              {sortDir === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+              <span className="text-xs">
+                {sortDir === 'asc' ? (isRTL ? 'تصاعدي' : 'Asc') : (isRTL ? 'تنازلي' : 'Desc')}
+              </span>
+            </Button>
           </div>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <span className="tech-content">
