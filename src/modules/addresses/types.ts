@@ -6,6 +6,9 @@ import type { Database } from '@/integrations/supabase/types';
 
 export type AddressOwnerType = 'profile' | 'business' | 'branch';
 export type AddressSource = 'spl' | 'map_pick' | 'manual' | 'import';
+export type AddressType =
+  | 'primary' | 'billing' | 'shipping'
+  | 'project_site' | 'branch' | 'national_address';
 
 export type AddressRow = Database['public']['Tables']['addresses']['Row'];
 export type AddressInsert = Database['public']['Tables']['addresses']['Insert'];
@@ -20,6 +23,8 @@ export interface OwnerRef {
 export interface AddressFields {
   label?: string | null;
   is_primary?: boolean;
+  address_type?: AddressType;
+  country_code?: string | null;
   short_address?: string | null;
   building_number?: string | null;
   additional_number?: string | null;
@@ -38,4 +43,8 @@ export interface AddressFields {
   address_en?: string | null;
   source?: AddressSource;
   verified_at?: string | null;
+  is_verified?: boolean;
+  national_address_source?: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  national_address_raw?: any | null;
 }

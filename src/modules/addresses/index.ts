@@ -10,3 +10,16 @@ export { upsertAddress } from './services/upsertAddress';
 export { setPrimaryAddress } from './services/setPrimaryAddress';
 export { deleteAddress } from './services/deleteAddress';
 export { resolveFromSpl, pingSpl, type SplLookupResult } from './services/resolveFromSpl';
+
+// ADDRESS-GOVERNANCE-1 — central governance API
+export { upsertPrimaryAddress } from './services/upsertPrimaryAddress';
+export type { UpsertPrimaryAddressOptions } from './services/upsertPrimaryAddress';
+export {
+  listRegions, listDistrictsByCity, searchDistricts,
+  type RegionOption, type DistrictRow,
+} from './services/districts';
+export { buildAddressLine, normalizeAddressPayload } from './helpers/buildAddressLine';
+export type { AddressType } from './types';
+
+/** Alias for governance — `listAddresses` already implements this API. */
+export { listAddresses as listAddressesForOwner } from './services/listAddresses';

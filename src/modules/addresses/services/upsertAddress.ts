@@ -14,7 +14,8 @@ export async function upsertAddress(
   options: UpsertAddressOptions,
 ): Promise<{ data: AddressRow | null; error: unknown }> {
   const { id, ownerType, ownerId, fields } = options;
-  const payload = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const payload: any = {
     owner_type: ownerType,
     owner_id: ownerId,
     ...fields,
