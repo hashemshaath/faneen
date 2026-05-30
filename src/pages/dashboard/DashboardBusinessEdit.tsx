@@ -972,23 +972,63 @@ const DashboardBusinessEdit: React.FC = () => {
 
         <Separator className="my-6" />
 
-        {/* Sticky save bar */}
-        <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-xl border border-border bg-background/95 backdrop-blur px-4 py-3 shadow-[var(--elev-2)]">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            {dirty
-              ? (<><AlertTriangle className="w-3.5 h-3.5 text-warning" />{t(isRTL, 'لديك تغييرات غير محفوظة', 'You have unsaved changes')}</>)
-              : (<><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />{t(isRTL, 'كل التغييرات محفوظة', 'All changes saved')}</>)}
-            <span className="hidden sm:inline opacity-60">·</span>
-            <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 h-5 rounded border border-border bg-muted/50 text-[10px] tech-content">
-              {navigator.platform.toLowerCase().includes('mac') ? '⌘' : 'Ctrl'}+S
-            </kbd>
+        {/* Sticky quick-save bar — shows live completion progress and
+            blocks saving when critical validation errors exist. */}
+        <div className="sticky bottom-4 z-10 rounded-xl border border-border bg-background/95 backdrop-blur shadow-[var(--elev-2)] overflow-hidden">
+          {/* Top progress strip */}
+          <div className="h-1 w-full bg-muted/60" aria-hidden>
+            <div
+              className={`h-full transition-[width] duration-500 ${
+                hasErrors
+                  ? 'bg-destructive/70'
+                  : 'bg-gradient-to-r from-emerald-500 to-emerald-400'
+              }`}
+              style={{ width: `${completionPct}%` }}
+            />
           </div>
-          <PermissionHint permission="entity.manage">
-            <Button onClick={handleSave} disabled={saving || !dirty || hasErrors} className="gap-1.5">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {t(isRTL, 'حفظ التغييرات', 'Save changes')}
-            </Button>
-          </PermissionHint>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+              {hasErrors ? (
+                <span className="inline-flex items-center gap-1.5 text-destructive font-medium">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {t(isRTL,
+                    `${errors} حقل يحتاج تصحيح قبل الحفظ`,
+                    `${errors} field${errors > 1 ? 's' : ''} need correction before saving`)}
+                </span>
+              ) : dirty ? (
+                <span className="inline-flex items-center gap-1.5 text-warning font-medium">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {t(isRTL, 'لديك تغييرات غير محفوظة', 'You have unsaved changes')}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  {t(isRTL, 'كل التغييرات محفوظة', 'All changes saved')}
+                </span>
+              )}
+              <span className="hidden sm:inline opacity-60">·</span>
+              <span className="inline-flex items-center gap-1">
+                <Sparkles className="w-3 h-3 opacity-70" />
+                {t(isRTL, 'الاكتمال:', 'Completion:')}
+                <span className="tech-content font-semibold text-foreground">{completionPct}%</span>
+              </span>
+              <span className="hidden sm:inline opacity-60">·</span>
+              <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 h-5 rounded border border-border bg-muted/50 text-[10px] tech-content">
+                {navigator.platform.toLowerCase().includes('mac') ? '⌘' : 'Ctrl'}+S
+              </kbd>
+            </div>
+            <PermissionHint permission="entity.manage">
+              <Button
+                onClick={handleSave}
+                disabled={saving || !dirty || hasErrors}
+                className="gap-1.5 w-full sm:w-auto"
+                title={hasErrors ? t(isRTL, 'صحّح الحقول الحرجة لتفعيل الحفظ', 'Fix critical fields to enable save') : undefined}
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {t(isRTL, 'حفظ سريع', 'Quick save')}
+              </Button>
+            </PermissionHint>
+          </div>
         </div>
       </div>
     </DashboardLayout>
