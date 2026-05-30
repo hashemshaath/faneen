@@ -146,6 +146,10 @@ export interface ProcurementRfqItemRow {
   unit: string | null;
   target_price: number | null;
   sort_order: number;
+  /** RFQ-BRAND-PICKER-1D — optional approved brand reference. */
+  requested_brand_id: string | null;
+  /** RFQ-BRAND-PICKER-1D — exact | preferred | flexible (null when no brand). */
+  brand_lock: 'exact' | 'preferred' | 'flexible' | null;
   created_at: string;
   updated_at: string;
 }
