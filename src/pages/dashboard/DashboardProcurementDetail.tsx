@@ -36,6 +36,7 @@ import {
   listQuoteItemsByRfq,
   compareQuotesWithLineItems,
   listPurchaseOrdersByRfq,
+  updateRfqItem,
   type ProcurementRfqInvitationRow,
   type ProcurementRequestRow,
   type ProcurementRfqRow,
@@ -46,6 +47,12 @@ import {
   type ProcurementPurchaseOrderRow,
   type QuoteComparisonResult,
 } from "@/modules/procurement";
+import { ApprovedBrandPicker } from "@/components/brands/ApprovedBrandPicker";
+import { listApprovedBrandsByIds } from "@/modules/brands";
+import {
+  describeBrandLock,
+  type BrandLock,
+} from "@/modules/brands/lib/brandSelectionRules";
 
 export default function DashboardProcurementDetail() {
   useNoIndex();
@@ -69,6 +76,10 @@ export default function DashboardProcurementDetail() {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // RFQ-BRAND-PICKER-1D — resolved approved-brand labels for line items.
+  const [brandLabels, setBrandLabels] = useState<
+    Record<string, { name_ar: string; name_en: string; ref_id: string | null; slug: string }>
+  >({});
 
   const tx = useMemo(
     () => ({
@@ -116,6 +127,13 @@ export default function DashboardProcurementDetail() {
       notEligible: isRTL ? "لا يمكن منح هذا العرض الآن." : "This quote cannot be awarded right now.",
       sentAt: isRTL ? "أُرسل في" : "Sent",
       expiresAt: isRTL ? "تنتهي في" : "Expires",
+      brand: isRTL ? "العلامة" : "Brand",
+      brandLock: isRTL ? "نمط الالتزام" : "Brand lock",
+      lockExact: isRTL ? "مطابق" : "Exact",
+      lockPreferred: isRTL ? "مفضّل" : "Preferred",
+      lockFlexible: isRTL ? "مرن" : "Flexible",
+      brandUnavailable: isRTL ? "العلامة غير متاحة" : "Brand unavailable",
+      noBrand: isRTL ? "بدون علامة" : "No brand",
     }),
     [isRTL],
   );
