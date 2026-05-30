@@ -7266,6 +7266,33 @@ export type Database = {
           },
         ]
       }
+      loyalty_points: {
+        Row: {
+          created_at: string
+          id: string
+          points: number
+          reason: string
+          reference_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          points: number
+          reason: string
+          reference_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          points?: number
+          reason?: string
+          reference_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       maintenance_requests: {
         Row: {
           client_id: string
@@ -11678,6 +11705,104 @@ export type Database = {
           },
         ]
       }
+      rfq_quotes: {
+        Row: {
+          amount: number
+          business_id: string | null
+          created_at: string
+          currency: string
+          delivery_days: number | null
+          id: string
+          message: string | null
+          provider_user_id: string
+          rfq_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          business_id?: string | null
+          created_at?: string
+          currency?: string
+          delivery_days?: number | null
+          id?: string
+          message?: string | null
+          provider_user_id: string
+          rfq_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          business_id?: string | null
+          created_at?: string
+          currency?: string
+          delivery_days?: number | null
+          id?: string
+          message?: string | null
+          provider_user_id?: string
+          rfq_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_quotes_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "rfq_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfq_requests: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          buyer_user_id: string
+          created_at: string
+          currency: string
+          deadline: string | null
+          description: string | null
+          id: string
+          industry: string
+          ref_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          buyer_user_id: string
+          created_at?: string
+          currency?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          industry: string
+          ref_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          buyer_user_id?: string
+          created_at?: string
+          currency?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          industry?: string
+          ref_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       role_permissions: {
         Row: {
           permission_key: string
@@ -15299,6 +15424,13 @@ export type Database = {
         Returns: string
       }
       get_home_stats: { Args: never; Returns: Json }
+      get_loyalty_summary: {
+        Args: { _user_id: string }
+        Returns: {
+          level: string
+          total_points: number
+        }[]
+      }
       get_membership_usage: {
         Args: { _business_id?: string; _user_id?: string }
         Returns: {
