@@ -683,39 +683,8 @@ const DashboardBusinessEdit: React.FC = () => {
             <CardDescription>{t(isRTL, 'العنوان الوطني (عربي/إنجليزي) وإحداثيات الموقع لظهور منشأتك على الخريطة.', 'National address (Arabic/English) and coordinates so your business shows on the map.')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            {/* Short Saudi National Address — type "RRRD2402" and auto-fill everything below */}
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
-              <Label className="text-xs font-medium text-primary">
-                {t(isRTL, 'العنوان الوطني المختصر', 'Short national address')}
-              </Label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Input
-                  dir="ltr"
-                  className="tech-content uppercase"
-                  placeholder="RRRD2402"
-                  value={shortAddress}
-                  onChange={(e) => {
-                    const v = e.target.value.toUpperCase();
-                    setShortAddress(v);
-                    update('short_address', v || null);
-                  }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleShortAddressLookup(); } }}
-                  maxLength={8}
-                />
-                <Button type="button" onClick={handleShortAddressLookup} disabled={lookupBusy || shortAddress.trim().length < 8} className="gap-1.5">
-                  {lookupBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
-                  {t(isRTL, 'تعبئة العنوان', 'Auto-fill address')}
-                </Button>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                {t(
-                  isRTL,
-                  'أدخل العنوان الوطني المختصر (4 أحرف + 4 أرقام) من خطاب الواصل لتعبئة المنطقة والمدينة والحي والشارع تلقائيًا.',
-                  'Enter your Saudi short national address (4 letters + 4 digits) from the WASEL letter to auto-fill region, city, district and street.',
-                )}
-              </p>
-            </div>
-
+            {/* Country lives outside the national-address card because some
+                edge flows allow non-SA businesses. */}
             <div className={grid2}>
               <div>
                 <Label className={fieldLabel}>{t(isRTL, 'الدولة', 'Country')}</Label>
@@ -726,54 +695,13 @@ const DashboardBusinessEdit: React.FC = () => {
                   {countries.map((c) => <option key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</option>)}
                 </select>
               </div>
-              <div>
-                <Label className={fieldLabel}>{t(isRTL, 'المنطقة', 'Region')}</Label>
-                <select className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  value={regionId}
-                  onChange={(e) => handleRegionChange(e.target.value as SaRegionId | '')}>
-                  <option value="">{t(isRTL, 'اختر المنطقة', 'Select region')}</option>
-                  {SA_REGIONS.map((r) => (
-                    <option key={r.id} value={r.id}>{isRTL ? r.name_ar : r.name_en}</option>
-                  ))}
-                </select>
-              </div>
             </div>
 
-            <div>
-              <Label className={fieldLabel}>{t(isRTL, 'المدينة', 'City')}</Label>
-              <select className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                value={form.city_id ?? ''} disabled={!regionId}
-                onChange={(e) => update('city_id', e.target.value || null)}>
-                <option value="">
-                  {!regionId
-                    ? t(isRTL, 'اختر المنطقة أولاً', 'Select a region first')
-                    : t(isRTL, 'اختر المدينة', 'Select city')}
-                </option>
-                {filteredCities.map((c) => <option key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</option>)}
-              </select>
-            </div>
-
-            <BilingualField isRTL={isRTL}
-              label={{ ar: 'الحي', en: 'District' }}
-              valueAr={form.district ?? ''} valueEn={form.district_en ?? ''}
-              onChangeAr={(v) => update('district', v)} onChangeEn={(v) => update('district_en', v)}
-              placeholderAr="مثال: حي العليا" placeholderEn="e.g. Al Olaya" />
-
-            <BilingualField isRTL={isRTL}
-              label={{ ar: 'اسم الشارع', en: 'Street name' }}
-              valueAr={form.street_name ?? ''} valueEn={form.street_name_en ?? ''}
-              onChangeAr={(v) => update('street_name', v)} onChangeEn={(v) => update('street_name_en', v)} />
-
-            <BilingualField isRTL={isRTL} multiline rows={2}
-              label={{ ar: 'العنوان التفصيلي', en: 'Full address' }}
-              valueAr={form.address ?? ''} valueEn={form.address_en ?? ''}
-              onChangeAr={(v) => update('address', v)} onChangeEn={(v) => update('address_en', v)} />
+            {/* ADDRESS-GOVERNANCE-1 — unified national address (writes via
+                addresses module, mirrors to legacy columns via DB trigger). */}
+            <NationalAddressForm value={address} onChange={handleAddressChange} isRTL={isRTL} />
 
             <div className={grid2}>
-              <div><Label className={fieldLabel}>{t(isRTL, 'رقم المبنى', 'Building number')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.building_number ?? ''} onChange={(e) => update('building_number', e.target.value)} /></div>
-              <div><Label className={fieldLabel}>{t(isRTL, 'الرقم الإضافي', 'Additional number')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.additional_number ?? ''} onChange={(e) => update('additional_number', e.target.value)} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'رقم الدور', 'Floor number')}</Label>
                 <Input dir="ltr" className="mt-1 tech-content" placeholder={t(isRTL, 'مثال: 3', 'e.g. 3')} value={form.floor_number ?? ''} onChange={(e) => update('floor_number', e.target.value)} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'رقم الوحدة', 'Unit number')}</Label>
