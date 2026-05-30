@@ -19,6 +19,8 @@ const ALLOWED_CONTACT = new Set(['whatsapp','call','email']);
 const ALLOWED_CUSTOMER_TYPE = new Set(['individual','contractor','engineering_office','company','government','other']);
 const ALLOWED_SERVICE_LOC = new Set(['project_site','provider_location','not_sure']);
 const ALLOWED_TIMELINE = new Set(['week','two-weeks','month','flexible','ask-provider']);
+const ALLOWED_BRAND_MODE = new Set(['exact','preferred','flexible']);
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface Body {
   customer_name?: string;
@@ -38,6 +40,9 @@ interface Body {
   budget_amount?: number | null;
   budget_note?: string | null;
   metadata?: Record<string, unknown>;
+  preferred_brand_ids?: string[] | null;
+  brand_preference_mode?: string | null;
+  brand_notes?: string | null;
 }
 
 function err(msg: string, status = 400) {
@@ -78,6 +83,25 @@ Deno.serve(async (req) => {
   const email = body.customer_email?.toString().trim() || null;
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return err('البريد الإلكتروني غير صالح');
 
+  // Brand preference (all optional; DB trigger enforces approved-brand validity)
+  let preferredBrandIds: string[] | null = null;
+  if (Array.isArray(body.preferred_brand_ids) && body.preferred_brand_ids.length) {
+    const cleaned = body.preferred_brand_ids
+      .map((x) => String(x ?? '').trim())
+      .filter((x) => UUID_RE.test(x));
+    if (cleaned.length > 20) return err('عدد العلامات التجارية المفضّلة كبير جدًا');
+    preferredBrandIds = cleaned.length ? cleaned : null;
+  }
+  const brandMode =
+    body.brand_preference_mode == null || body.brand_preference_mode === ''
+      ? null
+      : String(body.brand_preference_mode);
+  if (brandMode && !ALLOWED_BRAND_MODE.has(brandMode)) return err('وضع تفضيل العلامة غير صالح');
+  const brandNotes =
+    typeof body.brand_notes === 'string' && body.brand_notes.trim()
+      ? body.brand_notes.trim().slice(0, 2000)
+      : null;
+
   const url = Deno.env.get('SUPABASE_URL')!;
   const anon = Deno.env.get('SUPABASE_ANON_KEY')!;
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -116,6 +140,9 @@ Deno.serve(async (req) => {
     status: 'new',
     source: 'website_quote_form',
     metadata: body.metadata && typeof body.metadata === 'object' ? body.metadata : {},
+    preferred_brand_ids: preferredBrandIds,
+    brand_preference_mode: brandMode,
+    brand_notes: brandNotes,
   };
 
   const { data: inserted, error } = await admin
@@ -141,6 +168,8 @@ Deno.serve(async (req) => {
         customer_type: customerType,
         source: 'website_quote_form',
         anonymous: !userId,
+        brand_count: preferredBrandIds?.length ?? 0,
+        brand_preference_mode: brandMode,
       },
     });
   } catch (e) {

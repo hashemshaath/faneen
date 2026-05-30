@@ -29,6 +29,10 @@ export interface SubmitQuoteRequestPayload {
   budget_amount: number | null;
   budget_note: string | null;
   metadata: Record<string, unknown>;
+  // RFQ-BRAND-PICKER-1B — optional header brand preference
+  preferred_brand_ids?: string[] | null;
+  brand_preference_mode?: 'exact' | 'preferred' | 'flexible' | null;
+  brand_notes?: string | null;
 }
 
 export interface SubmitQuoteRequestResult {

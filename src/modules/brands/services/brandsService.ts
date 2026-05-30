@@ -393,6 +393,27 @@ export async function searchApprovedBrandsForPicker(args: {
   >;
 }
 
+/**
+ * RFQ-BRAND-PICKER-1B — resolve approved brand labels for a list of ids.
+ * Reads `brands_public` (approved-only). Returns rows in the same order as
+ * the input where possible; unknown / non-approved ids are dropped.
+ */
+export async function listApprovedBrandsByIds(ids: string[]) {
+  const unique = Array.from(new Set((ids ?? []).filter(Boolean)));
+  if (unique.length === 0) return [] as Array<
+    Pick<Brand, 'id' | 'ref_id' | 'name_ar' | 'name_en' | 'slug' | 'logo_url'>
+  >;
+  const { data, error } = await sb
+    .from('brands_public')
+    .select('id, ref_id, name_ar, name_en, slug, logo_url')
+    .in('id', unique);
+  if (error) throw error;
+  const map = new Map((data ?? []).map((r) => [r.id, r]));
+  return unique
+    .map((id) => map.get(id))
+    .filter((x): x is NonNullable<typeof x> => Boolean(x));
+}
+
 export async function linkBrandToService(args: {
   businessServiceId: string;
   businessId: string;

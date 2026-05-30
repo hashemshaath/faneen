@@ -18,6 +18,8 @@ import {
   adminRevealLeadContact,
   matchQuoteRequest,
 } from '@/modules/quotes';
+import { listApprovedBrandsByIds } from '@/modules/brands';
+import { describeBrandPreference } from '@/modules/brands/lib/brandSelectionRules';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -74,6 +76,10 @@ interface AdminQuoteRow {
   metadata: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+  // RFQ-BRAND-PICKER-1B — optional brand preference
+  preferred_brand_ids: string[] | null;
+  brand_preference_mode: string | null;
+  brand_notes: string | null;
 }
 
 interface FileRow {
@@ -462,6 +468,8 @@ const AdminQuoteRequestDetails: React.FC = () => {
                 <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-6">{quote.project_description}</p>
               </div>
 
+              <AdminQuoteBrandPreference quote={quote} />
+
               <div className="flex flex-wrap gap-2 pt-2">
                 <Button asChild className="min-h-[40px]" variant="default">
                   <a href={`https://wa.me/${waPhone}?text=${waMsg}`} target="_blank" rel="noopener noreferrer">
@@ -825,6 +833,65 @@ const Stat: React.FC<{ label: string; value: number }> = ({ label, value }) => (
 );
 
 export default AdminQuoteRequestDetails;
+
+// ===== RFQ-BRAND-PICKER-1B — brand preference panel =====
+
+const AdminQuoteBrandPreference: React.FC<{ quote: AdminQuoteRow }> = ({ quote }) => {
+  const ids = quote.preferred_brand_ids ?? [];
+  const mode = quote.brand_preference_mode;
+  const notes = quote.brand_notes;
+  const enabled = ids.length > 0 || !!mode || !!notes;
+
+  type BrandRow = { id: string; ref_id: string | null; name_ar: string; name_en: string; slug: string; logo_url: string | null };
+  const brandsQuery = useQuery({
+    queryKey: ['admin-quote-brands', quote.id, ids.join(',')],
+    queryFn: async () => (await listApprovedBrandsByIds(ids)) as BrandRow[],
+    enabled: ids.length > 0,
+  });
+  const brands = (brandsQuery.data ?? []) as BrandRow[];
+
+  if (!enabled) return null;
+
+  return (
+    <div className="pt-2 border-t" data-testid="admin-brand-preference">
+      <div className="text-xs text-muted-foreground mb-2">تفضيل العلامة التجارية</div>
+      {ids.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {brands.map((b) => (
+            <span
+              key={b.id}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1 text-xs"
+            >
+              <Tag className="h-3 w-3 text-muted-foreground" />
+              <span dir="auto">{b.name_ar || b.name_en}</span>
+              <span className="text-muted-foreground tech-content">· {b.ref_id}</span>
+            </span>
+          ))}
+          {brands.length < ids.length && (
+            <span className="text-xs text-muted-foreground">
+              ({ids.length - brands.length} غير معتمدة حاليًا)
+            </span>
+          )}
+        </div>
+      )}
+      {mode && (
+        <div className="text-sm text-foreground/90">
+          <span className="text-muted-foreground">درجة التفضيل: </span>
+          {describeBrandPreference(
+            mode as 'exact' | 'preferred' | 'flexible',
+            'ar',
+          )}
+        </div>
+      )}
+      {notes && (
+        <div className="mt-2 text-sm text-foreground/90 whitespace-pre-wrap leading-6">
+          <span className="text-xs text-muted-foreground block mb-1">ملاحظات</span>
+          {notes}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ===== Events timeline =====
 
