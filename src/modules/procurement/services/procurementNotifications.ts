@@ -100,6 +100,10 @@ export function notifyProcurementEvent(input: ProcurementNotificationInput): voi
     if (!input?.user_id) return;
     const content = BILINGUAL[input.event];
     if (!content) return;
+    // RFQ-BRAND-PICKER-1F — collapse duplicate same-state notifications fired
+    // within a short window (e.g. double-clicking approve). Pure in-memory,
+    // best-effort, never throws.
+    if (!shouldEmitNotification(input)) return;
     const reference_type = input.quote_id
       ? 'procurement_supplier_quote'
       : input.rfq_id
@@ -122,5 +126,32 @@ export function notifyProcurementEvent(input: ProcurementNotificationInput): voi
     );
   } catch {
     // never throw from notification path
+  }
+}
+
+// RFQ-BRAND-PICKER-1F — tiny in-memory dedupe cache (per process).
+const NOTIF_DEDUPE_WINDOW_MS = 5_000;
+const _notifDedupe = new Map<string, number>();
+function shouldEmitNotification(input: ProcurementNotificationInput): boolean {
+  try {
+    const key = [
+      input.user_id,
+      input.event,
+      input.quote_id ?? '',
+      input.rfq_id ?? '',
+      input.procurement_request_id ?? '',
+    ].join('|');
+    const now = Date.now();
+    const last = _notifDedupe.get(key);
+    if (last !== undefined && now - last < NOTIF_DEDUPE_WINDOW_MS) return false;
+    _notifDedupe.set(key, now);
+    // Bound the cache.
+    if (_notifDedupe.size > 256) {
+      const cutoff = now - NOTIF_DEDUPE_WINDOW_MS;
+      for (const [k, t] of _notifDedupe) if (t < cutoff) _notifDedupe.delete(k);
+    }
+    return true;
+  } catch {
+    return true;
   }
 }
