@@ -792,11 +792,50 @@ const DashboardBusinessEdit: React.FC = () => {
                 <Input dir="ltr" className="mt-1 tech-content" value={form.building_number ?? ''} onChange={(e) => update('building_number', e.target.value)} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'الرقم الإضافي', 'Additional number')}</Label>
                 <Input dir="ltr" className="mt-1 tech-content" value={form.additional_number ?? ''} onChange={(e) => update('additional_number', e.target.value)} /></div>
+              <div><Label className={fieldLabel}>{t(isRTL, 'رقم الدور', 'Floor number')}</Label>
+                <Input dir="ltr" className="mt-1 tech-content" placeholder={t(isRTL, 'مثال: 3', 'e.g. 3')} value={form.floor_number ?? ''} onChange={(e) => update('floor_number', e.target.value)} /></div>
+              <div><Label className={fieldLabel}>{t(isRTL, 'رقم الوحدة', 'Unit number')}</Label>
+                <Input dir="ltr" className="mt-1 tech-content" placeholder={t(isRTL, 'مثال: 12', 'e.g. 12')} value={form.unit_number ?? ''} onChange={(e) => update('unit_number', e.target.value)} /></div>
+              <div className="sm:col-span-2">
+                <Label className={fieldLabel}>{t(isRTL, 'نوع الوحدة', 'Unit type')}</Label>
+                <select
+                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  value={form.unit_type ?? ''}
+                  onChange={(e) => update('unit_type', e.target.value || null)}
+                >
+                  <option value="">{t(isRTL, 'اختر نوع الوحدة', 'Select unit type')}</option>
+                  <option value="office">{t(isRTL, 'مكتب', 'Office')}</option>
+                  <option value="showroom">{t(isRTL, 'معرض', 'Showroom')}</option>
+                  <option value="office_showroom">{t(isRTL, 'مكتب / معرض', 'Office / Showroom')}</option>
+                  <option value="warehouse">{t(isRTL, 'مستودع', 'Warehouse')}</option>
+                  <option value="apartment">{t(isRTL, 'شقة', 'Apartment')}</option>
+                  <option value="villa">{t(isRTL, 'فيلا', 'Villa')}</option>
+                  <option value="factory">{t(isRTL, 'مصنع', 'Factory')}</option>
+                  <option value="other">{t(isRTL, 'أخرى', 'Other')}</option>
+                </select>
+              </div>
               <div><Label className={fieldLabel}>{t(isRTL, 'خط العرض (Latitude)', 'Latitude')}</Label>
                 <Input dir="ltr" type="number" step="0.00000001" className="mt-1 tech-content" value={form.latitude ?? ''} onChange={(e) => update('latitude', e.target.value === '' ? null : Number(e.target.value))} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'خط الطول (Longitude)', 'Longitude')}</Label>
                 <Input dir="ltr" type="number" step="0.00000001" className="mt-1 tech-content" value={form.longitude ?? ''} onChange={(e) => update('longitude', e.target.value === '' ? null : Number(e.target.value))} /></div>
             </div>
+
+            {/* Composed address preview — concatenates the typed fields into a single line for confirmation */}
+            {(() => {
+              const parts = isRTL
+                ? [form.street_name, form.district, form.region, form.short_address]
+                : [form.street_name_en, form.district_en, form.region_en, form.short_address];
+              const composed = parts.map((p) => (p ?? '').toString().trim()).filter(Boolean).join(' - ');
+              if (!composed) return null;
+              return (
+                <div className="rounded-xl border border-dashed border-border bg-muted/20 p-3">
+                  <div className="text-[11px] font-medium text-muted-foreground mb-1">
+                    {t(isRTL, 'معاينة العنوان المركّب', 'Composed address preview')}
+                  </div>
+                  <div className="text-sm font-medium text-foreground" dir="auto">{composed}</div>
+                </div>
+              );
+            })()}
 
             <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
               <div className="flex items-center justify-between">
