@@ -61,8 +61,8 @@ export default function AdminAuditLog() {
         const [adminRes, bizRes, secRes, amendRes] = await Promise.all([
           supabase.from('admin_activity_log').select('id,action,user_id,entity_type,entity_id,details,created_at').gte('created_at', fromIso).lte('created_at', toIso).order('created_at', { ascending: false }).limit(500),
           supabase.from('business_audit_log').select('id,action,actor_id,business_id,changes,created_at').gte('created_at', fromIso).lte('created_at', toIso).order('created_at', { ascending: false }).limit(500),
-          supabase.from('security_audit_log').select('id,action,user_id,resource_type,resource_id,metadata,created_at').gte('created_at', fromIso).lte('created_at', toIso).order('created_at', { ascending: false }).limit(500),
-          supabase.from('contract_amendment_audit_safe').select('id,action,actor_id,amendment_id,created_at,reason').gte('created_at', fromIso).lte('created_at', toIso).order('created_at', { ascending: false }).limit(500),
+          supabase.from('security_audit_log').select('id,event_action,event_type,user_id,metadata,created_at').gte('created_at', fromIso).lte('created_at', toIso).order('created_at', { ascending: false }).limit(500),
+          supabase.from('contract_amendment_audit_safe').select('id,action,amendment_id,old_status,new_status,created_at').gte('created_at', fromIso).lte('created_at', toIso).order('created_at', { ascending: false }).limit(500),
         ]);
 
         if (cancelled) return;
@@ -74,11 +74,12 @@ export default function AdminAuditLog() {
         for (const r of (bizRes.data ?? []) as Array<{ id: string; action: string; actor_id: string | null; business_id: string | null; changes: unknown; created_at: string }>) {
           merged.push({ id: `b:${r.id}`, source: 'business', action: r.action, actor: r.actor_id, entity: r.business_id ? `business:${r.business_id}` : null, details: stringifyDetails(r.changes), created_at: r.created_at });
         }
-        for (const r of (secRes.data ?? []) as Array<{ id: string; action: string; user_id: string | null; resource_type: string | null; resource_id: string | null; metadata: unknown; created_at: string }>) {
-          merged.push({ id: `s:${r.id}`, source: 'security', action: r.action, actor: r.user_id, entity: r.resource_type ? `${r.resource_type}:${r.resource_id ?? ''}` : null, details: stringifyDetails(r.metadata), created_at: r.created_at });
+        for (const r of (secRes.data ?? []) as Array<{ id: string; event_action: string; event_type: string; user_id: string | null; metadata: unknown; created_at: string }>) {
+          merged.push({ id: `s:${r.id}`, source: 'security', action: `${r.event_type}:${r.event_action}`, actor: r.user_id, entity: null, details: stringifyDetails(r.metadata), created_at: r.created_at });
         }
-        for (const r of (amendRes.data ?? []) as Array<{ id: string; action: string | null; actor_id: string | null; amendment_id: string | null; created_at: string; reason: string | null }>) {
-          merged.push({ id: `c:${r.id}`, source: 'contract_amendment', action: r.action ?? 'amendment', actor: r.actor_id, entity: r.amendment_id ? `amendment:${r.amendment_id}` : null, details: r.reason ?? '', created_at: r.created_at });
+        for (const r of (amendRes.data ?? []) as Array<{ id: string | null; action: string | null; amendment_id: string | null; old_status: string | null; new_status: string | null; created_at: string | null }>) {
+          if (!r.id || !r.created_at) continue;
+          merged.push({ id: `c:${r.id}`, source: 'contract_amendment', action: r.action ?? 'amendment', actor: null, entity: r.amendment_id ? `amendment:${r.amendment_id}` : null, details: `${r.old_status ?? ''} → ${r.new_status ?? ''}`, created_at: r.created_at });
         }
 
         merged.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
@@ -115,8 +116,8 @@ export default function AdminAuditLog() {
   }, [rows]);
 
   function onExport() {
-    const headers = ['source', 'action', 'actor', 'entity', 'details', 'created_at'] as const;
-    const csv = buildCsv(headers, visible.map((r) => ({ ...r })));
+    const headers: ReadonlyArray<keyof UnifiedRow & string> = ['source', 'action', 'actor', 'entity', 'details', 'created_at'];
+    const csv = buildCsv(visible as unknown as Array<Record<string, unknown> & UnifiedRow>, headers);
     downloadCsv(`audit-log_${range.from}_${range.to}.csv`, csv);
   }
 
