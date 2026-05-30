@@ -180,6 +180,35 @@ const DashboardBusinessCompletion: React.FC = () => {
           </p>
         </header>
 
+        {business && (
+          <section
+            className="mb-5 rounded-xl border border-border bg-card px-4 py-3 flex items-center gap-3"
+            aria-label={isRTL ? 'هوية المنشأة' : 'Business identity'}
+          >
+            <div className="shrink-0 w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+              {business.logo_url ? (
+                <img src={business.logo_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <Building2 className="w-6 h-6 text-muted-foreground" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                {isRTL ? 'بيانات المنشأة (وليس بيانات المستخدم)' : 'Entity profile (not user account)'}
+              </p>
+              <p className="text-sm font-semibold text-foreground truncate" dir="auto">
+                {(isRTL ? business.name_ar : business.name_en) || business.name_ar || business.name_en
+                  || (isRTL ? 'منشأة بدون اسم' : 'Unnamed entity')}
+              </p>
+              {business.ref_id && (
+                <p className="text-[11px] text-muted-foreground mt-0.5 tech-content font-mono">
+                  {business.ref_id}
+                </p>
+              )}
+            </div>
+          </section>
+        )}
+
         {isLoading && (
           <div className="rounded-xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
             {isRTL ? 'جارِ التحميل...' : 'Loading…'}

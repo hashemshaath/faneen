@@ -56,19 +56,19 @@ export function useProviderReadiness(userId: string | undefined) {
     if (!business) return [];
     const items: MissingField[] = [];
     if (!business.logo_url)
-      items.push({ key: 'logo', ar: 'الشعار', en: 'Logo', href: '/dashboard/settings' });
+      items.push({ key: 'logo', ar: 'الشعار', en: 'Logo', href: '/dashboard/business-edit#logo' });
     if (!(business.description_ar || business.short_description_ar))
-      items.push({ key: 'desc', ar: 'وصف النشاط', en: 'Description', href: '/dashboard/settings' });
+      items.push({ key: 'desc', ar: 'وصف النشاط', en: 'Description', href: '/dashboard/business-edit#description' });
     if (!business.category_id)
-      items.push({ key: 'category', ar: 'القطاع', en: 'Sector', href: '/dashboard/settings' });
+      items.push({ key: 'category', ar: 'القطاع', en: 'Sector', href: '/dashboard/business-edit#sectors' });
     if (!business.city_id)
-      items.push({ key: 'city', ar: 'المدينة', en: 'City', href: '/dashboard/settings' });
+      items.push({ key: 'city', ar: 'المدينة', en: 'City', href: '/dashboard/business-edit#city' });
     if (!(business.phone || business.mobile))
-      items.push({ key: 'phone', ar: 'رقم التواصل', en: 'Phone', href: '/dashboard/settings' });
+      items.push({ key: 'phone', ar: 'رقم التواصل', en: 'Phone', href: '/dashboard/business-edit#phone' });
     if (!business.email)
-      items.push({ key: 'email', ar: 'البريد الإلكتروني', en: 'Email', href: '/dashboard/settings' });
+      items.push({ key: 'email', ar: 'البريد الإلكتروني', en: 'Email', href: '/dashboard/business-edit#email' });
     if (!business.address)
-      items.push({ key: 'address', ar: 'العنوان', en: 'Address' , href: '/dashboard/settings' });
+      items.push({ key: 'address', ar: 'العنوان', en: 'Address', href: '/dashboard/business-edit#address' });
     return items;
   }, [business]);
 
