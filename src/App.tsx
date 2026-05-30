@@ -14,6 +14,7 @@ import { AppDirectionShell } from "@/components/ui/app-direction-shell";
 import { RouteScrollToTop } from "@/components/RouteScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalLinkTracker } from "@/components/GlobalLinkTracker";
+import { GlobalShortcuts } from "@/components/GlobalShortcuts";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { ThemeApplier } from "@/components/ThemeApplier";
 const Index = lazyRetry(() => import("./pages/Index"));
@@ -225,6 +226,7 @@ const AppRoutes = () => (
     <AppDirectionShell>
       <RouteScrollToTop />
       <GlobalLinkTracker />
+      <GlobalShortcuts />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<Index />} />
