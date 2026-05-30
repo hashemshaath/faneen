@@ -255,6 +255,44 @@ const DashboardServices: React.FC = () => {
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
   });
 
+  // Bidirectional sync — add a sub_service to the business catalog.
+  const addSubMut = useMutation({
+    mutationFn: async (subId: string) => {
+      if (!businessId) throw new Error('No business');
+      const { error } = await supabase.rpc('add_business_sub_service', {
+        p_business_id: businessId,
+        p_sub_service_id: subId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-business-services-page'] });
+      toast.success(isRTL ? 'تمت الإضافة' : 'Added');
+    },
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
+  });
+
+  // Bidirectional sync — remove a sub_service (and its business_services row).
+  const removeSubMut = useMutation({
+    mutationFn: async (subId: string) => {
+      if (!businessId) throw new Error('No business');
+      const { error } = await supabase.rpc('remove_business_sub_service', {
+        p_business_id: businessId,
+        p_sub_service_id: subId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-business-services-page'] });
+      qc.invalidateQueries({ queryKey: ['business-services-sync', businessId] });
+      toast.success(isRTL ? 'تم الحذف' : 'Removed');
+    },
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
+  });
+
+  // Inline catalog picker
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   // ── Request new service form ──
   const [reqOpen, setReqOpen] = useState(false);
   const [reqForm, setReqForm] = useState({ sector_id: '' as string, name_ar: '', name_en: '', description: '' });
