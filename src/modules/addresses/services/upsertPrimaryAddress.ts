@@ -35,7 +35,8 @@ export async function upsertPrimaryAddress(
 
   if (findErr) return { data: null, error: findErr };
 
-  const payload = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const payload: any = {
     owner_type: ownerType,
     owner_id: ownerId,
     address_type: addressType,
