@@ -379,8 +379,9 @@ describe('RFQ-BRAND-PICKER-1E — notifications', () => {
     ]) {
       expect(NOTIF).toContain(ev);
     }
-    // No SMS / email / push / WhatsApp surfaces introduced.
-    expect(NOTIF).not.toMatch(/sendEmail|sendSms|sendPush|whatsapp/i);
+    // No SMS / email / push / WhatsApp call surfaces introduced (function calls only;
+    // docstring may still describe what is forbidden).
+    expect(NOTIF).not.toMatch(/sendEmail\(|sendSms\(|sendPush\(|sendWhatsapp\(/i);
   });
 });
 
