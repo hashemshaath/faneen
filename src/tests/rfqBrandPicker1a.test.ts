@@ -5,7 +5,7 @@
  * no live RFQ/supplier UI was wired in this phase.
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, type Dirent } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   isValidBrandPreferenceMode,
@@ -162,7 +162,7 @@ describe('RFQ-BRAND-PICKER-1A — scope discipline (no live wiring this phase)',
   function rgInDir(dir: string, re: RegExp): string[] {
     const out: string[] = [];
     function walk(d: string) {
-      let entries: ReturnType<typeof readdirSync>;
+      let entries: Dirent[];
       try { entries = readdirSync(repo(d), { withFileTypes: true }); }
       catch { return; }
       for (const entry of entries) {
