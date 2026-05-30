@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2, Plus, Pencil, X, Check, AlertCircle, ExternalLink, Wrench, Sparkles, Inbox, Ticket, Clock, CheckCircle2, XCircle, Send } from 'lucide-react';
+import { Loader2, Plus, Pencil, X, Check, AlertCircle, ExternalLink, Wrench, Sparkles, Inbox, Ticket, Clock, CheckCircle2, XCircle, Send, Trash2, ListPlus } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -13,6 +13,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
 import { ONBOARDING_SECTORS, findSubServiceById, type SectorId } from '@/data/onboarding-sectors';
+import { ServiceBrandsPicker } from '@/components/dashboard/ServiceBrandsPicker';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -104,6 +105,7 @@ const DashboardServices: React.FC = () => {
 
   const businessId = business?.id ?? null;
   const subServiceIds: string[] = useMemo(() => business?.sub_services ?? [], [business]);
+  const businessSectors: string[] = useMemo(() => (business as { sectors?: string[] } | null)?.sectors ?? [], [business]);
 
   const { data: services = [], isLoading: loadingSvc } = useQuery({
     queryKey: ['business-services-sync', businessId],
@@ -153,6 +155,7 @@ const DashboardServices: React.FC = () => {
       return {
         subId,
         isCustom,
+        sectorId: catalog?.sector_id ?? null,
         sectorLabel: catalog ? (isRTL ? catalog.sector_name_ar : catalog.sector_name_en) : null,
         name_ar: row?.name_ar ?? catalog?.name_ar ?? (isRTL ? 'خدمة مخصّصة' : 'Custom service'),
         name_en: row?.name_en ?? catalog?.name_en ?? 'Custom service',
@@ -252,6 +255,44 @@ const DashboardServices: React.FC = () => {
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
   });
 
+  // Bidirectional sync — add a sub_service to the business catalog.
+  const addSubMut = useMutation({
+    mutationFn: async (subId: string) => {
+      if (!businessId) throw new Error('No business');
+      const { error } = await supabase.rpc('add_business_sub_service', {
+        p_business_id: businessId,
+        p_sub_service_id: subId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-business-services-page'] });
+      toast.success(isRTL ? 'تمت الإضافة' : 'Added');
+    },
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
+  });
+
+  // Bidirectional sync — remove a sub_service (and its business_services row).
+  const removeSubMut = useMutation({
+    mutationFn: async (subId: string) => {
+      if (!businessId) throw new Error('No business');
+      const { error } = await supabase.rpc('remove_business_sub_service', {
+        p_business_id: businessId,
+        p_sub_service_id: subId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-business-services-page'] });
+      qc.invalidateQueries({ queryKey: ['business-services-sync', businessId] });
+      toast.success(isRTL ? 'تم الحذف' : 'Removed');
+    },
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
+  });
+
+  // Inline catalog picker
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   // ── Request new service form ──
   const [reqOpen, setReqOpen] = useState(false);
   const [reqForm, setReqForm] = useState({ sector_id: '' as string, name_ar: '', name_en: '', description: '' });
@@ -343,6 +384,10 @@ const DashboardServices: React.FC = () => {
                 {isRTL ? 'تعديل القطاعات والخدمات' : 'Edit sectors & services'}
               </Link>
             </Button>
+            <Button variant="outline" onClick={() => setPickerOpen((v) => !v)} className="rounded-xl">
+              <ListPlus className="h-4 w-4 me-2" />
+              {isRTL ? 'إضافة من الكتالوج' : 'Pick from catalog'}
+            </Button>
             <Button onClick={() => setReqOpen((v) => !v)} className="rounded-xl">
               <Plus className="h-4 w-4 me-2" />
               {isRTL ? 'طلب إضافة خدمة جديدة' : 'Request a new service'}
@@ -356,6 +401,55 @@ const DashboardServices: React.FC = () => {
           <StatCard icon={<Sparkles className="h-4 w-4 text-success" />} label={isRTL ? 'الخدمات النشطة' : 'Active'} value={stats.active} />
           <StatCard icon={<Inbox className="h-4 w-4 text-warning" />} label={isRTL ? 'طلبات قيد المراجعة' : 'Pending requests'} value={stats2.pending} />
         </section>
+
+        {/* Inline catalog picker — bidirectional sync with business-edit */}
+        {pickerOpen && businessId && (
+          <Card className="border-primary/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ListPlus className="h-4 w-4 text-primary" />
+                {isRTL ? 'اختر خدمات من الكتالوج' : 'Pick services from the catalog'}
+              </CardTitle>
+              <CardDescription>
+                {isRTL
+                  ? 'أي إضافة هنا تنعكس فوراً في صفحة بيانات المنشأة، وأي إزالة من هناك تنعكس هنا.'
+                  : 'Adding here updates your business profile instantly. Removals propagate both ways.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 max-h-[28rem] overflow-y-auto no-scrollbar">
+              {ONBOARDING_SECTORS
+                .filter((s) => businessSectors.length === 0 || businessSectors.includes(s.id))
+                .map((sector) => (
+                <div key={sector.id} className="rounded-lg border border-border/60 p-2.5">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h4 className="text-sm font-semibold">{isRTL ? sector.name_ar : sector.name_en}</h4>
+                    <span className="text-[10px] text-muted-foreground">{sector.subServices.length}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {sector.subServices.map((sub) => {
+                      const selected = subServiceIds.includes(sub.id);
+                      return (
+                        <button
+                          key={sub.id}
+                          onClick={() => selected ? removeSubMut.mutate(sub.id) : addSubMut.mutate(sub.id)}
+                          disabled={addSubMut.isPending || removeSubMut.isPending}
+                          className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+                            selected
+                              ? 'border-primary/40 bg-primary/10 text-primary'
+                              : 'border-border/60 bg-card hover:bg-accent/5'
+                          }`}
+                        >
+                          {selected ? <Check className="h-3 w-3 inline me-1" /> : <Plus className="h-3 w-3 inline me-1" />}
+                          {isRTL ? sub.name_ar : sub.name_en}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Request form (inline, no popup) */}
         {reqOpen && (
@@ -506,6 +600,9 @@ const DashboardServices: React.FC = () => {
                 {displayList.map((d) => (
                   <ServiceTile
                     key={d.subId}
+                    businessId={businessId!}
+                    userId={user?.id ?? ''}
+                    sectorId={d.sectorId}
                     sectorLabel={d.sectorLabel}
                     isCustom={d.isCustom}
                     name={isRTL ? d.name_ar : d.name_en || d.name_ar}
@@ -516,6 +613,8 @@ const DashboardServices: React.FC = () => {
                     saving={upsertMut.isPending}
                     onToggle={(next) => toggleMut.mutate({ subId: d.subId, name_ar: d.name_ar, name_en: d.name_en || d.name_ar, nextActive: next })}
                     onSave={(payload) => upsertMut.mutate({ subId: d.subId, payload: { ...payload, name_ar: d.name_ar, name_en: d.name_en || d.name_ar } })}
+                    onRemove={() => removeSubMut.mutate(d.subId)}
+                    removing={removeSubMut.isPending}
                   />
                 ))}
               </div>
@@ -537,8 +636,11 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 function ServiceTile({
-  sectorLabel, isCustom, name, nameAr, nameEn, row, isRTL, saving, onToggle, onSave,
+  businessId, userId, sectorId, sectorLabel, isCustom, name, nameAr, nameEn, row, isRTL, saving, onToggle, onSave, onRemove, removing,
 }: {
+  businessId: string;
+  userId: string;
+  sectorId: string | null;
   sectorLabel: string | null;
   isCustom: boolean;
   name: string;
@@ -549,6 +651,8 @@ function ServiceTile({
   saving: boolean;
   onToggle: (next: boolean) => void;
   onSave: (payload: { description_ar: string | null; description_en: string | null; price_from: number | null; price_to: number | null; currency_code: string; is_active: boolean }) => void;
+  onRemove: () => void;
+  removing: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({
@@ -575,6 +679,22 @@ function ServiceTile({
           <Switch checked={isActive} onCheckedChange={onToggle} aria-label="active" />
           <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setEditing((v) => !v)}>
             {editing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={() => {
+              if (window.confirm(isRTL
+                ? 'سيتم إزالة هذه الخدمة من ملف المنشأة وحذف بياناتها (السعر/الوصف). متابعة؟'
+                : 'This will remove the service from your business profile and delete its pricing/description. Continue?')) {
+                onRemove();
+              }
+            }}
+            disabled={removing}
+            aria-label="remove"
+          >
+            {removing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
           </Button>
         </div>
       </div>
@@ -643,6 +763,16 @@ function ServiceTile({
             </Button>
           </div>
         </div>
+      )}
+
+      {row && userId && (
+        <ServiceBrandsPicker
+          businessServiceId={row.id}
+          businessId={businessId}
+          userId={userId}
+          sectorId={sectorId}
+          isRTL={isRTL}
+        />
       )}
     </div>
   );
