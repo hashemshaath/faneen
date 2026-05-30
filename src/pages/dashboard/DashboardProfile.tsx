@@ -528,6 +528,7 @@ const DashboardProfile: React.FC = () => {
                   onChange={(v) => setForm((f) => ({ ...f, username: v }))}
                   onValidChange={(s) => setUsernameOk(form.username === '' ? true : s.isValid && s.isAvailable)}
                   excludeUserId={user?.id ?? null}
+                  currentUsername={profile?.username ?? null}
                   placeholder={t(isRTL, 'مثال: ahmad-aluminum', 'e.g. ahmad-aluminum')}
                 />
               </CardContent>
