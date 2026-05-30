@@ -50,65 +50,108 @@ interface BusinessRow {
   submitted_at?: string | null;
 }
 
-interface ChecklistItem {
+const has = (v: unknown) =>
+  typeof v === 'string' ? v.trim().length > 0 : Array.isArray(v) ? v.length > 0 : v != null;
+
+interface ChecklistField {
   key: string;
   label_ar: string;
   label_en: string;
   done: boolean;
   to: string;
-  Icon: typeof Building2;
 }
 
-function buildChecklist(b: BusinessRow): ChecklistItem[] {
-  const has = (v: unknown) => typeof v === 'string' ? v.trim().length > 0 : Array.isArray(v) ? v.length > 0 : v != null;
+interface ChecklistGroup {
+  key: string;
+  title_ar: string;
+  title_en: string;
+  hint_ar: string;
+  hint_en: string;
+  weight: number; // visibility / impact weight 0-100
+  Icon: typeof Building2;
+  fields: ChecklistField[];
+}
+
+function buildGroups(b: BusinessRow): ChecklistGroup[] {
+  const link = (anchor: string) => `/dashboard/business-edit#${anchor}`;
   return [
     {
       key: 'identity',
-      label_ar: 'اسم المنشأة وشعارها',
-      label_en: 'Business name & logo',
-      done: has(b.name_ar) && has(b.logo_url),
-      to: '/onboarding',
+      title_ar: 'الهوية البصرية',
+      title_en: 'Brand identity',
+      hint_ar: 'الاسم والشعار يحدّدان انطباع الزائر الأول.',
+      hint_en: 'Name and logo shape the first impression.',
+      weight: 20,
       Icon: ImageIcon,
+      fields: [
+        { key: 'name', label_ar: 'اسم المنشأة', label_en: 'Business name', done: has(b.name_ar) || has(b.name_en), to: link('name') },
+        { key: 'logo', label_ar: 'الشعار', label_en: 'Logo', done: has(b.logo_url), to: link('logo') },
+      ],
     },
     {
       key: 'about',
-      label_ar: 'وصف ونبذة عن المنشأة',
-      label_en: 'About & short description',
-      done: has(b.description_ar) && has(b.short_description_ar),
-      to: '/onboarding',
+      title_ar: 'الوصف والتعريف',
+      title_en: 'About & description',
+      hint_ar: 'صفحات بوصف غني تتفوّق بفارق ٤٠٪ في الظهور.',
+      hint_en: 'Pages with rich descriptions rank up to 40% higher.',
+      weight: 18,
       Icon: FileText,
+      fields: [
+        { key: 'short', label_ar: 'نبذة مختصرة', label_en: 'Short description', done: has(b.short_description_ar), to: link('description') },
+        { key: 'long', label_ar: 'وصف تفصيلي', label_en: 'Full description', done: has(b.description_ar), to: link('description') },
+      ],
     },
     {
       key: 'contact',
-      label_ar: 'وسائل التواصل (هاتف/جوال/إيميل)',
-      label_en: 'Contact channels (phone, mobile, email)',
-      done: (has(b.phone) || has(b.mobile)) && has(b.email),
-      to: '/onboarding',
+      title_ar: 'وسائل التواصل',
+      title_en: 'Contact channels',
+      hint_ar: 'كل قناة تواصل إضافية ترفع نسبة التحويل.',
+      hint_en: 'Each extra channel boosts conversion.',
+      weight: 17,
       Icon: Phone,
+      fields: [
+        { key: 'phone', label_ar: 'هاتف أو جوال', label_en: 'Phone or mobile', done: has(b.phone) || has(b.mobile), to: link('phone') },
+        { key: 'email', label_ar: 'البريد الإلكتروني', label_en: 'Email', done: has(b.email), to: link('email') },
+      ],
     },
     {
       key: 'location',
-      label_ar: 'الموقع والعنوان على الخريطة',
-      label_en: 'Location & map address',
-      done: has(b.city_id) && has(b.address) && b.latitude != null && b.longitude != null,
-      to: '/onboarding',
+      title_ar: 'الموقع الجغرافي',
+      title_en: 'Location',
+      hint_ar: 'الإحداثيات الدقيقة تُظهرك في خرائط البحث.',
+      hint_en: 'Precise coordinates surface you in map search.',
+      weight: 18,
       Icon: MapPin,
+      fields: [
+        { key: 'city', label_ar: 'المدينة', label_en: 'City', done: has(b.city_id), to: link('city') },
+        { key: 'address', label_ar: 'العنوان', label_en: 'Address', done: has(b.address), to: link('address') },
+        { key: 'geo', label_ar: 'دبوس الخريطة', label_en: 'Map pin', done: b.latitude != null && b.longitude != null, to: link('map') },
+      ],
     },
     {
       key: 'sectors',
-      label_ar: 'القطاعات والخدمات',
-      label_en: 'Sectors & services',
-      done: has(b.sectors) && has(b.sub_services),
-      to: '/onboarding',
+      title_ar: 'القطاعات والخدمات',
+      title_en: 'Sectors & services',
+      hint_ar: 'التصنيف الدقيق يربطك بالعملاء المهتمين فعلياً.',
+      hint_en: 'Accurate tagging matches you with real intent.',
+      weight: 15,
       Icon: Layers,
+      fields: [
+        { key: 'sectors', label_ar: 'القطاعات', label_en: 'Sectors', done: has(b.sectors), to: link('sectors') },
+        { key: 'sub', label_ar: 'الخدمات الفرعية', label_en: 'Sub‑services', done: has(b.sub_services), to: link('sectors') },
+      ],
     },
     {
       key: 'legal',
-      label_ar: 'البيانات النظامية (الرقم الموحّد/السجل)',
-      label_en: 'Legal identifiers (unified / national ID)',
-      done: has(b.national_id) || has(b.unified_number),
-      to: '/onboarding',
+      title_ar: 'البيانات النظامية',
+      title_en: 'Legal identifiers',
+      hint_ar: 'الرقم الموحّد يُسرّع الاعتماد ويمنح شارة الموثوقية.',
+      hint_en: 'Unified number speeds approval and unlocks verified badge.',
+      weight: 12,
       Icon: ShieldCheck,
+      fields: [
+        { key: 'unified', label_ar: 'الرقم الموحّد / السجل', label_en: 'Unified / commercial ID', done: has(b.national_id) || has(b.unified_number), to: link('legal') },
+      ],
     },
   ];
 }
@@ -120,6 +163,7 @@ const statusMeta: Record<ApprovalStatus, { ar: string; en: string; tone: 'info' 
   needs_changes: { ar: 'بحاجة لتعديلات',  en: 'Needs changes',   tone: 'destructive' },
   rejected:      { ar: 'مرفوضة',          en: 'Rejected',        tone: 'destructive' },
   approved:      { ar: 'معتمدة',          en: 'Approved',        tone: 'success' },
+  published:     { ar: 'منشورة',          en: 'Published',       tone: 'success' },
 };
 
 const toneClasses: Record<'info' | 'success' | 'warning' | 'destructive', string> = {
