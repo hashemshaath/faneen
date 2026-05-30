@@ -6,7 +6,7 @@ import {
   User, Mail, Phone, Globe, Hash, Save, Loader2, Camera,
   ShieldCheck, ExternalLink, Building2, Crown, AtSign, Languages,
   AlertCircle, ArrowLeft, Settings as SettingsIcon, Copy, Check,
-  IdCard, Receipt, MapPinned, Search,
+  IdCard, Receipt,
 } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -28,7 +28,11 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import { supabase } from '@/integrations/supabase/client';
 import { updateProfile } from '@/modules/users';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
-import { nationalAddressLookup } from '@/modules/locations';
+import {
+  NationalAddressForm,
+  upsertPrimaryAddress,
+  type NationalAddressValue,
+} from '@/modules/addresses';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { cn } from '@/lib/utils';
@@ -36,39 +40,6 @@ import { UsernamePicker } from '@/components/common/UsernamePicker';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
-
-/**
- * Compose a professional, human-readable detailed address line from the
- * structured National Address fields. Empty parts are skipped, separators
- * are Arabic commas, and building/additional numbers collapse into one
- * "مبنى {b}/{a}" segment when both exist.
- */
-function composeAddressLine(
-  parts: {
-    district?: string; street?: string;
-    building_number?: string; additional_number?: string;
-    postal_code?: string; region_name?: string;
-  },
-  isRTL: boolean,
-): string {
-  const seg: string[] = [];
-  const district = (parts.district ?? '').trim();
-  const street = (parts.street ?? '').trim();
-  const b = (parts.building_number ?? '').trim();
-  const a = (parts.additional_number ?? '').trim();
-  const post = (parts.postal_code ?? '').trim();
-  const region = (parts.region_name ?? '').trim();
-  if (district) seg.push(isRTL ? `حي ${district}` : `${district} District`);
-  if (street) seg.push(isRTL ? `شارع ${street}` : `${street} St.`);
-  if (b || a) {
-    const bldg = isRTL ? 'مبنى' : 'Bldg';
-    seg.push(b && a ? `${bldg} ${b}/${a}` : `${bldg} ${b || a}`);
-  }
-  if (region && post) seg.push(`${region} ${post}`);
-  else if (region) seg.push(region);
-  else if (post) seg.push(post);
-  return seg.join(isRTL ? '، ' : ', ');
-}
 
 const DashboardProfile: React.FC = () => {
   useNoIndex();
@@ -106,22 +77,20 @@ const DashboardProfile: React.FC = () => {
     national_id: '',
     national_id_type: '' as '' | 'saudi' | 'iqama',
     vat_number: '',
-    short_national_address: '',
-    region_name: '',
-    district: '',
-    street: '',
-    building_number: '',
-    additional_number: '',
-    postal_code: '',
-    address_line: '',
   });
   const [usernameOk, setUsernameOk] = useState(true); // empty username is acceptable for individuals
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [splLoading, setSplLoading] = useState(false);
-  // Auto-compose the detailed address line from structured fields unless
-  // the user has edited the line manually (or pulled it from SPL).
-  const [addressLineManual, setAddressLineManual] = useState(false);
+
+  // ADDRESS-GOVERNANCE-1: single source of truth for the national address.
+  // The component is controlled; persistence goes through `upsertPrimaryAddress`.
+  const [address, setAddress] = useState<NationalAddressValue>({
+    short_address: null, region: null, region_en: null, city_id: null,
+    district: null, district_en: null, street_name: null, street_name_en: null,
+    building_number: null, additional_number: null, post_code: null,
+    address: null, address_en: null, address_manual: false,
+  });
+  const [addressInitial, setAddressInitial] = useState<NationalAddressValue | null>(null);
 
   // Seed form from profile
   useEffect(() => {
@@ -141,43 +110,28 @@ const DashboardProfile: React.FC = () => {
       national_id: profile.national_id ?? '',
       national_id_type: (profile.national_id_type as 'saudi' | 'iqama' | null) ?? '',
       vat_number: profile.vat_number ?? '',
-      short_national_address: profile.short_national_address ?? '',
-      region_name: profile.region_name ?? '',
-      district: profile.district ?? '',
-      street: profile.street ?? '',
-      building_number: profile.building_number ?? '',
-      additional_number: profile.additional_number ?? '',
-      postal_code: profile.postal_code ?? '',
-      address_line: profile.address_line ?? '',
     });
     setUsernameOk(true);
-    // If the saved line differs from a fresh compose, treat as manual so we
-    // don't overwrite the user's existing detail on first render.
-    setAddressLineManual(!!(profile.address_line ?? '').trim());
+    // Seed address from legacy flat columns (one-time per profile load).
+    const seeded: NationalAddressValue = {
+      short_address: profile.short_national_address ?? null,
+      region: profile.region_name ?? null,
+      region_en: null,
+      city_id: (profile as { city_id?: string | null }).city_id ?? null,
+      district: profile.district ?? null,
+      district_en: null,
+      street_name: profile.street ?? null,
+      street_name_en: null,
+      building_number: profile.building_number ?? null,
+      additional_number: profile.additional_number ?? null,
+      post_code: profile.postal_code ?? null,
+      address: profile.address_line ?? null,
+      address_en: profile.address_line ?? null,
+      address_manual: !!(profile.address_line ?? '').trim(),
+    };
+    setAddress(seeded);
+    setAddressInitial(seeded);
   }, [profile, user?.email]);
-
-  // Auto-compose the detailed address line whenever the structured parts
-  // change — unless the user has manually edited it (or it came from SPL,
-  // which marks the line as manual to preserve the API's official text).
-  useEffect(() => {
-    if (addressLineManual) return;
-    const composed = composeAddressLine(
-      {
-        district: form.district,
-        street: form.street,
-        building_number: form.building_number,
-        additional_number: form.additional_number,
-        postal_code: form.postal_code,
-        region_name: form.region_name,
-      },
-      isRTL,
-    );
-    setForm((f) => (f.address_line === composed ? f : { ...f, address_line: composed }));
-  }, [
-    addressLineManual, isRTL,
-    form.district, form.street, form.building_number,
-    form.additional_number, form.postal_code, form.region_name,
-  ]);
 
   // Owner business (for "view as provider" link)
   const { data: business } = useQuery({
@@ -217,17 +171,16 @@ const DashboardProfile: React.FC = () => {
       [form.national_id, profile.national_id ?? ''],
       [form.national_id_type, (profile.national_id_type ?? '')],
       [form.vat_number, profile.vat_number ?? ''],
-      [form.short_national_address, profile.short_national_address ?? ''],
-      [form.region_name, profile.region_name ?? ''],
-      [form.district, profile.district ?? ''],
-      [form.street, profile.street ?? ''],
-      [form.building_number, profile.building_number ?? ''],
-      [form.additional_number, profile.additional_number ?? ''],
-      [form.postal_code, profile.postal_code ?? ''],
-      [form.address_line, profile.address_line ?? ''],
     ];
-    return cmp.some(([a, b]) => a !== b);
-  }, [form, profile]);
+    if (cmp.some(([a, b]) => a !== b)) return true;
+    if (!addressInitial) return false;
+    const ak: (keyof NationalAddressValue)[] = [
+      'short_address','region','region_en','city_id','district','district_en',
+      'street_name','street_name_en','building_number','additional_number',
+      'post_code','address','address_en',
+    ];
+    return ak.some((k) => (address[k] ?? null) !== (addressInitial[k] ?? null));
+  }, [form, profile, address, addressInitial]);
 
   const completion = useMemo(() => {
     const checks = [
@@ -237,11 +190,11 @@ const DashboardProfile: React.FC = () => {
       !!form.email.trim(),
       !!form.phone.trim(),
       !!form.national_id.trim(),
-      !!(form.district.trim() || form.address_line.trim() || form.short_national_address.trim()),
+      !!((address.district ?? '').trim() || (address.address ?? '').trim() || (address.short_address ?? '').trim()),
     ];
     const done = checks.filter(Boolean).length;
     return Math.round((done / checks.length) * 100);
-  }, [form]);
+  }, [form, address]);
 
   // ───────────────────────── Save
   const mut = useMutation({
@@ -263,12 +216,16 @@ const DashboardProfile: React.FC = () => {
           'الرقم الضريبي يجب أن يكون 15 رقمًا ويبدأ بـ 3 وينتهي بـ 3 والرقم 11 = 3',
           'VAT must be 15 digits, start with 3, end with 3, and 11th digit = 3'));
       }
-      const sna = form.short_national_address.trim().toUpperCase().replace(/\s+/g, '');
+      const sna = (address.short_address ?? '').trim().toUpperCase().replace(/\s+/g, '');
       if (sna && !/^[A-Z]{4}\d{4}$/.test(sna)) {
         throw new Error(t(isRTL,
           'العنوان الوطني المختصر يجب أن يكون 4 أحرف ثم 4 أرقام (مثل RRRD2402)',
           'Short national address must be 4 letters + 4 digits (e.g. RRRD2402)'));
       }
+      // 1) Non-address profile fields. Address columns are intentionally
+      //    omitted — they are written exclusively via `upsertPrimaryAddress`
+      //    below, and the legacy mirror trigger keeps the flat columns in
+      //    sync. This enforces "one write path" per the governance contract.
       const { error } = await updateProfile({
         userId: user.id,
         values: {
@@ -282,17 +239,40 @@ const DashboardProfile: React.FC = () => {
           national_id: nid || null,
           national_id_type: nid ? (nid[0] === '1' ? 'saudi' : 'iqama') : null,
           vat_number: vat || null,
-          short_national_address: sna || null,
-          region_name: form.region_name.trim() || null,
-          district: form.district.trim() || null,
-          street: form.street.trim() || null,
-          building_number: form.building_number.trim() || null,
-          additional_number: form.additional_number.trim() || null,
-          postal_code: form.postal_code.trim() || null,
-          address_line: form.address_line.trim() || null,
         },
       });
       if (error) throw error;
+
+      // 2) Address — single source of truth. Only writes when the user
+      //    actually provided some address data so we don't create empty rows.
+      const hasAddress = !!(
+        sna || address.region || address.district || address.city_id
+        || address.street_name || address.building_number || address.address
+      );
+      if (hasAddress) {
+        const { error: addrErr } = await upsertPrimaryAddress({
+          ownerType: 'profile', ownerId: user.id,
+          addressType: 'national_address',
+          fields: {
+            short_address: sna || null,
+            region: address.region ?? null,
+            region_en: address.region_en ?? null,
+            city_id: address.city_id ?? null,
+            district: address.district ?? null,
+            district_en: address.district_en ?? null,
+            street_name: address.street_name ?? null,
+            street_name_en: address.street_name_en ?? null,
+            building_number: address.building_number ?? null,
+            additional_number: address.additional_number ?? null,
+            post_code: address.post_code ?? null,
+            address: address.address ?? null,
+            address_en: address.address_en ?? null,
+            source: address.address_manual ? 'spl' : 'manual',
+          },
+        });
+        if (addrErr) throw addrErr;
+      }
+
       // Unified email: when the user changes the visible email and it
       // differs from the auth/login email, push the update to auth.users
       // as well so "profile email" and "login email" stay one and the
@@ -390,57 +370,6 @@ const DashboardProfile: React.FC = () => {
     await navigator.clipboard.writeText(publicUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
-  };
-
-  // ───────────────────────── National Address SPL lookup
-  const lookupShortAddress = async () => {
-    const code = form.short_national_address.trim().toUpperCase().replace(/\s+/g, '');
-    if (!/^[A-Z]{4}\d{4}$/.test(code)) {
-      toast.error(t(isRTL,
-        'أدخل رقم العنوان الوطني (4 أحرف + 4 أرقام)',
-        'Enter a short national address (4 letters + 4 digits)'));
-      return;
-    }
-    setSplLoading(true);
-    try {
-      const { data, error } = await nationalAddressLookup({ shortAddress: code });
-      if (error) throw error;
-      const res = data as {
-        ok: boolean; message_ar?: string; message_en?: string;
-        address?: {
-          region_ar?: string | null; region_en?: string | null;
-          city_ar?: string | null; city_en?: string | null;
-          district_ar?: string | null; district_en?: string | null;
-          street_ar?: string | null; street_en?: string | null;
-          address_ar?: string | null; address_en?: string | null;
-          building_number?: string | null; additional_number?: string | null;
-          post_code?: string | null;
-        };
-      };
-      if (!res?.ok || !res.address) {
-        toast.error(isRTL ? (res?.message_ar ?? 'تعذّر العثور على العنوان') : (res?.message_en ?? 'Address not found'));
-        return;
-      }
-      const a = res.address;
-      setForm((f) => ({
-        ...f,
-        short_national_address: code,
-        region_name: (isRTL ? a.region_ar : a.region_en) ?? a.region_ar ?? a.region_en ?? f.region_name,
-        district: (isRTL ? a.district_ar : a.district_en) ?? a.district_ar ?? a.district_en ?? f.district,
-        street: (isRTL ? a.street_ar : a.street_en) ?? a.street_ar ?? a.street_en ?? f.street,
-        building_number: a.building_number ?? f.building_number,
-        additional_number: a.additional_number ?? f.additional_number,
-        postal_code: a.post_code ?? f.postal_code,
-        address_line: (isRTL ? a.address_ar : a.address_en) ?? a.address_ar ?? a.address_en ?? f.address_line,
-      }));
-      // The SPL line is the official text — keep it as-is.
-      setAddressLineManual(true);
-      toast.success(t(isRTL, 'تم تعبئة العنوان', 'Address filled in'));
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
-    } finally {
-      setSplLoading(false);
-    }
   };
 
   // ───────────────────────── Render
@@ -727,148 +656,11 @@ const DashboardProfile: React.FC = () => {
             {/* National Address (SPL) */}
             <Card>
               <CardContent className="p-4 sm:p-5 space-y-4">
-                <header className="flex items-center gap-2">
-                  <MapPinned className="w-4 h-4 text-primary" />
-                  <h2 className="text-sm font-bold">{t(isRTL, 'العنوان الوطني', 'National address')}</h2>
-                </header>
-
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    {t(isRTL, 'رقم العنوان الوطني المختصر', 'Short national address')}
-                  </Label>
-                  <div className="mt-1 flex gap-2">
-                    <Input
-                      value={form.short_national_address}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          short_national_address: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8),
-                        }))
-                      }
-                      dir="ltr"
-                      className="h-11 rounded-xl tech-content uppercase"
-                      placeholder="RRRD2402"
-                      maxLength={8}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={lookupShortAddress}
-                      disabled={splLoading || form.short_national_address.length !== 8}
-                      className="h-11 rounded-xl gap-1.5 shrink-0"
-                    >
-                      {splLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                      {t(isRTL, 'استدعاء', 'Lookup')}
-                    </Button>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    {t(isRTL,
-                      '4 أحرف ثم 4 أرقام. سنقوم بتعبئة المنطقة والحي والشارع تلقائيًا.',
-                      '4 letters + 4 digits. We will auto-fill region, district and street.')}
-                  </p>
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'المنطقة', 'Region')}</Label>
-                    <Input
-                      value={form.region_name}
-                      onChange={(e) => setForm((f) => ({ ...f, region_name: e.target.value }))}
-                      dir="auto"
-                      className="mt-1 h-11 rounded-xl"
-                      maxLength={120}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الحي', 'District')}</Label>
-                    <Input
-                      value={form.district}
-                      onChange={(e) => setForm((f) => ({ ...f, district: e.target.value }))}
-                      dir="auto"
-                      className="mt-1 h-11 rounded-xl"
-                      maxLength={120}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الشارع', 'Street')}</Label>
-                    <Input
-                      value={form.street}
-                      onChange={(e) => setForm((f) => ({ ...f, street: e.target.value }))}
-                      dir="auto"
-                      className="mt-1 h-11 rounded-xl"
-                      maxLength={160}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'رقم المبنى', 'Building number')}</Label>
-                    <Input
-                      value={form.building_number}
-                      onChange={(e) => setForm((f) => ({ ...f, building_number: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
-                      dir="ltr"
-                      inputMode="numeric"
-                      className="mt-1 h-11 rounded-xl tech-content"
-                      maxLength={6}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الرقم الإضافي', 'Additional number')}</Label>
-                    <Input
-                      value={form.additional_number}
-                      onChange={(e) => setForm((f) => ({ ...f, additional_number: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
-                      dir="ltr"
-                      inputMode="numeric"
-                      className="mt-1 h-11 rounded-xl tech-content"
-                      maxLength={4}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الرمز البريدي', 'Postal code')}</Label>
-                    <Input
-                      value={form.postal_code}
-                      onChange={(e) => setForm((f) => ({ ...f, postal_code: e.target.value.replace(/\D/g, '').slice(0, 5) }))}
-                      dir="ltr"
-                      inputMode="numeric"
-                      className="mt-1 h-11 rounded-xl tech-content"
-                      maxLength={5}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      {t(isRTL, 'العنوان التفصيلي', 'Detailed address line')}
-                    </Label>
-                    {addressLineManual && (
-                      <button
-                        type="button"
-                        onClick={() => setAddressLineManual(false)}
-                        className="text-[10px] text-primary hover:underline"
-                      >
-                        {t(isRTL, 'إعادة التوليد تلقائيًا', 'Auto-generate again')}
-                      </button>
-                    )}
-                  </div>
-                  <Input
-                    value={form.address_line}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setAddressLineManual(true);
-                      setForm((f) => ({ ...f, address_line: v }));
-                    }}
-                    dir="auto"
-                    className="mt-1 h-11 rounded-xl"
-                    placeholder={t(isRTL, 'يتم توليده تلقائيًا من حقول العنوان أعلاه', 'Auto-generated from the address fields above')}
-                    maxLength={250}
-                  />
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    {addressLineManual
-                      ? t(isRTL, 'يدوي — لن يتم استبداله. اضغط "إعادة التوليد" لإرجاعه إلى التوليد التلقائي.',
-                           'Manual — won\'t be overwritten. Click "Auto-generate" to revert.')
-                      : t(isRTL, 'يُحدَّث تلقائيًا عند تغيير أي حقل من حقول العنوان أعلاه.',
-                           'Updates automatically when any address field above changes.')}
-                  </p>
-                </div>
+                <NationalAddressForm
+                  value={address}
+                  onChange={setAddress}
+                  isRTL={isRTL}
+                />
               </CardContent>
             </Card>
 

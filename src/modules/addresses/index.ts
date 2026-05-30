@@ -23,3 +23,7 @@ export type { AddressType } from './types';
 
 /** Alias for governance — `listAddresses` already implements this API. */
 export { listAddresses as listAddressesForOwner } from './services/listAddresses';
+
+// UI primitives
+export { NationalAddressForm } from './components/NationalAddressForm';
+export type { NationalAddressValue, NationalAddressFormProps } from './components/NationalAddressForm';

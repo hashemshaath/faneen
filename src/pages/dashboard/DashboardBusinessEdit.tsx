@@ -14,7 +14,11 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness, updateBusinessById, listBusinessesByIds } from '@/modules/businesses';
-import { nationalAddressLookup } from '@/modules/locations';
+import {
+  NationalAddressForm,
+  upsertPrimaryAddress,
+  type NationalAddressValue,
+} from '@/modules/addresses';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -44,16 +48,16 @@ import { ProviderGrowthCard } from '@/components/growth/ProviderGrowthCard';
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
 import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
-import {
-  SA_REGIONS,
-  findRegionByLabel,
-  findRegionForCity,
-  getRegionById,
-  type SaRegionId,
-} from '@/data/sa-regions';
 
 interface RefRow { id: string; name_ar: string; name_en: string }
-interface CityRow extends RefRow { country_id: string }
+
+/** Empty address skeleton used as initial state and reset helper. */
+const EMPTY_ADDRESS: NationalAddressValue = {
+  short_address: null, region: null, region_en: null, city_id: null,
+  district: null, district_en: null, street_name: null, street_name_en: null,
+  building_number: null, additional_number: null, post_code: null,
+  address: null, address_en: null, address_manual: false,
+};
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 const sectionTitle = 'flex items-center gap-2 text-base font-semibold text-foreground';
@@ -81,6 +85,13 @@ const DashboardBusinessEdit: React.FC = () => {
   const [form, setForm] = useState<BusinessRow | null>(null);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+
+  // ADDRESS-GOVERNANCE-1: business address lives in its own state and is
+  // persisted via `upsertPrimaryAddress`. The legacy flat columns on
+  // `businesses` are kept in sync by the DB trigger — UI must NOT write
+  // them directly.
+  const [address, setAddress] = useState<NationalAddressValue>(EMPTY_ADDRESS);
+  const [addressInitial, setAddressInitial] = useState<NationalAddressValue>(EMPTY_ADDRESS);
 
   const validationIssues = useMemo(() => (form ? validateBusinessForm(form) : []), [form]);
   const issueMap = useMemo(() => issuesByKey(validationIssues), [validationIssues]);
@@ -127,7 +138,24 @@ const DashboardBusinessEdit: React.FC = () => {
     if (!business) return;
     if (!form || form.id !== business.id) {
       setForm(business);
-      if (business.short_address) setShortAddress(business.short_address.toUpperCase());
+      const seeded: NationalAddressValue = {
+        short_address: business.short_address ?? null,
+        region: business.region ?? null,
+        region_en: business.region_en ?? null,
+        city_id: business.city_id ?? null,
+        district: business.district ?? null,
+        district_en: business.district_en ?? null,
+        street_name: business.street_name ?? null,
+        street_name_en: business.street_name_en ?? null,
+        building_number: business.building_number ?? null,
+        additional_number: (business as { additional_number?: string | null }).additional_number ?? null,
+        post_code: (business as { post_code?: string | null }).post_code ?? null,
+        address: business.address ?? null,
+        address_en: business.address_en ?? null,
+        address_manual: !!(business.address ?? '').trim(),
+      };
+      setAddress(seeded);
+      setAddressInitial(seeded);
     }
   }, [business, form]);
 
@@ -139,124 +167,10 @@ const DashboardBusinessEdit: React.FC = () => {
     },
   });
 
-  const { data: cities = [] } = useQuery({
-    queryKey: ['ref-cities', form?.country_id],
-    enabled: !!form?.country_id,
-    queryFn: async (): Promise<CityRow[]> => {
-      const { data } = await supabase.from('cities').select('id, name_ar, name_en, country_id')
-        .eq('is_active', true).eq('country_id', form!.country_id!).order('name_ar');
-      return (data as CityRow[]) ?? [];
-    },
-  });
-
-  // ------------------------------------------------------------------
-  // SA region <-> city helpers
-  // ------------------------------------------------------------------
-  const [regionId, setRegionId] = useState<SaRegionId | ''>('');
-  // Once the form loads, infer the region id from the stored AR/EN label
-  // or from the selected city, so the dropdown shows the current value.
-  useEffect(() => {
-    if (!form) return;
-    if (regionId) return;
-    const fromLabel = findRegionByLabel(form.region) ?? findRegionByLabel(form.region_en);
-    if (fromLabel) { setRegionId(fromLabel); return; }
-    if (form.city_id && cities.length) {
-      const c = cities.find((x) => x.id === form.city_id);
-      if (c) {
-        const inferred = findRegionForCity(c.name_ar, c.name_en);
-        if (inferred) setRegionId(inferred);
-      }
-    }
-  }, [form, cities, regionId]);
-
-  const filteredCities = useMemo<CityRow[]>(() => {
-    if (!regionId) return cities;
-    const matched = cities.filter((c) => findRegionForCity(c.name_ar, c.name_en) === regionId);
-    // If our token map didn't match anything for this region, fall back to
-    // the full list so the user is never stuck with an empty dropdown.
-    return matched.length ? matched : cities;
-  }, [cities, regionId]);
-
-  const handleRegionChange = (id: SaRegionId | '') => {
-    setRegionId(id);
-    const region = getRegionById(id || null);
-    setForm((prev) => prev ? {
-      ...prev,
-      region: region?.name_ar ?? null,
-      region_en: region?.name_en ?? null,
-      // Reset city if it no longer belongs to the new region
-      city_id: prev.city_id && region && findRegionForCity(
-        cities.find((c) => c.id === prev.city_id)?.name_ar,
-        cities.find((c) => c.id === prev.city_id)?.name_en,
-      ) !== region.id ? null : prev.city_id,
-    } : prev);
+  // Address state changes mark the form as dirty.
+  const handleAddressChange = (next: NationalAddressValue) => {
+    setAddress(next);
     setDirty(true);
-  };
-
-  // ------------------------------------------------------------------
-  // Saudi National Address — short-address autofill
-  // ------------------------------------------------------------------
-  const [shortAddress, setShortAddress] = useState('');
-  const [lookupBusy, setLookupBusy] = useState(false);
-
-  const handleShortAddressLookup = async () => {
-    if (!shortAddress.trim()) return;
-    setLookupBusy(true);
-    try {
-      const { data, error } = await nationalAddressLookup({ shortAddress: shortAddress.trim() });
-      if (error) throw error;
-      const res = data as {
-        ok: boolean;
-        message_ar?: string;
-        message_en?: string;
-        address?: {
-          region_ar: string | null; region_en: string | null;
-          city_ar: string | null;   city_en: string | null;
-          district_ar: string | null; district_en: string | null;
-          street_ar: string | null;   street_en: string | null;
-          address_ar: string | null;  address_en: string | null;
-          building_number: string | null; additional_number: string | null;
-          post_code: string | null;
-        };
-      };
-      if (!res.ok || !res.address) {
-        toast.error(isRTL ? (res.message_ar ?? 'تعذّر جلب العنوان') : (res.message_en ?? 'Lookup failed'));
-        return;
-      }
-      const a = res.address;
-      setForm((prev) => prev ? {
-        ...prev,
-        short_address: shortAddress.trim().toUpperCase(),
-        region: a.region_ar ?? prev.region,
-        region_en: a.region_en ?? prev.region_en,
-        district: a.district_ar ?? prev.district,
-        district_en: a.district_en ?? prev.district_en,
-        street_name: a.street_ar ?? prev.street_name,
-        street_name_en: a.street_en ?? prev.street_name_en,
-        address: a.address_ar ?? prev.address,
-        address_en: a.address_en ?? prev.address_en,
-        building_number: a.building_number ?? prev.building_number,
-        additional_number: a.additional_number ?? prev.additional_number,
-      } : prev);
-      setDirty(true);
-      // Try to auto-select the region too
-      const inferred = findRegionByLabel(a.region_ar) ?? findRegionByLabel(a.region_en);
-      if (inferred) setRegionId(inferred);
-      // Try to auto-select the city if a matching DB row exists
-      if (a.city_ar || a.city_en) {
-        const match = cities.find((c) =>
-          (a.city_ar && c.name_ar?.includes(a.city_ar)) ||
-          (a.city_en && c.name_en?.toLowerCase().includes(a.city_en.toLowerCase())),
-        );
-        if (match) setForm((prev) => prev ? { ...prev, city_id: match.id } : prev);
-      }
-      toast.success(isRTL ? 'تم جلب العنوان وتعبئة الحقول' : 'Address fetched and fields filled');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      toast.error(isRTL ? `تعذّر الاتصال بخدمة العنوان: ${message}` : `Address service error: ${message}`);
-    } finally {
-      setLookupBusy(false);
-    }
   };
 
   const update = <K extends keyof BusinessRow>(key: K, value: BusinessRow[K]) => {
@@ -270,18 +184,16 @@ const DashboardBusinessEdit: React.FC = () => {
   };
 
   const handleAutofillAddress = (data: ReverseGeocodeResult) => {
-    setForm((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        region: data.region_ar || prev.region,
-        region_en: data.region_en || prev.region_en,
-        district: data.district_ar || prev.district,
-        district_en: data.district_en || prev.district_en,
-        address: data.address_ar || prev.address,
-        address_en: data.address_en || prev.address_en,
-      };
-    });
+    setAddress((prev) => ({
+      ...prev,
+      region: data.region_ar || prev.region,
+      region_en: data.region_en || prev.region_en,
+      district: data.district_ar || prev.district,
+      district_en: data.district_en || prev.district_en,
+      address: data.address_ar || prev.address,
+      address_en: data.address_en || prev.address_en,
+      address_manual: true,
+    }));
     setDirty(true);
   };
 
@@ -350,14 +262,10 @@ const DashboardBusinessEdit: React.FC = () => {
         customer_service_phone: form.customer_service_phone || null,
         email: form.email || null, website: form.website || null,
         contact_person: form.contact_person || null,
-        country_id: form.country_id || null, city_id: form.city_id || null,
-        region: form.region || null, region_en: form.region_en || null,
-        district: form.district || null, district_en: form.district_en || null,
-        address: form.address || null, address_en: form.address_en || null,
-        street_name: form.street_name || null, street_name_en: form.street_name_en || null,
-        building_number: form.building_number || null, additional_number: form.additional_number || null,
+        country_id: form.country_id || null,
+        // Address columns are intentionally OMITTED — written via
+        // `upsertPrimaryAddress` and mirrored by the legacy sync trigger.
         latitude: form.latitude ?? null, longitude: form.longitude ?? null,
-        short_address: (form.short_address ?? shortAddress)?.trim().toUpperCase() || null,
         floor_number: form.floor_number || null,
         unit_number: form.unit_number || null,
         unit_type: form.unit_type || null,
@@ -375,6 +283,35 @@ const DashboardBusinessEdit: React.FC = () => {
       };
       const { error: updateError } = await updateBusinessById({ id: form.id, values: payload });
       if (updateError) throw updateError;
+
+      // Persist the National Address (single write path).
+      const hasAddress = !!(
+        address.short_address || address.region || address.district || address.city_id
+        || address.street_name || address.building_number || address.address
+      );
+      if (hasAddress) {
+        const { error: addrErr } = await upsertPrimaryAddress({
+          ownerType: 'business', ownerId: form.id,
+          addressType: 'national_address',
+          fields: {
+            short_address: (address.short_address ?? '').trim().toUpperCase() || null,
+            region: address.region ?? null, region_en: address.region_en ?? null,
+            city_id: address.city_id ?? null,
+            country_id: form.country_id ?? null,
+            district: address.district ?? null, district_en: address.district_en ?? null,
+            street_name: address.street_name ?? null, street_name_en: address.street_name_en ?? null,
+            building_number: address.building_number ?? null,
+            additional_number: address.additional_number ?? null,
+            post_code: address.post_code ?? null,
+            address: address.address ?? null, address_en: address.address_en ?? null,
+            latitude: form.latitude ?? null, longitude: form.longitude ?? null,
+            source: address.address_manual ? 'spl' : 'manual',
+          },
+        });
+        if (addrErr) throw addrErr;
+        setAddressInitial(address);
+      }
+
       if (!hasErrors) {
         toast.success(t(isRTL, 'تم حفظ التعديلات بنجاح', 'Changes saved successfully'));
       }
@@ -746,39 +683,8 @@ const DashboardBusinessEdit: React.FC = () => {
             <CardDescription>{t(isRTL, 'العنوان الوطني (عربي/إنجليزي) وإحداثيات الموقع لظهور منشأتك على الخريطة.', 'National address (Arabic/English) and coordinates so your business shows on the map.')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            {/* Short Saudi National Address — type "RRRD2402" and auto-fill everything below */}
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
-              <Label className="text-xs font-medium text-primary">
-                {t(isRTL, 'العنوان الوطني المختصر', 'Short national address')}
-              </Label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Input
-                  dir="ltr"
-                  className="tech-content uppercase"
-                  placeholder="RRRD2402"
-                  value={shortAddress}
-                  onChange={(e) => {
-                    const v = e.target.value.toUpperCase();
-                    setShortAddress(v);
-                    update('short_address', v || null);
-                  }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleShortAddressLookup(); } }}
-                  maxLength={8}
-                />
-                <Button type="button" onClick={handleShortAddressLookup} disabled={lookupBusy || shortAddress.trim().length < 8} className="gap-1.5">
-                  {lookupBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
-                  {t(isRTL, 'تعبئة العنوان', 'Auto-fill address')}
-                </Button>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                {t(
-                  isRTL,
-                  'أدخل العنوان الوطني المختصر (4 أحرف + 4 أرقام) من خطاب الواصل لتعبئة المنطقة والمدينة والحي والشارع تلقائيًا.',
-                  'Enter your Saudi short national address (4 letters + 4 digits) from the WASEL letter to auto-fill region, city, district and street.',
-                )}
-              </p>
-            </div>
-
+            {/* Country lives outside the national-address card because some
+                edge flows allow non-SA businesses. */}
             <div className={grid2}>
               <div>
                 <Label className={fieldLabel}>{t(isRTL, 'الدولة', 'Country')}</Label>
@@ -789,54 +695,13 @@ const DashboardBusinessEdit: React.FC = () => {
                   {countries.map((c) => <option key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</option>)}
                 </select>
               </div>
-              <div>
-                <Label className={fieldLabel}>{t(isRTL, 'المنطقة', 'Region')}</Label>
-                <select className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  value={regionId}
-                  onChange={(e) => handleRegionChange(e.target.value as SaRegionId | '')}>
-                  <option value="">{t(isRTL, 'اختر المنطقة', 'Select region')}</option>
-                  {SA_REGIONS.map((r) => (
-                    <option key={r.id} value={r.id}>{isRTL ? r.name_ar : r.name_en}</option>
-                  ))}
-                </select>
-              </div>
             </div>
 
-            <div>
-              <Label className={fieldLabel}>{t(isRTL, 'المدينة', 'City')}</Label>
-              <select className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                value={form.city_id ?? ''} disabled={!regionId}
-                onChange={(e) => update('city_id', e.target.value || null)}>
-                <option value="">
-                  {!regionId
-                    ? t(isRTL, 'اختر المنطقة أولاً', 'Select a region first')
-                    : t(isRTL, 'اختر المدينة', 'Select city')}
-                </option>
-                {filteredCities.map((c) => <option key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</option>)}
-              </select>
-            </div>
-
-            <BilingualField isRTL={isRTL}
-              label={{ ar: 'الحي', en: 'District' }}
-              valueAr={form.district ?? ''} valueEn={form.district_en ?? ''}
-              onChangeAr={(v) => update('district', v)} onChangeEn={(v) => update('district_en', v)}
-              placeholderAr="مثال: حي العليا" placeholderEn="e.g. Al Olaya" />
-
-            <BilingualField isRTL={isRTL}
-              label={{ ar: 'اسم الشارع', en: 'Street name' }}
-              valueAr={form.street_name ?? ''} valueEn={form.street_name_en ?? ''}
-              onChangeAr={(v) => update('street_name', v)} onChangeEn={(v) => update('street_name_en', v)} />
-
-            <BilingualField isRTL={isRTL} multiline rows={2}
-              label={{ ar: 'العنوان التفصيلي', en: 'Full address' }}
-              valueAr={form.address ?? ''} valueEn={form.address_en ?? ''}
-              onChangeAr={(v) => update('address', v)} onChangeEn={(v) => update('address_en', v)} />
+            {/* ADDRESS-GOVERNANCE-1 — unified national address (writes via
+                addresses module, mirrors to legacy columns via DB trigger). */}
+            <NationalAddressForm value={address} onChange={handleAddressChange} isRTL={isRTL} />
 
             <div className={grid2}>
-              <div><Label className={fieldLabel}>{t(isRTL, 'رقم المبنى', 'Building number')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.building_number ?? ''} onChange={(e) => update('building_number', e.target.value)} /></div>
-              <div><Label className={fieldLabel}>{t(isRTL, 'الرقم الإضافي', 'Additional number')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.additional_number ?? ''} onChange={(e) => update('additional_number', e.target.value)} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'رقم الدور', 'Floor number')}</Label>
                 <Input dir="ltr" className="mt-1 tech-content" placeholder={t(isRTL, 'مثال: 3', 'e.g. 3')} value={form.floor_number ?? ''} onChange={(e) => update('floor_number', e.target.value)} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'رقم الوحدة', 'Unit number')}</Label>
