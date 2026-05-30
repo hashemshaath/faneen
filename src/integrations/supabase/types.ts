@@ -17950,7 +17950,12 @@ export type Database = {
         | "rejected"
         | "suspended"
       promotion_type: "ad" | "offer" | "video"
-      service_request_status: "pending" | "approved" | "rejected"
+      service_request_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "in_review"
+        | "needs_more_info"
       username_status: "pending" | "approved" | "rejected"
       warranty_status: "active" | "expired" | "claimed" | "void"
       warranty_type: "comprehensive" | "limited" | "extended"
@@ -18197,7 +18202,13 @@ export const Constants = {
         "suspended",
       ],
       promotion_type: ["ad", "offer", "video"],
-      service_request_status: ["pending", "approved", "rejected"],
+      service_request_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "in_review",
+        "needs_more_info",
+      ],
       username_status: ["pending", "approved", "rejected"],
       warranty_status: ["active", "expired", "claimed", "void"],
       warranty_type: ["comprehensive", "limited", "extended"],
