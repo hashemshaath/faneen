@@ -8,6 +8,11 @@ import type {
   ProcurementSupplierQuoteItemRow,
   ProcurementRfqItemRow,
 } from '../types';
+import {
+  classifyBrandEquivalence,
+  resolveEffectiveBrandMatchStatus,
+  brandWarningForLine,
+} from './brandEquivalence';
 
 export interface QuoteComparisonInput {
   quote: ProcurementSupplierQuoteRow;
@@ -19,7 +24,10 @@ export type LineItemRecommendationReason =
   | 'fastest_lead_time'
   | 'most_complete'
   | 'missing_items'
-  | 'no_total';
+  | 'no_total'
+  | 'brand_pending_review'
+  | 'brand_mismatch'
+  | 'brand_rejected';
 
 export interface QuoteComparisonResult {
   quote_id: string;
@@ -38,6 +46,11 @@ export interface QuoteComparisonResult {
   recommended: boolean;
   reasons: LineItemRecommendationReason[];
   warnings: string[];
+  /** RFQ-BRAND-PICKER-1E — per-line brand warning codes (stable, bilingual-safe). */
+  brand_warnings: ReadonlyArray<{
+    rfq_item_id: string;
+    code: 'brand_pending_review' | 'brand_mismatch' | 'brand_rejected';
+  }>;
 }
 
 function safeNum(n: number | null | undefined): number {
@@ -106,6 +119,28 @@ export function compareQuotesWithLineItems(
     const warnings: string[] = [];
     if (missing.length > 0) warnings.push('missing_items');
     if (totalStored === null && computed === 0) warnings.push('no_total');
+    // RFQ-BRAND-PICKER-1E — brand-aware warnings per line.
+    const brand_warnings: { rfq_item_id: string; code: 'brand_pending_review' | 'brand_mismatch' | 'brand_rejected' }[] = [];
+    for (const ri of rfqItems) {
+      const line = items.find((it) => it.rfq_item_id === ri.id);
+      if (!line) continue;
+      const computedMatch = line.brand_match_status
+        ?? classifyBrandEquivalence({
+          requested_brand_id: ri.requested_brand_id,
+          brand_lock: ri.brand_lock,
+          proposed_brand_id: line.proposed_brand_id,
+          proposed_brand_name: line.proposed_brand_name,
+        }).brandMatchStatus;
+      const effective = resolveEffectiveBrandMatchStatus(
+        computedMatch,
+        line.brand_review_status,
+      );
+      const code = brandWarningForLine(effective);
+      if (code) brand_warnings.push({ rfq_item_id: ri.id, code });
+    }
+    for (const w of brand_warnings) {
+      if (!warnings.includes(w.code)) warnings.push(w.code);
+    }
     return {
       quote_id: quote.id,
       supplier_id: quote.supplier_id,
@@ -118,6 +153,7 @@ export function compareQuotesWithLineItems(
       completeness: Math.round(completeness * 1000) / 1000,
       missing_rfq_item_ids: missing,
       warnings,
+      brand_warnings,
     };
   });
 
@@ -151,10 +187,21 @@ export function compareQuotesWithLineItems(
       reasons.push('fastest_lead_time');
     if (q.missing_rfq_item_ids.length > 0) reasons.push('missing_items');
     if (q.total == null && q.computed_total === 0) reasons.push('no_total');
+    // RFQ-BRAND-PICKER-1E — surface brand issues as ranking reasons so callers
+    // can warn before auto-selecting a cheaper but brand-rejected quote.
+    const codes = new Set(q.brand_warnings.map((b) => b.code));
+    if (codes.has('brand_rejected')) reasons.push('brand_rejected');
+    if (codes.has('brand_mismatch')) reasons.push('brand_mismatch');
+    if (codes.has('brand_pending_review')) reasons.push('brand_pending_review');
+    const hasBlockingBrandIssue =
+      codes.has('brand_rejected') || codes.has('brand_mismatch');
     return {
       ...q,
       rank: idx + 1,
-      recommended: idx === 0 && q.missing_rfq_item_ids.length === 0,
+      recommended:
+        idx === 0 &&
+        q.missing_rfq_item_ids.length === 0 &&
+        !hasBlockingBrandIssue,
       reasons,
     };
   });
