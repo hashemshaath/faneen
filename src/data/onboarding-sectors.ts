@@ -225,3 +225,24 @@ export const ONBOARDING_SECTORS: OnboardingSector[] = [
 export function getSectorById(id: SectorId): OnboardingSector | undefined {
   return ONBOARDING_SECTORS.find((s) => s.id === id);
 }
+
+export interface SubServiceWithSector extends SubService {
+  sector_id: SectorId;
+  sector_name_ar: string;
+  sector_name_en: string;
+}
+
+export function findSubServiceById(id: string): SubServiceWithSector | undefined {
+  for (const sector of ONBOARDING_SECTORS) {
+    const sub = sector.subServices.find((s) => s.id === id);
+    if (sub) {
+      return {
+        ...sub,
+        sector_id: sector.id,
+        sector_name_ar: sector.name_ar,
+        sector_name_en: sector.name_en,
+      };
+    }
+  }
+  return undefined;
+}

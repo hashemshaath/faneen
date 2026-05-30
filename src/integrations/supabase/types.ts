@@ -1872,6 +1872,7 @@ export type Database = {
           price_from: number | null
           price_to: number | null
           sort_order: number
+          source_sub_service_id: string | null
         }
         Insert: {
           business_id: string
@@ -1888,6 +1889,7 @@ export type Database = {
           price_from?: number | null
           price_to?: number | null
           sort_order?: number
+          source_sub_service_id?: string | null
         }
         Update: {
           business_id?: string
@@ -1904,6 +1906,7 @@ export type Database = {
           price_from?: number | null
           price_to?: number | null
           sort_order?: number
+          source_sub_service_id?: string | null
         }
         Relationships: [
           {
@@ -12201,6 +12204,78 @@ export type Database = {
         }
         Relationships: []
       }
+      service_addition_requests: {
+        Row: {
+          approved_sub_service_id: string | null
+          business_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          reject_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sector_id: string
+          status: Database["public"]["Enums"]["service_request_status"]
+          ticket_ref_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_sub_service_id?: string | null
+          business_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name_ar: string
+          name_en?: string | null
+          ref_id?: string | null
+          reject_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sector_id: string
+          status?: Database["public"]["Enums"]["service_request_status"]
+          ticket_ref_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_sub_service_id?: string | null
+          business_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name_ar?: string
+          name_en?: string | null
+          ref_id?: string | null
+          reject_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sector_id?: string
+          status?: Database["public"]["Enums"]["service_request_status"]
+          ticket_ref_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_addition_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_addition_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       showcase_submissions: {
         Row: {
           business_id: string
@@ -14979,6 +15054,33 @@ export type Database = {
         }
         Returns: Json
       }
+      approve_service_addition_request: {
+        Args: { p_admin_note?: string; p_request_id: string }
+        Returns: {
+          approved_sub_service_id: string | null
+          business_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          reject_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sector_id: string
+          status: Database["public"]["Enums"]["service_request_status"]
+          ticket_ref_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_addition_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       archive_client_site: { Args: { _site_id: string }; Returns: Json }
       archive_expired_contract_pdf_exports: { Args: never; Returns: number }
       barcode_entity_prefix: { Args: { _entity_type: string }; Returns: string }
@@ -16337,6 +16439,33 @@ export type Database = {
         Args: { _reason: string; _ref_id: string; _token: string }
         Returns: Json
       }
+      reject_service_addition_request: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: {
+          approved_sub_service_id: string | null
+          business_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          reject_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sector_id: string
+          status: Database["public"]["Enums"]["service_request_status"]
+          ticket_ref_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_addition_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       request_client_site_access: {
         Args: {
           _provider_business_id: string
@@ -16910,6 +17039,7 @@ export type Database = {
         | "rejected"
         | "suspended"
       promotion_type: "ad" | "offer" | "video"
+      service_request_status: "pending" | "approved" | "rejected"
       username_status: "pending" | "approved" | "rejected"
       warranty_status: "active" | "expired" | "claimed" | "void"
       warranty_type: "comprehensive" | "limited" | "extended"
@@ -17156,6 +17286,7 @@ export const Constants = {
         "suspended",
       ],
       promotion_type: ["ad", "offer", "video"],
+      service_request_status: ["pending", "approved", "rejected"],
       username_status: ["pending", "approved", "rejected"],
       warranty_status: ["active", "expired", "claimed", "void"],
       warranty_type: ["comprehensive", "limited", "extended"],
