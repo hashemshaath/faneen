@@ -52,6 +52,59 @@ const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/dashboard/bookmarks': { ar: 'المفضلة', en: 'Bookmarks' },
   '/dashboard/blog': { ar: 'المدونة', en: 'Blog' },
   '/dashboard/profile-systems': { ar: 'القطاعات', en: 'Profiles' },
+  // Admin
+  '/admin': { ar: 'لوحة الإدارة', en: 'Admin' },
+  '/admin/operations': { ar: 'العمليات', en: 'Operations' },
+  '/admin/operations/console': { ar: 'مركز العمليات', en: 'Operations Console' },
+  '/admin/activity-log': { ar: 'سجل النشاط', en: 'Activity Log' },
+  '/admin/audit-log': { ar: 'سجل التدقيق الموحّد', en: 'Unified Audit Log' },
+  '/admin/cron-runs': { ar: 'تشغيل المهام', en: 'Cron Runs' },
+  '/admin/identity': { ar: 'مركز الحسابات', en: 'Account Center' },
+  '/admin/users': { ar: 'المستخدمون', en: 'Users' },
+  '/admin/businesses': { ar: 'المنشآت والكيانات', en: 'Businesses' },
+  '/admin/entity-access-requests': { ar: 'طلبات الانضمام', en: 'Access Requests' },
+  '/admin/access-management': { ar: 'إدارة الوصول', en: 'Access Management' },
+  '/admin/provider-review': { ar: 'مراجعة المزودين', en: 'Provider Review' },
+  '/admin/provider-analytics': { ar: 'تحليلات المزودين', en: 'Provider Analytics' },
+  '/admin/provider-landing': { ar: 'صفحة هبوط المزودين', en: 'Provider Landing' },
+  '/admin/provider-subscriptions': { ar: 'عضويات المزودين', en: 'Provider Memberships' },
+  '/admin/locations': { ar: 'مركز المواقع', en: 'Locations' },
+  '/admin/lead-requests': { ar: 'طلبات العملاء', en: 'Customer Requests' },
+  '/admin/quote-operations': { ar: 'تشغيل عروض الأسعار', en: 'Quote Operations' },
+  '/admin/quote-requests': { ar: 'طلبات الأسعار', en: 'Quote Requests' },
+  '/admin/contracts': { ar: 'إدارة العقود', en: 'Contracts Admin' },
+  '/admin/contracts/create': { ar: 'إنشاء عقد بالنيابة', en: 'Create on Behalf' },
+  '/admin/contracts/analytics': { ar: 'تحليلات العقود', en: 'Contracts Analytics' },
+  '/admin/contract-templates': { ar: 'قوالب العقود', en: 'Contract Templates' },
+  '/admin/pdf-exports': { ar: 'سجل تصدير العقود', en: 'PDF Export Audit' },
+  '/admin/reports': { ar: 'مركز التقارير', en: 'Reports Center' },
+  '/admin/kpis': { ar: 'لوحة المؤشرات المتقدمة', en: 'Advanced KPIs' },
+  '/admin/memberships': { ar: 'العضويات', en: 'Memberships' },
+  '/admin/membership-payments': { ar: 'مدفوعات العضويات', en: 'Membership Payments' },
+  '/admin/membership-events': { ar: 'أحداث العضويات', en: 'Membership Events' },
+  '/admin/membership-rejections': { ar: 'رفض العضويات', en: 'Membership Rejections' },
+  '/admin/contact-messages': { ar: 'مركز التواصل', en: 'Contact Center' },
+  '/admin/email-center': { ar: 'مركز البريد', en: 'Email Center' },
+  '/admin/email-deliverability': { ar: 'قابلية تسليم البريد', en: 'Email Deliverability' },
+  '/admin/categories': { ar: 'التصنيفات', en: 'Categories' },
+  '/admin/tags': { ar: 'الوسوم', en: 'Tags' },
+  '/admin/private-sectors': { ar: 'القطاعات الخاصة', en: 'Private Sectors' },
+  '/admin/sitemap-status': { ar: 'حالة Sitemap', en: 'Sitemap Status' },
+  '/admin/site-audit': { ar: 'تدقيق الموقع', en: 'Site Audit' },
+  '/admin/sector-seo': { ar: 'SEO القطاعات', en: 'Sector SEO' },
+  '/admin/barcode-registry': { ar: 'سجل الباركود', en: 'Barcode Registry' },
+  '/admin/client-sites': { ar: 'مواقع العملاء', en: 'Client Sites' },
+  '/admin/market-analytics': { ar: 'تحليلات السوق', en: 'Market Analytics' },
+  '/admin/ai-center': { ar: 'مركز الذكاء الاصطناعي', en: 'AI Center' },
+  '/admin/ab-experiments': { ar: 'تجارب A/B', en: 'A/B Experiments' },
+  '/admin/system-settings': { ar: 'إعدادات النظام', en: 'System Settings' },
+  '/admin/analytics-settings': { ar: 'إعدادات التحليلات', en: 'Analytics Settings' },
+  '/admin/branding': { ar: 'الهوية البصرية', en: 'Branding' },
+  '/admin/api-settings': { ar: 'إعدادات API', en: 'API Settings' },
+  '/admin/help': { ar: 'مركز المساعدة', en: 'Help Center' },
+  '/admin/ref/triage': { ar: 'فحص المراجع المتعدد', en: 'Bulk Reference Triage' },
+  '/admin/diagnostics': { ar: 'التشخيص', en: 'Diagnostics' },
+  '/admin/showcase': { ar: 'العرض', en: 'Showcase' },
 };
 
 const accountTypeLabels: Record<string, { ar: string; en: string }> = {
@@ -158,6 +211,24 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
   // Admin context: render permanent orange top strip per brand spec §15.
   const isAdminContext = location.pathname.startsWith('/admin');
+
+  // Build a small breadcrumb trail for admin pages so users always see
+  // their position within the admin tree, regardless of which page lands them.
+  const adminCrumbs = React.useMemo(() => {
+    if (!isAdminContext) return [] as Array<{ path: string; label: string }>;
+    const parts = location.pathname.split('/').filter(Boolean); // ['admin', 'x', 'y']
+    const acc: Array<{ path: string; label: string }> = [];
+    let cur = '';
+    for (const p of parts) {
+      cur += `/${p}`;
+      const meta = breadcrumbMap[cur];
+      const label = meta
+        ? (isRTL ? meta.ar : meta.en)
+        : p.replace(/-/g, ' ');
+      acc.push({ path: cur, label });
+    }
+    return acc;
+  }, [isAdminContext, location.pathname, isRTL]);
 
   return (
     <SidebarProvider>
@@ -298,6 +369,34 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           >
             <WorkspaceScrollRestoration />
             <WorkspaceHeader rightSlot={<WorkspaceSearchLauncher />} className="-mx-3 sm:-mx-5 md:-mx-7 -mt-3 sm:-mt-5 md:-mt-7 mb-3" />
+            {isAdminContext && adminCrumbs.length > 0 && (
+              <nav
+                aria-label={isRTL ? 'مسار التنقل' : 'Breadcrumb'}
+                className="mb-3 text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap"
+              >
+                {adminCrumbs.map((crumb, idx) => {
+                  const isLast = idx === adminCrumbs.length - 1;
+                  return (
+                    <React.Fragment key={crumb.path}>
+                      {isLast ? (
+                        <span className="text-foreground font-medium truncate max-w-[180px]" aria-current="page">
+                          {crumb.label}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => navigate(crumb.path)}
+                          className="hover:text-foreground transition-colors truncate max-w-[140px]"
+                        >
+                          {crumb.label}
+                        </button>
+                      )}
+                      {!isLast && <span className="text-muted-foreground/50">/</span>}
+                    </React.Fragment>
+                  );
+                })}
+              </nav>
+            )}
             <WorkspaceContextBar>
               <div className="flex items-center gap-3 min-w-0 overflow-hidden">
                 <RecentWorkspaceContext />
