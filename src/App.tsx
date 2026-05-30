@@ -94,6 +94,8 @@ const AdminBrandRequests = lazyRetry(() => import("./pages/admin/AdminBrandReque
 const DashboardBrands = lazyRetry(() => import("./pages/dashboard/DashboardBrands"));
 const BrandsCatalog = lazyRetry(() => import("./pages/BrandsCatalog"));
 const BrandDetail = lazyRetry(() => import("./pages/BrandDetail"));
+const PrivateSectorsCatalog = lazyRetry(() => import("./pages/PrivateSectorsCatalog"));
+const PrivateSectorDetail = lazyRetry(() => import("./pages/PrivateSectorDetail"));
 const DashboardProjects = lazyRetry(() => import("./pages/dashboard/DashboardProjects"));
 const DashboardBlog = lazyRetry(() => import("./pages/dashboard/DashboardBlog"));
 const DashboardProfileSystems = lazyRetry(() => import("./pages/dashboard/DashboardProfileSystems"));
@@ -267,6 +269,8 @@ const AppRoutes = () => (
           <Route path="/services/:slug" element={<ServiceDetail />} />
           <Route path="/brands" element={<BrandsCatalog />} />
           <Route path="/brands/:slug" element={<BrandDetail />} />
+          <Route path="/private-sectors" element={<PrivateSectorsCatalog />} />
+          <Route path="/private-sectors/:slug" element={<PrivateSectorDetail />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/compare-profiles" element={<CompareProfiles />} />
           <Route path="/membership" element={<Membership />} />

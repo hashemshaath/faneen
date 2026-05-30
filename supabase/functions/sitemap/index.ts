@@ -180,15 +180,15 @@ Deno.serve(async (req) => {
       }
     } else if (type === "brands") {
       const { data, error } = await supabase
-        .from("private_sectors_public")
-        .select("slug, updated_at")
-        .order("is_featured", { ascending: false })
+        .from("brands_public")
+        .select("slug, created_at")
         .limit(10000);
       if (error) console.error("brands sitemap error:", error.message);
       if (data) {
         for (const b of data) {
+          if (!b.slug) continue;
           entries.push(entry(`${BASE}/brands/${encodeURIComponent(b.slug)}`, {
-            lastmod: toDate(b.updated_at),
+            lastmod: toDate((b as { created_at?: string | null }).created_at ?? null),
             changefreq: "weekly",
             priority: "0.7",
           }));
