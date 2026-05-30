@@ -5,6 +5,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { WorkOrderBoqItemRow } from "../types";
+import { isValidBrandLock, type BrandLock } from "@/modules/brands/lib/brandSelectionRules";
 
 export interface UpdateBoqItemPricingPatch {
   quantity?: number;
@@ -12,6 +13,9 @@ export interface UpdateBoqItemPricingPatch {
   unit_price?: number;
   title_ar?: string;
   title_en?: string;
+  /** RFQ-BRAND-PICKER-1C — null clears the brand link (and forces lock=null). */
+  brand_id?: string | null;
+  brand_lock?: BrandLock | null;
 }
 
 export async function updateBoqItemPricing(
@@ -52,6 +56,20 @@ export async function updateBoqItemPricing(
     }
     update.title_en = t;
   }
+  if (patch.brand_id !== undefined) {
+    if (patch.brand_id !== null && typeof patch.brand_id !== "string") {
+      return { data: null, error: new Error("brand_id_invalid") };
+    }
+    update.brand_id = patch.brand_id;
+    // Clearing brand also clears lock to keep semantics consistent.
+    if (patch.brand_id === null) update.brand_lock = null;
+  }
+  if (patch.brand_lock !== undefined) {
+    if (patch.brand_lock !== null && !isValidBrandLock(patch.brand_lock)) {
+      return { data: null, error: new Error("brand_lock_invalid") };
+    }
+    update.brand_lock = patch.brand_lock;
+  }
   if (Object.keys(update).length === 0) {
     return { data: null, error: new Error("no_changes") };
   }
@@ -62,7 +80,7 @@ export async function updateBoqItemPricing(
     .update(update as any)
     .eq("id", itemId)
     .select(
-      "id, ref_id, boq_id, measurement_id, item_type, title_ar, title_en, quantity, unit, unit_price, total_price, metadata, sort_order, created_at, updated_at, deleted_at",
+      "id, ref_id, boq_id, measurement_id, item_type, title_ar, title_en, quantity, unit, unit_price, total_price, metadata, sort_order, brand_id, brand_lock, created_at, updated_at, deleted_at",
     )
     .maybeSingle();
   return { data: (data as WorkOrderBoqItemRow | null) ?? null, error };
