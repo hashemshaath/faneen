@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,14 @@ import { Inbox, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { listOpenRfqs, createQuote } from '@/modules/rfq/services';
 
+const INDUSTRIES = [
+  { key: 'all', ar: 'الكل', en: 'All' },
+  { key: 'aluminum', ar: 'الألمنيوم', en: 'Aluminum' },
+  { key: 'glass', ar: 'الزجاج', en: 'Glass' },
+  { key: 'wood', ar: 'الأخشاب', en: 'Wood' },
+  { key: 'steel', ar: 'الحديد', en: 'Steel' },
+] as const;
+
 const DashboardRfqInbox: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
@@ -21,11 +29,28 @@ const DashboardRfqInbox: React.FC = () => {
   const qc = useQueryClient();
   const [openId, setOpenId] = useState<string | null>(null);
   const [quote, setQuote] = useState({ amount: '', delivery_days: '', message: '' });
+  const [industry, setIndustry] = useState<string>('all');
+  const [search, setSearch] = useState('');
+  const [minBudget, setMinBudget] = useState('');
+  const [maxBudget, setMaxBudget] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['rfq-open'],
     queryFn: listOpenRfqs,
   });
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const minB = minBudget ? Number(minBudget) : null;
+    const maxB = maxBudget ? Number(maxBudget) : null;
+    return (data ?? []).filter((rfq) => {
+      if (industry !== 'all' && rfq.industry !== industry) return false;
+      if (q && !rfq.title.toLowerCase().includes(q) && !(rfq.description ?? '').toLowerCase().includes(q)) return false;
+      if (minB !== null && (rfq.budget_max ?? rfq.budget_min ?? 0) < minB) return false;
+      if (maxB !== null && (rfq.budget_min ?? rfq.budget_max ?? Infinity) > maxB) return false;
+      return true;
+    });
+  }, [data, industry, search, minBudget, maxBudget]);
 
   const submit = useMutation({
     mutationFn: (rfqId: string) => createQuote({
@@ -57,15 +82,50 @@ const DashboardRfqInbox: React.FC = () => {
           </p>
         </div>
 
+        <Card>
+          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
+            <Input
+              placeholder={isRTL ? 'ابحث في الطلبات…' : 'Search requests…'}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-11 rounded-xl md:col-span-2"
+              dir="auto"
+            />
+            <select
+              className="h-11 rounded-xl border border-input bg-background px-3 text-sm"
+              value={industry}
+              onChange={(e) => setIndustry(e.target.value)}
+            >
+              {INDUSTRIES.map((i) => (
+                <option key={i.key} value={i.key}>{isRTL ? i.ar : i.en}</option>
+              ))}
+            </select>
+            <Input
+              type="number"
+              placeholder={isRTL ? 'ميزانية من' : 'Budget from'}
+              value={minBudget}
+              onChange={(e) => setMinBudget(e.target.value)}
+              className="h-11 rounded-xl tech-content"
+            />
+            <Input
+              type="number"
+              placeholder={isRTL ? 'ميزانية إلى' : 'Budget to'}
+              value={maxBudget}
+              onChange={(e) => setMaxBudget(e.target.value)}
+              className="h-11 rounded-xl tech-content"
+            />
+          </CardContent>
+        </Card>
+
         {isLoading ? (
           <div className="space-y-3">{[0, 1, 2].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
-        ) : !data || data.length === 0 ? (
+        ) : !filtered.length ? (
           <Card><CardContent className="p-12 text-center text-muted-foreground">
-            {isRTL ? 'لا توجد طلبات مفتوحة' : 'No open requests'}
+            {isRTL ? 'لا توجد طلبات مطابقة للفلتر' : 'No requests match your filters'}
           </CardContent></Card>
         ) : (
           <div className="grid gap-3">
-            {data.map(rfq => (
+            {filtered.map(rfq => (
               <Card key={rfq.id}>
                 <CardContent className="p-5 space-y-3">
                   <div className="flex items-start justify-between gap-3">
