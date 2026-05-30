@@ -329,11 +329,17 @@ export default function DashboardProcurementDetail() {
   const onReviewBrandEquivalence = useCallback(
     async (line: ProcurementSupplierQuoteItemRow, decision: 'approved' | 'rejected') => {
       if (!user?.id) return;
+      // RFQ-BRAND-PICKER-1F — guard double-submits + restrict to pending only.
+      if (line.brand_review_status !== 'pending') return;
+      if (reviewingLineId) return;
+      setReviewingLineId(line.id);
       const { data, error: err } = await reviewSupplierQuoteItemBrandEquivalence(line.id, {
         decision,
         reviewer_id: user.id,
       });
+      setReviewingLineId(null);
       if (err || !data) {
+        // Never surface raw DB errors — use a generic localized message.
         setError(tx.errLoad);
         return;
       }
@@ -346,7 +352,7 @@ export default function DashboardProcurementDetail() {
         rfq_id: activeRfqId,
       });
     },
-    [user?.id, tx.errLoad, activeRfqId],
+    [user?.id, tx.errLoad, activeRfqId, reviewingLineId],
   );
 
   const onCreateRfq = useCallback(async () => {
