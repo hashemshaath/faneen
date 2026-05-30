@@ -69,6 +69,7 @@ type StaffRow = {
   is_primary_manager?: boolean | null;
   display_name?: string | null;
   email?: string | null;
+  user_ref_id?: string | null;
 };
 
 type TeamRow = {
@@ -215,16 +216,21 @@ function StaffOverview({ businessId }: { businessId: string }) {
     }
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('user_id, full_name, email')
+      .select('user_id, full_name, email, ref_id')
       .in('user_id', userIds);
     const byUser = new Map(
-      ((profiles ?? []) as Array<{ user_id: string; full_name: string | null; email: string | null }>)
+      ((profiles ?? []) as Array<{ user_id: string; full_name: string | null; email: string | null; ref_id: string | null }>)
         .map((p) => [p.user_id, p]),
     );
     setRows(
       baseRows.map((r) => {
         const p = r.user_id ? byUser.get(r.user_id) : null;
-        return { ...r, display_name: p?.full_name ?? null, email: p?.email ?? null };
+        return {
+          ...r,
+          display_name: p?.full_name ?? null,
+          email: p?.email ?? null,
+          user_ref_id: p?.ref_id ?? null,
+        };
       }),
     );
   }, [businessId, bi]);
@@ -275,7 +281,22 @@ function StaffOverview({ businessId }: { businessId: string }) {
                       {r.display_name ?? bi('عضو فريق', 'Staff member')}
                     </span>
                     <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-                      {r.ref_id ? <span className="tech-content">{r.ref_id}</span> : null}
+                      {r.user_ref_id ? (
+                        <span
+                          className="tech-content rounded bg-primary/10 px-1.5 py-0.5 font-medium text-primary"
+                          title={bi('معرّف الشخص (ثابت)', 'Person ID (permanent)')}
+                        >
+                          {r.user_ref_id}
+                        </span>
+                      ) : null}
+                      {r.ref_id ? (
+                        <span
+                          className="tech-content rounded bg-muted px-1.5 py-0.5"
+                          title={bi('معرّف العضوية في هذا الكيان', 'Membership ID in this entity')}
+                        >
+                          {r.ref_id}
+                        </span>
+                      ) : null}
                       {r.email ? <span className="tech-content">· {r.email}</span> : null}
                     </span>
                   </div>
