@@ -887,173 +887,150 @@ const DashboardBusinessEdit: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="legal" className="space-y-6 mt-4">
-            {/* Commercial Registration QR scanner — single source of truth for CR/Unified/VAT */}
-        <Card>
-          <CardHeader>
-            <CardTitle className={sectionTitle}>
-              <ShieldCheck className="w-4 h-4 text-primary" />
-              {t(isRTL, 'استيراد بيانات السجل التجاري', 'Import from Commercial Registration')}
-            </CardTitle>
-            <CardDescription>
-              {t(
-                isRTL,
-                'ارفع وثيقة السجل التجاري أو صورة الباركود (PDF / صورة) لتعبئة الحقول النظامية تلقائيًا.',
-                'Upload your CR document or QR image (PDF / image) to auto-fill all legal fields.',
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CrDocumentScanner
-              businessId={form.id}
-              defaults={{
-                cr_document_url: form.cr_document_url ?? null,
-                cr_document_uploaded_at: form.cr_document_uploaded_at ?? null,
-                cr_scan_data: null,
-                cr_scan_raw: null,
-                national_id: form.national_id ?? null,
-                unified_number: form.unified_number ?? null,
-                vat_number: form.vat_number ?? null,
-                cr_owner_name: form.cr_owner_name ?? null,
-                cr_legal_entity: form.cr_legal_entity ?? null,
-                cr_issue_date: form.cr_issue_date ?? null,
-                cr_expiry_date: form.cr_expiry_date ?? null,
-                name_ar: form.name_ar,
-                name_en: form.name_en,
-              }}
-              onSaved={() => {
-                qc.invalidateQueries({ queryKey: ['business-edit', user?.id] });
-              }}
-            />
-          </CardContent>
-        </Card>
+            {/*
+             * Unified Legal & CR section — single source of truth for everything that
+             * appears on the Commercial Registration: CR number, Unified (700), VAT,
+             * owner name, issue/expiry dates, and legal entity. The QR/document
+             * scanner auto-fills the same fields shown below; no duplicate cards.
+             */}
+            <Card>
+              <CardHeader>
+                <CardTitle className={sectionTitle}>
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                  {t(isRTL, 'السجل التجاري والبيانات النظامية', 'Commercial Registration & Legal Data')}
+                </CardTitle>
+                <CardDescription>
+                  {t(
+                    isRTL,
+                    'ارفع وثيقة السجل التجاري أو الباركود لتعبئة جميع الحقول تلقائيًا، أو حرّر الحقول يدويًا أدناه. كل البيانات تُحفظ في مكان واحد بدون تكرار.',
+                    'Upload the CR document or QR to auto-fill all fields, or edit them manually below. Everything is saved in one place with no duplication.',
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* 1) Document / QR scanner — writes to the same columns as the form below */}
+                <CrDocumentScanner
+                  businessId={form.id}
+                  defaults={{
+                    cr_document_url: form.cr_document_url ?? null,
+                    cr_document_uploaded_at: form.cr_document_uploaded_at ?? null,
+                    cr_scan_data: null,
+                    cr_scan_raw: null,
+                    national_id: form.national_id ?? null,
+                    unified_number: form.unified_number ?? null,
+                    vat_number: form.vat_number ?? null,
+                    cr_owner_name: form.cr_owner_name ?? null,
+                    cr_legal_entity: form.cr_legal_entity ?? null,
+                    cr_issue_date: form.cr_issue_date ?? null,
+                    cr_expiry_date: form.cr_expiry_date ?? null,
+                    name_ar: form.name_ar,
+                    name_en: form.name_en,
+                  }}
+                  onSaved={() => {
+                    qc.invalidateQueries({ queryKey: ['business-edit', user?.id] });
+                  }}
+                />
 
-        {/* Editable legal identifiers — CR / Unified 700 / VAT / Owner / Issue & Expiry */}
-        <Card>
-          <CardHeader>
-            <CardTitle className={sectionTitle}>
-              <Hash className="w-4 h-4 text-primary" />
-              {t(isRTL, 'البيانات النظامية', 'Legal identifiers')}
-            </CardTitle>
-            <CardDescription>
-              {t(isRTL,
-                'يمكنك تعديل هذه الحقول يدويًا، وسيتم حفظها مع باقي البيانات.',
-                'You can edit these fields manually — they are saved with the rest of the form.')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className={grid2}>
-              <div>
-                <Label className={fieldLabel}>{t(isRTL, 'رقم السجل التجاري', 'Commercial Registration (CR)')}</Label>
-                <Input
-                  dir="ltr"
-                  className="mt-1 tech-content"
-                  placeholder="1010XXXXXX"
-                  value={form.national_id ?? ''}
-                  onChange={(e) => update('national_id', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label className={fieldLabel}>{t(isRTL, 'الرقم الموحّد (700)', 'Unified number (700)')}</Label>
-                <Input
-                  dir="ltr"
-                  className="mt-1 tech-content"
-                  placeholder="7000000000"
-                  value={form.unified_number ?? ''}
-                  onChange={(e) => update('unified_number', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label className={fieldLabel}>{t(isRTL, 'الرقم الضريبي', 'VAT number')}</Label>
-                <Input
-                  dir="ltr"
-                  className="mt-1 tech-content"
-                  placeholder="3000000000003"
-                  value={form.vat_number ?? ''}
-                  onChange={(e) => update('vat_number', e.target.value)}
-                />
-                <FieldError issue={issueMap.vat_number} isRTL={isRTL} />
-              </div>
-              <div>
-                <Label className={fieldLabel}>{t(isRTL, 'اسم المالك', 'Owner name')}</Label>
-                <Input
-                  dir="auto"
-                  className="mt-1"
-                  value={form.cr_owner_name ?? ''}
-                  onChange={(e) => update('cr_owner_name', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label className={fieldLabel}>{t(isRTL, 'تاريخ الإصدار', 'Issue date')}</Label>
-                <Input
-                  dir="ltr"
-                  type="date"
-                  className="mt-1 tech-content"
-                  value={form.cr_issue_date ?? ''}
-                  onChange={(e) => update('cr_issue_date', e.target.value || null)}
-                />
-              </div>
-              <div>
-                <Label className={fieldLabel}>{t(isRTL, 'تاريخ الانتهاء', 'Expiry date')}</Label>
-                <Input
-                  dir="ltr"
-                  type="date"
-                  className="mt-1 tech-content"
-                  value={form.cr_expiry_date ?? ''}
-                  onChange={(e) => update('cr_expiry_date', e.target.value || null)}
-                />
-              </div>
-            </div>
-            <FieldHint>
-              {t(isRTL,
-                'يمكن تعبئة هذه الحقول تلقائيًا برفع وثيقة السجل التجاري في القسم العلوي، أو إدخالها يدويًا هنا.',
-                'These fields can be auto-filled by uploading the CR document above, or entered manually here.')}
-            </FieldHint>
-          </CardContent>
-        </Card>
+                <div className="border-t border-border" />
 
-        {/* Manual legal-entity selector — independent of CR scan */}
-        <Card>
-          <CardHeader>
-            <CardTitle className={sectionTitle}>
-              <FileText className="w-4 h-4 text-primary" />
-              {t(isRTL, 'الكيان القانوني', 'Legal entity')}
-            </CardTitle>
-            <CardDescription>
-              {t(
-                isRTL,
-                'اختر النوع القانوني للمنشأة. يتم تعبئته تلقائيًا عند استيراد السجل التجاري، ويمكنك تعديله يدويًا.',
-                'Pick the legal entity type. It is auto-filled from the CR import, and can be adjusted manually.',
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Label className={fieldLabel}>{t(isRTL, 'النوع القانوني', 'Entity type')}</Label>
-            <select
-              className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              value={form.cr_legal_entity ?? ''}
-              onChange={(e) => update('cr_legal_entity', e.target.value || null)}
-            >
-              <option value="">{t(isRTL, 'اختر من القائمة', 'Select from list')}</option>
-              <option value="sole_proprietorship">{t(isRTL, 'مؤسسة فردية', 'Sole proprietorship')}</option>
-              <option value="llc">{t(isRTL, 'شركة ذات مسؤولية محدودة', 'Limited Liability Company (LLC)')}</option>
-              <option value="single_person_llc">{t(isRTL, 'شركة شخص واحد', 'Single-person company')}</option>
-              <option value="closed_joint_stock">{t(isRTL, 'شركة مساهمة مقفلة', 'Closed joint-stock company')}</option>
-              <option value="public_joint_stock">{t(isRTL, 'شركة مساهمة عامة', 'Public joint-stock company')}</option>
-              <option value="simple_partnership">{t(isRTL, 'شركة تضامن', 'General partnership')}</option>
-              <option value="limited_partnership">{t(isRTL, 'شركة توصية بسيطة', 'Limited partnership')}</option>
-              <option value="professional_company">{t(isRTL, 'شركة مهنية', 'Professional company')}</option>
-              <option value="foreign_branch">{t(isRTL, 'فرع شركة أجنبية', 'Foreign company branch')}</option>
-              <option value="non_profit">{t(isRTL, 'منشأة غير ربحية', 'Non-profit entity')}</option>
-              <option value="government">{t(isRTL, 'جهة حكومية', 'Government entity')}</option>
-              <option value="other">{t(isRTL, 'أخرى', 'Other')}</option>
-            </select>
-            <FieldHint>
-              {t(isRTL,
-                'يظهر النوع القانوني في الصفحة العامة وفي العقود والفواتير.',
-                'The legal entity is shown on your public profile and on contracts/invoices.')}
-            </FieldHint>
-          </CardContent>
-        </Card>
+                {/* 2) Manual / editable identifiers — same columns as the scanner */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <Hash className="w-4 h-4 text-primary" />
+                    {t(isRTL, 'الحقول النظامية', 'Legal fields')}
+                  </div>
+                  <div className={grid2}>
+                    <div>
+                      <Label className={fieldLabel}>{t(isRTL, 'رقم السجل التجاري', 'Commercial Registration (CR)')}</Label>
+                      <Input
+                        dir="ltr"
+                        className="mt-1 tech-content"
+                        placeholder="1010XXXXXX"
+                        value={form.national_id ?? ''}
+                        onChange={(e) => update('national_id', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label className={fieldLabel}>{t(isRTL, 'الرقم الموحّد (700)', 'Unified number (700)')}</Label>
+                      <Input
+                        dir="ltr"
+                        className="mt-1 tech-content"
+                        placeholder="7000000000"
+                        value={form.unified_number ?? ''}
+                        onChange={(e) => update('unified_number', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label className={fieldLabel}>{t(isRTL, 'الرقم الضريبي', 'VAT number')}</Label>
+                      <Input
+                        dir="ltr"
+                        className="mt-1 tech-content"
+                        placeholder="3000000000003"
+                        value={form.vat_number ?? ''}
+                        onChange={(e) => update('vat_number', e.target.value)}
+                      />
+                      <FieldError issue={issueMap.vat_number} isRTL={isRTL} />
+                    </div>
+                    <div>
+                      <Label className={fieldLabel}>{t(isRTL, 'اسم المالك', 'Owner name')}</Label>
+                      <Input
+                        dir="auto"
+                        className="mt-1"
+                        value={form.cr_owner_name ?? ''}
+                        onChange={(e) => update('cr_owner_name', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label className={fieldLabel}>{t(isRTL, 'تاريخ الإصدار', 'Issue date')}</Label>
+                      <Input
+                        dir="ltr"
+                        type="date"
+                        className="mt-1 tech-content"
+                        value={form.cr_issue_date ?? ''}
+                        onChange={(e) => update('cr_issue_date', e.target.value || null)}
+                      />
+                    </div>
+                    <div>
+                      <Label className={fieldLabel}>{t(isRTL, 'تاريخ الانتهاء', 'Expiry date')}</Label>
+                      <Input
+                        dir="ltr"
+                        type="date"
+                        className="mt-1 tech-content"
+                        value={form.cr_expiry_date ?? ''}
+                        onChange={(e) => update('cr_expiry_date', e.target.value || null)}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label className={fieldLabel}>{t(isRTL, 'الكيان القانوني', 'Legal entity')}</Label>
+                      <select
+                        className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        value={form.cr_legal_entity ?? ''}
+                        onChange={(e) => update('cr_legal_entity', e.target.value || null)}
+                      >
+                        <option value="">{t(isRTL, 'اختر من القائمة', 'Select from list')}</option>
+                        <option value="sole_proprietorship">{t(isRTL, 'مؤسسة فردية', 'Sole proprietorship')}</option>
+                        <option value="llc">{t(isRTL, 'شركة ذات مسؤولية محدودة', 'Limited Liability Company (LLC)')}</option>
+                        <option value="single_person_llc">{t(isRTL, 'شركة شخص واحد', 'Single-person company')}</option>
+                        <option value="closed_joint_stock">{t(isRTL, 'شركة مساهمة مقفلة', 'Closed joint-stock company')}</option>
+                        <option value="public_joint_stock">{t(isRTL, 'شركة مساهمة عامة', 'Public joint-stock company')}</option>
+                        <option value="simple_partnership">{t(isRTL, 'شركة تضامن', 'General partnership')}</option>
+                        <option value="limited_partnership">{t(isRTL, 'شركة توصية بسيطة', 'Limited partnership')}</option>
+                        <option value="professional_company">{t(isRTL, 'شركة مهنية', 'Professional company')}</option>
+                        <option value="foreign_branch">{t(isRTL, 'فرع شركة أجنبية', 'Foreign company branch')}</option>
+                        <option value="non_profit">{t(isRTL, 'منشأة غير ربحية', 'Non-profit entity')}</option>
+                        <option value="government">{t(isRTL, 'جهة حكومية', 'Government entity')}</option>
+                        <option value="other">{t(isRTL, 'أخرى', 'Other')}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <FieldHint>
+                    {t(isRTL,
+                      'هذه الحقول مرتبطة مباشرة بالسجل التجاري — رفع الوثيقة أعلاه يُعبّئها تلقائيًا، ويمكنك تعديل أي حقل يدويًا. الكيان القانوني يظهر في صفحتك العامة والعقود والفواتير.',
+                      'These fields are tied to the CR — uploading the document above auto-fills them, and you can override any value manually. The legal entity is shown on your public page, contracts, and invoices.')}
+                  </FieldHint>
+                </div>
+              </CardContent>
+            </Card>
 
         {/* Representatives */}
           </TabsContent>
