@@ -6,8 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +16,7 @@ import {
   Building2, Check, Circle, Clock, AlertTriangle, ShieldCheck, Send,
   MapPin, Phone, FileText, Layers, Image as ImageIcon, ArrowRight,
   Sparkles, TrendingUp, ExternalLink, Eye, Zap, ChevronRight, Lightbulb,
-  CalendarClock, Target, Award,
+  CalendarClock, Target, Award, Inbox,
 } from 'lucide-react';
 
 type ApprovalStatus = 'draft' | 'submitted' | 'under_review' | 'needs_changes' | 'rejected' | 'approved' | 'published';
@@ -328,9 +327,8 @@ const DashboardBusinessCompletion: React.FC = () => {
   })();
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container px-4 py-8 sm:py-12 max-w-6xl">
+    <DashboardLayout>
+      <main className="container px-4 py-6 sm:py-8 max-w-6xl">
         {/* Page header */}
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -478,6 +476,33 @@ const DashboardBusinessCompletion: React.FC = () => {
                     {isRTL ? `آخر تحديث: ${lastUpdated}` : `Last updated: ${lastUpdated}`}
                   </p>
                 )}
+              </section>
+
+              {/* Quick navigation summary */}
+              <section className="rounded-2xl border border-border bg-card p-5">
+                <p className="text-sm font-semibold text-foreground mb-3">
+                  {isRTL ? 'روابط سريعة' : 'Quick links'}
+                </p>
+                <div className="space-y-1.5">
+                  {[
+                    { to: '/dashboard/contracts', ar: 'العقود', en: 'Contracts', Icon: FileText },
+                    { to: '/dashboard/leads', ar: 'طلبات الخدمة', en: 'Service requests', Icon: Inbox },
+                    { to: '/dashboard/portfolio', ar: 'معرض الأعمال', en: 'Portfolio', Icon: ImageIcon },
+                    { to: '/dashboard/messages', ar: 'الرسائل', en: 'Messages', Icon: Sparkles },
+                  ].map((l) => (
+                    <Link
+                      key={l.to}
+                      to={l.to}
+                      className="flex items-center justify-between gap-2 px-2 py-2 rounded-lg hover:bg-muted/50 transition-colors text-xs text-foreground"
+                    >
+                      <span className="flex items-center gap-2">
+                        <l.Icon className="w-3.5 h-3.5 text-muted-foreground" />
+                        {isRTL ? l.ar : l.en}
+                      </span>
+                      <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground ${isRTL ? 'rotate-180' : ''}`} />
+                    </Link>
+                  ))}
+                </div>
               </section>
 
               {/* Approval timeline */}
@@ -692,8 +717,7 @@ const DashboardBusinessCompletion: React.FC = () => {
           </div>
         )}
       </main>
-      <Footer />
-    </div>
+    </DashboardLayout>
   );
 };
 
