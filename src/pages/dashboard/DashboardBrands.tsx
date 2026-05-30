@@ -338,8 +338,8 @@ const DashboardBrands: React.FC = () => {
                   : 'Create your business profile first to link brands.'}
                 primaryAction={
                   <Button asChild>
-                    <Link to="/dashboard/business">
-                      {isRTL ? 'ملف المنشأة' : 'Business profile'}
+                    <Link to="/dashboard/business-edit">
+                      {isRTL ? 'تعديل الملف التجاري' : 'Edit business profile'}
                     </Link>
                   </Button>
                 }
