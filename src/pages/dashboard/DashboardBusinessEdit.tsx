@@ -226,6 +226,7 @@ const DashboardBusinessEdit: React.FC = () => {
       const a = res.address;
       setForm((prev) => prev ? {
         ...prev,
+        short_address: shortAddress.trim().toUpperCase(),
         region: a.region_ar ?? prev.region,
         region_en: a.region_en ?? prev.region_en,
         district: a.district_ar ?? prev.district,
