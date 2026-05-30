@@ -275,7 +275,30 @@ const DashboardProfile: React.FC = () => {
       toast.success(t(isRTL, 'تم حفظ الملف الشخصي', 'Profile saved'));
     },
     onError: (e) => {
-      const raw = e instanceof Error ? e.message : String(e);
+      // Robust extraction — Supabase PostgrestError is a plain object
+      // and `String(obj)` returns "[object Object]". Pull `.message` / `.details`
+      // / `.hint` / `.code` before falling back to JSON.
+      const extract = (err: unknown): string => {
+        if (!err) return '';
+        if (err instanceof Error) return err.message;
+        if (typeof err === 'string') return err;
+        if (typeof err === 'object') {
+          const o = err as Record<string, unknown>;
+          return (
+            (typeof o.message === 'string' && o.message) ||
+            (typeof o.error_description === 'string' && o.error_description) ||
+            (typeof o.details === 'string' && o.details) ||
+            (typeof o.hint === 'string' && o.hint) ||
+            (typeof o.code === 'string' && o.code) ||
+            ''
+          ) as string;
+        }
+        return '';
+      };
+      const raw = extract(e) || t(isRTL, 'حدث خطأ أثناء الحفظ. حاول مرة أخرى.', 'An error occurred while saving. Please try again.');
+      // Log full object for debugging
+      // eslint-disable-next-line no-console
+      console.error('[DashboardProfile] save failed:', e);
       const map: Record<string, { ar: string; en: string }> = {
         INVALID_NATIONAL_ID: {
           ar: 'رقم الهوية غير صحيح. يجب أن يكون 10 أرقام ويبدأ بـ 1 (سعودي) أو 2 (مقيم).',
