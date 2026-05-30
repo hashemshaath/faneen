@@ -39,14 +39,14 @@ interface QuickAction {
 }
 
 const QUICK_ACTIONS: QuickAction[] = [
-  { id: 'qa-new-user',     label_ar: 'إنشاء مستخدم جديد',     label_en: 'Create new user',       icon: UserPlus,    to: '/admin/identity?view=users&create=individual' },
-  { id: 'qa-new-provider', label_ar: 'إنشاء مزود خدمة',        label_en: 'Create service provider', icon: Briefcase,  to: '/admin/identity?view=users&create=provider' },
-  { id: 'qa-providers',    label_ar: 'مراجعة المزودين',         label_en: 'Provider review',        icon: ShieldCheck, to: '/admin/identity?view=provider-review' },
-  { id: 'qa-access-mgmt',  label_ar: 'إدارة الصلاحيات',         label_en: 'Access management',      icon: Shield,      to: '/admin/identity?view=access-management' },
-  { id: 'qa-access-req',   label_ar: 'طلبات الانضمام',          label_en: 'Access requests',        icon: KeyRound,    to: '/admin/identity?view=access-requests' },
-  { id: 'qa-memberships',  label_ar: 'إدارة العضويات',          label_en: 'Memberships',            icon: Crown,       to: '/admin/memberships' },
-  { id: 'qa-analytics',    label_ar: 'تحليلات الحسابات',         label_en: 'Identity analytics',     icon: BarChart3,   to: '/admin/identity?view=analytics' },
-  { id: 'qa-overview',     label_ar: 'النظرة العامة',            label_en: 'Overview',               icon: Activity,    to: '/admin/identity?view=overview' },
+  { id: 'qa-new-user',     label_ar: 'إنشاء مستخدم جديد',     label_en: 'Create new user',         icon: UserPlus,    to: '/admin/users?create=individual' },
+  { id: 'qa-new-provider', label_ar: 'إنشاء مزود خدمة',        label_en: 'Create service provider', icon: Briefcase,   to: '/admin/users?create=provider' },
+  { id: 'qa-providers',    label_ar: 'مراجعة المزودين',         label_en: 'Provider review',         icon: ShieldCheck, to: '/admin/provider-review' },
+  { id: 'qa-access-mgmt',  label_ar: 'إدارة الصلاحيات',         label_en: 'Access management',       icon: Shield,      to: '/admin/access-management' },
+  { id: 'qa-access-req',   label_ar: 'طلبات الانضمام',          label_en: 'Access requests',         icon: KeyRound,    to: '/admin/entity-access-requests' },
+  { id: 'qa-memberships',  label_ar: 'إدارة العضويات',          label_en: 'Memberships',             icon: Crown,       to: '/admin/memberships' },
+  { id: 'qa-analytics',    label_ar: 'تحليلات الحسابات',         label_en: 'Account analytics',       icon: BarChart3,   to: '/admin/provider-analytics' },
+  { id: 'qa-overview',     label_ar: 'النظرة العامة',            label_en: 'Overview',                icon: Activity,    to: '/admin/identity' },
 ];
 
 interface Row {

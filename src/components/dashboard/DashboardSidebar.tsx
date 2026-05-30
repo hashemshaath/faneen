@@ -199,7 +199,7 @@ const userGroups: MenuGroup[] = [
 //
 //  Hidden / deep-link-only admin routes (intentionally not in sidebar):
 //   - /admin/users, /admin/users/:id   → superseded by /admin/identity
-//   - /admin/businesses                → superseded by /admin/identity?view=businesses
+//   - /admin/businesses                → direct CRUD; also linked from Account Center
 //   - /admin/quote-requests(/:id)      → opened from Quote Operations
 //   - /admin/pdf-visual-qa             → opened from PDF Export Audit
 //   - /admin/contracts/analytics       → opened from Contracts dashboard
@@ -237,8 +237,8 @@ const adminBaseGroups: MenuGroup[] = [
     items: [
       // People
       { label: { ar: 'مركز الحسابات', en: 'Account Center' }, url: '/admin/identity', icon: Users, end: true },
-      // Entities (direct shortcut to the Businesses tab in Account Center)
-      { label: { ar: 'المنشآت والكيانات', en: 'Businesses & Entities' }, url: '/admin/identity?view=businesses', icon: Building2 },
+      // Entities (direct CRUD page)
+      { label: { ar: 'المنشآت والكيانات', en: 'Businesses & Entities' }, url: '/admin/businesses', icon: Building2 },
       // Access lifecycle
       { label: { ar: 'طلبات الانضمام', en: 'Access Requests' }, url: '/admin/entity-access-requests', icon: UserPlus },
       { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: Shield, superAdminOnly: true },
