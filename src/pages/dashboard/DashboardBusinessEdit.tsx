@@ -299,6 +299,46 @@ const DashboardBusinessEdit: React.FC = () => {
     }
     setSaving(true);
     try {
+      // CR duplicate guard — block save if another business already owns the
+      // same CR / Unified-700 / VAT. Uses the SECURITY DEFINER RPC
+      // `check_business_cr_duplicates` so detection is reliable even when RLS
+      // would otherwise hide the conflicting row.
+      const nat = (form.national_id ?? '').trim();
+      const uni = (form.unified_number ?? '').trim();
+      const vat = (form.vat_number ?? '').trim();
+      if (nat || uni || vat) {
+        const { data: dupes, error: dupErr } = await supabase.rpc(
+          'check_business_cr_duplicates',
+          {
+            _exclude_business_id: form.id,
+            _national_id: nat || null,
+            _unified_number: uni || null,
+            _vat_number: vat || null,
+          },
+        );
+        if (dupErr) {
+          // Don't hard-fail save on lookup failure; surface a warning only.
+          console.warn('CR duplicate check failed', dupErr);
+        } else if (Array.isArray(dupes) && dupes.length > 0) {
+          const first = dupes[0] as { field: string; ref_id: string | null; name_ar: string | null; name_en: string | null; value: string | null };
+          const fieldLabel =
+            first.field === 'national_id' ? t(isRTL, 'رقم السجل التجاري', 'CR number')
+            : first.field === 'unified_number' ? t(isRTL, 'الرقم الموحّد (700)', 'Unified number (700)')
+            : t(isRTL, 'الرقم الضريبي', 'VAT number');
+          const otherName = (isRTL ? first.name_ar : first.name_en) || first.name_ar || first.name_en || first.ref_id || '—';
+          toast.error(
+            t(
+              isRTL,
+              `${fieldLabel} مستخدم بالفعل من قبل منشأة أخرى (${otherName}). يجب الدمج بدل التكرار — راجع الحقل أو تواصل مع الدعم.`,
+              `${fieldLabel} is already used by another business (${otherName}). Merge instead of duplicating — review the field or contact support.`,
+            ),
+            { duration: 8000 },
+          );
+          setSaving(false);
+          return;
+        }
+      }
+
       const trim = (v: string | null) => (v?.trim() || null);
       const payload = {
         name_ar: trim(form.name_ar), name_en: trim(form.name_en),
