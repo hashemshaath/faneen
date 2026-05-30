@@ -97,6 +97,27 @@ export const QUICK_ACTIONS: readonly QuickActionDefinition[] = [
     audiences: ['admin'],
     icon: 'FilePlus',
   },
+  {
+    id: 'rfq-new',
+    label: { ar: 'طلب عرض سعر جديد', en: 'New RFQ' },
+    to: '/dashboard/rfq',
+    audiences: ['admin', 'provider', 'user'],
+    icon: 'FileText',
+  },
+  {
+    id: 'rfq-inbox',
+    label: { ar: 'صندوق طلبات الأسعار', en: 'RFQ Inbox' },
+    to: '/dashboard/rfq/inbox',
+    audiences: ['admin', 'provider'],
+    icon: 'Inbox',
+  },
+  {
+    id: 'loyalty',
+    label: { ar: 'نقاط الولاء', en: 'Loyalty Points' },
+    to: '/dashboard/loyalty',
+    audiences: ['admin', 'provider', 'user'],
+    icon: 'Award',
+  },
 ];
 
 export interface QuickActionFilterCtx {
