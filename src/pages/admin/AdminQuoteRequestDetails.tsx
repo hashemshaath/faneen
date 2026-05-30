@@ -842,12 +842,13 @@ const AdminQuoteBrandPreference: React.FC<{ quote: AdminQuoteRow }> = ({ quote }
   const notes = quote.brand_notes;
   const enabled = ids.length > 0 || !!mode || !!notes;
 
-  type BrandRow = Awaited<ReturnType<typeof listApprovedBrandsByIds>>[number];
-  const { data: brands } = useQuery<BrandRow[]>({
+  type BrandRow = { id: string; ref_id: string | null; name_ar: string; name_en: string; slug: string; logo_url: string | null };
+  const brandsQuery = useQuery({
     queryKey: ['admin-quote-brands', quote.id, ids.join(',')],
-    queryFn: () => listApprovedBrandsByIds(ids),
+    queryFn: async () => (await listApprovedBrandsByIds(ids)) as BrandRow[],
     enabled: ids.length > 0,
   });
+  const brands = (brandsQuery.data ?? []) as BrandRow[];
 
   if (!enabled) return null;
 
@@ -856,7 +857,7 @@ const AdminQuoteBrandPreference: React.FC<{ quote: AdminQuoteRow }> = ({ quote }
       <div className="text-xs text-muted-foreground mb-2">تفضيل العلامة التجارية</div>
       {ids.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">
-          {(brands ?? []).map((b) => (
+          {brands.map((b) => (
             <span
               key={b.id}
               className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1 text-xs"
@@ -866,9 +867,9 @@ const AdminQuoteBrandPreference: React.FC<{ quote: AdminQuoteRow }> = ({ quote }
               <span className="text-muted-foreground tech-content">· {b.ref_id}</span>
             </span>
           ))}
-          {(brands?.length ?? 0) < ids.length && (
+          {brands.length < ids.length && (
             <span className="text-xs text-muted-foreground">
-              ({ids.length - (brands?.length ?? 0)} غير معتمدة حاليًا)
+              ({ids.length - brands.length} غير معتمدة حاليًا)
             </span>
           )}
         </div>
