@@ -21,7 +21,6 @@ import { UnifiedOperationsFeed } from '@/components/operations/UnifiedOperations
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { AdminOperationalNotesPanel } from '@/components/admin/AdminOperationalNotesPanel';
 import { AdminOperationalMetricsCards } from '@/components/admin/AdminOperationalMetricsCards';
-import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
 import { AdminOpsQuickLinks } from '@/components/admin/AdminOpsQuickLinks';
 import {
   listAdminOperationalActivity,
