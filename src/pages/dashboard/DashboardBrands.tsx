@@ -7,7 +7,6 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +25,6 @@ const DashboardBrands: React.FC = () => {
   const locale = isRTL ? 'ar' : 'en';
   usePageMeta({ title: isRTL ? 'العلامات التجارية' : 'Brands' });
   const { user } = useAuth();
-  const { activeBusiness } = useActiveBusiness();
   const qc = useQueryClient();
 
   const [q, setQ] = useState('');
@@ -52,7 +50,7 @@ const DashboardBrands: React.FC = () => {
       if (!user) throw new Error('Not signed in');
       return createBrandRequest({
         request_type: 'create_brand',
-        business_id: activeBusiness?.id ?? null,
+        business_id: null,
         user_id: user.id,
         name_ar: nameAr.trim(),
         name_en: nameEn.trim() || null,
