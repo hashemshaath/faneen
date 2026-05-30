@@ -73,7 +73,7 @@ const AdminBrands: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button asChild variant="outline"><Link to="/admin/service-requests"><Inbox className="w-4 h-4 me-2" />{isRTL ? 'طلبات العلامات' : 'Brand requests'}</Link></Button>
+            <Button asChild variant="outline"><Link to="/admin/brand-requests"><Inbox className="w-4 h-4 me-2" />{isRTL ? 'طلبات العلامات' : 'Brand requests'}</Link></Button>
           </div>
         </div>
 
@@ -146,7 +146,7 @@ function BrandRow({ brand, locale, isRTL, onApprove, onArchive, rejecting, onSta
           )}
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-semibold truncate">{name}</h3>
+              <Link to={`/admin/brands/${brand.id}`} className="font-semibold truncate hover:underline">{name}</Link>
               {brand.ref_id && <code className="tech-content text-xs bg-muted px-2 py-0.5 rounded">{brand.ref_id}</code>}
               <Badge variant="outline" className="text-xs">{pick(brandStatusLabel[brand.status], locale)}</Badge>
               {brand.verification_status !== 'unverified' && (

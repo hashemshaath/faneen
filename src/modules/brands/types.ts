@@ -25,6 +25,37 @@ export type BrandRequestType =
 export type BrandRequestStatus =
   | 'pending' | 'in_review' | 'approved' | 'rejected' | 'needs_more_info';
 
+export interface ProviderBrandLink {
+  id: string;
+  ref_id: string | null;
+  business_id: string;
+  business_service_id: string;
+  brand_id: string;
+  relationship_type: ProviderBrandRelationship | null;
+  authorization_status: ProviderBrandAuthorizationStatus | null;
+  authorization_document_url: string | null;
+  authorization_starts_at: string | null;
+  authorization_ends_at: string | null;
+  submitted_by: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BrandAuditLogRow {
+  id: string;
+  brand_id: string | null;
+  brand_request_id: string | null;
+  provider_brand_link_id: string | null;
+  actor_id: string | null;
+  action: string;
+  old_values: Record<string, unknown> | null;
+  new_values: Record<string, unknown> | null;
+  created_at: string;
+}
+
 export interface Brand {
   id: string;
   ref_id: string | null;
