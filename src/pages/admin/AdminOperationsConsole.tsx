@@ -206,13 +206,6 @@ export default function AdminOperationsConsole() {
   return (
     <DashboardLayout>
       <div className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
-        <OperationsBreadcrumbs
-          homeTo="/admin"
-          crumbs={[
-            { labelEn: 'Operations', labelAr: 'العمليات', to: '/admin/operations' },
-            { labelEn: 'Console', labelAr: 'مركز العمليات' },
-          ]}
-        />
         <AdminOpsQuickLinks />
         <div className="flex items-start justify-between gap-2">
           <div>
