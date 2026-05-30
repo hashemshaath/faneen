@@ -1,105 +1,88 @@
-# خطة إصلاح وتحسين نظام العقود
+# خطة التطوير الشاملة — الجولة القادمة
 
-## نتائج التدقيق (ملخّص)
-
-النظام الحالي منظّم وموثّق جيداً، **لا توجد جداول مكررة حرجة**، والمسارات والـ RPCs واضحة. لكن البحث الشامل كشف 4 فجوات رئيسية يجب معالجتها.
-
-### الجداول الحالية (21 جدول) — كلها نشطة، عدا:
-- `legacy_contract_normalization_log` — جدول migration تاريخي (للاحتفاظ فقط).
-- `contract_template_sections/clauses/required_fields/attachments/measurement_methods` — موجودة في DB ولها services لكن النظام الفعلي يعتمد على `template_snapshot` المجمّد. **ليست تكراراً ضاراً** — تبقى للاستخدام المستقبلي في محرر القوالب.
-
-### المسارات الحالية:
-- عام: `/contracts`, `/contracts/:id`, `/v/c/:number`
-- Dashboard: `/dashboard/contracts`, `/dashboard/contract-analytics`
-- Admin: `/admin/contract-templates`, `/admin/contracts/analytics`, `/admin/pdf-export-audit`
-- **مفقود**: `/admin/contracts` (قائمة) و`/admin/contracts/:id` (تفاصيل) و`/admin/contracts/create` (إنشاء بالنيابة)
+اخترت "تحسينات متوسطة" تغطي المحاور الأربعة. سأنفّذها على 4 دفعات متتابعة (يمكن إيقافي بين كل دفعة لمراجعة النتائج).
 
 ---
 
-## الفجوات والإصلاحات
+## الدفعة 1 — نظام العقود (تحسينات متقدمة)
 
-### 1. 🔴 ثغرة أمان: الأدمن يستطيع أن يكون طرفاً في عقد
-في `create_contract_from_template` لا يوجد منع صريح من تعيين الأدمن نفسه كـ `provider_id` أو `client_id`، ولا يوجد CHECK يمنع `provider_id = client_id`.
+1. **تنبيهات انتهاء العقود**
+   - Edge Function يومي `contracts-expiry-notifier` يفحص العقود التي تنتهي خلال 30/14/7/1 يوم
+   - إنشاء إشعارات في `notifications` + إيميل للأطراف
+   - جدول `contract_expiry_alerts_log` لمنع التكرار
 
-**الإصلاح (migration)**:
-- إضافة CHECK constraint على `contracts`: `provider_id <> client_user_id`.
-- تعديل `create_contract_from_template` لرفض الحالات: الأدمن = provider، الأدمن = client، provider = client.
-- تعديل `update_contract_draft_autosave` و`clone_contract_as_draft` بنفس الفحوصات.
-- إضافة فحص مماثل في `link_lead_to_contract`.
+2. **مقارنة نسخ العقد (Diff Viewer)**
+   - مكوّن `ContractVersionDiff.tsx` يعرض الفروقات بين أي نسختين (الأسعار، البنود، القياسات)
+   - تبويب جديد داخل ContractDetail "مقارنة النسخ"
 
-### 2. 🟠 سجل تغييرات موحّد
-الأحداث مشتتة بين 4 مصادر: `business_audit_log`, `contract_amendment_audit`, `contract_pdf_exports`, `contract_versions`.
+3. **التفاوض بين الأطراف (Counter-Offers)**
+   - جدول جديد `contract_counter_offers` (proposer_id, field_path, old_value, new_value, status, message)
+   - زر "اقتراح تعديل" بجانب الحقول القابلة للتفاوض في حالة `pending_signature`
+   - شريط جانبي لقبول/رفض الاقتراحات قبل التوقيع
 
-**الإصلاح**:
-- إنشاء RPC `get_contract_full_audit_trail(_contract_id uuid)` SECURITY DEFINER يعيد timeline موحّد من المصادر الأربعة (نوع الحدث + الوقت + الفاعل (مُخفّى للأدمن فقط) + ملخّص آمن من PII).
-- صلاحية القراءة: طرفا العقد + admin.
-- اختبار العزل: يمنع تسرّب PII أو الكشف عبر التطفّل.
-
-### 3. 🟠 واجهة عقود للأدمن (إدارة + إنشاء بالنيابة)
-الأدمن لا يستطيع إنشاء/استعراض العقود الفردية من UI.
-
-**الإصلاح**:
-- صفحة جديدة `src/pages/admin/AdminContracts.tsx` على `/admin/contracts`: قائمة كل العقود مع فلاتر (الحالة، Provider، Client، التاريخ).
-- صفحة `src/pages/admin/AdminContractDetail.tsx` على `/admin/contracts/:id`: عرض للقراءة + إجراءات أدمن (إلغاء، نسخ كقالب، عرض السجل الكامل).
-- صفحة `src/pages/admin/AdminContractCreate.tsx` على `/admin/contracts/create`: 3 خطوات (اختيار Provider → اختيار Client → اختيار Template) ثم تنشئ Draft مع `provider_id` لمزود آخر، وترسل دعوة موافقة للطرفين.
-- RPC جديد `admin_create_contract_on_behalf(_provider_id, _client_id, _template_id, _payload)` يتحقق أن الأدمن ≠ أي طرف، وينشئ draft + يسجّل audit event + يرسل إشعار للطرفين.
-- ربط الصفحات في AdminSidebar تحت قسم "العقود".
-
-### 4. 🟡 روابط ناقصة في `ContractDetail.tsx`
-- تبويب جديد **"السجل الكامل"** (`history`) يستخدم `get_contract_full_audit_trail` ويعرض timeline.
-- زر **"رابط التحقق العام"** يفتح `/v/c/:number?h=<prefix>` في تبويب جديد + ينسخ الرابط.
-- زر **رجوع** واضح إلى القائمة (`/dashboard/contracts` أو `/admin/contracts` حسب الدور).
-
-### 5. 🟢 تنظيف
-- تعليق SQL على `legacy_contract_normalization_log` يوضّح أنه تاريخي.
-- تصحيح اختبار `contractsIsolationAudit.test.ts:40` الذي يشير إلى `contract_audit_logs` (خطأ مطبعي) → الإشارة إلى `contract_amendment_audit` أو إزالة السطر.
+4. **قوالب ذكية (AI Smart Templates)**
+   - زر "اقترح بنوداً" في محرر القالب يستخدم Lovable AI Gateway (gemini-2.5-flash) لاقتراح بنود حسب نوع المشروع
 
 ---
 
-## التفاصيل التقنية
+## الدفعة 2 — لوحة الإدارة والتقارير
 
-```text
-Migration 1: contracts_party_isolation_v1
-  - ALTER TABLE contracts ADD CONSTRAINT chk_provider_ne_client
-    CHECK (client_user_id IS NULL OR provider_id <> client_user_id) NOT VALID;
-  - VALIDATE CONSTRAINT (إذا لا توجد بيانات مخالفة)
-  - تعديل 3 RPCs بإضافة فحوصات الأدمن/الطرف
+5. **مركز التقارير الموحّد** (`/admin/reports`)
+   - تقارير PDF/Excel جاهزة: العقود، الإيرادات، المستخدمين، الأعمال، حركة الكريديت
+   - فلاتر زمنية + تصدير بالعربية (Amiri font)
+   
+6. **KPIs متقدمة على Admin Overview**
+   - GMV (إجمالي قيمة العقود النشطة)، Churn Rate، LTV، MRR
+   - مخطط Recharts خطي 12 شهر + مقارنة شهرية
 
-Migration 2: contract_full_audit_trail_v1
-  - CREATE FUNCTION get_contract_full_audit_trail(uuid)
-  - GRANT EXECUTE TO authenticated
-
-Migration 3: admin_create_contract_on_behalf_v1
-  - CREATE FUNCTION admin_create_contract_on_behalf(...)
-  - GRANT EXECUTE TO authenticated (الفحص داخل الدالة)
-```
-
-**ملفات Frontend الجديدة (4)**:
-- `src/pages/admin/AdminContracts.tsx`
-- `src/pages/admin/AdminContractDetail.tsx`
-- `src/pages/admin/AdminContractCreate.tsx`
-- `src/components/contracts/ContractFullHistory.tsx`
-
-**ملفات معدّلة (5)**:
-- `src/App.tsx` (إضافة 3 مسارات admin)
-- `src/pages/ContractDetail.tsx` (تبويب history + زر verify + رجوع)
-- `src/modules/contracts/services/` (wrappers للـ RPC الجديد)
-- `src/components/dashboard/AdminSidebar.tsx` (روابط القائمة الجديدة)
-- `src/__tests__/contractsIsolationAudit.test.ts` (تصحيح المرجع)
+7. **سجل تدقيق Admin شامل** (`/admin/audit-log`)
+   - عرض موحّد لكل أحداث `business_audit_log` و `admin_actions_log` مع فلترة بالمستخدم/النوع/التاريخ
 
 ---
 
-## ضمانات عدم فقدان روابط/ميزات
+## الدفعة 3 — تجربة المستخدم والأداء
 
-- لن يتم حذف أي ملف موجود (فقط إضافة + تعديل).
-- المسارات الحالية تبقى كما هي.
-- جدول `contract_amendment_audit` يُقرأ كما هو ويُدمج في الـ RPC الجديد دون استبدال `AmendmentHistoryPanel` الحالي.
-- جداول template الثانوية تبقى ولا تُحذف.
-- بعد كل تغيير: `tsc --noEmit` + الاختبارات الموجودة + اختبار جديد لكل RPC.
+8. **Command Palette عام (Cmd+K)**
+   - تنقل سريع لأي صفحة، بحث عن عقد/مستخدم/شركة، تنفيذ إجراءات
+   - يمتد `CommandPalette` الحالي ليشمل dashboard كاملاً
+
+9. **تحسين CWV على المسارات الإدارية**
+   - Code-splitting للوحات الـ admin (lazy + Suspense)
+   - تخفيض حجم chunks تحت 200KB حسب الذاكرة
+   - Preload للروابط الأكثر استخداماً
+
+10. **Skeleton موحّد + Optimistic Updates**
+    - استبدال Spinners بـ Skeleton components في dashboard
+    - Optimistic UI لإجراءات العقود (قبول/رفض/تجديد)
 
 ---
 
-## التقرير النهائي (سيُسلَّم بعد التنفيذ)
-سيتضمّن: ما تم إنجازه، الـ migrations المنفّذة، الصفحات/التبويبات الجديدة، نتائج الاختبارات، وقائمة التحقق من الروابط.
+## الدفعة 4 — ميزات تجارية جديدة
 
-هل أبدأ التنفيذ بالترتيب أعلاه (الأمان أولاً)؟
+11. **نظام عروض الأسعار (RFQ)**
+    - جدول `rfq_requests` (client → multiple providers)
+    - جدول `rfq_quotes` (ردود مزودي الخدمة)
+    - صفحات: `/dashboard/rfq` للعميل، `/dashboard/rfq/inbox` للمزود
+    - تحويل العرض المقبول مباشرة إلى عقد مسودة
+
+12. **برنامج الولاء (Loyalty Points)**
+    - جدول `loyalty_points` (earn على إكمال عقد، redeem على رسوم المنصة)
+    - شارة المستوى (Bronze/Silver/Gold/Platinum) على البروفايل العام
+    - صفحة `/dashboard/loyalty`
+
+---
+
+## التحقق بعد كل دفعة
+- `tsc --noEmit` + الاختبارات الحالية
+- اختبارات جديدة للـ RPCs والـ Edge Functions الجديدة
+- مراجعة security linter بعد كل migration
+- مذكرات `mem://` جديدة للأنظمة المضافة
+
+## ما لن أمسّه
+- لن أحذف أي جدول أو ملف موجود
+- لن أغيّر نظام الكريديت، التوثيق، الفوترة الحالي
+- لن أغيّر RLS على الجداول الحساسة دون مبرّر
+
+**إجمالي تقديري**: ~6 migrations، ~25 ملف جديد، ~15 ملف معدّل، دفعة واحدة كل رد.
+
+هل أبدأ بالدفعة 1 (تحسينات العقود)؟ أو تفضّل ترتيباً مختلفاً؟
