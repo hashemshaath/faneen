@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { FileText, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { listMyRfqs, createRfq } from '@/modules/rfq/services';
 
@@ -148,7 +149,8 @@ const DashboardRfq: React.FC = () => {
         ) : (
           <div className="grid gap-3">
             {data.map(rfq => (
-              <Card key={rfq.id} className="hover-lift">
+              <Link key={rfq.id} to={`/dashboard/rfq/${rfq.id}`} className="block">
+              <Card className="hover-lift">
                 <CardContent className="p-5 flex items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -168,6 +170,7 @@ const DashboardRfq: React.FC = () => {
                   )}
                 </CardContent>
               </Card>
+              </Link>
             ))}
           </div>
         )}
