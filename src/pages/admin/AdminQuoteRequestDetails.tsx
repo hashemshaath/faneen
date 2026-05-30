@@ -834,6 +834,63 @@ const Stat: React.FC<{ label: string; value: number }> = ({ label, value }) => (
 
 export default AdminQuoteRequestDetails;
 
+// ===== RFQ-BRAND-PICKER-1B — brand preference panel =====
+
+const AdminQuoteBrandPreference: React.FC<{ quote: AdminQuoteRow }> = ({ quote }) => {
+  const ids = quote.preferred_brand_ids ?? [];
+  const mode = quote.brand_preference_mode;
+  const notes = quote.brand_notes;
+  const enabled = ids.length > 0 || !!mode || !!notes;
+
+  const { data: brands } = useQuery({
+    queryKey: ['admin-quote-brands', quote.id, ids.join(',')],
+    queryFn: () => listApprovedBrandsByIds(ids),
+    enabled: ids.length > 0,
+  });
+
+  if (!enabled) return null;
+
+  return (
+    <div className="pt-2 border-t" data-testid="admin-brand-preference">
+      <div className="text-xs text-muted-foreground mb-2">تفضيل العلامة التجارية</div>
+      {ids.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {(brands ?? []).map((b) => (
+            <span
+              key={b.id}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1 text-xs"
+            >
+              <Tag className="h-3 w-3 text-muted-foreground" />
+              <span dir="auto">{b.name_ar || b.name_en}</span>
+              <span className="text-muted-foreground tech-content">· {b.ref_id}</span>
+            </span>
+          ))}
+          {(brands?.length ?? 0) < ids.length && (
+            <span className="text-xs text-muted-foreground">
+              ({ids.length - (brands?.length ?? 0)} غير معتمدة حاليًا)
+            </span>
+          )}
+        </div>
+      )}
+      {mode && (
+        <div className="text-sm text-foreground/90">
+          <span className="text-muted-foreground">درجة التفضيل: </span>
+          {describeBrandPreference(
+            mode as 'exact' | 'preferred' | 'flexible',
+            'ar',
+          )}
+        </div>
+      )}
+      {notes && (
+        <div className="mt-2 text-sm text-foreground/90 whitespace-pre-wrap leading-6">
+          <span className="text-xs text-muted-foreground block mb-1">ملاحظات</span>
+          {notes}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ===== Events timeline =====
 
 const EVENT_TITLE_AR: Record<string, string> = {
