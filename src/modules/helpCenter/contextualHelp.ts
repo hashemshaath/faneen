@@ -5,7 +5,9 @@
 export const contextualHelpRegistry: Record<string, string[]> = {
   'dashboard.work-orders': ['what-is-wo', 'measurements', 'wo-boq', 'wo-rfq', 'wo-production'],
   'dashboard.work-order-detail': ['what-is-wo', 'measurements', 'wo-production'],
+  'dashboard.production-board': ['production-board', 'stages', 'realtime', 'reassign'],
   'dashboard.procurement': ['what-is-rfq', 'create-rfq', 'supplier-quotes', 'award', 'po-draft'],
+  'dashboard.procurement-detail': ['supplier-quotes', 'award', 'po-draft'],
   'dashboard.contracts': ['contract-lifecycle', 'create-contract', 'payments', 'vat', 'amendments'],
   'dashboard.contract-detail': ['contract-lifecycle', 'payments', 'amendments', 'export-pdf'],
   'dashboard.quotes': ['create-quote', 'quote-to-contract', 'quote-pdf', 'quote-validity'],
@@ -14,6 +16,8 @@ export const contextualHelpRegistry: Record<string, string[]> = {
   'dashboard.services': ['services', 'create-business', 'edit-business'],
   'dashboard.portfolio': ['portfolio'],
   'dashboard.overview': ['create-business', 'how-publishing-works', 'completeness'],
+  'dashboard.business-profile': ['create-business', 'edit-business', 'completeness', 'how-publishing-works'],
+  'dashboard.staff': ['create-business', 'edit-business'],
   'customer.portal': ['tracking-link', 'what-you-see', 'privacy', 'support', 'confirm'],
   'admin.identity': ['identity-overview', 'approve-providers', 'diagnostics'],
   'admin.provider-review': ['how-publishing-works', 'readiness-checklist', 'approve-providers'],
