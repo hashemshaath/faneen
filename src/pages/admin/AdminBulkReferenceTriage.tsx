@@ -29,6 +29,7 @@ import {
   type AdminNoteEntityType,
 } from '@/modules/admin';
 import { OperationsBreadcrumbs } from '@/components/operations/OperationsBreadcrumbs';
+import { AdminOpsQuickLinks } from '@/components/admin/AdminOpsQuickLinks';
 import { downloadTriageCsv } from '@/lib/admin/triageCsv';
 import { printCurrentView } from '@/lib/admin/exportUtils';
 import {
@@ -328,6 +329,7 @@ export default function AdminBulkReferenceTriage() {
             { labelEn: 'Bulk Reference Triage', labelAr: 'فحص المراجع المتعدد' },
           ]}
         />
+        <AdminOpsQuickLinks />
         <div>
           <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-accent" aria-hidden="true" />

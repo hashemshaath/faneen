@@ -397,12 +397,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                 })}
               </nav>
             )}
-            <WorkspaceContextBar>
-              <div className="flex items-center gap-3 min-w-0 overflow-hidden">
-                <RecentWorkspaceContext />
-                <RecentWorkspaceFlows />
-              </div>
-            </WorkspaceContextBar>
+            {/* Workspace context bar is provider-oriented (active business/branch
+                + recent flows). Admins/super-admins do not operate as a business,
+                so the bar would be empty/misleading inside /admin/*. Hide it. */}
+            {!isAdminContext && (
+              <WorkspaceContextBar>
+                <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+                  <RecentWorkspaceContext />
+                  <RecentWorkspaceFlows />
+                </div>
+              </WorkspaceContextBar>
+            )}
             {children}
             <CommandPalette />
             <MobileWorkspaceActions />

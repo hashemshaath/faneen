@@ -20,6 +20,7 @@ import { format, isToday, isYesterday, isThisWeek, isThisMonth, subDays, startOf
 import { ar, enUS } from 'date-fns/locale';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { BarChart, Bar, XAxis, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
+import { AdminOpsQuickLinks } from '@/components/admin/AdminOpsQuickLinks';
 
 /* ─── Action Config ─── */
 type Bi = { ar: string; en: string };
@@ -545,6 +546,7 @@ const AdminActivityLog = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 print:space-y-3">
+        <AdminOpsQuickLinks />
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
