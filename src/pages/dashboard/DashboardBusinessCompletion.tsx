@@ -311,6 +311,39 @@ const DashboardBusinessCompletion: React.FC = () => {
     ? new Date(business.updated_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' })
     : null;
 
+  // Recent activity — latest contracts & service requests for this business.
+  const { data: recent } = useQuery({
+    queryKey: ['business-recent-activity', business?.id],
+    enabled: !!business?.id,
+    staleTime: 60_000,
+    queryFn: async () => {
+      if (!business?.id) return { contracts: [], requests: [] };
+      const [contractsRes, requestsRes] = await Promise.all([
+        supabase
+          .from('contracts')
+          .select('id, contract_number, title_ar, title_en, status, total_amount, currency_code, created_at')
+          .eq('business_id', business.id)
+          .order('created_at', { ascending: false })
+          .limit(4),
+        supabase
+          .from('lead_requests')
+          .select('id, ref_id, subject, status, created_at')
+          .eq('business_id', business.id)
+          .order('created_at', { ascending: false })
+          .limit(4),
+      ]);
+      return {
+        contracts: contractsRes.data ?? [],
+        requests: requestsRes.data ?? [],
+      };
+    },
+  });
+
+  const fmtDate = (iso?: string | null) =>
+    iso ? new Date(iso).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { day: '2-digit', month: 'short' }) : '';
+  const fmtMoney = (n?: number | null, c?: string | null) =>
+    n != null ? `${Number(n).toLocaleString(isRTL ? 'ar-SA' : 'en-US')} ${c ?? 'SAR'}` : '';
+
   // Approval timeline steps — purely visual.
   const timelineSteps: Array<{ key: ApprovalStatus | 'start'; ar: string; en: string }> = [
     { key: 'draft', ar: 'مسودة', en: 'Draft' },
