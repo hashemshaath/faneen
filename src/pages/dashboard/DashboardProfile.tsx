@@ -156,6 +156,29 @@ const DashboardProfile: React.FC = () => {
     setAddressLineManual(!!(profile.address_line ?? '').trim());
   }, [profile, user?.email]);
 
+  // Auto-compose the detailed address line whenever the structured parts
+  // change — unless the user has manually edited it (or it came from SPL,
+  // which marks the line as manual to preserve the API's official text).
+  useEffect(() => {
+    if (addressLineManual) return;
+    const composed = composeAddressLine(
+      {
+        district: form.district,
+        street: form.street,
+        building_number: form.building_number,
+        additional_number: form.additional_number,
+        postal_code: form.postal_code,
+        region_name: form.region_name,
+      },
+      isRTL,
+    );
+    setForm((f) => (f.address_line === composed ? f : { ...f, address_line: composed }));
+  }, [
+    addressLineManual, isRTL,
+    form.district, form.street, form.building_number,
+    form.additional_number, form.postal_code, form.region_name,
+  ]);
+
   // Owner business (for "view as provider" link)
   const { data: business } = useQuery({
     queryKey: ['profile-page-owner-business', user?.id, activeOwnerEntityId],
