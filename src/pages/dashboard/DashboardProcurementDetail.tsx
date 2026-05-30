@@ -323,6 +323,30 @@ export default function DashboardProcurementDetail() {
     [activeRfq, activeRfqId, tx.errLoad],
   );
 
+  // RFQ-BRAND-PICKER-1E — approve/reject supplier brand equivalence.
+  const onReviewBrandEquivalence = useCallback(
+    async (line: ProcurementSupplierQuoteItemRow, decision: 'approved' | 'rejected') => {
+      if (!user?.id) return;
+      const { data, error: err } = await reviewSupplierQuoteItemBrandEquivalence(line.id, {
+        decision,
+        reviewer_id: user.id,
+      });
+      if (err || !data) {
+        setError(tx.errLoad);
+        return;
+      }
+      setQuoteItems((prev) => prev.map((it) => (it.id === data.id ? data : it)));
+      // Fire-and-forget bilingual in-app notification (no PII).
+      notifyProcurementEvent({
+        user_id: user.id,
+        event: decision === 'approved' ? 'brand_equivalent_approved' : 'brand_equivalent_rejected',
+        quote_id: data.quote_id,
+        rfq_id: activeRfqId,
+      });
+    },
+    [user?.id, tx.errLoad, activeRfqId],
+  );
+
   const onCreateRfq = useCallback(async () => {
     if (!request || !user?.id) return;
     setBusy(true);
