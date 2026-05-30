@@ -66,6 +66,8 @@ Scenarios 4–7 require **item-level** brand. Scenarios 1–3 can live at RFQ he
 
 Scoring 1 (poor) – 5 (excellent).
 
+Legend: Option A = RFQ header-level; Option B = customer RFQ item-level; Option C = BOQ item-level; Option D = procurement item-level; Option E = hybrid of A header + C + D with supplier `proposed_brand_id`.
+
 | Option | Accuracy | Flexibility | Reporting | Procurement | Inventory-ready | Migration cost | Total |
 |--------|---------:|------------:|----------:|------------:|----------------:|---------------:|------:|
 | **A. RFQ-level brand** (`quote_requests.preferred_brand_id`) | 2 | 1 | 2 | 1 | 1 | **5** (1 col) | 12 |
