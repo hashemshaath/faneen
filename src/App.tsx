@@ -153,6 +153,9 @@ const AdminContractAnalytics = lazyRetry(() => import("./pages/admin/AdminContra
 const AdminContracts = lazyRetry(() => import("./pages/admin/AdminContracts"));
 const AdminContractCreate = lazyRetry(() => import("./pages/admin/AdminContractCreate"));
 const AdminReports = lazyRetry(() => import("./pages/admin/AdminReports"));
+const DashboardRfq = lazyRetry(() => import("./pages/dashboard/DashboardRfq"));
+const DashboardRfqInbox = lazyRetry(() => import("./pages/dashboard/DashboardRfqInbox"));
+const DashboardLoyalty = lazyRetry(() => import("./pages/dashboard/DashboardLoyalty"));
 const Notifications = lazyRetry(() => import("./pages/Notifications"));
 const Membership = lazyRetry(() => import("./pages/Membership"));
 const MembershipInvoice = lazyRetry(() => import("./pages/MembershipInvoice"));
