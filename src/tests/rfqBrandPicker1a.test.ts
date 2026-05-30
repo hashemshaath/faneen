@@ -181,14 +181,16 @@ describe('RFQ-BRAND-PICKER-1A — scope discipline (no live wiring this phase)',
     return out;
   }
 
-  it('ApprovedBrandPicker not imported by any RFQ / quote-request / supplier page yet', () => {
+  it('ApprovedBrandPicker only wired in approved 1B surfaces (Quote.tsx); no BOQ/procurement/supplier wiring', () => {
     const matches = rgInDir('src', /ApprovedBrandPicker/);
-    // Only the component file itself + the test file may reference it.
+    // 1B intentionally wires the picker into the customer RFQ form (Quote.tsx).
+    // BOQ / procurement / supplier-quote surfaces remain deferred to 1C+.
     const offenders = matches.filter(
       (m) =>
         !m.endsWith('ApprovedBrandPicker.tsx') &&
         !m.includes('/tests/') &&
-        !m.includes('/__tests__/'),
+        !m.includes('/__tests__/') &&
+        m !== 'src/pages/Quote.tsx',
     );
     expect(offenders).toEqual([]);
   });
