@@ -433,6 +433,8 @@ const DashboardProfile: React.FC = () => {
         postal_code: a.post_code ?? f.postal_code,
         address_line: (isRTL ? a.address_ar : a.address_en) ?? a.address_ar ?? a.address_en ?? f.address_line,
       }));
+      // The SPL line is the official text — keep it as-is.
+      setAddressLineManual(true);
       toast.success(t(isRTL, 'تم تعبئة العنوان', 'Address filled in'));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Error');
