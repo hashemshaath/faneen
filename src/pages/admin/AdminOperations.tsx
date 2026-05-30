@@ -569,7 +569,7 @@ const AdminOperations = () => {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary">
-                <Activity className="w-4.5 h-4.5" />
+                <Activity className="w-5 h-5" />
               </span>
               <h1 className="text-2xl font-bold tracking-tight">
                 {bi('لوحة العمليات', 'Operations Dashboard')}
