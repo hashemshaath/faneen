@@ -468,6 +468,8 @@ const AdminQuoteRequestDetails: React.FC = () => {
                 <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-6">{quote.project_description}</p>
               </div>
 
+              <AdminQuoteBrandPreference quote={quote} />
+
               <div className="flex flex-wrap gap-2 pt-2">
                 <Button asChild className="min-h-[40px]" variant="default">
                   <a href={`https://wa.me/${waPhone}?text=${waMsg}`} target="_blank" rel="noopener noreferrer">
