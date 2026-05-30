@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   ShieldCheck, ShieldAlert, Search, CheckCircle2, XCircle, Eye,
   AlertCircle, Loader2, Send, Globe, Tag, Lock, UserPlus, Users as UsersIcon,
+  ArrowUpDown, Building2, ExternalLink, Clock, RefreshCw,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { listAdminBusinesses, type ListAdminBusinessesFilter } from '@/modules/businesses';
+import { listAdminBusinesses, countBusinesses, type ListAdminBusinessesFilter } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { maskEmail, maskPhone } from '@/lib/masking';
@@ -20,6 +21,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { getSectorById, type SectorId } from '@/data/onboarding-sectors';
 import { trackProviderApproved, trackProviderRejected, trackProviderNeedsChanges } from '@/lib/analytics-events';
@@ -36,6 +39,8 @@ type ApprovalStatus =
   | 'approved' | 'rejected' | 'needs_changes' | 'published';
 
 type UsernameStatus = 'pending' | 'approved' | 'rejected';
+
+type SortKey = 'submitted_desc' | 'submitted_asc' | 'completion_desc' | 'name_asc';
 
 const STATUSES: { value: ApprovalStatus | 'all'; ar: string; en: string }[] = [
   { value: 'all',           ar: 'الكل',           en: 'All' },
@@ -138,8 +143,9 @@ export default function AdminProviderReview() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('submitted_desc');
 
-  const { data: rows, isLoading } = useQuery({
+  const { data: rows, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['admin-provider-review', statusFilter],
     queryFn: async () => {
       const filters: ListAdminBusinessesFilter[] = [];
@@ -158,20 +164,77 @@ export default function AdminProviderReview() {
     },
   });
 
+  // ── Per-status counts (drives KPI strip + tab badges). One light
+  //    head-only count per status — runs in parallel. Refreshes
+  //    whenever the main list mutates (same query-key prefix).
+  const COUNT_STATUSES: ApprovalStatus[] = [
+    'submitted', 'under_review', 'needs_changes', 'approved', 'published', 'rejected', 'draft',
+  ];
+  const { data: statusCounts } = useQuery({
+    queryKey: ['admin-provider-review', 'counts'],
+    queryFn: async () => {
+      const entries = await Promise.all(
+        COUNT_STATUSES.map(async (s) => {
+          const { count } = await countBusinesses({
+            select: 'id',
+            filters: [{ column: 'approval_status', op: 'eq', value: s }],
+          });
+          return [s, count ?? 0] as const;
+        }),
+      );
+      const map: Record<string, number> = {};
+      let total = 0;
+      for (const [s, n] of entries) { map[s] = n; total += n; }
+      map.all = total;
+      return map;
+    },
+    staleTime: 30_000,
+  });
+
   const filtered = useMemo(() => {
     const list = rows ?? [];
-    if (!searchTerm.trim()) return list;
-    const t = searchTerm.toLowerCase();
-    return list.filter((r) =>
-      [r.name_ar, r.name_en, r.username, r.email, r.phone]
-        .some((f) => f?.toLowerCase().includes(t))
+    const t = searchTerm.trim().toLowerCase();
+    const searched = !t ? list : list.filter((r) =>
+      [r.name_ar, r.name_en, r.username, r.email, r.phone, r.ref_id]
+        .some((f) => f?.toLowerCase().includes(t)),
     );
-  }, [rows, searchTerm]);
+    const sorted = [...searched].sort((a, b) => {
+      switch (sortKey) {
+        case 'submitted_asc': {
+          const av = a.submitted_at ?? a.created_at;
+          const bv = b.submitted_at ?? b.created_at;
+          return new Date(av).getTime() - new Date(bv).getTime();
+        }
+        case 'completion_desc':
+          return (b.onboarding_completion ?? 0) - (a.onboarding_completion ?? 0);
+        case 'name_asc': {
+          const an = (language === 'ar' ? a.name_ar : a.name_en) ?? '';
+          const bn = (language === 'ar' ? b.name_ar : b.name_en) ?? '';
+          return an.localeCompare(bn, language === 'ar' ? 'ar' : 'en');
+        }
+        case 'submitted_desc':
+        default: {
+          const av = a.submitted_at ?? a.created_at;
+          const bv = b.submitted_at ?? b.created_at;
+          return new Date(bv).getTime() - new Date(av).getTime();
+        }
+      }
+    });
+    return sorted;
+  }, [rows, searchTerm, sortKey, language]);
 
   const selected = useMemo(
     () => filtered.find((r) => r.id === selectedId) ?? null,
     [filtered, selectedId],
   );
+
+  // Auto-select first row when filter/sort changes and nothing is selected.
+  useEffect(() => {
+    if (!selectedId && filtered.length > 0) {
+      setSelectedId(filtered[0].id);
+      setNotes(filtered[0].approval_notes ?? '');
+    }
+  }, [filtered, selectedId]);
 
   const approvalMutation = useMutation({
     mutationFn: async (vars: { id: string; status: ApprovalStatus; notes?: string }) => {
