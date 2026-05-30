@@ -198,7 +198,7 @@ const DashboardProfile: React.FC = () => {
 
   const completion = useMemo(() => {
     const checks = [
-      !!form.full_name.trim(),
+      !!(form.full_name_ar.trim() || form.full_name_en.trim()),
       !!form.avatar_url,
       !!form.username,
       !!form.email.trim(),
@@ -241,7 +241,7 @@ const DashboardProfile: React.FC = () => {
       const { error } = await updateProfile({
         userId: user.id,
         values: {
-          full_name: form.full_name.trim() || null,
+          full_name: (form.full_name_ar.trim() || form.full_name_en.trim() || form.full_name.trim()) || null,
           full_name_ar: form.full_name_ar.trim() || null,
           full_name_en: form.full_name_en.trim() || null,
           username: form.username ? form.username : null,
@@ -275,7 +275,30 @@ const DashboardProfile: React.FC = () => {
       toast.success(t(isRTL, 'تم حفظ الملف الشخصي', 'Profile saved'));
     },
     onError: (e) => {
-      const raw = e instanceof Error ? e.message : String(e);
+      // Robust extraction — Supabase PostgrestError is a plain object
+      // and `String(obj)` returns "[object Object]". Pull `.message` / `.details`
+      // / `.hint` / `.code` before falling back to JSON.
+      const extract = (err: unknown): string => {
+        if (!err) return '';
+        if (err instanceof Error) return err.message;
+        if (typeof err === 'string') return err;
+        if (typeof err === 'object') {
+          const o = err as Record<string, unknown>;
+          return (
+            (typeof o.message === 'string' && o.message) ||
+            (typeof o.error_description === 'string' && o.error_description) ||
+            (typeof o.details === 'string' && o.details) ||
+            (typeof o.hint === 'string' && o.hint) ||
+            (typeof o.code === 'string' && o.code) ||
+            ''
+          ) as string;
+        }
+        return '';
+      };
+      const raw = extract(e) || t(isRTL, 'حدث خطأ أثناء الحفظ. حاول مرة أخرى.', 'An error occurred while saving. Please try again.');
+      // Log full object for debugging
+      // eslint-disable-next-line no-console
+      console.error('[DashboardProfile] save failed:', e);
       const map: Record<string, { ar: string; en: string }> = {
         INVALID_NATIONAL_ID: {
           ar: 'رقم الهوية غير صحيح. يجب أن يكون 10 أرقام ويبدأ بـ 1 (سعودي) أو 2 (مقيم).',
@@ -485,31 +508,17 @@ const DashboardProfile: React.FC = () => {
               <CardContent className="p-4 sm:p-5 space-y-4">
                 <header className="flex items-center gap-2">
                   <User className="w-4 h-4 text-primary" />
-                  <h2 className="text-sm font-bold">{t(isRTL, 'الهوية', 'Identity')}</h2>
+                  <h2 className="text-sm font-bold">{t(isRTL, 'البيانات الشخصية', 'Personal data')}</h2>
                 </header>
-
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    {t(isRTL, 'الاسم الكامل', 'Full name')} <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    value={form.full_name}
-                    onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
-                    dir="auto"
-                    className="mt-1 h-11 rounded-xl"
-                    placeholder={t(isRTL, 'اكتب اسمك الكامل', 'Enter your full name')}
-                    maxLength={120}
-                  />
-                </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-xs font-medium text-muted-foreground">
-                      {t(isRTL, 'الاسم بالعربية', 'Arabic name')}
+                      {t(isRTL, 'الاسم الكامل بالعربية', 'Full name (Arabic)')} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       value={form.full_name_ar}
-                      onChange={(e) => setForm((f) => ({ ...f, full_name_ar: e.target.value }))}
+                      onChange={(e) => setForm((f) => ({ ...f, full_name_ar: e.target.value, full_name: e.target.value }))}
                       dir="rtl"
                       lang="ar"
                       className="mt-1 h-11 rounded-xl"
@@ -519,7 +528,7 @@ const DashboardProfile: React.FC = () => {
                   </div>
                   <div>
                     <Label className="text-xs font-medium text-muted-foreground">
-                      {t(isRTL, 'الاسم بالإنجليزية', 'English name')}
+                      {t(isRTL, 'الاسم الكامل بالإنجليزية', 'Full name (English)')}
                     </Label>
                     <Input
                       value={form.full_name_en}
