@@ -323,6 +323,7 @@ const DashboardBusinessEdit: React.FC = () => {
         unit_type: form.unit_type || null,
         national_id: form.national_id || null, unified_number: form.unified_number || null,
         vat_number: form.vat_number || null,
+        cr_legal_entity: form.cr_legal_entity || null,
         account_manager_name: form.account_manager_name || null,
         account_manager_phone: form.account_manager_phone || null,
         account_manager_email: form.account_manager_email || null,
