@@ -31,7 +31,7 @@ export async function getContractFullAuditTrail(
     _contract_id: contractId,
   });
   if (error) throw error;
-  return (Array.isArray(data) ? (data as ContractAuditEvent[]) : []);
+  return Array.isArray(data) ? (data as unknown as ContractAuditEvent[]) : [];
 }
 
 export interface AdminCreateContractOnBehalfInput {
