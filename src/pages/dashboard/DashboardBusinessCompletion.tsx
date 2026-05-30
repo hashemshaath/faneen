@@ -173,6 +173,46 @@ const toneClasses: Record<'info' | 'success' | 'warning' | 'destructive', string
   destructive: 'border-destructive/30 bg-destructive/5 text-destructive',
 };
 
+/** SVG radial progress used in the hero card. */
+const RadialProgress: React.FC<{ value: number; tone: 'info' | 'success' | 'warning' | 'destructive' }> = ({ value, tone }) => {
+  const size = 84;
+  const stroke = 8;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c - (Math.min(100, Math.max(0, value)) / 100) * c;
+  const colorClass =
+    tone === 'success' ? 'stroke-emerald-500'
+      : tone === 'warning' ? 'stroke-warning'
+      : tone === 'destructive' ? 'stroke-destructive'
+      : 'stroke-primary';
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} className="stroke-muted" strokeWidth={stroke} fill="none" />
+        <circle
+          cx={size / 2} cy={size / 2} r={r}
+          className={`${colorClass} transition-[stroke-dashoffset] duration-700 ease-out`}
+          strokeWidth={stroke} fill="none" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={offset}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-lg font-bold text-foreground tech-content">{value}%</span>
+      </div>
+    </div>
+  );
+};
+
+const ImpactStat: React.FC<{ Icon: typeof Building2; label: string; value: string }> = ({ Icon, label, value }) => (
+  <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center gap-2 min-w-0">
+      <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+      <span className="text-xs text-muted-foreground truncate">{label}</span>
+    </div>
+    <span className="text-sm font-bold text-foreground tech-content shrink-0">{value}</span>
+  </div>
+);
+
 const DashboardBusinessCompletion: React.FC = () => {
   const { user } = useAuth();
   const { isRTL } = useLanguage();
