@@ -1281,6 +1281,139 @@ export type Database = {
           },
         ]
       }
+      brand_addition_requests: {
+        Row: {
+          approved_brand_id: string | null
+          business_id: string
+          business_service_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          reject_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sector_id: string | null
+          status: Database["public"]["Enums"]["service_request_status"]
+          ticket_ref_id: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          approved_brand_id?: string | null
+          business_id: string
+          business_service_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name_ar: string
+          name_en?: string | null
+          ref_id?: string | null
+          reject_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sector_id?: string | null
+          status?: Database["public"]["Enums"]["service_request_status"]
+          ticket_ref_id?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          approved_brand_id?: string | null
+          business_id?: string
+          business_service_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name_ar?: string
+          name_en?: string | null
+          ref_id?: string | null
+          reject_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sector_id?: string | null
+          status?: Database["public"]["Enums"]["service_request_status"]
+          ticket_ref_id?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_addition_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_addition_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_addition_requests_business_service_id_fkey"
+            columns: ["business_service_id"]
+            isOneToOne: false
+            referencedRelation: "business_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_catalog: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          sector_id: string | null
+          slug: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name_ar: string
+          name_en?: string | null
+          ref_id?: string | null
+          sector_id?: string | null
+          slug?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name_ar?: string
+          name_en?: string | null
+          ref_id?: string | null
+          sector_id?: string | null
+          slug?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       business_audit_log: {
         Row: {
           action: string
@@ -1803,6 +1936,62 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_service_brands: {
+        Row: {
+          brand_id: string
+          business_id: string
+          business_service_id: string
+          created_at: string
+          id: string
+          sort_order: number
+        }
+        Insert: {
+          brand_id: string
+          business_id: string
+          business_service_id: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+        }
+        Update: {
+          brand_id?: string
+          business_id?: string
+          business_service_id?: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_service_brands_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_brands_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_brands_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_brands_business_service_id_fkey"
+            columns: ["business_service_id"]
+            isOneToOne: false
+            referencedRelation: "business_services"
             referencedColumns: ["id"]
           },
         ]
@@ -14586,6 +14775,10 @@ export type Database = {
         }[]
       }
       accept_staff_invitation: { Args: { _token: string }; Returns: Json }
+      add_business_sub_service: {
+        Args: { p_business_id: string; p_sub_service_id: string }
+        Returns: undefined
+      }
       add_project_delivery_evidence: {
         Args: {
           _attachment_id?: string
@@ -14990,6 +15183,36 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "contract_amendments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approve_brand_addition_request: {
+        Args: { p_admin_note?: string; p_request_id: string }
+        Returns: {
+          approved_brand_id: string | null
+          business_id: string
+          business_service_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          reject_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sector_id: string | null
+          status: Database["public"]["Enums"]["service_request_status"]
+          ticket_ref_id: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "brand_addition_requests"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -16387,6 +16610,36 @@ export type Database = {
           success: boolean
         }[]
       }
+      reject_brand_addition_request: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: {
+          approved_brand_id: string | null
+          business_id: string
+          business_service_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          reject_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sector_id: string | null
+          status: Database["public"]["Enums"]["service_request_status"]
+          ticket_ref_id: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "brand_addition_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       reject_client_site_access: {
         Args: { _grant_id: string; _reason?: string }
         Returns: Json
@@ -16465,6 +16718,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      remove_business_sub_service: {
+        Args: { p_business_id: string; p_sub_service_id: string }
+        Returns: undefined
       }
       request_client_site_access: {
         Args: {
