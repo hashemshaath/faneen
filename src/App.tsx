@@ -14,6 +14,7 @@ import { AppDirectionShell } from "@/components/ui/app-direction-shell";
 import { RouteScrollToTop } from "@/components/RouteScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalLinkTracker } from "@/components/GlobalLinkTracker";
+import { GlobalShortcuts } from "@/components/GlobalShortcuts";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { ThemeApplier } from "@/components/ThemeApplier";
 const Index = lazyRetry(() => import("./pages/Index"));
@@ -156,8 +157,10 @@ const AdminReports = lazyRetry(() => import("./pages/admin/AdminReports"));
 const AdminKpis = lazyRetry(() => import("./pages/admin/AdminKpis"));
 const AdminAuditLog = lazyRetry(() => import("./pages/admin/AdminAuditLog"));
 const DashboardRfq = lazyRetry(() => import("./pages/dashboard/DashboardRfq"));
+const DashboardRfqDetail = lazyRetry(() => import("./pages/dashboard/DashboardRfqDetail"));
 const DashboardRfqInbox = lazyRetry(() => import("./pages/dashboard/DashboardRfqInbox"));
 const DashboardLoyalty = lazyRetry(() => import("./pages/dashboard/DashboardLoyalty"));
+const DashboardLoyaltyStore = lazyRetry(() => import("./pages/dashboard/DashboardLoyaltyStore"));
 const Notifications = lazyRetry(() => import("./pages/Notifications"));
 const Membership = lazyRetry(() => import("./pages/Membership"));
 const MembershipInvoice = lazyRetry(() => import("./pages/MembershipInvoice"));
@@ -223,6 +226,7 @@ const AppRoutes = () => (
     <AppDirectionShell>
       <RouteScrollToTop />
       <GlobalLinkTracker />
+      <GlobalShortcuts />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -413,7 +417,9 @@ const AppRoutes = () => (
           <Route path="/admin/audit-log" element={<ProtectedRoute requireAdmin><AdminAuditLog /></ProtectedRoute>} />
           <Route path="/dashboard/rfq" element={<ProtectedRoute><DashboardRfq /></ProtectedRoute>} />
           <Route path="/dashboard/rfq/inbox" element={<ProtectedRoute><DashboardRfqInbox /></ProtectedRoute>} />
+          <Route path="/dashboard/rfq/:id" element={<ProtectedRoute><DashboardRfqDetail /></ProtectedRoute>} />
           <Route path="/dashboard/loyalty" element={<ProtectedRoute><DashboardLoyalty /></ProtectedRoute>} />
+          <Route path="/dashboard/loyalty/store" element={<ProtectedRoute><DashboardLoyaltyStore /></ProtectedRoute>} />
 
           <Route path="/:username" element={<UsernameResolver />} />
           <Route path="*" element={<NotFound />} />

@@ -118,6 +118,7 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'العضوية والرصيد', en: 'Provider Membership' }, url: '/dashboard/provider/membership', icon: Crown },
       { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
       { label: { ar: 'نقاط الولاء', en: 'Loyalty Points' }, url: '/dashboard/loyalty', icon: Star, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
+      { label: { ar: 'متجر المكافآت', en: 'Reward Store' }, url: '/dashboard/loyalty/store', icon: Star, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
     ],
   },
   {

@@ -59,6 +59,19 @@ export async function listQuotesForRfq(rfqId: string): Promise<RfqQuote[]> {
   return (data ?? []) as RfqQuote[];
 }
 
+export async function getRfq(id: string): Promise<RfqRequest | null> {
+  const { data, error } = await supabase.from('rfq_requests').select('*').eq('id', id).maybeSingle();
+  if (error) throw error;
+  return (data as RfqRequest | null) ?? null;
+}
+
+export async function acceptQuote(quoteId: string, rfqId: string): Promise<void> {
+  const { error: e1 } = await supabase.from('rfq_quotes').update({ status: 'accepted' }).eq('id', quoteId);
+  if (e1) throw e1;
+  await supabase.from('rfq_quotes').update({ status: 'rejected' }).eq('rfq_id', rfqId).neq('id', quoteId);
+  await supabase.from('rfq_requests').update({ status: 'awarded' }).eq('id', rfqId);
+}
+
 export interface CreateRfqInput {
   buyer_user_id: string;
   industry: string;
