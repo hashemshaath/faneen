@@ -1,67 +1,101 @@
 /**
- * Public catalog of approved private sectors (brands).
- * Filterable by parent industrial sector + city + category, with text search.
- * Reads from the public `private_sectors_public` view (RLS-aware).
+ * BRANDS-GOVERNANCE-3 — Public Brand Registry catalog.
+ *
+ * Lists only approved brands (RLS-enforced via `brands_public` view).
+ * Pending / rejected / archived / merged brands are never exposed.
+ *
+ * Every Supabase access routes through `@/modules/brands` — no direct
+ * client calls. Verified by `scripts/brands-isolation-audit.mjs`.
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { Search, Globe2, ShieldCheck, Tag } from 'lucide-react';
+
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Building2, MapPin, Tag, Layers } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+
 import { useLanguage } from '@/i18n/LanguageContext';
-import { listPublicSectors } from '@/features/private-sectors/service';
-import { listActiveCategories } from '@/modules/categories';
-import { listActiveCities } from '@/modules/locations';
-import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { listApprovedBrands, listSectorsLite } from '@/modules/brands';
 
 const ALL = '__all__';
+const SITE = 'https://qitaat.com';
 
 const BrandsCatalog: React.FC = () => {
   const { isRTL } = useLanguage();
-  const [search, setSearch] = useState('');
-  const [parent, setParent] = useState<string>(ALL);
-  const [cityId, setCityId] = useState<string>(ALL);
-  const [categoryId, setCategoryId] = useState<string>(ALL);
+  const [q, setQ] = useState('');
+  const [sectorId, setSectorId] = useState<string>(ALL);
+  const [country, setCountry] = useState<string>(ALL);
+  const [verifiedOnly, setVerifiedOnly] = useState<string>(ALL);
 
-  useEffect(() => {
-    document.title = isRTL ? 'العلامات والقطاعات الخاصة | قِطاعات' : 'Private Brands & Sectors | Qitaat';
-    const meta = document.querySelector('meta[name="description"]') ?? document.head.appendChild(Object.assign(document.createElement('meta'), { name: 'description' }));
-    meta.setAttribute('content', isRTL
-      ? 'استكشف العلامات والوكالات الحصرية لمزودي الألمنيوم والمطابخ والزجاج والحديد المعتمدين على منصة قِطاعات.'
-      : 'Explore approved exclusive brands, agencies and specialized sub-sectors from Qitaat verified providers.');
-  }, [isRTL]);
-
-  const { data: cities = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string }>>({
-    queryKey: ['brands-cities'],
-    queryFn: async () => {
-      const { data } = await listActiveCities<{ id: string; name_ar: string; name_en: string }>();
-      return data ?? [];
-    },
+  usePageMeta({
+    title: isRTL ? 'سجل العلامات التجارية الصناعية' : 'Industrial Brands Registry',
+    description: isRTL
+      ? 'استكشف العلامات التجارية الصناعية المعتمدة في قِطاعات: ألمنيوم، زجاج، حديد، أخشاب وأكثر.'
+      : 'Browse approved industrial brands on Qitaat — aluminium, glass, steel, wood, and more.',
+    canonical: `${SITE}/brands`,
+    ogType: 'website',
   });
-  const { data: categories = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string; slug: string }>>({
-    queryKey: ['brands-categories'],
-    queryFn: async () => {
-      const { data } = await listActiveCategories<{ id: string; name_ar: string; name_en: string; slug: string }>({ select: 'id, name_ar, name_en, slug' });
-      return data ?? [];
-    },
+
+  const { data: sectors = [] } = useQuery({
+    queryKey: ['brands-sectors-lite'],
+    queryFn: listSectorsLite,
+    staleTime: 5 * 60_000,
   });
 
   const { data: brands = [], isLoading } = useQuery({
-    queryKey: ['public-private-sectors', parent, cityId, categoryId, search],
-    queryFn: () => listPublicSectors({
-      parent_sector: parent === ALL ? undefined : parent,
-      city_id: cityId === ALL ? undefined : cityId,
-      category_id: categoryId === ALL ? undefined : categoryId,
-      search: search.trim() || undefined,
-    }),
+    queryKey: ['public-brands', sectorId, country, q],
+    queryFn: () =>
+      listApprovedBrands({
+        sectorId: sectorId === ALL ? undefined : sectorId,
+        countryCode: country === ALL ? undefined : country,
+        q: q.trim() || undefined,
+        limit: 200,
+      }),
+    staleTime: 30_000,
   });
 
-  const filtered = useMemo(() => brands, [brands]);
+  const filtered = useMemo(() => {
+    if (verifiedOnly !== 'verified') return brands;
+    return brands.filter((b) => b.is_verified);
+  }, [brands, verifiedOnly]);
+
+  const countries = useMemo(() => {
+    const set = new Map<string, { code: string; name: string }>();
+    for (const b of brands) {
+      if (b.country_of_origin_code) {
+        set.set(b.country_of_origin_code, {
+          code: b.country_of_origin_code,
+          name: (isRTL ? b.country_of_origin_name_ar : b.country_of_origin_name_en) || b.country_of_origin_code,
+        });
+      }
+    }
+    return Array.from(set.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [brands, isRTL]);
+
+  useMultiJsonLd([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: isRTL ? 'الرئيسية' : 'Home', item: SITE },
+        { '@type': 'ListItem', position: 2, name: isRTL ? 'العلامات التجارية' : 'Brands', item: `${SITE}/brands` },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: isRTL ? 'سجل العلامات التجارية الصناعية' : 'Industrial Brands Registry',
+      url: `${SITE}/brands`,
+      isPartOf: { '@type': 'WebSite', name: 'Qitaat', url: SITE },
+    },
+  ]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -69,116 +103,127 @@ const BrandsCatalog: React.FC = () => {
       <main className="flex-1 container mx-auto px-4 py-8 space-y-6">
         <header className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="rounded-xl bg-primary/10 p-2 text-primary"><Layers className="h-5 w-5" /></div>
+            <div className="rounded-xl bg-primary/10 p-2 text-primary"><ShieldCheck className="h-5 w-5" /></div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              {isRTL ? 'العلامات والقطاعات الخاصة' : 'Brands & Private Sectors'}
+              {isRTL ? 'سجل العلامات التجارية الصناعية' : 'Industrial Brands Registry'}
             </h1>
           </div>
           <p className="text-sm text-muted-foreground max-w-2xl">
             {isRTL
-              ? 'كل العلامات الخاصة، الوكالات الحصرية، والتخصصات المعتمدة من قِبل إدارة المنصة.'
-              : 'Every private brand, exclusive agency, and specialized sub-sector approved by the platform team.'}
+              ? 'علامات تجارية معتمدة من إدارة قِطاعات. كل علامة هنا تمت مراجعتها قبل النشر.'
+              : 'Brands curated and approved by the Qitaat team. Every brand listed here has been reviewed before publication.'}
           </p>
         </header>
 
-        {/* Filters */}
         <Card>
           <CardContent className="p-4 grid gap-3 md:grid-cols-4">
             <div className="relative md:col-span-2">
               <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
-              <Input className="ps-10 h-11" placeholder={isRTL ? 'بحث بالاسم…' : 'Search by name…'}
-                     value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input dir="auto" className="ps-10 h-11" placeholder={isRTL ? 'ابحث بالاسم…' : 'Search by name…'}
+                     value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
-            <Select value={parent} onValueChange={setParent}>
+            <Select value={sectorId} onValueChange={setSectorId}>
               <SelectTrigger className="h-11"><SelectValue placeholder={isRTL ? 'القطاع' : 'Sector'} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value={ALL}>{isRTL ? 'كل القطاعات' : 'All sectors'}</SelectItem>
-                {ONBOARDING_SECTORS.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{isRTL ? s.name_ar : s.name_en}</SelectItem>
+                {sectors.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{isRTL ? s.name_ar : (s.name_en || s.name_ar)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <div className="grid grid-cols-2 gap-2 md:col-span-1">
-              <Select value={cityId} onValueChange={setCityId}>
-                <SelectTrigger className="h-11"><SelectValue placeholder={isRTL ? 'المدينة' : 'City'} /></SelectTrigger>
+            <div className="grid grid-cols-2 gap-2">
+              <Select value={country} onValueChange={setCountry}>
+                <SelectTrigger className="h-11"><SelectValue placeholder={isRTL ? 'بلد المنشأ' : 'Origin'} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL}>{isRTL ? 'كل المدن' : 'All cities'}</SelectItem>
-                  {cities.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
+                  <SelectItem value={ALL}>{isRTL ? 'كل البلدان' : 'All countries'}</SelectItem>
+                  {countries.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger className="h-11"><SelectValue placeholder={isRTL ? 'الفئة' : 'Category'} /></SelectTrigger>
+              <Select value={verifiedOnly} onValueChange={setVerifiedOnly}>
+                <SelectTrigger className="h-11"><SelectValue placeholder={isRTL ? 'التحقق' : 'Verification'} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL}>{isRTL ? 'كل الفئات' : 'All categories'}</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
-                  ))}
+                  <SelectItem value={ALL}>{isRTL ? 'الكل' : 'All'}</SelectItem>
+                  <SelectItem value="verified">{isRTL ? 'موثقة فقط' : 'Verified only'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardContent>
         </Card>
 
-        {/* Results */}
         {isLoading ? (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-44 rounded-xl bg-muted animate-pulse" />
-            ))}
+            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
           </div>
         ) : filtered.length === 0 ? (
           <Card><CardContent className="py-12 text-center">
-            <Layers className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد علامات بهذه الشروط.' : 'No brands match these filters.'}</p>
+            <ShieldCheck className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد علامات مطابقة.' : 'No brands match these filters.'}</p>
           </CardContent></Card>
         ) : (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((b) => (
-              <Link to={`/brands/${b.slug}`} key={b.id} className="group">
-                <Card className="hover-lift h-full overflow-hidden">
-                  {b.cover_url ? (
-                    <div className="aspect-[16/9] bg-muted overflow-hidden">
-                      <img src={b.cover_url} alt={(isRTL ? b.name_ar : b.name_en) || b.name_ar}
-                           loading="lazy"
-                           className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    </div>
-                  ) : (
-                    <div className="aspect-[16/9] bg-gradient-to-br from-primary/10 to-secondary/10 grid place-items-center">
-                      <Layers className="h-10 w-10 text-muted-foreground" />
-                    </div>
-                  )}
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex items-center gap-2">
-                      {b.logo_url && <img src={b.logo_url} alt={isRTL ? b.name_ar : (b.name_en || b.name_ar)} className="h-8 w-8 rounded border object-cover" loading="lazy" />}
-                      <div className="font-semibold truncate">{isRTL ? b.name_ar : (b.name_en || b.name_ar)}</div>
-                    </div>
-                    {(b.short_description_ar || b.short_description_en) && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {isRTL ? (b.short_description_ar || b.short_description_en) : (b.short_description_en || b.short_description_ar)}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {b.parent_sector && (() => {
-                        const ps = ONBOARDING_SECTORS.find((s) => s.id === b.parent_sector);
-                        return ps ? <Badge variant="secondary" className="gap-1"><Layers className="h-3 w-3" />{isRTL ? ps.name_ar : ps.name_en}</Badge> : null;
-                      })()}
-                      {b.city_name_ar && <Badge variant="outline" className="gap-1"><MapPin className="h-3 w-3" />{isRTL ? b.city_name_ar : (b.city_name_en || b.city_name_ar)}</Badge>}
-                      {b.category_name_ar && <Badge variant="outline" className="gap-1"><Tag className="h-3 w-3" />{isRTL ? b.category_name_ar : (b.category_name_en || b.category_name_ar)}</Badge>}
-                    </div>
-                    {b.business_username && (
-                      <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1 pt-1">
-                        <Building2 className="h-3 w-3" />
-                        {isRTL ? 'بواسطة' : 'by'} <span className="font-medium">{isRTL ? b.business_name_ar : (b.business_name_en || b.business_name_ar)}</span>
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+            {filtered.map((b) => {
+              const display = isRTL ? b.name_ar : (b.name_en || b.name_ar);
+              return (
+                <Link key={b.id} to={b.slug ? `/brands/${b.slug}` : '#'} className="group">
+                  <Card className="hover-lift h-full">
+                    <CardContent className="p-4 flex gap-3 items-start">
+                      {b.logo_url ? (
+                        <img src={b.logo_url} alt={display} loading="lazy"
+                             className="h-14 w-14 rounded-lg border bg-background object-cover" />
+                      ) : (
+                        <div className="h-14 w-14 rounded-lg bg-primary/10 grid place-items-center text-primary">
+                          <Tag className="h-6 w-6" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-semibold truncate">{display}</span>
+                          {b.is_verified && (
+                            <Badge variant="secondary" className="gap-1 text-[10px]">
+                              <ShieldCheck className="h-3 w-3" />{isRTL ? 'موثقة' : 'Verified'}
+                            </Badge>
+                          )}
+                        </div>
+                        {b.brand_owner_company && (
+                          <p className="text-xs text-muted-foreground truncate">{b.brand_owner_company}</p>
+                        )}
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {b.country_of_origin_code && (
+                            <Badge variant="outline" className="gap-1 text-[10px]">
+                              <Globe2 className="h-3 w-3" />
+                              {(isRTL ? b.country_of_origin_name_ar : b.country_of_origin_name_en) || b.country_of_origin_code}
+                            </Badge>
+                          )}
+                          {b.is_local && (
+                            <Badge variant="outline" className="text-[10px]">
+                              {isRTL ? 'محلية' : 'Local'}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         )}
+
+        <Card className="bg-muted/30">
+          <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm">
+              <p className="font-medium">{isRTL ? 'تبحث عن قطاع خاص أو وكالة محلية؟' : 'Looking for a private sub-sector or local agency?'}</p>
+              <p className="text-muted-foreground text-xs">
+                {isRTL ? 'القطاعات الخاصة والوكالات الحصرية لها سجلها الخاص.' : 'Private sectors and exclusive agencies have their own directory.'}
+              </p>
+            </div>
+            <Link to="/private-sectors" className="text-sm text-primary hover:underline">
+              {isRTL ? 'تصفح القطاعات الخاصة ←' : 'Browse private sectors →'}
+            </Link>
+          </CardContent>
+        </Card>
       </main>
       <Footer />
     </div>

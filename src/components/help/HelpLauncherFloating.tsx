@@ -42,6 +42,12 @@ export const ROUTE_PAGE_KEYS: RoutePageKeyEntry[] = [
   { pattern: '/admin/businesses', pageKey: 'admin.identity' },
   { pattern: '/admin/operations', pageKey: 'admin.operations-center' },
   { pattern: '/admin/help', pageKey: 'admin.help' },
+  // BRANDS-GOVERNANCE-3 — brand registry pages
+  { pattern: '/admin/brand-requests', pageKey: 'admin.brand-requests' },
+  { pattern: '/admin/brands/:id', pageKey: 'admin.brand-detail' },
+  { pattern: '/dashboard/brands', pageKey: 'dashboard.brands' },
+  { pattern: '/brands/:slug', pageKey: 'public.brand-detail' },
+  { pattern: '/brands', pageKey: 'public.brands' },
   // Public / customer
   { pattern: '/customer/projects/:token', pageKey: 'customer.portal' },
   { pattern: '/customer/project/:token', pageKey: 'customer.portal' },

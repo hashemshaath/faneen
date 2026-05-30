@@ -43,6 +43,45 @@ export async function getBrandBySlug(slug: string) {
   return data as Brand | null;
 }
 
+/**
+ * Public-facing: list approved provider links for an approved brand.
+ * Filters server-side by authorization_status='verified' so pending
+ * or rejected links never leak to the public profile.
+ */
+export async function listPublicProvidersForBrand(brandId: string) {
+  const { data, error } = await sb
+    .from('business_service_brands')
+    .select('id, business_id, business_service_id, relationship_type, authorization_status, created_at')
+    .eq('brand_id', brandId)
+    .eq('authorization_status', 'verified')
+    .limit(60);
+  if (error) throw error;
+  return (data ?? []) as Array<{
+    id: string; business_id: string; business_service_id: string;
+    relationship_type: string | null; authorization_status: string | null;
+    created_at: string;
+  }>;
+}
+
+/**
+ * Provider-facing: list this provider's brand links across all their
+ * business services. Used by /dashboard/brands "Linked brands" panel.
+ */
+export async function listMyProviderBrandLinks(businessId: string) {
+  const { data, error } = await sb
+    .from('business_service_brands')
+    .select('id, brand_id, business_service_id, relationship_type, authorization_status, rejection_reason, created_at, brand:brand_catalog!business_service_brands_brand_id_fkey(id, ref_id, name_ar, name_en, slug, logo_url, status)')
+    .eq('business_id', businessId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as Array<{
+    id: string; brand_id: string; business_service_id: string;
+    relationship_type: string | null; authorization_status: string | null;
+    rejection_reason: string | null; created_at: string;
+    brand: Pick<Brand, 'id' | 'ref_id' | 'name_ar' | 'name_en' | 'slug' | 'logo_url' | 'status'> | null;
+  }>;
+}
+
 // ------------------------------ ADMIN READ -------------------------------
 
 export async function adminListBrands(filters?: {

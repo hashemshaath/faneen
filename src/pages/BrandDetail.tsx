@@ -1,82 +1,111 @@
 /**
- * Public detail page for a single approved private sector.
- * Renders SEO meta + JSON-LD, displays specializations and approved distributors.
+ * BRANDS-GOVERNANCE-3 — Public brand detail page.
+ *
+ * Reads only approved brands (via `brands_public` view) and only the
+ * verified provider links (filtered server-side). Audit logs, admin
+ * notes, draft data and pending links are never rendered here.
  */
-import React, { useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useMemo } from 'react';
+import { Link, useParams, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { ChevronLeft, ShieldCheck, Globe2, Tag, Building2, AlertCircle } from 'lucide-react';
+
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Layers, MapPin, Tag, Building2, Globe2, Mail, Phone, ChevronLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+
 import { useLanguage } from '@/i18n/LanguageContext';
-import { getPublicSectorBySlug, listSpecializations, listDistributors } from '@/features/private-sectors/service';
-import { listBusinessesByIds } from '@/modules/businesses';
-import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
-import { PS_DIST_ROLE_META } from '@/features/private-sectors/types';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import {
+  getBrandBySlug,
+  listBrandManufacturingCountries,
+  listPublicProvidersForBrand,
+  lookupBusinessesByIds,
+  relationshipLabel,
+  pick,
+} from '@/modules/brands';
+import type { ProviderBrandRelationship } from '@/modules/brands';
+
+const SITE = 'https://qitaat.com';
 
 const BrandDetail: React.FC = () => {
   const { slug = '' } = useParams();
   const { isRTL } = useLanguage();
+  const locale = isRTL ? 'ar' : 'en';
 
-  const { data: brand, isLoading } = useQuery({
-    queryKey: ['public-brand', slug],
+  const { data: brand, isLoading, isError } = useQuery({
+    queryKey: ['public-brand-detail', slug],
     enabled: !!slug,
-    queryFn: () => getPublicSectorBySlug(slug),
+    queryFn: () => getBrandBySlug(slug),
+    staleTime: 60_000,
   });
 
-  const { data: specs = [] } = useQuery({
-    queryKey: ['public-brand-specs', brand?.id],
+  const { data: countries = [] } = useQuery({
+    queryKey: ['public-brand-mfg', brand?.id],
     enabled: !!brand?.id,
-    queryFn: () => listSpecializations(brand!.id),
+    queryFn: () => listBrandManufacturingCountries(brand!.id),
   });
 
-  const { data: dists = [] } = useQuery({
-    queryKey: ['public-brand-dists', brand?.id],
+  const { data: providerLinks = [] } = useQuery({
+    queryKey: ['public-brand-providers', brand?.id],
     enabled: !!brand?.id,
-    queryFn: () => listDistributors(brand!.id),
+    queryFn: () => listPublicProvidersForBrand(brand!.id),
   });
 
-  const distBizIds = Array.from(new Set(dists.map((d) => d.business_id)));
-  type DistBiz = { id: string; name_ar: string; name_en: string; username: string };
-  const { data: distBizs = [] } = useQuery<DistBiz[]>({
-    queryKey: ['public-brand-dist-bizs', brand?.id, distBizIds.join(',')],
-    enabled: distBizIds.length > 0,
-    queryFn: async () => {
-      const { data } = await listBusinessesByIds<DistBiz>({ ids: distBizIds });
-      return data ?? [];
+  const providerIds = useMemo(
+    () => Array.from(new Set(providerLinks.map((l) => l.business_id))),
+    [providerLinks],
+  );
+  const { data: providerBizs = [] } = useQuery({
+    queryKey: ['public-brand-provider-bizs', brand?.id, providerIds.join(',')],
+    enabled: providerIds.length > 0,
+    queryFn: () => lookupBusinessesByIds(providerIds),
+  });
+  const bizMap = useMemo(
+    () => new Map(providerBizs.map((b) => [b.id, b])),
+    [providerBizs],
+  );
+
+  const display = brand ? (isRTL ? brand.name_ar : (brand.name_en || brand.name_ar)) : '';
+  const desc = brand
+    ? (isRTL ? brand.description_ar : (brand.description_en || brand.description_ar)) || ''
+    : '';
+
+  usePageMeta({
+    title: brand ? `${display}` : (isRTL ? 'علامة تجارية' : 'Brand'),
+    description: desc || (isRTL ? 'صفحة علامة تجارية معتمدة على قِطاعات.' : 'Approved brand on Qitaat.'),
+    canonical: brand?.slug ? `${SITE}/brands/${brand.slug}` : `${SITE}/brands`,
+    ogType: 'website',
+    ogImage: brand?.logo_url || undefined,
+    noindex: !isLoading && !brand,
+  });
+
+  useMultiJsonLd(brand ? [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: isRTL ? 'الرئيسية' : 'Home', item: SITE },
+        { '@type': 'ListItem', position: 2, name: isRTL ? 'العلامات التجارية' : 'Brands', item: `${SITE}/brands` },
+        { '@type': 'ListItem', position: 3, name: display, item: `${SITE}/brands/${brand.slug}` },
+      ],
     },
-  });
-  const distBizMap = new Map(distBizs.map((b) => [b.id, b]));
-
-  useEffect(() => {
-    if (!brand) return;
-    const title = (isRTL ? brand.seo_title_ar : brand.seo_title_en) || (isRTL ? brand.name_ar : (brand.name_en || brand.name_ar));
-    const desc = (isRTL ? brand.seo_description_ar : brand.seo_description_en)
-      || (isRTL ? brand.short_description_ar : brand.short_description_en) || '';
-    document.title = `${title} | ${isRTL ? 'قِطاعات' : 'Qitaat'}`;
-    const setMeta = (name: string, content: string) => {
-      let el = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
-      if (!el) { el = document.createElement('meta'); el.setAttribute('name', name); document.head.appendChild(el); }
-      el.setAttribute('content', content);
-    };
-    setMeta('description', desc);
-    if (brand.seo_keywords?.length) setMeta('keywords', brand.seo_keywords.join(', '));
-
-    const jsonLd = {
+    {
       '@context': 'https://schema.org',
       '@type': 'Brand',
-      name: title,
-      description: desc,
+      name: display,
+      alternateName: isRTL ? brand.name_en : brand.name_ar,
+      description: desc || undefined,
       logo: brand.logo_url || undefined,
-      url: `https://qitaat.com/brands/${brand.slug}`,
-    };
-    let script = document.getElementById('brand-jsonld') as HTMLScriptElement | null;
-    if (!script) { script = document.createElement('script'); script.type = 'application/ld+json'; script.id = 'brand-jsonld'; document.head.appendChild(script); }
-    script.textContent = JSON.stringify(jsonLd);
-    return () => { script?.remove(); };
-  }, [brand, isRTL]);
+      url: `${SITE}/brands/${brand.slug}`,
+      sameAs: brand.website ? [brand.website] : undefined,
+    },
+  ] : null);
+
+  if (slug === '') return <Navigate to="/brands" replace />;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -88,92 +117,94 @@ const BrandDetail: React.FC = () => {
         </Link>
 
         {isLoading ? (
-          <div className="h-72 bg-muted animate-pulse rounded-xl" />
-        ) : !brand ? (
-          <Card><CardContent className="py-12 text-center text-muted-foreground">{isRTL ? 'لم يتم العثور على العلامة.' : 'Brand not found.'}</CardContent></Card>
+          <Skeleton className="h-64 rounded-2xl" />
+        ) : isError || !brand ? (
+          <Card><CardContent className="py-12 text-center space-y-3">
+            <AlertCircle className="h-10 w-10 mx-auto text-muted-foreground" />
+            <p className="text-muted-foreground">{isRTL ? 'لم يتم العثور على هذه العلامة، أو لم تعتمد بعد.' : 'Brand not found or not yet approved.'}</p>
+            <Link to="/brands"><Button variant="outline" size="sm">{isRTL ? 'العودة للسجل' : 'Back to registry'}</Button></Link>
+          </CardContent></Card>
         ) : (
           <>
-            {/* Hero */}
-            <section className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background">
-              {brand.cover_url && (
-                <div className="absolute inset-0 opacity-20">
-                  <img src={brand.cover_url} alt={isRTL ? brand.name_ar : (brand.name_en || brand.name_ar)} className="w-full h-full object-cover" />
-                </div>
-              )}
-              <div className="relative p-6 md:p-8 flex flex-wrap gap-5 items-start">
+            <section className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6 md:p-8">
+              <div className="flex flex-wrap gap-5 items-start">
                 {brand.logo_url ? (
-                  <img src={brand.logo_url} alt={isRTL ? brand.name_ar : (brand.name_en || brand.name_ar)} className="h-20 w-20 rounded-2xl border bg-background object-cover" />
+                  <img src={brand.logo_url} alt={display}
+                       className="h-20 w-20 rounded-2xl border bg-background object-cover" />
                 ) : (
-                  <div className="h-20 w-20 rounded-2xl bg-primary/15 grid place-items-center text-primary"><Layers className="h-8 w-8" /></div>
+                  <div className="h-20 w-20 rounded-2xl bg-primary/15 grid place-items-center text-primary">
+                    <Tag className="h-8 w-8" />
+                  </div>
                 )}
-                <div className="flex-1 min-w-[260px]">
-                  <h1 className="text-2xl md:text-3xl font-extrabold">{isRTL ? brand.name_ar : (brand.name_en || brand.name_ar)}</h1>
-                  <p className="text-xs text-muted-foreground tech-content mt-0.5">{brand.ref_id}</p>
-                  {(brand.short_description_ar || brand.short_description_en) && (
-                    <p className="mt-2 text-sm md:text-base text-muted-foreground max-w-3xl">
-                      {isRTL ? (brand.short_description_ar || brand.short_description_en) : (brand.short_description_en || brand.short_description_ar)}
-                    </p>
+                <div className="flex-1 min-w-[240px]">
+                  <h1 className="text-2xl md:text-3xl font-extrabold">{display}</h1>
+                  {brand.ref_id && (
+                    <p className="text-xs text-muted-foreground tech-content mt-0.5">{brand.ref_id}</p>
+                  )}
+                  {brand.brand_owner_company && (
+                    <p className="text-sm text-muted-foreground mt-1">{brand.brand_owner_company}</p>
                   )}
                   <div className="flex flex-wrap gap-1.5 mt-3">
-                    {(() => {
-                      const ps = ONBOARDING_SECTORS.find((s) => s.id === brand.parent_sector);
-                      return ps ? <Badge variant="secondary"><Layers className="h-3 w-3 me-1" />{isRTL ? ps.name_ar : ps.name_en}</Badge> : null;
-                    })()}
-                    {brand.city_name_ar && <Badge variant="outline"><MapPin className="h-3 w-3 me-1" />{isRTL ? brand.city_name_ar : (brand.city_name_en || brand.city_name_ar)}</Badge>}
-                    {brand.category_name_ar && <Badge variant="outline"><Tag className="h-3 w-3 me-1" />{isRTL ? brand.category_name_ar : (brand.category_name_en || brand.category_name_ar)}</Badge>}
-                    {brand.business_username && (
-                      <Link to={`/${brand.business_username}`}>
-                        <Badge className="cursor-pointer"><Building2 className="h-3 w-3 me-1" />{isRTL ? brand.business_name_ar : (brand.business_name_en || brand.business_name_ar)}</Badge>
-                      </Link>
+                    {brand.is_verified && (
+                      <Badge variant="secondary" className="gap-1">
+                        <ShieldCheck className="h-3 w-3" />{isRTL ? 'موثقة' : 'Verified'}
+                      </Badge>
+                    )}
+                    {brand.country_of_origin_code && (
+                      <Badge variant="outline" className="gap-1">
+                        <Globe2 className="h-3 w-3" />
+                        {(isRTL ? brand.country_of_origin_name_ar : brand.country_of_origin_name_en) || brand.country_of_origin_code}
+                      </Badge>
+                    )}
+                    {brand.is_local && (
+                      <Badge variant="outline">{isRTL ? 'محلية' : 'Local'}</Badge>
+                    )}
+                    {brand.founded_year && (
+                      <Badge variant="outline">{isRTL ? `تأسست ${brand.founded_year}` : `Founded ${brand.founded_year}`}</Badge>
                     )}
                   </div>
                 </div>
               </div>
             </section>
 
-            {(brand.description_ar || brand.description_en) && (
-              <Card><CardContent className="p-5 prose prose-sm max-w-none whitespace-pre-line">
-                {isRTL ? (brand.description_ar || brand.description_en) : (brand.description_en || brand.description_ar)}
-              </CardContent></Card>
+            {desc && (
+              <Card><CardContent className="p-5 prose prose-sm max-w-none whitespace-pre-line">{desc}</CardContent></Card>
             )}
 
-            {/* Specializations */}
-            {specs.length > 0 && (
+            {countries.length > 0 && (
               <section>
-                <h2 className="text-lg font-bold mb-3">{isRTL ? 'التخصصات' : 'Specializations'}</h2>
-                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  {specs.map((sp) => (
-                    <Card key={sp.id}><CardContent className="p-4">
-                      <div className="font-semibold">{isRTL ? sp.name_ar : (sp.name_en || sp.name_ar)}</div>
-                      {(sp.description_ar || sp.description_en) && (
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-3">{isRTL ? (sp.description_ar || sp.description_en) : (sp.description_en || sp.description_ar)}</p>
-                      )}
-                    </CardContent></Card>
+                <h2 className="text-lg font-bold mb-3">{isRTL ? 'دول التصنيع' : 'Manufacturing countries'}</h2>
+                <div className="flex flex-wrap gap-2">
+                  {countries.map((c) => (
+                    <Badge key={c.id} variant="secondary" className="gap-1">
+                      <Globe2 className="h-3 w-3" />
+                      {(isRTL ? c.country_name_ar : c.country_name_en) || c.country_code}
+                    </Badge>
                   ))}
                 </div>
               </section>
             )}
 
-            {/* Approved distributors only (RLS enforces) */}
-            {dists.length > 0 && (
+            {providerLinks.length > 0 && (
               <section>
                 <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" />
-                  {isRTL ? 'الموزعون المعتمدون' : 'Authorized distributors'}
+                  {isRTL ? 'مزودون معتمدون لهذه العلامة' : 'Authorized providers'}
                 </h2>
                 <div className="grid gap-2 md:grid-cols-2">
-                  {dists.map((d) => {
-                    const b = distBizMap.get(d.business_id);
+                  {providerLinks.map((l) => {
+                    const b = bizMap.get(l.business_id);
+                    if (!b) return null;
+                    const rel = l.relationship_type as ProviderBrandRelationship | null;
                     return (
-                      <Link to={b?.username ? `/${b.username}` : '#'} key={d.id}>
+                      <Link key={l.id} to={b.username ? `/${b.username}` : '#'}>
                         <Card className="hover-lift"><CardContent className="p-3 flex items-center gap-3">
                           <Building2 className="h-5 w-5 text-muted-foreground" />
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium truncate">{b ? (isRTL ? b.name_ar : (b.name_en || b.name_ar)) : '—'}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {isRTL ? PS_DIST_ROLE_META[d.role].ar : PS_DIST_ROLE_META[d.role].en}
-                              {(d.territory_ar || d.territory_en) && <> · {isRTL ? (d.territory_ar || d.territory_en) : (d.territory_en || d.territory_ar)}</>}
-                            </div>
+                            <div className="font-medium truncate">{isRTL ? (b.name_ar || b.name_en) : (b.name_en || b.name_ar)}</div>
+                            {rel && relationshipLabel[rel] && (
+                              <div className="text-xs text-muted-foreground">{pick(relationshipLabel[rel], locale)}</div>
+                            )}
                           </div>
                         </CardContent></Card>
                       </Link>
@@ -183,14 +214,28 @@ const BrandDetail: React.FC = () => {
               </section>
             )}
 
-            {/* Contact */}
-            {(brand.website || brand.contact_email || brand.contact_phone) && (
+            {brand.website && (
               <Card><CardContent className="p-4 flex flex-wrap gap-4 text-sm">
-                {brand.website && <a className="inline-flex items-center gap-1.5 text-primary tech-content" href={brand.website} target="_blank" rel="noopener noreferrer"><Globe2 className="h-4 w-4" />{brand.website}</a>}
-                {brand.contact_email && <a className="inline-flex items-center gap-1.5 tech-content" href={`mailto:${brand.contact_email}`}><Mail className="h-4 w-4" />{brand.contact_email}</a>}
-                {brand.contact_phone && <a className="inline-flex items-center gap-1.5 tech-content" href={`tel:${brand.contact_phone}`}><Phone className="h-4 w-4" />{brand.contact_phone}</a>}
+                <a className="inline-flex items-center gap-1.5 text-primary tech-content"
+                   href={brand.website} target="_blank" rel="noopener noreferrer">
+                  <Globe2 className="h-4 w-4" />{brand.website}
+                </a>
               </CardContent></Card>
             )}
+
+            <Card className="bg-muted/30">
+              <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="text-sm">
+                  <p className="font-medium">{isRTL ? 'وجدت معلومة غير دقيقة؟' : 'Spotted incorrect info?'}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {isRTL ? 'يمكنك طلب تصحيح بيانات هذه العلامة من خلال الداشبورد.' : 'You can request a correction from the provider dashboard.'}
+                  </p>
+                </div>
+                <Link to="/dashboard/brands" className="text-sm text-primary hover:underline">
+                  {isRTL ? 'اطلب تصحيحاً ←' : 'Request correction →'}
+                </Link>
+              </CardContent>
+            </Card>
           </>
         )}
       </main>

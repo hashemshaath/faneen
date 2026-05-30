@@ -38,6 +38,12 @@ export const contextualHelpRegistry: Record<string, string[]> = {
   'dashboard.customer-experience': ['tracking-link', 'what-you-see'],
   'customer.feedback': ['tracking-link', 'support'],
   'customer.warranty-claim': ['warranty-start', 'file-claim', 'coverage'],
+  // BRANDS-GOVERNANCE-3 — brand registry contextual help.
+  'public.brands': ['overview', 'how-publishing-works'],
+  'public.brand-detail': ['overview', 'how-publishing-works'],
+  'dashboard.brands': ['overview', 'create-business', 'how-publishing-works'],
+  'admin.brand-requests': ['overview', 'approve-providers'],
+  'admin.brand-detail': ['overview', 'approve-providers'],
 };
 
 export function getContextualArticles(pageKey: string): string[] {
