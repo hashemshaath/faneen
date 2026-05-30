@@ -217,8 +217,6 @@ const DashboardProfile: React.FC = () => {
           phone: form.phone.trim() || '',
           avatar_url: form.avatar_url || null,
           preferred_language: form.preferred_language,
-          country_id: form.country_id,
-          city_id: form.city_id,
           national_id: nid || null,
           national_id_type: nid ? (nid[0] === '1' ? 'saudi' : 'iqama') : null,
           vat_number: vat || null,
@@ -776,46 +774,17 @@ const DashboardProfile: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Location & Preferences */}
+            {/* Preferences — country/city removed (already captured by the
+                National Address card above). Only the UI language remains. */}
             <Card>
               <CardContent className="p-4 sm:p-5 space-y-4">
                 <header className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  <h2 className="text-sm font-bold">{t(isRTL, 'الموقع والتفضيلات', 'Location & preferences')}</h2>
+                  <Languages className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-bold">{t(isRTL, 'التفضيلات', 'Preferences')}</h2>
                 </header>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'الدولة', 'Country')}</Label>
-                    <Select
-                      value={form.country_id ?? ''}
-                      onValueChange={(v) => setForm((f) => ({ ...f, country_id: v || null, city_id: null }))}
-                    >
-                      <SelectTrigger className="mt-1 h-11 rounded-xl"><SelectValue placeholder={t(isRTL, 'اختر الدولة', 'Select country')} /></SelectTrigger>
-                      <SelectContent>
-                        {countries.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">{t(isRTL, 'المدينة', 'City')}</Label>
-                    <Select
-                      value={form.city_id ?? ''}
-                      onValueChange={(v) => setForm((f) => ({ ...f, city_id: v || null }))}
-                      disabled={!form.country_id || cities.length === 0}
-                    >
-                      <SelectTrigger className="mt-1 h-11 rounded-xl"><SelectValue placeholder={t(isRTL, 'اختر المدينة', 'Select city')} /></SelectTrigger>
-                      <SelectContent>
-                        {cities.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
                     <Label className="text-xs font-medium text-muted-foreground">
-                      <Languages className="w-3 h-3 inline me-1" />
                       {t(isRTL, 'اللغة المفضلة', 'Preferred language')}
                     </Label>
                     <Select
