@@ -171,17 +171,16 @@ const DashboardProfile: React.FC = () => {
       [form.national_id, profile.national_id ?? ''],
       [form.national_id_type, (profile.national_id_type ?? '')],
       [form.vat_number, profile.vat_number ?? ''],
-      [form.short_national_address, profile.short_national_address ?? ''],
-      [form.region_name, profile.region_name ?? ''],
-      [form.district, profile.district ?? ''],
-      [form.street, profile.street ?? ''],
-      [form.building_number, profile.building_number ?? ''],
-      [form.additional_number, profile.additional_number ?? ''],
-      [form.postal_code, profile.postal_code ?? ''],
-      [form.address_line, profile.address_line ?? ''],
     ];
-    return cmp.some(([a, b]) => a !== b);
-  }, [form, profile]);
+    if (cmp.some(([a, b]) => a !== b)) return true;
+    if (!addressInitial) return false;
+    const ak: (keyof NationalAddressValue)[] = [
+      'short_address','region','region_en','city_id','district','district_en',
+      'street_name','street_name_en','building_number','additional_number',
+      'post_code','address','address_en',
+    ];
+    return ak.some((k) => (address[k] ?? null) !== (addressInitial[k] ?? null));
+  }, [form, profile, address, addressInitial]);
 
   const completion = useMemo(() => {
     const checks = [
@@ -191,11 +190,11 @@ const DashboardProfile: React.FC = () => {
       !!form.email.trim(),
       !!form.phone.trim(),
       !!form.national_id.trim(),
-      !!(form.district.trim() || form.address_line.trim() || form.short_national_address.trim()),
+      !!((address.district ?? '').trim() || (address.address ?? '').trim() || (address.short_address ?? '').trim()),
     ];
     const done = checks.filter(Boolean).length;
     return Math.round((done / checks.length) * 100);
-  }, [form]);
+  }, [form, address]);
 
   // ───────────────────────── Save
   const mut = useMutation({
@@ -217,12 +216,16 @@ const DashboardProfile: React.FC = () => {
           'الرقم الضريبي يجب أن يكون 15 رقمًا ويبدأ بـ 3 وينتهي بـ 3 والرقم 11 = 3',
           'VAT must be 15 digits, start with 3, end with 3, and 11th digit = 3'));
       }
-      const sna = form.short_national_address.trim().toUpperCase().replace(/\s+/g, '');
+      const sna = (address.short_address ?? '').trim().toUpperCase().replace(/\s+/g, '');
       if (sna && !/^[A-Z]{4}\d{4}$/.test(sna)) {
         throw new Error(t(isRTL,
           'العنوان الوطني المختصر يجب أن يكون 4 أحرف ثم 4 أرقام (مثل RRRD2402)',
           'Short national address must be 4 letters + 4 digits (e.g. RRRD2402)'));
       }
+      // 1) Non-address profile fields. Address columns are intentionally
+      //    omitted — they are written exclusively via `upsertPrimaryAddress`
+      //    below, and the legacy mirror trigger keeps the flat columns in
+      //    sync. This enforces "one write path" per the governance contract.
       const { error } = await updateProfile({
         userId: user.id,
         values: {
@@ -236,17 +239,40 @@ const DashboardProfile: React.FC = () => {
           national_id: nid || null,
           national_id_type: nid ? (nid[0] === '1' ? 'saudi' : 'iqama') : null,
           vat_number: vat || null,
-          short_national_address: sna || null,
-          region_name: form.region_name.trim() || null,
-          district: form.district.trim() || null,
-          street: form.street.trim() || null,
-          building_number: form.building_number.trim() || null,
-          additional_number: form.additional_number.trim() || null,
-          postal_code: form.postal_code.trim() || null,
-          address_line: form.address_line.trim() || null,
         },
       });
       if (error) throw error;
+
+      // 2) Address — single source of truth. Only writes when the user
+      //    actually provided some address data so we don't create empty rows.
+      const hasAddress = !!(
+        sna || address.region || address.district || address.city_id
+        || address.street_name || address.building_number || address.address
+      );
+      if (hasAddress) {
+        const { error: addrErr } = await upsertPrimaryAddress({
+          ownerType: 'profile', ownerId: user.id,
+          addressType: 'national_address',
+          fields: {
+            short_address: sna || null,
+            region: address.region ?? null,
+            region_en: address.region_en ?? null,
+            city_id: address.city_id ?? null,
+            district: address.district ?? null,
+            district_en: address.district_en ?? null,
+            street_name: address.street_name ?? null,
+            street_name_en: address.street_name_en ?? null,
+            building_number: address.building_number ?? null,
+            additional_number: address.additional_number ?? null,
+            post_code: address.post_code ?? null,
+            address: address.address ?? null,
+            address_en: address.address_en ?? null,
+            source: address.address_manual ? 'spl' : 'manual',
+          },
+        });
+        if (addrErr) throw addrErr;
+      }
+
       // Unified email: when the user changes the visible email and it
       // differs from the auth/login email, push the update to auth.users
       // as well so "profile email" and "login email" stay one and the
@@ -344,57 +370,6 @@ const DashboardProfile: React.FC = () => {
     await navigator.clipboard.writeText(publicUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
-  };
-
-  // ───────────────────────── National Address SPL lookup
-  const lookupShortAddress = async () => {
-    const code = form.short_national_address.trim().toUpperCase().replace(/\s+/g, '');
-    if (!/^[A-Z]{4}\d{4}$/.test(code)) {
-      toast.error(t(isRTL,
-        'أدخل رقم العنوان الوطني (4 أحرف + 4 أرقام)',
-        'Enter a short national address (4 letters + 4 digits)'));
-      return;
-    }
-    setSplLoading(true);
-    try {
-      const { data, error } = await nationalAddressLookup({ shortAddress: code });
-      if (error) throw error;
-      const res = data as {
-        ok: boolean; message_ar?: string; message_en?: string;
-        address?: {
-          region_ar?: string | null; region_en?: string | null;
-          city_ar?: string | null; city_en?: string | null;
-          district_ar?: string | null; district_en?: string | null;
-          street_ar?: string | null; street_en?: string | null;
-          address_ar?: string | null; address_en?: string | null;
-          building_number?: string | null; additional_number?: string | null;
-          post_code?: string | null;
-        };
-      };
-      if (!res?.ok || !res.address) {
-        toast.error(isRTL ? (res?.message_ar ?? 'تعذّر العثور على العنوان') : (res?.message_en ?? 'Address not found'));
-        return;
-      }
-      const a = res.address;
-      setForm((f) => ({
-        ...f,
-        short_national_address: code,
-        region_name: (isRTL ? a.region_ar : a.region_en) ?? a.region_ar ?? a.region_en ?? f.region_name,
-        district: (isRTL ? a.district_ar : a.district_en) ?? a.district_ar ?? a.district_en ?? f.district,
-        street: (isRTL ? a.street_ar : a.street_en) ?? a.street_ar ?? a.street_en ?? f.street,
-        building_number: a.building_number ?? f.building_number,
-        additional_number: a.additional_number ?? f.additional_number,
-        postal_code: a.post_code ?? f.postal_code,
-        address_line: (isRTL ? a.address_ar : a.address_en) ?? a.address_ar ?? a.address_en ?? f.address_line,
-      }));
-      // The SPL line is the official text — keep it as-is.
-      setAddressLineManual(true);
-      toast.success(t(isRTL, 'تم تعبئة العنوان', 'Address filled in'));
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
-    } finally {
-      setSplLoading(false);
-    }
   };
 
   // ───────────────────────── Render
