@@ -413,6 +413,51 @@ export async function unlinkBrandFromService(linkId: string) {
   if (error) throw error;
 }
 
+// ─────────────── PROVIDER DASHBOARD CONVENIENCE WRAPPERS ───────────────
+// PROVIDER-BRANDS-DASHBOARD-1 — stable aliases used by /dashboard/brands.
+// They re-expose existing approved-only / RLS-enforced primitives under the
+// names required by the dashboard contract so pages have a single import
+// surface and tests can assert provider semantics independently from
+// admin / ServiceBrandsPicker call paths.
+
+export const listApprovedBrandsForProviderPicker = listApprovedBrands;
+export const linkBrandToMyServiceOrBusiness = linkBrandToService;
+export const unlinkMyProviderBrand = unlinkBrandFromService;
+export const createMyBrandRequest = createBrandRequest;
+
+/**
+ * Distinct sector ids and country-of-origin tuples derived from the
+ * approved-only `brands_public` view. Powers the provider dashboard
+ * filter dropdowns without exposing any pending/rejected metadata.
+ */
+export async function getBrandFilterOptions(): Promise<{
+  sectors: string[];
+  countries: Array<{ code: string; name_ar: string | null; name_en: string | null }>;
+}> {
+  const { data, error } = await sb
+    .from('brands_public')
+    .select('sector_id, country_of_origin_code, country_of_origin_name_ar, country_of_origin_name_en');
+  if (error) throw error;
+  const sectors = new Set<string>();
+  const countries = new Map<string, { code: string; name_ar: string | null; name_en: string | null }>();
+  for (const r of (data ?? []) as Array<{
+    sector_id: string | null;
+    country_of_origin_code: string | null;
+    country_of_origin_name_ar: string | null;
+    country_of_origin_name_en: string | null;
+  }>) {
+    if (r.sector_id) sectors.add(r.sector_id);
+    if (r.country_of_origin_code) {
+      countries.set(r.country_of_origin_code, {
+        code: r.country_of_origin_code,
+        name_ar: r.country_of_origin_name_ar,
+        name_en: r.country_of_origin_name_en,
+      });
+    }
+  }
+  return { sectors: Array.from(sectors), countries: Array.from(countries.values()) };
+}
+
 /**
  * Provider quick-request from the inline ServiceBrandsPicker.
  * Creates a brand_addition_request bound to the business_service and returns the row.
