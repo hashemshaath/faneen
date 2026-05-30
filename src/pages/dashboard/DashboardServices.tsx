@@ -600,6 +600,9 @@ const DashboardServices: React.FC = () => {
                 {displayList.map((d) => (
                   <ServiceTile
                     key={d.subId}
+                    businessId={businessId!}
+                    userId={user?.id ?? ''}
+                    sectorId={d.sectorId}
                     sectorLabel={d.sectorLabel}
                     isCustom={d.isCustom}
                     name={isRTL ? d.name_ar : d.name_en || d.name_ar}
@@ -610,6 +613,8 @@ const DashboardServices: React.FC = () => {
                     saving={upsertMut.isPending}
                     onToggle={(next) => toggleMut.mutate({ subId: d.subId, name_ar: d.name_ar, name_en: d.name_en || d.name_ar, nextActive: next })}
                     onSave={(payload) => upsertMut.mutate({ subId: d.subId, payload: { ...payload, name_ar: d.name_ar, name_en: d.name_en || d.name_ar } })}
+                    onRemove={() => removeSubMut.mutate(d.subId)}
+                    removing={removeSubMut.isPending}
                   />
                 ))}
               </div>
