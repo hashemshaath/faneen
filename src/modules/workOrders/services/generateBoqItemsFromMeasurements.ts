@@ -48,6 +48,9 @@ export interface BoqItemDraft {
   unit_price: number;
   metadata: Record<string, unknown>;
   sort_order: number;
+  /** RFQ-BRAND-PICKER-1C — generator NEVER auto-assigns brands. Always null. */
+  brand_id: null;
+  brand_lock: null;
 }
 
 export interface GenerateBoqItemsInput {
