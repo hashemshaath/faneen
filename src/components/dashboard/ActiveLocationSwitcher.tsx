@@ -64,11 +64,11 @@ export const ActiveLocationSwitcher: React.FC = () => {
   const triggerLabel = active ? nameOf(active) : labelAll;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu dir={isRTL ? 'rtl' : 'ltr'}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="hidden md:inline-flex items-center gap-2 h-9 px-2.5 rounded-full border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30 max-w-[220px]"
+          className={`hidden md:inline-flex items-center gap-2 h-10 px-3 rounded-full border border-border/40 bg-card/60 hover:bg-card hover:border-border/70 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 max-w-[220px] ${isRTL ? '' : 'font-sans tracking-tight'}`}
           title={labelPick}
           data-testid="active-location-trigger"
         >
@@ -84,7 +84,7 @@ export const ActiveLocationSwitcher: React.FC = () => {
           <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={isRTL ? 'start' : 'end'} sideOffset={8} className="w-64 p-1">
+      <DropdownMenuContent align="end" sideOffset={8} className={`w-64 p-1 rounded-2xl shadow-xl border-border/50 ${isRTL ? '' : 'font-sans tracking-tight'}`}>
         <DropdownMenuLabel className="text-[11px] text-muted-foreground font-medium">
           {labelLocation}
         </DropdownMenuLabel>
