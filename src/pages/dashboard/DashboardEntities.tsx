@@ -187,7 +187,7 @@ const DashboardEntities: React.FC = () => {
               return (
                 <Link
                   key={e.id}
-                  to={`/dashboard/entities/${e.id}`}
+                  to={`/dashboard/entities/${e.ref_id ?? e.legacy_ref_id ?? e.id}`}
                   className="group block hover-lift"
                 >
                   <Card className="p-5 h-full border-border/60 transition-colors group-hover:border-primary/40">
