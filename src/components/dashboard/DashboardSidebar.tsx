@@ -515,6 +515,7 @@ export const DashboardSidebar: React.FC = () => {
   const { language, setLanguage, isRTL } = useLanguage();
   const { signOut, isAdmin, isSuperAdmin, isProvider } = useAuth();
   const workspace = useActiveWorkspace();
+  const { isRouteHidden } = useVisibleModules();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -617,6 +618,7 @@ export const DashboardSidebar: React.FC = () => {
           isAdmin={isAdmin}
           workspace={{ active_role: workspace.active_role, permissions: workspace.permissions }}
           pathname={pathname}
+          isRouteHidden={isRouteHidden}
         />
       </SidebarContent>
 
