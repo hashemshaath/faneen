@@ -186,6 +186,31 @@ const DashboardEntityDetail: React.FC = () => {
   const [addRefId, setAddRefId] = useState('');
   const [addRole, setAddRole] = useState<StaffRow['role']>('viewer');
   const [submitting, setSubmitting] = useState(false);
+  const [staffQuery, setStaffQuery] = useState('');
+  const [staffRoleFilter, setStaffRoleFilter] = useState<'all' | StaffRow['role']>('all');
+  const [copied, setCopied] = useState<string | null>(null);
+  const transferMutation = useTransferPrimaryManagerMutation();
+
+  const copyToClipboard = async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(key);
+      toast({ title: pickBi(isRTL, 'تم النسخ', 'Copied') });
+      setTimeout(() => setCopied(null), 1500);
+    } catch {
+      toast({ title: pickBi(isRTL, 'تعذّر النسخ', 'Copy failed'), variant: 'destructive' });
+    }
+  };
+
+  const handleTransferOwnership = async (targetUserId: string) => {
+    const result = await transferMutation.mutateAsync({ businessId: id, newPrimaryManagerUserId: targetUserId });
+    if (result.ok) {
+      toast({ title: pickBi(isRTL, 'تم نقل الإدارة الرئيسية', 'Primary manager transferred') });
+      refetchStaff();
+    } else {
+      toast({ title: pickBi(isRTL, 'تعذّر النقل', 'Transfer failed'), description: result.code, variant: 'destructive' });
+    }
+  };
 
   const handleAddStaff = async () => {
     const ref = addRefId.trim().toUpperCase();
