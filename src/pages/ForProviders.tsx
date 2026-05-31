@@ -191,8 +191,8 @@ const ForProviders = () => {
             </h1>
             <p className="text-base md:text-lg text-muted-foreground mb-7 max-w-2xl mx-auto leading-relaxed">
               {pick(hero?.subtitle_ar, hero?.subtitle_en) || (isRTL
-                ? 'مصنع، مقاول، مورد، ورشة، معرض، مكتب هندسي، أو مزود تركيب وصيانة — سجّل جهتك واحصل على ظهور قابل للبحث والتصنيف، واستقبل طلبات وعروض أسعار حقيقية.'
-                : 'Factory, contractor, supplier, workshop, showroom, engineering office or installer — register your business, get searchable visibility, and receive real requests and RFQs.')}
+                ? 'منصة شاملة لجميع جهات قطاع البناء والتشييد والصناعات الخفيفة — سجّل جهتك واحصل على ظهور قابل للبحث والتصنيف، واستقبل طلبات وعروض أسعار حقيقية.'
+                : 'A comprehensive platform for every business in construction and light industry — register, get searchable visibility, and receive real requests and RFQs.')}
             </p>
 
             {/* Audience switcher */}
