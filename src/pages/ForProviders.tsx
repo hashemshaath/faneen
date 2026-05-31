@@ -440,6 +440,12 @@ const ForProviders = () => {
       ? 'منصة شاملة لجميع جهات قطاع البناء والتشييد والصناعات الخفيفة — ملف مهني قابل للتصنيف، طلبات منظّمة، عروض أسعار، وعقود نظامية تربط جهتك بمشاريع حقيقية.'
       : 'A comprehensive platform for every business in construction and light industry — classifiable profiles, structured requests, RFQs, and compliant contracts that connect you to real projects.');
 
+  // Social-share headline mirrors the H1 exactly (no site-name suffix) so
+  // OG/Twitter cards match what users read on the page.
+  const socialTitle = isRTL
+    ? 'انضم لأكبر منصة لورش الألمنيوم والحديد والزجاج في السعودية والخليج'
+    : 'Join the largest platform for aluminum, steel & glass workshops in Saudi Arabia & the Gulf';
+
   usePageMeta({
     title: seoTitle,
     description: seoDesc,
@@ -447,11 +453,29 @@ const ForProviders = () => {
     canonical: 'https://qitaat.com/for-providers',
     ogType: 'website',
     ogImage: settings?.og_image_url ?? undefined,
+    ogTitle: socialTitle,
+    ogDescription: seoDesc,
   });
 
   useMultiJsonLd(useMemo(() => {
     const blocks: Record<string, unknown>[] = [
       { '@context': 'https://schema.org', '@type': 'WebPage', name: seoTitle, description: seoDesc, url: 'https://qitaat.com/for-providers', inLanguage: isRTL ? 'ar' : 'en' },
+      {
+        '@context': 'https://schema.org', '@type': 'Organization',
+        '@id': 'https://qitaat.com/#organization',
+        name: 'Qitaat قِطاعات',
+        alternateName: ['قِطاعات', 'Qitaat'],
+        url: 'https://qitaat.com',
+        logo: { '@type': 'ImageObject', url: 'https://qitaat.com/logo.png' },
+        description: seoDesc,
+        areaServed: ['Saudi Arabia','United Arab Emirates','Kuwait','Bahrain','Qatar','Oman'].map(n => ({ '@type': 'Country', name: n })),
+        contactPoint: {
+          '@type': 'ContactPoint',
+          contactType: 'customer support',
+          url: 'https://qitaat.com/contact',
+          availableLanguage: ['Arabic', 'English'],
+        },
+      },
       {
         '@context': 'https://schema.org', '@type': 'Service',
         name: isRTL ? 'منصة قِطاعات لقطاع البناء والصناعات الخفيفة' : 'Qitaat Platform for Construction & Light Industry',
