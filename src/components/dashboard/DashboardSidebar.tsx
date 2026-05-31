@@ -392,6 +392,35 @@ const BadgePill: React.FC<{ tone?: 'new' | 'support' | 'neutral'; children: Reac
   );
 };
 
+// ──────────────────────────────────────────────────────────
+// Collapsible group state — persisted per group key.
+// Items: open=true means the group is expanded.
+// ──────────────────────────────────────────────────────────
+const SIDEBAR_GROUPS_LS_KEY = 'qitaat_sidebar_groups_v1';
+
+function readGroupState(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(SIDEBAR_GROUPS_LS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, boolean>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function useSidebarGroupCollapse() {
+  const [state, setState] = React.useState<Record<string, boolean>>(() => readGroupState());
+  const setOpen = React.useCallback((key: string, open: boolean) => {
+    setState((prev) => {
+      const next = { ...prev, [key]: open };
+      try { localStorage.setItem(SIDEBAR_GROUPS_LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+  return { state, setOpen };
+}
+
 const RenderMenu: React.FC<{
   items: MenuItem[];
   collapsed: boolean;
