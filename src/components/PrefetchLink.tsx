@@ -1,8 +1,10 @@
 import { Link, LinkProps } from "react-router-dom";
 import { useCallback, useRef } from "react";
 
+type RouteImport = () => Promise<unknown>;
+
 // Map of routes to their lazy import functions
-const routeImports: Record<string, () => Promise<any>> = {
+const routeImports: Record<string, RouteImport> = {
   "/search": () => import("@/pages/Search"),
   "/offers": () => import("@/pages/Offers"),
   "/compare": () => import("@/pages/Compare"),
@@ -35,7 +37,10 @@ export const PrefetchLink = ({ to, onMouseEnter, onFocus, ...props }: LinkProps)
     const importFn = routeImports[path];
     if (importFn) {
       prefetched.add(path);
-      importFn();
+      void importFn().catch(() => {
+        // Prefetch is opportunistic; real navigation is handled by lazyRetry.
+        prefetched.delete(path);
+      });
     }
   }, [to]);
 
