@@ -107,12 +107,12 @@ const ForProviders = () => {
 
   const seoTitle = pick(settings?.seo_title_ar, settings?.seo_title_en) ||
     (isRTL
-      ? 'انضم لقِطاعات — منصة المصانع والمعارض والورش في الصناعات الخفيفة'
-      : 'Join Qitaat — Factories, Showrooms & Workshops Platform');
+      ? 'سجّل جهتك في قِطاعات — منصة قطاع البناء والتشييد والصناعات الخفيفة'
+      : 'Register on Qitaat — Construction, Supply & Light Industry Platform');
   const seoDesc = pick(settings?.seo_desc_ar, settings?.seo_desc_en) ||
     (isRTL
-      ? 'منصة قِطاعات تربط المصانع والمعارض والورش بالعملاء والمقاولين والاستشاريين في قطاعات الألمنيوم والحديد والزجاج والخشب والمطابخ والديكور بأدوات احترافية متكاملة.'
-      : 'Qitaat connects factories, showrooms and workshops with clients, contractors and consultants across aluminum, steel, glass, wood, kitchens and decor — with full pro tools.');
+      ? 'قِطاعات تربط المصانع والمقاولين والموردين والورش والمعارض والمكاتب الهندسية ومزودي التركيب والصيانة بمشاريع البناء والتشييد، عبر ملف مهني قابل للتصنيف، طلبات منظّمة، عروض أسعار، وعقود نظامية.'
+      : 'Qitaat connects factories, contractors, suppliers, workshops, showrooms, engineering offices and installation teams with construction projects — through classifiable profiles, structured requests, RFQs and compliant contracts.');
 
   usePageMeta({
     title: seoTitle,
@@ -182,17 +182,17 @@ const ForProviders = () => {
           <div className="max-w-5xl mx-auto text-center">
             <Badge variant="secondary" className="mb-4 px-3 py-1.5 text-xs font-medium gap-1.5 inline-flex items-center">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
-              {isRTL ? 'منصة الصناعات الخفيفة #1 في الخليج' : '#1 Light Industry Platform in the Gulf'}
+              {isRTL ? 'منصة قطاع البناء والتشييد والصناعات الخفيفة' : 'Construction, Supply & Light Industry Platform'}
             </Badge>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.12] mb-5 bg-gradient-to-br from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent">
               {pick(hero?.title_ar, hero?.title_en) || (isRTL
-                ? 'منصة واحدة. عملاء أكثر. مشاريع موثّقة.'
-                : 'One Platform. More Clients. Verified Projects.')}
+                ? 'حوّل جهتك إلى ملف مهني داخل سوق البناء والتشييد'
+                : 'Turn your business into a professional profile inside the construction market')}
             </h1>
             <p className="text-base md:text-lg text-muted-foreground mb-7 max-w-2xl mx-auto leading-relaxed">
               {pick(hero?.subtitle_ar, hero?.subtitle_en) || (isRTL
-                ? 'سواء كنت مصنعاً أو معرضاً أو ورشة — قِطاعات تمنحك الوصول، الأدوات، والمصداقية لتنمو بثقة.'
-                : 'Factory, showroom, or workshop — Qitaat gives you reach, tools, and credibility to grow with confidence.')}
+                ? 'مصنع، مقاول، مورد، ورشة، معرض، مكتب هندسي، أو مزود تركيب وصيانة — سجّل جهتك واحصل على ظهور قابل للبحث والتصنيف، واستقبل طلبات وعروض أسعار حقيقية.'
+                : 'Factory, contractor, supplier, workshop, showroom, engineering office or installer — register your business, get searchable visibility, and receive real requests and RFQs.')}
             </p>
 
             {/* Audience switcher */}
@@ -221,7 +221,7 @@ const ForProviders = () => {
               <Button asChild size="lg" className="h-12 px-7 text-base shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
                 onClick={() => { track({ event_type: 'cta_click', section: 'hero', cta_id: 'primary' }); gtmTrack.providerSignupStart({}); }}>
                 <Link to={hero?.cta_primary_href || '/auth?mode=signup&role=provider'}>
-                  {pick(hero?.cta_primary_label_ar, hero?.cta_primary_label_en) || (isRTL ? 'سجّل منشأتك مجاناً' : 'Register Your Business — Free')}
+                  {pick(hero?.cta_primary_label_ar, hero?.cta_primary_label_en) || (isRTL ? 'سجّل جهتك الآن — مجاناً' : 'Register Your Business — Free')}
                   <ArrowFwd className="w-4 h-4 ms-2" />
                 </Link>
               </Button>
@@ -267,15 +267,15 @@ const ForProviders = () => {
       <section className="py-12 md:py-16 border-y border-border/40 bg-muted/20">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-8">
-            <Badge variant="outline" className="mb-3">{isRTL ? 'مصمّمة لمنشأتك' : 'Built for your business'}</Badge>
+            <Badge variant="outline" className="mb-3">{isRTL ? 'من يمكنه التسجيل' : 'Who can register'}</Badge>
             <h2 className="text-2xl md:text-3xl font-bold mb-2">
-              {isRTL ? 'مصانع، معارض، وورش — كلٌّ يجد ما يناسبه' : 'Factories, Showrooms & Workshops — each gets its fit'}
+              {isRTL ? 'منصة واحدة تخدم منظومة البناء والتشييد بالكامل' : 'One platform serving the full construction ecosystem'}
             </h2>
             <p className="text-sm md:text-base text-muted-foreground">
-              {isRTL ? 'تجربة مخصّصة بحسب نوع المنشأة وحجم العمليات' : 'A tailored experience by business type and scale'}
+              {isRTL ? 'تجربة مخصّصة لكل نوع جهة، بأدوات تناسب تخصصك وحجم عملياتك.' : 'A tailored experience for every business type, with tools matching your scope and scale.'}
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {AUDIENCES.map((a) => {
               const Icon = a.icon;
               return (
