@@ -277,54 +277,61 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2.5 rounded-full border border-border/30 bg-muted/20 py-1 pe-2.5 sm:pe-3.5 ps-1 dark:border-border/15 hover:bg-muted/40 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30">
+                    <button
+                      className="group flex items-center gap-2.5 rounded-full border border-border/40 bg-card/60 py-1 pe-2.5 sm:pe-3.5 ps-1 hover:bg-card hover:border-border/70 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      aria-label={isRTL ? 'قائمة حسابي الشخصي' : 'My personal account menu'}
+                    >
                       <div className="relative">
-                        <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
+                        <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-background">
                           <AvatarImage src={profile?.avatar_url || undefined} />
-                          <AvatarFallback className="bg-accent/15 text-accent text-xs sm:text-sm font-bold">{initial}</AvatarFallback>
+                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20 text-primary text-xs sm:text-sm font-bold">{initial}</AvatarFallback>
                         </Avatar>
-                        <span className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 bg-success border-2 border-card rounded-full" />
+                        <span className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 bg-success border-2 border-card rounded-full" aria-hidden="true" />
                       </div>
-                      <div className="hidden sm:flex flex-col items-start min-w-0">
-                        <span className="text-[9px] uppercase tracking-wide text-muted-foreground/70 leading-none">
-                          {isRTL ? 'حسابي' : 'My account'}
+                      <div className="hidden sm:flex flex-col items-start min-w-0 text-start">
+                        <span className="text-[9px] uppercase tracking-wide text-muted-foreground/80 leading-none">
+                          {isRTL ? 'حسابي الشخصي' : 'Personal account'}
                         </span>
-                        <span className="text-xs font-semibold text-foreground truncate max-w-[140px] leading-tight mt-0.5">
+                        <span className="text-xs font-semibold text-foreground truncate max-w-[160px] leading-tight mt-0.5">
                           {displayName || (isRTL ? 'مستخدم' : 'User')}
                         </span>
-                        <span className="text-[10px] text-muted-foreground leading-tight">
-                          {isRTL ? `نوع الحساب: ${accountLabel?.ar}` : `Account: ${accountLabel?.en}`}
+                        <span className="inline-flex items-center gap-1 mt-0.5">
+                          <roleBadge.icon className="w-2.5 h-2.5 text-muted-foreground" aria-hidden="true" />
+                          <span className="text-[10px] text-muted-foreground leading-tight">
+                            {isRTL ? `الصلاحية: ${roleBadge.label}` : `Role: ${roleBadge.label}`}
+                          </span>
                         </span>
                       </div>
-                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground hidden sm:block" />
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground hidden sm:block transition-transform group-data-[state=open]:rotate-180" />
                     </button>
                   </DropdownMenuTrigger>
 
-                  <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-72 p-0" sideOffset={8}>
+                  <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-80 p-0 overflow-hidden rounded-2xl shadow-xl border-border/50" sideOffset={10}>
                     {/* Profile header */}
-                    <div className="p-4 border-b border-border/30 bg-muted/10">
+                    <div className="relative p-4 border-b border-border/30 bg-gradient-to-br from-primary/[0.06] via-card to-accent/[0.04]">
                       <div className="flex items-center gap-3">
                         <div className="relative group">
-                          <Avatar className="h-13 w-13">
+                          <Avatar className="h-14 w-14 ring-2 ring-background shadow-sm">
                             <AvatarImage src={profile?.avatar_url || undefined} />
-                            <AvatarFallback className="bg-accent/15 text-accent text-lg font-bold">{initial}</AvatarFallback>
+                            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20 text-primary text-lg font-bold">{initial}</AvatarFallback>
                           </Avatar>
-                          <button onClick={() => fileInputRef.current?.click()} disabled={avatarUploading}
-                            className="absolute inset-0 flex items-center justify-center bg-foreground/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={avatarUploading}
+                            className="absolute inset-0 flex items-center justify-center bg-foreground/55 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            aria-label={isRTL ? 'تغيير الصورة الشخصية' : 'Change profile picture'}
+                          >
                             <Camera className="w-4 h-4 text-background" />
                           </button>
                           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-[10px] uppercase tracking-wide text-muted-foreground/80 leading-none mb-1">
-                            {isRTL ? 'حسابي الشخصي' : 'My personal account'}
+                            {isRTL ? 'حسابي الشخصي' : 'Personal account'}
                           </p>
                           <p className="font-semibold text-sm text-foreground truncate">{displayName || (isRTL ? 'مستخدم' : 'User')}</p>
-                          <div className="flex items-center gap-1 mt-1">
-                            <span className="text-[10px] text-muted-foreground">
-                              {isRTL ? 'نوع الحساب:' : 'Account type:'}
-                            </span>
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${roleBadge.color}`}>
+                          <div className="flex items-center gap-1.5 mt-1.5">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${roleBadge.color}`}>
                               <roleBadge.icon className="w-2.5 h-2.5" />{roleBadge.label}
                             </span>
                           </div>
