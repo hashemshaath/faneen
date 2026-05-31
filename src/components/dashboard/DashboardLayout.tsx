@@ -23,6 +23,8 @@ import { BrandLogo } from '@/components/common/BrandLogo';
 import { ActiveBusinessSwitcher } from './ActiveBusinessSwitcher';
 import { ActiveLocationSwitcher } from './ActiveLocationSwitcher';
 import { useDisplayRefId } from '@/hooks/useDisplayRefId';
+import { useQuery } from '@tanstack/react-query';
+import { listOwnerBusinesses } from '@/modules/businesses';
 import { WorkspaceHeader } from '@/components/workspace/shell/WorkspaceHeader';
 import { WorkspaceContextBar } from '@/components/workspace/shell/WorkspaceContextBar';
 import { WorkspaceSearchLauncher } from '@/components/workspace/shell/WorkspaceSearchLauncher';
@@ -108,20 +110,25 @@ const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/admin/showcase': { ar: 'العرض', en: 'Showcase' },
 };
 
-const accountTypeLabels: Record<string, { ar: string; en: string }> = {
-  individual: { ar: 'مستخدم', en: 'User' },
-  business: { ar: 'مزود خدمة', en: 'Provider' },
-  company: { ar: 'مزود خدمة', en: 'Provider' },
-  provider: { ar: 'مزود خدمة', en: 'Provider' },
-  admin: { ar: 'مشرف', en: 'Admin' },
-  super_admin: { ar: 'مدير المنصة', en: 'Super Admin' },
-};
-
-function getRoleBadge(isSuperAdmin: boolean, isAdmin: boolean, isProvider: boolean, isRTL: boolean) {
-  if (isSuperAdmin) return { label: isRTL ? 'مدير المنصة' : 'Super Admin', icon: ShieldAlert, color: 'text-destructive bg-destructive/10' };
-  if (isAdmin) return { label: isRTL ? 'مشرف' : 'Admin', icon: Shield, color: 'text-destructive bg-destructive/10' };
-  if (isProvider) return { label: isRTL ? 'مزود خدمة' : 'Provider', icon: Crown, color: 'text-accent bg-accent/10' };
-  return { label: isRTL ? 'مستخدم' : 'User', icon: User, color: 'text-muted-foreground bg-muted/50' };
+/**
+ * Permission-derived account label. The "Account type" shown in the header
+ * reflects the user's authorization (Owner / Staff / Admin / User), NOT the
+ * business activity (provider vs. customer) — a company can be a provider,
+ * a customer, or both depending on which services it has activated.
+ */
+function getRoleBadge(opts: {
+  isSuperAdmin: boolean;
+  isAdmin: boolean;
+  isProvider: boolean;
+  isOwner: boolean;
+  isRTL: boolean;
+}) {
+  const { isSuperAdmin, isAdmin, isProvider, isOwner, isRTL } = opts;
+  if (isSuperAdmin) return { label: isRTL ? 'مدير المنصة' : 'Super Admin', icon: ShieldAlert, color: 'text-destructive bg-destructive/10 ring-1 ring-destructive/20' };
+  if (isAdmin) return { label: isRTL ? 'مشرف' : 'Admin', icon: Shield, color: 'text-destructive bg-destructive/10 ring-1 ring-destructive/20' };
+  if (isOwner) return { label: isRTL ? 'مالك' : 'Owner', icon: Crown, color: 'text-primary bg-primary/10 ring-1 ring-primary/20' };
+  if (isProvider) return { label: isRTL ? 'موظف / مفوّض' : 'Staff', icon: Shield, color: 'text-accent bg-accent/10 ring-1 ring-accent/20' };
+  return { label: isRTL ? 'مستخدم' : 'User', icon: User, color: 'text-muted-foreground bg-muted/60 ring-1 ring-border/40' };
 }
 
 interface DashboardLayoutProps {
@@ -144,6 +151,23 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   useWorkspaceStateSelfHeal();
   const ws2 = useWorkspaceState();
   const prefs = useWorkspacePreferences();
+
+  // Permission-derived ownership probe — used only to label the account chip
+  // as "Owner" vs "Staff" for provider accounts. Cached for 5 minutes.
+  const { data: ownsBusiness = false } = useQuery({
+    queryKey: ['account-owns-business', user?.id],
+    enabled: !!user && !isAdmin && !isSuperAdmin,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data } = await listOwnerBusinesses<{ id: string }>({
+        userId: user!.id,
+        select: 'id',
+        limit: 1,
+      });
+      return (data?.length ?? 0) > 0;
+    },
+  });
+
   React.useEffect(() => {
     ws2.pushRecentRoute({ path: location.pathname });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -177,14 +201,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     isRTL ? 'ar' : 'en',
   );
   const initial = (displayName || '?').charAt(0).toUpperCase();
-  const roleBadge = getRoleBadge(isSuperAdmin, isAdmin, isProvider, isRTL);
-  const accountLabel = isSuperAdmin
-    ? accountTypeLabels.super_admin
-    : isAdmin
-      ? accountTypeLabels.admin
-      : isProvider
-        ? accountTypeLabels.provider
-        : (accountTypeLabels[profile?.account_type || 'individual'] || accountTypeLabels.individual);
+  const roleBadge = getRoleBadge({ isSuperAdmin, isAdmin, isProvider, isOwner: ownsBusiness, isRTL });
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
