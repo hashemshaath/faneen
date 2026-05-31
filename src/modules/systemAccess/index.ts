@@ -11,7 +11,7 @@ export type ModuleCategory =
   | 'workspace'
   | 'general';
 
-export type ScopeType = 'global_default' | 'account_type' | 'user';
+export type ScopeType = 'global_default' | 'account_type' | 'entity' | 'user';
 
 export interface SystemModule {
   id: string;
@@ -44,7 +44,7 @@ export interface SystemModuleOverride {
 export interface EffectiveVisibility {
   module_key: string;
   enabled: boolean;
-  source: 'core' | 'user' | 'account_type' | 'global_default' | 'module_default';
+  source: 'core' | 'user' | 'entity' | 'account_type' | 'global_default' | 'module_default';
 }
 
 export interface SystemModuleAuditEntry {
@@ -108,9 +108,56 @@ export async function clearModuleOverride(params: {
   if (error) throw error;
 }
 
-export async function getUserVisibleModules(userId: string): Promise<EffectiveVisibility[]> {
+export async function getUserVisibleModules(
+  userId: string,
+  entityId: string | null = null,
+): Promise<EffectiveVisibility[]> {
   const { data, error } = await (supabase as any).rpc('get_user_visible_modules', {
     _user_id: userId,
+    _entity_id: entityId,
+  });
+  if (error) throw error;
+  return (data ?? []) as EffectiveVisibility[];
+}
+
+/** Owner-managed override (entity or staff user scope). */
+export async function ownerSetModuleOverride(params: {
+  moduleKey: string;
+  scopeType: 'entity' | 'user';
+  scopeValue: string;
+  enabled: boolean;
+  reason?: string | null;
+}): Promise<void> {
+  const { error } = await (supabase as any).rpc('owner_set_module_override', {
+    _module_key: params.moduleKey,
+    _scope_type: params.scopeType,
+    _scope_value: params.scopeValue,
+    _enabled: params.enabled,
+    _reason: params.reason ?? null,
+  });
+  if (error) throw error;
+}
+
+export async function ownerClearModuleOverride(params: {
+  moduleKey: string;
+  scopeType: 'entity' | 'user';
+  scopeValue: string;
+}): Promise<void> {
+  const { error } = await (supabase as any).rpc('owner_clear_module_override', {
+    _module_key: params.moduleKey,
+    _scope_type: params.scopeType,
+    _scope_value: params.scopeValue,
+  });
+  if (error) throw error;
+}
+
+export async function ownerGetStaffVisibleModules(
+  staffUserId: string,
+  entityId: string | null = null,
+): Promise<EffectiveVisibility[]> {
+  const { data, error } = await (supabase as any).rpc('owner_get_staff_visible_modules', {
+    _staff_user_id: staffUserId,
+    _entity_id: entityId,
   });
   if (error) throw error;
   return (data ?? []) as EffectiveVisibility[];
