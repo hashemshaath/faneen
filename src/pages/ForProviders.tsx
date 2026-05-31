@@ -517,6 +517,20 @@ const ForProviders = () => {
     // Do not inject gtag.js directly here — keep GTM as the single marketing tag.
   }, [settings]);
 
+  // Preload the hero LCP image so it starts downloading before the JSX paints.
+  // Cleaned up on unmount to avoid leaking the hint into other routes.
+  useEffect(() => {
+    const href = hero?.image_url || heroImage;
+    if (!href) return;
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = href;
+    link.setAttribute('fetchpriority', 'high');
+    document.head.appendChild(link);
+    return () => { link.remove(); };
+  }, [hero?.image_url]);
+
   const ArrowFwd = isRTL ? ArrowLeft : ArrowRight;
   const activeAudience = AUDIENCES.find(a => a.key === audience) ?? AUDIENCES[0];
 
@@ -534,6 +548,8 @@ const ForProviders = () => {
             aria-hidden="true"
             className="w-full h-full object-cover"
             loading="eager"
+            decoding="async"
+            fetchPriority="high"
             width={1920}
             height={1080}
           />
