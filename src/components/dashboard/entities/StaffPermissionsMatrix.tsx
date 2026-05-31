@@ -556,6 +556,49 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
                   )}
                 </div>
                 {!collapsed && (
+                <>
+                {canEdit && !isPrimaryManager && (() => {
+                  const viewPerms = allPerms.filter((p) => p.endsWith('.view'));
+                  const nonViewPerms = allPerms.filter((p) => !p.endsWith('.view'));
+                  // detect current level
+                  const onCount = grantedCount;
+                  const viewOn = viewPerms.every((p) => selected.has(p)) && nonViewPerms.every((p) => !selected.has(p));
+                  const level: 'none' | 'view' | 'manage' =
+                    onCount === 0 ? 'none' : viewOn ? 'view' : allOn ? 'manage' : 'none';
+                  const setLevel = (lvl: 'none' | 'view' | 'manage') => {
+                    setSelected((prev) => {
+                      const next = new Set(prev);
+                      for (const p of allPerms) next.delete(p);
+                      if (lvl === 'view') for (const p of viewPerms) next.add(p);
+                      else if (lvl === 'manage') for (const p of allPerms) next.add(p);
+                      return next;
+                    });
+                  };
+                  const PILLS: { v: typeof level; ar: string; en: string }[] = [
+                    { v: 'none', ar: 'لا شيء', en: 'None' },
+                    { v: 'view', ar: 'قراءة', en: 'View' },
+                    { v: 'manage', ar: 'إدارة', en: 'Manage' },
+                  ];
+                  return (
+                    <div className="flex items-center gap-0.5 mb-1.5 p-0.5 rounded-md bg-background/60 border border-border/30">
+                      {PILLS.map((pl) => (
+                        <button
+                          key={pl.v}
+                          type="button"
+                          onClick={() => setLevel(pl.v)}
+                          className={`flex-1 text-[9px] py-1 rounded transition-all ${
+                            level === pl.v
+                              ? 'bg-primary text-primary-foreground font-semibold'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                          }`}
+                          title={pickBi(isRTL, `ضبط ${pl.ar}`, `Set ${pl.en}`)}
+                        >
+                          {pickBi(isRTL, pl.ar, pl.en)}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
                 <div className="space-y-1">
                   {perms.map((p) => {
                     const action = p.split('.')[1] ?? '';
@@ -594,6 +637,7 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
                     );
                   })}
                 </div>
+                </>
                 )}
               </div>
               );
