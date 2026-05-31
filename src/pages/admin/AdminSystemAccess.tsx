@@ -13,7 +13,8 @@ import { toast } from 'sonner';
 import {
   Layers, Search, Globe, Users as UsersIcon, User as UserIcon,
   ShieldCheck, Lock, Eye, EyeOff, Sparkles, Filter, Loader2,
-  AlertTriangle, RotateCcw, Info, ArrowLeft,
+  AlertTriangle, RotateCcw, Info, ArrowLeft, History, Settings2,
+  Check, X as XIcon, Pencil,
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
@@ -21,15 +22,18 @@ import {
   listAllOverrides,
   setModuleOverride,
   clearModuleOverride,
+  listAuditLog,
   type SystemModule,
   type SystemModuleOverride,
   type ScopeType,
+  type SystemModuleAuditEntry,
 } from '@/modules/systemAccess';
 import { listProfiles } from '@/modules/users';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type ScopeTab = 'global' | 'account_type' | 'user';
+type ViewTab = 'manage' | 'audit';
 
 const ACCOUNT_TYPES = ['provider', 'client', 'individual'] as const;
 type AccountType = typeof ACCOUNT_TYPES[number];
