@@ -1,8 +1,7 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { BUILD_ID } from '@/lib/buildVersion';
 
-type LazyComponent = ComponentType<never>;
-type LazyModule<T extends LazyComponent> = { default: T };
+type LazyModule<T extends ComponentType<unknown>> = { default: T };
 
 const CHUNK_LOAD_ERROR_RE =
   /Importing a module script failed|Failed to fetch dynamically imported module|Loading chunk|ChunkLoadError|error loading dynamically imported module|Module script load failed|Unable to preload CSS/i;
@@ -10,7 +9,7 @@ const CHUNK_LOAD_ERROR_RE =
 const RECOVERY_KEY = 'qitaat_lazy_chunk_recovery_v2';
 const MIN_RELOAD_INTERVAL_MS = 4_000;
 
-const neverResolve = <T extends LazyComponent>() => new Promise<LazyModule<T>>(() => {
+const neverResolve = <T extends ComponentType<unknown>>() => new Promise<LazyModule<T>>(() => {
   // Keep Suspense active while the browser refreshes stale assets.
 });
 
@@ -75,7 +74,7 @@ const reloadWithFreshAssets = () => {
   }, 0);
 };
 
-export function lazyRetry<T extends LazyComponent>(
+export function lazyRetry<T extends ComponentType<unknown>>(
   factory: () => Promise<LazyModule<T>>,
 ): LazyExoticComponent<T> {
   return lazy(() =>
