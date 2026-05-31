@@ -22,7 +22,6 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarBrand } from '@/components/dashboard/navigation/SidebarBrand';
 import { SidebarQuickCreate } from '@/components/dashboard/navigation/SidebarQuickCreate';
 import { SidebarFavorites } from '@/components/dashboard/navigation/SidebarFavorites';
-import { SidebarRecent } from '@/components/dashboard/navigation/SidebarRecent';
 import {
   LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut,
   Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare,
@@ -42,6 +41,7 @@ import {
   User,
   UserPlus,
   ClipboardList,
+  ChevronDown,
 } from 'lucide-react';
 
 interface MenuItem {
