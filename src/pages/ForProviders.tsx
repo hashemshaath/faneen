@@ -5,7 +5,7 @@ import * as Icons from 'lucide-react';
 import {
   Star, ArrowLeft, ArrowRight, CheckCircle2, XCircle, Sparkles,
   TrendingUp, ShieldCheck, Zap, Clock, Award, BadgeCheck,
-  Factory, Store, Wrench, Quote,
+  Factory, Store, Wrench, Quote, HardHat, Truck, Compass, Settings2,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -31,9 +31,13 @@ const pickIcon = (name: string): React.ComponentType<{ className?: string }> => 
 };
 
 const AUDIENCES = [
-  { key: 'factories', icon: Factory, ar: 'مصانع', en: 'Factories', desc_ar: 'وصول مباشر لمشاريع المقاولين والاستشاريين والمواصفات الكبرى', desc_en: 'Direct access to contractors, consultants, and large-spec projects' },
-  { key: 'showrooms', icon: Store, ar: 'معارض', en: 'Showrooms', desc_ar: 'عرض الكتالوجات والأنظمة بصور احترافية مع طلبات تسعير فورية', desc_en: 'Showcase catalogs and systems with instant quote requests' },
-  { key: 'workshops', icon: Wrench, ar: 'ورش', en: 'Workshops', desc_ar: 'استقبل طلبات الأعمال المخصصة وحوّلها إلى عقود موثّقة', desc_en: 'Receive custom job requests and convert them to verified contracts' },
+  { key: 'factories',   icon: Factory,  ar: 'مصانع',          en: 'Factories',         desc_ar: 'اعرض خطوط الإنتاج والمواصفات الفنية، واستقبل طلبات المقاولين والاستشاريين والمشاريع الكبرى مباشرة.', desc_en: 'Showcase production lines and specs; receive direct demand from contractors, consultants and large projects.' },
+  { key: 'contractors', icon: HardHat,  ar: 'مقاولون',        en: 'Contractors',       desc_ar: 'ابنِ ملفًا تنفيذيًا موثّقًا بالخبرات والمشاريع، وشارك في عروض الأسعار وفرص التنفيذ المناسبة لتخصصك.', desc_en: 'Build a verified execution profile, join RFQs and unlock projects that match your scope.' },
+  { key: 'suppliers',   icon: Truck,    ar: 'موردون',         en: 'Suppliers',         desc_ar: 'صنّف منتجاتك وعلاماتك التجارية، واستقبل طلبات توريد منظّمة (RFQ) من مقاولين ومشاريع جاهزة للشراء.', desc_en: 'Classify products and brands; receive structured RFQs from contractors ready to purchase.' },
+  { key: 'workshops',   icon: Wrench,   ar: 'ورش',            en: 'Workshops',         desc_ar: 'أبرز تخصصك التقني وأعمالك السابقة، وحوّل الطلبات المخصّصة إلى عقود وفواتير منظّمة.', desc_en: 'Highlight your technical specialty and past work; convert custom jobs into structured contracts.' },
+  { key: 'showrooms',   icon: Store,    ar: 'معارض',          en: 'Showrooms',         desc_ar: 'اعرض الكتالوجات والأنظمة بصور احترافية، واربط منتجاتك بالعلامات التجارية لطلبات تسعير فورية.', desc_en: 'Display catalogs and systems with rich media; link products to brands for instant quote requests.' },
+  { key: 'engineering', icon: Compass,  ar: 'مكاتب هندسية',   en: 'Engineering Offices', desc_ar: 'كن جزءًا من منظومة البناء: استشارات، تصاميم، ومواصفات يصل إليها المطورون والمقاولون والمصانع.', desc_en: 'Position your office inside the construction ecosystem — reachable by developers, contractors and factories.' },
+  { key: 'install',     icon: Settings2,ar: 'تركيب وصيانة',   en: 'Install & Maintenance', desc_ar: 'استقبل طلبات التركيب والصيانة والتشطيب حسب القطاع والمدينة، بتسعير وعقود واضحة.', desc_en: 'Receive installation, maintenance and finishing requests by sector and city, with clear quotes and contracts.' },
 ];
 
 const SECTORS = [
@@ -47,26 +51,26 @@ const SECTORS = [
 ];
 
 const STEPS = [
-  { ar: 'سجّل مجاناً', en: 'Sign Up Free', desc_ar: 'حساب جاهز خلال دقيقة بالبريد أو جوجل — بدون رسوم', desc_en: 'Account ready in a minute via email or Google — no fees' },
-  { ar: 'فعّل ملفك', en: 'Build Profile', desc_ar: 'بيانات المنشأة، الموقع، الفروع، وساعات العمل', desc_en: 'Business details, location, branches, and hours' },
-  { ar: 'اعرض أعمالك', en: 'Showcase Work', desc_ar: 'خدمات، كتالوجات، مشاريع سابقة، وأنظمة فنية', desc_en: 'Services, catalogs, past projects, and technical systems' },
-  { ar: 'استقبل المشاريع', en: 'Win Projects', desc_ar: 'محادثات، تسعيرات، عقود VAT، ودفعات منظمة', desc_en: 'Chats, quotes, VAT contracts, and structured payments' },
+  { ar: 'أنشئ الحساب', en: 'Create Account', desc_ar: 'تسجيل سريع بالبريد أو جوجل خلال دقيقة، بدون رسوم اشتراك مبدئية.', desc_en: 'Quick email or Google signup in under a minute — no upfront fees.' },
+  { ar: 'ابنِ ملف الجهة', en: 'Build Your Profile', desc_ar: 'البيانات النظامية، الفروع، ساعات العمل، التخصصات، والعلامات التجارية.', desc_en: 'Legal details, branches, hours, specializations and brand affiliations.' },
+  { ar: 'صنّف خدماتك ومنتجاتك', en: 'Classify Services & Products', desc_ar: 'اربط جهتك بالقطاعات والخدمات الدقيقة لتظهر في النتائج المناسبة فقط.', desc_en: 'Link your business to precise sectors and services to appear in the right results only.' },
+  { ar: 'استقبل الطلبات وعروض الأسعار', en: 'Receive Requests & RFQs', desc_ar: 'محادثات منظمة، طلبات تسعير، عقود ضريبية، وفواتير ودفعات قابلة للتتبع.', desc_en: 'Structured chats, RFQs, VAT contracts, and trackable invoices and payments.' },
 ];
 
 const VALUE_PILLARS = [
-  { icon: TrendingUp, ar: 'نمو حقيقي', en: 'Real Growth', desc_ar: 'متوسط زيادة 3.4× في الطلبات الواردة خلال أول 90 يوماً', desc_en: 'Avg 3.4× more inbound requests in first 90 days' },
-  { icon: ShieldCheck, ar: 'عملاء موثّقون', en: 'Verified Clients', desc_ar: 'كل طلب من حساب موثّق برقم جوال ومعلومات حقيقية', desc_en: 'Every request from a verified phone-validated account' },
-  { icon: Zap, ar: 'أدوات احترافية', en: 'Pro Tools', desc_ar: 'عقود، فواتير، قياسات، وضمانات — جاهزة بضغطة', desc_en: 'Contracts, invoices, measurements, warranties — ready' },
-  { icon: Award, ar: 'تميّز ظاهر', en: 'Visible Excellence', desc_ar: 'شارات التحقق وتصنيف القطاع لتسبق منافسيك بالبحث', desc_en: 'Verified badges and sector ranking to outrank rivals' },
+  { icon: TrendingUp,  ar: 'ظهور مهني',       en: 'Professional Visibility', desc_ar: 'ملف جهتك قابل للبحث والتصنيف والمقارنة في سوق البناء والتشييد.', desc_en: 'A profile that is searchable, classifiable and comparable inside the construction market.' },
+  { icon: ShieldCheck, ar: 'ثقة موثّقة',       en: 'Verified Trust',          desc_ar: 'حسابات موثّقة، مراجعة من فريق المنصة، وشارات تعكس مصداقية الجهة.', desc_en: 'Verified accounts, platform review, and badges that reflect real credibility.' },
+  { icon: Zap,         ar: 'أدوات تشغيلية',    en: 'Operational Tools',        desc_ar: 'إدارة طلبات، عروض أسعار، عقود VAT، قياسات، فواتير، ودفعات منظمة.', desc_en: 'Requests, RFQs, VAT contracts, measurements, invoices and structured payments.' },
+  { icon: Award,       ar: 'فرص مستهدفة',     en: 'Targeted Opportunities',   desc_ar: 'وصول لطلبات وعروض أسعار تتوافق مع تخصصك، قطاعك، ومنطقة عملك.', desc_en: 'Reach requests and RFQs aligned with your specialty, sector and service area.' },
 ];
 
 const COMPARISON = [
-  { ar: 'الوصول لعملاء جاهزين للشراء', en: 'Reach buyer-ready clients', without: false, withQ: true },
-  { ar: 'عقود رسمية بضريبة القيمة المضافة', en: 'Formal VAT-compliant contracts', without: false, withQ: true },
-  { ar: 'تتبّع الدفعات والمشاريع تلقائياً', en: 'Auto-tracked payments & projects', without: false, withQ: true },
-  { ar: 'ظهور في محركات البحث وجوجل', en: 'Search engine & Google visibility', without: false, withQ: true },
-  { ar: 'قياسات الموقع وحسابات تلقائية', en: 'Site measurements & auto-calc', without: false, withQ: true },
-  { ar: 'بدون رسوم عمولة على المشاريع', en: 'Zero commission on projects', without: false, withQ: true },
+  { ar: 'ملف مهني قابل للتصنيف والمقارنة',     en: 'Classifiable, comparable profile',       without: false, withQ: true },
+  { ar: 'استقبال طلبات وعروض أسعار منظّمة',   en: 'Structured requests & RFQs',             without: false, withQ: true },
+  { ar: 'عقود نظامية بضريبة القيمة المضافة',  en: 'VAT-compliant formal contracts',         without: false, withQ: true },
+  { ar: 'ربط العلامات التجارية بالمنتجات',     en: 'Link brands to products & catalogs',     without: false, withQ: true },
+  { ar: 'ظهور في نتائج البحث وصفحات القطاع', en: 'Visibility in search & sector pages',    without: false, withQ: true },
+  { ar: 'بدون عمولة على المشاريع',             en: 'No commission on awarded projects',      without: false, withQ: true },
 ];
 
 const ForProviders = () => {
