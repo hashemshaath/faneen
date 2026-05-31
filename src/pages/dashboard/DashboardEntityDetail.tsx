@@ -295,6 +295,36 @@ const DashboardEntityDetail: React.FC = () => {
     }
   };
 
+  // Completeness score (must run before any early return — Rules of Hooks)
+  const completeness = useMemo(() => {
+    const checks = [
+      { key: 'name', ok: !!(biz?.name_ar || biz?.name_en), label: pickBi(isRTL, 'الاسم', 'Name') },
+      { key: 'username', ok: !!biz?.username, label: pickBi(isRTL, 'اسم المستخدم', 'Username') },
+      { key: 'email', ok: !!biz?.email, label: pickBi(isRTL, 'البريد', 'Email') },
+      { key: 'phone', ok: !!biz?.phone, label: pickBi(isRTL, 'الهاتف', 'Phone') },
+      { key: 'category', ok: !!biz?.category_id, label: pickBi(isRTL, 'التصنيف', 'Category') },
+      { key: 'verified', ok: !!biz?.is_verified, label: pickBi(isRTL, 'التوثيق', 'Verified') },
+      { key: 'branch', ok: (branches ?? []).length > 0, label: pickBi(isRTL, 'فرع واحد على الأقل', 'At least one branch') },
+      { key: 'team', ok: (staff ?? []).length > 0, label: pickBi(isRTL, 'عضو فريق', 'Team member') },
+      { key: 'description', ok: !!(biz?.description_ar || biz?.description_en), label: pickBi(isRTL, 'الوصف', 'Description') },
+    ];
+    const done = checks.filter((c) => c.ok).length;
+    return { checks, done, total: checks.length, pct: Math.round((done / checks.length) * 100) };
+  }, [biz, branches, staff, isRTL]);
+
+  // Staff filtering (must run before any early return — Rules of Hooks)
+  const filteredStaff = useMemo(() => {
+    const list = staff ?? [];
+    const q = staffQuery.trim().toLowerCase();
+    return list.filter((s) => {
+      if (staffRoleFilter !== 'all' && s.role !== staffRoleFilter) return false;
+      if (!q) return true;
+      const prof = profileMap.get(s.user_id);
+      const hay = `${prof?.full_name ?? ''} ${prof?.ref_id ?? ''} ${prof?.email ?? ''} ${s.ref_id ?? ''}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [staff, staffQuery, staffRoleFilter, profileMap]);
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -320,36 +350,6 @@ const DashboardEntityDetail: React.FC = () => {
 
   const bizName = pickBi(isRTL, biz.name_ar ?? '', biz.name_en ?? '') || biz.username || '—';
   const refIdDisplay = biz.ref_id ?? biz.legacy_ref_id ?? '';
-
-  // Completeness score
-  const completeness = useMemo(() => {
-    const checks = [
-      { key: 'name', ok: !!(biz.name_ar || biz.name_en), label: pickBi(isRTL, 'الاسم', 'Name') },
-      { key: 'username', ok: !!biz.username, label: pickBi(isRTL, 'اسم المستخدم', 'Username') },
-      { key: 'email', ok: !!biz.email, label: pickBi(isRTL, 'البريد', 'Email') },
-      { key: 'phone', ok: !!biz.phone, label: pickBi(isRTL, 'الهاتف', 'Phone') },
-      { key: 'category', ok: !!biz.category_id, label: pickBi(isRTL, 'التصنيف', 'Category') },
-      { key: 'verified', ok: !!biz.is_verified, label: pickBi(isRTL, 'التوثيق', 'Verified') },
-      { key: 'branch', ok: (branches ?? []).length > 0, label: pickBi(isRTL, 'فرع واحد على الأقل', 'At least one branch') },
-      { key: 'team', ok: (staff ?? []).length > 0, label: pickBi(isRTL, 'عضو فريق', 'Team member') },
-      { key: 'description', ok: !!(biz.description_ar || biz.description_en), label: pickBi(isRTL, 'الوصف', 'Description') },
-    ];
-    const done = checks.filter((c) => c.ok).length;
-    return { checks, done, total: checks.length, pct: Math.round((done / checks.length) * 100) };
-  }, [biz, branches, staff, isRTL]);
-
-  // Staff filtering
-  const filteredStaff = useMemo(() => {
-    const list = staff ?? [];
-    const q = staffQuery.trim().toLowerCase();
-    return list.filter((s) => {
-      if (staffRoleFilter !== 'all' && s.role !== staffRoleFilter) return false;
-      if (!q) return true;
-      const prof = profileMap.get(s.user_id);
-      const hay = `${prof?.full_name ?? ''} ${prof?.ref_id ?? ''} ${prof?.email ?? ''} ${s.ref_id ?? ''}`.toLowerCase();
-      return hay.includes(q);
-    });
-  }, [staff, staffQuery, staffRoleFilter, profileMap]);
 
   const kpis = [
     { icon: Users, label: pickBi(isRTL, 'أعضاء الفريق', 'Team members'), value: (staff ?? []).filter((s) => s.is_active).length, total: (staff ?? []).length, color: 'text-blue-500' },
