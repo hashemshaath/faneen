@@ -31,6 +31,7 @@ import { listBranchesByBusiness } from '@/modules/catalog';
 import { supabase } from '@/integrations/supabase/client';
 import { StaffPermissionsMatrix } from '@/components/dashboard/entities/StaffPermissionsMatrix';
 import { TeamPermissionsOverview } from '@/components/dashboard/entities/TeamPermissionsOverview';
+import { PermissionInspector } from '@/components/dashboard/entities/PermissionInspector';
 import { useTransferPrimaryManagerMutation } from '@/hooks/useTransferPrimaryManagerMutation';
 
 interface BizDetail {
@@ -696,6 +697,17 @@ const DashboardEntityDetail: React.FC = () => {
           {/* ===== Permissions (governance) ===== */}
           <TabsContent value="permissions" className="space-y-4 mt-0">
             <TeamPermissionsOverview
+              members={(staff ?? []).map((s) => ({
+                id: s.id,
+                user_id: s.user_id,
+                role: s.role,
+                is_active: s.is_active,
+                is_primary_manager: s.is_primary_manager,
+                permissions_override: s.permissions_override,
+              }))}
+              profiles={profileMap}
+            />
+            <PermissionInspector
               members={(staff ?? []).map((s) => ({
                 id: s.id,
                 user_id: s.user_id,

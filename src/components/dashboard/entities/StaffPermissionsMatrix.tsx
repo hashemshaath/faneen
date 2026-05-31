@@ -8,10 +8,10 @@
  *   future role-default changes flow through automatically.
  * - UI-only hint; RLS + `has_permission` on the server remain authoritative.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Check, ChevronDown, ChevronUp, Copy, Minus, Pin, Plus, RotateCcw,
-  Save, Search, ShieldCheck, Sparkles, X,
+  Bookmark, Check, ChevronDown, ChevronUp, Download, Minus, Pin, Plus,
+  RotateCcw, Save, Search, ShieldCheck, Sparkles, Upload, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +30,25 @@ import {
   type WorkspacePermission,
 } from '@/modules/workspace/permissions';
 import { updateBusinessStaffById } from '@/modules/businesses/services/updateBusinessStaffById';
+
+// Local-only storage for user-saved permission templates (UI convenience).
+const PRESETS_STORAGE_KEY = 'qitaat_perm_presets_v1';
+interface CustomPreset { id: string; name: string; perms: string[]; created_at: number }
+
+function readPresets(): CustomPreset[] {
+  try {
+    const raw = localStorage.getItem(PRESETS_STORAGE_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    return arr.filter((p): p is CustomPreset =>
+      !!p && typeof p.id === 'string' && typeof p.name === 'string' && Array.isArray(p.perms),
+    );
+  } catch { return []; }
+}
+function writePresets(list: CustomPreset[]): void {
+  try { localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(list)); } catch { /* noop */ }
+}
 
 const DOMAIN_LABELS: Record<string, { ar: string; en: string }> = {
   entity: { ar: 'الكيان', en: 'Entity' },
@@ -113,6 +132,17 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
   const [filter, setFilter] = useState<'all' | 'granted' | 'changed' | 'denied'>('all');
   const [collapsedDomains, setCollapsedDomains] = useState<Set<string>>(new Set());
   const [templateRole, setTemplateRole] = useState<string>('');
+  const [presets, setPresets] = useState<CustomPreset[]>(() => readPresets());
+  const [presetName, setPresetName] = useState('');
+  const [showPresetForm, setShowPresetForm] = useState(false);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === PRESETS_STORAGE_KEY) setPresets(readPresets());
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   const toggle = (p: string) => {
     if (!canEdit || isPrimaryManager) return;
@@ -148,6 +178,70 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
     setSelected(new Set(tplDefaults));
     setTemplateRole('');
     toast({ title: pickBi(isRTL, 'تم تطبيق القالب', 'Template applied') });
+  };
+
+  const applyCustomPreset = (presetId: string) => {
+    if (!canEdit || isPrimaryManager) return;
+    const p = presets.find((x) => x.id === presetId);
+    if (!p) return;
+    const valid = p.perms.filter((x): x is WorkspacePermission =>
+      (WORKSPACE_PERMISSIONS as readonly string[]).includes(x),
+    );
+    setSelected(new Set(valid));
+    toast({ title: pickBi(isRTL, `طُبّق: ${p.name}`, `Applied: ${p.name}`) });
+  };
+
+  const savePreset = () => {
+    const name = presetName.trim();
+    if (!name) return;
+    const next: CustomPreset = {
+      id: `pst_${Date.now()}`,
+      name,
+      perms: Array.from(selected),
+      created_at: Date.now(),
+    };
+    const updated = [next, ...presets].slice(0, 20);
+    setPresets(updated);
+    writePresets(updated);
+    setPresetName('');
+    setShowPresetForm(false);
+    toast({ title: pickBi(isRTL, 'تم حفظ القالب', 'Preset saved') });
+  };
+
+  const deletePreset = (presetId: string) => {
+    const updated = presets.filter((p) => p.id !== presetId);
+    setPresets(updated);
+    writePresets(updated);
+  };
+
+  const exportJson = () => {
+    const payload = { role, permissions: Array.from(selected).sort(), exported_at: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `permissions-${role}-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importJson = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const obj = JSON.parse(String(reader.result ?? ''));
+        const list = Array.isArray(obj?.permissions) ? obj.permissions : [];
+        const valid = list.filter((x: unknown): x is WorkspacePermission =>
+          typeof x === 'string' && (WORKSPACE_PERMISSIONS as readonly string[]).includes(x),
+        );
+        if (valid.length === 0) throw new Error('empty');
+        setSelected(new Set(valid));
+        toast({ title: pickBi(isRTL, 'تم الاستيراد', 'Imported'), description: `${valid.length} ${pickBi(isRTL, 'صلاحية', 'permissions')}` });
+      } catch {
+        toast({ title: pickBi(isRTL, 'ملف غير صالح', 'Invalid file'), variant: 'destructive' });
+      }
+    };
+    reader.readAsText(file);
   };
 
   const grantAll = () => {
@@ -297,6 +391,80 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
               )}
             </div>
 
+            {/* Custom presets row */}
+            {canEdit && !isPrimaryManager && (
+              <div className="flex items-center gap-1.5 flex-wrap p-2 rounded-lg bg-muted/30 border border-border/30">
+                <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                  <Bookmark className="w-3 h-3" />
+                  {pickBi(isRTL, 'قوالب محفوظة', 'Saved presets')}
+                </span>
+                {presets.length === 0 && (
+                  <span className="text-[10px] text-muted-foreground/70">—</span>
+                )}
+                {presets.map((p) => (
+                  <span key={p.id} className="inline-flex items-center gap-0.5 rounded-full bg-background border border-border/40 ps-2 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => applyCustomPreset(p.id)}
+                      className="py-0.5 hover:text-primary transition"
+                      title={`${p.perms.length} ${pickBi(isRTL, 'صلاحية', 'perms')}`}
+                    >
+                      {p.name}
+                      <Badge variant="outline" className="text-[8px] h-3.5 px-1 ms-1">{p.perms.length}</Badge>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deletePreset(p.id)}
+                      className="px-1.5 py-0.5 text-muted-foreground hover:text-destructive"
+                      title={pickBi(isRTL, 'حذف', 'Delete')}
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </span>
+                ))}
+                <div className="ms-auto inline-flex items-center gap-1">
+                  {showPresetForm ? (
+                    <>
+                      <Input
+                        autoFocus
+                        value={presetName}
+                        onChange={(e) => setPresetName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') { setShowPresetForm(false); setPresetName(''); } }}
+                        placeholder={pickBi(isRTL, 'اسم القالب…', 'Preset name…')}
+                        className="h-7 text-[10px] w-32"
+                      />
+                      <Button onClick={savePreset} disabled={!presetName.trim()} size="sm" className="h-7 px-2 text-[10px]">
+                        <Save className="w-3 h-3" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button onClick={() => setShowPresetForm(true)} variant="ghost" size="sm" className="h-7 px-2 text-[10px]">
+                      <Plus className="w-3 h-3 me-0.5" />
+                      {pickBi(isRTL, 'احفظ كقالب', 'Save as preset')}
+                    </Button>
+                  )}
+                  <Button onClick={exportJson} variant="ghost" size="sm" className="h-7 px-2 text-[10px]" title="Export JSON">
+                    <Download className="w-3 h-3" />
+                  </Button>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input
+                      type="file"
+                      accept="application/json"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) importJson(f);
+                        e.currentTarget.value = '';
+                      }}
+                    />
+                    <span className="h-7 px-2 text-[10px] inline-flex items-center rounded-md hover:bg-accent hover:text-accent-foreground" title="Import JSON">
+                      <Upload className="w-3 h-3" />
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center gap-1.5 flex-wrap">
               {FILTER_CHIPS.map((c) => (
                 <button
@@ -388,6 +556,49 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
                   )}
                 </div>
                 {!collapsed && (
+                <>
+                {canEdit && !isPrimaryManager && (() => {
+                  const viewPerms = allPerms.filter((p) => p.endsWith('.view'));
+                  const nonViewPerms = allPerms.filter((p) => !p.endsWith('.view'));
+                  // detect current level
+                  const onCount = grantedCount;
+                  const viewOn = viewPerms.every((p) => selected.has(p)) && nonViewPerms.every((p) => !selected.has(p));
+                  const level: 'none' | 'view' | 'manage' =
+                    onCount === 0 ? 'none' : viewOn ? 'view' : allOn ? 'manage' : 'none';
+                  const setLevel = (lvl: 'none' | 'view' | 'manage') => {
+                    setSelected((prev) => {
+                      const next = new Set(prev);
+                      for (const p of allPerms) next.delete(p);
+                      if (lvl === 'view') for (const p of viewPerms) next.add(p);
+                      else if (lvl === 'manage') for (const p of allPerms) next.add(p);
+                      return next;
+                    });
+                  };
+                  const PILLS: { v: typeof level; ar: string; en: string }[] = [
+                    { v: 'none', ar: 'لا شيء', en: 'None' },
+                    { v: 'view', ar: 'قراءة', en: 'View' },
+                    { v: 'manage', ar: 'إدارة', en: 'Manage' },
+                  ];
+                  return (
+                    <div className="flex items-center gap-0.5 mb-1.5 p-0.5 rounded-md bg-background/60 border border-border/30">
+                      {PILLS.map((pl) => (
+                        <button
+                          key={pl.v}
+                          type="button"
+                          onClick={() => setLevel(pl.v)}
+                          className={`flex-1 text-[9px] py-1 rounded transition-all ${
+                            level === pl.v
+                              ? 'bg-primary text-primary-foreground font-semibold'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                          }`}
+                          title={pickBi(isRTL, `ضبط ${pl.ar}`, `Set ${pl.en}`)}
+                        >
+                          {pickBi(isRTL, pl.ar, pl.en)}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
                 <div className="space-y-1">
                   {perms.map((p) => {
                     const action = p.split('.')[1] ?? '';
@@ -426,6 +637,7 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
                     );
                   })}
                 </div>
+                </>
                 )}
               </div>
               );
