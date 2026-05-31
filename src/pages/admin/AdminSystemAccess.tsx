@@ -757,6 +757,7 @@ const AuditLogPanel: React.FC<{ modules: SystemModule[] }> = ({ modules }) => {
   const scopeLabel = (e: SystemModuleAuditEntry): string => {
     if (e.scope_type === 'global_default') return isRTL ? 'افتراضي عام' : 'Global default';
     if (e.scope_type === 'account_type') return `${isRTL ? 'نوع حساب' : 'Account type'}: ${e.scope_value}`;
+    if (e.scope_type === 'entity') return `${isRTL ? 'منشأة' : 'Business'}: ${(e.scope_value ?? '').slice(0, 8)}…`;
     return `${isRTL ? 'مستخدم' : 'User'}: ${(e.scope_value ?? '').slice(0, 8)}…`;
   };
 
