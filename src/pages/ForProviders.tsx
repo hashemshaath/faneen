@@ -7,6 +7,8 @@ import {
   TrendingUp, ShieldCheck, Zap, Clock, Award, BadgeCheck,
   Factory, Store, Quote, HardHat, Truck, Compass, Settings2, Layers3,
   Calculator, Gift, Rocket,
+  Lock, FileBadge, MapPin, Globe2, Headphones, Activity,
+  Crown, MessageSquare, FileText, Receipt,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -95,6 +97,65 @@ const ONBOARDING_CHECKLIST = [
   { ar: 'نشر الملف ومشاركة الرابط الاحترافي',    en: 'Publish profile & share your pro link',  mins: 1 },
 ];
 
+/** Compliance & trust pillars — Saudi-market specific. */
+const TRUST_PILLARS = [
+  { icon: Lock,      ar: 'بياناتك مشفّرة SSL',         en: 'SSL-encrypted data' },
+  { icon: ShieldCheck,ar: 'متوافق مع نظام حماية البيانات (PDPL)', en: 'PDPL-compliant' },
+  { icon: FileBadge, ar: 'فواتير وعقود بضريبة 15%',    en: 'VAT-compliant invoices & contracts' },
+  { icon: MapPin,    ar: 'استضافة في المنطقة',         en: 'Regionally hosted' },
+  { icon: Globe2,    ar: 'دعم عربي/إنجليزي',           en: 'Arabic & English' },
+  { icon: Headphones,ar: 'دعم بشري حقيقي',             en: 'Real human support' },
+];
+
+/** Membership tier preview — high-level only, full plans on /membership. */
+const TIERS = [
+  {
+    key: 'free', icon: Sparkles,
+    name_ar: 'مجاني',     name_en: 'Free',
+    tag_ar: 'للبدء',      tag_en: 'To get started',
+    price_ar: '0',        price_en: '0',  unit_ar: 'ريال/شهر', unit_en: 'SAR/mo',
+    features: [
+      { ar: 'ملف جهة كامل', en: 'Full business profile' },
+      { ar: 'ظهور في نتائج البحث', en: 'Search-page visibility' },
+      { ar: 'استقبال محدود لعروض الأسعار', en: 'Limited RFQ inbox' },
+    ],
+  },
+  {
+    key: 'pro', icon: TrendingUp, popular: true,
+    name_ar: 'الاحتراف',  name_en: 'Pro',
+    tag_ar: 'الأكثر اختياراً', tag_en: 'Most popular',
+    price_ar: '٩٩',       price_en: '99', unit_ar: 'ريال/شهر', unit_en: 'SAR/mo',
+    features: [
+      { ar: 'كل مزايا المجاني',           en: 'Everything in Free' },
+      { ar: 'عروض أسعار وعقود غير محدودة', en: 'Unlimited RFQs & contracts' },
+      { ar: 'شارة موثّق وأولوية في النتائج', en: 'Verified badge & search priority' },
+      { ar: 'تحليلات أداء الملف',         en: 'Profile analytics' },
+    ],
+  },
+  {
+    key: 'enterprise', icon: Crown,
+    name_ar: 'المنشآت',   name_en: 'Enterprise',
+    tag_ar: 'للمصانع والمطورين', tag_en: 'For factories & developers',
+    price_ar: '٢٩٩',      price_en: '299', unit_ar: 'ريال/شهر', unit_en: 'SAR/mo',
+    features: [
+      { ar: 'كل مزايا الاحتراف',          en: 'Everything in Pro' },
+      { ar: 'فروع وفرق متعددة',           en: 'Multi-branch & team seats' },
+      { ar: 'تكامل API ومدير حساب مخصص',  en: 'API integration & dedicated CSM' },
+      { ar: 'تقارير وتحليلات متقدمة',     en: 'Advanced reports & analytics' },
+    ],
+  },
+];
+
+/** Integrated capabilities row — what they get out of the box. */
+const CAPABILITIES = [
+  { icon: MessageSquare, ar: 'محادثات WhatsApp مدمجة', en: 'Built-in WhatsApp chats' },
+  { icon: Receipt,       ar: 'فواتير ضريبية تلقائية',  en: 'Auto VAT e-invoices' },
+  { icon: FileText,      ar: 'عقود PDF احترافية',      en: 'Professional PDF contracts' },
+  { icon: MapPin,        ar: 'خرائط ومناطق خدمة',     en: 'Maps & service areas' },
+  { icon: Calculator,    ar: 'حاسبات تسعير ومقاسات',  en: 'Pricing & measurement calculators' },
+  { icon: Activity,      ar: 'تتبّع حالة الطلب لحظياً', en: 'Real-time request tracking' },
+];
+
 /** Animated number that counts up when scrolled into view. */
 function AnimatedNumber({ value, suffix = '+' }: { value: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement | null>(null);
@@ -111,6 +172,123 @@ function AnimatedNumber({ value, suffix = '+' }: { value: number; suffix?: strin
   }, [start]);
   const display = useCountUp(value, start, 1600, suffix);
   return <span ref={ref} className="tech-content">{display}</span>;
+}
+
+/** Section pills that stick under the navbar and highlight the active section on scroll. */
+function SectionSubNav({ isRTL }: { isRTL: boolean }) {
+  const items = [
+    { id: 'why',           ar: 'لماذا قِطاعات', en: 'Why' },
+    { id: 'how-it-works',  ar: 'كيف تعمل',     en: 'How it works' },
+    { id: 'roi',           ar: 'حاسبة العائد', en: 'ROI' },
+    { id: 'capabilities',  ar: 'الأدوات',     en: 'Capabilities' },
+    { id: 'pricing',       ar: 'الباقات',     en: 'Pricing' },
+    { id: 'faq',           ar: 'الأسئلة',     en: 'FAQ' },
+  ];
+  const [active, setActive] = useState<string>('why');
+  const [stuck, setStuck] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setStuck(window.scrollY > 600);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter(e => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActive(visible.target.id);
+      },
+      { rootMargin: '-30% 0px -55% 0px', threshold: [0, 0.25, 0.5, 1] },
+    );
+    items.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    });
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <nav
+      className={`sticky top-16 z-30 transition-all duration-300 ${stuck ? 'bg-background/85 backdrop-blur-md border-b border-border/40 shadow-sm' : 'bg-transparent'}`}
+      aria-label={isRTL ? 'تنقل الصفحة' : 'Page sections'}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2.5">
+          {items.map((it) => {
+            const isActive = active === it.id;
+            return (
+              <a
+                key={it.id}
+                href={`#${it.id}`}
+                className={`shrink-0 px-3.5 h-9 inline-flex items-center rounded-full text-xs md:text-sm font-medium border transition-all ${isActive ? 'bg-primary text-primary-foreground border-primary shadow-sm' : 'bg-card/70 border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/40'}`}
+              >
+                {isRTL ? it.ar : it.en}
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+/** Lightweight live-activity ticker — animates a horizontal marquee of recent events. */
+function LiveTicker({ isRTL, businesses }: { isRTL: boolean; businesses: number }) {
+  const items = isRTL
+    ? [
+        `🏗️ مصنع ألمنيوم انضم للمنصة قبل دقائق`,
+        `📄 تم توقيع عقد جديد بنظام ضريبة القيمة المضافة`,
+        `🛠️ مقاول تشطيبات في الرياض استقبل طلب تسعير`,
+        `🏬 معرض مطابخ في جدة فعّل الكتالوج الرقمي`,
+        `⚒️ ورشة حدادة فنية حصلت على شارة التوثيق`,
+        `🏢 مطوّر عقاري أطلق RFQ لـ ١٢ مورّداً`,
+        `📈 إجمالي الجهات النشطة: ${businesses.toLocaleString('en-US')}+`,
+      ]
+    : [
+        `🏗️ An aluminum factory joined minutes ago`,
+        `📄 A new VAT-compliant contract was signed`,
+        `🛠️ A finishing contractor in Riyadh got an RFQ`,
+        `🏬 A kitchen showroom in Jeddah activated its digital catalog`,
+        `⚒️ A blacksmith workshop earned the verified badge`,
+        `🏢 A real-estate developer launched an RFQ to 12 suppliers`,
+        `📈 Active businesses: ${businesses.toLocaleString('en-US')}+`,
+      ];
+  // Duplicate for seamless loop
+  const loop = [...items, ...items];
+  return (
+    <div className="relative w-full overflow-hidden border-y border-border/40 bg-card/60 backdrop-blur py-2.5">
+      <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+      <div className="flex items-center gap-2 px-3">
+        <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-success/15 text-success">
+          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+          {isRTL ? 'مباشر' : 'LIVE'}
+        </span>
+        <div className="flex-1 overflow-hidden">
+          <div
+            className="flex gap-10 whitespace-nowrap text-[12px] md:text-sm text-muted-foreground"
+            style={{ animation: 'qi-marquee 45s linear infinite' }}
+          >
+            {loop.map((t, i) => (
+              <span key={i} className="inline-flex items-center gap-1.5">
+                <span className="opacity-90">{t}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <style>{`
+        @keyframes qi-marquee {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 /** Sticky bottom CTA bar — appears after the user scrolls past the hero. */
@@ -429,6 +607,12 @@ const ForProviders = () => {
         </div>
       </section>
 
+      {/* LIVE ACTIVITY TICKER */}
+      <LiveTicker isRTL={isRTL} businesses={stats?.businessCount ?? 0} />
+
+      {/* STICKY SECTION SUB-NAV */}
+      <SectionSubNav isRTL={isRTL} />
+
       {/* AUDIENCE DEEP DIVE */}
       <section className="py-12 md:py-16 border-y border-border/40 bg-muted/20">
         <div className="container mx-auto px-4">
@@ -464,7 +648,7 @@ const ForProviders = () => {
       </section>
 
       {/* VALUE PILLARS */}
-      <section className="py-14 md:py-20">
+      <section id="why" className="py-14 md:py-20 scroll-mt-32">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-10">
             <Badge variant="outline" className="mb-3">{isRTL ? 'لماذا قِطاعات' : 'Why Qitaat'}</Badge>
@@ -503,7 +687,7 @@ const ForProviders = () => {
       </section>
 
       {/* ROI CALCULATOR */}
-      <section className="py-14 md:py-20 bg-muted/20 border-y border-border/40">
+      <section id="roi" className="py-14 md:py-20 bg-muted/20 border-y border-border/40 scroll-mt-32">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="text-center max-w-2xl mx-auto mb-8">
             <Badge variant="outline" className="mb-3 inline-flex items-center gap-1.5">
@@ -522,7 +706,7 @@ const ForProviders = () => {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" className="py-14 md:py-20 bg-muted/20">
+      <section id="how-it-works" className="py-14 md:py-20 bg-muted/20 scroll-mt-32">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-10">
             <Badge variant="outline" className="mb-3">{isRTL ? 'بأربع خطوات' : 'In four steps'}</Badge>
@@ -636,7 +820,7 @@ const ForProviders = () => {
 
       {/* FEATURES */}
       {features.length > 0 && (
-        <section className="py-14 md:py-20 bg-muted/20">
+        <section id="capabilities" className="py-14 md:py-20 bg-muted/20 scroll-mt-32">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-2xl mx-auto mb-10">
               <Badge variant="outline" className="mb-3">{isRTL ? 'الأدوات' : 'The toolkit'}</Badge>
@@ -691,6 +875,34 @@ const ForProviders = () => {
         </div>
       </section>
 
+      {/* CAPABILITIES STRIP — what comes out of the box */}
+      <section className="py-12 md:py-16 bg-muted/20 border-y border-border/40">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <Badge variant="outline" className="mb-3">{isRTL ? 'جاهز من اليوم الأول' : 'Ready on day one'}</Badge>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              {isRTL ? 'كل ما تحتاجه مدمج في المنصة' : 'Everything you need, built-in'}
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground">
+              {isRTL ? 'لا حاجة لاشتراكات إضافية أو أدوات منفصلة.' : 'No extra subscriptions, no separate tools required.'}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {CAPABILITIES.map((c, i) => {
+              const I = c.icon;
+              return (
+                <div key={i} className="p-4 rounded-2xl bg-card border border-border/50 hover-lift text-center">
+                  <div className="w-10 h-10 mx-auto rounded-xl bg-primary/10 text-primary grid place-items-center mb-2">
+                    <I className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs md:text-sm font-medium leading-snug">{isRTL ? c.ar : c.en}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* TESTIMONIALS */}
       {testimonials.length > 0 && (
         <section className="py-14 md:py-20 bg-muted/20">
@@ -726,33 +938,87 @@ const ForProviders = () => {
       )}
 
       {/* PRICING TEASER */}
-      <section className="py-14 md:py-20">
-        <div className="container mx-auto px-4 max-w-3xl text-center">
+      <section id="pricing" className="py-14 md:py-20 scroll-mt-32">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <Badge variant="outline" className="mb-3">{isRTL ? 'العضويات' : 'Memberships'}</Badge>
+            <h2 className="text-2xl md:text-4xl font-bold mb-3">
+              {isRTL ? 'ابدأ مجاناً، وطوّر عضويتك مع نمو جهتك' : 'Start free, upgrade as your business grows'}
+            </h2>
+            <p className="text-muted-foreground">
+              {isRTL ? 'خطط مرنة لكل جهة في قطاع البناء والصناعات الخفيفة — بدون التزام سنوي وبدون عمولة على المشاريع.' : 'Flexible plans for every business — no annual lock-in, no project commission.'}
+            </p>
+          </div>
+
+          {/* Tier cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+            {TIERS.map((t) => {
+              const I = t.icon;
+              const popular = !!('popular' in t && (t as { popular?: boolean }).popular);
+              return (
+                <Card
+                  key={t.key}
+                  className={`relative p-6 md:p-7 flex flex-col hover-lift ${popular ? 'border-primary shadow-xl ring-1 ring-primary/30' : 'border-border/50'}`}
+                >
+                  {popular && (
+                    <div className="absolute -top-3 inset-x-0 flex justify-center">
+                      <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-primary text-primary-foreground shadow-md uppercase tracking-wide">
+                        {isRTL ? t.tag_ar : t.tag_en}
+                      </span>
+                    </div>
+                  )}
+                  <div className={`w-11 h-11 rounded-xl grid place-items-center mb-4 ${popular ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
+                    <I className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">{isRTL ? t.tag_ar : t.tag_en}</div>
+                  <h3 className="text-xl font-bold mb-3">{isRTL ? t.name_ar : t.name_en}</h3>
+                  <div className="flex items-baseline gap-1.5 mb-5">
+                    <span className="text-4xl font-bold tech-content">{isRTL ? t.price_ar : t.price_en}</span>
+                    <span className="text-sm text-muted-foreground">{isRTL ? t.unit_ar : t.unit_en}</span>
+                  </div>
+                  <ul className="space-y-2.5 mb-6 flex-1">
+                    {t.features.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                        <span className="text-foreground/85">{isRTL ? f.ar : f.en}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    asChild
+                    variant={popular ? 'default' : 'outline'}
+                    className="h-11 w-full"
+                    onClick={() => { track({ event_type: 'cta_click', section: 'tiers', cta_id: t.key }); gtmTrack.providerSignupStart({}); }}
+                  >
+                    <Link to={t.key === 'enterprise' ? '/contact' : '/auth?mode=signup&role=provider'}>
+                      {t.key === 'enterprise'
+                        ? (isRTL ? 'تواصل مع المبيعات' : 'Contact sales')
+                        : (isRTL ? 'ابدأ الآن' : 'Get started')}
+                    </Link>
+                  </Button>
+                </Card>
+              );
+            })}
+          </div>
+
+          <div className="text-center">
           <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-success/15 via-success/10 to-transparent border border-success/30 text-success text-xs md:text-sm font-medium">
             <Gift className="w-4 h-4" />
             {isRTL ? 'عرض الإطلاق: 90 يومًا مجانًا على باقة الاحتراف للجهات الجديدة' : 'Launch offer: 90 days free on Pro plan for new businesses'}
           </div>
-          <Badge variant="outline" className="mb-3">{isRTL ? 'العضويات' : 'Memberships'}</Badge>
-          <h2 className="text-2xl md:text-4xl font-bold mb-3">{isRTL ? 'ابدأ مجاناً، وطوّر عضويتك مع نمو جهتك' : 'Start free, upgrade as your business grows'}</h2>
-          <p className="text-muted-foreground mb-7">
-            {isRTL ? 'خطط مرنة تناسب جميع جهات قطاع البناء والصناعات الخفيفة، بدون التزام سنوي وبدون عمولة على المشاريع.' : 'Flexible plans for every business in construction and light industry — no annual lock-in, no project commission.'}
-          </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-7"
               onClick={() => track({ event_type: 'cta_click', section: 'pricing', cta_id: 'view_plans' })}>
-              <Link to="/membership">{isRTL ? 'استعرض الخطط' : 'View plans'} <ArrowFwd className="w-4 h-4 ms-2" /></Link>
+              <Link to="/membership">{isRTL ? 'استعرض كل الخطط بالتفصيل' : 'View full plan details'} <ArrowFwd className="w-4 h-4 ms-2" /></Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="h-12 px-7"
-              onClick={() => { track({ event_type: 'cta_click', section: 'pricing', cta_id: 'start_free' }); gtmTrack.providerSignupStart({}); }}>
-              <Link to="/auth?mode=signup&role=provider">{isRTL ? 'ابدأ مجاناً' : 'Start free'}</Link>
-            </Button>
+          </div>
           </div>
         </div>
       </section>
 
       {/* FAQ */}
       {faq.length > 0 && (
-        <section className="py-14 md:py-20 bg-muted/20">
+        <section id="faq" className="py-14 md:py-20 bg-muted/20 scroll-mt-32">
           <div className="container mx-auto px-4 max-w-3xl">
             <div className="text-center mb-10">
               <Badge variant="outline" className="mb-3">{isRTL ? 'استفسارات' : 'FAQ'}</Badge>
@@ -809,6 +1075,37 @@ const ForProviders = () => {
       </section>
 
       {/* FINAL CTA */}
+      {/* TRUST & COMPLIANCE STRIP */}
+      <section className="py-12 md:py-16 border-t border-border/40">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <Badge variant="outline" className="mb-3 inline-flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              {isRTL ? 'الأمان والامتثال' : 'Security & compliance'}
+            </Badge>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              {isRTL ? 'منصة مبنيّة على معايير السوق السعودي' : 'Built to Saudi-market standards'}
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground">
+              {isRTL ? 'بياناتك ومعاملاتك محميّة بمعايير حديثة ومتوافقة مع الأنظمة المحلية.' : 'Your data and transactions are protected by modern standards and local compliance.'}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 max-w-5xl mx-auto">
+            {TRUST_PILLARS.map((p, i) => {
+              const I = p.icon;
+              return (
+                <div key={i} className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border/50 hover-lift">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary grid place-items-center shrink-0">
+                    <I className="w-4 h-4" />
+                  </div>
+                  <div className="text-xs md:text-sm font-medium leading-snug">{isRTL ? p.ar : p.en}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <section className="py-16 md:py-24 relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary via-primary to-primary/80" />
         <div className="absolute inset-0 -z-20">
