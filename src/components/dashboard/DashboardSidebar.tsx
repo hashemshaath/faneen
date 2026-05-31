@@ -243,9 +243,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: Shield, superAdminOnly: true },
       { label: { ar: 'إظهار الأنظمة', en: 'System Access' }, url: '/admin/system-access', icon: Layers },
       // Provider operations
-      { label: { ar: 'مراجعة المزودين', en: 'Provider Review' }, url: '/admin/provider-review', icon: ShieldCheck },
-      { label: { ar: 'تحليلات المزودين', en: 'Provider Analytics' }, url: '/admin/provider-analytics', icon: TrendingUp },
-      { label: { ar: 'صفحة هبوط المزودين', en: 'Provider Landing Page' }, url: '/admin/provider-landing', icon: Gauge },
+      { label: { ar: 'مركز مراجعة المزودين', en: 'Provider Review Center' }, url: '/admin/provider-review', icon: ShieldCheck },
       // Geographic context
       { label: { ar: 'مركز المواقع', en: 'Locations Center' }, url: '/admin/locations', icon: MapPin },
     ],
@@ -257,10 +255,7 @@ const adminBaseGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'طلبات العملاء', en: 'Customer Requests' }, url: '/admin/lead-requests', icon: Inbox },
       { label: { ar: 'تشغيل عروض الأسعار', en: 'Quote Operations' }, url: '/admin/quote-operations', icon: Activity },
-      { label: { ar: 'إدارة العقود', en: 'Contracts Admin' }, url: '/admin/contracts', icon: FileText },
-      { label: { ar: 'إنشاء عقد بالنيابة', en: 'Create on Behalf' }, url: '/admin/contracts/create', icon: FileText },
-      { label: { ar: 'قوالب العقود', en: 'Contract Templates' }, url: '/admin/contract-templates', icon: FileText },
-      { label: { ar: 'سجل تصدير العقود', en: 'Contract Export Audit' }, url: '/admin/pdf-exports', icon: FileText },
+      { label: { ar: 'مركز إدارة العقود', en: 'Contracts Center' }, url: '/admin/contracts', icon: FileText },
       { label: { ar: 'مركز التقارير', en: 'Reports Center' }, url: '/admin/reports', icon: BarChart3 },
       { label: { ar: 'سجل التدقيق الموحّد', en: 'Unified Audit Log' }, url: '/admin/audit-log', icon: ShieldAlert },
     ],
@@ -270,11 +265,7 @@ const adminBaseGroups: MenuGroup[] = [
     groupLabel: { ar: 'العضويات والمدفوعات', en: 'Memberships & Payments' },
     icon: Crown,
     items: [
-      { label: { ar: 'العضويات', en: 'Memberships' }, url: '/admin/memberships', icon: Crown },
-      { label: { ar: 'عضويات المزودين', en: 'Provider Memberships' }, url: '/admin/provider-subscriptions', icon: Crown },
-      { label: { ar: 'مدفوعات العضويات', en: 'Membership Payments' }, url: '/admin/membership-payments', icon: CreditCard },
-      { label: { ar: 'سجل أحداث الاشتراكات', en: 'Subscription Events' }, url: '/admin/membership-events', icon: ShieldAlert, superAdminOnly: true },
-      { label: { ar: 'تدقيق رفض الترقيات', en: 'Upgrade Rejection Audit' }, url: '/admin/membership-rejections', icon: ShieldAlert, superAdminOnly: true },
+      { label: { ar: 'مركز العضويات', en: 'Memberships Center' }, url: '/admin/memberships', icon: Crown },
     ],
   },
   {
@@ -293,8 +284,7 @@ const adminBaseGroups: MenuGroup[] = [
     icon: Database,
     items: [
       { label: { ar: 'المدونة', en: 'Blog' }, url: '/dashboard/blog', icon: PenSquare },
-      { label: { ar: 'التصنيفات', en: 'Categories' }, url: '/admin/categories', icon: FolderTree },
-      { label: { ar: 'الوسوم', en: 'Tags' }, url: '/admin/tags', icon: Tags },
+      { label: { ar: 'التصنيفات والوسوم', en: 'Categories & Tags' }, url: '/admin/categories', icon: FolderTree },
       { label: { ar: 'القطاعات', en: 'Sectors' }, url: '/dashboard/profile-systems', icon: Layers },
       { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/admin/private-sectors', icon: Layers },
       { label: { ar: 'مركز SEO', en: 'SEO Center' }, url: '/admin/sitemap-status', icon: SearchIcon },
@@ -318,10 +308,6 @@ const adminBaseGroups: MenuGroup[] = [
     icon: Cog,
     items: [
       { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: Cog, superAdminOnly: true },
-      { label: { ar: 'التحليلات والموافقة', en: 'Analytics & Consent' }, url: '/admin/analytics-settings', icon: BarChart3 },
-      { label: { ar: 'العلامة التجارية', en: 'Branding' }, url: '/admin/branding', icon: Palette },
-      { label: { ar: 'إعدادات API', en: 'API Settings' }, url: '/admin/api-settings', icon: Key },
-      { label: { ar: 'توثيق API', en: 'API Documentation' }, url: '/admin/api-docs', icon: Book },
     ],
   },
   {
