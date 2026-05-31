@@ -501,7 +501,7 @@ const ForProviders = () => {
       <Navbar />
 
       {/* HERO */}
-      <section className="relative overflow-hidden pt-24 pb-16 md:pt-36 md:pb-24">
+      <section className="relative overflow-hidden pt-20 pb-12 md:pt-28 md:pb-20">
         {/* Cover image (admin-controlled via hero.image_url) */}
         <div className="absolute inset-0 -z-20">
           <img
@@ -524,7 +524,7 @@ const ForProviders = () => {
               <Sparkles className="w-3.5 h-3.5 text-primary" />
               {isRTL ? 'منصة قطاع البناء والتشييد والصناعات الخفيفة' : 'Construction, Supply & Light Industry Platform'}
             </Badge>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.7] md:leading-[1.6] pb-2 mb-5 max-w-4xl mx-auto bg-gradient-to-br from-foreground via-foreground to-foreground/75 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.7] md:leading-[1.6] [word-spacing:0.25em] pb-2 mb-5 max-w-4xl mx-auto bg-gradient-to-br from-foreground via-foreground to-foreground/75 bg-clip-text text-transparent">
               {pick(hero?.title_ar, hero?.title_en) || (isRTL
                 ? 'انضم لأكبر منصة لورش الألمنيوم والحديد والزجاج في السعودية والخليج'
                 : 'Join the largest platform for aluminum, steel & glass workshops in Saudi Arabia & the Gulf')}
