@@ -472,9 +472,9 @@ const ForProviders = () => {
       <section className="py-14 md:py-20">
         <div className="container mx-auto px-4 max-w-3xl text-center">
           <Badge variant="outline" className="mb-3">{isRTL ? 'العضويات' : 'Memberships'}</Badge>
-          <h2 className="text-2xl md:text-4xl font-bold mb-3">{isRTL ? 'ابدأ مجاناً، طوّر كلما نمت' : 'Start free, upgrade as you grow'}</h2>
+          <h2 className="text-2xl md:text-4xl font-bold mb-3">{isRTL ? 'ابدأ مجاناً، وطوّر عضويتك مع نمو جهتك' : 'Start free, upgrade as your business grows'}</h2>
           <p className="text-muted-foreground mb-7">
-            {isRTL ? 'خطط مرنة تناسب المصنع الكبير والمعرض الإقليمي والورشة المتخصّصة. بدون عقود سنوية، بدون عمولة على المشاريع.' : 'Flexible plans for large factories, regional showrooms, and specialized workshops. No annual lock-in, no project commission.'}
+            {isRTL ? 'خطط مرنة تناسب المصانع والمقاولين والموردين والورش والمعارض والمكاتب الهندسية، بدون التزام سنوي وبدون عمولة على المشاريع.' : 'Flexible plans for factories, contractors, suppliers, workshops, showrooms and engineering offices — no annual lock-in, no project commission.'}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-7"
@@ -524,10 +524,10 @@ const ForProviders = () => {
             {isRTL ? 'التسجيل يستغرق أقل من دقيقة' : 'Setup in under a minute'}
           </Badge>
           <h2 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
-            {pick(finalCta?.title_ar, finalCta?.title_en) || (isRTL ? 'انضم لمئات المنشآت الرائدة اليوم' : 'Join hundreds of leading businesses today')}
+            {pick(finalCta?.title_ar, finalCta?.title_en) || (isRTL ? 'ابدأ ببناء ملف جهتك المهني اليوم' : 'Start building your professional profile today')}
           </h2>
           <p className="text-base md:text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-            {pick(finalCta?.subtitle_ar, finalCta?.subtitle_en) || (isRTL ? 'سجّل منشأتك الآن وابدأ باستقبال المشاريع خلال أيام' : 'Register now and start receiving projects within days')}
+            {pick(finalCta?.subtitle_ar, finalCta?.subtitle_en) || (isRTL ? 'سجّل جهتك مجانًا، وابدأ بالظهور أمام مشاريع البناء والتشييد، واستقبل طلبات وعروض أسعار تناسب تخصصك.' : 'Register free, become visible to construction projects, and receive requests and RFQs aligned with your specialty.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
             <Button asChild size="lg" variant="secondary" className="h-12 px-8 text-base shadow-xl"
