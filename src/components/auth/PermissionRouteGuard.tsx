@@ -17,6 +17,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { canViewWorkspaceRoute } from '@/modules/workspace/permissions/routePermissions';
+import { useVisibleModules } from '@/hooks/useVisibleModules';
 
 export interface PermissionRouteGuardProps {
   /** Optional explicit route key. Defaults to the current pathname. */
@@ -34,12 +35,22 @@ export const PermissionRouteGuard: React.FC<PermissionRouteGuardProps> = ({
   const location = useLocation();
   const { isAdmin, isSuperAdmin, loading } = useAuth();
   const ws = useActiveWorkspace();
+  const { isRouteHidden, isLoading: modulesLoading } = useVisibleModules();
 
-  if (loading || ws.isLoading) {
+  if (loading || ws.isLoading || modulesLoading) {
     return <>{children}</>; // ProtectedRoute already shows the auth loader
   }
 
   const path = route ?? location.pathname;
+  if (isRouteHidden(path)) {
+    return (
+      <Navigate
+        to={fallbackPath}
+        replace
+        state={{ from: location.pathname, denied: true, reason: 'module_disabled' }}
+      />
+    );
+  }
   const allowed = canViewWorkspaceRoute(path, {
     workspace: { active_role: ws.active_role, permissions: ws.permissions },
     isAdmin: !!(isAdmin || isSuperAdmin),
