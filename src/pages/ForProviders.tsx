@@ -174,6 +174,123 @@ function AnimatedNumber({ value, suffix = '+' }: { value: number; suffix?: strin
   return <span ref={ref} className="tech-content">{display}</span>;
 }
 
+/** Section pills that stick under the navbar and highlight the active section on scroll. */
+function SectionSubNav({ isRTL }: { isRTL: boolean }) {
+  const items = [
+    { id: 'why',           ar: 'لماذا قِطاعات', en: 'Why' },
+    { id: 'how-it-works',  ar: 'كيف تعمل',     en: 'How it works' },
+    { id: 'roi',           ar: 'حاسبة العائد', en: 'ROI' },
+    { id: 'capabilities',  ar: 'الأدوات',     en: 'Capabilities' },
+    { id: 'pricing',       ar: 'الباقات',     en: 'Pricing' },
+    { id: 'faq',           ar: 'الأسئلة',     en: 'FAQ' },
+  ];
+  const [active, setActive] = useState<string>('why');
+  const [stuck, setStuck] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setStuck(window.scrollY > 600);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter(e => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActive(visible.target.id);
+      },
+      { rootMargin: '-30% 0px -55% 0px', threshold: [0, 0.25, 0.5, 1] },
+    );
+    items.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    });
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <nav
+      className={`sticky top-16 z-30 transition-all duration-300 ${stuck ? 'bg-background/85 backdrop-blur-md border-b border-border/40 shadow-sm' : 'bg-transparent'}`}
+      aria-label={isRTL ? 'تنقل الصفحة' : 'Page sections'}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2.5">
+          {items.map((it) => {
+            const isActive = active === it.id;
+            return (
+              <a
+                key={it.id}
+                href={`#${it.id}`}
+                className={`shrink-0 px-3.5 h-9 inline-flex items-center rounded-full text-xs md:text-sm font-medium border transition-all ${isActive ? 'bg-primary text-primary-foreground border-primary shadow-sm' : 'bg-card/70 border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/40'}`}
+              >
+                {isRTL ? it.ar : it.en}
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+/** Lightweight live-activity ticker — animates a horizontal marquee of recent events. */
+function LiveTicker({ isRTL, businesses }: { isRTL: boolean; businesses: number }) {
+  const items = isRTL
+    ? [
+        `🏗️ مصنع ألمنيوم انضم للمنصة قبل دقائق`,
+        `📄 تم توقيع عقد جديد بنظام ضريبة القيمة المضافة`,
+        `🛠️ مقاول تشطيبات في الرياض استقبل طلب تسعير`,
+        `🏬 معرض مطابخ في جدة فعّل الكتالوج الرقمي`,
+        `⚒️ ورشة حدادة فنية حصلت على شارة التوثيق`,
+        `🏢 مطوّر عقاري أطلق RFQ لـ ١٢ مورّداً`,
+        `📈 إجمالي الجهات النشطة: ${businesses.toLocaleString('en-US')}+`,
+      ]
+    : [
+        `🏗️ An aluminum factory joined minutes ago`,
+        `📄 A new VAT-compliant contract was signed`,
+        `🛠️ A finishing contractor in Riyadh got an RFQ`,
+        `🏬 A kitchen showroom in Jeddah activated its digital catalog`,
+        `⚒️ A blacksmith workshop earned the verified badge`,
+        `🏢 A real-estate developer launched an RFQ to 12 suppliers`,
+        `📈 Active businesses: ${businesses.toLocaleString('en-US')}+`,
+      ];
+  // Duplicate for seamless loop
+  const loop = [...items, ...items];
+  return (
+    <div className="relative w-full overflow-hidden border-y border-border/40 bg-card/60 backdrop-blur py-2.5">
+      <div className="absolute inset-y-0 start-0 w-12 bg-gradient-to-e from-background to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-y-0 end-0 w-12 bg-gradient-to-s from-background to-transparent z-10 pointer-events-none" />
+      <div className="flex items-center gap-2 px-3">
+        <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-success/15 text-success">
+          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+          {isRTL ? 'مباشر' : 'LIVE'}
+        </span>
+        <div className="flex-1 overflow-hidden">
+          <div
+            className="flex gap-10 whitespace-nowrap text-[12px] md:text-sm text-muted-foreground"
+            style={{ animation: 'qi-marquee 45s linear infinite' }}
+          >
+            {loop.map((t, i) => (
+              <span key={i} className="inline-flex items-center gap-1.5">
+                <span className="opacity-90">{t}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <style>{`
+        @keyframes qi-marquee {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 /** Sticky bottom CTA bar — appears after the user scrolls past the hero. */
 function StickyCtaBar({ isRTL, onClick }: { isRTL: boolean; onClick: () => void }) {
   const [visible, setVisible] = useState(false);
