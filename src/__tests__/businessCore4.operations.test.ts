@@ -100,10 +100,13 @@ describe("BUSINESS-CORE-4: route + sidebar", () => {
     expect(app).toMatch(/DashboardWorkOrdersOverview/);
   });
 
-  it("adds sidebar entry for Operations Overview", () => {
-    expect(sidebar).toMatch(/\/dashboard\/work-orders\/overview/);
-    expect(sidebar).toMatch(/Operations Overview/);
-    expect(sidebar).toMatch(/نظرة عامة على العمليات/);
+  // NAVIGATION-CONSOLIDATION-1 (group 5): the dedicated Operations
+  // Overview sidebar entry was merged into the main "Work Orders"
+  // link. The /dashboard/work-orders/overview path itself still
+  // resolves (now via redirect) for legacy bookmarks.
+  it("keeps Work Orders sidebar entry available", () => {
+    expect(sidebar).toMatch(/\/dashboard\/work-orders["']/);
+    expect(sidebar).toMatch(/Work Orders/);
   });
 
   it("does not modify /dashboard/operations route", () => {
