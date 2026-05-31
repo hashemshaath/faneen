@@ -72,7 +72,6 @@ const providerGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'التحليلات', en: 'Analytics' }, url: '/dashboard/analytics', icon: BarChart3 },
-      { label: { ar: 'نظرة عامة على العمليات', en: 'Operations Overview' }, url: '/dashboard/work-orders/overview', icon: ClipboardList },
       { label: { ar: 'سجل العمليات', en: 'Operations Feed' }, url: '/dashboard/operations/feed', icon: Activity, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
     ],
   },
@@ -120,8 +119,7 @@ const providerGroups: MenuGroup[] = [
     icon: Crown,
     description: { ar: 'الاشتراكات والرصيد والأقساط', en: 'Subscriptions, credits, and installments' },
     items: [
-      { label: { ar: 'العضوية', en: 'Membership' }, url: '/membership', icon: Crown },
-      { label: { ar: 'العضوية والرصيد', en: 'Provider Membership' }, url: '/dashboard/provider/membership', icon: Crown },
+      { label: { ar: 'العضوية', en: 'Membership' }, url: '/dashboard/provider/membership', icon: Crown },
       { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
       { label: { ar: 'نقاط الولاء', en: 'Loyalty Points' }, url: '/dashboard/loyalty', icon: Star, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
       { label: { ar: 'متجر المكافآت', en: 'Reward Store' }, url: '/dashboard/loyalty/store', icon: Star, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
