@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Building2, Check, ChevronDown, Crown, Users, ShieldCheck } from 'lucide-react';
+import { Building2, Check, ChevronDown, Crown, Users, ShieldCheck, Briefcase } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -79,33 +79,38 @@ export const ActiveBusinessSwitcher: React.FC = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="hidden md:inline-flex items-center gap-2 h-9 px-2.5 rounded-full border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30 max-w-[280px]"
+          className="hidden md:inline-flex items-center gap-2.5 h-10 ps-1 pe-3 rounded-full border border-border/40 bg-card/60 hover:bg-card hover:border-border/70 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 max-w-[320px]"
           title={isRTL
-            ? 'تبديل المنشأة النشطة — يُحفظ اختيارك تلقائيًا'
-            : 'Switch active business — your choice is saved automatically'}
+            ? 'تبديل حساب الشركة النشط — يُحفظ اختيارك تلقائيًا'
+            : 'Switch active company account — your choice is saved automatically'}
         >
-          <Building2 className="w-3.5 h-3.5 text-primary shrink-0" />
-          <span className="flex flex-col items-start leading-tight min-w-0">
-            <span className="text-xs font-semibold text-foreground truncate max-w-[160px]">
+          <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <Briefcase className="w-4 h-4" />
+          </span>
+          <span className="flex flex-col items-start leading-tight min-w-0 text-start">
+            <span className="text-[9px] uppercase tracking-wide text-muted-foreground/80 leading-none">
+              {isRTL ? 'حساب شركة' : 'Company account'}
+            </span>
+            <span className="text-xs font-semibold text-foreground truncate max-w-[180px] mt-0.5">
               {displayName(active)}
             </span>
             {active && (
-              <span className="text-[9px] text-muted-foreground truncate max-w-[160px]">
+              <span className="text-[10px] text-muted-foreground truncate max-w-[180px] leading-tight">
                 {isRTL ? 'دورك: ' : 'Your role: '}{roleLabel(active)}
               </span>
             )}
           </span>
           {businesses.length > 1 && (
-            <Badge variant="outline" className="h-4 px-1 text-[10px] tech-content shrink-0">
+            <Badge variant="outline" className="h-5 px-1.5 text-[10px] tech-content shrink-0 rounded-full">
               {businesses.length}
             </Badge>
           )}
-          <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" />
+          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={isRTL ? 'start' : 'end'} sideOffset={8} className="w-72 p-1">
         <DropdownMenuLabel className="text-[11px] text-muted-foreground font-medium">
-          {isRTL ? 'المنشأة النشطة • دورك فيها' : 'Active business • your role'}
+          {isRTL ? 'حسابات الشركات • دورك فيها' : 'Company accounts • your role'}
         </DropdownMenuLabel>
         <div className="px-2 pb-1.5 flex items-start gap-1.5 text-[10px] text-muted-foreground leading-snug">
           <ShieldCheck className="w-3 h-3 mt-0.5 text-emerald-600 shrink-0" />
@@ -131,7 +136,7 @@ export const ActiveBusinessSwitcher: React.FC = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[9px] uppercase tracking-wide text-muted-foreground/70 leading-none mb-0.5">
-                  {isRTL ? 'المنشأة' : 'Business'}
+                  {isRTL ? 'حساب شركة' : 'Company account'}
                 </p>
                 <p className="text-xs font-semibold text-foreground truncate">{displayName(b)}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
