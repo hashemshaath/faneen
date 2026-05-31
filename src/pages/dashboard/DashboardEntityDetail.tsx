@@ -30,6 +30,7 @@ import { getProfileByUserId } from '@/modules/users/services/getProfileByUserId'
 import { listBranchesByBusiness } from '@/modules/catalog';
 import { supabase } from '@/integrations/supabase/client';
 import { StaffPermissionsMatrix } from '@/components/dashboard/entities/StaffPermissionsMatrix';
+import { TeamPermissionsOverview } from '@/components/dashboard/entities/TeamPermissionsOverview';
 import { useTransferPrimaryManagerMutation } from '@/hooks/useTransferPrimaryManagerMutation';
 
 interface BizDetail {
@@ -447,9 +448,10 @@ const DashboardEntityDetail: React.FC = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 h-11">
+          <TabsList className="grid w-full grid-cols-5 h-11">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">{pickBi(isRTL, 'نظرة عامة', 'Overview')}</TabsTrigger>
-            <TabsTrigger value="team" className="text-xs sm:text-sm">{pickBi(isRTL, 'الفريق والصلاحيات', 'Team & Permissions')}</TabsTrigger>
+            <TabsTrigger value="team" className="text-xs sm:text-sm">{pickBi(isRTL, 'الفريق', 'Team')}</TabsTrigger>
+            <TabsTrigger value="permissions" className="text-xs sm:text-sm">{pickBi(isRTL, 'الصلاحيات', 'Permissions')}</TabsTrigger>
             <TabsTrigger value="branches" className="text-xs sm:text-sm">{pickBi(isRTL, 'الفروع', 'Branches')}</TabsTrigger>
             <TabsTrigger value="settings" className="text-xs sm:text-sm">{pickBi(isRTL, 'الإعدادات', 'Settings')}</TabsTrigger>
           </TabsList>
