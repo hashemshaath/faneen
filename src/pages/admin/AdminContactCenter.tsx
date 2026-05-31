@@ -1,10 +1,11 @@
-import React, { Suspense, lazy, useMemo } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { AdminEmbeddedContext } from '@/contexts/AdminTabsContext';
+import { lazyRetry } from '@/lib/lazyRetry';
 import { Loader2, Inbox, Settings, ShieldAlert, TrendingUp, Mail } from 'lucide-react';
 
 /**
@@ -14,11 +15,11 @@ import { Loader2, Inbox, Settings, ShieldAlert, TrendingUp, Mail } from 'lucide-
  * detects the AdminEmbeddedContext flag and skips its own DashboardLayout
  * wrapper, preserving 100% of existing logic, RLS, and permissions.
  */
-const InboxPage          = lazy(() => import('./AdminContactMessages'));
-const SettingsPage       = lazy(() => import('./AdminContactInboxSettings'));
-const AuditPage          = lazy(() => import('./AdminContactAuditLog'));
-const SlaPage            = lazy(() => import('./AdminContactSlaDashboard'));
-const NotificationsPage  = lazy(() => import('./AdminContactNotificationLog'));
+const InboxPage          = lazyRetry(() => import('./AdminContactMessages'));
+const SettingsPage       = lazyRetry(() => import('./AdminContactInboxSettings'));
+const AuditPage          = lazyRetry(() => import('./AdminContactAuditLog'));
+const SlaPage            = lazyRetry(() => import('./AdminContactSlaDashboard'));
+const NotificationsPage  = lazyRetry(() => import('./AdminContactNotificationLog'));
 
 type TabKey = 'inbox' | 'settings' | 'audit' | 'sla' | 'notifications';
 const VALID: TabKey[] = ['inbox', 'settings', 'audit', 'sla', 'notifications'];
