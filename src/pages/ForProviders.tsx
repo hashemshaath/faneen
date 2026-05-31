@@ -6,7 +6,7 @@ import {
   Star, ArrowLeft, ArrowRight, CheckCircle2, XCircle, Sparkles,
   TrendingUp, ShieldCheck, Zap, Clock, Award, BadgeCheck,
   Factory, Store, Quote, HardHat, Truck, Compass, Settings2, Layers3,
-  Calculator, Gift, PlayCircle, Rocket, Users, FileText, Briefcase,
+  Calculator, Gift, Rocket,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
