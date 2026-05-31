@@ -261,6 +261,32 @@ const AdminSystemAccess: React.FC = () => {
           </div>
         )}
 
+        {/* View tabs: Manage / Audit Log */}
+        <div className="flex rounded-2xl bg-muted/40 p-1 gap-1">
+          <button
+            onClick={() => setViewTab('manage')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              viewTab === 'manage' ? 'bg-card text-foreground shadow-sm ring-1 ring-border/30' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Settings2 className="w-4 h-4" />
+            {isRTL ? 'إدارة الإظهار' : 'Manage Visibility'}
+          </button>
+          <button
+            onClick={() => setViewTab('audit')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              viewTab === 'audit' ? 'bg-card text-foreground shadow-sm ring-1 ring-border/30' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <History className="w-4 h-4" />
+            {isRTL ? 'سجل التدقيق' : 'Audit Log'}
+          </button>
+        </div>
+
+        {viewTab === 'audit' ? (
+          <AuditLogPanel modules={modulesQuery.data ?? []} />
+        ) : (
+        <>
         {/* Scope Tabs */}
         <div className="rounded-2xl border border-border/30 bg-card p-4 space-y-4">
           <div className="flex rounded-2xl bg-muted/40 p-1 gap-1 flex-wrap">
