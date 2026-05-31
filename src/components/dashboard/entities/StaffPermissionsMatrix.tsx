@@ -391,6 +391,80 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
               )}
             </div>
 
+            {/* Custom presets row */}
+            {canEdit && !isPrimaryManager && (
+              <div className="flex items-center gap-1.5 flex-wrap p-2 rounded-lg bg-muted/30 border border-border/30">
+                <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                  <Bookmark className="w-3 h-3" />
+                  {pickBi(isRTL, 'قوالب محفوظة', 'Saved presets')}
+                </span>
+                {presets.length === 0 && (
+                  <span className="text-[10px] text-muted-foreground/70">—</span>
+                )}
+                {presets.map((p) => (
+                  <span key={p.id} className="inline-flex items-center gap-0.5 rounded-full bg-background border border-border/40 ps-2 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => applyCustomPreset(p.id)}
+                      className="py-0.5 hover:text-primary transition"
+                      title={`${p.perms.length} ${pickBi(isRTL, 'صلاحية', 'perms')}`}
+                    >
+                      {p.name}
+                      <Badge variant="outline" className="text-[8px] h-3.5 px-1 ms-1">{p.perms.length}</Badge>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deletePreset(p.id)}
+                      className="px-1.5 py-0.5 text-muted-foreground hover:text-destructive"
+                      title={pickBi(isRTL, 'حذف', 'Delete')}
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </span>
+                ))}
+                <div className="ms-auto inline-flex items-center gap-1">
+                  {showPresetForm ? (
+                    <>
+                      <Input
+                        autoFocus
+                        value={presetName}
+                        onChange={(e) => setPresetName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') { setShowPresetForm(false); setPresetName(''); } }}
+                        placeholder={pickBi(isRTL, 'اسم القالب…', 'Preset name…')}
+                        className="h-7 text-[10px] w-32"
+                      />
+                      <Button onClick={savePreset} disabled={!presetName.trim()} size="sm" className="h-7 px-2 text-[10px]">
+                        <Save className="w-3 h-3" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button onClick={() => setShowPresetForm(true)} variant="ghost" size="sm" className="h-7 px-2 text-[10px]">
+                      <Plus className="w-3 h-3 me-0.5" />
+                      {pickBi(isRTL, 'احفظ كقالب', 'Save as preset')}
+                    </Button>
+                  )}
+                  <Button onClick={exportJson} variant="ghost" size="sm" className="h-7 px-2 text-[10px]" title="Export JSON">
+                    <Download className="w-3 h-3" />
+                  </Button>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input
+                      type="file"
+                      accept="application/json"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) importJson(f);
+                        e.currentTarget.value = '';
+                      }}
+                    />
+                    <span className="h-7 px-2 text-[10px] inline-flex items-center rounded-md hover:bg-accent hover:text-accent-foreground" title="Import JSON">
+                      <Upload className="w-3 h-3" />
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center gap-1.5 flex-wrap">
               {FILTER_CHIPS.map((c) => (
                 <button
