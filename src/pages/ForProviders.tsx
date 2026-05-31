@@ -501,7 +501,7 @@ const ForProviders = () => {
       <Navbar />
 
       {/* HERO */}
-      <section className="relative overflow-hidden pt-24 pb-16 md:pt-36 md:pb-24">
+      <section className="relative overflow-hidden pt-20 pb-12 md:pt-28 md:pb-20">
         {/* Cover image (admin-controlled via hero.image_url) */}
         <div className="absolute inset-0 -z-20">
           <img
