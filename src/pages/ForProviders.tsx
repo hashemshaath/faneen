@@ -866,6 +866,10 @@ const ForProviders = () => {
 
       <Footer />
       <ScrollToTop />
+      <StickyCtaBar
+        isRTL={isRTL}
+        onClick={() => { track({ event_type: 'cta_click', section: 'sticky_bar', cta_id: 'primary' }); gtmTrack.providerSignupStart({}); }}
+      />
     </div>
   );
 };
