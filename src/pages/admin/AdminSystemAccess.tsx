@@ -445,6 +445,84 @@ const AdminSystemAccess: React.FC = () => {
               </Button>
             </div>
           )}
+
+          {scopeTab === 'entity' && !selectedEntityId && (
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
+                <Input
+                  value={entitySearch}
+                  onChange={e => setEntitySearch(e.target.value)}
+                  placeholder={isRTL ? 'ابحث باسم المنشأة أو معرف ENT-...' : 'Search by business name or ENT- ID'}
+                  className="ps-10 h-11 rounded-xl"
+                />
+              </div>
+              {entitiesQuery.isLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
+                </div>
+              ) : filteredEntities.length === 0 ? (
+                <div className="text-center text-muted-foreground text-sm py-6">
+                  {isRTL ? 'لا توجد منشآت' : 'No businesses'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
+                  {filteredEntities.map(b => {
+                    const name = isRTL ? (b.name_ar || b.name_en) : (b.name_en || b.name_ar);
+                    return (
+                      <button
+                        key={b.id}
+                        onClick={() => setSelectedEntityId(b.id)}
+                        className="text-start rounded-xl border border-border/30 bg-card p-3 hover:bg-muted/40 transition-colors flex items-center gap-3"
+                      >
+                        <Avatar className="w-9 h-9 rounded-lg">
+                          <AvatarImage src={b.logo_url || undefined} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold rounded-lg">
+                            <Building2 className="w-4 h-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-sm truncate">{name || '—'}</span>
+                            <ReferenceBadge refId={b.ref_id} />
+                          </div>
+                          <div className="text-[11px] text-muted-foreground truncate tech-content">{b.id.slice(0, 8)}…</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {scopeTab === 'entity' && selectedEntityId && selectedEntity && (
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/30 p-3 border border-border/30">
+              <div className="flex items-center gap-3 min-w-0">
+                <Avatar className="w-9 h-9 rounded-lg">
+                  <AvatarImage src={selectedEntity.logo_url || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary rounded-lg">
+                    <Building2 className="w-4 h-4" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-semibold text-sm truncate">
+                      {(isRTL ? selectedEntity.name_ar : selectedEntity.name_en) || selectedEntity.name_ar || selectedEntity.name_en}
+                    </span>
+                    <ReferenceBadge refId={selectedEntity.ref_id} />
+                  </div>
+                  <div className="text-[11px] text-muted-foreground truncate">
+                    {isRTL ? 'القواعد ستُطبَّق على المنشأة وجميع موظفيها.' : 'Rules apply to this business and all its staff.'}
+                  </div>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedEntityId(null)} className="gap-1.5">
+                <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
+                {isRTL ? 'تغيير المنشأة' : 'Change business'}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Filters bar */}
