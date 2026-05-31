@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Building2, Search, Filter, Users, ShieldCheck, ArrowRight } from 'lucide-react';
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Input } from '@/components/ui/input';
@@ -179,7 +179,7 @@ const DashboardEntities: React.FC = () => {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filtered.map((e) => {
-              const name = pickBi(isRTL, e.name_ar, e.name_en) || e.username || '—';
+              const name = pickBi(isRTL, e.name_ar ?? '', e.name_en ?? '') || e.username || '—';
               const status = e.approval_status ?? 'draft';
               const statusCfg = STATUS_LABELS[status] ?? { ar: status, en: status };
               const tier = e.membership_tier ?? 'free';
