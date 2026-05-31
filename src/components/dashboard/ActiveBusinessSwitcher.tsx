@@ -76,10 +76,10 @@ export const ActiveBusinessSwitcher: React.FC = () => {
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu dir={isRTL ? 'rtl' : 'ltr'}>
       <DropdownMenuTrigger asChild>
         <button
-          className="hidden md:inline-flex items-center gap-2.5 h-10 ps-1 pe-3 rounded-full border border-border/40 bg-card/60 hover:bg-card hover:border-border/70 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 max-w-[320px]"
+          className={`hidden md:inline-flex items-center gap-2.5 h-10 ps-1 pe-3 rounded-full border border-border/40 bg-card/60 hover:bg-card hover:border-border/70 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 max-w-[320px] ${isRTL ? '' : 'font-sans tracking-tight'}`}
           title={isRTL
             ? 'تبديل حساب الشركة النشط — يُحفظ اختيارك تلقائيًا'
             : 'Switch active company account — your choice is saved automatically'}
@@ -108,7 +108,7 @@ export const ActiveBusinessSwitcher: React.FC = () => {
           <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={isRTL ? 'start' : 'end'} sideOffset={8} className="w-72 p-1">
+      <DropdownMenuContent align="end" sideOffset={8} className={`w-72 p-1 rounded-2xl shadow-xl border-border/50 ${isRTL ? '' : 'font-sans tracking-tight'}`}>
         <DropdownMenuLabel className="text-[11px] text-muted-foreground font-medium">
           {isRTL ? 'حسابات الشركات • دورك فيها' : 'Company accounts • your role'}
         </DropdownMenuLabel>
