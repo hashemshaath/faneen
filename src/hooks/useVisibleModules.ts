@@ -32,6 +32,11 @@ export interface UseVisibleModulesResult {
   isRouteHidden: (path: string | null | undefined) => boolean;
 }
 
+interface RouteVisibilityEntry {
+  route: string;
+  enabled: boolean;
+}
+
 const EMPTY: EffectiveVisibility[] = [];
 
 const MODULE_ROUTE_ALIASES: Record<string, readonly string[]> = {
@@ -86,36 +91,42 @@ export function useVisibleModules(): UseVisibleModulesResult {
     },
   });
 
-  const hiddenRoutes = useMemo(() => {
+  const routeVisibility = useMemo((): RouteVisibilityEntry[] => {
     const rows = visibility.data ?? EMPTY;
     const byKey = new Map<string, SystemModule>();
     for (const m of catalog.data ?? []) byKey.set(m.key, m);
-    const out = new Set<string>();
+    const out: RouteVisibilityEntry[] = [];
     for (const v of rows) {
-      if (v.enabled) continue;
       const meta = byKey.get(v.module_key);
       if (!meta?.route) continue;
       if (meta.is_core) continue; // safety: never hide core
-      out.add(meta.route);
-      for (const route of MODULE_ROUTE_ALIASES[v.module_key] ?? []) out.add(route);
+      const routes = new Set([meta.route, ...(MODULE_ROUTE_ALIASES[v.module_key] ?? [])]);
+      for (const route of routes) out.push({ route, enabled: v.enabled });
     }
-    return out;
+    return out.sort((a, b) => b.route.length - a.route.length);
   }, [visibility.data, catalog.data]);
 
+  const hiddenRoutes = useMemo(() => {
+    const out = new Set<string>();
+    for (const item of routeVisibility) {
+      if (!item.enabled) out.add(item.route);
+    }
+    return out;
+  }, [routeVisibility]);
+
   const isRouteHidden = useMemo(() => {
-    if (hiddenRoutes.size === 0) {
+    if (routeVisibility.length === 0) {
       return () => false;
     }
-    const list = Array.from(hiddenRoutes);
     return (path: string | null | undefined): boolean => {
       if (!path) return false;
-      for (const r of list) {
-        if (path === r) return true;
-        if (path.startsWith(r + '/')) return true;
+      for (const item of routeVisibility) {
+        if (path === item.route) return !item.enabled;
+        if (path.startsWith(item.route + '/')) return !item.enabled;
       }
       return false;
     };
-  }, [hiddenRoutes]);
+  }, [routeVisibility]);
 
   return {
     modules: visibility.data ?? EMPTY,
