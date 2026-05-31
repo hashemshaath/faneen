@@ -419,7 +419,8 @@ const DashboardEntityDetail: React.FC = () => {
               {staff!.map((s) => {
                 const prof = profileMap.get(s.user_id);
                 return (
-                  <div key={s.id} className="flex items-center gap-3 p-3 rounded-xl border border-border/40">
+                  <div key={s.id} className="rounded-xl border border-border/40 p-3">
+                    <div className="flex items-center gap-3">
                     {prof?.avatar_url ? (
                       <img src={prof.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover" />
                     ) : (
@@ -455,7 +456,7 @@ const DashboardEntityDetail: React.FC = () => {
                         </Button>
                       </>
                     )}
-                  </div>
+                    </div>
                   <StaffPermissionsMatrix
                     staffId={s.id}
                     role={s.role}
@@ -464,6 +465,7 @@ const DashboardEntityDetail: React.FC = () => {
                     canEdit={canManageStaff}
                     onSaved={refetchStaff}
                   />
+                  </div>
                 );
               })}
             </div>
