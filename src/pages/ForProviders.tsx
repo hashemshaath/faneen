@@ -501,28 +501,42 @@ const ForProviders = () => {
       <Navbar />
 
       {/* HERO */}
-      <section className="relative overflow-hidden pt-10 pb-14 md:pt-20 md:pb-24">
+      <section className="relative overflow-hidden pt-8 pb-10 md:pt-14 md:pb-16">
+        {/* Cover image (admin-controlled via hero.image_url) */}
+        <div className="absolute inset-0 -z-20">
+          <img
+            src={hero?.image_url || heroImage}
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-cover"
+            loading="eager"
+            width={1920}
+            height={1080}
+          />
+        </div>
+        {/* Layered overlays for contrast */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/85 via-background/92 to-background" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/15 via-transparent to-accent/10" />
         <HeroParticles />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/5 via-background to-background" />
         <div className="container mx-auto px-4 relative">
           <div className="max-w-5xl mx-auto text-center">
             <Badge variant="secondary" className="mb-4 px-3 py-1.5 text-xs font-medium gap-1.5 inline-flex items-center">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
               {isRTL ? 'منصة قطاع البناء والتشييد والصناعات الخفيفة' : 'Construction, Supply & Light Industry Platform'}
             </Badge>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.12] mb-5 bg-gradient-to-br from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.15] mb-4 bg-gradient-to-br from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
               {pick(hero?.title_ar, hero?.title_en) || (isRTL
-                ? 'حوّل جهتك إلى ملف مهني داخل سوق البناء والتشييد'
-                : 'Turn your business into a professional profile inside the construction market')}
+                ? 'انضم لأكبر منصة لورش الألمنيوم والحديد والزجاج في السعودية والخليج'
+                : 'Join the largest platform for aluminum, steel & glass workshops in Saudi Arabia & the Gulf')}
             </h1>
-            <p className="text-base md:text-lg text-muted-foreground mb-7 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base md:text-lg text-muted-foreground mb-6 max-w-2xl mx-auto leading-relaxed">
               {pick(hero?.subtitle_ar, hero?.subtitle_en) || (isRTL
                 ? 'منصة شاملة لجميع جهات قطاع البناء والتشييد والصناعات الخفيفة — سجّل جهتك واحصل على ظهور قابل للبحث والتصنيف، واستقبل طلبات وعروض أسعار حقيقية.'
                 : 'A comprehensive platform for every business in construction and light industry — register, get searchable visibility, and receive real requests and RFQs.')}
             </p>
 
             {/* Audience switcher */}
-            <div className="flex flex-wrap justify-center gap-2 mb-7" role="tablist" aria-label={isRTL ? 'نوع المنشأة' : 'Business type'}>
+            <div className="flex flex-wrap justify-center gap-2 mb-5" role="tablist" aria-label={isRTL ? 'نوع المنشأة' : 'Business type'}>
               {AUDIENCES.map((a) => {
                 const Icon = a.icon;
                 const active = audience === a.key;
@@ -539,11 +553,11 @@ const ForProviders = () => {
                 );
               })}
             </div>
-            <p className="text-sm md:text-base text-foreground/80 max-w-xl mx-auto mb-8 min-h-[2.5rem]">
+            <p className="text-sm md:text-base text-foreground/80 max-w-xl mx-auto mb-6 min-h-[2.5rem]">
               {isRTL ? activeAudience.desc_ar : activeAudience.desc_en}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-10">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-7">
               <Button asChild size="lg" className="h-12 px-7 text-base shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
                 onClick={() => { track({ event_type: 'cta_click', section: 'hero', cta_id: 'primary' }); gtmTrack.providerSignupStart({}); }}>
                 <Link to={hero?.cta_primary_href || '/auth?mode=signup&role=provider'}>
@@ -560,7 +574,7 @@ const ForProviders = () => {
             </div>
 
             {/* Trust signals */}
-            <div className="flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-xs md:text-sm text-muted-foreground mb-8">
+            <div className="flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-xs md:text-sm text-muted-foreground mb-6">
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{isRTL ? 'بدون رسوم تسجيل' : 'No signup fees'}</span>
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{isRTL ? 'بدون عمولة على المشاريع' : 'Zero project commission'}</span>
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{isRTL ? 'إلغاء في أي وقت' : 'Cancel anytime'}</span>
@@ -588,21 +602,6 @@ const ForProviders = () => {
               })}
             </div>
 
-            {/* Hero showcase image (admin-controlled) */}
-            {/* Hero showcase image (admin-controlled, with realistic default) */}
-            <div className="mt-10 md:mt-14 max-w-5xl mx-auto">
-              <div className="relative rounded-3xl overflow-hidden border border-border/40 shadow-2xl bg-card aspect-[16/9]">
-                <img
-                  src={hero?.image_url || heroImage}
-                  alt={pick(hero?.title_ar, hero?.title_en) || (isRTL ? 'مشاريع البناء والتشييد على منصة قِطاعات' : 'Construction projects on Qitaat')}
-                  className="w-full h-full object-cover"
-                  loading="eager"
-                  width={1600}
-                  height={900}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/10 to-transparent" />
-              </div>
-            </div>
           </div>
         </div>
       </section>
