@@ -542,6 +542,11 @@ const ForProviders = () => {
       {/* FINAL CTA */}
       <section className="py-16 md:py-24 relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary via-primary to-primary/80" />
+        {finalCta?.image_url && (
+          <div className="absolute inset-0 -z-20">
+            <img src={finalCta.image_url} alt="" className="w-full h-full object-cover opacity-30" loading="lazy" />
+          </div>
+        )}
         <div className="absolute inset-0 -z-10 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20% 30%, hsl(var(--primary-foreground)/0.3) 0, transparent 50%), radial-gradient(circle at 80% 70%, hsl(var(--primary-foreground)/0.2) 0, transparent 50%)' }} />
         <div className="container mx-auto px-4 text-center text-primary-foreground">
           <Badge variant="secondary" className="mb-4 bg-primary-foreground/15 text-primary-foreground border-0 backdrop-blur">
