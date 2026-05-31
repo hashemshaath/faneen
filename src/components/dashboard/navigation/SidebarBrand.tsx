@@ -27,49 +27,48 @@ export const SidebarBrand: React.FC<SidebarBrandProps> = ({
   const titleAr = businessName?.trim() || 'قِطاعات';
   const titleEn = businessName?.trim() || 'Qitaat';
 
-  // When no custom business logo is supplied, render the canonical Qitaat
-  // brand lock-up (mark + wordmark) so the sidebar matches the navbar/auth
-  // surfaces. Falls back to the letter mark when collapsed.
-  if (!businessLogoUrl) {
-    return (
-      <div
-        className="p-4 sm:p-5 flex items-center gap-3 border-b border-sidebar-border"
-        data-testid="sidebar-brand"
-      >
+  // Always render the canonical Qitaat brand lock-up (mark + wordmark) so the
+  // sidebar matches the navbar/auth/footer surfaces across every dashboard
+  // and every account type (admin, provider, client/user, staff). When the
+  // active workspace has a business logo + name, surface them as a compact
+  // secondary row underneath — never replacing the Qitaat brand.
+  const hasBusiness = !!(businessLogoUrl || businessName?.trim());
+
+  return (
+    <div
+      className="p-4 sm:p-5 flex flex-col gap-3 border-b border-sidebar-border"
+      data-testid="sidebar-brand"
+    >
+      <div className="flex items-center gap-2">
         {collapsed ? (
           <BrandLogo variant="mark" tone="auto" size={36} />
         ) : (
           <BrandLogo variant="full" tone="auto" size={32} />
         )}
       </div>
-    );
-  }
 
-  return (
-    <div
-      className="p-4 sm:p-5 flex items-center gap-3 border-b border-sidebar-border"
-      data-testid="sidebar-brand"
-    >
-      <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg shrink-0 shadow-md shadow-primary/20 overflow-hidden">
-        <img
-            src={businessLogoUrl}
-            alt={isRTL ? titleAr : titleEn}
-            className="w-full h-full object-cover"
-            loading="lazy"
-            decoding="async"
-            onError={(e) => {
-              // Fallback to the letter mark if the logo fails to load.
-              (e.currentTarget as HTMLImageElement).style.display = 'none';
-            }}
-          />
-      </div>
-      {!collapsed && (
-        <div className="min-w-0">
-          <h1 className="font-heading font-bold text-lg leading-none text-sidebar-foreground truncate">
+      {hasBusiness && !collapsed && (
+        <div className="flex items-center gap-2 pt-2 border-t border-sidebar-border/50 min-w-0">
+          {businessLogoUrl ? (
+            <div className="w-7 h-7 rounded-lg overflow-hidden bg-muted shrink-0 ring-1 ring-sidebar-border/60">
+              <img
+                src={businessLogoUrl}
+                alt={isRTL ? titleAr : titleEn}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+          ) : (
+            <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+              {(isRTL ? titleAr : titleEn).charAt(0)}
+            </div>
+          )}
+          <span className="text-xs font-medium text-sidebar-foreground/80 truncate min-w-0">
             {isRTL ? titleAr : titleEn}
-          </h1>
-          <span className="text-[10px] text-accent/80 font-medium tracking-wider">
-            {isRTL ? 'Qitaat' : 'قِطاعات'}
           </span>
         </div>
       )}
