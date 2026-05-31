@@ -594,6 +594,7 @@ export const DashboardSidebar: React.FC = () => {
           isRTL={isRTL}
           audience={audience}
           closeMobile={closeMobile}
+          isRouteHidden={isRouteHidden}
         />
 
         {/* Pinned favorites + recently visited */}
@@ -602,12 +603,14 @@ export const DashboardSidebar: React.FC = () => {
           isRTL={isRTL}
           labelLookup={labelLookup}
           closeMobile={closeMobile}
+          isRouteHidden={isRouteHidden}
         />
         <SidebarRecent
           collapsed={collapsed}
           isRTL={isRTL}
           labelLookup={labelLookup}
           closeMobile={closeMobile}
+          isRouteHidden={isRouteHidden}
         />
 
         {/* ─── Role-based menu ─── */}
