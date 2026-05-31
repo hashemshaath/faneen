@@ -939,25 +939,79 @@ const ForProviders = () => {
 
       {/* PRICING TEASER */}
       <section id="pricing" className="py-14 md:py-20 scroll-mt-32">
-        <div className="container mx-auto px-4 max-w-3xl text-center">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <Badge variant="outline" className="mb-3">{isRTL ? 'العضويات' : 'Memberships'}</Badge>
+            <h2 className="text-2xl md:text-4xl font-bold mb-3">
+              {isRTL ? 'ابدأ مجاناً، وطوّر عضويتك مع نمو جهتك' : 'Start free, upgrade as your business grows'}
+            </h2>
+            <p className="text-muted-foreground">
+              {isRTL ? 'خطط مرنة لكل جهة في قطاع البناء والصناعات الخفيفة — بدون التزام سنوي وبدون عمولة على المشاريع.' : 'Flexible plans for every business — no annual lock-in, no project commission.'}
+            </p>
+          </div>
+
+          {/* Tier cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+            {TIERS.map((t) => {
+              const I = t.icon;
+              const popular = !!('popular' in t && (t as { popular?: boolean }).popular);
+              return (
+                <Card
+                  key={t.key}
+                  className={`relative p-6 md:p-7 flex flex-col hover-lift ${popular ? 'border-primary shadow-xl ring-1 ring-primary/30' : 'border-border/50'}`}
+                >
+                  {popular && (
+                    <div className="absolute -top-3 inset-x-0 flex justify-center">
+                      <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-primary text-primary-foreground shadow-md uppercase tracking-wide">
+                        {isRTL ? t.tag_ar : t.tag_en}
+                      </span>
+                    </div>
+                  )}
+                  <div className={`w-11 h-11 rounded-xl grid place-items-center mb-4 ${popular ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
+                    <I className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">{isRTL ? t.tag_ar : t.tag_en}</div>
+                  <h3 className="text-xl font-bold mb-3">{isRTL ? t.name_ar : t.name_en}</h3>
+                  <div className="flex items-baseline gap-1.5 mb-5">
+                    <span className="text-4xl font-bold tech-content">{isRTL ? t.price_ar : t.price_en}</span>
+                    <span className="text-sm text-muted-foreground">{isRTL ? t.unit_ar : t.unit_en}</span>
+                  </div>
+                  <ul className="space-y-2.5 mb-6 flex-1">
+                    {t.features.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                        <span className="text-foreground/85">{isRTL ? f.ar : f.en}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    asChild
+                    variant={popular ? 'default' : 'outline'}
+                    className="h-11 w-full"
+                    onClick={() => { track({ event_type: 'cta_click', section: 'tiers', cta_id: t.key }); gtmTrack.providerSignupStart({}); }}
+                  >
+                    <Link to={t.key === 'enterprise' ? '/contact' : '/auth?mode=signup&role=provider'}>
+                      {t.key === 'enterprise'
+                        ? (isRTL ? 'تواصل مع المبيعات' : 'Contact sales')
+                        : (isRTL ? 'ابدأ الآن' : 'Get started')}
+                    </Link>
+                  </Button>
+                </Card>
+              );
+            })}
+          </div>
+
+          <div className="text-center">
           <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-success/15 via-success/10 to-transparent border border-success/30 text-success text-xs md:text-sm font-medium">
             <Gift className="w-4 h-4" />
             {isRTL ? 'عرض الإطلاق: 90 يومًا مجانًا على باقة الاحتراف للجهات الجديدة' : 'Launch offer: 90 days free on Pro plan for new businesses'}
           </div>
-          <Badge variant="outline" className="mb-3">{isRTL ? 'العضويات' : 'Memberships'}</Badge>
-          <h2 className="text-2xl md:text-4xl font-bold mb-3">{isRTL ? 'ابدأ مجاناً، وطوّر عضويتك مع نمو جهتك' : 'Start free, upgrade as your business grows'}</h2>
-          <p className="text-muted-foreground mb-7">
-            {isRTL ? 'خطط مرنة تناسب جميع جهات قطاع البناء والصناعات الخفيفة، بدون التزام سنوي وبدون عمولة على المشاريع.' : 'Flexible plans for every business in construction and light industry — no annual lock-in, no project commission.'}
-          </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-7"
               onClick={() => track({ event_type: 'cta_click', section: 'pricing', cta_id: 'view_plans' })}>
-              <Link to="/membership">{isRTL ? 'استعرض الخطط' : 'View plans'} <ArrowFwd className="w-4 h-4 ms-2" /></Link>
+              <Link to="/membership">{isRTL ? 'استعرض كل الخطط بالتفصيل' : 'View full plan details'} <ArrowFwd className="w-4 h-4 ms-2" /></Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="h-12 px-7"
-              onClick={() => { track({ event_type: 'cta_click', section: 'pricing', cta_id: 'start_free' }); gtmTrack.providerSignupStart({}); }}>
-              <Link to="/auth?mode=signup&role=provider">{isRTL ? 'ابدأ مجاناً' : 'Start free'}</Link>
-            </Button>
+          </div>
           </div>
         </div>
       </section>
