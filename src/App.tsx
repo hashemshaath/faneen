@@ -82,6 +82,7 @@ const DashboardWarranties = lazyRetry(() => import("./pages/dashboard/DashboardW
 const DashboardInstallments = lazyRetry(() => import("./pages/dashboard/DashboardInstallments"));
 const DashboardSettings = lazyRetry(() => import("./pages/dashboard/DashboardSettings"));
 const DashboardStaffCenter = lazyRetry(() => import("./pages/dashboard/DashboardStaffCenter"));
+const DashboardTeamAccess = lazyRetry(() => import("./pages/dashboard/DashboardTeamAccess"));
 const DashboardNoAccess = lazyRetry(() => import("./pages/dashboard/DashboardNoAccess"));
 const DashboardProfile = lazyRetry(() => import("./pages/dashboard/DashboardProfile"));
 const DashboardPromotions = lazyRetry(() => import("./pages/dashboard/DashboardPromotions"));
@@ -329,6 +330,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/bookings" element={<ProtectedRoute><DashboardBookings /></ProtectedRoute>} />
           <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
           <Route path="/dashboard/settings/staff" element={<ProtectedRoute><DashboardStaffCenter /></ProtectedRoute>} />
+          <Route path="/dashboard/settings/staff-access" element={<ProtectedRoute><DashboardTeamAccess /></ProtectedRoute>} />
           <Route path="/dashboard/no-access" element={<ProtectedRoute><DashboardNoAccess /></ProtectedRoute>} />
           <Route path="/dashboard/profile" element={<ProtectedRoute><DashboardProfile /></ProtectedRoute>} />
           <Route path="/dashboard/business-completion" element={<ProtectedRoute><DashboardBusinessCompletion /></ProtectedRoute>} />
