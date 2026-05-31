@@ -47,6 +47,19 @@ export interface EffectiveVisibility {
   source: 'core' | 'user' | 'account_type' | 'global_default' | 'module_default';
 }
 
+export interface SystemModuleAuditEntry {
+  id: string;
+  action: 'grant' | 'revoke' | 'reset' | 'update';
+  module_key: string;
+  scope_type: ScopeType;
+  scope_value: string | null;
+  previous_enabled: boolean | null;
+  new_enabled: boolean | null;
+  reason: string | null;
+  actor: string | null;
+  created_at: string;
+}
+
 export async function listSystemModules(): Promise<SystemModule[]> {
   const { data, error } = await (supabase as any)
     .from('system_modules')
@@ -101,4 +114,14 @@ export async function getUserVisibleModules(userId: string): Promise<EffectiveVi
   });
   if (error) throw error;
   return (data ?? []) as EffectiveVisibility[];
+}
+
+export async function listAuditLog(limit = 100): Promise<SystemModuleAuditEntry[]> {
+  const { data, error } = await (supabase as any)
+    .from('system_module_audit_log')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as SystemModuleAuditEntry[];
 }
