@@ -9,10 +9,11 @@
  * - UI-only hint; RLS + `has_permission` on the server remain authoritative.
  */
 import React, { useMemo, useState } from 'react';
-import { Check, RotateCcw, Save, ShieldCheck } from 'lucide-react';
+import { Check, Pin, RotateCcw, Save, Search, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { pickBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -57,6 +58,15 @@ function groupByDomain(perms: readonly string[]): Record<string, string[]> {
   return groups;
 }
 
+// Pinned domains surface at the top of the matrix for quick access.
+const PINNED_DOMAINS = ['contracts', 'payments', 'leads'] as const;
+
+function sortDomains(domains: string[]): string[] {
+  const pinned = PINNED_DOMAINS.filter((d) => domains.includes(d));
+  const rest = domains.filter((d) => !pinned.includes(d as typeof PINNED_DOMAINS[number]));
+  return [...pinned, ...rest];
+}
+
 function sameSet(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
   const sa = new Set(a);
@@ -92,6 +102,7 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
   const [selected, setSelected] = useState<Set<string>>(new Set(initial));
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [query, setQuery] = useState('');
 
   const toggle = (p: string) => {
     if (!canEdit || isPrimaryManager) return;
@@ -132,6 +143,29 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
   const totalSelected = selected.size;
   const totalAvailable = WORKSPACE_PERMISSIONS.length;
 
+  const matches = (domain: string, perm: string): boolean => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    const action = perm.split('.')[1] ?? '';
+    const haystack = [
+      perm,
+      domain,
+      action,
+      DOMAIN_LABELS[domain]?.ar ?? '',
+      DOMAIN_LABELS[domain]?.en ?? '',
+      ACTION_LABELS[action]?.ar ?? '',
+      ACTION_LABELS[action]?.en ?? '',
+    ].join(' ').toLowerCase();
+    return haystack.includes(q);
+  };
+
+  const visibleDomains = useMemo(() => {
+    const ordered = sortDomains(Object.keys(grouped));
+    return ordered
+      .map((d) => ({ domain: d, perms: grouped[d].filter((p) => matches(d, p)) }))
+      .filter((g) => g.perms.length > 0);
+  }, [grouped, query]);
+
   return (
     <div className="mt-2 border-t border-border/40 pt-2">
       <button
@@ -161,10 +195,25 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
               {pickBi(isRTL, 'المدير الرئيسي يملك جميع الصلاحيات تلقائيًا.', 'Primary manager has all permissions by default.')}
             </p>
           )}
+          <div className="relative">
+            <Search className="absolute top-1/2 -translate-y-1/2 start-2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={pickBi(isRTL, 'ابحث في الصلاحيات...', 'Search permissions...')}
+              className="h-8 ps-7 text-[11px]"
+            />
+          </div>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {Object.entries(grouped).map(([domain, perms]) => (
-              <div key={domain} className="rounded-lg border border-border/40 p-2.5 bg-muted/20">
-                <p className="text-[11px] font-semibold mb-1.5">
+            {visibleDomains.map(({ domain, perms }) => {
+              const isPinned = (PINNED_DOMAINS as readonly string[]).includes(domain);
+              return (
+              <div
+                key={domain}
+                className={`rounded-lg border p-2.5 ${isPinned ? 'border-primary/40 bg-primary/5' : 'border-border/40 bg-muted/20'}`}
+              >
+                <p className="text-[11px] font-semibold mb-1.5 flex items-center gap-1.5">
+                  {isPinned && <Pin className="w-3 h-3 text-primary" />}
                   {pickBi(isRTL, DOMAIN_LABELS[domain]?.ar ?? domain, DOMAIN_LABELS[domain]?.en ?? domain)}
                 </p>
                 <div className="space-y-1">
@@ -197,7 +246,13 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
                   })}
                 </div>
               </div>
-            ))}
+              );
+            })}
+            {visibleDomains.length === 0 && (
+              <p className="text-[11px] text-muted-foreground col-span-full text-center py-4">
+                {pickBi(isRTL, 'لا توجد نتائج مطابقة', 'No matching permissions')}
+              </p>
+            )}
           </div>
           {canEdit && !isPrimaryManager && (
             <div className="flex justify-end gap-2 pt-1">
