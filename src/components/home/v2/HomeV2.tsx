@@ -585,9 +585,9 @@ export const HeroV2 = () => {
                   alt=""
                   width={1920}
                   height={1080}
-                  fetchPriority={i === 0 ? 'high' : 'low'}
                   loading={i === 0 ? 'eager' : 'lazy'}
                   decoding="async"
+                  {...{ fetchpriority: i === 0 ? 'high' : 'low' }}
                   className={`absolute inset-0 w-full h-full object-cover ease-out ${
                     reducedMotion ? '' : 'transition-opacity duration-[1100ms]'
                   } ${i === active ? 'opacity-100' : 'opacity-0'}`}
