@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Building2, ArrowLeft, User, ShieldCheck, MapPin, Tag, Users,
-  ExternalLink, UserPlus, Trash2, Crown, Library,
+  ExternalLink, UserPlus, Trash2, Crown, Library, Copy, Check,
+  Search, Activity, Sparkles, ArrowRightLeft, Phone, Mail,
+  CheckCircle2, AlertCircle,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { pickBi } from '@/components/common/Bilingual';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -26,6 +30,7 @@ import { getProfileByUserId } from '@/modules/users/services/getProfileByUserId'
 import { listBranchesByBusiness } from '@/modules/catalog';
 import { supabase } from '@/integrations/supabase/client';
 import { StaffPermissionsMatrix } from '@/components/dashboard/entities/StaffPermissionsMatrix';
+import { useTransferPrimaryManagerMutation } from '@/hooks/useTransferPrimaryManagerMutation';
 
 interface BizDetail {
   id: string;
