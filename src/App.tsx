@@ -25,14 +25,28 @@ function lazyRetry<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T }>,
 ): React.LazyExoticComponent<T> {
   return lazy(() =>
-    factory().catch(() => {
+    factory().catch((err) => {
+      const msg = String(err?.message ?? err ?? '');
+      const isChunkError =
+        /Importing a module script failed|Failed to fetch dynamically imported module|Loading chunk|ChunkLoadError|error loading dynamically imported module/i.test(
+          msg,
+        );
+      if (!isChunkError) throw err;
       const key = 'lazy-retry-reloaded';
-      if (!sessionStorage.getItem(key)) {
-        sessionStorage.setItem(key, '1');
-        window.location.reload();
+      try {
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, '1');
+          window.location.reload();
+          // Suspend forever while the reload happens so React/ErrorBoundary
+          // never sees the failure UI flash.
+          return new Promise<{ default: T }>(() => {});
+        }
+      } catch {
+        /* storage may be blocked */
       }
+      // Second attempt after a reload — retry once more, then surface.
       return factory();
-    })
+    }),
   );
 }
 
