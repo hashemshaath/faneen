@@ -5,7 +5,7 @@ import * as Icons from 'lucide-react';
 import {
   Star, ArrowLeft, ArrowRight, CheckCircle2, XCircle, Sparkles,
   TrendingUp, ShieldCheck, Zap, Clock, Award, BadgeCheck,
-  Factory, Store, Wrench, Quote, HardHat, Truck, Compass, Settings2,
+  Factory, Store, Quote, HardHat, Truck, Compass, Settings2, Layers3,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -34,10 +34,10 @@ const AUDIENCES = [
   { key: 'factories',   icon: Factory,  ar: 'مصانع',          en: 'Factories',         desc_ar: 'اعرض خطوط الإنتاج والمواصفات الفنية، واستقبل طلبات المقاولين والاستشاريين والمشاريع الكبرى مباشرة.', desc_en: 'Showcase production lines and specs; receive direct demand from contractors, consultants and large projects.' },
   { key: 'contractors', icon: HardHat,  ar: 'مقاولون',        en: 'Contractors',       desc_ar: 'ابنِ ملفًا تنفيذيًا موثّقًا بالخبرات والمشاريع، وشارك في عروض الأسعار وفرص التنفيذ المناسبة لتخصصك.', desc_en: 'Build a verified execution profile, join RFQs and unlock projects that match your scope.' },
   { key: 'suppliers',   icon: Truck,    ar: 'موردون',         en: 'Suppliers',         desc_ar: 'صنّف منتجاتك وعلاماتك التجارية، واستقبل طلبات توريد منظّمة (RFQ) من مقاولين ومشاريع جاهزة للشراء.', desc_en: 'Classify products and brands; receive structured RFQs from contractors ready to purchase.' },
-  { key: 'workshops',   icon: Wrench,   ar: 'ورش',            en: 'Workshops',         desc_ar: 'أبرز تخصصك التقني وأعمالك السابقة، وحوّل الطلبات المخصّصة إلى عقود وفواتير منظّمة.', desc_en: 'Highlight your technical specialty and past work; convert custom jobs into structured contracts.' },
   { key: 'showrooms',   icon: Store,    ar: 'معارض',          en: 'Showrooms',         desc_ar: 'اعرض الكتالوجات والأنظمة بصور احترافية، واربط منتجاتك بالعلامات التجارية لطلبات تسعير فورية.', desc_en: 'Display catalogs and systems with rich media; link products to brands for instant quote requests.' },
   { key: 'engineering', icon: Compass,  ar: 'مكاتب هندسية',   en: 'Engineering Offices', desc_ar: 'كن جزءًا من منظومة البناء: استشارات، تصاميم، ومواصفات يصل إليها المطورون والمقاولون والمصانع.', desc_en: 'Position your office inside the construction ecosystem — reachable by developers, contractors and factories.' },
   { key: 'install',     icon: Settings2,ar: 'تركيب وصيانة',   en: 'Install & Maintenance', desc_ar: 'استقبل طلبات التركيب والصيانة والتشطيب حسب القطاع والمدينة، بتسعير وعقود واضحة.', desc_en: 'Receive installation, maintenance and finishing requests by sector and city, with clear quotes and contracts.' },
+  { key: 'developers',  icon: Layers3,  ar: 'مطورون عقاريون', en: 'Real-estate Developers', desc_ar: 'أدر منظومة الموردين والمقاولين على مشاريعك، مع عروض أسعار وعقود وفواتير منظّمة في مكان واحد.', desc_en: 'Manage your supplier and contractor ecosystem with RFQs, structured contracts and invoices in one place.' },
 ];
 
 const SECTORS = [
@@ -111,8 +111,8 @@ const ForProviders = () => {
       : 'Register on Qitaat — Construction, Supply & Light Industry Platform');
   const seoDesc = pick(settings?.seo_desc_ar, settings?.seo_desc_en) ||
     (isRTL
-      ? 'قِطاعات تربط المصانع والمقاولين والموردين والورش والمعارض والمكاتب الهندسية ومزودي التركيب والصيانة بمشاريع البناء والتشييد، عبر ملف مهني قابل للتصنيف، طلبات منظّمة، عروض أسعار، وعقود نظامية.'
-      : 'Qitaat connects factories, contractors, suppliers, workshops, showrooms, engineering offices and installation teams with construction projects — through classifiable profiles, structured requests, RFQs and compliant contracts.');
+      ? 'منصة شاملة لجميع جهات قطاع البناء والتشييد والصناعات الخفيفة — ملف مهني قابل للتصنيف، طلبات منظّمة، عروض أسعار، وعقود نظامية تربط جهتك بمشاريع حقيقية.'
+      : 'A comprehensive platform for every business in construction and light industry — classifiable profiles, structured requests, RFQs, and compliant contracts that connect you to real projects.');
 
   usePageMeta({
     title: seoTitle,
@@ -128,7 +128,7 @@ const ForProviders = () => {
       { '@context': 'https://schema.org', '@type': 'WebPage', name: seoTitle, description: seoDesc, url: 'https://qitaat.com/for-providers', inLanguage: isRTL ? 'ar' : 'en' },
       {
         '@context': 'https://schema.org', '@type': 'Service',
-        name: isRTL ? 'منصة قِطاعات للمصانع والمعارض والورش' : 'Qitaat Platform for Factories, Showrooms & Workshops',
+        name: isRTL ? 'منصة قِطاعات لقطاع البناء والصناعات الخفيفة' : 'Qitaat Platform for Construction & Light Industry',
         description: seoDesc,
         provider: { '@type': 'Organization', name: 'Qitaat قِطاعات', url: 'https://qitaat.com' },
         serviceType: isRTL ? 'منصة دليل أعمال صناعية' : 'Industrial Business Directory',
@@ -191,8 +191,8 @@ const ForProviders = () => {
             </h1>
             <p className="text-base md:text-lg text-muted-foreground mb-7 max-w-2xl mx-auto leading-relaxed">
               {pick(hero?.subtitle_ar, hero?.subtitle_en) || (isRTL
-                ? 'مصنع، مقاول، مورد، ورشة، معرض، مكتب هندسي، أو مزود تركيب وصيانة — سجّل جهتك واحصل على ظهور قابل للبحث والتصنيف، واستقبل طلبات وعروض أسعار حقيقية.'
-                : 'Factory, contractor, supplier, workshop, showroom, engineering office or installer — register your business, get searchable visibility, and receive real requests and RFQs.')}
+                ? 'منصة شاملة لجميع جهات قطاع البناء والتشييد والصناعات الخفيفة — سجّل جهتك واحصل على ظهور قابل للبحث والتصنيف، واستقبل طلبات وعروض أسعار حقيقية.'
+                : 'A comprehensive platform for every business in construction and light industry — register, get searchable visibility, and receive real requests and RFQs.')}
             </p>
 
             {/* Audience switcher */}
@@ -259,6 +259,21 @@ const ForProviders = () => {
                 );
               })}
             </div>
+
+            {/* Hero showcase image (admin-controlled) */}
+            {hero?.image_url && (
+              <div className="mt-10 md:mt-14 max-w-5xl mx-auto">
+                <div className="relative rounded-3xl overflow-hidden border border-border/40 shadow-2xl bg-card aspect-[16/9]">
+                  <img
+                    src={hero.image_url}
+                    alt={pick(hero.title_ar, hero.title_en) || 'Qitaat'}
+                    className="w-full h-full object-cover"
+                    loading="eager"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent" />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -305,6 +320,11 @@ const ForProviders = () => {
             <h2 className="text-2xl md:text-4xl font-bold mb-3">{pick(why?.title_ar, why?.title_en) || (isRTL ? 'أكثر من مجرد دليل — شريك نموّ' : 'More than a directory — a growth partner')}</h2>
             <p className="text-muted-foreground">{pick(why?.subtitle_ar, why?.subtitle_en) || (isRTL ? 'أربعة أعمدة تجعل قرارك بالانضمام واضحاً' : 'Four pillars that make joining an easy decision')}</p>
           </div>
+          {why?.image_url && (
+            <div className="max-w-4xl mx-auto mb-10 rounded-2xl overflow-hidden border border-border/40 shadow-lg aspect-[21/9]">
+              <img src={why.image_url} alt={pick(why.title_ar, why.title_en) || ''} className="w-full h-full object-cover" loading="lazy" />
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {VALUE_PILLARS.map((p, i) => {
               const Icon = p.icon;
@@ -333,6 +353,11 @@ const ForProviders = () => {
             <h2 className="text-2xl md:text-4xl font-bold mb-3">{pick(how?.title_ar, how?.title_en) || (isRTL ? 'من التسجيل إلى أول مشروع' : 'From signup to your first project')}</h2>
             <p className="text-muted-foreground">{pick(how?.subtitle_ar, how?.subtitle_en) || (isRTL ? 'بدون تعقيد — كل شيء مرشد بالعربية' : 'No complexity — fully Arabic-guided')}</p>
           </div>
+          {how?.image_url && (
+            <div className="max-w-4xl mx-auto mb-10 rounded-2xl overflow-hidden border border-border/40 shadow-lg aspect-[21/9]">
+              <img src={how.image_url} alt={pick(how.title_ar, how.title_en) || ''} className="w-full h-full object-cover" loading="lazy" />
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
             {STEPS.map((s, i) => (
               <Card key={i} className="p-5 md:p-6 h-full text-center hover-lift relative">
@@ -474,7 +499,7 @@ const ForProviders = () => {
           <Badge variant="outline" className="mb-3">{isRTL ? 'العضويات' : 'Memberships'}</Badge>
           <h2 className="text-2xl md:text-4xl font-bold mb-3">{isRTL ? 'ابدأ مجاناً، وطوّر عضويتك مع نمو جهتك' : 'Start free, upgrade as your business grows'}</h2>
           <p className="text-muted-foreground mb-7">
-            {isRTL ? 'خطط مرنة تناسب المصانع والمقاولين والموردين والورش والمعارض والمكاتب الهندسية، بدون التزام سنوي وبدون عمولة على المشاريع.' : 'Flexible plans for factories, contractors, suppliers, workshops, showrooms and engineering offices — no annual lock-in, no project commission.'}
+            {isRTL ? 'خطط مرنة تناسب جميع جهات قطاع البناء والصناعات الخفيفة، بدون التزام سنوي وبدون عمولة على المشاريع.' : 'Flexible plans for every business in construction and light industry — no annual lock-in, no project commission.'}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-7"
@@ -517,6 +542,11 @@ const ForProviders = () => {
       {/* FINAL CTA */}
       <section className="py-16 md:py-24 relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary via-primary to-primary/80" />
+        {finalCta?.image_url && (
+          <div className="absolute inset-0 -z-20">
+            <img src={finalCta.image_url} alt="" className="w-full h-full object-cover opacity-30" loading="lazy" />
+          </div>
+        )}
         <div className="absolute inset-0 -z-10 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20% 30%, hsl(var(--primary-foreground)/0.3) 0, transparent 50%), radial-gradient(circle at 80% 70%, hsl(var(--primary-foreground)/0.2) 0, transparent 50%)' }} />
         <div className="container mx-auto px-4 text-center text-primary-foreground">
           <Badge variant="secondary" className="mb-4 bg-primary-foreground/15 text-primary-foreground border-0 backdrop-blur">
