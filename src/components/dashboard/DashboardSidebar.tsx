@@ -17,6 +17,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { canViewWorkspaceRoute } from '@/modules/workspace/permissions/routePermissions';
+import { useVisibleModules } from '@/hooks/useVisibleModules';
 import { Separator } from '@/components/ui/separator';
 import { SidebarBrand } from '@/components/dashboard/navigation/SidebarBrand';
 import { SidebarQuickCreate } from '@/components/dashboard/navigation/SidebarQuickCreate';
@@ -445,13 +446,16 @@ const RenderGroups: React.FC<{
   pathname: string;
   isAdmin?: boolean;
   workspace?: { active_role: string | null; permissions: string[] } | null;
-}> = ({ groups, collapsed, isRTL, closeMobile, isSuperAdmin = false, pathname, isAdmin = false, workspace = null }) => {
+  isRouteHidden?: (path: string) => boolean;
+}> = ({ groups, collapsed, isRTL, closeMobile, isSuperAdmin = false, pathname, isAdmin = false, workspace = null, isRouteHidden }) => {
   // ORG-RBAC-STRUCTURE-1 — Phase D
   // Centralized visibility: admin override always wins; owner short-circuits;
   // unmapped routes fall through to legacy (visible) behavior. RLS remains
   // authoritative on the server.
-  const canView = (url: string): boolean =>
-    canViewWorkspaceRoute(url, { workspace, isAdmin: isAdmin || isSuperAdmin });
+  const canView = (url: string): boolean => {
+    if (isRouteHidden && isRouteHidden(url)) return false;
+    return canViewWorkspaceRoute(url, { workspace, isAdmin: isAdmin || isSuperAdmin });
+  };
   // Compute best-match across ALL visible items in ALL groups, then
   // pass it down. This prevents two sidebar entries (e.g. "Work Orders"
   // and "Operations Overview") from both highlighting on a nested route.
