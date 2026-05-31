@@ -607,6 +607,12 @@ const ForProviders = () => {
         </div>
       </section>
 
+      {/* LIVE ACTIVITY TICKER */}
+      <LiveTicker isRTL={isRTL} businesses={stats?.businessCount ?? 0} />
+
+      {/* STICKY SECTION SUB-NAV */}
+      <SectionSubNav isRTL={isRTL} />
+
       {/* AUDIENCE DEEP DIVE */}
       <section className="py-12 md:py-16 border-y border-border/40 bg-muted/20">
         <div className="container mx-auto px-4">
@@ -642,7 +648,7 @@ const ForProviders = () => {
       </section>
 
       {/* VALUE PILLARS */}
-      <section className="py-14 md:py-20">
+      <section id="why" className="py-14 md:py-20 scroll-mt-32">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-10">
             <Badge variant="outline" className="mb-3">{isRTL ? 'لماذا قِطاعات' : 'Why Qitaat'}</Badge>
@@ -681,7 +687,7 @@ const ForProviders = () => {
       </section>
 
       {/* ROI CALCULATOR */}
-      <section className="py-14 md:py-20 bg-muted/20 border-y border-border/40">
+      <section id="roi" className="py-14 md:py-20 bg-muted/20 border-y border-border/40 scroll-mt-32">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="text-center max-w-2xl mx-auto mb-8">
             <Badge variant="outline" className="mb-3 inline-flex items-center gap-1.5">
@@ -700,7 +706,7 @@ const ForProviders = () => {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" className="py-14 md:py-20 bg-muted/20">
+      <section id="how-it-works" className="py-14 md:py-20 bg-muted/20 scroll-mt-32">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-10">
             <Badge variant="outline" className="mb-3">{isRTL ? 'بأربع خطوات' : 'In four steps'}</Badge>
@@ -814,7 +820,7 @@ const ForProviders = () => {
 
       {/* FEATURES */}
       {features.length > 0 && (
-        <section className="py-14 md:py-20 bg-muted/20">
+        <section id="capabilities" className="py-14 md:py-20 bg-muted/20 scroll-mt-32">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-2xl mx-auto mb-10">
               <Badge variant="outline" className="mb-3">{isRTL ? 'الأدوات' : 'The toolkit'}</Badge>
@@ -904,7 +910,7 @@ const ForProviders = () => {
       )}
 
       {/* PRICING TEASER */}
-      <section className="py-14 md:py-20">
+      <section id="pricing" className="py-14 md:py-20 scroll-mt-32">
         <div className="container mx-auto px-4 max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-success/15 via-success/10 to-transparent border border-success/30 text-success text-xs md:text-sm font-medium">
             <Gift className="w-4 h-4" />
@@ -930,7 +936,7 @@ const ForProviders = () => {
 
       {/* FAQ */}
       {faq.length > 0 && (
-        <section className="py-14 md:py-20 bg-muted/20">
+        <section id="faq" className="py-14 md:py-20 bg-muted/20 scroll-mt-32">
           <div className="container mx-auto px-4 max-w-3xl">
             <div className="text-center mb-10">
               <Badge variant="outline" className="mb-3">{isRTL ? 'استفسارات' : 'FAQ'}</Badge>
