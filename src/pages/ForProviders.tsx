@@ -7,6 +7,8 @@ import {
   TrendingUp, ShieldCheck, Zap, Clock, Award, BadgeCheck,
   Factory, Store, Quote, HardHat, Truck, Compass, Settings2, Layers3,
   Calculator, Gift, Rocket,
+  Lock, FileBadge, MapPin, Globe2, Headphones, Activity,
+  Crown, MessageSquare, FileText, Receipt,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -93,6 +95,65 @@ const ONBOARDING_CHECKLIST = [
   { ar: 'ربط العلامات التجارية والكتالوجات',     en: 'Link brands & product catalogs',         mins: 5 },
   { ar: 'تفعيل استقبال طلبات التسعير (RFQ)',     en: 'Enable RFQ inbox',                       mins: 1 },
   { ar: 'نشر الملف ومشاركة الرابط الاحترافي',    en: 'Publish profile & share your pro link',  mins: 1 },
+];
+
+/** Compliance & trust pillars — Saudi-market specific. */
+const TRUST_PILLARS = [
+  { icon: Lock,      ar: 'بياناتك مشفّرة SSL',         en: 'SSL-encrypted data' },
+  { icon: ShieldCheck,ar: 'متوافق مع نظام حماية البيانات (PDPL)', en: 'PDPL-compliant' },
+  { icon: FileBadge, ar: 'فواتير وعقود بضريبة 15%',    en: 'VAT-compliant invoices & contracts' },
+  { icon: MapPin,    ar: 'استضافة في المنطقة',         en: 'Regionally hosted' },
+  { icon: Globe2,    ar: 'دعم عربي/إنجليزي',           en: 'Arabic & English' },
+  { icon: Headphones,ar: 'دعم بشري حقيقي',             en: 'Real human support' },
+];
+
+/** Membership tier preview — high-level only, full plans on /membership. */
+const TIERS = [
+  {
+    key: 'free', icon: Sparkles,
+    name_ar: 'مجاني',     name_en: 'Free',
+    tag_ar: 'للبدء',      tag_en: 'To get started',
+    price_ar: '0',        price_en: '0',  unit_ar: 'ريال/شهر', unit_en: 'SAR/mo',
+    features: [
+      { ar: 'ملف جهة كامل', en: 'Full business profile' },
+      { ar: 'ظهور في نتائج البحث', en: 'Search-page visibility' },
+      { ar: 'استقبال محدود لعروض الأسعار', en: 'Limited RFQ inbox' },
+    ],
+  },
+  {
+    key: 'pro', icon: TrendingUp, popular: true,
+    name_ar: 'الاحتراف',  name_en: 'Pro',
+    tag_ar: 'الأكثر اختياراً', tag_en: 'Most popular',
+    price_ar: '٩٩',       price_en: '99', unit_ar: 'ريال/شهر', unit_en: 'SAR/mo',
+    features: [
+      { ar: 'كل مزايا المجاني',           en: 'Everything in Free' },
+      { ar: 'عروض أسعار وعقود غير محدودة', en: 'Unlimited RFQs & contracts' },
+      { ar: 'شارة موثّق وأولوية في النتائج', en: 'Verified badge & search priority' },
+      { ar: 'تحليلات أداء الملف',         en: 'Profile analytics' },
+    ],
+  },
+  {
+    key: 'enterprise', icon: Crown,
+    name_ar: 'المنشآت',   name_en: 'Enterprise',
+    tag_ar: 'للمصانع والمطورين', tag_en: 'For factories & developers',
+    price_ar: '٢٩٩',      price_en: '299', unit_ar: 'ريال/شهر', unit_en: 'SAR/mo',
+    features: [
+      { ar: 'كل مزايا الاحتراف',          en: 'Everything in Pro' },
+      { ar: 'فروع وفرق متعددة',           en: 'Multi-branch & team seats' },
+      { ar: 'تكامل API ومدير حساب مخصص',  en: 'API integration & dedicated CSM' },
+      { ar: 'تقارير وتحليلات متقدمة',     en: 'Advanced reports & analytics' },
+    ],
+  },
+];
+
+/** Integrated capabilities row — what they get out of the box. */
+const CAPABILITIES = [
+  { icon: MessageSquare, ar: 'محادثات WhatsApp مدمجة', en: 'Built-in WhatsApp chats' },
+  { icon: Receipt,       ar: 'فواتير ضريبية تلقائية',  en: 'Auto VAT e-invoices' },
+  { icon: FileText,      ar: 'عقود PDF احترافية',      en: 'Professional PDF contracts' },
+  { icon: MapPin,        ar: 'خرائط ومناطق خدمة',     en: 'Maps & service areas' },
+  { icon: Calculator,    ar: 'حاسبات تسعير ومقاسات',  en: 'Pricing & measurement calculators' },
+  { icon: Activity,      ar: 'تتبّع حالة الطلب لحظياً', en: 'Real-time request tracking' },
 ];
 
 /** Animated number that counts up when scrolled into view. */
