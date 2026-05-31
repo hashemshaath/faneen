@@ -275,10 +275,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                 <ThemeToggle />
                 <NotificationBell />
 
-                <DropdownMenu>
+                <DropdownMenu dir={isRTL ? 'rtl' : 'ltr'}>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="group flex items-center gap-2.5 rounded-full border border-border/40 bg-card/60 py-1 pe-2.5 sm:pe-3.5 ps-1 hover:bg-card hover:border-border/70 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      className={`group flex items-center gap-2.5 rounded-full border border-border/40 bg-card/60 py-1 pe-2.5 sm:pe-3.5 ps-1 hover:bg-card hover:border-border/70 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 ${isRTL ? '' : 'font-sans tracking-tight'}`}
                       aria-label={isRTL ? 'قائمة حسابي الشخصي' : 'My personal account menu'}
                     >
                       <div className="relative">
@@ -306,7 +306,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                     </button>
                   </DropdownMenuTrigger>
 
-                  <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-80 p-0 overflow-hidden rounded-2xl shadow-xl border-border/50" sideOffset={10}>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={10}
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                    className={`w-80 p-0 overflow-hidden rounded-2xl shadow-xl border-border/50 ${isRTL ? '' : 'font-sans tracking-tight'}`}
+                  >
                     {/* Profile header */}
                     <div className="relative p-4 border-b border-border/30 bg-gradient-to-br from-primary/[0.06] via-card to-accent/[0.04]">
                       <div className="flex items-center gap-3">
