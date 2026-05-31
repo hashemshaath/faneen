@@ -117,6 +117,7 @@ const AdminSystemAccess: React.FC = () => {
     mutationFn: setModuleOverride,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
+      qc.invalidateQueries({ queryKey: ['system-access'] });
       toast.success(isRTL ? 'تم حفظ التغيير' : 'Saved');
     },
     onError: (e: unknown) => {
@@ -129,6 +130,7 @@ const AdminSystemAccess: React.FC = () => {
     mutationFn: clearModuleOverride,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
+      qc.invalidateQueries({ queryKey: ['system-access'] });
       toast.success(isRTL ? 'تم إعادة التعيين للافتراضي' : 'Reset to default');
     },
     onError: (e: unknown) => {
