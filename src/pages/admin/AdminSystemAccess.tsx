@@ -14,7 +14,7 @@ import {
   Layers, Search, Globe, Users as UsersIcon, User as UserIcon,
   ShieldCheck, Lock, Eye, EyeOff, Sparkles, Filter, Loader2,
   AlertTriangle, RotateCcw, Info, ArrowLeft, History, Settings2,
-  Check, X as XIcon, Pencil,
+  Check, X as XIcon, Pencil, Building2,
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
@@ -29,10 +29,11 @@ import {
   type SystemModuleAuditEntry,
 } from '@/modules/systemAccess';
 import { listProfiles } from '@/modules/users';
+import { supabase } from '@/integrations/supabase/client';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-type ScopeTab = 'global' | 'account_type' | 'user';
+type ScopeTab = 'global' | 'account_type' | 'entity' | 'user';
 type ViewTab = 'manage' | 'audit';
 
 const ACCOUNT_TYPES = ['provider', 'client', 'individual'] as const;
@@ -61,6 +62,8 @@ const AdminSystemAccess: React.FC = () => {
   const [accountType, setAccountType] = useState<AccountType>('provider');
   const [userSearch, setUserSearch] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [entitySearch, setEntitySearch] = useState('');
+  const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'enabled' | 'disabled' | 'overridden'>('all');
   const [search, setSearch] = useState('');
 
@@ -93,6 +96,23 @@ const AdminSystemAccess: React.FC = () => {
     enabled: scopeTab === 'user',
   });
 
+  const entitiesQuery = useQuery({
+    queryKey: ['system-access-entities'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('businesses')
+        .select('id, name_ar, name_en, ref_id, logo_url')
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string; name_ar: string | null; name_en: string | null;
+        ref_id: string | null; logo_url: string | null;
+      }>;
+    },
+    enabled: scopeTab === 'entity',
+  });
+
   const setMutation = useMutation({
     mutationFn: setModuleOverride,
     onSuccess: () => {
@@ -121,12 +141,14 @@ const AdminSystemAccess: React.FC = () => {
   const currentScopeValue: string | null = useMemo(() => {
     if (scopeTab === 'global') return null;
     if (scopeTab === 'account_type') return accountType;
+    if (scopeTab === 'entity') return selectedEntityId;
     return selectedUserId;
-  }, [scopeTab, accountType, selectedUserId]);
+  }, [scopeTab, accountType, selectedUserId, selectedEntityId]);
 
   const currentScopeType: ScopeType = useMemo(() => {
     if (scopeTab === 'global') return 'global_default';
     if (scopeTab === 'account_type') return 'account_type';
+    if (scopeTab === 'entity') return 'entity';
     return 'user';
   }, [scopeTab]);
 
@@ -178,6 +200,22 @@ const AdminSystemAccess: React.FC = () => {
     ).slice(0, 50);
   }, [usersQuery.data, userSearch]);
 
+  const filteredEntities = useMemo(() => {
+    const list = entitiesQuery.data ?? [];
+    if (!entitySearch) return list.slice(0, 60);
+    const s = entitySearch.toLowerCase();
+    return list.filter(b =>
+      (b.name_ar ?? '').toLowerCase().includes(s) ||
+      (b.name_en ?? '').toLowerCase().includes(s) ||
+      (b.ref_id ?? '').toLowerCase().includes(s),
+    ).slice(0, 60);
+  }, [entitiesQuery.data, entitySearch]);
+
+  const selectedEntity = useMemo(
+    () => (entitiesQuery.data ?? []).find(b => b.id === selectedEntityId) || null,
+    [entitiesQuery.data, selectedEntityId],
+  );
+
   const selectedUser = useMemo(
     () => (usersQuery.data ?? []).find(u => u.user_id === selectedUserId) || null,
     [usersQuery.data, selectedUserId],
@@ -196,7 +234,9 @@ const AdminSystemAccess: React.FC = () => {
 
   const canEdit = scopeTab === 'global' || scopeTab === 'account_type'
     ? true
-    : !!selectedUserId;
+    : scopeTab === 'entity'
+      ? !!selectedEntityId
+      : !!selectedUserId;
 
   const handleToggle = (m: SystemModule, nextEnabled: boolean) => {
     if (m.is_core && !nextEnabled) {
@@ -294,6 +334,8 @@ const AdminSystemAccess: React.FC = () => {
               icon={Globe} label={isRTL ? 'الافتراضي العام' : 'Global Default'} />
             <ScopeTabBtn active={scopeTab === 'account_type'} onClick={() => setScopeTab('account_type')}
               icon={UsersIcon} label={isRTL ? 'حسب نوع الحساب' : 'By Account Type'} />
+            <ScopeTabBtn active={scopeTab === 'entity'} onClick={() => { setScopeTab('entity'); setSelectedEntityId(null); }}
+              icon={Building2} label={isRTL ? 'لمنشأة محددة' : 'Per Business'} />
             <ScopeTabBtn active={scopeTab === 'user'} onClick={() => { setScopeTab('user'); setSelectedUserId(null); }}
               icon={UserIcon} label={isRTL ? 'مستخدم محدد' : 'Per User'} />
           </div>
@@ -400,6 +442,84 @@ const AdminSystemAccess: React.FC = () => {
                 className="gap-1.5">
                 <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
                 {isRTL ? 'تغيير المستخدم' : 'Change user'}
+              </Button>
+            </div>
+          )}
+
+          {scopeTab === 'entity' && !selectedEntityId && (
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '12px' }} />
+                <Input
+                  value={entitySearch}
+                  onChange={e => setEntitySearch(e.target.value)}
+                  placeholder={isRTL ? 'ابحث باسم المنشأة أو معرف ENT-...' : 'Search by business name or ENT- ID'}
+                  className="ps-10 h-11 rounded-xl"
+                />
+              </div>
+              {entitiesQuery.isLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
+                </div>
+              ) : filteredEntities.length === 0 ? (
+                <div className="text-center text-muted-foreground text-sm py-6">
+                  {isRTL ? 'لا توجد منشآت' : 'No businesses'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
+                  {filteredEntities.map(b => {
+                    const name = isRTL ? (b.name_ar || b.name_en) : (b.name_en || b.name_ar);
+                    return (
+                      <button
+                        key={b.id}
+                        onClick={() => setSelectedEntityId(b.id)}
+                        className="text-start rounded-xl border border-border/30 bg-card p-3 hover:bg-muted/40 transition-colors flex items-center gap-3"
+                      >
+                        <Avatar className="w-9 h-9 rounded-lg">
+                          <AvatarImage src={b.logo_url || undefined} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold rounded-lg">
+                            <Building2 className="w-4 h-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-sm truncate">{name || '—'}</span>
+                            <ReferenceBadge refId={b.ref_id} />
+                          </div>
+                          <div className="text-[11px] text-muted-foreground truncate tech-content">{b.id.slice(0, 8)}…</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {scopeTab === 'entity' && selectedEntityId && selectedEntity && (
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/30 p-3 border border-border/30">
+              <div className="flex items-center gap-3 min-w-0">
+                <Avatar className="w-9 h-9 rounded-lg">
+                  <AvatarImage src={selectedEntity.logo_url || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary rounded-lg">
+                    <Building2 className="w-4 h-4" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-semibold text-sm truncate">
+                      {(isRTL ? selectedEntity.name_ar : selectedEntity.name_en) || selectedEntity.name_ar || selectedEntity.name_en}
+                    </span>
+                    <ReferenceBadge refId={selectedEntity.ref_id} />
+                  </div>
+                  <div className="text-[11px] text-muted-foreground truncate">
+                    {isRTL ? 'القواعد ستُطبَّق على المنشأة وجميع موظفيها.' : 'Rules apply to this business and all its staff.'}
+                  </div>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedEntityId(null)} className="gap-1.5">
+                <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
+                {isRTL ? 'تغيير المنشأة' : 'Change business'}
               </Button>
             </div>
           )}
@@ -548,14 +668,22 @@ const AdminSystemAccess: React.FC = () => {
           )
         ) : (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-            <UserIcon className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            {scopeTab === 'entity'
+              ? <Building2 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              : <UserIcon className="w-10 h-10 text-muted-foreground mx-auto mb-3" />}
             <div className="font-semibold text-sm">
-              {isRTL ? 'اختر مستخدماً لإدارة صلاحياته' : 'Pick a user to manage their visibility'}
+              {scopeTab === 'entity'
+                ? (isRTL ? 'اختر منشأة لإدارة أنظمتها' : 'Pick a business to manage its modules')
+                : (isRTL ? 'اختر مستخدماً لإدارة صلاحياته' : 'Pick a user to manage their visibility')}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {isRTL
-                ? 'قواعد المستخدم تتفوق على قواعد نوع الحساب والافتراضي العام.'
-                : 'User rules override account-type and global defaults.'}
+              {scopeTab === 'entity'
+                ? (isRTL
+                    ? 'قواعد المنشأة تنطبق على المالك وجميع الموظفين، ويمكن تجاوزها بقواعد المستخدم.'
+                    : 'Business rules apply to the owner and all staff; per-user rules can still override them.')
+                : (isRTL
+                    ? 'قواعد المستخدم تتفوق على قواعد المنشأة ونوع الحساب والافتراضي العام.'
+                    : 'User rules override business, account-type, and global defaults.')}
             </p>
           </div>
         )}
@@ -637,6 +765,7 @@ const AuditLogPanel: React.FC<{ modules: SystemModule[] }> = ({ modules }) => {
   const scopeLabel = (e: SystemModuleAuditEntry): string => {
     if (e.scope_type === 'global_default') return isRTL ? 'افتراضي عام' : 'Global default';
     if (e.scope_type === 'account_type') return `${isRTL ? 'نوع حساب' : 'Account type'}: ${e.scope_value}`;
+    if (e.scope_type === 'entity') return `${isRTL ? 'منشأة' : 'Business'}: ${(e.scope_value ?? '').slice(0, 8)}…`;
     return `${isRTL ? 'مستخدم' : 'User'}: ${(e.scope_value ?? '').slice(0, 8)}…`;
   };
 

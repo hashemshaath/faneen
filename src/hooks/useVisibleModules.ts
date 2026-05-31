@@ -16,6 +16,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import {
   getUserVisibleModules,
   listSystemModules,
@@ -34,17 +35,19 @@ const EMPTY: EffectiveVisibility[] = [];
 
 export function useVisibleModules(): UseVisibleModulesResult {
   const { user, isAdmin, isSuperAdmin } = useAuth();
+  const ws = useActiveWorkspace();
   const userId = user?.id ?? null;
+  const entityId = ws.active_entity_id ?? null;
   const bypass = !!(isAdmin || isSuperAdmin);
 
   const visibility = useQuery({
-    queryKey: ['system-access', 'visible-modules', userId],
+    queryKey: ['system-access', 'visible-modules', userId, entityId],
     enabled: !!userId && !bypass,
     staleTime: 60_000,
     queryFn: async () => {
       if (!userId) return EMPTY;
       try {
-        return await getUserVisibleModules(userId);
+        return await getUserVisibleModules(userId, entityId);
       } catch {
         // Fail open — never block the UI on a visibility lookup error.
         return EMPTY;
