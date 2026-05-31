@@ -119,8 +119,7 @@ const providerGroups: MenuGroup[] = [
     icon: Crown,
     description: { ar: 'الاشتراكات والرصيد والأقساط', en: 'Subscriptions, credits, and installments' },
     items: [
-      { label: { ar: 'العضوية', en: 'Membership' }, url: '/membership', icon: Crown },
-      { label: { ar: 'العضوية والرصيد', en: 'Provider Membership' }, url: '/dashboard/provider/membership', icon: Crown },
+      { label: { ar: 'العضوية', en: 'Membership' }, url: '/dashboard/provider/membership', icon: Crown },
       { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
       { label: { ar: 'نقاط الولاء', en: 'Loyalty Points' }, url: '/dashboard/loyalty', icon: Star, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
       { label: { ar: 'متجر المكافآت', en: 'Reward Store' }, url: '/dashboard/loyalty/store', icon: Star, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
