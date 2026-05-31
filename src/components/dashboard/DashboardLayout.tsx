@@ -309,7 +309,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                   <DropdownMenuContent
                     align="end"
                     sideOffset={10}
-                    dir={isRTL ? 'rtl' : 'ltr'}
                     className={`w-80 p-0 overflow-hidden rounded-2xl shadow-xl border-border/50 ${isRTL ? '' : 'font-sans tracking-tight'}`}
                   >
                     {/* Profile header */}
