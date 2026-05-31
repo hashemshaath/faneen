@@ -326,7 +326,7 @@ const AppRoutes = () => (
           <Route path="/r/:refId" element={<ReferenceResolver />} />
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/for-providers" element={<ForProviders />} />
-          <Route path="/join-as-provider" element={<ForProviders />} />
+          <Route path="/join-as-provider" element={<Navigate to="/for-providers" replace />} />
 
           <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
           <Route path="/contracts/:id" element={<ProtectedRoute><ContractDetail /></ProtectedRoute>} />
