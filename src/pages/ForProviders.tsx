@@ -502,6 +502,25 @@ const ForProviders = () => {
         </div>
       </section>
 
+      {/* ROI CALCULATOR */}
+      <section className="py-14 md:py-20 bg-muted/20 border-y border-border/40">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <Badge variant="outline" className="mb-3 inline-flex items-center gap-1.5">
+              <Calculator className="w-3.5 h-3.5" />
+              {isRTL ? 'حاسبة العائد' : 'ROI calculator'}
+            </Badge>
+            <h2 className="text-2xl md:text-4xl font-bold mb-3">
+              {isRTL ? 'كم يمكن أن تنمو إيراداتك مع قِطاعات؟' : 'How much could you grow with Qitaat?'}
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground">
+              {isRTL ? 'حرّك الشرائط لتقدير قيمة المشاريع المحتملة بناءً على حجم نشاطك.' : 'Move the sliders to estimate potential project value based on your activity.'}
+            </p>
+          </div>
+          <RoiCalculator isRTL={isRTL} />
+        </div>
+      </section>
+
       {/* HOW IT WORKS */}
       <section id="how-it-works" className="py-14 md:py-20 bg-muted/20">
         <div className="container mx-auto px-4">
@@ -531,6 +550,56 @@ const ForProviders = () => {
                 <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{isRTL ? s.desc_ar : s.desc_en}</p>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ONBOARDING CHECKLIST PREVIEW */}
+      <section className="py-14 md:py-20">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-8 lg:gap-12 items-center">
+            <div>
+              <Badge variant="outline" className="mb-3 inline-flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {isRTL ? 'قائمة التهيئة' : 'Onboarding checklist'}
+              </Badge>
+              <h2 className="text-2xl md:text-4xl font-bold mb-3">
+                {isRTL ? 'ملف جاهز للإطلاق خلال 20 دقيقة' : 'A launch-ready profile in 20 minutes'}
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                {isRTL ? 'كل خطوة موجّهة بالعربية، مع حفظ تلقائي وإمكانية الإكمال لاحقاً.' : 'Every step is Arabic-guided, auto-saved, and resumable anytime.'}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild size="lg" className="h-12 px-7"
+                  onClick={() => { track({ event_type: 'cta_click', section: 'onboarding', cta_id: 'start' }); gtmTrack.providerSignupStart({}); }}>
+                  <Link to="/auth?mode=signup&role=provider">
+                    {isRTL ? 'ابدأ التهيئة' : 'Start setup'}
+                    <ArrowFwd className="w-4 h-4 ms-2" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="h-12 px-6">
+                  <a href="#how-it-works">{isRTL ? 'كيف تعمل المنصة' : 'See how it works'}</a>
+                </Button>
+              </div>
+            </div>
+            <Card className="p-5 md:p-7 border-border/50 shadow-sm">
+              <ul className="space-y-3">
+                {ONBOARDING_CHECKLIST.map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div className="shrink-0 w-7 h-7 rounded-lg bg-primary/10 text-primary grid place-items-center text-xs font-bold">
+                      {i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium">{isRTL ? item.ar : item.en}</div>
+                      <div className="text-[11px] text-muted-foreground inline-flex items-center gap-1 mt-0.5">
+                        <Clock className="w-3 h-3" /> ≈ {item.mins} {isRTL ? 'دقائق' : 'min'}
+                      </div>
+                    </div>
+                    <CheckCircle2 className="w-5 h-5 text-success/40 shrink-0 self-center" />
+                  </li>
+                ))}
+              </ul>
+            </Card>
           </div>
         </div>
       </section>
@@ -659,6 +728,10 @@ const ForProviders = () => {
       {/* PRICING TEASER */}
       <section className="py-14 md:py-20">
         <div className="container mx-auto px-4 max-w-3xl text-center">
+          <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-success/15 via-success/10 to-transparent border border-success/30 text-success text-xs md:text-sm font-medium">
+            <Gift className="w-4 h-4" />
+            {isRTL ? 'عرض الإطلاق: 90 يومًا مجانًا على باقة الاحتراف للجهات الجديدة' : 'Launch offer: 90 days free on Pro plan for new businesses'}
+          </div>
           <Badge variant="outline" className="mb-3">{isRTL ? 'العضويات' : 'Memberships'}</Badge>
           <h2 className="text-2xl md:text-4xl font-bold mb-3">{isRTL ? 'ابدأ مجاناً، وطوّر عضويتك مع نمو جهتك' : 'Start free, upgrade as your business grows'}</h2>
           <p className="text-muted-foreground mb-7">
