@@ -501,7 +501,7 @@ const ForProviders = () => {
       <Navbar />
 
       {/* HERO */}
-      <section className="relative overflow-hidden pt-8 pb-10 md:pt-14 md:pb-16">
+      <section className="relative overflow-hidden pt-20 pb-12 md:pt-28 md:pb-20">
         {/* Cover image (admin-controlled via hero.image_url) */}
         <div className="absolute inset-0 -z-20">
           <img
@@ -514,17 +514,17 @@ const ForProviders = () => {
             height={1080}
           />
         </div>
-        {/* Layered overlays for contrast */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/85 via-background/92 to-background" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/15 via-transparent to-accent/10" />
+        {/* Layered overlays — let the cover image breathe while keeping text legible */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/70 via-background/80 to-background" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
         <HeroParticles />
         <div className="container mx-auto px-4 relative">
           <div className="max-w-5xl mx-auto text-center">
-            <Badge variant="secondary" className="mb-4 px-3 py-1.5 text-xs font-medium gap-1.5 inline-flex items-center">
+            <Badge variant="secondary" className="mb-5 px-3 py-1.5 text-xs font-medium gap-1.5 inline-flex items-center backdrop-blur">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
               {isRTL ? 'منصة قطاع البناء والتشييد والصناعات الخفيفة' : 'Construction, Supply & Light Industry Platform'}
             </Badge>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.15] mb-4 bg-gradient-to-br from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.25] mb-5 max-w-4xl mx-auto bg-gradient-to-br from-foreground via-foreground to-foreground/75 bg-clip-text text-transparent">
               {pick(hero?.title_ar, hero?.title_en) || (isRTL
                 ? 'انضم لأكبر منصة لورش الألمنيوم والحديد والزجاج في السعودية والخليج'
                 : 'Join the largest platform for aluminum, steel & glass workshops in Saudi Arabia & the Gulf')}
