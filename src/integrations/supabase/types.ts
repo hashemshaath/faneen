@@ -17058,14 +17058,23 @@ export type Database = {
           role: string
         }[]
       }
-      get_user_visible_modules: {
-        Args: { _user_id: string }
-        Returns: {
-          enabled: boolean
-          module_key: string
-          source: string
-        }[]
-      }
+      get_user_visible_modules:
+        | {
+            Args: { _user_id: string }
+            Returns: {
+              enabled: boolean
+              module_key: string
+              source: string
+            }[]
+          }
+        | {
+            Args: { _entity_id?: string; _user_id: string }
+            Returns: {
+              enabled: boolean
+              module_key: string
+              source: string
+            }[]
+          }
       get_web_vitals_summary: {
         Args: { _hours?: number }
         Returns: {
@@ -17152,6 +17161,10 @@ export type Database = {
         Returns: undefined
       }
       is_business_owner: {
+        Args: { _business_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_business_owner_of: {
         Args: { _business_id: string; _user_id: string }
         Returns: boolean
       }
@@ -17413,6 +17426,48 @@ export type Database = {
       }
       normalize_barcode_code: { Args: { _code: string }; Returns: string }
       notify_expiring_memberships: { Args: never; Returns: number }
+      owner_clear_module_override: {
+        Args: { _module_key: string; _scope_type: string; _scope_value: string }
+        Returns: boolean
+      }
+      owner_employs_user: {
+        Args: { _owner_id: string; _staff_user_id: string }
+        Returns: boolean
+      }
+      owner_get_staff_visible_modules: {
+        Args: { _entity_id?: string; _staff_user_id: string }
+        Returns: {
+          enabled: boolean
+          module_key: string
+          source: string
+        }[]
+      }
+      owner_set_module_override: {
+        Args: {
+          _enabled: boolean
+          _module_key: string
+          _reason?: string
+          _scope_type: string
+          _scope_value: string
+        }
+        Returns: {
+          created_at: string
+          enabled: boolean
+          id: string
+          module_key: string
+          reason: string | null
+          scope_type: string
+          scope_value: string | null
+          set_by: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "system_module_overrides"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       prepare_contract_prefill_from_lead: {
         Args: { _lead_id: string }
         Returns: Json
