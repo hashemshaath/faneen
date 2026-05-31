@@ -91,11 +91,31 @@ const ROLES: { value: StaffRow['role']; ar: string; en: string }[] = [
 
 const DashboardEntityDetail: React.FC = () => {
   useNoIndex();
-  const { id = '' } = useParams<{ id: string }>();
+  const { id: routeParam = '' } = useParams<{ id: string }>();
   const { user, isAdmin } = useAuth();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
   const queryClient = useQueryClient();
+
+  // Route param may be a UUID or a ref_id like BIZ-1000001 / legacy_ref_id.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const isUuid = UUID_RE.test(routeParam);
+
+  const { data: resolvedId } = useQuery({
+    queryKey: ['entity-resolve-ref', routeParam],
+    queryFn: async () => {
+      const ref = routeParam.trim().toUpperCase();
+      const { data } = await supabase
+        .from('businesses')
+        .select('id')
+        .or(`ref_id.eq.${ref},legacy_ref_id.eq.${ref}`)
+        .maybeSingle();
+      return (data?.id as string | undefined) ?? null;
+    },
+    enabled: !!routeParam && !isUuid,
+  });
+
+  const id = isUuid ? routeParam : (resolvedId ?? '');
 
   const { data: biz, isLoading } = useQuery({
     queryKey: ['entity-detail', id],
