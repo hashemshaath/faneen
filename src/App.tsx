@@ -383,7 +383,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/badge" element={<ProtectedRoute requireProvider><DashboardBadge /></ProtectedRoute>} />
           <Route path="/dashboard/my-requests" element={<ProtectedRoute><DashboardMyRequests /></ProtectedRoute>} />
           <Route path="/dashboard/my-requests/:id" element={<ProtectedRoute><QuoteRequestDetails /></ProtectedRoute>} />
-          <Route path="/dashboard/provider/leads" element={<ProtectedRoute requireProvider><ProviderLeads /></ProtectedRoute>} />
+          <Route path="/dashboard/provider/leads" element={<Navigate to="/dashboard/leads?tab=quote-opportunities" replace />} />
           <Route path="/dashboard/provider/leads/:id" element={<ProtectedRoute requireProvider><ProviderLeadDetails /></ProtectedRoute>} />
           <Route path="/dashboard/provider/membership" element={<ProtectedRoute requireProvider><ProviderMembership /></ProtectedRoute>} />
           <Route path="/dashboard/provider/service-areas" element={<ProtectedRoute requireProvider><ProviderServiceAreas /></ProtectedRoute>} />
@@ -424,13 +424,15 @@ const AppRoutes = () => (
           <Route path="/admin/quote-requests/:id" element={<ProtectedRoute requireAdmin><AdminQuoteRequestDetails /></ProtectedRoute>} />
           <Route path="/admin/quote-operations" element={<ProtectedRoute requireAdmin><AdminQuoteOperations /></ProtectedRoute>} />
           <Route path="/admin/provider-subscriptions" element={<ProtectedRoute requireAdmin><AdminProviderSubscriptions /></ProtectedRoute>} />
-          <Route path="/admin/email-deliverability" element={<ProtectedRoute requireAdmin><AdminEmailDeliverability /></ProtectedRoute>} />
-          <Route path="/admin/email-center" element={<ProtectedRoute requireAdmin><AdminEmailCenter /></ProtectedRoute>} />
-          <Route path="/admin/site-audit" element={<ProtectedRoute requireAdmin><AdminSiteAudit /></ProtectedRoute>} />
+          {/* NAVIGATION-CONSOLIDATION-1 group 14 — Email hub. */}
+          <Route path="/admin/email-center" element={<ProtectedRoute requireAdmin><AdminEmailHub /></ProtectedRoute>} />
+          <Route path="/admin/email-deliverability" element={<Navigate to="/admin/email-center?tab=deliverability" replace />} />
+          {/* NAVIGATION-CONSOLIDATION-1 group 16 — SEO hub. */}
+          <Route path="/admin/site-audit" element={<Navigate to="/admin/sitemap-status?tab=audit" replace />} />
           <Route path="/admin/diagnostics" element={<ProtectedRoute requireAdmin><AdminDiagnostics /></ProtectedRoute>} />
-          <Route path="/admin/sector-seo" element={<ProtectedRoute requireAdmin><AdminSectorSeo /></ProtectedRoute>} />
+          <Route path="/admin/sector-seo" element={<Navigate to="/admin/sitemap-status?tab=sector-seo" replace />} />
           <Route path="/admin/market-analytics" element={<ProtectedRoute requireAdmin><AdminMarketAnalytics /></ProtectedRoute>} />
-          <Route path="/admin/sitemap-status" element={<ProtectedRoute requireAdmin><AdminSitemapStatus /></ProtectedRoute>} />
+          <Route path="/admin/sitemap-status" element={<ProtectedRoute requireAdmin><AdminSeoHub /></ProtectedRoute>} />
           <Route path="/admin/provider-analytics" element={<ProtectedRoute requireAdmin><AdminProviderAnalytics /></ProtectedRoute>} />
           <Route path="/admin/provider-landing" element={<ProtectedRoute requireAdmin><AdminProviderLanding /></ProtectedRoute>} />
           <Route path="/admin/access-management" element={<ProtectedRoute requireSuperAdmin><AdminAccessManagement /></ProtectedRoute>} />
@@ -441,8 +443,9 @@ const AppRoutes = () => (
           <Route path="/admin/identity" element={<ProtectedRoute requireSuperAdmin><AdminIdentity /></ProtectedRoute>} />
           <Route path="/admin/system-settings" element={<ProtectedRoute requireSuperAdmin><AdminSystemSettings /></ProtectedRoute>} />
           <Route path="/admin/cron-runs" element={<ProtectedRoute requireAdmin><AdminCronRuns /></ProtectedRoute>} />
-          <Route path="/admin/operations" element={<ProtectedRoute requireAdmin><AdminOperations /></ProtectedRoute>} />
-          <Route path="/admin/operations/console" element={<ProtectedRoute requireAdmin><AdminOperationsConsole /></ProtectedRoute>} />
+          {/* NAVIGATION-CONSOLIDATION-1 group 9 — Operations hub. */}
+          <Route path="/admin/operations" element={<ProtectedRoute requireAdmin><AdminOperationsHub /></ProtectedRoute>} />
+          <Route path="/admin/operations/console" element={<Navigate to="/admin/operations?tab=console" replace />} />
          <Route path="/admin/ref/triage" element={<ProtectedRoute requireAdmin><AdminBulkReferenceTriage /></ProtectedRoute>} />
          <Route path="/admin/ref/:refId" element={<ProtectedRoute requireAdmin><AdminReferenceInspector /></ProtectedRoute>} />
           <Route path="/admin/analytics-settings" element={<ProtectedRoute requireAdmin><AdminAnalyticsSettings /></ProtectedRoute>} />
@@ -453,15 +456,18 @@ const AppRoutes = () => (
           <Route path="/admin/contracts/analytics" element={<ProtectedRoute requireAdmin><AdminContractAnalytics /></ProtectedRoute>} />
           <Route path="/admin/contracts" element={<ProtectedRoute requireAdmin><AdminContracts /></ProtectedRoute>} />
           <Route path="/admin/contracts/create" element={<ProtectedRoute requireAdmin><AdminContractCreate /></ProtectedRoute>} />
-          <Route path="/admin/reports" element={<ProtectedRoute requireAdmin><AdminReports /></ProtectedRoute>} />
-          <Route path="/admin/kpis" element={<ProtectedRoute requireAdmin><AdminKpis /></ProtectedRoute>} />
+          {/* NAVIGATION-CONSOLIDATION-1 group 12 — Reports hub. */}
+          <Route path="/admin/reports" element={<ProtectedRoute requireAdmin><AdminReportsHub /></ProtectedRoute>} />
+          <Route path="/admin/kpis" element={<Navigate to="/admin/reports?tab=kpis" replace />} />
           <Route path="/admin/audit-log" element={<ProtectedRoute requireAdmin><AdminAuditLog /></ProtectedRoute>} />
           <Route path="/admin" element={<Navigate to="/admin/operations" replace />} />
-          <Route path="/dashboard/rfq" element={<ProtectedRoute><DashboardRfq /></ProtectedRoute>} />
-          <Route path="/dashboard/rfq/inbox" element={<ProtectedRoute><DashboardRfqInbox /></ProtectedRoute>} />
+          {/* NAVIGATION-CONSOLIDATION-1 group 3 — RFQ hub. */}
+          <Route path="/dashboard/rfq" element={<ProtectedRoute><DashboardRfqHub /></ProtectedRoute>} />
+          <Route path="/dashboard/rfq/inbox" element={<Navigate to="/dashboard/rfq?tab=inbox" replace />} />
           <Route path="/dashboard/rfq/:id" element={<ProtectedRoute><DashboardRfqDetail /></ProtectedRoute>} />
-          <Route path="/dashboard/loyalty" element={<ProtectedRoute><DashboardLoyalty /></ProtectedRoute>} />
-          <Route path="/dashboard/loyalty/store" element={<ProtectedRoute><DashboardLoyaltyStore /></ProtectedRoute>} />
+          {/* NAVIGATION-CONSOLIDATION-1 group 7 — Loyalty hub. */}
+          <Route path="/dashboard/loyalty" element={<ProtectedRoute><DashboardLoyaltyHub /></ProtectedRoute>} />
+          <Route path="/dashboard/loyalty/store" element={<Navigate to="/dashboard/loyalty?tab=store" replace />} />
 
           <Route path="/:username" element={<UsernameResolver />} />
           <Route path="*" element={<NotFound />} />
