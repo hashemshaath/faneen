@@ -10,8 +10,8 @@
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Bookmark, Check, ChevronDown, ChevronUp, Download, Eye, Minus, Pin, Plus,
-  RotateCcw, Save, Search, ShieldCheck, Sparkles, Trash2, Upload, Wand2, X,
+  Bookmark, Check, ChevronDown, ChevronUp, Download, Minus, Pin, Plus,
+  RotateCcw, Save, Search, ShieldCheck, Sparkles, Upload, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
