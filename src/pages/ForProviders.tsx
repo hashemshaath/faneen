@@ -86,6 +86,141 @@ const COMPARISON = [
   { ar: 'بدون عمولة على المشاريع',             en: 'No commission on awarded projects',      without: false, withQ: true },
 ];
 
+const ONBOARDING_CHECKLIST = [
+  { ar: 'تفعيل البريد وإكمال البيانات النظامية', en: 'Verify email & complete legal details', mins: 3 },
+  { ar: 'رفع شعار الجهة وصور المعرض/المصنع',     en: 'Upload logo & showroom/factory photos',  mins: 4 },
+  { ar: 'تصنيف الخدمات والمنتجات بدقة',          en: 'Classify services & products precisely', mins: 6 },
+  { ar: 'ربط العلامات التجارية والكتالوجات',     en: 'Link brands & product catalogs',         mins: 5 },
+  { ar: 'تفعيل استقبال طلبات التسعير (RFQ)',     en: 'Enable RFQ inbox',                       mins: 1 },
+  { ar: 'نشر الملف ومشاركة الرابط الاحترافي',    en: 'Publish profile & share your pro link',  mins: 1 },
+];
+
+/** Animated number that counts up when scrolled into view. */
+function AnimatedNumber({ value, suffix = '+' }: { value: number; suffix?: string }) {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  const [start, setStart] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || start) return;
+    const io = new IntersectionObserver(
+      (entries) => { for (const e of entries) if (e.isIntersecting) { setStart(true); io.disconnect(); } },
+      { threshold: 0.3 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [start]);
+  const display = useCountUp(value, start, 1600, suffix);
+  return <span ref={ref} className="tech-content">{display}</span>;
+}
+
+/** Sticky bottom CTA bar — appears after the user scrolls past the hero. */
+function StickyCtaBar({ isRTL, onClick }: { isRTL: boolean; onClick: () => void }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 720);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return (
+    <div
+      className={`fixed inset-x-0 bottom-0 z-40 transition-all duration-300 ${visible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}
+      role="region"
+      aria-label={isRTL ? 'تسجيل سريع' : 'Quick signup'}
+    >
+      <div className="mx-auto max-w-5xl m-3 md:m-4 rounded-2xl border border-border/50 bg-card/95 backdrop-blur shadow-2xl px-4 py-3 flex items-center gap-3">
+        <div className="hidden sm:grid w-10 h-10 rounded-xl bg-primary/10 text-primary place-items-center shrink-0">
+          <Rocket className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold truncate">
+            {isRTL ? 'جاهز للظهور أمام مشاريع البناء؟' : 'Ready to be visible to construction projects?'}
+          </div>
+          <div className="text-[11px] md:text-xs text-muted-foreground truncate">
+            {isRTL ? 'تسجيل مجاني — بدون عمولة على المشاريع' : 'Free signup — zero project commission'}
+          </div>
+        </div>
+        <Button asChild size="sm" className="h-10 px-4 shrink-0" onClick={onClick}>
+          <Link to="/auth?mode=signup&role=provider">
+            {isRTL ? 'سجّل الآن' : 'Sign up'}
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** Interactive ROI calculator (illustrative — not a binding promise). */
+function RoiCalculator({ isRTL }: { isRTL: boolean }) {
+  const [rfqs, setRfqs] = useState(20);     // monthly RFQs received
+  const [winRate, setWinRate] = useState(15); // %
+  const [avg, setAvg] = useState(12000);    // SAR per project
+
+  const wonPerMonth = Math.round((rfqs * winRate) / 100);
+  const monthlyRevenue = wonPerMonth * avg;
+  const yearlyRevenue = monthlyRevenue * 12;
+
+  const fmt = (n: number) => n.toLocaleString('en-US');
+
+  return (
+    <Card className="p-5 md:p-8 border-border/50 shadow-sm">
+      <div className="grid lg:grid-cols-[1fr_1px_1fr] gap-6 lg:gap-10 items-stretch">
+        {/* Inputs */}
+        <div className="space-y-5">
+          {[
+            { label: isRTL ? 'طلبات تسعير شهرية' : 'Monthly RFQs', value: rfqs, min: 5, max: 200, step: 5, set: setRfqs, suffix: '' },
+            { label: isRTL ? 'نسبة الفوز بالعروض' : 'Win rate',    value: winRate, min: 5, max: 60, step: 1, set: setWinRate, suffix: '%' },
+            { label: isRTL ? 'متوسط قيمة المشروع' : 'Avg. project value', value: avg, min: 1000, max: 200000, step: 500, set: setAvg, suffix: ' SAR' },
+          ].map((f, i) => (
+            <div key={i}>
+              <div className="flex items-center justify-between mb-2 text-sm">
+                <span className="font-medium">{f.label}</span>
+                <span className="tech-content font-semibold text-primary">{fmt(f.value)}{f.suffix}</span>
+              </div>
+              <input
+                type="range"
+                min={f.min}
+                max={f.max}
+                step={f.step}
+                value={f.value}
+                onChange={(e) => f.set(Number(e.target.value))}
+                className="w-full h-2 rounded-full bg-muted accent-primary cursor-pointer"
+                aria-label={f.label}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="hidden lg:block bg-border/60" />
+        {/* Outputs */}
+        <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 md:p-6 border border-primary/20">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+            {isRTL ? 'تقدير شهري' : 'Estimated monthly'}
+          </div>
+          <div className="text-4xl md:text-5xl font-bold text-foreground tech-content mb-1">{fmt(monthlyRevenue)} <span className="text-base text-muted-foreground">SAR</span></div>
+          <div className="text-sm text-muted-foreground mb-5">
+            {isRTL ? `≈ ${wonPerMonth} مشاريع شهرياً` : `≈ ${wonPerMonth} projects/month`}
+          </div>
+          <div className="pt-4 border-t border-border/40 flex items-end justify-between">
+            <div>
+              <div className="text-xs text-muted-foreground">{isRTL ? 'سنوياً' : 'Yearly'}</div>
+              <div className="text-xl font-bold tech-content">{fmt(yearlyRevenue)} SAR</div>
+            </div>
+            <Button asChild size="sm" className="h-10">
+              <Link to="/auth?mode=signup&role=provider">
+                {isRTL ? 'ابدأ الآن' : 'Get started'}
+              </Link>
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-4 leading-relaxed">
+            {isRTL ? '* أرقام إرشادية للتوضيح فقط — تختلف النتائج حسب القطاع والتخصص ومنطقة العمل.' : '* Illustrative numbers only — actual results vary by sector, specialty and service area.'}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+
 const ForProviders = () => {
   const { isRTL } = useLanguage();
   const { track } = useLandingTracking(true);
