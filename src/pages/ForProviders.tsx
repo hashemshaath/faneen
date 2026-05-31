@@ -474,7 +474,7 @@ const ForProviders = () => {
           <Badge variant="outline" className="mb-3">{isRTL ? 'العضويات' : 'Memberships'}</Badge>
           <h2 className="text-2xl md:text-4xl font-bold mb-3">{isRTL ? 'ابدأ مجاناً، وطوّر عضويتك مع نمو جهتك' : 'Start free, upgrade as your business grows'}</h2>
           <p className="text-muted-foreground mb-7">
-            {isRTL ? 'خطط مرنة تناسب المصانع والمقاولين والموردين والورش والمعارض والمكاتب الهندسية، بدون التزام سنوي وبدون عمولة على المشاريع.' : 'Flexible plans for factories, contractors, suppliers, workshops, showrooms and engineering offices — no annual lock-in, no project commission.'}
+            {isRTL ? 'خطط مرنة تناسب جميع جهات قطاع البناء والصناعات الخفيفة، بدون التزام سنوي وبدون عمولة على المشاريع.' : 'Flexible plans for every business in construction and light industry — no annual lock-in, no project commission.'}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-7"
