@@ -1,7 +1,7 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { BUILD_ID } from '@/lib/buildVersion';
 
-type LazyModule<P extends object> = { default: ComponentType<P> };
+type LazyModule<P, T extends ComponentType<P>> = { default: T };
 
 const CHUNK_LOAD_ERROR_RE =
   /Importing a module script failed|Failed to fetch dynamically imported module|Loading chunk|ChunkLoadError|error loading dynamically imported module|Module script load failed|Unable to preload CSS/i;
@@ -9,7 +9,7 @@ const CHUNK_LOAD_ERROR_RE =
 const RECOVERY_KEY = 'qitaat_lazy_chunk_recovery_v2';
 const MIN_RELOAD_INTERVAL_MS = 4_000;
 
-const neverResolve = <P extends object>() => new Promise<LazyModule<P>>(() => {
+const neverResolve = <P, T extends ComponentType<P>>() => new Promise<LazyModule<P, T>>(() => {
   // Keep Suspense active while the browser refreshes stale assets.
 });
 
@@ -74,9 +74,9 @@ const reloadWithFreshAssets = () => {
   }, 0);
 };
 
-export function lazyRetry<P extends object>(
-  factory: () => Promise<LazyModule<P>>,
-): LazyExoticComponent<ComponentType<P>> {
+export function lazyRetry<P, T extends ComponentType<P>>(
+  factory: () => Promise<LazyModule<P, T>>,
+): LazyExoticComponent<T> {
   return lazy(() =>
     factory()
       .then((module) => {
@@ -86,7 +86,7 @@ export function lazyRetry<P extends object>(
       .catch((error: unknown) => {
         if (!isChunkLoadError(error)) throw error;
         reloadWithFreshAssets();
-        return neverResolve<P>();
+        return neverResolve<P, T>();
       }),
   );
 }
