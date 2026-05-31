@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
@@ -6,6 +6,7 @@ import {
   Star, ArrowLeft, ArrowRight, CheckCircle2, XCircle, Sparkles,
   TrendingUp, ShieldCheck, Zap, Clock, Award, BadgeCheck,
   Factory, Store, Quote, HardHat, Truck, Compass, Settings2, Layers3,
+  Calculator, Gift, Rocket,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -24,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { HeroParticles } from '@/components/home/HeroParticles';
 import { track as gtmTrack } from '@/lib/analytics-events';
+import { useCountUp } from '@/hooks/useCountUp';
 import heroImage from '@/assets/providers-hero-construction.jpg';
 import whyImage from '@/assets/providers-why-factory.jpg';
 import howImage from '@/assets/providers-how-dashboard.jpg';
@@ -83,6 +85,141 @@ const COMPARISON = [
   { ar: 'ظهور في نتائج البحث وصفحات القطاع', en: 'Visibility in search & sector pages',    without: false, withQ: true },
   { ar: 'بدون عمولة على المشاريع',             en: 'No commission on awarded projects',      without: false, withQ: true },
 ];
+
+const ONBOARDING_CHECKLIST = [
+  { ar: 'تفعيل البريد وإكمال البيانات النظامية', en: 'Verify email & complete legal details', mins: 3 },
+  { ar: 'رفع شعار الجهة وصور المعرض/المصنع',     en: 'Upload logo & showroom/factory photos',  mins: 4 },
+  { ar: 'تصنيف الخدمات والمنتجات بدقة',          en: 'Classify services & products precisely', mins: 6 },
+  { ar: 'ربط العلامات التجارية والكتالوجات',     en: 'Link brands & product catalogs',         mins: 5 },
+  { ar: 'تفعيل استقبال طلبات التسعير (RFQ)',     en: 'Enable RFQ inbox',                       mins: 1 },
+  { ar: 'نشر الملف ومشاركة الرابط الاحترافي',    en: 'Publish profile & share your pro link',  mins: 1 },
+];
+
+/** Animated number that counts up when scrolled into view. */
+function AnimatedNumber({ value, suffix = '+' }: { value: number; suffix?: string }) {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  const [start, setStart] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || start) return;
+    const io = new IntersectionObserver(
+      (entries) => { for (const e of entries) if (e.isIntersecting) { setStart(true); io.disconnect(); } },
+      { threshold: 0.3 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [start]);
+  const display = useCountUp(value, start, 1600, suffix);
+  return <span ref={ref} className="tech-content">{display}</span>;
+}
+
+/** Sticky bottom CTA bar — appears after the user scrolls past the hero. */
+function StickyCtaBar({ isRTL, onClick }: { isRTL: boolean; onClick: () => void }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 720);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return (
+    <div
+      className={`fixed inset-x-0 bottom-0 z-40 transition-all duration-300 ${visible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}
+      role="region"
+      aria-label={isRTL ? 'تسجيل سريع' : 'Quick signup'}
+    >
+      <div className="mx-auto max-w-5xl m-3 md:m-4 rounded-2xl border border-border/50 bg-card/95 backdrop-blur shadow-2xl px-4 py-3 flex items-center gap-3">
+        <div className="hidden sm:grid w-10 h-10 rounded-xl bg-primary/10 text-primary place-items-center shrink-0">
+          <Rocket className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold truncate">
+            {isRTL ? 'جاهز للظهور أمام مشاريع البناء؟' : 'Ready to be visible to construction projects?'}
+          </div>
+          <div className="text-[11px] md:text-xs text-muted-foreground truncate">
+            {isRTL ? 'تسجيل مجاني — بدون عمولة على المشاريع' : 'Free signup — zero project commission'}
+          </div>
+        </div>
+        <Button asChild size="sm" className="h-10 px-4 shrink-0" onClick={onClick}>
+          <Link to="/auth?mode=signup&role=provider">
+            {isRTL ? 'سجّل الآن' : 'Sign up'}
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** Interactive ROI calculator (illustrative — not a binding promise). */
+function RoiCalculator({ isRTL }: { isRTL: boolean }) {
+  const [rfqs, setRfqs] = useState(20);     // monthly RFQs received
+  const [winRate, setWinRate] = useState(15); // %
+  const [avg, setAvg] = useState(12000);    // SAR per project
+
+  const wonPerMonth = Math.round((rfqs * winRate) / 100);
+  const monthlyRevenue = wonPerMonth * avg;
+  const yearlyRevenue = monthlyRevenue * 12;
+
+  const fmt = (n: number) => n.toLocaleString('en-US');
+
+  return (
+    <Card className="p-5 md:p-8 border-border/50 shadow-sm">
+      <div className="grid lg:grid-cols-[1fr_1px_1fr] gap-6 lg:gap-10 items-stretch">
+        {/* Inputs */}
+        <div className="space-y-5">
+          {[
+            { label: isRTL ? 'طلبات تسعير شهرية' : 'Monthly RFQs', value: rfqs, min: 5, max: 200, step: 5, set: setRfqs, suffix: '' },
+            { label: isRTL ? 'نسبة الفوز بالعروض' : 'Win rate',    value: winRate, min: 5, max: 60, step: 1, set: setWinRate, suffix: '%' },
+            { label: isRTL ? 'متوسط قيمة المشروع' : 'Avg. project value', value: avg, min: 1000, max: 200000, step: 500, set: setAvg, suffix: ' SAR' },
+          ].map((f, i) => (
+            <div key={i}>
+              <div className="flex items-center justify-between mb-2 text-sm">
+                <span className="font-medium">{f.label}</span>
+                <span className="tech-content font-semibold text-primary">{fmt(f.value)}{f.suffix}</span>
+              </div>
+              <input
+                type="range"
+                min={f.min}
+                max={f.max}
+                step={f.step}
+                value={f.value}
+                onChange={(e) => f.set(Number(e.target.value))}
+                className="w-full h-2 rounded-full bg-muted accent-primary cursor-pointer"
+                aria-label={f.label}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="hidden lg:block bg-border/60" />
+        {/* Outputs */}
+        <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 md:p-6 border border-primary/20">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+            {isRTL ? 'تقدير شهري' : 'Estimated monthly'}
+          </div>
+          <div className="text-4xl md:text-5xl font-bold text-foreground tech-content mb-1">{fmt(monthlyRevenue)} <span className="text-base text-muted-foreground">SAR</span></div>
+          <div className="text-sm text-muted-foreground mb-5">
+            {isRTL ? `≈ ${wonPerMonth} مشاريع شهرياً` : `≈ ${wonPerMonth} projects/month`}
+          </div>
+          <div className="pt-4 border-t border-border/40 flex items-end justify-between">
+            <div>
+              <div className="text-xs text-muted-foreground">{isRTL ? 'سنوياً' : 'Yearly'}</div>
+              <div className="text-xl font-bold tech-content">{fmt(yearlyRevenue)} SAR</div>
+            </div>
+            <Button asChild size="sm" className="h-10">
+              <Link to="/auth?mode=signup&role=provider">
+                {isRTL ? 'ابدأ الآن' : 'Get started'}
+              </Link>
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-4 leading-relaxed">
+            {isRTL ? '* أرقام إرشادية للتوضيح فقط — تختلف النتائج حسب القطاع والتخصص ومنطقة العمل.' : '* Illustrative numbers only — actual results vary by sector, specialty and service area.'}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 
 const ForProviders = () => {
   const { isRTL } = useLanguage();
@@ -258,13 +395,15 @@ const ForProviders = () => {
                 { v: stats?.businessCount ?? 0, ar: 'منشأة مسجّلة', en: 'Businesses', icon: Factory },
                 { v: stats?.projectCount ?? 0, ar: 'مشروع منشور', en: 'Projects', icon: Award },
                 { v: stats?.reviewCount ?? 0, ar: 'تقييم موثّق', en: 'Reviews', icon: Star },
-                { v: `${stats?.satisfaction ?? 98}%`, ar: 'رضا العملاء', en: 'Satisfaction', icon: TrendingUp },
+                { v: stats?.satisfaction ?? 98, ar: 'رضا العملاء', en: 'Satisfaction', icon: TrendingUp, isPct: true },
               ].map((s, i) => {
                 const I = s.icon;
                 return (
                   <div key={i} className="rounded-2xl bg-card/70 backdrop-blur border border-border/40 p-3 hover-lift">
                     <I className="w-4 h-4 text-primary mx-auto mb-1.5 opacity-70" />
-                    <div className="text-xl md:text-2xl font-bold text-foreground tech-content">{s.v}+</div>
+                    <div className="text-xl md:text-2xl font-bold text-foreground">
+                      <AnimatedNumber value={Number(s.v) || 0} suffix={('isPct' in s && s.isPct) ? '%' : '+'} />
+                    </div>
                     <div className="text-[11px] md:text-xs text-muted-foreground mt-0.5">{isRTL ? s.ar : s.en}</div>
                   </div>
                 );
@@ -363,6 +502,25 @@ const ForProviders = () => {
         </div>
       </section>
 
+      {/* ROI CALCULATOR */}
+      <section className="py-14 md:py-20 bg-muted/20 border-y border-border/40">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <Badge variant="outline" className="mb-3 inline-flex items-center gap-1.5">
+              <Calculator className="w-3.5 h-3.5" />
+              {isRTL ? 'حاسبة العائد' : 'ROI calculator'}
+            </Badge>
+            <h2 className="text-2xl md:text-4xl font-bold mb-3">
+              {isRTL ? 'كم يمكن أن تنمو إيراداتك مع قِطاعات؟' : 'How much could you grow with Qitaat?'}
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground">
+              {isRTL ? 'حرّك الشرائط لتقدير قيمة المشاريع المحتملة بناءً على حجم نشاطك.' : 'Move the sliders to estimate potential project value based on your activity.'}
+            </p>
+          </div>
+          <RoiCalculator isRTL={isRTL} />
+        </div>
+      </section>
+
       {/* HOW IT WORKS */}
       <section id="how-it-works" className="py-14 md:py-20 bg-muted/20">
         <div className="container mx-auto px-4">
@@ -392,6 +550,56 @@ const ForProviders = () => {
                 <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{isRTL ? s.desc_ar : s.desc_en}</p>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ONBOARDING CHECKLIST PREVIEW */}
+      <section className="py-14 md:py-20">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-8 lg:gap-12 items-center">
+            <div>
+              <Badge variant="outline" className="mb-3 inline-flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {isRTL ? 'قائمة التهيئة' : 'Onboarding checklist'}
+              </Badge>
+              <h2 className="text-2xl md:text-4xl font-bold mb-3">
+                {isRTL ? 'ملف جاهز للإطلاق خلال 20 دقيقة' : 'A launch-ready profile in 20 minutes'}
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                {isRTL ? 'كل خطوة موجّهة بالعربية، مع حفظ تلقائي وإمكانية الإكمال لاحقاً.' : 'Every step is Arabic-guided, auto-saved, and resumable anytime.'}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild size="lg" className="h-12 px-7"
+                  onClick={() => { track({ event_type: 'cta_click', section: 'onboarding', cta_id: 'start' }); gtmTrack.providerSignupStart({}); }}>
+                  <Link to="/auth?mode=signup&role=provider">
+                    {isRTL ? 'ابدأ التهيئة' : 'Start setup'}
+                    <ArrowFwd className="w-4 h-4 ms-2" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="h-12 px-6">
+                  <a href="#how-it-works">{isRTL ? 'كيف تعمل المنصة' : 'See how it works'}</a>
+                </Button>
+              </div>
+            </div>
+            <Card className="p-5 md:p-7 border-border/50 shadow-sm">
+              <ul className="space-y-3">
+                {ONBOARDING_CHECKLIST.map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div className="shrink-0 w-7 h-7 rounded-lg bg-primary/10 text-primary grid place-items-center text-xs font-bold">
+                      {i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium">{isRTL ? item.ar : item.en}</div>
+                      <div className="text-[11px] text-muted-foreground inline-flex items-center gap-1 mt-0.5">
+                        <Clock className="w-3 h-3" /> ≈ {item.mins} {isRTL ? 'دقائق' : 'min'}
+                      </div>
+                    </div>
+                    <CheckCircle2 className="w-5 h-5 text-success/40 shrink-0 self-center" />
+                  </li>
+                ))}
+              </ul>
+            </Card>
           </div>
         </div>
       </section>
@@ -520,6 +728,10 @@ const ForProviders = () => {
       {/* PRICING TEASER */}
       <section className="py-14 md:py-20">
         <div className="container mx-auto px-4 max-w-3xl text-center">
+          <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-success/15 via-success/10 to-transparent border border-success/30 text-success text-xs md:text-sm font-medium">
+            <Gift className="w-4 h-4" />
+            {isRTL ? 'عرض الإطلاق: 90 يومًا مجانًا على باقة الاحتراف للجهات الجديدة' : 'Launch offer: 90 days free on Pro plan for new businesses'}
+          </div>
           <Badge variant="outline" className="mb-3">{isRTL ? 'العضويات' : 'Memberships'}</Badge>
           <h2 className="text-2xl md:text-4xl font-bold mb-3">{isRTL ? 'ابدأ مجاناً، وطوّر عضويتك مع نمو جهتك' : 'Start free, upgrade as your business grows'}</h2>
           <p className="text-muted-foreground mb-7">
@@ -654,6 +866,10 @@ const ForProviders = () => {
 
       <Footer />
       <ScrollToTop />
+      <StickyCtaBar
+        isRTL={isRTL}
+        onClick={() => { track({ event_type: 'cta_click', section: 'sticky_bar', cta_id: 'primary' }); gtmTrack.providerSignupStart({}); }}
+      />
     </div>
   );
 };
