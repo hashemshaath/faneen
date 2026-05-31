@@ -24,6 +24,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { HeroParticles } from '@/components/home/HeroParticles';
 import { track as gtmTrack } from '@/lib/analytics-events';
+import heroImage from '@/assets/providers-hero-construction.jpg';
+import whyImage from '@/assets/providers-why-factory.jpg';
+import howImage from '@/assets/providers-how-dashboard.jpg';
+import ctaImage from '@/assets/providers-cta-handshake.jpg';
+
+const SHOWCASE_IMAGES = [
+  { src: heroImage,  ar: 'مشاريع البناء الكبرى',     en: 'Major construction projects' },
+  { src: whyImage,   ar: 'مصانع الصناعات الخفيفة',   en: 'Light-industry factories' },
+  { src: howImage,   ar: 'إدارة رقمية احترافية',     en: 'Professional digital management' },
+  { src: ctaImage,   ar: 'شراكات وعقود نظامية',     en: 'Partnerships & formal contracts' },
+];
 
 const pickIcon = (name: string): React.ComponentType<{ className?: string }> => {
   const Lib = Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
@@ -261,19 +272,20 @@ const ForProviders = () => {
             </div>
 
             {/* Hero showcase image (admin-controlled) */}
-            {hero?.image_url && (
-              <div className="mt-10 md:mt-14 max-w-5xl mx-auto">
-                <div className="relative rounded-3xl overflow-hidden border border-border/40 shadow-2xl bg-card aspect-[16/9]">
-                  <img
-                    src={hero.image_url}
-                    alt={pick(hero.title_ar, hero.title_en) || 'Qitaat'}
-                    className="w-full h-full object-cover"
-                    loading="eager"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent" />
-                </div>
+            {/* Hero showcase image (admin-controlled, with realistic default) */}
+            <div className="mt-10 md:mt-14 max-w-5xl mx-auto">
+              <div className="relative rounded-3xl overflow-hidden border border-border/40 shadow-2xl bg-card aspect-[16/9]">
+                <img
+                  src={hero?.image_url || heroImage}
+                  alt={pick(hero?.title_ar, hero?.title_en) || (isRTL ? 'مشاريع البناء والتشييد على منصة قِطاعات' : 'Construction projects on Qitaat')}
+                  className="w-full h-full object-cover"
+                  loading="eager"
+                  width={1600}
+                  height={900}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/10 to-transparent" />
               </div>
-            )}
+            </div>
           </div>
         </div>
       </section>
@@ -320,11 +332,17 @@ const ForProviders = () => {
             <h2 className="text-2xl md:text-4xl font-bold mb-3">{pick(why?.title_ar, why?.title_en) || (isRTL ? 'أكثر من مجرد دليل — شريك نموّ' : 'More than a directory — a growth partner')}</h2>
             <p className="text-muted-foreground">{pick(why?.subtitle_ar, why?.subtitle_en) || (isRTL ? 'أربعة أعمدة تجعل قرارك بالانضمام واضحاً' : 'Four pillars that make joining an easy decision')}</p>
           </div>
-          {why?.image_url && (
-            <div className="max-w-4xl mx-auto mb-10 rounded-2xl overflow-hidden border border-border/40 shadow-lg aspect-[21/9]">
-              <img src={why.image_url} alt={pick(why.title_ar, why.title_en) || ''} className="w-full h-full object-cover" loading="lazy" />
-            </div>
-          )}
+          <div className="max-w-5xl mx-auto mb-10 rounded-2xl overflow-hidden border border-border/40 shadow-lg aspect-[21/9] relative">
+            <img
+              src={why?.image_url || whyImage}
+              alt={pick(why?.title_ar, why?.title_en) || (isRTL ? 'مصانع الصناعات الخفيفة' : 'Light-industry factories')}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              width={1600}
+              height={700}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {VALUE_PILLARS.map((p, i) => {
               const Icon = p.icon;
@@ -353,11 +371,17 @@ const ForProviders = () => {
             <h2 className="text-2xl md:text-4xl font-bold mb-3">{pick(how?.title_ar, how?.title_en) || (isRTL ? 'من التسجيل إلى أول مشروع' : 'From signup to your first project')}</h2>
             <p className="text-muted-foreground">{pick(how?.subtitle_ar, how?.subtitle_en) || (isRTL ? 'بدون تعقيد — كل شيء مرشد بالعربية' : 'No complexity — fully Arabic-guided')}</p>
           </div>
-          {how?.image_url && (
-            <div className="max-w-4xl mx-auto mb-10 rounded-2xl overflow-hidden border border-border/40 shadow-lg aspect-[21/9]">
-              <img src={how.image_url} alt={pick(how.title_ar, how.title_en) || ''} className="w-full h-full object-cover" loading="lazy" />
-            </div>
-          )}
+          <div className="max-w-5xl mx-auto mb-10 rounded-2xl overflow-hidden border border-border/40 shadow-lg aspect-[21/9] relative">
+            <img
+              src={how?.image_url || howImage}
+              alt={pick(how?.title_ar, how?.title_en) || (isRTL ? 'إدارة رقمية احترافية للجهات' : 'Professional digital management')}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              width={1600}
+              height={700}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
             {STEPS.map((s, i) => (
               <Card key={i} className="p-5 md:p-6 h-full text-center hover-lift relative">
@@ -539,14 +563,53 @@ const ForProviders = () => {
         </section>
       )}
 
+      {/* VISUAL SHOWCASE STRIP */}
+      <section className="py-12 md:py-16 bg-muted/20 border-y border-border/40">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <Badge variant="outline" className="mb-3">{isRTL ? 'من قلب القطاع' : 'From the field'}</Badge>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              {isRTL ? 'صور حقيقية من بيئة عمل جهاتنا' : 'Real scenes from our partners on the ground'}
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground">
+              {isRTL ? 'مصانع، مشاريع، ومكاتب تعمل كل يوم عبر قِطاعات.' : 'Factories, projects, and offices working through Qitaat every day.'}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {SHOWCASE_IMAGES.map((img, i) => (
+              <div key={i} className="group relative rounded-2xl overflow-hidden border border-border/40 aspect-[4/5] hover-lift">
+                <img
+                  src={img.src}
+                  alt={isRTL ? img.ar : img.en}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                  width={800}
+                  height={1000}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 p-3 md:p-4 text-white">
+                  <div className="text-xs md:text-sm font-semibold leading-snug">{isRTL ? img.ar : img.en}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FINAL CTA */}
       <section className="py-16 md:py-24 relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary via-primary to-primary/80" />
-        {finalCta?.image_url && (
-          <div className="absolute inset-0 -z-20">
-            <img src={finalCta.image_url} alt="" className="w-full h-full object-cover opacity-30" loading="lazy" />
-          </div>
-        )}
+        <div className="absolute inset-0 -z-20">
+          <img
+            src={finalCta?.image_url || ctaImage}
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-cover opacity-25 mix-blend-overlay"
+            loading="lazy"
+            width={1600}
+            height={700}
+          />
+        </div>
         <div className="absolute inset-0 -z-10 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20% 30%, hsl(var(--primary-foreground)/0.3) 0, transparent 50%), radial-gradient(circle at 80% 70%, hsl(var(--primary-foreground)/0.2) 0, transparent 50%)' }} />
         <div className="container mx-auto px-4 text-center text-primary-foreground">
           <Badge variant="secondary" className="mb-4 bg-primary-foreground/15 text-primary-foreground border-0 backdrop-blur">
