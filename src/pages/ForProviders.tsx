@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
@@ -6,6 +6,7 @@ import {
   Star, ArrowLeft, ArrowRight, CheckCircle2, XCircle, Sparkles,
   TrendingUp, ShieldCheck, Zap, Clock, Award, BadgeCheck,
   Factory, Store, Quote, HardHat, Truck, Compass, Settings2, Layers3,
+  Calculator, Gift, PlayCircle, Rocket, Users, FileText, Briefcase,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -24,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { HeroParticles } from '@/components/home/HeroParticles';
 import { track as gtmTrack } from '@/lib/analytics-events';
+import { useCountUp } from '@/hooks/useCountUp';
 import heroImage from '@/assets/providers-hero-construction.jpg';
 import whyImage from '@/assets/providers-why-factory.jpg';
 import howImage from '@/assets/providers-how-dashboard.jpg';
