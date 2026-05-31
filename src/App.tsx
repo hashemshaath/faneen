@@ -397,7 +397,7 @@ const AppRoutes = () => (
 
           <Route path="/dashboard/blog" element={<ProtectedRoute requireAdmin><DashboardBlog /></ProtectedRoute>} />
           <Route path="/dashboard/profile-systems" element={<ProtectedRoute requireAdmin><DashboardProfileSystems /></ProtectedRoute>} />
-          <Route path="/admin/api-settings" element={<ProtectedRoute requireAdmin><AdminApiSettings /></ProtectedRoute>} />
+          <Route path="/admin/api-settings" element={<Navigate to="/admin/system-settings?tab=api" replace />} />
           <Route path="/admin/ab-experiments" element={<ProtectedRoute requireAdmin><AdminAbExperiments /></ProtectedRoute>} />
           <Route path="/admin/showcase" element={<ProtectedRoute requireAdmin><AdminShowcase /></ProtectedRoute>} />
           <Route path="/dashboard/showcase" element={<ProtectedRoute><DashboardShowcase /></ProtectedRoute>} />
