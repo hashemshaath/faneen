@@ -13133,6 +13133,45 @@ export type Database = {
         }
         Relationships: []
       }
+      system_module_audit_log: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          id: string
+          module_key: string
+          new_enabled: boolean | null
+          previous_enabled: boolean | null
+          reason: string | null
+          scope_type: string
+          scope_value: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          id?: string
+          module_key: string
+          new_enabled?: boolean | null
+          previous_enabled?: boolean | null
+          reason?: string | null
+          scope_type: string
+          scope_value?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          id?: string
+          module_key?: string
+          new_enabled?: boolean | null
+          previous_enabled?: boolean | null
+          reason?: string | null
+          scope_type?: string
+          scope_value?: string | null
+        }
+        Relationships: []
+      }
       system_module_overrides: {
         Row: {
           created_at: string

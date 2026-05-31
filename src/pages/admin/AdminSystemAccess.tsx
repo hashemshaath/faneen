@@ -13,7 +13,8 @@ import { toast } from 'sonner';
 import {
   Layers, Search, Globe, Users as UsersIcon, User as UserIcon,
   ShieldCheck, Lock, Eye, EyeOff, Sparkles, Filter, Loader2,
-  AlertTriangle, RotateCcw, Info, ArrowLeft,
+  AlertTriangle, RotateCcw, Info, ArrowLeft, History, Settings2,
+  Check, X as XIcon, Pencil,
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
@@ -21,15 +22,18 @@ import {
   listAllOverrides,
   setModuleOverride,
   clearModuleOverride,
+  listAuditLog,
   type SystemModule,
   type SystemModuleOverride,
   type ScopeType,
+  type SystemModuleAuditEntry,
 } from '@/modules/systemAccess';
 import { listProfiles } from '@/modules/users';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type ScopeTab = 'global' | 'account_type' | 'user';
+type ViewTab = 'manage' | 'audit';
 
 const ACCOUNT_TYPES = ['provider', 'client', 'individual'] as const;
 type AccountType = typeof ACCOUNT_TYPES[number];
@@ -53,6 +57,7 @@ const AdminSystemAccess: React.FC = () => {
   const qc = useQueryClient();
 
   const [scopeTab, setScopeTab] = useState<ScopeTab>('global');
+  const [viewTab, setViewTab] = useState<ViewTab>('manage');
   const [accountType, setAccountType] = useState<AccountType>('provider');
   const [userSearch, setUserSearch] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -256,6 +261,32 @@ const AdminSystemAccess: React.FC = () => {
           </div>
         )}
 
+        {/* View tabs: Manage / Audit Log */}
+        <div className="flex rounded-2xl bg-muted/40 p-1 gap-1">
+          <button
+            onClick={() => setViewTab('manage')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              viewTab === 'manage' ? 'bg-card text-foreground shadow-sm ring-1 ring-border/30' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Settings2 className="w-4 h-4" />
+            {isRTL ? 'إدارة الإظهار' : 'Manage Visibility'}
+          </button>
+          <button
+            onClick={() => setViewTab('audit')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              viewTab === 'audit' ? 'bg-card text-foreground shadow-sm ring-1 ring-border/30' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <History className="w-4 h-4" />
+            {isRTL ? 'سجل التدقيق' : 'Audit Log'}
+          </button>
+        </div>
+
+        {viewTab === 'audit' ? (
+          <AuditLogPanel modules={modulesQuery.data ?? []} />
+        ) : (
+        <>
         {/* Scope Tabs */}
         <div className="rounded-2xl border border-border/30 bg-card p-4 space-y-4">
           <div className="flex rounded-2xl bg-muted/40 p-1 gap-1 flex-wrap">
@@ -528,6 +559,8 @@ const AdminSystemAccess: React.FC = () => {
             </p>
           </div>
         )}
+        </>
+        )}
       </div>
     </DashboardLayout>
   );
@@ -564,5 +597,127 @@ const ScopeTabBtn: React.FC<{
     {label}
   </button>
 );
+
+const AuditLogPanel: React.FC<{ modules: SystemModule[] }> = ({ modules }) => {
+  const { isRTL, language } = useLanguage();
+  const [actionFilter, setActionFilter] = useState<'all' | 'grant' | 'revoke' | 'reset' | 'update'>('all');
+
+  const auditQuery = useQuery({
+    queryKey: ['system-module-audit', 200],
+    queryFn: () => listAuditLog(200),
+    staleTime: 15_000,
+  });
+
+  const moduleLabel = useMemo(() => {
+    const map = new Map<string, { ar: string; en: string }>();
+    modules.forEach(m => map.set(m.key, { ar: m.label_ar, en: m.label_en }));
+    return map;
+  }, [modules]);
+
+  const filtered = useMemo(() => {
+    const list = auditQuery.data ?? [];
+    if (actionFilter === 'all') return list;
+    return list.filter(e => e.action === actionFilter);
+  }, [auditQuery.data, actionFilter]);
+
+  const formatTime = (iso: string): string => {
+    const d = new Date(iso);
+    return d.toLocaleString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en', {
+      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+  };
+
+  const actionMeta = (a: SystemModuleAuditEntry['action']) => {
+    if (a === 'grant') return { icon: Check, color: 'bg-success/15 text-success border-success/30', ar: 'منح', en: 'Granted' };
+    if (a === 'revoke') return { icon: XIcon, color: 'bg-destructive/15 text-destructive border-destructive/30', ar: 'حجب', en: 'Revoked' };
+    if (a === 'reset') return { icon: RotateCcw, color: 'bg-muted text-foreground border-border', ar: 'إعادة', en: 'Reset' };
+    return { icon: Pencil, color: 'bg-info/15 text-info border-info/30', ar: 'تحديث', en: 'Updated' };
+  };
+
+  const scopeLabel = (e: SystemModuleAuditEntry): string => {
+    if (e.scope_type === 'global_default') return isRTL ? 'افتراضي عام' : 'Global default';
+    if (e.scope_type === 'account_type') return `${isRTL ? 'نوع حساب' : 'Account type'}: ${e.scope_value}`;
+    return `${isRTL ? 'مستخدم' : 'User'}: ${(e.scope_value ?? '').slice(0, 8)}…`;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-border/30 bg-card p-3 flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1 rounded-xl bg-muted/40 p-1">
+          {(['all','grant','revoke','reset','update'] as const).map(a => (
+            <button
+              key={a}
+              onClick={() => setActionFilter(a)}
+              className={`px-3 h-8 rounded-lg text-xs font-medium transition-all ${
+                actionFilter === a ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {a === 'all' ? (isRTL ? 'الكل' : 'All')
+                : a === 'grant' ? (isRTL ? 'منح' : 'Grant')
+                : a === 'revoke' ? (isRTL ? 'حجب' : 'Revoke')
+                : a === 'reset' ? (isRTL ? 'إعادة' : 'Reset')
+                : (isRTL ? 'تحديث' : 'Update')}
+            </button>
+          ))}
+        </div>
+        <span className="text-xs text-muted-foreground ms-auto tech-content">
+          {filtered.length} / {(auditQuery.data ?? []).length}
+        </span>
+      </div>
+
+      {auditQuery.isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
+          {isRTL ? 'لا توجد سجلات' : 'No audit entries'}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map(e => {
+            const meta = actionMeta(e.action);
+            const Icon = meta.icon;
+            const label = moduleLabel.get(e.module_key);
+            return (
+              <div key={e.id} className="rounded-xl border border-border/30 bg-card p-3 flex items-start gap-3">
+                <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${meta.color}`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className={`text-[10px] ${meta.color} border`}>
+                      {isRTL ? meta.ar : meta.en}
+                    </Badge>
+                    <span className="font-semibold text-sm">
+                      {label ? (isRTL ? label.ar : label.en) : e.module_key}
+                    </span>
+                    <code className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground tech-content">
+                      {e.module_key}
+                    </code>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                    <span>{scopeLabel(e)}</span>
+                    {e.previous_enabled !== null && e.new_enabled !== null && (
+                      <span>
+                        {e.previous_enabled ? (isRTL ? 'كان: ظاهر' : 'was: visible') : (isRTL ? 'كان: مخفي' : 'was: hidden')}
+                        {' → '}
+                        {e.new_enabled ? (isRTL ? 'أصبح: ظاهر' : 'now: visible') : (isRTL ? 'أصبح: مخفي' : 'now: hidden')}
+                      </span>
+                    )}
+                    <span className="tech-content">{formatTime(e.created_at)}</span>
+                  </div>
+                  {e.reason && (
+                    <div className="text-xs text-muted-foreground mt-1 italic">"{e.reason}"</div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default AdminSystemAccess;

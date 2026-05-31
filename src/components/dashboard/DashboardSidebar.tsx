@@ -247,6 +247,7 @@ const adminBaseGroups: MenuGroup[] = [
       // Access lifecycle
       { label: { ar: 'طلبات الانضمام', en: 'Access Requests' }, url: '/admin/entity-access-requests', icon: UserPlus },
       { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: Shield, superAdminOnly: true },
+      { label: { ar: 'إظهار الأنظمة', en: 'System Access' }, url: '/admin/system-access', icon: Layers },
       // Provider operations
       { label: { ar: 'مراجعة المزودين', en: 'Provider Review' }, url: '/admin/provider-review', icon: ShieldCheck },
       { label: { ar: 'تحليلات المزودين', en: 'Provider Analytics' }, url: '/admin/provider-analytics', icon: TrendingUp },
