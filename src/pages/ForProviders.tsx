@@ -1075,6 +1075,37 @@ const ForProviders = () => {
       </section>
 
       {/* FINAL CTA */}
+      {/* TRUST & COMPLIANCE STRIP */}
+      <section className="py-12 md:py-16 border-t border-border/40">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <Badge variant="outline" className="mb-3 inline-flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              {isRTL ? 'الأمان والامتثال' : 'Security & compliance'}
+            </Badge>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              {isRTL ? 'منصة مبنيّة على معايير السوق السعودي' : 'Built to Saudi-market standards'}
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground">
+              {isRTL ? 'بياناتك ومعاملاتك محميّة بمعايير حديثة ومتوافقة مع الأنظمة المحلية.' : 'Your data and transactions are protected by modern standards and local compliance.'}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 max-w-5xl mx-auto">
+            {TRUST_PILLARS.map((p, i) => {
+              const I = p.icon;
+              return (
+                <div key={i} className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border/50 hover-lift">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary grid place-items-center shrink-0">
+                    <I className="w-4 h-4" />
+                  </div>
+                  <div className="text-xs md:text-sm font-medium leading-snug">{isRTL ? p.ar : p.en}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <section className="py-16 md:py-24 relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary via-primary to-primary/80" />
         <div className="absolute inset-0 -z-20">
