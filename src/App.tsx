@@ -155,6 +155,7 @@ const AdminSectorSeo = lazyRetry(() => import("./pages/admin/AdminSectorSeo"));
 const AdminMarketAnalytics = lazyRetry(() => import("./pages/admin/AdminMarketAnalytics"));
 const AdminSitemapStatus = lazyRetry(() => import("./pages/admin/AdminSitemapStatus"));
 const AdminAccessManagement = lazyRetry(() => import("./pages/admin/AdminAccessManagement"));
+const AdminSystemAccess = lazyRetry(() => import("./pages/admin/AdminSystemAccess"));
 const AdminProviderReview = lazyRetry(() => import("./pages/admin/AdminProviderReview"));
 const AdminProviderAnalytics = lazyRetry(() => import("./pages/admin/AdminProviderAnalytics"));
 const AdminContractAnalytics = lazyRetry(() => import("./pages/admin/AdminContractAnalytics"));
@@ -412,6 +413,7 @@ const AppRoutes = () => (
           <Route path="/admin/provider-analytics" element={<ProtectedRoute requireAdmin><AdminProviderAnalytics /></ProtectedRoute>} />
           <Route path="/admin/provider-landing" element={<ProtectedRoute requireAdmin><AdminProviderLanding /></ProtectedRoute>} />
           <Route path="/admin/access-management" element={<ProtectedRoute requireSuperAdmin><AdminAccessManagement /></ProtectedRoute>} />
+          <Route path="/admin/system-access" element={<ProtectedRoute requireAdmin><AdminSystemAccess /></ProtectedRoute>} />
 
           <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
           <Route path="/admin/users/:id" element={<ProtectedRoute requireSuperAdmin><AdminUserDetail /></ProtectedRoute>} />
