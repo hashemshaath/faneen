@@ -25,6 +25,7 @@ import { deleteBusinessStaffById } from '@/modules/businesses/services/deleteBus
 import { getProfileByUserId } from '@/modules/users/services/getProfileByUserId';
 import { listBranchesByBusiness } from '@/modules/catalog';
 import { supabase } from '@/integrations/supabase/client';
+import { StaffPermissionsMatrix } from '@/components/dashboard/entities/StaffPermissionsMatrix';
 
 interface BizDetail {
   id: string;
@@ -63,6 +64,7 @@ interface StaffRow {
   is_active: boolean;
   is_primary_manager: boolean | null;
   created_at: string;
+  permissions_override: unknown;
 }
 
 interface CategoryRow { id: string; name_ar: string | null; name_en: string | null; icon: string | null }
@@ -122,7 +124,7 @@ const DashboardEntityDetail: React.FC = () => {
       const res = await listBusinessStaffByBusiness<StaffRow>({
         businessId: id,
         includeInactive: true,
-        select: 'id, ref_id, user_id, role, is_active, is_primary_manager, created_at',
+        select: 'id, ref_id, user_id, role, is_active, is_primary_manager, created_at, permissions_override',
       });
       return (res.data ?? []) as StaffRow[];
     },
@@ -454,6 +456,14 @@ const DashboardEntityDetail: React.FC = () => {
                       </>
                     )}
                   </div>
+                  <StaffPermissionsMatrix
+                    staffId={s.id}
+                    role={s.role}
+                    permissionsOverride={s.permissions_override}
+                    isPrimaryManager={!!s.is_primary_manager}
+                    canEdit={canManageStaff}
+                    onSaved={refetchStaff}
+                  />
                 );
               })}
             </div>
