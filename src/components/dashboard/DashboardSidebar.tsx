@@ -163,6 +163,7 @@ const userGroups: MenuGroup[] = [
     groupLabel: { ar: 'نشاطي', en: 'My Activity' },
     icon: FileText,
     items: [
+      { label: { ar: 'جهاتي', en: 'My Entities' }, url: '/dashboard/entities', icon: Building2 },
       { label: { ar: 'طلباتي', en: 'My Requests' }, url: '/dashboard/my-requests', icon: Inbox },
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
