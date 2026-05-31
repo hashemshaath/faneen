@@ -1,10 +1,11 @@
-import React, { Suspense, lazy, useMemo } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { EmbeddedPageContext } from '@/contexts/AdminTabsContext';
+import { lazyRetry } from '@/lib/lazyRetry';
 import { Loader2, type LucideIcon } from 'lucide-react';
 
 /**
@@ -59,7 +60,7 @@ const TabbedShellInner: React.FC<TabbedShellProps> = ({ icon: Icon, title, descr
   // Memoize lazy components so they aren't re-created on each render.
   const lazyMap = useMemo(() => {
     const m: Record<string, React.LazyExoticComponent<React.ComponentType<unknown>>> = {};
-    for (const t of tabs) m[t.key] = lazy(t.loader);
+    for (const t of tabs) m[t.key] = lazyRetry(t.loader);
     return m;
   }, [tabs]);
 
