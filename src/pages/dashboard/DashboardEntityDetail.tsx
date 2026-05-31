@@ -693,6 +693,57 @@ const DashboardEntityDetail: React.FC = () => {
             </Card>
           </TabsContent>
 
+          {/* ===== Permissions (governance) ===== */}
+          <TabsContent value="permissions" className="space-y-4 mt-0">
+            <TeamPermissionsOverview
+              members={(staff ?? []).map((s) => ({
+                id: s.id,
+                user_id: s.user_id,
+                role: s.role,
+                is_active: s.is_active,
+                is_primary_manager: s.is_primary_manager,
+                permissions_override: s.permissions_override,
+              }))}
+              profiles={profileMap}
+            />
+            <Card className="p-5">
+              <h2 className="font-semibold mb-2 flex items-center gap-2 text-sm">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                {pickBi(isRTL, 'كيف تعمل الصلاحيات؟', 'How permissions work')}
+              </h2>
+              <ul className="text-[12px] text-muted-foreground space-y-1.5 leading-relaxed">
+                <li>
+                  • {pickBi(
+                    isRTL,
+                    'كل عضو يأخذ افتراضيًا صلاحيات دوره. يمكنك تعديل ذلك من تبويب الفريق بفتح بطاقته.',
+                    'Each member inherits their role defaults. Override them from the Team tab by expanding the member card.',
+                  )}
+                </li>
+                <li>
+                  • {pickBi(
+                    isRTL,
+                    'الشريط الجانبي وصفحات لوحة التحكم تظهر/تختفي تلقائيًا حسب الصلاحيات الفعالة لكل عضو.',
+                    'Sidebar items and dashboard pages auto show/hide based on each member\'s effective permissions.',
+                  )}
+                </li>
+                <li>
+                  • {pickBi(
+                    isRTL,
+                    'علامة كهرمانية تشير إلى صلاحيات مخصصة تختلف عن افتراضي الدور.',
+                    'An amber dot indicates custom permissions that differ from role defaults.',
+                  )}
+                </li>
+                <li>
+                  • {pickBi(
+                    isRTL,
+                    'سياسات قاعدة البيانات (RLS) هي المرجع النهائي — هذه المصفوفة لتجربة الواجهة فقط.',
+                    'Database RLS policies remain the source of truth — this matrix only governs the UI experience.',
+                  )}
+                </li>
+              </ul>
+            </Card>
+          </TabsContent>
+
           {/* ===== Branches ===== */}
           <TabsContent value="branches" className="space-y-4 mt-0">
             <Card className="p-5">
