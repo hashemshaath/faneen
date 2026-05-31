@@ -433,8 +433,8 @@ const ForProviders = () => {
 
   const seoTitle = pick(settings?.seo_title_ar, settings?.seo_title_en) ||
     (isRTL
-      ? 'سجّل جهتك في قِطاعات — منصة قطاع البناء والتشييد والصناعات الخفيفة'
-      : 'Register on Qitaat — Construction, Supply & Light Industry Platform');
+      ? 'انضم لأكبر منصة لورش الألمنيوم والحديد والزجاج في السعودية والخليج | قِطاعات'
+      : 'Join the largest platform for aluminum, steel & glass workshops in Saudi Arabia & the Gulf | Qitaat');
   const seoDesc = pick(settings?.seo_desc_ar, settings?.seo_desc_en) ||
     (isRTL
       ? 'منصة شاملة لجميع جهات قطاع البناء والتشييد والصناعات الخفيفة — ملف مهني قابل للتصنيف، طلبات منظّمة، عروض أسعار، وعقود نظامية تربط جهتك بمشاريع حقيقية.'
@@ -524,20 +524,20 @@ const ForProviders = () => {
               <Sparkles className="w-3.5 h-3.5 text-primary" />
               {isRTL ? 'منصة قطاع البناء والتشييد والصناعات الخفيفة' : 'Construction, Supply & Light Industry Platform'}
             </Badge>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-[2] md:leading-[1.9] pb-3 mb-5 max-w-4xl mx-auto bg-gradient-to-br from-foreground via-foreground to-foreground/75 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.55] md:leading-[1.6] pb-2 mb-5 max-w-4xl mx-auto bg-gradient-to-br from-foreground via-foreground to-foreground/75 bg-clip-text text-transparent">
               {pick(hero?.title_ar, hero?.title_en) ? (
                 pick(hero?.title_ar, hero?.title_en)
               ) : isRTL ? (
                 <>
-                  انضم لأكبر منصة لورش الألمنيوم والحديد
-                  <br />
-                  والزجاج في السعودية والخليج
+                  <span className="inline md:block">انضم لأكبر منصة لورش الألمنيوم والحديد</span>
+                  <span className="hidden md:block" aria-hidden="true">&nbsp;</span>
+                  <span className="inline md:block">والزجاج في السعودية والخليج</span>
                 </>
               ) : (
                 <>
-                  Join the largest platform for aluminum, steel
-                  <br />
-                  &amp; glass workshops in Saudi Arabia &amp; the Gulf
+                  <span className="inline md:block">Join the largest platform for aluminum, steel</span>
+                  <span className="hidden md:block" aria-hidden="true">&nbsp;</span>
+                  <span className="inline md:block">&amp; glass workshops in Saudi Arabia &amp; the Gulf</span>
                 </>
               )}
             </h1>
