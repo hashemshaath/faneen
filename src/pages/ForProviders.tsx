@@ -395,13 +395,15 @@ const ForProviders = () => {
                 { v: stats?.businessCount ?? 0, ar: 'منشأة مسجّلة', en: 'Businesses', icon: Factory },
                 { v: stats?.projectCount ?? 0, ar: 'مشروع منشور', en: 'Projects', icon: Award },
                 { v: stats?.reviewCount ?? 0, ar: 'تقييم موثّق', en: 'Reviews', icon: Star },
-                { v: `${stats?.satisfaction ?? 98}%`, ar: 'رضا العملاء', en: 'Satisfaction', icon: TrendingUp },
+                { v: stats?.satisfaction ?? 98, ar: 'رضا العملاء', en: 'Satisfaction', icon: TrendingUp, isPct: true },
               ].map((s, i) => {
                 const I = s.icon;
                 return (
                   <div key={i} className="rounded-2xl bg-card/70 backdrop-blur border border-border/40 p-3 hover-lift">
                     <I className="w-4 h-4 text-primary mx-auto mb-1.5 opacity-70" />
-                    <div className="text-xl md:text-2xl font-bold text-foreground tech-content">{s.v}+</div>
+                    <div className="text-xl md:text-2xl font-bold text-foreground">
+                      <AnimatedNumber value={Number(s.v) || 0} suffix={('isPct' in s && s.isPct) ? '%' : '+'} />
+                    </div>
                     <div className="text-[11px] md:text-xs text-muted-foreground mt-0.5">{isRTL ? s.ar : s.en}</div>
                   </div>
                 );
