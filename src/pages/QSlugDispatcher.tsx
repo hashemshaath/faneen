@@ -10,11 +10,12 @@
  *
  * Pure routing decision — no data access, no logging.
  */
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { lazyRetry } from '@/lib/lazyRetry';
 
-const QuotationViewer = lazy(() => import('./QuotationViewer'));
-const PublicBarcodeResolve = lazy(() => import('./PublicBarcodeResolve'));
+const QuotationViewer = lazyRetry(() => import('./QuotationViewer'));
+const PublicBarcodeResolve = lazyRetry(() => import('./PublicBarcodeResolve'));
 
 const QSlugDispatcher: React.FC = () => {
   const [params] = useSearchParams();

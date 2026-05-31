@@ -1,4 +1,4 @@
-import { lazy, Suspense, ComponentType } from "react";
+import { Suspense } from "react";
 import "@/lib/accent-colors";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -17,38 +17,10 @@ import { GlobalLinkTracker } from "@/components/GlobalLinkTracker";
 import { GlobalShortcuts } from "@/components/GlobalShortcuts";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { ThemeApplier } from "@/components/ThemeApplier";
+import { lazyRetry } from "@/lib/lazyRetry";
 const Index = lazyRetry(() => import("./pages/Index"));
-const ConsentBanner = lazy(() => import("./components/consent/ConsentBanner"));
-const BuildVersionWatcher = lazy(() => import("./components/BuildVersionWatcher"));
-
-function lazyRetry<T extends ComponentType<any>>(
-  factory: () => Promise<{ default: T }>,
-): React.LazyExoticComponent<T> {
-  return lazy(() =>
-    factory().catch((err) => {
-      const msg = String(err?.message ?? err ?? '');
-      const isChunkError =
-        /Importing a module script failed|Failed to fetch dynamically imported module|Loading chunk|ChunkLoadError|error loading dynamically imported module/i.test(
-          msg,
-        );
-      if (!isChunkError) throw err;
-      const key = 'lazy-retry-reloaded';
-      try {
-        if (!sessionStorage.getItem(key)) {
-          sessionStorage.setItem(key, '1');
-          window.location.reload();
-          // Suspend forever while the reload happens so React/ErrorBoundary
-          // never sees the failure UI flash.
-          return new Promise<{ default: T }>(() => {});
-        }
-      } catch {
-        /* storage may be blocked */
-      }
-      // Second attempt after a reload — retry once more, then surface.
-      return factory();
-    }),
-  );
-}
+const ConsentBanner = lazyRetry(() => import("./components/consent/ConsentBanner"));
+const BuildVersionWatcher = lazyRetry(() => import("./components/BuildVersionWatcher"));
 
 const Auth = lazyRetry(() => import("./pages/Auth"));
 const HelpCenterHome = lazyRetry(() => import("./pages/help/HelpCenterHome"));
@@ -58,7 +30,7 @@ const ReportIssuePage = lazyRetry(() => import("./pages/help/ReportIssuePage"));
 const FeatureRequestPage = lazyRetry(() => import("./pages/help/FeatureRequestPage"));
 const AdminHelpCenter = lazyRetry(() => import("./pages/admin/AdminHelpCenter"));
 const DashboardHelpCenter = lazyRetry(() => import("./pages/dashboard/DashboardHelpCenter"));
-const HelpLauncherFloating = lazy(() => import("./components/help/HelpLauncherFloating"));
+const HelpLauncherFloating = lazyRetry(() => import("./components/help/HelpLauncherFloating"));
 const PublicSiteScan = lazyRetry(() => import("./pages/PublicSiteScan"));
 const PublicBarcodeResolve = lazyRetry(() => import("./pages/PublicBarcodeResolve"));
 const ReferenceResolver = lazyRetry(() => import("./pages/ReferenceResolver"));

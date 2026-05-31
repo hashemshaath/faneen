@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, lazy, Suspense } from 'react';
+import React, { useEffect, useMemo, useRef, Suspense } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,8 +6,9 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { setForbiddenContext } from '@/lib/forbiddenContext';
 import { useVisibleModules } from '@/hooks/useVisibleModules';
+import { lazyRetry } from '@/lib/lazyRetry';
 
-const Forbidden = lazy(() => import('@/pages/Forbidden'));
+const Forbidden = lazyRetry(() => import('@/pages/Forbidden'));
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

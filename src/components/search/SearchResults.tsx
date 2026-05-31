@@ -7,16 +7,17 @@ import {
   Search as SearchIcon, LayoutGrid, List, Map, Columns,
   Share2,
 } from 'lucide-react';
-import { lazy, Suspense, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { toast } from 'sonner';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { lazyRetry } from '@/lib/lazyRetry';
 
 // Leaflet weighs ~150KB gzipped — only load it when the user actually opens
 // a map view. Grid/list searchers (the majority) never pay that cost, which
 // improves LCP/INP on /search significantly.
-const SearchMap = lazy(() =>
+const SearchMap = lazyRetry(() =>
   import('./SearchMap').then((m) => ({ default: m.SearchMap })),
 );
 
