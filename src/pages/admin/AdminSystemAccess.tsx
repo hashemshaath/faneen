@@ -334,6 +334,8 @@ const AdminSystemAccess: React.FC = () => {
               icon={Globe} label={isRTL ? 'الافتراضي العام' : 'Global Default'} />
             <ScopeTabBtn active={scopeTab === 'account_type'} onClick={() => setScopeTab('account_type')}
               icon={UsersIcon} label={isRTL ? 'حسب نوع الحساب' : 'By Account Type'} />
+            <ScopeTabBtn active={scopeTab === 'entity'} onClick={() => { setScopeTab('entity'); setSelectedEntityId(null); }}
+              icon={Building2} label={isRTL ? 'لمنشأة محددة' : 'Per Business'} />
             <ScopeTabBtn active={scopeTab === 'user'} onClick={() => { setScopeTab('user'); setSelectedUserId(null); }}
               icon={UserIcon} label={isRTL ? 'مستخدم محدد' : 'Per User'} />
           </div>
