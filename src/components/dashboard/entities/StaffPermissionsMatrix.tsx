@@ -9,16 +9,23 @@
  * - UI-only hint; RLS + `has_permission` on the server remain authoritative.
  */
 import React, { useMemo, useState } from 'react';
-import { Check, Pin, RotateCcw, Save, Search, ShieldCheck } from 'lucide-react';
+import {
+  Check, ChevronDown, ChevronUp, Copy, Minus, Pin, Plus, RotateCcw,
+  Save, Search, ShieldCheck, Sparkles, X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { pickBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import {
   WORKSPACE_PERMISSIONS,
+  WORKSPACE_ROLES,
   getDefaultPermissionsForRole,
   type WorkspacePermission,
 } from '@/modules/workspace/permissions';
@@ -103,6 +110,9 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<'all' | 'granted' | 'changed' | 'denied'>('all');
+  const [collapsedDomains, setCollapsedDomains] = useState<Set<string>>(new Set());
+  const [templateRole, setTemplateRole] = useState<string>('');
 
   const toggle = (p: string) => {
     if (!canEdit || isPrimaryManager) return;
@@ -115,8 +125,53 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
 
   const resetToRole = () => setSelected(new Set(defaults));
 
+  const setDomainAll = (perms: string[], on: boolean) => {
+    if (!canEdit || isPrimaryManager) return;
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const p of perms) { if (on) next.add(p); else next.delete(p); }
+      return next;
+    });
+  };
+
+  const toggleDomainCollapse = (d: string) => {
+    setCollapsedDomains((prev) => {
+      const next = new Set(prev);
+      if (next.has(d)) next.delete(d); else next.add(d);
+      return next;
+    });
+  };
+
+  const applyTemplate = (roleKey: string) => {
+    if (!canEdit || isPrimaryManager || !roleKey) return;
+    const tplDefaults = getDefaultPermissionsForRole(roleKey) as string[];
+    setSelected(new Set(tplDefaults));
+    setTemplateRole('');
+    toast({ title: pickBi(isRTL, 'تم تطبيق القالب', 'Template applied') });
+  };
+
+  const grantAll = () => {
+    if (!canEdit || isPrimaryManager) return;
+    setSelected(new Set(WORKSPACE_PERMISSIONS));
+  };
+  const denyAll = () => {
+    if (!canEdit || isPrimaryManager) return;
+    setSelected(new Set());
+  };
+
   const dirty = !sameSet(Array.from(selected), initial);
   const matchesDefaults = sameSet(Array.from(selected), defaults);
+
+  // Diff vs role defaults
+  const diff = useMemo(() => {
+    const sel = new Set(selected);
+    const def = new Set(defaults);
+    const added: string[] = [];
+    const removed: string[] = [];
+    for (const p of sel) if (!def.has(p)) added.push(p);
+    for (const p of def) if (!sel.has(p)) removed.push(p);
+    return { added, removed };
+  }, [selected, defaults]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -145,18 +200,21 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
 
   const matches = (domain: string, perm: string): boolean => {
     const q = query.trim().toLowerCase();
-    if (!q) return true;
-    const action = perm.split('.')[1] ?? '';
-    const haystack = [
-      perm,
-      domain,
-      action,
-      DOMAIN_LABELS[domain]?.ar ?? '',
-      DOMAIN_LABELS[domain]?.en ?? '',
-      ACTION_LABELS[action]?.ar ?? '',
-      ACTION_LABELS[action]?.en ?? '',
-    ].join(' ').toLowerCase();
-    return haystack.includes(q);
+    if (q) {
+      const action = perm.split('.')[1] ?? '';
+      const haystack = [
+        perm, domain, action,
+        DOMAIN_LABELS[domain]?.ar ?? '', DOMAIN_LABELS[domain]?.en ?? '',
+        ACTION_LABELS[action]?.ar ?? '', ACTION_LABELS[action]?.en ?? '',
+      ].join(' ').toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    const isOn = selected.has(perm);
+    const inDefault = defaults.includes(perm);
+    if (filter === 'granted' && !isOn) return false;
+    if (filter === 'denied' && isOn) return false;
+    if (filter === 'changed' && isOn === inDefault) return false;
+    return true;
   };
 
   const visibleDomains = useMemo(() => {
@@ -164,7 +222,15 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
     return ordered
       .map((d) => ({ domain: d, perms: grouped[d].filter((p) => matches(d, p)) }))
       .filter((g) => g.perms.length > 0);
-  }, [grouped, query]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [grouped, query, filter, selected, defaults]);
+
+  const FILTER_CHIPS: { value: typeof filter; ar: string; en: string }[] = [
+    { value: 'all', ar: 'الكل', en: 'All' },
+    { value: 'granted', ar: 'الممنوحة', en: 'Granted' },
+    { value: 'changed', ar: 'المختلفة عن الدور', en: 'Changed' },
+    { value: 'denied', ar: 'المرفوضة', en: 'Denied' },
+  ];
 
   return (
     <div className="mt-2 border-t border-border/40 pt-2">
@@ -195,37 +261,146 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
               {pickBi(isRTL, 'المدير الرئيسي يملك جميع الصلاحيات تلقائيًا.', 'Primary manager has all permissions by default.')}
             </p>
           )}
-          <div className="relative">
-            <Search className="absolute top-1/2 -translate-y-1/2 start-2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={pickBi(isRTL, 'ابحث في الصلاحيات...', 'Search permissions...')}
-              className="h-8 ps-7 text-[11px]"
-            />
+
+          {/* Toolbar: search + filter chips + role template + global actions */}
+          <div className="space-y-2">
+            <div className="grid gap-2 md:grid-cols-[1fr_auto]">
+              <div className="relative">
+                <Search className="absolute top-1/2 -translate-y-1/2 start-2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={pickBi(isRTL, 'ابحث في الصلاحيات...', 'Search permissions...')}
+                  className="h-8 ps-7 text-[11px]"
+                />
+              </div>
+              {canEdit && !isPrimaryManager && (
+                <div className="flex items-center gap-1.5">
+                  <Select value={templateRole} onValueChange={applyTemplate}>
+                    <SelectTrigger className="h-8 text-[11px] w-[180px]">
+                      <Sparkles className="w-3 h-3 me-1 text-primary" />
+                      <SelectValue placeholder={pickBi(isRTL, 'تطبيق قالب دور…', 'Apply role template…')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {WORKSPACE_ROLES.map((r) => (
+                        <SelectItem key={r} value={r} className="text-[11px]">{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={grantAll} variant="outline" size="sm" className="h-8 px-2 text-[10px]">
+                    {pickBi(isRTL, 'منح الكل', 'Grant all')}
+                  </Button>
+                  <Button onClick={denyAll} variant="outline" size="sm" className="h-8 px-2 text-[10px]">
+                    {pickBi(isRTL, 'رفض الكل', 'Deny all')}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {FILTER_CHIPS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setFilter(c.value)}
+                  className={`text-[10px] px-2 py-1 rounded-full border transition-all ${
+                    filter === c.value
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-muted/40 text-muted-foreground border-border/40 hover:border-primary/40'
+                  }`}
+                >
+                  {pickBi(isRTL, c.ar, c.en)}
+                </button>
+              ))}
+              <span className="text-[10px] text-muted-foreground ms-auto inline-flex items-center gap-2">
+                {diff.added.length > 0 && (
+                  <span className="inline-flex items-center gap-0.5 text-emerald-600">
+                    <Plus className="w-2.5 h-2.5" />{diff.added.length}
+                  </span>
+                )}
+                {diff.removed.length > 0 && (
+                  <span className="inline-flex items-center gap-0.5 text-rose-600">
+                    <Minus className="w-2.5 h-2.5" />{diff.removed.length}
+                  </span>
+                )}
+                {diff.added.length === 0 && diff.removed.length === 0 && (
+                  <span>{pickBi(isRTL, 'مطابق للدور', 'Matches role')}</span>
+                )}
+              </span>
+            </div>
           </div>
+
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {visibleDomains.map(({ domain, perms }) => {
               const isPinned = (PINNED_DOMAINS as readonly string[]).includes(domain);
+              const allPerms = grouped[domain] ?? [];
+              const grantedCount = allPerms.filter((p) => selected.has(p)).length;
+              const allOn = grantedCount === allPerms.length;
+              const noneOn = grantedCount === 0;
+              const customDomain = allPerms.some(
+                (p) => selected.has(p) !== defaults.includes(p),
+              );
+              const collapsed = collapsedDomains.has(domain);
               return (
               <div
                 key={domain}
-                className={`rounded-lg border p-2.5 ${isPinned ? 'border-primary/40 bg-primary/5' : 'border-border/40 bg-muted/20'}`}
+                className={`rounded-lg border p-2.5 ${
+                  isPinned ? 'border-primary/40 bg-primary/5' : 'border-border/40 bg-muted/20'
+                } ${customDomain ? 'ring-1 ring-amber-500/30' : ''}`}
               >
-                <p className="text-[11px] font-semibold mb-1.5 flex items-center gap-1.5">
-                  {isPinned && <Pin className="w-3 h-3 text-primary" />}
-                  {pickBi(isRTL, DOMAIN_LABELS[domain]?.ar ?? domain, DOMAIN_LABELS[domain]?.en ?? domain)}
-                </p>
+                <div className="flex items-center justify-between gap-1 mb-1.5">
+                  <button
+                    type="button"
+                    onClick={() => toggleDomainCollapse(domain)}
+                    className="text-[11px] font-semibold flex items-center gap-1.5 hover:text-primary transition"
+                  >
+                    {isPinned && <Pin className="w-3 h-3 text-primary" />}
+                    {pickBi(isRTL, DOMAIN_LABELS[domain]?.ar ?? domain, DOMAIN_LABELS[domain]?.en ?? domain)}
+                    <Badge variant="outline" className="text-[8px] h-3.5 px-1">
+                      {grantedCount}/{allPerms.length}
+                    </Badge>
+                    {customDomain && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title={pickBi(isRTL, 'مخصصة', 'Custom')} />
+                    )}
+                    {collapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+                  </button>
+                  {canEdit && !isPrimaryManager && !collapsed && (
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setDomainAll(allPerms, true)}
+                        disabled={allOn}
+                        className="text-[9px] px-1 py-0.5 rounded text-emerald-600 hover:bg-emerald-500/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title={pickBi(isRTL, 'منح الكل', 'Grant all')}
+                      >
+                        <Check className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDomainAll(allPerms, false)}
+                        disabled={noneOn}
+                        className="text-[9px] px-1 py-0.5 rounded text-rose-600 hover:bg-rose-500/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title={pickBi(isRTL, 'رفض الكل', 'Deny all')}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {!collapsed && (
                 <div className="space-y-1">
                   {perms.map((p) => {
                     const action = p.split('.')[1] ?? '';
                     const isOn = selected.has(p);
                     const inDefault = defaults.includes(p);
                     const disabled = !canEdit || isPrimaryManager;
+                    const changed = isOn !== inDefault;
                     return (
                       <label
                         key={p}
-                        className={`flex items-center gap-2 text-[11px] cursor-pointer ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        className={`flex items-center gap-2 text-[11px] cursor-pointer rounded px-1 -mx-1 ${
+                          disabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-background/60'
+                        } ${changed ? 'bg-amber-500/5' : ''}`}
                       >
                         <Checkbox
                           checked={isOn}
@@ -233,18 +408,25 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
                           onCheckedChange={() => toggle(p)}
                           className="h-3.5 w-3.5"
                         />
-                        <span className="flex-1">
+                        <span className={`flex-1 ${isOn ? 'text-foreground' : 'text-muted-foreground'}`}>
                           {pickBi(isRTL, ACTION_LABELS[action]?.ar ?? action, ACTION_LABELS[action]?.en ?? action)}
                         </span>
-                        {inDefault && (
-                          <span className="text-[9px] text-muted-foreground/70">
+                        {changed ? (
+                          isOn ? (
+                            <span className="text-[8px] px-1 rounded bg-emerald-500/15 text-emerald-700">+</span>
+                          ) : (
+                            <span className="text-[8px] px-1 rounded bg-rose-500/15 text-rose-700">−</span>
+                          )
+                        ) : inDefault ? (
+                          <span className="text-[9px] text-muted-foreground/70" title={pickBi(isRTL, 'افتراضي الدور', 'Role default')}>
                             <Check className="w-2.5 h-2.5 inline" />
                           </span>
-                        )}
+                        ) : null}
                       </label>
                     );
                   })}
                 </div>
+                )}
               </div>
               );
             })}
@@ -255,15 +437,29 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
             )}
           </div>
           {canEdit && !isPrimaryManager && (
-            <div className="flex justify-end gap-2 pt-1">
-              <Button onClick={resetToRole} variant="ghost" size="sm" disabled={saving}>
-                <RotateCcw className="w-3.5 h-3.5 me-1" />
-                {pickBi(isRTL, 'افتراضي الدور', 'Role defaults')}
-              </Button>
-              <Button onClick={handleSave} size="sm" disabled={saving || !dirty}>
-                <Save className="w-3.5 h-3.5 me-1" />
-                {pickBi(isRTL, 'حفظ', 'Save')}
-              </Button>
+            <div className={`flex items-center justify-between gap-2 pt-2 mt-1 -mx-2 px-2 border-t border-border/40 ${
+              dirty ? 'sticky bottom-0 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 py-2 rounded-b-lg shadow-[0_-4px_12px_-8px_rgba(0,0,0,0.15)]' : ''
+            }`}>
+              <div className="text-[10px] text-muted-foreground">
+                {dirty ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    {pickBi(isRTL, 'تغييرات غير محفوظة', 'Unsaved changes')}
+                  </span>
+                ) : (
+                  <span>{pickBi(isRTL, 'محفوظ', 'Saved')}</span>
+                )}
+              </div>
+              <div className="flex gap-1.5">
+                <Button onClick={resetToRole} variant="ghost" size="sm" disabled={saving} className="h-7 text-[11px]">
+                  <RotateCcw className="w-3 h-3 me-1" />
+                  {pickBi(isRTL, 'افتراضي الدور', 'Role defaults')}
+                </Button>
+                <Button onClick={handleSave} size="sm" disabled={saving || !dirty} className="h-7 text-[11px]">
+                  <Save className="w-3 h-3 me-1" />
+                  {pickBi(isRTL, 'حفظ', 'Save')}
+                </Button>
+              </div>
             </div>
           )}
           <p className="text-[10px] text-muted-foreground leading-snug">
