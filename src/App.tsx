@@ -229,6 +229,12 @@ const AdminOperationsHub = lazyRetry(() => import("./pages/admin/AdminOperations
 const AdminReportsHub = lazyRetry(() => import("./pages/admin/AdminReportsHub"));
 const AdminEmailHub = lazyRetry(() => import("./pages/admin/AdminEmailHub"));
 const AdminSeoHub = lazyRetry(() => import("./pages/admin/AdminSeoHub"));
+// NAVIGATION-CONSOLIDATION-1 — Phase 3 hubs.
+const AdminProviderReviewHub = lazyRetry(() => import("./pages/admin/AdminProviderReviewHub"));
+const AdminContractsHub = lazyRetry(() => import("./pages/admin/AdminContractsHub"));
+const AdminMembershipsHub = lazyRetry(() => import("./pages/admin/AdminMembershipsHub"));
+const AdminTaxonomyHub = lazyRetry(() => import("./pages/admin/AdminTaxonomyHub"));
+const AdminSystemSettingsHub = lazyRetry(() => import("./pages/admin/AdminSystemSettingsHub"));
 
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
