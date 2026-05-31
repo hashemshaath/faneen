@@ -518,3 +518,142 @@ const AiAssistantPanel = ({ onSaved }: { onSaved: () => void }) => {
 };
 
 export default AdminProviderLanding;
+
+type ContentRowProps = {
+  c: Awaited<ReturnType<typeof fetchLandingContent>>[number];
+  onSaved: () => void;
+  onErr: (e: unknown) => void;
+};
+
+const ContentRow = ({ c, onSaved, onErr }: ContentRowProps) => {
+  const { toast } = useToast();
+  const [imageUrl, setImageUrl] = useState<string>(c.image_url ?? '');
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <Card className="p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <Badge variant="outline">{c.section_key}</Badge>
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={c.is_active}
+            onCheckedChange={async (v) => {
+              try {
+                const { error } = await supabase.from('provider_landing_content').update({ is_active: v }).eq('id', c.id);
+                if (error) throw error;
+                onSaved();
+              } catch (e) { onErr(e); }
+            }}
+          />
+          <span className="text-xs text-muted-foreground">{c.is_active ? 'مفعل' : 'معطل'}</span>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-3">
+        <div>
+          <Label className="text-xs">العنوان (عربي)</Label>
+          <Input defaultValue={c.title_ar ?? ''} dir="auto" id={`t-ar-${c.id}`} />
+        </div>
+        <div>
+          <Label className="text-xs">Title (English)</Label>
+          <Input defaultValue={c.title_en ?? ''} dir="auto" id={`t-en-${c.id}`} />
+        </div>
+        <div>
+          <Label className="text-xs">العنوان الفرعي (عربي)</Label>
+          <Textarea defaultValue={c.subtitle_ar ?? ''} dir="auto" id={`s-ar-${c.id}`} rows={2} />
+        </div>
+        <div>
+          <Label className="text-xs">Subtitle (English)</Label>
+          <Textarea defaultValue={c.subtitle_en ?? ''} dir="auto" id={`s-en-${c.id}`} rows={2} />
+        </div>
+        <div>
+          <Label className="text-xs">نص إضافي (عربي)</Label>
+          <Textarea defaultValue={c.body_ar ?? ''} dir="auto" id={`b-ar-${c.id}`} rows={3} />
+        </div>
+        <div>
+          <Label className="text-xs">Body (English)</Label>
+          <Textarea defaultValue={c.body_en ?? ''} dir="auto" id={`b-en-${c.id}`} rows={3} />
+        </div>
+
+        <div>
+          <Label className="text-xs">زر رئيسي (عربي)</Label>
+          <Input defaultValue={c.cta_primary_label_ar ?? ''} id={`cta1-ar-${c.id}`} />
+        </div>
+        <div>
+          <Label className="text-xs">Primary CTA (English)</Label>
+          <Input defaultValue={c.cta_primary_label_en ?? ''} id={`cta1-en-${c.id}`} />
+        </div>
+        <div className="md:col-span-2">
+          <Label className="text-xs">رابط الزر الرئيسي</Label>
+          <Input defaultValue={c.cta_primary_href ?? ''} id={`cta1-href-${c.id}`} dir="ltr" className="tech-content" />
+        </div>
+
+        <div>
+          <Label className="text-xs">زر ثانوي (عربي)</Label>
+          <Input defaultValue={c.cta_secondary_label_ar ?? ''} id={`cta2-ar-${c.id}`} />
+        </div>
+        <div>
+          <Label className="text-xs">Secondary CTA (English)</Label>
+          <Input defaultValue={c.cta_secondary_label_en ?? ''} id={`cta2-en-${c.id}`} />
+        </div>
+        <div className="md:col-span-2">
+          <Label className="text-xs">رابط الزر الثانوي</Label>
+          <Input defaultValue={c.cta_secondary_href ?? ''} id={`cta2-href-${c.id}`} dir="ltr" className="tech-content" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs">صورة القسم (تظهر داخل الصفحة)</Label>
+        <ImageUpload
+          bucket="showcase"
+          folder={`provider-landing/${c.section_key}`}
+          value={imageUrl || undefined}
+          onChange={(url) => setImageUrl(url)}
+          onRemove={() => setImageUrl('')}
+          aspectRatio="video"
+          placeholder="ارفع صورة تحفيزية أو معبّرة عن هذا القسم"
+        />
+        <Input
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          dir="ltr"
+          className="tech-content text-xs"
+          placeholder="أو ألصق رابط صورة مباشرة"
+        />
+      </div>
+
+      <Button
+        size="sm"
+        disabled={saving}
+        onClick={async () => {
+          setSaving(true);
+          try {
+            const get = (id: string) =>
+              (document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null)?.value ?? null;
+            const { error } = await supabase.from('provider_landing_content').update({
+              title_ar: get(`t-ar-${c.id}`),
+              title_en: get(`t-en-${c.id}`),
+              subtitle_ar: get(`s-ar-${c.id}`),
+              subtitle_en: get(`s-en-${c.id}`),
+              body_ar: get(`b-ar-${c.id}`),
+              body_en: get(`b-en-${c.id}`),
+              cta_primary_label_ar: get(`cta1-ar-${c.id}`),
+              cta_primary_label_en: get(`cta1-en-${c.id}`),
+              cta_primary_href: get(`cta1-href-${c.id}`),
+              cta_secondary_label_ar: get(`cta2-ar-${c.id}`),
+              cta_secondary_label_en: get(`cta2-en-${c.id}`),
+              cta_secondary_href: get(`cta2-href-${c.id}`),
+              image_url: imageUrl || null,
+            }).eq('id', c.id);
+            if (error) throw error;
+            toast({ title: 'تم الحفظ' });
+            onSaved();
+          } catch (e) { onErr(e); } finally { setSaving(false); }
+        }}
+      >
+        {saving ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Save className="w-4 h-4 me-2" />}
+        حفظ
+      </Button>
+    </Card>
+  );
+};
