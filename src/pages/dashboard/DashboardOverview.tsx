@@ -1,10 +1,11 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useProviderActivityPing } from '@/hooks/useProviderActivityPing';
 import { DashboardViewSkeleton } from '@/components/dashboard/overview/shared';
+import { lazyRetry } from '@/lib/lazyRetry';
 import '@/styles/dashboard-emerald.css';
 
 /**
@@ -13,9 +14,9 @@ import '@/styles/dashboard-emerald.css';
  * activity log views; provider chunk ~ provider widgets + revenue chart;
  * user chunk ~ minimal).
  */
-const AdminDashboardView    = lazy(() => import('./overview/AdminDashboardView'));
-const ProviderDashboardView = lazy(() => import('./overview/ProviderDashboardView'));
-const UserDashboardView     = lazy(() => import('./overview/UserDashboardView'));
+const AdminDashboardView    = lazyRetry(() => import('./overview/AdminDashboardView'));
+const ProviderDashboardView = lazyRetry(() => import('./overview/ProviderDashboardView'));
+const UserDashboardView     = lazyRetry(() => import('./overview/UserDashboardView'));
 
 const DashboardOverview = () => {
   useNoIndex();
