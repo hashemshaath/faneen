@@ -203,7 +203,7 @@ const DashboardEntityDetail: React.FC = () => {
   };
 
   const handleTransferOwnership = async (targetUserId: string) => {
-    const result = await transferMutation.mutateAsync({ businessId: id, newPrimaryManagerUserId: targetUserId });
+    const result = await transferMutation.mutateAsync({ businessId: id, toUserId: targetUserId });
     if (result.ok) {
       toast({ title: pickBi(isRTL, 'تم نقل الإدارة الرئيسية', 'Primary manager transferred') });
       refetchStaff();
