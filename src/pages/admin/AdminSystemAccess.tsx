@@ -57,6 +57,7 @@ const AdminSystemAccess: React.FC = () => {
   const qc = useQueryClient();
 
   const [scopeTab, setScopeTab] = useState<ScopeTab>('global');
+  const [viewTab, setViewTab] = useState<ViewTab>('manage');
   const [accountType, setAccountType] = useState<AccountType>('provider');
   const [userSearch, setUserSearch] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
