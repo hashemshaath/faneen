@@ -132,6 +132,17 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
   const [filter, setFilter] = useState<'all' | 'granted' | 'changed' | 'denied'>('all');
   const [collapsedDomains, setCollapsedDomains] = useState<Set<string>>(new Set());
   const [templateRole, setTemplateRole] = useState<string>('');
+  const [presets, setPresets] = useState<CustomPreset[]>(() => readPresets());
+  const [presetName, setPresetName] = useState('');
+  const [showPresetForm, setShowPresetForm] = useState(false);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === PRESETS_STORAGE_KEY) setPresets(readPresets());
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   const toggle = (p: string) => {
     if (!canEdit || isPrimaryManager) return;
@@ -167,6 +178,70 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
     setSelected(new Set(tplDefaults));
     setTemplateRole('');
     toast({ title: pickBi(isRTL, 'تم تطبيق القالب', 'Template applied') });
+  };
+
+  const applyCustomPreset = (presetId: string) => {
+    if (!canEdit || isPrimaryManager) return;
+    const p = presets.find((x) => x.id === presetId);
+    if (!p) return;
+    const valid = p.perms.filter((x): x is WorkspacePermission =>
+      (WORKSPACE_PERMISSIONS as readonly string[]).includes(x),
+    );
+    setSelected(new Set(valid));
+    toast({ title: pickBi(isRTL, `طُبّق: ${p.name}`, `Applied: ${p.name}`) });
+  };
+
+  const savePreset = () => {
+    const name = presetName.trim();
+    if (!name) return;
+    const next: CustomPreset = {
+      id: `pst_${Date.now()}`,
+      name,
+      perms: Array.from(selected),
+      created_at: Date.now(),
+    };
+    const updated = [next, ...presets].slice(0, 20);
+    setPresets(updated);
+    writePresets(updated);
+    setPresetName('');
+    setShowPresetForm(false);
+    toast({ title: pickBi(isRTL, 'تم حفظ القالب', 'Preset saved') });
+  };
+
+  const deletePreset = (presetId: string) => {
+    const updated = presets.filter((p) => p.id !== presetId);
+    setPresets(updated);
+    writePresets(updated);
+  };
+
+  const exportJson = () => {
+    const payload = { role, permissions: Array.from(selected).sort(), exported_at: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `permissions-${role}-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importJson = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const obj = JSON.parse(String(reader.result ?? ''));
+        const list = Array.isArray(obj?.permissions) ? obj.permissions : [];
+        const valid = list.filter((x: unknown): x is WorkspacePermission =>
+          typeof x === 'string' && (WORKSPACE_PERMISSIONS as readonly string[]).includes(x),
+        );
+        if (valid.length === 0) throw new Error('empty');
+        setSelected(new Set(valid));
+        toast({ title: pickBi(isRTL, 'تم الاستيراد', 'Imported'), description: `${valid.length} ${pickBi(isRTL, 'صلاحية', 'permissions')}` });
+      } catch {
+        toast({ title: pickBi(isRTL, 'ملف غير صالح', 'Invalid file'), variant: 'destructive' });
+      }
+    };
+    reader.readAsText(file);
   };
 
   const grantAll = () => {
