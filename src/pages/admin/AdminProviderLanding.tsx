@@ -24,6 +24,7 @@ import {
 } from '@/services/providerLandingService';
 import { Loader2, Save, Trash2, Plus, ExternalLink, BarChart3, Eye, MousePointerClick, UserPlus, TrendingUp, Sparkles } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 /* Brand-aligned chart palette — sourced from central design tokens.
    No purple/cyan/pink/neon. */
@@ -95,6 +96,13 @@ const AdminProviderLanding = () => {
           {/* CONTENT */}
           <TabsContent value="content" className="space-y-4 mt-4">
             {content.map((c) => (
+              <ContentRow key={c.id} c={c} onSaved={refreshAll} onErr={handleErr} />
+            ))}
+          </TabsContent>
+
+          {/* dummy block to anchor patch */}
+          <TabsContent value="__never__" className="hidden">
+            {false && content.map((c) => (
               <Card key={c.id} className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <Badge variant="outline">{c.section_key}</Badge>
