@@ -668,14 +668,22 @@ const AdminSystemAccess: React.FC = () => {
           )
         ) : (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-            <UserIcon className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            {scopeTab === 'entity'
+              ? <Building2 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              : <UserIcon className="w-10 h-10 text-muted-foreground mx-auto mb-3" />}
             <div className="font-semibold text-sm">
-              {isRTL ? 'اختر مستخدماً لإدارة صلاحياته' : 'Pick a user to manage their visibility'}
+              {scopeTab === 'entity'
+                ? (isRTL ? 'اختر منشأة لإدارة أنظمتها' : 'Pick a business to manage its modules')
+                : (isRTL ? 'اختر مستخدماً لإدارة صلاحياته' : 'Pick a user to manage their visibility')}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {isRTL
-                ? 'قواعد المستخدم تتفوق على قواعد نوع الحساب والافتراضي العام.'
-                : 'User rules override account-type and global defaults.'}
+              {scopeTab === 'entity'
+                ? (isRTL
+                    ? 'قواعد المنشأة تنطبق على المالك وجميع الموظفين، ويمكن تجاوزها بقواعد المستخدم.'
+                    : 'Business rules apply to the owner and all staff; per-user rules can still override them.')
+                : (isRTL
+                    ? 'قواعد المستخدم تتفوق على قواعد المنشأة ونوع الحساب والافتراضي العام.'
+                    : 'User rules override business, account-type, and global defaults.')}
             </p>
           </div>
         )}
