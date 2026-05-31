@@ -180,11 +180,10 @@ describe('Part F — branding fallback', () => {
 });
 
 describe('Part B — sidebar invariants', () => {
-  it('mounts SidebarBrand, SidebarQuickCreate, SidebarFavorites, SidebarRecent', () => {
+  it('mounts SidebarBrand, SidebarQuickCreate, SidebarFavorites', () => {
     expect(SIDEBAR).toContain('<SidebarBrand');
     expect(SIDEBAR).toContain('<SidebarQuickCreate');
     expect(SIDEBAR).toContain('<SidebarFavorites');
-    expect(SIDEBAR).toContain('<SidebarRecent');
   });
 
   it('no /admin/identity?view=... deep links remain anywhere in the sidebar', () => {

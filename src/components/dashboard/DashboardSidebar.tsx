@@ -22,7 +22,6 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarBrand } from '@/components/dashboard/navigation/SidebarBrand';
 import { SidebarQuickCreate } from '@/components/dashboard/navigation/SidebarQuickCreate';
 import { SidebarFavorites } from '@/components/dashboard/navigation/SidebarFavorites';
-import { SidebarRecent } from '@/components/dashboard/navigation/SidebarRecent';
 import {
   LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut,
   Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare,
@@ -42,6 +41,7 @@ import {
   User,
   UserPlus,
   ClipboardList,
+  ChevronDown,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -392,6 +392,35 @@ const BadgePill: React.FC<{ tone?: 'new' | 'support' | 'neutral'; children: Reac
   );
 };
 
+// ──────────────────────────────────────────────────────────
+// Collapsible group state — persisted per group key.
+// Items: open=true means the group is expanded.
+// ──────────────────────────────────────────────────────────
+const SIDEBAR_GROUPS_LS_KEY = 'qitaat_sidebar_groups_v1';
+
+function readGroupState(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(SIDEBAR_GROUPS_LS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, boolean>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function useSidebarGroupCollapse() {
+  const [state, setState] = React.useState<Record<string, boolean>>(() => readGroupState());
+  const setOpen = React.useCallback((key: string, open: boolean) => {
+    setState((prev) => {
+      const next = { ...prev, [key]: open };
+      try { localStorage.setItem(SIDEBAR_GROUPS_LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+  return { state, setOpen };
+}
+
 const RenderMenu: React.FC<{
   items: MenuItem[];
   collapsed: boolean;
@@ -450,6 +479,7 @@ const RenderGroups: React.FC<{
   workspace?: { active_role: string | null; permissions: string[] } | null;
   isRouteHidden?: (path: string) => boolean;
 }> = ({ groups, collapsed, isRTL, closeMobile, isSuperAdmin = false, pathname, isAdmin = false, workspace = null, isRouteHidden }) => {
+  const { state: groupOpenState, setOpen: setGroupOpen } = useSidebarGroupCollapse();
   // ORG-RBAC-STRUCTURE-1 — Phase D
   // Centralized visibility: admin override always wins; owner short-circuits;
   // unmapped routes fall through to legacy (visible) behavior. RLS remains
@@ -480,30 +510,56 @@ const RenderGroups: React.FC<{
         (item) => (!item.superAdminOnly || isSuperAdmin) && canView(item.url),
       );
       if (visibleItems.length === 0) return null;
+      const groupKey = group.groupLabel.en;
+      // Auto-expand the group that contains the active route. Otherwise
+      // use the user's persisted preference; default open for the first
+      // group, default closed for the rest to reduce visual noise.
+      const containsActive = bestActiveUrl != null && visibleItems.some((it) => it.url === bestActiveUrl);
+      const storedOpen = groupOpenState[groupKey];
+      const isOpen = collapsed
+        ? true
+        : containsActive
+          ? true
+          : (storedOpen ?? gi === 0);
       return (
         <SidebarGroup key={group.groupLabel.en} className={gi > 0 && !collapsed ? 'mt-1.5 pt-1.5 border-t border-sidebar-border/60' : ''}>
-          <SidebarGroupLabel>
+          <SidebarGroupLabel asChild>
             {!collapsed ? (
-              <span className="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/55">
-                <group.icon className="w-3 h-3 opacity-70" />
-                {isRTL ? group.groupLabel.ar : group.groupLabel.en}
-              </span>
-            ) : ''}
+              <button
+                type="button"
+                onClick={() => setGroupOpen(groupKey, !isOpen)}
+                aria-expanded={isOpen}
+                aria-controls={`sidebar-group-${groupKey}`}
+                className="group/grp w-full flex items-center gap-1.5 px-2 py-1 rounded-md text-[10.5px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/55 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors"
+              >
+                <group.icon className="w-3 h-3 opacity-70 shrink-0" />
+                <span className="truncate">{isRTL ? group.groupLabel.ar : group.groupLabel.en}</span>
+                <span className="ms-auto inline-flex items-center gap-1 text-[9px] font-normal text-sidebar-foreground/40">
+                  <span className="tabular-nums">{visibleItems.length}</span>
+                  <ChevronDown
+                    className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-0' : '-rotate-90'}`}
+                    aria-hidden="true"
+                  />
+                </span>
+              </button>
+            ) : <span />}
           </SidebarGroupLabel>
-          {!collapsed && group.description ? (
+          {!collapsed && isOpen && group.description ? (
             <p className="px-2 mb-1 text-[10.5px] text-sidebar-foreground/50 leading-snug">
               {isRTL ? group.description.ar : group.description.en}
             </p>
           ) : null}
-          <SidebarGroupContent>
-            <RenderMenu
-              items={visibleItems}
-              collapsed={collapsed}
-              isRTL={isRTL}
-              closeMobile={closeMobile}
-              bestActiveUrl={bestActiveUrl}
-            />
-          </SidebarGroupContent>
+          {isOpen && (
+            <SidebarGroupContent id={`sidebar-group-${groupKey}`}>
+              <RenderMenu
+                items={visibleItems}
+                collapsed={collapsed}
+                isRTL={isRTL}
+                closeMobile={closeMobile}
+                bestActiveUrl={bestActiveUrl}
+              />
+            </SidebarGroupContent>
+          )}
         </SidebarGroup>
       );
     })}
@@ -599,13 +655,6 @@ export const DashboardSidebar: React.FC = () => {
 
         {/* Pinned favorites + recently visited */}
         <SidebarFavorites
-          collapsed={collapsed}
-          isRTL={isRTL}
-          labelLookup={labelLookup}
-          closeMobile={closeMobile}
-          isRouteHidden={isRouteHidden}
-        />
-        <SidebarRecent
           collapsed={collapsed}
           isRTL={isRTL}
           labelLookup={labelLookup}
