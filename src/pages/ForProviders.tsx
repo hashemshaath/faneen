@@ -259,6 +259,21 @@ const ForProviders = () => {
                 );
               })}
             </div>
+
+            {/* Hero showcase image (admin-controlled) */}
+            {hero?.image_url && (
+              <div className="mt-10 md:mt-14 max-w-5xl mx-auto">
+                <div className="relative rounded-3xl overflow-hidden border border-border/40 shadow-2xl bg-card aspect-[16/9]">
+                  <img
+                    src={hero.image_url}
+                    alt={pick(hero.title_ar, hero.title_en) || 'Qitaat'}
+                    className="w-full h-full object-cover"
+                    loading="eager"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent" />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -305,6 +320,11 @@ const ForProviders = () => {
             <h2 className="text-2xl md:text-4xl font-bold mb-3">{pick(why?.title_ar, why?.title_en) || (isRTL ? 'أكثر من مجرد دليل — شريك نموّ' : 'More than a directory — a growth partner')}</h2>
             <p className="text-muted-foreground">{pick(why?.subtitle_ar, why?.subtitle_en) || (isRTL ? 'أربعة أعمدة تجعل قرارك بالانضمام واضحاً' : 'Four pillars that make joining an easy decision')}</p>
           </div>
+          {why?.image_url && (
+            <div className="max-w-4xl mx-auto mb-10 rounded-2xl overflow-hidden border border-border/40 shadow-lg aspect-[21/9]">
+              <img src={why.image_url} alt={pick(why.title_ar, why.title_en) || ''} className="w-full h-full object-cover" loading="lazy" />
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {VALUE_PILLARS.map((p, i) => {
               const Icon = p.icon;
@@ -333,6 +353,11 @@ const ForProviders = () => {
             <h2 className="text-2xl md:text-4xl font-bold mb-3">{pick(how?.title_ar, how?.title_en) || (isRTL ? 'من التسجيل إلى أول مشروع' : 'From signup to your first project')}</h2>
             <p className="text-muted-foreground">{pick(how?.subtitle_ar, how?.subtitle_en) || (isRTL ? 'بدون تعقيد — كل شيء مرشد بالعربية' : 'No complexity — fully Arabic-guided')}</p>
           </div>
+          {how?.image_url && (
+            <div className="max-w-4xl mx-auto mb-10 rounded-2xl overflow-hidden border border-border/40 shadow-lg aspect-[21/9]">
+              <img src={how.image_url} alt={pick(how.title_ar, how.title_en) || ''} className="w-full h-full object-cover" loading="lazy" />
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
             {STEPS.map((s, i) => (
               <Card key={i} className="p-5 md:p-6 h-full text-center hover-lift relative">
