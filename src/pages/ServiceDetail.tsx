@@ -125,7 +125,7 @@ const ServiceDetail: React.FC = () => {
                     height={720}
                     loading="eager"
                     decoding="async"
-                    fetchPriority="high"
+                    {...{ fetchpriority: 'high' }}
                     className="w-full h-auto object-cover aspect-[16/9]"
                   />
                   <figcaption className="sr-only">
