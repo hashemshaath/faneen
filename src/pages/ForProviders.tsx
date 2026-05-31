@@ -875,6 +875,34 @@ const ForProviders = () => {
         </div>
       </section>
 
+      {/* CAPABILITIES STRIP — what comes out of the box */}
+      <section className="py-12 md:py-16 bg-muted/20 border-y border-border/40">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <Badge variant="outline" className="mb-3">{isRTL ? 'جاهز من اليوم الأول' : 'Ready on day one'}</Badge>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              {isRTL ? 'كل ما تحتاجه مدمج في المنصة' : 'Everything you need, built-in'}
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground">
+              {isRTL ? 'لا حاجة لاشتراكات إضافية أو أدوات منفصلة.' : 'No extra subscriptions, no separate tools required.'}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {CAPABILITIES.map((c, i) => {
+              const I = c.icon;
+              return (
+                <div key={i} className="p-4 rounded-2xl bg-card border border-border/50 hover-lift text-center">
+                  <div className="w-10 h-10 mx-auto rounded-xl bg-primary/10 text-primary grid place-items-center mb-2">
+                    <I className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs md:text-sm font-medium leading-snug">{isRTL ? c.ar : c.en}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* TESTIMONIALS */}
       {testimonials.length > 0 && (
         <section className="py-14 md:py-20 bg-muted/20">
