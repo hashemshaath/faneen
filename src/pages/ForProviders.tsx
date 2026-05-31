@@ -525,9 +525,21 @@ const ForProviders = () => {
               {isRTL ? 'منصة قطاع البناء والتشييد والصناعات الخفيفة' : 'Construction, Supply & Light Industry Platform'}
             </Badge>
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-[2] md:leading-[1.9] pb-3 mb-5 max-w-4xl mx-auto bg-gradient-to-br from-foreground via-foreground to-foreground/75 bg-clip-text text-transparent">
-              {pick(hero?.title_ar, hero?.title_en) || (isRTL
-                ? 'انضم لأكبر منصة لورش الألمنيوم والحديد والزجاج في السعودية والخليج'
-                : 'Join the largest platform for aluminum, steel & glass workshops in Saudi Arabia & the Gulf')}
+              {pick(hero?.title_ar, hero?.title_en) ? (
+                pick(hero?.title_ar, hero?.title_en)
+              ) : isRTL ? (
+                <>
+                  انضم لأكبر منصة لورش الألمنيوم والحديد
+                  <br />
+                  والزجاج في السعودية والخليج
+                </>
+              ) : (
+                <>
+                  Join the largest platform for aluminum, steel
+                  <br />
+                  &amp; glass workshops in Saudi Arabia &amp; the Gulf
+                </>
+              )}
             </h1>
             <p className="text-base md:text-lg text-muted-foreground mb-6 max-w-2xl mx-auto leading-relaxed">
               {pick(hero?.subtitle_ar, hero?.subtitle_en) || (isRTL
