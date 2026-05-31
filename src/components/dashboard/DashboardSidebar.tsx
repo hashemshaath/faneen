@@ -80,7 +80,6 @@ const providerGroups: MenuGroup[] = [
     icon: Wrench,
     items: [
       { label: { ar: 'بيانات المنشأة', en: 'Business Profile' }, url: '/dashboard/business-edit', icon: Building2 },
-      { label: { ar: 'حسابات الكيانات', en: 'Entities' }, url: '/dashboard/entities', icon: Building2 },
       { label: { ar: 'الخدمات', en: 'Services' }, url: '/dashboard/services', icon: Wrench },
       { label: { ar: 'معرض الأعمال', en: 'Portfolio' }, url: '/dashboard/portfolio', icon: Image },
       { label: { ar: 'المشاريع', en: 'Projects' }, url: '/dashboard/projects', icon: FolderOpen },
@@ -95,12 +94,10 @@ const providerGroups: MenuGroup[] = [
     groupLabel: { ar: 'المبيعات والطلبات', en: 'Sales & Requests' },
     icon: Inbox,
     items: [
-      { label: { ar: 'طلبات الخدمة', en: 'Service Requests' }, url: '/dashboard/leads', icon: Inbox },
-      { label: { ar: 'فرص عروض الأسعار', en: 'Quote Opportunities' }, url: '/dashboard/provider/leads', icon: Inbox },
+      { label: { ar: 'الطلبات والفرص', en: 'Requests & Opportunities' }, url: '/dashboard/leads', icon: Inbox },
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
       { label: { ar: 'العملاء', en: 'Clients' }, url: '/dashboard/clients', icon: Users },
-      { label: { ar: 'طلبات عروض الأسعار', en: 'RFQs' }, url: '/dashboard/rfq', icon: FileText, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
-      { label: { ar: 'صندوق طلبات الأسعار', en: 'RFQ Inbox' }, url: '/dashboard/rfq/inbox', icon: Inbox },
+      { label: { ar: 'عروض الأسعار RFQ', en: 'RFQ' }, url: '/dashboard/rfq', icon: FileText, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
     ],
   },
   {
@@ -110,7 +107,6 @@ const providerGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'أوامر العمل', en: 'Work Orders' }, url: '/dashboard/work-orders', icon: ClipboardList, end: true, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
-      { label: { ar: 'تحليلات العقود', en: 'Contract Analytics' }, url: '/dashboard/contract-analytics', icon: BarChart3 },
       { label: { ar: 'الضمانات', en: 'Warranties' }, url: '/dashboard/warranties', icon: Shield },
     ],
   },
@@ -121,8 +117,7 @@ const providerGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'العضوية', en: 'Membership' }, url: '/dashboard/provider/membership', icon: Crown },
       { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
-      { label: { ar: 'نقاط الولاء', en: 'Loyalty Points' }, url: '/dashboard/loyalty', icon: Star, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
-      { label: { ar: 'متجر المكافآت', en: 'Reward Store' }, url: '/dashboard/loyalty/store', icon: Star, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
+      { label: { ar: 'الولاء', en: 'Loyalty' }, url: '/dashboard/loyalty', icon: Star, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
     ],
   },
   {
@@ -139,8 +134,7 @@ const providerGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'الملف الشخصي', en: 'Profile' }, url: '/dashboard/profile', icon: User },
       { label: { ar: 'تفضيلات التواصل', en: 'Communication Preferences' }, url: '/dashboard/communication-preferences', icon: Settings2 },
-      { label: { ar: 'الموظفون والفرق', en: 'Staff & Teams' }, url: '/dashboard/settings/staff', icon: Users },
-      { label: { ar: 'صلاحيات الأنظمة للموظفين', en: 'Staff System Access' }, url: '/dashboard/settings/staff-access', icon: ShieldCheck },
+      { label: { ar: 'الموظفون', en: 'Staff' }, url: '/dashboard/settings/staff', icon: Users },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
@@ -226,8 +220,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: Activity },
       { label: { ar: 'تشغيل المهام', en: 'Cron Runs' }, url: '/admin/cron-runs', icon: CalendarClock },
-      { label: { ar: 'لوحة العمليات', en: 'Operations' }, url: '/admin/operations', icon: Activity, end: true },
-      { label: { ar: 'مركز العمليات', en: 'Operations Console' }, url: '/admin/operations/console', icon: ShieldCheck },
+      { label: { ar: 'مركز العمليات', en: 'Operations Center' }, url: '/admin/operations', icon: Activity },
       { label: { ar: 'فحص المراجع المتعدد', en: 'Bulk Reference Triage' }, url: '/admin/ref/triage', icon: SearchIcon, badge: { ar: 'دعم', en: 'Support', tone: 'support' } },
     ],
   },
@@ -269,7 +262,6 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'قوالب العقود', en: 'Contract Templates' }, url: '/admin/contract-templates', icon: FileText },
       { label: { ar: 'سجل تصدير العقود', en: 'Contract Export Audit' }, url: '/admin/pdf-exports', icon: FileText },
       { label: { ar: 'مركز التقارير', en: 'Reports Center' }, url: '/admin/reports', icon: BarChart3 },
-      { label: { ar: 'لوحة المؤشرات المتقدمة', en: 'Advanced KPIs' }, url: '/admin/kpis', icon: BarChart3 },
       { label: { ar: 'سجل التدقيق الموحّد', en: 'Unified Audit Log' }, url: '/admin/audit-log', icon: ShieldAlert },
     ],
   },
@@ -292,7 +284,6 @@ const adminBaseGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'مركز التواصل', en: 'Contact Center' }, url: '/admin/contact-messages', icon: MessageSquare },
       { label: { ar: 'مركز البريد', en: 'Email Center' }, url: '/admin/email-center', icon: Mail },
-      { label: { ar: 'مراقبة البريد', en: 'Email Monitoring' }, url: '/admin/email-deliverability', icon: Activity },
       { label: { ar: 'كل المحادثات', en: 'Conversations' }, url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
     ],
   },
@@ -306,9 +297,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'الوسوم', en: 'Tags' }, url: '/admin/tags', icon: Tags },
       { label: { ar: 'القطاعات', en: 'Sectors' }, url: '/dashboard/profile-systems', icon: Layers },
       { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/admin/private-sectors', icon: Layers },
-      { label: { ar: 'حالة Sitemap', en: 'Sitemap Status' }, url: '/admin/sitemap-status', icon: SearchIcon },
-      { label: { ar: 'تدقيق الأداء و SEO', en: 'SEO Performance Audit' }, url: '/admin/site-audit', icon: Gauge },
-      { label: { ar: 'سيو القطاعات', en: 'Sector SEO' }, url: '/admin/sector-seo', icon: SearchIcon },
+      { label: { ar: 'مركز SEO', en: 'SEO Center' }, url: '/admin/sitemap-status', icon: SearchIcon },
     ],
   },
   {

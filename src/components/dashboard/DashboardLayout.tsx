@@ -37,6 +37,7 @@ import { useWorkspaceState } from '@/hooks/useWorkspaceState';
 import { WorkspaceScrollRestoration } from '@/components/workspace/shell/WorkspaceScrollRestoration';
 import { useWorkspacePreferences } from '@/hooks/useWorkspacePreferences';
 import { useWorkspaceStateSelfHeal } from '@/hooks/useWorkspaceStateSelfHeal';
+import { useEmbeddedPage } from '@/contexts/AdminTabsContext';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -136,6 +137,14 @@ interface DashboardLayoutProps {
 }
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+  // NAVIGATION-CONSOLIDATION-1 — when this page is rendered inside a
+  // tabbed shell (the parent already mounted DashboardLayout), skip our
+  // entire shell and just render children. This keeps every existing
+  // page valid as a standalone route *and* as a tab without changes.
+  const embedded = useEmbeddedPage();
+  if (embedded) {
+    return <>{children}</>;
+  }
   const { isRTL, language } = useLanguage();
   const { user, loading, profile, isAdmin, isSuperAdmin, isProvider, signOut, refreshProfile } = useAuth();
   const displayRefId = useDisplayRefId();
