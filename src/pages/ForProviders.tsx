@@ -261,8 +261,8 @@ function LiveTicker({ isRTL, businesses }: { isRTL: boolean; businesses: number 
   const loop = [...items, ...items];
   return (
     <div className="relative w-full overflow-hidden border-y border-border/40 bg-card/60 backdrop-blur py-2.5">
-      <div className="absolute inset-y-0 start-0 w-12 bg-gradient-to-e from-background to-transparent z-10 pointer-events-none" />
-      <div className="absolute inset-y-0 end-0 w-12 bg-gradient-to-s from-background to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
       <div className="flex items-center gap-2 px-3">
         <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-success/15 text-success">
           <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
