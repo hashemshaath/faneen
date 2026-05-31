@@ -5,7 +5,7 @@ import * as Icons from 'lucide-react';
 import {
   Star, ArrowLeft, ArrowRight, CheckCircle2, XCircle, Sparkles,
   TrendingUp, ShieldCheck, Zap, Clock, Award, BadgeCheck,
-  Factory, Store, Wrench, Quote,
+  Factory, Store, Wrench, Quote, HardHat, Truck, Compass, Settings2,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -31,9 +31,13 @@ const pickIcon = (name: string): React.ComponentType<{ className?: string }> => 
 };
 
 const AUDIENCES = [
-  { key: 'factories', icon: Factory, ar: 'مصانع', en: 'Factories', desc_ar: 'وصول مباشر لمشاريع المقاولين والاستشاريين والمواصفات الكبرى', desc_en: 'Direct access to contractors, consultants, and large-spec projects' },
-  { key: 'showrooms', icon: Store, ar: 'معارض', en: 'Showrooms', desc_ar: 'عرض الكتالوجات والأنظمة بصور احترافية مع طلبات تسعير فورية', desc_en: 'Showcase catalogs and systems with instant quote requests' },
-  { key: 'workshops', icon: Wrench, ar: 'ورش', en: 'Workshops', desc_ar: 'استقبل طلبات الأعمال المخصصة وحوّلها إلى عقود موثّقة', desc_en: 'Receive custom job requests and convert them to verified contracts' },
+  { key: 'factories',   icon: Factory,  ar: 'مصانع',          en: 'Factories',         desc_ar: 'اعرض خطوط الإنتاج والمواصفات الفنية، واستقبل طلبات المقاولين والاستشاريين والمشاريع الكبرى مباشرة.', desc_en: 'Showcase production lines and specs; receive direct demand from contractors, consultants and large projects.' },
+  { key: 'contractors', icon: HardHat,  ar: 'مقاولون',        en: 'Contractors',       desc_ar: 'ابنِ ملفًا تنفيذيًا موثّقًا بالخبرات والمشاريع، وشارك في عروض الأسعار وفرص التنفيذ المناسبة لتخصصك.', desc_en: 'Build a verified execution profile, join RFQs and unlock projects that match your scope.' },
+  { key: 'suppliers',   icon: Truck,    ar: 'موردون',         en: 'Suppliers',         desc_ar: 'صنّف منتجاتك وعلاماتك التجارية، واستقبل طلبات توريد منظّمة (RFQ) من مقاولين ومشاريع جاهزة للشراء.', desc_en: 'Classify products and brands; receive structured RFQs from contractors ready to purchase.' },
+  { key: 'workshops',   icon: Wrench,   ar: 'ورش',            en: 'Workshops',         desc_ar: 'أبرز تخصصك التقني وأعمالك السابقة، وحوّل الطلبات المخصّصة إلى عقود وفواتير منظّمة.', desc_en: 'Highlight your technical specialty and past work; convert custom jobs into structured contracts.' },
+  { key: 'showrooms',   icon: Store,    ar: 'معارض',          en: 'Showrooms',         desc_ar: 'اعرض الكتالوجات والأنظمة بصور احترافية، واربط منتجاتك بالعلامات التجارية لطلبات تسعير فورية.', desc_en: 'Display catalogs and systems with rich media; link products to brands for instant quote requests.' },
+  { key: 'engineering', icon: Compass,  ar: 'مكاتب هندسية',   en: 'Engineering Offices', desc_ar: 'كن جزءًا من منظومة البناء: استشارات، تصاميم، ومواصفات يصل إليها المطورون والمقاولون والمصانع.', desc_en: 'Position your office inside the construction ecosystem — reachable by developers, contractors and factories.' },
+  { key: 'install',     icon: Settings2,ar: 'تركيب وصيانة',   en: 'Install & Maintenance', desc_ar: 'استقبل طلبات التركيب والصيانة والتشطيب حسب القطاع والمدينة، بتسعير وعقود واضحة.', desc_en: 'Receive installation, maintenance and finishing requests by sector and city, with clear quotes and contracts.' },
 ];
 
 const SECTORS = [
@@ -47,26 +51,26 @@ const SECTORS = [
 ];
 
 const STEPS = [
-  { ar: 'سجّل مجاناً', en: 'Sign Up Free', desc_ar: 'حساب جاهز خلال دقيقة بالبريد أو جوجل — بدون رسوم', desc_en: 'Account ready in a minute via email or Google — no fees' },
-  { ar: 'فعّل ملفك', en: 'Build Profile', desc_ar: 'بيانات المنشأة، الموقع، الفروع، وساعات العمل', desc_en: 'Business details, location, branches, and hours' },
-  { ar: 'اعرض أعمالك', en: 'Showcase Work', desc_ar: 'خدمات، كتالوجات، مشاريع سابقة، وأنظمة فنية', desc_en: 'Services, catalogs, past projects, and technical systems' },
-  { ar: 'استقبل المشاريع', en: 'Win Projects', desc_ar: 'محادثات، تسعيرات، عقود VAT، ودفعات منظمة', desc_en: 'Chats, quotes, VAT contracts, and structured payments' },
+  { ar: 'أنشئ الحساب', en: 'Create Account', desc_ar: 'تسجيل سريع بالبريد أو جوجل خلال دقيقة، بدون رسوم اشتراك مبدئية.', desc_en: 'Quick email or Google signup in under a minute — no upfront fees.' },
+  { ar: 'ابنِ ملف الجهة', en: 'Build Your Profile', desc_ar: 'البيانات النظامية، الفروع، ساعات العمل، التخصصات، والعلامات التجارية.', desc_en: 'Legal details, branches, hours, specializations and brand affiliations.' },
+  { ar: 'صنّف خدماتك ومنتجاتك', en: 'Classify Services & Products', desc_ar: 'اربط جهتك بالقطاعات والخدمات الدقيقة لتظهر في النتائج المناسبة فقط.', desc_en: 'Link your business to precise sectors and services to appear in the right results only.' },
+  { ar: 'استقبل الطلبات وعروض الأسعار', en: 'Receive Requests & RFQs', desc_ar: 'محادثات منظمة، طلبات تسعير، عقود ضريبية، وفواتير ودفعات قابلة للتتبع.', desc_en: 'Structured chats, RFQs, VAT contracts, and trackable invoices and payments.' },
 ];
 
 const VALUE_PILLARS = [
-  { icon: TrendingUp, ar: 'نمو حقيقي', en: 'Real Growth', desc_ar: 'متوسط زيادة 3.4× في الطلبات الواردة خلال أول 90 يوماً', desc_en: 'Avg 3.4× more inbound requests in first 90 days' },
-  { icon: ShieldCheck, ar: 'عملاء موثّقون', en: 'Verified Clients', desc_ar: 'كل طلب من حساب موثّق برقم جوال ومعلومات حقيقية', desc_en: 'Every request from a verified phone-validated account' },
-  { icon: Zap, ar: 'أدوات احترافية', en: 'Pro Tools', desc_ar: 'عقود، فواتير، قياسات، وضمانات — جاهزة بضغطة', desc_en: 'Contracts, invoices, measurements, warranties — ready' },
-  { icon: Award, ar: 'تميّز ظاهر', en: 'Visible Excellence', desc_ar: 'شارات التحقق وتصنيف القطاع لتسبق منافسيك بالبحث', desc_en: 'Verified badges and sector ranking to outrank rivals' },
+  { icon: TrendingUp,  ar: 'ظهور مهني',       en: 'Professional Visibility', desc_ar: 'ملف جهتك قابل للبحث والتصنيف والمقارنة في سوق البناء والتشييد.', desc_en: 'A profile that is searchable, classifiable and comparable inside the construction market.' },
+  { icon: ShieldCheck, ar: 'ثقة موثّقة',       en: 'Verified Trust',          desc_ar: 'حسابات موثّقة، مراجعة من فريق المنصة، وشارات تعكس مصداقية الجهة.', desc_en: 'Verified accounts, platform review, and badges that reflect real credibility.' },
+  { icon: Zap,         ar: 'أدوات تشغيلية',    en: 'Operational Tools',        desc_ar: 'إدارة طلبات، عروض أسعار، عقود VAT، قياسات، فواتير، ودفعات منظمة.', desc_en: 'Requests, RFQs, VAT contracts, measurements, invoices and structured payments.' },
+  { icon: Award,       ar: 'فرص مستهدفة',     en: 'Targeted Opportunities',   desc_ar: 'وصول لطلبات وعروض أسعار تتوافق مع تخصصك، قطاعك، ومنطقة عملك.', desc_en: 'Reach requests and RFQs aligned with your specialty, sector and service area.' },
 ];
 
 const COMPARISON = [
-  { ar: 'الوصول لعملاء جاهزين للشراء', en: 'Reach buyer-ready clients', without: false, withQ: true },
-  { ar: 'عقود رسمية بضريبة القيمة المضافة', en: 'Formal VAT-compliant contracts', without: false, withQ: true },
-  { ar: 'تتبّع الدفعات والمشاريع تلقائياً', en: 'Auto-tracked payments & projects', without: false, withQ: true },
-  { ar: 'ظهور في محركات البحث وجوجل', en: 'Search engine & Google visibility', without: false, withQ: true },
-  { ar: 'قياسات الموقع وحسابات تلقائية', en: 'Site measurements & auto-calc', without: false, withQ: true },
-  { ar: 'بدون رسوم عمولة على المشاريع', en: 'Zero commission on projects', without: false, withQ: true },
+  { ar: 'ملف مهني قابل للتصنيف والمقارنة',     en: 'Classifiable, comparable profile',       without: false, withQ: true },
+  { ar: 'استقبال طلبات وعروض أسعار منظّمة',   en: 'Structured requests & RFQs',             without: false, withQ: true },
+  { ar: 'عقود نظامية بضريبة القيمة المضافة',  en: 'VAT-compliant formal contracts',         without: false, withQ: true },
+  { ar: 'ربط العلامات التجارية بالمنتجات',     en: 'Link brands to products & catalogs',     without: false, withQ: true },
+  { ar: 'ظهور في نتائج البحث وصفحات القطاع', en: 'Visibility in search & sector pages',    without: false, withQ: true },
+  { ar: 'بدون عمولة على المشاريع',             en: 'No commission on awarded projects',      without: false, withQ: true },
 ];
 
 const ForProviders = () => {
@@ -103,12 +107,12 @@ const ForProviders = () => {
 
   const seoTitle = pick(settings?.seo_title_ar, settings?.seo_title_en) ||
     (isRTL
-      ? 'انضم لقِطاعات — منصة المصانع والمعارض والورش في الصناعات الخفيفة'
-      : 'Join Qitaat — Factories, Showrooms & Workshops Platform');
+      ? 'سجّل جهتك في قِطاعات — منصة قطاع البناء والتشييد والصناعات الخفيفة'
+      : 'Register on Qitaat — Construction, Supply & Light Industry Platform');
   const seoDesc = pick(settings?.seo_desc_ar, settings?.seo_desc_en) ||
     (isRTL
-      ? 'منصة قِطاعات تربط المصانع والمعارض والورش بالعملاء والمقاولين والاستشاريين في قطاعات الألمنيوم والحديد والزجاج والخشب والمطابخ والديكور بأدوات احترافية متكاملة.'
-      : 'Qitaat connects factories, showrooms and workshops with clients, contractors and consultants across aluminum, steel, glass, wood, kitchens and decor — with full pro tools.');
+      ? 'قِطاعات تربط المصانع والمقاولين والموردين والورش والمعارض والمكاتب الهندسية ومزودي التركيب والصيانة بمشاريع البناء والتشييد، عبر ملف مهني قابل للتصنيف، طلبات منظّمة، عروض أسعار، وعقود نظامية.'
+      : 'Qitaat connects factories, contractors, suppliers, workshops, showrooms, engineering offices and installation teams with construction projects — through classifiable profiles, structured requests, RFQs and compliant contracts.');
 
   usePageMeta({
     title: seoTitle,
@@ -178,17 +182,17 @@ const ForProviders = () => {
           <div className="max-w-5xl mx-auto text-center">
             <Badge variant="secondary" className="mb-4 px-3 py-1.5 text-xs font-medium gap-1.5 inline-flex items-center">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
-              {isRTL ? 'منصة الصناعات الخفيفة #1 في الخليج' : '#1 Light Industry Platform in the Gulf'}
+              {isRTL ? 'منصة قطاع البناء والتشييد والصناعات الخفيفة' : 'Construction, Supply & Light Industry Platform'}
             </Badge>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.12] mb-5 bg-gradient-to-br from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent">
               {pick(hero?.title_ar, hero?.title_en) || (isRTL
-                ? 'منصة واحدة. عملاء أكثر. مشاريع موثّقة.'
-                : 'One Platform. More Clients. Verified Projects.')}
+                ? 'حوّل جهتك إلى ملف مهني داخل سوق البناء والتشييد'
+                : 'Turn your business into a professional profile inside the construction market')}
             </h1>
             <p className="text-base md:text-lg text-muted-foreground mb-7 max-w-2xl mx-auto leading-relaxed">
               {pick(hero?.subtitle_ar, hero?.subtitle_en) || (isRTL
-                ? 'سواء كنت مصنعاً أو معرضاً أو ورشة — قِطاعات تمنحك الوصول، الأدوات، والمصداقية لتنمو بثقة.'
-                : 'Factory, showroom, or workshop — Qitaat gives you reach, tools, and credibility to grow with confidence.')}
+                ? 'مصنع، مقاول، مورد، ورشة، معرض، مكتب هندسي، أو مزود تركيب وصيانة — سجّل جهتك واحصل على ظهور قابل للبحث والتصنيف، واستقبل طلبات وعروض أسعار حقيقية.'
+                : 'Factory, contractor, supplier, workshop, showroom, engineering office or installer — register your business, get searchable visibility, and receive real requests and RFQs.')}
             </p>
 
             {/* Audience switcher */}
@@ -217,7 +221,7 @@ const ForProviders = () => {
               <Button asChild size="lg" className="h-12 px-7 text-base shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
                 onClick={() => { track({ event_type: 'cta_click', section: 'hero', cta_id: 'primary' }); gtmTrack.providerSignupStart({}); }}>
                 <Link to={hero?.cta_primary_href || '/auth?mode=signup&role=provider'}>
-                  {pick(hero?.cta_primary_label_ar, hero?.cta_primary_label_en) || (isRTL ? 'سجّل منشأتك مجاناً' : 'Register Your Business — Free')}
+                  {pick(hero?.cta_primary_label_ar, hero?.cta_primary_label_en) || (isRTL ? 'سجّل جهتك الآن — مجاناً' : 'Register Your Business — Free')}
                   <ArrowFwd className="w-4 h-4 ms-2" />
                 </Link>
               </Button>
@@ -263,15 +267,15 @@ const ForProviders = () => {
       <section className="py-12 md:py-16 border-y border-border/40 bg-muted/20">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-8">
-            <Badge variant="outline" className="mb-3">{isRTL ? 'مصمّمة لمنشأتك' : 'Built for your business'}</Badge>
+            <Badge variant="outline" className="mb-3">{isRTL ? 'من يمكنه التسجيل' : 'Who can register'}</Badge>
             <h2 className="text-2xl md:text-3xl font-bold mb-2">
-              {isRTL ? 'مصانع، معارض، وورش — كلٌّ يجد ما يناسبه' : 'Factories, Showrooms & Workshops — each gets its fit'}
+              {isRTL ? 'منصة واحدة تخدم منظومة البناء والتشييد بالكامل' : 'One platform serving the full construction ecosystem'}
             </h2>
             <p className="text-sm md:text-base text-muted-foreground">
-              {isRTL ? 'تجربة مخصّصة بحسب نوع المنشأة وحجم العمليات' : 'A tailored experience by business type and scale'}
+              {isRTL ? 'تجربة مخصّصة لكل نوع جهة، بأدوات تناسب تخصصك وحجم عملياتك.' : 'A tailored experience for every business type, with tools matching your scope and scale.'}
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {AUDIENCES.map((a) => {
               const Icon = a.icon;
               return (
@@ -468,9 +472,9 @@ const ForProviders = () => {
       <section className="py-14 md:py-20">
         <div className="container mx-auto px-4 max-w-3xl text-center">
           <Badge variant="outline" className="mb-3">{isRTL ? 'العضويات' : 'Memberships'}</Badge>
-          <h2 className="text-2xl md:text-4xl font-bold mb-3">{isRTL ? 'ابدأ مجاناً، طوّر كلما نمت' : 'Start free, upgrade as you grow'}</h2>
+          <h2 className="text-2xl md:text-4xl font-bold mb-3">{isRTL ? 'ابدأ مجاناً، وطوّر عضويتك مع نمو جهتك' : 'Start free, upgrade as your business grows'}</h2>
           <p className="text-muted-foreground mb-7">
-            {isRTL ? 'خطط مرنة تناسب المصنع الكبير والمعرض الإقليمي والورشة المتخصّصة. بدون عقود سنوية، بدون عمولة على المشاريع.' : 'Flexible plans for large factories, regional showrooms, and specialized workshops. No annual lock-in, no project commission.'}
+            {isRTL ? 'خطط مرنة تناسب المصانع والمقاولين والموردين والورش والمعارض والمكاتب الهندسية، بدون التزام سنوي وبدون عمولة على المشاريع.' : 'Flexible plans for factories, contractors, suppliers, workshops, showrooms and engineering offices — no annual lock-in, no project commission.'}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-7"
@@ -520,10 +524,10 @@ const ForProviders = () => {
             {isRTL ? 'التسجيل يستغرق أقل من دقيقة' : 'Setup in under a minute'}
           </Badge>
           <h2 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
-            {pick(finalCta?.title_ar, finalCta?.title_en) || (isRTL ? 'انضم لمئات المنشآت الرائدة اليوم' : 'Join hundreds of leading businesses today')}
+            {pick(finalCta?.title_ar, finalCta?.title_en) || (isRTL ? 'ابدأ ببناء ملف جهتك المهني اليوم' : 'Start building your professional profile today')}
           </h2>
           <p className="text-base md:text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-            {pick(finalCta?.subtitle_ar, finalCta?.subtitle_en) || (isRTL ? 'سجّل منشأتك الآن وابدأ باستقبال المشاريع خلال أيام' : 'Register now and start receiving projects within days')}
+            {pick(finalCta?.subtitle_ar, finalCta?.subtitle_en) || (isRTL ? 'سجّل جهتك مجانًا، وابدأ بالظهور أمام مشاريع البناء والتشييد، واستقبل طلبات وعروض أسعار تناسب تخصصك.' : 'Register free, become visible to construction projects, and receive requests and RFQs aligned with your specialty.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
             <Button asChild size="lg" variant="secondary" className="h-12 px-8 text-base shadow-xl"
