@@ -218,6 +218,17 @@ const AdminBranding = lazyRetry(() => import("./pages/admin/AdminBranding"));
 const AdminContractTemplates = lazyRetry(() => import("./pages/admin/AdminContractTemplates"));
 const AdminPdfExportAudit = lazyRetry(() => import("./pages/admin/AdminPdfExportAudit"));
 const AdminPdfVisualQa = lazyRetry(() => import("./pages/admin/AdminPdfVisualQa"));
+// NAVIGATION-CONSOLIDATION-1 — unified tabbed hubs (Phase 2).
+const DashboardBusinessProfileHub = lazyRetry(() => import("./pages/dashboard/DashboardBusinessProfileHub"));
+const DashboardRequestsHub = lazyRetry(() => import("./pages/dashboard/DashboardRequestsHub"));
+const DashboardRfqHub = lazyRetry(() => import("./pages/dashboard/DashboardRfqHub"));
+const DashboardContractsHub = lazyRetry(() => import("./pages/dashboard/DashboardContractsHub"));
+const DashboardLoyaltyHub = lazyRetry(() => import("./pages/dashboard/DashboardLoyaltyHub"));
+const DashboardStaffHub = lazyRetry(() => import("./pages/dashboard/DashboardStaffHub"));
+const AdminOperationsHub = lazyRetry(() => import("./pages/admin/AdminOperationsHub"));
+const AdminReportsHub = lazyRetry(() => import("./pages/admin/AdminReportsHub"));
+const AdminEmailHub = lazyRetry(() => import("./pages/admin/AdminEmailHub"));
+const AdminSeoHub = lazyRetry(() => import("./pages/admin/AdminSeoHub"));
 
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
