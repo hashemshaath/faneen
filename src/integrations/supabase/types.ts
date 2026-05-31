@@ -13133,6 +13133,107 @@ export type Database = {
         }
         Relationships: []
       }
+      system_module_overrides: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          module_key: string
+          reason: string | null
+          scope_type: string
+          scope_value: string | null
+          set_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled: boolean
+          id?: string
+          module_key: string
+          reason?: string | null
+          scope_type: string
+          scope_value?: string | null
+          set_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          module_key?: string
+          reason?: string | null
+          scope_type?: string
+          scope_value?: string | null
+          set_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_module_overrides_module_key_fkey"
+            columns: ["module_key"]
+            isOneToOne: false
+            referencedRelation: "system_modules"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      system_modules: {
+        Row: {
+          category: string
+          created_at: string
+          default_account_types: string[]
+          default_enabled: boolean
+          description_ar: string | null
+          description_en: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          is_core: boolean
+          key: string
+          label_ar: string
+          label_en: string
+          route: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          default_account_types?: string[]
+          default_enabled?: boolean
+          description_ar?: string | null
+          description_en?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          is_core?: boolean
+          key: string
+          label_ar: string
+          label_en: string
+          route?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          default_account_types?: string[]
+          default_enabled?: boolean
+          description_ar?: string | null
+          description_en?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          is_core?: boolean
+          key?: string
+          label_ar?: string
+          label_en?: string
+          route?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           color: string | null
@@ -15441,6 +15542,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_clear_module_override: {
+        Args: { _module_key: string; _scope_type: string; _scope_value: string }
+        Returns: boolean
+      }
       admin_client_sites_monitoring_summary: { Args: never; Returns: Json }
       admin_contract_pdf_exports_summary: {
         Args: never
@@ -15825,6 +15930,32 @@ export type Database = {
           _tier: Database["public"]["Enums"]["membership_tier"]
         }
         Returns: Json
+      }
+      admin_set_module_override: {
+        Args: {
+          _enabled: boolean
+          _module_key: string
+          _reason?: string
+          _scope_type: string
+          _scope_value: string
+        }
+        Returns: {
+          created_at: string
+          enabled: boolean
+          id: string
+          module_key: string
+          reason: string | null
+          scope_type: string
+          scope_value: string | null
+          set_by: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "system_module_overrides"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_sync_profile_email_from_auth: {
         Args: { _target_user_id: string }
@@ -16886,6 +17017,14 @@ export type Database = {
           name_ar: string
           ref_id: string
           role: string
+        }[]
+      }
+      get_user_visible_modules: {
+        Args: { _user_id: string }
+        Returns: {
+          enabled: boolean
+          module_key: string
+          source: string
         }[]
       }
       get_web_vitals_summary: {
