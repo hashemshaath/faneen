@@ -65,19 +65,20 @@ const hasRecentUrlRecovery = (): boolean => {
   }
 };
 
-const reloadWithFreshAssets = () => {
-  if (typeof window === 'undefined') return;
+const reloadWithFreshAssets = (): boolean => {
+  if (typeof window === 'undefined') return false;
 
   const now = Date.now();
-  if (hasRecentUrlRecovery()) return;
+  if (hasRecentUrlRecovery()) return false;
 
   const last = readLastRecovery();
-  if (last?.buildId === BUILD_ID && now - last.at < MIN_RELOAD_INTERVAL_MS) return;
+  if (last?.buildId === BUILD_ID && now - last.at < MIN_RELOAD_INTERVAL_MS) return false;
 
   writeLastRecovery();
   window.setTimeout(() => {
     window.location.replace(cacheBustedHref());
   }, 0);
+  return true;
 };
 
 export function lazyRetry<P, T extends ComponentType<P>>(
@@ -87,7 +88,7 @@ export function lazyRetry<P, T extends ComponentType<P>>(
     factory()
       .catch((error: unknown) => {
         if (!isChunkLoadError(error)) throw error;
-        reloadWithFreshAssets();
+        if (!reloadWithFreshAssets()) throw error;
         return neverResolve<P, T>();
       }),
   );
