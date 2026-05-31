@@ -14,7 +14,7 @@ import {
   Layers, Search, Globe, Users as UsersIcon, User as UserIcon,
   ShieldCheck, Lock, Eye, EyeOff, Sparkles, Filter, Loader2,
   AlertTriangle, RotateCcw, Info, ArrowLeft, History, Settings2,
-  Check, X as XIcon, Pencil,
+  Check, X as XIcon, Pencil, Building2,
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
@@ -29,10 +29,11 @@ import {
   type SystemModuleAuditEntry,
 } from '@/modules/systemAccess';
 import { listProfiles } from '@/modules/users';
+import { supabase } from '@/integrations/supabase/client';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-type ScopeTab = 'global' | 'account_type' | 'user';
+type ScopeTab = 'global' | 'account_type' | 'entity' | 'user';
 type ViewTab = 'manage' | 'audit';
 
 const ACCOUNT_TYPES = ['provider', 'client', 'individual'] as const;
@@ -61,6 +62,8 @@ const AdminSystemAccess: React.FC = () => {
   const [accountType, setAccountType] = useState<AccountType>('provider');
   const [userSearch, setUserSearch] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [entitySearch, setEntitySearch] = useState('');
+  const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'enabled' | 'disabled' | 'overridden'>('all');
   const [search, setSearch] = useState('');
 
@@ -93,6 +96,23 @@ const AdminSystemAccess: React.FC = () => {
     enabled: scopeTab === 'user',
   });
 
+  const entitiesQuery = useQuery({
+    queryKey: ['system-access-entities'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('businesses')
+        .select('id, name_ar, name_en, ref_id, logo_url')
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string; name_ar: string | null; name_en: string | null;
+        ref_id: string | null; logo_url: string | null;
+      }>;
+    },
+    enabled: scopeTab === 'entity',
+  });
+
   const setMutation = useMutation({
     mutationFn: setModuleOverride,
     onSuccess: () => {
@@ -121,12 +141,14 @@ const AdminSystemAccess: React.FC = () => {
   const currentScopeValue: string | null = useMemo(() => {
     if (scopeTab === 'global') return null;
     if (scopeTab === 'account_type') return accountType;
+    if (scopeTab === 'entity') return selectedEntityId;
     return selectedUserId;
-  }, [scopeTab, accountType, selectedUserId]);
+  }, [scopeTab, accountType, selectedUserId, selectedEntityId]);
 
   const currentScopeType: ScopeType = useMemo(() => {
     if (scopeTab === 'global') return 'global_default';
     if (scopeTab === 'account_type') return 'account_type';
+    if (scopeTab === 'entity') return 'entity';
     return 'user';
   }, [scopeTab]);
 
@@ -178,6 +200,22 @@ const AdminSystemAccess: React.FC = () => {
     ).slice(0, 50);
   }, [usersQuery.data, userSearch]);
 
+  const filteredEntities = useMemo(() => {
+    const list = entitiesQuery.data ?? [];
+    if (!entitySearch) return list.slice(0, 60);
+    const s = entitySearch.toLowerCase();
+    return list.filter(b =>
+      (b.name_ar ?? '').toLowerCase().includes(s) ||
+      (b.name_en ?? '').toLowerCase().includes(s) ||
+      (b.ref_id ?? '').toLowerCase().includes(s),
+    ).slice(0, 60);
+  }, [entitiesQuery.data, entitySearch]);
+
+  const selectedEntity = useMemo(
+    () => (entitiesQuery.data ?? []).find(b => b.id === selectedEntityId) || null,
+    [entitiesQuery.data, selectedEntityId],
+  );
+
   const selectedUser = useMemo(
     () => (usersQuery.data ?? []).find(u => u.user_id === selectedUserId) || null,
     [usersQuery.data, selectedUserId],
@@ -196,7 +234,9 @@ const AdminSystemAccess: React.FC = () => {
 
   const canEdit = scopeTab === 'global' || scopeTab === 'account_type'
     ? true
-    : !!selectedUserId;
+    : scopeTab === 'entity'
+      ? !!selectedEntityId
+      : !!selectedUserId;
 
   const handleToggle = (m: SystemModule, nextEnabled: boolean) => {
     if (m.is_core && !nextEnabled) {
