@@ -53,7 +53,7 @@ export const SectorTopTechnicians: React.FC<Props> = ({ sectorName, technicians,
                       width={64}
                       height={64}
                       decoding="async"
-                      fetchPriority="high"
+                      {...{ fetchpriority: 'high' }}
                     />
                   ) : (
                     <Building2 className="w-7 h-7 text-muted-foreground/40" />

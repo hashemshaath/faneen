@@ -7,7 +7,8 @@ const CHUNK_LOAD_ERROR_RE =
   /Importing a module script failed|Failed to fetch dynamically imported module|Loading chunk|ChunkLoadError|error loading dynamically imported module|Module script load failed|Unable to preload CSS/i;
 
 const RECOVERY_KEY = 'qitaat_lazy_chunk_recovery_v2';
-const MIN_RELOAD_INTERVAL_MS = 4_000;
+const MIN_RELOAD_INTERVAL_MS = 5 * 60_000;
+const REFRESH_PARAM = '_chunk_refresh';
 
 const neverResolve = <P, T extends ComponentType<P>>() => new Promise<LazyModule<P, T>>(() => {
   // Keep Suspense active while the browser refreshes stale assets.
@@ -47,31 +48,37 @@ const writeLastRecovery = () => {
   }
 };
 
-const clearLastRecovery = () => {
-  try {
-    sessionStorage.removeItem(RECOVERY_KEY);
-  } catch {
-    // Ignore blocked storage.
-  }
-};
-
 const cacheBustedHref = (): string => {
   const url = new URL(window.location.href);
-  url.searchParams.set('_chunk_refresh', String(Date.now()));
+  url.searchParams.set(REFRESH_PARAM, String(Date.now()));
   return url.toString();
 };
 
-const reloadWithFreshAssets = () => {
-  if (typeof window === 'undefined') return;
+const hasRecentUrlRecovery = (): boolean => {
+  try {
+    const raw = new URL(window.location.href).searchParams.get(REFRESH_PARAM);
+    if (!raw) return false;
+    const at = Number(raw);
+    return Number.isFinite(at) && Date.now() - at < MIN_RELOAD_INTERVAL_MS;
+  } catch {
+    return false;
+  }
+};
+
+const reloadWithFreshAssets = (): boolean => {
+  if (typeof window === 'undefined') return false;
 
   const now = Date.now();
+  if (hasRecentUrlRecovery()) return false;
+
   const last = readLastRecovery();
-  if (last?.buildId === BUILD_ID && now - last.at < MIN_RELOAD_INTERVAL_MS) return;
+  if (last?.buildId === BUILD_ID && now - last.at < MIN_RELOAD_INTERVAL_MS) return false;
 
   writeLastRecovery();
   window.setTimeout(() => {
     window.location.replace(cacheBustedHref());
   }, 0);
+  return true;
 };
 
 export function lazyRetry<P, T extends ComponentType<P>>(
@@ -79,13 +86,9 @@ export function lazyRetry<P, T extends ComponentType<P>>(
 ): LazyExoticComponent<T> {
   return lazy(() =>
     factory()
-      .then((module) => {
-        clearLastRecovery();
-        return module;
-      })
       .catch((error: unknown) => {
         if (!isChunkLoadError(error)) throw error;
-        reloadWithFreshAssets();
+        if (!reloadWithFreshAssets()) throw error;
         return neverResolve<P, T>();
       }),
   );
