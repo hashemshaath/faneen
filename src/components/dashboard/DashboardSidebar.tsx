@@ -142,6 +142,7 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'الملف الشخصي', en: 'Profile' }, url: '/dashboard/profile', icon: User },
       { label: { ar: 'تفضيلات التواصل', en: 'Communication Preferences' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الموظفون والفرق', en: 'Staff & Teams' }, url: '/dashboard/settings/staff', icon: Users },
+      { label: { ar: 'صلاحيات الأنظمة للموظفين', en: 'Staff System Access' }, url: '/dashboard/settings/staff-access', icon: ShieldCheck },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
