@@ -17,6 +17,7 @@ export interface SidebarFavoritesProps {
   /** Lookup of url → bilingual label, sourced from the main menu. */
   labelLookup: Map<string, { ar: string; en: string }>;
   closeMobile: () => void;
+  isRouteHidden?: (path: string) => boolean;
 }
 
 export const SidebarFavorites: React.FC<SidebarFavoritesProps> = ({
@@ -24,9 +25,10 @@ export const SidebarFavorites: React.FC<SidebarFavoritesProps> = ({
   isRTL,
   labelLookup,
   closeMobile,
+  isRouteHidden,
 }) => {
   const { favorites, remove } = useSidebarFavorites();
-  const known = favorites.filter((u) => labelLookup.has(u));
+  const known = favorites.filter((u) => labelLookup.has(u) && !isRouteHidden?.(u));
   if (collapsed || known.length === 0) return null;
 
   return (
