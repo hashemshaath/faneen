@@ -9,8 +9,9 @@
  *   - isRouteHidden(path): boolean — true when a disabled module owns
  *                          this path (exact match or path prefix)
  *
- * NOT an authorization boundary — RLS remains authoritative. Admins and
- * super-admins always bypass (they need to see everything to manage it).
+ * NOT an authorization boundary — RLS remains authoritative. Admin pages are
+ * outside this catalog, while dashboard modules respect the same visibility
+ * rules for every signed-in viewer.
  */
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -33,16 +34,33 @@ export interface UseVisibleModulesResult {
 
 const EMPTY: EffectiveVisibility[] = [];
 
+const MODULE_ROUTE_ALIASES: Record<string, readonly string[]> = {
+  business_info: ['/dashboard/business-edit', '/dashboard/business'],
+  service_areas: ['/dashboard/provider/service-areas', '/dashboard/service-areas'],
+  verification_badge: ['/dashboard/badge', '/dashboard/verification'],
+  customers: ['/dashboard/clients', '/dashboard/customers'],
+  quote_requests: ['/dashboard/rfq', '/dashboard/quote-requests'],
+  quote_inbox: ['/dashboard/rfq/inbox', '/dashboard/quote-inbox'],
+  quotes: ['/dashboard/provider/leads', '/dashboard/quotes'],
+  contract_analytics: ['/dashboard/contract-analytics', '/dashboard/contracts/analytics'],
+  warranty: ['/dashboard/warranties', '/dashboard/warranty'],
+  memberships: ['/membership', '/dashboard/memberships'],
+  membership_credits: ['/dashboard/provider/membership', '/dashboard/membership-credits'],
+  rewards_store: ['/dashboard/loyalty/store', '/dashboard/rewards'],
+  communication_prefs: ['/dashboard/communication-preferences', '/dashboard/settings/communication'],
+  staff: ['/dashboard/settings/staff', '/dashboard/team'],
+  staff_permissions: ['/dashboard/settings/staff-access', '/dashboard/team-access'],
+};
+
 export function useVisibleModules(): UseVisibleModulesResult {
-  const { user, isAdmin, isSuperAdmin } = useAuth();
+  const { user } = useAuth();
   const ws = useActiveWorkspace();
   const userId = user?.id ?? null;
   const entityId = ws.active_entity_id ?? null;
-  const bypass = !!(isAdmin || isSuperAdmin);
 
   const visibility = useQuery({
     queryKey: ['system-access', 'visible-modules', userId, entityId],
-    enabled: !!userId && !bypass,
+    enabled: !!userId && !ws.isLoading,
     staleTime: 60_000,
     queryFn: async () => {
       if (!userId) return EMPTY;
@@ -57,7 +75,7 @@ export function useVisibleModules(): UseVisibleModulesResult {
 
   const catalog = useQuery({
     queryKey: ['system-access', 'catalog'],
-    enabled: !!userId && !bypass,
+    enabled: !!userId,
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<SystemModule[]> => {
       try {
@@ -69,7 +87,6 @@ export function useVisibleModules(): UseVisibleModulesResult {
   });
 
   const hiddenRoutes = useMemo(() => {
-    if (bypass) return new Set<string>();
     const rows = visibility.data ?? EMPTY;
     const byKey = new Map<string, SystemModule>();
     for (const m of catalog.data ?? []) byKey.set(m.key, m);
@@ -80,12 +97,13 @@ export function useVisibleModules(): UseVisibleModulesResult {
       if (!meta?.route) continue;
       if (meta.is_core) continue; // safety: never hide core
       out.add(meta.route);
+      for (const route of MODULE_ROUTE_ALIASES[v.module_key] ?? []) out.add(route);
     }
     return out;
-  }, [bypass, visibility.data, catalog.data]);
+  }, [visibility.data, catalog.data]);
 
   const isRouteHidden = useMemo(() => {
-    if (bypass || hiddenRoutes.size === 0) {
+    if (hiddenRoutes.size === 0) {
       return () => false;
     }
     const list = Array.from(hiddenRoutes);
@@ -97,12 +115,12 @@ export function useVisibleModules(): UseVisibleModulesResult {
       }
       return false;
     };
-  }, [bypass, hiddenRoutes]);
+  }, [hiddenRoutes]);
 
   return {
     modules: visibility.data ?? EMPTY,
     hiddenRoutes,
-    isLoading: !bypass && (visibility.isLoading || catalog.isLoading),
+    isLoading: ws.isLoading || visibility.isLoading || catalog.isLoading,
     isRouteHidden,
   };
 }

@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { setForbiddenContext } from '@/lib/forbiddenContext';
+import { useVisibleModules } from '@/hooks/useVisibleModules';
 
 const Forbidden = lazy(() => import('@/pages/Forbidden'));
 
@@ -50,6 +51,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, loading, isAdmin, isSuperAdmin, isProvider, profile, roles } = useAuth();
   const location = useLocation();
   const loggedRef = useRef(false);
+  const { isRouteHidden, isLoading: modulesLoading } = useVisibleModules();
 
   // Prevent search engines from indexing protected pages
   useNoIndex();
@@ -90,7 +92,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }, [shouldDeny, user?.id, location.pathname, requireSuperAdmin, requireAdmin, roles, isAdmin, isSuperAdmin, isProvider, profile?.account_type]);
 
   // Show loading spinner while auth state is being resolved
-  if (!fullyLoaded) {
+  if (!fullyLoaded || modulesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse">
@@ -121,6 +123,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
   if (requireProvider && !isProvider && !isAdmin) {
     return <Suspense fallback={null}><Forbidden /></Suspense>;
+  }
+
+  if (isRouteHidden(location.pathname) && location.pathname !== '/dashboard/no-access') {
+    return (
+      <Navigate
+        to="/dashboard/no-access"
+        replace
+        state={{ from: location.pathname, denied: true, reason: 'module_disabled' }}
+      />
+    );
   }
 
   return <>{children}</>;

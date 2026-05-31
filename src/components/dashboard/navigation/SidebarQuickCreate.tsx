@@ -14,6 +14,7 @@ export interface SidebarQuickCreateProps {
   isRTL: boolean;
   audience: 'provider' | 'admin' | 'user';
   closeMobile: () => void;
+  isRouteHidden?: (path: string) => boolean;
 }
 
 export const SidebarQuickCreate: React.FC<SidebarQuickCreateProps> = ({
@@ -21,8 +22,9 @@ export const SidebarQuickCreate: React.FC<SidebarQuickCreateProps> = ({
   isRTL,
   audience,
   closeMobile,
+  isRouteHidden,
 }) => {
-  const actions = quickCreateFor(audience);
+  const actions = quickCreateFor(audience).filter((a) => !isRouteHidden?.(a.url));
   if (collapsed || actions.length === 0) return null;
 
   return (

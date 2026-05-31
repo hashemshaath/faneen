@@ -16,6 +16,7 @@ export interface SidebarRecentProps {
   isRTL: boolean;
   labelLookup: Map<string, { ar: string; en: string }>;
   closeMobile: () => void;
+  isRouteHidden?: (path: string) => boolean;
 }
 
 export const SidebarRecent: React.FC<SidebarRecentProps> = ({
@@ -23,9 +24,10 @@ export const SidebarRecent: React.FC<SidebarRecentProps> = ({
   isRTL,
   labelLookup,
   closeMobile,
+  isRouteHidden,
 }) => {
   const recent = useRecentRoutes();
-  const known = recent.filter((u) => labelLookup.has(u));
+  const known = recent.filter((u) => labelLookup.has(u) && !isRouteHidden?.(u));
   if (collapsed || known.length === 0) return null;
 
   return (
