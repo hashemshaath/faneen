@@ -328,7 +328,9 @@ const AppRoutes = () => (
 
           <Route path="/dashboard" element={<ProtectedRoute><DashboardOverview /></ProtectedRoute>} />
           <Route path="/dashboard/diagnostics" element={<ProtectedRoute><DashboardAccountDiagnostics /></ProtectedRoute>} />
-          <Route path="/dashboard/contracts" element={<ProtectedRoute><DashboardContracts /></ProtectedRoute>} />
+          {/* NAVIGATION-CONSOLIDATION-1 group 4 — Contracts hub. */}
+          <Route path="/dashboard/contracts" element={<ProtectedRoute><DashboardContractsHub /></ProtectedRoute>} />
+          <Route path="/dashboard/contract-analytics" element={<Navigate to="/dashboard/contracts?tab=analytics" replace />} />
           <Route path="/dashboard/work-orders" element={<ProtectedRoute><DashboardWorkOrders /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 (group 5): legacy overview merged into main work-orders */}
           <Route path="/dashboard/work-orders/overview" element={<Navigate to="/dashboard/work-orders" replace />} />
@@ -341,14 +343,16 @@ const AppRoutes = () => (
           <Route path="/dashboard/notifications" element={<ProtectedRoute><DashboardNotifications /></ProtectedRoute>} />
           <Route path="/dashboard/bookings" element={<ProtectedRoute><DashboardBookings /></ProtectedRoute>} />
           <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
-          <Route path="/dashboard/settings/staff" element={<ProtectedRoute><DashboardStaffCenter /></ProtectedRoute>} />
-          <Route path="/dashboard/settings/staff-access" element={<ProtectedRoute><DashboardTeamAccess /></ProtectedRoute>} />
+          {/* NAVIGATION-CONSOLIDATION-1 group 8 — Staff hub. */}
+          <Route path="/dashboard/settings/staff" element={<ProtectedRoute><DashboardStaffHub /></ProtectedRoute>} />
+          <Route path="/dashboard/settings/staff-access" element={<Navigate to="/dashboard/settings/staff?tab=permissions" replace />} />
           <Route path="/dashboard/no-access" element={<ProtectedRoute><DashboardNoAccess /></ProtectedRoute>} />
           <Route path="/dashboard/profile" element={<ProtectedRoute><DashboardProfile /></ProtectedRoute>} />
           <Route path="/dashboard/business-completion" element={<ProtectedRoute><DashboardBusinessCompletion /></ProtectedRoute>} />
           <Route path="/dashboard/business-draft" element={<ProtectedRoute><DashboardBusinessDraft /></ProtectedRoute>} />
-          <Route path="/dashboard/business-edit" element={<ProtectedRoute><DashboardBusinessEdit /></ProtectedRoute>} />
-          <Route path="/dashboard/entities" element={<ProtectedRoute><DashboardEntities /></ProtectedRoute>} />
+          {/* NAVIGATION-CONSOLIDATION-1 group 1 — Business Profile hub. */}
+          <Route path="/dashboard/business-edit" element={<ProtectedRoute><DashboardBusinessProfileHub /></ProtectedRoute>} />
+          <Route path="/dashboard/entities" element={<Navigate to="/dashboard/business-edit?tab=entities" replace />} />
           <Route path="/dashboard/entities/:id" element={<ProtectedRoute><DashboardEntityDetail /></ProtectedRoute>} />
           <Route path="/dashboard/communication-preferences" element={<ProtectedRoute><DashboardCommunicationPreferences /></ProtectedRoute>} />
 
@@ -370,8 +374,11 @@ const AppRoutes = () => (
           <Route path="/dashboard/operations/feed" element={<ProtectedRoute><DashboardOperationsFeed /></ProtectedRoute>} />
           <Route path="/dashboard/operations-center" element={<ProtectedRoute><DashboardOperationsCenter /></ProtectedRoute>} />
           <Route path="/dashboard/analytics" element={<ProtectedRoute requireProvider><DashboardAnalytics /></ProtectedRoute>} />
-          <Route path="/dashboard/contract-analytics" element={<ProtectedRoute requireProvider><DashboardContractAnalytics /></ProtectedRoute>} />
-          <Route path="/dashboard/leads" element={<ProtectedRoute requireProvider><DashboardLeads /></ProtectedRoute>} />
+          {/* NAVIGATION-CONSOLIDATION-1 group 2 — Requests hub.
+              Note: original /dashboard/leads required provider; the hub
+              keeps that guard. Legacy /dashboard/provider/leads (also
+              provider-only) redirects in to tab=quote-opportunities. */}
+          <Route path="/dashboard/leads" element={<ProtectedRoute requireProvider><DashboardRequestsHub /></ProtectedRoute>} />
           <Route path="/dashboard/clients" element={<ProtectedRoute requireProvider><DashboardClients /></ProtectedRoute>} />
           <Route path="/dashboard/badge" element={<ProtectedRoute requireProvider><DashboardBadge /></ProtectedRoute>} />
           <Route path="/dashboard/my-requests" element={<ProtectedRoute><DashboardMyRequests /></ProtectedRoute>} />
