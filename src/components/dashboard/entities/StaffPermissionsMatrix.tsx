@@ -8,10 +8,10 @@
  *   future role-default changes flow through automatically.
  * - UI-only hint; RLS + `has_permission` on the server remain authoritative.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Check, ChevronDown, ChevronUp, Copy, Minus, Pin, Plus, RotateCcw,
-  Save, Search, ShieldCheck, Sparkles, X,
+  Bookmark, Check, ChevronDown, ChevronUp, Download, Eye, Minus, Pin, Plus,
+  RotateCcw, Save, Search, ShieldCheck, Sparkles, Trash2, Upload, Wand2, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +30,25 @@ import {
   type WorkspacePermission,
 } from '@/modules/workspace/permissions';
 import { updateBusinessStaffById } from '@/modules/businesses/services/updateBusinessStaffById';
+
+// Local-only storage for user-saved permission templates (UI convenience).
+const PRESETS_STORAGE_KEY = 'qitaat_perm_presets_v1';
+interface CustomPreset { id: string; name: string; perms: string[]; created_at: number }
+
+function readPresets(): CustomPreset[] {
+  try {
+    const raw = localStorage.getItem(PRESETS_STORAGE_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    return arr.filter((p): p is CustomPreset =>
+      !!p && typeof p.id === 'string' && typeof p.name === 'string' && Array.isArray(p.perms),
+    );
+  } catch { return []; }
+}
+function writePresets(list: CustomPreset[]): void {
+  try { localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(list)); } catch { /* noop */ }
+}
 
 const DOMAIN_LABELS: Record<string, { ar: string; en: string }> = {
   entity: { ar: 'الكيان', en: 'Entity' },
