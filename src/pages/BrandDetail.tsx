@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 import {
   getBrandBySlug,
   listBrandManufacturingCountries,
@@ -93,15 +94,13 @@ const BrandDetail: React.FC = () => {
   });
 
   useMultiJsonLd(brand ? [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: isRTL ? 'الرئيسية' : 'Home', item: SITE },
-        { '@type': 'ListItem', position: 2, name: isRTL ? 'العلامات التجارية' : 'Brands', item: `${SITE}/brands` },
-        { '@type': 'ListItem', position: 3, name: display, item: `${SITE}/brands/${brand.slug}` },
+    buildBreadcrumbList(
+      [
+        { name: isRTL ? 'العلامات التجارية' : 'Brands', url: '/brands' },
+        { name: display, url: `/brands/${brand.slug}` },
       ],
-    },
+      { homeName: isRTL ? 'الرئيسية' : 'Home', id: `${SITE}/brands/${brand.slug}#breadcrumb` },
+    )!,
     {
       '@context': 'https://schema.org',
       '@type': 'Brand',

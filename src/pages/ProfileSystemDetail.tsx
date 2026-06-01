@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useContentTracking } from '@/hooks/useContentTracking';
+import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -466,6 +467,17 @@ const ProfileSystemDetail = () => {
     };
 
     const result: Record<string, any>[] = [product];
+
+    // SEO-4 — BreadcrumbList (Home → Profile Systems → this system).
+    const canonical = `https://qitaat.com/profile-systems/${slug}`;
+    const bc = buildBreadcrumbList(
+      [
+        { name: language === 'ar' ? 'الأنظمة' : 'Profile Systems', url: '/profile-systems' },
+        { name: profileName, url: `/profile-systems/${slug}` },
+      ],
+      { id: `${canonical}#breadcrumb` },
+    );
+    if (bc) result.push(bc);
 
     // Build FAQPage from specs + features + applications
     const faqEntries: Array<{ q: string; a: string }> = [];
