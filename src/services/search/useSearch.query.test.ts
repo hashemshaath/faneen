@@ -72,6 +72,26 @@ describe('useBusinesses Supabase query', () => {
 
     // Selected projection includes only the columns the badges need
     const selectArg = (calls.find((c) => c.fn === 'select')!.args[0] as string);
+    // PERF-1D.1 — parent select is now an explicit allow-list, not `*`.
+    expect(selectArg.startsWith('*')).toBe(false);
+    expect(selectArg).not.toMatch(/^\*,/);
+    for (const col of [
+      'id', 'username', 'name_ar', 'name_en', 'description_ar', 'description_en',
+      'logo_url', 'cover_url', 'website',
+      'rating_avg', 'rating_count', 'is_verified', 'membership_tier',
+      'category_id', 'city_id', 'latitude', 'longitude', 'created_at',
+    ]) {
+      expect(selectArg).toContain(col);
+    }
+    // Confirm trimmed columns are gone — guards regressions that would
+    // silently widen the public read surface again.
+    for (const col of [
+      'business_number', 'ref_id', 'country_id',
+      'short_description_ar', 'short_description_en',
+      'address', 'district', 'region', 'street_name', 'updated_at',
+    ]) {
+      expect(selectArg).not.toMatch(new RegExp(`\\b${col}\\b`));
+    }
     expect(selectArg).toContain(
       'business_services(name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status, category_id)',
     );
