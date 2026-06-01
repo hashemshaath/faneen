@@ -42,7 +42,8 @@ function extractLinkTargets(src: string): string[] {
 
 describe('SEO-6 internal linking — hub cross-links', () => {
   it.each([
-    ['src/pages/SectorsHub.tsx', PUBLIC_HUBS],
+    // SectorsHub is itself /sectors, so only require sibling hubs.
+    ['src/pages/SectorsHub.tsx', ['/services', '/brands']],
     ['src/pages/SectorLanding.tsx', PUBLIC_HUBS],
     ['src/pages/BrandsCatalog.tsx', ['/sectors', '/services']],
     ['src/pages/BrandDetail.tsx', PUBLIC_HUBS],
