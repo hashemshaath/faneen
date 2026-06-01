@@ -35,6 +35,7 @@ const ALLOWLIST: AllowEntry[] = [
   { path: 'src/__tests__/rtlLtrCentralAudit.test.ts',        reason: 'this audit references the forbidden patterns by name' },
   { path: 'src/__tests__/rtlLtrDirectionAudit.test.ts',      reason: 'legacy audit; superseded but kept for back-compat' },
   { path: 'src/__tests__/navUiPolish1.sidebar.test.ts',      reason: 'sidebar test references forbidden patterns by name to assert their absence' },
+  { path: 'src/tests/pagePolishRepairs1.test.ts',            reason: 'page-polish audit references forbidden class tokens by name in regex' },
 ];
 
 const isAllowed = (rel: string): boolean =>

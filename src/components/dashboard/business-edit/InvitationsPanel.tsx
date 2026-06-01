@@ -326,7 +326,7 @@ export const InvitationsPanel: React.FC<Props> = ({
           </p>
         )}
         {suggestions.length > 0 && (
-          <ul className="absolute z-10 left-0 right-0 mt-1 max-h-56 overflow-auto rounded-lg border border-border bg-popover shadow-md divide-y divide-border">
+          <ul className="absolute z-10 start-0 end-0 mt-1 max-h-56 overflow-auto rounded-lg border border-border bg-popover shadow-md divide-y divide-border">
             {suggestions.map((s) => (
               <li key={s.user_id}>
                 <button

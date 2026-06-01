@@ -723,7 +723,7 @@ const ProfileSystems = () => {
           >
             <div className="flex items-center gap-2 min-w-0">
               <Scale className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-              <div className="flex -space-x-2 rtl:space-x-reverse">
+              <div className="flex [&>*:not(:first-child)]:-ms-2">
                 {selectedProfiles.slice(0, 4).map((p) => (
                   <div key={p.id} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full ring-2 ring-primary bg-muted overflow-hidden shrink-0">
                     {p.cover_image_url ? (

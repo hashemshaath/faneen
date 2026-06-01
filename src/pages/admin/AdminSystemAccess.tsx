@@ -391,7 +391,7 @@ const AdminSystemAccess: React.FC = () => {
                   {isRTL ? 'لا توجد نتائج' : 'No results'}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto pe-1">
                   {filteredUsers.map(u => (
                     <button
                       key={u.user_id}
@@ -468,7 +468,7 @@ const AdminSystemAccess: React.FC = () => {
                   {isRTL ? 'لا توجد منشآت' : 'No businesses'}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto pe-1">
                   {filteredEntities.map(b => {
                     const name = isRTL ? (b.name_ar || b.name_en) : (b.name_en || b.name_ar);
                     return (
