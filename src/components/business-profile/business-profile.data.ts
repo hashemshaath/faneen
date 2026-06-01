@@ -201,17 +201,21 @@ export const useBranches = (businessId: string | undefined) =>
         businessId: businessId!,
         // PERF-1D.3 — explicit branch fields used by BranchesTab. Joins unchanged.
         // sort_order/is_main filters/order applied server-side by wrapper.
-        // DB-GOVERNANCE-2 — route anonymous BusinessProfile reads through the
-        // `business_branches_public` view (parent approval + is_active enforced).
-        // The select list is restricted to columns exposed by the public view;
-        // any column outside the view (e.g. contact_person, phone/email, address,
-        // region, building_number) is intentionally not requested here. Owner-
-        // facing branch details still flow through the private table elsewhere.
+        // DB-GOVERNANCE-2 — kept on the private `business_branches` table because
+        // BranchesTab renders contact_person/phone/email/customer_service_phone/
+        // unified_number/building_number/cities/countries which are intentionally
+        // not exposed by `business_branches_public`. Anonymous visitors are
+        // therefore filtered out by table RLS (no anon SELECT policy), which is
+        // the existing safe behavior. Authenticated owners/staff/admins keep
+        // full visibility. The view was strengthened (parent approval enforced)
+        // and `source: 'public'` on the wrapper is reserved for a future,
+        // explicitly-anon BusinessProfile branches surface.
         select:
           "id, name_ar, name_en, is_main, " +
-          "district, street_name, address, region, " +
-          "website, latitude, longitude",
-        source: "public",
+          "district, street_name, building_number, " +
+          "contact_person, phone, mobile, unified_number, customer_service_phone, " +
+          "email, website, latitude, longitude, " +
+          "cities(name_ar, name_en), countries(name_ar, name_en)",
         activeOnly: true,
         order: [
           { column: "is_main", ascending: false },
