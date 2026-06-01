@@ -7,10 +7,9 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const notifySpy = vi.fn();
 vi.mock('../services/notifications', async () => {
   const actual = await vi.importActual<typeof import('../services/notifications')>('../services/notifications');
-  return { ...actual, notifyServiceActivationEvent: notifySpy };
+  return { ...actual, notifyServiceActivationEvent: vi.fn() };
 });
 
 let services: Array<{ id: string; required_plan_tier: string | null }> = [];
