@@ -16,7 +16,8 @@ import { ProjectImageGallery } from '@/components/project/ProjectImageGallery';
 import { ProjectSidebar } from '@/components/project/ProjectSidebar';
 import { RelatedProjects } from '@/components/project/RelatedProjects';
 import {
-  FolderOpen, ArrowRight, ArrowLeft, Tag, MapPin, Building2, Share2, Bookmark
+  FolderOpen, ArrowRight, ArrowLeft, Tag, MapPin, Building2, Share2, Bookmark,
+  ShieldCheck, MessageSquare
 } from 'lucide-react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
@@ -339,9 +340,28 @@ const ProjectDetail = () => {
           className="mt-8"
         >
           <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
-            <h2 className="font-heading text-base font-bold mb-3">
-              {isRTL ? 'روابط مفيدة' : 'Useful links'}
+            <h2 className="font-heading text-base font-bold mb-1">
+              {isRTL ? 'الخطوة التالية' : 'Next step'}
             </h2>
+            <p className="text-xs text-muted-foreground mb-3 inline-flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3 text-accent" />
+              {isRTL ? 'الأعمال المعروضة منشورة بعد المراجعة، ولا تعني ضمان نتائج التنفيذ.' : 'Showcased work is reviewed before publishing and does not guarantee execution outcomes.'}
+            </p>
+            <div className="flex flex-wrap gap-2 mb-3">
+              <Link to="/quote">
+                <Button size="sm" className="h-9">
+                  <MessageSquare className="w-4 h-4 me-1.5" />
+                  {isRTL ? 'اطلب عرض سعر لمشروع مشابه' : 'Request a quote for a similar project'}
+                </Button>
+              </Link>
+              {project.businesses?.username && (
+                <Link to={`/${project.businesses.username}`}>
+                  <Button size="sm" variant="outline" className="h-9">
+                    {isRTL ? 'صفحة المزود' : 'Provider profile'}
+                  </Button>
+                </Link>
+              )}
+            </div>
             <ul className="flex flex-wrap gap-2 text-sm">
               {sectorSlug && (
                 <li>
