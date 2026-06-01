@@ -15,7 +15,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Search as SearchIcon, ArrowLeft, ArrowRight, Star, Clock, ShieldCheck } from 'lucide-react';
+import { Search as SearchIcon, ArrowLeft, ArrowRight, Star, Clock, ShieldCheck, FileText, Layers } from 'lucide-react';
 import {
   SERVICES_CATALOG, SECTOR_LABEL, QUALITY_LABEL, UNIT_LABEL,
   listAllFeatures, type QualityTier,
@@ -112,6 +112,25 @@ const Services: React.FC = () => {
               {isRTL
                 ? 'قائمة شفافة بأسعار خدمات الألمنيوم والزجاج والحديد والخشب والمطابخ في السوق السعودي. استخدم الفلاتر للمقارنة بين المزايا وجودة العمل ومدة التنفيذ والضمان.'
                 : 'A transparent price list for aluminum, glass, steel, wood, and kitchen services in the Saudi market. Use the filters to compare features, quality, lead time, and warranty.'}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button asChild className="rounded-xl h-11">
+                <Link to="/quote">
+                  <FileText className="h-4 w-4 me-1.5" />
+                  {isRTL ? 'اطلب عرض سعر' : 'Request a quote'}
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-xl h-11">
+                <Link to="/sectors">
+                  <Layers className="h-4 w-4 me-1.5" />
+                  {isRTL ? 'استكشف القطاعات' : 'Explore sectors'}
+                </Link>
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {isRTL
+                ? 'ابدأ من الخدمة إذا كنت تعرف المطلوب. الأسعار تقديرية وقد تتغير حسب المواصفات والمدينة.'
+                : 'Start from the service if you know what you need. Prices are estimates and may vary by spec and city.'}
             </p>
           </header>
 
@@ -264,8 +283,24 @@ const Services: React.FC = () => {
 
           {filtered.length === 0 && (
             <Card className="mt-4">
-              <CardContent className="p-8 text-center text-muted-foreground">
-                {isRTL ? 'لا توجد نتائج مطابقة للفلاتر الحالية.' : 'No services match the current filters.'}
+              <CardContent className="p-8 text-center space-y-4">
+                <SearchIcon className="h-10 w-10 mx-auto text-muted-foreground/40" />
+                <div>
+                  <p className="font-heading font-bold text-foreground mb-1">
+                    {isRTL ? 'لا توجد خدمات مطابقة' : 'No services match'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {isRTL ? 'جرّب توسيع القطاع أو إزالة بعض الفلاتر، أو أرسل طلب عرض سعر وسنساعدك.' : 'Try widening the sector or removing filters, or request a quote and we will help.'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <Button asChild size="sm" className="rounded-xl">
+                    <Link to="/quote">{isRTL ? 'اطلب عرض سعر' : 'Request a quote'}</Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline" className="rounded-xl">
+                    <Link to="/sectors">{isRTL ? 'استكشف القطاعات' : 'Explore sectors'}</Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
