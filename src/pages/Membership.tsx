@@ -1067,7 +1067,7 @@ const Membership = () => {
           </div>
           <div className="relative z-10 space-y-7">
             <h2 className="font-heading font-bold text-3xl sm:text-4xl text-white">
-              {isRTL ? 'جاهز للارتقاء بأعمالك؟' : 'Ready to grow your business?'}
+              {isRTL ? 'اختر العضوية المناسبة' : 'Pick the right membership'}
             </h2>
             <p className="text-slate-300 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
               {isRTL
@@ -1079,10 +1079,10 @@ const Membership = () => {
                 size="lg"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 px-8 font-bold w-full sm:w-auto"
                 onClick={() => {
-                  document.querySelector('[data-plan-tier="premium"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  document.getElementById('compare')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
               >
-                {isRTL ? 'اشترك الآن' : 'Subscribe now'}
+                {isRTL ? 'اختر العضوية المناسبة' : 'Pick the right plan'}
               </Button>
               <Button
                 asChild
@@ -1090,12 +1090,14 @@ const Membership = () => {
                 variant="outline"
                 className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white rounded-xl h-12 px-8 font-bold w-full sm:w-auto"
               >
-                <Link to="/contact">{isRTL ? 'تحدث مع المبيعات' : 'Talk to sales'}</Link>
+                <Link to="/contact">{isRTL ? 'تواصل معنا' : 'Contact us'}</Link>
               </Button>
             </div>
             <p className="text-slate-400 text-xs flex items-center justify-center gap-1.5 pt-2">
               <Shield className="w-3.5 h-3.5" />
-              {isRTL ? 'جميع الخطط تشمل حماية كاملة للبيانات والخصوصية' : 'All plans include full data protection and privacy'}
+              {isRTL
+                ? 'العضوية تساعد على تنظيم الظهور والمزايا، ولا تعني ضمان الطلبات أو المبيعات.'
+                : 'Memberships organize visibility and benefits — they do not guarantee leads or sales.'}
             </p>
           </div>
         </div>
