@@ -172,3 +172,67 @@ export async function listAuditLog(limit = 100): Promise<SystemModuleAuditEntry[
   if (error) throw error;
   return (data ?? []) as SystemModuleAuditEntry[];
 }
+
+/* ------------------------------------------------------------------ */
+/* MEMBERSHIP-SYSTEM-ACCESS-GOVERNANCE-1                              */
+/* Super-admin-only governance helpers.                               */
+/* ------------------------------------------------------------------ */
+
+export interface MembershipPlanModuleRow {
+  module_key: string;
+  label_ar: string;
+  label_en: string;
+  category: string;
+  is_core: boolean;
+  enabled: boolean;
+}
+
+/**
+ * Per-business super-admin override. Requires a non-empty reason and the
+ * caller MUST hold the `super_admin` role (enforced server-side). Writes
+ * to `system_module_audit_log` via the existing trigger.
+ */
+export async function superAdminSetBusinessModuleOverride(params: {
+  businessId: string;
+  moduleKey: string;
+  enabled: boolean;
+  reason: string;
+}): Promise<void> {
+  const reason = (params.reason ?? '').trim();
+  if (!reason) throw new Error('reason required for super-admin override');
+  const { error } = await (supabase as any).rpc('super_admin_set_business_module_override', {
+    _business_id: params.businessId,
+    _module_key: params.moduleKey,
+    _enabled: params.enabled,
+    _reason: reason,
+  });
+  if (error) throw error;
+}
+
+/**
+ * Toggle a module on/off for a membership plan. Super-admin only.
+ * Writes an audit row tagged `account_type` / `plan:<id>`.
+ */
+export async function superAdminSetMembershipPlanModule(params: {
+  planId: string;
+  moduleKey: string;
+  enabled: boolean;
+}): Promise<void> {
+  const { error } = await (supabase as any).rpc('super_admin_set_membership_plan_module', {
+    _plan_id: params.planId,
+    _module_key: params.moduleKey,
+    _enabled: params.enabled,
+  });
+  if (error) throw error;
+}
+
+/** Returns every active module joined with the plan's enabled flag. */
+export async function listMembershipPlanModules(
+  planId: string,
+): Promise<MembershipPlanModuleRow[]> {
+  const { data, error } = await (supabase as any).rpc('list_membership_plan_modules', {
+    _plan_id: planId,
+  });
+  if (error) throw error;
+  return (data ?? []) as MembershipPlanModuleRow[];
+}
