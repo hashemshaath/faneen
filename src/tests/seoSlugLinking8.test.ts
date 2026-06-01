@@ -111,7 +111,9 @@ describe('SEO-8 Showcase hub cross-links', () => {
     expect(block.includes('to="/dashboard')).toBe(false);
   });
 
-  it('does not add ItemList structured data (SEO-8 keeps showcase ItemList deferred)', () => {
-    expect(src).not.toMatch(/"@type"\s*:\s*"ItemList"/);
+  it('preserves approved-only source filter on showcase submissions', () => {
+    // SEO-8 deferred ItemList; SEO-10A enabled it after enforcing verified
+    // businesses on the join. The approved-only filter must remain in place.
+    expect(src).toMatch(/\.eq\(["']status["'],\s*["']approved["']\)/);
   });
 });

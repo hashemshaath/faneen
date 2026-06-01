@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { VerifiedBadge } from "@/components/common/VerifiedBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { useMultiJsonLd } from "@/hooks/usePageMeta";
+import { buildBreadcrumbList, SITE_URL } from "@/lib/seo/structured-data";
 import { useBi } from "@/components/common/Bilingual";
 import { Building2, ExternalLink, Sparkles } from "lucide-react";
 
@@ -62,6 +64,13 @@ const Showcase = () => {
           "id, business_id, kind, title_ar, title_en, description_ar, description_en, image_url, link_url, sector_slug, business:businesses!inner(id, name_ar, name_en, username, logo_url, is_verified)",
         )
         .eq("status", "approved")
+        // SEO-10A — enforce verified+active+published+non-demo on the joined
+        // business so the page matches its "verified providers" promise and
+        // the public ItemList below is safe to enumerate.
+        .eq("business.is_verified", true)
+        .eq("business.is_active", true)
+        .eq("business.approval_status", "published")
+        .eq("business.is_demo", false)
         .order("created_at", { ascending: false })
         .limit(120);
       if (sector !== "all") q = q.eq("sector_slug", sector);
@@ -79,6 +88,43 @@ const Showcase = () => {
     () => (query.data ?? []).filter((r) => r.kind === "work"),
     [query.data],
   );
+
+  // SEO-10A — ItemList JSON-LD over the visible, verified-only cards.
+  // Source: showcase_submissions filtered by status='approved' AND joined
+  // businesses filtered by is_verified+is_active+approval_status='published'+is_demo=false.
+  // Order matches the rendered logos-then-works composition.
+  const visibleRows = useMemo(() => [...logos, ...works], [logos, works]);
+  useMultiJsonLd([
+    buildBreadcrumbList(
+      [{ name: bi("معرض الأعمال", "Showcase"), url: "/showcase" }],
+      { homeName: bi("الرئيسية", "Home"), id: `${SITE_URL}/showcase#breadcrumb` },
+    )!,
+    ...(visibleRows.length > 0
+      ? [{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "@id": `${SITE_URL}/showcase#showcase`,
+          name: bi("شعارات وأعمال مزوّدين موثّقين", "Logos and work from verified providers"),
+          numberOfItems: visibleRows.filter((r) => !!r.business?.username).length,
+          itemListElement: visibleRows
+            .filter((r) => !!r.business?.username)
+            .map((r, i) => {
+              const name =
+                bi(r.title_ar || "", r.title_en || "") ||
+                bi(r.business?.name_ar || "", r.business?.name_en || "") ||
+                "";
+              return {
+                "@type": "ListItem",
+                position: i + 1,
+                url: `${SITE_URL}/${r.business!.username}`,
+                ...(name ? { name } : {}),
+                ...(r.image_url ? { image: r.image_url } : {}),
+              };
+            })
+            .filter((it) => !!it.name),
+        }]
+      : []),
+  ]);
 
   return (
     <>
