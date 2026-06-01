@@ -522,6 +522,74 @@ const BusinessProfile = () => {
               </div>
             </Tabs>
           </section>
+
+          {/* Explore more — hub/spoke depth (SEO-7).
+              Only uses public slugs already loaded on this page. */}
+          <nav
+            aria-label={isRTL ? 'استكشف المزيد في قِطاعات' : 'Explore more on Qitaat'}
+            className="container mx-auto px-4 mt-8 mb-6"
+          >
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+              <h2 className="font-heading text-base font-bold mb-3">
+                {isRTL ? 'روابط مفيدة' : 'Useful links'}
+              </h2>
+              <ul className="flex flex-wrap gap-2 text-sm">
+                {(business.categories as { slug?: string } | null)?.slug && (
+                  <li>
+                    <Link
+                      to={`/sectors/${(business.categories as { slug?: string }).slug}`}
+                      className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                    >
+                      {isRTL ? `قطاع ${categoryName}` : `${categoryName} sector`}
+                    </Link>
+                  </li>
+                )}
+                {(business.categories as { slug?: string } | null)?.slug &&
+                  (business.cities as { slug?: string } | null)?.slug && (
+                    <li>
+                      <Link
+                        to={`/sectors/${(business.categories as { slug?: string }).slug}/${(business.cities as { slug?: string }).slug}`}
+                        className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                      >
+                        {isRTL ? `${categoryName} في ${cityName}` : `${categoryName} in ${cityName}`}
+                      </Link>
+                    </li>
+                  )}
+                <li>
+                  <Link
+                    to="/sectors"
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                  >
+                    {isRTL ? 'كل القطاعات' : 'All sectors'}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/services"
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                  >
+                    {isRTL ? 'الخدمات' : 'Services'}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/brands"
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                  >
+                    {isRTL ? 'العلامات التجارية' : 'Brands'}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/showcase"
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                  >
+                    {isRTL ? 'أعمال المزودين' : 'Provider showcase'}
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </nav>
         </main>
       </div>
 
