@@ -336,7 +336,10 @@ export const BusinessOwnerPanel: React.FC<Props> = ({
             </div>
             <div className="min-w-0">
               <div className="text-sm font-semibold truncate" dir="auto">
-                {owner.full_name_ar || owner.full_name_en || owner.username || t(isRTL, 'بدون اسم', 'No name')}
+                {getProfileDisplayName(owner, {
+                  locale: isRTL ? 'ar' : 'en',
+                  emptyFallback: t(isRTL, 'بدون اسم', 'No name'),
+                })}
               </div>
               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <ReferenceTag refId={owner.ref_id} isRTL={isRTL} />
