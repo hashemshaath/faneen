@@ -1,5 +1,5 @@
 import { useBi } from '@/components/common/Bilingual';
-import { Section, SectionHead, PrimaryCTA, ROUTES } from './_shared';
+import { Section, SectionHead, PrimaryCTA, SecondaryCTA, ROUTES } from './_shared';
 
 const HowItWorksV2 = () => {
   const bi = useBi();
@@ -25,8 +25,9 @@ const HowItWorksV2 = () => {
           </div>
         ))}
       </div>
-      <div className="text-center mt-10">
+      <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
         <PrimaryCTA to={ROUTES.quote} label={bi('اطلب عرض سعر', 'Request a quote')} />
+        <SecondaryCTA to="/for-providers" label={bi('هل أنت مزود خدمة؟ سجّل منشأتك', 'Are you a provider? Register your business')} />
       </div>
     </Section>
   );

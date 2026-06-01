@@ -1,6 +1,7 @@
 import {
   CheckCircle2, Image as ImageIcon, ShieldCheck, Activity, FileText,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useBi } from '@/components/common/Bilingual';
 import { Section, SectionHead } from './_shared';
 
@@ -26,6 +27,15 @@ const TrustSection = () => {
           'We present provider details in an organized way, so clients see the activity, services, city, scope and work samples before reaching out.',
         )}
       />
+      <p className="text-center text-xs sm:text-sm text-muted-foreground -mt-6 mb-8 max-w-2xl mx-auto">
+        {bi(
+          'نراجع البيانات قبل النشر، ولا نضمن نتائج التنفيذ.',
+          'We review provider details before publishing, but do not guarantee execution results.',
+        )}{' '}
+        <Link to="/about#trust" className="text-primary hover:underline underline-offset-4">
+          {bi('كيف نتحقق', 'How verification works')}
+        </Link>
+      </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {badges.map(({ icon: Icon, titleAr, titleEn, bodyAr, bodyEn }) => (
           <div key={titleEn} className="rounded-xl border border-border/60 bg-background p-5 hover-lift">

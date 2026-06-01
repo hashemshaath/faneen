@@ -51,9 +51,18 @@ const FinalCTASection = () => {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12px] sm:text-xs text-white/70">
               <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-300" /> {bi('مزودون موثّقون', 'Verified providers')}</span>
               <span className="opacity-40">·</span>
-              <span className="inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-sky-300" /> {bi('تغطية المملكة', 'Saudi-wide coverage')}</span>
+              <span className="inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-sky-300" /> {bi('تغطية متعددة المدن السعودية', 'Coverage across multiple Saudi cities')}</span>
               <span className="opacity-40">·</span>
               <span className="inline-flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-amber-300" /> {bi('بدون عمولة على العميل', 'No fees for customers')}</span>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[12px] text-white/75">
+              <Link to="/sectors" className="hover:text-white underline-offset-4 hover:underline">{bi('تصفح القطاعات', 'Browse sectors')}</Link>
+              <span className="opacity-40">·</span>
+              <Link to="/services" className="hover:text-white underline-offset-4 hover:underline">{bi('استكشف الخدمات', 'Explore services')}</Link>
+              <span className="opacity-40">·</span>
+              <Link to="/brands" className="hover:text-white underline-offset-4 hover:underline">{bi('العلامات المعتمدة', 'Approved brands')}</Link>
+              <span className="opacity-40">·</span>
+              <Link to="/showcase" className="hover:text-white underline-offset-4 hover:underline">{bi('معرض الأعمال', 'Showcase')}</Link>
             </div>
           </div>
         </div>
