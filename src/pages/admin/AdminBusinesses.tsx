@@ -31,6 +31,7 @@ import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import { RegionCitySelector } from '@/components/forms/RegionCitySelector';
 import { SA_REGIONS, type SaRegionId } from '@/data/sa-regions';
 import { setBusinessMembershipTier, type MembershipTier } from '@/modules/memberships';
+import { notifyMembershipChangeForBusiness } from '@/modules/providerServices';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { getProfileByUserId } from '@/modules/users/services/getProfileByUserId';
 import {
@@ -72,7 +73,7 @@ import {
   TrendingUp, ArrowUpRight, Filter, RefreshCw, Copy, MoreHorizontal,
   Activity, Zap, Languages, ArrowUpDown, ChevronLeft, ChevronRight,
   CheckSquare, Square, AlertTriangle,
-  FlaskConical, User,
+  FlaskConical, User, ShieldCheck,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
@@ -486,6 +487,13 @@ const AdminBusinesses = () => {
       } catch (err) {
         // eslint-disable-next-line no-console
         console.warn('[AdminBusinesses] tier-change email failed', err);
+      }
+      // SERVICE-ACTIVATION-GOVERNANCE-4 — single summary in-app notification
+      // to the provider owner if their tier change gates any services.
+      try {
+        await notifyMembershipChangeForBusiness(id, tier as MembershipTier);
+      } catch {
+        /* never block tier change */
       }
     },
     onSuccess: () => {
@@ -2686,6 +2694,12 @@ const AdminBusinesses = () => {
                         <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl"
                           onClick={() => openServices(biz.id)}>
                           <Package className="w-3 h-3" /> {isRTL ? 'خدمات' : 'Services'}
+                        </Button>
+
+                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl" asChild>
+                          <Link to={`/admin/service-activations?businessId=${biz.id}`}>
+                            <ShieldCheck className="w-3 h-3" />{isRTL ? 'خدمات الجهة' : 'Activations'}
+                          </Link>
                         </Button>
 
                         <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl" onClick={() => openEdit(biz)}>

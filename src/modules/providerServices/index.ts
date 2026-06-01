@@ -43,8 +43,11 @@ export {
   adminSetPremiumService,
   adminSetFeaturedService,
   adminUpdateServiceActivationNote,
+  adminGetServiceActivationCounters,
+  notifyMembershipChangeForBusiness,
   type AdminServiceActivationRow,
   type AdminListFilters,
+  type ServiceActivationCounters,
 } from './services/admin';
 
 /** SERVICE-ACTIVATION-GOVERNANCE-3 — Phase E notifications. */
