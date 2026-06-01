@@ -46,7 +46,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Star, MapPin, Plus, X, ArrowRight, ArrowLeft, Scale, Search, Download } from 'lucide-react';
+import { Star, MapPin, Plus, X, ArrowRight, ArrowLeft, Scale, Search, Download, Filter, GitCompare, CheckCircle2, Info, MoveHorizontal } from 'lucide-react';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { track } from '@/lib/analytics-events';
 
@@ -248,6 +248,24 @@ const Compare = () => {
                   ? 'أضف جهتين أو أكثر للمقارنة حتى تظهر الفروقات بوضوح: التقييم، التخصص، الموقع، الخدمات وخيارات التقسيط.'
                   : 'Add two or more providers to clearly see the differences: ratings, category, location, services and installment options.'}
               </p>
+              {/* How it works — 3 simple steps so users understand the flow */}
+              <ol className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl w-full text-start">
+                {[
+                  { icon: Filter, t: isRTL ? '1. ابحث وصفِّ النتائج' : '1. Search & filter', d: isRTL ? 'استخدم الفلاتر لتقريب المزودين المناسبين لقطاعك ومدينتك.' : 'Use filters to narrow providers by sector and city.' },
+                  { icon: GitCompare, t: isRTL ? '2. أضف للمقارنة' : '2. Add to compare', d: isRTL ? 'اختر حتى 4 جهات لمقارنة التقييم والخدمات والتقسيط جنباً إلى جنب.' : 'Pick up to 4 providers to compare ratings, services and installments.' },
+                  { icon: CheckCircle2, t: isRTL ? '3. قرّر وتواصل' : '3. Decide & contact', d: isRTL ? 'استعرض الملف وأرسل طلب عرض سعر منظّم عبر قِطاعات.' : 'Open the profile and send an organized quote request via Qitaat.' },
+                ].map(({ icon: Icon, t, d }) => (
+                  <li key={t} className="rounded-xl border border-border/30 bg-card/50 p-3">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-accent/10 text-accent">
+                        <Icon className="w-3.5 h-3.5" />
+                      </span>
+                      <p className="text-xs font-heading font-bold text-foreground">{t}</p>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">{d}</p>
+                  </li>
+                ))}
+              </ol>
               <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
                 <Button asChild variant="default" className="rounded-xl">
                   <Link to="/search">{isRTL ? 'ابحث عن مزودين' : 'Find providers'}</Link>
@@ -289,6 +307,27 @@ const Compare = () => {
           </Card>
         ) : (
           <>
+          {/* Hint: comparison is clearer with 2+ providers */}
+          {selectedBusinesses.length === 1 && (
+            <div className="rounded-xl border border-accent/30 bg-accent/5 p-3 sm:p-4 flex items-start gap-3">
+              <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-heading font-bold text-foreground">
+                  {isRTL ? 'أضف جهة ثانية للمقارنة' : 'Add a second provider'}
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                  {isRTL
+                    ? 'المقارنة أوضح وأفيد عند اختيار جهتين أو أكثر. استخدم البحث في الأعلى أو ارجع لصفحة البحث لإضافة جهات.'
+                    : 'Comparison is clearer with two or more providers. Use the search above or return to the search page to add more.'}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button asChild size="sm" variant="outline" className="rounded-lg h-8">
+                    <Link to="/search">{isRTL ? 'العودة للبحث' : 'Back to search'}</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex justify-end mb-2">
             <Button
               size="sm"
@@ -322,6 +361,11 @@ const Compare = () => {
               <Download className="ic-sm me-1" />
               {isRTL ? 'تصدير PDF' : 'Export PDF'}
             </Button>
+          </div>
+          {/* Mobile scroll affordance for the comparison table */}
+          <div className="md:hidden flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground mb-1">
+            <MoveHorizontal className="w-3.5 h-3.5" />
+            {isRTL ? 'اسحب أفقياً لعرض كل الأعمدة' : 'Swipe horizontally to see all columns'}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-separate border-spacing-0">
