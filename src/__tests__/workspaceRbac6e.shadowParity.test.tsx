@@ -154,7 +154,6 @@ describe('WORKSPACE-RBAC-6E — safety invariants', () => {
 
   const ALLOWED_PARITY_PAGES = new Set(
     [
-      'pages/dashboard/DashboardServices.tsx',
       'pages/dashboard/DashboardBusinessEdit.tsx',
     ].map((p) => join(SRC, p)),
   );

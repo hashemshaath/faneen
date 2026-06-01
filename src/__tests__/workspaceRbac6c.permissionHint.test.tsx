@@ -101,7 +101,6 @@ describe('WORKSPACE-RBAC-6C — safety invariants', () => {
   };
 
   const ALLOWED_PAGES = [
-    'pages/dashboard/DashboardServices.tsx',
     'pages/dashboard/DashboardPortfolio.tsx',
     'pages/dashboard/DashboardPromotions.tsx',
     'pages/dashboard/DashboardBusinessEdit.tsx',

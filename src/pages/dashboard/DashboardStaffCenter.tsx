@@ -35,7 +35,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Bi } from '@/components/common/Bilingual';
-import { supabase } from '@/integrations/supabase/client';
 import { listProfilesByUserIds } from '@/modules/users';
 import {
   listBusinessTeams,
@@ -48,7 +47,8 @@ import {
   revokeDelegatedWorkspaceAccess,
   listStaffActivitySessions,
 } from '@/modules/workspace/governance';
-import { listManagedBusinessesForUser } from '@/modules/businesses';
+import { listManagedBusinessesForUser, listBusinessesByIds } from '@/modules/businesses';
+import { countPendingStaffInvitationsForBusiness } from '@/modules/identity/services/invitations/countPendingStaffInvitationsForBusiness';
 import { listBusinessStaffByBusiness } from '@/modules/businesses/services/listBusinessStaffByBusiness';
 import { useTransferPrimaryManagerMutation } from '@/hooks/useTransferPrimaryManagerMutation';
 import { mapTransferPrimaryManagerCode } from '@/modules/businesses/services/transferPrimaryManagerMessages';
@@ -69,7 +69,6 @@ type StaffRow = {
   is_active?: boolean | null;
   is_primary_manager?: boolean | null;
   display_name?: string | null;
-  email?: string | null;
   user_ref_id?: string | null;
 };
 
@@ -215,14 +214,14 @@ function StaffOverview({ businessId }: { businessId: string }) {
       setRows(baseRows);
       return;
     }
+    // Privacy: do NOT request email/phone for staff rows (ORG-RBAC-STRUCTURE-9E).
     const { data: profiles } = await listProfilesByUserIds<{
       user_id: string;
       full_name: string | null;
-      email: string | null;
       ref_id: string | null;
-    }>({ userIds, select: 'user_id, full_name, email, ref_id' });
+    }>({ userIds, select: 'user_id, full_name, ref_id' });
     const byUser = new Map(
-      ((profiles ?? []) as Array<{ user_id: string; full_name: string | null; email: string | null; ref_id: string | null }>)
+      ((profiles ?? []) as Array<{ user_id: string; full_name: string | null; ref_id: string | null }>)
         .map((p) => [p.user_id, p]),
     );
     setRows(
@@ -231,7 +230,6 @@ function StaffOverview({ businessId }: { businessId: string }) {
         return {
           ...r,
           display_name: p?.full_name ?? null,
-          email: p?.email ?? null,
           user_ref_id: p?.ref_id ?? null,
         };
       }),
@@ -300,7 +298,8 @@ function StaffOverview({ businessId }: { businessId: string }) {
                           {r.ref_id}
                         </span>
                       ) : null}
-                      {r.email ? <span className="tech-content">· {r.email}</span> : null}
+                      {/* Email/phone are NOT shown in staff rows — privacy invariant
+                          enforced by ORG-RBAC-STRUCTURE-9E. */}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -687,12 +686,7 @@ function StaffKpiStrip({ businessId }: { businessId: string }) {
   const { data: invitesPending = 0 } = useQuery({
     queryKey: ['staff-center-kpi-invites', businessId],
     queryFn: async () => {
-      const { count } = await supabase
-        .from('business_staff_invitations')
-        .select('id', { count: 'exact', head: true })
-        .eq('business_id', businessId)
-        .eq('status', 'pending');
-      return count ?? 0;
+      return countPendingStaffInvitationsForBusiness(businessId);
     },
   });
 
@@ -737,12 +731,13 @@ const DashboardStaffCenter: React.FC = () => {
     queryKey: ['staff-center-business-meta', businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('businesses')
-        .select('id, name_ar, name_en, user_id')
-        .eq('id', businessId!)
-        .maybeSingle();
-      return data as { id: string; name_ar: string | null; name_en: string | null; user_id: string } | null;
+      const { data } = await listBusinessesByIds<{
+        id: string;
+        name_ar: string | null;
+        name_en: string | null;
+        user_id: string;
+      }>({ ids: [businessId!], select: 'id, name_ar, name_en, user_id' });
+      return data?.[0] ?? null;
     },
   });
 

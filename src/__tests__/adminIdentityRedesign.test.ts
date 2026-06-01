@@ -1,3 +1,13 @@
+/**
+ * ADMIN-IDENTITY-REDESIGN-1 (refreshed for the hub-style IA)
+ *
+ * AdminIdentity was rewritten from a tab-based page (Overview / Users /
+ * Businesses / Diagnostics / Activity tabs) to a navigation hub that
+ * surfaces combined KPIs, unified search, a management grid linking to
+ * the dedicated standalone admin pages, and recent activity. The old
+ * tab assertions are no longer applicable; tests now lock in the hub
+ * structure plus the privacy / safety invariants that still apply.
+ */
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -9,16 +19,13 @@ const src = readFileSync(PAGE, 'utf8');
 const bizSrc = readFileSync(BIZ, 'utf8');
 
 describe('ADMIN-IDENTITY-REDESIGN-1 page header & subtitle', () => {
-  it('renders the new bilingual title', () => {
+  it('renders the bilingual title', () => {
     expect(src).toContain('المستخدمون والمنشآت');
     expect(src).toContain('Users & Businesses');
   });
-  it('renders a subtitle mentioning users, businesses, ownership, diagnostics', () => {
-    expect(src).toContain('المستخدمين');
-    expect(src).toContain('المنشآت');
-    expect(src).toContain('الملكية');
-    expect(src).toContain('تشخيصات');
-    expect(src).toMatch(/users.*businesses.*ownership.*identity diagnostics/i);
+  it('renders an overview subtitle mentioning stats and dedicated pages', () => {
+    expect(src).toMatch(/نظرة شاملة[\s\S]*الإدارة التفصيلية|للإدارة التفصيلية/);
+    expect(src).toMatch(/consolidated stats overview[\s\S]*dedicated pages/i);
   });
   it('uses noindex meta and admin-only shell (DashboardLayout + useNoIndex)', () => {
     expect(src).toContain('useNoIndex');
@@ -28,18 +35,25 @@ describe('ADMIN-IDENTITY-REDESIGN-1 page header & subtitle', () => {
 });
 
 describe('ADMIN-IDENTITY-REDESIGN-1 header quick actions', () => {
-  it('exposes Add business CTA', () => {
+  it('exposes a New business CTA linking to /admin/businesses', () => {
     expect(src).toContain('منشأة جديدة');
     expect(src).toContain('New business');
+    expect(src).toMatch(/to=["']\/admin\/businesses["']/);
   });
-  it('exposes Add / invite owner CTA', () => {
-    expect(src).toContain('دعوة مالك');
-    expect(src).toContain('Invite owner');
+  it('exposes a New user CTA linking to /admin/users', () => {
+    expect(src).toContain('مستخدم جديد');
+    expect(src).toContain('New user');
+    expect(src).toMatch(/to=["']\/admin\/users\?create=individual["']/);
   });
-  it('exposes a Refresh action wired to invalidateQueries', () => {
-    expect(src).toMatch(/refreshDiagnostics/);
+  it('exposes a Refresh action wired to invalidateQueries for identity caches', () => {
+    expect(src).toMatch(/refreshAll/);
     expect(src).toMatch(/invalidateQueries\(\{\s*queryKey:\s*\['identity-profiles'\]/);
     expect(src).toMatch(/invalidateQueries\(\{\s*queryKey:\s*\['identity-businesses'\]/);
+    expect(src).toMatch(/invalidateQueries\(\{\s*queryKey:\s*\['identity-activity'\]/);
+  });
+  it('exposes the ⌘K command palette trigger', () => {
+    expect(src).toContain('IdentityCommandPalette');
+    expect(src).toMatch(/setPaletteOpen\(true\)/);
   });
 });
 
@@ -56,29 +70,43 @@ describe('ADMIN-IDENTITY-REDESIGN-1 KPI strip', () => {
   });
 });
 
-describe('ADMIN-IDENTITY-REDESIGN-1 tabs', () => {
-  it('has Overview / Users / Businesses / Diagnostics / Activity tabs', () => {
-    expect(src).toContain('value="overview"');
-    expect(src).toContain('value="users"');
-    expect(src).toContain('value="businesses"');
-    expect(src).toContain('value="integrity"'); // URL key retained
-    expect(src).toContain('value="activity"');
+describe('ADMIN-IDENTITY-REDESIGN-1 management navigation hub', () => {
+  it('links to the dedicated standalone admin destinations (no embedded CRUD)', () => {
+    for (const route of [
+      '/admin/users',
+      '/admin/businesses',
+      '/admin/provider-review',
+      '/admin/entity-access-requests',
+      '/admin/access-management',
+      '/admin/memberships',
+      '/admin/provider-analytics',
+      '/admin/locations',
+    ]) {
+      expect(src).toContain(`to: '${route}'`);
+    }
   });
-  it('Diagnostics tab is labeled "Diagnostics" / "التشخيصات"', () => {
-    expect(src).toContain('التشخيصات');
-    expect(src).toContain('Diagnostics');
+  it('renders IdentityActivityFeed and IdentitySignupsChart on the overview', () => {
+    expect(src).toMatch(/<IdentitySignupsChart\b/);
+    expect(src).toMatch(/<IdentityActivityFeed\s+isRTL=\{isRTL\}\s+limit=\{15\}/);
   });
-  it('Activity tab renders IdentityActivityFeed with limit', () => {
-    expect(src).toMatch(/<IdentityActivityFeed\s+isRTL=\{isRTL\}\s+limit=\{50\}/);
-    expect(src).toContain('سجل نشاط الإدارة');
-    expect(src).toContain('Admin activity log');
+  it('redirects legacy ?view=… deep links to the standalone pages', () => {
+    expect(src).toContain('VIEW_REDIRECTS');
+    expect(src).toMatch(/users:\s*['"]\/admin\/users['"]/);
+    expect(src).toMatch(/businesses:\s*['"]\/admin\/businesses['"]/);
+    expect(src).toMatch(/'provider-review':\s*['"]\/admin\/provider-review['"]/);
+    expect(src).toMatch(/<Navigate\s+to=/);
   });
 });
 
 describe('ADMIN-IDENTITY-REDESIGN-1 privacy & safety invariants', () => {
-  it('uses maskEmail / maskPhone fallbacks for non-super admins', () => {
+  it('uses maskEmail when displaying emails to non-super admins', () => {
     expect(src).toMatch(/maskEmail\(p\.email[^)]*\)/);
-    expect(src).toMatch(/maskPhone\(p\.phone[^)]*\)/);
+    expect(src).toMatch(/isSuperAdmin\s*\?\s*p\.email\s*:\s*maskEmail/);
+  });
+  it('imports the masking helpers (kept for hub previews)', () => {
+    expect(src).toMatch(/from '@\/lib\/masking'/);
+    expect(src).toMatch(/\bmaskEmail\b/);
+    expect(src).toMatch(/\bmaskPhone\b/);
   });
   it('never invokes auth.users mutation APIs from this page', () => {
     expect(src).not.toMatch(/admin\.auth\.admin\./);
@@ -88,12 +116,17 @@ describe('ADMIN-IDENTITY-REDESIGN-1 privacy & safety invariants', () => {
   it('does not import payment / membership / contract modules', () => {
     expect(src).not.toMatch(/from\s+['"]@\/modules\/payments/);
     expect(src).not.toMatch(/from\s+['"]@\/modules\/contracts/);
-    // memberships is referenced ONLY through user-management views; not imported here
     expect(src).not.toMatch(/from\s+['"]@\/modules\/memberships/);
   });
   it('does not render synthetic emails (e.g. user_id@local)', () => {
     expect(src).not.toMatch(/@local\b/);
     expect(src).not.toMatch(/synthetic/i);
+  });
+  it('reads identity data only through canonical wrappers (no direct supabase.from)', () => {
+    expect(src).not.toMatch(/supabase\.from\(/);
+    expect(src).toMatch(/listProfiles\b/);
+    expect(src).toMatch(/listAdminBusinesses\b/);
+    expect(src).toMatch(/listAllUserRoles\b/);
   });
 });
 

@@ -201,8 +201,13 @@ describe('No duplicated sidebar visibility logic', () => {
     expect(SIDEBAR_TSX).toMatch(/canViewWorkspaceRoute/);
     // The only role-based visibility flag still allowed at the sidebar level
     // is `superAdminOnly` (legacy super-admin reveal for admin sidebar items).
-    // Anything else would be a regression of duplicated logic.
-    const adHocChecks = SIDEBAR_TSX.match(/isProvider\s*&&|isAdmin\s*&&\s*item|role\s*===/g) ?? [];
+    // Anything else (a `role === 'x' && item.url` style visibility check, or
+    // an `isProvider && item` / `isAdmin && item` gate) would be a regression
+    // of duplicated logic. We intentionally do NOT flag `role === 'x' ? … : …`
+    // ternaries used to render localized display labels — those are not
+    // visibility checks.
+    const adHocChecks =
+      SIDEBAR_TSX.match(/isProvider\s*&&|isAdmin\s*&&\s*item|role\s*===\s*['"][^'"]+['"]\s*&&/g) ?? [];
     expect(adHocChecks.length).toBe(0);
   });
 });
