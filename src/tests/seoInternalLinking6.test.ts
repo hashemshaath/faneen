@@ -107,8 +107,12 @@ describe('SEO-6 internal linking — safety', () => {
     }
   });
 
-  it('BrandDetail tags its private dashboard correction link with rel="nofollow"', () => {
+  it('BrandDetail correction link is public-safe (UX-REDESIGN-5: /contact, not /dashboard)', () => {
     const src = read('src/pages/BrandDetail.tsx');
-    expect(src).toMatch(/to="\/dashboard\/brands"[^>]*rel="nofollow"/);
+    // UX-REDESIGN-5 replaced the private /dashboard/brands link with a
+    // public /contact route so crawlers (and signed-out users) follow it
+    // without hitting the auth wall.
+    expect(src).not.toMatch(/to=["']\/dashboard\/brands["']/);
+    expect(src).toContain('to="/contact"');
   });
 });
