@@ -42,6 +42,7 @@ import { MembershipUnavailableState } from '@/components/membership/MembershipUn
 
 // Below-the-fold sections — lazy to keep the initial bundle lean.
 const FeatureComparisonTable = lazyRetry(() => import('@/components/membership/FeatureComparisonTable').then((m) => ({ default: m.FeatureComparisonTable })));
+const MembershipPlanModuleMatrix = lazyRetry(() => import('@/components/membership/MembershipPlanModuleMatrix').then((m) => ({ default: m.MembershipPlanModuleMatrix })));
 const MembershipBenefits = lazyRetry(() => import('@/components/membership/MembershipBenefits').then((m) => ({ default: m.MembershipBenefits })));
 const MembershipFAQ = lazyRetry(() => import('@/components/membership/MembershipFAQ').then((m) => ({ default: m.MembershipFAQ })));
 const MembershipTestimonials = lazyRetry(() => import('@/components/membership/MembershipTestimonials').then((m) => ({ default: m.MembershipTestimonials })));
@@ -144,14 +145,14 @@ const Membership = () => {
       mainEntity: (language === 'ar' ? [
         { q: 'هل يمكنني تغيير باقتي لاحقاً؟', a: 'نعم، يمكنك ترقية باقتك في أي وقت. عند خفض الباقة تحتفظ بمميزاتك الحالية حتى انتهاء الفترة المدفوعة، ثم يتم الانتقال للباقة الأقل تلقائياً.' },
         { q: 'هل التجربة مجانية حقاً؟', a: 'الباقة المجانية مجانية بالكامل وبدون أي بطاقة ائتمان.' },
-        { q: 'كيف يتم الدفع؟', a: 'حالياً النسخة تجريبية، ويتم تفعيل الترقيات يدوياً دون أي رسوم. سيتم إضافة الدفع الإلكتروني قريباً.' },
+        { q: 'كيف يتم الدفع؟', a: 'الدفع الإلكتروني عبر مُيسّر (Moyasar) باستخدام مدى أو فيزا أو ماستركارد أو أبل باي. يتم تفعيل الباقة فور تأكيد العملية.' },
         { q: 'هل تشمل الأسعار ضريبة القيمة المضافة؟', a: 'نعم، جميع الأسعار شاملة لضريبة القيمة المضافة 15%.' },
         { q: 'هل يمكنني الحصول على فاتورة ضريبية؟', a: 'نعم، يتم إصدار فاتورة ضريبية إلكترونية معتمدة ويمكن تنزيلها من لوحة التحكم.' },
         { q: 'ماذا يحدث إذا ألغيت الاشتراك؟', a: 'تحتفظ بكامل مميزات باقتك حتى انتهاء فترة الاشتراك المدفوعة، ثم تنتقل تلقائياً للباقة المختارة أو المجانية.' },
       ] : [
         { q: 'Can I change my plan later?', a: 'Yes — upgrade anytime. When downgrading, you keep your benefits until the paid period ends, then move to the lower plan automatically.' },
         { q: 'Is the free tier really free?', a: 'The Free plan is fully free with no credit card required.' },
-        { q: 'How does payment work?', a: 'We are in beta — upgrades are activated manually with no charge. Online payment is coming soon.' },
+        { q: 'How does payment work?', a: 'Online payment is processed via Moyasar (Mada, Visa, Mastercard, Apple Pay). Your plan is activated as soon as the payment is confirmed.' },
         { q: 'Do prices include VAT?', a: 'Yes — all displayed prices include 15% VAT per Saudi regulations.' },
         { q: 'Can I get a tax invoice?', a: 'Yes — a certified e-invoice is issued and can be downloaded from your dashboard.' },
         { q: 'What happens if I cancel?', a: 'You keep all benefits until the end of the paid period, then automatically move to your chosen plan or Free.' },
@@ -1049,6 +1050,7 @@ const Membership = () => {
           <section id="compare" className="scroll-mt-24">
             <FeatureComparisonTable isRTL={isRTL} />
           </section>
+          <MembershipPlanModuleMatrix isRTL={isRTL} />
           <ServiceActivationAlignment isRTL={isRTL} />
           <MembershipBenefits isRTL={isRTL} />
           <MembershipTrustStrip isRTL={isRTL} />
