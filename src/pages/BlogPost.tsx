@@ -891,6 +891,31 @@ const BlogPost = () => {
 
             {/* Helpful next step — public-safe CTA */}
             <div className="mb-8 sm:mb-12">
+              {/* UX-REDESIGN-7 — Related help (Blog ↔ Help cross-link). */}
+              {relatedHelp.length > 0 && (
+                <div data-testid="blog-related-help" className="mb-4">
+                  <h3 className="font-heading font-bold text-base sm:text-xl mb-3 flex items-center gap-2">
+                    <LifeBuoy className="ic-sm sm:w-5 sm:h-5 text-accent" />
+                    {isRTL ? 'مقالات مساعدة ذات صلة' : 'Related help articles'}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                    {relatedHelp.map((h) => (
+                      <Link
+                        key={h.id}
+                        to={`/help/article/${h.slug}`}
+                        className="hover-lift block rounded-xl border border-border/60 bg-card p-3"
+                      >
+                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                          {isRTL ? 'مساعدة' : 'Help'}
+                        </div>
+                        <div className="text-xs sm:text-sm font-semibold line-clamp-2" dir="auto">
+                          {language === 'ar' ? h.title_ar : (h.title_en || h.title_ar)}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
               <Card className="border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
                 <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <div className="flex-1 text-center sm:text-start">
