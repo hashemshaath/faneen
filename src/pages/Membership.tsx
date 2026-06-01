@@ -691,7 +691,8 @@ const Membership = () => {
       <>
       <Navbar />
       <div className="container px-4 py-10 sm:py-16">
-        <MembershipHeader isRTL={isRTL} billingCycle={billingCycle} setBillingCycle={setBillingCycle} plans={plans} />
+        {/* MEMBERSHIP-PAGE-REDESIGN-2: Spec hero. */}
+        <MembershipHero isRTL={isRTL} compareAnchorId="compare" />
 
         {/* Governance-safe disclaimer — shown above the plan grid to make
             it explicit that some benefits depend on account/service
