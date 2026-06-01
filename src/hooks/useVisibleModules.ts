@@ -61,8 +61,22 @@ const MODULE_ROUTE_ALIASES: Record<string, readonly string[]> = {
     '/dashboard/operations/feed',
     '/dashboard/operations-feed',
   ],
+  operations_log: [
+    '/dashboard/activity',
+    '/dashboard/operations',
+    '/dashboard/operations/feed',
+    '/dashboard/operations-feed',
+    '/dashboard/audit',
+  ],
   private_sectors: ['/dashboard/private-sectors'],
   installments: ['/dashboard/installments', '/dashboard/billing/installments'],
+  staff_management: [
+    '/dashboard/team',
+    '/dashboard/team-access',
+    '/dashboard/settings/staff',
+    '/dashboard/settings/staff-access',
+    '/dashboard/invitations',
+  ],
 };
 
 export function useVisibleModules(): UseVisibleModulesResult {
