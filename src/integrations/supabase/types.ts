@@ -8459,6 +8459,51 @@ export type Database = {
         }
         Relationships: []
       }
+      membership_plan_modules: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          module_key: string
+          plan_id: string
+          set_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          module_key: string
+          plan_id: string
+          set_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          module_key?: string
+          plan_id?: string
+          set_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_plan_modules_module_key_fkey"
+            columns: ["module_key"]
+            isOneToOne: false
+            referencedRelation: "system_modules"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "membership_plan_modules_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membership_plans: {
         Row: {
           created_at: string
@@ -17350,6 +17395,17 @@ export type Database = {
           total_count: number
         }[]
       }
+      list_membership_plan_modules: {
+        Args: { _plan_id: string }
+        Returns: {
+          category: string
+          enabled: boolean
+          is_core: boolean
+          label_ar: string
+          label_en: string
+          module_key: string
+        }[]
+      }
       list_my_site_access_grants: { Args: never; Returns: Json }
       list_site_access_requests_for_owner: {
         Args: { _site_id?: string }
@@ -18066,6 +18122,49 @@ export type Database = {
           _user_id: string
         }
         Returns: string
+      }
+      super_admin_set_business_module_override: {
+        Args: {
+          _business_id: string
+          _enabled: boolean
+          _module_key: string
+          _reason: string
+        }
+        Returns: {
+          created_at: string
+          enabled: boolean
+          id: string
+          module_key: string
+          reason: string | null
+          scope_type: string
+          scope_value: string | null
+          set_by: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "system_module_overrides"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      super_admin_set_membership_plan_module: {
+        Args: { _enabled: boolean; _module_key: string; _plan_id: string }
+        Returns: {
+          created_at: string
+          enabled: boolean
+          id: string
+          module_key: string
+          plan_id: string
+          set_by: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "membership_plan_modules"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       template_version_archive: {
         Args: { p_note?: string; p_version_id: string }
