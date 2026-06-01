@@ -1000,6 +1000,10 @@ const Membership = () => {
 
         <MembershipPlanRecommender isRTL={isRTL} onApply={handleRecommenderApply} />
 
+        {/* MEMBERSHIP-PAGE-REDESIGN-2: Billing toggle sits directly above
+            the plan grid, where the user actually compares prices. */}
+        <MembershipHeader isRTL={isRTL} billingCycle={billingCycle} setBillingCycle={setBillingCycle} plans={plans} />
+
         {/* Asymmetric bento: Premium spans 2 cols + 2 rows (featured),
             others fill remaining cells on lg. Stacks cleanly on mobile. */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-4 max-w-6xl mx-auto auto-rows-fr">
