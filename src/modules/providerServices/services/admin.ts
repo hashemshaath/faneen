@@ -176,16 +176,13 @@ export interface ServiceActivationCounters {
 }
 
 export async function adminGetServiceActivationCounters(): Promise<ServiceActivationCounters> {
-  const head = (build: (q: ReturnType<typeof base>) => ReturnType<typeof base>) => {
-    const base = () => supabase.from('business_services').select('id', { count: 'exact', head: true });
-    return build(base());
-  };
+  const base = () => supabase.from('business_services').select('id', { count: 'exact', head: true });
   const [pendingQ, suspendedQ, upgradeQ, premiumQ, featuredQ] = await Promise.all([
-    head((q) => q.eq('requires_admin_review', true)),
-    head((q) => q.eq('admin_status', 'suspended')),
-    head((q) => q.not('required_plan_tier', 'is', null)),
-    head((q) => q.eq('is_premium_service', true)),
-    head((q) => q.eq('is_featured', true)),
+    base().eq('requires_admin_review', true),
+    base().eq('admin_status', 'suspended'),
+    base().not('required_plan_tier', 'is', null),
+    base().eq('is_premium_service', true),
+    base().eq('is_featured', true),
   ]);
   return {
     pendingReview: pendingQ.count ?? 0,
