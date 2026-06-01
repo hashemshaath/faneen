@@ -164,12 +164,55 @@ const DashboardServices: React.FC = () => {
     return m;
   }, [services]);
 
+  // ── SERVICE-ACTIVATION-GOVERNANCE-1: current tier + plan cap ──
+  const { data: subscription } = useQuery({
+    queryKey: ['my-membership-subscription', user?.id],
+    enabled: !!user,
+    staleTime: 60_000,
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await getCurrentMembershipSubscription<{
+        plan: { tier: string | null } | null;
+      }>({ userId: user.id, select: 'plan:membership_plans!plan_id(tier)' });
+      return data;
+    },
+  });
+  const currentTier: TierKey | null = useMemo(
+    () => normalizeTier(subscription?.plan?.tier ?? null) ?? 'free',
+    [subscription],
+  );
+  const { limits } = useMembershipLimits(currentTier, isRTL);
+  const maxActiveServices = useMemo<number | null>(() => {
+    const raw = (limits as Record<string, unknown> | undefined)?.max_services;
+    return typeof raw === 'number' && raw >= 0 ? raw : null;
+  }, [limits]);
+
+  // Resolve effective status for every row using the canonical resolver.
+  const resolvedByRowId = useMemo(() => {
+    const m = new Map<string, ResolvedServiceEntitlement>();
+    const rowsForResolve: ProviderServiceRowLike[] = services.map((s) => ({
+      id: s.id,
+      provider_status: s.provider_status,
+      admin_status: s.admin_status,
+      required_plan_tier: s.required_plan_tier,
+      is_active: s.is_active,
+    }));
+    resolveServiceEntitlements(rowsForResolve, { currentTier, maxActiveServices }).forEach(
+      (r) => m.set(r.row.id, r.resolved),
+    );
+    return m;
+  }, [services, currentTier, maxActiveServices]);
+
+  // Status filter
+  const [statusFilter, setStatusFilter] = useState<'all' | EffectiveServiceStatus>('all');
+
   // Build display list aligned with sub_services chosen on the business
   const displayList = useMemo(() => {
     return subServiceIds.map((subId) => {
       const catalog = findSubServiceById(subId);
       const row = byCatalogId.get(subId);
       const isCustom = subId.startsWith('custom:');
+      const resolved = row ? resolvedByRowId.get(row.id) ?? null : null;
       return {
         subId,
         isCustom,
@@ -178,16 +221,29 @@ const DashboardServices: React.FC = () => {
         name_ar: row?.name_ar ?? catalog?.name_ar ?? (isRTL ? 'خدمة مخصّصة' : 'Custom service'),
         name_en: row?.name_en ?? catalog?.name_en ?? 'Custom service',
         row,
+        resolved,
       };
     });
-  }, [subServiceIds, byCatalogId, isRTL]);
+  }, [subServiceIds, byCatalogId, resolvedByRowId, isRTL]);
+
+  const filteredDisplayList = useMemo(() => {
+    if (statusFilter === 'all') return displayList;
+    return displayList.filter((d) => d.resolved?.effective_status === statusFilter);
+  }, [displayList, statusFilter]);
 
   // Stats
   const stats = useMemo(() => {
     const total = displayList.length;
-    const active = displayList.filter((d) => d.row?.is_active).length;
-    const priced = displayList.filter((d) => d.row && (d.row.price_from || d.row.price_to)).length;
-    return { total, active, priced };
+    let active = 0, paused = 0, upgrade = 0, review = 0, suspended = 0;
+    displayList.forEach((d) => {
+      const s = d.resolved?.effective_status;
+      if (s === 'active') active += 1;
+      else if (s === 'paused') paused += 1;
+      else if (s === 'upgrade_required' || s === 'quota_exceeded') upgrade += 1;
+      else if (s === 'pending_review') review += 1;
+      else if (s === 'disabled' || s === 'hidden') suspended += 1;
+    });
+    return { total, active, paused, upgrade, review, suspended };
   }, [displayList]);
 
   const stats2 = useMemo(() => ({
