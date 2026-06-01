@@ -62,6 +62,12 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', '.git', '.next', 'build', 'co
 // ملفات مُستثناة عمداً (تذكر تاريخياً النطاق القديم لشرح تنظيف البيانات)
 const ALLOWED_FILES = new Set([
   'src/pages/Privacy.tsx',
+  // Audit guards — these files intentionally mention legacy names to detect leaks.
+  // Do NOT add user-facing source paths (src/pages, src/components, src/modules,
+  // supabase/functions, public/, email/notification templates) here.
+  'src/tests/supabaseDatabaseDeepRepair1.test.ts',
+  'src/tests/brandAuditFalsePositive.test.ts',
+  'scripts/brand-audit.mjs',
 ])
 
 // ── جامع الملفات ────────────────────────────────────────
