@@ -213,6 +213,7 @@ const FALLBACK_FAQ = [
 const ForProviders = () => {
   const { isRTL } = useLanguage();
   const { track } = useLandingTracking(true);
+  const membershipVisibility = useMembershipVisibility();
 
   const { data: settings } = useQuery({ queryKey: ['plp_settings'], queryFn: fetchLandingSettings });
   const { data: content = [] } = useQuery({ queryKey: ['plp_content'], queryFn: fetchLandingContent });
