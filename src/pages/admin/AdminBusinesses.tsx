@@ -31,6 +31,7 @@ import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import { RegionCitySelector } from '@/components/forms/RegionCitySelector';
 import { SA_REGIONS, type SaRegionId } from '@/data/sa-regions';
 import { setBusinessMembershipTier, type MembershipTier } from '@/modules/memberships';
+import { notifyMembershipChangeForBusiness } from '@/modules/providerServices';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { getProfileByUserId } from '@/modules/users/services/getProfileByUserId';
 import {
@@ -486,6 +487,13 @@ const AdminBusinesses = () => {
       } catch (err) {
         // eslint-disable-next-line no-console
         console.warn('[AdminBusinesses] tier-change email failed', err);
+      }
+      // SERVICE-ACTIVATION-GOVERNANCE-4 — single summary in-app notification
+      // to the provider owner if their tier change gates any services.
+      try {
+        await notifyMembershipChangeForBusiness(id, tier as MembershipTier);
+      } catch {
+        /* never block tier change */
       }
     },
     onSuccess: () => {
