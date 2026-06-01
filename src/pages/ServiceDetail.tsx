@@ -42,6 +42,7 @@ const ServiceDetail: React.FC = () => {
     noindex: !service,
   });
 
+  const relatedForLd = service ? getRelatedServices(service.slug, 3) : [];
   useMultiJsonLd(
     service
       ? [
@@ -79,6 +80,26 @@ const ServiceDetail: React.FC = () => {
               a: language === 'ar' ? q.a_ar : q.a_en,
             })),
           ),
+          // SEO-3 — ItemList of the visibly-rendered "related services" cards.
+          // Sourced from the static services catalog, all items resolve to
+          // canonical `/services/:slug` pages.
+          ...(relatedForLd.length > 0
+            ? [{
+                '@context': 'https://schema.org',
+                '@type': 'ItemList',
+                '@id': `${SITE_URL}/services/${service.slug}#related`,
+                name: isRTL
+                  ? `خدمات ${sectorName} ذات صلة`
+                  : `Related ${sectorName} services`,
+                numberOfItems: relatedForLd.length,
+                itemListElement: relatedForLd.map((r, i) => ({
+                  '@type': 'ListItem',
+                  position: i + 1,
+                  url: `${SITE_URL}/services/${r.slug}`,
+                  name: isRTL ? r.name_ar : r.name_en,
+                })),
+              }]
+            : []),
         ]
       : null,
   );
