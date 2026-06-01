@@ -35,6 +35,8 @@ import sql from 'highlight.js/lib/languages/sql';
 import 'highlight.js/styles/github-dark.css';
 import { BlogComments } from '@/components/blog/BlogComments';
 import { getProfileByUserId } from '@/modules/users';
+import { getContextualArticles, listPublishedArticles, type HelpArticle } from '@/modules/helpCenter';
+import { LifeBuoy } from 'lucide-react';
 
 hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('js', javascript);
@@ -202,6 +204,20 @@ const BlogPost = () => {
     },
     enabled: !!post,
   });
+
+  // UX-REDESIGN-7 — pull contextual help articles for `public.blog-post` so
+  // every blog page exposes a related-help block (Blog ↔ Help cross-link).
+  const { data: helpPool = [] } = useQuery<HelpArticle[]>({
+    queryKey: ['help', 'all-published-blog-post'],
+    queryFn: () => listPublishedArticles({ limit: 500 }),
+    staleTime: 5 * 60_000,
+    enabled: !!post,
+  });
+  const relatedHelp = useMemo<HelpArticle[]>(() => {
+    const wanted = new Set(getContextualArticles('public.blog-post'));
+    if (wanted.size === 0) return [];
+    return helpPool.filter((a) => wanted.has(a.slug)).slice(0, 3);
+  }, [helpPool]);
 
   const { data: latestPosts = [] } = useQuery({
     queryKey: ['latest-posts-sidebar', post?.id],
