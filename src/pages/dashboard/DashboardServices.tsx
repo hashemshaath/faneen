@@ -787,6 +787,7 @@ function ServiceTile({
   removing: boolean;
 }) {
   const [editing, setEditing] = useState(false);
+  const membershipVisibility = useMembershipVisibility();
   const [draft, setDraft] = useState({
     description_ar: row?.description_ar ?? '',
     description_en: row?.description_en ?? '',
