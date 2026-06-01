@@ -11,6 +11,7 @@ import { listProviderSubscriptionsForCurrentUser } from '@/modules/memberships';
 import { listProviderCreditTransactionsForBusinesses } from '@/modules/credits';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { Crown, Wallet, Calendar, Activity, Sparkles, ArrowUpRight, TrendingUp, Download } from 'lucide-react';
 import { PROVIDER_COMMERCIAL_CONFIG } from '@/lib/providerCommercialConfig';
 import { trackEvent } from '@/lib/analytics';
@@ -78,6 +79,7 @@ const fmtDate = (d: string | null) =>
 const ProviderMembership: React.FC = () => {
   useNoIndex();
   const { user } = useAuth();
+  const membershipVisibility = useMembershipVisibility();
 
   React.useEffect(() => { trackEvent('provider_membership_viewed'); }, []);
 
@@ -184,12 +186,18 @@ const ProviderMembership: React.FC = () => {
                   )}
                 </div>
               </div>
-              <Button asChild size="sm" className="h-9 gap-1.5">
-                <Link to="/membership" onClick={() => trackEvent('provider_membership_upgrade_cta_clicked')}>
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                  ترقية الباقة
-                </Link>
-              </Button>
+              {membershipVisibility.membershipPathOrNull ? (
+                <Button asChild size="sm" className="h-9 gap-1.5">
+                  <Link to={membershipVisibility.membershipPathOrNull} onClick={() => trackEvent('provider_membership_upgrade_cta_clicked')}>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                    ترقية الباقة
+                  </Link>
+                </Button>
+              ) : (
+                <Button asChild size="sm" variant="outline" className="h-9 gap-1.5">
+                  <Link to="/contact">تواصل مع الدعم</Link>
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -15,8 +15,8 @@ const faqs = [
     en: { q: 'Is the free tier really free?', a: 'The Free plan is fully free with no credit card required. You can use it forever with the core features.' },
   },
   {
-    ar: { q: 'كيف يتم الدفع؟', a: 'حالياً نحن في النسخة التجريبية، ويتم تفعيل الترقيات يدوياً دون أي رسوم. سيتم إضافة الدفع الإلكتروني (مدى، فيزا، ماستركارد، أبل باي) قريباً.' },
-    en: { q: 'How does payment work?', a: 'We are currently in beta — upgrades are activated manually with no charge. Online payment (Mada, Visa, Mastercard, Apple Pay) will be added soon.' },
+    ar: { q: 'كيف يتم الدفع؟', a: 'الدفع الإلكتروني عبر مُيسّر (Moyasar) باستخدام مدى أو فيزا أو ماستركارد أو أبل باي. تتم العملية على صفحة دفع آمنة، ويتم تفعيل الباقة فور تأكيد العملية.' },
+    en: { q: 'How does payment work?', a: 'Online payment is processed via Moyasar (Mada, Visa, Mastercard, Apple Pay) on a secure checkout page. Your plan is activated as soon as the payment is confirmed.' },
   },
   {
     ar: { q: 'هل تشمل الأسعار ضريبة القيمة المضافة؟', a: 'نعم، جميع الأسعار المعروضة شاملة لضريبة القيمة المضافة 15% وفقاً للأنظمة في المملكة العربية السعودية.' },
@@ -29,6 +29,26 @@ const faqs = [
   {
     ar: { q: 'ماذا يحدث إذا ألغيت الاشتراك؟', a: 'تحتفظ بكامل مميزات باقتك حتى انتهاء فترة الاشتراك المدفوعة، ثم يتم الانتقال للباقة المختارة (أو المجانية) تلقائياً. يمكنك استئناف التجديد في أي وقت.' },
     en: { q: 'What happens if I cancel?', a: 'You keep all benefits until the end of the paid period, then automatically move to your chosen plan (or Free). You can resume renewal anytime.' },
+  },
+  {
+    ar: { q: 'هل العضوية تضمن وصول طلبات أو مبيعات؟', a: 'لا. العضوية تنظّم مستوى الظهور والمزايا (مثل الأولوية في النتائج، عدد الخدمات، وأدوات إضافية)، لكنها لا تضمن عدد الطلبات أو إتمام أي صفقة. النتائج تعتمد على جودة الملف، الخدمات المعروضة، ومنطقة التغطية.' },
+    en: { q: 'Does membership guarantee leads or sales?', a: 'No. Membership organizes your visibility and benefits (priority in results, service limits, extra tools) but does not guarantee any number of leads or deals. Outcomes depend on profile quality, services listed, and service area.' },
+  },
+  {
+    ar: { q: 'لماذا تظهر بعض الخدمات كمطلوب ترقية؟', a: 'لكل باقة حد لعدد الخدمات النشطة والقطاعات المتاحة. عند تجاوز الحد أو محاولة تفعيل خدمة ضمن قطاع لا يشمله مستواك الحالي، ستظهر دعوة للترقية. يمكنك دائمًا حفظ الخدمة كمسودة ثم تفعيلها بعد الترقية.' },
+    en: { q: 'Why do some services show as requiring an upgrade?', a: 'Each plan has limits on active services and covered sectors. When you exceed the limit or activate a service in a sector beyond your tier, an upgrade prompt appears. You can keep the service as a draft and activate it later.' },
+  },
+  {
+    ar: { q: 'هل كل العلامات التجارية والقطاعات تظهر مباشرة؟', a: 'بعض العلامات والقطاعات تخضع لمراجعة من فريق قطاعات قبل النشر للحفاظ على دقة الدليل. ستصلك إشعارات عند الموافقة أو طلب تعديلات.' },
+    en: { q: 'Do all brands and sectors appear instantly?', a: 'Some brands and sectors are reviewed by the Qitaat team before publishing to keep the directory accurate. You will be notified once approved or if changes are requested.' },
+  },
+  {
+    ar: { q: 'هل العقود وعروض الأسعار متاحة لكل الخطط؟', a: 'الوصول الأساسي للعقود وطلبات عروض الأسعار متاح حسب نوع الحساب، أما الحدود التفصيلية والميزات المتقدمة (مثل عدد العقود المتزامنة) فتعتمد على الباقة وقد تتطلب ترقية.' },
+    en: { q: 'Are contracts and quote requests available on every plan?', a: 'Basic access to contracts and RFQs depends on account type. Detailed limits and advanced features (such as concurrent contract count) depend on the plan and may require an upgrade.' },
+  },
+  {
+    ar: { q: 'ماذا يحدث إذا كانت العضويات غير متاحة مؤقتًا؟', a: 'إذا أوقفت الإدارة عرض خطط العضوية، ستبقى خدمات الدليل وطلبات عروض الأسعار متاحة، ويمكنك التواصل مع الدعم لمعرفة الخيارات المتاحة لجهتك.' },
+    en: { q: 'What happens if memberships are temporarily unavailable?', a: 'If the admin pauses membership plans, the directory and quote requests stay available and you can contact support to learn what options remain for your business.' },
   },
 ];
 

@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { parseLimits } from '@/lib/membership-limits';
 import { Progress } from '@/components/ui/progress';
 import { tierColors } from '@/lib/membership-tiers';
+import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 
 const tierIconMap: Record<string, React.ElementType> = {
   free: Zap, basic: Star, premium: Crown, enterprise: Building2,
@@ -45,6 +46,7 @@ type UsageRow = {
 
 export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, tier }) => {
   const { isRTL } = useLanguage();
+  const membershipVisibility = useMembershipVisibility();
 
   const { data: subscription } = useQuery({
     queryKey: ['provider-active-subscription', userId, businessId ?? null],
@@ -180,12 +182,24 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
               </div>
             </div>
           </div>
-          <Link to="/membership" className="shrink-0" aria-label={isFreePlan ? (isRTL ? 'طلب الترقية' : 'Request upgrade') : (isRTL ? 'إدارة الاشتراك' : 'Manage subscription')}>
-            <Button size="sm" variant={isFreePlan ? 'default' : 'outline'} className="h-9 text-xs gap-1.5 px-3">
+          <Link
+            to={membershipVisibility.membershipPathOrNull ?? '/contact'}
+            className="shrink-0"
+            aria-label={
+              !membershipVisibility.membershipPathOrNull
+                ? (isRTL ? 'تواصل مع الدعم' : 'Contact support')
+                : isFreePlan
+                  ? (isRTL ? 'طلب الترقية' : 'Request upgrade')
+                  : (isRTL ? 'إدارة الاشتراك' : 'Manage subscription')
+            }
+          >
+            <Button size="sm" variant={isFreePlan && membershipVisibility.membershipPathOrNull ? 'default' : 'outline'} className="h-9 text-xs gap-1.5 px-3">
               {isFreePlan ? <Send className="w-3.5 h-3.5" aria-hidden="true" /> : <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />}
-              {isFreePlan
-                ? (isRTL ? 'طلب الترقية' : 'Request upgrade')
-                : (isRTL ? 'إدارة الاشتراك' : 'Manage subscription')}
+              {!membershipVisibility.membershipPathOrNull
+                ? (isRTL ? 'تواصل مع الدعم' : 'Contact support')
+                : isFreePlan
+                  ? (isRTL ? 'طلب الترقية' : 'Request upgrade')
+                  : (isRTL ? 'إدارة الاشتراك' : 'Manage subscription')}
             </Button>
           </Link>
         </div>
@@ -193,8 +207,8 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
         <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-info/30 bg-info/5 px-2.5 py-1 text-[11px] text-info">
           <Info className="w-3 h-3" aria-hidden="true" />
           {isRTL
-            ? 'نسخة تجريبية — يتم تفعيل الترقيات يدوياً حالياً'
-            : 'Beta — upgrades are manually activated for now'}
+            ? 'تفعيل فوري بعد الدفع — قد تخضع بعض المزايا لمراجعة الإدارة'
+            : 'Instant activation after payment — some benefits may be subject to admin review'}
         </div>
 
         {isFreePlan && (

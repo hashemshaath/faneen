@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { tierIcons } from '@/lib/membership-tiers';
+import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 
 /** Brand-aligned chart palette — sourced from central design tokens. */
 export const CHART_COLORS = [
@@ -270,6 +271,7 @@ type MembershipSub = {
 export const MembershipWidget = React.memo(function MembershipWidget({
   isRTL, userId,
 }: { isRTL: boolean; userId: string }) {
+  const membershipVisibility = useMembershipVisibility();
   const { data: sub } = useQuery({
     queryKey: ['membership-widget', userId],
     queryFn: async () => {
@@ -320,7 +322,7 @@ export const MembershipWidget = React.memo(function MembershipWidget({
             )}
           </div>
         </div>
-        <Link to="/membership">
+        <Link to={membershipVisibility.membershipPathOrNull ?? '/contact'}>
           <Button variant="ghost" size="sm" className="w-full mt-2 text-[10px] h-7 text-accent gap-1">
             <Sparkles className="w-3 h-3" aria-hidden="true" />{isRTL ? 'إدارة العضوية' : 'Manage Plan'}
           </Button>
