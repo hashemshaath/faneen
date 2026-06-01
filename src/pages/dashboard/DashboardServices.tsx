@@ -749,7 +749,7 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 function ServiceTile({
-  businessId, userId, sectorId, sectorLabel, isCustom, name, nameAr, nameEn, row, isRTL, saving, onToggle, onSave, onRemove, removing,
+  businessId, userId, sectorId, sectorLabel, isCustom, name, nameAr, nameEn, row, resolved, isRTL, saving, onToggle, onSave, onRemove, removing,
 }: {
   businessId: string;
   userId: string;
@@ -760,6 +760,7 @@ function ServiceTile({
   nameAr: string;
   nameEn: string;
   row: ServiceRow | undefined;
+  resolved: ResolvedServiceEntitlement | null;
   isRTL: boolean;
   saving: boolean;
   onToggle: (next: boolean) => void;
@@ -775,21 +776,47 @@ function ServiceTile({
     price_to: row?.price_to?.toString() ?? '',
     currency_code: row?.currency_code ?? 'SAR',
   });
-  const isActive = row?.is_active ?? false;
+  const effective = resolved?.effective_status ?? null;
+  const isActive = effective === 'active';
+  const switchLocked = !!resolved && !resolved.canActivate && !resolved.canPause;
   const hasPrice = !!(row && (row.price_from || row.price_to));
 
   return (
-    <div className={`rounded-xl border bg-card p-3 transition-all ${isActive ? 'border-border/60' : 'border-border/40 opacity-80'}`}>
+    <div className={`rounded-xl border bg-card p-3 transition-all ${isActive ? 'border-border/60' : 'border-border/40 opacity-90'}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-semibold text-sm truncate">{name}</h3>
             {isCustom && <Badge variant="outline" className="text-[10px]">{isRTL ? 'مخصّصة' : 'Custom'}</Badge>}
+            {effective && (
+              <Badge
+                variant="outline"
+                className={`text-[10px] ${effectiveStatusBadgeClass(effective)}`}
+              >
+                {effective === 'upgrade_required' || effective === 'quota_exceeded' ? (
+                  <Lock className="h-3 w-3 me-1 inline" />
+                ) : effective === 'disabled' || effective === 'hidden' ? (
+                  <ShieldAlert className="h-3 w-3 me-1 inline" />
+                ) : effective === 'pending_review' ? (
+                  <Clock className="h-3 w-3 me-1 inline" />
+                ) : effective === 'paused' ? (
+                  <PauseCircle className="h-3 w-3 me-1 inline" />
+                ) : (
+                  <CheckCircle2 className="h-3 w-3 me-1 inline" />
+                )}
+                {effectiveStatusLabel(effective, isRTL)}
+              </Badge>
+            )}
           </div>
           {sectorLabel && <p className="text-[11px] text-muted-foreground mt-0.5">{sectorLabel}</p>}
         </div>
         <div className="flex items-center gap-2">
-          <Switch checked={isActive} onCheckedChange={onToggle} aria-label="active" />
+          <Switch
+            checked={isActive}
+            onCheckedChange={onToggle}
+            aria-label="active"
+            disabled={switchLocked}
+          />
           <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setEditing((v) => !v)}>
             {editing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
           </Button>
@@ -811,6 +838,34 @@ function ServiceTile({
           </Button>
         </div>
       </div>
+
+      {/* Governance call-outs */}
+      {resolved?.requiresUpgrade && (
+        <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-accent/30 bg-accent/5 p-2">
+          <p className="text-[11px] text-accent flex items-center gap-1">
+            <Lock className="h-3 w-3" />
+            {resolved.upgradeReason === 'quota_exceeded'
+              ? (isRTL ? 'تجاوزت حد الخدمات في باقتك الحالية.' : 'You exceeded your plan\'s active services limit.')
+              : (isRTL ? 'هذه الخدمة متاحة ضمن باقة أعلى.' : 'This service requires a higher membership plan.')}
+          </p>
+          <Button asChild size="sm" variant="outline" className="h-7 text-[11px]">
+            <Link to="/membership">{isRTL ? 'ترقية العضوية' : 'Upgrade plan'}</Link>
+          </Button>
+        </div>
+      )}
+      {resolved?.adminBlockedReason && (effective === 'disabled' || effective === 'pending_review' || effective === 'hidden') && (
+        <div className="mt-2 rounded-lg border border-destructive/20 bg-destructive/5 p-2 text-[11px] text-destructive flex items-start gap-1">
+          <ShieldAlert className="h-3 w-3 mt-0.5 shrink-0" />
+          <span>
+            {effective === 'pending_review'
+              ? (isRTL ? 'هذه الخدمة قيد المراجعة من الإدارة.' : 'This service is under admin review.')
+              : effective === 'hidden'
+                ? (isRTL ? 'هذه الخدمة مخفية من قِبل الإدارة.' : 'This service is hidden by admin.')
+                : (isRTL ? 'تم إيقاف هذه الخدمة من قِبل الإدارة.' : 'This service has been suspended by admin.')}
+            {row?.rejection_reason ? ` — ${row.rejection_reason}` : ''}
+          </span>
+        </div>
+      )}
 
       {!editing && (
         <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
