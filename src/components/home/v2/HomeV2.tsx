@@ -20,26 +20,6 @@ import heroSlide1 from '@/assets/home/hero-slide-1.webp';
 import heroSlide2 from '@/assets/home/hero-slide-2.webp';
 import heroSlide3 from '@/assets/home/hero-slide-3.webp';
 import heroSlide4 from '@/assets/home/hero-slide-4.webp';
-import imgClients from '@/assets/home/audience-clients.webp';
-import imgContractors from '@/assets/home/audience-contractors.webp';
-import imgProviders from '@/assets/home/audience-providers.webp';
-import sectorAluminum from '@/assets/home/sector-aluminum.webp';
-import sectorIron from '@/assets/home/sector-iron.webp';
-import sectorWood from '@/assets/home/sector-wood.webp';
-import sectorGlass from '@/assets/home/sector-glass.webp';
-import sectorStainless from '@/assets/home/sector-stainless.webp';
-import sectorFabrication from '@/assets/home/sector-fabrication.webp';
-import solSearch from '@/assets/home/sol-search.webp';
-import solCity from '@/assets/home/sol-city.webp';
-import solRequest from '@/assets/home/sol-request.webp';
-import solCompare from '@/assets/home/sol-compare.webp';
-import probScattered from '@/assets/home/prob-scattered.webp';
-import probUnclear from '@/assets/home/prob-unclear.webp';
-import probCompare from '@/assets/home/prob-compare.webp';
-import whoIndividuals from '@/assets/home/who-individuals.webp';
-import whoContractors from '@/assets/home/who-contractors.webp';
-import whoEngineers from '@/assets/home/who-engineers.webp';
-import whoProviders from '@/assets/home/who-providers.webp';
 
 const ROUTES = {
   quote: '/search?intent=quote',
