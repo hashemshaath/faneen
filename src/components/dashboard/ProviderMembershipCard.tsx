@@ -207,8 +207,8 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
         <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-info/30 bg-info/5 px-2.5 py-1 text-[11px] text-info">
           <Info className="w-3 h-3" aria-hidden="true" />
           {isRTL
-            ? 'نسخة تجريبية — يتم تفعيل الترقيات يدوياً حالياً'
-            : 'Beta — upgrades are manually activated for now'}
+            ? 'تفعيل فوري بعد الدفع — قد تخضع بعض المزايا لمراجعة الإدارة'
+            : 'Instant activation after payment — some benefits may be subject to admin review'}
         </div>
 
         {isFreePlan && (
