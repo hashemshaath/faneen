@@ -4,7 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Send, Building2, ArrowLeft, Layers, MessageSquare } from 'lucide-react';
+import { Send, Building2, Layers, MessageSquare, Compass, Wrench, Tag, FileText, ShieldCheck } from 'lucide-react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { SECTORS_SEO_LIST } from '@/lib/sectors-seo';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
@@ -61,11 +61,17 @@ const SectorsHub: React.FC = () => {
           <p className="mt-3 text-primary-foreground/80 text-sm sm:text-base max-w-2xl leading-relaxed">
             من الأعمال الصغيرة إلى المشاريع التجارية، ابدأ من القطاع الأقرب لاحتياجك، ثم أرسل تفاصيل طلبك لمزودي الخدمة المناسبين.
           </p>
-          <div className="mt-6">
+          <div className="mt-6 flex flex-wrap gap-2">
             <Link to="/quote">
               <Button size="lg" className="rounded-xl bg-gold text-primary hover:bg-gold/90 font-bold h-12 px-6">
                 <Send className="w-4 h-4 ms-2" />
                 اطلب عرض سعر
+              </Button>
+            </Link>
+            <Link to="/services">
+              <Button size="lg" variant="outline" className="rounded-xl h-12 px-6 bg-primary-foreground/[0.06] border-primary-foreground/25 text-primary-foreground hover:bg-primary-foreground/[0.12]">
+                <Wrench className="w-4 h-4 ms-2" />
+                استعرض الخدمات
               </Button>
             </Link>
           </div>
@@ -73,6 +79,34 @@ const SectorsHub: React.FC = () => {
       </header>
 
       <main className="container px-4 py-12 space-y-14">
+        {/* Discovery helper — explains how to choose the right entry point */}
+        <section aria-labelledby="discovery-helper-h" className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary">
+              <Compass className="w-4 h-4" />
+            </span>
+            <h2 id="discovery-helper-h" className="font-heading text-lg font-bold">من أين تبدأ؟</h2>
+          </div>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[
+              { icon: Layers, t: 'ابدأ من القطاع', d: 'إذا كنت تعرف نوع العمل (ألمنيوم، حديد، زجاج، خشب).', to: '/sectors' },
+              { icon: Wrench, t: 'ابدأ من الخدمة', d: 'إذا كنت تعرف الخدمة المطلوبة وتريد مقارنة الأسعار.', to: '/services' },
+              { icon: Tag, t: 'ابدأ من العلامة', d: 'استخدم العلامة التجارية عندما تكون لديك مواصفات محددة.', to: '/brands' },
+              { icon: FileText, t: 'لست متأكدًا؟', d: 'أرسل طلب عرض سعر ووضّح التفاصيل، وسنوجّه طلبك.', to: '/quote' },
+            ].map(({ icon: Icon, t, d, to }) => (
+              <li key={t}>
+                <Link to={to} className="block h-full rounded-xl border border-border/50 bg-background p-3 hover:border-primary/40 hover:bg-primary/[0.03] transition-colors">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Icon className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-sm font-heading font-bold">{t}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{d}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         {/* Sector cards */}
         <section aria-labelledby="sectors-h">
           <h2 id="sectors-h" className="sr-only">القطاعات المتاحة</h2>
@@ -99,6 +133,14 @@ const SectorsHub: React.FC = () => {
               </Card>
             ))}
           </div>
+        </section>
+
+        {/* Trust note — explains what shows on the directory */}
+        <section className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-4 sm:p-5 flex items-start gap-3">
+          <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            البيانات المعروضة تعتمد على الجهات المنشورة والمعتمدة. نراجع بيانات الظهور قبل النشر، ولا نضمن نتائج التنفيذ.
+          </p>
         </section>
 
         {/* Not sure which sector */}
