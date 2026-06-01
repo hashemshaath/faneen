@@ -191,9 +191,25 @@ export const useBusinesses = () =>
     queryKey: ['businesses-all-with-services'],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
+      // PERF-1D.1 — explicit parent select on `businesses_public` to drop
+      // 11 columns that no search consumer reads (Search.tsx, BusinessCard,
+      // SearchMap, SearchInsightsBar, RecentlyViewedStrip, filterAndSort,
+      // JSON-LD). Kept fields are all verified used by at least one of:
+      // links/keys (id, username), display/sort/fuzzy (name_*, description_*,
+      // rating_*, created_at), filters (category_id, city_id, is_verified,
+      // membership_tier), map markers (latitude, longitude), or card chrome
+      // (logo_url, cover_url, website). Triple-gate, ordering, limit, and
+      // embedded relation filters are unchanged.
+      const PARENT_SELECT =
+        'id, username, name_ar, name_en, description_ar, description_en, ' +
+        'logo_url, cover_url, website, ' +
+        'rating_avg, rating_count, is_verified, membership_tier, ' +
+        'category_id, city_id, latitude, longitude, created_at';
       const { data } = await supabase
         .from('businesses_public')
-        .select('*, categories(id, name_ar, name_en, slug, icon, parent_id), cities(id, name_ar, name_en), business_services(name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status, category_id), promotions(id, end_date)')
+        .select(
+          `${PARENT_SELECT}, categories(id, name_ar, name_en, slug, icon, parent_id), cities(id, name_ar, name_en), business_services(name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status, category_id), promotions(id, end_date)`,
+        )
         .eq('is_active', true)
         // SERVICE-ACTIVATION-GOVERNANCE-3 — eligibility gate on nested
         // business_services rows: legacy is_active AND new governance
