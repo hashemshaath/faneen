@@ -3,12 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import {
-  Star, ArrowLeft, ArrowRight, CheckCircle2, XCircle, Sparkles,
-  TrendingUp, ShieldCheck, Zap, Clock, Award, BadgeCheck,
-  Factory, Store, Quote, HardHat, Truck, Compass, Settings2, Layers3,
-  Calculator, Gift, Rocket,
-  Lock, FileBadge, MapPin, Globe2, Headphones, Activity,
-  Crown, MessageSquare, FileText, Receipt,
+  ArrowLeft, ArrowRight, CheckCircle2, Sparkles,
+  TrendingUp, ShieldCheck, Zap, Award,
+  Factory, Store, HardHat, Truck, Compass, Settings2, Layers3,
+  Wrench, Tags, Images, Briefcase, Users, FileSignature, CreditCard,
+  Square, PanelTop, TreePine, ChefHat, Palette, Hammer,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -21,24 +20,33 @@ import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useLandingTracking } from '@/hooks/useLandingTracking';
 import {
   fetchLandingContent, fetchLandingFeatures, fetchLandingFaq,
-  fetchLandingTestimonials, fetchLandingSettings, type LandingContent,
+  fetchLandingSettings, type LandingContent,
 } from '@/services/providerLandingService';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { HeroParticles } from '@/components/home/HeroParticles';
 import { track as gtmTrack } from '@/lib/analytics-events';
-import { useCountUp } from '@/hooks/useCountUp';
 import heroImage from '@/assets/providers-hero-construction.jpg';
 import whyImage from '@/assets/providers-why-factory.jpg';
 import howImage from '@/assets/providers-how-dashboard.jpg';
 import ctaImage from '@/assets/providers-cta-handshake.jpg';
 
-const SHOWCASE_IMAGES = [
-  { src: heroImage,  ar: 'مشاريع البناء الكبرى',     en: 'Major construction projects' },
-  { src: whyImage,   ar: 'مصانع الصناعات الخفيفة',   en: 'Light-industry factories' },
-  { src: howImage,   ar: 'إدارة رقمية احترافية',     en: 'Professional digital management' },
-  { src: ctaImage,   ar: 'شراكات وعقود نظامية',     en: 'Partnerships & formal contracts' },
-];
+/**
+ * UX-REDESIGN-2 — /for-providers
+ *
+ * Rebuild of the provider landing page. Goals:
+ *   • Cut from 14+ sections (~1,225 lines) to 10 focused sections.
+ *   • Remove unverifiable claims (PDPL, regional hosting, 24/7 support,
+ *     fabricated "98% satisfaction", ROI calculator, fake live ticker,
+ *     one-sided comparison, hard-coded pricing literals).
+ *   • Surface real provider capabilities — services, brands, showcase,
+ *     team, opportunities, membership, contracts — with soft framing
+ *     ("يدعم", "يساعد", "عند تفعيل الميزة", "حسب الخطة").
+ *   • Preserve CMS overrides from `providerLandingService` for hero,
+ *     why, how and final-CTA sections so admin copy still wins.
+ *   • Preserve SEO: canonical, JSON-LD (WebPage/Org/Service/BreadcrumbList,
+ *     plus FAQPage when CMS FAQ is populated), hero LCP preload.
+ */
 
 const pickIcon = (name: string): React.ComponentType<{ className?: string }> => {
   const Lib = Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
