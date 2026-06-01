@@ -27,6 +27,12 @@ interface PlanFeatureMatrixProps {
   /** Optional caption rendered above the table. */
   caption?: React.ReactNode;
   className?: string;
+  /**
+   * When true, render every declared LIMIT_FIELDS row including unconfirmed ones
+   * (admin editor / internal previews). Defaults to `false` so PUBLIC surfaces
+   * never advertise invented numeric limits.
+   */
+  includeUnconfirmed?: boolean;
 }
 
 /**
@@ -41,6 +47,7 @@ export const PlanFeatureMatrix: React.FC<PlanFeatureMatrixProps> = ({
   highlightTier = 'premium',
   caption,
   className,
+  includeUnconfirmed = false,
 }) => {
   const { data: plans = [] } = useQuery({
     queryKey: ['membership-plans-comparison'],
@@ -94,7 +101,9 @@ export const PlanFeatureMatrix: React.FC<PlanFeatureMatrixProps> = ({
           </thead>
           <tbody>
             {LIMIT_CATEGORIES.map((cat) => {
-              const catFields = LIMIT_FIELDS.filter((f) => f.category === cat.key);
+              const catFields = LIMIT_FIELDS.filter(
+                (f) => f.category === cat.key && (includeUnconfirmed || f.confirmed),
+              );
               if (catFields.length === 0) return null;
               return (
                 <React.Fragment key={cat.key}>
