@@ -7,6 +7,7 @@ import { Bi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
+import { listProfilesByCreatedRange } from '@/modules/users';
 import { buildCsv, downloadCsv, defaultRange, type DateRange } from '@/lib/admin-reports-csv';
 import { Download, FileSpreadsheet, Loader2, FileText, Users, Building2, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
@@ -53,13 +54,13 @@ const REPORTS: ReportDef[] = [
     descEn: 'Users created in the selected period (id, email, name, created)',
     icon: Users,
     async fetch(range) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('ref_id, email, full_name, account_type, created_at, country_id')
-        .gte('created_at', `${range.from}T00:00:00Z`)
-        .lte('created_at', `${range.to}T23:59:59Z`)
-        .order('created_at', { ascending: false })
-        .limit(5000);
+      const { data, error } = await listProfilesByCreatedRange({
+        fromIso: `${range.from}T00:00:00Z`,
+        toIso: `${range.to}T23:59:59Z`,
+        select: 'ref_id, email, full_name, account_type, created_at, country_id',
+        order: { column: 'created_at', ascending: false },
+        limit: 5000,
+      });
       if (error) throw error;
       const headers = ['ref_id','email','full_name','account_type','created_at','country_id'] as const;
       return { rows: (data ?? []) as Record<string, unknown>[], headers };
