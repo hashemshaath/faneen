@@ -1066,8 +1066,8 @@ const Membership = () => {
             </h2>
             <p className="text-slate-300 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
               {isRTL
-                ? 'انضم لمئات المنشآت التي تثق بقطاعات لتنمية أعمالها في القطاع الصناعي.'
-                : 'Join hundreds of businesses that trust Qitaat to grow in the industrial sector.'}
+                ? 'اختر مستوى الظهور والمزايا المناسب لجهتك حسب الخدمات، الطلبات، والعروض المتاحة.'
+                : 'Pick the visibility and benefits level that fits your business based on services, requests, and offers available.'}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <Button
