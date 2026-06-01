@@ -25,6 +25,7 @@ function makeBuilder() {
     return chain();
   });
   b.select = vi.fn(chain);
+  b.maybeSingle = vi.fn(async () => ({ data: null, error: null }));
   b.then = (cb: (v: unknown) => unknown) =>
     Promise.resolve({ data: [], error: null }).then(cb);
   return b;

@@ -24,7 +24,17 @@ export async function listServicesByBusiness<T = unknown>({
   order = 'sort_order',
 }: ListServicesByBusinessOptions): Promise<{ data: T[] | null; error: unknown }> {
   let q = supabase.from('business_services').select(select).eq('business_id', businessId);
-  if (activeOnly) q = q.eq('is_active', true);
+  if (activeOnly) {
+    // SERVICE-ACTIVATION-GOVERNANCE-3 — public eligibility gate.
+    // A row is publicly "active" only when legacy is_active, provider_status,
+    // and admin_status are all aligned. required_plan_tier is intentionally
+    // not enforced here because membership tier is not available in this
+    // catalog read path; see providerServices.resolveServiceEntitlement for
+    // membership-aware decisions.
+    q = q.eq('is_active', true)
+      .eq('provider_status', 'active')
+      .eq('admin_status', 'allowed');
+  }
   if (order) q = q.order(order);
   const { data, error } = await q;
   return { data: data as unknown as T[] | null, error };
@@ -43,7 +53,11 @@ export async function countServicesByBusiness({
     .from('business_services')
     .select('id', { count: 'exact', head: true })
     .eq('business_id', businessId);
-  if (activeOnly) q = q.eq('is_active', true);
+  if (activeOnly) {
+    q = q.eq('is_active', true)
+      .eq('provider_status', 'active')
+      .eq('admin_status', 'allowed');
+  }
   const { count, error } = await q;
   return { count, error };
 }

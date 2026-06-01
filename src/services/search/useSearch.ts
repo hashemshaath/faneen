@@ -193,10 +193,14 @@ export const useBusinesses = () =>
       const today = new Date().toISOString().slice(0, 10);
       const { data } = await supabase
         .from('businesses_public')
-        .select('*, categories(id, name_ar, name_en, slug, icon, parent_id), cities(id, name_ar, name_en), business_services(name_ar, name_en, price_from, price_to, is_active, category_id), promotions(id, end_date)')
+        .select('*, categories(id, name_ar, name_en, slug, icon, parent_id), cities(id, name_ar, name_en), business_services(name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status, category_id), promotions(id, end_date)')
         .eq('is_active', true)
-        // Only return active + non-expired service rows for tag chips & price filter
+        // SERVICE-ACTIVATION-GOVERNANCE-3 — eligibility gate on nested
+        // business_services rows: legacy is_active AND new governance
+        // statuses must all align before a service is treated as public.
         .eq('business_services.is_active', true)
+        .eq('business_services.provider_status', 'active')
+        .eq('business_services.admin_status', 'allowed')
         // Only return live promotions for the "كوبون" badge (active and not expired)
         .eq('promotions.is_active', true)
         .or(`end_date.is.null,end_date.gte.${today}`, { foreignTable: 'promotions' })

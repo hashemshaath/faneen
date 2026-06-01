@@ -12,6 +12,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { AdminActivationStatus } from '../resolveServiceEntitlement';
+import {
+  notifyServiceActivationEvent,
+  type ServiceActivationEvent,
+} from './notifications';
 
 type Tier = Database['public']['Enums']['membership_tier'];
 
@@ -35,6 +39,8 @@ export interface AdminServiceActivationRow {
   reviewed_at: string | null;
   updated_at: string;
   created_at: string;
+  /** Joined business owner id, used for tier preview / notifications. */
+  owner_user_id?: string | null;
 }
 
 export interface AdminListFilters {
@@ -50,8 +56,63 @@ export interface AdminListFilters {
 }
 
 const COLS =
-  'id,business_id,category_id,name_ar,name_en,provider_status,admin_status,required_plan_tier,requires_admin_review,is_premium_service,is_featured,is_active,admin_note,provider_note,rejection_reason,reviewed_by,reviewed_at,updated_at,created_at';
+  'id,business_id,category_id,name_ar,name_en,provider_status,admin_status,required_plan_tier,requires_admin_review,is_premium_service,is_featured,is_active,admin_note,provider_note,rejection_reason,reviewed_by,reviewed_at,updated_at,created_at,businesses(user_id)';
 
+/**
+ * Lightweight context fetch used by mutation wrappers to address the
+ * notification to the provider's owner and include the service name.
+ * Never throws; returns null on failure so the mutation still succeeds.
+ */
+async function loadNotificationContext(serviceId: string): Promise<{
+  user_id: string | null;
+  business_id: string;
+  name_ar: string;
+  name_en: string | null;
+  required_plan_tier: string | null;
+} | null> {
+  const { data, error } = await supabase
+    .from('business_services')
+    .select('business_id,name_ar,name_en,required_plan_tier,businesses(user_id)')
+    .eq('id', serviceId)
+    .maybeSingle();
+  if (error || !data) return null;
+  type Joined = {
+    business_id: string;
+    name_ar: string;
+    name_en: string | null;
+    required_plan_tier: string | null;
+    businesses: { user_id: string | null } | { user_id: string | null }[] | null;
+  };
+  const row = data as unknown as Joined;
+  const biz = Array.isArray(row.businesses) ? row.businesses[0] : row.businesses;
+  return {
+    user_id: biz?.user_id ?? null,
+    business_id: row.business_id,
+    name_ar: row.name_ar,
+    name_en: row.name_en,
+    required_plan_tier: row.required_plan_tier,
+  };
+}
+
+async function notifyOwner(
+  serviceId: string,
+  event: ServiceActivationEvent,
+  reason?: string | null,
+  tierOverride?: string | null,
+): Promise<void> {
+  const ctx = await loadNotificationContext(serviceId);
+  if (!ctx || !ctx.user_id) return;
+  notifyServiceActivationEvent({
+    user_id: ctx.user_id,
+    event,
+    business_service_id: serviceId,
+    business_id: ctx.business_id,
+    service_name_ar: ctx.name_ar,
+    service_name_en: ctx.name_en,
+    reason: reason ?? null,
+    required_plan_tier: tierOverride !== undefined ? tierOverride : ctx.required_plan_tier,
+  });
+}
 export async function adminListServiceActivations(
   filters: AdminListFilters = {},
 ): Promise<AdminServiceActivationRow[]> {
@@ -77,7 +138,14 @@ export async function adminListServiceActivations(
 
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []) as AdminServiceActivationRow[];
+  type RawRow = Omit<AdminServiceActivationRow, 'owner_user_id'> & {
+    businesses: { user_id: string | null } | { user_id: string | null }[] | null;
+  };
+  const raw = (data ?? []) as unknown as RawRow[];
+  return raw.map((r) => {
+    const biz = Array.isArray(r.businesses) ? r.businesses[0] : r.businesses;
+    return { ...r, owner_user_id: biz?.user_id ?? null } as AdminServiceActivationRow;
+  });
 }
 
 async function currentReviewerId(): Promise<string | null> {
@@ -112,6 +180,7 @@ export async function adminApproveProviderService(id: string, note?: string): Pr
     requires_admin_review: false,
     ...(note !== undefined ? { admin_note: note } : {}),
   });
+  await notifyOwner(id, 'provider_service_activation_approved');
 }
 
 export async function adminRejectProviderService(id: string, reason: string): Promise<void> {
@@ -120,6 +189,7 @@ export async function adminRejectProviderService(id: string, reason: string): Pr
     rejection_reason: reason,
     is_active: false,
   });
+  await notifyOwner(id, 'provider_service_activation_rejected', reason);
 }
 
 export async function adminSuspendProviderService(id: string, reason: string): Promise<void> {
@@ -128,6 +198,7 @@ export async function adminSuspendProviderService(id: string, reason: string): P
     rejection_reason: reason,
     is_active: false,
   });
+  await notifyOwner(id, 'provider_service_suspended_by_admin', reason);
 }
 
 export async function adminRestoreProviderService(id: string, note?: string): Promise<void> {
@@ -136,10 +207,12 @@ export async function adminRestoreProviderService(id: string, note?: string): Pr
     rejection_reason: null,
     ...(note !== undefined ? { admin_note: note } : {}),
   });
+  await notifyOwner(id, 'provider_service_restored_by_admin');
 }
 
 export async function adminSetRequiredPlanTier(id: string, tier: Tier): Promise<void> {
   await patchRow(id, { required_plan_tier: tier });
+  await notifyOwner(id, 'provider_service_requires_upgrade', null, tier);
 }
 
 export async function adminClearRequiredPlanTier(id: string): Promise<void> {

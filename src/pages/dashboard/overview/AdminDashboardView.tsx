@@ -412,6 +412,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               { icon: Users, label: isRTL ? 'المستخدمين' : 'Users', to: '/admin/users' },
               { icon: Building2, label: isRTL ? 'المنشآت' : 'Businesses', to: '/admin/businesses' },
               { icon: Crown, label: isRTL ? 'العضويات' : 'Memberships', to: '/admin/memberships' },
+              { icon: ShieldCheck, label: isRTL ? 'تفعيل الخدمات' : 'Service activations', to: '/admin/service-activations' },
               { icon: Newspaper, label: isRTL ? 'المدونة' : 'Blog', to: '/dashboard/blog' },
               { icon: Activity, label: isRTL ? 'السجل' : 'Activity', to: '/admin/activity-log' },
               { icon: ShieldAlert, label: isRTL ? 'النظام' : 'System', to: '/admin/system-settings' },
