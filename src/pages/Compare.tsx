@@ -103,16 +103,27 @@ const Compare = () => {
       if (!selectedIds.length) return [];
       const { data } = await listBusinessesByIds<CompareBizDetailRow>({
         ids: selectedIds,
-        // PERF-1D — trim embedded `*` relations to only the columns the
-        // Compare table renders. Parent `*` is intentionally retained
-        // because Compare's detail row pulls many top-level fields
-        // (name_ar/en, username, logo_url, rating_avg/_count, is_verified,
-        // membership_tier, …) and trimming it requires a full column
-        // inventory of `businesses` — deferred to a follow-up phase.
-        // Triple-gate filters below still apply at the DB level even
-        // though is_active/provider_status/admin_status are not selected.
+        // PERF-1D.2 — explicit parent allow-list (9 columns) replaces `*`
+        // on the `businesses` table. Every retained field is verified used
+        // by the Compare table:
+        //   id              — React keys + relation joins
+        //   username        — `/${b.username}` profile link
+        //   name_ar/en      — provider name (header, table, PDF export)
+        //   logo_url        — provider logo (table header, picker)
+        //   rating_avg/_count — rating row + PDF export
+        //   is_verified     — VerifiedBadge in table header
+        //   membership_tier — membership tier badge + PDF export
+        // ~77 unused parent columns are dropped — including PII fields like
+        // email, phone, national_id, vat_number, cr_document_*, and
+        // account_manager_* that the public Compare page never needs to
+        // surface. Embedded relations remain trimmed from PERF-1D. Triple-
+        // gate filters below still apply at the DB level even though
+        // is_active/provider_status/admin_status are not selected on the
+        // embedded business_services rows.
         select:
-          '*, categories(name_ar, name_en), cities(name_ar, name_en), ' +
+          'id, username, name_ar, name_en, logo_url, ' +
+          'rating_avg, rating_count, is_verified, membership_tier, ' +
+          'categories(name_ar, name_en), cities(name_ar, name_en), ' +
           'business_services(name_ar, name_en, price_from, price_to, currency_code), ' +
           'provider_installment_settings(is_enabled, max_installments)',
         // SERVICE-ACTIVATION-GOVERNANCE-FINAL — only embed eligible

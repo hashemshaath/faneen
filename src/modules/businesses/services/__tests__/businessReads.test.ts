@@ -49,16 +49,23 @@ describe('listBusinessesByIds', () => {
     expect(builder.in).toHaveBeenCalledWith('id', ['a', 'b']);
   });
   it('honors custom select (Compare detail shape)', async () => {
-    // PERF-1D — Compare's embedded relations are trimmed to only the
-    // columns the comparison table actually renders. The wrapper test
-    // verifies verbatim passthrough of whatever select the caller passes.
+    // PERF-1D.2 — Compare's parent select is now an explicit allow-list
+    // (no `*`) of the 9 fields the Compare table actually renders. The
+    // wrapper test still verifies verbatim passthrough of whatever select
+    // the caller passes.
     const sel =
-      '*, categories(name_ar, name_en), cities(name_ar, name_en), ' +
+      'id, username, name_ar, name_en, logo_url, ' +
+      'rating_avg, rating_count, is_verified, membership_tier, ' +
+      'categories(name_ar, name_en), cities(name_ar, name_en), ' +
       'business_services(name_ar, name_en, price_from, price_to, currency_code), ' +
       'provider_installment_settings(is_enabled, max_installments)';
     await listBusinessesByIds({ ids: ['x'], select: sel });
     expect(builder.select).toHaveBeenCalledWith(sel);
     expect(builder.in).toHaveBeenCalledWith('id', ['x']);
+    // Guard against a regression that would silently re-introduce parent `*`
+    // (and with it ~77 unused / PII parent columns).
+    expect(sel.startsWith('*')).toBe(false);
+    expect(sel).not.toMatch(/^\*,/);
   });
 });
 
