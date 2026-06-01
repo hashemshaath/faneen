@@ -638,11 +638,15 @@ const BusinessProfile = () => {
       {/* Mobile-only sticky CTA — hidden when the owner views their own
           profile to keep authoring UX clean. */}
       {business.user_id !== user?.id && (
-        <BusinessProfileStickyCta
-          onContact={() => handleContactClick("sticky_mobile")}
-          onShare={handleShare}
-          isContacting={contactMutation.isPending}
-        />
+        <>
+          {/* Spacer to prevent the mobile sticky CTA from covering the footer. */}
+          <div aria-hidden="true" className="h-20 sm:hidden" />
+          <BusinessProfileStickyCta
+            onContact={() => handleContactClick("sticky_mobile")}
+            onShare={handleShare}
+            isContacting={contactMutation.isPending}
+          />
+        </>
       )}
 
       <Footer />
