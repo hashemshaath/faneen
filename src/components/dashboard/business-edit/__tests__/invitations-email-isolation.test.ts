@@ -61,7 +61,10 @@ describe('E-Mail-8: InvitationsPanel email isolation', () => {
   });
 
   it('preserves toast behavior on success and error for initial invitation', () => {
-    expect(src).toContain("toast.success(isRTL ? 'تم إرسال الدعوة بالبريد الإلكتروني' : 'Invitation email sent')");
+    // Multi-channel delivery summary (post-STAB-1A InvitationsPanel revamp):
+    // success toast now reports the channels used (email / in-app / both).
+    expect(src).toContain('تم إنشاء الدعوة وإرسالها عبر');
+    expect(src).toContain('Invitation created and delivered via');
     expect(src).toContain("toast.error(isRTL ? `تعذّر الإرسال: ${msg}` : `Failed to send: ${msg}`)");
   });
 
