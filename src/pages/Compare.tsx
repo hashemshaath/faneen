@@ -238,10 +238,29 @@ const Compare = () => {
 
         {selectedIds.length === 0 ? (
           <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center py-16 text-muted-foreground">
-              <Scale className="w-16 h-16 mb-4 opacity-30" />
-              <p className="text-xl font-medium">{isRTL ? 'ابدأ المقارنة' : 'Start Comparing'}</p>
-              <p className="text-sm">{isRTL ? 'ابحث وأضف مزودي خدمة للمقارنة بينهم' : 'Search and add providers to compare them'}</p>
+            <CardContent className="flex flex-col items-center py-12 sm:py-16 text-center">
+              <Scale className="w-14 h-14 sm:w-16 sm:h-16 mb-4 opacity-30 text-muted-foreground" />
+              <p className="text-lg sm:text-xl font-heading font-bold text-foreground mb-1">
+                {isRTL ? 'ابدأ المقارنة' : 'Start comparing'}
+              </p>
+              <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
+                {isRTL
+                  ? 'أضف جهتين أو أكثر للمقارنة حتى تظهر الفروقات بوضوح: التقييم، التخصص، الموقع، الخدمات وخيارات التقسيط.'
+                  : 'Add two or more providers to clearly see the differences: ratings, category, location, services and installment options.'}
+              </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                <Button asChild variant="default" className="rounded-xl">
+                  <Link to="/search">{isRTL ? 'ابحث عن مزودين' : 'Find providers'}</Link>
+                </Button>
+                <Button asChild variant="outline" className="rounded-xl">
+                  <Link to="/sectors">{isRTL ? 'تصفّح القطاعات' : 'Browse sectors'}</Link>
+                </Button>
+              </div>
+              <p className="mt-5 text-[11px] text-muted-foreground/80 max-w-md leading-relaxed">
+                {isRTL
+                  ? 'المقارنة تساعدك في تنظيم خياراتك ولا تضمن نتائج التنفيذ. أرسل طلبك للجهة عبر قِطاعات قبل اتخاذ القرار.'
+                  : 'Comparison helps you organize options but does not guarantee execution. Send your request through Qitaat before deciding.'}
+              </p>
             </CardContent>
           </Card>
         ) : isLoadingSelected ? (
