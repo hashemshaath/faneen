@@ -3,6 +3,7 @@
  * Pages/components must import from `@/modules/brands` only.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 import { createNotificationFireAndForget } from '@/modules/notifications';
 import type {
   Brand, BrandStatus, BrandRequest, BrandRequestType,

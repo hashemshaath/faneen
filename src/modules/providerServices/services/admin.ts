@@ -10,6 +10,7 @@
  * `reviewed_by` / `reviewed_at` for state-changing actions.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 import type { Database } from '@/integrations/supabase/types';
 import type { AdminActivationStatus } from '../resolveServiceEntitlement';
 import { normalizeTier } from '../resolveServiceEntitlement';
