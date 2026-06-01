@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { parseLimits } from '@/lib/membership-limits';
 import { Progress } from '@/components/ui/progress';
 import { tierColors } from '@/lib/membership-tiers';
+import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 
 const tierIconMap: Record<string, React.ElementType> = {
   free: Zap, basic: Star, premium: Crown, enterprise: Building2,
