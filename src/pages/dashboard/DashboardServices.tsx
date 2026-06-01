@@ -867,9 +867,15 @@ function ServiceTile({
               ? (isRTL ? 'تجاوزت حد الخدمات في باقتك الحالية.' : 'You exceeded your plan\'s active services limit.')
               : (isRTL ? 'هذه الخدمة متاحة ضمن باقة أعلى.' : 'This service requires a higher membership plan.')}
           </p>
-          <Button asChild size="sm" variant="outline" className="h-7 text-[11px]">
-            <Link to="/membership">{isRTL ? 'ترقية العضوية' : 'Upgrade plan'}</Link>
-          </Button>
+          {membershipVisibility.membershipPathOrNull ? (
+            <Button asChild size="sm" variant="outline" className="h-7 text-[11px]">
+              <Link to={membershipVisibility.membershipPathOrNull}>{isRTL ? 'ترقية العضوية' : 'Upgrade plan'}</Link>
+            </Button>
+          ) : (
+            <Button asChild size="sm" variant="outline" className="h-7 text-[11px]">
+              <Link to="/contact">{isRTL ? 'تواصل مع الدعم' : 'Contact support'}</Link>
+            </Button>
+          )}
         </div>
       )}
       {resolved?.adminBlockedReason && (effective === 'disabled' || effective === 'pending_review' || effective === 'hidden') && (
