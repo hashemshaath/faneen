@@ -2,7 +2,7 @@
 
 Visual tests run in `.github/workflows/visual-regression.yml` on every PR
 and push to `main` using the official Playwright container
-`mcr.microsoft.com/playwright:v1.57.0-jammy` (Chromium + system deps
+`mcr.microsoft.com/playwright:v1.59.1-jammy` (Chromium + system deps
 pre-installed, matches Playwright 1.57).
 
 Pipeline steps:
@@ -39,12 +39,12 @@ git commit -m "chore(visual): seed Playwright baselines"
 ```bash
 # Run tests against existing baselines:
 docker run --rm -it --ipc=host -v "$PWD":/work -w /work \
-  mcr.microsoft.com/playwright:v1.57.0-jammy \
+  mcr.microsoft.com/playwright:v1.59.1-jammy \
   bash scripts/run-visual-tests.sh
 
 # Or re-seed baselines (writes to e2e/__screenshots__/):
 docker run --rm -it --ipc=host -v "$PWD":/work -w /work \
-  mcr.microsoft.com/playwright:v1.57.0-jammy \
+  mcr.microsoft.com/playwright:v1.59.1-jammy \
   bash scripts/run-visual-tests.sh --update
 ```
 
