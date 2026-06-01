@@ -739,8 +739,10 @@ const DashboardProfile: React.FC = () => {
                   label={t(isRTL, 'تفضيلات الإشعارات', 'Notification preferences')} />
                 <JumpLink to="/dashboard/communication-preferences"
                   label={t(isRTL, 'تفضيلات التواصل', 'Communication preferences')} />
-                <JumpLink to="/membership"
-                  label={t(isRTL, 'العضوية والاشتراك', 'Membership & subscription')} />
+                {membershipVisibility.membershipPathOrNull && (
+                  <JumpLink to={membershipVisibility.membershipPathOrNull}
+                    label={t(isRTL, 'العضوية والاشتراك', 'Membership & subscription')} />
+                )}
                 {business && (
                   <JumpLink to="/dashboard/business-edit"
                     label={t(isRTL, 'تعديل بيانات المنشأة', 'Edit business profile')} />
