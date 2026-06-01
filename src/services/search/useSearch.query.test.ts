@@ -53,6 +53,11 @@ describe('useBusinesses Supabase query', () => {
       expect.arrayContaining([
         ['is_active', true],
         ['business_services.is_active', true],
+        // SERVICE-ACTIVATION-GOVERNANCE-3 — triple-gate eligibility:
+        // legacy is_active + provider_status + admin_status must align
+        // before a nested service is treated as public.
+        ['business_services.provider_status', 'active'],
+        ['business_services.admin_status', 'allowed'],
         ['promotions.is_active', true],
       ]),
     );
@@ -67,7 +72,9 @@ describe('useBusinesses Supabase query', () => {
 
     // Selected projection includes only the columns the badges need
     const selectArg = (calls.find((c) => c.fn === 'select')!.args[0] as string);
-    expect(selectArg).toContain('business_services(name_ar, name_en, price_from, price_to, is_active, category_id)');
+    expect(selectArg).toContain(
+      'business_services(name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status, category_id)',
+    );
     expect(selectArg).toContain('promotions(id, end_date)');
     expect(selectArg).toContain('categories(id, name_ar, name_en, slug, icon, parent_id)');
     // No greedy "promotions(*)" or "business_services(*)" patterns
