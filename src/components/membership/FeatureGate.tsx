@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useFeatureGate } from '@/hooks/useFeatureGate';
 import { Button } from '@/components/ui/button';
 import { useDirection } from '@/hooks/useDirection';
+import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 
 interface Props {
   feature: string;
@@ -23,6 +24,7 @@ interface Props {
 export const FeatureGate: React.FC<Props> = ({ feature, businessId, mode = 'hide', fallback, children }) => {
   const { isRTL } = useDirection();
   const { allowed, isLoading } = useFeatureGate(feature, businessId);
+  const membershipVisibility = useMembershipVisibility();
 
   if (isLoading) return null;
   if (allowed) return <>{children}</>;
@@ -47,13 +49,21 @@ export const FeatureGate: React.FC<Props> = ({ feature, businessId, mode = 'hide
               {isRTL ? 'هذه الميزة تتطلب باقة أعلى' : 'This feature requires a higher plan'}
             </p>
             <p className="text-muted-foreground">
-              {isRTL ? 'قم بترقية اشتراكك للوصول.' : 'Upgrade your membership to unlock.'}
+              {membershipVisibility.shouldShowUpgradeCTA
+                ? (isRTL ? 'قم بترقية اشتراكك للوصول.' : 'Upgrade your membership to unlock.')
+                : (isRTL ? membershipVisibility.unavailableMessage.ar : membershipVisibility.unavailableMessage.en)}
             </p>
           </div>
         </div>
-        <Button asChild size="sm">
-          <Link to="/membership">{isRTL ? 'ترقية' : 'Upgrade'}</Link>
-        </Button>
+        {membershipVisibility.membershipPathOrNull ? (
+          <Button asChild size="sm">
+            <Link to={membershipVisibility.membershipPathOrNull}>{isRTL ? 'ترقية' : 'Upgrade'}</Link>
+          </Button>
+        ) : (
+          <Button asChild size="sm" variant="outline">
+            <Link to="/contact">{isRTL ? 'تواصل مع الدعم' : 'Contact support'}</Link>
+          </Button>
+        )}
       </div>
     );
   }
