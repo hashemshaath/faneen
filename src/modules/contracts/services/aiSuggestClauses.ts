@@ -1,6 +1,15 @@
 /**
  * Calls the contracts-ai-suggest-clauses edge function (Lovable AI Gateway)
  * to suggest professional contract clauses for a category/industry.
+ *
+ * STATUS (STAB-1J audit): Deferred — wrapper is production-ready but has
+ * NO UI caller yet. Intended integration points (any of these is appropriate
+ * future product work, not part of stabilization):
+ *   - src/pages/admin/AdminContractTemplates.tsx (admin template authoring)
+ *   - src/components/admin/contract-templates/EditorPanels.tsx
+ *   - src/components/contracts/dashboard/create/* (contract creation flow)
+ * Do not delete this wrapper or the edge function without product sign-off:
+ * the function is deployed, auth-checked, and tracked by the inventory test.
  */
 import { supabase } from '@/integrations/supabase/client';
 
