@@ -38,9 +38,18 @@ describe('SYSTEM-ACCESS-MODULE-COVERAGE-2', () => {
   });
 
   it('migration registers operations_log and staff_management in system_modules', () => {
-    const path = 'supabase/migrations/20260601182500_system_access_module_coverage_2.sql';
-    expect(existsSync(path), 'migration file present').toBe(true);
-    const sql = read(path);
+    // The migration tool assigns its own timestamp; locate the file containing both keys.
+    const dir = 'supabase/migrations';
+    const fs = require('node:fs') as typeof import('node:fs');
+    const files = fs.readdirSync(dir);
+    const match = files
+      .map((f) => `${dir}/${f}`)
+      .find((p) => {
+        const t = fs.readFileSync(p, 'utf8');
+        return /operations_log/.test(t) && /staff_management/.test(t);
+      });
+    expect(match, 'migration containing operations_log + staff_management').toBeTruthy();
+    const sql = read(match as string);
     expect(sql).toMatch(/'operations_log'/);
     expect(sql).toMatch(/'staff_management'/);
     expect(sql).toMatch(/ON CONFLICT \(key\) DO UPDATE/);
@@ -87,7 +96,16 @@ describe('SYSTEM-ACCESS-MODULE-COVERAGE-2', () => {
   });
 
   it('no scope creep into inventory/accounting/supplier-payments', () => {
-    const sql = read('supabase/migrations/20260601182500_system_access_module_coverage_2.sql');
+    const fs = require('node:fs') as typeof import('node:fs');
+    const dir = 'supabase/migrations';
+    const match = fs
+      .readdirSync(dir)
+      .map((f) => `${dir}/${f}`)
+      .find((p) => {
+        const t = fs.readFileSync(p, 'utf8');
+        return /operations_log/.test(t) && /staff_management/.test(t);
+      })!;
+    const sql = read(match);
     expect(sql).not.toMatch(/inventory/i);
     expect(sql).not.toMatch(/accounting/i);
     expect(sql).not.toMatch(/supplier_payments/i);
