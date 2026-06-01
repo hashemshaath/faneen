@@ -798,33 +798,6 @@ const AdminBusinesses = () => {
     onSuccess: () => refetchServices(),
   });
 
-  const __legacyAddServiceMutationDoNotUse = useMutation({
-    mutationFn: async () => {
-      const { error } = await insertBusinessService({
-        business_id: servicesPanel!,
-        name_ar: newService.name_ar, name_en: newService.name_en || null,
-        description_ar: newService.description_ar || null, description_en: newService.description_en || null,
-        price_from: newService.price_from ? parseFloat(newService.price_from) : null,
-        price_to: newService.price_to ? parseFloat(newService.price_to) : null,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      refetchServices();
-      setNewService({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
-      toast.success(isRTL ? 'تمت إضافة الخدمة' : 'Service added');
-    },
-  });
-
-  const __legacyToggleServiceMutationDoNotUse = useMutation({
-    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await updateBusinessServiceById(id, {});
-      if (error) throw error;
-      void is_active;
-    },
-    onSuccess: () => refetchServices(),
-  });
-
   const deleteServiceMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await deleteBusinessServiceById(id);
