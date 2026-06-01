@@ -22,6 +22,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 import { listApprovedBrands, listSectorsLite } from '@/modules/brands';
 
 const ALL = '__all__';
@@ -80,14 +81,10 @@ const BrandsCatalog: React.FC = () => {
   }, [brands, isRTL]);
 
   useMultiJsonLd([
-    {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: isRTL ? 'الرئيسية' : 'Home', item: SITE },
-        { '@type': 'ListItem', position: 2, name: isRTL ? 'العلامات التجارية' : 'Brands', item: `${SITE}/brands` },
-      ],
-    },
+    buildBreadcrumbList(
+      [{ name: isRTL ? 'العلامات التجارية' : 'Brands', url: '/brands' }],
+      { homeName: isRTL ? 'الرئيسية' : 'Home', id: `${SITE}/brands#breadcrumb` },
+    )!,
     {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
