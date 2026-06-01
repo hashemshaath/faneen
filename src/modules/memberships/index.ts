@@ -155,3 +155,13 @@ export type {
 // R4F-8C: provider-agnostic membership payments scaffold.
 // Scaffold only — no UI callsites. See src/modules/memberships/services/payments/.
 export * from './services/payments';
+
+// STAB-1E: centralized membership tier label/comparison helpers.
+export {
+  getMembershipTierLabel,
+  getMembershipTierBadgeVariant,
+  getUpgradePath,
+  compareMembershipTiers,
+  isTierAtLeast,
+} from './utils/tierLabels';
+export type { Locale as MembershipTierLocale } from './utils/tierLabels';
