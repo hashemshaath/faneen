@@ -47,9 +47,10 @@ describe("APP-STABILITY-CLEANUP-SECURITY-1 — /q/:code dispatcher", () => {
   });
 
   it("dispatcher and target pages are lazy-loaded (no eager dashboard/admin bundles)", () => {
-    // Dispatcher itself uses React.lazy for the two targets.
-    expect(dispatcher).toMatch(/lazy\(\(\)\s*=>\s*import\(['"]\.\/QuotationViewer['"]\)\)/);
-    expect(dispatcher).toMatch(/lazy\(\(\)\s*=>\s*import\(['"]\.\/PublicBarcodeResolve['"]\)\)/);
+    // Dispatcher itself uses lazyRetry (project standard) for the two targets.
+    expect(dispatcher).toMatch(/lazyRetry\(\(\)\s*=>\s*import\(['"]\.\/QuotationViewer['"]\)\)/);
+    expect(dispatcher).toMatch(/lazyRetry\(\(\)\s*=>\s*import\(['"]\.\/PublicBarcodeResolve['"]\)\)/);
+    expect(dispatcher).toMatch(/from ['"]@\/lib\/lazyRetry['"]/);
     // App.tsx loads the dispatcher itself lazily.
     expect(app).toMatch(/QSlugDispatcher\s*=\s*lazyRetry\(\(\)\s*=>\s*import\(['"]\.\/pages\/QSlugDispatcher['"]\)\)/);
     // No accidental admin/dashboard imports inside the public dispatcher.
