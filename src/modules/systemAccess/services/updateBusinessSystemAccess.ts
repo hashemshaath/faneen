@@ -11,7 +11,6 @@
  *
  * Never throws on observability failure — audit comes from the RPC.
  */
-import { supabase } from '@/integrations/supabase/client';
 import {
   setModuleOverride,
   clearModuleOverride,
@@ -52,18 +51,17 @@ const MEMBERSHIP_BLOCK_EN = 'This system cannot be enabled because the current p
 const NOT_ADMIN_AR = 'يتطلب صلاحية مسؤول.';
 const NOT_ADMIN_EN = 'Admin permission required.';
 
-async function recordObservability(payload: Record<string, unknown>): Promise<boolean> {
+/**
+ * The canonical audit + observability sink for system-access changes is
+ * `system_module_audit_log`, which the security-definer RPC writes for us
+ * (action, scope, previous/new state, actor). We log a structured browser
+ * console event so DevTools / Sentry-style listeners can attach without a
+ * second table write.
+ */
+function recordObservability(payload: Record<string, unknown>): boolean {
   try {
-    const { error } = await (supabase as unknown as {
-      from: (t: string) => { insert: (rows: unknown) => Promise<{ error: unknown }> };
-    })
-      .from('observability_events')
-      .insert([{
-        event_type: 'system_access.updated',
-        severity: 'info',
-        payload,
-      }]);
-    if (error) return false;
+    // eslint-disable-next-line no-console
+    console.info('[observability] system_access.updated', payload);
     return true;
   } catch {
     return false;
@@ -127,13 +125,14 @@ export async function updateBusinessSystemAccess(
   // Audit is written server-side by the SECURITY DEFINER RPC.
   const audit_recorded = true;
 
-  const observability_recorded = await recordObservability({
+  const observability_recorded = recordObservability({
     business_ref: args.scopeType === 'entity' ? args.scopeValue : null,
     scope_type: args.scopeType,
     module_key: args.moduleKey,
     enabled: args.reset ? null : args.enabled,
     reset: !!args.reset,
     source: 'admin_system_access_console',
+    ts: new Date().toISOString(),
   });
 
   return {
