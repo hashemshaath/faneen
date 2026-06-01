@@ -126,7 +126,6 @@ describe('WORKSPACE-RBAC-6D — safety invariants', () => {
 
   const ALLOWED = new Set(
     [
-      'pages/dashboard/DashboardServices.tsx',
       'pages/dashboard/DashboardPortfolio.tsx',
       'pages/dashboard/DashboardPromotions.tsx',
       'pages/dashboard/DashboardBusinessEdit.tsx',
