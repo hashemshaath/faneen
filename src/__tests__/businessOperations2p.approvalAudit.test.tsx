@@ -4,7 +4,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -227,9 +227,18 @@ describe('2P — AdminOperations dashboard exposes approval audit logging', () =
     expect(panel.textContent ?? '').toMatch(/approval audit logging/i);
     expect(panel.textContent ?? '').toMatch(/enabled/i);
   });
-  it('renders approval audit section', () => {
+  it('renders approval audit section', async () => {
     renderPage();
-    expect(screen.getByTestId('approval-audit')).toBeTruthy();
+    // ADMIN-OPS-TAB-CONSOLIDATION: detailed sections moved into tabs.
+    // The approval audit lives under the "Audit" tab; switch to it first.
+    const tabs = await screen.findAllByRole('tab');
+    const auditTab = tabs.find((t) => /Audit/i.test(t.textContent ?? ''))!;
+    await act(async () => {
+      fireEvent.pointerDown(auditTab, { button: 0, pointerType: 'mouse' });
+      fireEvent.mouseDown(auditTab, { button: 0 });
+      fireEvent.click(auditTab);
+    });
+    expect(await screen.findByTestId('approval-audit')).toBeTruthy();
   });
   it('does not render real-run / approval / unlock / cron buttons', () => {
     renderPage();

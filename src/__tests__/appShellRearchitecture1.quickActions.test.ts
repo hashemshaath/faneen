@@ -39,12 +39,20 @@ describe('APP-SHELL-1 — quickActions filtering', () => {
     expect(visible.find((a) => a.id === 'bulk-reference-triage')).toBeDefined();
   });
 
-  it('regular user only sees actions audienced to user (currently none)', () => {
+  it('regular user sees only actions audienced to user (rfq-new + loyalty)', () => {
     const visible = filterQuickActions(QUICK_ACTIONS, {
       audience: 'user',
       hasPermission: () => true,
     });
-    // All actions today are admin/provider — user audience sees nothing.
-    expect(visible).toEqual([]);
+    // Post-consolidation: rfq-new and loyalty are audienced to all roles
+    // (admin/provider/user). Admin/provider-only actions (operations-console,
+    // bulk-reference-triage, staff-center, contracts, rfq-inbox, etc.) must
+    // not appear for the user audience.
+    const ids = visible.map((a) => a.id).sort();
+    expect(ids).toEqual(['loyalty', 'rfq-new']);
+    expect(visible.find((a) => a.id === 'operations-console')).toBeUndefined();
+    expect(visible.find((a) => a.id === 'bulk-reference-triage')).toBeUndefined();
+    expect(visible.find((a) => a.id === 'staff-center')).toBeUndefined();
+    expect(visible.find((a) => a.id === 'contracts')).toBeUndefined();
   });
 });

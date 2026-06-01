@@ -60,10 +60,15 @@ describe('AdminMembershipPayments source contract', () => {
 
 describe('AdminMembershipPayments route wiring', () => {
   const APP = fs.readFileSync(path.resolve(__dirname, '../../../App.tsx'), 'utf8');
-  it('is registered as admin-only route at /admin/membership-payments', () => {
-    expect(APP).toMatch(/\/admin\/membership-payments/);
-    expect(APP).toMatch(/AdminMembershipPayments/);
-    expect(APP).toMatch(/requireAdmin[^>]*>\s*<AdminMembershipPayments/);
+  it('keeps /admin/membership-payments as an admin-gated route (now a redirect into the consolidated Memberships Center)', () => {
+    // ADMIN-IA-CONSOLIDATION: AdminMembershipPayments is rendered as the
+    // "Payments" tab inside AdminMembershipsHub (see
+    // src/pages/admin/AdminMembershipsHub.tsx). The legacy direct route
+    // remains as an admin-guarded redirect to /admin/memberships?tab=payments
+    // so historical deep links keep working.
+    expect(APP).toMatch(/path="\/admin\/membership-payments"/);
+    expect(APP).toMatch(/\/admin\/membership-payments[^"]*"\s+element=\{<ProtectedRoute\s+requireAdmin>/);
+    expect(APP).toMatch(/\/admin\/membership-payments[^"]*"[^]*<Navigate\s+to="\/admin\/memberships\?tab=payments"/);
   });
 });
 
@@ -88,10 +93,16 @@ describe('Admin sidebar nav entry (R4F-8F)', () => {
     path.resolve(__dirname, '../../../components/dashboard/DashboardSidebar.tsx'),
     'utf8',
   );
-  it('includes /admin/membership-payments link with bilingual labels', () => {
-    expect(NAV).toMatch(/\/admin\/membership-payments/);
-    expect(NAV).toMatch(/مدفوعات العضويات/);
-    expect(NAV).toMatch(/Membership Payments/);
+  it('exposes consolidated Memberships Center entry (membership-payments now a tab)', () => {
+    // R4F-8F + ADMIN-IA-CONSOLIDATION: the standalone "Membership Payments"
+    // sidebar entry was merged into the unified Memberships Center.
+    // /admin/membership-payments is still registered as a redirect to
+    // /admin/memberships?tab=payments so legacy deep links keep working.
+    expect(NAV).toMatch(/\/admin\/memberships/);
+    expect(NAV).toMatch(/مركز العضويات/);
+    expect(NAV).toMatch(/Memberships Center/);
+    // The legacy direct entry must not be reintroduced.
+    expect(NAV).not.toMatch(/url:\s*'\/admin\/membership-payments'/);
   });
 
   it('does not directly query payment intents or call mark-paid rpc from nav', () => {

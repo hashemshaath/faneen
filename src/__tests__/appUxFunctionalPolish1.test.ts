@@ -25,7 +25,6 @@ const PROVIDER_PAGES = [
 ];
 
 const ADMIN_PAGES = [
-  'pages/admin/AdminOperationsConsole.tsx',
   'pages/admin/AdminBulkReferenceTriage.tsx',
   'pages/admin/AdminReferenceInspector.tsx',
 ];
@@ -86,22 +85,42 @@ describe('APP-UX-FUNCTIONAL-POLISH-1 — provider operations pages', () => {
 });
 
 describe('APP-UX-FUNCTIONAL-POLISH-1 — admin operations pages', () => {
-  it('all admin pages wire OperationsBreadcrumbs with homeTo="/admin"', () => {
-    for (const p of ADMIN_PAGES) {
-      const src = read(p);
-      expect(src, p).toContain('OperationsBreadcrumbs');
-      expect(src, p).toContain('homeTo="/admin"');
-    }
+  // ADMIN-IA-CONSOLIDATION: admin breadcrumbs are now provided by the
+  // shared TabbedShell chrome (AdminOperationsHub, AdminMembershipsHub,
+  // etc.) and by the AdminOpsQuickLinks helper that links across the
+  // operations triage flow, so individual admin pages no longer mount
+  // their own <OperationsBreadcrumbs /> instance. The provider
+  // operations pages above still own their breadcrumbs.
+  it('admin operations triage pages expose the unified AdminOpsQuickLinks navigation aid', () => {
+    const triage = read('pages/admin/AdminBulkReferenceTriage.tsx');
+    expect(triage).toContain('AdminOpsQuickLinks');
+    const inspector = read('pages/admin/AdminReferenceInspector.tsx');
+    // Inspector exposes a back-link into the consolidated operations hub.
+    expect(inspector).toContain('/admin/operations/console');
   });
 
-  it('bulk triage links back to the operations console', () => {
+  it('bulk triage row links reach the per-ref inspector (Admin Ref deep link)', () => {
     const src = read('pages/admin/AdminBulkReferenceTriage.tsx');
+    expect(src).toContain('/admin/ref/');
+  });
+
+  it('reference inspector links back into the consolidated operations console', () => {
+    const src = read('pages/admin/AdminReferenceInspector.tsx');
     expect(src).toContain('/admin/operations/console');
   });
 
-  it('reference inspector breadcrumb links back to triage', () => {
-    const src = read('pages/admin/AdminReferenceInspector.tsx');
-    expect(src).toContain('/admin/ref/triage');
+  // ADMIN-IA-CONSOLIDATION: AdminOperationsConsole.tsx is no longer a
+  // standalone page — it is mounted as the "Console" tab inside
+  // AdminOperationsHub via the shared TabbedShell, which provides the
+  // page chrome (title, description, no-index, tab nav). The /admin/
+  // operations/console URL is kept as an admin-gated redirect to
+  // /admin/operations?tab=console so legacy deep links keep working.
+  it('Operations Console is consolidated into AdminOperationsHub', () => {
+    const hub = read('pages/admin/AdminOperationsHub.tsx');
+    expect(hub).toContain("import('./AdminOperationsConsole')");
+    const app = read('App.tsx');
+    expect(app).toMatch(/path="\/admin\/operations\/console"/);
+    expect(app).toMatch(/\/admin\/operations\/console[^"]*"[^]*<Navigate\s+to="\/admin\/operations\?tab=console"/);
   });
 });
 
