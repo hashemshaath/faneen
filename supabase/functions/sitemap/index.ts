@@ -127,9 +127,27 @@ Deno.serve(async (req) => {
         entries.push(entry(`${BASE}/services/${s}`, { lastmod: today, changefreq: "weekly", priority: "0.7" }));
       }
     } else if (type === "businesses") {
-      const { data } = await supabase.from("businesses").select("username, updated_at").eq("is_active", true).order("rating_avg", { ascending: false }).limit(50000);
+      // SEO-1 — align with `businesses_public` filters so pending / rejected /
+      // demo / unpublished providers never reach the sitemap. The columns
+      // selected match what's exposed by the public view; using the raw
+      // `businesses` table here is intentional only because we need
+      // service-role access for the full page count, and the filters below
+      // mirror the public view definition exactly:
+      //   is_active = true
+      //   approval_status = 'published'
+      //   is_demo = false
+      const { data } = await supabase
+        .from("businesses")
+        .select("username, updated_at")
+        .eq("is_active", true)
+        .eq("approval_status", "published")
+        .eq("is_demo", false)
+        .not("username", "is", null)
+        .order("rating_avg", { ascending: false })
+        .limit(50000);
       if (data) {
         for (const b of data) {
+          if (!b.username) continue;
           entries.push(entry(`${BASE}/${encodeURIComponent(b.username)}`, { lastmod: toDate(b.updated_at), changefreq: "weekly", priority: "0.8" }));
         }
       }
