@@ -242,6 +242,30 @@ const BrandsCatalog: React.FC = () => {
             </Link>
           </CardContent>
         </Card>
+
+        {/* Cross-link to sectors/services hubs (internal linking — SEO-6) */}
+        <nav aria-label={isRTL ? 'استكشف المزيد' : 'Explore more'} className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+          <h2 className="font-heading text-base font-bold mb-3">
+            {isRTL ? 'قطاعات وخدمات مرتبطة' : 'Related sectors & services'}
+          </h2>
+          <ul className="flex flex-wrap gap-2 text-sm">
+            <li>
+              <Link to="/sectors" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
+                {isRTL ? 'كل القطاعات' : 'All sectors'}
+              </Link>
+            </li>
+            <li>
+              <Link to="/services" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
+                {isRTL ? 'الخدمات' : 'Services'}
+              </Link>
+            </li>
+            <li>
+              <Link to="/showcase" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
+                {isRTL ? 'أعمال المزودين' : 'Provider showcase'}
+              </Link>
+            </li>
+          </ul>
+        </nav>
       </main>
       <Footer />
     </div>
