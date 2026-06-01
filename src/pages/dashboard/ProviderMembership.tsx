@@ -11,6 +11,7 @@ import { listProviderSubscriptionsForCurrentUser } from '@/modules/memberships';
 import { listProviderCreditTransactionsForBusinesses } from '@/modules/credits';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { Crown, Wallet, Calendar, Activity, Sparkles, ArrowUpRight, TrendingUp, Download } from 'lucide-react';
 import { PROVIDER_COMMERCIAL_CONFIG } from '@/lib/providerCommercialConfig';
 import { trackEvent } from '@/lib/analytics';
