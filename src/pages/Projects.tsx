@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildBreadcrumbList, SITE_URL } from '@/lib/seo/structured-data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -115,6 +116,38 @@ const Projects = () => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filtered.slice(start, start + ITEMS_PER_PAGE);
   }, [filtered, currentPage]);
+
+  // SEO-9 — ItemList JSON-LD for the visible page of projects.
+  // Source: `projects` table filtered server-side by status='published'.
+  // Only enumerates items currently rendered on this page, in the same order.
+  useMultiJsonLd([
+    buildBreadcrumbList(
+      [{ name: isRTL ? 'المشاريع' : 'Projects', url: '/projects' }],
+      { homeName: isRTL ? 'الرئيسية' : 'Home', id: `${SITE_URL}/projects#breadcrumb` },
+    )!,
+    ...(projects.length > 0
+      ? [{
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          '@id': `${SITE_URL}/projects#projects`,
+          name: isRTL ? 'المشاريع المنجزة' : 'Completed Projects',
+          numberOfItems: projects.filter((p) => p?.id).length,
+          itemListElement: projects
+            .filter((p) => !!p?.id)
+            .map((p, i) => {
+              const name = (language === 'ar' ? p.title_ar : (p.title_en || p.title_ar)) || p.title_ar || '';
+              return {
+                '@type': 'ListItem',
+                position: i + 1,
+                url: `${SITE_URL}/projects/${p.id}`,
+                ...(name ? { name } : {}),
+                ...(p.cover_image_url ? { image: p.cover_image_url } : {}),
+              };
+            })
+            .filter((item) => !!item.name),
+        }]
+      : []),
+  ]);
 
   const handleFilterChange = (setter: (v: string) => void) => (val: string) => {
     setter(val);
