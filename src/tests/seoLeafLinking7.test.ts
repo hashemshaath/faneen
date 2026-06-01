@@ -37,8 +37,9 @@ describe('SEO-7 BusinessProfile leaf links', () => {
   it('emits sector + sector-city links from public slug data only', () => {
     expect(src).toMatch(/to=\{`\/sectors\/\$\{[^`]+\}`\}/);
     expect(src).toMatch(/to=\{`\/sectors\/\$\{[^`]+\}\/\$\{[^`]+\}`\}/);
-    // Both must be slug-guarded (conditional render on `.slug`)
-    expect(src).toMatch(/categories[^)]*\.slug[\s\S]{0,200}sectors\/\$\{/);
+    // The sector hub-link section is conditionally rendered on the public
+    // category slug (no slug → no leaf link).
+    expect(src).toMatch(/business\.categories[\s\S]{0,200}\.slug[\s\S]{0,400}sectors\//);
   });
 
   it('does not link to private/session/search/compare routes', () => {
