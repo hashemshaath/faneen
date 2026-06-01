@@ -242,6 +242,19 @@ const Showcase = () => {
             </Link>
           </div>
         </section>
+
+        {/* SEO-8: cross-hub outbound links (public-safe, static). */}
+        <nav aria-label={bi('تصفح أقسام أخرى', 'Explore other hubs')} className="container mx-auto px-4 py-8">
+          <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+            <h2 className="font-heading text-base font-bold mb-3">{bi('تصفح أيضاً', 'Browse also')}</h2>
+            <ul className="flex flex-wrap gap-2 text-sm">
+              <li><Link to="/projects" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">{bi('المشاريع', 'Projects')}</Link></li>
+              <li><Link to="/sectors" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">{bi('القطاعات الصناعية', 'Industrial sectors')}</Link></li>
+              <li><Link to="/services" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">{bi('الخدمات', 'Services')}</Link></li>
+              <li><Link to="/brands" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">{bi('العلامات التجارية', 'Brands')}</Link></li>
+            </ul>
+          </div>
+        </nav>
       </main>
       <Suspense fallback={null}><Footer /></Suspense>
     </>
