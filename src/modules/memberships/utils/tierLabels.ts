@@ -32,6 +32,20 @@ const TIER_ORDER: Record<MembershipTier, number> = {
 
 const KNOWN_TIERS: ReadonlySet<string> = new Set(Object.keys(TIER_ORDER));
 
+/**
+ * Normalize an unknown tier value into a known `MembershipTier` or null.
+ * Trims, lowercases, then matches against the enum. Useful for guarding
+ * data coming from external sources before passing it to compare/label
+ * helpers without surprising callers.
+ */
+export function normalizeMembershipTier(
+  tier: MembershipTier | string | null | undefined,
+): MembershipTier | null {
+  if (tier == null) return null;
+  const key = String(tier).trim().toLowerCase();
+  return KNOWN_TIERS.has(key) ? (key as MembershipTier) : null;
+}
+
 /** Return the localized label for a tier, falling back to the raw token. */
 export function getMembershipTierLabel(
   tier: MembershipTier | string | null | undefined,
@@ -59,9 +73,12 @@ export function getMembershipTierBadgeVariant(
 }
 
 /** Canonical upgrade route shown across the dashboard. */
-export function getUpgradePath(): string {
+export function getMembershipUpgradePath(): string {
   return '/membership';
 }
+
+/** @deprecated Use `getMembershipUpgradePath()` — kept for backward compat. */
+export const getUpgradePath = getMembershipUpgradePath;
 
 /**
  * Compare two tiers. Returns:
