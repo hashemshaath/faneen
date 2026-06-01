@@ -81,7 +81,7 @@ function parseSitemapFindings(stdout) {
 
 /* ─── Run all three checks ─── */
 const results = [
-  run('vitest',          'bunx', ['vitest', 'run', '--reporter=default']),
+  run('vitest',          'npx', ['vitest', 'run', '--reporter=default']),
   run('broken-links',    'node', ['scripts/broken-links-audit.mjs']),
   run('sitemap-integrity', 'node', ['scripts/sitemap-integrity-audit.mjs']),
 ];
