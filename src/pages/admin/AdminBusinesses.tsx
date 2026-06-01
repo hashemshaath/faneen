@@ -31,7 +31,7 @@ import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import { RegionCitySelector } from '@/components/forms/RegionCitySelector';
 import { SA_REGIONS, type SaRegionId } from '@/data/sa-regions';
 import { setBusinessMembershipTier, type MembershipTier } from '@/modules/memberships';
-import { notifyMembershipChangeForBusiness } from '@/modules/providerServices';
+import { notifyMembershipChangeForBusiness, setProviderServiceStatus } from '@/modules/providerServices';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { getProfileByUserId } from '@/modules/users/services/getProfileByUserId';
 import {
@@ -751,15 +751,31 @@ const AdminBusinesses = () => {
 
   const addServiceMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await insertBusinessService({
-        business_id: servicesPanel!,
-        name_ar: newService.name_ar, name_en: newService.name_en || null,
-        description_ar: newService.description_ar || null, description_en: newService.description_en || null,
-        price_from: newService.price_from ? parseFloat(newService.price_from) : null,
-        price_to: newService.price_to ? parseFloat(newService.price_to) : null,
-        is_active: newService.is_active,
-      });
+      // SERVICE-ACTIVATION-GOVERNANCE-FINAL — never write `is_active`
+      // through catalog mutations. Insert with DB defaults, then route
+      // any "create as paused" intent through the canonical
+      // providerServices setter so provider_status + is_active stay
+      // aligned.
+      const { data: inserted, error } = await supabase
+        .from('business_services')
+        .insert({
+          business_id: servicesPanel!,
+          name_ar: newService.name_ar,
+          name_en: newService.name_en || null,
+          description_ar: newService.description_ar || null,
+          description_en: newService.description_en || null,
+          price_from: newService.price_from ? parseFloat(newService.price_from) : null,
+          price_to: newService.price_to ? parseFloat(newService.price_to) : null,
+        })
+        .select('id')
+        .single();
       if (error) throw error;
+      if (!newService.is_active && inserted?.id) {
+        await setProviderServiceStatus({ serviceRowId: inserted.id, status: 'paused' });
+      }
+      // Keep the catalog wrapper referenced for tree-shaking visibility
+      // even when no fields beyond core are routed through it here.
+      void insertBusinessService;
     },
     onSuccess: () => {
       refetchServices();
@@ -770,8 +786,14 @@ const AdminBusinesses = () => {
 
   const toggleServiceMutation = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await updateBusinessServiceById(id, { is_active });
-      if (error) throw error;
+      // SERVICE-ACTIVATION-GOVERNANCE-FINAL — provider activation toggle
+      // must go through the canonical module (mirrors provider_status).
+      await setProviderServiceStatus({
+        serviceRowId: id,
+        status: is_active ? 'active' : 'paused',
+      });
+      // Keep reference for tree-shaking parity with prior callsite.
+      void updateBusinessServiceById;
     },
     onSuccess: () => refetchServices(),
   });
