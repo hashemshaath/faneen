@@ -86,7 +86,7 @@ const AdminServiceActivations: React.FC = () => {
   const invalidate = () =>
     qc.invalidateQueries({ queryKey: ['admin-service-activations'] });
 
-  function runAction<TArgs extends unknown[]>(
+  function useRunAction<TArgs extends unknown[]>(
     fn: (...a: TArgs) => Promise<void>,
     successMsg: string,
   ) {
@@ -101,16 +101,16 @@ const AdminServiceActivations: React.FC = () => {
     });
   }
 
-  const mApprove = runAction(adminApproveProviderService, isRTL ? 'تمت الموافقة' : 'Approved');
-  const mReject = runAction(adminRejectProviderService, isRTL ? 'تم الرفض' : 'Rejected');
-  const mSuspend = runAction(adminSuspendProviderService, isRTL ? 'تم التعليق' : 'Suspended');
-  const mRestore = runAction(adminRestoreProviderService, isRTL ? 'تمت الاستعادة' : 'Restored');
-  const mSetTier = runAction(adminSetRequiredPlanTier, isRTL ? 'تم تعيين الباقة المطلوبة' : 'Tier set');
-  const mClearTier = runAction(adminClearRequiredPlanTier, isRTL ? 'تم مسح الباقة' : 'Tier cleared');
-  const mReview = runAction(adminSetRequiresReview, isRTL ? 'تم التحديث' : 'Updated');
-  const mPremium = runAction(adminSetPremiumService, isRTL ? 'تم التحديث' : 'Updated');
-  const mFeatured = runAction(adminSetFeaturedService, isRTL ? 'تم التحديث' : 'Updated');
-  const mNote = runAction(adminUpdateServiceActivationNote, isRTL ? 'تم حفظ الملاحظة' : 'Note saved');
+  const mApprove = useRunAction(adminApproveProviderService, isRTL ? 'تمت الموافقة' : 'Approved');
+  const mReject = useRunAction(adminRejectProviderService, isRTL ? 'تم الرفض' : 'Rejected');
+  const mSuspend = useRunAction(adminSuspendProviderService, isRTL ? 'تم التعليق' : 'Suspended');
+  const mRestore = useRunAction(adminRestoreProviderService, isRTL ? 'تمت الاستعادة' : 'Restored');
+  const mSetTier = useRunAction(adminSetRequiredPlanTier, isRTL ? 'تم تعيين الباقة المطلوبة' : 'Tier set');
+  const mClearTier = useRunAction(adminClearRequiredPlanTier, isRTL ? 'تم مسح الباقة' : 'Tier cleared');
+  const mReview = useRunAction(adminSetRequiresReview, isRTL ? 'تم التحديث' : 'Updated');
+  const mPremium = useRunAction(adminSetPremiumService, isRTL ? 'تم التحديث' : 'Updated');
+  const mFeatured = useRunAction(adminSetFeaturedService, isRTL ? 'تم التحديث' : 'Updated');
+  const mNote = useRunAction(adminUpdateServiceActivationNote, isRTL ? 'تم حفظ الملاحظة' : 'Note saved');
 
   return (
     <DashboardLayout>
