@@ -30,4 +30,7 @@
   <sitemap>
     <loc>https://qitaat.com/functions/v1/sitemap?type=brands</loc>
   </sitemap>
+  <sitemap>
+    <loc>https://qitaat.com/functions/v1/sitemap?type=help</loc>
+  </sitemap>
 </sitemapindex>
