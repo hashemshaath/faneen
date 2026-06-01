@@ -68,10 +68,22 @@ describe('CAT-2 mixed read+write files: reads migrated, writes intentionally def
 });
 
 describe('CAT-2 out-of-scope guardrail (must NOT be touched in this phase)', () => {
-  it('DashboardServices business_services access fully migrated (CAT-6 residual cleanup)', () => {
+  // SERVICE-ACTIVATION-GOVERNANCE — DashboardServices ownership boundary
+  // was redefined: `@/modules/providerServices` owns activation/governance
+  // state, while non-governance metadata (names, prices, descriptions)
+  // may continue to use direct `supabase.from('business_services')`
+  // reads/inserts. The previous CAT-6 expectation (fully proxied through
+  // `listServicesByBusiness`) is intentionally NOT enforced here anymore.
+  it('DashboardServices routes activation through providerServices, not catalog mutations', () => {
     const src = read('src/pages/dashboard/DashboardServices.tsx');
-    expect(src).not.toMatch(/supabase\.from\(['"]business_services['"]\)/);
-    expect(src).toContain('listServicesByBusiness');
+    // Activation/governance must flow through the canonical module.
+    expect(src).toContain('@/modules/providerServices');
+    expect(src).toContain('setProviderServiceStatus');
+    // Catalog mutation wrappers must NOT be used here — their payload
+    // types now strip is_active/provider_status, so any catalog-side
+    // toggle of activation would be a type error AND a regression.
+    expect(src).not.toContain('updateBusinessServiceById');
+    expect(src).not.toContain('insertBusinessService(');
   });
   it('DashboardInstallments BNPL admin reads + writes fully migrated (CAT-5B)', () => {
     const src = read('src/pages/dashboard/DashboardInstallments.tsx');
