@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useLandingTracking } from '@/hooks/useLandingTracking';
 import {
