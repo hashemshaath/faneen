@@ -16,6 +16,7 @@ import {
   pushRecentlyViewedSlug,
   isHelpBookmarked,
   toggleHelpBookmark,
+  getNextBestAction,
 } from '@/modules/helpCenter';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
