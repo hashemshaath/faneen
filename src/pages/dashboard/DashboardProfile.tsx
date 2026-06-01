@@ -35,6 +35,7 @@ import {
   type NationalAddressValue,
 } from '@/modules/addresses';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
+import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { isSyntheticPhoneEmail } from '@/lib/auth-email';
 import { cn } from '@/lib/utils';
 import { UsernamePicker } from '@/components/common/UsernamePicker';
