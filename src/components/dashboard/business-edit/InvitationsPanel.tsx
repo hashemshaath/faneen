@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
-import { getProfileByUserId } from '@/modules/users';
+import { getProfileByUserId, searchProfilesByOr, getProfileByEmailIlike } from '@/modules/users';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { checkInvitationTransition } from '@/modules/identity';
 import { useAuth } from '@/contexts/AuthContext';
