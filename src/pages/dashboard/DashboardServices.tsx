@@ -8,6 +8,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
+import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
