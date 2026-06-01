@@ -21,6 +21,8 @@ import {
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { track } from '@/lib/analytics-events';
+import { detectSectorFromCategorySlug } from '@/lib/sector-keywords';
+import { SA_CITIES } from '@/lib/sa-cities';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -66,10 +68,13 @@ const ProjectDetail = () => {
     });
   }, [project?.id, project?.businesses?.username]);
 
-  const { data: category } = useQuery<{ name_ar: string; name_en: string } | null>({
+  const { data: category } = useQuery<{ slug: string | null; name_ar: string; name_en: string } | null>({
     queryKey: ['category', project?.category_id],
     queryFn: async () => {
-      const { data } = await getCategoryById<{ name_ar: string; name_en: string }>(project!.category_id!);
+      const { data } = await getCategoryById<{ slug: string | null; name_ar: string; name_en: string }>(
+        project!.category_id!,
+        { select: 'slug, name_ar, name_en' },
+      );
       return data;
     },
     enabled: !!project?.category_id,
@@ -130,6 +135,15 @@ const ProjectDetail = () => {
     },
     enabled: !!project?.city_id,
   });
+
+  // SEO-8: derive public-safe sector + city slugs for deep hub links.
+  // sector slug comes from the curated CATEGORY_SLUG_TO_SECTOR map; city
+  // slug comes from the static SA_CITIES table matched by name_en. We never
+  // invent slugs and never link if a slug is missing.
+  const sectorSlug = detectSectorFromCategorySlug(category?.slug ?? null);
+  const citySlug = city?.name_en
+    ? (SA_CITIES.find((c) => c.nameEn.toLowerCase() === city.name_en.toLowerCase())?.slug ?? null)
+    : null;
 
   const allImages = project
     ? [
@@ -329,6 +343,26 @@ const ProjectDetail = () => {
               {isRTL ? 'روابط مفيدة' : 'Useful links'}
             </h2>
             <ul className="flex flex-wrap gap-2 text-sm">
+              {sectorSlug && (
+                <li>
+                  <Link
+                    to={`/sectors/${sectorSlug}`}
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                  >
+                    {isRTL ? 'قطاع ذو صلة' : 'Related sector'}
+                  </Link>
+                </li>
+              )}
+              {sectorSlug && citySlug && (
+                <li>
+                  <Link
+                    to={`/sectors/${sectorSlug}/${citySlug}`}
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                  >
+                    {isRTL ? 'القطاع في المدينة' : 'Sector in this city'}
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link
                   to="/projects"
