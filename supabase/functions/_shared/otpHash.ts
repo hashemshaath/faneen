@@ -6,25 +6,35 @@
 // Hash inputs: `${code}|${userId}|${pepper}`
 //  - userId provides per-row uniqueness so two users with the same
 //    OTP do not produce the same digest.
-//  - pepper (env: OTP_HASH_PEPPER) raises the cost of an offline brute
-//    force across the 10^6 code space if the audit/backup is leaked.
-//    When unset we still hash (per-user salting) but log a warning.
+//  - pepper (env: OTP_HASH_PEPPER) is REQUIRED. If missing, both the
+//    send and verify paths fail closed with a generic error — we do
+//    not silently fall back to a per-user-only hash, because that
+//    would let an attacker who reads a backup brute force the 10^6
+//    code space.
 
-let pepperWarned = false;
+/** Sentinel thrown when OTP_HASH_PEPPER is not configured. Callers must
+ *  catch this and return a generic 500 to the user. The error message
+ *  intentionally does not name the missing secret. */
+export class OtpHashConfigError extends Error {
+  constructor() {
+    super("otp_hash_unavailable");
+    this.name = "OtpHashConfigError";
+  }
+}
 
-function getPepper(): string {
+function getPepperOrThrow(): string {
   const p = Deno.env.get("OTP_HASH_PEPPER") || "";
-  if (!p && !pepperWarned) {
-    pepperWarned = true;
-    console.warn(
-      "[otpHash] OTP_HASH_PEPPER is not configured; OTP hashes are still per-user salted but missing an additional pepper.",
-    );
+  if (!p) {
+    // Log a non-sensitive diagnostic (never the value) so operators see
+    // the misconfiguration in edge function logs.
+    console.error("[otpHash] required pepper secret is not configured; refusing to hash OTP");
+    throw new OtpHashConfigError();
   }
   return p;
 }
 
 export async function hashOtp(code: string, userId: string): Promise<string> {
-  const input = `${code}|${userId}|${getPepper()}`;
+  const input = `${code}|${userId}|${getPepperOrThrow()}`;
   const data = new TextEncoder().encode(input);
   const buf = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(buf))
