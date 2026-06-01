@@ -438,6 +438,24 @@ const Compare = () => {
               </tbody>
             </table>
           </div>
+          <div className="rounded-2xl border border-border/40 bg-card/60 p-4 sm:p-5 dark:border-border/20 dark:bg-card/40">
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              {isRTL
+                ? 'الحقول الفارغة (—) تعني أن المزود لم يُدرج هذه القيمة في ملفه بعد. المقارنة تساعدك في تنظيم خياراتك ولا تضمن نتائج التنفيذ.'
+                : 'Empty fields (—) mean the provider has not listed that value on their profile yet. Comparison helps you organize options but does not guarantee execution.'}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button asChild variant="default" size="sm" className="rounded-xl">
+                <Link to="/search">{isRTL ? 'العودة للبحث' : 'Back to search'}</Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" className="rounded-xl">
+                <Link to="/sectors">{isRTL ? 'استكشف القطاعات' : 'Explore sectors'}</Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" className="rounded-xl">
+                <Link to="/contact">{isRTL ? 'اطلب عرض سعر' : 'Request a quote'}</Link>
+              </Button>
+            </div>
+          </div>
           </>
         )}
       </div>
