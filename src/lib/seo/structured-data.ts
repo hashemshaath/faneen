@@ -56,9 +56,9 @@ export interface BreadcrumbCrumb {
  */
 export function buildBreadcrumbList(
   crumbs: BreadcrumbCrumb[],
-  options: { includeHome?: boolean; homeName?: string } = {},
+  options: { includeHome?: boolean; homeName?: string; id?: string } = {},
 ): Record<string, unknown> | null {
-  const { includeHome = true, homeName = SITE_NAME_AR } = options;
+  const { includeHome = true, homeName = SITE_NAME_AR, id } = options;
   const list: BreadcrumbCrumb[] = [];
   if (includeHome) list.push({ name: homeName, url: SITE_URL });
   for (const c of crumbs) {
@@ -69,6 +69,7 @@ export function buildBreadcrumbList(
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
+    ...(id ? { '@id': id } : {}),
     itemListElement: list.map((c, i) => ({
       '@type': 'ListItem',
       position: i + 1,
