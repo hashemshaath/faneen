@@ -200,7 +200,7 @@ const Showcase = () => {
                       <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40">
                         <Link to={href} className="flex items-center gap-2 text-xs hover:text-primary min-w-0">
                           {row.business?.logo_url ? (
-                            <img src={row.business.logo_url} alt="" className="w-5 h-5 rounded object-cover" />
+                            <img src={row.business.logo_url} alt="" aria-hidden="true" width={20} height={20} loading="lazy" decoding="async" className="w-5 h-5 rounded object-cover" />
                           ) : (
                             <Building2 className="w-4 h-4 text-muted-foreground" />
                           )}
