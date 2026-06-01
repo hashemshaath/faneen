@@ -35,6 +35,8 @@ import { MembershipTrustStrip } from '@/components/membership/MembershipTrustStr
 import { MembershipPlanRecommender } from '@/components/membership/MembershipPlanRecommender';
 import { SubscribeStepper } from '@/components/membership/SubscribeStepper';
 import { lazyRetry } from '@/lib/lazyRetry';
+import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
+import { MembershipUnavailableState } from '@/components/membership/MembershipUnavailableState';
 
 // Below-the-fold sections — lazy to keep the initial bundle lean.
 const FeatureComparisonTable = lazyRetry(() => import('@/components/membership/FeatureComparisonTable').then((m) => ({ default: m.FeatureComparisonTable })));
@@ -53,6 +55,7 @@ const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 
 const Membership = () => {
   const { language, isRTL } = useLanguage();
+  const membershipVisibility = useMembershipVisibility();
   usePageMeta({
     title: language === 'ar'
       ? 'باقات العضوية الاحترافية — اشترك واحصل على مميزات حصرية | قِطاعات'
