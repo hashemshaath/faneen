@@ -305,11 +305,12 @@ const DashboardServices: React.FC = () => {
       if (!businessId) throw new Error('No business');
       const existing = byCatalogId.get(input.subId);
       if (existing) {
-        const { error } = await supabase
-          .from('business_services')
-          .update({ is_active: input.nextActive })
-          .eq('id', existing.id);
-        if (error) throw error;
+        // SERVICE-ACTIVATION-GOVERNANCE-1: go through canonical module so
+        // provider_status and is_active stay in sync.
+        await setProviderServiceStatus({
+          serviceRowId: existing.id,
+          status: input.nextActive ? 'active' : 'paused',
+        });
       } else {
         const { error } = await supabase
           .from('business_services')
@@ -319,6 +320,7 @@ const DashboardServices: React.FC = () => {
             name_ar: input.name_ar,
             name_en: input.name_en,
             is_active: input.nextActive,
+            provider_status: input.nextActive ? 'active' : 'paused',
             currency_code: 'SAR',
             sort_order: services.length,
           });
