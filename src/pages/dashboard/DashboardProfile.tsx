@@ -48,6 +48,7 @@ const DashboardProfile: React.FC = () => {
   const navigate = useNavigate();
   const { isRTL } = useLanguage();
   const { user, profile, refreshProfile } = useAuth();
+  const membershipVisibility = useMembershipVisibility();
   const displayRefId = useDisplayRefId();
   const qc = useQueryClient();
   // WORKSPACE-CONTEXT-4A: source the active entity id from the unified
