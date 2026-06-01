@@ -180,10 +180,10 @@ export const SearchResults = ({
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Button asChild variant="default" className="rounded-xl">
-              <a href="/dashboard">{isRTL ? 'الذهاب إلى لوحة التحكم' : 'Go to dashboard'}</a>
+              <a href="/for-providers">{isRTL ? 'سجّل نشاطك التجاري' : 'List your business'}</a>
             </Button>
             <Button asChild variant="outline" className="rounded-xl">
-              <a href="/auth">{isRTL ? 'تسجيل الدخول' : 'Sign in'}</a>
+              <a href="/sectors">{isRTL ? 'تصفّح القطاعات' : 'Browse sectors'}</a>
             </Button>
           </div>
         </div>
@@ -231,9 +231,22 @@ export const SearchResults = ({
             </ul>
           </div>
           
-          <Button variant="outline" onClick={onClearFilters} className="rounded-xl dark:border-border/20">
-            {t('search.clear_filters')}
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Button variant="outline" onClick={onClearFilters} className="rounded-xl dark:border-border/20">
+              {t('search.clear_filters')}
+            </Button>
+            <Button asChild variant="outline" className="rounded-xl dark:border-border/20">
+              <a href="/sectors">{isRTL ? 'تصفّح القطاعات' : 'Browse sectors'}</a>
+            </Button>
+            <Button asChild variant="default" className="rounded-xl">
+              <a href="/contact">{isRTL ? 'أرسل طلبك وسنساعدك' : 'Send a request — we can help'}</a>
+            </Button>
+          </div>
+          <p className="mt-4 text-[11px] text-muted-foreground/80 max-w-md mx-auto leading-relaxed">
+            {isRTL
+              ? 'لم نجد نتائج مطابقة. جرّب توسيع المدينة أو القطاع، أو أرسل طلب عرض سعر وسنساعدك في تنظيم الطلب.'
+              : 'No matching results. Try widening the city or sector, or send a request and we will help you organize it.'}
+          </p>
         </div>
         )
       )

@@ -238,10 +238,29 @@ const Compare = () => {
 
         {selectedIds.length === 0 ? (
           <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center py-16 text-muted-foreground">
-              <Scale className="w-16 h-16 mb-4 opacity-30" />
-              <p className="text-xl font-medium">{isRTL ? 'ابدأ المقارنة' : 'Start Comparing'}</p>
-              <p className="text-sm">{isRTL ? 'ابحث وأضف مزودي خدمة للمقارنة بينهم' : 'Search and add providers to compare them'}</p>
+            <CardContent className="flex flex-col items-center py-12 sm:py-16 text-center">
+              <Scale className="w-14 h-14 sm:w-16 sm:h-16 mb-4 opacity-30 text-muted-foreground" />
+              <p className="text-lg sm:text-xl font-heading font-bold text-foreground mb-1">
+                {isRTL ? 'ابدأ المقارنة' : 'Start comparing'}
+              </p>
+              <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
+                {isRTL
+                  ? 'أضف جهتين أو أكثر للمقارنة حتى تظهر الفروقات بوضوح: التقييم، التخصص، الموقع، الخدمات وخيارات التقسيط.'
+                  : 'Add two or more providers to clearly see the differences: ratings, category, location, services and installment options.'}
+              </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                <Button asChild variant="default" className="rounded-xl">
+                  <Link to="/search">{isRTL ? 'ابحث عن مزودين' : 'Find providers'}</Link>
+                </Button>
+                <Button asChild variant="outline" className="rounded-xl">
+                  <Link to="/sectors">{isRTL ? 'تصفّح القطاعات' : 'Browse sectors'}</Link>
+                </Button>
+              </div>
+              <p className="mt-5 text-[11px] text-muted-foreground/80 max-w-md leading-relaxed">
+                {isRTL
+                  ? 'المقارنة تساعدك في تنظيم خياراتك ولا تضمن نتائج التنفيذ. أرسل طلبك للجهة عبر قِطاعات قبل اتخاذ القرار.'
+                  : 'Comparison helps you organize options but does not guarantee execution. Send your request through Qitaat before deciding.'}
+              </p>
             </CardContent>
           </Card>
         ) : isLoadingSelected ? (
@@ -418,6 +437,24 @@ const Compare = () => {
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div className="rounded-2xl border border-border/40 bg-card/60 p-4 sm:p-5 dark:border-border/20 dark:bg-card/40">
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              {isRTL
+                ? 'الحقول الفارغة (—) تعني أن المزود لم يُدرج هذه القيمة في ملفه بعد. المقارنة تساعدك في تنظيم خياراتك ولا تضمن نتائج التنفيذ.'
+                : 'Empty fields (—) mean the provider has not listed that value on their profile yet. Comparison helps you organize options but does not guarantee execution.'}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button asChild variant="default" size="sm" className="rounded-xl">
+                <Link to="/search">{isRTL ? 'العودة للبحث' : 'Back to search'}</Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" className="rounded-xl">
+                <Link to="/sectors">{isRTL ? 'استكشف القطاعات' : 'Explore sectors'}</Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" className="rounded-xl">
+                <Link to="/contact">{isRTL ? 'اطلب عرض سعر' : 'Request a quote'}</Link>
+              </Button>
+            </div>
           </div>
           </>
         )}
