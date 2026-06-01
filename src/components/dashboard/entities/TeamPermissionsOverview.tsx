@@ -14,6 +14,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { pickBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { getProfileDisplayName } from '@/modules/profiles/utils/displayName';
 import {
   WORKSPACE_PERMISSIONS,
   getDefaultPermissionsForRole,
@@ -152,7 +153,7 @@ export const TeamPermissionsOverview: React.FC<TeamPermissionsOverviewProps> = (
                       )}
                       <div className="min-w-0">
                         <div className="flex items-center gap-1 truncate">
-                          <span className="font-medium truncate">{prof?.full_name ?? '—'}</span>
+                          <span className="font-medium truncate">{getProfileDisplayName(prof, { locale: isRTL ? 'ar' : 'en', allowRefIdFallback: true, emptyFallback: '—' })}</span>
                           {member.is_primary_manager && <Crown className="w-2.5 h-2.5 text-amber-500 shrink-0" />}
                           {isCustom && (
                             <span
