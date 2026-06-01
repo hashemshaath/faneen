@@ -10,7 +10,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Globe2, ShieldCheck, Tag } from 'lucide-react';
+import { Search, Globe2, ShieldCheck, Tag, FileText, Layers } from 'lucide-react';
 
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
@@ -130,6 +131,25 @@ const BrandsCatalog: React.FC = () => {
               ? 'علامات تجارية معتمدة من إدارة قِطاعات. كل علامة هنا تمت مراجعتها قبل النشر.'
               : 'Brands curated and approved by the Qitaat team. Every brand listed here has been reviewed before publication.'}
           </p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Button asChild size="sm" className="rounded-xl h-10">
+              <Link to="/quote">
+                <FileText className="h-4 w-4 me-1.5" />
+                {isRTL ? 'اطلب عرض سعر' : 'Request a quote'}
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline" className="rounded-xl h-10">
+              <Link to="/sectors">
+                <Layers className="h-4 w-4 me-1.5" />
+                {isRTL ? 'استكشف القطاعات' : 'Explore sectors'}
+              </Link>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {isRTL
+              ? 'استخدم العلامة التجارية عندما تكون لديك مواصفات محددة. العلامات تظهر بعد الاعتماد فقط.'
+              : 'Use the brand entry when you have specific specs. Brands appear only after approval.'}
+          </p>
         </header>
 
         <Card>
@@ -174,9 +194,27 @@ const BrandsCatalog: React.FC = () => {
             {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
           </div>
         ) : filtered.length === 0 ? (
-          <Card><CardContent className="py-12 text-center">
-            <ShieldCheck className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد علامات مطابقة.' : 'No brands match these filters.'}</p>
+          <Card><CardContent className="py-12 text-center space-y-4">
+            <ShieldCheck className="h-10 w-10 mx-auto text-muted-foreground/40" />
+            <div>
+              <p className="font-heading font-bold text-foreground mb-1">
+                {isRTL ? 'لا توجد علامات مطابقة' : 'No brands match'}
+              </p>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {isRTL ? 'جرّب توسيع الفلاتر، أو استعرض القطاعات والخدمات للوصول للمزودين مباشرة.' : 'Try widening the filters, or browse sectors and services to reach providers directly.'}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button asChild size="sm" className="rounded-xl">
+                <Link to="/quote">{isRTL ? 'اطلب عرض سعر' : 'Request a quote'}</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="rounded-xl">
+                <Link to="/sectors">{isRTL ? 'استكشف القطاعات' : 'Explore sectors'}</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="rounded-xl">
+                <Link to="/services">{isRTL ? 'استعرض الخدمات' : 'Browse services'}</Link>
+              </Button>
+            </div>
           </CardContent></Card>
         ) : (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
