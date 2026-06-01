@@ -37,10 +37,17 @@ import {
   RefreshButton, getTimeGreeting,
 } from '@/components/dashboard/overview/shared';
 import { BentoTile } from '@/components/dashboard/overview/BentoTile';
+import { adminGetServiceActivationCounters } from '@/modules/providerServices';
 
 export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
   const { user, profile } = useAuth();
   const qc = useQueryClient();
+
+  const { data: svcCounters } = useQuery({
+    queryKey: ['admin-service-activation-counters'],
+    queryFn: adminGetServiceActivationCounters,
+    staleTime: 60_000,
+  });
 
   const { data: stats, isFetching, refetch } = useQuery({
     queryKey: ['admin-overview-stats'],
@@ -420,6 +427,42 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Messages', to: '/dashboard/messages' },
               { icon: Mail, label: isRTL ? 'رسائل التواصل' : 'Contact', to: '/admin/contact-messages' },
             ].map((a) => <QuickAction key={a.to} {...a} />)}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* SERVICE-ACTIVATION-GOVERNANCE-4 — Operations counters */}
+      <Card className="border-border/40">
+        <CardHeader className="pb-1 px-4 pt-3">
+          <CardTitle className="text-xs flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+            {isRTL ? 'تشغيل الخدمات' : 'Service Operations'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            {[
+              { label_ar: 'قيد المراجعة', label_en: 'Pending review', value: svcCounters?.pendingReview ?? 0, to: '/admin/service-activations?requires_admin_review=true', icon: ShieldAlert, tone: 'text-warning bg-warning/10' },
+              { label_ar: 'موقوفة', label_en: 'Suspended', value: svcCounters?.suspended ?? 0, to: '/admin/service-activations?admin_status=suspended', icon: AlertTriangle, tone: 'text-destructive bg-destructive/10' },
+              { label_ar: 'تتطلب ترقية', label_en: 'Requires upgrade', value: svcCounters?.requiresUpgrade ?? 0, to: '/admin/service-activations?required_plan_tier=not_null', icon: Crown, tone: 'text-accent bg-accent/10' },
+              { label_ar: 'مميزة', label_en: 'Featured', value: svcCounters?.featured ?? 0, to: '/admin/service-activations?is_featured=true', icon: Activity, tone: 'text-info bg-info/10' },
+              { label_ar: 'Premium', label_en: 'Premium', value: svcCounters?.premium ?? 0, to: '/admin/service-activations?is_premium_service=true', icon: Crown, tone: 'text-primary bg-primary/10' },
+            ].map((c) => (
+              <Link
+                key={c.to}
+                to={c.to}
+                className="flex items-center justify-between gap-2 rounded-xl border border-border/40 px-3 py-2 hover:border-primary/40 transition-colors"
+                data-testid="service-ops-counter"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={cn('w-6 h-6 rounded-md flex items-center justify-center', c.tone)}>
+                    <c.icon className="w-3 h-3" aria-hidden="true" />
+                  </span>
+                  <span className="text-[11px] truncate">{isRTL ? c.label_ar : c.label_en}</span>
+                </div>
+                <span className="tech-content text-sm font-bold">{c.value}</span>
+              </Link>
+            ))}
           </div>
         </CardContent>
       </Card>
