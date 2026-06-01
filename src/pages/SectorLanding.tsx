@@ -702,6 +702,32 @@ const SectorLanding: React.FC = () => {
         </section>
       )}
 
+      {/* Cross-link to services & brands hubs (internal linking — SEO-6) */}
+      <section className="container px-4 pb-12">
+        <nav aria-label={isRTL ? 'استكشف المزيد' : 'Explore more'} className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+          <h2 className="font-heading text-base font-bold mb-3">
+            {isRTL ? 'استكشف المزيد في قِطاعات' : 'Explore more on Qitaat'}
+          </h2>
+          <ul className="flex flex-wrap gap-2 text-sm">
+            <li>
+              <Link to="/services" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
+                {isRTL ? 'خدمات ذات صلة' : 'Related services'}
+              </Link>
+            </li>
+            <li>
+              <Link to="/brands" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
+                {isRTL ? 'العلامات التجارية' : 'Brands directory'}
+              </Link>
+            </li>
+            <li>
+              <Link to="/sectors" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
+                {isRTL ? 'كل القطاعات' : 'All sectors'}
+              </Link>
+            </li>
+          </ul>
+        </nav>
+      </section>
+
       <Footer />
     </div>
   );
