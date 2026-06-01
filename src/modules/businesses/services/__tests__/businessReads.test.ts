@@ -49,7 +49,13 @@ describe('listBusinessesByIds', () => {
     expect(builder.in).toHaveBeenCalledWith('id', ['a', 'b']);
   });
   it('honors custom select (Compare detail shape)', async () => {
-    const sel = '*, categories(name_ar, name_en), cities(name_ar, name_en), business_services(*), provider_installment_settings(*)';
+    // PERF-1D — Compare's embedded relations are trimmed to only the
+    // columns the comparison table actually renders. The wrapper test
+    // verifies verbatim passthrough of whatever select the caller passes.
+    const sel =
+      '*, categories(name_ar, name_en), cities(name_ar, name_en), ' +
+      'business_services(name_ar, name_en, price_from, price_to, currency_code), ' +
+      'provider_installment_settings(is_enabled, max_installments)';
     await listBusinessesByIds({ ids: ['x'], select: sel });
     expect(builder.select).toHaveBeenCalledWith(sel);
     expect(builder.in).toHaveBeenCalledWith('id', ['x']);
