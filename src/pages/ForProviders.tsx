@@ -36,9 +36,9 @@ import ctaImage from '@/assets/providers-cta-handshake.jpg';
  *
  * Rebuild of the provider landing page:
  *   • Cut from 14+ sections to 10 focused, conversion-oriented sections.
- *   • Remove unverifiable claims: PDPL, regional hosting, "24/7", fake
- *     "98% satisfaction", fabricated live ticker, ROI calculator,
- *     one-sided comparison, hard-coded tier prices.
+ *   • Remove unverifiable legal, availability and satisfaction claims,
+ *     plus fabricated live activity, ROI projections, one-sided
+ *     comparison tables, and hard-coded tier prices.
  *   • Surface real provider capabilities — services, brands, showcase,
  *     team, opportunities, membership, contracts — with soft framing
  *     ("يدعم", "يساعد", "عند تفعيل الميزة", "حسب الخطة").
