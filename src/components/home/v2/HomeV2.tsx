@@ -3,90 +3,32 @@
  * short sentences, one idea per section, no hype, no superlatives).
  */
 import { Link, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useCallback, useRef, type ComponentType } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
 import {
-  ArrowLeft, ArrowRight, Search, FileText, Building2, Users, HardHat, Compass,
-  Layers, Hammer, Plus, Minus, ShieldCheck, Image as ImageIcon,
-  CheckCircle2, Activity, MapPin, Send, Scale, Boxes, DoorClosed, Square, Wrench,
-  Play, Pause, Sparkles, TrendingUp, Clock,
+  ArrowLeft, ArrowRight, Search, ShieldCheck, Activity, MapPin,
+  Play, Pause, Sparkles,
 } from 'lucide-react';
 import { getSearchHistory, addToSearchHistory } from '@/services/search/useSearch';
-import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useAbVariant, trackAbClick } from '@/lib/abTesting';
 import heroSlide1 from '@/assets/home/hero-slide-1.webp';
 import heroSlide2 from '@/assets/home/hero-slide-2.webp';
 import heroSlide3 from '@/assets/home/hero-slide-3.webp';
 import heroSlide4 from '@/assets/home/hero-slide-4.webp';
 
+/**
+ * HomeV2 hosts the eager, above-the-fold HeroV2 component (LCP image owner).
+ * All other home sections were split into ./sections/* during PERF-1C so they
+ * can be code-split via React.lazy from src/pages/Index.tsx. Do not re-add
+ * below-the-fold sections here — that would defeat the bundle split.
+ */
 const ROUTES = {
   quote: '/search?intent=quote',
   search: '/search',
   signupProvider: '/auth?mode=signup&role=provider',
   categories: '/categories',
-};
-
-const Section: React.FC<React.PropsWithChildren<{ id?: string; className?: string; ariaLabelledBy?: string }>> = ({
-  id, className = '', ariaLabelledBy, children,
-}) => (
-  <section id={id} aria-labelledby={ariaLabelledBy} className={`py-14 sm:py-20 ${className}`}>
-    <div className="container-app">{children}</div>
-  </section>
-);
-
-const SectionHead: React.FC<{ title: string; sub?: string; headingId?: string }> = ({ title, sub, headingId }) => (
-  <div className="max-w-2xl mx-auto text-center mb-10 sm:mb-14">
-    <h2 id={headingId} className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-foreground tracking-tight leading-tight scroll-mt-24">
-      {title}
-    </h2>
-    {sub && <p className="font-body text-sm sm:text-base text-muted-foreground mt-3 leading-relaxed">{sub}</p>}
-  </div>
-);
-
-/**
- * Premium section header — eyebrow chip, gradient accent line, large title, supportive subtitle.
- * Use to give important sections a polished, branded cover.
- */
-const SectionCover: React.FC<{
-  eyebrow: string;
-  title: string;
-  sub?: string;
-  tone?: 'primary' | 'secondary' | 'accent';
-  align?: 'center' | 'start';
-  icon?: React.ComponentType<{ className?: string }>;
-  headingId?: string;
-}> = ({ eyebrow, title, sub, tone = 'primary', align = 'center', icon: Icon, headingId }) => {
-  const toneRing =
-    tone === 'secondary' ? 'bg-secondary/10 text-secondary ring-secondary/20' :
-    tone === 'accent'    ? 'bg-accent/10 text-accent ring-accent/20' :
-                           'bg-primary/10 text-primary ring-primary/20';
-  const toneBar =
-    tone === 'secondary' ? 'from-secondary/0 via-secondary to-secondary/0' :
-    tone === 'accent'    ? 'from-accent/0 via-accent to-accent/0' :
-                           'from-primary/0 via-primary to-primary/0';
-  const isCenter = align === 'center';
-  return (
-    <div className={`max-w-3xl ${isCenter ? 'mx-auto text-center' : ''} mb-10 sm:mb-14`}>
-      <div className={`flex items-center gap-3 mb-5 ${isCenter ? 'justify-center' : ''}`}>
-        <span className={`hidden sm:block h-px w-10 bg-gradient-to-r ${toneBar}`} aria-hidden="true" />
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-wider ring-1 ${toneRing}`}>
-          {Icon && <Icon className="w-3.5 h-3.5" />}
-          {eyebrow}
-        </span>
-        <span className={`hidden sm:block h-px w-10 bg-gradient-to-r ${toneBar}`} aria-hidden="true" />
-      </div>
-      <h2 id={headingId} className="font-heading font-black text-3xl sm:text-4xl md:text-[2.75rem] text-foreground tracking-tight leading-[1.15] scroll-mt-24">
-        {title}
-      </h2>
-      {sub && (
-        <p className={`font-body text-sm sm:text-base md:text-lg text-muted-foreground mt-4 leading-relaxed ${isCenter ? 'max-w-2xl mx-auto' : ''}`}>
-          {sub}
-        </p>
-      )}
-    </div>
-  );
 };
 
 const PrimaryCTA: React.FC<{ to: string; label: string; onClick?: () => void }> = ({ to, label, onClick }) => {
@@ -101,21 +43,6 @@ const PrimaryCTA: React.FC<{ to: string; label: string; onClick?: () => void }> 
     </Link>
   );
 };
-
-const SecondaryCTA: React.FC<{ to: string; label: string }> = ({ to, label }) => (
-  <Link to={to}>
-    <Button variant="outline" size="appLg" className="gap-2">{label}</Button>
-  </Link>
-);
-
-const HERO_CHIPS = [
-  { ar: 'ألمنيوم', en: 'Aluminum', slug: 'aluminum', icon: Square },
-  { ar: 'حديد', en: 'Iron', slug: 'iron', icon: Wrench },
-  { ar: 'خشب', en: 'Wood', slug: 'wood', icon: DoorClosed },
-  { ar: 'زجاج', en: 'Glass', slug: 'glass', icon: Layers },
-  { ar: 'ستانلس ستيل', en: 'Stainless Steel', slug: 'stainless', icon: Boxes },
-  { ar: 'تصنيع وتركيب', en: 'Fabrication & Install', slug: 'fabrication', icon: Hammer },
-];
 
 export const HeroV2 = () => {
   const bi = useBi();
