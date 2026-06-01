@@ -312,7 +312,10 @@ const DashboardServices: React.FC = () => {
           status: input.nextActive ? 'active' : 'paused',
         });
       } else {
-        const { error } = await supabase
+        // SERVICE-ACTIVATION-GOVERNANCE-2: do not write `provider_status`
+        // directly. Insert the row (DB default = 'active'), then route
+        // through the canonical module to flip it to paused if needed.
+        const { data: inserted, error } = await supabase
           .from('business_services')
           .insert({
             business_id: businessId,
@@ -320,11 +323,15 @@ const DashboardServices: React.FC = () => {
             name_ar: input.name_ar,
             name_en: input.name_en,
             is_active: input.nextActive,
-            provider_status: input.nextActive ? 'active' : 'paused',
             currency_code: 'SAR',
             sort_order: services.length,
-          });
+          })
+          .select('id')
+          .single();
         if (error) throw error;
+        if (!input.nextActive && inserted?.id) {
+          await setProviderServiceStatus({ serviceRowId: inserted.id, status: 'paused' });
+        }
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['business-services-sync', businessId] }),
