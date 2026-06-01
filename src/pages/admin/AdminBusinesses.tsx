@@ -31,6 +31,7 @@ import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import { RegionCitySelector } from '@/components/forms/RegionCitySelector';
 import { SA_REGIONS, type SaRegionId } from '@/data/sa-regions';
 import { setBusinessMembershipTier, type MembershipTier } from '@/modules/memberships';
+import { getProfileDisplayName } from '@/modules/profiles/utils/displayName';
 import { notifyMembershipChangeForBusiness, setProviderServiceStatus } from '@/modules/providerServices';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { getProfileByUserId } from '@/modules/users/services/getProfileByUserId';
@@ -1480,7 +1481,13 @@ const AdminBusinesses = () => {
                           </div>
                         ) : (
                           ownerResults.map((u) => {
-                            const displayName = (isRTL ? (u.full_name_ar || u.full_name) : (u.full_name_en || u.full_name)) || u.full_name || (isRTL ? 'بدون اسم' : 'No name');
+                            // STAB-1G: admin/support row — name → username → "بدون اسم".
+                            // ref_id/email remain hidden from the primary display
+                            // line; they are already rendered separately below.
+                            const displayName = getProfileDisplayName(u, {
+                              locale: isRTL ? 'ar' : 'en',
+                              emptyFallback: isRTL ? 'بدون اسم' : 'No name',
+                            });
                             return (
                               <button
                                 key={u.user_id}
