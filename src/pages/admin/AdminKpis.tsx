@@ -6,6 +6,8 @@ import { Bi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
+import { listProfilesByCreatedRange } from '@/modules/users';
+import { listMembershipPaymentIntents } from '@/modules/memberships/services/payments';
 import { defaultRange, type DateRange } from '@/lib/admin-reports-csv';
 import { Loader2, TrendingUp, Users, FileText, DollarSign, Activity } from 'lucide-react';
 import {
@@ -75,21 +77,21 @@ export default function AdminKpis() {
             .select('id,status,total_amount,created_at')
             .gte('created_at', fromIso)
             .lte('created_at', toIso),
-          supabase
-            .from('profiles')
-            .select('id,created_at')
-            .gte('created_at', fromIso)
-            .lte('created_at', toIso),
+          listProfilesByCreatedRange<{ id: string; created_at: string }>({
+            fromIso,
+            toIso,
+            select: 'id,created_at',
+          }),
           supabase
             .from('businesses')
             .select('id,created_at')
             .gte('created_at', fromIso)
             .lte('created_at', toIso),
-          supabase
-            .from('membership_payment_intents')
-            .select('amount,created_at,status')
-            .gte('created_at', fromIso)
-            .lte('created_at', toIso),
+          listMembershipPaymentIntents<{ amount: number | null; created_at: string; status: string | null }>({
+            select: 'amount,created_at,status',
+            createdFromIso: fromIso,
+            createdToIso: toIso,
+          }),
         ]);
 
         if (cancelled) return;
