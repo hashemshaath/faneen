@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2, Plus, Pencil, X, Check, AlertCircle, ExternalLink, Wrench, Sparkles, Inbox, Ticket, Clock, CheckCircle2, XCircle, Send, Trash2, ListPlus } from 'lucide-react';
+import { Loader2, Plus, Pencil, X, Check, AlertCircle, ExternalLink, Wrench, Sparkles, Inbox, Ticket, Clock, CheckCircle2, XCircle, Send, Trash2, ListPlus, Lock, PauseCircle, ShieldAlert } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -14,6 +14,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
 import { ONBOARDING_SECTORS, findSubServiceById, type SectorId } from '@/data/onboarding-sectors';
 import { ServiceBrandsPicker } from '@/components/dashboard/ServiceBrandsPicker';
+import {
+  resolveServiceEntitlements,
+  setProviderServiceStatus,
+  effectiveStatusLabel,
+  effectiveStatusBadgeClass,
+  normalizeTier,
+  type EffectiveServiceStatus,
+  type ResolvedServiceEntitlement,
+  type ProviderServiceRowLike,
+} from '@/modules/providerServices';
+import { getCurrentMembershipSubscription } from '@/modules/memberships';
+import { useMembershipLimits } from '@/hooks/useMembershipLimits';
+import type { TierKey } from '@/lib/membership-tiers';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +53,11 @@ type ServiceRow = {
   sort_order: number;
   is_demo: boolean;
   created_at: string;
+  provider_status: 'active' | 'paused';
+  admin_status: 'allowed' | 'suspended' | 'rejected' | 'pending_review';
+  required_plan_tier: TierKey | null;
+  rejection_reason: string | null;
+  admin_note: string | null;
 };
 
 type SARequest = {
@@ -113,7 +131,7 @@ const DashboardServices: React.FC = () => {
       if (!businessId) return [] as ServiceRow[];
       const { data, error } = await supabase
         .from('business_services')
-        .select('id, business_id, source_sub_service_id, name_ar, name_en, description_ar, description_en, price_from, price_to, currency_code, is_active, sort_order, is_demo, created_at')
+        .select('id, business_id, source_sub_service_id, name_ar, name_en, description_ar, description_en, price_from, price_to, currency_code, is_active, sort_order, is_demo, created_at, provider_status, admin_status, required_plan_tier, rejection_reason, admin_note')
         .eq('business_id', businessId)
         .order('sort_order', { ascending: true });
       if (error) throw error;
