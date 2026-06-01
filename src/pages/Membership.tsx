@@ -25,6 +25,8 @@ import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send, Clock, Chev
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
+import { MembershipHero } from '@/components/membership/MembershipHero';
+import { ServiceActivationAlignment } from '@/components/membership/ServiceActivationAlignment';
 import { CurrentSubscriptionCard } from '@/components/membership/CurrentSubscriptionCard';
 import { MembershipPaymentStatus } from '@/components/membership/MembershipPaymentStatus';
 import { PlanCard } from '@/components/membership/PlanCard';
