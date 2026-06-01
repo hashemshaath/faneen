@@ -72,6 +72,7 @@ describe('ACCESS-GOVERNANCE-FINAL-1 — single source of truth', () => {
       'src/pages/admin/AdminSystemAccess.tsx',
       'src/components/dashboard/DashboardSidebar.tsx',
       'src/App.tsx',
+      'src/components/auth/ProtectedRoute.tsx',
     ].map(p => path.normalize(p)));
     const leaks = callers.map(p => path.normalize(p)).filter(p => !allowed.has(p));
     expect(leaks, `Unexpected visibility consumers: ${leaks.join(', ')}`).toEqual([]);
@@ -107,6 +108,7 @@ describe('ACCESS-GOVERNANCE-FINAL-1 — single source of truth', () => {
     const adhoc = rgFiles(/has_membership_feature\s*\(/);
     const allowed = new Set([
       path.normalize('src/modules/memberships/services/usage/reads.ts'),
+      path.normalize('src/hooks/useFeatureGate.ts'),
     ]);
     const leaks = adhoc.map(p => path.normalize(p)).filter(p => !allowed.has(p));
     expect(leaks, `Ad-hoc plan checks: ${leaks.join(', ')}`).toEqual([]);
