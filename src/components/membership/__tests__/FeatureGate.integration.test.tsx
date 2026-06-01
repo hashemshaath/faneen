@@ -12,12 +12,38 @@ vi.mock('@/hooks/useDirection', () => ({
   useDirection: () => ({ isRTL: true, direction: 'rtl' }),
 }));
 
+// `useMembershipVisibility` was added to FeatureGate after this suite was written
+// (membership governance phases). It internally calls `useVisibleModules` /
+// `useActiveWorkspace`, both of which require a QueryClientProvider + Auth
+// context that this suite intentionally does not set up. Membership visibility
+// is covered by its own tests (membershipPageGovernanceRedesign1, etc.);
+// here we only assert FeatureGate's gating behaviour, so we mock the hook with
+// the "membership module visible" default state. A second mockReturnValue is
+// installed in the "membership-hidden" describe block below.
+const useMembershipVisibilityMock = vi.fn();
+vi.mock('@/hooks/useMembershipVisibility', () => ({
+  useMembershipVisibility: () => useMembershipVisibilityMock(),
+}));
+
 import { FeatureGate, RequireFeature } from '@/components/membership/FeatureGate';
 
 const wrap = (ui: React.ReactNode) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
 beforeEach(() => {
   useFeatureGateMock.mockReset();
+  useMembershipVisibilityMock.mockReset();
+  // Default: membership module is visible — preserves the original
+  // assertion that the upgrade CTA links to "/membership".
+  useMembershipVisibilityMock.mockReturnValue({
+    isVisible: true,
+    isLoading: false,
+    shouldShowUpgradeCTA: true,
+    membershipPathOrNull: '/membership',
+    unavailableMessage: {
+      ar: 'العضويات غير متاحة حالياً',
+      en: 'Memberships are currently unavailable',
+    },
+  });
 });
 
 describe('FeatureGate — DB-driven plan visibility', () => {
@@ -132,5 +158,29 @@ describe('RequireFeature — route-level gating', () => {
       </RequireFeature>,
     );
     expect(container.textContent).toBe('');
+  });
+});
+
+describe('FeatureGate — membership-visibility governance', () => {
+  it('renders a contact-support link (not /membership) when the membership module is hidden', () => {
+    useFeatureGateMock.mockReturnValue({ allowed: false, isLoading: false });
+    useMembershipVisibilityMock.mockReturnValue({
+      isVisible: false,
+      isLoading: false,
+      shouldShowUpgradeCTA: false,
+      membershipPathOrNull: null,
+      unavailableMessage: {
+        ar: 'العضويات غير متاحة حالياً',
+        en: 'Memberships are currently unavailable',
+      },
+    });
+    wrap(
+      <FeatureGate feature="advanced_analytics" mode="upgrade">
+        <span>secret-feature</span>
+      </FeatureGate>,
+    );
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', '/contact');
+    expect(link.getAttribute('href')).not.toBe('/membership');
   });
 });
