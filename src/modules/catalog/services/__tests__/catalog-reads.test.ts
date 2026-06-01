@@ -103,6 +103,20 @@ describe('catalog services reads', () => {
     expect(builder.order).toHaveBeenNthCalledWith(2, 'sort_order', { ascending: true });
   });
 
+  it('listBranchesByBusiness with source=public routes through business_branches_public and skips is_active filter (DB-GOVERNANCE-2)', async () => {
+    await listBranchesByBusiness({
+      businessId: 'b1',
+      select: 'id, name_ar, name_en',
+      activeOnly: true,
+      source: 'public',
+    });
+    expect(fromMock).toHaveBeenCalledWith('business_branches_public');
+    expect(builder.eq).toHaveBeenCalledWith('business_id', 'b1');
+    // is_active is enforced by the view; wrapper must NOT add a redundant filter.
+    const eqCalls = (builder.eq as ReturnType<typeof vi.fn>).mock.calls;
+    expect(eqCalls.find((c: unknown[]) => c[0] === 'is_active')).toBeUndefined();
+  });
+
   it('listAvailabilityByBusiness preserves filters and order', async () => {
     await listAvailabilityByBusiness({ businessId: 'b1', order: 'day_of_week' });
     expect(fromMock).toHaveBeenCalledWith('business_availability');

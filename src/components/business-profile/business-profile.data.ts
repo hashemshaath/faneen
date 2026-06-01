@@ -201,6 +201,15 @@ export const useBranches = (businessId: string | undefined) =>
         businessId: businessId!,
         // PERF-1D.3 — explicit branch fields used by BranchesTab. Joins unchanged.
         // sort_order/is_main filters/order applied server-side by wrapper.
+        // DB-GOVERNANCE-2 — kept on the private `business_branches` table because
+        // BranchesTab renders contact_person/phone/email/customer_service_phone/
+        // unified_number/building_number/cities/countries which are intentionally
+        // not exposed by `business_branches_public`. Anonymous visitors are
+        // therefore filtered out by table RLS (no anon SELECT policy), which is
+        // the existing safe behavior. Authenticated owners/staff/admins keep
+        // full visibility. The view was strengthened (parent approval enforced)
+        // and `source: 'public'` on the wrapper is reserved for a future,
+        // explicitly-anon BusinessProfile branches surface.
         select:
           "id, name_ar, name_en, is_main, " +
           "district, street_name, building_number, " +
