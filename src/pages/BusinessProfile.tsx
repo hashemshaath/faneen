@@ -52,6 +52,8 @@ import { BnplBadges } from "@/components/bnpl/BnplBadges";
 import { BusinessBarcodeCard } from "@/components/business-profile/BusinessBarcodeCard";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { ContactSupplierSheet } from "@/components/business-profile/ContactSupplierSheet";
+import { BusinessProfileTrustStrip } from "@/components/business-profile/BusinessProfileTrustStrip";
+import { BusinessProfileStickyCta } from "@/components/business-profile/BusinessProfileStickyCta";
 import { buildBreadcrumbList, buildService, ogImageFor } from "@/lib/seo/structured-data";
 import { track } from "@/lib/analytics-events";
 // JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement:
@@ -348,6 +350,25 @@ const BusinessProfile = () => {
     }
   };
 
+  // Mobile sticky CTA share handler — mirrors header share without
+  // exposing private fields. Native share with clipboard fallback.
+  const handleShare = async () => {
+    if (typeof window === "undefined") return;
+    const shareUrl = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: businessName || "Qitaat", url: shareUrl });
+        return;
+      }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success(isRTL ? "تم نسخ الرابط" : "Link copied");
+      }
+    } catch {
+      return;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -430,6 +451,12 @@ const BusinessProfile = () => {
           branchCount={branches.length}
           activeOffersCount={activeOffersCount}
           topServices={services}
+        />
+
+        <BusinessProfileTrustStrip
+          isVerified={!!business.is_verified}
+          serviceCount={services.length}
+          projectCount={projects.length}
         />
 
         <main className="container-app pb-10 pt-4 sm:pb-16 sm:pt-8">
@@ -607,6 +634,16 @@ const BusinessProfile = () => {
         businessName={businessName}
         source="business-profile"
       />
+
+      {/* Mobile-only sticky CTA — hidden when the owner views their own
+          profile to keep authoring UX clean. */}
+      {business.user_id !== user?.id && (
+        <BusinessProfileStickyCta
+          onContact={() => handleContactClick("sticky_mobile")}
+          onShare={handleShare}
+          isContacting={contactMutation.isPending}
+        />
+      )}
 
       <Footer />
     </div>
