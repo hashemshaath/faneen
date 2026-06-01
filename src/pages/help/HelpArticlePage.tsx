@@ -16,6 +16,7 @@ import {
   pushRecentlyViewedSlug,
   isHelpBookmarked,
   toggleHelpBookmark,
+  getNextBestAction,
 } from '@/modules/helpCenter';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
@@ -270,6 +271,38 @@ const HelpArticlePage: React.FC = () => {
           <Card className="rounded-xl mb-6">
             <CardContent className="p-6 prose max-w-none whitespace-pre-line" dir="auto">{content}</CardContent>
           </Card>
+
+          {/* UX-REDESIGN-7 — Next Best Action card (workflow continuation). */}
+          {(() => {
+            const nba = getNextBestAction(article.slug, article.audience);
+            return (
+              <Card
+                data-testid="help-next-best-action"
+                className="rounded-xl mb-6 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 print:hidden"
+              >
+                <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex-1">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                      {isRTL ? 'الخطوة التالية' : 'Next step'}
+                    </div>
+                    <div className="text-sm font-semibold" dir="auto">
+                      {isRTL ? 'تابع داخل المنصة' : 'Continue inside the platform'}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {isRTL
+                        ? 'المقالة لا تعد بضمان نتائج التنفيذ؛ تابع الإجراء الفعلي من الصفحة المناسبة.'
+                        : 'Articles don\u2019t guarantee execution outcomes; continue the actual action on the right page.'}
+                    </p>
+                  </div>
+                  <Link to={nba.to} className="shrink-0">
+                    <Button size="sm" className="h-9">
+                      {isRTL ? nba.label_ar : nba.label_en}
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           {/* Prev / Next */}
           {(prev || next) && (
