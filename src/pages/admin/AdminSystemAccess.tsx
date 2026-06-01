@@ -328,6 +328,19 @@ const AdminSystemAccess: React.FC = () => {
           </div>
         </div>
 
+        {lastSyncAt && (
+          <div
+            data-testid="system-access-sync-indicator"
+            className="inline-flex items-center gap-2 rounded-xl bg-success/10 border border-success/30 px-3 py-1.5 text-xs text-success"
+          >
+            <Check className="w-3.5 h-3.5" />
+            <span>{isRTL ? ACCESS_LABELS.synced.ar : ACCESS_LABELS.synced.en}</span>
+            <span className="text-success/70 tech-content">
+              · {new Date(lastSyncAt).toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US')}
+            </span>
+          </div>
+        )}
+
         {!isAdmin && (
           <div className="rounded-2xl border border-warning/40 bg-warning/10 p-4 flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
