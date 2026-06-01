@@ -897,15 +897,28 @@ export async function getBrandOpsCounts() {
 
 // ----------------------------- BUSINESSES (lookup) -----------------------
 
+// DB-GOVERNANCE-1: route brand→business lookups through the canonical
+// `listBusinessesByIds` wrapper so this read shows up under the allowed
+// `src/modules/businesses/services/**` path in the isolation audit instead
+// of being a direct `.from('businesses')` call inside the brands module.
+// Behavior preserved verbatim: same select shape, same `in('id', ids)`,
+// same empty-array short-circuit, same throw-on-error contract.
+import { listBusinessesByIds } from '@/modules/businesses/services/listBusinessesByIds';
+
+type BrandBusinessLookupRow = {
+  id: string;
+  ref_id: string | null;
+  name_ar: string | null;
+  name_en: string | null;
+  username: string | null;
+};
+
 export async function lookupBusinessesByIds(ids: string[]) {
   if (ids.length === 0) return [];
-  const { data, error } = await sb
-    .from('businesses')
-    .select('id, ref_id, name_ar, name_en, username')
-    .in('id', ids);
+  const { data, error } = await listBusinessesByIds<BrandBusinessLookupRow>({
+    ids,
+    select: 'id, ref_id, name_ar, name_en, username',
+  });
   if (error) throw error;
-  return (data ?? []) as Array<{
-    id: string; ref_id: string | null;
-    name_ar: string | null; name_en: string | null; username: string | null;
-  }>;
+  return data ?? [];
 }
