@@ -14,6 +14,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
+import { useSearchParams } from 'react-router-dom';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,7 @@ import { TIERS, type TierKey } from '@/lib/membership-tiers';
 
 type AdminStatusFilter = 'all' | 'allowed' | 'suspended' | 'rejected' | 'pending_review';
 type ProviderStatusFilter = 'all' | 'active' | 'paused';
+type TierFilter = 'all' | 'not_null' | TierKey;
 
 const AdminServiceActivations: React.FC = () => {
   useNoIndex();
@@ -55,27 +57,67 @@ const AdminServiceActivations: React.FC = () => {
   });
   const qc = useQueryClient();
 
+  // SERVICE-ACTIVATION-GOVERNANCE-4 — URL query-param hydration.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const businessId = searchParams.get('businessId') || '';
   const [search, setSearch] = useState('');
-  const [adminStatus, setAdminStatus] = useState<AdminStatusFilter>('all');
-  const [providerStatus, setProviderStatus] = useState<ProviderStatusFilter>('all');
-  const [requiresReviewOnly, setRequiresReviewOnly] = useState(false);
-  const [premiumOnly, setPremiumOnly] = useState(false);
-  const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [adminStatus, setAdminStatus] = useState<AdminStatusFilter>(
+    (searchParams.get('admin_status') as AdminStatusFilter) || 'all',
+  );
+  const [providerStatus, setProviderStatus] = useState<ProviderStatusFilter>(
+    (searchParams.get('provider_status') as ProviderStatusFilter) || 'all',
+  );
+  const [requiresReviewOnly, setRequiresReviewOnly] = useState(
+    searchParams.get('requires_admin_review') === 'true',
+  );
+  const [premiumOnly, setPremiumOnly] = useState(searchParams.get('is_premium_service') === 'true');
+  const [featuredOnly, setFeaturedOnly] = useState(searchParams.get('is_featured') === 'true');
+  const initialTier = searchParams.get('required_plan_tier');
+  const [tierFilter, setTierFilter] = useState<TierFilter>(
+    initialTier === 'not_null'
+      ? 'not_null'
+      : (TIERS as readonly string[]).includes(initialTier ?? '')
+      ? (initialTier as TierKey)
+      : 'all',
+  );
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [reasonDraft, setReasonDraft] = useState('');
   const [noteDraft, setNoteDraft] = useState('');
 
   const filters: AdminListFilters = useMemo(
     () => ({
+      businessId: businessId || undefined,
       search: search || undefined,
       adminStatus: adminStatus === 'all' ? undefined : adminStatus,
       providerStatus: providerStatus === 'all' ? undefined : providerStatus,
       requiresAdminReview: requiresReviewOnly ? true : undefined,
       premiumOnly: premiumOnly || undefined,
       featuredOnly: featuredOnly || undefined,
+      requiredPlanTierAny: tierFilter === 'not_null' ? true : undefined,
+      requiredPlanTier:
+        tierFilter !== 'all' && tierFilter !== 'not_null' ? (tierFilter as TierKey) : undefined,
     }),
-    [search, adminStatus, providerStatus, requiresReviewOnly, premiumOnly, featuredOnly],
+    [businessId, search, adminStatus, providerStatus, requiresReviewOnly, premiumOnly, featuredOnly, tierFilter],
   );
+
+  // Sync UI filter state back into URL so deep-links stay bookmarkable.
+  React.useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    const setOrDelete = (k: string, v: string | null) => {
+      if (v && v !== 'all' && v !== 'false') next.set(k, v);
+      else next.delete(k);
+    };
+    setOrDelete('admin_status', adminStatus);
+    setOrDelete('provider_status', providerStatus);
+    setOrDelete('requires_admin_review', requiresReviewOnly ? 'true' : null);
+    setOrDelete('is_premium_service', premiumOnly ? 'true' : null);
+    setOrDelete('is_featured', featuredOnly ? 'true' : null);
+    setOrDelete('required_plan_tier', tierFilter === 'all' ? null : tierFilter);
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adminStatus, providerStatus, requiresReviewOnly, premiumOnly, featuredOnly, tierFilter]);
 
   const { data: rows = [], isLoading, refetch, isFetching } = useQuery({
     queryKey: ['admin-service-activations', filters],
@@ -138,6 +180,25 @@ const AdminServiceActivations: React.FC = () => {
             <CardTitle className="text-sm">{isRTL ? 'تصفية' : 'Filters'}</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {businessId && (
+              <div className="md:col-span-2 lg:col-span-4 flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+                <span>
+                  {isRTL ? 'مفلتر حسب الجهة: ' : 'Filtered by business: '}
+                  <span className="tech-content font-mono">{businessId.slice(0, 8)}…</span>
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const next = new URLSearchParams(searchParams);
+                    next.delete('businessId');
+                    setSearchParams(next, { replace: true });
+                  }}
+                >
+                  {isRTL ? 'إزالة' : 'Clear'}
+                </Button>
+              </div>
+            )}
             <div className="relative">
               <Search className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-muted-foreground`} />
               <Input
@@ -163,6 +224,16 @@ const AdminServiceActivations: React.FC = () => {
                 <SelectItem value="all">{isRTL ? 'كل حالات المزوّد' : 'All provider statuses'}</SelectItem>
                 <SelectItem value="active">{isRTL ? 'مفعّلة' : 'Active'}</SelectItem>
                 <SelectItem value="paused">{isRTL ? 'متوقفة' : 'Paused'}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={tierFilter} onValueChange={(v) => setTierFilter(v as TierFilter)}>
+              <SelectTrigger><SelectValue placeholder={isRTL ? 'الباقة المطلوبة' : 'Required tier'} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{isRTL ? 'كل الباقات' : 'Any tier'}</SelectItem>
+                <SelectItem value="not_null">{isRTL ? 'تتطلب ترقية (أي)' : 'Requires upgrade (any)'}</SelectItem>
+                {TIERS.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <div className="flex flex-wrap items-center gap-2">
