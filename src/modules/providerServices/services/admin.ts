@@ -39,6 +39,8 @@ export interface AdminServiceActivationRow {
   reviewed_at: string | null;
   updated_at: string;
   created_at: string;
+  /** Joined business owner id, used for tier preview / notifications. */
+  owner_user_id?: string | null;
 }
 
 export interface AdminListFilters {
@@ -54,7 +56,7 @@ export interface AdminListFilters {
 }
 
 const COLS =
-  'id,business_id,category_id,name_ar,name_en,provider_status,admin_status,required_plan_tier,requires_admin_review,is_premium_service,is_featured,is_active,admin_note,provider_note,rejection_reason,reviewed_by,reviewed_at,updated_at,created_at';
+  'id,business_id,category_id,name_ar,name_en,provider_status,admin_status,required_plan_tier,requires_admin_review,is_premium_service,is_featured,is_active,admin_note,provider_note,rejection_reason,reviewed_by,reviewed_at,updated_at,created_at,businesses(user_id)';
 
 /**
  * Lightweight context fetch used by mutation wrappers to address the
@@ -136,7 +138,14 @@ export async function adminListServiceActivations(
 
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []) as AdminServiceActivationRow[];
+  type RawRow = Omit<AdminServiceActivationRow, 'owner_user_id'> & {
+    businesses: { user_id: string | null } | { user_id: string | null }[] | null;
+  };
+  const raw = (data ?? []) as unknown as RawRow[];
+  return raw.map((r) => {
+    const biz = Array.isArray(r.businesses) ? r.businesses[0] : r.businesses;
+    return { ...r, owner_user_id: biz?.user_id ?? null } as AdminServiceActivationRow;
+  });
 }
 
 async function currentReviewerId(): Promise<string | null> {
