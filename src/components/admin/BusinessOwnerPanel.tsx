@@ -589,7 +589,13 @@ export const BusinessOwnerPanel: React.FC<Props> = ({
         </div>
         {resolvedNewOwner && (
           <div className="p-2 rounded-lg bg-card border border-border/40 text-[11px] flex items-center justify-between gap-2">
-            <span dir="auto">{resolvedNewOwner.full_name_ar || resolvedNewOwner.ref_id}</span>
+            <span dir="auto">
+              {getProfileDisplayName(resolvedNewOwner, {
+                locale: isRTL ? 'ar' : 'en',
+                allowRefIdFallback: true,
+                emptyFallback: t(isRTL, 'بدون اسم', 'No name'),
+              })}
+            </span>
             <ReferenceTag refId={resolvedNewOwner.ref_id} isRTL={isRTL} />
           </div>
         )}

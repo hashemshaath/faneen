@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { pickBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { getProfileDisplayName } from '@/modules/profiles/utils/displayName';
 import {
   WORKSPACE_PERMISSIONS,
   getDefaultPermissionsForRole,
@@ -190,7 +191,7 @@ export const PermissionInspector: React.FC<PermissionInspectorProps> = ({ member
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-medium text-xs truncate">{prof?.full_name ?? '—'}</span>
+                    <span className="font-medium text-xs truncate">{getProfileDisplayName(prof, { locale: isRTL ? 'ar' : 'en', allowRefIdFallback: true, emptyFallback: '—' })}</span>
                     <span className="text-[10px] text-muted-foreground tech-content">{prof?.ref_id ?? ''}</span>
                   </div>
                   <span className="text-[10px] text-muted-foreground">{member.role}</span>
