@@ -25,12 +25,12 @@ export async function listBusinessesByIds<T = unknown>(
   options: ListBusinessesByIdsOptions,
 ): Promise<{ data: T[] | null; error: unknown }> {
   const { ids, select = 'id, name_ar, name_en, username', nestedEq } = options;
-  let q = supabase
-    .from('businesses')
-    .select(select)
-    .in('id', ids);
+  // Use `any` for the builder type because PostgREST's nested column path
+  // strings (e.g. `business_services.is_active`) are not part of the
+  // generated row union and would otherwise blow up TS' type instantiation.
+  let q: any = supabase.from('businesses').select(select).in('id', ids);
   if (nestedEq) {
-    for (const [col, val] of nestedEq) q = q.eq(col, val as never);
+    for (const [col, val] of nestedEq) q = q.eq(col, val);
   }
   const { data, error } = await q;
   return { data: (data as unknown as T[] | null), error };
