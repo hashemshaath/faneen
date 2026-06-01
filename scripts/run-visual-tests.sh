@@ -2,7 +2,7 @@
 # Run Playwright visual regression tests with the same flow used in CI.
 # Designed to run inside the official Playwright Docker image:
 #   docker run --rm -it --ipc=host -v "$PWD":/work -w /work \
-#     mcr.microsoft.com/playwright:v1.57.0-jammy \
+#     mcr.microsoft.com/playwright:v1.59.1-jammy \
 #     bash scripts/run-visual-tests.sh [--update]
 #
 # Flags:
