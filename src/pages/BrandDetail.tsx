@@ -75,8 +75,17 @@ const BrandDetail: React.FC = () => {
     : '';
 
   usePageMeta({
-    title: brand ? `${display}` : (isRTL ? 'علامة تجارية' : 'Brand'),
-    description: desc || (isRTL ? 'صفحة علامة تجارية معتمدة على قِطاعات.' : 'Approved brand on Qitaat.'),
+    title: brand
+      ? (isRTL
+          ? `${display} | العلامات التجارية في قِطاعات`
+          : `${display} | Brands on Qitaat`)
+      : (isRTL ? 'علامة تجارية | قِطاعات' : 'Brand | Qitaat'),
+    description: brand
+      ? (desc
+          || (isRTL
+              ? `استعرض الجهات المرتبطة بعلامة ${display} والخدمات والقطاعات التي تعمل بها ضمن منصة قِطاعات.`
+              : `Explore firms associated with the ${display} brand, their services and the sectors they operate in on Qitaat.`))
+      : (isRTL ? 'صفحة علامة تجارية معتمدة على قِطاعات.' : 'Approved brand on Qitaat.'),
     canonical: brand?.slug ? `${SITE}/brands/${brand.slug}` : `${SITE}/brands`,
     ogType: 'website',
     ogImage: brand?.logo_url || undefined,

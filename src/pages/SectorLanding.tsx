@@ -205,19 +205,19 @@ const SectorLanding: React.FC = () => {
     title: meta
       ? selectedCityName
         ? (isRTL
-            ? `${meta.name} في ${selectedCityName} — ${meta.tagline} | قِطاعات`
-            : `${meta.name} in ${selectedCityName} — ${meta.tagline} | Qitaat`)
+            ? `${meta.name} في ${selectedCityName} | قِطاعات`
+            : `${meta.name} in ${selectedCityName} | Qitaat`)
         : (isRTL
-            ? `${meta.name} — ${meta.tagline} | قِطاعات`
-            : `${meta.name} — ${meta.tagline} | Qitaat`)
+            ? `${meta.name} في السعودية | قِطاعات`
+            : `${meta.name} in Saudi Arabia | Qitaat`)
       : isRTL
         ? 'قطاع غير معروف | قِطاعات'
         : 'Unknown sector | Qitaat',
     description: meta
       ? (selectedCityName
           ? (isRTL
-              ? `أفضل مزودي ${meta.name} في ${selectedCityName}: ورش ومصانع موثّقة، أسعار، أعمال سابقة، ودليل اختيار. ${meta.description}`
-              : `Top ${meta.name} providers in ${selectedCityName}: verified workshops, prices, past projects and a buyer guide. ${meta.description}`)
+              ? `اعثر على مزودي ${meta.name} في ${selectedCityName}، واستعرض الجهات والخدمات المناسبة لمشاريع البناء والتشييد عبر منصة قِطاعات.`
+              : `Find ${meta.name} providers in ${selectedCityName}. Browse vetted firms and services for construction projects on Qitaat.`)
           : meta.description)
       : '',
     keywords: meta?.keywords,
@@ -232,6 +232,7 @@ const SectorLanding: React.FC = () => {
       subtitle: meta?.tagline || (isRTL ? 'دليل قِطاعات' : 'Qitaat directory'),
     }),
     ogType: 'website',
+    noindex: !meta,
   });
 
   useMultiJsonLd(
