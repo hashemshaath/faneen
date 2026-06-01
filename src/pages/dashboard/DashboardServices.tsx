@@ -261,6 +261,8 @@ const DashboardServices: React.FC = () => {
       if (!businessId) throw new Error('No business');
       const existing = byCatalogId.get(input.subId);
       if (existing) {
+        // SERVICE-ACTIVATION-GOVERNANCE-FINAL — never write is_active
+        // directly. If activation changed, route through canonical setter.
         const { error } = await supabase
           .from('business_services')
           .update({
@@ -269,12 +271,20 @@ const DashboardServices: React.FC = () => {
             price_from: input.payload.price_from ?? null,
             price_to: input.payload.price_to ?? null,
             currency_code: input.payload.currency_code ?? 'SAR',
-            is_active: input.payload.is_active ?? true,
           })
           .eq('id', existing.id);
         if (error) throw error;
+        const nextActive = input.payload.is_active ?? true;
+        if (nextActive !== existing.is_active) {
+          await setProviderServiceStatus({
+            serviceRowId: existing.id,
+            status: nextActive ? 'active' : 'paused',
+          });
+        }
       } else {
-        const { error } = await supabase
+        // Insert with DB defaults for is_active/provider_status; flip to
+        // paused via canonical setter when needed.
+        const { data: inserted, error } = await supabase
           .from('business_services')
           .insert({
             business_id: businessId,
@@ -286,10 +296,15 @@ const DashboardServices: React.FC = () => {
             price_from: input.payload.price_from ?? null,
             price_to: input.payload.price_to ?? null,
             currency_code: input.payload.currency_code ?? 'SAR',
-            is_active: input.payload.is_active ?? true,
             sort_order: services.length,
-          });
+          })
+          .select('id')
+          .single();
         if (error) throw error;
+        const nextActive = input.payload.is_active ?? true;
+        if (!nextActive && inserted?.id) {
+          await setProviderServiceStatus({ serviceRowId: inserted.id, status: 'paused' });
+        }
       }
     },
     onSuccess: () => {
@@ -322,7 +337,6 @@ const DashboardServices: React.FC = () => {
             source_sub_service_id: input.subId,
             name_ar: input.name_ar,
             name_en: input.name_en,
-            is_active: input.nextActive,
             currency_code: 'SAR',
             sort_order: services.length,
           })
