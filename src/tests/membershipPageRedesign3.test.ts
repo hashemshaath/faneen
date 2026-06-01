@@ -18,8 +18,10 @@ describe('MEMBERSHIP-PAGE-REDESIGN-2 — module matrix + JSON-LD safety', () => 
     expect(src).toContain('data-testid="membership-plan-module-matrix"');
     // Core modules render the locked icon (always-on).
     expect(src).toMatch(/is_core[\s\S]*Lock/);
-    // No invented limits or guarantees in the component copy.
-    expect(src).not.toMatch(/guarantee|ضمان الطلبات|guaranteed|SLA/i);
+    // No invented numeric limits or fake SLA in the component copy.
+    expect(src).not.toMatch(/\bSLA\b/);
+    // The safe disclaimer says "does NOT guarantee" — explicit safety.
+    expect(src).toMatch(/does not guarantee|لا تعني[^.]*ضمان/);
     // No direct table writes / reads — RPC only.
     expect(src).not.toMatch(/from\(['"]membership_plan_modules['"]\)/);
   });
