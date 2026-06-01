@@ -4,7 +4,7 @@ import whoIndividuals from '@/assets/home/who-individuals.webp';
 import whoContractors from '@/assets/home/who-contractors.webp';
 import whoEngineers from '@/assets/home/who-engineers.webp';
 import whoProviders from '@/assets/home/who-providers.webp';
-import { Section, SectionCover, SecondaryCTA } from './_shared';
+import { Section, SectionCover, PrimaryCTA, SecondaryCTA, ROUTES } from './_shared';
 
 const WhoIsItForSection = () => {
   const bi = useBi();
@@ -63,8 +63,9 @@ const WhoIsItForSection = () => {
           </div>
         ))}
       </div>
-      <div className="text-center mt-12">
-        <SecondaryCTA to="/about" label={bi('اختر المسار المناسب لك', 'Choose your path')} />
+      <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <PrimaryCTA to={ROUTES.quote} label={bi('اطلب عرض سعر', 'Request a quote')} />
+        <SecondaryCTA to={ROUTES.signupProvider} label={bi('أضف منشأتك', 'Add your business')} />
       </div>
     </Section>
   );

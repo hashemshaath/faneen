@@ -20,7 +20,7 @@ const ForProvidersSection = () => {
         bi('ظهور للعملاء والمقاولين', 'Visibility to clients and contractors'),
         bi('استقبال طلبات أكثر تنظيمًا', 'Receive more organized requests'),
       ]}
-      cta={{ to: ROUTES.signupProvider, label: bi('أضف منشأتك', 'Add your business') }}
+      cta={{ to: '/for-providers', label: bi('تعرف على ميزات المزودين', 'See provider features') }}
       small={bi('من يبحث عن خدماتك يجب أن يجدك بسهولة.', 'People looking for your services should find you easily.')}
       tone="accent"
     />
