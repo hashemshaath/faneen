@@ -14,9 +14,11 @@
  *   admin_note, provider_note, rejection_reason,
  *   reviewed_by, reviewed_at
  *
- * `is_active` is intentionally NOT guarded here — legacy compatibility
- * writes are still permitted (catalog, branches, bnpl) but should be
- * migrated case-by-case in a later phase.
+ * SERVICE-ACTIVATION-GOVERNANCE-FINAL (Policy A):
+ *   `is_active` IS now guarded — every activation-related write must go
+ *   through `@/modules/providerServices`. Non-governance call sites
+ *   (e.g. catalog mutations) must drop `is_active` from their payloads
+ *   and rely on DB defaults / canonical setters.
  *
  * Exit 1 on any violation.
  */
@@ -34,6 +36,7 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', 'coverage', '.git', 
 const SKIP_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.css', '.scss']);
 
 const FIELDS = [
+  'is_active',
   'provider_status',
   'admin_status',
   'required_plan_tier',
