@@ -103,6 +103,14 @@ const Compare = () => {
       const { data } = await listBusinessesByIds<CompareBizDetailRow>({
         ids: selectedIds,
         select: '*, categories(name_ar, name_en), cities(name_ar, name_en), business_services(*), provider_installment_settings(*)',
+        // SERVICE-ACTIVATION-GOVERNANCE-FINAL — only embed eligible
+        // services (is_active + provider_status + admin_status all aligned).
+        // Mirrors the triple-gate enforced by catalog reads / search.
+        nestedEq: [
+          ['business_services.is_active', true],
+          ['business_services.provider_status', 'active'],
+          ['business_services.admin_status', 'allowed'],
+        ],
       });
       return data ?? [];
     },
