@@ -14,6 +14,15 @@ export interface LimitField {
   icon: string;
   /** Category grouping */
   category: 'visibility' | 'content' | 'operations' | 'support';
+  /**
+   * Whether this field has a confirmed product/data source-of-truth.
+   * - `true`  → key is populated in seed/DB OR enforced in code; safe to render in public surfaces.
+   * - `false` → declared for forward-compatibility / admin editor only.
+   *             Public surfaces (PlanFeatureMatrix on /membership) MUST hide these
+   *             to avoid showing invented numbers.
+   *   See docs/membership-plan-limits-source-of-truth.md
+   */
+  confirmed: boolean;
 }
 
 export const LIMIT_FIELDS: LimitField[] = [
@@ -22,31 +31,31 @@ export const LIMIT_FIELDS: LimitField[] = [
     key: 'max_featured_ads',
     label: { ar: 'الإعلانات المميزة', en: 'Featured Ads' },
     description: { ar: 'عدد الإعلانات المميزة المسموح بها شهرياً', en: 'Number of featured ads allowed per month' },
-    type: 'number', defaultValue: 0, icon: 'Megaphone', category: 'visibility',
+    type: 'number', defaultValue: 0, icon: 'Megaphone', category: 'visibility', confirmed: false,
   },
   {
     key: 'homepage_visibility',
     label: { ar: 'الظهور في الصفحة الرئيسية', en: 'Homepage Visibility' },
     description: { ar: 'إظهار النشاط التجاري في قسم "مزودي الخدمات" بالصفحة الرئيسية', en: 'Show business in "Top Providers" section on homepage' },
-    type: 'boolean', defaultValue: false, icon: 'Home', category: 'visibility',
+    type: 'boolean', defaultValue: false, icon: 'Home', category: 'visibility', confirmed: true,
   },
   {
     key: 'search_priority',
     label: { ar: 'أولوية الظهور في البحث', en: 'Search Priority Boost' },
     description: { ar: 'مستوى أولوية الظهور في نتائج البحث (0=عادي، 1-10=مرتفع)', en: 'Search result ranking boost (0=normal, 1-10=high)' },
-    type: 'number', defaultValue: 0, icon: 'TrendingUp', category: 'visibility',
+    type: 'number', defaultValue: 0, icon: 'TrendingUp', category: 'visibility', confirmed: false,
   },
   {
     key: 'suggested_services',
     label: { ar: 'خدمات مقترحة', en: 'Suggested Services' },
     description: { ar: 'إظهار الخدمات في قسم "الخدمات المقترحة" للعملاء', en: 'Show services in "Suggested Services" section for clients' },
-    type: 'boolean', defaultValue: false, icon: 'Sparkles', category: 'visibility',
+    type: 'boolean', defaultValue: false, icon: 'Sparkles', category: 'visibility', confirmed: true,
   },
   {
     key: 'profile_badge',
     label: { ar: 'شارة العضوية المميزة', en: 'Premium Profile Badge' },
     description: { ar: 'إظهار شارة مميزة على الملف الشخصي', en: 'Display premium badge on business profile' },
-    type: 'boolean', defaultValue: false, icon: 'Award', category: 'visibility',
+    type: 'boolean', defaultValue: false, icon: 'Award', category: 'visibility', confirmed: true,
   },
 
   // ── Content & Portfolio ──
@@ -54,25 +63,25 @@ export const LIMIT_FIELDS: LimitField[] = [
     key: 'max_projects',
     label: { ar: 'المشاريع في المعرض', en: 'Portfolio Projects' },
     description: { ar: 'الحد الأقصى لعدد مشاريع معرض الأعمال', en: 'Maximum portfolio projects allowed' },
-    type: 'number', defaultValue: 5, icon: 'FolderOpen', category: 'content',
+    type: 'number', defaultValue: 5, icon: 'FolderOpen', category: 'content', confirmed: true,
   },
   {
     key: 'max_services',
     label: { ar: 'الخدمات المعروضة', en: 'Listed Services' },
     description: { ar: 'عدد الخدمات المسموح بعرضها', en: 'Number of services that can be listed' },
-    type: 'number', defaultValue: 5, icon: 'Wrench', category: 'content',
+    type: 'number', defaultValue: 5, icon: 'Wrench', category: 'content', confirmed: true,
   },
   {
     key: 'max_promotions',
     label: { ar: 'العروض الترويجية', en: 'Promotions' },
     description: { ar: 'عدد العروض الترويجية النشطة في نفس الوقت', en: 'Number of active promotions at the same time' },
-    type: 'number', defaultValue: 0, icon: 'Tag', category: 'content',
+    type: 'number', defaultValue: 0, icon: 'Tag', category: 'content', confirmed: true,
   },
   {
     key: 'max_blog_posts',
     label: { ar: 'مقالات المدونة', en: 'Blog Posts' },
     description: { ar: 'عدد المقالات المسموح بنشرها شهرياً', en: 'Number of blog posts allowed per month' },
-    type: 'number', defaultValue: 0, icon: 'Newspaper', category: 'content',
+    type: 'number', defaultValue: 0, icon: 'Newspaper', category: 'content', confirmed: false,
   },
 
   // ── Operations ──
@@ -80,37 +89,43 @@ export const LIMIT_FIELDS: LimitField[] = [
     key: 'max_contracts',
     label: { ar: 'العقود الشهرية', en: 'Monthly Contracts' },
     description: { ar: 'الحد الأقصى للعقود الجديدة شهرياً (0=غير محدود)', en: 'Max new contracts per month (0=unlimited)' },
-    type: 'number', defaultValue: 3, icon: 'FileText', category: 'operations',
+    type: 'number', defaultValue: 3, icon: 'FileText', category: 'operations', confirmed: false,
   },
   {
     key: 'max_branches',
     label: { ar: 'الفروع', en: 'Branches' },
     description: { ar: 'عدد الفروع المسموح بإضافتها', en: 'Number of branches allowed' },
-    type: 'number', defaultValue: 1, icon: 'MapPin', category: 'operations',
+    type: 'number', defaultValue: 1, icon: 'MapPin', category: 'operations', confirmed: true,
   },
   {
     key: 'max_staff',
     label: { ar: 'أعضاء الفريق', en: 'Team Members' },
     description: { ar: 'عدد أعضاء الفريق المسموح بإضافتهم للحساب', en: 'Number of team members that can be added' },
-    type: 'number', defaultValue: 1, icon: 'Users', category: 'operations',
+    type: 'number', defaultValue: 1, icon: 'Users', category: 'operations', confirmed: false,
   },
   {
     key: 'max_bookings_daily',
     label: { ar: 'الحجوزات اليومية', en: 'Daily Bookings' },
     description: { ar: 'الحد الأقصى للحجوزات اليومية (0=غير محدود)', en: 'Max daily bookings (0=unlimited)' },
-    type: 'number', defaultValue: 10, icon: 'CalendarDays', category: 'operations',
+    type: 'number', defaultValue: 10, icon: 'CalendarDays', category: 'operations', confirmed: false,
   },
   {
     key: 'bnpl_enabled',
     label: { ar: 'التقسيط (BNPL)', en: 'BNPL (Buy Now Pay Later)' },
     description: { ar: 'تفعيل خيارات التقسيط للعملاء', en: 'Enable installment payment options for clients' },
-    type: 'boolean', defaultValue: false, icon: 'CreditCard', category: 'operations',
+    type: 'boolean', defaultValue: false, icon: 'CreditCard', category: 'operations', confirmed: true,
   },
   {
     key: 'analytics_enabled',
     label: { ar: 'التحليلات المتقدمة', en: 'Advanced Analytics' },
     description: { ar: 'الوصول للوحة التحليلات والتقارير المتقدمة', en: 'Access to advanced analytics and reporting dashboard' },
-    type: 'boolean', defaultValue: false, icon: 'BarChart3', category: 'operations',
+    type: 'boolean', defaultValue: false, icon: 'BarChart3', category: 'operations', confirmed: true,
+  },
+  {
+    key: 'api_access',
+    label: { ar: 'الوصول إلى الواجهة البرمجية (API)', en: 'API Access' },
+    description: { ar: 'صلاحية استخدام واجهة قِطاعات البرمجية للتكامل', en: 'Permission to use the Qitaat API for integrations' },
+    type: 'boolean', defaultValue: false, icon: 'Code2', category: 'operations', confirmed: true,
   },
 
   // ── Support ──
@@ -118,21 +133,28 @@ export const LIMIT_FIELDS: LimitField[] = [
     key: 'priority_support',
     label: { ar: 'دعم ذو أولوية', en: 'Priority Support' },
     description: { ar: 'الحصول على دعم فني بأولوية مرتفعة', en: 'Get priority technical support' },
-    type: 'boolean', defaultValue: false, icon: 'Headphones', category: 'support',
+    type: 'boolean', defaultValue: false, icon: 'Headphones', category: 'support', confirmed: true,
   },
   {
     key: 'dedicated_manager',
     label: { ar: 'مدير حساب مخصص', en: 'Dedicated Account Manager' },
     description: { ar: 'تعيين مدير حساب مخصص للمتابعة', en: 'Assign a dedicated account manager' },
-    type: 'boolean', defaultValue: false, icon: 'UserCheck', category: 'support',
+    type: 'boolean', defaultValue: false, icon: 'UserCheck', category: 'support', confirmed: true,
   },
   {
     key: 'performance_reports',
     label: { ar: 'تقارير الأداء الدورية', en: 'Performance Reports' },
     description: { ar: 'استلام تقارير أداء دورية شهرية', en: 'Receive monthly performance reports' },
-    type: 'boolean', defaultValue: false, icon: 'TrendingUp', category: 'support',
+    type: 'boolean', defaultValue: false, icon: 'TrendingUp', category: 'support', confirmed: true,
   },
 ];
+
+/**
+ * Subset of LIMIT_FIELDS whose values are confirmed in seed/DB or enforced in code.
+ * Use this for PUBLIC-facing surfaces (e.g. /membership PlanFeatureMatrix) to avoid
+ * advertising invented numbers. Admin editor still shows the full LIMIT_FIELDS list.
+ */
+export const CONFIRMED_LIMIT_FIELDS: LimitField[] = LIMIT_FIELDS.filter((f) => f.confirmed);
 
 export const LIMIT_CATEGORIES = [
   { key: 'visibility' as const, label: { ar: 'الظهور والترويج', en: 'Visibility & Promotion' } },
