@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.0";
 import { logSecurityEvent, hashSubject, hashIp } from "../_shared/securityAudit.ts";
+import { hashOtp, timingSafeEqualHex } from "../_shared/otpHash.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -194,7 +195,8 @@ Deno.serve(async (req) => {
     }
 
     // 4. Timing-safe OTP comparison
-    const codeMatch = timingSafeEqual(otpRecord.otp_code, otp_code);
+    const incomingHash = await hashOtp(otp_code, profile.user_id);
+    const codeMatch = timingSafeEqualHex(otpRecord.otp_code_hash ?? "", incomingHash);
 
     if (!codeMatch) {
       // Increment attempts ONLY on failure
