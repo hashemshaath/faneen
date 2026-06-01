@@ -5,20 +5,24 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
 import { LazyOnView } from "@/components/LazyOnView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import {
-  HeroV2,
-  SectorChipsBar,
-  SolutionSection,
-  HowItWorksV2,
-  WhoIsItForSection,
-  MainSectorsSection,
-  ForClientsSection,
-  ForProvidersSection,
-  TrustSection,
-  FAQSection,
-  FinalCTASection,
-  FAQ_ITEMS_BI,
-} from "@/components/home/v2/HomeV2";
+import { lazyRetry } from "@/lib/lazyRetry";
+// Eager: above-the-fold + LCP hero, plus the chips bar (small, no images).
+import { HeroV2 } from "@/components/home/v2/HomeV2";
+import SectorChipsBar from "@/components/home/v2/sections/SectorChipsBar";
+// FAQ data is needed eagerly for JSON-LD; keep it in a tiny module so the
+// FAQSection component itself can stay lazy-loaded.
+import { FAQ_ITEMS_BI } from "@/components/home/v2/sections/faqItems";
+// Below-the-fold sections — each one ships as its own chunk so HomeV2 no
+// longer carries every image import in the eager bundle (PERF-1C).
+const MainSectorsSection = lazyRetry(() => import("@/components/home/v2/sections/MainSectorsSection"));
+const HowItWorksV2       = lazyRetry(() => import("@/components/home/v2/sections/HowItWorksV2"));
+const SolutionSection    = lazyRetry(() => import("@/components/home/v2/sections/SolutionSection"));
+const WhoIsItForSection  = lazyRetry(() => import("@/components/home/v2/sections/WhoIsItForSection"));
+const TrustSection       = lazyRetry(() => import("@/components/home/v2/sections/TrustSection"));
+const ForProvidersSection = lazyRetry(() => import("@/components/home/v2/sections/ForProvidersSection"));
+const ForClientsSection  = lazyRetry(() => import("@/components/home/v2/sections/ForClientsSection"));
+const FAQSection         = lazyRetry(() => import("@/components/home/v2/sections/FAQSection"));
+const FinalCTASection    = lazyRetry(() => import("@/components/home/v2/sections/FinalCTASection"));
 
 const SectionFallback = ({ minH = 360 }: { minH?: number }) => (
   <div
