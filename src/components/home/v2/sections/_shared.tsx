@@ -138,12 +138,3 @@ export const AudienceBlock: React.FC<{
     </Section>
   );
 };
-
-export const HERO_CHIPS = [
-  { ar: 'ألمنيوم', en: 'Aluminum', slug: 'aluminum' },
-  { ar: 'حديد', en: 'Iron', slug: 'iron' },
-  { ar: 'خشب', en: 'Wood', slug: 'wood' },
-  { ar: 'زجاج', en: 'Glass', slug: 'glass' },
-  { ar: 'ستانلس ستيل', en: 'Stainless Steel', slug: 'stainless' },
-  { ar: 'تصنيع وتركيب', en: 'Fabrication & Install', slug: 'fabrication' },
-];
