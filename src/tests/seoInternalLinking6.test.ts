@@ -23,13 +23,19 @@ const PRIVATE_PREFIXES = [
   '/notifications',
 ];
 
-/** Extract every `to="..."` href literal from a TSX source. */
+/**
+ * Extract every `to="..."` href literal from a TSX source.
+ * For template literals, `${expr}` placeholders are normalised to `:slug`
+ * so callers can match on the static path prefix (e.g. `/sectors/`).
+ */
 function extractLinkTargets(src: string): string[] {
   const out: string[] = [];
-  const re = /to=(?:"([^"]+)"|\{`([^`$]+)`\})/g;
+  const reStr = /to="([^"]+)"/g;
+  const reTpl = /to=\{`([^`]+)`\}/g;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(src))) {
-    out.push(m[1] ?? m[2]);
+  while ((m = reStr.exec(src))) out.push(m[1]);
+  while ((m = reTpl.exec(src))) {
+    out.push(m[1].replace(/\$\{[^}]+\}/g, ':slug'));
   }
   return out;
 }
