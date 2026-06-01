@@ -106,7 +106,7 @@ const ServiceDetail: React.FC = () => {
 
   if (!service) return <Navigate to="/services" replace />;
 
-  const related = getRelatedServices(service.slug, 3);
+  const related = relatedForLd;
   const midPrice = Math.round((service.price_min + service.price_max) / 2);
   const content = getServiceContent(service.slug);
   const heroImg = SECTOR_HERO[service.sector];
