@@ -103,7 +103,18 @@ const Compare = () => {
       if (!selectedIds.length) return [];
       const { data } = await listBusinessesByIds<CompareBizDetailRow>({
         ids: selectedIds,
-        select: '*, categories(name_ar, name_en), cities(name_ar, name_en), business_services(*), provider_installment_settings(*)',
+        // PERF-1D — trim embedded `*` relations to only the columns the
+        // Compare table renders. Parent `*` is intentionally retained
+        // because Compare's detail row pulls many top-level fields
+        // (name_ar/en, username, logo_url, rating_avg/_count, is_verified,
+        // membership_tier, …) and trimming it requires a full column
+        // inventory of `businesses` — deferred to a follow-up phase.
+        // Triple-gate filters below still apply at the DB level even
+        // though is_active/provider_status/admin_status are not selected.
+        select:
+          '*, categories(name_ar, name_en), cities(name_ar, name_en), ' +
+          'business_services(name_ar, name_en, price_from, price_to, currency_code), ' +
+          'provider_installment_settings(is_enabled, max_installments)',
         // SERVICE-ACTIVATION-GOVERNANCE-FINAL — only embed eligible
         // services (is_active + provider_status + admin_status all aligned).
         // Mirrors the triple-gate enforced by catalog reads / search.
