@@ -73,6 +73,7 @@ describe('ACCESS-GOVERNANCE-FINAL-1 — single source of truth', () => {
       'src/components/dashboard/DashboardSidebar.tsx',
       'src/App.tsx',
       'src/components/auth/ProtectedRoute.tsx',
+      'src/components/auth/PermissionRouteGuard.tsx',
     ].map(p => path.normalize(p)));
     const leaks = callers.map(p => path.normalize(p)).filter(p => !allowed.has(p));
     expect(leaks, `Unexpected visibility consumers: ${leaks.join(', ')}`).toEqual([]);
