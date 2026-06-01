@@ -78,3 +78,40 @@ actively guarded as deferred by
 
 Re-opening any of these requires removing the corresponding guard test
 in the same change, which forces an explicit phase decision.
+
+---
+
+## SERVICE-ACTIVATION-GOVERNANCE — Non-blocking backlog
+
+Shipped FINAL PASS. The following items are deferred and tracked here so
+they aren't lost:
+
+- **Provider-initiated activation request UX.** The
+  `provider_service_activation_requested` notification event exists but
+  has no provider-facing entry point yet. Add a "Request activation"
+  flow on `/dashboard/services` for rows where
+  `requires_admin_review = true`, and wire it to fire the event with the
+  admin/reviewer as recipient.
+
+- **Server-side notification fan-out for cron/RPC membership changes.**
+  `notifyMembershipChangeForBusiness` is wired only on the app-side
+  `setBusinessMembershipTier` path. Tier flips triggered by
+  `admin_set_business_membership_tier` RPC or the expired-membership
+  cron don't fan out an in-app notification. Needs a server-side
+  notification path (edge fn invoked from the RPC trigger, or a
+  separate worker) before it can be safely covered.
+
+- **`required_plan_tier` enforcement in public/search reads.**
+  Currently enforced only by `resolveServiceEntitlement` in
+  membership-aware surfaces. Public search/catalog reads do not match
+  on `required_plan_tier` to avoid a per-row resolver call. Resolve
+  via a resolver-aware match/refactor (e.g. a SQL view that joins
+  membership tier) so search can filter without N+1 cost.
+
+- **CAT-3 stale migration test cleanup.** Pre-existing failures in
+  `src/modules/catalog/services/__tests__/catalog-migration.test.ts` and
+  `catalog-mutations-migration.test.ts` assert old DashboardServices
+  imports that the governance phase intentionally moved off. Refresh
+  these tests to reflect the current canonical pattern (direct supabase
+  + `@/modules/providerServices`) — do not roll back DashboardServices
+  to satisfy them.
