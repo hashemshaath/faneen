@@ -33,3 +33,9 @@ export { getProfileByRefId } from './services/getProfileByRefId';
 export type { GetProfileByRefIdOptions } from './services/getProfileByRefId';
 export { searchProfilesByOr } from './services/searchProfilesByOr';
 export type { SearchProfilesByOrOptions } from './services/searchProfilesByOr';
+
+// STAB-1A — isolation cleanup wrappers
+export { listProfilesByCreatedRange } from './services/listProfilesByCreatedRange';
+export type { ListProfilesByCreatedRangeOptions } from './services/listProfilesByCreatedRange';
+export { getProfileByEmailIlike } from './services/getProfileByEmailIlike';
+export type { GetProfileByEmailIlikeOptions } from './services/getProfileByEmailIlike';
