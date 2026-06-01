@@ -34,8 +34,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+import SuperAdminBusinessOverridePanel from '@/components/admin/system-access/SuperAdminBusinessOverridePanel';
+
 type ScopeTab = 'global' | 'account_type' | 'entity' | 'user';
-type ViewTab = 'manage' | 'audit';
+type ViewTab = 'manage' | 'audit' | 'super_override';
 
 const ACCOUNT_TYPES = ['provider', 'client', 'individual'] as const;
 type AccountType = typeof ACCOUNT_TYPES[number];
@@ -55,7 +57,7 @@ const CATEGORY_META: Record<string, { ar: string; en: string; tone: string }> = 
 const AdminSystemAccess: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, isSuperAdmin, user } = useAuth();
   const qc = useQueryClient();
   const invalidateAccess = useBusinessAccessInvalidation();
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
@@ -373,10 +375,23 @@ const AdminSystemAccess: React.FC = () => {
             <History className="w-4 h-4" />
             {isRTL ? 'سجل التدقيق' : 'Audit Log'}
           </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => setViewTab('super_override')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                viewTab === 'super_override' ? 'bg-card text-foreground shadow-sm ring-1 ring-border/30' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4" />
+              {isRTL ? 'استثناءات الجهات' : 'Business Overrides'}
+            </button>
+          )}
         </div>
 
         {viewTab === 'audit' ? (
           <AuditLogPanel modules={modulesQuery.data ?? []} />
+        ) : viewTab === 'super_override' ? (
+          <SuperAdminBusinessOverridePanel />
         ) : (
         <>
         {/* Scope Tabs */}
