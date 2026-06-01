@@ -680,9 +680,28 @@ const Membership = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* MEMBERSHIP-PAGE-GOVERNANCE-REDESIGN-1: Route guard. When the admin
+          has disabled the `memberships` module, show a safe unavailable
+          state. Admins always bypass so they can preview the page. */}
+      {!membershipVisibility.canShowMembershipPage && !membershipVisibility.isLoading ? (
+        <MembershipUnavailableState />
+      ) : (
+      <>
       <Navbar />
       <div className="container px-4 py-10 sm:py-16">
         <MembershipHeader isRTL={isRTL} billingCycle={billingCycle} setBillingCycle={setBillingCycle} plans={plans} />
+
+        {/* Governance-safe disclaimer — shown above the plan grid to make
+            it explicit that some benefits depend on account/service
+            configuration and admin review. */}
+        <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-border/60 bg-card px-4 py-3 flex items-start gap-2 text-xs text-muted-foreground">
+          <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+          <p className="leading-relaxed">
+            {isRTL
+              ? 'قد تختلف بعض المزايا حسب إعدادات الحساب ونوع الخدمة، وقد تخضع لمراجعة من الإدارة. العضوية تساعد على تنظيم الظهور والمزايا، ولا تعني ضمان الطلبات أو المبيعات.'
+              : 'Some benefits may vary based on account settings and service type and may be subject to admin review. Membership organizes visibility and benefits — it does not guarantee leads or sales.'}
+          </p>
+        </div>
 
         {user && !isProvider && profile?.account_type === 'user' && (
           <div className="max-w-3xl mx-auto mb-6 rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/5 via-card to-primary/5 px-5 py-5">
@@ -1077,6 +1096,8 @@ const Membership = () => {
         </div>
       </div>
       <Footer />
+      </>
+      )}
     </div>
   );
 };
