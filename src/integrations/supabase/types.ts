@@ -2362,6 +2362,8 @@ export type Database = {
       }
       business_services: {
         Row: {
+          admin_note: string | null
+          admin_status: string
           business_id: string
           category_id: string | null
           created_at: string
@@ -2371,14 +2373,28 @@ export type Database = {
           id: string
           is_active: boolean
           is_demo: boolean
+          is_featured: boolean
+          is_premium_service: boolean
           name_ar: string
           name_en: string | null
           price_from: number | null
           price_to: number | null
+          provider_note: string | null
+          provider_status: string
+          rejection_reason: string | null
+          required_plan_tier:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          requires_admin_review: boolean
+          reviewed_at: string | null
+          reviewed_by: string | null
           sort_order: number
           source_sub_service_id: string | null
+          updated_at: string
         }
         Insert: {
+          admin_note?: string | null
+          admin_status?: string
           business_id: string
           category_id?: string | null
           created_at?: string
@@ -2388,14 +2404,28 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_demo?: boolean
+          is_featured?: boolean
+          is_premium_service?: boolean
           name_ar: string
           name_en?: string | null
           price_from?: number | null
           price_to?: number | null
+          provider_note?: string | null
+          provider_status?: string
+          rejection_reason?: string | null
+          required_plan_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          requires_admin_review?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sort_order?: number
           source_sub_service_id?: string | null
+          updated_at?: string
         }
         Update: {
+          admin_note?: string | null
+          admin_status?: string
           business_id?: string
           category_id?: string | null
           created_at?: string
@@ -2405,12 +2435,24 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_demo?: boolean
+          is_featured?: boolean
+          is_premium_service?: boolean
           name_ar?: string
           name_en?: string | null
           price_from?: number | null
           price_to?: number | null
+          provider_note?: string | null
+          provider_status?: string
+          rejection_reason?: string | null
+          required_plan_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          requires_admin_review?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sort_order?: number
           source_sub_service_id?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
