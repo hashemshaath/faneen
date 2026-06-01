@@ -54,7 +54,9 @@ const MIGRATED: Migrated[] = [
   {
     path: 'src/pages/dashboard/DashboardBusinessCompletion.tsx',
     select:
-      "'id, ref_id, approval_status, onboarding_completion, approval_notes, name_ar, name_en, logo_url, description_ar, short_description_ar, phone, mobile, email, city_id, region, address, latitude, longitude, sectors, sub_services, national_id, unified_number'",
+      // Select was extended to include `username` and `updated_at` to
+      // power the page header chip + last-updated indicator.
+      "'id, ref_id, username, approval_status, onboarding_completion, approval_notes, name_ar, name_en, logo_url, description_ar, short_description_ar, phone, mobile, email, city_id, region, address, latitude, longitude, sectors, sub_services, national_id, unified_number, updated_at'",
     queryKey: "['business-completion', user?.id]",
     enabled: '!!user',
     staleTime: '30_000',
