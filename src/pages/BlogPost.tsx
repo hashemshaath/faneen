@@ -873,6 +873,26 @@ const BlogPost = () => {
               </div>
             )}
 
+            {/* Helpful next step — public-safe CTA */}
+            <div className="mb-8 sm:mb-12">
+              <Card className="border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
+                <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <div className="flex-1 text-center sm:text-start">
+                    <h4 className="font-heading font-bold text-sm sm:text-base mb-0.5">
+                      {isRTL ? 'جاهز للخطوة التالية؟' : 'Ready for the next step?'}
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      {isRTL ? 'المقالات تساعدك على فهم الخيارات، ولا تعني ضمان التنفيذ.' : 'Articles help you understand options and do not guarantee execution.'}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-2 shrink-0">
+                    <Link to="/quote"><Button size="sm" className="h-9">{isRTL ? 'اطلب عرض سعر' : 'Request a quote'}</Button></Link>
+                    <Link to="/sectors"><Button size="sm" variant="outline" className="h-9">{isRTL ? 'استكشف القطاعات' : 'Explore sectors'}</Button></Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Comments */}
             {post && <BlogComments postId={post.id} />}
           </div>
