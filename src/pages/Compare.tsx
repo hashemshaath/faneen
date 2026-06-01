@@ -38,6 +38,7 @@ type CompareBizDetailRow = CompareBizRow & {
   [key: string]: unknown;
 };
 import { useLanguage } from '@/i18n/LanguageContext';
+import { getMembershipTierLabel } from '@/modules/memberships';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -341,7 +342,7 @@ const Compare = () => {
                   <td className="sticky start-0 bg-background p-3 font-medium text-sm">{isRTL ? 'العضوية' : 'Tier'}</td>
                   {selectedBusinesses.map((b) => (
                     <td key={b.id} className="p-3 text-center">
-                      <Badge variant={b.membership_tier === 'premium' || b.membership_tier === 'enterprise' ? 'default' : 'secondary'}>{b.membership_tier}</Badge>
+                      <Badge variant={b.membership_tier === 'premium' || b.membership_tier === 'enterprise' ? 'default' : 'secondary'}>{getMembershipTierLabel(b.membership_tier, isRTL ? 'ar' : 'en')}</Badge>
                     </td>
                   ))}
                 </tr>
