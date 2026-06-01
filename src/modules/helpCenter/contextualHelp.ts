@@ -44,6 +44,17 @@ export const contextualHelpRegistry: Record<string, string[]> = {
   'dashboard.brands': ['provider-link-brands', 'request-new-brand', 'brand-request-review'],
   'admin.brand-requests': ['admin-brand-requests-guide', 'brand-request-review'],
   'admin.brand-detail': ['admin-brand-detail-guide', 'admin-brand-requests-guide'],
+  // UX-REDESIGN-7 — public surfaces gain contextual help so the launcher and
+  // blog ↔ help cross-links can resolve safe slug arrays. All slugs below are
+  // already referenced elsewhere in this registry (and surfaced when
+  // published in the DB pool).
+  'public.home': ['brands-overview', 'create-business', 'what-is-rfq'],
+  'public.search': ['brands-overview', 'brands-rfq-discovery'],
+  'public.sector-detail': ['brands-overview', 'brands-rfq-discovery', 'create-quote'],
+  'public.provider-detail': ['brands-overview', 'how-publishing-works', 'create-quote'],
+  'public.quote': ['what-is-rfq', 'create-rfq', 'measurements', 'brands-rfq-discovery'],
+  'public.blog': ['brands-overview', 'create-quote', 'what-is-rfq'],
+  'public.blog-post': ['brands-overview', 'create-quote', 'what-is-rfq'],
 };
 
 export function getContextualArticles(pageKey: string): string[] {

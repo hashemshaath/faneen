@@ -5,5 +5,6 @@ export * from './search';
 export * from './issueReports';
 export * from './featureRequests';
 export * from './contextualHelp';
+export * from './nextBestAction';
 export * from './analytics';
 export * from './intelligence';
