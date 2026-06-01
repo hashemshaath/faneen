@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.0";
 import { logSecurityEvent, hashSubject, hashIp } from "../_shared/securityAudit.ts";
+import { hashOtp, timingSafeEqualHex } from "../_shared/otpHash.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -181,8 +182,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Timing-safe verify
-    if (!timingSafeEqual(otpRecord.otp_code, otp_code)) {
+    // Timing-safe verify against stored hash (raw code is never persisted)
+    const incomingHash = await hashOtp(otp_code, user.id);
+    if (!timingSafeEqualHex(otpRecord.otp_code_hash ?? "", incomingHash)) {
       await adminClient
         .from("phone_otps")
         .update({ attempts: otpRecord.attempts + 1 })

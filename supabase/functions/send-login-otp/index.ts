@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.0";
 import { logSecurityEvent, hashSubject, hashIp } from "../_shared/securityAudit.ts";
+import { hashOtp } from "../_shared/otpHash.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -143,11 +144,12 @@ Deno.serve(async (req) => {
     // Delete previous OTPs for this user
     await adminClient.from("phone_otps").delete().eq("user_id", profile.user_id);
 
-    // Insert new OTP
+    // Insert new OTP (store SHA-256 hash, never the raw code)
+    const otpHash = await hashOtp(otp, profile.user_id);
     const { error: insertError } = await adminClient.from("phone_otps").insert({
       user_id: profile.user_id,
       phone: fullPhone,
-      otp_code: otp,
+      otp_code_hash: otpHash,
       expires_at: new Date(Date.now() + OTP_LIFETIME_MS).toISOString(),
     });
 

@@ -9674,7 +9674,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
-          otp_code: string
+          otp_code_hash: string
           phone: string
           user_id: string
           verified: boolean
@@ -9684,7 +9684,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
-          otp_code: string
+          otp_code_hash: string
           phone: string
           user_id: string
           verified?: boolean
@@ -9694,7 +9694,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
-          otp_code?: string
+          otp_code_hash?: string
           phone?: string
           user_id?: string
           verified?: boolean

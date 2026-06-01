@@ -39,13 +39,30 @@ export interface SecurityAuditEntry {
   metadata?: Record<string, unknown>;
 }
 
-function getSalt(): string {
-  return (
+let saltMissingWarned = false;
+
+/**
+ * Returns the configured salt for PII hashing, or null if no real secret
+ * is configured. We deliberately do NOT fall back to publicly knowable
+ * values (e.g. SUPABASE_URL) or hardcoded literals, because either would
+ * make the hashes reversible via a small rainbow table over the Saudi
+ * phone-number space.
+ */
+function getSalt(): string | null {
+  const salt =
     Deno.env.get("SECURITY_AUDIT_SALT") ||
     Deno.env.get("RATE_LIMIT_SALT") ||
-    Deno.env.get("SUPABASE_URL") ||
-    "qitaat-default-audit-salt"
-  );
+    "";
+  if (!salt) {
+    if (!saltMissingWarned) {
+      saltMissingWarned = true;
+      console.warn(
+        "[securityAudit] SECURITY_AUDIT_SALT is not configured; subject/IP hashes will be omitted from audit log entries.",
+      );
+    }
+    return null;
+  }
+  return salt;
 }
 
 async function sha256Hex(input: string): Promise<string> {
@@ -59,7 +76,9 @@ async function sha256Hex(input: string): Promise<string> {
 /** Hash any subject (phone, email, target user id) with the project salt. */
 export async function hashSubject(value: string | null | undefined): Promise<string | null> {
   if (!value) return null;
-  return sha256Hex(`${String(value).trim().toLowerCase()}|${getSalt()}`);
+  const salt = getSalt();
+  if (!salt) return null;
+  return sha256Hex(`${String(value).trim().toLowerCase()}|${salt}`);
 }
 
 /** Extract the best-effort client IP from a Deno Request. */
@@ -78,7 +97,9 @@ export function extractIp(req: Request): string {
 export async function hashIp(req: Request): Promise<string | null> {
   const ip = extractIp(req);
   if (!ip || ip === "unknown") return null;
-  return sha256Hex(`${ip}|${getSalt()}`);
+  const salt = getSalt();
+  if (!salt) return null;
+  return sha256Hex(`${ip}|${salt}`);
 }
 
 /** Best-effort write to public.security_audit_log. Never throws. */
