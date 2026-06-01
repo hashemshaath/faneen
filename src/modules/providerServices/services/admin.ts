@@ -12,6 +12,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { AdminActivationStatus } from '../resolveServiceEntitlement';
+import { normalizeTier } from '../resolveServiceEntitlement';
+import type { TierKey } from '@/lib/membership-tiers';
 import {
   notifyServiceActivationEvent,
   type ServiceActivationEvent,
@@ -41,6 +43,8 @@ export interface AdminServiceActivationRow {
   created_at: string;
   /** Joined business owner id, used for tier preview / notifications. */
   owner_user_id?: string | null;
+  /** Joined business membership tier (denormalised for admin display). */
+  current_tier?: TierKey | null;
 }
 
 export interface AdminListFilters {
@@ -49,6 +53,8 @@ export interface AdminListFilters {
   providerStatus?: 'active' | 'paused';
   adminStatus?: AdminActivationStatus;
   requiredPlanTier?: Tier | null;
+  /** When true, only rows whose `required_plan_tier` is non-null are returned. */
+  requiredPlanTierAny?: boolean;
   requiresAdminReview?: boolean;
   premiumOnly?: boolean;
   featuredOnly?: boolean;
@@ -56,7 +62,7 @@ export interface AdminListFilters {
 }
 
 const COLS =
-  'id,business_id,category_id,name_ar,name_en,provider_status,admin_status,required_plan_tier,requires_admin_review,is_premium_service,is_featured,is_active,admin_note,provider_note,rejection_reason,reviewed_by,reviewed_at,updated_at,created_at,businesses(user_id)';
+  'id,business_id,category_id,name_ar,name_en,provider_status,admin_status,required_plan_tier,requires_admin_review,is_premium_service,is_featured,is_active,admin_note,provider_note,rejection_reason,reviewed_by,reviewed_at,updated_at,created_at,businesses(user_id,membership_tier)';
 
 /**
  * Lightweight context fetch used by mutation wrappers to address the
@@ -125,7 +131,8 @@ export async function adminListServiceActivations(
   if (filters.businessId) q = q.eq('business_id', filters.businessId);
   if (filters.providerStatus) q = q.eq('provider_status', filters.providerStatus);
   if (filters.adminStatus) q = q.eq('admin_status', filters.adminStatus);
-  if (filters.requiredPlanTier === null) q = q.is('required_plan_tier', null);
+  if (filters.requiredPlanTierAny) q = q.not('required_plan_tier', 'is', null);
+  else if (filters.requiredPlanTier === null) q = q.is('required_plan_tier', null);
   else if (filters.requiredPlanTier) q = q.eq('required_plan_tier', filters.requiredPlanTier);
   if (filters.requiresAdminReview !== undefined)
     q = q.eq('requires_admin_review', filters.requiresAdminReview);
@@ -139,13 +146,101 @@ export async function adminListServiceActivations(
   const { data, error } = await q;
   if (error) throw error;
   type RawRow = Omit<AdminServiceActivationRow, 'owner_user_id'> & {
-    businesses: { user_id: string | null } | { user_id: string | null }[] | null;
+    businesses:
+      | { user_id: string | null; membership_tier: string | null }
+      | { user_id: string | null; membership_tier: string | null }[]
+      | null;
   };
   const raw = (data ?? []) as unknown as RawRow[];
   return raw.map((r) => {
     const biz = Array.isArray(r.businesses) ? r.businesses[0] : r.businesses;
-    return { ...r, owner_user_id: biz?.user_id ?? null } as AdminServiceActivationRow;
+    return {
+      ...r,
+      owner_user_id: biz?.user_id ?? null,
+      current_tier: normalizeTier(biz?.membership_tier ?? null),
+    } as AdminServiceActivationRow;
   });
+}
+
+/**
+ * SERVICE-ACTIVATION-GOVERNANCE-4 — operations counters for the admin
+ * dashboard. Returns lightweight head-count queries (no row payload).
+ * Failures fall back to `0` so the dashboard never blocks on this.
+ */
+export interface ServiceActivationCounters {
+  pendingReview: number;
+  suspended: number;
+  requiresUpgrade: number;
+  premium: number;
+  featured: number;
+}
+
+export async function adminGetServiceActivationCounters(): Promise<ServiceActivationCounters> {
+  const head = (build: (q: ReturnType<typeof base>) => ReturnType<typeof base>) => {
+    const base = () => supabase.from('business_services').select('id', { count: 'exact', head: true });
+    return build(base());
+  };
+  const [pendingQ, suspendedQ, upgradeQ, premiumQ, featuredQ] = await Promise.all([
+    head((q) => q.eq('requires_admin_review', true)),
+    head((q) => q.eq('admin_status', 'suspended')),
+    head((q) => q.not('required_plan_tier', 'is', null)),
+    head((q) => q.eq('is_premium_service', true)),
+    head((q) => q.eq('is_featured', true)),
+  ]);
+  return {
+    pendingReview: pendingQ.count ?? 0,
+    suspended: suspendedQ.count ?? 0,
+    requiresUpgrade: upgradeQ.count ?? 0,
+    premium: premiumQ.count ?? 0,
+    featured: featuredQ.count ?? 0,
+  };
+}
+
+/**
+ * SERVICE-ACTIVATION-GOVERNANCE-4 — membership-change notification hook.
+ * Sends a SINGLE summary notification to the business owner if any of
+ * their services would be gated by the new tier (either because of
+ * `required_plan_tier > newTier` or membership-driven quota). Safe to
+ * call from any membership update path; never throws.
+ */
+export async function notifyMembershipChangeForBusiness(
+  businessId: string,
+  newTier: TierKey | null,
+): Promise<void> {
+  try {
+    const { data: biz } = await supabase
+      .from('businesses')
+      .select('user_id')
+      .eq('id', businessId)
+      .maybeSingle();
+    const ownerId = (biz as { user_id: string | null } | null)?.user_id ?? null;
+    if (!ownerId) return;
+
+    // Count services that REQUIRE a tier strictly higher than the new tier.
+    const TIER_RANK: Record<string, number> = { free: 0, basic: 1, premium: 2, enterprise: 3 };
+    const curRank = TIER_RANK[newTier ?? 'free'] ?? 0;
+    const { data: services } = await supabase
+      .from('business_services')
+      .select('id,required_plan_tier')
+      .eq('business_id', businessId)
+      .not('required_plan_tier', 'is', null);
+    const affected = (services ?? []).filter((s) => {
+      const r = (s as { required_plan_tier: string | null }).required_plan_tier;
+      return r && (TIER_RANK[r] ?? 0) > curRank;
+    });
+    if (affected.length === 0) return;
+
+    notifyServiceActivationEvent({
+      user_id: ownerId,
+      event: 'membership_change_affected_services',
+      business_service_id: affected[0].id,
+      business_id: businessId,
+      service_name_ar: `${affected.length} خدمة`,
+      service_name_en: `${affected.length} service(s)`,
+    });
+  } catch {
+    // never block membership flow
+  }
 }
 
 async function currentReviewerId(): Promise<string | null> {
