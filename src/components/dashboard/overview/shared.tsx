@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { tierIcons } from '@/lib/membership-tiers';
+import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 
 /** Brand-aligned chart palette — sourced from central design tokens. */
 export const CHART_COLORS = [
