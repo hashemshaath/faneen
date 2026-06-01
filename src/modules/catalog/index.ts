@@ -26,6 +26,7 @@ export {
 export {
   insertBusinessService,
   insertBusinessServices,
+  insertBusinessServiceReturning,
   updateBusinessServiceById,
   deleteBusinessServiceById,
   deleteDemoBusinessServicesForBusiness,
