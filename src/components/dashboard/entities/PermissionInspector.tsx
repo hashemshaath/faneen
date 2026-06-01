@@ -183,7 +183,7 @@ export const PermissionInspector: React.FC<PermissionInspectorProps> = ({ member
                 }`}
               >
                 {prof?.avatar_url ? (
-                  <img src={prof.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+                  <img src={prof.avatar_url} alt="" aria-hidden="true" className="w-8 h-8 rounded-full object-cover shrink-0" />
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                     <User className="w-3.5 h-3.5 text-muted-foreground" />

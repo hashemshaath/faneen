@@ -430,7 +430,7 @@ const DashboardBusinessCompletion: React.FC = () => {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="shrink-0 w-14 h-14 rounded-xl bg-muted flex items-center justify-center overflow-hidden ring-1 ring-border">
                     {business.logo_url ? (
-                      <img src={business.logo_url} alt="" className="w-full h-full object-cover" />
+                      <img src={business.logo_url} alt="" aria-hidden="true" className="w-full h-full object-cover" />
                     ) : (
                       <Building2 className="w-7 h-7 text-muted-foreground" />
                     )}

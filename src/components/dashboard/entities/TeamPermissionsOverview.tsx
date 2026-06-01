@@ -145,7 +145,7 @@ export const TeamPermissionsOverview: React.FC<TeamPermissionsOverviewProps> = (
                   <td className="pe-2 py-1 sticky start-0 bg-card z-10">
                     <div className="flex items-center gap-2 min-w-0 max-w-[180px]">
                       {prof?.avatar_url ? (
-                        <img src={prof.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
+                        <img src={prof.avatar_url} alt="" aria-hidden="true" className="w-6 h-6 rounded-full object-cover shrink-0" />
                       ) : (
                         <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0">
                           <User className="w-3 h-3 text-muted-foreground" />
