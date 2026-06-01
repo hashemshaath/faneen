@@ -55,6 +55,14 @@ const MODULE_ROUTE_ALIASES: Record<string, readonly string[]> = {
   communication_prefs: ['/dashboard/communication-preferences', '/dashboard/settings/communication'],
   staff: ['/dashboard/settings/staff', '/dashboard/team'],
   staff_permissions: ['/dashboard/settings/staff-access', '/dashboard/team-access'],
+  analytics: ['/dashboard/analytics', '/dashboard/insights'],
+  activity_log: [
+    '/dashboard/activity',
+    '/dashboard/operations/feed',
+    '/dashboard/operations-feed',
+  ],
+  private_sectors: ['/dashboard/private-sectors'],
+  installments: ['/dashboard/installments', '/dashboard/billing/installments'],
 };
 
 export function useVisibleModules(): UseVisibleModulesResult {
