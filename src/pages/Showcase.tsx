@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { VerifiedBadge } from "@/components/common/VerifiedBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { usePageMeta as _unused } from "@/hooks/usePageMeta";
 import { useBi } from "@/components/common/Bilingual";
 import { Building2, ExternalLink, Sparkles } from "lucide-react";
 
