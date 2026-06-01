@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { getProfileDisplayName, getProfileInitial } from '@/modules/profiles/utils/displayName';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -394,10 +395,10 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                 <div key={u.id} className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-muted/30 transition-colors">
                   <Avatar className="w-7 h-7">
                     <AvatarImage src={u.avatar_url || undefined} />
-                    <AvatarFallback className="bg-accent/10 text-accent text-[9px] font-bold">{(u.full_name || '?').charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="bg-accent/10 text-accent text-[9px] font-bold">{getProfileInitial(u, isRTL ? 'ar' : 'en')}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-medium truncate">{u.full_name || (isRTL ? 'بدون اسم' : 'No name')}</p>
+                    <p className="text-[10px] font-medium truncate">{getProfileDisplayName(u, { locale: isRTL ? 'ar' : 'en', emptyFallback: isRTL ? 'بدون اسم' : 'No name' })}</p>
                     <p className="text-[9px] text-muted-foreground truncate tech-content" title={isRTL ? 'البريد مخفي لحماية الخصوصية' : 'Email masked for privacy'}>{maskEmail(u.email)}</p>
                   </div>
                   <Badge variant="outline" className="text-[8px] h-4 shrink-0">
