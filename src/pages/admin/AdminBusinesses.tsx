@@ -39,6 +39,7 @@ import {
   listAllBusinessServicesLite,
   listBranchesByBusiness,
   insertBusinessService,
+  insertBusinessServiceReturning,
   updateBusinessServiceById,
   deleteBusinessServiceById,
   insertBusinessBranch,
@@ -756,19 +757,15 @@ const AdminBusinesses = () => {
       // any "create as paused" intent through the canonical
       // providerServices setter so provider_status + is_active stay
       // aligned.
-      const { data: inserted, error } = await supabase
-        .from('business_services')
-        .insert({
-          business_id: servicesPanel!,
-          name_ar: newService.name_ar,
-          name_en: newService.name_en || null,
-          description_ar: newService.description_ar || null,
-          description_en: newService.description_en || null,
-          price_from: newService.price_from ? parseFloat(newService.price_from) : null,
-          price_to: newService.price_to ? parseFloat(newService.price_to) : null,
-        })
-        .select('id')
-        .single();
+      const { data: inserted, error } = await insertBusinessServiceReturning<{ id: string }>({
+        business_id: servicesPanel!,
+        name_ar: newService.name_ar,
+        name_en: newService.name_en || null,
+        description_ar: newService.description_ar || null,
+        description_en: newService.description_en || null,
+        price_from: newService.price_from ? parseFloat(newService.price_from) : null,
+        price_to: newService.price_to ? parseFloat(newService.price_to) : null,
+      });
       if (error) throw error;
       if (!newService.is_active && inserted?.id) {
         await setProviderServiceStatus({ serviceRowId: inserted.id, status: 'paused' });

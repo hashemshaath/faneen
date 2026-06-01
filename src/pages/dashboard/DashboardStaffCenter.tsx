@@ -36,6 +36,7 @@ import {
 import { toast } from 'sonner';
 import { Bi } from '@/components/common/Bilingual';
 import { supabase } from '@/integrations/supabase/client';
+import { listProfilesByUserIds } from '@/modules/users';
 import {
   listBusinessTeams,
   createBusinessTeam,
@@ -214,10 +215,12 @@ function StaffOverview({ businessId }: { businessId: string }) {
       setRows(baseRows);
       return;
     }
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, full_name, email, ref_id')
-      .in('user_id', userIds);
+    const { data: profiles } = await listProfilesByUserIds<{
+      user_id: string;
+      full_name: string | null;
+      email: string | null;
+      ref_id: string | null;
+    }>({ userIds, select: 'user_id, full_name, email, ref_id' });
     const byUser = new Map(
       ((profiles ?? []) as Array<{ user_id: string; full_name: string | null; email: string | null; ref_id: string | null }>)
         .map((p) => [p.user_id, p]),

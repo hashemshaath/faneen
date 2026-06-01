@@ -17,6 +17,10 @@ export interface ListMembershipPaymentIntentsOptions {
   select?: string;
   limit?: number;
   order?: { column: string; ascending: boolean };
+  /** STAB-1A: optional `created_at >= fromIso` filter (admin KPIs). */
+  createdFromIso?: string;
+  /** STAB-1A: optional `created_at <= toIso` filter (admin KPIs). */
+  createdToIso?: string;
 }
 
 export async function listMembershipPaymentIntents<T = unknown>(
@@ -28,6 +32,8 @@ export async function listMembershipPaymentIntents<T = unknown>(
   if (params.userId) q = q.eq('user_id', params.userId);
   if (params.businessId) q = q.eq('business_id', params.businessId);
   if (params.status) q = q.eq('status', params.status);
+  if (params.createdFromIso) q = q.gte('created_at', params.createdFromIso);
+  if (params.createdToIso) q = q.lte('created_at', params.createdToIso);
   if (params.order) {
     q = q.order(params.order.column, { ascending: params.order.ascending });
   } else {

@@ -27,6 +27,7 @@ import { updateBusinessStaffById } from '@/modules/businesses/services/updateBus
 import { insertBusinessStaff } from '@/modules/businesses/services/insertBusinessStaff';
 import { deleteBusinessStaffById } from '@/modules/businesses/services/deleteBusinessStaffById';
 import { getProfileByUserId } from '@/modules/users/services/getProfileByUserId';
+import { listProfilesByUserIds, getProfileByRefId } from '@/modules/users';
 import { listBranchesByBusiness } from '@/modules/catalog';
 import { supabase } from '@/integrations/supabase/client';
 import { StaffPermissionsMatrix } from '@/components/dashboard/entities/StaffPermissionsMatrix';
@@ -194,10 +195,10 @@ const DashboardEntityDetail: React.FC = () => {
     queryKey: ['entity-staff-profiles', staffUserIds.sort().join(',')],
     queryFn: async () => {
       if (staffUserIds.length === 0) return [];
-      const { data } = await supabase
-        .from('profiles')
-        .select('user_id, ref_id, full_name, email, phone, avatar_url')
-        .in('user_id', staffUserIds);
+      const { data } = await listProfilesByUserIds<OwnerProfile>({
+        userIds: staffUserIds,
+        select: 'user_id, ref_id, full_name, email, phone, avatar_url',
+      });
       return (data ?? []) as OwnerProfile[];
     },
     enabled: staffUserIds.length > 0,
@@ -242,7 +243,7 @@ const DashboardEntityDetail: React.FC = () => {
     }
     setSubmitting(true);
     try {
-      const { data: prof } = await supabase.from('profiles').select('user_id').eq('ref_id', ref).maybeSingle();
+      const { data: prof } = await getProfileByRefId<{ user_id: string }>({ refId: ref, select: 'user_id' });
       if (!prof?.user_id) {
         toast({ title: pickBi(isRTL, 'لم يُعثر على المستخدم', 'User not found'), variant: 'destructive' });
         return;

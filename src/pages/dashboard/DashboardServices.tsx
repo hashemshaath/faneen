@@ -12,6 +12,11 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
+import {
+  listServicesByBusiness,
+  updateBusinessServiceById,
+  insertBusinessServiceReturning,
+} from '@/modules/catalog';
 import { ONBOARDING_SECTORS, findSubServiceById, type SectorId } from '@/data/onboarding-sectors';
 import { ServiceBrandsPicker } from '@/components/dashboard/ServiceBrandsPicker';
 import {
@@ -129,11 +134,13 @@ const DashboardServices: React.FC = () => {
     queryKey: ['business-services-sync', businessId],
     queryFn: async () => {
       if (!businessId) return [] as ServiceRow[];
-      const { data, error } = await supabase
-        .from('business_services')
-        .select('id, business_id, source_sub_service_id, name_ar, name_en, description_ar, description_en, price_from, price_to, currency_code, is_active, sort_order, is_demo, created_at, provider_status, admin_status, required_plan_tier, rejection_reason, admin_note')
-        .eq('business_id', businessId)
-        .order('sort_order', { ascending: true });
+      const { data, error } = await listServicesByBusiness<ServiceRow>({
+        businessId,
+        select: 'id, business_id, source_sub_service_id, name_ar, name_en, description_ar, description_en, price_from, price_to, currency_code, is_active, sort_order, is_demo, created_at, provider_status, admin_status, required_plan_tier, rejection_reason, admin_note',
+        // Owner view: show every service regardless of triple-gate.
+        activeOnly: false,
+        order: 'sort_order',
+      });
       if (error) throw error;
       return (data ?? []) as ServiceRow[];
     },
@@ -263,16 +270,13 @@ const DashboardServices: React.FC = () => {
       if (existing) {
         // SERVICE-ACTIVATION-GOVERNANCE-FINAL — never write is_active
         // directly. If activation changed, route through canonical setter.
-        const { error } = await supabase
-          .from('business_services')
-          .update({
-            description_ar: input.payload.description_ar ?? null,
-            description_en: input.payload.description_en ?? null,
-            price_from: input.payload.price_from ?? null,
-            price_to: input.payload.price_to ?? null,
-            currency_code: input.payload.currency_code ?? 'SAR',
-          })
-          .eq('id', existing.id);
+        const { error } = await updateBusinessServiceById(existing.id, {
+          description_ar: input.payload.description_ar ?? null,
+          description_en: input.payload.description_en ?? null,
+          price_from: input.payload.price_from ?? null,
+          price_to: input.payload.price_to ?? null,
+          currency_code: input.payload.currency_code ?? 'SAR',
+        });
         if (error) throw error;
         const nextActive = input.payload.is_active ?? true;
         if (nextActive !== existing.is_active) {
@@ -284,22 +288,18 @@ const DashboardServices: React.FC = () => {
       } else {
         // Insert with DB defaults for is_active/provider_status; flip to
         // paused via canonical setter when needed.
-        const { data: inserted, error } = await supabase
-          .from('business_services')
-          .insert({
-            business_id: businessId,
-            source_sub_service_id: input.subId,
-            name_ar: input.payload.name_ar,
-            name_en: input.payload.name_en ?? input.payload.name_ar,
-            description_ar: input.payload.description_ar ?? null,
-            description_en: input.payload.description_en ?? null,
-            price_from: input.payload.price_from ?? null,
-            price_to: input.payload.price_to ?? null,
-            currency_code: input.payload.currency_code ?? 'SAR',
-            sort_order: services.length,
-          })
-          .select('id')
-          .single();
+        const { data: inserted, error } = await insertBusinessServiceReturning<{ id: string }>({
+          business_id: businessId,
+          source_sub_service_id: input.subId,
+          name_ar: input.payload.name_ar,
+          name_en: input.payload.name_en ?? input.payload.name_ar,
+          description_ar: input.payload.description_ar ?? null,
+          description_en: input.payload.description_en ?? null,
+          price_from: input.payload.price_from ?? null,
+          price_to: input.payload.price_to ?? null,
+          currency_code: input.payload.currency_code ?? 'SAR',
+          sort_order: services.length,
+        });
         if (error) throw error;
         const nextActive = input.payload.is_active ?? true;
         if (!nextActive && inserted?.id) {
@@ -330,18 +330,14 @@ const DashboardServices: React.FC = () => {
         // SERVICE-ACTIVATION-GOVERNANCE-2: do not write `provider_status`
         // directly. Insert the row (DB default = 'active'), then route
         // through the canonical module to flip it to paused if needed.
-        const { data: inserted, error } = await supabase
-          .from('business_services')
-          .insert({
-            business_id: businessId,
-            source_sub_service_id: input.subId,
-            name_ar: input.name_ar,
-            name_en: input.name_en,
-            currency_code: 'SAR',
-            sort_order: services.length,
-          })
-          .select('id')
-          .single();
+        const { data: inserted, error } = await insertBusinessServiceReturning<{ id: string }>({
+          business_id: businessId,
+          source_sub_service_id: input.subId,
+          name_ar: input.name_ar,
+          name_en: input.name_en,
+          currency_code: 'SAR',
+          sort_order: services.length,
+        });
         if (error) throw error;
         if (!input.nextActive && inserted?.id) {
           await setProviderServiceStatus({ serviceRowId: inserted.id, status: 'paused' });

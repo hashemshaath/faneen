@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
-import { getProfileByUserId } from '@/modules/users';
+import { getProfileByUserId, searchProfilesByOr, getProfileByEmailIlike } from '@/modules/users';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { checkInvitationTransition } from '@/modules/identity';
 import { useAuth } from '@/contexts/AuthContext';
@@ -91,11 +91,11 @@ export const InvitationsPanel: React.FC<Props> = ({
     setSearching(true);
     const timer = setTimeout(async () => {
       const like = `%${q}%`;
-      const { data } = await supabase
-        .from('profiles')
-        .select('user_id, email, username, full_name')
-        .or(`email.ilike.${like},username.ilike.${like},full_name.ilike.${like}`)
-        .limit(6);
+      const { data } = await searchProfilesByOr<ProfileSuggestion>({
+        select: 'user_id, email, username, full_name',
+        or: `email.ilike.${like},username.ilike.${like},full_name.ilike.${like}`,
+        limit: 6,
+      });
       if (!cancelled) {
         setSuggestions((data ?? []) as ProfileSuggestion[]);
         setSearching(false);
@@ -190,11 +190,10 @@ export const InvitationsPanel: React.FC<Props> = ({
       if (sendInApp) {
         let recipientUserId = picked?.user_id ?? null;
         if (!recipientUserId) {
-          const { data: profileRow } = await supabase
-            .from('profiles')
-            .select('user_id')
-            .ilike('email', trimmed)
-            .maybeSingle();
+          const { data: profileRow } = await getProfileByEmailIlike<{ user_id: string }>({
+            email: trimmed,
+            select: 'user_id',
+          });
           recipientUserId = (profileRow as { user_id: string } | null)?.user_id ?? null;
         }
         if (recipientUserId) {

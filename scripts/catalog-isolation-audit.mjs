@@ -47,6 +47,18 @@ const ALLOWED_DIRS = [
   "src/modules/catalog/services/",
   // WORKSPACE-CONTEXT-2: read-only RLS-scoped workspace location wrappers.
   "src/modules/locations/services/workspace/",
+  // STAB-1A: providerServices is the canonical owner of `business_services`
+  // ACTIVATION + GOVERNANCE writes (provider_status, admin_status,
+  // required_plan_tier, requires_admin_review, is_premium_service,
+  // is_featured, admin_note, provider_note, rejection_reason, reviewed_by,
+  // reviewed_at, plus the legacy `is_active` mirror). Catalog mutation
+  // payload types strip those fields (Policy A) so the boundary is
+  // enforced both statically (TS Omit) and at runtime/source-grep
+  // (scripts/provider-services-isolation-audit.mjs). Allowing direct
+  // `.from('business_services')` here is required because providerServices
+  // IS the governance owner — its admin.ts/mutations.ts could not function
+  // otherwise. No new product feature; no new boundary.
+  "src/modules/providerServices/services/",
 ];
 const ALLOWED_FILES = new Set([
   "src/modules/contracts/services/aggregates.ts",

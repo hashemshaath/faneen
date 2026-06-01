@@ -27,6 +27,7 @@ import { ImageUpload } from '@/components/ui/image-upload';
 
 import { supabase } from '@/integrations/supabase/client';
 import { updateProfile } from '@/modules/users';
+import { updateAuthEmail } from '@/modules/identity/services/account';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
 import {
   NationalAddressForm,
@@ -283,7 +284,7 @@ const DashboardProfile: React.FC = () => {
         && !isSyntheticPhoneEmail(user.email)
         && newEmail.toLowerCase() !== (user.email ?? '').toLowerCase()
       ) {
-        const { error: authErr } = await supabase.auth.updateUser({ email: newEmail });
+        const { error: authErr } = await updateAuthEmail(newEmail);
         if (authErr) throw authErr;
       }
     },

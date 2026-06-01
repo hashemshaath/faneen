@@ -50,6 +50,27 @@ export async function insertBusinessServices(rows: BusinessServiceInsertPayload[
   return await supabase.from('business_services').insert(rows as RawInsert[]);
 }
 
+/**
+ * STAB-1A — provider/admin "create service then act on returned id" path.
+ *
+ * Same payload policy as `insertBusinessService` (governance fields are
+ * stripped via `BusinessServiceInsertPayload`). Caller controls the
+ * `select`; default is `'id'`. Terminal is `.single()` to mirror the
+ * existing dashboard/admin callsites that relied on a single returned row.
+ */
+export async function insertBusinessServiceReturning<T = unknown>(
+  payload: BusinessServiceInsertPayload,
+  options?: { select?: string },
+): Promise<{ data: T | null; error: unknown }> {
+  const select = options?.select ?? 'id';
+  const { data, error } = await supabase
+    .from('business_services')
+    .insert(payload as RawInsert)
+    .select(select)
+    .single();
+  return { data: data as unknown as T | null, error };
+}
+
 export async function updateBusinessServiceById(
   id: string,
   values: BusinessServiceUpdatePayload,
