@@ -46,3 +46,10 @@ export {
   type AdminServiceActivationRow,
   type AdminListFilters,
 } from './services/admin';
+
+/** SERVICE-ACTIVATION-GOVERNANCE-3 — Phase E notifications. */
+export {
+  notifyServiceActivationEvent,
+  type ServiceActivationEvent,
+  type ServiceActivationNotificationInput,
+} from './services/notifications';
