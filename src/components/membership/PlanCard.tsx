@@ -11,8 +11,10 @@ interface PlanCardPlan {
   name_en: string | null;
   description_ar: string | null;
   description_en: string | null;
-  price_monthly: number;
-  price_yearly: number;
+  // null / undefined → price unconfirmed for that cycle (renders "تواصل معنا").
+  // Only an explicit `0` on BOTH rails marks a plan as truly free.
+  price_monthly: number | null;
+  price_yearly: number | null;
   features?: unknown;
   limits?: unknown;
 }
@@ -36,11 +38,19 @@ export const PlanCard = React.memo(({
   plan, billingCycle, isRTL, language, isCurrentPlan, isUpgrade, isDowngrade, isSubscribing, onSubscribe,
   featured = false, className, highlighted = false,
 }: PlanCardProps) => {
-  const price = billingCycle === 'monthly' ? plan.price_monthly : plan.price_yearly;
+  // PRICING-SOURCE-OF-TRUTH-1: distinguish null/undefined (missing/unconfirmed) from 0 (explicit free).
+  // A plan is "truly free" only when BOTH price rails are explicitly 0.
+  const rawPrice = billingCycle === 'monthly' ? plan.price_monthly : plan.price_yearly;
+  const isTrulyFree =
+    Number(plan.price_monthly ?? -1) === 0 && Number(plan.price_yearly ?? -1) === 0;
+  const isPriceMissing = rawPrice == null || (Number(rawPrice) === 0 && !isTrulyFree);
+  const price = isPriceMissing ? null : Number(rawPrice);
   const isPremium = plan.tier === 'premium' || featured;
-  const monthlyEq = billingCycle === 'yearly' && plan.price_yearly > 0 ? Math.round(plan.price_yearly / 12) : null;
-  const savingPct = (plan.price_monthly > 0 && plan.price_yearly > 0)
-    ? Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100)
+  const monthlyEq = billingCycle === 'yearly' && Number(plan.price_yearly ?? 0) > 0
+    ? Math.round(Number(plan.price_yearly) / 12)
+    : null;
+  const savingPct = (Number(plan.price_monthly ?? 0) > 0 && Number(plan.price_yearly ?? 0) > 0)
+    ? Math.round((1 - Number(plan.price_yearly) / (Number(plan.price_monthly) * 12)) * 100)
     : 0;
 
   // Top features to surface inline (max 5). Derived from the canonical
@@ -121,13 +131,17 @@ export const PlanCard = React.memo(({
       <div className="mb-7">
         <div className={cn('flex items-baseline gap-2 flex-wrap', isPremium && 'text-primary')}>
           <span className="font-heading font-bold text-foreground tracking-tight text-4xl sm:text-5xl">
-            {price === 0 ? (
+            {isPriceMissing ? (
+              <span className="text-2xl sm:text-3xl text-muted-foreground">
+                {isRTL ? 'تواصل معنا' : 'Contact us'}
+              </span>
+            ) : price === 0 ? (
               isRTL ? 'مجاناً' : 'Free'
             ) : (
-              <span className="tech-content">{price.toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
+              <span className="tech-content">{price!.toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
             )}
           </span>
-          {price > 0 && (
+          {!isPriceMissing && price! > 0 && (
             <span className="text-muted-foreground text-sm">
               {isRTL ? 'ر.س' : 'SAR'} / {billingCycle === 'monthly' ? (isRTL ? 'شهر' : 'mo') : (isRTL ? 'سنة' : 'yr')}
             </span>
@@ -140,8 +154,13 @@ export const PlanCard = React.memo(({
             <span className="text-success font-semibold">−{savingPct}%</span>
           </p>
         )}
-        {price === 0 && (
+        {!isPriceMissing && price === 0 && (
           <p className="text-[11px] text-muted-foreground mt-2">{isRTL ? 'بدون بطاقة ائتمان' : 'No credit card required'}</p>
+        )}
+        {isPriceMissing && (
+          <p className="text-[11px] text-muted-foreground mt-2">
+            {isRTL ? 'السعر لهذه الدورة غير متاح حاليًا — تواصل معنا للتفاصيل.' : 'Price for this cycle is unavailable — contact us for details.'}
+          </p>
         )}
       </div>
 
@@ -177,10 +196,12 @@ export const PlanCard = React.memo(({
           'w-full gap-1.5 font-semibold rounded-xl h-12',
           isPremium && 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20',
         )}
-        disabled={!!isCurrentPlan || isSubscribing}
+        disabled={!!isCurrentPlan || isSubscribing || isPriceMissing}
       >
         {isSubscribing ? (
           <><Loader2 className="w-4 h-4 animate-spin" />{isRTL ? 'جارٍ التفعيل...' : 'Activating...'}</>
+        ) : isPriceMissing ? (
+          <>{isRTL ? 'تواصل معنا' : 'Contact us'}</>
         ) : isCurrentPlan ? (
           <><Check className="w-4 h-4" />{isRTL ? 'خطتك الحالية' : 'Current Plan'}</>
         ) : isUpgrade ? (
@@ -192,7 +213,7 @@ export const PlanCard = React.memo(({
         )}
       </Button>
 
-      {!isCurrentPlan && !isDowngrade && price > 0 && (
+      {!isCurrentPlan && !isDowngrade && !isPriceMissing && (price ?? 0) > 0 && (
         <p className="text-[10px] text-center text-muted-foreground mt-3">
           {isRTL ? '✓ بدون التزام · إلغاء في أي وقت' : '✓ No commitment · Cancel anytime'}
         </p>
