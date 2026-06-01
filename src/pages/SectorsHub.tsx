@@ -132,6 +132,28 @@ const SectorsHub: React.FC = () => {
             </Button>
           </Link>
         </section>
+
+        {/* Cross-link hubs (internal linking — SEO-6) */}
+        <nav aria-label="روابط أقسام أخرى" className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+          <h2 className="font-heading text-lg font-bold mb-3">استكشف أقسام أخرى</h2>
+          <ul className="flex flex-wrap gap-2 text-sm">
+            <li>
+              <Link to="/services" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
+                تصفّح كل الخدمات
+              </Link>
+            </li>
+            <li>
+              <Link to="/brands" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
+                دليل العلامات التجارية
+              </Link>
+            </li>
+            <li>
+              <Link to="/showcase" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
+                أعمال ومشاريع المزودين
+              </Link>
+            </li>
+          </ul>
+        </nav>
       </main>
 
       <Footer />
