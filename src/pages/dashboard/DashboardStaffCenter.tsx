@@ -214,14 +214,14 @@ function StaffOverview({ businessId }: { businessId: string }) {
       setRows(baseRows);
       return;
     }
+    // Privacy: do NOT request email/phone for staff rows (ORG-RBAC-STRUCTURE-9E).
     const { data: profiles } = await listProfilesByUserIds<{
       user_id: string;
       full_name: string | null;
-      email: string | null;
       ref_id: string | null;
-    }>({ userIds, select: 'user_id, full_name, email, ref_id' });
+    }>({ userIds, select: 'user_id, full_name, ref_id' });
     const byUser = new Map(
-      ((profiles ?? []) as Array<{ user_id: string; full_name: string | null; email: string | null; ref_id: string | null }>)
+      ((profiles ?? []) as Array<{ user_id: string; full_name: string | null; ref_id: string | null }>)
         .map((p) => [p.user_id, p]),
     );
     setRows(
@@ -230,7 +230,6 @@ function StaffOverview({ businessId }: { businessId: string }) {
         return {
           ...r,
           display_name: p?.full_name ?? null,
-          email: p?.email ?? null,
           user_ref_id: p?.ref_id ?? null,
         };
       }),
