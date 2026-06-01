@@ -112,6 +112,29 @@ const BrandDetail: React.FC = () => {
       url: `${SITE}/brands/${brand.slug}`,
       sameAs: brand.website ? [brand.website] : undefined,
     },
+    // SEO-3 — ItemList of visibly-rendered authorized providers.
+    // `providerLinks` is filtered to authorization_status='verified' and only
+    // those whose business row was fetched and has a public username are
+    // rendered on the page; mirror exactly that set here.
+    ...(() => {
+      const visible = providerLinks
+        .map((l) => bizMap.get(l.business_id))
+        .filter((b): b is NonNullable<typeof b> => !!b && !!b.username);
+      if (visible.length === 0) return [];
+      return [{
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        '@id': `${SITE}/brands/${brand.slug}#providers`,
+        name: isRTL ? `مزودون معتمدون لعلامة ${display}` : `Authorized providers for ${display}`,
+        numberOfItems: visible.length,
+        itemListElement: visible.map((b, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          url: `${SITE}/${b.username}`,
+          name: (isRTL ? (b.name_ar || b.name_en) : (b.name_en || b.name_ar)) || '',
+        })),
+      }];
+    })(),
   ] : null);
 
   if (slug === '') return <Navigate to="/brands" replace />;

@@ -95,6 +95,26 @@ const BrandsCatalog: React.FC = () => {
       url: `${SITE}/brands`,
       isPartOf: { '@type': 'WebSite', name: 'Qitaat', url: SITE },
     },
+    // SEO-3 — ItemList of visibly-rendered approved brands (brands_public).
+    // `filtered` is sourced from listApprovedBrands → brands_public view, so
+    // pending / rejected / archived / merged brands are never enumerated.
+    ...(filtered.length > 0
+      ? [{
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          '@id': `${SITE}/brands#brands`,
+          name: isRTL ? 'سجل العلامات التجارية الصناعية' : 'Industrial Brands Registry',
+          numberOfItems: filtered.filter((b) => b.slug).length,
+          itemListElement: filtered
+            .filter((b) => !!b.slug)
+            .map((b, i) => ({
+              '@type': 'ListItem',
+              position: i + 1,
+              url: `${SITE}/brands/${b.slug}`,
+              name: (isRTL ? b.name_ar : (b.name_en || b.name_ar)) || b.name_ar,
+            })),
+        }]
+      : []),
   ]);
 
   return (
