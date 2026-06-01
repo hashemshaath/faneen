@@ -88,10 +88,16 @@ describe('Admin sidebar nav entry (R4F-8F)', () => {
     path.resolve(__dirname, '../../../components/dashboard/DashboardSidebar.tsx'),
     'utf8',
   );
-  it('includes /admin/membership-payments link with bilingual labels', () => {
-    expect(NAV).toMatch(/\/admin\/membership-payments/);
-    expect(NAV).toMatch(/مدفوعات العضويات/);
-    expect(NAV).toMatch(/Membership Payments/);
+  it('exposes consolidated Memberships Center entry (membership-payments now a tab)', () => {
+    // R4F-8F + ADMIN-IA-CONSOLIDATION: the standalone "Membership Payments"
+    // sidebar entry was merged into the unified Memberships Center.
+    // /admin/membership-payments is still registered as a redirect to
+    // /admin/memberships?tab=payments so legacy deep links keep working.
+    expect(NAV).toMatch(/\/admin\/memberships/);
+    expect(NAV).toMatch(/مركز العضويات/);
+    expect(NAV).toMatch(/Memberships Center/);
+    // The legacy direct entry must not be reintroduced.
+    expect(NAV).not.toMatch(/url:\s*'\/admin\/membership-payments'/);
   });
 
   it('does not directly query payment intents or call mark-paid rpc from nav', () => {

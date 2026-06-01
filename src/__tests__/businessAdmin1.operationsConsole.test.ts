@@ -42,8 +42,13 @@ describe('BUSINESS-ADMIN-1 — route + sidebar wiring', () => {
   });
 
   it('sidebar exposes a bilingual "Operations Console" link', () => {
-    expect(SIDEBAR).toMatch(/\/admin\/operations\/console/);
-    expect(SIDEBAR).toMatch(/Operations Console/);
+    // ADMIN-IA-CONSOLIDATION: the standalone "Operations Console" entry was
+    // merged into the unified Operations Center hub. The console page is
+    // still reachable at /admin/operations/console (registered redirect to
+    // /admin/operations?tab=console). The sidebar exposes a single bilingual
+    // "Operations Center" entry that lands on the hub.
+    expect(SIDEBAR).toMatch(/\/admin\/operations(?!\/)/);
+    expect(SIDEBAR).toMatch(/Operations Center/);
     expect(SIDEBAR).toMatch(/مركز العمليات/);
   });
 });

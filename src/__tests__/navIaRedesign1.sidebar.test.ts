@@ -70,11 +70,17 @@ describe('NAV-IA-REDESIGN-1 — grouping & operations placement', () => {
     return SIDEBAR.slice(s, e);
   })();
 
-  it('provider Overview group contains Operations Overview + Operations Feed', () => {
+  it('provider Overview group contains Dashboard, Analytics, Operations Feed', () => {
+    // PROVIDER-IA-CONSOLIDATION: /dashboard/work-orders/overview now
+    // redirects to /dashboard/work-orders and is no longer pinned to the
+    // Overview group. Work Orders lives under "Operations". The Overview
+    // group exposes the cross-domain Operations Feed as the entry point
+    // to operational activity.
     const s = providerBlock.indexOf("en: 'Overview'");
     const e = providerBlock.indexOf('groupLabel', s + 1);
     const block = providerBlock.slice(s, e);
-    expect(block).toContain('/dashboard/work-orders/overview');
+    expect(block).toContain("'/dashboard'");
+    expect(block).toContain('/dashboard/analytics');
     expect(block).toContain('/dashboard/operations/feed');
   });
 
@@ -95,11 +101,16 @@ describe('NAV-IA-REDESIGN-1 — grouping & operations placement', () => {
     expect(block).not.toContain('/dashboard/contracts');
   });
 
-  it('admin Overview group contains Operations Console + Bulk Reference Triage', () => {
+  it('admin Overview group contains Operations Center + Bulk Reference Triage', () => {
+    // ADMIN-IA-CONSOLIDATION: the standalone Operations Console sidebar
+    // entry was merged into the unified Operations Center hub. The console
+    // page is still reachable at /admin/operations/console (redirect to
+    // /admin/operations?tab=console). Bulk Reference Triage remains a
+    // top-level Overview shortcut.
     const s = adminBlock.indexOf("en: 'Overview'");
     const e = adminBlock.indexOf('groupLabel', s + 1);
     const block = adminBlock.slice(s, e);
-    expect(block).toContain('/admin/operations/console');
+    expect(block).toMatch(/url:\s*'\/admin\/operations'/);
     expect(block).toContain('/admin/ref/triage');
   });
 
