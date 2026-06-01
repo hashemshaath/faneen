@@ -8,7 +8,7 @@
 import React, { useMemo } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ShieldCheck, Globe2, Tag, Building2, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ShieldCheck, Globe2, Tag, Building2, AlertCircle, FileText, Search } from 'lucide-react';
 
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -243,6 +243,46 @@ const BrandDetail: React.FC = () => {
                     );
                   })}
                 </div>
+                <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
+                  {isRTL
+                    ? 'تظهر هنا الجهات التي أكّدت ارتباطها بالعلامة بعد المراجعة. الارتباط لا يعني ضمان نتائج التنفيذ.'
+                    : 'Only providers whose relationship was verified appear here. The link does not guarantee execution.'}
+                </p>
+              </section>
+            )}
+
+            {providerLinks.length === 0 && (
+              <section>
+                <Card className="border-dashed"><CardContent className="py-8 px-5 text-center space-y-3">
+                  <Building2 className="h-9 w-9 mx-auto text-muted-foreground/40" />
+                  <div>
+                    <p className="font-heading font-bold text-foreground">
+                      {isRTL ? 'لا يوجد مزودون معتمدون مرتبطون بهذه العلامة بعد' : 'No authorized providers linked yet'}
+                    </p>
+                    <p className="text-xs text-muted-foreground max-w-md mx-auto mt-1 leading-relaxed">
+                      {isRTL
+                        ? 'تظهر الجهات هنا بعد توثيق الارتباط بالعلامة. يمكنك البحث في القطاع المناسب أو طلب عرض سعر بمواصفات محددة.'
+                        : 'Providers appear here after their relationship with the brand is verified. You can search the related sector or send a spec-based quote request.'}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <Button asChild size="sm" className="rounded-xl">
+                      <Link to="/quote">
+                        <FileText className="h-3.5 w-3.5 me-1" />
+                        {isRTL ? 'اطلب عرض سعر' : 'Request a quote'}
+                      </Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="rounded-xl">
+                      <Link to="/sectors">{isRTL ? 'استكشف القطاعات' : 'Explore sectors'}</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="rounded-xl">
+                      <Link to="/search">
+                        <Search className="h-3.5 w-3.5 me-1" />
+                        {isRTL ? 'ابحث عن مزودين' : 'Find providers'}
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent></Card>
               </section>
             )}
 
@@ -260,10 +300,10 @@ const BrandDetail: React.FC = () => {
                 <div className="text-sm">
                   <p className="font-medium">{isRTL ? 'وجدت معلومة غير دقيقة؟' : 'Spotted incorrect info?'}</p>
                   <p className="text-muted-foreground text-xs">
-                    {isRTL ? 'يمكنك طلب تصحيح بيانات هذه العلامة من خلال الداشبورد.' : 'You can request a correction from the provider dashboard.'}
+                    {isRTL ? 'راسلنا لطلب تصحيح بيانات هذه العلامة وسنراجعها قبل النشر.' : 'Contact us to request a correction; we review every change before publishing.'}
                   </p>
                 </div>
-                <Link to="/dashboard/brands" rel="nofollow" className="text-sm text-primary hover:underline">
+                <Link to="/contact" className="text-sm text-primary hover:underline">
                   {isRTL ? 'اطلب تصحيحاً ←' : 'Request correction →'}
                 </Link>
               </CardContent>
