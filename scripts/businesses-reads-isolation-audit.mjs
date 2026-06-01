@@ -34,6 +34,26 @@ const ALLOWED_FILES = new Set([
   // BUSINESS-OPERATIONS-2I: narrow opaque-ownership lookup (user_id only)
   // for SLA notification recipient resolution. No PII fields selected.
   "src/modules/operations/services/notificationRecipients.ts",
+  // DB-GOVERNANCE-1: narrow opaque-ownership lookup (user_id only) used by
+  // provider-services admin moderation to resolve the business owner before
+  // sending governance notifications. Same shape as notificationRecipients.
+  "src/modules/providerServices/services/admin.ts",
+  // DB-GOVERNANCE-1: admin-only KPI dashboard. Selects non-PII columns
+  // (id, created_at) for time-bucketed counts. RLS gates access to admins
+  // via has_admin_access. Page is useNoIndex.
+  "src/pages/admin/AdminKpis.tsx",
+  // DB-GOVERNANCE-1: admin-only reports page. Selects governance columns
+  // (ref_id, name_*, approval_status, created_at, user_id). RLS gates to
+  // admins. Page is useNoIndex. No public route reaches it.
+  "src/pages/admin/AdminReports.tsx",
+  // DB-GOVERNANCE-1: admin-only system access viewer. Selects display
+  // columns (id, name_*, ref_id, logo_url). RLS gates to admins. useNoIndex.
+  "src/pages/admin/AdminSystemAccess.tsx",
+  // DB-GOVERNANCE-1: provider self-service entity detail. Resolves a ref
+  // through the legacy-aware `or(ref_id.eq, legacy_ref_id.eq)` filter that
+  // is not yet covered by `getBusinessByRefId` (legacy_ref_id support
+  // tracked as a P2 wrapper extension). Only selects `id`. No PII.
+  "src/pages/dashboard/DashboardEntityDetail.tsx",
 ]);
 
 // Whitespace/newline tolerant: `.from('businesses')` ... `.select(`
