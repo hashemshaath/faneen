@@ -29,3 +29,20 @@ export {
 export type { SetProviderServiceStatusArgs } from './services/mutations';
 
 export { effectiveStatusLabel, effectiveStatusBadgeClass } from './display';
+
+/** SERVICE-ACTIVATION-GOVERNANCE-2 — Phase D admin surface. */
+export {
+  adminListServiceActivations,
+  adminApproveProviderService,
+  adminRejectProviderService,
+  adminSuspendProviderService,
+  adminRestoreProviderService,
+  adminSetRequiredPlanTier,
+  adminClearRequiredPlanTier,
+  adminSetRequiresReview,
+  adminSetPremiumService,
+  adminSetFeaturedService,
+  adminUpdateServiceActivationNote,
+  type AdminServiceActivationRow,
+  type AdminListFilters,
+} from './services/admin';
