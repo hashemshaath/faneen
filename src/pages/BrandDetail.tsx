@@ -161,6 +161,7 @@ const BrandDetail: React.FC = () => {
               <div className="flex flex-wrap gap-5 items-start">
                 {brand.logo_url ? (
                   <img src={brand.logo_url} alt={display}
+                       width={80} height={80} decoding="async" loading="eager"
                        className="h-20 w-20 rounded-2xl border bg-background object-cover" />
                 ) : (
                   <div className="h-20 w-20 rounded-2xl bg-primary/15 grid place-items-center text-primary">
