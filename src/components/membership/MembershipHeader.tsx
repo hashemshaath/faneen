@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 interface MembershipHeaderProps {
   isRTL: boolean;
@@ -34,9 +34,11 @@ export const MembershipHeader = ({ isRTL, billingCycle, setBillingCycle, plans =
   );
 
   // If yearly disappears while it was selected, snap back to monthly.
-  if (!yearlyAvailable && billingCycle === 'yearly') {
-    setBillingCycle('monthly');
-  }
+  useEffect(() => {
+    if (!yearlyAvailable && billingCycle === 'yearly') {
+      setBillingCycle('monthly');
+    }
+  }, [yearlyAvailable, billingCycle, setBillingCycle]);
 
   return (
     <div className="flex items-center justify-center mb-8 sm:mb-10">
