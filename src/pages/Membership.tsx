@@ -25,6 +25,8 @@ import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send, Clock, Chev
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
+import { MembershipHero } from '@/components/membership/MembershipHero';
+import { ServiceActivationAlignment } from '@/components/membership/ServiceActivationAlignment';
 import { CurrentSubscriptionCard } from '@/components/membership/CurrentSubscriptionCard';
 import { MembershipPaymentStatus } from '@/components/membership/MembershipPaymentStatus';
 import { PlanCard } from '@/components/membership/PlanCard';
@@ -689,7 +691,8 @@ const Membership = () => {
       <>
       <Navbar />
       <div className="container px-4 py-10 sm:py-16">
-        <MembershipHeader isRTL={isRTL} billingCycle={billingCycle} setBillingCycle={setBillingCycle} plans={plans} />
+        {/* MEMBERSHIP-PAGE-REDESIGN-2: Spec hero. */}
+        <MembershipHero isRTL={isRTL} compareAnchorId="compare" />
 
         {/* Governance-safe disclaimer — shown above the plan grid to make
             it explicit that some benefits depend on account/service
@@ -997,6 +1000,10 @@ const Membership = () => {
 
         <MembershipPlanRecommender isRTL={isRTL} onApply={handleRecommenderApply} />
 
+        {/* MEMBERSHIP-PAGE-REDESIGN-2: Billing toggle sits directly above
+            the plan grid, where the user actually compares prices. */}
+        <MembershipHeader isRTL={isRTL} billingCycle={billingCycle} setBillingCycle={setBillingCycle} plans={plans} />
+
         {/* Asymmetric bento: Premium spans 2 cols + 2 rows (featured),
             others fill remaining cells on lg. Stacks cleanly on mobile. */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-4 max-w-6xl mx-auto auto-rows-fr">
@@ -1035,16 +1042,14 @@ const Membership = () => {
         </div>
 
         <Suspense fallback={<div className="h-32" aria-hidden />}>
-          <details className="max-w-5xl mx-auto mt-12 sm:mt-16 group">
-            <summary className="cursor-pointer list-none rounded-xl border border-border/60 bg-card px-5 py-3 font-heading font-semibold text-sm text-foreground hover:border-accent/40 transition-colors flex items-center justify-between">
-              <span>{isRTL ? 'مقارنة تفصيلية للمميزات' : 'Detailed Feature Comparison'}</span>
-              <span className="text-xs text-muted-foreground group-open:hidden">{isRTL ? 'عرض' : 'Show'}</span>
-              <span className="text-xs text-muted-foreground hidden group-open:inline">{isRTL ? 'إخفاء' : 'Hide'}</span>
-            </summary>
-            <div className="mt-4">
-              <FeatureComparisonTable isRTL={isRTL} />
-            </div>
-          </details>
+          {/* MEMBERSHIP-PAGE-REDESIGN-2: Feature matrix is always visible
+              (anchor target for the hero "قارن العضويات" CTA). Data is
+              sourced from `membership_plans.limits` via `PlanFeatureMatrix`
+              — no fabricated numbers. */}
+          <section id="compare" className="scroll-mt-24">
+            <FeatureComparisonTable isRTL={isRTL} />
+          </section>
+          <ServiceActivationAlignment isRTL={isRTL} />
           <MembershipBenefits isRTL={isRTL} />
           <MembershipTrustStrip isRTL={isRTL} />
           <MembershipTestimonials isRTL={isRTL} />
@@ -1062,7 +1067,7 @@ const Membership = () => {
           </div>
           <div className="relative z-10 space-y-7">
             <h2 className="font-heading font-bold text-3xl sm:text-4xl text-white">
-              {isRTL ? 'جاهز للارتقاء بأعمالك؟' : 'Ready to grow your business?'}
+              {isRTL ? 'اختر العضوية المناسبة' : 'Pick the right membership'}
             </h2>
             <p className="text-slate-300 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
               {isRTL
@@ -1074,10 +1079,10 @@ const Membership = () => {
                 size="lg"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 px-8 font-bold w-full sm:w-auto"
                 onClick={() => {
-                  document.querySelector('[data-plan-tier="premium"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  document.getElementById('compare')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
               >
-                {isRTL ? 'اشترك الآن' : 'Subscribe now'}
+                {isRTL ? 'اختر العضوية المناسبة' : 'Pick the right plan'}
               </Button>
               <Button
                 asChild
@@ -1085,12 +1090,14 @@ const Membership = () => {
                 variant="outline"
                 className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white rounded-xl h-12 px-8 font-bold w-full sm:w-auto"
               >
-                <Link to="/contact">{isRTL ? 'تحدث مع المبيعات' : 'Talk to sales'}</Link>
+                <Link to="/contact">{isRTL ? 'تواصل معنا' : 'Contact us'}</Link>
               </Button>
             </div>
             <p className="text-slate-400 text-xs flex items-center justify-center gap-1.5 pt-2">
               <Shield className="w-3.5 h-3.5" />
-              {isRTL ? 'جميع الخطط تشمل حماية كاملة للبيانات والخصوصية' : 'All plans include full data protection and privacy'}
+              {isRTL
+                ? 'العضوية تساعد على تنظيم الظهور والمزايا، ولا تعني ضمان الطلبات أو المبيعات.'
+                : 'Memberships organize visibility and benefits — they do not guarantee leads or sales.'}
             </p>
           </div>
         </div>

@@ -50,6 +50,10 @@ const faqs = [
     ar: { q: 'ماذا يحدث إذا كانت العضويات غير متاحة مؤقتًا؟', a: 'إذا أوقفت الإدارة عرض خطط العضوية، ستبقى خدمات الدليل وطلبات عروض الأسعار متاحة، ويمكنك التواصل مع الدعم لمعرفة الخيارات المتاحة لجهتك.' },
     en: { q: 'What happens if memberships are temporarily unavailable?', a: 'If the admin pauses membership plans, the directory and quote requests stay available and you can contact support to learn what options remain for your business.' },
   },
+  {
+    ar: { q: 'هل تختلف المزايا حسب نوع الخدمة؟', a: 'نعم. بعض المزايا (مثل الظهور المميز، التقسيط، أو أدوات إضافية) ترتبط بنوع الخدمة وقطاعها وحدود الباقة، وقد تظهر لبعض الخدمات دون غيرها.' },
+    en: { q: 'Do benefits differ by service type?', a: 'Yes. Some benefits (such as boosted visibility, BNPL, or extra tools) depend on the service type, its sector, and plan limits, so they may appear for some services and not others.' },
+  },
 ];
 
 export const MembershipFAQ = ({ isRTL }: Props) => {
