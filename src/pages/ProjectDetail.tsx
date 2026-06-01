@@ -318,6 +318,60 @@ const ProjectDetail = () => {
           categoryId={project.category_id}
           cityId={project.city_id}
         />
+
+        {/* Explore more — hub/spoke depth (SEO-7). Static, public-safe. */}
+        <nav
+          aria-label={isRTL ? 'استكشف المزيد' : 'Explore more'}
+          className="mt-8"
+        >
+          <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+            <h2 className="font-heading text-base font-bold mb-3">
+              {isRTL ? 'روابط مفيدة' : 'Useful links'}
+            </h2>
+            <ul className="flex flex-wrap gap-2 text-sm">
+              <li>
+                <Link
+                  to="/projects"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                >
+                  {isRTL ? 'كل المشاريع' : 'All projects'}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/showcase"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                >
+                  {isRTL ? 'أعمال المزودين' : 'Provider showcase'}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/sectors"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                >
+                  {isRTL ? 'القطاعات الصناعية' : 'Industrial sectors'}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/services"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                >
+                  {isRTL ? 'الخدمات' : 'Services'}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/brands"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary"
+                >
+                  {isRTL ? 'العلامات التجارية' : 'Brands'}
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </nav>
       </div>
 
       <Footer />
