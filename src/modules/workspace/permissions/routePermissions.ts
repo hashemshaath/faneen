@@ -76,6 +76,7 @@ export const WORKSPACE_ROUTE_PERMISSIONS = {
   '/dashboard/provider/leads':               { permissions: ['quotes.view'],                            scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/bookings':                     { permissions: ['bookings.view'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/clients':                      { permissions: ['leads.view'],                             scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
+  '/dashboard/rfq':                          { permissions: ['leads.view'],                             scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
 
   // Operations
   '/dashboard/work-orders':                  { permissions: ['bookings.view'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
@@ -88,6 +89,7 @@ export const WORKSPACE_ROUTE_PERMISSIONS = {
   '/membership':                             { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/provider/membership':          { permissions: ['memberships.view', 'payments.view'],      scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/installments':                 { permissions: ['payments.view'],                          scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
+  '/dashboard/loyalty':                      { permissions: ['memberships.view'],                       scope: 'entity',   sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
 
   // Communication — personal
   '/dashboard/messages':                     { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
@@ -103,6 +105,7 @@ export const WORKSPACE_ROUTE_PERMISSIONS = {
   // User-only routes (no permission gate — visible to any authed user)
   '/dashboard/my-requests':                  { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
   '/dashboard/bookmarks':                    { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
+  '/dashboard/entities':                     { permissions: [],                                         scope: 'personal', sidebar: true,  adminOverride: true,  ownerOverride: true,  level: 'view'   },
 
   // Admin-surfaced dashboard routes (linked from admin sidebar; not gated for workspace users)
   '/dashboard/blog':                         { permissions: [],                                         scope: 'platform', sidebar: false, adminOverride: true,  ownerOverride: true,  level: 'manage' },
