@@ -1,9 +1,11 @@
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { SearchAutocomplete } from './SearchAutocomplete';
-import { TrendingUp, BadgeCheck, Star, Heart, CreditCard, LayoutGrid, ChevronDown, ChevronUp } from 'lucide-react';
+import { TrendingUp, BadgeCheck, Star, Heart, LayoutGrid, ChevronDown, ChevronUp, FileText, Boxes } from 'lucide-react';
 import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
 
 interface SearchHeaderProps {
@@ -82,6 +84,28 @@ export const SearchHeader = ({
             businesses={businesses}
             categories={categories}
           />
+
+          {/* Primary decision-flow CTAs — quote request + sectors browse.
+              Public-safe routes only; keeps SEO / no-private-link rules. */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <Button asChild size="sm" className="rounded-xl h-9 px-4 bg-accent text-accent-foreground hover:bg-accent/90">
+              <Link to="/contact">
+                <FileText className="w-3.5 h-3.5 me-1.5" />
+                {isRTL ? 'اطلب عرض سعر' : 'Request a quote'}
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline" className="rounded-xl h-9 px-4 bg-surface-nav-foreground/[0.04] border-surface-nav-foreground/20 text-surface-nav-foreground hover:bg-surface-nav-foreground/[0.08]">
+              <Link to="/sectors">
+                <Boxes className="w-3.5 h-3.5 me-1.5" />
+                {isRTL ? 'استكشف القطاعات' : 'Explore sectors'}
+              </Link>
+            </Button>
+          </div>
+          <p className="mt-2 text-[11px] sm:text-xs text-surface-nav-foreground/55 font-body max-w-md mx-auto">
+            {isRTL
+              ? 'استخدم الفلاتر لتقريب النتائج، ثم قارن قبل التواصل.'
+              : 'Use the filters to narrow results, then compare before reaching out.'}
+          </p>
 
           {/* Quick filter chips */}
           {quickChips.length > 0 && (

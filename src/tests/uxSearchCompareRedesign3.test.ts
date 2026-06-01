@@ -87,4 +87,40 @@ describe('UX-REDESIGN-3 — Compare empty/result states', () => {
   it('does not display raw membership enum (uses localized label helper)', () => {
     expect(src).toContain('getMembershipTierLabel(b.membership_tier');
   });
+
+  it('empty state explains the 3-step comparison flow', () => {
+    expect(src).toContain('ابحث وصفِّ النتائج');
+    expect(src).toContain('أضف للمقارنة');
+    expect(src).toContain('قرّر وتواصل');
+  });
+
+  it('single-provider state surfaces the add-second-provider hint', () => {
+    expect(src).toContain('أضف جهة ثانية للمقارنة');
+    expect(src).toContain('selectedBusinesses.length === 1');
+  });
+
+  it('mobile users get a horizontal-scroll affordance for the table', () => {
+    expect(src).toMatch(/md:hidden[\s\S]{0,160}اسحب أفقياً/);
+  });
+});
+
+describe('UX-REDESIGN-3 — Search header hero CTAs', () => {
+  const src = read('src/components/search/SearchHeader.tsx');
+
+  it('exposes a primary quote CTA and sectors CTA in the hero', () => {
+    expect(src).toContain('to="/contact"');
+    expect(src).toContain('to="/sectors"');
+    expect(src).toContain('اطلب عرض سعر');
+    expect(src).toContain('استكشف القطاعات');
+  });
+
+  it('renders the filter-then-compare helper line', () => {
+    expect(src).toContain('استخدم الفلاتر لتقريب النتائج، ثم قارن قبل التواصل.');
+  });
+
+  it('hero CTAs never link to private/admin/auth routes', () => {
+    for (const re of [/to=["']\/dashboard/, /to=["']\/admin/, /to=["']\/auth/, /to=["']\/onboarding/]) {
+      expect(src).not.toMatch(re);
+    }
+  });
 });
