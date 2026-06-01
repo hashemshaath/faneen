@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2, Plus, Pencil, X, Check, AlertCircle, ExternalLink, Wrench, Sparkles, Inbox, Ticket, Clock, CheckCircle2, XCircle, Send, Trash2, ListPlus } from 'lucide-react';
+import { Loader2, Plus, Pencil, X, Check, AlertCircle, ExternalLink, Wrench, Sparkles, Inbox, Ticket, Clock, CheckCircle2, XCircle, Send, Trash2, ListPlus, Lock, PauseCircle, ShieldAlert } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -14,6 +14,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
 import { ONBOARDING_SECTORS, findSubServiceById, type SectorId } from '@/data/onboarding-sectors';
 import { ServiceBrandsPicker } from '@/components/dashboard/ServiceBrandsPicker';
+import {
+  resolveServiceEntitlements,
+  setProviderServiceStatus,
+  effectiveStatusLabel,
+  effectiveStatusBadgeClass,
+  normalizeTier,
+  type EffectiveServiceStatus,
+  type ResolvedServiceEntitlement,
+  type ProviderServiceRowLike,
+} from '@/modules/providerServices';
+import { getCurrentMembershipSubscription } from '@/modules/memberships';
+import { useMembershipLimits } from '@/hooks/useMembershipLimits';
+import type { TierKey } from '@/lib/membership-tiers';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +53,11 @@ type ServiceRow = {
   sort_order: number;
   is_demo: boolean;
   created_at: string;
+  provider_status: 'active' | 'paused';
+  admin_status: 'allowed' | 'suspended' | 'rejected' | 'pending_review';
+  required_plan_tier: TierKey | null;
+  rejection_reason: string | null;
+  admin_note: string | null;
 };
 
 type SARequest = {
@@ -113,7 +131,7 @@ const DashboardServices: React.FC = () => {
       if (!businessId) return [] as ServiceRow[];
       const { data, error } = await supabase
         .from('business_services')
-        .select('id, business_id, source_sub_service_id, name_ar, name_en, description_ar, description_en, price_from, price_to, currency_code, is_active, sort_order, is_demo, created_at')
+        .select('id, business_id, source_sub_service_id, name_ar, name_en, description_ar, description_en, price_from, price_to, currency_code, is_active, sort_order, is_demo, created_at, provider_status, admin_status, required_plan_tier, rejection_reason, admin_note')
         .eq('business_id', businessId)
         .order('sort_order', { ascending: true });
       if (error) throw error;
@@ -146,12 +164,55 @@ const DashboardServices: React.FC = () => {
     return m;
   }, [services]);
 
+  // ── SERVICE-ACTIVATION-GOVERNANCE-1: current tier + plan cap ──
+  const { data: subscription } = useQuery({
+    queryKey: ['my-membership-subscription', user?.id],
+    enabled: !!user,
+    staleTime: 60_000,
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await getCurrentMembershipSubscription<{
+        plan: { tier: string | null } | null;
+      }>({ userId: user.id, select: 'plan:membership_plans!plan_id(tier)' });
+      return data;
+    },
+  });
+  const currentTier: TierKey | null = useMemo(
+    () => normalizeTier(subscription?.plan?.tier ?? null) ?? 'free',
+    [subscription],
+  );
+  const { limits } = useMembershipLimits(currentTier, isRTL);
+  const maxActiveServices = useMemo<number | null>(() => {
+    const raw = (limits as Record<string, unknown> | undefined)?.max_services;
+    return typeof raw === 'number' && raw >= 0 ? raw : null;
+  }, [limits]);
+
+  // Resolve effective status for every row using the canonical resolver.
+  const resolvedByRowId = useMemo(() => {
+    const m = new Map<string, ResolvedServiceEntitlement>();
+    const rowsForResolve: ProviderServiceRowLike[] = services.map((s) => ({
+      id: s.id,
+      provider_status: s.provider_status,
+      admin_status: s.admin_status,
+      required_plan_tier: s.required_plan_tier,
+      is_active: s.is_active,
+    }));
+    resolveServiceEntitlements(rowsForResolve, { currentTier, maxActiveServices }).forEach(
+      (r) => m.set(r.row.id, r.resolved),
+    );
+    return m;
+  }, [services, currentTier, maxActiveServices]);
+
+  // Status filter
+  const [statusFilter, setStatusFilter] = useState<'all' | EffectiveServiceStatus>('all');
+
   // Build display list aligned with sub_services chosen on the business
   const displayList = useMemo(() => {
     return subServiceIds.map((subId) => {
       const catalog = findSubServiceById(subId);
       const row = byCatalogId.get(subId);
       const isCustom = subId.startsWith('custom:');
+      const resolved = row ? resolvedByRowId.get(row.id) ?? null : null;
       return {
         subId,
         isCustom,
@@ -160,16 +221,29 @@ const DashboardServices: React.FC = () => {
         name_ar: row?.name_ar ?? catalog?.name_ar ?? (isRTL ? 'خدمة مخصّصة' : 'Custom service'),
         name_en: row?.name_en ?? catalog?.name_en ?? 'Custom service',
         row,
+        resolved,
       };
     });
-  }, [subServiceIds, byCatalogId, isRTL]);
+  }, [subServiceIds, byCatalogId, resolvedByRowId, isRTL]);
+
+  const filteredDisplayList = useMemo(() => {
+    if (statusFilter === 'all') return displayList;
+    return displayList.filter((d) => d.resolved?.effective_status === statusFilter);
+  }, [displayList, statusFilter]);
 
   // Stats
   const stats = useMemo(() => {
     const total = displayList.length;
-    const active = displayList.filter((d) => d.row?.is_active).length;
-    const priced = displayList.filter((d) => d.row && (d.row.price_from || d.row.price_to)).length;
-    return { total, active, priced };
+    let active = 0, paused = 0, upgrade = 0, review = 0, suspended = 0;
+    displayList.forEach((d) => {
+      const s = d.resolved?.effective_status;
+      if (s === 'active') active += 1;
+      else if (s === 'paused') paused += 1;
+      else if (s === 'upgrade_required' || s === 'quota_exceeded') upgrade += 1;
+      else if (s === 'pending_review') review += 1;
+      else if (s === 'disabled' || s === 'hidden') suspended += 1;
+    });
+    return { total, active, paused, upgrade, review, suspended };
   }, [displayList]);
 
   const stats2 = useMemo(() => ({
@@ -231,11 +305,12 @@ const DashboardServices: React.FC = () => {
       if (!businessId) throw new Error('No business');
       const existing = byCatalogId.get(input.subId);
       if (existing) {
-        const { error } = await supabase
-          .from('business_services')
-          .update({ is_active: input.nextActive })
-          .eq('id', existing.id);
-        if (error) throw error;
+        // SERVICE-ACTIVATION-GOVERNANCE-1: go through canonical module so
+        // provider_status and is_active stay in sync.
+        await setProviderServiceStatus({
+          serviceRowId: existing.id,
+          status: input.nextActive ? 'active' : 'paused',
+        });
       } else {
         const { error } = await supabase
           .from('business_services')
@@ -245,6 +320,7 @@ const DashboardServices: React.FC = () => {
             name_ar: input.name_ar,
             name_en: input.name_en,
             is_active: input.nextActive,
+            provider_status: input.nextActive ? 'active' : 'paused',
             currency_code: 'SAR',
             sort_order: services.length,
           });
@@ -398,11 +474,38 @@ const DashboardServices: React.FC = () => {
         </header>
 
         {/* Stats */}
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          <StatCard icon={<Wrench className="h-4 w-4" />} label={isRTL ? 'إجمالي الخدمات' : 'Total services'} value={stats.total} />
-          <StatCard icon={<Sparkles className="h-4 w-4 text-success" />} label={isRTL ? 'الخدمات النشطة' : 'Active'} value={stats.active} />
-          <StatCard icon={<Inbox className="h-4 w-4 text-warning" />} label={isRTL ? 'طلبات قيد المراجعة' : 'Pending requests'} value={stats2.pending} />
+        <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatCard icon={<Sparkles className="h-4 w-4 text-success" />} label={isRTL ? 'الخدمات المفعّلة' : 'Active'} value={stats.active} />
+          <StatCard icon={<PauseCircle className="h-4 w-4 text-muted-foreground" />} label={isRTL ? 'متوقفة' : 'Paused'} value={stats.paused} />
+          <StatCard icon={<Lock className="h-4 w-4 text-accent" />} label={isRTL ? 'تتطلب ترقية' : 'Upgrade required'} value={stats.upgrade} />
+          <StatCard icon={<Inbox className="h-4 w-4 text-warning" />} label={isRTL ? 'قيد المراجعة' : 'Pending review'} value={stats.review} />
         </section>
+
+        {/* Status filter */}
+        {displayList.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground me-1">{isRTL ? 'تصفية:' : 'Filter:'}</span>
+            {([
+              ['all', isRTL ? 'الكل' : 'All', displayList.length],
+              ['active', effectiveStatusLabel('active', isRTL), stats.active],
+              ['paused', effectiveStatusLabel('paused', isRTL), stats.paused],
+              ['upgrade_required', effectiveStatusLabel('upgrade_required', isRTL), stats.upgrade],
+              ['pending_review', effectiveStatusLabel('pending_review', isRTL), stats.review],
+              ['disabled', effectiveStatusLabel('disabled', isRTL), stats.suspended],
+            ] as Array<['all' | EffectiveServiceStatus, string, number]>).map(([key, label, count]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setStatusFilter(key)}
+                className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${
+                  statusFilter === key ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border/60 bg-card hover:bg-accent/5'
+                }`}
+              >
+                {label} <span className="tech-content opacity-60">({count})</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Inline catalog picker — bidirectional sync with business-edit */}
         {pickerOpen && businessId && (
@@ -597,9 +700,16 @@ const DashboardServices: React.FC = () => {
                 </Button>
               </div>
             )}
-            {!loading && displayList.length > 0 && (
+            {!loading && displayList.length > 0 && filteredDisplayList.length === 0 && (
+              <div className="rounded-xl border border-dashed border-border p-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {isRTL ? 'لا توجد خدمات مطابقة للفلتر الحالي.' : 'No services match the current filter.'}
+                </p>
+              </div>
+            )}
+            {!loading && filteredDisplayList.length > 0 && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                {displayList.map((d) => (
+                {filteredDisplayList.map((d) => (
                   <ServiceTile
                     key={d.subId}
                     businessId={businessId!}
@@ -611,6 +721,7 @@ const DashboardServices: React.FC = () => {
                     nameAr={d.name_ar}
                     nameEn={d.name_en || d.name_ar}
                     row={d.row}
+                    resolved={d.resolved}
                     isRTL={isRTL}
                     saving={upsertMut.isPending}
                     onToggle={(next) => toggleMut.mutate({ subId: d.subId, name_ar: d.name_ar, name_en: d.name_en || d.name_ar, nextActive: next })}
@@ -638,7 +749,7 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 function ServiceTile({
-  businessId, userId, sectorId, sectorLabel, isCustom, name, nameAr, nameEn, row, isRTL, saving, onToggle, onSave, onRemove, removing,
+  businessId, userId, sectorId, sectorLabel, isCustom, name, nameAr, nameEn, row, resolved, isRTL, saving, onToggle, onSave, onRemove, removing,
 }: {
   businessId: string;
   userId: string;
@@ -649,6 +760,7 @@ function ServiceTile({
   nameAr: string;
   nameEn: string;
   row: ServiceRow | undefined;
+  resolved: ResolvedServiceEntitlement | null;
   isRTL: boolean;
   saving: boolean;
   onToggle: (next: boolean) => void;
@@ -664,21 +776,47 @@ function ServiceTile({
     price_to: row?.price_to?.toString() ?? '',
     currency_code: row?.currency_code ?? 'SAR',
   });
-  const isActive = row?.is_active ?? false;
+  const effective = resolved?.effective_status ?? null;
+  const isActive = effective === 'active';
+  const switchLocked = !!resolved && !resolved.canActivate && !resolved.canPause;
   const hasPrice = !!(row && (row.price_from || row.price_to));
 
   return (
-    <div className={`rounded-xl border bg-card p-3 transition-all ${isActive ? 'border-border/60' : 'border-border/40 opacity-80'}`}>
+    <div className={`rounded-xl border bg-card p-3 transition-all ${isActive ? 'border-border/60' : 'border-border/40 opacity-90'}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-semibold text-sm truncate">{name}</h3>
             {isCustom && <Badge variant="outline" className="text-[10px]">{isRTL ? 'مخصّصة' : 'Custom'}</Badge>}
+            {effective && (
+              <Badge
+                variant="outline"
+                className={`text-[10px] ${effectiveStatusBadgeClass(effective)}`}
+              >
+                {effective === 'upgrade_required' || effective === 'quota_exceeded' ? (
+                  <Lock className="h-3 w-3 me-1 inline" />
+                ) : effective === 'disabled' || effective === 'hidden' ? (
+                  <ShieldAlert className="h-3 w-3 me-1 inline" />
+                ) : effective === 'pending_review' ? (
+                  <Clock className="h-3 w-3 me-1 inline" />
+                ) : effective === 'paused' ? (
+                  <PauseCircle className="h-3 w-3 me-1 inline" />
+                ) : (
+                  <CheckCircle2 className="h-3 w-3 me-1 inline" />
+                )}
+                {effectiveStatusLabel(effective, isRTL)}
+              </Badge>
+            )}
           </div>
           {sectorLabel && <p className="text-[11px] text-muted-foreground mt-0.5">{sectorLabel}</p>}
         </div>
         <div className="flex items-center gap-2">
-          <Switch checked={isActive} onCheckedChange={onToggle} aria-label="active" />
+          <Switch
+            checked={isActive}
+            onCheckedChange={onToggle}
+            aria-label="active"
+            disabled={switchLocked}
+          />
           <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setEditing((v) => !v)}>
             {editing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
           </Button>
@@ -700,6 +838,34 @@ function ServiceTile({
           </Button>
         </div>
       </div>
+
+      {/* Governance call-outs */}
+      {resolved?.requiresUpgrade && (
+        <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-accent/30 bg-accent/5 p-2">
+          <p className="text-[11px] text-accent flex items-center gap-1">
+            <Lock className="h-3 w-3" />
+            {resolved.upgradeReason === 'quota_exceeded'
+              ? (isRTL ? 'تجاوزت حد الخدمات في باقتك الحالية.' : 'You exceeded your plan\'s active services limit.')
+              : (isRTL ? 'هذه الخدمة متاحة ضمن باقة أعلى.' : 'This service requires a higher membership plan.')}
+          </p>
+          <Button asChild size="sm" variant="outline" className="h-7 text-[11px]">
+            <Link to="/membership">{isRTL ? 'ترقية العضوية' : 'Upgrade plan'}</Link>
+          </Button>
+        </div>
+      )}
+      {resolved?.adminBlockedReason && (effective === 'disabled' || effective === 'pending_review' || effective === 'hidden') && (
+        <div className="mt-2 rounded-lg border border-destructive/20 bg-destructive/5 p-2 text-[11px] text-destructive flex items-start gap-1">
+          <ShieldAlert className="h-3 w-3 mt-0.5 shrink-0" />
+          <span>
+            {effective === 'pending_review'
+              ? (isRTL ? 'هذه الخدمة قيد المراجعة من الإدارة.' : 'This service is under admin review.')
+              : effective === 'hidden'
+                ? (isRTL ? 'هذه الخدمة مخفية من قِبل الإدارة.' : 'This service is hidden by admin.')
+                : (isRTL ? 'تم إيقاف هذه الخدمة من قِبل الإدارة.' : 'This service has been suspended by admin.')}
+            {row?.rejection_reason ? ` — ${row.rejection_reason}` : ''}
+          </span>
+        </div>
+      )}
 
       {!editing && (
         <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
