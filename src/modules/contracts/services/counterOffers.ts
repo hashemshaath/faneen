@@ -6,6 +6,7 @@
  * propose, or respond.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser } from '@/modules/identity/services/session';
 
 export type CounterOfferStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn';
 
@@ -48,7 +49,7 @@ export async function listCounterOffers(contractId: string): Promise<CounterOffe
 }
 
 export async function proposeCounterOffer(input: ProposeOfferInput): Promise<CounterOffer> {
-  const { data: userData } = await supabase.auth.getUser();
+  const { data: userData } = await getCurrentUser();
   const proposerId = userData?.user?.id;
   if (!proposerId) throw new Error('unauthenticated');
 
@@ -75,7 +76,7 @@ export async function respondToCounterOffer(
   decision: Exclude<CounterOfferStatus, 'pending'>,
   responseMessage?: string,
 ): Promise<CounterOffer> {
-  const { data: userData } = await supabase.auth.getUser();
+  const { data: userData } = await getCurrentUser();
   const userId = userData?.user?.id;
   if (!userId) throw new Error('unauthenticated');
 

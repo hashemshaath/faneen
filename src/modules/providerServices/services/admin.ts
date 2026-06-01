@@ -241,7 +241,7 @@ export async function notifyMembershipChangeForBusiness(
 }
 
 async function currentReviewerId(): Promise<string | null> {
-  const { data } = await supabase.auth.getUser();
+  const { data } = await getCurrentUser();
   return data.user?.id ?? null;
 }
 

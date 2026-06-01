@@ -578,7 +578,7 @@ async function writeBrandAuditLog(payload: {
   new_values?: Record<string, unknown> | null;
 }) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getCurrentUser();
     await sb.from('brand_audit_logs').insert({
       brand_id: payload.brand_id ?? null,
       brand_request_id: payload.brand_request_id ?? null,
