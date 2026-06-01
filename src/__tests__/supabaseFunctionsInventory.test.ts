@@ -80,9 +80,11 @@ const INVENTORY: Record<string, Classification> = {
   'weekly-sla-report': 'cron',
   'verify-pdf-arabic': 'frontend',
   'analyze-contract-document': 'frontend',
-  // AI-assisted clause suggestion tool. Auth-checked + CORS, intended for
-  // dashboard contract editor; no current src/ wrapper yet but the function
-  // is deployed and ready for the editor UI.
+  // AI-assisted clause suggestion tool. Auth-checked + CORS.
+  // Wrapper: src/modules/contracts/services/aiSuggestClauses.ts (deployed,
+  // ready). STAB-1J audit: no UI caller today — intentionally deferred until
+  // the contract editor / admin contract templates surface a "Suggest clauses"
+  // action. Do not delete without product sign-off.
   'contracts-ai-suggest-clauses': 'frontend',
   // Daily scheduled job. Scans active contracts and emits expiry alerts at
   // 30 / 14 / 7 / 1 day thresholds. Idempotent via contract_expiry_alerts_log.
