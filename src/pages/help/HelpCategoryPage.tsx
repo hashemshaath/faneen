@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { getHelpCategoryBySlug, listPublishedArticles } from '@/modules/helpCenter';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { BookOpen, Search, ChevronLeft, ChevronRight } from 'lucide-react';
