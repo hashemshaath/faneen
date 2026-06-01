@@ -1042,16 +1042,14 @@ const Membership = () => {
         </div>
 
         <Suspense fallback={<div className="h-32" aria-hidden />}>
-          <details className="max-w-5xl mx-auto mt-12 sm:mt-16 group">
-            <summary className="cursor-pointer list-none rounded-xl border border-border/60 bg-card px-5 py-3 font-heading font-semibold text-sm text-foreground hover:border-accent/40 transition-colors flex items-center justify-between">
-              <span>{isRTL ? 'مقارنة تفصيلية للمميزات' : 'Detailed Feature Comparison'}</span>
-              <span className="text-xs text-muted-foreground group-open:hidden">{isRTL ? 'عرض' : 'Show'}</span>
-              <span className="text-xs text-muted-foreground hidden group-open:inline">{isRTL ? 'إخفاء' : 'Hide'}</span>
-            </summary>
-            <div className="mt-4">
-              <FeatureComparisonTable isRTL={isRTL} />
-            </div>
-          </details>
+          {/* MEMBERSHIP-PAGE-REDESIGN-2: Feature matrix is always visible
+              (anchor target for the hero "قارن العضويات" CTA). Data is
+              sourced from `membership_plans.limits` via `PlanFeatureMatrix`
+              — no fabricated numbers. */}
+          <section id="compare" className="scroll-mt-24">
+            <FeatureComparisonTable isRTL={isRTL} />
+          </section>
+          <ServiceActivationAlignment isRTL={isRTL} />
           <MembershipBenefits isRTL={isRTL} />
           <MembershipTrustStrip isRTL={isRTL} />
           <MembershipTestimonials isRTL={isRTL} />
