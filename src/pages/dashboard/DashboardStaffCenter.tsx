@@ -48,6 +48,7 @@ import {
   listStaffActivitySessions,
 } from '@/modules/workspace/governance';
 import { listManagedBusinessesForUser, listBusinessesByIds } from '@/modules/businesses';
+import { countPendingStaffInvitationsForBusiness } from '@/modules/identity/services/invitations/countPendingStaffInvitationsForBusiness';
 import { listBusinessStaffByBusiness } from '@/modules/businesses/services/listBusinessStaffByBusiness';
 import { useTransferPrimaryManagerMutation } from '@/hooks/useTransferPrimaryManagerMutation';
 import { mapTransferPrimaryManagerCode } from '@/modules/businesses/services/transferPrimaryManagerMessages';
@@ -298,7 +299,8 @@ function StaffOverview({ businessId }: { businessId: string }) {
                           {r.ref_id}
                         </span>
                       ) : null}
-                      {r.email ? <span className="tech-content">· {r.email}</span> : null}
+                      {/* Email/phone are NOT shown in staff rows — privacy invariant
+                          enforced by ORG-RBAC-STRUCTURE-9E. */}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -685,12 +687,7 @@ function StaffKpiStrip({ businessId }: { businessId: string }) {
   const { data: invitesPending = 0 } = useQuery({
     queryKey: ['staff-center-kpi-invites', businessId],
     queryFn: async () => {
-      const { count } = await supabase
-        .from('business_staff_invitations')
-        .select('id', { count: 'exact', head: true })
-        .eq('business_id', businessId)
-        .eq('status', 'pending');
-      return count ?? 0;
+      return countPendingStaffInvitationsForBusiness(businessId);
     },
   });
 
@@ -735,12 +732,13 @@ const DashboardStaffCenter: React.FC = () => {
     queryKey: ['staff-center-business-meta', businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('businesses')
-        .select('id, name_ar, name_en, user_id')
-        .eq('id', businessId!)
-        .maybeSingle();
-      return data as { id: string; name_ar: string | null; name_en: string | null; user_id: string } | null;
+      const { data } = await listBusinessesByIds<{
+        id: string;
+        name_ar: string | null;
+        name_en: string | null;
+        user_id: string;
+      }>({ ids: [businessId!], select: 'id, name_ar, name_en, user_id' });
+      return data?.[0] ?? null;
     },
   });
 
