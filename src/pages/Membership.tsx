@@ -349,7 +349,7 @@ const Membership = () => {
     onError: (e: Error) => { setSubscribingPlanId(null); toast.error(e.message); },
   });
 
-  // Manual upgrade request flow (paid plans). Replaces self-serve activation in beta.
+  // Manual upgrade request flow for paid plans (admin-mediated activation alongside the Moyasar checkout).
   const requestUpgradeMutation = useMutation({
     mutationFn: async (plan: { id: string; tier: string }) => {
       if (!user || !myBusiness) throw new Error(isRTL ? 'يجب تسجيل الدخول وإنشاء نشاط تجاري أولاً' : 'Login and create a business first');

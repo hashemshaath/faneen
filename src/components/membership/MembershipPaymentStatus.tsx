@@ -13,8 +13,8 @@ import { MembershipCheckoutButton } from '@/components/membership/MembershipChec
  * subscription via the canonical service wrapper. No direct table access,
  * no admin-only fields, no raw payload/webhook data, no refund action.
  *
- * If no intent exists, the panel renders nothing so existing
- * manual / beta activation copy stays unchanged.
+ * If no intent exists, the panel renders nothing so the
+ * admin-mediated manual activation flow remains the visible path.
  */
 
 type Status = 'created' | 'requires_action' | 'succeeded' | 'failed' | 'cancelled' | 'refunded';
