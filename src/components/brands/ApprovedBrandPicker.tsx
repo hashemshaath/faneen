@@ -170,7 +170,7 @@ export const ApprovedBrandPicker: React.FC<ApprovedBrandPickerProps> = (props) =
             }`}
           >
             {b.logo_url ? (
-              <img src={b.logo_url} alt="" className="w-8 h-8 rounded object-contain bg-background" />
+              <img src={b.logo_url} alt="" aria-hidden="true" className="w-8 h-8 rounded object-contain bg-background" />
             ) : (
               <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
                 <Tag className="w-4 h-4 text-muted-foreground" />
