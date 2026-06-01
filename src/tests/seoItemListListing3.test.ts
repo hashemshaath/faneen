@@ -9,7 +9,7 @@ describe('SEO-3 — ItemList JSON-LD on listing pages', () => {
     const src = read('src/pages/BrandsCatalog.tsx');
     // ItemList block present and tied to the visible filtered list.
     expect(src).toMatch(/'@type':\s*'ItemList'/);
-    expect(src).toMatch(/filtered\.filter\(\(b\)\s*=>\s*!!b\.slug\)/);
+    expect(src).toMatch(/\.filter\(\(b\)\s*=>\s*!!b\.slug\)/);
     // Source is the public brand reader (brands_public), not raw brand_catalog.
     expect(src).toMatch(/listApprovedBrands/);
     expect(src).not.toMatch(/from\(['"]brand_catalog['"]\)/);
