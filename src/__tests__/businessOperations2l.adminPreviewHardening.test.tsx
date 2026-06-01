@@ -17,8 +17,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import type { PreviewSlaSweepResult } from '@/modules/operations/services/previewSlaSweepForAdmin';
@@ -203,8 +202,13 @@ describe('2L AdminOperations dashboard hardening', () => {
     // ADMIN-OPS-TAB-CONSOLIDATION: detailed sections moved into tabs.
     // Loader health lives under the "Health" tab; switch to it first.
     await screen.findByTestId('status-badge');
-    const user = userEvent.setup();
-    await user.click(screen.getByRole('tab', { name: /Health/i }));
+    const tabs = screen.getAllByRole('tab');
+    const healthTab = tabs.find((t) => /Health/i.test(t.textContent ?? ''))!;
+    await act(async () => {
+      fireEvent.pointerDown(healthTab, { button: 0, pointerType: 'mouse' });
+      fireEvent.mouseDown(healthTab, { button: 0 });
+      fireEvent.click(healthTab);
+    });
     const summary = await screen.findByTestId('loader-health-summary');
     expect(summary.textContent).toMatch(/Healthy/);
     expect(summary.textContent).toMatch(/Failed/);
