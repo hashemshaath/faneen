@@ -83,9 +83,16 @@ describe('MembershipPaymentHistory — bilingual copy', () => {
 
 describe('Membership page mounts MembershipPaymentHistory', () => {
   it('imports and renders the history component with subscriptionId', () => {
-    expect(PAGE).toContain(
+    // The component is loaded via lazyRetry (project standard) — assert either
+    // the eager named import or the canonical lazyRetry dynamic import.
+    const hasEagerImport = PAGE.includes(
       "import { MembershipPaymentHistory } from '@/components/membership/MembershipPaymentHistory'",
     );
+    const hasLazyImport =
+      /lazyRetry\(\(\)\s*=>\s*import\(['"]@\/components\/membership\/MembershipPaymentHistory['"]\)/.test(
+        PAGE,
+      ) && /MembershipPaymentHistory/.test(PAGE);
+    expect(hasEagerImport || hasLazyImport).toBe(true);
     expect(PAGE).toContain('<MembershipPaymentHistory');
     expect(PAGE).toMatch(/subscriptionId=\{/);
   });
