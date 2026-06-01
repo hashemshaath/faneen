@@ -8,6 +8,7 @@ import {
 
 import { supabase } from '@/integrations/supabase/client';
 import { getProfileByUserId, searchProfilesByOr, getProfileByEmailIlike } from '@/modules/users';
+import { getProfileDisplayName } from '@/modules/profiles/utils/displayName';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
 import { checkInvitationTransition } from '@/modules/identity';
@@ -336,7 +337,15 @@ export const InvitationsPanel: React.FC<Props> = ({
                 >
                   <AtSign className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium truncate">{s.full_name || s.username || s.email}</div>
+                    {/* STAB-1G: invitation/contact search row — email allowed as
+                        last-resort fallback because the secondary line already
+                        exposes it; locale preference picks Arabic-first. */}
+                    <div className="text-sm font-medium truncate">
+                      {getProfileDisplayName(s, {
+                        locale: isRTL ? 'ar' : 'en',
+                        allowEmailFallback: true,
+                      })}
+                    </div>
                     <div className="text-[11px] text-muted-foreground tech-content truncate">
                       {s.email}{s.username ? ` · @${s.username}` : ''}
                     </div>
