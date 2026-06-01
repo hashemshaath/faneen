@@ -474,11 +474,38 @@ const DashboardServices: React.FC = () => {
         </header>
 
         {/* Stats */}
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          <StatCard icon={<Wrench className="h-4 w-4" />} label={isRTL ? 'إجمالي الخدمات' : 'Total services'} value={stats.total} />
-          <StatCard icon={<Sparkles className="h-4 w-4 text-success" />} label={isRTL ? 'الخدمات النشطة' : 'Active'} value={stats.active} />
-          <StatCard icon={<Inbox className="h-4 w-4 text-warning" />} label={isRTL ? 'طلبات قيد المراجعة' : 'Pending requests'} value={stats2.pending} />
+        <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatCard icon={<Sparkles className="h-4 w-4 text-success" />} label={isRTL ? 'الخدمات المفعّلة' : 'Active'} value={stats.active} />
+          <StatCard icon={<PauseCircle className="h-4 w-4 text-muted-foreground" />} label={isRTL ? 'متوقفة' : 'Paused'} value={stats.paused} />
+          <StatCard icon={<Lock className="h-4 w-4 text-accent" />} label={isRTL ? 'تتطلب ترقية' : 'Upgrade required'} value={stats.upgrade} />
+          <StatCard icon={<Inbox className="h-4 w-4 text-warning" />} label={isRTL ? 'قيد المراجعة' : 'Pending review'} value={stats.review} />
         </section>
+
+        {/* Status filter */}
+        {displayList.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground me-1">{isRTL ? 'تصفية:' : 'Filter:'}</span>
+            {([
+              ['all', isRTL ? 'الكل' : 'All', displayList.length],
+              ['active', effectiveStatusLabel('active', isRTL), stats.active],
+              ['paused', effectiveStatusLabel('paused', isRTL), stats.paused],
+              ['upgrade_required', effectiveStatusLabel('upgrade_required', isRTL), stats.upgrade],
+              ['pending_review', effectiveStatusLabel('pending_review', isRTL), stats.review],
+              ['disabled', effectiveStatusLabel('disabled', isRTL), stats.suspended],
+            ] as Array<['all' | EffectiveServiceStatus, string, number]>).map(([key, label, count]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setStatusFilter(key)}
+                className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${
+                  statusFilter === key ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border/60 bg-card hover:bg-accent/5'
+                }`}
+              >
+                {label} <span className="tech-content opacity-60">({count})</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Inline catalog picker — bidirectional sync with business-edit */}
         {pickerOpen && businessId && (
@@ -673,9 +700,16 @@ const DashboardServices: React.FC = () => {
                 </Button>
               </div>
             )}
-            {!loading && displayList.length > 0 && (
+            {!loading && displayList.length > 0 && filteredDisplayList.length === 0 && (
+              <div className="rounded-xl border border-dashed border-border p-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {isRTL ? 'لا توجد خدمات مطابقة للفلتر الحالي.' : 'No services match the current filter.'}
+                </p>
+              </div>
+            )}
+            {!loading && filteredDisplayList.length > 0 && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                {displayList.map((d) => (
+                {filteredDisplayList.map((d) => (
                   <ServiceTile
                     key={d.subId}
                     businessId={businessId!}
@@ -687,6 +721,7 @@ const DashboardServices: React.FC = () => {
                     nameAr={d.name_ar}
                     nameEn={d.name_en || d.name_ar}
                     row={d.row}
+                    resolved={d.resolved}
                     isRTL={isRTL}
                     saving={upsertMut.isPending}
                     onToggle={(next) => toggleMut.mutate({ subId: d.subId, name_ar: d.name_ar, name_en: d.name_en || d.name_ar, nextActive: next })}
