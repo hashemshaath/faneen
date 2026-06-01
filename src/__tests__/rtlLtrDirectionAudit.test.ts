@@ -33,6 +33,8 @@ const ALLOWED_DIR_PREFIXES = [
   // Sidebar test asserts the forbidden patterns are absent; literal strings
   // referencing `before:left-0` / `before:right-0` appear by name.
   'src/__tests__/navUiPolish1.sidebar.test.ts',
+  // Page-polish audit lists physical-direction tokens by name in a regex.
+  'src/tests/pagePolishRepairs1.test.ts',
 ];
 
 const isAllowed = (rel: string) =>

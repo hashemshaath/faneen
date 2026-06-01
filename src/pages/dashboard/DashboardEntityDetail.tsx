@@ -592,12 +592,12 @@ const DashboardEntityDetail: React.FC = () => {
               {(staff ?? []).length > 0 && (
                 <div className="grid gap-2 md:grid-cols-[1fr_180px] mb-3">
                   <div className="relative">
-                    <Search className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} text-muted-foreground`} />
+                    <Search className="w-4 h-4 absolute top-1/2 -translate-y-1/2 start-3 text-muted-foreground" />
                     <Input
                       value={staffQuery}
                       onChange={(e) => setStaffQuery(e.target.value)}
                       placeholder={pickBi(isRTL, 'بحث بالاسم أو المعرف…', 'Search by name or ID…')}
-                      className={`h-10 ${isRTL ? 'pr-9' : 'pl-9'}`}
+                      className="h-10 ps-9"
                     />
                   </div>
                   <Select value={staffRoleFilter} onValueChange={(v) => setStaffRoleFilter(v as typeof staffRoleFilter)}>

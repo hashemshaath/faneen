@@ -170,7 +170,7 @@ const AdminServiceActivations: React.FC = () => {
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''} ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''} me-2`} />
             {isRTL ? 'تحديث' : 'Refresh'}
           </Button>
         </header>
@@ -200,12 +200,12 @@ const AdminServiceActivations: React.FC = () => {
               </div>
             )}
             <div className="relative">
-              <Search className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-muted-foreground`} />
+              <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={isRTL ? 'بحث عن خدمة...' : 'Search service…'}
-                className={isRTL ? 'pr-10' : 'pl-10'}
+                className="ps-10"
               />
             </div>
             <Select value={adminStatus} onValueChange={(v) => setAdminStatus(v as AdminStatusFilter)}>
@@ -249,7 +249,7 @@ const AdminServiceActivations: React.FC = () => {
                 size="sm"
                 onClick={() => setPremiumOnly((v) => !v)}
               >
-                <Crown className="h-3.5 w-3.5 mr-1" />
+                <Crown className="h-3.5 w-3.5 me-1" />
                 {isRTL ? 'مميزة' : 'Premium'}
               </Button>
               <Button
@@ -257,7 +257,7 @@ const AdminServiceActivations: React.FC = () => {
                 size="sm"
                 onClick={() => setFeaturedOnly((v) => !v)}
               >
-                <Star className="h-3.5 w-3.5 mr-1" />
+                <Star className="h-3.5 w-3.5 me-1" />
                 {isRTL ? 'منتقاة' : 'Featured'}
               </Button>
             </div>
@@ -386,14 +386,14 @@ const ActivationRow: React.FC<{
             }
             data-testid="provider-tier-chip"
           >
-            <Crown className="h-3 w-3 mr-1" />{tierChip}
+            <Crown className="h-3 w-3 me-1" />{tierChip}
           </Badge>
           <Badge className={effectiveStatusBadgeClass(resolved.effective_status)} variant="outline">
             {effectiveStatusLabel(resolved.effective_status, isRTL)}
           </Badge>
           {row.requires_admin_review && (
             <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
-              <ShieldAlert className="h-3 w-3 mr-1" />{isRTL ? 'مراجعة' : 'Review'}
+              <ShieldAlert className="h-3 w-3 me-1" />{isRTL ? 'مراجعة' : 'Review'}
             </Badge>
           )}
           {row.required_plan_tier && (
@@ -467,7 +467,7 @@ const ActivationRow: React.FC<{
               disabled={busy}
               onClick={() => actions.setPremium(!row.is_premium_service)}
             >
-              <Crown className="h-3.5 w-3.5 mr-1" />
+              <Crown className="h-3.5 w-3.5 me-1" />
               {row.is_premium_service ? (isRTL ? 'إلغاء مميزة' : 'Unmark premium') : (isRTL ? 'تعليم مميزة' : 'Mark premium')}
             </Button>
             <Button
@@ -476,7 +476,7 @@ const ActivationRow: React.FC<{
               disabled={busy}
               onClick={() => actions.setFeatured(!row.is_featured)}
             >
-              <Star className="h-3.5 w-3.5 mr-1" />
+              <Star className="h-3.5 w-3.5 me-1" />
               {row.is_featured ? (isRTL ? 'إلغاء انتقاء' : 'Unfeature') : (isRTL ? 'انتقاء' : 'Feature')}
             </Button>
           </div>
@@ -509,7 +509,7 @@ const ActivationRow: React.FC<{
             />
             <div className="flex justify-end mt-2">
               <Button size="sm" variant="outline" disabled={busy} onClick={() => actions.saveNote(noteDraft)}>
-                {busy && <Loader2 className={`h-3.5 w-3.5 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />}
+                {busy && <Loader2 className="h-3.5 w-3.5 animate-spin me-2" />}
                 {isRTL ? 'حفظ الملاحظة' : 'Save note'}
               </Button>
             </div>

@@ -164,7 +164,7 @@ const DashboardRfq: React.FC = () => {
                     )}
                   </div>
                   {(rfq.budget_min || rfq.budget_max) && (
-                    <div className="text-sm tech-content text-right">
+                    <div className="text-sm tech-content text-end">
                       {rfq.budget_min ?? '-'} – {rfq.budget_max ?? '-'} {rfq.currency}
                     </div>
                   )}
