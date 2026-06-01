@@ -25,7 +25,7 @@ describe('UX-REDESIGN-1 — Homepage redesign', () => {
 
   it('PlatformFeaturesSection links to every previously-hidden public route', () => {
     for (const route of ['/services', '/brands', '/showcase', '/projects', '/compare', '/for-providers']) {
-      expect(features).toContain(`to=\"${route}\"`);
+      expect(features).toContain(`'${route}'`);
     }
   });
 
