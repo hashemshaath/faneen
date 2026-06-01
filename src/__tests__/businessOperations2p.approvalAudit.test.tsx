@@ -227,9 +227,14 @@ describe('2P — AdminOperations dashboard exposes approval audit logging', () =
     expect(panel.textContent ?? '').toMatch(/approval audit logging/i);
     expect(panel.textContent ?? '').toMatch(/enabled/i);
   });
-  it('renders approval audit section', () => {
+  it('renders approval audit section', async () => {
     renderPage();
-    expect(screen.getByTestId('approval-audit')).toBeTruthy();
+    // ADMIN-OPS-TAB-CONSOLIDATION: detailed sections moved into tabs.
+    // The approval audit lives under the "Audit" tab; switch to it first.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('tab', { name: /Audit/i }));
+    });
+    expect(await screen.findByTestId('approval-audit')).toBeTruthy();
   });
   it('does not render real-run / approval / unlock / cron buttons', () => {
     renderPage();

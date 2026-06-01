@@ -199,6 +199,12 @@ describe('2L AdminOperations dashboard hardening', () => {
       loaderErrorsCount: 1,
     }));
     renderPage();
+    // ADMIN-OPS-TAB-CONSOLIDATION: detailed sections moved into tabs.
+    // Loader health lives under the "Health" tab; switch to it first.
+    await screen.findByTestId('status-badge');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('tab', { name: /Health/i }));
+    });
     const summary = await screen.findByTestId('loader-health-summary');
     expect(summary.textContent).toMatch(/Healthy/);
     expect(summary.textContent).toMatch(/Failed/);
