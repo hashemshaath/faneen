@@ -49,11 +49,14 @@ export const PlanCard = React.memo(({
     () => parseLimits(plan.limits as Record<string, unknown> | undefined),
     [plan.limits],
   );
+  // Only surface CONFIRMED keys on public plan cards. Unconfirmed keys
+  // (max_featured_ads, search_priority, etc.) would render fabricated
+  // "Unlimited" / "off" badges. See docs/membership-plan-limits-source-of-truth.md
   const TOP_KEYS = [
-    'max_featured_ads',
-    'search_priority',
     'homepage_visibility',
     'profile_badge',
+    'suggested_services',
+    'max_services',
     'max_projects',
   ];
   const topFields: LimitField[] = TOP_KEYS
