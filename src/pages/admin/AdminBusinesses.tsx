@@ -2696,6 +2696,12 @@ const AdminBusinesses = () => {
                           <Package className="w-3 h-3" /> {isRTL ? 'خدمات' : 'Services'}
                         </Button>
 
+                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl" asChild>
+                          <Link to={`/admin/service-activations?businessId=${biz.id}`}>
+                            <ShieldCheck className="w-3 h-3" />{isRTL ? 'خدمات الجهة' : 'Activations'}
+                          </Link>
+                        </Button>
+
                         <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl" onClick={() => openEdit(biz)}>
                           <Edit className="w-3 h-3" />{isRTL ? 'تعديل' : 'Edit'}
                         </Button>
