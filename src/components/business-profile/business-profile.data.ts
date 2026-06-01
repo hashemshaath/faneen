@@ -13,6 +13,26 @@ type CityRow = Database["public"]["Tables"]["cities"]["Row"];
 type CountryRow = Database["public"]["Tables"]["countries"]["Row"];
 type ServiceRow = Database["public"]["Tables"]["business_services"]["Row"];
 type BranchRow = Database["public"]["Tables"]["business_branches"]["Row"];
+type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
+type PortfolioItemRow = Database["public"]["Tables"]["portfolio_items"]["Row"];
+type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
+
+type ProjectWithJoins = Pick<
+  ProjectRow,
+  | "id"
+  | "title_ar"
+  | "title_en"
+  | "description_ar"
+  | "description_en"
+  | "cover_image_url"
+  | "is_featured"
+  | "duration_days"
+  | "project_cost"
+  | "currency_code"
+> & {
+  categories: Pick<CategoryRow, "name_ar" | "name_en"> | null;
+  cities: Pick<CityRow, "name_ar" | "name_en"> | null;
+};
 
 type BranchWithJoins = BranchRow & {
   cities: Pick<CityRow, "name_ar" | "name_en"> | null;
@@ -132,7 +152,8 @@ export const useProjects = (businessId: string | undefined) =>
         .eq("business_id", businessId!)
         .eq("status", "published")
         .order("is_featured", { ascending: false })
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .returns<ProjectWithJoins[]>();
 
       return data ?? [];
     },
