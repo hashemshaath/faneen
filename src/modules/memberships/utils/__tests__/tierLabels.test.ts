@@ -2,9 +2,10 @@ import { describe, it, expect } from 'vitest';
 import {
   getMembershipTierLabel,
   getMembershipTierBadgeVariant,
-  getUpgradePath,
+  getMembershipUpgradePath,
   compareMembershipTiers,
   isTierAtLeast,
+  normalizeMembershipTier,
 } from '../tierLabels';
 
 describe('membership tier labels', () => {
@@ -40,7 +41,7 @@ describe('membership tier labels', () => {
   });
 
   it('exposes the canonical upgrade path', () => {
-    expect(getUpgradePath()).toBe('/membership');
+    expect(getMembershipUpgradePath()).toBe('/membership');
   });
 });
 
@@ -63,5 +64,20 @@ describe('membership tier comparison', () => {
     expect(isTierAtLeast('basic', 'premium')).toBe(false);
     expect(isTierAtLeast('enterprise', 'enterprise')).toBe(true);
     expect(isTierAtLeast(null, 'free')).toBe(false);
+  });
+});
+
+describe('normalizeMembershipTier', () => {
+  it('returns the canonical tier for known values', () => {
+    expect(normalizeMembershipTier('free')).toBe('free');
+    expect(normalizeMembershipTier('  Premium ')).toBe('premium');
+    expect(normalizeMembershipTier('ENTERPRISE')).toBe('enterprise');
+  });
+
+  it('returns null for unknown or empty values', () => {
+    expect(normalizeMembershipTier(null)).toBeNull();
+    expect(normalizeMembershipTier(undefined)).toBeNull();
+    expect(normalizeMembershipTier('')).toBeNull();
+    expect(normalizeMembershipTier('bogus')).toBeNull();
   });
 });
