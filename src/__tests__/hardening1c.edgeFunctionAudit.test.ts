@@ -49,6 +49,10 @@ const NOTIFICATION_DISPATCHERS = new Set([
   'temp-code-session',
   'admin-reveal-lead-contact',
   'match-quote-request',
+  // Scheduled cron notifier — approved dispatcher for contract-expiry events
+  // (parallel to `check-overdue`). Idempotency enforced via
+  // contract_expiry_alerts_log UNIQUE(contract_id, days_before).
+  'contracts-expiry-notifier',
 ]);
 
 describe('HARDENING-1C: Edge function audit', () => {
