@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { track } from '@/lib/analytics-events';
+import { getMembershipTierLabel } from '@/modules/memberships';
 
 const Offers = () => {
   const { isRTL, language } = useLanguage();
