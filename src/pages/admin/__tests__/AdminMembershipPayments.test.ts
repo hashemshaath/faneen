@@ -60,10 +60,15 @@ describe('AdminMembershipPayments source contract', () => {
 
 describe('AdminMembershipPayments route wiring', () => {
   const APP = fs.readFileSync(path.resolve(__dirname, '../../../App.tsx'), 'utf8');
-  it('is registered as admin-only route at /admin/membership-payments', () => {
-    expect(APP).toMatch(/\/admin\/membership-payments/);
-    expect(APP).toMatch(/AdminMembershipPayments/);
-    expect(APP).toMatch(/requireAdmin[^>]*>\s*<AdminMembershipPayments/);
+  it('keeps /admin/membership-payments as an admin-gated route (now a redirect into the consolidated Memberships Center)', () => {
+    // ADMIN-IA-CONSOLIDATION: AdminMembershipPayments is rendered as the
+    // "Payments" tab inside AdminMembershipsHub (see
+    // src/pages/admin/AdminMembershipsHub.tsx). The legacy direct route
+    // remains as an admin-guarded redirect to /admin/memberships?tab=payments
+    // so historical deep links keep working.
+    expect(APP).toMatch(/path="\/admin\/membership-payments"/);
+    expect(APP).toMatch(/\/admin\/membership-payments[^"]*"\s+element=\{<ProtectedRoute\s+requireAdmin>/);
+    expect(APP).toMatch(/\/admin\/membership-payments[^"]*"[^]*<Navigate\s+to="\/admin\/memberships\?tab=payments"/);
   });
 });
 
