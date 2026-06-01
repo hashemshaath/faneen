@@ -29,7 +29,7 @@ import {
   getDefaultPermissionsForRole,
   type WorkspacePermission,
 } from '@/modules/workspace/permissions';
-import { updateBusinessStaffById } from '@/modules/businesses/services/updateBusinessStaffById';
+import { updateBusinessStaffPermissionsOverride } from '@/modules/businesses/services/guardedStaffMutations';
 
 // Local-only storage for user-saved permission templates (UI convenience).
 const PRESETS_STORAGE_KEY = 'qitaat_perm_presets_v1';
@@ -270,11 +270,10 @@ export const StaffPermissionsMatrix: React.FC<StaffPermissionsMatrixProps> = ({
   const handleSave = async () => {
     setSaving(true);
     try {
-      const payload = matchesDefaults
-        ? { permissions_override: null }
-        : { permissions_override: Array.from(selected) };
-      const res = await updateBusinessStaffById({ id: staffId, values: payload });
-      if (res.error) throw res.error;
+      await updateBusinessStaffPermissionsOverride(
+        staffId,
+        matchesDefaults ? null : Array.from(selected),
+      );
       toast({ title: pickBi(isRTL, 'تم حفظ الصلاحيات', 'Permissions saved') });
       onSaved?.();
     } catch (err) {
