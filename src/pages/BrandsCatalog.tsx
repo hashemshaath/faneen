@@ -187,7 +187,8 @@ const BrandsCatalog: React.FC = () => {
                   <Card className="hover-lift h-full">
                     <CardContent className="p-4 flex gap-3 items-start">
                       {b.logo_url ? (
-                        <img src={b.logo_url} alt={display} loading="lazy"
+                        <img src={b.logo_url} alt={display} loading="lazy" decoding="async"
+                             width={56} height={56}
                              className="h-14 w-14 rounded-lg border bg-background object-cover" />
                       ) : (
                         <div className="h-14 w-14 rounded-lg bg-primary/10 grid place-items-center text-primary">
