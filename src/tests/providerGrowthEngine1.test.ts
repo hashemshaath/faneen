@@ -29,7 +29,7 @@ const ready: GrowthBusiness = {
   sub_services: ['windows', 'doors'],
   email: 'r@example.com',
   phone: '+966500000000',
-  logo_url: 'https://x/y.png',
+  logo_url: '/placeholder.svg',
   description_ar: 'وصف مختصر يحتوي على معلومات كافية لمحركات البحث ولزوار الموقع المهتمين بالخدمات.',
   city: 'Riyadh',
   approval_status: 'published',
