@@ -367,9 +367,7 @@ const Offers = () => {
                               biz.membership_tier === 'premium' ? 'bg-accent text-accent-foreground' :
                               'bg-info/90 text-white'
                             }`}>
-                              {biz.membership_tier === 'enterprise' ? (isRTL ? 'مؤسسي' : 'Enterprise') :
-                               biz.membership_tier === 'premium' ? (isRTL ? 'مميز' : 'Premium') :
-                               (isRTL ? 'أساسي' : 'Basic')}
+                              {getMembershipTierLabel(biz.membership_tier, isRTL ? 'ar' : 'en')}
                             </Badge>
                           </div>
                         )}
