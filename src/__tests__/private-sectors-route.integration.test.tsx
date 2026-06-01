@@ -49,6 +49,14 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 vi.mock('@/hooks/useNoIndex', () => ({ useNoIndex: () => {} }));
 vi.mock('@/hooks/usePageMeta', () => ({ usePageMeta: () => {} }));
+vi.mock('@/hooks/useVisibleModules', () => ({
+  useVisibleModules: () => ({
+    modules: [],
+    hiddenRoutes: new Set<string>(),
+    isRouteHidden: () => false,
+    isLoading: false,
+  }),
+}));
 vi.mock('@/components/common/BrandLogo', () => ({
   BrandLogo: () => <div data-testid="brand-logo" />,
 }));
