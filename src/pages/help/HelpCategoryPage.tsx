@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { getHelpCategoryBySlug, listPublishedArticles } from '@/modules/helpCenter';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { BookOpen, Search, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -136,8 +137,12 @@ const HelpCategoryPage: React.FC = () => {
             </Link>
           ))}
           {filtered.length === 0 && (
-            <div className="md:col-span-2 text-center text-sm text-muted-foreground py-8">
-              {isRTL ? 'لا توجد مقالات مطابقة.' : 'No matching articles.'}
+            <div className="md:col-span-2 text-center py-8 space-y-3">
+              <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد مقالات مطابقة.' : 'No matching articles.'}</p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Link to="/help"><Button size="sm" variant="outline" className="h-8">{isRTL ? 'مركز المساعدة' : 'Help center'}</Button></Link>
+                <Link to="/contact"><Button size="sm" className="h-8">{isRTL ? 'تواصل معنا' : 'Contact us'}</Button></Link>
+              </div>
             </div>
           )}
         </div>

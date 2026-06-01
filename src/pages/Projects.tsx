@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   FolderOpen, Calendar, DollarSign, Clock, Building2, X, ImageIcon,
   Search, MapPin, Tag, ArrowUpDown, SlidersHorizontal, ChevronDown,
+  MessageSquare, Layers, ShieldCheck,
 } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 12;
@@ -171,7 +172,27 @@ const Projects = () => {
             {isRTL ? 'المشاريع المنجزة' : 'Completed Projects'}
           </h1>
           <p className="text-primary-foreground/60 font-body text-sm sm:text-base">
-            {isRTL ? 'استعرض أفضل المشاريع من مزودي الخدمة' : 'Browse the best projects from service providers'}
+            {isRTL
+              ? 'أمثلة أعمال منشورة من مزودي خدمات الصناعات الخفيفة بعد المراجعة. تساعدك على فهم الخيارات قبل اتخاذ القرار.'
+              : 'Published work examples from light-industry providers, reviewed before publishing. They help you understand options before deciding.'}
+          </p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <Link to="/quote">
+              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 h-9">
+                <MessageSquare className="w-4 h-4 me-1.5" />
+                {isRTL ? 'اطلب عرض سعر' : 'Request a quote'}
+              </Button>
+            </Link>
+            <Link to="/sectors">
+              <Button size="sm" variant="outline" className="h-9 bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                <Layers className="w-4 h-4 me-1.5" />
+                {isRTL ? 'استكشف القطاعات' : 'Explore sectors'}
+              </Button>
+            </Link>
+          </div>
+          <p className="mt-3 text-[11px] sm:text-xs text-primary-foreground/55 inline-flex items-center gap-1 justify-center">
+            <ShieldCheck className="w-3 h-3" />
+            {isRTL ? 'الأعمال المعروضة لا تعني ضمان نتائج التنفيذ.' : 'Showcased work does not guarantee execution outcomes.'}
           </p>
         </div>
       </div>
@@ -302,11 +323,22 @@ const Projects = () => {
             {[1, 2, 3, 4, 5, 6].map(i => <ProjectSkeleton key={i} />)}
           </div>
         ) : projects.length === 0 ? (
-          <div className="text-center py-16 sm:py-20 text-muted-foreground">
+          <div className="text-center py-12 sm:py-16">
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-muted/50 dark:bg-muted/30 flex items-center justify-center mx-auto mb-4">
-              <FolderOpen className="w-10 h-10 sm:w-12 sm:h-12 opacity-20" />
+              <FolderOpen className="w-10 h-10 sm:w-12 sm:h-12 opacity-30 text-muted-foreground" />
             </div>
-            <p className="text-sm sm:text-base">{isRTL ? 'لا توجد مشاريع حالياً' : 'No projects available'}</p>
+            <p className="text-sm sm:text-base font-medium mb-1">{isRTL ? 'لا توجد مشاريع مطابقة' : 'No matching projects'}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-5 max-w-md mx-auto">
+              {isRTL
+                ? 'جرّب تعديل الفلاتر، أو ابدأ من أحد الخيارات الآمنة التالية:'
+                : 'Try adjusting your filters, or start from one of the safe options below:'}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Link to="/quote"><Button size="sm" className="h-9"><MessageSquare className="w-4 h-4 me-1.5" />{isRTL ? 'اطلب عرض سعر' : 'Request a quote'}</Button></Link>
+              <Link to="/sectors"><Button size="sm" variant="outline" className="h-9"><Layers className="w-4 h-4 me-1.5" />{isRTL ? 'استكشف القطاعات' : 'Explore sectors'}</Button></Link>
+              <Link to="/services"><Button size="sm" variant="outline" className="h-9">{isRTL ? 'استعرض الخدمات' : 'Browse services'}</Button></Link>
+              <Link to="/contact"><Button size="sm" variant="ghost" className="h-9">{isRTL ? 'تواصل معنا' : 'Contact us'}</Button></Link>
+            </div>
           </div>
         ) : (
           <>

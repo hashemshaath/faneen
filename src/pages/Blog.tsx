@@ -521,9 +521,17 @@ const Blog = () => {
             </div>
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-16 sm:py-24 text-muted-foreground">
-            <FileText className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 opacity-20" />
-            <p className="text-sm sm:text-lg">{isRTL ? 'لا توجد مقالات حالياً' : 'No articles available'}</p>
+          <div className="text-center py-12 sm:py-20">
+            <FileText className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 opacity-20 text-muted-foreground" />
+            <p className="text-sm sm:text-lg font-medium mb-1">{isRTL ? 'لا توجد مقالات حالياً' : 'No articles available'}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-5 max-w-md mx-auto">
+              {isRTL ? 'يمكنك في الأثناء استكشاف القطاعات أو طلب عرض سعر.' : 'In the meantime, explore sectors or request a quote.'}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Link to="/quote"><Button size="sm" className="h-9">{isRTL ? 'اطلب عرض سعر' : 'Request a quote'}</Button></Link>
+              <Link to="/sectors"><Button size="sm" variant="outline" className="h-9">{isRTL ? 'استكشف القطاعات' : 'Explore sectors'}</Button></Link>
+              <Link to="/help"><Button size="sm" variant="ghost" className="h-9">{isRTL ? 'مركز المساعدة' : 'Help center'}</Button></Link>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-8">
