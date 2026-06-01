@@ -1069,6 +1069,18 @@ const Onboarding = () => {
               <Arrow className="w-4 h-4 ms-1" />
             </Button>
           </div>
+
+          {/* SERVICE-ACTIVATION-GOVERNANCE-4 — services handoff copy */}
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <p className="text-xs text-foreground/80 flex-1">
+              {isRTL
+                ? 'يمكنك إدارة خدماتك لاحقًا من صفحة إدارة الخدمات، وتفعيل أو إيقاف الخدمات حسب عضويتك وحالة المراجعة.'
+                : 'You can manage your services later from the Services page, activating or pausing each one based on your membership and review status.'}
+            </p>
+            <Button size="sm" variant="outline" onClick={() => navigate('/dashboard/services')}>
+              {isRTL ? 'إدارة الخدمات' : 'Manage services'}
+            </Button>
+          </div>
         </div>
       </AuthLayout>
     );
