@@ -9,6 +9,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { getProfileByUserId, searchProfilesByOr, getProfileByEmailIlike } from '@/modules/users';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
+import { createNotification } from '@/modules/notifications/services/createNotification';
 import { checkInvitationTransition } from '@/modules/identity';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
