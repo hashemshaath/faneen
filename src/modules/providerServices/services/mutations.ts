@@ -23,7 +23,11 @@ export interface SetProviderServiceStatusArgs {
 }
 
 export async function setProviderServiceStatus(args: SetProviderServiceStatusArgs): Promise<void> {
-  const patch: Record<string, unknown> = {
+  const patch: {
+    provider_status: ProviderActivationStatus;
+    is_active: boolean;
+    provider_note?: string | null;
+  } = {
     provider_status: args.status,
     is_active: args.status === 'active',
   };
