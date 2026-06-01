@@ -67,9 +67,15 @@ describe('UX-REDESIGN-3 — Compare empty/result states', () => {
   it('preserves the PERF-1D.2 explicit public column allow-list (no PII)', () => {
     // Sentinel: the curated select string must remain — never replaced with `*`.
     expect(src).toContain("'id, username, name_ar, name_en, logo_url, '");
-    for (const pii of ['email', 'national_id', 'vat_number', 'cr_document', 'account_manager']) {
-      expect(src.includes(pii), `Compare must not select PII column ${pii}`).toBe(false);
+    // No bare `*` parent select on businesses, and no PII columns inside the
+    // curated select literals (comments are allowed to mention them).
+    const selectLiterals = src.match(/select:\s*\n?\s*'[^']*'(\s*\+\s*\n?\s*'[^']*')*/g) || [];
+    expect(selectLiterals.length).toBeGreaterThan(0);
+    const joined = selectLiterals.join(' ');
+    for (const pii of ['email', 'national_id', 'vat_number', 'cr_document', 'account_manager', 'phone']) {
+      expect(joined.includes(pii), `Compare select must not include PII column ${pii}`).toBe(false);
     }
+    expect(joined).not.toMatch(/select:\s*'\*'/);
   });
 
   it('preserves the SERVICE-ACTIVATION triple-gate on embedded services', () => {
