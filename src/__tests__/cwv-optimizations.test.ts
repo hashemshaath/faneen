@@ -30,7 +30,9 @@ describe('Core Web Vitals optimizations for public routes', () => {
       'utf8',
     );
     expect(src).not.toMatch(/^import\s+\{\s*SearchMap\s*\}/m);
-    expect(src).toMatch(/lazy\(\(\)\s*=>\s*import\(['"]\.\/SearchMap['"]\)/);
+    // Accept both React.lazy and the project-wide lazyRetry wrapper
+    // (asset-stability pattern that retries on stale chunk loads).
+    expect(src).toMatch(/(?:lazy|lazyRetry)\(\(\)\s*=>\s*import\(['"]\.\/SearchMap['"]\)/);
     expect(src).toMatch(/<Suspense[\s\S]*?<SearchMap/);
   });
 
