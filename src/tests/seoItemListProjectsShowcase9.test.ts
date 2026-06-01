@@ -31,13 +31,8 @@ describe('SEO-9 — Projects ItemList + Showcase source hardening review', () =>
     expect(src).not.toMatch(/'@type':\s*'Review'/);
   });
 
-  it('Showcase ItemList is intentionally deferred until source verification is enforced', () => {
+  it('Showcase keeps approved-only filter (visibility-tightening lives in SEO-10A)', () => {
     const src = read('src/pages/Showcase.tsx');
-    // Blocker: current query filters status='approved' but does NOT filter
-    // businesses by is_verified, while the hero advertises "verified only".
-    // Adding ItemList over this source could enumerate unverified businesses,
-    // so SEO-9 keeps Showcase ItemList deferred per safety policy.
-    expect(src).not.toMatch(/'@type':\s*'ItemList'/);
     // Approved-only filter must remain in place on the source query.
     expect(src).toMatch(/\.eq\(['"]status['"],\s*['"]approved['"]\)/);
   });
