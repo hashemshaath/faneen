@@ -48,7 +48,8 @@ export const tierConfig: Record<string, { label: string; labelAr: string; color:
   premium: { label: "Premium", labelAr: "مميز", color: "bg-accent/80 text-accent-foreground" },
 };
 
-// PERF-1D.3 — Explicit parent select replaces `*, categories(*), cities(*), countries(*)`.
+// PERF-1D.3 — Explicit parent select replaces the legacy parent-wildcard plus full
+// joined wildcards for categories / cities / countries.
 // Every column listed is referenced by either BusinessProfile.tsx (LocalBusiness JSON-LD,
 // SEO meta, contact mutation, preview banner, lead-context data attrs) or by the
 // BusinessProfileHeader / BusinessProfileTabs (contact + branches/services/reviews tabs).
