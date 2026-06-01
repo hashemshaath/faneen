@@ -168,7 +168,34 @@ describe('P-21 public/SEO businesses read migration', () => {
     const src = read('src/components/business-profile/business-profile.data.ts');
     expect(src).toMatch(/getPublicBusinessByUsername<BusinessWithJoins>\(\{/);
     expect(src).toContain('username,');
-    expect(src).toContain('select: "*, categories(*), cities(*), countries(*)"');
+    // PERF-1D.3 — `*, categories(*), cities(*), countries(*)` was replaced with an
+    // explicit allow-list (PUBLIC_BUSINESS_SELECT). Lock the trim instead of the
+    // legacy `*` shape:
+    //   - parent select no longer starts with `*`
+    //   - all consumed columns + trimmed joins present
+    //   - join wildcards removed
+    expect(src).toContain('const PUBLIC_BUSINESS_SELECT =');
+    expect(src).toContain('select: PUBLIC_BUSINESS_SELECT');
+    expect(src).not.toContain('"*, categories(*)');
+    expect(src).not.toContain('categories(*)');
+    expect(src).not.toContain('cities(*)');
+    expect(src).not.toContain('countries(*)');
+    for (const col of [
+      'id, user_id, username',
+      'name_ar, name_en, description_ar, description_en',
+      'short_description_ar, short_description_en',
+      'cover_url, logo_url, is_verified, membership_tier, approval_status',
+      'rating_avg, rating_count, created_at',
+      'website',
+      'address, region, district, street_name, building_number, additional_number',
+      'latitude, longitude',
+      'contact_person, phone, mobile, unified_number, customer_service_phone, email',
+      'categories(name_ar, name_en, slug)',
+      'cities(name_ar, name_en, slug)',
+      'countries(name_ar, name_en, code)',
+    ]) {
+      expect(src).toContain(col);
+    }
     expect(src).toContain('queryKey: ["business", username]');
     expect(src).toContain('enabled: !!username');
     // No direct businesses table read remains in this file.
