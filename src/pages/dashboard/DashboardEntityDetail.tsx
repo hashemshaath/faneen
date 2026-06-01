@@ -470,7 +470,7 @@ const DashboardEntityDetail: React.FC = () => {
                 {owner ? (
                   <div className="flex items-center gap-3">
                     {owner.avatar_url ? (
-                      <img src={owner.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover" />
+                      <img src={owner.avatar_url} alt="" aria-hidden="true" className="w-12 h-12 rounded-full object-cover" />
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center"><User className="w-6 h-6 text-muted-foreground" /></div>
                     )}
@@ -630,7 +630,7 @@ const DashboardEntityDetail: React.FC = () => {
                       <div key={s.id} className="rounded-xl border border-border/40 p-3 hover-lift transition-all">
                         <div className="flex items-center gap-3 flex-wrap">
                           {prof?.avatar_url ? (
-                            <img src={prof.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover" />
+                            <img src={prof.avatar_url} alt="" aria-hidden="true" className="w-9 h-9 rounded-full object-cover" />
                           ) : (
                             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center"><User className="w-4 h-4 text-primary" /></div>
                           )}

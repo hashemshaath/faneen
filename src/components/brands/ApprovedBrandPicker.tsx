@@ -97,7 +97,12 @@ export const ApprovedBrandPicker: React.FC<ApprovedBrandPickerProps> = (props) =
   const isSelected = (id: string) => valueIds.includes(id);
 
   return (
-    <div data-testid="approved-brand-picker" className="space-y-3">
+    <div
+      data-testid="approved-brand-picker"
+      role="group"
+      aria-label={isRTL ? 'اختيار العلامات التجارية المعتمدة' : 'Approved brand selection'}
+      className="space-y-3"
+    >
       {/* Selected chips */}
       {valueIds.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -133,6 +138,7 @@ export const ApprovedBrandPicker: React.FC<ApprovedBrandPickerProps> = (props) =
           className="ps-9 h-12 rounded-xl"
           dir="auto"
           disabled={props.disabled}
+          aria-label={isRTL ? 'ابحث عن علامة تجارية معتمدة' : 'Search approved brands'}
         />
       </div>
 

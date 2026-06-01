@@ -1018,7 +1018,7 @@ const DashboardBusinessEdit: React.FC = () => {
                     >
                       <div className="w-9 h-9 rounded-full bg-background flex items-center justify-center overflow-hidden">
                         {form.logo_url ? (
-                          <img src={form.logo_url} alt="" className="w-full h-full object-cover" />
+                          <img src={form.logo_url} alt="" aria-hidden="true" className="w-full h-full object-cover" />
                         ) : (
                           <Building2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         )}
