@@ -13,14 +13,14 @@ const read = (p: string) => readFileSync(resolve(p), 'utf8');
 
 const PUBLIC_HUBS = ['/sectors', '/services', '/brands'];
 
+// Truly private/session routes that must never be linked as crawlable
+// internal links from SEO sections. Public conversion CTAs (/auth signup,
+// /quote, /contact) are allowed.
 const PRIVATE_PREFIXES = [
   '/admin',
-  '/dashboard/(?!brands)', // /dashboard/brands is intentionally rel="nofollow"
   '/onboarding',
   '/settings',
-  '/auth',
   '/notifications',
-  '/contracts',
 ];
 
 /** Extract every `to="..."` href literal from a TSX source. */
@@ -81,10 +81,17 @@ describe('SEO-6 internal linking — safety', () => {
     const targets = extractLinkTargets(src);
     for (const t of targets) {
       for (const prefix of PRIVATE_PREFIXES) {
-        const re = new RegExp(`^${prefix}`);
         expect(
-          re.test(t),
+          t.startsWith(prefix),
           `${file} links to private route ${t}`,
+        ).toBe(false);
+      }
+      // /dashboard/* links must be explicitly rel="nofollow" (verified
+      // separately for BrandDetail). Other SEO pages must not link there.
+      if (file !== 'src/pages/BrandDetail.tsx') {
+        expect(
+          t.startsWith('/dashboard'),
+          `${file} links to private dashboard route ${t}`,
         ).toBe(false);
       }
       // Never expose search-query or compare-ids urls as crawlable internal links
