@@ -29,12 +29,17 @@ const ServiceDetail: React.FC = () => {
   usePageMeta({
     title: service
       ? (isRTL
-          ? `${name} — أسعار ومقارنة 2026 | قِطاعات`
-          : `${name} — prices & comparison 2026 | Qitaat`)
+          ? `${name} | مزودو خدمات البناء والتشييد | قِطاعات`
+          : `${name} | Construction service providers | Qitaat`)
       : (isRTL ? 'الخدمة غير موجودة' : 'Service not found'),
-    description: desc || (isRTL ? 'الخدمة غير موجودة' : 'Service not found'),
+    description: service
+      ? (isRTL
+          ? `استعرض مزودي خدمة ${name} ضمن قطاعات البناء والتشييد، مع تصنيف حسب القطاع والموقع والجهات المتخصصة على قِطاعات.`
+          : `Browse ${name} providers across construction sectors on Qitaat, filtered by sector, location and specialised firms.`)
+      : (isRTL ? 'الخدمة غير موجودة' : 'Service not found'),
     keywords: service?.keywords.join(', '),
     canonical: service ? `${SITE_URL}/services/${service.slug}` : `${SITE_URL}/services`,
+    noindex: !service,
   });
 
   useMultiJsonLd(

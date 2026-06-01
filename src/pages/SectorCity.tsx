@@ -154,14 +154,14 @@ const SectorCity: React.FC = () => {
 
   const title = sector && city
     ? (isRTL
-        ? `${meta!.name} ${cityIn} — أفضل ورش وموردين 2026 | قِطاعات`
-        : `${meta!.name} ${cityIn} — top workshops & suppliers 2026 | Qitaat`)
+        ? `${meta!.name} في ${city.nameAr} | قِطاعات`
+        : `${meta!.name} in ${city.nameEn} | Qitaat`)
     : (isRTL ? 'صفحة غير موجودة | قِطاعات' : 'Not found | Qitaat');
 
   const description = sector && city
     ? (isRTL
-        ? `دليل ورش وموردي ${meta!.name} ${cityIn}: قارن المعارض، التقييمات، حالة التحقق، واطلب عرض سعر مجاني من أفضل المزودين في ${cityName}.`
-        : `Directory of ${meta!.name} workshops and suppliers ${cityIn}: compare portfolios, ratings, verification status, and request free quotes from top providers in ${cityName}.`)
+        ? `اعثر على مزودي ${meta!.name} في ${city.nameAr}، واستعرض الجهات والخدمات المناسبة لمشاريع البناء والتشييد عبر منصة قِطاعات.`
+        : `Find ${meta!.name} providers in ${city.nameEn}. Browse vetted firms and services for construction projects on Qitaat.`)
     : '';
 
   const keywords = sector && city
@@ -184,6 +184,7 @@ const SectorCity: React.FC = () => {
       subtitle: meta?.tagline,
     }),
     ogType: 'website',
+    noindex: !sector || !city,
   });
 
   useMultiJsonLd(
