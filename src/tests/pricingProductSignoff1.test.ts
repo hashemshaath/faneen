@@ -123,8 +123,10 @@ describe('PRICING-PRODUCT-SIGNOFF-1', () => {
     it('Membership page still consults useMembershipVisibility', () => {
       expect(page).toMatch(/useMembershipVisibility/);
     });
-    it('Membership page still uses membershipPathOrNull for CTAs', () => {
-      expect(page).toMatch(/membershipPathOrNull/);
+    it('membershipPathOrNull is still the gating helper for CTAs elsewhere', () => {
+      // Used by upgrade banners / feature gates that link to /membership.
+      const fg = read('src/components/membership/FeatureGate.tsx');
+      expect(fg).toMatch(/membershipPathOrNull/);
     });
   });
 });
