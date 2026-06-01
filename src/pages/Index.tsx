@@ -23,6 +23,7 @@ const ForProvidersSection = lazyRetry(() => import("@/components/home/v2/section
 const ForClientsSection  = lazyRetry(() => import("@/components/home/v2/sections/ForClientsSection"));
 const FAQSection         = lazyRetry(() => import("@/components/home/v2/sections/FAQSection"));
 const FinalCTASection    = lazyRetry(() => import("@/components/home/v2/sections/FinalCTASection"));
+const PlatformFeaturesSection = lazyRetry(() => import("@/components/home/v2/sections/PlatformFeaturesSection"));
 
 const SectionFallback = ({ minH = 360 }: { minH?: number }) => (
   <div
@@ -170,7 +171,12 @@ const Index = () => {
           <Suspense fallback={<SectionFallback />}><MainSectorsSection /></Suspense>
         </LazyOnView>
 
-        {/* 4. How it works */}
+        {/* 4. Platform capabilities — exposes brands/services/showcase/projects/compare */}
+        <LazyOnView minHeight={520} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><PlatformFeaturesSection /></Suspense>
+        </LazyOnView>
+
+        {/* 5. How it works */}
         <LazyOnView minHeight={460} className="cv-auto">
           <Suspense fallback={<SectionFallback />}><HowItWorksV2 /></Suspense>
         </LazyOnView>
