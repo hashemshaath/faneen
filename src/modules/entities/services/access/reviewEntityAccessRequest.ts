@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { insertBusinessStaff } from '@/modules/businesses/services/insertBusinessStaff';
+import { createNotification } from '@/modules/notifications/services/createNotification';
 
 /**
  * REGISTRATION-UX-FULL-COMPLETE-1 Part 2
