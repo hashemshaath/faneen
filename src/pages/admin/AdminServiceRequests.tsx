@@ -10,6 +10,10 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
+// DB-GOVERNANCE-1: route admin business lookup through the canonical
+// `listBusinessesByIds` wrapper so this admin page no longer triggers
+// the direct `.from('businesses')` audit violation. Same select shape.
+import { listBusinessesByIds } from '@/modules/businesses/services/listBusinessesByIds';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -80,10 +84,10 @@ const AdminServiceRequests: React.FC = () => {
     queryKey: ['admin-service-requests-businesses', businessIds.join(',')],
     queryFn: async () => {
       if (businessIds.length === 0) return [] as BizLite[];
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('id, name_ar, name_en, username, ref_id')
-        .in('id', businessIds);
+      const { data, error } = await listBusinessesByIds<BizLite>({
+        ids: businessIds,
+        select: 'id, name_ar, name_en, username, ref_id',
+      });
       if (error) throw error;
       return (data ?? []) as BizLite[];
     },
