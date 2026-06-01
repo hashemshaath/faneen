@@ -5,7 +5,7 @@
  * Runs the three guardrails that matter most on every PR and produces
  * a single Markdown summary suitable for `$GITHUB_STEP_SUMMARY` and a
  * downloadable artifact:
- *   1. bunx vitest run                  (full unit suite)
+ *   1. npx vitest run                   (full unit suite)
  *   2. broken-links-audit.mjs           (internal links)
  *   3. sitemap-integrity-audit.mjs      (sitemap ↔ routes)
  *
