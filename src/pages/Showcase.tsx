@@ -12,7 +12,7 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { useMultiJsonLd } from "@/hooks/usePageMeta";
 import { buildBreadcrumbList, SITE_URL } from "@/lib/seo/structured-data";
 import { useBi } from "@/components/common/Bilingual";
-import { Building2, ExternalLink, Sparkles } from "lucide-react";
+import { Building2, ExternalLink, Sparkles, MessageSquare, Layers, ShieldCheck } from "lucide-react";
 
 interface ShowcaseRow {
   id: string;
@@ -146,6 +146,24 @@ const Showcase = () => {
                 "Every entry is manually reviewed and only shown for verified businesses.",
               )}
             </p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+              <Link to="/quote">
+                <Button size="sm" className="h-9">
+                  <MessageSquare className="w-4 h-4 me-1.5" />
+                  {bi("اطلب عرض سعر", "Request a quote")}
+                </Button>
+              </Link>
+              <Link to="/sectors">
+                <Button size="sm" variant="outline" className="h-9">
+                  <Layers className="w-4 h-4 me-1.5" />
+                  {bi("استكشف القطاعات", "Explore sectors")}
+                </Button>
+              </Link>
+            </div>
+            <p className="mt-3 text-[11px] text-muted-foreground inline-flex items-center gap-1 justify-center">
+              <ShieldCheck className="w-3 h-3" />
+              {bi("الظهور في المعرض لا يعني ضمان نتائج التنفيذ.", "Inclusion in the showcase does not guarantee execution outcomes.")}
+            </p>
           </div>
         </section>
 
@@ -176,8 +194,12 @@ const Showcase = () => {
               ))}
             </div>
           ) : logos.length === 0 ? (
-            <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">
-              {bi("لا توجد شعارات منشورة بعد لهذا القطاع.", "No logos published yet for this sector.")}
+            <Card><CardContent className="p-6 text-sm text-muted-foreground text-center space-y-3">
+              <p>{bi("لا توجد شعارات منشورة بعد لهذا القطاع.", "No logos published yet for this sector.")}</p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Link to="/sectors"><Button size="sm" variant="outline" className="h-8">{bi("استكشف القطاعات", "Explore sectors")}</Button></Link>
+                <Link to="/services"><Button size="sm" variant="outline" className="h-8">{bi("استعرض الخدمات", "Browse services")}</Button></Link>
+              </div>
             </CardContent></Card>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
@@ -220,8 +242,12 @@ const Showcase = () => {
               ))}
             </div>
           ) : works.length === 0 ? (
-            <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">
-              {bi("لا توجد أعمال منشورة بعد لهذا القطاع.", "No work examples published yet for this sector.")}
+            <Card><CardContent className="p-6 text-sm text-muted-foreground text-center space-y-3">
+              <p>{bi("لا توجد أعمال منشورة بعد لهذا القطاع.", "No work examples published yet for this sector.")}</p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Link to="/quote"><Button size="sm" className="h-8">{bi("اطلب عرض سعر", "Request a quote")}</Button></Link>
+                <Link to="/projects"><Button size="sm" variant="outline" className="h-8">{bi("شاهد المشاريع", "View projects")}</Button></Link>
+              </div>
             </CardContent></Card>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -279,12 +305,12 @@ const Showcase = () => {
             <h3 className="text-lg font-semibold">{bi("هل أنت مزوّد؟", "Are you a provider?")}</h3>
             <p className="text-sm text-muted-foreground">
               {bi(
-                "ارفع شعارك أو مثال عمل من لوحة التحكم. سيُراجعه الفريق قبل النشر.",
-                "Upload your logo or work from your dashboard. Our team reviews before publishing.",
+                "تعرّف على شروط الظهور والتوثيق قبل التقديم. يراجع الفريق كل مشاركة قبل النشر.",
+                "Review the listing and verification requirements before applying. Every submission is reviewed before publishing.",
               )}
             </p>
-            <Link to="/dashboard/showcase">
-              <Button>{bi("أرسل أعمالك", "Submit your work")}</Button>
+            <Link to="/for-providers">
+              <Button>{bi("تعرّف على شروط الظهور", "See listing requirements")}</Button>
             </Link>
           </div>
         </section>
