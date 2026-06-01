@@ -9,7 +9,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
 import {
   ArrowLeft, ArrowRight, Search, ShieldCheck, Activity, MapPin,
-  Play, Pause, Sparkles,
+  Play, Pause, Sparkles, Clock, TrendingUp,
 } from 'lucide-react';
 import { getSearchHistory, addToSearchHistory } from '@/services/search/useSearch';
 import { useAbVariant, trackAbClick } from '@/lib/abTesting';
