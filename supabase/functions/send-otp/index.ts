@@ -126,11 +126,12 @@ Deno.serve(async (req) => {
     // Delete previous OTPs for this user/phone
     await adminClient.from("phone_otps").delete().eq("user_id", user.id);
 
-    // Insert new OTP
+    // Insert new OTP (store SHA-256 hash, never the raw code)
+    const otpHash = await hashOtp(otp, user.id);
     const { error: insertError } = await adminClient.from("phone_otps").insert({
       user_id: user.id,
       phone: fullPhone,
-      otp_code: otp,
+      otp_code_hash: otpHash,
       expires_at: new Date(Date.now() + OTP_LIFETIME_MS).toISOString(),
     });
 
