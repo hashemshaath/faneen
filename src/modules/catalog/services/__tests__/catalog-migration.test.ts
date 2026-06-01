@@ -71,19 +71,24 @@ describe('CAT-2 out-of-scope guardrail (must NOT be touched in this phase)', () 
   // SERVICE-ACTIVATION-GOVERNANCE — DashboardServices ownership boundary
   // was redefined: `@/modules/providerServices` owns activation/governance
   // state, while non-governance metadata (names, prices, descriptions)
-  // may continue to use direct `supabase.from('business_services')`
-  // reads/inserts. The previous CAT-6 expectation (fully proxied through
-  // `listServicesByBusiness`) is intentionally NOT enforced here anymore.
+  // flows through the catalog mutation wrappers
+  // (`updateBusinessServiceById`, `insertBusinessServiceReturning`).
+  // Those wrappers `Omit` governance fields at the type level, so they
+  // cannot be used to toggle activation. The previous CAT-6 expectation
+  // (fully proxied through `listServicesByBusiness`) is intentionally
+  // NOT enforced here anymore.
   it('DashboardServices routes activation through providerServices, not catalog mutations', () => {
     const src = read('src/pages/dashboard/DashboardServices.tsx');
     // Activation/governance must flow through the canonical module.
     expect(src).toContain('@/modules/providerServices');
     expect(src).toContain('setProviderServiceStatus');
-    // Catalog mutation wrappers must NOT be used here — their payload
-    // types now strip is_active/provider_status, so any catalog-side
-    // toggle of activation would be a type error AND a regression.
-    expect(src).not.toContain('updateBusinessServiceById');
-    expect(src).not.toContain('insertBusinessService(');
+    // Direct governance writes against `business_services` must be gone.
+    // Catalog mutation wrappers ARE permitted for metadata-only updates
+    // (their payload types strip governance fields, enforced statically),
+    // so we no longer ban their identifiers here. The provider-services
+    // isolation audit is the source of truth for governance-field writes.
+    expect(src).not.toMatch(/\.from\(['"]business_services['"]\)\s*\.\s*update\s*\(\s*\{\s*[^}]*\bis_active\s*:/);
+    expect(src).not.toMatch(/\.from\(['"]business_services['"]\)\s*\.\s*update\s*\(\s*\{\s*[^}]*\bprovider_status\s*:/);
   });
   it('DashboardInstallments BNPL admin reads + writes fully migrated (CAT-5B)', () => {
     const src = read('src/pages/dashboard/DashboardInstallments.tsx');

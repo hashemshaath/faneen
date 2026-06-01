@@ -19,7 +19,8 @@ const CATEGORIES_MIGRATED: Array<{ path: string; service: string; key: string }>
   { path: 'src/components/home/HeroSection.tsx', service: 'listActiveCategories', key: "['nav-categories']" },
   { path: 'src/pages/Categories.tsx', service: 'listActiveCategories', key: "['categories-page']" },
   { path: 'src/pages/Projects.tsx', service: 'listActiveCategories', key: "['categories']" },
-  { path: 'src/pages/BrandsCatalog.tsx', service: 'listActiveCategories', key: "['brands-categories']" },
+  // BrandsCatalog.tsx was rewritten under BRANDS-GOVERNANCE-3 to use
+  // sectors instead of categories. Entry intentionally removed.
   { path: 'src/pages/ProjectDetail.tsx', service: 'getCategoryById', key: "['category', project?.category_id]" },
   { path: 'src/services/search/useSearch.ts', service: 'listActiveCategories', key: "['categories']" },
   { path: 'src/features/private-sectors/PrivateSectorForm.tsx', service: 'listActiveCategories', key: "['categories-active']" },
@@ -30,7 +31,7 @@ const CATEGORIES_MIGRATED: Array<{ path: string; service: string; key: string }>
 const CITIES_MIGRATED: Array<{ path: string; service: string; key: string }> = [
   { path: 'src/components/home/HeroSection.tsx', service: 'listActiveCities', key: "['nav-cities']" },
   { path: 'src/pages/Projects.tsx', service: 'listActiveCities', key: "['cities']" },
-  { path: 'src/pages/BrandsCatalog.tsx', service: 'listActiveCities', key: "['brands-cities']" },
+  // BrandsCatalog.tsx no longer references cities (sectors-only catalog).
   { path: 'src/pages/ProjectDetail.tsx', service: 'getCityById', key: "['city', project?.city_id]" },
   { path: 'src/services/search/useSearch.ts', service: 'listActiveCities', key: "['cities']" },
   { path: 'src/features/private-sectors/PrivateSectorForm.tsx', service: 'listActiveCities', key: "['cities-active']" },
@@ -71,10 +72,12 @@ describe('P-2 out-of-scope guardrail (must NOT be touched)', () => {
   // NOTE: ContractDetail.tsx profiles reads were migrated in P-5
   // (getProfileForContractParty). Their regression lock lives in
   // src/modules/users/services/__tests__/profileReads.test.ts.
-  it('DashboardBusinessEdit cities read (country_id-scoped) remains direct in this phase', () => {
+  it('DashboardBusinessEdit cities read was migrated off direct supabase.from in a later phase', () => {
+    // The original P-2 guardrail asserted this read remained direct. It
+    // was subsequently migrated; we now lock the migrated state so the
+    // file does not regress to a direct table read.
     const src = read('src/pages/dashboard/DashboardBusinessEdit.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]cities['"]\)/);
-    expect(src).toContain("eq('country_id'");
+    expect(src).not.toMatch(/supabase\.from\(['"]cities['"]\)/);
   });
   it('AdminCategories CRUD remains direct in this phase', () => {
     const src = read('src/pages/admin/AdminCategories.tsx');

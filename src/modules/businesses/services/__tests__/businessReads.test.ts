@@ -96,11 +96,16 @@ describe('getBusinessForContract', () => {
 const read = (p: string) => readFileSync(resolve(process.cwd(), p), 'utf-8');
 
 describe('P-3 public business migration', () => {
-  it('BrandDetail uses listBusinessesByIds (no direct businesses read)', () => {
+  it('BrandDetail does not directly read businesses (BRANDS-GOVERNANCE-3 rewrote it through brands module)', () => {
+    // BrandDetail was rewritten under BRANDS-GOVERNANCE-3 and now resolves
+    // provider businesses through `lookupBusinessesByIds` from
+    // `@/modules/brands` (which itself routes through businesses services).
+    // The previous P-3 expectation that BrandDetail directly imports
+    // `listBusinessesByIds` is therefore obsolete.
     const src = read('src/pages/BrandDetail.tsx');
     expect(src).not.toMatch(/supabase\.from\(['"]businesses['"]\)/);
-    expect(src).toContain('listBusinessesByIds');
-    expect(src).toContain("['public-brand-dist-bizs'");
+    expect(src).toContain('lookupBusinessesByIds');
+    expect(src).toContain("['public-brand-provider-bizs'");
   });
   it('About uses countActiveBusinesses (no direct businesses read)', () => {
     const src = read('src/pages/About.tsx');

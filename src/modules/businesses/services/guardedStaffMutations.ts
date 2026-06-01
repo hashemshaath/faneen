@@ -36,3 +36,19 @@ export async function removeBusinessStaff(staffId: string): Promise<void> {
   const res = await deleteBusinessStaffById({ id: staffId });
   unwrap(res);
 }
+
+/**
+ * R4E-3 — Guarded permissions-override write for staff rows.
+ * Used by the entity-level Staff Permissions matrix, which is the only
+ * surface that may set per-staff permissions overrides.
+ */
+export async function updateBusinessStaffPermissionsOverride(
+  staffId: string,
+  override: string[] | null,
+): Promise<void> {
+  const res = await updateBusinessStaffById({
+    id: staffId,
+    values: { permissions_override: override },
+  });
+  unwrap(res);
+}

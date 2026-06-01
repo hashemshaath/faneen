@@ -9,6 +9,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { getProfileByUserId, searchProfilesByOr, getProfileByEmailIlike } from '@/modules/users';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
+import { createNotification } from '@/modules/notifications/services/createNotification';
 import { checkInvitationTransition } from '@/modules/identity';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
@@ -198,14 +199,14 @@ export const InvitationsPanel: React.FC<Props> = ({
         }
         if (recipientUserId) {
           const nameForBody = isRTL ? (businessNameAr ?? businessNameEn ?? '') : (businessNameEn ?? businessNameAr ?? '');
-          await supabase.from('notifications').insert({
+          await createNotification({
             user_id: recipientUserId,
             notification_type: 'business_staff_invitation',
             title_ar: 'دعوة للانضمام كمفوّض',
             title_en: 'Staff invitation',
             body_ar: `تمت دعوتك للانضمام إلى ${nameForBody} بدور ${STAFF_ROLE_META[role].ar}.`,
             body_en: `You have been invited to join ${nameForBody} as ${STAFF_ROLE_META[role].en}.`,
-            reference_id: inserted?.id ?? null,
+            reference_id: inserted?.id ?? undefined,
             reference_type: 'business_staff_invitation',
             action_url: `/staff-invite/${token}`,
           });

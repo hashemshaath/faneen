@@ -23,9 +23,12 @@ import { pickBi } from '@/components/common/Bilingual';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { getAdminBusinessById } from '@/modules/businesses/services/getAdminBusinessById';
 import { listBusinessStaffByBusiness } from '@/modules/businesses/services/listBusinessStaffByBusiness';
-import { updateBusinessStaffById } from '@/modules/businesses/services/updateBusinessStaffById';
 import { insertBusinessStaff } from '@/modules/businesses/services/insertBusinessStaff';
-import { deleteBusinessStaffById } from '@/modules/businesses/services/deleteBusinessStaffById';
+import {
+  updateBusinessStaffRole,
+  setBusinessStaffActive,
+  removeBusinessStaff,
+} from '@/modules/businesses/services/guardedStaffMutations';
 import { getProfileByUserId } from '@/modules/users/services/getProfileByUserId';
 import { listProfilesByUserIds, getProfileByRefId } from '@/modules/users';
 import { listBranchesByBusiness } from '@/modules/catalog';
@@ -269,32 +272,32 @@ const DashboardEntityDetail: React.FC = () => {
   };
 
   const handleChangeRole = async (staffId: string, role: StaffRow['role']) => {
-    const res = await updateBusinessStaffById({ id: staffId, values: { role } });
-    if (res.error) {
-      toast({ title: pickBi(isRTL, 'تعذّر التحديث', 'Update failed'), variant: 'destructive' });
-    } else {
+    try {
+      await updateBusinessStaffRole(staffId, role);
       toast({ title: pickBi(isRTL, 'تم تحديث الدور', 'Role updated') });
       refetchStaff();
+    } catch {
+      toast({ title: pickBi(isRTL, 'تعذّر التحديث', 'Update failed'), variant: 'destructive' });
     }
   };
 
   const handleToggleActive = async (s: StaffRow) => {
-    const res = await updateBusinessStaffById({ id: s.id, values: { is_active: !s.is_active } });
-    if (res.error) {
-      toast({ title: pickBi(isRTL, 'تعذّر التحديث', 'Update failed'), variant: 'destructive' });
-    } else {
+    try {
+      await setBusinessStaffActive(s.id, !s.is_active);
       toast({ title: pickBi(isRTL, s.is_active ? 'تم الإيقاف' : 'تم التفعيل', s.is_active ? 'Deactivated' : 'Activated') });
       refetchStaff();
+    } catch {
+      toast({ title: pickBi(isRTL, 'تعذّر التحديث', 'Update failed'), variant: 'destructive' });
     }
   };
 
   const handleRemove = async (staffId: string) => {
-    const res = await deleteBusinessStaffById({ id: staffId });
-    if (res.error) {
-      toast({ title: pickBi(isRTL, 'تعذّر الحذف', 'Delete failed'), variant: 'destructive' });
-    } else {
+    try {
+      await removeBusinessStaff(staffId);
       toast({ title: pickBi(isRTL, 'تم الحذف', 'Removed') });
       refetchStaff();
+    } catch {
+      toast({ title: pickBi(isRTL, 'تعذّر الحذف', 'Delete failed'), variant: 'destructive' });
     }
   };
 

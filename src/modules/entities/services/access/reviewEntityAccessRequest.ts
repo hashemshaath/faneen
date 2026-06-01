@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { insertBusinessStaff } from '@/modules/businesses/services/insertBusinessStaff';
+import { createNotification } from '@/modules/notifications/services/createNotification';
 
 /**
  * REGISTRATION-UX-FULL-COMPLETE-1 Part 2
@@ -71,7 +72,7 @@ export async function reviewEntityAccessRequest(
     const entityEn = tb?.name_en ?? tb?.name_ar ?? 'the entity';
     const isApprove = action === 'approve';
     try {
-      await supabase.from('notifications').insert({
+      await createNotification({
         user_id: req.requester_user_id,
         notification_type: isApprove ? 'access_request_approved' : 'access_request_rejected',
         reference_type: 'entity_access_request',
