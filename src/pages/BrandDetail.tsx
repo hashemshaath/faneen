@@ -263,11 +263,35 @@ const BrandDetail: React.FC = () => {
                     {isRTL ? 'يمكنك طلب تصحيح بيانات هذه العلامة من خلال الداشبورد.' : 'You can request a correction from the provider dashboard.'}
                   </p>
                 </div>
-                <Link to="/dashboard/brands" className="text-sm text-primary hover:underline">
+                <Link to="/dashboard/brands" rel="nofollow" className="text-sm text-primary hover:underline">
                   {isRTL ? 'اطلب تصحيحاً ←' : 'Request correction →'}
                 </Link>
               </CardContent>
             </Card>
+
+            {/* Cross-link to brands/sectors hubs (internal linking — SEO-6) */}
+            <nav aria-label={isRTL ? 'استكشف المزيد' : 'Explore more'} className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+              <h2 className="font-heading text-base font-bold mb-3">
+                {isRTL ? 'تصفّح المزيد' : 'Browse more'}
+              </h2>
+              <ul className="flex flex-wrap gap-2 text-sm">
+                <li>
+                  <Link to="/brands" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
+                    {isRTL ? 'كل العلامات التجارية' : 'All brands'}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/sectors" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
+                    {isRTL ? 'القطاعات الصناعية' : 'Industrial sectors'}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/services" className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 hover:text-primary">
+                    {isRTL ? 'الخدمات' : 'Services'}
+                  </Link>
+                </li>
+              </ul>
+            </nav>
           </>
         )}
       </main>
