@@ -160,8 +160,10 @@ export * from './services/payments';
 export {
   getMembershipTierLabel,
   getMembershipTierBadgeVariant,
+  getMembershipUpgradePath,
   getUpgradePath,
   compareMembershipTiers,
   isTierAtLeast,
+  normalizeMembershipTier,
 } from './utils/tierLabels';
 export type { Locale as MembershipTierLocale } from './utils/tierLabels';
