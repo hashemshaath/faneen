@@ -58,6 +58,9 @@ describe('catalog services reads', () => {
     expect(builder.select).toHaveBeenCalledWith('*');
     expect(builder.eq).toHaveBeenNthCalledWith(1, 'business_id', 'b1');
     expect(builder.eq).toHaveBeenNthCalledWith(2, 'is_active', true);
+    // SERVICE-ACTIVATION-GOVERNANCE-3 — eligibility gate
+    expect(builder.eq).toHaveBeenNthCalledWith(3, 'provider_status', 'active');
+    expect(builder.eq).toHaveBeenNthCalledWith(4, 'admin_status', 'allowed');
     expect(builder.order).toHaveBeenCalledWith('sort_order');
   });
 
@@ -79,6 +82,8 @@ describe('catalog services reads', () => {
   it('countServicesByBusiness applies is_active when activeOnly', async () => {
     await countServicesByBusiness({ businessId: 'b1', activeOnly: true });
     expect(builder.eq).toHaveBeenNthCalledWith(2, 'is_active', true);
+    expect(builder.eq).toHaveBeenNthCalledWith(3, 'provider_status', 'active');
+    expect(builder.eq).toHaveBeenNthCalledWith(4, 'admin_status', 'allowed');
   });
 
   it('listBranchesByBusiness preserves multi-order + active filter', async () => {
