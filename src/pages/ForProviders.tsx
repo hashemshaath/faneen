@@ -663,10 +663,16 @@ const ForProviders = () => {
                 : 'You can register and set up a profile with no signup fees. Full plan details, features and visibility are listed on the membership page.'}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button asChild size="lg" className="h-12 px-7"
-                onClick={() => track({ event_type: 'cta_click', section: 'membership', cta_id: 'view_plans' })}>
-                <Link to="/membership">{isRTL ? 'اعرض خطط العضوية' : 'See membership plans'} <ArrowFwd className="w-4 h-4 ms-2" /></Link>
-              </Button>
+              {membershipVisibility.membershipPathOrNull ? (
+                <Button asChild size="lg" className="h-12 px-7"
+                  onClick={() => track({ event_type: 'cta_click', section: 'membership', cta_id: 'view_plans' })}>
+                  <Link to={membershipVisibility.membershipPathOrNull}>{isRTL ? 'اعرض خطط العضوية' : 'See membership plans'} <ArrowFwd className="w-4 h-4 ms-2" /></Link>
+                </Button>
+              ) : (
+                <Button asChild size="lg" variant="outline" className="h-12 px-7">
+                  <Link to="/contact">{isRTL ? 'تواصل مع المبيعات' : 'Talk to sales'}</Link>
+                </Button>
+              )}
               <Button asChild size="lg" variant="outline" className="h-12 px-6"
                 onClick={onPrimaryCta('membership', 'signup')}>
                 <Link to={PROVIDER_SIGNUP}>{isRTL ? 'سجّل جهتك' : 'Register your business'}</Link>
