@@ -46,6 +46,7 @@ type UsageRow = {
 
 export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, tier }) => {
   const { isRTL } = useLanguage();
+  const membershipVisibility = useMembershipVisibility();
 
   const { data: subscription } = useQuery({
     queryKey: ['provider-active-subscription', userId, businessId ?? null],
@@ -181,12 +182,24 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
               </div>
             </div>
           </div>
-          <Link to="/membership" className="shrink-0" aria-label={isFreePlan ? (isRTL ? 'طلب الترقية' : 'Request upgrade') : (isRTL ? 'إدارة الاشتراك' : 'Manage subscription')}>
-            <Button size="sm" variant={isFreePlan ? 'default' : 'outline'} className="h-9 text-xs gap-1.5 px-3">
+          <Link
+            to={membershipVisibility.membershipPathOrNull ?? '/contact'}
+            className="shrink-0"
+            aria-label={
+              !membershipVisibility.membershipPathOrNull
+                ? (isRTL ? 'تواصل مع الدعم' : 'Contact support')
+                : isFreePlan
+                  ? (isRTL ? 'طلب الترقية' : 'Request upgrade')
+                  : (isRTL ? 'إدارة الاشتراك' : 'Manage subscription')
+            }
+          >
+            <Button size="sm" variant={isFreePlan && membershipVisibility.membershipPathOrNull ? 'default' : 'outline'} className="h-9 text-xs gap-1.5 px-3">
               {isFreePlan ? <Send className="w-3.5 h-3.5" aria-hidden="true" /> : <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />}
-              {isFreePlan
-                ? (isRTL ? 'طلب الترقية' : 'Request upgrade')
-                : (isRTL ? 'إدارة الاشتراك' : 'Manage subscription')}
+              {!membershipVisibility.membershipPathOrNull
+                ? (isRTL ? 'تواصل مع الدعم' : 'Contact support')
+                : isFreePlan
+                  ? (isRTL ? 'طلب الترقية' : 'Request upgrade')
+                  : (isRTL ? 'إدارة الاشتراك' : 'Manage subscription')}
             </Button>
           </Link>
         </div>
