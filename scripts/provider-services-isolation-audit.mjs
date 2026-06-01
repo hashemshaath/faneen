@@ -47,15 +47,12 @@ const FIELDS = [
   'reviewed_at',
 ];
 
-// Match an object-literal key assignment, e.g. `admin_status: 'allowed'`
-// or `provider_status:"paused"`. We require a colon followed by a value
-// so we don't flag reads of the same identifier.
-const FIELD_WRITE = new RegExp(
-  String.raw`\b(${FIELDS.join('|')})\s*:\s*['"\w\[\{]`,
-);
+// Field-key inside an object literal (key: value).
+const FIELD_WRITE = new RegExp(String.raw`\b(${FIELDS.join('|')})\s*:`, 'g');
 
-// Must appear together with a business_services mutation chain to count.
-const BS_UPDATE = /\.from\(\s*['"]business_services['"]\s*\)\s*\.\s*(update|upsert|insert)\b/;
+// Locate `.from('business_services').<op>(` start positions in source.
+const BS_UPDATE_GLOBAL =
+  /\.from\(\s*['"]business_services['"]\s*\)\s*\.\s*(update|upsert|insert)\s*\(/g;
 
 function* walk(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -79,17 +76,26 @@ for (const file of walk(SRC)) {
   const rel = path.relative(ROOT, file).replace(/\\/g, '/');
   if (isAllowed(rel)) continue;
   const src = fs.readFileSync(file, 'utf-8');
-  if (!BS_UPDATE.test(src)) continue;
-  const lines = src.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const m = FIELD_WRITE.exec(lines[i]);
-    if (m) {
-      violations.push({
-        file: rel,
-        line: i + 1,
-        field: m[1],
-        snippet: lines[i].trim().slice(0, 160),
-      });
+  BS_UPDATE_GLOBAL.lastIndex = 0;
+  let m;
+  while ((m = BS_UPDATE_GLOBAL.exec(src)) !== null) {
+    // Balanced-paren walk from the opening `(` of the op call.
+    const openIdx = m.index + m[0].length - 1; // index of '('
+    let depth = 1;
+    let i = openIdx + 1;
+    for (; i < src.length && depth > 0; i++) {
+      const ch = src[i];
+      if (ch === '(') depth++;
+      else if (ch === ')') depth--;
+    }
+    const arg = src.slice(openIdx + 1, i - 1);
+    FIELD_WRITE.lastIndex = 0;
+    let f;
+    while ((f = FIELD_WRITE.exec(arg)) !== null) {
+      const absolute = openIdx + 1 + f.index;
+      const line = src.slice(0, absolute).split('\n').length;
+      const snippet = src.split('\n')[line - 1]?.trim().slice(0, 160) ?? '';
+      violations.push({ file: rel, line, field: f[1], snippet });
     }
   }
 }
