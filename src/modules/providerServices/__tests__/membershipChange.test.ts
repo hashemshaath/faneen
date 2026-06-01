@@ -42,6 +42,8 @@ vi.mock('@/integrations/supabase/client', () => {
 });
 
 import { notifyMembershipChangeForBusiness } from '../services/admin';
+import { notifyServiceActivationEvent } from '../services/notifications';
+const notifySpy = notifyServiceActivationEvent as unknown as ReturnType<typeof vi.fn>;
 
 describe('notifyMembershipChangeForBusiness', () => {
   beforeEach(() => {
