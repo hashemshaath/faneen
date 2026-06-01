@@ -20,14 +20,15 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import {
   listSystemModules,
   listAllOverrides,
-  setModuleOverride,
-  clearModuleOverride,
   listAuditLog,
   type SystemModule,
   type SystemModuleOverride,
   type ScopeType,
   type SystemModuleAuditEntry,
 } from '@/modules/systemAccess';
+import { updateBusinessSystemAccess } from '@/modules/systemAccess/services/updateBusinessSystemAccess';
+import { useBusinessAccessInvalidation } from '@/hooks/useBusinessAccessInvalidation';
+import { ACCESS_LABELS } from '@/modules/systemAccess/accessResolution';
 import { listProfiles } from '@/modules/users';
 import { supabase } from '@/integrations/supabase/client';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
@@ -54,8 +55,10 @@ const CATEGORY_META: Record<string, { ar: string; en: string; tone: string }> = 
 const AdminSystemAccess: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const qc = useQueryClient();
+  const invalidateAccess = useBusinessAccessInvalidation();
+  const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
 
   const [scopeTab, setScopeTab] = useState<ScopeTab>('global');
   const [viewTab, setViewTab] = useState<ViewTab>('manage');
@@ -114,11 +117,29 @@ const AdminSystemAccess: React.FC = () => {
   });
 
   const setMutation = useMutation({
-    mutationFn: setModuleOverride,
-    onSuccess: () => {
+    mutationFn: (vars: { moduleKey: string; scopeType: ScopeType; scopeValue: string | null; enabled: boolean }) =>
+      updateBusinessSystemAccess({
+        ...vars,
+        isAdmin: !!isAdmin,
+        actingUserId: user?.id ?? null,
+        businessId: vars.scopeType === 'entity' ? vars.scopeValue : null,
+      }),
+    onSuccess: (res, vars) => {
+      if (!res.ok && res.blocked_by_membership) {
+        toast.error(isRTL ? (res.reason_ar ?? '') : (res.reason_en ?? ''));
+        return;
+      }
+      if (!res.ok) {
+        toast.error((isRTL ? res.reason_ar : res.reason_en) || (isRTL ? 'فشل الحفظ' : 'Save failed'));
+        return;
+      }
       qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
-      qc.invalidateQueries({ queryKey: ['system-access'] });
-      toast.success(isRTL ? 'تم حفظ التغيير' : 'Saved');
+      invalidateAccess({
+        businessId: vars.scopeType === 'entity' ? vars.scopeValue : null,
+        includeAudit: true,
+      });
+      setLastSyncAt(Date.now());
+      toast.success(`${isRTL ? 'تم الحفظ' : 'Saved'} · ${isRTL ? ACCESS_LABELS.synced.ar : ACCESS_LABELS.synced.en}`);
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : String(e);
@@ -127,10 +148,26 @@ const AdminSystemAccess: React.FC = () => {
   });
 
   const clearMutation = useMutation({
-    mutationFn: clearModuleOverride,
-    onSuccess: () => {
+    mutationFn: (vars: { moduleKey: string; scopeType: ScopeType; scopeValue: string | null }) =>
+      updateBusinessSystemAccess({
+        ...vars,
+        enabled: false,
+        reset: true,
+        isAdmin: !!isAdmin,
+        actingUserId: user?.id ?? null,
+        businessId: vars.scopeType === 'entity' ? vars.scopeValue : null,
+      }),
+    onSuccess: (res, vars) => {
+      if (!res.ok) {
+        toast.error((isRTL ? res.reason_ar : res.reason_en) || (isRTL ? 'فشل الإجراء' : 'Action failed'));
+        return;
+      }
       qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
-      qc.invalidateQueries({ queryKey: ['system-access'] });
+      invalidateAccess({
+        businessId: vars.scopeType === 'entity' ? vars.scopeValue : null,
+        includeAudit: true,
+      });
+      setLastSyncAt(Date.now());
       toast.success(isRTL ? 'تم إعادة التعيين للافتراضي' : 'Reset to default');
     },
     onError: (e: unknown) => {
