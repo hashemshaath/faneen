@@ -14,6 +14,7 @@ import {
   type MembershipPlanModuleRow,
 } from '@/modules/systemAccess';
 import { listAdminMembershipPlans } from '@/modules/memberships';
+import { useBusinessAccessInvalidation } from '@/hooks/useBusinessAccessInvalidation';
 
 interface PlanLite {
   id: string;
@@ -29,6 +30,7 @@ const AdminMembershipPlanModules: React.FC = () => {
   const { isRTL } = useLanguage();
   const { isSuperAdmin, isAdmin } = useAuth();
   const qc = useQueryClient();
+  const invalidateAccess = useBusinessAccessInvalidation();
   const [busyCell, setBusyCell] = useState<string | null>(null);
 
   const plansQuery = useQuery({
@@ -89,6 +91,10 @@ const AdminMembershipPlanModules: React.FC = () => {
       await qc.invalidateQueries({ queryKey: ['system-modules'] });
       await qc.invalidateQueries({ queryKey: ['effective-business-access'] });
       await qc.invalidateQueries({ queryKey: ['visible-modules'] });
+      // MEMBERSHIP-GOVERNANCE-FINAL-AUDIT — propagate plan-module change to every
+      // beneficiary surface (FeatureGate, sidebar, membership subscription/usage,
+      // workspace context, dashboard modules) and refresh the audit log panel.
+      invalidateAccess({ includeAudit: true });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Save failed');
     } finally {
