@@ -348,9 +348,18 @@ const ActivationRow: React.FC<{
       required_plan_tier: row.required_plan_tier,
       is_active: row.is_active,
     },
-    currentTier: null, // resolver-only preview; provider tier shown elsewhere
+    currentTier: row.current_tier ?? null,
   });
   const name = isRTL ? row.name_ar : (row.name_en || row.name_ar);
+  const tierLabels: Record<string, { ar: string; en: string }> = {
+    free: { ar: 'مجاني', en: 'Free' },
+    basic: { ar: 'نمو', en: 'Growth' },
+    premium: { ar: 'احترافي', en: 'Pro' },
+    enterprise: { ar: 'مؤسسي', en: 'Enterprise' },
+  };
+  const tierChip = row.current_tier
+    ? (isRTL ? tierLabels[row.current_tier].ar : tierLabels[row.current_tier].en)
+    : (isRTL ? 'لا توجد عضوية' : 'No membership');
 
   return (
     <Card className="overflow-hidden">
@@ -368,6 +377,17 @@ const ActivationRow: React.FC<{
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
+          <Badge
+            variant="outline"
+            className={
+              row.current_tier
+                ? 'bg-info/10 text-info border-info/30'
+                : 'bg-muted text-muted-foreground'
+            }
+            data-testid="provider-tier-chip"
+          >
+            <Crown className="h-3 w-3 mr-1" />{tierChip}
+          </Badge>
           <Badge className={effectiveStatusBadgeClass(resolved.effective_status)} variant="outline">
             {effectiveStatusLabel(resolved.effective_status, isRTL)}
           </Badge>
