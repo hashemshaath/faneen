@@ -35,7 +35,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Bi } from '@/components/common/Bilingual';
-import { supabase } from '@/integrations/supabase/client';
 import { listProfilesByUserIds } from '@/modules/users';
 import {
   listBusinessTeams,
@@ -48,7 +47,7 @@ import {
   revokeDelegatedWorkspaceAccess,
   listStaffActivitySessions,
 } from '@/modules/workspace/governance';
-import { listManagedBusinessesForUser } from '@/modules/businesses';
+import { listManagedBusinessesForUser, listBusinessesByIds } from '@/modules/businesses';
 import { listBusinessStaffByBusiness } from '@/modules/businesses/services/listBusinessStaffByBusiness';
 import { useTransferPrimaryManagerMutation } from '@/hooks/useTransferPrimaryManagerMutation';
 import { mapTransferPrimaryManagerCode } from '@/modules/businesses/services/transferPrimaryManagerMessages';
@@ -69,7 +68,6 @@ type StaffRow = {
   is_active?: boolean | null;
   is_primary_manager?: boolean | null;
   display_name?: string | null;
-  email?: string | null;
   user_ref_id?: string | null;
 };
 
