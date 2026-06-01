@@ -80,6 +80,13 @@ const INVENTORY: Record<string, Classification> = {
   'weekly-sla-report': 'cron',
   'verify-pdf-arabic': 'frontend',
   'analyze-contract-document': 'frontend',
+  // AI-assisted clause suggestion tool. Auth-checked + CORS, intended for
+  // dashboard contract editor; no current src/ wrapper yet but the function
+  // is deployed and ready for the editor UI.
+  'contracts-ai-suggest-clauses': 'frontend',
+  // Daily scheduled job. Scans active contracts and emits expiry alerts at
+  // 30 / 14 / 7 / 1 day thresholds. Idempotent via contract_expiry_alerts_log.
+  'contracts-expiry-notifier': 'cron',
 
   // --- operations (server-only manual SLA real-run) ---
   'manual-sla-real-run': 'admin',
