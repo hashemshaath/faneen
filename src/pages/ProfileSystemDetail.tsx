@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useContentTracking } from '@/hooks/useContentTracking';
+import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
