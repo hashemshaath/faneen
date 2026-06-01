@@ -36,6 +36,7 @@ import {
 import { toast } from 'sonner';
 import { Bi } from '@/components/common/Bilingual';
 import { supabase } from '@/integrations/supabase/client';
+import { listProfilesByUserIds } from '@/modules/users';
 import {
   listBusinessTeams,
   createBusinessTeam,
