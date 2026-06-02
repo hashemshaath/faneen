@@ -159,6 +159,7 @@ const userGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'جهاتي', en: 'My Entities' }, url: '/dashboard/entities', icon: Building2 },
       { label: { ar: 'طلباتي', en: 'My Requests' }, url: '/dashboard/my-requests', icon: Inbox },
+      { label: { ar: 'عناوين المواقع', en: 'Site Addresses' }, url: '/dashboard/sites', icon: MapPin, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
       { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
