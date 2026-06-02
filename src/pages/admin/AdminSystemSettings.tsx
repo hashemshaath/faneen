@@ -324,6 +324,8 @@ const AdminSystemSettings = () => {
   });
 
   const updateValue = useCallback((key: string, value: string) => {
+    // Phase-2 guard: silently ignore writes to non-wired settings.
+    if (!WIRED_SYSTEM_SETTING_KEYS.has(key)) return;
     setValues(prev => ({ ...prev, [key]: value }));
     setDirty(prev => new Set(prev).add(key));
   }, []);
