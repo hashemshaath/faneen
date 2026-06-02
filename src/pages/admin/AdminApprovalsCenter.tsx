@@ -226,8 +226,10 @@ const CATEGORIES: CategoryConfig[] = [
 ];
 
 const AdminApprovalsCenter: React.FC = () => {
-  const { isAdmin, isSuperAdmin } = useAuth();
+  const { isAdmin, isSuperAdmin, user } = useAuth();
   const { isRTL } = useLanguage();
+  const queryClient = useQueryClient();
+  const [busyId, setBusyId] = React.useState<string | null>(null);
   usePageMeta({ title: isRTL ? 'مركز الموافقات الموحّد' : 'Unified Approvals Center', noindex: true });
   useNoIndex();
 
@@ -252,6 +254,52 @@ const AdminApprovalsCenter: React.FC = () => {
 
   const refreshAll = () => {
     (Object.keys(queries) as ApprovalCategoryKey[]).forEach((k) => queries[k].refetch());
+    queryClient.invalidateQueries({ queryKey: ['approvals-audit'] });
+  };
+
+  // Recent admin decisions — read-only audit timeline.
+  const auditQuery = useQuery({
+    queryKey: ['approvals-audit'],
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('admin_activity_log')
+        .select('id, action, entity_type, entity_id, details, created_at, user_id')
+        .in('action', [
+          'role_assigned', 'role_removed', 'role_updated',
+          'membership_tier.admin_override', 'business_tier_change',
+          'business_is_verified_true', 'business_sensitive_update',
+          'business_created', 'cleanup_super_admin_business_link',
+          'entity_access_request.approved', 'entity_access_request.rejected',
+          'service_activation.approved', 'service_activation.rejected',
+          'membership_subscription_activated',
+        ])
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) return [];
+      return data ?? [];
+    },
+  });
+
+  const handleReview = async (id: string, action: 'approve' | 'reject') => {
+    if (!user?.id) return;
+    setBusyId(id);
+    const { ok, error } = await reviewEntityAccessRequest({
+      requestId: id, reviewerUserId: user.id, action,
+    });
+    setBusyId(null);
+    if (!ok) {
+      const msg = (error as { message?: string } | null)?.message ?? 'error';
+      toast.error(isRTL ? `فشل التنفيذ: ${msg}` : `Action failed: ${msg}`);
+      return;
+    }
+    toast.success(
+      isRTL
+        ? action === 'approve' ? 'تمت الموافقة' : 'تم الرفض'
+        : action === 'approve' ? 'Approved' : 'Rejected',
+    );
+    queries.entity_access.refetch();
+    queryClient.invalidateQueries({ queryKey: ['approvals-audit'] });
   };
 
   if (!isAdmin && !isSuperAdmin) {
