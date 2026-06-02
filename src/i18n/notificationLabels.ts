@@ -57,6 +57,10 @@ export const notificationLabelDict: Record<string, LabelPair> = {
   membership_payment_refunded:         { ar: 'استرداد دفعة العضوية',         en: 'Membership Payment Refunded' },
   provider_credit_granted:             { ar: 'منح رصيد للمزوّد',             en: 'Provider Credit Granted' },
   provider_credit_consumed:            { ar: 'استهلاك رصيد المزوّد',          en: 'Provider Credit Consumed' },
+  membership_payment_marked_paid:      { ar: 'تأكيد دفعة العضوية يدويًا',     en: 'Membership Payment Marked Paid' },
+  membership_payment_marked_refunded:  { ar: 'استرداد دفعة العضوية يدويًا',   en: 'Membership Payment Marked Refunded' },
+  'membership-lifecycle-dispatcher':    { ar: 'موزّع دورة حياة العضويات',     en: 'Membership Lifecycle Dispatcher' },
+  'monthly-provider-credit-grant':      { ar: 'منح الرصيد الشهري للمزوّدين',  en: 'Monthly Provider Credit Grant' },
 
   // ── Roles / staff / access
   user_added:                    { ar: 'إضافة مستخدم',              en: 'User Added' },
@@ -81,6 +85,8 @@ export const notificationLabelDict: Record<string, LabelPair> = {
   payment_received:              { ar: 'استلام دفعة',               en: 'Payment Received' },
   stage_completed:               { ar: 'اكتمال مرحلة',              en: 'Stage Completed' },
   stage_awaiting:                { ar: 'مرحلة بانتظار تأكيد',       en: 'Stage Awaiting Confirmation' },
+  contract_milestone_completed:  { ar: 'اكتمال مرحلة من العقد',     en: 'Contract Milestone Completed' },
+  contract_payment_recorded:     { ar: 'تسجيل دفعة عقد',            en: 'Contract Payment Recorded' },
 
   // ── Reviews / quotes / messages
   new_message:                   { ar: 'رسالة جديدة',               en: 'New Message' },
@@ -89,6 +95,19 @@ export const notificationLabelDict: Record<string, LabelPair> = {
   quote_received:                { ar: 'استلام عرض سعر',            en: 'Quote Received' },
   quote_accepted:                { ar: 'قبول عرض السعر',            en: 'Quote Accepted' },
   quote_rejected:                { ar: 'رفض عرض السعر',             en: 'Quote Rejected' },
+  quote_request_submitted:       { ar: 'إرسال طلب عرض سعر',         en: 'Quote Request Submitted' },
+  quote_request_new_admin:       { ar: 'طلب عرض سعر جديد (إدارة)',   en: 'New Quote Request (Admin)' },
+  quote_request_status_updated:  { ar: 'تحديث حالة طلب عرض السعر',  en: 'Quote Request Status Updated' },
+  quote_lead_assigned:           { ar: 'إسناد فرصة بيع',            en: 'Lead Assigned' },
+  quote_contact_revealed:        { ar: 'كشف بيانات التواصل',         en: 'Contact Details Revealed' },
+  lead_cancelled:                { ar: 'إلغاء الفرصة',              en: 'Lead Cancelled' },
+
+  // ── Brands / staff invitations
+  brand_request_approved:        { ar: 'اعتماد طلب علامة تجارية',   en: 'Brand Request Approved' },
+  brand_request_rejected:        { ar: 'رفض طلب علامة تجارية',      en: 'Brand Request Rejected' },
+  provider_brand_link_approved:  { ar: 'اعتماد ربط العلامة بالمزوّد', en: 'Provider Brand Link Approved' },
+  provider_brand_link_rejected:  { ar: 'رفض ربط العلامة بالمزوّد',    en: 'Provider Brand Link Rejected' },
+  business_staff_invitation:     { ar: 'دعوة موظف للمنشأة',         en: 'Business Staff Invitation' },
 
   // ── Maintenance / warranty
   maintenance_request:           { ar: 'طلب صيانة',                 en: 'Maintenance Request' },
