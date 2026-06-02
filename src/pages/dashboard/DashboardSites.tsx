@@ -745,6 +745,12 @@ export default function DashboardSites() {
                         {linkedCount > 0 && <ArrowUpRight className="w-2.5 h-2.5" />}
                       </button>
                       <div className="flex items-center gap-0.5">
+                          <Button variant="ghost" size="icon"
+                            className={`h-7 w-7 ${expandedBarcode === s.id ? 'text-primary bg-primary/10' : ''}`}
+                            onClick={() => setExpandedBarcode(v => v === s.id ? null : s.id)}
+                            title={isRTL ? 'الباركود والطباعة' : 'Barcode & print'}>
+                            <QrCode className="w-3.5 h-3.5" />
+                          </Button>
                           {!isArchived && (
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10"
                               onClick={() => goToNewContract(s.id)} title={isRTL ? 'إنشاء عقد لهذا الموقع' : 'New contract for this site'}>
@@ -771,6 +777,12 @@ export default function DashboardSites() {
                         )}
                       </div>
                     </div>
+
+                    {expandedBarcode === s.id && (
+                      <div className="pt-2 border-t border-border/40 -mx-1">
+                        <SiteBarcodePanel siteId={s.id} siteRef={s.site_ref} label={s.label} isRTL={isRTL} />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );
