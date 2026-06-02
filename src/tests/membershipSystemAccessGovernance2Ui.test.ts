@@ -35,12 +35,11 @@ describe('MEMBERSHIP-SYSTEM-ACCESS-GOVERNANCE-2-UI', () => {
     expect(hub).toContain('مصفوفة الخدمات');
   });
 
-  it('exposes a super-admin only business override panel with mandatory reason', () => {
+  it('exposes a super-admin only business override panel with optional reason', () => {
     const src = read('src/components/admin/system-access/SuperAdminBusinessOverridePanel.tsx');
     expect(src).toContain('superAdminSetBusinessModuleOverride');
-    // Reason is enforced before submit.
-    expect(src).toMatch(/reason\.trim\(\)\.length > 0/);
-    expect(src).toMatch(/Reason is required|السبب مطلوب/);
+    // Reason is OPTIONAL — submit is enabled without it.
+    expect(src).toMatch(/Reason \(optional\)|السبب \(اختياري\)/);
     // Core modules cannot be disabled via this panel.
     expect(src).toMatch(/is_core[\s\S]*Core module cannot be disabled/);
     // Super admin gate is enforced in the UI.

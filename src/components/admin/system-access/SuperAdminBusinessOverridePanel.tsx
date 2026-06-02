@@ -75,7 +75,7 @@ const SuperAdminBusinessOverridePanel: React.FC = () => {
     modulesQuery.data?.find((m) => m.key === selectedModuleKey);
 
   const canSubmit =
-    !!selectedBizId && !!selectedModule && reason.trim().length > 0 && !submitting;
+    !!selectedBizId && !!selectedModule && !submitting;
 
   const handleSubmit = async () => {
     if (!isSuperAdmin) {
@@ -87,17 +87,13 @@ const SuperAdminBusinessOverridePanel: React.FC = () => {
       toast.error(isRTL ? 'لا يمكن تعطيل النظام الأساسي' : 'Core module cannot be disabled');
       return;
     }
-    if (!reason.trim()) {
-      toast.error(isRTL ? 'السبب مطلوب' : 'Reason is required');
-      return;
-    }
     setSubmitting(true);
     try {
       await superAdminSetBusinessModuleOverride({
         businessId: selectedBizId,
         moduleKey: selectedModule.key,
         enabled,
-        reason: reason.trim(),
+        reason: reason.trim() || null,
       });
       toast.success(isRTL ? 'تم تطبيق الاستثناء' : 'Override applied');
       setReason('');
@@ -231,12 +227,12 @@ const SuperAdminBusinessOverridePanel: React.FC = () => {
           )}
 
           <label className="text-sm font-semibold">
-            {isRTL ? 'السبب (إلزامي)' : 'Reason (required)'}
+            {isRTL ? 'السبب (اختياري)' : 'Reason (optional)'}
           </label>
           <Textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder={isRTL ? 'وضّح سبب الاستثناء…' : 'Explain why this override is needed…'}
+            placeholder={isRTL ? 'سبب اختياري للسجل…' : 'Optional note for the audit log…'}
             rows={3}
           />
 

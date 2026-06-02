@@ -18,9 +18,9 @@ describe('SUPER-ADMIN-BYPASS-MEMBERSHIP-1 — /admin/system-access', () => {
     expect(src).toMatch(/scopeTab === 'entity'/);
   });
 
-  it('requires a non-empty reason before submit', () => {
+  it('reason field is present but optional (submit enabled without it)', () => {
     expect(src).toMatch(/super-admin-bypass-reason/);
-    expect(src).toMatch(/disabled=\{!bypassReason\.trim\(\) \|\| bypassMutation\.isPending\}/);
+    expect(src).toMatch(/disabled=\{bypassMutation\.isPending\}/);
   });
 
   it('submit calls updateBusinessSystemAccess with bypassMembership:true + reason', () => {

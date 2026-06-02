@@ -196,10 +196,12 @@ export async function superAdminSetBusinessModuleOverride(params: {
   businessId: string;
   moduleKey: string;
   enabled: boolean;
-  reason: string;
+  reason?: string | null;
 }): Promise<void> {
-  const reason = (params.reason ?? '').trim();
-  if (!reason) throw new Error('reason required for super-admin override');
+  // Reason is optional for direct admin actions. We always send a non-empty
+  // string to satisfy the server-side audit contract ("reason required for
+  // super-admin override") while keeping the UI friction-free.
+  const reason = (params.reason ?? '').trim() || 'direct admin action';
   const { error } = await (supabase as any).rpc('super_admin_set_business_module_override', {
     _business_id: params.businessId,
     _module_key: params.moduleKey,

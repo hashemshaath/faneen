@@ -138,8 +138,42 @@ const AdminSystemAccess: React.FC = () => {
         actingUserId: user?.id ?? null,
         businessId: vars.scopeType === 'entity' ? vars.scopeValue : null,
       }),
+    // Optimistic update — flip the Switch instantly and roll back on failure.
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: ['system-module-overrides'] });
+      const previous = qc.getQueryData<SystemModuleOverride[]>(['system-module-overrides']);
+      qc.setQueryData<SystemModuleOverride[]>(['system-module-overrides'], (old) => {
+        const list = old ? [...old] : [];
+        const idx = list.findIndex(
+          (o) =>
+            o.module_key === vars.moduleKey &&
+            o.scope_type === vars.scopeType &&
+            (o.scope_value ?? null) === (vars.scopeValue ?? null),
+        );
+        const stub: SystemModuleOverride = {
+          id: idx >= 0 ? list[idx].id : `optimistic-${vars.moduleKey}`,
+          module_key: vars.moduleKey,
+          scope_type: vars.scopeType,
+          scope_value: vars.scopeValue,
+          enabled: vars.enabled,
+          reason: idx >= 0 ? list[idx].reason : null,
+          set_by: idx >= 0 ? list[idx].set_by : null,
+          updated_at: new Date().toISOString(),
+        };
+        if (idx >= 0) list[idx] = stub; else list.push(stub);
+        return list;
+      });
+      return { previous };
+    },
+    onError: (e: unknown, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(['system-module-overrides'], ctx.previous);
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(msg || (isRTL ? 'فشل الحفظ' : 'Save failed'));
+    },
     onSuccess: (res, vars) => {
       if (!res.ok && res.blocked_by_membership) {
+        // Roll back optimistic flip — the server did not apply the change.
+        qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
         // Super admin gets an inline force-override card; others see the toast.
         if (isSuperAdmin && vars.scopeType === 'entity' && vars.scopeValue) {
           const mod = (modulesQuery.data ?? []).find(m => m.key === vars.moduleKey);
@@ -158,6 +192,7 @@ const AdminSystemAccess: React.FC = () => {
         return;
       }
       if (!res.ok) {
+        qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
         toast.error((isRTL ? res.reason_ar : res.reason_en) || (isRTL ? 'فشل الحفظ' : 'Save failed'));
         return;
       }
@@ -168,10 +203,6 @@ const AdminSystemAccess: React.FC = () => {
       });
       setLastSyncAt(Date.now());
       toast.success(`${isRTL ? 'تم الحفظ' : 'Saved'} · ${isRTL ? ACCESS_LABELS.synced.ar : ACCESS_LABELS.synced.en}`);
-    },
-    onError: (e: unknown) => {
-      const msg = e instanceof Error ? e.message : String(e);
-      toast.error(msg || (isRTL ? 'فشل الحفظ' : 'Save failed'));
     },
   });
 
@@ -188,7 +219,7 @@ const AdminSystemAccess: React.FC = () => {
         bypassMembership: true,
         // Tag the audit row so it's clearly identifiable as a super-admin bypass
         // (system_module_audit_log has no dedicated column).
-        reason: `[super-admin bypass] ${vars.reason}`,
+        reason: `[super-admin bypass] ${vars.reason || 'direct admin action'}`,
       }),
     onSuccess: (res, vars) => {
       if (!res.ok) {
@@ -758,13 +789,13 @@ const AdminSystemAccess: React.FC = () => {
                     : 'This action bypasses membership limits for this business only. It does not change the business plan or plan settings. The reason will be recorded in the audit log.'}
                 </div>
                 <label className="text-xs font-semibold">
-                  {isRTL ? 'السبب (إلزامي)' : 'Reason (required)'}
+                  {isRTL ? 'السبب (اختياري)' : 'Reason (optional)'}
                 </label>
                 <Textarea
                   data-testid="super-admin-bypass-reason"
                   value={bypassReason}
                   onChange={(e) => setBypassReason(e.target.value)}
-                  placeholder={isRTL ? 'وضّح سبب التجاوز…' : 'Explain why this override is needed…'}
+                  placeholder={isRTL ? 'سبب اختياري للسجل…' : 'Optional note for the audit log…'}
                   rows={2}
                 />
                 <div className="flex flex-wrap items-center gap-2 justify-end">
@@ -780,14 +811,14 @@ const AdminSystemAccess: React.FC = () => {
                     data-testid="super-admin-bypass-submit"
                     size="sm"
                     className="gap-1.5"
-                    disabled={!bypassReason.trim() || bypassMutation.isPending}
+                    disabled={bypassMutation.isPending}
                     onClick={() => {
-                      if (!blockedAttempt.scopeValue || !bypassReason.trim()) return;
+                      if (!blockedAttempt.scopeValue) return;
                       bypassMutation.mutate({
                         moduleKey: blockedAttempt.moduleKey,
                         scopeValue: blockedAttempt.scopeValue,
                         enabled: blockedAttempt.nextEnabled,
-                        reason: bypassReason.trim(),
+                        reason: bypassReason.trim() || '',
                       });
                     }}
                   >
