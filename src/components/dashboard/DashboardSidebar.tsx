@@ -236,6 +236,8 @@ const adminBaseGroups: MenuGroup[] = [
     items: [
       // People
       { label: { ar: 'مركز الحسابات', en: 'Account Center' }, url: '/admin/identity', icon: Users, end: true },
+      // Unified approvals — single entry point for every pending approval
+      { label: { ar: 'مركز الموافقات', en: 'Approvals Center' }, url: '/admin/approvals', icon: CheckCircle2 },
       // Entities (direct CRUD page)
       { label: { ar: 'المنشآت والكيانات', en: 'Businesses & Entities' }, url: '/admin/businesses', icon: Building2 },
       // Access lifecycle
