@@ -935,6 +935,9 @@ const AdminBusinesses = () => {
   /* ─── AI auto-translate missing field (single business) ─── */
   const [autoTranslating, setAutoTranslating] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  // Hold the latest filtered list so keyboard shortcut `e` can export the
+  // current view without forcing the listener to re-bind on every change.
+  const filteredRef = useRef<unknown[]>([]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
@@ -952,7 +955,7 @@ const AdminBusinesses = () => {
       }
       if (e.key === 'e' || e.key === 'E') {
         e.preventDefault();
-        exportCSV(filtered, language);
+        exportCSV(filteredRef.current as any[], language);
       }
       if (e.key === 'Escape') {
         if (editingBiz) setEditingBiz(null);
@@ -962,10 +965,6 @@ const AdminBusinesses = () => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-    // `filtered` is referenced via closure; including it in deps would force this
-    // listener to be re-bound on every list change. The handler reads the latest
-    // closed-over value at fire time, which is sufficient for export.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingBiz, servicesPanel, selected.size, refetchBusinesses, isRTL, language]);
   const autoFillTranslations = useCallback(async () => {
     if (!editingBiz) return;
