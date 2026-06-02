@@ -342,7 +342,9 @@ const DashboardAnalytics = () => {
 
   const trend = (curr: number, prev: number | undefined): { up?: boolean; label: string } | undefined => {
     if (prev === undefined || prev === null) return undefined;
-    if (prev === 0 && curr === 0) return { up: undefined, label: '0%' };
+    // Suppress noisy "0%" badges when there's no baseline AND no current value —
+    // showing "0%" on every tile when the account has no data yet looks broken.
+    if (prev === 0 && curr === 0) return undefined;
     if (prev === 0) return { up: true, label: '+∞' };
     const pct = ((curr - prev) / prev) * 100;
     const sign = pct > 0 ? '+' : '';
