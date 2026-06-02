@@ -54,7 +54,7 @@ export function ProviderServicesStatusCard({ businessId }: Props) {
       else if (adm === 'rejected' || adm === 'suspended') blocked++;
       else if (r.required_plan_tier && r.required_plan_tier !== 'free') upgrade++;
       else if (prv === 'paused' || r.is_active === false) paused++;
-      else if (prv === 'active' && adm === 'allowed' && r.is_active !== false) active++;
+      else if (prv === 'active' && adm === 'allowed') active++;
     }
     return { total: rows.length, active, pending, paused, upgrade, blocked };
   }, [data]);
