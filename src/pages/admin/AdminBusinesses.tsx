@@ -1155,54 +1155,116 @@ const AdminBusinesses = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* ─── Header ─── */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-sm">
-                <Building2 className="w-5 h-5 text-accent" />
+      <div className="space-y-6 p-4 md:p-6 max-w-[1600px] mx-auto">
+        <AdminPageHeader
+          tone="accent"
+          icon={Building2}
+          eyebrow={isRTL ? 'لوحة الإدارة' : 'Admin Console'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'إدارة الأعمال' : 'Business Management' },
+          ]}
+          title={isRTL ? 'إدارة الأعمال والمنشآت' : 'Business Management'}
+          subtitle={
+            isRTL
+              ? `${stats.total} منشأة مسجلة • تحكم كامل في الملفات والخدمات والفروع والعضويات`
+              : `${stats.total} registered businesses • Full control of profiles, services, branches & memberships`
+          }
+          actions={
+            <>
+              <div className="flex bg-muted/40 border border-border/40 rounded-xl overflow-hidden p-0.5">
+                <button
+                  type="button"
+                  aria-label={isRTL ? 'عرض بطاقات' : 'Card view'}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  onClick={() => setViewMode('cards')}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={isRTL ? 'عرض جدول' : 'Table view'}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  onClick={() => setViewMode('table')}
+                >
+                  <List className="w-4 h-4" />
+                </button>
               </div>
-              {isRTL ? 'إدارة الأعمال' : 'Business Management'}
-            </h1>
-            <p className="text-muted-foreground font-body mt-1 text-sm">
-              {isRTL ? `${stats.total} نشاط تجاري مسجّل • التحكم الشامل في الأعمال والخدمات والفروع` : `${stats.total} registered businesses • Full control over businesses, services & branches`}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex bg-muted/50 border border-border/30 rounded-xl overflow-hidden p-0.5">
-              <button className={`p-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                onClick={() => setViewMode('cards')}><LayoutGrid className="w-4 h-4" /></button>
-              <button className={`p-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                onClick={() => setViewMode('table')}><List className="w-4 h-4" /></button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-10 text-xs gap-1.5 rounded-xl"
+                onClick={() => { refetchBusinesses(); toast.success(isRTL ? 'تم التحديث' : 'Refreshed'); }}
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-10 text-xs gap-1.5 rounded-xl"
+                onClick={() => exportCSV(filtered, language)}
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="h-10 text-xs gap-1.5 rounded-xl"
+              >
+                <Link to="/admin/provider-review">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{isRTL ? 'مراجعة المزودين' : 'Provider Review'}</span>
+                </Link>
+              </Button>
+              <Button
+                size="sm"
+                className="h-10 text-xs gap-1.5 rounded-xl"
+                onClick={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); }}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                {isRTL ? 'منشأة جديدة' : 'New Business'}
+              </Button>
+            </>
+          }
+          kpiSlot={
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+              <AdminKpiCard
+                label={isRTL ? 'إجمالي المنشآت' : 'Total Businesses'}
+                value={stats.total}
+                icon={Building2}
+                tone="primary"
+              />
+              <AdminKpiCard
+                label={isRTL ? 'نشطة' : 'Active'}
+                value={stats.active}
+                icon={Activity}
+                tone="success"
+                trend={stats.total ? `${Math.round((stats.active / stats.total) * 100)}%` : undefined}
+              />
+              <AdminKpiCard
+                label={isRTL ? 'موثّقة' : 'Verified'}
+                value={stats.verified}
+                icon={Shield}
+                tone="info"
+              />
+              <AdminKpiCard
+                label={isRTL ? 'بعقود فعّالة' : 'With Contracts'}
+                value={stats.contracts}
+                icon={FileText}
+                tone="accent"
+              />
+              <AdminKpiCard
+                label={isRTL ? 'مميّز / مؤسسات' : 'Premium / Enterprise'}
+                value={stats.premium}
+                icon={Crown}
+                tone="secondary"
+              />
             </div>
-            <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
-              onClick={() => { refetchBusinesses(); toast.success(isRTL ? 'تم التحديث' : 'Refreshed'); }}>
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
-            </Button>
-            <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
-              onClick={() => exportCSV(filtered, language)}>
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
-            </Button>
-            <Button size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
-              onClick={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); }}>
-              <Plus className="w-3.5 h-3.5" />
-              {isRTL ? 'منشأة جديدة' : 'New Business'}
-            </Button>
-          </div>
-        </div>
-
-        {/* ─── Stats ─── */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <StatCard label={isRTL ? 'إجمالي الأعمال' : 'Total Businesses'} value={stats.total} icon={Building2} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
-          <StatCard label={isRTL ? 'نشط' : 'Active'} value={stats.active} icon={Activity} gradient="from-success/10 to-success/5" iconBg="bg-success/15 text-success"
-            trend={stats.total ? `${Math.round(stats.active / stats.total * 100)}%` : undefined} />
-          <StatCard label={isRTL ? 'موثق' : 'Verified'} value={stats.verified} icon={Shield} gradient="from-info/10 to-info/5" iconBg="bg-info/15 text-info" />
-          <StatCard label={isRTL ? 'مرتبط بعقود' : 'With Contracts'} value={stats.contracts} icon={FileText} gradient="from-accent/10 to-accent/5" iconBg="bg-accent/15 text-accent" />
-          <StatCard label={isRTL ? 'مميز / مؤسسات' : 'Premium/Enterprise'} value={stats.premium} icon={Crown} gradient="from-secondary/10 to-secondary/5" iconBg="bg-secondary/15 text-secondary" />
-        </div>
+          }
+        />
 
         {/* ─── Tier Distribution Bar ─── */}
         {stats.total > 0 && (
