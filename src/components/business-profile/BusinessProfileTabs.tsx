@@ -28,6 +28,7 @@ import { getLocalizedValue, useDirection } from "@/lib/direction";
 import { cn } from "@/lib/utils";
 import { maskPhone, maskEmail } from "@/lib/masking";
 import { Button } from "@/components/ui/button";
+import { recordPortfolioView } from "@/modules/portfolio/views";
 import {
   useBranches,
   usePortfolio,
@@ -328,7 +329,7 @@ export const PortfolioTab = ({ businessId }: { businessId: string }) => {
               key={item.id}
               className="group relative aspect-square cursor-pointer overflow-hidden rounded-[1.25rem] border border-border/30 transition-all active:scale-[0.97] dark:border-border/15 animate-fade-in"
               style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
-              onClick={() => setSelectedIndex(index)}
+              onClick={() => { setSelectedIndex(index); void recordPortfolioView(item.id, "view"); }}
             >
               {item.media_type === "image" ? (
                 <img

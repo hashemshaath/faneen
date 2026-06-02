@@ -9839,57 +9839,145 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_item_views: {
+        Row: {
+          business_id: string
+          created_at: string
+          event_type: string
+          id: string
+          portfolio_item_id: string
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          viewer_user_id: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          portfolio_item_id: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          viewer_user_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          portfolio_item_id?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          viewer_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_item_views_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_item_views_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_item_views_portfolio_item_id_fkey"
+            columns: ["portfolio_item_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portfolio_items: {
         Row: {
           business_id: string
           category: string
+          client_name: string | null
           completion_date: string | null
           created_at: string
           description_ar: string | null
           description_en: string | null
+          external_url: string | null
           id: string
           is_demo: boolean
           is_featured: boolean
+          last_viewed_at: string | null
           media_type: string
           media_url: string
+          project_duration_days: number | null
           project_location: string | null
+          project_value: number | null
+          service_id: string | null
+          share_count: number
           sort_order: number
+          tags: string[]
           title_ar: string
           title_en: string | null
+          updated_at: string
+          view_count: number
         }
         Insert: {
           business_id: string
           category?: string
+          client_name?: string | null
           completion_date?: string | null
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
+          external_url?: string | null
           id?: string
           is_demo?: boolean
           is_featured?: boolean
+          last_viewed_at?: string | null
           media_type?: string
           media_url: string
+          project_duration_days?: number | null
           project_location?: string | null
+          project_value?: number | null
+          service_id?: string | null
+          share_count?: number
           sort_order?: number
+          tags?: string[]
           title_ar: string
           title_en?: string | null
+          updated_at?: string
+          view_count?: number
         }
         Update: {
           business_id?: string
           category?: string
+          client_name?: string | null
           completion_date?: string | null
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
+          external_url?: string | null
           id?: string
           is_demo?: boolean
           is_featured?: boolean
+          last_viewed_at?: string | null
           media_type?: string
           media_url?: string
+          project_duration_days?: number | null
           project_location?: string | null
+          project_value?: number | null
+          service_id?: string | null
+          share_count?: number
           sort_order?: number
+          tags?: string[]
           title_ar?: string
           title_en?: string | null
+          updated_at?: string
+          view_count?: number
         }
         Relationships: [
           {
@@ -9904,6 +9992,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "business_services"
             referencedColumns: ["id"]
           },
         ]
@@ -17080,6 +17175,17 @@ export type Database = {
           token: string
         }[]
       }
+      get_portfolio_analytics: {
+        Args: { _business_id: string; _days?: number }
+        Returns: {
+          last_view: string
+          portfolio_item_id: string
+          shares_period: number
+          unique_sessions: number
+          views_period: number
+          views_total: number
+        }[]
+      }
       get_promo_code_status: {
         Args: { _code_id: string }
         Returns: {
@@ -17754,6 +17860,15 @@ export type Database = {
         Returns: undefined
       }
       record_email_open: { Args: { _message_id: string }; Returns: undefined }
+      record_portfolio_view: {
+        Args: {
+          _event_type?: string
+          _portfolio_id: string
+          _referrer?: string
+          _session_id?: string
+        }
+        Returns: undefined
+      }
       redeem_loyalty_reward: { Args: { _reward_id: string }; Returns: string }
       redeem_promo_code: {
         Args: { _business_id?: string; _code: string }

@@ -21,7 +21,8 @@ import {
   Plus, Trash2, Star, GripVertical, X, Pencil, Image as ImageIcon,
   Eye, EyeOff, LayoutGrid, List, Search, StarOff, CheckCircle2,
   MapPin, Calendar, FolderOpen, Layers, Copy, Loader2, Maximize2,
-  Download, AlertCircle, BarChart3, Zap, Filter,
+  Download, AlertCircle, BarChart3, Zap, Filter, Share2, ExternalLink,
+  Tag, User, Banknote, Clock, Link2, TrendingUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/ui/image-upload';
@@ -41,6 +42,9 @@ interface PortfolioItem {
   description_ar: string | null; description_en: string | null; media_url: string;
   media_type: string; is_featured: boolean; sort_order: number; created_at: string;
   category: string; project_location: string | null; completion_date: string | null;
+  view_count: number; share_count: number; last_viewed_at: string | null;
+  tags: string[] | null; client_name: string | null; project_value: number | null;
+  project_duration_days: number | null; external_url: string | null;
 }
 
 const portfolioCategories = [
@@ -76,13 +80,15 @@ type FilterMode = 'all' | 'featured' | 'regular';
 
 /* ── Sortable Card ── */
 const SortableCard = React.memo(({
-  item, rtl, onDelete, onEdit, onToggleFeatured, onDuplicate, onPreview, viewMode, isSelected, onSelect,
+  item, rtl, onDelete, onEdit, onToggleFeatured, onDuplicate, onPreview, onShare, onOpenPublic, viewMode, isSelected, onSelect,
 }: {
   item: PortfolioItem; rtl: boolean; viewMode: ViewMode; isSelected: boolean;
   onDelete: (id: string) => void; onEdit: (item: PortfolioItem) => void;
   onToggleFeatured: (item: PortfolioItem) => void;
   onDuplicate: (item: PortfolioItem) => void;
   onPreview: (url: string) => void;
+  onShare: (item: PortfolioItem) => void;
+  onOpenPublic: (item: PortfolioItem) => void;
   onSelect: (id: string) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
@@ -129,7 +135,13 @@ const SortableCard = React.memo(({
             </Button>
             <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(item)}><Pencil className="w-3.5 h-3.5" /></Button>
             <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(item)}><Copy className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onShare(item)} title={rtl ? 'مشاركة' : 'Share'}><Share2 className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onOpenPublic(item)} title={rtl ? 'عرض عام' : 'Public'}><ExternalLink className="w-3.5 h-3.5" /></Button>
             <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(item.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 text-[10px] text-muted-foreground tech-content">
+            <span className="inline-flex items-center gap-0.5"><Eye className="w-3 h-3" />{item.view_count ?? 0}</span>
+            <span className="inline-flex items-center gap-0.5"><Share2 className="w-3 h-3" />{item.share_count ?? 0}</span>
           </div>
         </div>
       </div>
@@ -177,9 +189,18 @@ const SortableCard = React.memo(({
             <Button size="sm" variant="secondary" className="h-6 text-[10px] px-1.5 shadow-lg" onClick={() => onDuplicate(item)}>
               <Copy className="w-3 h-3" />
             </Button>
+            <Button size="sm" variant="secondary" className="h-6 text-[10px] px-1.5 shadow-lg" onClick={() => onShare(item)} title={rtl ? 'مشاركة' : 'Share'}>
+              <Share2 className="w-3 h-3" />
+            </Button>
             <Button size="sm" variant="destructive" className="h-6 text-[10px] px-1.5 shadow-lg" onClick={() => onDelete(item.id)}>
               <Trash2 className="w-3 h-3" />
             </Button>
+          </div>
+          {/* View counter (top-right always visible) */}
+          <div className="absolute top-1.5 end-1.5 group-hover:opacity-0 transition-opacity flex items-center gap-1">
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-background/85 backdrop-blur-sm shadow-sm tech-content inline-flex items-center gap-0.5">
+              <Eye className="w-2.5 h-2.5" />{item.view_count ?? 0}
+            </span>
           </div>
         </div>
         <div className="p-2.5">
@@ -188,7 +209,17 @@ const SortableCard = React.memo(({
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             {item.project_location && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{item.project_location}</span>}
             {item.completion_date && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(item.completion_date).toLocaleDateString(rtl ? 'ar-SA-u-nu-latn' : 'en-US', { year: 'numeric', month: 'short' })}</span>}
+            {item.client_name && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><User className="w-2.5 h-2.5" />{item.client_name}</span>}
+            {item.share_count > 0 && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 tech-content"><Share2 className="w-2.5 h-2.5" />{item.share_count}</span>}
           </div>
+          {item.tags && item.tags.length > 0 && (
+            <div className="flex items-center gap-1 mt-1 flex-wrap">
+              {item.tags.slice(0, 3).map(t => (
+                <span key={t} className="text-[8px] px-1 py-px rounded bg-muted/70 text-muted-foreground">#{t}</span>
+              ))}
+              {item.tags.length > 3 && <span className="text-[8px] text-muted-foreground">+{item.tags.length - 3}</span>}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -221,8 +252,11 @@ const DashboardPortfolio = () => {
     title_ar: '', title_en: '', description_ar: '', description_en: '',
     media_url: '', media_type: 'image' as const, is_featured: false,
     category: 'general', project_location: '', completion_date: '',
+    tags: '' as string, client_name: '', project_value: '' as string,
+    project_duration_days: '' as string, external_url: '',
   }), []);
   const [form, setForm] = useState(emptyForm);
+  const [sortBy, setSortBy] = useState<'order' | 'views' | 'shares' | 'recent'>('order');
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -234,9 +268,9 @@ const DashboardPortfolio = () => {
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await getOwnerBusiness<{ id: string }>({
+      const { data } = await getOwnerBusiness<{ id: string; ref_id: string | null }>({
         userId: user.id,
-        select: 'id',
+        select: 'id, ref_id',
       });
       return data;
     },
@@ -244,6 +278,7 @@ const DashboardPortfolio = () => {
     staleTime: 10 * 60 * 1000,
   });
   const businessId = business?.id;
+  const businessRefId = business?.ref_id;
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['dashboard-portfolio', businessId],
@@ -263,7 +298,9 @@ const DashboardPortfolio = () => {
     const usedCats = new Set(items.map(i => i.category)).size;
     const complete = items.filter(i => i.title_ar && i.description_ar && i.media_url && i.project_location).length;
     const completeness = total > 0 ? Math.round((complete / total) * 100) : 0;
-    return { total, featured, regular: total - featured, usedCats, completeness };
+    const totalViews = items.reduce((s, i) => s + (i.view_count || 0), 0);
+    const totalShares = items.reduce((s, i) => s + (i.share_count || 0), 0);
+    return { total, featured, regular: total - featured, usedCats, completeness, totalViews, totalShares };
   }, [items]);
 
   const usedCategories = useMemo(() => {
@@ -278,21 +315,38 @@ const DashboardPortfolio = () => {
     if (categoryFilter !== 'all') result = result.filter(i => i.category === categoryFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(i => i.title_ar.toLowerCase().includes(q) || (i.title_en || '').toLowerCase().includes(q) || (i.description_ar || '').toLowerCase().includes(q));
+      result = result.filter(i =>
+        i.title_ar.toLowerCase().includes(q) ||
+        (i.title_en || '').toLowerCase().includes(q) ||
+        (i.description_ar || '').toLowerCase().includes(q) ||
+        (i.client_name || '').toLowerCase().includes(q) ||
+        (i.tags || []).some(t => t.toLowerCase().includes(q))
+      );
     }
+    if (sortBy === 'views') result.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
+    else if (sortBy === 'shares') result.sort((a, b) => (b.share_count || 0) - (a.share_count || 0));
+    else if (sortBy === 'recent') result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     return result;
-  }, [items, filterMode, categoryFilter, searchQuery]);
+  }, [items, filterMode, categoryFilter, searchQuery, sortBy]);
 
   /* ─── Mutations ─── */
   const saveMut = useMutation({
     mutationFn: async () => {
       if (!businessId) throw new Error('No business');
+      const tagsArr = form.tags.split(',').map(t => t.trim()).filter(Boolean).slice(0, 12);
+      const valueNum = form.project_value ? Number(form.project_value) : null;
+      const durNum = form.project_duration_days ? Math.max(0, parseInt(form.project_duration_days, 10) || 0) : null;
       const payload = {
         title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
         description_ar: form.description_ar.trim() || null, description_en: form.description_en.trim() || null,
         media_url: form.media_url, media_type: form.media_type, is_featured: form.is_featured,
         category: form.category, project_location: form.project_location.trim() || null,
         completion_date: form.completion_date || null,
+        tags: tagsArr,
+        client_name: form.client_name.trim() || null,
+        project_value: valueNum && !Number.isNaN(valueNum) ? valueNum : null,
+        project_duration_days: durNum,
+        external_url: form.external_url.trim() || null,
       };
       if (editingItem) {
         const { error } = await supabase.from('portfolio_items').update(payload).eq('id', editingItem.id);
@@ -345,6 +399,11 @@ const DashboardPortfolio = () => {
       media_url: item.media_url, media_type: item.media_type as 'image', is_featured: item.is_featured,
       category: item.category || 'general', project_location: item.project_location || '',
       completion_date: item.completion_date || '',
+      tags: (item.tags || []).join(', '),
+      client_name: item.client_name || '',
+      project_value: item.project_value != null ? String(item.project_value) : '',
+      project_duration_days: item.project_duration_days != null ? String(item.project_duration_days) : '',
+      external_url: item.external_url || '',
     });
     setShowForm(true);
     scrollToForm();
@@ -359,6 +418,11 @@ const DashboardPortfolio = () => {
       media_url: item.media_url, media_type: item.media_type as 'image', is_featured: false,
       category: item.category || 'general', project_location: item.project_location || '',
       completion_date: item.completion_date || '',
+      tags: (item.tags || []).join(', '),
+      client_name: item.client_name || '',
+      project_value: item.project_value != null ? String(item.project_value) : '',
+      project_duration_days: item.project_duration_days != null ? String(item.project_duration_days) : '',
+      external_url: item.external_url || '',
     });
     setShowForm(true);
     scrollToForm();
@@ -381,8 +445,8 @@ const DashboardPortfolio = () => {
   }, [filteredItems]);
 
   const exportCSV = useCallback(() => {
-    const rows = [['Title AR', 'Title EN', 'Category', 'Location', 'Date', 'Featured', 'Image URL'].join(','),
-      ...items.map(i => [`"${i.title_ar}"`, `"${i.title_en || ''}"`, i.category, `"${i.project_location || ''}"`, i.completion_date || '', i.is_featured, `"${i.media_url}"`].join(','))
+    const rows = [['Title AR', 'Title EN', 'Category', 'Location', 'Date', 'Client', 'Value', 'Views', 'Shares', 'Featured', 'Image URL'].join(','),
+      ...items.map(i => [`"${i.title_ar}"`, `"${i.title_en || ''}"`, i.category, `"${i.project_location || ''}"`, i.completion_date || '', `"${i.client_name || ''}"`, i.project_value ?? '', i.view_count ?? 0, i.share_count ?? 0, i.is_featured, `"${i.media_url}"`].join(','))
     ].join('\n');
     const blob = new Blob(['\ufeff' + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -390,6 +454,36 @@ const DashboardPortfolio = () => {
     URL.revokeObjectURL(url);
     toast.success(isRTL ? 'تم التصدير' : 'Exported');
   }, [items, isRTL]);
+
+  const publicLinkFor = useCallback((_item: PortfolioItem) => {
+    if (!businessRefId) return null;
+    return `${window.location.origin}/r/${businessRefId}`;
+  }, [businessRefId]);
+
+  const handleShare = useCallback(async (item: PortfolioItem) => {
+    const url = publicLinkFor(item);
+    if (!url) { toast.error(isRTL ? 'لا يوجد رابط عام بعد' : 'No public link yet'); return; }
+    const title = isRTL ? item.title_ar : (item.title_en || item.title_ar);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success(isRTL ? 'تم نسخ الرابط' : 'Link copied');
+      }
+      // Optimistic share counter
+      queryClient.setQueryData(['dashboard-portfolio', businessId], (prev: PortfolioItem[] | undefined) =>
+        prev?.map(p => p.id === item.id ? { ...p, share_count: (p.share_count || 0) + 1 } : p) ?? prev
+      );
+      void supabase.rpc('record_portfolio_view', { _portfolio_id: item.id, _event_type: 'share', _session_id: null, _referrer: null });
+    } catch { /* user cancelled share */ }
+  }, [publicLinkFor, isRTL, queryClient, businessId]);
+
+  const handleOpenPublic = useCallback((item: PortfolioItem) => {
+    const url = publicLinkFor(item);
+    if (!url) { toast.error(isRTL ? 'لا يوجد رابط عام بعد' : 'No public link yet'); return; }
+    window.open(url, '_blank', 'noopener');
+  }, [publicLinkFor, isRTL]);
 
   const filterOptions = useMemo(() => [
     { key: 'all' as const, label: isRTL ? 'الكل' : 'All', count: stats.total, icon: Layers },
@@ -429,11 +523,12 @@ const DashboardPortfolio = () => {
 
         {/* ═══ Stats ═══ */}
         {items.length > 0 && (
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
             {[
               { l: isRTL ? 'إجمالي' : 'Total', v: stats.total, icon: ImageIcon, cls: 'text-primary bg-primary/10' },
               { l: isRTL ? 'مميزة' : 'Featured', v: stats.featured, icon: Star, cls: 'text-accent bg-accent/10' },
-              { l: isRTL ? 'عادية' : 'Regular', v: stats.regular, icon: Eye, cls: 'text-muted-foreground bg-muted' },
+              { l: isRTL ? 'المشاهدات' : 'Views', v: stats.totalViews, icon: Eye, cls: 'text-primary bg-primary/10' },
+              { l: isRTL ? 'المشاركات' : 'Shares', v: stats.totalShares, icon: Share2, cls: 'text-accent bg-accent/10' },
               { l: isRTL ? 'تصنيفات' : 'Categories', v: stats.usedCats, icon: FolderOpen, cls: 'text-primary bg-primary/10' },
               { l: isRTL ? 'الاكتمال' : 'Complete', v: stats.completeness, icon: BarChart3, cls: 'text-primary bg-primary/10', suffix: '%' },
             ].map((s, i) => (
@@ -528,6 +623,30 @@ const DashboardPortfolio = () => {
                   <ImageUpload bucket="portfolio-images" value={form.media_url} onChange={url => setForm(p => ({ ...p, media_url: url }))} onRemove={() => setForm(p => ({ ...p, media_url: '' }))} compact placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'} />
                 </div>
 
+                {/* ── Pro fields: client, value, duration, external url, tags ── */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><User className="w-3.5 h-3.5" />{isRTL ? 'اسم العميل' : 'Client'}</Label>
+                    <Input value={form.client_name} onChange={e => setForm(p => ({ ...p, client_name: e.target.value }))} placeholder={isRTL ? 'اختياري' : 'Optional'} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><Banknote className="w-3.5 h-3.5" />{isRTL ? 'قيمة المشروع' : 'Project Value'}</Label>
+                    <Input type="number" min="0" step="0.01" value={form.project_value} onChange={e => setForm(p => ({ ...p, project_value: e.target.value }))} placeholder="SAR" dir="ltr" className="h-9 tech-content" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{isRTL ? 'المدة (أيام)' : 'Duration (days)'}</Label>
+                    <Input type="number" min="0" step="1" value={form.project_duration_days} onChange={e => setForm(p => ({ ...p, project_duration_days: e.target.value }))} dir="ltr" className="h-9 tech-content" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><Link2 className="w-3.5 h-3.5" />{isRTL ? 'رابط خارجي' : 'External Link'}</Label>
+                    <Input type="url" value={form.external_url} onChange={e => setForm(p => ({ ...p, external_url: e.target.value }))} placeholder="https://…" dir="ltr" className="h-9 tech-content" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{isRTL ? 'وسوم (مفصولة بفاصلة)' : 'Tags (comma-separated)'}</Label>
+                  <Input value={form.tags} onChange={e => setForm(p => ({ ...p, tags: e.target.value }))} placeholder={isRTL ? 'فلل، تجاري، الرياض' : 'villa, commercial, riyadh'} className="h-9" />
+                </div>
+
                 {/* Descriptions */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -592,6 +711,17 @@ const DashboardPortfolio = () => {
                   </SelectContent>
                 </Select>
               )}
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger className="w-auto h-8 gap-1 text-[11px] border-border/40">
+                  <TrendingUp className="w-3 h-3" /><SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="order">{isRTL ? 'الترتيب اليدوي' : 'Manual order'}</SelectItem>
+                  <SelectItem value="views">{isRTL ? 'الأكثر مشاهدة' : 'Most viewed'}</SelectItem>
+                  <SelectItem value="shares">{isRTL ? 'الأكثر مشاركة' : 'Most shared'}</SelectItem>
+                  <SelectItem value="recent">{isRTL ? 'الأحدث' : 'Newest'}</SelectItem>
+                </SelectContent>
+              </Select>
               <div className="flex border border-border/40 rounded-lg overflow-hidden ms-auto">
                 <button className={`p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('grid')}><LayoutGrid className="w-3.5 h-3.5" /></button>
                 <button className={`p-1.5 transition-colors ${viewMode === 'list' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('list')}><List className="w-3.5 h-3.5" /></button>
@@ -672,6 +802,8 @@ const DashboardPortfolio = () => {
                     onToggleFeatured={item => toggleFeaturedMut.mutate(item)}
                     onDuplicate={duplicateItem}
                     onPreview={url => setPreviewUrl(url)}
+                    onShare={handleShare}
+                    onOpenPublic={handleOpenPublic}
                     onSelect={toggleSelect} />
                 ))}
               </div>
