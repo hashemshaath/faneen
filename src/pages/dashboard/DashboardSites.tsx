@@ -429,6 +429,15 @@ export default function DashboardSites() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pb-5">
+                <Tabs defaultValue="general" className="w-full">
+                  <TabsList className="w-full grid grid-cols-4 h-auto p-1">
+                    <TabsTrigger value="general" className="text-[11px] gap-1.5"><Layers className="w-3.5 h-3.5" />{isRTL ? 'الأساسيات' : 'General'}</TabsTrigger>
+                    <TabsTrigger value="address" className="text-[11px] gap-1.5"><MapPin className="w-3.5 h-3.5" />{isRTL ? 'العنوان والخريطة' : 'Address & Map'}</TabsTrigger>
+                    <TabsTrigger value="government" className="text-[11px] gap-1.5"><Landmark className="w-3.5 h-3.5" />{isRTL ? 'البيانات الحكومية' : 'Government'}</TabsTrigger>
+                    <TabsTrigger value="contact" className="text-[11px] gap-1.5"><User className="w-3.5 h-3.5" />{isRTL ? 'التواصل' : 'Contact'}</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="general" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">{isRTL ? 'الاسم المختصر' : 'Label'} <span className="text-destructive">*</span></Label>
@@ -457,8 +466,13 @@ export default function DashboardSites() {
                     </Select>
                   </div>
                 </div>
+                <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 border border-border/40">
+                  <input type="checkbox" id="is_default" checked={form.is_default} onChange={e => setForm(p => ({ ...p, is_default: e.target.checked }))} className="w-4 h-4 rounded border-border" />
+                  <label htmlFor="is_default" className="text-xs font-medium cursor-pointer">{isRTL ? 'تعيين كموقع افتراضي' : 'Set as default site'}</label>
+                </div>
+                  </TabsContent>
 
-                {/* Unified National Address (Region → City → District + SPL lookup + structured) */}
+                  <TabsContent value="address" className="space-y-4 mt-4">
                 <div className="rounded-xl border border-border/50 bg-card/40 p-3">
                   <NationalAddressForm value={naf} onChange={setNaf} isRTL={isRTL} />
                 </div>
@@ -496,7 +510,91 @@ export default function DashboardSites() {
                     <Input type="url" dir="ltr" value={form.map_url} onChange={e => setForm(p => ({ ...p, map_url: e.target.value }))} placeholder="https://maps.google.com/…" className="h-9 tech-content" />
                   </div>
                 </div>
+                  </TabsContent>
 
+                  <TabsContent value="government" className="space-y-3 mt-4">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-primary/5 border border-primary/15 rounded-lg p-2.5">
+                      <Landmark className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span>{isRTL ? 'بيانات الرخص الحكومية وصك الملكية والمالك — تستخدم تلقائياً في العقود المرتبطة بهذا الموقع.' : 'Government licenses, title deed, and ownership data — auto-attached to contracts linked to this site.'}</span>
+                    </div>
+
+                    <div className="rounded-xl border border-border/50 bg-card/40 p-3 space-y-3">
+                      <div className="flex items-center gap-2 pb-1 border-b border-border/30">
+                        <ScrollText className="w-3.5 h-3.5 text-primary" />
+                        <h3 className="text-xs font-bold">{isRTL ? 'رخصة البلدية' : 'Municipal License'}</h3>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">{isRTL ? 'رقم الرخصة' : 'License No.'}</Label>
+                          <Input dir="ltr" value={form.municipal_license_no} onChange={e => setForm(p => ({ ...p, municipal_license_no: e.target.value }))} className="h-9 tech-content" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">{isRTL ? 'تاريخ الإصدار' : 'Issue Date'}</Label>
+                          <Input type="date" dir="ltr" value={form.municipal_license_issue_date} onChange={e => setForm(p => ({ ...p, municipal_license_issue_date: e.target.value }))} className="h-9 tech-content" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">{isRTL ? 'تاريخ الانتهاء' : 'Expiry Date'}</Label>
+                          <Input type="date" dir="ltr" value={form.municipal_license_expiry_date} onChange={e => setForm(p => ({ ...p, municipal_license_expiry_date: e.target.value }))} className="h-9 tech-content" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-border/50 bg-card/40 p-3 space-y-3">
+                      <div className="flex items-center gap-2 pb-1 border-b border-border/30">
+                        <FileText className="w-3.5 h-3.5 text-primary" />
+                        <h3 className="text-xs font-bold">{isRTL ? 'صك الملكية والمالك' : 'Title Deed & Owner'}</h3>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">{isRTL ? 'رقم الصك' : 'Deed Number'}</Label>
+                          <Input dir="ltr" value={form.title_deed_no} onChange={e => setForm(p => ({ ...p, title_deed_no: e.target.value }))} className="h-9 tech-content" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">{isRTL ? 'تاريخ الصك' : 'Deed Date'}</Label>
+                          <Input type="date" dir="ltr" value={form.title_deed_date} onChange={e => setForm(p => ({ ...p, title_deed_date: e.target.value }))} className="h-9 tech-content" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">{isRTL ? 'اسم المالك' : 'Owner Name'}</Label>
+                          <Input value={form.owner_name} onChange={e => setForm(p => ({ ...p, owner_name: e.target.value }))} className="h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">{isRTL ? 'رقم هوية المالك' : 'Owner ID Number'}</Label>
+                          <Input dir="ltr" value={form.owner_id_number} onChange={e => setForm(p => ({ ...p, owner_id_number: e.target.value }))} className="h-9 tech-content" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-border/50 bg-card/40 p-3 space-y-3">
+                      <div className="flex items-center gap-2 pb-1 border-b border-border/30">
+                        <Layers className="w-3.5 h-3.5 text-primary" />
+                        <h3 className="text-xs font-bold">{isRTL ? 'بيانات المخطط والاستخدام' : 'Plan & Land Use'}</h3>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">{isRTL ? 'نوع الاستخدام' : 'Land Use'}</Label>
+                          <Input value={form.land_use_type} onChange={e => setForm(p => ({ ...p, land_use_type: e.target.value }))} placeholder={isRTL ? 'سكني / تجاري...' : 'Residential...'} className="h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">{isRTL ? 'رقم القطعة' : 'Plot No.'}</Label>
+                          <Input dir="ltr" value={form.plot_number} onChange={e => setForm(p => ({ ...p, plot_number: e.target.value }))} className="h-9 tech-content" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">{isRTL ? 'رقم البلوك' : 'Block No.'}</Label>
+                          <Input dir="ltr" value={form.block_number} onChange={e => setForm(p => ({ ...p, block_number: e.target.value }))} className="h-9 tech-content" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">{isRTL ? 'رقم المخطط' : 'Plan No.'}</Label>
+                          <Input dir="ltr" value={form.plan_number} onChange={e => setForm(p => ({ ...p, plan_number: e.target.value }))} className="h-9 tech-content" />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-medium">{isRTL ? 'ملاحظات حكومية' : 'Government Notes'}</Label>
+                        <Textarea value={form.government_notes} onChange={e => setForm(p => ({ ...p, government_notes: e.target.value }))} rows={2} placeholder={isRTL ? 'رخص إضافية، اشتراطات، تصاريح...' : 'Additional permits, conditions...'} className="text-sm resize-none" />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="contact" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium flex items-center gap-1"><User className="w-3.5 h-3.5" />{isRTL ? 'اسم الجهة المسؤولة' : 'Contact Name'}</Label>
@@ -512,11 +610,8 @@ export default function DashboardSites() {
                   <Label className="text-xs font-medium">{isRTL ? 'ملاحظات الوصول' : 'Access notes'}</Label>
                   <Textarea value={form.access_notes} onChange={e => setForm(p => ({ ...p, access_notes: e.target.value }))} rows={2} placeholder={isRTL ? 'أرقام البوابات، أوقات الوصول...' : 'Gate numbers, access hours...'} className="text-sm resize-none" />
                 </div>
-
-                <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 border border-border/40">
-                  <input type="checkbox" id="is_default" checked={form.is_default} onChange={e => setForm(p => ({ ...p, is_default: e.target.checked }))} className="w-4 h-4 rounded border-border" />
-                  <label htmlFor="is_default" className="text-xs font-medium cursor-pointer">{isRTL ? 'تعيين كموقع افتراضي' : 'Set as default site'}</label>
-                </div>
+                  </TabsContent>
+                </Tabs>
 
                 <div className="flex gap-2 pt-1">
                   <Button onClick={() => saveMut.mutate()} disabled={!form.label.trim() || !naf.city_id || saveMut.isPending} variant="hero" className="flex-1 h-9">
