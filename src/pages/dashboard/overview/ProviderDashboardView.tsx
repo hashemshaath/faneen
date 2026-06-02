@@ -440,28 +440,6 @@ export default function ProviderDashboardView({
         </CardContent>
       </Card>
 
-      {/* Bottom stats */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-        {[
-          { icon: Wrench, label: isRTL ? 'خدمات' : 'Services', value: stats?.services ?? 0 },
-          { icon: ImageIcon, label: isRTL ? 'معرض' : 'Portfolio', value: stats?.portfolio ?? 0 },
-          { icon: FolderOpen, label: isRTL ? 'مشاريع' : 'Projects', value: stats?.projects ?? 0 },
-          { icon: Megaphone, label: isRTL ? 'عروض' : 'Promos', value: stats?.promotions ?? 0 },
-          { icon: MessageSquare, label: isRTL ? 'محادثات' : 'Chats', value: stats?.messages ?? 0 },
-          { icon: Activity, label: isRTL ? 'عمليات' : 'Operations', value: stats?.operations ?? 0 },
-        ].map((card) => (
-          <Card key={card.label} className="border-border/40">
-            <CardContent className="p-2 flex flex-col items-center text-center gap-0.5">
-              <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
-                <card.icon className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-              </div>
-              <span className="tech-content text-sm font-bold">{card.value}</span>
-              <span className="text-[8px] text-muted-foreground">{card.label}</span>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
       {/* J — Final dynamic CTA */}
       <ProviderSmartActionFooter
         servicesCount={stats?.services ?? 0}
