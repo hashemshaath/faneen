@@ -668,14 +668,14 @@ const AdminApprovalsCenter: React.FC = () => {
           <div className="rounded-2xl border border-primary/30 bg-primary/5 px-4 py-2.5 flex items-center gap-3 flex-wrap">
             <span className="text-xs font-medium text-foreground">
               {isRTL
-                ? `${selectedRows.length} محدد${selectedEntityAccess.length !== selectedRows.length ? ` (قابل للتنفيذ: ${selectedEntityAccess.length})` : ''}`
-                : `${selectedRows.length} selected${selectedEntityAccess.length !== selectedRows.length ? ` (actionable: ${selectedEntityAccess.length})` : ''}`}
+                ? `${selectedRows.length} محدد${selectedActionable.length !== selectedRows.length ? ` (قابل للتنفيذ: ${selectedActionable.length})` : ''}`
+                : `${selectedRows.length} selected${selectedActionable.length !== selectedRows.length ? ` (actionable: ${selectedActionable.length})` : ''}`}
             </span>
             <div className="flex items-center gap-1.5 ms-auto">
               <Button
                 size="sm" variant="outline"
                 className="h-8 rounded-lg gap-1 text-success hover:text-success hover:border-success/40"
-                disabled={bulkBusy || selectedEntityAccess.length === 0}
+                disabled={bulkBusy || selectedActionable.length === 0}
                 onClick={() => handleBulk('approve')}
               >
                 {bulkBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
@@ -684,7 +684,7 @@ const AdminApprovalsCenter: React.FC = () => {
               <Button
                 size="sm" variant="outline"
                 className="h-8 rounded-lg gap-1 text-destructive hover:text-destructive hover:border-destructive/40"
-                disabled={bulkBusy || selectedEntityAccess.length === 0}
+                disabled={bulkBusy || selectedActionable.length === 0}
                 onClick={() => handleBulk('reject')}
               >
                 <X className="w-3.5 h-3.5" />
