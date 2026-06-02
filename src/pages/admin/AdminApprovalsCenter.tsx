@@ -64,6 +64,12 @@ const PAGE_SIZE = 20;
 const FILTERS_STORAGE_KEY = 'qitaat_approvals_filters_v1';
 const POLL_INTERVAL_MS = 60_000;
 
+function escapeHtml(s: string): string {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 type DateRangeKey = 'all' | '24h' | '7d' | '30d';
 
 interface PersistedFilters {
@@ -451,7 +457,7 @@ const AdminApprovalsCenter: React.FC = () => {
 
   // ── Export helpers (respect current filter/search/date range) ──
   const exportRows = useMemo(() => unified.map((r) => {
-    const c = catMapEarly(r.category);
+    const c = CATEGORIES.find((cc) => cc.key === r.category)!;
     return {
       category: isRTL ? c.ar : c.en,
       ref_id: r.refId,
