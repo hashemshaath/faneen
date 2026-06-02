@@ -125,6 +125,12 @@ const AdminSystemAccess: React.FC = () => {
         isAdmin: !!isAdmin,
         actingUserId: user?.id ?? null,
         businessId: vars.scopeType === 'entity' ? vars.scopeValue : null,
+        // ADMIN-DIRECT-TOGGLE-1 — Admins (including super-admins) always bypass
+        // membership gating from this console. The action is recorded in the
+        // audit log via the same SECURITY DEFINER RPC, so the bypass remains
+        // auditable while the UI stays instant and unobstructed.
+        bypassMembership: !!isAdmin,
+        reason: '[admin direct] system-access console',
       }),
     // Optimistic update — flip the Switch instantly and roll back on failure.
     onMutate: async (vars) => {
@@ -159,26 +165,6 @@ const AdminSystemAccess: React.FC = () => {
       toast.error(msg || (isRTL ? 'فشل الحفظ' : 'Save failed'));
     },
     onSuccess: (res, vars) => {
-      if (!res.ok && res.blocked_by_membership) {
-        // Roll back optimistic flip — the server did not apply the change.
-        qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
-        // Super admin gets an inline force-override card; others see the toast.
-        if (isSuperAdmin && vars.scopeType === 'entity' && vars.scopeValue) {
-          const mod = (modulesQuery.data ?? []).find(m => m.key === vars.moduleKey);
-          setBlockedAttempt({
-            moduleKey: vars.moduleKey,
-            moduleLabelAr: mod?.label_ar ?? vars.moduleKey,
-            moduleLabelEn: mod?.label_en ?? vars.moduleKey,
-            nextEnabled: vars.enabled,
-            scopeValue: vars.scopeValue,
-          });
-          setBypassReason('');
-          toast.message(isRTL ? 'هذه الوحدة غير متاحة ضمن عضوية المنشأة الحالية.' : (res.reason_en ?? ''));
-          return;
-        }
-        toast.error(isRTL ? (res.reason_ar ?? '') : (res.reason_en ?? ''));
-        return;
-      }
       if (!res.ok) {
         qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
         toast.error((isRTL ? res.reason_ar : res.reason_en) || (isRTL ? 'فشل الحفظ' : 'Save failed'));
@@ -191,40 +177,6 @@ const AdminSystemAccess: React.FC = () => {
       });
       setLastSyncAt(Date.now());
       toast.success(`${isRTL ? 'تم الحفظ' : 'Saved'} · ${isRTL ? ACCESS_LABELS.synced.ar : ACCESS_LABELS.synced.en}`);
-    },
-  });
-
-  const bypassMutation = useMutation({
-    mutationFn: (vars: { moduleKey: string; scopeValue: string; enabled: boolean; reason: string }) =>
-      updateBusinessSystemAccess({
-        moduleKey: vars.moduleKey,
-        scopeType: 'entity',
-        scopeValue: vars.scopeValue,
-        enabled: vars.enabled,
-        isAdmin: !!isAdmin,
-        actingUserId: user?.id ?? null,
-        businessId: vars.scopeValue,
-        bypassMembership: true,
-        // Tag the audit row so it's clearly identifiable as a super-admin bypass
-        // (system_module_audit_log has no dedicated column).
-        reason: `[super-admin bypass] ${vars.reason || 'direct admin action'}`,
-      }),
-    onSuccess: (res, vars) => {
-      if (!res.ok) {
-        toast.error((isRTL ? res.reason_ar : res.reason_en) || (isRTL ? 'فشل التجاوز' : 'Override failed'));
-        return;
-      }
-      qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
-      qc.invalidateQueries({ queryKey: ['system-module-audit-recent'] });
-      invalidateAccess({ businessId: vars.scopeValue, includeAudit: true });
-      setLastSyncAt(Date.now());
-      setBlockedAttempt(null);
-      setBypassReason('');
-      toast.success(isRTL ? 'تم تطبيق التجاوز وتسجيله في سجل العمليات' : 'Override applied and logged');
-    },
-    onError: (e: unknown) => {
-      const msg = e instanceof Error ? e.message : String(e);
-      toast.error(msg || (isRTL ? 'فشل التجاوز' : 'Override failed'));
     },
   });
 
