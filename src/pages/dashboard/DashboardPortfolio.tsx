@@ -265,9 +265,9 @@ const DashboardPortfolio = () => {
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await getOwnerBusiness<{ id: string }>({
+      const { data } = await getOwnerBusiness<{ id: string; ref_id: string | null }>({
         userId: user.id,
-        select: 'id',
+        select: 'id, ref_id',
       });
       return data;
     },
@@ -275,6 +275,7 @@ const DashboardPortfolio = () => {
     staleTime: 10 * 60 * 1000,
   });
   const businessId = business?.id;
+  const businessRefId = business?.ref_id;
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['dashboard-portfolio', businessId],
@@ -294,7 +295,9 @@ const DashboardPortfolio = () => {
     const usedCats = new Set(items.map(i => i.category)).size;
     const complete = items.filter(i => i.title_ar && i.description_ar && i.media_url && i.project_location).length;
     const completeness = total > 0 ? Math.round((complete / total) * 100) : 0;
-    return { total, featured, regular: total - featured, usedCats, completeness };
+    const totalViews = items.reduce((s, i) => s + (i.view_count || 0), 0);
+    const totalShares = items.reduce((s, i) => s + (i.share_count || 0), 0);
+    return { total, featured, regular: total - featured, usedCats, completeness, totalViews, totalShares };
   }, [items]);
 
   const usedCategories = useMemo(() => {
