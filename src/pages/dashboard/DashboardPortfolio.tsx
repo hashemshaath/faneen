@@ -324,12 +324,20 @@ const DashboardPortfolio = () => {
   const saveMut = useMutation({
     mutationFn: async () => {
       if (!businessId) throw new Error('No business');
+      const tagsArr = form.tags.split(',').map(t => t.trim()).filter(Boolean).slice(0, 12);
+      const valueNum = form.project_value ? Number(form.project_value) : null;
+      const durNum = form.project_duration_days ? Math.max(0, parseInt(form.project_duration_days, 10) || 0) : null;
       const payload = {
         title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
         description_ar: form.description_ar.trim() || null, description_en: form.description_en.trim() || null,
         media_url: form.media_url, media_type: form.media_type, is_featured: form.is_featured,
         category: form.category, project_location: form.project_location.trim() || null,
         completion_date: form.completion_date || null,
+        tags: tagsArr,
+        client_name: form.client_name.trim() || null,
+        project_value: valueNum && !Number.isNaN(valueNum) ? valueNum : null,
+        project_duration_days: durNum,
+        external_url: form.external_url.trim() || null,
       };
       if (editingItem) {
         const { error } = await supabase.from('portfolio_items').update(payload).eq('id', editingItem.id);
