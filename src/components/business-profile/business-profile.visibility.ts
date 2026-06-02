@@ -88,7 +88,13 @@ export const useUpdateVisibility = (businessId: string | undefined) => {
       adminNote?: string | null;
     }) => {
       if (!businessId) throw new Error("missing business");
-      const payload: Record<string, unknown> = {
+      const payload: {
+        business_id: string;
+        section_key: string;
+        visibility_level: string;
+        locked_by_admin?: boolean;
+        admin_note?: string | null;
+      } = {
         business_id: businessId,
         section_key: input.section,
         visibility_level: input.level,
