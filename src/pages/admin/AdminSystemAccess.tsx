@@ -789,13 +789,13 @@ const AdminSystemAccess: React.FC = () => {
                     : 'This action bypasses membership limits for this business only. It does not change the business plan or plan settings. The reason will be recorded in the audit log.'}
                 </div>
                 <label className="text-xs font-semibold">
-                  {isRTL ? 'السبب (إلزامي)' : 'Reason (required)'}
+                  {isRTL ? 'السبب (اختياري)' : 'Reason (optional)'}
                 </label>
                 <Textarea
                   data-testid="super-admin-bypass-reason"
                   value={bypassReason}
                   onChange={(e) => setBypassReason(e.target.value)}
-                  placeholder={isRTL ? 'وضّح سبب التجاوز…' : 'Explain why this override is needed…'}
+                  placeholder={isRTL ? 'سبب اختياري للسجل…' : 'Optional note for the audit log…'}
                   rows={2}
                 />
                 <div className="flex flex-wrap items-center gap-2 justify-end">
@@ -811,14 +811,14 @@ const AdminSystemAccess: React.FC = () => {
                     data-testid="super-admin-bypass-submit"
                     size="sm"
                     className="gap-1.5"
-                    disabled={!bypassReason.trim() || bypassMutation.isPending}
+                    disabled={bypassMutation.isPending}
                     onClick={() => {
-                      if (!blockedAttempt.scopeValue || !bypassReason.trim()) return;
+                      if (!blockedAttempt.scopeValue) return;
                       bypassMutation.mutate({
                         moduleKey: blockedAttempt.moduleKey,
                         scopeValue: blockedAttempt.scopeValue,
                         enabled: blockedAttempt.nextEnabled,
-                        reason: bypassReason.trim(),
+                        reason: bypassReason.trim() || '',
                       });
                     }}
                   >
