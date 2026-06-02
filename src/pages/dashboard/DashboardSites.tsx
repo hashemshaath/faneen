@@ -138,6 +138,7 @@ export default function DashboardSites() {
   const [typeFilter, setTypeFilter] = useState<SiteType | 'all'>('all');
   const [showArchived, setShowArchived] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [expandedBarcode, setExpandedBarcode] = useState<string | null>(null);
 
   /* ─── Owner business ─── */
   const { data: business } = useQuery({
