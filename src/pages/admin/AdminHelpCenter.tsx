@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LifeBuoy, BookOpen, FolderTree, AlertTriangle, Lightbulb, BarChart3 } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {
   listHelpArticles,
   publishHelpArticle,
@@ -108,15 +109,17 @@ const AdminHelpCenter: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-4 max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-        <header className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-primary/10 grid place-items-center text-primary">
-            <LifeBuoy className="size-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">{isRTL ? 'مركز المساعدة (إدارة)' : 'Help Center (Admin)'}</h1>
-            <p className="text-xs text-muted-foreground">{isRTL ? 'المقالات، الفئات، البلاغات، والطلبات' : 'Articles, categories, issues, requests'}</p>
-          </div>
-        </header>
+        <AdminPageHeader
+          icon={LifeBuoy}
+          tone="primary"
+          eyebrow={isRTL ? 'الإدارة' : 'Admin'}
+          title={isRTL ? 'مركز المساعدة' : 'Help Center'}
+          subtitle={isRTL ? 'المقالات، الفئات، البلاغات، والطلبات' : 'Articles, categories, issues, requests'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'مركز المساعدة' : 'Help Center' },
+          ]}
+        />
 
         <Tabs defaultValue="articles" className="space-y-4">
           <TabsList className="flex flex-wrap h-auto justify-start gap-1">

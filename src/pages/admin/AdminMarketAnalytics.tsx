@@ -22,6 +22,7 @@ import {
   TrendingUp, TrendingDown, Minus, Eye, Link2, Globe, BarChart3,
   ExternalLink,
 } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { ALL_SECTORS, SECTOR_KEYWORDS, type SectorSlug } from '@/lib/sector-keywords';
 import { SA_CITIES } from '@/lib/sa-cities';
 
@@ -197,20 +198,20 @@ const AdminMarketAnalytics: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="container mx-auto py-6 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <BarChart3 className="w-6 h-6 text-primary" />
-              {isRTL ? 'تحليلات السوق والقطاعات' : 'Market & Sector Analytics'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isRTL
-                ? 'نمو الزيارات والروابط المكتسبة وأهم الكلمات المفتاحية لكل قطاع ومدينة.'
-                : 'Visit growth, acquired backlinks and top keywords per sector × city.'}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
+        <AdminPageHeader
+          icon={BarChart3}
+          tone="info"
+          eyebrow={isRTL ? 'الإدارة' : 'Admin'}
+          title={isRTL ? 'تحليلات السوق والقطاعات' : 'Market & Sector Analytics'}
+          subtitle={isRTL
+            ? 'نمو الزيارات والروابط المكتسبة وأهم الكلمات المفتاحية لكل قطاع ومدينة.'
+            : 'Visit growth, acquired backlinks and top keywords per sector × city.'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'تحليلات السوق' : 'Market Analytics' },
+          ]}
+          actions={
+            <div className="flex flex-wrap gap-2">
             <Select value={String(days)} onValueChange={(v) => setDays(Number(v) as Days)}>
               <SelectTrigger className="w-[140px] h-10"><SelectValue /></SelectTrigger>
               <SelectContent>

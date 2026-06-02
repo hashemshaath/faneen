@@ -12,6 +12,7 @@ import { buildCsv, downloadCsv, defaultRange, type DateRange } from '@/lib/admin
 import { Download, FileSpreadsheet, Loader2, FileText, Users, Building2, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 type ReportKey = 'contracts' | 'users' | 'businesses' | 'revenue';
 
@@ -150,20 +151,19 @@ export default function AdminReports() {
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-6xl mx-auto">
-        <header className="space-y-2">
-          <div className="flex items-center gap-3">
-            <FileSpreadsheet className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-heading font-bold">
-              <Bi ar="مركز التقارير" en="Reports Center" />
-            </h1>
-          </div>
-          <p className="text-sm text-muted-foreground max-w-2xl">
-            <Bi
-              ar="صدّر تقارير CSV جاهزة (متوافقة مع Excel العربي) عن العقود والمستخدمين والمنشآت والإيرادات."
-              en="Export ready CSV reports (Arabic-Excel compatible) for contracts, users, businesses, and revenue."
-            />
-          </p>
-        </header>
+        <AdminPageHeader
+          icon={FileSpreadsheet}
+          tone="success"
+          eyebrow={isRTL ? 'الإدارة' : 'Admin'}
+          title={isRTL ? 'مركز التقارير' : 'Reports Center'}
+          subtitle={isRTL
+            ? 'صدّر تقارير CSV جاهزة (متوافقة مع Excel العربي) عن العقود والمستخدمين والمنشآت والإيرادات.'
+            : 'Export ready CSV reports (Arabic-Excel compatible) for contracts, users, businesses, and revenue.'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'التقارير' : 'Reports' },
+          ]}
+        />
 
         <Card className="p-4 surface-card">
           <div className="flex flex-wrap items-end gap-3">

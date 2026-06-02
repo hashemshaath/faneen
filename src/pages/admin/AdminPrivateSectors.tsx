@@ -12,6 +12,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { listBusinessesByIds } from '@/modules/businesses';
 import { toast } from 'sonner';
 import { ShieldCheck, Search, CheckCircle2, XCircle, Pause, RotateCcw, Pencil, FileClock, Layers, Trash2, Users } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {
   listAllSectors, reviewSector, listGlobalAudit, listAuditForSector,
   updateSector, deleteSector, setSectorReason,
@@ -121,17 +122,17 @@ const AdminPrivateSectors: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex flex-wrap items-center gap-3 justify-between">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-2 text-primary"><ShieldCheck className="h-5 w-5" /></div>
-            <div>
-              <h1 className="text-xl font-bold">{isRTL ? 'إدارة القطاعات الخاصة' : 'Private Sectors Admin'}</h1>
-              <p className="text-sm text-muted-foreground">
-                {isRTL ? 'مراجعة واعتماد وإدارة كل القطاعات والعلامات الخاصة بالمزودين.' : 'Review, approve and manage all provider-owned brands and sub-sectors.'}
-              </p>
-            </div>
-          </div>
-        </div>
+        <AdminPageHeader
+          icon={ShieldCheck}
+          tone="info"
+          eyebrow={isRTL ? 'الإدارة' : 'Admin'}
+          title={isRTL ? 'إدارة القطاعات الخاصة' : 'Private Sectors Admin'}
+          subtitle={isRTL ? 'مراجعة واعتماد وإدارة كل القطاعات والعلامات الخاصة بالمزودين.' : 'Review, approve and manage all provider-owned brands and sub-sectors.'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'القطاعات الخاصة' : 'Private Sectors' },
+          ]}
+        />
 
         {editing && (
           <PrivateSectorForm
