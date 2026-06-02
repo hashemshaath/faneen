@@ -353,6 +353,18 @@ const DashboardAnalytics = () => {
     setLastRefreshed(new Date());
   };
 
+  // Overdue installments — real data for the analytics chart's KPI strip.
+  const { data: overdueCount = 0 } = useQuery({
+    queryKey: ['provider-analytics-overdue', user?.id],
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await listOverdueInstallmentPayments(today, 50);
+      return (data ?? []).length;
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+
   const downloadCsv = () => {
     if (!analytics || !stats) return;
     const rows: string[] = [];
