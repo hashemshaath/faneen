@@ -1256,6 +1256,13 @@ const AdminBusinesses = () => {
                 <Download className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
               </Button>
+              <SavedViewsMenu
+                views={savedViews.views}
+                currentFilters={currentViewFilters}
+                onApply={applySavedView}
+                onSave={savedViews.save}
+                onRemove={savedViews.remove}
+              />
               <Button
                 asChild
                 variant="outline"
