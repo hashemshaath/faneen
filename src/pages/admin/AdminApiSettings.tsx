@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { ResendIntegrationCard } from '@/components/admin/ResendIntegrationCard';
 import {
   Mail, Smartphone, Brain, Globe, Eye, EyeOff, Save, Loader2,
   CheckCircle2, XCircle, Shield, Key, Server, Lock, Bot, Sparkles,
@@ -433,6 +434,9 @@ const AdminApiSettings = () => {
               </p>
             </div>
           </div>
+
+          {/* ── Resend integration hero ── */}
+          <ResendIntegrationCard />
 
           {/* ── Status Cards ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
