@@ -390,6 +390,11 @@ const DashboardPortfolio = () => {
       media_url: item.media_url, media_type: item.media_type as 'image', is_featured: item.is_featured,
       category: item.category || 'general', project_location: item.project_location || '',
       completion_date: item.completion_date || '',
+      tags: (item.tags || []).join(', '),
+      client_name: item.client_name || '',
+      project_value: item.project_value != null ? String(item.project_value) : '',
+      project_duration_days: item.project_duration_days != null ? String(item.project_duration_days) : '',
+      external_url: item.external_url || '',
     });
     setShowForm(true);
     scrollToForm();
@@ -404,6 +409,11 @@ const DashboardPortfolio = () => {
       media_url: item.media_url, media_type: item.media_type as 'image', is_featured: false,
       category: item.category || 'general', project_location: item.project_location || '',
       completion_date: item.completion_date || '',
+      tags: (item.tags || []).join(', '),
+      client_name: item.client_name || '',
+      project_value: item.project_value != null ? String(item.project_value) : '',
+      project_duration_days: item.project_duration_days != null ? String(item.project_duration_days) : '',
+      external_url: item.external_url || '',
     });
     setShowForm(true);
     scrollToForm();
