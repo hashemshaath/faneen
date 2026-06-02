@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
-  ShieldCheck, ShieldAlert, Search, CheckCircle2, XCircle, Eye,
+  ShieldCheck, Search, CheckCircle2, XCircle, Eye,
   AlertCircle, Loader2, Send, Globe, Tag, Lock, UserPlus, Users as UsersIcon,
   ArrowUpDown, Building2, ExternalLink, Clock, RefreshCw,
 } from 'lucide-react';
@@ -10,126 +10,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { listAdminBusinesses, countBusinesses, type ListAdminBusinessesFilter } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { maskEmail, maskPhone } from '@/lib/masking';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { getSectorById, type SectorId } from '@/data/onboarding-sectors';
 import { trackProviderApproved, trackProviderRejected, trackProviderNeedsChanges } from '@/lib/analytics-events';
 import { useNoIndex } from "@/hooks/useNoIndex";
-import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
 import { sendTransactionalEmail } from '@/modules/notifications/services/sendTransactionalEmail';
 import { createNotification } from '@/modules/notifications/services/createNotification';
-import { ReferenceTag } from '@/components/reference/ReferenceTag';
-import { PublishReadinessPanel } from '@/components/admin/PublishReadinessPanel';
 import { AdminProviderGrowthPanel } from '@/components/admin/AdminProviderGrowthPanel';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
-
-type ApprovalStatus =
-  | 'draft' | 'submitted' | 'under_review'
-  | 'approved' | 'rejected' | 'needs_changes' | 'published';
-
-type UsernameStatus = 'pending' | 'approved' | 'rejected';
-
-type SortKey = 'submitted_desc' | 'submitted_asc' | 'completion_desc' | 'name_asc';
-
-const STATUSES: { value: ApprovalStatus | 'all'; ar: string; en: string }[] = [
-  { value: 'all',           ar: 'الكل',           en: 'All' },
-  { value: 'submitted',     ar: 'تم الإرسال',     en: 'Submitted' },
-  { value: 'under_review',  ar: 'قيد المراجعة',   en: 'Under Review' },
-  { value: 'needs_changes', ar: 'يحتاج تعديل',    en: 'Needs Changes' },
-  { value: 'approved',      ar: 'موافق',          en: 'Approved' },
-  { value: 'published',     ar: 'منشور',          en: 'Published' },
-  { value: 'rejected',      ar: 'مرفوض',          en: 'Rejected' },
-  { value: 'draft',         ar: 'مسودة',          en: 'Draft' },
-];
-
-const TONE: Record<ApprovalStatus, string> = {
-  draft: 'bg-muted text-muted-foreground',
-  submitted: 'bg-info/10 text-info',
-  under_review: 'bg-info/10 text-info',
-  needs_changes: 'bg-warning/10 text-warning',
-  approved: 'bg-success/10 text-success',
-  rejected: 'bg-destructive/10 text-destructive',
-  published: 'bg-success/10 text-success',
-};
-
-/** Map approval status → (template, in-app notification copy). */
-const NOTIFY_MAP: Partial<Record<ApprovalStatus, {
-  template: 'provider-approved' | 'provider-rejected' | 'provider-revision-requested';
-  titleAr: string;
-  bodyAr: string;
-  titleEn: string;
-  bodyEn: string;
-}>> = {
-  approved: {
-    template: 'provider-approved',
-    titleAr: 'تم اعتماد حساب منشأتك في قِطاعات',
-    bodyAr: 'تم اعتماد حساب منشأتك ويمكنك الآن إدارة ملفك واستقبال الطلبات عبر منصة قِطاعات.',
-    titleEn: 'Your provider account has been approved',
-    bodyEn: 'Your provider account is now active. You can manage your profile and receive requests on Qitaat.',
-  },
-  rejected: {
-    template: 'provider-rejected',
-    titleAr: 'لم يتم اعتماد حساب منشأتك',
-    bodyAr: 'نأسف، لم يتم اعتماد حساب منشأتك حالياً. يمكنك مراجعة الملاحظات وتحديث البيانات عند الحاجة.',
-    titleEn: 'Provider account not approved',
-    bodyEn: 'Your provider account was not approved. Review the notes and update your details if needed.',
-  },
-  needs_changes: {
-    template: 'provider-revision-requested',
-    titleAr: 'مطلوب تحديث بيانات منشأتك',
-    bodyAr: 'يحتاج طلب التسجيل إلى بعض التعديلات قبل الاعتماد. يرجى مراجعة الملاحظات وإعادة الإرسال.',
-    titleEn: 'Updates required on your provider profile',
-    bodyEn: 'Your registration needs a few updates before approval. Review the notes and resubmit.',
-  },
-};
-
-interface ProviderRow {
-  id: string;
-  ref_id: string | null;
-  user_id: string;
-  name_ar: string | null;
-  name_en: string | null;
-  username: string | null;
-  username_status: UsernameStatus | null;
-  logo_url: string | null;
-  description_ar: string | null;
-  short_description_ar: string | null;
-  email: string | null;
-  phone: string | null;
-  approval_status: ApprovalStatus | null;
-  approval_notes: string | null;
-  onboarding_completion: number | null;
-  sectors: string[] | null;
-  sub_services: string[] | null;
-  submitted_at: string | null;
-  reviewed_at: string | null;
-  published_at: string | null;
-  created_at: string;
-  national_id: string | null;
-  unified_number: string | null;
-  vat_number: string | null;
-  cr_document_url: string | null;
-  cr_document_uploaded_at: string | null;
-  cr_owner_name: string | null;
-  cr_legal_entity: string | null;
-  cr_issue_date: string | null;
-  cr_expiry_date: string | null;
-  is_active: boolean | null;
-  is_demo: boolean | null;
-}
+import {
+  STATUSES, NOTIFY_MAP,
+  type ApprovalStatus, type UsernameStatus, type SortKey, type ProviderRow,
+} from '@/components/admin/provider-review/types';
+import { ProviderReviewListItem } from '@/components/admin/provider-review/ProviderReviewListItem';
+import { ProviderReviewDetailPanel } from '@/components/admin/provider-review/ProviderReviewDetailPanel';
 
 export default function AdminProviderReview() {
   useNoIndex();
@@ -332,23 +235,6 @@ export default function AdminProviderReview() {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
-  const renderSectors = (ids: string[] | null) => {
-    if (!ids || !ids.length) return null;
-    return (
-      <div className="flex flex-wrap gap-1.5">
-        {ids.map((id) => {
-          const s = getSectorById(id as SectorId);
-          return (
-            <Badge key={id} variant="outline" className="gap-1 text-[11px]">
-              <Tag className="h-3 w-3" />
-              {s ? (language === 'ar' ? s.name_ar : s.name_en) : id}
-            </Badge>
-          );
-        })}
-      </div>
-    );
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6 max-w-[1600px] mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -517,337 +403,32 @@ export default function AdminProviderReview() {
                   {isRTL ? 'لا توجد ملفات في هذه الحالة' : 'No providers in this status'}
                 </div>
               )}
-              {filtered.map((r) => {
-                const status = (r.approval_status ?? 'draft') as ApprovalStatus;
-                const active = selectedId === r.id;
-                const completion = r.onboarding_completion ?? 0;
-                return (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => { setSelectedId(r.id); setNotes(r.approval_notes ?? ''); }}
-                    className={`w-full rounded-xl border p-3 text-start transition-colors hover-lift ${
-                      active ? 'border-accent bg-accent/5' : 'border-border bg-card'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={r.logo_url ?? undefined} />
-                        <AvatarFallback>{(r.name_ar ?? '?').slice(0, 1)}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="truncate font-heading text-sm font-bold">
-                            {language === 'ar' ? (r.name_ar ?? r.name_en) : (r.name_en ?? r.name_ar)}
-                          </div>
-                          <Badge className={`${TONE[status]} shrink-0 text-[10px]`}>
-                            {STATUSES.find((s) => s.value === status)?.[language === 'ar' ? 'ar' : 'en']}
-                          </Badge>
-                        </div>
-                        <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground tech-content">
-                          {r.ref_id && <span className="font-mono">{r.ref_id}</span>}
-                          {r.username && <span className="truncate">@{r.username}</span>}
-                          {r.submitted_at && (
-                            <span className="inline-flex items-center gap-0.5">
-                              <Clock className="h-2.5 w-2.5" />
-                              {new Date(r.submitted_at).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-1.5 flex items-center gap-2">
-                          <Progress value={completion} className="h-1 flex-1" />
-                          <span className="text-[10px] tabular-nums tech-content text-muted-foreground">{completion}%</span>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+              {filtered.map((r) => (
+                <ProviderReviewListItem
+                  key={r.id}
+                  row={r}
+                  active={selectedId === r.id}
+                  language={language === 'ar' ? 'ar' : 'en'}
+                  onSelect={(row) => { setSelectedId(row.id); setNotes(row.approval_notes ?? ''); }}
+                />
+              ))}
             </CardContent>
           </Card>
 
           {/* Detail */}
           <Card className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-260px)] lg:overflow-y-auto">
-            {!selected ? (
-              <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center text-sm text-muted-foreground">
-                <Eye className="h-8 w-8 opacity-50" />
-                {isRTL ? 'اختر ملفاً من القائمة لمراجعته' : 'Pick a profile from the list to review'}
-              </CardContent>
-            ) : (
-              <>
-                <CardHeader className="pb-3">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={selected.logo_url ?? undefined} />
-                        <AvatarFallback>{(selected.name_ar ?? '?').slice(0, 1)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <CardTitle className="text-base">
-                          {language === 'ar' ? (selected.name_ar ?? selected.name_en) : (selected.name_en ?? selected.name_ar)}
-                        </CardTitle>
-                        {selected.ref_id && (
-                          <div className="mt-1">
-                            <ReferenceTag refId={selected.ref_id} isRTL={isRTL} />
-                          </div>
-                        )}
-                        {selected.username && (
-                          <a
-                            href={`/${selected.username}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mt-0.5 inline-flex items-center gap-1 text-xs text-accent tech-content hover:underline"
-                          >
-                            <Globe className="h-3 w-3" /> qitaat.com/{selected.username}
-                            <ExternalLink className="h-2.5 w-2.5" />
-                          </a>
-                        )}
-                        {selected.user_id && (
-                          <Link
-                            to={`/admin/users/${selected.user_id}`}
-                            className="mt-0.5 ms-2 inline-flex items-center gap-1 text-xs text-info hover:underline"
-                            title={isRTL ? 'فتح حساب المالك' : 'Open owner account'}
-                          >
-                            <UsersIcon className="h-3 w-3" />
-                            {isRTL ? 'حساب المالك' : 'Owner account'}
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                    <Badge className={TONE[selected.approval_status ?? 'draft']}>
-                      {STATUSES.find((s) => s.value === (selected.approval_status ?? 'draft'))?.[language === 'ar' ? 'ar' : 'en']}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-5">
-                  {/* Username controls */}
-                  {selected.username && (
-                    <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
-                      <div className="mb-2 flex items-center justify-between">
-                        <div className="text-xs font-semibold text-muted-foreground">
-                          {isRTL ? 'حالة اسم المستخدم' : 'Username status'}
-                        </div>
-                        <Badge variant="outline" className="text-[11px]">
-                          {selected.username_status ?? 'pending'}
-                        </Badge>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => usernameMutation.mutate({ id: selected.id, status: 'approved' })}
-                          disabled={usernameMutation.isPending}
-                          className="gap-1"
-                        >
-                          <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                          {isRTL ? 'الموافقة على الاسم' : 'Approve username'}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => usernameMutation.mutate({ id: selected.id, status: 'rejected', notes })}
-                          disabled={usernameMutation.isPending}
-                          className="gap-1"
-                        >
-                          <XCircle className="h-3.5 w-3.5 text-destructive" />
-                          {isRTL ? 'رفض الاسم' : 'Reject username'}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Profile details */}
-                  <div className="grid gap-3 sm:grid-cols-2 text-sm">
-                    <div>
-                      <div className="text-xs text-muted-foreground">{isRTL ? 'البريد' : 'Email'}</div>
-                      <div className="tech-content inline-flex items-center gap-1.5">
-                        {selected.email
-                          ? (isSuperAdmin ? selected.email : <>{maskEmail(selected.email)} <Lock className="w-3 h-3 opacity-60" aria-label={isRTL ? 'متاح فقط لمدير النظام' : 'Super Admin only'} /></>)
-                          : '—'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">{isRTL ? 'الجوال' : 'Phone'}</div>
-                      <div className="tech-content inline-flex items-center gap-1.5">
-                        {selected.phone
-                          ? (isSuperAdmin ? selected.phone : <>{maskPhone(selected.phone)} <Lock className="w-3 h-3 opacity-60" aria-label={isRTL ? 'متاح فقط لمدير النظام' : 'Super Admin only'} /></>)
-                          : '—'}
-                      </div>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <div className="text-xs text-muted-foreground">{isRTL ? 'الوصف' : 'Description'}</div>
-                      <p className="leading-relaxed">
-                        {selected.description_ar || selected.short_description_ar || (isRTL ? 'لا يوجد وصف' : 'No description')}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Sectors */}
-                  <div className="space-y-2">
-                    <div className="text-xs font-semibold text-muted-foreground">
-                      {isRTL ? 'القطاعات' : 'Sectors'}
-                    </div>
-                    {renderSectors(selected.sectors) ?? (
-                      <p className="text-xs text-muted-foreground">—</p>
-                    )}
-                  </div>
-
-                  {/* Sub-services */}
-                  {selected.sub_services && selected.sub_services.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-xs font-semibold text-muted-foreground">
-                        {isRTL ? 'الخدمات الفرعية' : 'Sub-services'}
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {selected.sub_services.map((s) => (
-                          <Badge key={s} variant="secondary" className="text-[11px]">{s}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Timeline */}
-                  <div className="grid grid-cols-3 gap-2 rounded-lg border border-border/60 bg-muted/20 p-3 text-[11px] tech-content">
-                    <div>
-                      <div className="text-muted-foreground">{isRTL ? 'أُرسل' : 'Submitted'}</div>
-                      <div>{selected.submitted_at ? new Date(selected.submitted_at).toLocaleDateString() : '—'}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">{isRTL ? 'روجع' : 'Reviewed'}</div>
-                      <div>{selected.reviewed_at ? new Date(selected.reviewed_at).toLocaleDateString() : '—'}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">{isRTL ? 'نُشر' : 'Published'}</div>
-                      <div>{selected.published_at ? new Date(selected.published_at).toLocaleDateString() : '—'}</div>
-                    </div>
-                  </div>
-
-                  {/* Admin notes */}
-                  <div className="space-y-2">
-                    <div className="text-xs font-semibold text-muted-foreground">
-                      {isRTL ? 'ملاحظات للمزود' : 'Notes to provider'}
-                    </div>
-                    <Textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value.slice(0, 800))}
-                      rows={3}
-                      dir="auto"
-                      placeholder={isRTL ? 'سبب الرفض، تعديلات مطلوبة...' : 'Reason for rejection or required changes...'}
-                    />
-                    <p className="text-[11px] text-muted-foreground tech-content text-end">{notes.length}/800</p>
-                  </div>
-
-                  {/* Commercial Registration scanner */}
-                  <CrDocumentScanner
-                    businessId={selected.id}
-                    defaults={{
-                      cr_document_url: selected.cr_document_url,
-                      cr_document_uploaded_at: selected.cr_document_uploaded_at,
-                      cr_scan_data: null,
-                      cr_scan_raw: null,
-                      national_id: selected.national_id,
-                      unified_number: selected.unified_number,
-                      vat_number: selected.vat_number,
-                      cr_owner_name: selected.cr_owner_name,
-                      cr_legal_entity: selected.cr_legal_entity,
-                      cr_issue_date: selected.cr_issue_date,
-                      cr_expiry_date: selected.cr_expiry_date,
-                      name_ar: selected.name_ar,
-                      name_en: selected.name_en,
-                    }}
-                  />
-
-                  {/* Publish readiness + public visibility */}
-                  <PublishReadinessPanel business={selected} isRTL={isRTL} />
-
-                  {/* Actions */}
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => approvalMutation.mutate({ id: selected.id, status: 'under_review', notes })}
-                      disabled={approvalMutation.isPending}
-                      className="gap-1"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      {isRTL ? 'قيد المراجعة' : 'Under review'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        if (!notes.trim()) {
-                          toast.error(isRTL ? 'الرجاء كتابة ملاحظات' : 'Please add notes');
-                          return;
-                        }
-                        approvalMutation.mutate({ id: selected.id, status: 'needs_changes', notes });
-                      }}
-                      disabled={approvalMutation.isPending}
-                      className="gap-1"
-                    >
-                      <AlertCircle className="h-3.5 w-3.5 text-warning" />
-                      {isRTL ? 'طلب تعديلات' : 'Request changes'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => approvalMutation.mutate({ id: selected.id, status: 'approved', notes })}
-                      disabled={approvalMutation.isPending}
-                      className="gap-1"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                      {isRTL ? 'موافقة' : 'Approve'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="hero"
-                      onClick={() => approvalMutation.mutate({ id: selected.id, status: 'published', notes })}
-                      disabled={approvalMutation.isPending}
-                      className="gap-1"
-                    >
-                      <Send className="h-3.5 w-3.5" />
-                      {isRTL ? 'نشر' : 'Publish'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => approvalMutation.mutate({ id: selected.id, status: 'submitted', notes })}
-                      disabled={approvalMutation.isPending}
-                      className="gap-1"
-                    >
-                      <ShieldAlert className="h-3.5 w-3.5 text-warning" />
-                      {isRTL ? 'إلغاء النشر' : 'Unpublish'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        if (!notes.trim()) {
-                          toast.error(isRTL ? 'يلزم سبب الرفض' : 'Reason required');
-                          return;
-                        }
-                        approvalMutation.mutate({ id: selected.id, status: 'rejected', notes });
-                      }}
-                      disabled={approvalMutation.isPending}
-                      className="gap-1 text-destructive"
-                    >
-                      {approvalMutation.isPending ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <XCircle className="h-3.5 w-3.5" />
-                      )}
-                      {isRTL ? 'رفض' : 'Reject'}
-                    </Button>
-                    <Button asChild size="sm" variant="ghost">
-                      <Link to={`/admin/businesses?focus=${selected.id}`} className="gap-1">
-                        <Building2 className="h-3.5 w-3.5" />
-                        {isRTL ? 'إدارة كاملة' : 'Full admin'}
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </>
-            )}
+            <ProviderReviewDetailPanel
+              selected={selected}
+              notes={notes}
+              setNotes={setNotes}
+              language={language === 'ar' ? 'ar' : 'en'}
+              isRTL={isRTL}
+              isSuperAdmin={isSuperAdmin}
+              approvalPending={approvalMutation.isPending}
+              usernamePending={usernameMutation.isPending}
+              onApprovalChange={(status) => approvalMutation.mutate({ id: selected!.id, status, notes })}
+              onUsernameChange={(status) => usernameMutation.mutate({ id: selected!.id, status, notes: status === 'rejected' ? notes : undefined })}
+            />
           </Card>
         </div>
       </div>
