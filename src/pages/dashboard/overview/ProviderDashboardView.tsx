@@ -29,6 +29,8 @@ import { ProviderTipsCard } from '@/components/dashboard/ProviderTipsCard';
 import { ProviderServicesStatusCard } from '@/components/dashboard/ProviderServicesStatusCard';
 import { ProviderSmartActionFooter } from '@/components/dashboard/ProviderSmartActionFooter';
 import { ProviderStatsOverview } from '@/components/dashboard/ProviderStatsOverview';
+import { ProviderAnalyticsCharts } from '@/components/dashboard/ProviderAnalyticsCharts';
+import { listOverdueInstallmentPayments } from '@/modules/contracts';
 import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import {
@@ -131,6 +133,7 @@ export default function ProviderDashboardView({
         messages: cnt(messages), promotions: cnt(promotions), leads: cnt(leads),
         statusCounts,
         monthlyRevenue: Array.from(revenueMap.entries()).map(([month, revenue]) => ({ month, revenue })),
+        contractsRaw: contractsData,
       };
     },
     enabled: !!user,
@@ -161,6 +164,17 @@ export default function ProviderDashboardView({
       return (data || []) as Review[];
     },
     enabled: !!businessId,
+    staleTime: 60000,
+  });
+
+  const { data: overdueCount = 0 } = useQuery({
+    queryKey: ['provider-overdue-count', user?.id],
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await listOverdueInstallmentPayments(today, 50);
+      return (data ?? []).length;
+    },
+    enabled: !!user,
     staleTime: 60000,
   });
 
@@ -278,6 +292,14 @@ export default function ProviderDashboardView({
         promotions={stats?.promotions ?? 0}
         messages={stats?.messages ?? 0}
         operations={stats?.operations ?? 0}
+      />
+
+      {/* B2 — Analytics & insights (sales, contracts, delivery, overdue) */}
+      <ProviderAnalyticsCharts
+        isRTL={isRTL}
+        contracts={stats?.contractsRaw ?? []}
+        monthlyRevenue={stats?.monthlyRevenue ?? []}
+        overdueCount={overdueCount}
       />
 
       {/* Widgets row */}
