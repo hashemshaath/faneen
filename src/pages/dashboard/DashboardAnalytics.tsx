@@ -266,10 +266,10 @@ const DashboardAnalytics = () => {
   const bookingPieData = useMemo(() => {
     if (!stats) return [];
     const items = [
-      { name: isRTL ? 'مؤكد' : 'Confirmed', value: stats.confirmedBookings },
-      { name: isRTL ? 'مكتمل' : 'Completed', value: stats.completedBookings },
-      { name: isRTL ? 'بانتظار' : 'Pending', value: stats.pendingBookings },
-      { name: isRTL ? 'ملغي' : 'Cancelled', value: stats.cancelledBookings },
+      { name: isRTL ? 'مؤكد' : 'Confirmed',  key: 'confirmed', value: stats.confirmedBookings },
+      { name: isRTL ? 'مكتمل' : 'Completed', key: 'completed', value: stats.completedBookings },
+      { name: isRTL ? 'بانتظار' : 'Pending', key: 'pending',   value: stats.pendingBookings },
+      { name: isRTL ? 'ملغي' : 'Cancelled',  key: 'cancelled', value: stats.cancelledBookings },
     ];
     return items.filter(i => i.value > 0);
   }, [stats, isRTL]);
@@ -286,6 +286,7 @@ const DashboardAnalytics = () => {
     };
     return Object.entries(statusMap).map(([status, value]) => ({
       name: labels[status]?.[isRTL ? 'ar' : 'en'] || status,
+      key: status,
       value,
     }));
   }, [analytics, isRTL]);
