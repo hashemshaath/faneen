@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,7 +8,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Inbox, Search, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  Inbox, Search, RefreshCw, ChevronDown, ChevronUp, Download,
+  Sparkles, Clock, FileCheck2, TrendingUp, Flame, ArrowUpDown, Link2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { LeadStatusBadge, type LeadStatus } from '@/components/leads/LeadStatusBadge';
@@ -21,6 +25,11 @@ import { createOrGetLeadConversation } from '@/modules/leads/services/createOrGe
 import { getManagedBusinessesForUser } from '@/modules/leads/services/getManagedBusinessesForUser';
 import { LegacyReferenceHint } from '@/components/reference/LegacyReferenceHint';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const FILTERS: Array<{ key: 'all' | LeadStatus; ar: string; en: string }> = [
   { key: 'all',        ar: 'الكل',           en: 'All' },
@@ -33,8 +42,50 @@ const FILTERS: Array<{ key: 'all' | LeadStatus; ar: string; en: string }> = [
   { key: 'closed',     ar: 'مغلق',            en: 'Closed' },
 ];
 
+type SortKey = 'newest' | 'oldest' | 'priority' | 'value';
+const PRIORITY_RANK: Record<string, number> = { urgent: 4, high: 3, normal: 2, low: 1 };
+
 function safeTrack(event: Parameters<typeof trackEvent>[0], payload: Parameters<typeof trackEvent>[1]) {
   try { trackEvent(event, payload); } catch { /* analytics must not throw */ }
+}
+
+function startOfToday(): number {
+  const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime();
+}
+
+function exportLeadsCsv(rows: LeadRow[], businessNameMap: Map<string, string>): void {
+  const headers = [
+    'ref_id', 'business', 'status', 'priority', 'name', 'email', 'phone',
+    'subject', 'budget_range', 'quote_amount', 'quote_currency',
+    'created_at', 'responded_at', 'quoted_at', 'converted_contract_id',
+  ];
+  const esc = (v: unknown) => {
+    if (v === null || v === undefined) return '';
+    const s = String(v).replace(/"/g, '""');
+    return /[",\n]/.test(s) ? `"${s}"` : s;
+  };
+  const csv = [
+    headers.join(','),
+    ...rows.map((r) => [
+      r.ref_id ?? '',
+      businessNameMap.get(r.business_id) ?? '',
+      r.status, r.priority, r.name, r.email, r.phone ?? '',
+      r.subject ?? '', r.budget_range ?? '',
+      (r as unknown as { quote_amount?: number | string | null }).quote_amount ?? '',
+      (r as unknown as { quote_currency?: string | null }).quote_currency ?? '',
+      r.created_at,
+      (r as unknown as { responded_at?: string | null }).responded_at ?? '',
+      (r as unknown as { quoted_at?: string | null }).quoted_at ?? '',
+      (r as unknown as { converted_contract_id?: string | null }).converted_contract_id ?? '',
+    ].map(esc).join(',')),
+  ].join('\n');
+  const blob = new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `qitaat-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 const DashboardLeads: React.FC = () => {
@@ -46,6 +97,8 @@ const DashboardLeads: React.FC = () => {
   const [search, setSearch] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [sort, setSort] = useState<SortKey>('newest');
+  const [searchParams] = useSearchParams();
 
   // WORKSPACE-CONTEXT-4D: provider leads are staff-safe today —
   // `getManagedBusinessesForUser` already returns owner + active
@@ -79,22 +132,130 @@ const DashboardLeads: React.FC = () => {
     return allIds;
   }, [active_entity_id, allIds]);
 
+  // Always pull the full window (filter is applied client-side so we can
+  // compute live counts, KPI strip, and sparkline accurately).
   const { data: leads, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ['provider-leads', ids.join(','), filter, active_entity_id],
+    queryKey: ['provider-leads', ids.join(','), active_entity_id],
     enabled: ids.length > 0,
     queryFn: () =>
-      listProviderLeadRequests(ids, filter) as unknown as Promise<LeadRow[]>,
+      listProviderLeadRequests(ids, 'all') as unknown as Promise<LeadRow[]>,
   });
 
+  // Per-status counts for filter pills (computed from the full window).
+  const counts = useMemo(() => {
+    const m: Record<string, number> = { all: leads?.length ?? 0 };
+    for (const l of leads ?? []) m[l.status] = (m[l.status] ?? 0) + 1;
+    return m;
+  }, [leads]);
+
+  // KPIs
+  const kpis = useMemo(() => {
+    const list = leads ?? [];
+    const today0 = startOfToday();
+    const todayNew = list.filter((l) => new Date(l.created_at).getTime() >= today0).length;
+    const awaiting = list.filter((l) => l.status === 'new' || l.status === 'viewed' || l.status === 'needs_info').length;
+    const quoted = list.filter((l) => l.status === 'quoted').length;
+    const converted = list.filter((l) => !!(l as unknown as { converted_contract_id?: string | null }).converted_contract_id).length;
+    const convRate = list.length ? (converted / list.length) * 100 : 0;
+    // Average first-response time (created_at → responded_at) in hours.
+    const responded = list.filter((l) => (l as unknown as { responded_at?: string | null }).responded_at);
+    const avgHours = responded.length
+      ? responded.reduce((sum, l) => {
+          const r = (l as unknown as { responded_at: string }).responded_at;
+          return sum + (new Date(r).getTime() - new Date(l.created_at).getTime()) / 3_600_000;
+        }, 0) / responded.length
+      : null;
+    return { total: list.length, todayNew, awaiting, quoted, converted, convRate, avgHours };
+  }, [leads]);
+
+  // 30-day sparkline buckets
+  const sparkline = useMemo(() => {
+    const buckets: { d: string; count: number }[] = [];
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    for (let i = 29; i >= 0; i--) {
+      const day = new Date(now); day.setDate(day.getDate() - i);
+      buckets.push({ d: day.toISOString().slice(0, 10), count: 0 });
+    }
+    const idx = new Map(buckets.map((b, i) => [b.d, i]));
+    for (const l of leads ?? []) {
+      const k = l.created_at.slice(0, 10);
+      const j = idx.get(k); if (j !== undefined) buckets[j].count++;
+    }
+    const max = Math.max(1, ...buckets.map((b) => b.count));
+    return { buckets, max };
+  }, [leads]);
+
+  // Apply status filter + search + sort
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
-    if (!s || !leads) return leads ?? [];
-    return leads.filter((l) =>
-      (l.ref_id ?? '').toLowerCase().includes(s) ||
-      (l.name ?? '').toLowerCase().includes(s) ||
-      (l.subject ?? '').toLowerCase().includes(s),
-    );
-  }, [leads, search]);
+    let list = (leads ?? []).slice();
+    if (filter !== 'all') list = list.filter((l) => l.status === filter);
+    if (s) {
+      list = list.filter((l) =>
+        (l.ref_id ?? '').toLowerCase().includes(s) ||
+        ((l as unknown as { legacy_ref_id?: string | null }).legacy_ref_id ?? '').toLowerCase().includes(s) ||
+        (l.name ?? '').toLowerCase().includes(s) ||
+        (l.subject ?? '').toLowerCase().includes(s) ||
+        (l.email ?? '').toLowerCase().includes(s) ||
+        (l.phone ?? '').toLowerCase().includes(s),
+      );
+    }
+    list.sort((a, b) => {
+      switch (sort) {
+        case 'oldest':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'priority': {
+          const pa = PRIORITY_RANK[a.priority] ?? 0;
+          const pb = PRIORITY_RANK[b.priority] ?? 0;
+          if (pa !== pb) return pb - pa;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        case 'value': {
+          const va = Number((a as unknown as { quote_amount?: number | string | null }).quote_amount ?? 0);
+          const vb = Number((b as unknown as { quote_amount?: number | string | null }).quote_amount ?? 0);
+          if (va !== vb) return vb - va;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        case 'newest':
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+    return list;
+  }, [leads, search, filter, sort]);
+
+  // Realtime: refetch on any change to lead_requests for my businesses, and
+  // toast when a brand-new lead arrives so the provider notices immediately.
+  useEffect(() => {
+    if (ids.length === 0) return;
+    const ch = supabase
+      .channel(`provider-leads-${ids.join('-').slice(0, 24)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lead_requests', filter: `business_id=in.(${ids.join(',')})` }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          toast.success(isRTL ? 'وصل طلب جديد' : 'New service request received', { duration: 4000 });
+        }
+        qc.invalidateQueries({ queryKey: ['provider-leads'] });
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [ids, qc, isRTL]);
+
+  // Deep-link: ?ref=LR-... or ?id=<uuid> auto-opens the matching lead.
+  useEffect(() => {
+    if (!leads?.length) return;
+    const ref = searchParams.get('ref');
+    const id = searchParams.get('id');
+    if (!ref && !id) return;
+    const match = leads.find((l) => (id && l.id === id) || (ref && (l.ref_id === ref || (l as unknown as { legacy_ref_id?: string | null }).legacy_ref_id === ref)));
+    if (match) {
+      setOpenId(match.id);
+      setFilter('all');
+      setTimeout(() => {
+        const el = document.getElementById(`lead-card-${match.id}`);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
+    }
+  }, [leads, searchParams]);
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, next }: { id: string; next: LeadStatus }) => {
@@ -251,11 +412,112 @@ const DashboardLeads: React.FC = () => {
               {isRTL ? 'استقبل وأدر طلبات العملاء لمنشآتك' : 'Receive and manage customer requests for your businesses'}
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} aria-label={isRTL ? 'تحديث' : 'Refresh'}>
-            <RefreshCw className={isFetching ? 'animate-spin' : ''} />
-            <span>{isRTL ? 'تحديث' : 'Refresh'}</span>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <ArrowUpDown className="h-4 w-4" />
+                  {isRTL ? 'فرز' : 'Sort'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="min-w-[180px]">
+                <DropdownMenuLabel>{isRTL ? 'ترتيب القائمة' : 'Order list by'}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {([
+                  ['newest',   isRTL ? 'الأحدث أولاً'        : 'Newest first'],
+                  ['oldest',   isRTL ? 'الأقدم أولاً'         : 'Oldest first'],
+                  ['priority', isRTL ? 'الأولوية (عالية أولاً)' : 'Priority (high first)'],
+                  ['value',    isRTL ? 'قيمة العرض (أعلى أولاً)' : 'Quote value (high first)'],
+                ] as const).map(([k, label]) => (
+                  <DropdownMenuItem key={k} onClick={() => setSort(k)} className={sort === k ? 'bg-muted font-semibold' : ''}>
+                    {label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              variant="outline" size="sm" className="gap-1.5"
+              onClick={() => exportLeadsCsv(filtered, businessNameMap)}
+              disabled={!filtered.length}
+            >
+              <Download className="h-4 w-4" />
+              <span>{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} aria-label={isRTL ? 'تحديث' : 'Refresh'} className="gap-1.5">
+              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+              <span>{isRTL ? 'تحديث' : 'Refresh'}</span>
+            </Button>
+          </div>
         </header>
+
+        {/* KPI strip — real-data only, hidden until we know there are managed businesses. */}
+        {ids.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            {[
+              { icon: Inbox,      tone: 'text-foreground',  label: isRTL ? 'الإجمالي'        : 'Total',          value: kpis.total },
+              { icon: Sparkles,   tone: 'text-primary',     label: isRTL ? 'جديد اليوم'      : 'New today',      value: kpis.todayNew },
+              { icon: Clock,      tone: 'text-warning',     label: isRTL ? 'بانتظار الرد'    : 'Awaiting reply', value: kpis.awaiting },
+              { icon: FileCheck2, tone: 'text-primary',     label: isRTL ? 'عروض مرسلة'      : 'Quoted',         value: kpis.quoted },
+              { icon: Flame,      tone: 'text-success',     label: isRTL ? 'تحوّلت لعقود'   : 'Converted',      value: kpis.converted },
+              { icon: TrendingUp, tone: 'text-success',     label: isRTL ? 'معدّل التحويل'  : 'Conv. rate',     value: `${kpis.convRate.toFixed(1)}%` },
+            ].map((k) => (
+              <Card key={k.label} className="hover-lift">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                    <k.icon className="h-3 w-3" />{k.label}
+                  </div>
+                  <div className={`mt-1 text-xl font-heading font-bold tech-content ${k.tone}`}>{k.value}</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* 30-day sparkline + avg response time */}
+        {ids.length > 0 && kpis.total > 0 && (
+          <Card>
+            <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                  <TrendingUp className="h-3 w-3" />
+                  {isRTL ? 'الطلبات خلال 30 يومًا' : 'Requests · last 30 days'}
+                </div>
+                <svg viewBox="0 0 300 48" preserveAspectRatio="none" className="w-full h-12" aria-hidden="true">
+                  {sparkline.buckets.map((b, i) => {
+                    const w = 300 / sparkline.buckets.length;
+                    const h = (b.count / sparkline.max) * 44;
+                    return (
+                      <rect
+                        key={b.d}
+                        x={i * w + 1}
+                        y={48 - h - 2}
+                        width={Math.max(1, w - 2)}
+                        height={Math.max(1, h)}
+                        rx={1.5}
+                        className="fill-primary/60"
+                      />
+                    );
+                  })}
+                </svg>
+              </div>
+              <div className="shrink-0 rounded-xl border bg-muted/30 px-4 py-2.5 min-w-[160px]">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+                  <Clock className="h-3 w-3" />
+                  {isRTL ? 'متوسط زمن الرد' : 'Avg response time'}
+                </div>
+                <div className="mt-0.5 text-lg font-heading font-bold tech-content">
+                  {kpis.avgHours === null
+                    ? '—'
+                    : kpis.avgHours < 1
+                      ? (isRTL ? `${Math.round(kpis.avgHours * 60)} دقيقة` : `${Math.round(kpis.avgHours * 60)} min`)
+                      : kpis.avgHours < 48
+                        ? (isRTL ? `${kpis.avgHours.toFixed(1)} ساعة` : `${kpis.avgHours.toFixed(1)} h`)
+                        : (isRTL ? `${(kpis.avgHours / 24).toFixed(1)} يوم` : `${(kpis.avgHours / 24).toFixed(1)} d`)}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
@@ -263,7 +525,9 @@ const DashboardLeads: React.FC = () => {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={isRTL ? 'بحث برقم الطلب أو الاسم أو الموضوع' : 'Search by ref, name, or subject'}
+              placeholder={isRTL
+                ? 'ابحث بالرقم التعريفي، الاسم، الموضوع، البريد، أو الجوال'
+                : 'Search by ref ID, name, subject, email, or phone'}
               className="ps-9 h-11"
               dir="auto"
             />
@@ -277,9 +541,12 @@ const DashboardLeads: React.FC = () => {
               size="sm"
               variant={filter === f.key ? 'default' : 'outline'}
               onClick={() => setFilter(f.key)}
-              className="min-h-[40px]"
+              className="min-h-[40px] gap-1.5"
             >
-              {isRTL ? f.ar : f.en}
+              <span>{isRTL ? f.ar : f.en}</span>
+              <span className={`tech-content text-[10px] px-1.5 py-0.5 rounded-full ${filter === f.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                {counts[f.key] ?? 0}
+              </span>
             </Button>
           ))}
         </div>
@@ -308,8 +575,9 @@ const DashboardLeads: React.FC = () => {
         <div className="space-y-3">
           {filtered.map((lead) => {
             const open = openId === lead.id;
+            const convertedContractId = (lead as unknown as { converted_contract_id?: string | null }).converted_contract_id ?? null;
             return (
-              <Card key={lead.id} className="overflow-hidden">
+              <Card key={lead.id} id={`lead-card-${lead.id}`} className="overflow-hidden">
                 <CardContent className="p-0">
                   <button
                     type="button"
@@ -324,6 +592,16 @@ const DashboardLeads: React.FC = () => {
                         <LeadStatusBadge status={lead.status} />
                         {lead.priority && lead.priority !== 'normal' && (
                           <span className="text-[11px] px-2 py-0.5 rounded-full bg-warning/10 text-warning border border-warning/30">{lead.priority}</span>
+                        )}
+                        {convertedContractId && (
+                          <Link
+                            to={`/contracts/${convertedContractId}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-[11px] px-2 py-0.5 rounded-full bg-success/10 text-success border border-success/30 inline-flex items-center gap-1 hover:bg-success/20"
+                          >
+                            <Link2 className="h-3 w-3" />
+                            {isRTL ? 'عقد مرتبط' : 'Contract'}
+                          </Link>
                         )}
                       </div>
                       <div className="font-medium truncate">{lead.subject || lead.name}</div>
