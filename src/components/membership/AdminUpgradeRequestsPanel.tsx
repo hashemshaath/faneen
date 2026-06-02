@@ -236,6 +236,7 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
           {requests.map((r) => {
             const open = activeId === r.id;
             const businessName = isRTL ? (r.business?.name_ar || r.business?.name_en) : (r.business?.name_en || r.business?.name_ar);
+            const businessMissing = !r.business || (!r.business.name_ar && !r.business.name_en);
             const isPending = r.status === 'pending';
             return (
               <Card key={r.id} className="overflow-hidden">
@@ -244,7 +245,15 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <Badge variant="outline" className={`text-[10px] h-5 ${statusBadge[r.status] || ''}`}>{r.status}</Badge>
-                        <span className="text-xs font-medium text-foreground truncate">{businessName || r.business_id.slice(0, 8)}</span>
+                        {businessMissing ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive">
+                            <AlertTriangle className="w-3 h-3" />
+                            {isRTL ? 'جهة محذوفة' : 'Deleted business'}
+                            <span className="text-[10px] text-muted-foreground tech-content ms-1">{r.business_id.slice(0, 8)}</span>
+                          </span>
+                        ) : (
+                          <span className="text-xs font-medium text-foreground truncate">{businessName}</span>
+                        )}
                         {r.profile?.ref_id && (
                           <span className="text-[10px] text-muted-foreground tech-content">{r.profile.ref_id}</span>
                         )}
@@ -259,6 +268,13 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
                         <Clock className="w-3 h-3" />
                         <span className="tech-content">{format(new Date(r.created_at), 'yyyy-MM-dd HH:mm')}</span>
                       </div>
+                      {businessMissing && isPending && (
+                        <p className="text-[11px] mt-1.5 text-destructive/80">
+                          {isRTL
+                            ? 'لا يمكن تفعيل هذا الطلب لأن الجهة لم تعد موجودة. يُنصح برفضه.'
+                            : 'This request cannot be activated because the business no longer exists. Reject it.'}
+                        </p>
+                      )}
                       {r.admin_note && (
                         <p className="text-[11px] mt-1.5 text-muted-foreground italic line-clamp-2">{r.admin_note}</p>
                       )}
@@ -285,7 +301,7 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
                         <Button
                           size="sm"
                           className="h-8 text-xs gap-1.5"
-                          disabled={approveMutation.isPending || rejectMutation.isPending}
+                          disabled={approveMutation.isPending || rejectMutation.isPending || businessMissing}
                           onClick={() => approveMutation.mutate(r)}
                         >
                           <Check className="w-3.5 h-3.5" />
