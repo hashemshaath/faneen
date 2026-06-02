@@ -33,6 +33,8 @@ import { createNotification } from '@/modules/notifications/services/createNotif
 import { ReferenceTag } from '@/components/reference/ReferenceTag';
 import { PublishReadinessPanel } from '@/components/admin/PublishReadinessPanel';
 import { AdminProviderGrowthPanel } from '@/components/admin/AdminProviderGrowthPanel';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 
 type ApprovalStatus =
   | 'draft' | 'submitted' | 'under_review'
