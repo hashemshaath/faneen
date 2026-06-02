@@ -9,6 +9,7 @@ import {
 import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
 import { useRecentlyViewedBusinesses } from '@/hooks/useRecentlyViewedBusinesses';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
+import { BusinessIdentityStrip } from '@/components/business/BusinessIdentityStrip';
 import { toast } from 'sonner';
 
 interface BusinessCardProps {
@@ -205,6 +206,7 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
               <DiversityPill hideOnXs />
             </div>
           )}
+          <BusinessIdentityStrip business={b} size="compact" linkUsername={false} className="mt-1.5" />
           <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
             <div className="flex items-center gap-1">
               <RatingStars rating={rating} size="xs" />
@@ -326,6 +328,7 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
           <span className="font-heading font-bold text-sm text-foreground">{rating.toFixed(1)}</span>
           <span className="text-[10px] sm:text-xs text-muted-foreground">({b.rating_count} {isRTL ? 'تقييم' : 'reviews'})</span>
         </div>
+        <BusinessIdentityStrip business={b} size="compact" linkUsername={false} className="mt-2" />
 
         {/* Meta footer */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-auto pt-3 text-[10px] sm:text-xs text-muted-foreground font-body border-t border-border/20 dark:border-border/10">
