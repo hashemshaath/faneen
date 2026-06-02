@@ -405,69 +405,64 @@ const DashboardAnalytics = () => {
 
   return (
     <DashboardLayout>
-      <div className="dash-emerald space-y-6">
-        {/* Hero header */}
-        <div className="dash-hero p-5 sm:p-7">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between relative">
-            <div className="space-y-2">
-              <span className="dash-hero-chip inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold">
-                <Sparkles className="w-3 h-3" />
-                {isRTL ? 'مركز التحليلات الاحترافي' : 'Pro Analytics Center'}
+      <div className="space-y-5">
+        {/* Brand-aligned hero (Qitaat: primary green + info blue, no off-brand gold) */}
+        <section
+          aria-label={isRTL ? 'مركز التحليلات' : 'Analytics center'}
+          className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-primary/8 via-card to-info/5 p-5 sm:p-7 shadow-[var(--elev-1)]"
+        >
+          <div className="pointer-events-none absolute -top-24 -end-24 h-56 w-56 rounded-full bg-primary/15 blur-3xl" aria-hidden />
+          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0 space-y-2">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider rounded-full px-2.5 py-1 bg-primary/10 text-primary border border-primary/15">
+                <Sparkles className="w-3 h-3" aria-hidden="true" />
+                {isRTL ? 'مركز التحليلات' : 'Analytics center'}
               </span>
-              <h1 className="ds-h2 flex items-center gap-2">
-                <BarChart3 className="w-6 h-6" />
+              <h1 className="font-heading text-2xl sm:text-3xl font-bold leading-tight flex items-center gap-2">
+                <BarChart3 className="w-6 h-6 text-primary" aria-hidden="true" />
                 {isRTL ? 'التحليلات والإحصائيات' : 'Analytics & Insights'}
               </h1>
-              <p className="dash-hero-sub text-sm max-w-xl">
+              <p className="text-xs sm:text-sm text-foreground/80 max-w-xl">
                 {isRTL
-                  ? 'لوحة احترافية بمؤشرات أداء حية، مقارنات بين الفترات، وتصدير فوري للبيانات.'
-                  : 'Pro dashboard with live KPIs, period-over-period comparisons, and instant CSV export.'}
+                  ? 'مؤشرات أداء حية، مقارنات بين الفترات، تسليم العقود، المتأخرات، وتصدير فوري للبيانات.'
+                  : 'Live KPIs, period comparisons, contract delivery, overdue payments, and instant CSV export.'}
               </p>
-              <p className="dash-hero-sub text-[11px] tech-content opacity-80">
+              <p className="text-[10px] tech-content text-muted-foreground">
                 {isRTL ? 'آخر تحديث' : 'Updated'} · {format(lastRefreshed, 'HH:mm:ss')}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Segmented period selector */}
-              <div className="inline-flex rounded-full bg-white/10 border border-white/20 p-1 backdrop-blur-sm">
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <div className="inline-flex rounded-full bg-muted/40 border border-border/60 p-1" role="tablist" aria-label={isRTL ? 'اختيار الفترة' : 'Select period'}>
                 {periodOptions.map((o) => (
                   <button
                     key={o.value}
                     type="button"
+                    role="tab"
+                    aria-selected={period === o.value}
                     onClick={() => setPeriod(o.value)}
                     className={cn(
                       'rounded-full px-3 py-1.5 text-xs font-semibold transition tech-content',
                       period === o.value
-                        ? 'bg-white text-emerald-900 shadow'
-                        : 'text-white/80 hover:text-white',
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground',
                     )}
                   >
                     {o.label}
                   </button>
                 ))}
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="dash-hero-chip h-9 rounded-full"
-                onClick={refetchAll}
-              >
-                <RefreshCw className={cn('w-3.5 h-3.5 me-1.5', isLoading && 'animate-spin')} />
+              <Button size="sm" variant="outline" className="h-9 gap-1.5" onClick={refetchAll}>
+                <RefreshCw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} aria-hidden="true" />
                 {isRTL ? 'تحديث' : 'Refresh'}
               </Button>
-              <Button
-                size="sm"
-                className="dash-hero-gold h-9 rounded-full"
-                onClick={downloadCsv}
-                disabled={!stats}
-              >
-                <Download className="w-3.5 h-3.5 me-1.5" />
+              <Button size="sm" className="h-9 gap-1.5" onClick={downloadCsv} disabled={!stats}>
+                <Download className="w-3.5 h-3.5" aria-hidden="true" />
                 {isRTL ? 'تصدير CSV' : 'Export CSV'}
               </Button>
             </div>
           </div>
-        </div>
+        </section>
 
         {isLoading || !stats ? (
           <div className="dash-bento">
@@ -479,10 +474,10 @@ const DashboardAnalytics = () => {
           <>
             {/* Smart insight strip */}
             {insight && (
-              <Card className="border-[hsl(var(--de-gold))]/40 bg-gradient-to-br from-[hsl(var(--de-emerald))]/5 to-[hsl(var(--de-gold))]/5">
+              <Card className="border-border/50 bg-gradient-to-br from-primary/5 to-info/5 shadow-[var(--elev-1)]">
                 <CardContent className="p-4 flex flex-wrap items-center gap-4">
-                  <span className="inline-flex w-10 h-10 items-center justify-center rounded-xl bg-[hsl(var(--de-gold))]/20 text-[hsl(var(--de-emerald-deep))]">
-                    <Sparkles className="w-5 h-5" />
+                  <span className="inline-flex w-10 h-10 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
+                    <Sparkles className="w-5 h-5" aria-hidden="true" />
                   </span>
                   <div className="flex-1 min-w-[200px]">
                     <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -500,7 +495,7 @@ const DashboardAnalytics = () => {
                     <p className="text-[11px] text-muted-foreground">
                       {isRTL ? 'معدل الإنجاز' : 'Completion Rate'}
                     </p>
-                    <p className="text-2xl font-bold tech-content text-[hsl(var(--de-emerald))]">
+                    <p className="text-2xl font-bold tech-content text-success">
                       {insight.convRate}%
                     </p>
                   </div>
@@ -522,7 +517,7 @@ const DashboardAnalytics = () => {
                 }
                 sub={`${stats.activeContracts + stats.completedContracts} ${isRTL ? 'عقد مُولِّد' : 'earning contracts'}`}
                 trend={trend(stats.totalRevenue, prevAnalytics?.revenue)}
-                accent="gold"
+                accent="primary"
               />
               <BentoTile
                 icon={FileText}
@@ -544,7 +539,7 @@ const DashboardAnalytics = () => {
                 value={stats.avgRating}
                 sub={`${stats.totalReviews} ${isRTL ? 'تقييم' : 'reviews'}`}
                 trend={prevAnalytics ? trend(Number(stats.avgRating), prevAnalytics.avgRating) : undefined}
-                accent="gold"
+                accent="accent"
               />
               <BentoTile
                 icon={Briefcase}
@@ -568,12 +563,20 @@ const DashboardAnalytics = () => {
               />
             </div>
 
+            {/* Unified analytics charts (delivery, overdue, status, monthly sales) */}
+            <ProviderAnalyticsCharts
+              isRTL={isRTL}
+              contracts={analytics?.contracts ?? []}
+              monthlyRevenue={revenueChartData.map((d) => ({ month: d.date, revenue: d.revenue }))}
+              overdueCount={overdueCount}
+            />
+
             {/* Revenue Chart */}
             <Card className="border-border/40 shadow-elev-1">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-heading flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-[hsl(var(--de-emerald))]" />
+                    <DollarSign className="w-4 h-4 text-primary" />
                     {isRTL ? 'تطور الإيرادات' : 'Revenue Trend'}
                   </CardTitle>
                   {prevAnalytics && (
