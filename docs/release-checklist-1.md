@@ -6,6 +6,35 @@ _Source docs: `docs/final-qa-1-audit.md`, `docs/launch-readiness.md` §4 + §6, 
 
 ---
 
+## 0. OWNER-MANUAL-TESTING-1 Execution Log
+
+_Executed by: **Lovable agent** (preview only) — 2026-06-02 ~05:55 UTC_
+
+**Important honesty note.** The vast majority of rows in §2 require human-only execution on the live/sandbox environment and cannot legitimately be marked Pass by the agent:
+
+- **Areas A, B, C** require a real phone, a real Google account, and Moyasar sandbox card credentials — none of which are available to the agent.
+- **Area D** requires creating fresh accounts and going through email/SMS verification end-to-end.
+- **Area E (most rows)** requires actually toggling production-like modules and verifying audit-log writes against real businesses; the preview is currently signed in as Super Admin (visible in the top bar) but agent-initiated admin writes could affect real data.
+- **Area F** requires observing `cron_run_log` and `email_send_log` in the Lovable Cloud dashboard, which the agent cannot view.
+- **Area G** requires real email inboxes to receive transactional mail.
+- **Area H** can be partially smoked by the agent in preview, **but** the preview is auto-signed-in as Super Admin, so checks about "no admin links visible to unauthenticated users" must still be repeated in an incognito browser by the owner.
+- **Area I** requires a real provider account to log in as.
+
+Per the phase rule "Do not mark any item Pass unless it was actually tested," every row that the agent did not actually exercise is recorded as **Not Tested (Agent Limitation)** below, with the test left ready for the owner.
+
+### Agent-executed smoke (preview only)
+
+| Row | What was done | Result |
+|-----|---------------|--------|
+| H1 (homepage `/`) | Navigated, screenshot, console-error scan | ✅ Renders cleanly; 0 console errors |
+| H3 (membership `/membership`) | Navigated, screenshot, console-error scan | ✅ Renders; pricing-display safety wording present ("الدفع الإلكتروني عبر مُيسر — اختر الباقة المناسبة وسيتم تحويلك مباشرة إلى صفحة الدفع الآمنة"); 0 console errors |
+| E (page load) | `/admin/system-access` loaded as Super Admin | ✅ Route resolves; 0 console errors (interactive checks E1–E7 NOT performed — would mutate real overrides) |
+| H10 caveat | Preview auto-signed-in as Super Admin | ⚠️ Cannot verify "no admin links on public" from this session — needs incognito by owner |
+
+No application code was modified during this phase.
+
+---
+
 ## 1. Automated Gate Summary (already PASS)
 
 | Gate | Result |
@@ -201,3 +230,30 @@ Document the rollback reason in this file under §7 and immediately open `FINAL-
 | Notes | _pending_ |
 
 Once every row in §2 is Pass (or explicitly accepted as deferred P2/P3) and §7 is filled in, flip from **Limited Beta** to **Full Production** and open `RELEASE-SIGNOFF-1`.
+
+---
+
+## 8. Status Roll-Up (post OWNER-MANUAL-TESTING-1 agent pass)
+
+| Area | Total rows | Pass | Fail | Blocked | Not Tested |
+|------|-----------:|-----:|-----:|--------:|-----------:|
+| A. Phone OTP | 6 | 0 | 0 | 0 | 6 |
+| B. Google OAuth | 4 | 0 | 0 | 0 | 4 |
+| C. Moyasar Sandbox | 5 | 0 | 0 | 0 | 5 |
+| D. Signup & Onboarding | 6 | 0 | 0 | 0 | 6 |
+| E. Admin Walkthrough | 14 | 0 | 0 | 0 | 14 (page-load OK) |
+| F. Cron & Scheduled Jobs | 6 | 0 | 0 | 0 | 6 |
+| G. Email / Notifications | 7 | 0 | 0 | 0 | 7 |
+| H. Public Smoke | 10 | 2 (H1, H3) | 0 | 0 | 8 |
+| I. Provider Dashboard | 7 | 0 | 0 | 0 | 7 |
+| **Total** | **65** | **2** | **0** | **0** | **63** |
+
+- **P0/P1 blockers found by agent:** none.
+- **Beta caveats:** unchanged from §4.
+- **Release readiness:** **Ready after owner manual checks** — the 63 Not-Tested rows must be executed by the owner before flipping to full production.
+
+### Recommended next phase
+
+- **OWNER-MANUAL-TESTING-1 (owner pass)** — owner physically executes A1–I7 on the live/sandbox environment, replaces each "Not Tested (Agent Limitation)" in §2 with the actual result, and fills in §7.
+- If owner-pass surfaces P0/P1 issues → **FINAL-FIXES-1**.
+- If owner-pass is clean → **RELEASE-SIGNOFF-1**.
