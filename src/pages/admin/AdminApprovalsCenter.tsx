@@ -27,6 +27,11 @@ import {
   listPendingUsernameBusinesses,
 } from '@/modules/businesses/services/listPendingApprovalBusinesses';
 import { toast } from 'sonner';
+import {
+  buildApprovalsCsv, buildAuditCsv, buildPdfHtml, downloadTextFile,
+  filterAuditRows, type AuditRow, type ExportRow, type DateRangeKey,
+} from '@/pages/admin/approvalsCenter/exportHelpers';
+import { runBulkReview } from '@/pages/admin/approvalsCenter/bulkReview';
 
 /**
  * UNIFIED-APPROVALS-CENTER-1
@@ -63,14 +68,6 @@ const PREVIEW_LIMIT = 25;
 const PAGE_SIZE = 20;
 const FILTERS_STORAGE_KEY = 'qitaat_approvals_filters_v1';
 const POLL_INTERVAL_MS = 60_000;
-
-function escapeHtml(s: string): string {
-  return String(s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-type DateRangeKey = 'all' | '24h' | '7d' | '30d';
 
 interface PersistedFilters {
   activeFilter: 'all' | ApprovalCategoryKey;
