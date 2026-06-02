@@ -74,22 +74,22 @@ const ANALYTICS_ENV_NOTE = {
 
 /* ═══════════ Default Settings ═══════════ */
 const defaultSettings: SystemSetting[] = [
-  // ── Auth ──
-  { key: 'allow_registration', value: 'true', labelAr: 'السماح بالتسجيل الجديد', labelEn: 'Allow New Registrations', descAr: 'تفعيل أو تعطيل تسجيل مستخدمين جدد', descEn: 'Enable or disable new user registrations', type: 'toggle', category: 'auth', importance: 'critical' },
-  { key: 'require_email_verification', value: 'true', labelAr: 'تأكيد البريد الإلكتروني', labelEn: 'Require Email Verification', descAr: 'إلزام المستخدمين بتأكيد بريدهم الإلكتروني', descEn: 'Require users to verify their email', type: 'toggle', category: 'auth' },
-  { key: 'max_login_attempts', value: '5', labelAr: 'محاولات تسجيل الدخول', labelEn: 'Max Login Attempts', descAr: 'أقصى عدد محاولات قبل قفل الحساب مؤقتاً', descEn: 'Max attempts before temporary lockout', type: 'number', category: 'auth' },
-  { key: 'session_timeout_hours', value: '24', labelAr: 'مدة الجلسة (ساعات)', labelEn: 'Session Timeout (hours)', descAr: 'المدة قبل انتهاء صلاحية الجلسة', descEn: 'Duration before session expires', type: 'number', category: 'auth' },
-  { key: 'enable_google_auth', value: 'true', labelAr: 'تسجيل الدخول بـ Google', labelEn: 'Google OAuth Login', descAr: 'السماح بتسجيل الدخول عبر حساب جوجل', descEn: 'Allow login via Google account', type: 'toggle', category: 'auth' },
-  { key: 'enable_phone_auth', value: 'true', labelAr: 'تسجيل الدخول بالهاتف', labelEn: 'Phone OTP Login', descAr: 'السماح بتسجيل الدخول عبر رقم الهاتف (OTP)', descEn: 'Allow login via phone OTP', type: 'toggle', category: 'auth' },
+  // ── Auth (controlled by Supabase Auth, not by this page) ──
+  { key: 'allow_registration', value: 'true', labelAr: 'السماح بالتسجيل الجديد', labelEn: 'Allow New Registrations', descAr: 'تفعيل أو تعطيل تسجيل مستخدمين جدد', descEn: 'Enable or disable new user registrations', type: 'toggle', category: 'auth', importance: 'critical', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'require_email_verification', value: 'true', labelAr: 'تأكيد البريد الإلكتروني', labelEn: 'Require Email Verification', descAr: 'إلزام المستخدمين بتأكيد بريدهم الإلكتروني', descEn: 'Require users to verify their email', type: 'toggle', category: 'auth', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'max_login_attempts', value: '5', labelAr: 'محاولات تسجيل الدخول', labelEn: 'Max Login Attempts', descAr: 'أقصى عدد محاولات قبل قفل الحساب مؤقتاً', descEn: 'Max attempts before temporary lockout', type: 'number', category: 'auth', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'session_timeout_hours', value: '24', labelAr: 'مدة الجلسة (ساعات)', labelEn: 'Session Timeout (hours)', descAr: 'المدة قبل انتهاء صلاحية الجلسة', descEn: 'Duration before session expires', type: 'number', category: 'auth', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'enable_google_auth', value: 'true', labelAr: 'تسجيل الدخول بـ Google', labelEn: 'Google OAuth Login', descAr: 'السماح بتسجيل الدخول عبر حساب جوجل', descEn: 'Allow login via Google account', type: 'toggle', category: 'auth', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'enable_phone_auth', value: 'true', labelAr: 'تسجيل الدخول بالهاتف', labelEn: 'Phone OTP Login', descAr: 'السماح بتسجيل الدخول عبر رقم الهاتف (OTP)', descEn: 'Allow login via phone OTP', type: 'toggle', category: 'auth', deferredNote: SUPABASE_CONTROLLED_NOTE },
 
   // ── Platform ──
-  { key: 'platform_name_ar', value: 'قِطاعات', labelAr: 'اسم المنصة (عربي)', labelEn: 'Platform Name (Arabic)', descAr: 'اسم المنصة المعروض باللغة العربية', descEn: 'Platform name displayed in Arabic', type: 'text', category: 'platform' },
-  { key: 'platform_name_en', value: 'Qitaat', labelAr: 'اسم المنصة (إنجليزي)', labelEn: 'Platform Name (English)', descAr: 'اسم المنصة المعروض بالإنجليزية', descEn: 'Platform name displayed in English', type: 'text', category: 'platform' },
-  { key: 'maintenance_mode', value: 'false', labelAr: 'وضع الصيانة', labelEn: 'Maintenance Mode', descAr: 'تفعيل وضع الصيانة يمنع الوصول للمنصة مؤقتاً', descEn: 'Enabling maintenance mode blocks platform access', type: 'toggle', category: 'platform', importance: 'critical' },
-  { key: 'default_language', value: 'ar', labelAr: 'اللغة الافتراضية', labelEn: 'Default Language', descAr: 'اللغة الافتراضية للمنصة', descEn: 'Default platform language', type: 'select', options: [{ value: 'ar', labelAr: 'العربية', labelEn: 'Arabic' }, { value: 'en', labelAr: 'الإنجليزية', labelEn: 'English' }], category: 'platform' },
-  { key: 'contact_email', value: '', labelAr: 'البريد الإلكتروني للتواصل', labelEn: 'Contact Email', descAr: 'البريد الإلكتروني الرسمي للمنصة', descEn: 'Official platform contact email', type: 'text', category: 'platform' },
-  { key: 'support_phone', value: '', labelAr: 'رقم الدعم الفني', labelEn: 'Support Phone', descAr: 'رقم هاتف الدعم الفني للعملاء', descEn: 'Technical support phone number', type: 'text', category: 'platform' },
-  { key: 'platform_description_ar', value: '', labelAr: 'وصف المنصة (عربي)', labelEn: 'Platform Description (AR)', descAr: 'الوصف المختصر المعروض في محركات البحث', descEn: 'Short description for SEO', type: 'textarea', category: 'platform' },
+  { key: 'platform_name_ar', value: 'قِطاعات', labelAr: 'اسم المنصة (عربي)', labelEn: 'Platform Name (Arabic)', descAr: 'اسم المنصة المعروض باللغة العربية', descEn: 'Platform name displayed in Arabic', type: 'text', category: 'platform', deferredNote: STATIC_PLATFORM_NOTE },
+  { key: 'platform_name_en', value: 'Qitaat', labelAr: 'اسم المنصة (إنجليزي)', labelEn: 'Platform Name (English)', descAr: 'اسم المنصة المعروض بالإنجليزية', descEn: 'Platform name displayed in English', type: 'text', category: 'platform', deferredNote: STATIC_PLATFORM_NOTE },
+  { key: 'maintenance_mode', value: 'false', labelAr: 'وضع الصيانة', labelEn: 'Maintenance Mode', descAr: 'تفعيل وضع الصيانة يمنع الوصول للمنصة مؤقتاً', descEn: 'Enabling maintenance mode blocks platform access', type: 'toggle', category: 'platform', importance: 'critical', deferredNote: MAINTENANCE_NOTE },
+  { key: 'default_language', value: 'ar', labelAr: 'اللغة الافتراضية', labelEn: 'Default Language', descAr: 'اللغة الافتراضية للمنصة', descEn: 'Default platform language', type: 'select', options: [{ value: 'ar', labelAr: 'العربية', labelEn: 'Arabic' }, { value: 'en', labelAr: 'الإنجليزية', labelEn: 'English' }], category: 'platform', deferredNote: STATIC_PLATFORM_NOTE },
+  { key: 'contact_email', value: '', labelAr: 'البريد الإلكتروني للتواصل', labelEn: 'Contact Email', descAr: 'البريد الإلكتروني الرسمي للمنصة', descEn: 'Official platform contact email', type: 'text', category: 'platform', deferredNote: STATIC_PLATFORM_NOTE },
+  { key: 'support_phone', value: '', labelAr: 'رقم الدعم الفني', labelEn: 'Support Phone', descAr: 'رقم هاتف الدعم الفني للعملاء', descEn: 'Technical support phone number', type: 'text', category: 'platform', deferredNote: STATIC_PLATFORM_NOTE },
+  { key: 'platform_description_ar', value: '', labelAr: 'وصف المنصة (عربي)', labelEn: 'Platform Description (AR)', descAr: 'الوصف المختصر المعروض في محركات البحث', descEn: 'Short description for SEO', type: 'textarea', category: 'platform', deferredNote: STATIC_PLATFORM_NOTE },
 
   // ── Business ──
   { key: 'max_businesses_per_user', value: '3', labelAr: 'أقصى عدد أعمال لكل مستخدم', labelEn: 'Max Businesses Per User', descAr: 'الحد الأقصى للأعمال التي يمكن لمستخدم إنشاؤها', descEn: 'Maximum businesses a user can create', type: 'number', category: 'business' },
@@ -110,13 +110,13 @@ const defaultSettings: SystemSetting[] = [
     { value: 'weekly', labelAr: 'أسبوعي', labelEn: 'Weekly' },
   ], category: 'notifications' },
 
-  // ── Security ──
-  { key: 'min_password_length', value: '8', labelAr: 'أقل طول لكلمة المرور', labelEn: 'Min Password Length', descAr: 'الحد الأدنى لطول كلمة المرور', descEn: 'Minimum password length', type: 'number', category: 'security' },
-  { key: 'enable_2fa', value: 'false', labelAr: 'المصادقة الثنائية', labelEn: 'Two-Factor Auth', descAr: 'تفعيل المصادقة الثنائية للمشرفين', descEn: 'Enable 2FA for admin accounts', type: 'toggle', category: 'security' },
-  { key: 'rate_limit_per_minute', value: '60', labelAr: 'حد الطلبات بالدقيقة', labelEn: 'Rate Limit / Min', descAr: 'أقصى عدد طلبات API لكل مستخدم بالدقيقة', descEn: 'Max API requests per user per minute', type: 'number', category: 'security' },
-  { key: 'block_duration_minutes', value: '30', labelAr: 'مدة الحظر (دقائق)', labelEn: 'Block Duration (min)', descAr: 'مدة حظر الحساب بعد تجاوز المحاولات', descEn: 'Account block duration after exceeding attempts', type: 'number', category: 'security' },
-  { key: 'enable_ip_logging', value: 'true', labelAr: 'تسجيل عناوين IP', labelEn: 'IP Logging', descAr: 'تسجيل عناوين IP لمحاولات الدخول', descEn: 'Log IP addresses for login attempts', type: 'toggle', category: 'security' },
-  { key: 'cors_allowed_origins', value: '*', labelAr: 'النطاقات المسموحة (CORS)', labelEn: 'CORS Allowed Origins', descAr: 'النطاقات المسموح لها بالوصول للـ API', descEn: 'Domains allowed to access the API', type: 'text', category: 'security' },
+  // ── Security (Supabase / server-controlled) ──
+  { key: 'min_password_length', value: '8', labelAr: 'أقل طول لكلمة المرور', labelEn: 'Min Password Length', descAr: 'الحد الأدنى لطول كلمة المرور', descEn: 'Minimum password length', type: 'number', category: 'security', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'enable_2fa', value: 'false', labelAr: 'المصادقة الثنائية', labelEn: 'Two-Factor Auth', descAr: 'تفعيل المصادقة الثنائية للمشرفين', descEn: 'Enable 2FA for admin accounts', type: 'toggle', category: 'security', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'rate_limit_per_minute', value: '60', labelAr: 'حد الطلبات بالدقيقة', labelEn: 'Rate Limit / Min', descAr: 'أقصى عدد طلبات API لكل مستخدم بالدقيقة', descEn: 'Max API requests per user per minute', type: 'number', category: 'security', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'block_duration_minutes', value: '30', labelAr: 'مدة الحظر (دقائق)', labelEn: 'Block Duration (min)', descAr: 'مدة حظر الحساب بعد تجاوز المحاولات', descEn: 'Account block duration after exceeding attempts', type: 'number', category: 'security', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'enable_ip_logging', value: 'true', labelAr: 'تسجيل عناوين IP', labelEn: 'IP Logging', descAr: 'تسجيل عناوين IP لمحاولات الدخول', descEn: 'Log IP addresses for login attempts', type: 'toggle', category: 'security', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'cors_allowed_origins', value: '*', labelAr: 'النطاقات المسموحة (CORS)', labelEn: 'CORS Allowed Origins', descAr: 'النطاقات المسموح لها بالوصول للـ API', descEn: 'Domains allowed to access the API', type: 'text', category: 'security', deferredNote: SUPABASE_CONTROLLED_NOTE },
 
   // ── Content ──
   { key: 'enable_blog', value: 'true', labelAr: 'نظام المدونة', labelEn: 'Blog System', descAr: 'تفعيل أو تعطيل نظام المدونة', descEn: 'Enable or disable the blog', type: 'toggle', category: 'content' },
@@ -126,10 +126,10 @@ const defaultSettings: SystemSetting[] = [
   { key: 'enable_reviews', value: 'true', labelAr: 'نظام التقييمات', labelEn: 'Review System', descAr: 'تفعيل أو تعطيل نظام تقييم المنشآت', descEn: 'Enable or disable business reviews', type: 'toggle', category: 'content' },
 
   // ── SEO ──
-  { key: 'google_analytics_id', value: '', labelAr: 'معرّف Google Analytics', labelEn: 'Google Analytics ID', descAr: 'معرّف GA4 للتتبع (G-XXXXXXXXXX)', descEn: 'GA4 tracking ID (G-XXXXXXXXXX)', type: 'text', category: 'seo' },
-  { key: 'meta_title_suffix', value: ' | قِطاعات', labelAr: 'لاحقة عنوان الصفحة', labelEn: 'Meta Title Suffix', descAr: 'النص المضاف بعد عنوان كل صفحة', descEn: 'Text appended to each page title', type: 'text', category: 'seo' },
-  { key: 'enable_sitemap', value: 'true', labelAr: 'خريطة الموقع (Sitemap)', labelEn: 'Enable Sitemap', descAr: 'إنشاء خريطة موقع XML تلقائياً', descEn: 'Auto-generate XML sitemap', type: 'toggle', category: 'seo' },
-  { key: 'robots_txt_custom', value: '', labelAr: 'ملف Robots.txt مخصص', labelEn: 'Custom Robots.txt', descAr: 'محتوى مخصص لملف robots.txt', descEn: 'Custom robots.txt content', type: 'textarea', category: 'seo' },
+  // google_analytics_id REMOVED — runtime uses VITE_GTM_ID env. See AdminAnalyticsSettings.
+  { key: 'meta_title_suffix', value: ' | قِطاعات', labelAr: 'لاحقة عنوان الصفحة', labelEn: 'Meta Title Suffix', descAr: 'النص المضاف بعد عنوان كل صفحة', descEn: 'Text appended to each page title', type: 'text', category: 'seo', deferredNote: STATIC_PLATFORM_NOTE },
+  { key: 'enable_sitemap', value: 'true', labelAr: 'خريطة الموقع (Sitemap)', labelEn: 'Enable Sitemap', descAr: 'إنشاء خريطة موقع XML تلقائياً', descEn: 'Auto-generate XML sitemap', type: 'toggle', category: 'seo', deferredNote: { ar: 'تُنشأ تلقائيًا من الـ Edge Function بصرف النظر عن هذا المفتاح.', en: 'Generated automatically by the edge function regardless of this key.' } },
+  { key: 'robots_txt_custom', value: '', labelAr: 'ملف Robots.txt مخصص', labelEn: 'Custom Robots.txt', descAr: 'محتوى مخصص لملف robots.txt', descEn: 'Custom robots.txt content', type: 'textarea', category: 'seo', wired: true },
 ];
 
 /* ═══════════ Categories ═══════════ */
