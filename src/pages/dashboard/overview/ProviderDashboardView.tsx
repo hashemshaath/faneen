@@ -6,6 +6,7 @@ import { getOwnerBusiness } from '@/modules/businesses';
 import { countConversationsForUser } from '@/modules/messaging';
 import { listContractsForOwner } from '@/modules/contracts';
 import { countServicesByBusiness } from '@/modules/catalog';
+import { countLeadsForBusiness } from '@/modules/leads';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,17 +15,20 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import {
-  Wrench, Image as ImageIcon, Star, FileText, TrendingUp, DollarSign,
+  Wrench, Image as ImageIcon, Star, FileText, TrendingUp,
   Plus, Send, MessageSquare, Crown, Building2, FolderOpen, Megaphone,
-  Activity, CheckCircle2, Target,
+  Activity, CheckCircle2, Target, ExternalLink, Sparkles, ArrowLeft, ArrowRight,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
 import { cn } from '@/lib/utils';
 import { ProviderReadinessCard } from '@/components/dashboard/ProviderReadinessCard';
 import { ProviderMembershipCard } from '@/components/dashboard/ProviderMembershipCard';
-import { ProviderCompletionSummary } from '@/components/dashboard/ProviderCompletionSummary';
 import { ProviderEngagementPreviews } from '@/components/dashboard/ProviderEngagementPreviews';
+import { ProviderTipsCard } from '@/components/dashboard/ProviderTipsCard';
+import { ProviderServicesStatusCard } from '@/components/dashboard/ProviderServicesStatusCard';
+import { ProviderSmartActionFooter } from '@/components/dashboard/ProviderSmartActionFooter';
+import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import {
   ChartTooltipStyle, getStatusLabel, getStatusColor, getMonths,
@@ -45,6 +49,8 @@ export default function ProviderDashboardView({
   isRTL, user, profile,
 }: { isRTL: boolean; user: { id: string }; profile: ProviderProfile }) {
   const qc = useQueryClient();
+  const membershipVisibility = useMembershipVisibility();
+  const Arrow = isRTL ? ArrowLeft : ArrowRight;
 
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
@@ -54,6 +60,7 @@ export default function ProviderDashboardView({
         logo_url: string | null;
         name_ar: string | null;
         name_en: string | null;
+        username: string | null;
         is_verified: boolean | null;
         membership_tier: string | null;
         [key: string]: unknown;
@@ -69,11 +76,13 @@ export default function ProviderDashboardView({
   });
 
   const businessId = business?.id;
+  const publicUsername = (business?.username as string | null) ?? null;
+  const isPublished = !!business?.is_verified;
 
   const { data: stats, isFetching, refetch } = useQuery({
     queryKey: ['provider-overview-stats', user?.id, businessId],
     queryFn: async () => {
-      const [services, portfolio, reviews, allContracts, projects, operations, messages, promotions] = await Promise.all([
+      const [services, portfolio, reviews, allContracts, projects, operations, messages, promotions, leads] = await Promise.all([
         businessId ? countServicesByBusiness({ businessId }) : { count: 0 },
         businessId ? supabase.from('portfolio_items').select('id', { count: 'exact', head: true }).eq('business_id', businessId) : { count: 0 },
         businessId ? supabase.from('reviews').select('id, rating', { count: 'exact' }).eq('business_id', businessId) : { count: 0, data: [] },
@@ -86,6 +95,7 @@ export default function ProviderDashboardView({
         supabase.from('operations_log').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         countConversationsForUser({ userId: user.id }),
         businessId ? supabase.from('promotions').select('id', { count: 'exact', head: true }).eq('business_id', businessId).eq('is_active', true) : { count: 0 },
+        businessId ? countLeadsForBusiness(businessId) : { count: 0 },
       ]);
 
       const contractsData = allContracts.data || [];
@@ -117,7 +127,7 @@ export default function ProviderDashboardView({
         contracts: contractsData.length, activeContracts: activeContracts.length,
         completedContracts: completedContracts.length, totalRevenue,
         projects: cnt(projects), operations: cnt(operations),
-        messages: cnt(messages), promotions: cnt(promotions),
+        messages: cnt(messages), promotions: cnt(promotions), leads: cnt(leads),
         statusCounts,
         monthlyRevenue: Array.from(revenueMap.entries()).map(([month, revenue]) => ({ month, revenue })),
       };
@@ -157,6 +167,9 @@ export default function ProviderDashboardView({
   const animatedRevenue = useCountUp(stats?.totalRevenue ?? 0, isVisible, 1500);
   const animatedContracts = useCountUp(stats?.contracts ?? 0, isVisible, 1200);
   const completionRate = stats?.contracts ? Math.round((stats.completedContracts / stats.contracts) * 100) : 0;
+  const hasRevenueData = (stats?.completedContracts ?? 0) > 0 && (stats?.totalRevenue ?? 0) > 0;
+  const membershipTier = (business?.membership_tier ?? profile?.membership_tier ?? 'free') as string;
+  const isFreePlan = membershipTier === 'free';
 
   const handleRefresh = () => {
     qc.invalidateQueries({ queryKey: ['provider-overview-stats'] });
@@ -169,49 +182,85 @@ export default function ProviderDashboardView({
 
   return (
     <div className="space-y-5" ref={ref}>
-      {/* Welcome — Emerald Prestige hero */}
-      <div className="dash-hero p-5 sm:p-7">
-        <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-[hsl(var(--de-gold)/0.35)] bg-[hsl(var(--de-cream)/0.10)] backdrop-blur">
-              {business?.logo_url
-                ? <img src={business.logo_url} alt={isRTL ? business.name_ar ?? '' : (business.name_en || business.name_ar || '')} className="w-full h-full object-cover" loading="lazy" />
-                : <Building2 className="w-7 h-7 text-[hsl(var(--de-gold))]" aria-hidden="true" />}
+      {/* A — Welcome hero (Qitaat brand: green primary + navy) */}
+      <section
+        aria-label={isRTL ? 'لوحة تحكم المزود' : 'Provider dashboard'}
+        className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-primary/8 via-card to-info/5 p-5 sm:p-7 shadow-[var(--elev-1)]"
+      >
+        <div className="pointer-events-none absolute -top-24 -end-24 h-56 w-56 rounded-full bg-primary/15 blur-3xl" aria-hidden />
+        <div className="relative flex flex-col gap-5">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-primary/25 bg-primary/10">
+                {business?.logo_url
+                  ? <img src={business.logo_url} alt={isRTL ? business.name_ar ?? '' : (business.name_en || business.name_ar || '')} className="w-full h-full object-cover" loading="lazy" />
+                  : <Building2 className="w-7 h-7 text-primary" aria-hidden="true" />}
+              </div>
+              <div className="min-w-0">
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider rounded-full px-2.5 py-1 mb-2 bg-primary/10 text-primary border border-primary/15">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" aria-hidden="true" />
+                  {isRTL ? 'لوحة مزود الخدمة' : 'Provider dashboard'}
+                  {isPublished && (
+                    <span className="inline-flex items-center gap-0.5 ms-1">
+                      <CheckCircle2 className="w-3 h-3 text-success" aria-hidden="true" />
+                      {isRTL ? 'موثق' : 'Verified'}
+                    </span>
+                  )}
+                </span>
+                <h1 className="font-heading text-2xl sm:text-3xl font-bold leading-tight truncate">
+                  {getTimeGreeting(isRTL)}{profile?.full_name ? `، ${profile.full_name}` : ''}
+                </h1>
+                <p className="text-xs sm:text-sm mt-1 text-muted-foreground truncate">
+                  {business
+                    ? (isRTL ? business.name_ar ?? '' : (business.name_en || business.name_ar || ''))
+                    : (isRTL ? 'ابدأ بإعداد ملف منشأتك' : 'Set up your business profile')}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider dash-hero-chip rounded-full px-2.5 py-1 mb-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--de-gold))]" aria-hidden="true" />
-                {isRTL ? 'لوحة مزود الخدمة' : 'Provider Dashboard'}
-                {business?.is_verified && (
-                  <span className="inline-flex items-center gap-0.5 ms-1">
-                    <CheckCircle2 className="w-3 h-3 text-[hsl(var(--de-gold))]" aria-hidden="true" />
-                    {isRTL ? 'موثق' : 'Verified'}
-                  </span>
-                )}
-              </span>
-              <h1 className="font-heading text-2xl sm:text-3xl font-bold leading-tight truncate">
-                {getTimeGreeting(isRTL)}{profile?.full_name ? `، ${profile.full_name}` : ''}
-              </h1>
-              <p className="dash-hero-sub text-xs sm:text-sm mt-1 truncate">
-                {business
-                  ? (isRTL ? business.name_ar ?? '' : (business.name_en || business.name_ar || ''))
-                  : (isRTL ? 'ابدأ بإعداد ملف منشأتك' : 'Set up your business profile')}
-              </p>
+            <div className="flex items-center gap-2 flex-wrap shrink-0">
+              <RefreshButton onClick={handleRefresh} isLoading={isFetching} isRTL={isRTL} />
+              {profile?.ref_id && (
+                <Badge variant="outline" className="tech-content text-[10px] h-6 px-2">{profile.ref_id}</Badge>
+              )}
+              {membershipTier && (
+                <Badge className="text-[10px] h-6 px-2 capitalize bg-info/10 text-info border border-info/20">
+                  {membershipTier}
+                </Badge>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap shrink-0">
-            <RefreshButton onClick={handleRefresh} isLoading={isFetching} isRTL={isRTL} />
-            {profile?.ref_id && (
-              <Badge className="dash-hero-chip tech-content text-[10px] h-6 px-2">{profile.ref_id}</Badge>
-            )}
-            {business?.membership_tier && (
-              <Badge className="dash-hero-gold text-[10px] h-6 px-2 capitalize">{business.membership_tier}</Badge>
+
+          <p className="text-xs sm:text-sm text-foreground/80 max-w-2xl">
+            {isRTL
+              ? 'هذه لوحة التحكم تساعدك على تحسين ظهورك واستقبال فرص أكثر عبر قطاعات.'
+              : 'This dashboard helps you improve visibility and receive more opportunities through Qitaat.'}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild size="sm" className="gap-1.5">
+              <Link to="/dashboard/business-completion">
+                <Sparkles className="w-3.5 h-3.5" aria-hidden />
+                {isRTL ? 'أكمل ملفك' : 'Complete profile'}
+                <Arrow className="w-3.5 h-3.5" />
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline" className="gap-1.5">
+              <Link to="/dashboard/services">
+                <Wrench className="w-3.5 h-3.5" aria-hidden />
+                {isRTL ? 'إدارة الخدمات' : 'Manage services'}
+              </Link>
+            </Button>
+            {publicUsername && (
+              <Button asChild size="sm" variant="ghost" className="gap-1.5">
+                <Link to={`/${publicUsername}`}>
+                  <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+                  {isRTL ? 'مشاهدة الصفحة العامة' : 'View public page'}
+                </Link>
+              </Button>
             )}
           </div>
         </div>
-      </div>
-
-      <ProviderCompletionSummary />
+      </section>
 
       {/* Widgets row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -219,17 +268,26 @@ export default function ProviderDashboardView({
         <TodaySummary isRTL={isRTL} userId={user.id} />
       </div>
 
-      <ProviderMembershipCard
-        userId={user.id}
-        businessId={businessId ?? null}
-        tier={business?.membership_tier ?? profile?.membership_tier ?? 'free'}
-      />
-
+      {/* C — Profile readiness (single strong card) */}
       <div id="provider-readiness" className="scroll-mt-24">
         <ProviderReadinessCard />
       </div>
 
+      {/* D — Smart tips (deterministic, derived from current state) */}
+      <ProviderTipsCard businessId={businessId} />
+
+      {/* F — Services status */}
+      <ProviderServicesStatusCard businessId={businessId ?? null} />
+
+      {/* E + I — Opportunities, messages, notifications */}
       <ProviderEngagementPreviews businessId={businessId ?? null} />
+
+      {/* G — Membership / access */}
+      <ProviderMembershipCard
+        userId={user.id}
+        businessId={businessId ?? null}
+        tier={membershipTier}
+      />
 
       {businessId && (
         <BusinessBarcodeCard
@@ -238,23 +296,23 @@ export default function ProviderDashboardView({
         />
       )}
 
-      {/* Bento KPI grid */}
+      {/* B — Real-only smart stats */}
       <div className="dash-bento">
         <BentoTile
           variant="feature"
-          icon={DollarSign}
-          accent="gold"
-          label={isRTL ? 'إجمالي الإيرادات' : 'Total Revenue'}
-          value={`${animatedRevenue.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`}
-          sub={`${stats?.completedContracts ?? 0} ${isRTL ? 'مكتمل' : 'completed'}`}
-        />
-        <BentoTile
-          variant="wide"
           icon={FileText}
           label={isRTL ? 'العقود النشطة' : 'Active Contracts'}
           value={stats?.activeContracts ?? 0}
           sub={`${isRTL ? 'من أصل' : 'of'} ${animatedContracts}`}
           to="/dashboard/contracts"
+        />
+        <BentoTile
+          variant="wide"
+          icon={Wrench}
+          label={isRTL ? 'الخدمات النشطة' : 'Active services'}
+          value={stats?.services ?? 0}
+          sub={isRTL ? 'انتقل لإدارتها' : 'Manage them'}
+          to="/dashboard/services"
         />
         <BentoTile
           variant="tile"
@@ -273,19 +331,21 @@ export default function ProviderDashboardView({
         />
       </div>
 
-      {/* Charts */}
+      {/* Charts — only when real revenue data exists */}
+      {hasRevenueData && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <Card className="border-border/40 lg:col-span-2">
           <CardHeader className="pb-1 px-4 pt-3"><CardTitle className="text-xs flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 text-success" aria-hidden="true" />{isRTL ? 'الإيرادات الشهرية' : 'Monthly Revenue'}</CardTitle></CardHeader>
           <CardContent className="px-4 pb-3">
+            <p className="sr-only">{animatedRevenue.toLocaleString()}</p>
             <div className="h-[170px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={stats?.monthlyRevenue || []}>
-                  <defs><linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.3} /><stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0} /></linearGradient></defs>
+                  <defs><linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} /><stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} /></linearGradient></defs>
                   <XAxis dataKey="month" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={36} />
                   <Tooltip contentStyle={ChartTooltipStyle} />
-                  <Area type="monotone" dataKey="revenue" stroke="hsl(var(--accent))" fill="url(#revenueGrad)" strokeWidth={2} name={isRTL ? 'إيرادات' : 'Revenue'} />
+                  <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fill="url(#revenueGrad)" strokeWidth={2} name={isRTL ? 'إيرادات' : 'Revenue'} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -314,6 +374,7 @@ export default function ProviderDashboardView({
           </CardContent>
         </Card>
       </div>
+      )}
 
       {/* Contracts + Reviews */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -388,7 +449,9 @@ export default function ProviderDashboardView({
               { icon: Send, label: isRTL ? 'عرض' : 'Offer', to: '/dashboard/promotions' },
               { icon: MessageSquare, label: isRTL ? 'رسائل' : 'Messages', to: '/dashboard/messages' },
               { icon: FileText, label: isRTL ? 'عقود' : 'Contracts', to: '/dashboard/contracts' },
-              { icon: Crown, label: isRTL ? 'عضوية' : 'Membership', to: '/membership' },
+              ...(membershipVisibility.membershipPathOrNull
+                ? [{ icon: Crown, label: isRTL ? 'عضوية' : 'Membership', to: membershipVisibility.membershipPathOrNull }]
+                : []),
             ].map((a) => <QuickAction key={a.to} {...a} />)}
           </div>
         </CardContent>
@@ -415,6 +478,15 @@ export default function ProviderDashboardView({
           </Card>
         ))}
       </div>
+
+      {/* J — Final dynamic CTA */}
+      <ProviderSmartActionFooter
+        servicesCount={stats?.services ?? 0}
+        portfolioCount={(stats?.portfolio ?? 0) + (stats?.projects ?? 0)}
+        leadsCount={stats?.leads ?? 0}
+        isFreePlan={isFreePlan}
+        publicUsername={publicUsername}
+      />
     </div>
   );
 }
