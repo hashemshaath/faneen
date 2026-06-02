@@ -172,6 +172,8 @@ const AdminSystemAccess: React.FC = () => {
     },
     onSuccess: (res, vars) => {
       if (!res.ok && res.blocked_by_membership) {
+        // Roll back optimistic flip — the server did not apply the change.
+        qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
         // Super admin gets an inline force-override card; others see the toast.
         if (isSuperAdmin && vars.scopeType === 'entity' && vars.scopeValue) {
           const mod = (modulesQuery.data ?? []).find(m => m.key === vars.moduleKey);
@@ -190,6 +192,7 @@ const AdminSystemAccess: React.FC = () => {
         return;
       }
       if (!res.ok) {
+        qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
         toast.error((isRTL ? res.reason_ar : res.reason_en) || (isRTL ? 'فشل الحفظ' : 'Save failed'));
         return;
       }
