@@ -21,7 +21,6 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { reviewEntityAccessRequest } from '@/modules/entities/services/access/reviewEntityAccessRequest';
 import {
   listPendingProviderReviewBusinesses,
   listPendingUsernameBusinesses,
@@ -32,6 +31,7 @@ import {
   filterAuditRows, type AuditRow, type ExportRow, type DateRangeKey,
 } from '@/pages/admin/approvalsCenter/exportHelpers';
 import { runBulkReview } from '@/pages/admin/approvalsCenter/bulkReview';
+import { getReviewer, ACTIONABLE_CATEGORIES } from '@/pages/admin/approvalsCenter/categoryReviewers';
 
 /**
  * UNIFIED-APPROVALS-CENTER-1
@@ -303,6 +303,7 @@ const AdminApprovalsCenter: React.FC = () => {
           'entity_access_request.approved', 'entity_access_request.rejected',
           'service_activation.approved', 'service_activation.rejected',
           'membership_subscription_activated',
+          'business_approval_changed', 'username_status_changed',
         ])
         .order('created_at', { ascending: false })
         .limit(20);
@@ -311,12 +312,16 @@ const AdminApprovalsCenter: React.FC = () => {
     },
   });
 
-  const handleReview = async (id: string, action: 'approve' | 'reject') => {
+  const handleReview = async (
+    id: string,
+    category: ApprovalCategoryKey,
+    action: 'approve' | 'reject',
+  ) => {
     if (!user?.id) return;
+    const fn = getReviewer(category);
+    if (!fn) return;
     setBusyId(id);
-    const { ok, error } = await reviewEntityAccessRequest({
-      requestId: id, reviewerUserId: user.id, action,
-    });
+    const { ok, error } = await fn({ requestId: id, reviewerUserId: user.id, action });
     setBusyId(null);
     if (!ok) {
       const msg = (error as { message?: string } | null)?.message ?? 'error';
@@ -328,7 +333,7 @@ const AdminApprovalsCenter: React.FC = () => {
         ? action === 'approve' ? 'تمت الموافقة' : 'تم الرفض'
         : action === 'approve' ? 'Approved' : 'Rejected',
     );
-    queries.entity_access.refetch();
+    queries[category].refetch();
     queryClient.invalidateQueries({ queryKey: ['approvals-audit'] });
   };
 
@@ -412,8 +417,8 @@ const AdminApprovalsCenter: React.FC = () => {
     () => unified.filter((r) => selected[rowKey(r)]),
     [unified, selected],
   );
-  const selectedEntityAccess = useMemo(
-    () => selectedRows.filter((r) => r.category === 'entity_access'),
+  const selectedActionable = useMemo(
+    () => selectedRows.filter((r) => ACTIONABLE_CATEGORIES.has(r.category)),
     [selectedRows],
   );
   const toggleRow = (it: UnifiedRow) =>
@@ -427,15 +432,15 @@ const AdminApprovalsCenter: React.FC = () => {
   };
   const clearSelection = () => setSelected({});
 
-  // ── Bulk approve/reject (entity_access only; others have no inline action) ──
+  // ── Bulk approve/reject across all actionable categories ──
   const handleBulk = async (action: 'approve' | 'reject') => {
-    if (!user?.id || selectedEntityAccess.length === 0) return;
+    if (!user?.id || selectedActionable.length === 0) return;
     setBulkBusy(true);
     const { ok, fail } = await runBulkReview({
-      items: selectedEntityAccess.map((r) => ({ id: r.id, category: r.category })),
+      items: selectedActionable.map((r) => ({ id: r.id, category: r.category })),
       action,
       reviewerUserId: user.id,
-      reviewFn: reviewEntityAccessRequest,
+      getReviewer,
     });
     setBulkBusy(false);
     if (ok > 0) {
@@ -448,7 +453,9 @@ const AdminApprovalsCenter: React.FC = () => {
       toast.error(isRTL ? `فشل التنفيذ على ${fail} عناصر` : `Failed on ${fail} items`);
     }
     clearSelection();
-    queries.entity_access.refetch();
+    // Refetch every category whose items were affected (cheap; only 5 queries total)
+    const affected = new Set(selectedActionable.map((r) => r.category));
+    affected.forEach((cat) => queries[cat as ApprovalCategoryKey].refetch());
     queryClient.invalidateQueries({ queryKey: ['approvals-audit'] });
   };
 
@@ -661,14 +668,14 @@ const AdminApprovalsCenter: React.FC = () => {
           <div className="rounded-2xl border border-primary/30 bg-primary/5 px-4 py-2.5 flex items-center gap-3 flex-wrap">
             <span className="text-xs font-medium text-foreground">
               {isRTL
-                ? `${selectedRows.length} محدد${selectedEntityAccess.length !== selectedRows.length ? ` (قابل للتنفيذ: ${selectedEntityAccess.length})` : ''}`
-                : `${selectedRows.length} selected${selectedEntityAccess.length !== selectedRows.length ? ` (actionable: ${selectedEntityAccess.length})` : ''}`}
+                ? `${selectedRows.length} محدد${selectedActionable.length !== selectedRows.length ? ` (قابل للتنفيذ: ${selectedActionable.length})` : ''}`
+                : `${selectedRows.length} selected${selectedActionable.length !== selectedRows.length ? ` (actionable: ${selectedActionable.length})` : ''}`}
             </span>
             <div className="flex items-center gap-1.5 ms-auto">
               <Button
                 size="sm" variant="outline"
                 className="h-8 rounded-lg gap-1 text-success hover:text-success hover:border-success/40"
-                disabled={bulkBusy || selectedEntityAccess.length === 0}
+                disabled={bulkBusy || selectedActionable.length === 0}
                 onClick={() => handleBulk('approve')}
               >
                 {bulkBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
@@ -677,7 +684,7 @@ const AdminApprovalsCenter: React.FC = () => {
               <Button
                 size="sm" variant="outline"
                 className="h-8 rounded-lg gap-1 text-destructive hover:text-destructive hover:border-destructive/40"
-                disabled={bulkBusy || selectedEntityAccess.length === 0}
+                disabled={bulkBusy || selectedActionable.length === 0}
                 onClick={() => handleBulk('reject')}
               >
                 <X className="w-3.5 h-3.5" />
@@ -756,14 +763,14 @@ const AdminApprovalsCenter: React.FC = () => {
                           {fmtDate(it.createdAt)}
                         </p>
                       </div>
-                      {it.category === 'entity_access' ? (
+                      {ACTIONABLE_CATEGORIES.has(it.category) ? (
                         <div className="flex items-center gap-1.5 shrink-0">
                           <Button
                             size="sm"
                             variant="outline"
                             className="h-8 px-2.5 rounded-lg gap-1 text-success hover:text-success hover:border-success/40"
                             disabled={busyId === it.id}
-                            onClick={() => handleReview(it.id, 'approve')}
+                            onClick={() => handleReview(it.id, it.category, 'approve')}
                           >
                             {busyId === it.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                             <span className="text-[11px]">{isRTL ? 'موافقة' : 'Approve'}</span>
@@ -773,7 +780,7 @@ const AdminApprovalsCenter: React.FC = () => {
                             variant="outline"
                             className="h-8 px-2.5 rounded-lg gap-1 text-destructive hover:text-destructive hover:border-destructive/40"
                             disabled={busyId === it.id}
-                            onClick={() => handleReview(it.id, 'reject')}
+                            onClick={() => handleReview(it.id, it.category, 'reject')}
                           >
                             <X className="w-3.5 h-3.5" />
                             <span className="text-[11px]">{isRTL ? 'رفض' : 'Reject'}</span>

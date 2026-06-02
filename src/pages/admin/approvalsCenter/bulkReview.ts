@@ -43,15 +43,25 @@ export async function runBulkReview(args: {
   items: BulkReviewItem[];
   action: 'approve' | 'reject';
   reviewerUserId: string;
-  reviewFn: ReviewFn;
+  /**
+   * Backwards-compatible: when provided, `reviewFn` is used for every
+   * `entity_access` item (legacy single-category mode). Prefer the new
+   * `getReviewer` resolver to support every actionable category.
+   */
+  reviewFn?: ReviewFn;
+  /** Resolver that returns the right mutation per category, or null to skip. */
+  getReviewer?: (category: string) => ReviewFn | null;
 }): Promise<BulkReviewSummary> {
-  const { items, action, reviewerUserId, reviewFn } = args;
+  const { items, action, reviewerUserId, reviewFn, getReviewer } = args;
   const start = Date.now();
   const results: BulkReviewResult[] = [];
   let ok = 0, fail = 0;
   for (const it of items) {
-    if (it.category !== 'entity_access') continue;
-    const res = await reviewFn({ requestId: it.id, reviewerUserId, action });
+    const fn = getReviewer
+      ? getReviewer(it.category)
+      : it.category === 'entity_access' ? (reviewFn ?? null) : null;
+    if (!fn) continue;
+    const res = await fn({ requestId: it.id, reviewerUserId, action });
     results.push({ id: it.id, ok: res.ok, error: res.error });
     if (res.ok) ok += 1; else fail += 1;
   }
