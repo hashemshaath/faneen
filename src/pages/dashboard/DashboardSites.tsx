@@ -698,6 +698,55 @@ export default function DashboardSites() {
               className={`px-2.5 h-8 rounded-lg text-[11px] font-medium border transition-colors ${showArchived ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border/40 text-muted-foreground hover:bg-muted/50'}`}>
               {isRTL ? 'إظهار المؤرشفة' : 'Show archived'}
             </button>
+            <button onClick={() => setShowAdvanced(v => !v)}
+              className={`px-2.5 h-8 rounded-lg text-[11px] font-medium border transition-colors flex items-center gap-1.5 ${showAdvanced || advancedActive ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border/40 text-muted-foreground hover:bg-muted/50'}`}>
+              <SlidersHorizontal className="w-3 h-3" />
+              {isRTL ? 'فلترة متقدمة' : 'Advanced filters'}
+              {advancedActive && <span className="ms-0.5 w-1.5 h-1.5 rounded-full bg-primary" />}
+            </button>
+          </div>
+        )}
+
+        {showAdvanced && (
+          <div className="rounded-xl border border-border/50 bg-card/40 p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold flex items-center gap-1.5"><Landmark className="w-3.5 h-3.5 text-primary" />{isRTL ? 'فلترة بالبيانات الحكومية' : 'Filter by government data'}</p>
+              {advancedActive && (
+                <button onClick={resetAdvanced} className="text-[10px] text-primary hover:underline">{isRTL ? 'مسح الكل' : 'Clear all'}</button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'رقم رخصة البلدية' : 'License No.'}</Label>
+                <Input dir="ltr" value={advLicenseNo} onChange={e => setAdvLicenseNo(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'رقم الصك' : 'Deed No.'}</Label>
+                <Input dir="ltr" value={advDeedNo} onChange={e => setAdvDeedNo(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'رقم هوية المالك' : 'Owner ID'}</Label>
+                <Input dir="ltr" value={advOwnerId} onChange={e => setAdvOwnerId(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'إصدار من' : 'Issued from'}</Label>
+                <Input type="date" dir="ltr" value={advIssueFrom} onChange={e => setAdvIssueFrom(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'إصدار إلى' : 'Issued to'}</Label>
+                <Input type="date" dir="ltr" value={advIssueTo} onChange={e => setAdvIssueTo(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'انتهاء من' : 'Expiry from'}</Label>
+                <Input type="date" dir="ltr" value={advExpiryFrom} onChange={e => setAdvExpiryFrom(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'انتهاء إلى' : 'Expiry to'}</Label>
+                <Input type="date" dir="ltr" value={advExpiryTo} onChange={e => setAdvExpiryTo(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+            </div>
           </div>
         )}
 
