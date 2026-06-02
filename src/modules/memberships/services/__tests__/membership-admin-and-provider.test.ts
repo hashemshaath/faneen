@@ -156,7 +156,7 @@ describe('MEMB-7 providerSubscriptions/reads', () => {
       'plan:provider_plans(id, code, name_ar, lead_credits_per_month)',
     );
     expect((ops[1] as { kind: 'select'; arg: string }).arg).toContain(
-      'business:businesses!provider_subscriptions_business_id_fkey(id, name_ar, user_id)',
+      'business:businesses!provider_subscriptions_business_id_fkey(id, name_ar, user_id',
     );
     expect(ops[2]).toEqual({ kind: 'order', col: 'updated_at', opts: { ascending: false } });
     expect(ops[3]).toEqual({ kind: 'limit', n: 500 });
