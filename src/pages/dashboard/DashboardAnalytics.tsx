@@ -16,6 +16,7 @@ import {
   BarChart3, TrendingUp, DollarSign, Users, FileText, Star,
   CalendarClock, Eye, ArrowUpRight, ArrowDownRight, Minus,
   PieChart as PieChartIcon, Activity, Download, RefreshCw, Sparkles, Briefcase,
+  FileDown, X as XIcon, Filter,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -29,6 +30,7 @@ import { ProviderTipsCard } from '@/components/dashboard/ProviderTipsCard';
 import { BentoTile } from '@/components/dashboard/overview/BentoTile';
 import { ProviderAnalyticsCharts } from '@/components/dashboard/ProviderAnalyticsCharts';
 import { listOverdueInstallmentPayments } from '@/modules/contracts';
+import { exportAnalyticsPdf } from '@/lib/analytics-pdf-export';
 import '@/styles/dashboard-emerald.css';
 
 // Brand-aligned chart palette — sourced from central design tokens.
