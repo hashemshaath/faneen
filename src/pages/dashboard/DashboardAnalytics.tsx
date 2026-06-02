@@ -342,7 +342,9 @@ const DashboardAnalytics = () => {
 
   const trend = (curr: number, prev: number | undefined): { up?: boolean; label: string } | undefined => {
     if (prev === undefined || prev === null) return undefined;
-    if (prev === 0 && curr === 0) return { up: undefined, label: '0%' };
+    // Suppress noisy "0%" badges when there's no baseline AND no current value —
+    // showing "0%" on every tile when the account has no data yet looks broken.
+    if (prev === 0 && curr === 0) return undefined;
     if (prev === 0) return { up: true, label: '+∞' };
     const pct = ((curr - prev) / prev) * 100;
     const sign = pct > 0 ? '+' : '';
@@ -558,6 +560,37 @@ const DashboardAnalytics = () => {
                     <p className="text-2xl font-bold tech-content text-success">
                       {insight.convRate}%
                     </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Empty-state banner — surfaced when the account has zero activity
+                in the selected period. Replaces noisy zeroed charts/badges with
+                a clear, professional message and next-step CTAs. */}
+            {stats.totalContracts === 0 && stats.totalBookings === 0 && stats.totalReviews === 0 && (
+              <Card className="border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-info/5">
+                <CardContent className="p-5 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <span className="inline-flex w-12 h-12 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20 shrink-0">
+                    <Sparkles className="w-6 h-6" aria-hidden="true" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-heading text-sm sm:text-base font-semibold">
+                      {isRTL ? 'لا توجد نشاطات في هذه الفترة بعد' : 'No activity in this period yet'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+                      {isRTL
+                        ? 'ستظهر مؤشرات الأداء والرسوم البيانية تلقائيًا فور توفر بيانات حقيقية من العقود والحجوزات والتقييمات.'
+                        : 'KPIs and charts will appear automatically once real contract, booking, and review data is available.'}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 flex-wrap shrink-0">
+                    <Button asChild size="sm" variant="outline" className="h-8 text-xs">
+                      <a href="/dashboard/services">{isRTL ? 'إدارة الخدمات' : 'Manage services'}</a>
+                    </Button>
+                    <Button asChild size="sm" className="h-8 text-xs">
+                      <a href="/dashboard/business-completion">{isRTL ? 'أكمل ملفك' : 'Complete profile'}</a>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
