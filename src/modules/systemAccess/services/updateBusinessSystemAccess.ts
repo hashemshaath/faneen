@@ -80,8 +80,21 @@ export async function updateBusinessSystemAccess(
     return { ...base, reason_ar: NOT_ADMIN_AR, reason_en: NOT_ADMIN_EN };
   }
 
-  // Membership pre-check (only when enabling a non-reset write).
-  if (args.enabled && !args.reset && !args.bypassMembership && args.actingUserId) {
+  // SYSTEM-ACCESS-DEFAULT-SCOPE-1 — Membership pre-check is ONLY valid for
+  // a specific business (entity scope), or a user scope explicitly tied to
+  // a business. Global default and account-type scopes are platform-level
+  // rules and must never be gated by one user's/one business's plan.
+  const scopeUsesMembership =
+    args.scopeType === 'entity' ||
+    (args.scopeType === 'user' && !!args.businessId);
+
+  if (
+    scopeUsesMembership &&
+    args.enabled &&
+    !args.reset &&
+    !args.bypassMembership &&
+    args.actingUserId
+  ) {
     try {
       const { data } = await hasMembershipFeature({
         _user_id: args.actingUserId,
