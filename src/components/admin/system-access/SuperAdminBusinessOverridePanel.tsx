@@ -23,14 +23,6 @@ import {
 } from '@/modules/businesses';
 import { useBusinessAccessInvalidation } from '@/hooks/useBusinessAccessInvalidation';
 
-interface BusinessLite {
-  id: string;
-  name_ar: string | null;
-  name_en: string | null;
-  ref_id: string | null;
-}
-
-/**
  * MEMBERSHIP-SYSTEM-ACCESS-GOVERNANCE-2-UI — Super-admin only panel that
  * activates/deactivates a module for one business via the
  * super_admin_set_business_module_override RPC (mandatory reason).
