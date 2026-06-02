@@ -11,9 +11,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import {
-  computeMembershipPeriodEnd,
-} from '../../supabase/functions/_shared/membership-payments/index.ts';
+import { computeMembershipPeriodEnd } from '@/lib/membership/computePeriodEnd';
 
 describe('computeMembershipPeriodEnd — billing cycle math', () => {
   const start = new Date('2026-06-02T10:00:00.000Z');
