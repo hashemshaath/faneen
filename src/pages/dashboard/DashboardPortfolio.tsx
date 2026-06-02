@@ -436,8 +436,8 @@ const DashboardPortfolio = () => {
   }, [filteredItems]);
 
   const exportCSV = useCallback(() => {
-    const rows = [['Title AR', 'Title EN', 'Category', 'Location', 'Date', 'Featured', 'Image URL'].join(','),
-      ...items.map(i => [`"${i.title_ar}"`, `"${i.title_en || ''}"`, i.category, `"${i.project_location || ''}"`, i.completion_date || '', i.is_featured, `"${i.media_url}"`].join(','))
+    const rows = [['Title AR', 'Title EN', 'Category', 'Location', 'Date', 'Client', 'Value', 'Views', 'Shares', 'Featured', 'Image URL'].join(','),
+      ...items.map(i => [`"${i.title_ar}"`, `"${i.title_en || ''}"`, i.category, `"${i.project_location || ''}"`, i.completion_date || '', `"${i.client_name || ''}"`, i.project_value ?? '', i.view_count ?? 0, i.share_count ?? 0, i.is_featured, `"${i.media_url}"`].join(','))
     ].join('\n');
     const blob = new Blob(['\ufeff' + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -445,6 +445,36 @@ const DashboardPortfolio = () => {
     URL.revokeObjectURL(url);
     toast.success(isRTL ? 'تم التصدير' : 'Exported');
   }, [items, isRTL]);
+
+  const publicLinkFor = useCallback((_item: PortfolioItem) => {
+    if (!businessRefId) return null;
+    return `${window.location.origin}/r/${businessRefId}`;
+  }, [businessRefId]);
+
+  const handleShare = useCallback(async (item: PortfolioItem) => {
+    const url = publicLinkFor(item);
+    if (!url) { toast.error(isRTL ? 'لا يوجد رابط عام بعد' : 'No public link yet'); return; }
+    const title = isRTL ? item.title_ar : (item.title_en || item.title_ar);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success(isRTL ? 'تم نسخ الرابط' : 'Link copied');
+      }
+      // Optimistic share counter
+      queryClient.setQueryData(['dashboard-portfolio', businessId], (prev: PortfolioItem[] | undefined) =>
+        prev?.map(p => p.id === item.id ? { ...p, share_count: (p.share_count || 0) + 1 } : p) ?? prev
+      );
+      void supabase.rpc('record_portfolio_view', { _portfolio_id: item.id, _event_type: 'share', _session_id: null, _referrer: null });
+    } catch { /* user cancelled share */ }
+  }, [publicLinkFor, isRTL, queryClient, businessId]);
+
+  const handleOpenPublic = useCallback((item: PortfolioItem) => {
+    const url = publicLinkFor(item);
+    if (!url) { toast.error(isRTL ? 'لا يوجد رابط عام بعد' : 'No public link yet'); return; }
+    window.open(url, '_blank', 'noopener');
+  }, [publicLinkFor, isRTL]);
 
   const filterOptions = useMemo(() => [
     { key: 'all' as const, label: isRTL ? 'الكل' : 'All', count: stats.total, icon: Layers },
