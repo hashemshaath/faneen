@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback, useTransition, useRef } from 'react';
+import { useState, useMemo, useCallback, useTransition, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +28,7 @@ import {
   MapPin, Plus, Pencil, Trash2, Search, X, Loader2, Building2, Home, Warehouse,
   Store, Briefcase, Layers, AlertCircle, CheckCircle2, FileText, Phone, User,
   ExternalLink, Star, ArrowUpRight, Map as MapIcon, FilePlus2, QrCode, ScrollText,
-  Landmark,
+  Landmark, SlidersHorizontal, Printer,
 } from 'lucide-react';
 
 type SiteType = 'apartment' | 'villa' | 'showroom' | 'office' | 'branch' | 'warehouse' | 'project' | 'commercial' | 'other';
@@ -139,6 +139,30 @@ export default function DashboardSites() {
   const [showArchived, setShowArchived] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [expandedBarcode, setExpandedBarcode] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [advLicenseNo, setAdvLicenseNo] = useState('');
+  const [advDeedNo, setAdvDeedNo] = useState('');
+  const [advOwnerId, setAdvOwnerId] = useState('');
+  const [advIssueFrom, setAdvIssueFrom] = useState('');
+  const [advIssueTo, setAdvIssueTo] = useState('');
+  const [advExpiryFrom, setAdvExpiryFrom] = useState('');
+  const [advExpiryTo, setAdvExpiryTo] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const focusRef = useRef<HTMLDivElement | null>(null);
+
+  // Consume ?focus=<site_ref or id> to auto-search and scroll to that card.
+  useEffect(() => {
+    const f = searchParams.get('focus');
+    if (f) {
+      setSearch(f);
+      requestAnimationFrame(() => focusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+      // Clean URL so refresh doesn't re-trigger.
+      const next = new URLSearchParams(searchParams);
+      next.delete('focus');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ─── Owner business ─── */
   const { data: business } = useQuery({
