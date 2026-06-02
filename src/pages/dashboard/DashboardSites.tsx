@@ -413,37 +413,42 @@ export default function DashboardSites() {
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">{isRTL ? 'العنوان (السطر 1)' : 'Address line 1'} <span className="text-destructive">*</span></Label>
-                  <Input value={form.address_line1} onChange={e => setForm(p => ({ ...p, address_line1: e.target.value }))} placeholder={isRTL ? 'الشارع، رقم المبنى' : 'Street, building no.'} className="h-9" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">{isRTL ? 'السطر 2' : 'Address line 2'}</Label>
-                    <Input value={form.address_line2} onChange={e => setForm(p => ({ ...p, address_line2: e.target.value }))} className="h-9" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">{isRTL ? 'المدينة' : 'City'}</Label>
-                    <Input value={form.city_name} onChange={e => setForm(p => ({ ...p, city_name: e.target.value }))} placeholder={isRTL ? 'الرياض' : 'Riyadh'} className="h-9" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">{isRTL ? 'الحي' : 'District'}</Label>
-                    <Input value={form.district} onChange={e => setForm(p => ({ ...p, district: e.target.value }))} className="h-9" />
-                  </div>
+                {/* Unified National Address (Region → City → District + SPL lookup + structured) */}
+                <div className="rounded-xl border border-border/50 bg-card/40 p-3">
+                  <NationalAddressForm value={naf} onChange={setNaf} isRTL={isRTL} />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium flex items-center gap-1"><MapIcon className="w-3.5 h-3.5" />{isRTL ? 'رابط الخريطة' : 'Map URL'}</Label>
-                    <Input type="url" dir="ltr" value={form.map_url} onChange={e => setForm(p => ({ ...p, map_url: e.target.value }))} placeholder="https://maps…" className="h-9 tech-content" />
+                {/* Interactive map picker (lat/lng + optional reverse-fill of region/district) */}
+                <div className="rounded-xl border border-border/50 bg-card/40 p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <MapIcon className="w-4 h-4 text-primary" />
+                    <h3 className="text-sm font-bold">{isRTL ? 'تحديد الموقع على الخريطة' : 'Pin location on map'}</h3>
                   </div>
+                  <LocationPicker
+                    isRTL={isRTL}
+                    latitude={form.latitude ? Number(form.latitude) : null}
+                    longitude={form.longitude ? Number(form.longitude) : null}
+                    onChange={(lat, lng) => setForm(p => ({
+                      ...p,
+                      latitude: String(lat),
+                      longitude: String(lng),
+                      map_url: p.map_url || `https://www.google.com/maps?q=${lat},${lng}`,
+                    }))}
+                    onAutofill={(r) => {
+                      setNaf(prev => ({
+                        ...prev,
+                        region: r.region_ar ?? prev.region,
+                        region_en: r.region_en ?? prev.region_en,
+                        district: r.district_ar ?? prev.district,
+                        district_en: r.district_en ?? prev.district_en,
+                        address: r.address_ar ?? prev.address,
+                        address_en: r.address_en ?? prev.address_en,
+                      }));
+                    }}
+                  />
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">{isRTL ? 'خط العرض' : 'Latitude'}</Label>
-                    <Input type="number" step="0.000001" dir="ltr" value={form.latitude} onChange={e => setForm(p => ({ ...p, latitude: e.target.value }))} className="h-9 tech-content" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">{isRTL ? 'خط الطول' : 'Longitude'}</Label>
-                    <Input type="number" step="0.000001" dir="ltr" value={form.longitude} onChange={e => setForm(p => ({ ...p, longitude: e.target.value }))} className="h-9 tech-content" />
+                    <Label className="text-xs font-medium">{isRTL ? 'رابط خريطة مخصص (اختياري)' : 'Custom map URL (optional)'}</Label>
+                    <Input type="url" dir="ltr" value={form.map_url} onChange={e => setForm(p => ({ ...p, map_url: e.target.value }))} placeholder="https://maps.google.com/…" className="h-9 tech-content" />
                   </div>
                 </div>
 
@@ -469,7 +474,7 @@ export default function DashboardSites() {
                 </div>
 
                 <div className="flex gap-2 pt-1">
-                  <Button onClick={() => saveMut.mutate()} disabled={!form.label.trim() || !form.address_line1.trim() || saveMut.isPending} variant="hero" className="flex-1 h-9">
+                  <Button onClick={() => saveMut.mutate()} disabled={!form.label.trim() || !naf.city_id || saveMut.isPending} variant="hero" className="flex-1 h-9">
                     {saveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin me-1.5" /> : <CheckCircle2 className="w-4 h-4 me-1.5" />}
                     {saveMut.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editing ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add')}
                   </Button>
