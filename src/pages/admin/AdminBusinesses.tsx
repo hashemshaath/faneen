@@ -940,6 +940,20 @@ const AdminBusinesses = () => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if (e.key === '/') { e.preventDefault(); searchRef.current?.focus(); }
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        setEditingBiz(null); setServicesPanel(null);
+        setCreateForm(emptyCreateForm()); setCreatingBiz(true);
+      }
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        refetchBusinesses();
+        toast.success(isRTL ? 'تم التحديث' : 'Refreshed');
+      }
+      if (e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        exportCSV(filtered, language);
+      }
       if (e.key === 'Escape') {
         if (editingBiz) setEditingBiz(null);
         else if (servicesPanel) setServicesPanel(null);
@@ -948,7 +962,7 @@ const AdminBusinesses = () => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [editingBiz, servicesPanel, selected.size]);
+  }, [editingBiz, servicesPanel, selected.size, refetchBusinesses, isRTL, language]);
   const autoFillTranslations = useCallback(async () => {
     if (!editingBiz) return;
     setAutoTranslating(true);
