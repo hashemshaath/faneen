@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FileText, Plus, Filter, ExternalLink, Search } from 'lucide-react';
+import { FileText, Plus, Filter, ExternalLink, Search, CheckCircle2, Clock, Ban } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -13,6 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getContractStatusMeta, type ContractStatus } from '@/lib/contract-statuses';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 
 interface AdminContractRow {
   id: string;
@@ -62,29 +64,49 @@ export default function AdminContracts() {
     );
   }, [data, search]);
 
+  const stats = useMemo(() => {
+    const list = data ?? [];
+    return {
+      total: list.length,
+      active: list.filter((c) => c.status === 'active').length,
+      pending: list.filter((c) => c.status === 'pending_approval' || c.status === 'draft').length,
+      cancelled: list.filter((c) => c.status === 'cancelled' || c.status === 'disputed').length,
+    };
+  }, [data]);
+
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-6xl">
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-accent/10 p-2"><FileText className="w-5 h-5 text-accent" /></div>
-          <div>
-            <h1 className="font-heading font-bold text-xl sm:text-2xl">
-              {isRTL ? 'إدارة العقود' : 'Contracts Administration'}
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              {isRTL ? 'عرض كل العقود وإنشاء عقود بالنيابة بين طرفين' : 'View all contracts and create on-behalf contracts between parties'}
-            </p>
-          </div>
-        </div>
-        <Button asChild variant="default" size="sm" className="gap-1.5">
-          <Link to="/admin/contracts/create">
-            <Plus className="w-4 h-4" />{isRTL ? 'إنشاء عقد بالنيابة' : 'Create on Behalf'}
-          </Link>
-        </Button>
-      </div>
+      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-[1600px] space-y-5">
+        <AdminPageHeader
+          tone="accent"
+          icon={FileText}
+          eyebrow={isRTL ? 'لوحة الإدارة' : 'Admin Console'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'إدارة العقود' : 'Contracts' },
+          ]}
+          title={isRTL ? 'إدارة العقود' : 'Contracts Administration'}
+          subtitle={isRTL
+            ? 'عرض كل العقود وإنشاء عقود بالنيابة بين طرفين، مع متابعة الحالة والقيمة الإجمالية.'
+            : 'Browse every contract and create on-behalf contracts between parties, with status and totals.'}
+          actions={
+            <Button asChild size="sm" className="h-10 gap-1.5 rounded-xl">
+              <Link to="/admin/contracts/create">
+                <Plus className="w-4 h-4" />{isRTL ? 'إنشاء عقد بالنيابة' : 'Create on Behalf'}
+              </Link>
+            </Button>
+          }
+          kpiSlot={
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <AdminKpiCard label={isRTL ? 'إجمالي العقود' : 'Total'} value={stats.total} icon={FileText} tone="primary" />
+              <AdminKpiCard label={isRTL ? 'نشطة' : 'Active'} value={stats.active} icon={CheckCircle2} tone="success" />
+              <AdminKpiCard label={isRTL ? 'بانتظار/مسودة' : 'Pending / Draft'} value={stats.pending} icon={Clock} tone="warning" />
+              <AdminKpiCard label={isRTL ? 'ملغاة/متنازع' : 'Cancelled / Disputed'} value={stats.cancelled} icon={Ban} tone="destructive" />
+            </div>
+          }
+        />
 
-      <Card className="mb-4">
+      <Card>
         <CardContent className="p-3 sm:p-4 flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="w-4 h-4 absolute top-1/2 -translate-y-1/2 start-3 text-muted-foreground" />

@@ -18,6 +18,8 @@ import {
   AlertTriangle, Bug, Download, Trash2, RefreshCw, ShieldAlert, Upload, Database, FileSearch,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 
 const KIND_TONE: Record<string, string> = {
   name_swapped: 'bg-warning/10 text-warning border-warning/30',
@@ -94,40 +96,28 @@ const AdminDiagnostics: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto space-y-5 pb-12">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold font-heading flex items-center gap-2">
-              <Bug className="w-6 h-6 text-accent" />
-              {isRTL ? 'التشخيص والاتساق' : 'Diagnostics & Consistency'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isRTL
-                ? 'تنبيهات فورية لفشل الرفع/RLS وفحص دوري للبيانات ثنائية اللغة.'
-                : 'Live alerts for upload/RLS failures and bilingual data consistency checks.'}
-            </p>
-          </div>
-        </div>
-
-        {/* Stat strip */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { k: 'errors', label: isRTL ? 'إجمالي الأخطاء' : 'Total errors', val: counts.errors, icon: AlertTriangle, color: 'text-destructive bg-destructive/10' },
-            { k: 'rls', label: isRTL ? 'RLS مرفوضة' : 'RLS denied', val: counts.rls, icon: ShieldAlert, color: 'text-warning bg-warning/10' },
-            { k: 'upload', label: isRTL ? 'فشل رفع' : 'Upload failures', val: counts.upload, icon: Upload, color: 'text-warning bg-warning/10' },
-            { k: 'network', label: isRTL ? 'شبكة' : 'Network', val: counts.network, icon: Database, color: 'text-info bg-info/10' },
-          ].map((s) => (
-            <div key={s.k} className="rounded-2xl border border-border/30 bg-card p-4 flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.color}`}>
-                <s.icon className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold tech-content leading-none">{s.val}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{s.label}</p>
-              </div>
+      <div className="max-w-[1600px] mx-auto space-y-5 pb-12 p-4 md:p-6">
+        <AdminPageHeader
+          tone="warning"
+          icon={Bug}
+          eyebrow={isRTL ? 'لوحة الإدارة' : 'Admin Console'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'التشخيص والاتساق' : 'Diagnostics' },
+          ]}
+          title={isRTL ? 'التشخيص والاتساق' : 'Diagnostics & Consistency'}
+          subtitle={isRTL
+            ? 'تنبيهات فورية لفشل الرفع/RLS وفحص دوري للبيانات ثنائية اللغة.'
+            : 'Live alerts for upload/RLS failures and bilingual data consistency checks.'}
+          kpiSlot={
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <AdminKpiCard label={isRTL ? 'إجمالي الأخطاء' : 'Total errors'} value={counts.errors} icon={AlertTriangle} tone="destructive" />
+              <AdminKpiCard label={isRTL ? 'RLS مرفوضة' : 'RLS denied'} value={counts.rls} icon={ShieldAlert} tone="warning" />
+              <AdminKpiCard label={isRTL ? 'فشل رفع' : 'Upload failures'} value={counts.upload} icon={Upload} tone="warning" />
+              <AdminKpiCard label={isRTL ? 'شبكة' : 'Network'} value={counts.network} icon={Database} tone="info" />
             </div>
-          ))}
-        </div>
+          }
+        />
 
         <Tabs defaultValue="alerts">
           <TabsList>

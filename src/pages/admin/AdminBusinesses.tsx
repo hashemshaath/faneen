@@ -84,6 +84,8 @@ import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneFie
 import { BusinessOwnerPanel } from '@/components/admin/BusinessOwnerPanel';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
+import { SavedViewsMenu } from '@/components/admin/SavedViewsMenu';
+import { useAdminSavedViews } from '@/hooks/useAdminSavedViews';
 import { BusinessFiltersToolbar } from '@/components/admin/businesses/BusinessFiltersToolbar';
 import { BusinessBulkActionBar } from '@/components/admin/businesses/BusinessBulkActionBar';
 import {
@@ -933,11 +935,28 @@ const AdminBusinesses = () => {
   /* ─── AI auto-translate missing field (single business) ─── */
   const [autoTranslating, setAutoTranslating] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  // Hold the latest filtered list so keyboard shortcut `e` can export the
+  // current view without forcing the listener to re-bind on every change.
+  const filteredRef = useRef<unknown[]>([]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if (e.key === '/') { e.preventDefault(); searchRef.current?.focus(); }
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        setEditingBiz(null); setServicesPanel(null);
+        setCreateForm(emptyCreateForm()); setCreatingBiz(true);
+      }
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        refetchBusinesses();
+        toast.success(isRTL ? 'تم التحديث' : 'Refreshed');
+      }
+      if (e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        exportCSV(filteredRef.current as any[], language);
+      }
       if (e.key === 'Escape') {
         if (editingBiz) setEditingBiz(null);
         else if (servicesPanel) setServicesPanel(null);
@@ -946,7 +965,7 @@ const AdminBusinesses = () => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [editingBiz, servicesPanel, selected.size]);
+  }, [editingBiz, servicesPanel, selected.size, refetchBusinesses, isRTL, language]);
   const autoFillTranslations = useCallback(async () => {
     if (!editingBiz) return;
     setAutoTranslating(true);
@@ -1123,6 +1142,8 @@ const AdminBusinesses = () => {
   }, [businesses, search, filterStatus, filterTier, filterTranslation, filterOrigin, sortBy, language, contractBusinessIds, translationCompleteness]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  // Keep the keyboard-export ref pointed at the latest filtered list.
+  useEffect(() => { filteredRef.current = filtered; }, [filtered]);
   const safePage = Math.min(Math.max(1, page), totalPages);
   const paged = useMemo(() => filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE), [filtered, safePage]);
   const allPagedSelected = paged.length > 0 && paged.every(b => selected.has(b.id));
@@ -1154,6 +1175,31 @@ const AdminBusinesses = () => {
     : cities;
 
   if (!isAdmin) return null;
+
+  /* ─── Saved Views (per-admin localStorage) ─── */
+  type BizViewFilters = {
+    q: string; status: string; tier: string; translation: string; origin: string; sort: string;
+  };
+  const savedViews = useAdminSavedViews<BizViewFilters>('admin.businesses');
+  const currentViewFilters: BizViewFilters = {
+    q: search,
+    status: filterStatus,
+    tier: filterTier,
+    translation: filterTranslation,
+    origin: filterOrigin,
+    sort: sortBy,
+  };
+  const applySavedView = (f: BizViewFilters) => {
+    const sp = new URLSearchParams();
+    if (f.q) sp.set('q', f.q);
+    if (f.status && f.status !== 'all') sp.set('status', f.status);
+    if (f.tier && f.tier !== 'all') sp.set('tier', f.tier);
+    if (f.translation && f.translation !== 'all') sp.set('translation', f.translation);
+    if (f.origin && f.origin !== 'all') sp.set('origin', f.origin);
+    if (f.sort && f.sort !== 'recent') sp.set('sort', f.sort);
+    setSearchInput(f.q || '');
+    setSearchParams(sp, { replace: false });
+  };
 
   return (
     <DashboardLayout>
@@ -1210,6 +1256,13 @@ const AdminBusinesses = () => {
                 <Download className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
               </Button>
+              <SavedViewsMenu
+                views={savedViews.views}
+                currentFilters={currentViewFilters}
+                onApply={applySavedView}
+                onSave={savedViews.save}
+                onRemove={savedViews.remove}
+              />
               <Button
                 asChild
                 variant="outline"
