@@ -644,6 +644,11 @@ const AdminApprovalsCenter: React.FC = () => {
                 {isRTL ? 'إجمالي قيد الانتظار' : 'pending total'}
               </span>
             </Badge>
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
+              <Link to="/admin/business-visibility">
+                {isRTL ? 'ظهور البروفايلات' : 'Profile visibility'}
+              </Link>
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="rounded-xl gap-1.5" disabled={unified.length === 0}>
