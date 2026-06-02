@@ -42,6 +42,7 @@ import {
   UserPlus,
   ClipboardList,
   ChevronDown,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface MenuItem {
