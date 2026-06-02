@@ -16,6 +16,10 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { reviewEntityAccessRequest } from '@/modules/entities/services/access/reviewEntityAccessRequest';
+import {
+  listPendingProviderReviewBusinesses,
+  listPendingUsernameBusinesses,
+} from '@/modules/businesses/services/listPendingApprovalBusinesses';
 import { toast } from 'sonner';
 
 /**
@@ -52,41 +56,31 @@ interface CategoryResult {
 const PREVIEW_LIMIT = 5;
 
 async function fetchProviderReview(): Promise<CategoryResult> {
-  const { data, count, error } = await supabase
-    .from('businesses')
-    .select('id, ref_id, name_ar, name_en, username, submitted_at, approval_status', { count: 'exact' })
-    .in('approval_status', ['submitted', 'under_review'] as never[])
-    .order('submitted_at', { ascending: false, nullsFirst: false })
-    .limit(PREVIEW_LIMIT);
+  const { data, count, error } = await listPendingProviderReviewBusinesses(PREVIEW_LIMIT);
   if (error) return { count: 0, items: [] };
   return {
-    count: count ?? 0,
-    items: (data ?? []).map((r) => ({
+    count,
+    items: data.map((r) => ({
       id: r.id,
       refId: r.ref_id ?? '—',
       primary: r.name_ar ?? r.name_en ?? r.username ?? r.ref_id ?? '—',
-      secondary: r.approval_status as string | null,
-      createdAt: r.submitted_at as string | null,
+      secondary: r.approval_status,
+      createdAt: r.submitted_at,
     })),
   };
 }
 
 async function fetchUsername(): Promise<CategoryResult> {
-  const { data, count, error } = await supabase
-    .from('businesses')
-    .select('id, ref_id, name_ar, name_en, username, created_at, username_status', { count: 'exact' })
-    .eq('username_status', 'pending' as never)
-    .order('created_at', { ascending: false })
-    .limit(PREVIEW_LIMIT);
+  const { data, count, error } = await listPendingUsernameBusinesses(PREVIEW_LIMIT);
   if (error) return { count: 0, items: [] };
   return {
-    count: count ?? 0,
-    items: (data ?? []).map((r) => ({
+    count,
+    items: data.map((r) => ({
       id: r.id,
       refId: r.ref_id ?? '—',
       primary: r.name_ar ?? r.name_en ?? r.ref_id ?? '—',
       secondary: r.username ? `qitaat.com/${r.username}` : null,
-      createdAt: r.created_at as string | null,
+      createdAt: r.created_at,
     })),
   };
 }
