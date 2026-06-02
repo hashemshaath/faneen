@@ -16,8 +16,8 @@ import {
 } from 'recharts';
 import {
   Wrench, Image as ImageIcon, Star, FileText, TrendingUp,
-  Plus, Send, MessageSquare, Crown, Building2, FolderOpen, Megaphone,
-  Activity, CheckCircle2, Target, ExternalLink, Sparkles, ArrowLeft, ArrowRight,
+  Plus, Send, MessageSquare, Crown, Building2,
+  CheckCircle2, ExternalLink, Sparkles, ArrowLeft, ArrowRight,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -36,7 +36,7 @@ import {
   QuickAction, OverdueAlerts, TodaySummary,
   RefreshButton, getTimeGreeting,
 } from '@/components/dashboard/overview/shared';
-import { BentoTile } from '@/components/dashboard/overview/BentoTile';
+
 
 type ProviderProfile = {
   full_name?: string | null;
@@ -166,7 +166,7 @@ export default function ProviderDashboardView({
 
   const { ref, isVisible } = useScrollAnimation(0.1);
   const animatedRevenue = useCountUp(stats?.totalRevenue ?? 0, isVisible, 1500);
-  const animatedContracts = useCountUp(stats?.contracts ?? 0, isVisible, 1200);
+
   const completionRate = stats?.contracts ? Math.round((stats.completedContracts / stats.contracts) * 100) : 0;
   const hasRevenueData = (stats?.completedContracts ?? 0) > 0 && (stats?.totalRevenue ?? 0) > 0;
   const membershipTier = (business?.membership_tier ?? profile?.membership_tier ?? 'free') as string;
