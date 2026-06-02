@@ -58,6 +58,7 @@ const ContractDetail = lazyRetry(() => import("./pages/ContractDetail"));
 const DashboardOverview = lazyRetry(() => import("./pages/dashboard/DashboardOverview"));
 const DashboardServices = lazyRetry(() => import("./pages/dashboard/DashboardServices"));
 const DashboardPortfolio = lazyRetry(() => import("./pages/dashboard/DashboardPortfolio"));
+const DashboardSites = lazyRetry(() => import("./pages/dashboard/DashboardSites"));
 const DashboardReviews = lazyRetry(() => import("./pages/dashboard/DashboardReviews"));
 const DashboardContracts = lazyRetry(() => import("./pages/dashboard/DashboardContracts"));
 const DashboardWorkOrders = lazyRetry(() => import("./pages/dashboard/DashboardWorkOrders"));
