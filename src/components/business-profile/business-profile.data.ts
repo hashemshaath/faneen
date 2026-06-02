@@ -58,6 +58,12 @@ export const tierConfig: Record<string, { label: string; labelAr: string; color:
 //   cities     — name_ar/_en for label, slug for lead-context
 //   countries  — name_ar/_en for label, code for PostalAddress.addressCountry
 const PUBLIC_BUSINESS_SELECT =
+  // PII-MASKING — reads route through `businesses_public`, which exposes only
+  // non-sensitive columns. Sensitive contact fields (phone, mobile, email,
+  // contact_person, unified_number, customer_service_phone, building_number,
+  // additional_number) are intentionally omitted from the public select and
+  // rendered client-side behind the contact-reveal flow when authenticated
+  // viewers fetch the full row separately.
   // identity + routing
   'id, user_id, username, ' +
   // names + descriptions (SEO, header, JSON-LD)
@@ -69,16 +75,13 @@ const PUBLIC_BUSINESS_SELECT =
   'rating_avg, rating_count, created_at, ' +
   // public web presence
   'website, ' +
-  // address (Contact tab + JSON-LD PostalAddress)
-  'address, region, district, street_name, building_number, additional_number, ' +
+  // address (Contact tab + JSON-LD PostalAddress) — safe subset only
+  'address, region, district, street_name, ' +
   // geo (Contact tab map + JSON-LD GeoCoordinates)
   'latitude, longitude, ' +
-  // contact channels (Contact tab; phone/email intentionally omitted from JSON-LD
-  // but still rendered client-side behind the reveal flow)
-  'contact_person, phone, mobile, unified_number, customer_service_phone, email, ' +
-  // trimmed joins
+  // trimmed joins (FK columns exposed by the view enable PostgREST embedding)
   'categories(name_ar, name_en, slug), ' +
-  'cities(name_ar, name_en, slug), ' +
+  'cities(name_ar, name_en), ' +
   'countries(name_ar, name_en, code)';
 
 export const useBusinessByUsername = (username: string) =>

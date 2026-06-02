@@ -13,7 +13,7 @@ export async function getBusinessIdByUsername(
 ): Promise<{ data: { id: string } | null; error: unknown }> {
   const { username } = options;
   const { data, error } = await supabase
-    .from('businesses')
+    .from('businesses_public')
     .select('id')
     .eq('username', username)
     .maybeSingle();
