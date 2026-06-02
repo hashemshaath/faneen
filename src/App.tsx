@@ -400,6 +400,7 @@ const AppRoutes = () => (
           {/* SERVICE-ACTIVATION-GOVERNANCE-2 — Phase D admin control surface. */}
           <Route path="/admin/service-activations" element={<ProtectedRoute requireAdmin><AdminServiceActivations /></ProtectedRoute>} />
           <Route path="/admin/entity-access-requests" element={<ProtectedRoute requireAdmin><AdminEntityAccessRequests /></ProtectedRoute>} />
+          <Route path="/admin/approvals" element={<ProtectedRoute requireAdmin><AdminApprovalsCenter /></ProtectedRoute>} />
           <Route path="/admin/locations" element={<ProtectedRoute requireAdmin><AdminLocationsHub /></ProtectedRoute>} />
           <Route path="/admin/locations/catalog" element={<ProtectedRoute requireAdmin><AdminLocationsCatalog /></ProtectedRoute>} />
           <Route path="/admin/locations/service-areas" element={<ProtectedRoute requireAdmin><AdminBusinessServiceAreas /></ProtectedRoute>} />
