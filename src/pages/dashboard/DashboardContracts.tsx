@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { mapContractLockError, mapContractCreateError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
+import { SiteGovernmentDataPanel } from '@/components/contracts/SiteGovernmentDataPanel';
 import {
   listContractsForRole,
   getContractParticipantProfiles,
