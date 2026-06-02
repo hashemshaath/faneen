@@ -8,8 +8,6 @@ import {
   Loader2,
   MapPin,
   MessageSquare,
-  Phone,
-  AtSign,
   Share2,
   Star,
   ShieldCheck,
@@ -25,6 +23,7 @@ import { tierConfig } from "./business-profile.data";
 import { VerificationStatusBadge } from "@/components/common/VerificationStatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
 import { BrandLogo } from "@/components/common/BrandLogo";
+import { BusinessIdentityStrip } from "@/components/business/BusinessIdentityStrip";
 
 export const Stars = ({ rating, size = "w-4 h-4" }: { rating: number; size?: string }) => (
   <div className="flex items-center gap-0.5">
@@ -234,39 +233,11 @@ export const BusinessProfileHeader = ({
                     </div>
                   </div>
 
-                  {/* Identity strip: handle · primary phone · tier (always-visible basics) */}
-                  {(business.username || business.phone || tier) && (
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2">
-                      {business.username && (
-                        <span
-                          className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-muted/40 px-2 py-0.5 text-[10px] sm:text-[11px] text-foreground"
-                          title={language === "ar" ? "اسم المستخدم" : "Username"}
-                        >
-                          <AtSign className="h-3 w-3 text-accent" />
-                          <span className="tech-content font-medium">{business.username}</span>
-                        </span>
-                      )}
-                      {business.phone && (
-                        <a
-                          href={`tel:${business.phone}`}
-                          className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-muted/40 px-2 py-0.5 text-[10px] sm:text-[11px] text-foreground hover:bg-accent/10 hover:border-accent/30 transition-colors"
-                          title={language === "ar" ? "الرقم الرئيسي" : "Primary phone"}
-                        >
-                          <Phone className="h-3 w-3 text-accent" />
-                          <span className="tech-content font-medium" dir="ltr">{business.phone}</span>
-                        </a>
-                      )}
-                      {tier && (
-                        <span
-                          className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-[10px] sm:text-[11px] text-accent font-semibold"
-                          title={language === "ar" ? "نوع العضوية" : "Membership tier"}
-                        >
-                          <Crown className="h-3 w-3" />
-                          {language === "ar" ? tier.labelAr : tier.label}
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  <BusinessIdentityStrip
+                    business={business}
+                    className="mt-2"
+                    linkUsername={false}
+                  />
                 </div>
 
                 <div className="hidden sm:flex shrink-0 items-center gap-2">
