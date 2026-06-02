@@ -6,6 +6,7 @@ import {
   ExternalLink, RefreshCw, Loader2, CheckCircle2, Clock, Building2,
   Check, X, History, ShieldAlert, Search, Filter,
   Download, FileText, FileSpreadsheet, Calendar as CalendarIcon, ChevronDown,
+  AlertTriangle,
 } from 'lucide-react';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   listPendingProviderReviewBusinesses,
   listPendingUsernameBusinesses,
+  listBusinessVisibilityAudit,
 } from '@/modules/businesses/services/listPendingApprovalBusinesses';
 import { toast } from 'sonner';
 import {
@@ -62,6 +64,27 @@ interface ApprovalItem {
 interface CategoryResult {
   count: number;
   items: ApprovalItem[];
+}
+
+interface BusinessVisibilityRow {
+  id: string;
+  ref_id: string | null;
+  name_ar: string | null;
+  name_en: string | null;
+  username: string | null;
+  approval_status: string | null;
+  username_status: string | null;
+  is_active: boolean | null;
+  is_demo: boolean | null;
+  created_at: string | null;
+}
+
+interface SubscriptionHealthRow {
+  id: string;
+  ref_id: string | null;
+  business_id: string | null;
+  status: string | null;
+  created_at: string | null;
 }
 
 const PREVIEW_LIMIT = 25;
@@ -149,7 +172,7 @@ async function fetchEntityAccess(): Promise<CategoryResult> {
 async function fetchSubscriptions(): Promise<CategoryResult> {
   const { data, count, error } = await supabase
     .from('membership_subscriptions')
-    .select('id, ref_id, tier, created_at, business:business_id(ref_id, name_ar, name_en)', { count: 'exact' })
+    .select('id, ref_id, created_at, plan:plan_id(tier, name_ar, name_en), business:business_id(ref_id, name_ar, name_en)', { count: 'exact' })
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
     .limit(PREVIEW_LIMIT);
@@ -162,10 +185,36 @@ async function fetchSubscriptions(): Promise<CategoryResult> {
       id: r.id,
       refId: r.ref_id ?? '—',
       primary: r.business?.name_ar ?? r.business?.name_en ?? r.business?.ref_id ?? '—',
-      secondary: r.tier ?? null,
+      secondary: r.plan?.name_ar ?? r.plan?.name_en ?? r.plan?.tier ?? null,
       createdAt: r.created_at,
     })),
   };
+}
+
+async function fetchBusinessVisibilityAudit(): Promise<BusinessVisibilityRow[]> {
+  const { data, error } = await listBusinessVisibilityAudit(50);
+  if (error) return [];
+  return data;
+}
+
+async function fetchSubscriptionHealth(): Promise<SubscriptionHealthRow[]> {
+  type RawSubscriptionHealthRow = SubscriptionHealthRow & { business?: { id: string } | null };
+  const { data, error } = await supabase
+    .from('membership_subscriptions')
+    .select('id, ref_id, business_id, status, created_at, business:business_id(id)')
+    .in('status', ['pending', 'active'])
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) return [];
+  return ((data ?? []) as unknown as RawSubscriptionHealthRow[])
+    .filter((row) => row.business_id && !row.business)
+    .map((row) => ({
+      id: row.id,
+      ref_id: row.ref_id ?? null,
+      business_id: row.business_id ?? null,
+      status: row.status ?? null,
+      created_at: row.created_at ?? null,
+    }));
 }
 
 async function fetchUpgrades(): Promise<CategoryResult> {
@@ -271,6 +320,22 @@ const AdminApprovalsCenter: React.FC = () => {
     upgrades:        useQuery({ queryKey: ['approvals', 'upgrades'],        queryFn: fetchUpgrades,       staleTime: 30_000, refetchInterval: POLL_INTERVAL_MS, refetchOnWindowFocus: true }),
   } as const;
 
+  const visibilityQuery = useQuery({
+    queryKey: ['approvals', 'business-visibility-audit'],
+    queryFn: fetchBusinessVisibilityAudit,
+    staleTime: 30_000,
+    refetchInterval: POLL_INTERVAL_MS,
+    refetchOnWindowFocus: true,
+  });
+
+  const subscriptionHealthQuery = useQuery({
+    queryKey: ['approvals', 'subscription-health'],
+    queryFn: fetchSubscriptionHealth,
+    staleTime: 30_000,
+    refetchInterval: POLL_INTERVAL_MS,
+    refetchOnWindowFocus: true,
+  });
+
   const totals = useMemo(() => {
     let total = 0;
     let anyLoading = false;
@@ -284,6 +349,8 @@ const AdminApprovalsCenter: React.FC = () => {
 
   const refreshAll = () => {
     (Object.keys(queries) as ApprovalCategoryKey[]).forEach((k) => queries[k].refetch());
+    visibilityQuery.refetch();
+    subscriptionHealthQuery.refetch();
     queryClient.invalidateQueries({ queryKey: ['approvals-audit'] });
   };
 
@@ -527,6 +594,28 @@ const AdminApprovalsCenter: React.FC = () => {
     return m;
   }, []);
 
+  const visibilityRows = useMemo(() => {
+    const rows = visibilityQuery.data ?? [];
+    return rows.map((row) => {
+      const isPublic = row.is_active === true
+        && row.approval_status === 'published'
+        && row.is_demo !== true;
+      const reason = row.is_demo === true
+        ? (isRTL ? 'جهة تجريبية لا تظهر للعامة' : 'Demo business is hidden publicly')
+        : row.is_active !== true
+        ? (isRTL ? 'الجهة معطّلة' : 'Business is inactive')
+        : row.approval_status !== 'published'
+        ? (isRTL ? `حالة الاعتماد الحالية: ${row.approval_status ?? 'غير محددة'}` : `Approval status: ${row.approval_status ?? 'unset'}`)
+        : row.username_status && row.username_status !== 'approved'
+        ? (isRTL ? `حالة اسم المستخدم: ${row.username_status}` : `Username status: ${row.username_status}`)
+        : (isRTL ? 'ظاهرة للعامة' : 'Visible publicly');
+      return { ...row, isPublic, reason };
+    });
+  }, [visibilityQuery.data, isRTL]);
+
+  const hiddenBusinesses = visibilityRows.filter((row) => !row.isPublic);
+  const orphanSubscriptions = subscriptionHealthQuery.data ?? [];
+
   return (
     <DashboardLayout>
       <div className="space-y-6 pb-12">
@@ -662,6 +751,105 @@ const AdminApprovalsCenter: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* Business visibility audit */}
+        <section className="rounded-2xl border border-border/40 bg-card overflow-hidden">
+          <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 bg-muted/20">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center shrink-0">
+                <Building2 className="w-4 h-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  {isRTL ? 'فحص ظهور الجهات' : 'Business visibility audit'}
+                  <Badge variant="outline" className="text-[10px] tech-content">
+                    {visibilityQuery.isLoading ? '…' : visibilityRows.length}
+                  </Badge>
+                </h2>
+                <p className="text-[11px] text-muted-foreground">
+                  {isRTL ? 'يوضح سبب ظهور أو إخفاء كل جهة ويكشف الاشتراكات المرتبطة بجهات محذوفة.' : 'Shows why each business is visible or hidden and flags subscriptions linked to deleted businesses.'}
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/admin/businesses"
+              className="inline-flex items-center gap-1 text-xs px-3 h-8 rounded-lg border border-border/60 bg-card hover:border-primary/40 hover:text-primary transition-colors whitespace-nowrap"
+            >
+              <ExternalLink className="w-3 h-3" />
+              {isRTL ? 'إدارة الجهات' : 'Manage businesses'}
+            </Link>
+          </header>
+          <div className="grid gap-3 p-3 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="rounded-xl border border-border/40 overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 bg-muted/10 border-b border-border/40">
+                <span className="text-xs font-medium text-foreground">{isRTL ? 'آخر الجهات' : 'Latest businesses'}</span>
+                <Badge variant="outline" className="text-[10px]">
+                  {isRTL ? `مخفية: ${hiddenBusinesses.length}` : `Hidden: ${hiddenBusinesses.length}`}
+                </Badge>
+              </div>
+              {visibilityRows.length === 0 ? (
+                <div className="px-3 py-6 text-xs text-muted-foreground flex items-center gap-2">
+                  <Inbox className="w-4 h-4" />
+                  {isRTL ? 'لا توجد جهات مسجلة.' : 'No businesses found.'}
+                </div>
+              ) : (
+                <ul className="divide-y divide-border/40 max-h-72 overflow-auto no-scrollbar">
+                  {visibilityRows.map((row) => (
+                    <li key={row.id} className="flex items-center gap-3 px-3 py-2.5">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${row.isPublic ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+                        {row.isPublic ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium text-foreground truncate">{row.name_ar ?? row.name_en ?? row.ref_id ?? '—'}</span>
+                          <span className="text-[10px] text-muted-foreground tech-content">{row.ref_id ?? row.id.slice(0, 8)}</span>
+                          <Badge variant="outline" className="text-[10px] h-5 tech-content">{row.approval_status ?? '—'}</Badge>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{row.reason}</p>
+                      </div>
+                      <Link
+                        to={`/admin/businesses?focus=${row.id}`}
+                        className="inline-flex items-center gap-1 text-[11px] px-2.5 h-7 rounded-lg border border-border/60 hover:border-primary/40 hover:text-primary transition-colors whitespace-nowrap"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        {isRTL ? 'فتح' : 'Open'}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="rounded-xl border border-border/40 overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 bg-muted/10 border-b border-border/40">
+                <span className="text-xs font-medium text-foreground">{isRTL ? 'مؤشرات الازدواج' : 'Duplication signals'}</span>
+                <Badge variant={orphanSubscriptions.length ? 'destructive' : 'outline'} className="text-[10px]">
+                  {orphanSubscriptions.length}
+                </Badge>
+              </div>
+              {orphanSubscriptions.length === 0 ? (
+                <div className="px-3 py-6 text-xs text-muted-foreground flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                  {isRTL ? 'لا توجد اشتراكات معلقة مرتبطة بجهات محذوفة.' : 'No pending subscriptions linked to deleted businesses.'}
+                </div>
+              ) : (
+                <ul className="divide-y divide-border/40 max-h-72 overflow-auto no-scrollbar">
+                  {orphanSubscriptions.map((row) => (
+                    <li key={row.id} className="px-3 py-2.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <AlertTriangle className="w-3.5 h-3.5 text-warning" />
+                        <span className="text-xs font-medium tech-content">{row.ref_id ?? row.id.slice(0, 8)}</span>
+                        <Badge variant="outline" className="text-[10px] h-5 tech-content">{row.status ?? '—'}</Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground tech-content mt-1">
+                        {isRTL ? 'مرتبطة بجهة غير موجودة: ' : 'Linked to missing business: '}{row.business_id}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </section>
 
         {/* Bulk actions bar */}
         {selectedRows.length > 0 && (
