@@ -57,15 +57,7 @@ const SuperAdminBusinessOverridePanel: React.FC = () => {
   const bizQuery = useQuery({
     queryKey: ['super-admin-override-businesses'],
     enabled: isSuperAdmin,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('id, name_ar, name_en, ref_id')
-        .order('created_at', { ascending: false })
-        .limit(500);
-      if (error) throw error;
-      return (data ?? []) as BusinessLite[];
-    },
+    queryFn: listBusinessesForSystemAccessOverride,
   });
 
   const auditQuery = useQuery({
