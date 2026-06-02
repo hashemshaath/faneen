@@ -1142,6 +1142,8 @@ const AdminBusinesses = () => {
   }, [businesses, search, filterStatus, filterTier, filterTranslation, filterOrigin, sortBy, language, contractBusinessIds, translationCompleteness]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  // Keep the keyboard-export ref pointed at the latest filtered list.
+  useEffect(() => { filteredRef.current = filtered; }, [filtered]);
   const safePage = Math.min(Math.max(1, page), totalPages);
   const paged = useMemo(() => filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE), [filtered, safePage]);
   const allPagedSelected = paged.length > 0 && paged.every(b => selected.has(b.id));
