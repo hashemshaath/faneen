@@ -2160,6 +2160,54 @@ export type Database = {
           },
         ]
       }
+      business_profile_visibility: {
+        Row: {
+          admin_note: string | null
+          business_id: string
+          id: string
+          locked_by_admin: boolean
+          section_key: string
+          updated_at: string
+          updated_by: string | null
+          visibility_level: string
+        }
+        Insert: {
+          admin_note?: string | null
+          business_id: string
+          id?: string
+          locked_by_admin?: boolean
+          section_key: string
+          updated_at?: string
+          updated_by?: string | null
+          visibility_level?: string
+        }
+        Update: {
+          admin_note?: string | null
+          business_id?: string
+          id?: string
+          locked_by_admin?: boolean
+          section_key?: string
+          updated_at?: string
+          updated_by?: string | null
+          visibility_level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_profile_visibility_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_profile_visibility_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_service_areas: {
         Row: {
           business_id: string
@@ -16806,6 +16854,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_business_visibility: { Args: { _business_id: string }; Returns: Json }
       get_client_site_notification_preferences: {
         Args: { _site_id: string }
         Returns: Json
@@ -17290,6 +17339,21 @@ export type Database = {
           full_name: string
           role: string
           user_id: string
+        }[]
+      }
+      list_business_public_rfqs: {
+        Args: { _business_id: string }
+        Returns: {
+          budget_max: number
+          budget_min: number
+          created_at: string
+          currency: string
+          deadline: string
+          id: string
+          industry: string
+          ref_id: string
+          status: string
+          title: string
         }[]
       }
       list_client_sites_for_contract: {
