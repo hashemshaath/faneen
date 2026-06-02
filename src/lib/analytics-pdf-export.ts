@@ -101,8 +101,8 @@ export async function exportAnalyticsPdf(input: AnalyticsExportInput): Promise<v
     startY: 32,
     head: [[T(input.isRTL, 'المؤشر', 'Metric'), T(input.isRTL, 'القيمة', 'Value')]],
     body: kpiRows,
-    styles: { ...styles.styles, fontSize: 10, cellPadding: 2.5 },
-    headStyles: { ...styles.headStyles, fillColor: [34, 139, 90] },
+    styles: { ...styles, fontSize: 10, cellPadding: 2.5 },
+    headStyles: { ...styles, fillColor: [34, 139, 90], textColor: 255 },
     theme: 'striped',
     margin: { left: 14, right: 14 },
   });
@@ -119,8 +119,8 @@ export async function exportAnalyticsPdf(input: AnalyticsExportInput): Promise<v
       startY: last + 6,
       head: [[title, T(input.isRTL, 'العدد', 'Count')]],
       body: rows.map((r) => [r.name, String(r.value)]),
-      styles: { ...styles.styles, fontSize: 9, cellPadding: 2 },
-      headStyles: { ...styles.headStyles, fillColor: [47, 98, 174] },
+      styles: { ...styles, fontSize: 9, cellPadding: 2 },
+      headStyles: { ...styles, fillColor: [47, 98, 174], textColor: 255 },
       theme: 'grid',
       margin: { left: 14, right: 14 },
     });
@@ -147,8 +147,8 @@ export async function exportAnalyticsPdf(input: AnalyticsExportInput): Promise<v
       body: input.revenueSeries.map((r) => [
         r.date, r.revenue.toLocaleString(), String(r.count),
       ]),
-      styles: { ...styles.styles, fontSize: 8, cellPadding: 1.8 },
-      headStyles: { ...styles.headStyles, fillColor: [34, 139, 90] },
+      styles: { ...styles, fontSize: 8, cellPadding: 1.8 },
+      headStyles: { ...styles, fillColor: [34, 139, 90], textColor: 255 },
       theme: 'striped',
       margin: { left: 14, right: 14 },
     });
