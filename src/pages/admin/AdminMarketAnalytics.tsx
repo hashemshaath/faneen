@@ -239,7 +239,8 @@ const AdminMarketAnalytics: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
-        </div>
+          }
+        />
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
