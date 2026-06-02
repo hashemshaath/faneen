@@ -98,7 +98,7 @@ const DashboardLeads: React.FC = () => {
   const [openId, setOpenId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>('newest');
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   // WORKSPACE-CONTEXT-4D: provider leads are staff-safe today —
   // `getManagedBusinessesForUser` already returns owner + active
@@ -595,7 +595,7 @@ const DashboardLeads: React.FC = () => {
                         )}
                         {convertedContractId && (
                           <Link
-                            to={`/dashboard/contracts/${convertedContractId}`}
+                            to={`/contracts/${convertedContractId}`}
                             onClick={(e) => e.stopPropagation()}
                             className="text-[11px] px-2 py-0.5 rounded-full bg-success/10 text-success border border-success/30 inline-flex items-center gap-1 hover:bg-success/20"
                           >
