@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ShieldCheck, UserPlus, Crown, ArrowUp, AtSign, Inbox,
   ExternalLink, RefreshCw, Loader2, CheckCircle2, Clock, Building2,
+  Check, X, History, ShieldAlert,
 } from 'lucide-react';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,8 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { reviewEntityAccessRequest } from '@/modules/entities/services/access/reviewEntityAccessRequest';
+import { toast } from 'sonner';
 
 /**
  * UNIFIED-APPROVALS-CENTER-1
