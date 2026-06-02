@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
+import { listOwnerBusinesses } from "@/modules/businesses/services/listOwnerBusinesses";
 import { BusinessVisibilityEditor } from "@/components/business-profile/BusinessVisibilityEditor";
 
 interface OwnedBusiness {
@@ -26,11 +26,11 @@ const DashboardBusinessVisibility = () => {
     if (!user) return;
     let cancelled = false;
     void (async () => {
-      const { data } = await supabase
-        .from("businesses")
-        .select("id, name_ar, name_en, username")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+      const { data } = await listOwnerBusinesses<OwnedBusiness>({
+        userId: user.id,
+        select: "id, name_ar, name_en, username",
+        orderBy: { column: "created_at", ascending: false },
+      });
       if (cancelled) return;
       const list = (data ?? []) as OwnedBusiness[];
       setBusinesses(list);
