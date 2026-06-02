@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { Tag as TagIcon } from 'lucide-react';
 
 import {
   adminListBrands, adminApproveBrand, adminRejectBrand, adminArchiveBrand,
@@ -65,17 +67,22 @@ const AdminBrands: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">{isRTL ? 'سجل العلامات التجارية' : 'Brands Registry'}</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              {isRTL ? 'إدارة العلامات التجارية المعتمدة وطلبات الإضافة' : 'Manage approved brands and addition requests'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline"><Link to="/admin/brand-requests"><Inbox className="w-4 h-4 me-2" />{isRTL ? 'طلبات العلامات' : 'Brand requests'}</Link></Button>
-          </div>
-        </div>
+        <AdminPageHeader
+          icon={TagIcon}
+          tone="primary"
+          eyebrow={isRTL ? 'الإدارة' : 'Admin'}
+          title={isRTL ? 'سجل العلامات التجارية' : 'Brands Registry'}
+          subtitle={isRTL ? 'إدارة العلامات التجارية المعتمدة وطلبات الإضافة' : 'Manage approved brands and addition requests'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'العلامات التجارية' : 'Brands' },
+          ]}
+          actions={
+            <Button asChild variant="outline" size="sm">
+              <Link to="/admin/brand-requests"><Inbox className="w-4 h-4 me-2" />{isRTL ? 'طلبات العلامات' : 'Brand requests'}</Link>
+            </Button>
+          }
+        />
 
         <Card>
           <CardHeader className="pb-3">

@@ -22,6 +22,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { ListChecks } from 'lucide-react';
 
 type SARequest = {
   id: string;
@@ -155,25 +157,28 @@ const AdminServiceRequests: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">
-              {isRTL ? 'طلبات إضافة الخدمات' : 'Service Addition Requests'}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {isRTL
-                ? 'راجع الطلبات المرسلة من المزوّدين لإضافة خدمات غير متوفرة في الكتالوج.'
-                : 'Review requests from providers to add services not in the catalog.'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <FilterBtn k="pending" label={isRTL ? 'قيد المراجعة' : 'Pending'} />
-            <FilterBtn k="approved" label={isRTL ? 'مقبول' : 'Approved'} />
-            <FilterBtn k="rejected" label={isRTL ? 'مرفوض' : 'Rejected'} />
-            <FilterBtn k="all" label={isRTL ? 'الكل' : 'All'} />
-          </div>
-        </header>
+        <AdminPageHeader
+          icon={ListChecks}
+          tone="warning"
+          eyebrow={isRTL ? 'الإدارة' : 'Admin'}
+          title={isRTL ? 'طلبات إضافة الخدمات' : 'Service Addition Requests'}
+          subtitle={isRTL
+            ? 'راجع الطلبات المرسلة من المزوّدين لإضافة خدمات غير متوفرة في الكتالوج.'
+            : 'Review requests from providers to add services not in the catalog.'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'طلبات الخدمات' : 'Service Requests' },
+          ]}
+          actions={
+            <div className="flex items-center gap-1.5">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <FilterBtn k="pending" label={isRTL ? 'قيد المراجعة' : 'Pending'} />
+              <FilterBtn k="approved" label={isRTL ? 'مقبول' : 'Approved'} />
+              <FilterBtn k="rejected" label={isRTL ? 'مرفوض' : 'Rejected'} />
+              <FilterBtn k="all" label={isRTL ? 'الكل' : 'All'} />
+            </div>
+          }
+        />
 
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="py-3 flex items-center justify-between gap-3 flex-wrap">

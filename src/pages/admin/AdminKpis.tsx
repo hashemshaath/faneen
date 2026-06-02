@@ -10,6 +10,8 @@ import { listProfilesByCreatedRange } from '@/modules/users';
 import { listMembershipPaymentIntents } from '@/modules/memberships/services/payments';
 import { defaultRange, type DateRange } from '@/lib/admin-reports-csv';
 import { Loader2, TrendingUp, Users, FileText, DollarSign, Activity } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { BarChart3 } from 'lucide-react';
 import {
   ResponsiveContainer,
   LineChart,
@@ -168,21 +170,24 @@ export default function AdminKpis() {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold">
-              <Bi ar="لوحة المؤشرات المتقدمة" en="Advanced KPIs" />
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              <Bi ar="GMV · MRR · Churn · LTV — في الفترة المختارة" en="GMV · MRR · Churn · LTV — in selected period" />
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Input type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} className="h-10 w-auto" />
-            <Input type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} className="h-10 w-auto" />
-            {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-          </div>
-        </div>
+        <AdminPageHeader
+          icon={BarChart3}
+          tone="accent"
+          eyebrow={isRTL ? 'الإدارة' : 'Admin'}
+          title={isRTL ? 'لوحة المؤشرات المتقدمة' : 'Advanced KPIs'}
+          subtitle={isRTL ? 'GMV · MRR · Churn · LTV — في الفترة المختارة' : 'GMV · MRR · Churn · LTV — in selected period'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'المؤشرات' : 'KPIs' },
+          ]}
+          actions={
+            <div className="flex items-center gap-2">
+              <Input type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} className="h-9 w-auto tech-content" />
+              <Input type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} className="h-9 w-auto tech-content" />
+              {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            </div>
+          }
+        />
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
           {cards.map((c) => (
