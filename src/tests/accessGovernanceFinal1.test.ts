@@ -69,6 +69,7 @@ describe('ACCESS-GOVERNANCE-FINAL-1 — single source of truth', () => {
       'src/modules/systemAccess/index.ts',
       'src/hooks/useVisibleModules.ts',
       'src/hooks/useEffectiveBusinessAccess.ts',
+      'src/hooks/useMembershipVisibility.ts',
       'src/pages/admin/AdminSystemAccess.tsx',
       'src/components/dashboard/DashboardSidebar.tsx',
       'src/App.tsx',
