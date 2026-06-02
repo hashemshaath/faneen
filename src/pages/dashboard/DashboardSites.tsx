@@ -920,13 +920,22 @@ function SiteBarcodePanel({ siteId, siteRef, label, isRTL }: { siteId: string; s
     );
   }
   return (
-    <BarcodeWidget
-      barcodeCode={code}
-      entityType="client_site"
-      title={label}
-      subtitle={siteRef ?? undefined}
-      size="sm"
-      className="border-0 shadow-none p-0 bg-transparent"
-    />
+    <div className="space-y-2">
+      <BarcodeWidget
+        barcodeCode={code}
+        entityType="client_site"
+        title={label}
+        subtitle={siteRef ?? undefined}
+        size="sm"
+        className="border-0 shadow-none p-0 bg-transparent"
+      />
+      <Link
+        to={`/dashboard/sites/${siteId}/print`}
+        className="flex items-center justify-center gap-1.5 text-[11px] text-primary hover:underline py-1.5 rounded-lg border border-primary/20 bg-primary/5"
+      >
+        <Printer className="w-3 h-3" />
+        {isRTL ? 'فتح صفحة الطباعة المخصصة (PDF / ملصق)' : 'Open dedicated print page (PDF / sticker)'}
+      </Link>
+    </div>
   );
 }
