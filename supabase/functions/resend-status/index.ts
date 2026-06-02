@@ -103,6 +103,19 @@ Deno.serve(async (req) => {
 
     if (!r.ok) {
       const text = await r.text();
+      // A "send-only" restricted key can't list /domains but is still valid.
+      // Treat it as connected with a note instead of an error.
+      if (r.status === 401 && /restricted_api_key/i.test(text)) {
+        return new Response(JSON.stringify({
+          configured: true,
+          connected: true,
+          restricted: true,
+          domains: [],
+          checkedAt,
+          keyMasked: maskKey(apiKey),
+          note: 'API key is send-only (restricted) — cannot list domains.',
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
       const body: StatusResponse = {
         configured: true,
         connected: false,
