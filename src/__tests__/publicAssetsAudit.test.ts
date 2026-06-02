@@ -29,6 +29,8 @@ const REQUIRED_PUBLIC_FILES = [
   'og-image.jpg',
   'logo.png',
   'placeholder.svg',
+  // PWA manifest — referenced by index.html <link rel="manifest"> and /_headers
+  'manifest.webmanifest',
   // Google Search Console verification
   'googled1e09a6f0ff15d8e.html',
   // IndexNow keys (filename === key contents, requested verbatim by Bing/IndexNow)
