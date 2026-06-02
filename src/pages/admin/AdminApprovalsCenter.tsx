@@ -430,13 +430,12 @@ const AdminApprovalsCenter: React.FC = () => {
   const handleBulk = async (action: 'approve' | 'reject') => {
     if (!user?.id || selectedEntityAccess.length === 0) return;
     setBulkBusy(true);
-    let ok = 0, fail = 0;
-    for (const r of selectedEntityAccess) {
-      const res = await reviewEntityAccessRequest({
-        requestId: r.id, reviewerUserId: user.id, action,
-      });
-      if (res.ok) ok += 1; else fail += 1;
-    }
+    const { ok, fail } = await runBulkReview({
+      items: selectedEntityAccess.map((r) => ({ id: r.id, category: r.category })),
+      action,
+      reviewerUserId: user.id,
+      reviewFn: reviewEntityAccessRequest,
+    });
     setBulkBusy(false);
     if (ok > 0) {
       toast.success(
@@ -453,7 +452,7 @@ const AdminApprovalsCenter: React.FC = () => {
   };
 
   // ── Export helpers (respect current filter/search/date range) ──
-  const exportRows = useMemo(() => unified.map((r) => {
+  const exportRows = useMemo<ExportRow[]>(() => unified.map((r) => {
     const c = CATEGORIES.find((cc) => cc.key === r.category)!;
     return {
       category: isRTL ? c.ar : c.en,
@@ -465,22 +464,8 @@ const AdminApprovalsCenter: React.FC = () => {
   }), [unified, isRTL]);
 
   const downloadCSV = () => {
-    const headers = isRTL
-      ? ['النوع', 'المعرف', 'الاسم', 'التفاصيل', 'تاريخ الإنشاء']
-      : ['Category', 'Ref ID', 'Name', 'Detail', 'Created At'];
-    const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
-    const lines = [
-      headers.map(escape).join(','),
-      ...exportRows.map((r) => [r.category, r.ref_id, r.name, r.detail, r.created_at].map(escape).join(',')),
-    ];
-    const csv = '\uFEFF' + lines.join('\n'); // BOM for Arabic in Excel
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `approvals-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const csv = buildApprovalsCsv(exportRows, isRTL);
+    downloadTextFile(csv, `approvals-${new Date().toISOString().slice(0, 10)}.csv`);
     toast.success(isRTL ? `تم تصدير ${exportRows.length} صف` : `Exported ${exportRows.length} rows`);
   };
 
@@ -491,30 +476,11 @@ const AdminApprovalsCenter: React.FC = () => {
       : ['Category', 'Ref ID', 'Name', 'Detail', 'Created At'];
     const w = window.open('', '_blank', 'width=900,height=700');
     if (!w) { toast.error(isRTL ? 'تعذّر فتح نافذة الطباعة' : 'Print window blocked'); return; }
-    const rowsHtml = exportRows.map((r) => `
-      <tr>
-        <td>${escapeHtml(r.category)}</td>
-        <td>${escapeHtml(r.ref_id)}</td>
-        <td>${escapeHtml(r.name)}</td>
-        <td>${escapeHtml(r.detail)}</td>
-        <td>${escapeHtml(r.created_at)}</td>
-      </tr>`).join('');
-    w.document.write(`<!doctype html><html dir="${isRTL ? 'rtl' : 'ltr'}" lang="${isRTL ? 'ar' : 'en'}"><head><meta charset="utf-8" /><title>${title}</title>
-      <style>
-        body { font-family: -apple-system, "Segoe UI", Tahoma, sans-serif; padding: 24px; color: #111; }
-        h1 { font-size: 18px; margin: 0 0 4px; }
-        .meta { font-size: 11px; color: #555; margin-bottom: 16px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: ${isRTL ? 'right' : 'left'}; }
-        th { background: #f3f4f6; }
-        tr:nth-child(even) td { background: #fafafa; }
-        @media print { body { padding: 0; } }
-      </style></head><body>
-      <h1>${title}</h1>
-      <div class="meta">${isRTL ? 'تاريخ التصدير' : 'Exported'}: ${new Date().toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')} · ${exportRows.length} ${isRTL ? 'سجل' : 'records'}</div>
-      <table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table>
-      <script>window.onload = () => { window.print(); };</script>
-      </body></html>`);
+    const meta = `${isRTL ? 'تاريخ التصدير' : 'Exported'}: ${new Date().toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')} · ${exportRows.length} ${isRTL ? 'سجل' : 'records'}`;
+    w.document.write(buildPdfHtml({
+      title, isRTL, headers, meta,
+      rows: exportRows.map((r) => [r.category, r.ref_id, r.name, r.detail, r.created_at]),
+    }));
     w.document.close();
   };
 
