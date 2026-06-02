@@ -125,3 +125,7 @@ export {
   getTransferPrimaryManagerMessageEntries,
 } from './services/transferPrimaryManagerMessages';
 export type { TransferPrimaryManagerLang } from './services/transferPrimaryManagerMessages';
+
+// SYSTEM-ACCESS-GOVERNANCE-2: Super Admin business selector for module overrides
+export { listBusinessesForSystemAccessOverride } from './services/listBusinessesForSystemAccessOverride';
+export type { SystemAccessOverrideBusiness } from './services/listBusinessesForSystemAccessOverride';
