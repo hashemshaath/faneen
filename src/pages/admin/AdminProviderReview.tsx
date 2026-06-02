@@ -235,23 +235,6 @@ export default function AdminProviderReview() {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
-  const renderSectors = (ids: string[] | null) => {
-    if (!ids || !ids.length) return null;
-    return (
-      <div className="flex flex-wrap gap-1.5">
-        {ids.map((id) => {
-          const s = getSectorById(id as SectorId);
-          return (
-            <Badge key={id} variant="outline" className="gap-1 text-[11px]">
-              <Tag className="h-3 w-3" />
-              {s ? (language === 'ar' ? s.name_ar : s.name_en) : id}
-            </Badge>
-          );
-        })}
-      </div>
-    );
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6 max-w-[1600px] mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
