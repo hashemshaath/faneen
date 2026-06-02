@@ -37,7 +37,40 @@ interface SystemSetting {
   category: string;
   isSecret?: boolean;
   importance?: 'critical' | 'normal';
+  /**
+   * `wired` settings are actually consumed by runtime code. Anything else is
+   * displayed as a deferred / read-only placeholder so admins are not misled
+   * into believing a fake control affects the platform.
+   * ADMIN-SYSTEM-SETTINGS-DEEP-AUDIT-1 Phase 2.
+   */
+  wired?: boolean;
+  /** Optional Arabic/English note explaining why a control is deferred. */
+  deferredNote?: { ar: string; en: string };
 }
+
+/* ═══════════ ADMIN-SYSTEM-SETTINGS-DEEP-AUDIT-1 Phase 2 — wired keys ═══════════ */
+/** Only these system-tab keys have a real runtime consumer. */
+export const WIRED_SYSTEM_SETTING_KEYS = new Set<string>(['robots_txt_custom']);
+
+const DEFERRED_DEFAULT_AR = 'غير مفعّل حاليًا — لا يؤثر على النظام بعد';
+const DEFERRED_DEFAULT_EN = 'Not wired to runtime — has no effect yet';
+
+const SUPABASE_CONTROLLED_NOTE = {
+  ar: 'تُضبط هذه الإعداد من تكوين المصادقة في Supabase وليس من هذه الصفحة.',
+  en: 'Controlled by Supabase Auth configuration, not from this page.',
+};
+const MAINTENANCE_NOTE = {
+  ar: 'لا يوجد بوّابة تشغيل حقيقية بعد. لا تستخدم هذا كمفتاح إيقاف.',
+  en: 'No real runtime gate exists yet. Do not rely on this as a kill switch.',
+};
+const STATIC_PLATFORM_NOTE = {
+  ar: 'ثابت حاليًا في الواجهة/الميتاداتا ولا يُقرأ من قاعدة البيانات.',
+  en: 'Currently static in UI/metadata — not read from the database.',
+};
+const ANALYTICS_ENV_NOTE = {
+  ar: 'يُضبط من متغير البيئة VITE_GTM_ID. لا تستخدم حقلاً يدويًا هنا.',
+  en: 'Configured via VITE_GTM_ID env variable. Do not set manually here.',
+};
 
 /* ═══════════ Default Settings ═══════════ */
 const defaultSettings: SystemSetting[] = [
