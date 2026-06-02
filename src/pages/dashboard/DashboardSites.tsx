@@ -604,6 +604,12 @@ export default function DashboardSites() {
                         {linkedCount > 0 && <ArrowUpRight className="w-2.5 h-2.5" />}
                       </button>
                       <div className="flex items-center gap-0.5">
+                          {!isArchived && (
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10"
+                              onClick={() => goToNewContract(s.id)} title={isRTL ? 'إنشاء عقد لهذا الموقع' : 'New contract for this site'}>
+                              <FilePlus2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
                         {s.map_url && (
                           <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
                             <a href={s.map_url} target="_blank" rel="noopener noreferrer" title={isRTL ? 'فتح الخريطة' : 'Open map'}>
