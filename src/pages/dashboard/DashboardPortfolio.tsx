@@ -252,8 +252,11 @@ const DashboardPortfolio = () => {
     title_ar: '', title_en: '', description_ar: '', description_en: '',
     media_url: '', media_type: 'image' as const, is_featured: false,
     category: 'general', project_location: '', completion_date: '',
+    tags: '' as string, client_name: '', project_value: '' as string,
+    project_duration_days: '' as string, external_url: '',
   }), []);
   const [form, setForm] = useState(emptyForm);
+  const [sortBy, setSortBy] = useState<'order' | 'views' | 'shares' | 'recent'>('order');
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
