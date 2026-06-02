@@ -417,8 +417,8 @@ const AdminApprovalsCenter: React.FC = () => {
     () => unified.filter((r) => selected[rowKey(r)]),
     [unified, selected],
   );
-  const selectedEntityAccess = useMemo(
-    () => selectedRows.filter((r) => r.category === 'entity_access'),
+  const selectedActionable = useMemo(
+    () => selectedRows.filter((r) => ACTIONABLE_CATEGORIES.has(r.category)),
     [selectedRows],
   );
   const toggleRow = (it: UnifiedRow) =>
@@ -432,15 +432,15 @@ const AdminApprovalsCenter: React.FC = () => {
   };
   const clearSelection = () => setSelected({});
 
-  // ── Bulk approve/reject (entity_access only; others have no inline action) ──
+  // ── Bulk approve/reject across all actionable categories ──
   const handleBulk = async (action: 'approve' | 'reject') => {
-    if (!user?.id || selectedEntityAccess.length === 0) return;
+    if (!user?.id || selectedActionable.length === 0) return;
     setBulkBusy(true);
     const { ok, fail } = await runBulkReview({
-      items: selectedEntityAccess.map((r) => ({ id: r.id, category: r.category })),
+      items: selectedActionable.map((r) => ({ id: r.id, category: r.category })),
       action,
       reviewerUserId: user.id,
-      reviewFn: reviewEntityAccessRequest,
+      getReviewer,
     });
     setBulkBusy(false);
     if (ok > 0) {
@@ -453,7 +453,9 @@ const AdminApprovalsCenter: React.FC = () => {
       toast.error(isRTL ? `فشل التنفيذ على ${fail} عناصر` : `Failed on ${fail} items`);
     }
     clearSelection();
-    queries.entity_access.refetch();
+    // Refetch every category whose items were affected (cheap; only 5 queries total)
+    const affected = new Set(selectedActionable.map((r) => r.category));
+    affected.forEach((cat) => queries[cat as ApprovalCategoryKey].refetch());
     queryClient.invalidateQueries({ queryKey: ['approvals-audit'] });
   };
 
