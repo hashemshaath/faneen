@@ -11,6 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { buildCsv, downloadCsv, defaultRange, type DateRange } from '@/lib/admin-reports-csv';
 import { Loader2, Download, ShieldAlert, FileText, Building2, Activity } from 'lucide-react';
 import { toast } from 'sonner';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 
 type SourceKey = 'admin' | 'business' | 'security' | 'contract_amendment';
 
@@ -123,26 +125,39 @@ export default function AdminAuditLog() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 p-4 md:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold">
-              <Bi ar="سجل التدقيق الموحّد" en="Unified Audit Log" />
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              <Bi ar="جميع الأنشطة الإدارية، المنشآت، الأمن، وتعديلات العقود" en="Admin, business, security, and contract amendment activity" />
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Input type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} className="h-10 w-auto" />
-            <Input type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} className="h-10 w-auto" />
-            <Button variant="outline" onClick={onExport} disabled={!visible.length}>
-              <Download className="me-2 h-4 w-4" />
-              <Bi ar="تصدير CSV" en="Export CSV" />
-            </Button>
-            {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-          </div>
-        </div>
+      <div className="space-y-6 p-4 md:p-6 max-w-[1600px] mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+        <AdminPageHeader
+          tone="info"
+          icon={ShieldAlert}
+          eyebrow={isRTL ? 'لوحة الإدارة' : 'Admin Console'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'سجل التدقيق' : 'Audit Log' },
+          ]}
+          title={isRTL ? 'سجل التدقيق الموحّد' : 'Unified Audit Log'}
+          subtitle={isRTL
+            ? 'جميع الأنشطة الإدارية، المنشآت، الأمن، وتعديلات العقود في مكان واحد.'
+            : 'Admin, business, security, and contract amendment activity — one feed.'}
+          actions={
+            <>
+              <Input type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} className="h-10 w-auto rounded-xl text-xs" />
+              <Input type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} className="h-10 w-auto rounded-xl text-xs" />
+              <Button variant="outline" size="sm" className="h-10 rounded-xl gap-1.5" onClick={onExport} disabled={!visible.length}>
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline"><Bi ar="تصدير CSV" en="Export CSV" /></span>
+              </Button>
+              {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            </>
+          }
+          kpiSlot={
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <AdminKpiCard label={isRTL ? SOURCE_META.admin.ar : SOURCE_META.admin.en} value={counts.admin} icon={ShieldAlert} tone="primary" />
+              <AdminKpiCard label={isRTL ? SOURCE_META.business.ar : SOURCE_META.business.en} value={counts.business} icon={Building2} tone="success" />
+              <AdminKpiCard label={isRTL ? SOURCE_META.security.ar : SOURCE_META.security.en} value={counts.security} icon={ShieldAlert} tone="destructive" />
+              <AdminKpiCard label={isRTL ? SOURCE_META.contract_amendment.ar : SOURCE_META.contract_amendment.en} value={counts.contract_amendment} icon={FileText} tone="warning" />
+            </div>
+          }
+        />
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {(Object.keys(SOURCE_META) as SourceKey[]).map((k) => {
