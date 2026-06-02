@@ -2102,6 +2102,9 @@ const DashboardContracts = () => {
                     queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
                   }}
                 />
+                {selectedSiteId && (
+                  <SiteGovernmentDataPanel siteId={selectedSiteId} isRTL={isRTL} />
+                )}
               </div>
 
               {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
