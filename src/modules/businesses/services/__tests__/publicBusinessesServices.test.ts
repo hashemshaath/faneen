@@ -52,17 +52,20 @@ beforeEach(() => {
 });
 
 describe('getPublicBusinessByUsername', () => {
-  it("from('businesses').select(select).eq(username).eq(is_active,true).maybeSingle() by default", async () => {
+  it("from('businesses_public').select(select).eq(username).maybeSingle() by default", async () => {
     await getPublicBusinessByUsername({ username: 'acme', select: '*, categories(*)' });
-    expect(fromMock).toHaveBeenCalledWith('businesses');
+    // PII-MASKING: routes through the masked `businesses_public` view, which
+    // already pre-filters is_active+published+!demo. The legacy `activeOnly`
+    // option is therefore a no-op on the wrapper.
+    expect(fromMock).toHaveBeenCalledWith('businesses_public');
     expect(builder.select).toHaveBeenCalledWith('*, categories(*)');
-    expect(builder.eq).toHaveBeenNthCalledWith(1, 'username', 'acme');
-    expect(builder.eq).toHaveBeenNthCalledWith(2, 'is_active', true);
+    expect(builder.eq).toHaveBeenCalledTimes(1);
+    expect(builder.eq).toHaveBeenCalledWith('username', 'acme');
     expect(builder.maybeSingle).toHaveBeenCalled();
     expect(builder.single).not.toHaveBeenCalled();
   });
 
-  it('omits is_active filter when activeOnly=false', async () => {
+  it('ignores activeOnly because the public view pre-filters is_active', async () => {
     await getPublicBusinessByUsername({ username: 'acme', activeOnly: false });
     expect(builder.eq).toHaveBeenCalledTimes(1);
     expect(builder.eq).toHaveBeenCalledWith('username', 'acme');
