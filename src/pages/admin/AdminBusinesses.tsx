@@ -962,7 +962,7 @@ const AdminBusinesses = () => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [editingBiz, servicesPanel, selected.size, refetchBusinesses, isRTL, language]);
+  }, [editingBiz, servicesPanel, selected.size, refetchBusinesses, isRTL, language, filtered]);
   const autoFillTranslations = useCallback(async () => {
     if (!editingBiz) return;
     setAutoTranslating(true);
