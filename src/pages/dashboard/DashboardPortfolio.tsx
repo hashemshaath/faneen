@@ -523,11 +523,12 @@ const DashboardPortfolio = () => {
 
         {/* ═══ Stats ═══ */}
         {items.length > 0 && (
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
             {[
               { l: isRTL ? 'إجمالي' : 'Total', v: stats.total, icon: ImageIcon, cls: 'text-primary bg-primary/10' },
               { l: isRTL ? 'مميزة' : 'Featured', v: stats.featured, icon: Star, cls: 'text-accent bg-accent/10' },
-              { l: isRTL ? 'عادية' : 'Regular', v: stats.regular, icon: Eye, cls: 'text-muted-foreground bg-muted' },
+              { l: isRTL ? 'المشاهدات' : 'Views', v: stats.totalViews, icon: Eye, cls: 'text-primary bg-primary/10' },
+              { l: isRTL ? 'المشاركات' : 'Shares', v: stats.totalShares, icon: Share2, cls: 'text-accent bg-accent/10' },
               { l: isRTL ? 'تصنيفات' : 'Categories', v: stats.usedCats, icon: FolderOpen, cls: 'text-primary bg-primary/10' },
               { l: isRTL ? 'الاكتمال' : 'Complete', v: stats.completeness, icon: BarChart3, cls: 'text-primary bg-primary/10', suffix: '%' },
             ].map((s, i) => (
