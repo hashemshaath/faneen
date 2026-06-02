@@ -52,17 +52,20 @@ beforeEach(() => {
 });
 
 describe('getPublicBusinessByUsername', () => {
-  it("from('businesses').select(select).eq(username).eq(is_active,true).maybeSingle() by default", async () => {
+  it("from('businesses_public').select(select).eq(username).maybeSingle() by default", async () => {
     await getPublicBusinessByUsername({ username: 'acme', select: '*, categories(*)' });
-    expect(fromMock).toHaveBeenCalledWith('businesses');
+    // PII-MASKING: routes through the masked `businesses_public` view, which
+    // already pre-filters is_active+published+!demo. The legacy `activeOnly`
+    // option is therefore a no-op on the wrapper.
+    expect(fromMock).toHaveBeenCalledWith('businesses_public');
     expect(builder.select).toHaveBeenCalledWith('*, categories(*)');
-    expect(builder.eq).toHaveBeenNthCalledWith(1, 'username', 'acme');
-    expect(builder.eq).toHaveBeenNthCalledWith(2, 'is_active', true);
+    expect(builder.eq).toHaveBeenCalledTimes(1);
+    expect(builder.eq).toHaveBeenCalledWith('username', 'acme');
     expect(builder.maybeSingle).toHaveBeenCalled();
     expect(builder.single).not.toHaveBeenCalled();
   });
 
-  it('omits is_active filter when activeOnly=false', async () => {
+  it('ignores activeOnly because the public view pre-filters is_active', async () => {
     await getPublicBusinessByUsername({ username: 'acme', activeOnly: false });
     expect(builder.eq).toHaveBeenCalledTimes(1);
     expect(builder.eq).toHaveBeenCalledWith('username', 'acme');
@@ -187,14 +190,38 @@ describe('P-21 public/SEO businesses read migration', () => {
       'cover_url, logo_url, is_verified, membership_tier, approval_status',
       'rating_avg, rating_count, created_at',
       'website',
-      'address, region, district, street_name, building_number, additional_number',
+      // PII-MASKING — building_number/additional_number are no longer fetched
+      // from the public view; only the safe address subset is exposed.
+      'address, region, district, street_name',
       'latitude, longitude',
-      'contact_person, phone, mobile, unified_number, customer_service_phone, email',
       'categories(name_ar, name_en, slug)',
-      'cities(name_ar, name_en, slug)',
+      // cities has no `slug` column in this schema; embed name_ar/_en only.
+      'cities(name_ar, name_en)',
       'countries(name_ar, name_en, code)',
     ]) {
       expect(src).toContain(col);
+    }
+    // PII-MASKING — sensitive contact fields must never appear in the public
+    // profile select. They are fetched separately via the contact-reveal flow
+    // when the viewer is authenticated. Extract just the PUBLIC_BUSINESS_SELECT
+    // literal so banned tokens inside surrounding comments don't trip the check.
+    const selectMatch = src.match(
+      /const PUBLIC_BUSINESS_SELECT\s*=\s*([\s\S]*?);/,
+    );
+    expect(selectMatch, 'PUBLIC_BUSINESS_SELECT initializer not found').toBeTruthy();
+    const selectLiteral = (selectMatch?.[1] ?? '').replace(/\/\/.*$/gm, '');
+    for (const banned of [
+      'phone',
+      'mobile',
+      'email',
+      'contact_person',
+      'unified_number',
+      'customer_service_phone',
+    ]) {
+      expect(
+        selectLiteral.includes(banned),
+        `PUBLIC_BUSINESS_SELECT must not include ${banned}`,
+      ).toBe(false);
     }
     expect(src).toContain('queryKey: ["business", username]');
     expect(src).toContain('enabled: !!username');
