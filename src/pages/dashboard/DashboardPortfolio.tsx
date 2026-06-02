@@ -767,6 +767,8 @@ const DashboardPortfolio = () => {
                     onToggleFeatured={item => toggleFeaturedMut.mutate(item)}
                     onDuplicate={duplicateItem}
                     onPreview={url => setPreviewUrl(url)}
+                    onShare={handleShare}
+                    onOpenPublic={handleOpenPublic}
                     onSelect={toggleSelect} />
                 ))}
               </div>
