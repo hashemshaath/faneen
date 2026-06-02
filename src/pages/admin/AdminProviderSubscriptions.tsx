@@ -30,7 +30,7 @@ interface AdminTxRow {
 }
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Crown, Wallet, RefreshCw, Search, ChevronRight, Undo2 } from 'lucide-react';
+import { Wallet, RefreshCw, Search, ChevronRight, Undo2, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { trackEvent } from '@/lib/analytics';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
@@ -55,11 +55,18 @@ interface Sub {
   plan_id: string; status: string; lead_credits_balance: number;
   current_period_start: string | null; current_period_end: string | null; updated_at: string;
   plan: Plan | null;
-  business: { id: string; name_ar: string; user_id: string | null } | null;
+  business: { id: string; ref_id: string | null; name_ar: string; user_id: string | null; membership_tier: string | null } | null;
 }
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'نشطة', paused: 'موقوفة', expired: 'منتهية', cancelled: 'ملغاة',
+};
+
+const PLATFORM_TIER_LABEL: Record<string, string> = {
+  free: 'مجانية',
+  basic: 'أساسية',
+  pro: 'احترافية',
+  enterprise: 'مؤسسية',
 };
 
 const AdminProviderSubscriptions: React.FC = () => {
@@ -106,10 +113,10 @@ const AdminProviderSubscriptions: React.FC = () => {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-              <Crown className="h-5 w-5 text-primary" /> عضويات المزودين
+              <Wallet className="h-5 w-5 text-primary" /> اشتراكات رصيد فرص التواصل (للمزودين)
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              إدارة خطط المزودين وأرصدة فرص التواصل.
+              إدارة خطط المزودين وأرصدة فرص التواصل. هذه الخطط مستقلة عن «عضوية المنصة» الظاهرة في حساب المنشأة.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -121,6 +128,13 @@ const AdminProviderSubscriptions: React.FC = () => {
               <RefreshCw className={`h-3.5 w-3.5 ${subsQ.isFetching ? 'animate-spin' : ''}`} /> تحديث
             </Button>
           </div>
+        </div>
+
+        <div className="rounded-lg border border-info/30 bg-info/5 p-3 flex items-start gap-2 text-xs">
+          <Info className="h-4 w-4 text-info shrink-0 mt-0.5" />
+          <p className="text-muted-foreground leading-relaxed">
+            <span className="font-medium text-foreground">تنبيه:</span> «خطة المزود» هنا تخص رصيد فرص التواصل فقط (basic/pro …) ولا تعني أن المنشأة لديها عضوية احترافية على المنصة. عمود «عضوية المنصة» أدناه يعرض المستوى الفعلي للعضوية لمقارنته مع خطة المزود.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -136,8 +150,9 @@ const AdminProviderSubscriptions: React.FC = () => {
                     <tr>
                       <th className="text-start py-2 px-2">المنشأة</th>
                       <th className="text-start py-2 px-2">المرجع</th>
-                      <th className="text-start py-2 px-2">الخطة</th>
-                      <th className="text-start py-2 px-2">الحالة</th>
+                      <th className="text-start py-2 px-2">خطة المزود</th>
+                      <th className="text-start py-2 px-2">حالة خطة المزود</th>
+                      <th className="text-start py-2 px-2">عضوية المنصة</th>
                       <th className="text-start py-2 px-2">الرصيد</th>
                       <th className="text-start py-2 px-2">آخر تحديث</th>
                       <th></th>
@@ -146,7 +161,12 @@ const AdminProviderSubscriptions: React.FC = () => {
                   <tbody>
                     {filtered.map((s) => (
                       <tr key={s.id} className={`border-t border-border cursor-pointer hover:bg-muted/40 ${editId === s.id ? 'bg-primary/5' : ''}`} onClick={() => setEditId(s.id)}>
-                        <td className="py-2 px-2 font-medium truncate max-w-[200px]">{s.business?.name_ar ?? '—'}</td>
+                        <td className="py-2 px-2 font-medium truncate max-w-[200px]">
+                          <div>{s.business?.name_ar ?? '—'}</div>
+                          {s.business?.ref_id && (
+                            <div className="tech-content text-[10px] text-muted-foreground">{s.business.ref_id}</div>
+                          )}
+                        </td>
                         <td className="py-2 px-2">
                           {s.ref_id ? (
                             <span onClick={(e) => e.stopPropagation()}>
@@ -161,6 +181,18 @@ const AdminProviderSubscriptions: React.FC = () => {
                         </td>
                         <td className="py-2 px-2">{s.plan?.name_ar ?? '—'}</td>
                         <td className="py-2 px-2"><span className="text-[10px] px-2 py-0.5 rounded-full border border-border bg-muted/50">{STATUS_LABEL[s.status] ?? s.status}</span></td>
+                        <td className="py-2 px-2">
+                          {(() => {
+                            const tier = s.business?.membership_tier ?? 'free';
+                            const label = PLATFORM_TIER_LABEL[tier] ?? tier;
+                            const isFree = tier === 'free';
+                            return (
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full border ${isFree ? 'border-muted-foreground/30 bg-muted/30 text-muted-foreground' : 'border-success/40 bg-success/10 text-success'}`}>
+                                {label}
+                              </span>
+                            );
+                          })()}
+                        </td>
                         <td className="py-2 px-2 tech-content font-medium">{s.lead_credits_balance}</td>
                         <td className="py-2 px-2 tech-content text-muted-foreground">{new Date(s.updated_at).toLocaleDateString('ar-SA-u-nu-latn')}</td>
                         <td className="py-2 px-2 text-end"><ChevronRight className="h-4 w-4 text-muted-foreground" /></td>
@@ -278,7 +310,15 @@ const ManageSub: React.FC<{ sub: Sub; plans: Plan[]; onDone: () => void; adminId
     <div className="space-y-4">
       <div>
         <h3 className="font-semibold text-sm">{sub.business?.name_ar ?? '—'}</h3>
-        <p className="text-xs text-muted-foreground tech-content">#{sub.business_id.slice(-6)}</p>
+        <div className="flex items-center gap-2 flex-wrap mt-1">
+          {sub.business?.ref_id && (
+            <span className="text-[10px] tech-content px-1.5 py-0.5 rounded border border-border bg-muted/40">{sub.business.ref_id}</span>
+          )}
+          <span className="text-[10px] text-muted-foreground">عضوية المنصة:</span>
+          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${(sub.business?.membership_tier ?? 'free') === 'free' ? 'border-muted-foreground/30 bg-muted/30 text-muted-foreground' : 'border-success/40 bg-success/10 text-success'}`}>
+            {PLATFORM_TIER_LABEL[sub.business?.membership_tier ?? 'free'] ?? (sub.business?.membership_tier ?? 'free')}
+          </span>
+        </div>
       </div>
 
       <div className="space-y-2">
