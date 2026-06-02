@@ -125,11 +125,12 @@ describe('SYSTEM-ACCESS-MEMBERSHIP-SYNC-1', () => {
     expect(src).not.toMatch(/SERVICE_ROLE/);
   });
 
-  it('UI surfaces the synced + membership-block + admin-disabled states', () => {
+  it('UI surfaces the synced + admin-disabled states (admin direct toggle bypasses membership)', () => {
     const src = read('src/pages/admin/AdminSystemAccess.tsx');
     expect(src).toMatch(/system-access-sync-indicator/);
     expect(src).toMatch(/ACCESS_LABELS\.synced/);
-    expect(src).toMatch(/blocked_by_membership/);
+    // ADMIN-DIRECT-TOGGLE-1 — admin actions always bypass membership gating.
+    expect(src).toMatch(/bypassMembership:\s*!!isAdmin/);
   });
 
   it('no inventory/accounting/supplier-payment scope creep was introduced', () => {
