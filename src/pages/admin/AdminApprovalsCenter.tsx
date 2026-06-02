@@ -4,11 +4,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ShieldCheck, UserPlus, Crown, ArrowUp, AtSign, Inbox,
   ExternalLink, RefreshCw, Loader2, CheckCircle2, Clock, Building2,
-  Check, X, History, ShieldAlert,
+  Check, X, History, ShieldAlert, Search, Filter,
 } from 'lucide-react';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
