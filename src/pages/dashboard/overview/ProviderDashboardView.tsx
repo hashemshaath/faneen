@@ -28,6 +28,7 @@ import { ProviderEngagementPreviews } from '@/components/dashboard/ProviderEngag
 import { ProviderTipsCard } from '@/components/dashboard/ProviderTipsCard';
 import { ProviderServicesStatusCard } from '@/components/dashboard/ProviderServicesStatusCard';
 import { ProviderSmartActionFooter } from '@/components/dashboard/ProviderSmartActionFooter';
+import { ProviderStatsOverview } from '@/components/dashboard/ProviderStatsOverview';
 import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import {
@@ -262,6 +263,23 @@ export default function ProviderDashboardView({
         </div>
       </section>
 
+      {/* B — Performance overview (KPIs + secondary metrics, professional B2B) */}
+      <ProviderStatsOverview
+        isRTL={isRTL}
+        activeContracts={stats?.activeContracts ?? 0}
+        totalContracts={stats?.contracts ?? 0}
+        services={stats?.services ?? 0}
+        avgRating={stats?.avgRating ?? '0.0'}
+        reviews={stats?.reviews ?? 0}
+        completionRate={completionRate}
+        completedContracts={stats?.completedContracts ?? 0}
+        portfolio={stats?.portfolio ?? 0}
+        projects={stats?.projects ?? 0}
+        promotions={stats?.promotions ?? 0}
+        messages={stats?.messages ?? 0}
+        operations={stats?.operations ?? 0}
+      />
+
       {/* Widgets row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <OverdueAlerts isRTL={isRTL} userId={user.id} />
@@ -295,41 +313,6 @@ export default function ProviderDashboardView({
           businessName={isRTL ? business?.name_ar : (business?.name_en || business?.name_ar)}
         />
       )}
-
-      {/* B — Real-only smart stats */}
-      <div className="dash-bento">
-        <BentoTile
-          variant="feature"
-          icon={FileText}
-          label={isRTL ? 'العقود النشطة' : 'Active Contracts'}
-          value={stats?.activeContracts ?? 0}
-          sub={`${isRTL ? 'من أصل' : 'of'} ${animatedContracts}`}
-          to="/dashboard/contracts"
-        />
-        <BentoTile
-          variant="wide"
-          icon={Wrench}
-          label={isRTL ? 'الخدمات النشطة' : 'Active services'}
-          value={stats?.services ?? 0}
-          sub={isRTL ? 'انتقل لإدارتها' : 'Manage them'}
-          to="/dashboard/services"
-        />
-        <BentoTile
-          variant="tile"
-          icon={Star}
-          label={isRTL ? 'التقييم' : 'Rating'}
-          value={stats?.avgRating ?? '0.0'}
-          sub={`${stats?.reviews ?? 0} ${isRTL ? 'تقييم' : 'reviews'}`}
-          to="/dashboard/reviews"
-        />
-        <BentoTile
-          variant="tile"
-          icon={Target}
-          label={isRTL ? 'معدل الإنجاز' : 'Completion'}
-          value={`${completionRate}%`}
-          sub={`${stats?.completedContracts ?? 0} ${isRTL ? 'مكتمل' : 'done'}`}
-        />
-      </div>
 
       {/* Charts — only when real revenue data exists */}
       {hasRevenueData && (
