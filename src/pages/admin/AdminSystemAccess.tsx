@@ -138,6 +138,38 @@ const AdminSystemAccess: React.FC = () => {
         actingUserId: user?.id ?? null,
         businessId: vars.scopeType === 'entity' ? vars.scopeValue : null,
       }),
+    // Optimistic update — flip the Switch instantly and roll back on failure.
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: ['system-module-overrides'] });
+      const previous = qc.getQueryData<SystemModuleOverride[]>(['system-module-overrides']);
+      qc.setQueryData<SystemModuleOverride[]>(['system-module-overrides'], (old) => {
+        const list = old ? [...old] : [];
+        const idx = list.findIndex(
+          (o) =>
+            o.module_key === vars.moduleKey &&
+            o.scope_type === vars.scopeType &&
+            (o.scope_value ?? null) === (vars.scopeValue ?? null),
+        );
+        const stub: SystemModuleOverride = {
+          id: idx >= 0 ? list[idx].id : `optimistic-${vars.moduleKey}`,
+          module_key: vars.moduleKey,
+          scope_type: vars.scopeType,
+          scope_value: vars.scopeValue,
+          enabled: vars.enabled,
+          reason: idx >= 0 ? list[idx].reason : null,
+          set_by: idx >= 0 ? list[idx].set_by : null,
+          updated_at: new Date().toISOString(),
+        };
+        if (idx >= 0) list[idx] = stub; else list.push(stub);
+        return list;
+      });
+      return { previous };
+    },
+    onError: (e: unknown, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(['system-module-overrides'], ctx.previous);
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(msg || (isRTL ? 'فشل الحفظ' : 'Save failed'));
+    },
     onSuccess: (res, vars) => {
       if (!res.ok && res.blocked_by_membership) {
         // Super admin gets an inline force-override card; others see the toast.
@@ -168,10 +200,6 @@ const AdminSystemAccess: React.FC = () => {
       });
       setLastSyncAt(Date.now());
       toast.success(`${isRTL ? 'تم الحفظ' : 'Saved'} · ${isRTL ? ACCESS_LABELS.synced.ar : ACCESS_LABELS.synced.en}`);
-    },
-    onError: (e: unknown) => {
-      const msg = e instanceof Error ? e.message : String(e);
-      toast.error(msg || (isRTL ? 'فشل الحفظ' : 'Save failed'));
     },
   });
 
