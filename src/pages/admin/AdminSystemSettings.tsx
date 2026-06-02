@@ -37,26 +37,59 @@ interface SystemSetting {
   category: string;
   isSecret?: boolean;
   importance?: 'critical' | 'normal';
+  /**
+   * `wired` settings are actually consumed by runtime code. Anything else is
+   * displayed as a deferred / read-only placeholder so admins are not misled
+   * into believing a fake control affects the platform.
+   * ADMIN-SYSTEM-SETTINGS-DEEP-AUDIT-1 Phase 2.
+   */
+  wired?: boolean;
+  /** Optional Arabic/English note explaining why a control is deferred. */
+  deferredNote?: { ar: string; en: string };
 }
+
+/* ═══════════ ADMIN-SYSTEM-SETTINGS-DEEP-AUDIT-1 Phase 2 — wired keys ═══════════ */
+/** Only these system-tab keys have a real runtime consumer. */
+export const WIRED_SYSTEM_SETTING_KEYS = new Set<string>(['robots_txt_custom']);
+
+const DEFERRED_DEFAULT_AR = 'غير مفعّل حاليًا — لا يؤثر على النظام بعد';
+const DEFERRED_DEFAULT_EN = 'Not wired to runtime — has no effect yet';
+
+const SUPABASE_CONTROLLED_NOTE = {
+  ar: 'تُضبط هذه الإعداد من تكوين المصادقة في Supabase وليس من هذه الصفحة.',
+  en: 'Controlled by Supabase Auth configuration, not from this page.',
+};
+const MAINTENANCE_NOTE = {
+  ar: 'لا يوجد بوّابة تشغيل حقيقية بعد. لا تستخدم هذا كمفتاح إيقاف.',
+  en: 'No real runtime gate exists yet. Do not rely on this as a kill switch.',
+};
+const STATIC_PLATFORM_NOTE = {
+  ar: 'ثابت حاليًا في الواجهة/الميتاداتا ولا يُقرأ من قاعدة البيانات.',
+  en: 'Currently static in UI/metadata — not read from the database.',
+};
+const ANALYTICS_ENV_NOTE = {
+  ar: 'يُضبط من متغير البيئة VITE_GTM_ID. لا تستخدم حقلاً يدويًا هنا.',
+  en: 'Configured via VITE_GTM_ID env variable. Do not set manually here.',
+};
 
 /* ═══════════ Default Settings ═══════════ */
 const defaultSettings: SystemSetting[] = [
-  // ── Auth ──
-  { key: 'allow_registration', value: 'true', labelAr: 'السماح بالتسجيل الجديد', labelEn: 'Allow New Registrations', descAr: 'تفعيل أو تعطيل تسجيل مستخدمين جدد', descEn: 'Enable or disable new user registrations', type: 'toggle', category: 'auth', importance: 'critical' },
-  { key: 'require_email_verification', value: 'true', labelAr: 'تأكيد البريد الإلكتروني', labelEn: 'Require Email Verification', descAr: 'إلزام المستخدمين بتأكيد بريدهم الإلكتروني', descEn: 'Require users to verify their email', type: 'toggle', category: 'auth' },
-  { key: 'max_login_attempts', value: '5', labelAr: 'محاولات تسجيل الدخول', labelEn: 'Max Login Attempts', descAr: 'أقصى عدد محاولات قبل قفل الحساب مؤقتاً', descEn: 'Max attempts before temporary lockout', type: 'number', category: 'auth' },
-  { key: 'session_timeout_hours', value: '24', labelAr: 'مدة الجلسة (ساعات)', labelEn: 'Session Timeout (hours)', descAr: 'المدة قبل انتهاء صلاحية الجلسة', descEn: 'Duration before session expires', type: 'number', category: 'auth' },
-  { key: 'enable_google_auth', value: 'true', labelAr: 'تسجيل الدخول بـ Google', labelEn: 'Google OAuth Login', descAr: 'السماح بتسجيل الدخول عبر حساب جوجل', descEn: 'Allow login via Google account', type: 'toggle', category: 'auth' },
-  { key: 'enable_phone_auth', value: 'true', labelAr: 'تسجيل الدخول بالهاتف', labelEn: 'Phone OTP Login', descAr: 'السماح بتسجيل الدخول عبر رقم الهاتف (OTP)', descEn: 'Allow login via phone OTP', type: 'toggle', category: 'auth' },
+  // ── Auth (controlled by Supabase Auth, not by this page) ──
+  { key: 'allow_registration', value: 'true', labelAr: 'السماح بالتسجيل الجديد', labelEn: 'Allow New Registrations', descAr: 'تفعيل أو تعطيل تسجيل مستخدمين جدد', descEn: 'Enable or disable new user registrations', type: 'toggle', category: 'auth', importance: 'critical', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'require_email_verification', value: 'true', labelAr: 'تأكيد البريد الإلكتروني', labelEn: 'Require Email Verification', descAr: 'إلزام المستخدمين بتأكيد بريدهم الإلكتروني', descEn: 'Require users to verify their email', type: 'toggle', category: 'auth', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'max_login_attempts', value: '5', labelAr: 'محاولات تسجيل الدخول', labelEn: 'Max Login Attempts', descAr: 'أقصى عدد محاولات قبل قفل الحساب مؤقتاً', descEn: 'Max attempts before temporary lockout', type: 'number', category: 'auth', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'session_timeout_hours', value: '24', labelAr: 'مدة الجلسة (ساعات)', labelEn: 'Session Timeout (hours)', descAr: 'المدة قبل انتهاء صلاحية الجلسة', descEn: 'Duration before session expires', type: 'number', category: 'auth', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'enable_google_auth', value: 'true', labelAr: 'تسجيل الدخول بـ Google', labelEn: 'Google OAuth Login', descAr: 'السماح بتسجيل الدخول عبر حساب جوجل', descEn: 'Allow login via Google account', type: 'toggle', category: 'auth', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'enable_phone_auth', value: 'true', labelAr: 'تسجيل الدخول بالهاتف', labelEn: 'Phone OTP Login', descAr: 'السماح بتسجيل الدخول عبر رقم الهاتف (OTP)', descEn: 'Allow login via phone OTP', type: 'toggle', category: 'auth', deferredNote: SUPABASE_CONTROLLED_NOTE },
 
   // ── Platform ──
-  { key: 'platform_name_ar', value: 'قِطاعات', labelAr: 'اسم المنصة (عربي)', labelEn: 'Platform Name (Arabic)', descAr: 'اسم المنصة المعروض باللغة العربية', descEn: 'Platform name displayed in Arabic', type: 'text', category: 'platform' },
-  { key: 'platform_name_en', value: 'Qitaat', labelAr: 'اسم المنصة (إنجليزي)', labelEn: 'Platform Name (English)', descAr: 'اسم المنصة المعروض بالإنجليزية', descEn: 'Platform name displayed in English', type: 'text', category: 'platform' },
-  { key: 'maintenance_mode', value: 'false', labelAr: 'وضع الصيانة', labelEn: 'Maintenance Mode', descAr: 'تفعيل وضع الصيانة يمنع الوصول للمنصة مؤقتاً', descEn: 'Enabling maintenance mode blocks platform access', type: 'toggle', category: 'platform', importance: 'critical' },
-  { key: 'default_language', value: 'ar', labelAr: 'اللغة الافتراضية', labelEn: 'Default Language', descAr: 'اللغة الافتراضية للمنصة', descEn: 'Default platform language', type: 'select', options: [{ value: 'ar', labelAr: 'العربية', labelEn: 'Arabic' }, { value: 'en', labelAr: 'الإنجليزية', labelEn: 'English' }], category: 'platform' },
-  { key: 'contact_email', value: '', labelAr: 'البريد الإلكتروني للتواصل', labelEn: 'Contact Email', descAr: 'البريد الإلكتروني الرسمي للمنصة', descEn: 'Official platform contact email', type: 'text', category: 'platform' },
-  { key: 'support_phone', value: '', labelAr: 'رقم الدعم الفني', labelEn: 'Support Phone', descAr: 'رقم هاتف الدعم الفني للعملاء', descEn: 'Technical support phone number', type: 'text', category: 'platform' },
-  { key: 'platform_description_ar', value: '', labelAr: 'وصف المنصة (عربي)', labelEn: 'Platform Description (AR)', descAr: 'الوصف المختصر المعروض في محركات البحث', descEn: 'Short description for SEO', type: 'textarea', category: 'platform' },
+  { key: 'platform_name_ar', value: 'قِطاعات', labelAr: 'اسم المنصة (عربي)', labelEn: 'Platform Name (Arabic)', descAr: 'اسم المنصة المعروض باللغة العربية', descEn: 'Platform name displayed in Arabic', type: 'text', category: 'platform', deferredNote: STATIC_PLATFORM_NOTE },
+  { key: 'platform_name_en', value: 'Qitaat', labelAr: 'اسم المنصة (إنجليزي)', labelEn: 'Platform Name (English)', descAr: 'اسم المنصة المعروض بالإنجليزية', descEn: 'Platform name displayed in English', type: 'text', category: 'platform', deferredNote: STATIC_PLATFORM_NOTE },
+  { key: 'maintenance_mode', value: 'false', labelAr: 'وضع الصيانة', labelEn: 'Maintenance Mode', descAr: 'تفعيل وضع الصيانة يمنع الوصول للمنصة مؤقتاً', descEn: 'Enabling maintenance mode blocks platform access', type: 'toggle', category: 'platform', importance: 'critical', deferredNote: MAINTENANCE_NOTE },
+  { key: 'default_language', value: 'ar', labelAr: 'اللغة الافتراضية', labelEn: 'Default Language', descAr: 'اللغة الافتراضية للمنصة', descEn: 'Default platform language', type: 'select', options: [{ value: 'ar', labelAr: 'العربية', labelEn: 'Arabic' }, { value: 'en', labelAr: 'الإنجليزية', labelEn: 'English' }], category: 'platform', deferredNote: STATIC_PLATFORM_NOTE },
+  { key: 'contact_email', value: '', labelAr: 'البريد الإلكتروني للتواصل', labelEn: 'Contact Email', descAr: 'البريد الإلكتروني الرسمي للمنصة', descEn: 'Official platform contact email', type: 'text', category: 'platform', deferredNote: STATIC_PLATFORM_NOTE },
+  { key: 'support_phone', value: '', labelAr: 'رقم الدعم الفني', labelEn: 'Support Phone', descAr: 'رقم هاتف الدعم الفني للعملاء', descEn: 'Technical support phone number', type: 'text', category: 'platform', deferredNote: STATIC_PLATFORM_NOTE },
+  { key: 'platform_description_ar', value: '', labelAr: 'وصف المنصة (عربي)', labelEn: 'Platform Description (AR)', descAr: 'الوصف المختصر المعروض في محركات البحث', descEn: 'Short description for SEO', type: 'textarea', category: 'platform', deferredNote: STATIC_PLATFORM_NOTE },
 
   // ── Business ──
   { key: 'max_businesses_per_user', value: '3', labelAr: 'أقصى عدد أعمال لكل مستخدم', labelEn: 'Max Businesses Per User', descAr: 'الحد الأقصى للأعمال التي يمكن لمستخدم إنشاؤها', descEn: 'Maximum businesses a user can create', type: 'number', category: 'business' },
@@ -77,13 +110,13 @@ const defaultSettings: SystemSetting[] = [
     { value: 'weekly', labelAr: 'أسبوعي', labelEn: 'Weekly' },
   ], category: 'notifications' },
 
-  // ── Security ──
-  { key: 'min_password_length', value: '8', labelAr: 'أقل طول لكلمة المرور', labelEn: 'Min Password Length', descAr: 'الحد الأدنى لطول كلمة المرور', descEn: 'Minimum password length', type: 'number', category: 'security' },
-  { key: 'enable_2fa', value: 'false', labelAr: 'المصادقة الثنائية', labelEn: 'Two-Factor Auth', descAr: 'تفعيل المصادقة الثنائية للمشرفين', descEn: 'Enable 2FA for admin accounts', type: 'toggle', category: 'security' },
-  { key: 'rate_limit_per_minute', value: '60', labelAr: 'حد الطلبات بالدقيقة', labelEn: 'Rate Limit / Min', descAr: 'أقصى عدد طلبات API لكل مستخدم بالدقيقة', descEn: 'Max API requests per user per minute', type: 'number', category: 'security' },
-  { key: 'block_duration_minutes', value: '30', labelAr: 'مدة الحظر (دقائق)', labelEn: 'Block Duration (min)', descAr: 'مدة حظر الحساب بعد تجاوز المحاولات', descEn: 'Account block duration after exceeding attempts', type: 'number', category: 'security' },
-  { key: 'enable_ip_logging', value: 'true', labelAr: 'تسجيل عناوين IP', labelEn: 'IP Logging', descAr: 'تسجيل عناوين IP لمحاولات الدخول', descEn: 'Log IP addresses for login attempts', type: 'toggle', category: 'security' },
-  { key: 'cors_allowed_origins', value: '*', labelAr: 'النطاقات المسموحة (CORS)', labelEn: 'CORS Allowed Origins', descAr: 'النطاقات المسموح لها بالوصول للـ API', descEn: 'Domains allowed to access the API', type: 'text', category: 'security' },
+  // ── Security (Supabase / server-controlled) ──
+  { key: 'min_password_length', value: '8', labelAr: 'أقل طول لكلمة المرور', labelEn: 'Min Password Length', descAr: 'الحد الأدنى لطول كلمة المرور', descEn: 'Minimum password length', type: 'number', category: 'security', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'enable_2fa', value: 'false', labelAr: 'المصادقة الثنائية', labelEn: 'Two-Factor Auth', descAr: 'تفعيل المصادقة الثنائية للمشرفين', descEn: 'Enable 2FA for admin accounts', type: 'toggle', category: 'security', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'rate_limit_per_minute', value: '60', labelAr: 'حد الطلبات بالدقيقة', labelEn: 'Rate Limit / Min', descAr: 'أقصى عدد طلبات API لكل مستخدم بالدقيقة', descEn: 'Max API requests per user per minute', type: 'number', category: 'security', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'block_duration_minutes', value: '30', labelAr: 'مدة الحظر (دقائق)', labelEn: 'Block Duration (min)', descAr: 'مدة حظر الحساب بعد تجاوز المحاولات', descEn: 'Account block duration after exceeding attempts', type: 'number', category: 'security', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'enable_ip_logging', value: 'true', labelAr: 'تسجيل عناوين IP', labelEn: 'IP Logging', descAr: 'تسجيل عناوين IP لمحاولات الدخول', descEn: 'Log IP addresses for login attempts', type: 'toggle', category: 'security', deferredNote: SUPABASE_CONTROLLED_NOTE },
+  { key: 'cors_allowed_origins', value: '*', labelAr: 'النطاقات المسموحة (CORS)', labelEn: 'CORS Allowed Origins', descAr: 'النطاقات المسموح لها بالوصول للـ API', descEn: 'Domains allowed to access the API', type: 'text', category: 'security', deferredNote: SUPABASE_CONTROLLED_NOTE },
 
   // ── Content ──
   { key: 'enable_blog', value: 'true', labelAr: 'نظام المدونة', labelEn: 'Blog System', descAr: 'تفعيل أو تعطيل نظام المدونة', descEn: 'Enable or disable the blog', type: 'toggle', category: 'content' },
@@ -93,10 +126,10 @@ const defaultSettings: SystemSetting[] = [
   { key: 'enable_reviews', value: 'true', labelAr: 'نظام التقييمات', labelEn: 'Review System', descAr: 'تفعيل أو تعطيل نظام تقييم المنشآت', descEn: 'Enable or disable business reviews', type: 'toggle', category: 'content' },
 
   // ── SEO ──
-  { key: 'google_analytics_id', value: '', labelAr: 'معرّف Google Analytics', labelEn: 'Google Analytics ID', descAr: 'معرّف GA4 للتتبع (G-XXXXXXXXXX)', descEn: 'GA4 tracking ID (G-XXXXXXXXXX)', type: 'text', category: 'seo' },
-  { key: 'meta_title_suffix', value: ' | قِطاعات', labelAr: 'لاحقة عنوان الصفحة', labelEn: 'Meta Title Suffix', descAr: 'النص المضاف بعد عنوان كل صفحة', descEn: 'Text appended to each page title', type: 'text', category: 'seo' },
-  { key: 'enable_sitemap', value: 'true', labelAr: 'خريطة الموقع (Sitemap)', labelEn: 'Enable Sitemap', descAr: 'إنشاء خريطة موقع XML تلقائياً', descEn: 'Auto-generate XML sitemap', type: 'toggle', category: 'seo' },
-  { key: 'robots_txt_custom', value: '', labelAr: 'ملف Robots.txt مخصص', labelEn: 'Custom Robots.txt', descAr: 'محتوى مخصص لملف robots.txt', descEn: 'Custom robots.txt content', type: 'textarea', category: 'seo' },
+  // google_analytics_id REMOVED — runtime uses VITE_GTM_ID env. See AdminAnalyticsSettings.
+  { key: 'meta_title_suffix', value: ' | قِطاعات', labelAr: 'لاحقة عنوان الصفحة', labelEn: 'Meta Title Suffix', descAr: 'النص المضاف بعد عنوان كل صفحة', descEn: 'Text appended to each page title', type: 'text', category: 'seo', deferredNote: STATIC_PLATFORM_NOTE },
+  { key: 'enable_sitemap', value: 'true', labelAr: 'خريطة الموقع (Sitemap)', labelEn: 'Enable Sitemap', descAr: 'إنشاء خريطة موقع XML تلقائياً', descEn: 'Auto-generate XML sitemap', type: 'toggle', category: 'seo', deferredNote: { ar: 'تُنشأ تلقائيًا من الـ Edge Function بصرف النظر عن هذا المفتاح.', en: 'Generated automatically by the edge function regardless of this key.' } },
+  { key: 'robots_txt_custom', value: '', labelAr: 'ملف Robots.txt مخصص', labelEn: 'Custom Robots.txt', descAr: 'محتوى مخصص لملف robots.txt', descEn: 'Custom robots.txt content', type: 'textarea', category: 'seo', wired: true },
 ];
 
 /* ═══════════ Categories ═══════════ */
@@ -117,20 +150,41 @@ const SettingRow = React.memo(({ setting, value, isDirty, isRTL, onUpdate }: {
 }) => {
   const [showSecret, setShowSecret] = useState(false);
   const isCritical = setting.importance === 'critical';
+  const isWired = setting.wired === true;
+  // Phase-2: non-wired controls are visually disabled and read-only so they
+  // cannot pretend to influence runtime behavior.
+  const deferredNote = setting.deferredNote;
 
   return (
-    <div className={`flex flex-col sm:flex-row sm:items-center gap-3 py-4 ${isCritical ? 'bg-destructive/[0.02] -mx-4 px-4 rounded-xl border border-destructive/10' : ''}`}>
+    <div className={`flex flex-col sm:flex-row sm:items-center gap-3 py-4 ${isCritical && isWired ? 'bg-destructive/[0.02] -mx-4 px-4 rounded-xl border border-destructive/10' : ''} ${!isWired ? 'opacity-70' : ''}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <Label className="font-semibold text-sm">{isRTL ? setting.labelAr : setting.labelEn}</Label>
-          {isDirty && <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
-          {isCritical && (
+          {isWired && isDirty && <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
+          {isWired && (
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[16px] text-success border-success/40 gap-0.5">
+              <CheckCircle2 className="w-2.5 h-2.5" />{isRTL ? 'مُفعّل في التشغيل' : 'Wired'}
+            </Badge>
+          )}
+          {!isWired && (
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[16px] text-muted-foreground border-border gap-0.5">
+              <Info className="w-2.5 h-2.5" />{isRTL ? 'مؤجَّل' : 'Deferred'}
+            </Badge>
+          )}
+          {isCritical && isWired && (
             <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[16px] text-destructive/70 border-destructive/30 gap-0.5">
               <AlertTriangle className="w-2.5 h-2.5" />{isRTL ? 'حساس' : 'Critical'}
             </Badge>
           )}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{isRTL ? setting.descAr : setting.descEn}</p>
+        {!isWired && (
+          <p className="text-[11px] text-warning/80 dark:text-warning mt-1 leading-relaxed">
+            {isRTL
+              ? (deferredNote?.ar ?? DEFERRED_DEFAULT_AR)
+              : (deferredNote?.en ?? DEFERRED_DEFAULT_EN)}
+          </p>
+        )}
         <p className="text-[10px] text-muted-foreground/40 font-mono mt-0.5">{setting.key}</p>
       </div>
       <div className="sm:w-56 shrink-0">
@@ -138,7 +192,8 @@ const SettingRow = React.memo(({ setting, value, isDirty, isRTL, onUpdate }: {
           <div className="flex items-center gap-2.5">
             <Switch
               checked={value === 'true'}
-              onCheckedChange={c => onUpdate(setting.key, String(c))}
+              disabled={!isWired}
+              onCheckedChange={c => isWired && onUpdate(setting.key, String(c))}
             />
             <span className={`text-xs font-medium ${value === 'true' ? 'text-success' : 'text-muted-foreground'}`}>
               {value === 'true' ? (isRTL ? 'مفعّل' : 'On') : (isRTL ? 'معطّل' : 'Off')}
@@ -150,7 +205,9 @@ const SettingRow = React.memo(({ setting, value, isDirty, isRTL, onUpdate }: {
             <Input
               type={setting.isSecret && !showSecret ? 'password' : 'text'}
               value={value || ''}
-              onChange={e => onUpdate(setting.key, e.target.value)}
+              onChange={e => isWired && onUpdate(setting.key, e.target.value)}
+              readOnly={!isWired}
+              disabled={!isWired}
               className="h-9 text-sm rounded-lg pe-8"
               placeholder={isRTL ? 'أدخل القيمة...' : 'Enter value...'}
             />
@@ -169,13 +226,15 @@ const SettingRow = React.memo(({ setting, value, isDirty, isRTL, onUpdate }: {
           <Input
             type="number"
             value={value || ''}
-            onChange={e => onUpdate(setting.key, e.target.value)}
+            onChange={e => isWired && onUpdate(setting.key, e.target.value)}
+            readOnly={!isWired}
+            disabled={!isWired}
             className="h-9 text-sm w-28 rounded-lg tabular-nums"
             min={0}
           />
         )}
         {setting.type === 'select' && setting.options && (
-          <Select value={value} onValueChange={v => onUpdate(setting.key, v)}>
+          <Select value={value} onValueChange={v => isWired && onUpdate(setting.key, v)} disabled={!isWired}>
             <SelectTrigger className="h-9 text-sm rounded-lg"><SelectValue /></SelectTrigger>
             <SelectContent className="rounded-xl">
               {setting.options.map(opt => (
@@ -187,7 +246,9 @@ const SettingRow = React.memo(({ setting, value, isDirty, isRTL, onUpdate }: {
         {setting.type === 'textarea' && (
           <Textarea
             value={value || ''}
-            onChange={e => onUpdate(setting.key, e.target.value)}
+            onChange={e => isWired && onUpdate(setting.key, e.target.value)}
+            readOnly={!isWired}
+            disabled={!isWired}
             rows={2}
             className="text-sm rounded-lg"
             placeholder={isRTL ? 'أدخل القيمة...' : 'Enter value...'}
@@ -233,7 +294,8 @@ const AdminSystemSettings = () => {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const dirtyKeys = Array.from(dirty);
+      // Phase-2: only persist wired keys, even if state ever contained others.
+      const dirtyKeys = Array.from(dirty).filter(k => WIRED_SYSTEM_SETTING_KEYS.has(k));
       for (const key of dirtyKeys) {
         const setting = defaultSettings.find(s => s.key === key);
         if (!setting) continue;
@@ -262,6 +324,8 @@ const AdminSystemSettings = () => {
   });
 
   const updateValue = useCallback((key: string, value: string) => {
+    // Phase-2 guard: silently ignore writes to non-wired settings.
+    if (!WIRED_SYSTEM_SETTING_KEYS.has(key)) return;
     setValues(prev => ({ ...prev, [key]: value }));
     setDirty(prev => new Set(prev).add(key));
   }, []);
@@ -411,6 +475,20 @@ const AdminSystemSettings = () => {
               </Button>
             </div>
           </div>
+
+          {/* ── Phase-2 Honesty Banner ── */}
+          <Card className="border-warning/40 bg-warning/[0.04]">
+            <CardContent className="p-4 flex gap-3">
+              <div className="w-9 h-9 rounded-xl bg-warning/10 flex items-center justify-center shrink-0">
+                <Info className="w-4.5 h-4.5 text-warning" />
+              </div>
+              <div className="text-xs leading-relaxed text-warning/90 dark:text-warning/90">
+                {isRTL
+                  ? 'هذه الصفحة تعرض فقط الإعدادات المرتبطة فعليًا بالتشغيل. الإعدادات غير الموصولة تظهر كعناصر مؤجلة ولا تغيّر سلوك النظام.'
+                  : 'This page only persists settings that have a real runtime consumer. Unwired entries are shown as deferred and have no effect on the platform.'}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* ── Stats Cards ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

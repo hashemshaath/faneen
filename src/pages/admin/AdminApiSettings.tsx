@@ -142,6 +142,26 @@ const settingIcons: Record<string, React.ElementType> = {
   SPL_API_KEY: MapPin,
 };
 
+/* ═══════════ ADMIN-SYSTEM-SETTINGS-DEEP-AUDIT-1 Phase 2 ═══════════
+ * Server-side secrets are NOT editable here. They must live in Lovable /
+ * Supabase Secrets so they are never persisted in `platform_settings` and
+ * never reach the client bundle. We expose them as status-only rows with
+ * setup instructions.
+ *
+ * SPL_API_KEY remains editable because the `national-address-lookup` edge
+ * function still has a documented DB-fallback path, but it is labeled
+ * "fallback only — prefer Supabase Secrets".
+ * ════════════════════════════════════════════════════════════════════ */
+export const SERVER_SECRET_KEYS = new Set<string>([
+  'SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASSWORD',
+  'SENDER_EMAIL', 'SENDER_NAME',
+  'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER', 'TWILIO_VERIFY_SID',
+  'OPENAI_API_KEY', 'GOOGLE_AI_KEY',
+  'GOOGLE_MAPS_KEY', 'GOOGLE_ANALYTICS_ID',
+  'GOOGLE_RECAPTCHA_KEY', 'GOOGLE_RECAPTCHA_SECRET', 'FCM_SERVER_KEY',
+]);
+export const FALLBACK_ONLY_KEYS = new Set<string>(['SPL_API_KEY']);
+
 /* ═══════════ Code Block ═══════════ */
 const CodeBlock = ({ code }: { code: string }) => (
   <div className="relative group">
@@ -169,6 +189,39 @@ const SettingField = React.memo(({ setting, editValue, isVisible, isRTL, languag
   const hasChanges = editValue !== undefined;
   const SettingIcon = settingIcons[setting.setting_key] || Key;
   const isConfigured = setting.is_active && !!setting.setting_value;
+  const isServerSecret = SERVER_SECRET_KEYS.has(setting.setting_key);
+  const isFallbackOnly = FALLBACK_ONLY_KEYS.has(setting.setting_key);
+
+  // Phase-2: server-managed secrets — render status-only, no editable input,
+  // no toggle. Admins are told to configure them via Lovable/Supabase Secrets.
+  if (isServerSecret) {
+    return (
+      <div className="py-3.5">
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div className="flex items-start gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 mt-0.5">
+              <SettingIcon className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Label className="font-semibold text-sm">{language === 'ar' ? setting.setting_label_ar : setting.setting_label_en}</Label>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-[16px] gap-1 border-info/40 text-info">
+                  <Shield className="w-2.5 h-2.5" />{isRTL ? 'مفتاح خادم' : 'Server secret'}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">{language === 'ar' ? setting.description_ar : setting.description_en}</p>
+              <p className="text-[10px] text-muted-foreground/40 font-mono mt-0.5">{setting.setting_key}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-info/[0.04] border border-info/15 rounded-lg p-2.5 text-[11px] text-info/90 leading-relaxed" style={{ marginInlineStart: '42px' }}>
+          {isRTL
+            ? 'يتم ضبط هذا المفتاح من Lovable/Supabase Secrets وليس من قاعدة بيانات المنصة.'
+            : 'Configure this key via Lovable / Supabase Secrets — never inside the platform database.'}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`py-3.5 ${!setting.is_active ? 'opacity-50' : ''}`}>
@@ -180,6 +233,11 @@ const SettingField = React.memo(({ setting, editValue, isVisible, isRTL, languag
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <Label className="font-semibold text-sm">{language === 'ar' ? setting.setting_label_ar : setting.setting_label_en}</Label>
+              {isFallbackOnly && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-[16px] gap-1 border-warning/40 text-warning">
+                  <Info className="w-2.5 h-2.5" />{isRTL ? 'احتياطي فقط' : 'Fallback only'}
+                </Badge>
+              )}
               {isConfigured ? (
                 <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
               ) : (
@@ -187,6 +245,13 @@ const SettingField = React.memo(({ setting, editValue, isVisible, isRTL, languag
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">{language === 'ar' ? setting.description_ar : setting.description_en}</p>
+            {isFallbackOnly && (
+              <p className="text-[11px] text-warning/80 mt-1 leading-relaxed">
+                {isRTL
+                  ? 'مسار احتياطي للـ Edge Function. الأفضل ضبطه في Supabase Secrets بدلاً من قاعدة البيانات.'
+                  : 'Edge Function fallback path — prefer setting this in Supabase Secrets instead of the database.'}
+              </p>
+            )}
             <p className="text-[10px] text-muted-foreground/40 font-mono mt-0.5">{setting.setting_key}</p>
           </div>
         </div>
