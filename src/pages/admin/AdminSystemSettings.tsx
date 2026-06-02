@@ -150,20 +150,41 @@ const SettingRow = React.memo(({ setting, value, isDirty, isRTL, onUpdate }: {
 }) => {
   const [showSecret, setShowSecret] = useState(false);
   const isCritical = setting.importance === 'critical';
+  const isWired = setting.wired === true;
+  // Phase-2: non-wired controls are visually disabled and read-only so they
+  // cannot pretend to influence runtime behavior.
+  const deferredNote = setting.deferredNote;
 
   return (
-    <div className={`flex flex-col sm:flex-row sm:items-center gap-3 py-4 ${isCritical ? 'bg-destructive/[0.02] -mx-4 px-4 rounded-xl border border-destructive/10' : ''}`}>
+    <div className={`flex flex-col sm:flex-row sm:items-center gap-3 py-4 ${isCritical && isWired ? 'bg-destructive/[0.02] -mx-4 px-4 rounded-xl border border-destructive/10' : ''} ${!isWired ? 'opacity-70' : ''}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <Label className="font-semibold text-sm">{isRTL ? setting.labelAr : setting.labelEn}</Label>
-          {isDirty && <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
-          {isCritical && (
+          {isWired && isDirty && <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
+          {isWired && (
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[16px] text-success border-success/40 gap-0.5">
+              <CheckCircle2 className="w-2.5 h-2.5" />{isRTL ? 'مُفعّل في التشغيل' : 'Wired'}
+            </Badge>
+          )}
+          {!isWired && (
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[16px] text-muted-foreground border-border gap-0.5">
+              <Info className="w-2.5 h-2.5" />{isRTL ? 'مؤجَّل' : 'Deferred'}
+            </Badge>
+          )}
+          {isCritical && isWired && (
             <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[16px] text-destructive/70 border-destructive/30 gap-0.5">
               <AlertTriangle className="w-2.5 h-2.5" />{isRTL ? 'حساس' : 'Critical'}
             </Badge>
           )}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{isRTL ? setting.descAr : setting.descEn}</p>
+        {!isWired && (
+          <p className="text-[11px] text-warning/80 dark:text-warning mt-1 leading-relaxed">
+            {isRTL
+              ? (deferredNote?.ar ?? DEFERRED_DEFAULT_AR)
+              : (deferredNote?.en ?? DEFERRED_DEFAULT_EN)}
+          </p>
+        )}
         <p className="text-[10px] text-muted-foreground/40 font-mono mt-0.5">{setting.key}</p>
       </div>
       <div className="sm:w-56 shrink-0">
@@ -171,7 +192,8 @@ const SettingRow = React.memo(({ setting, value, isDirty, isRTL, onUpdate }: {
           <div className="flex items-center gap-2.5">
             <Switch
               checked={value === 'true'}
-              onCheckedChange={c => onUpdate(setting.key, String(c))}
+              disabled={!isWired}
+              onCheckedChange={c => isWired && onUpdate(setting.key, String(c))}
             />
             <span className={`text-xs font-medium ${value === 'true' ? 'text-success' : 'text-muted-foreground'}`}>
               {value === 'true' ? (isRTL ? 'مفعّل' : 'On') : (isRTL ? 'معطّل' : 'Off')}
@@ -183,7 +205,9 @@ const SettingRow = React.memo(({ setting, value, isDirty, isRTL, onUpdate }: {
             <Input
               type={setting.isSecret && !showSecret ? 'password' : 'text'}
               value={value || ''}
-              onChange={e => onUpdate(setting.key, e.target.value)}
+              onChange={e => isWired && onUpdate(setting.key, e.target.value)}
+              readOnly={!isWired}
+              disabled={!isWired}
               className="h-9 text-sm rounded-lg pe-8"
               placeholder={isRTL ? 'أدخل القيمة...' : 'Enter value...'}
             />
@@ -202,13 +226,15 @@ const SettingRow = React.memo(({ setting, value, isDirty, isRTL, onUpdate }: {
           <Input
             type="number"
             value={value || ''}
-            onChange={e => onUpdate(setting.key, e.target.value)}
+            onChange={e => isWired && onUpdate(setting.key, e.target.value)}
+            readOnly={!isWired}
+            disabled={!isWired}
             className="h-9 text-sm w-28 rounded-lg tabular-nums"
             min={0}
           />
         )}
         {setting.type === 'select' && setting.options && (
-          <Select value={value} onValueChange={v => onUpdate(setting.key, v)}>
+          <Select value={value} onValueChange={v => isWired && onUpdate(setting.key, v)} disabled={!isWired}>
             <SelectTrigger className="h-9 text-sm rounded-lg"><SelectValue /></SelectTrigger>
             <SelectContent className="rounded-xl">
               {setting.options.map(opt => (
@@ -220,7 +246,9 @@ const SettingRow = React.memo(({ setting, value, isDirty, isRTL, onUpdate }: {
         {setting.type === 'textarea' && (
           <Textarea
             value={value || ''}
-            onChange={e => onUpdate(setting.key, e.target.value)}
+            onChange={e => isWired && onUpdate(setting.key, e.target.value)}
+            readOnly={!isWired}
+            disabled={!isWired}
             rows={2}
             className="text-sm rounded-lg"
             placeholder={isRTL ? 'أدخل القيمة...' : 'Enter value...'}
