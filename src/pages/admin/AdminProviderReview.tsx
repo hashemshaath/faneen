@@ -351,26 +351,23 @@ export default function AdminProviderReview() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 p-4 md:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        {/* ─────── Header ─────── */}
-        <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card to-card/60 p-4 md:p-5 shadow-[var(--elev-1)]">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-success/10 text-success">
-                  <ShieldCheck className="h-5 w-5" />
-                </span>
-                <h1 className="font-heading text-xl md:text-2xl font-bold">
-                  {isRTL ? 'مراجعة ملفات المزودين' : 'Provider Review'}
-                </h1>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {isRTL
-                  ? 'موافقة، طلب تعديلات، رفض، أو نشر ملفات المزودين قبل الظهور للجمهور.'
-                  : 'Approve, request changes, reject, or publish provider profiles.'}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
+      <div className="space-y-6 p-4 md:p-6 max-w-[1600px] mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+        <AdminPageHeader
+          tone="success"
+          icon={ShieldCheck}
+          eyebrow={isRTL ? 'مراجعة الجودة' : 'Quality Review'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'مراجعة المزودين' : 'Provider Review' },
+          ]}
+          title={isRTL ? 'مراجعة ملفات المزودين' : 'Provider Profile Review'}
+          subtitle={
+            isRTL
+              ? `${statusCounts?.all ?? 0} ملف إجمالاً • اعتماد، طلب تعديلات، رفض، أو نشر ملفات المزودين قبل ظهورها للجمهور.`
+              : `${statusCounts?.all ?? 0} profiles total • Approve, request changes, reject, or publish provider profiles before they go public.`
+          }
+          actions={
+            <>
               <Button
                 size="sm"
                 variant="outline"
@@ -401,33 +398,47 @@ export default function AdminProviderReview() {
                   </Link>
                 </Button>
               )}
+            </>
+          }
+          kpiSlot={
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+              {STATUSES.filter((s) => s.value !== 'all').map((s) => {
+                const key = s.value as ApprovalStatus;
+                const n = statusCounts?.[key] ?? 0;
+                const active = statusFilter === key;
+                const toneMap: Record<ApprovalStatus, 'success' | 'info' | 'warning' | 'destructive' | 'muted'> = {
+                  draft: 'muted',
+                  submitted: 'info',
+                  under_review: 'info',
+                  needs_changes: 'warning',
+                  approved: 'success',
+                  rejected: 'destructive',
+                  published: 'success',
+                };
+                const iconMap: Record<ApprovalStatus, React.ElementType> = {
+                  draft: Clock,
+                  submitted: Send,
+                  under_review: Eye,
+                  needs_changes: AlertCircle,
+                  approved: CheckCircle2,
+                  rejected: XCircle,
+                  published: Globe,
+                };
+                return (
+                  <AdminKpiCard
+                    key={s.value}
+                    label={language === 'ar' ? s.ar : s.en}
+                    value={n}
+                    icon={iconMap[key]}
+                    tone={toneMap[key]}
+                    active={active}
+                    onClick={() => { setStatusFilter(key); setSelectedId(null); }}
+                  />
+                );
+              })}
             </div>
-          </div>
-
-          {/* KPI strip — clickable status filters */}
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-            {STATUSES.filter((s) => s.value !== 'all').map((s) => {
-              const key = s.value as ApprovalStatus;
-              const n = statusCounts?.[key] ?? 0;
-              const active = statusFilter === key;
-              return (
-                <button
-                  key={s.value}
-                  type="button"
-                  onClick={() => { setStatusFilter(key); setSelectedId(null); }}
-                  className={`group rounded-xl border p-2.5 text-start transition-all hover-lift ${
-                    active ? 'border-accent bg-accent/5 shadow-sm' : 'border-border/60 bg-card hover:border-accent/40'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <Badge className={`${TONE[key]} text-[10px] px-1.5 py-0`}>{language === 'ar' ? s.ar : s.en}</Badge>
-                  </div>
-                  <div className="mt-1.5 font-heading text-xl font-bold tabular-nums tech-content">{n}</div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+          }
+        />
 
         {/* ─────── Toolbar: tabs + search + sort ─────── */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
