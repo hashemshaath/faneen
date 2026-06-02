@@ -512,9 +512,13 @@ const DashboardAnalytics = () => {
                 <RefreshCw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} aria-hidden="true" />
                 {isRTL ? 'تحديث' : 'Refresh'}
               </Button>
-              <Button size="sm" className="h-9 gap-1.5" onClick={downloadCsv} disabled={!stats}>
+              <Button size="sm" variant="outline" className="h-9 gap-1.5" onClick={downloadCsv} disabled={!stats}>
                 <Download className="w-3.5 h-3.5" aria-hidden="true" />
-                {isRTL ? 'تصدير CSV' : 'Export CSV'}
+                {isRTL ? 'CSV' : 'CSV'}
+              </Button>
+              <Button size="sm" className="h-9 gap-1.5" onClick={downloadPdf} disabled={!stats || isExportingPdf}>
+                <FileDown className={cn('w-3.5 h-3.5', isExportingPdf && 'animate-pulse')} aria-hidden="true" />
+                {isRTL ? (isExportingPdf ? 'جارٍ التصدير…' : 'تصدير PDF') : (isExportingPdf ? 'Exporting…' : 'Export PDF')}
               </Button>
             </div>
           </div>
