@@ -321,11 +321,37 @@ export default function DashboardSites() {
         (s.address_line1 || '').toLowerCase().includes(q) ||
         (s.city_name || '').toLowerCase().includes(q) ||
         (s.contact_name || '').toLowerCase().includes(q) ||
-        (s.site_ref || '').toLowerCase().includes(q)
+        (s.site_ref || '').toLowerCase().includes(q) ||
+        (s.municipal_license_no || '').toLowerCase().includes(q) ||
+        (s.title_deed_no || '').toLowerCase().includes(q) ||
+        (s.owner_name || '').toLowerCase().includes(q) ||
+        (s.owner_id_number || '').toLowerCase().includes(q)
       );
     }
+    if (advLicenseNo.trim()) {
+      const q = advLicenseNo.trim().toLowerCase();
+      r = r.filter(s => (s.municipal_license_no || '').toLowerCase().includes(q));
+    }
+    if (advDeedNo.trim()) {
+      const q = advDeedNo.trim().toLowerCase();
+      r = r.filter(s => (s.title_deed_no || '').toLowerCase().includes(q));
+    }
+    if (advOwnerId.trim()) {
+      const q = advOwnerId.trim().toLowerCase();
+      r = r.filter(s => (s.owner_id_number || '').toLowerCase().includes(q));
+    }
+    if (advIssueFrom) r = r.filter(s => !!s.municipal_license_issue_date && s.municipal_license_issue_date >= advIssueFrom);
+    if (advIssueTo)   r = r.filter(s => !!s.municipal_license_issue_date && s.municipal_license_issue_date <= advIssueTo);
+    if (advExpiryFrom) r = r.filter(s => !!s.municipal_license_expiry_date && s.municipal_license_expiry_date >= advExpiryFrom);
+    if (advExpiryTo)   r = r.filter(s => !!s.municipal_license_expiry_date && s.municipal_license_expiry_date <= advExpiryTo);
     return r;
-  }, [sites, search, typeFilter]);
+  }, [sites, search, typeFilter, advLicenseNo, advDeedNo, advOwnerId, advIssueFrom, advIssueTo, advExpiryFrom, advExpiryTo]);
+
+  const advancedActive = !!(advLicenseNo || advDeedNo || advOwnerId || advIssueFrom || advIssueTo || advExpiryFrom || advExpiryTo);
+  const resetAdvanced = () => {
+    setAdvLicenseNo(''); setAdvDeedNo(''); setAdvOwnerId('');
+    setAdvIssueFrom(''); setAdvIssueTo(''); setAdvExpiryFrom(''); setAdvExpiryTo('');
+  };
 
   const stats = useMemo(() => {
     const total = sites.filter(s => !s.archived_at).length;
