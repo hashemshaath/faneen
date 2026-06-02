@@ -1,6 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 export interface AdminPageHeaderCrumb {
@@ -17,7 +15,11 @@ interface AdminPageHeaderProps {
   icon: React.ElementType;
   /** Optional eyebrow text (small uppercase label above the title) */
   eyebrow?: string;
-  /** Optional breadcrumbs */
+  /**
+   * @deprecated Breadcrumbs are rendered globally by `WorkspaceHeader`
+   * via `useBreadcrumbs()`. The prop is kept for backwards-compat but
+   * is intentionally ignored to prevent duplicate trails on admin pages.
+   */
   breadcrumbs?: AdminPageHeaderCrumb[];
   /** Right-aligned action buttons */
   actions?: React.ReactNode;
@@ -46,13 +48,11 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
   subtitle,
   icon: Icon,
   eyebrow,
-  breadcrumbs,
   actions,
   kpiSlot,
   tone = 'accent',
 }) => {
-  const { isRTL } = useLanguage();
-  const Chevron = isRTL ? ChevronLeft : ChevronRight;
+  useLanguage(); // keep hook stable for RTL-aware children that read context
   return (
     <section
       aria-label={title}
@@ -60,28 +60,6 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
     >
       <div className="pointer-events-none absolute -top-24 -end-24 h-56 w-56 rounded-full bg-gradient-to-br from-accent/15 to-transparent blur-3xl" />
       <div className="relative flex flex-col gap-4">
-        {breadcrumbs && breadcrumbs.length > 0 && (
-          <nav
-            aria-label="breadcrumb"
-            className="flex items-center gap-1 text-[11px] text-muted-foreground"
-          >
-            {breadcrumbs.map((c, i) => (
-              <React.Fragment key={`${c.label}-${i}`}>
-                {i > 0 && <Chevron className="h-3 w-3 opacity-60" />}
-                {c.href ? (
-                  <Link
-                    to={c.href}
-                    className="rounded-md px-1 hover:text-foreground hover:bg-muted/50 transition-colors"
-                  >
-                    {c.label}
-                  </Link>
-                ) : (
-                  <span className="px-1 text-foreground/80">{c.label}</span>
-                )}
-              </React.Fragment>
-            ))}
-          </nav>
-        )}
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="flex items-start gap-3 min-w-0">
             <div
