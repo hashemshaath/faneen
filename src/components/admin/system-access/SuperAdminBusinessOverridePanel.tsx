@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { Building2, Search, ShieldAlert, Loader2, Lock } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,14 +17,11 @@ import {
   type SystemModule,
   type SystemModuleAuditEntry,
 } from '@/modules/systemAccess';
+import {
+  listBusinessesForSystemAccessOverride,
+  type SystemAccessOverrideBusiness,
+} from '@/modules/businesses';
 import { useBusinessAccessInvalidation } from '@/hooks/useBusinessAccessInvalidation';
-
-interface BusinessLite {
-  id: string;
-  name_ar: string | null;
-  name_en: string | null;
-  ref_id: string | null;
-}
 
 /**
  * MEMBERSHIP-SYSTEM-ACCESS-GOVERNANCE-2-UI — Super-admin only panel that
@@ -54,15 +50,7 @@ const SuperAdminBusinessOverridePanel: React.FC = () => {
   const bizQuery = useQuery({
     queryKey: ['super-admin-override-businesses'],
     enabled: isSuperAdmin,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('id, name_ar, name_en, ref_id')
-        .order('created_at', { ascending: false })
-        .limit(500);
-      if (error) throw error;
-      return (data ?? []) as BusinessLite[];
-    },
+    queryFn: listBusinessesForSystemAccessOverride,
   });
 
   const auditQuery = useQuery({
