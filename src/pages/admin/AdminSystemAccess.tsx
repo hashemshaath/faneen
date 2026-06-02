@@ -219,7 +219,7 @@ const AdminSystemAccess: React.FC = () => {
         bypassMembership: true,
         // Tag the audit row so it's clearly identifiable as a super-admin bypass
         // (system_module_audit_log has no dedicated column).
-        reason: `[super-admin bypass] ${vars.reason}`,
+        reason: `[super-admin bypass] ${vars.reason || 'direct admin action'}`,
       }),
     onSuccess: (res, vars) => {
       if (!res.ok) {
