@@ -16899,6 +16899,14 @@ export type Database = {
         Args: { _ref_id: string; _token: string }
         Returns: Json
       }
+      get_effective_membership_tier: {
+        Args: { p_business_id: string }
+        Returns: Database["public"]["Enums"]["membership_tier"]
+      }
+      get_effective_user_membership_tier: {
+        Args: { p_user_id: string }
+        Returns: Database["public"]["Enums"]["membership_tier"]
+      }
       get_email_deliverability_stats: {
         Args: { _window_minutes?: number }
         Returns: {
@@ -17512,6 +17520,10 @@ export type Database = {
           sector_slug: string
           visits: number
         }[]
+      }
+      membership_tier_rank: {
+        Args: { _tier: Database["public"]["Enums"]["membership_tier"] }
+        Returns: number
       }
       move_to_dlq: {
         Args: {
@@ -18165,6 +18177,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      sync_business_membership_tier: {
+        Args: { p_business_id: string }
+        Returns: undefined
+      }
+      sync_user_profile_membership_tier: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
       template_version_archive: {
         Args: { p_note?: string; p_version_id: string }
