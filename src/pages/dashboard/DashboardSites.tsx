@@ -796,8 +796,13 @@ export default function DashboardSites() {
               const Icon = meta.icon;
               const linkedCount = contractCounts[s.id] ?? 0;
               const isArchived = !!s.archived_at;
+              const isFocused = !!search && (s.site_ref === search.trim() || s.id === search.trim());
               return (
-                <Card key={s.id} className={`hover-lift border-border/50 ${isArchived ? 'opacity-60' : ''}`}>
+                <Card
+                  key={s.id}
+                  ref={isFocused ? focusRef : undefined}
+                  className={`hover-lift border-border/50 ${isArchived ? 'opacity-60' : ''} ${isFocused ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                >
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-2.5 min-w-0">
