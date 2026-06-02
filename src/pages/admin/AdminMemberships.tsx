@@ -63,6 +63,20 @@ type UsageReportRow = {
 };
 
 /* ─── Plan Card ─── */
+/* ─── Integrated Command Hub: Plan Card ─── */
+const PLAN_TIER_RAIL: Record<string, string> = {
+  free: 'border-e-muted-foreground/40',
+  basic: 'border-e-info',
+  premium: 'border-e-accent',
+  enterprise: 'border-e-secondary',
+};
+const PLAN_TIER_PROGRESS: Record<string, string> = {
+  free: 'bg-muted-foreground/40',
+  basic: 'bg-info',
+  premium: 'bg-accent',
+  enterprise: 'bg-secondary',
+};
+
 const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { plan: any; isRTL: boolean; language: string; subsCount: number; onEdit: (p: any) => void }) => {
   const Icon = tierIcons[plan.tier] || Zap;
   const colors = tierColors[plan.tier] || tierColors.free;
@@ -76,204 +90,194 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
     ? Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100) : 0;
 
   const isPremium = plan.tier === 'premium';
-  const isEnterprise = plan.tier === 'enterprise';
+  const isFree = plan.price_monthly === 0 && plan.price_yearly === 0;
+  const tierName = isRTL ? plan.name_ar : plan.name_en;
+  const tierDesc = isRTL ? plan.description_ar : plan.description_en;
 
   return (
     <Card className={cn(
-      'relative transition-all duration-300 group border overflow-hidden',
-      colors.border, colors.bg,
-      isPremium && 'ring-1 ring-accent/30 shadow-md shadow-accent/5',
-      isEnterprise && 'ring-1 ring-secondary/20',
-      !plan.is_active && 'opacity-40 grayscale',
-      'hover:shadow-xl hover:-translate-y-0.5'
+      'group relative overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm',
+      'border-e-4 transition-all hover:shadow-md hover:-translate-y-0.5',
+      PLAN_TIER_RAIL[plan.tier] || PLAN_TIER_RAIL.free,
+      !plan.is_active && 'opacity-70',
     )}>
-      {/* Top accent stripe */}
-      <div className={cn(
-        'absolute top-0 inset-x-0 h-1',
-        plan.tier === 'free' && 'bg-muted-foreground/30',
-        plan.tier === 'basic' && 'bg-info',
-        isPremium && 'bg-gradient-to-r from-accent via-accent/80 to-accent',
-        isEnterprise && 'bg-gradient-to-r from-secondary via-secondary to-secondary',
-      )} />
-
-      {/* Popular badge */}
+      {/* Popular ribbon */}
       {isPremium && (
-        <div className="absolute -top-0 end-4 z-10">
-          <div className="bg-accent text-accent-foreground text-[8px] font-bold px-3 py-1 rounded-b-lg shadow-lg shadow-accent/20 flex items-center gap-1">
+        <div className="absolute top-3 start-3 z-10">
+          <div className="bg-accent text-accent-foreground text-[9px] font-bold px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1">
             <Sparkles className="w-2.5 h-2.5" />
             {isRTL ? 'الأكثر شعبية' : 'Most Popular'}
           </div>
         </div>
       )}
+      {!plan.is_active && (
+        <div className="absolute top-3 start-3 z-10 bg-destructive/10 text-destructive text-[9px] font-bold px-2 py-0.5 rounded-md border border-destructive/20">
+          {isRTL ? 'معطّلة' : 'Inactive'}
+        </div>
+      )}
 
-      <CardContent className="p-5 sm:p-6 pt-5">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-5">
-          <div className="flex items-center gap-3.5">
-            <div className={cn(
-              'w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-105',
-              colors.badge,
-              isPremium && 'shadow-accent/20',
-            )}>
-              <Icon className="w-5.5 h-5.5" />
+      <CardContent className="p-5 space-y-4">
+        {/* ── Header ── */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center shrink-0', colors.badge)}>
+              <Icon className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="font-heading font-bold text-base leading-tight">{isRTL ? plan.name_ar : plan.name_en}</h3>
-              <div className="flex items-center gap-1.5 mt-1">
-                <Badge className={cn('text-[7px] px-1.5 py-0 h-3.5 uppercase font-bold tracking-wider', colors.badge)}>
+            <div className="min-w-0">
+              <h3 className="font-heading font-bold text-base leading-tight truncate">{tierName}</h3>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={cn('text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded', colors.badge)}>
                   {plan.tier}
-                </Badge>
-                {!plan.is_active && (
-                  <Badge variant="outline" className="text-[7px] h-3.5 bg-destructive/5 text-destructive border-destructive/20">
-                    {isRTL ? 'معطل' : 'Inactive'}
-                  </Badge>
-                )}
+                </span>
+                <span className="text-[10px] text-muted-foreground tech-content">{plan.currency_code}</span>
               </div>
             </div>
           </div>
-          <Button variant="ghost" size="icon"
-            className="h-8 w-8 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-accent/10"
-            onClick={() => onEdit(plan)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg hover:bg-muted shrink-0"
+            onClick={() => onEdit(plan)}
+            aria-label={isRTL ? 'تعديل الخطة' : 'Edit plan'}
+          >
             <Pencil className="w-3.5 h-3.5" />
           </Button>
         </div>
 
-        {/* Description */}
-        <p className="text-[11px] text-muted-foreground mb-5 line-clamp-2 min-h-[2.25rem] leading-relaxed">
-          {isRTL ? plan.description_ar : plan.description_en}
-        </p>
+        {/* ── Description (one line) ── */}
+        {tierDesc && (
+          <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 min-h-[2rem]">{tierDesc}</p>
+        )}
 
-        {/* Pricing */}
-        <div className="grid grid-cols-2 gap-2.5 mb-5">
-          <div className={cn(
-            'p-3.5 rounded-xl border text-center transition-colors',
-            'bg-background/60 border-border/15 hover:bg-background/90'
-          )}>
-            <p className="text-[8px] text-muted-foreground mb-1 uppercase tracking-wider font-medium">
-              {isRTL ? 'شهري' : 'Monthly'}
-            </p>
-            <p className={cn('font-bold text-xl leading-none', colors.text)}>
-              {plan.price_monthly === 0
-                ? (isRTL ? 'مجاناً' : 'Free')
-                : <>{plan.price_monthly}<span className="text-[9px] text-muted-foreground font-normal ms-0.5">{plan.currency_code}</span></>
-              }
-            </p>
-          </div>
-          <div className={cn(
-            'p-3.5 rounded-xl border text-center relative transition-colors',
-            'bg-background/60 border-border/15 hover:bg-background/90'
-          )}>
-            <p className="text-[8px] text-muted-foreground mb-1 uppercase tracking-wider font-medium">
-              {isRTL ? 'سنوي' : 'Yearly'}
-            </p>
-            <p className={cn('font-bold text-xl leading-none', colors.text)}>
-              {plan.price_yearly === 0
-                ? (isRTL ? 'مجاناً' : 'Free')
-                : <>{plan.price_yearly}<span className="text-[9px] text-muted-foreground font-normal ms-0.5">{plan.currency_code}</span></>
-              }
-            </p>
-            {savingPct > 0 && (
-              <Badge className="absolute -top-1.5 -end-1.5 bg-success text-white text-[7px] px-1.5 py-0 h-4 shadow-sm">
-                -{savingPct}%
-              </Badge>
-            )}
-          </div>
+        {/* ── Pricing hero ── */}
+        <div className="rounded-xl border border-border/60 bg-muted/20 p-3.5">
+          {isFree ? (
+            <div className="flex items-baseline justify-between">
+              <span className={cn('text-3xl font-bold leading-none tech-content', colors.text)}>
+                {isRTL ? 'مجاناً' : 'Free'}
+              </span>
+              <span className="text-[10px] text-muted-foreground">{isRTL ? 'بدون التزام' : 'No commitment'}</span>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <div className="flex items-baseline gap-1.5">
+                <span className={cn('text-3xl font-bold leading-none tech-content tabular-nums', colors.text)}>
+                  {plan.price_monthly}
+                </span>
+                <span className="text-[10px] font-medium text-muted-foreground">{plan.currency_code}</span>
+                <span className="text-[10px] text-muted-foreground">/ {isRTL ? 'شهر' : 'mo'}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                <span className="tech-content tabular-nums">
+                  {plan.price_yearly > 0
+                    ? `${plan.price_yearly} ${plan.currency_code} / ${isRTL ? 'سنة' : 'yr'}`
+                    : (isRTL ? 'بدون خطة سنوية' : 'No yearly')}
+                </span>
+                {savingPct > 0 && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20">
+                    -{savingPct}%
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-muted/25 border border-border/10">
-            <div className="w-7 h-7 rounded-lg bg-background/80 flex items-center justify-center shadow-sm">
-              <Users className="w-3 h-3 text-muted-foreground" />
-            </div>
-            <div>
-              <p className={cn('text-sm font-bold leading-none', colors.text)}>{subsCount}</p>
-              <p className="text-[8px] text-muted-foreground mt-0.5">{isRTL ? 'مشترك' : 'Subscribers'}</p>
+        {/* ── Metric chips ── */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-background">
+            <Users className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <div className="min-w-0">
+              <div className={cn('text-sm font-bold leading-none tabular-nums', subsCount > 0 ? colors.text : 'text-muted-foreground')}>
+                {subsCount}
+              </div>
+              <div className="text-[9px] text-muted-foreground mt-0.5 truncate">{isRTL ? 'مشترك' : 'Subscribers'}</div>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-muted/25 border border-border/10">
-            <div className="w-7 h-7 rounded-lg bg-background/80 flex items-center justify-center shadow-sm">
-              <Settings2 className="w-3 h-3 text-muted-foreground" />
-            </div>
-            <div>
-              <p className={cn('text-sm font-bold leading-none', colors.text)}>{enabledBoolLimits}<span className="text-muted-foreground font-normal">/{totalBoolLimits}</span></p>
-              <p className="text-[8px] text-muted-foreground mt-0.5">{isRTL ? 'مزايا' : 'Benefits'}</p>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-background">
+            <Settings2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <div className="min-w-0">
+              <div className={cn('text-sm font-bold leading-none tabular-nums', enabledBoolLimits > 0 ? colors.text : 'text-muted-foreground')}>
+                {enabledBoolLimits}<span className="text-muted-foreground font-normal">/{totalBoolLimits}</span>
+              </div>
+              <div className="text-[9px] text-muted-foreground mt-0.5 truncate">{isRTL ? 'مزايا مفعّلة' : 'Benefits on'}</div>
             </div>
           </div>
         </div>
 
-        {/* Benefits progress */}
-        <div className="mb-4 px-1">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[8px] text-muted-foreground font-medium uppercase tracking-wider">
-              {isRTL ? 'المزايا المفعّلة' : 'Benefits Enabled'}
-            </span>
-            <span className={cn('text-[9px] font-bold', colors.text)}>{benefitPct}%</span>
+        {/* ── Benefits bar ── */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="text-muted-foreground font-medium">{isRTL ? 'تغطية المزايا' : 'Benefit coverage'}</span>
+            <span className={cn('font-bold tabular-nums', benefitPct > 0 ? colors.text : 'text-muted-foreground')}>{benefitPct}%</span>
           </div>
-          <div className="h-1.5 bg-muted/40 rounded-full overflow-hidden">
+          <div className={cn('h-1.5 rounded-full overflow-hidden', benefitPct === 0 ? 'bg-muted/30 border border-dashed border-border/60' : 'bg-muted/40')}>
             <div
-              className={cn('h-full rounded-full transition-all duration-500',
-                plan.tier === 'free' ? 'bg-muted-foreground/40' :
-                plan.tier === 'basic' ? 'bg-info' :
-                isPremium ? 'bg-accent' : 'bg-secondary'
-              )}
+              className={cn('h-full rounded-full transition-all duration-500', PLAN_TIER_PROGRESS[plan.tier] || PLAN_TIER_PROGRESS.free)}
               style={{ width: `${benefitPct}%` }}
             />
           </div>
         </div>
 
-        {/* Features List */}
+        {/* ── Features ── */}
         {features.length > 0 && (
-          <div className="mb-4">
-            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+          <div className="space-y-1.5 pt-1">
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
               {isRTL ? 'المميزات' : 'Features'}
             </p>
-            <div className="space-y-1.5">
+            <ul className="space-y-1">
               {features.slice(0, 5).map((f: string, i: number) => (
-                <div key={i} className="flex items-center gap-2 text-[11px] group/feat">
-                  <div className={cn('w-4 h-4 rounded-md flex items-center justify-center shrink-0', colors.badge)}>
-                    <Check className="w-2.5 h-2.5" />
-                  </div>
-                  <span className="truncate text-foreground/80 group-hover/feat:text-foreground transition-colors">{f}</span>
-                </div>
+                <li key={i} className="flex items-center gap-2 text-[11px] text-foreground/80">
+                  <Check className={cn('w-3 h-3 shrink-0', colors.text)} />
+                  <span className="truncate">{f}</span>
+                </li>
               ))}
               {features.length > 5 && (
-                <p className="text-[9px] text-muted-foreground ps-6 font-medium">
+                <li className="text-[10px] text-muted-foreground ps-5 font-medium">
                   +{features.length - 5} {isRTL ? 'ميزة أخرى' : 'more'}
-                </p>
+                </li>
               )}
-            </div>
+            </ul>
           </div>
         )}
 
-        {/* Key Limits */}
-        <div className="pt-3 border-t border-border/15">
-          <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-            {isRTL ? 'الحدود الرئيسية' : 'Key Limits'}
-          </p>
+        {/* ── Key Limits grid ── */}
+        <div className="pt-3 border-t border-border/40">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+              {isRTL ? 'الحدود الرئيسية' : 'Key Limits'}
+            </p>
+            {extraKeys.length > 0 && (
+              <span
+                className="text-[9px] text-muted-foreground/80 italic"
+                title={extraKeys.join(', ')}
+              >
+                +{extraKeys.length} {isRTL ? 'إضافي' : 'extra'}
+              </span>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-1.5">
             {LIMIT_FIELDS.filter(f => f.type === 'number').slice(0, 6).map(field => {
               const val = limits[field.key] as number;
+              const unlimited = val === 0;
               return (
-                <div key={field.key} className="flex items-center justify-between px-2 py-1 rounded-lg bg-muted/15 border border-border/5">
-                  <span className="text-[8px] text-muted-foreground truncate">{isRTL ? field.label.ar : field.label.en}</span>
-                  <span className={cn('text-[10px] font-bold ms-1.5', val === 0 ? 'text-muted-foreground' : colors.text)}>
-                    {val === 0 ? '∞' : val}
+                <div
+                  key={field.key}
+                  className={cn(
+                    'flex items-center justify-between gap-1.5 px-2 py-1.5 rounded-lg border',
+                    unlimited
+                      ? 'bg-muted/20 border-dashed border-border/50'
+                      : 'bg-background border-border/60',
+                  )}
+                >
+                  <span className="text-[9px] text-muted-foreground truncate">{isRTL ? field.label.ar : field.label.en}</span>
+                  <span className={cn('text-[11px] font-bold tabular-nums tech-content shrink-0', unlimited ? 'text-muted-foreground' : colors.text)}>
+                    {unlimited ? '∞' : val}
                   </span>
                 </div>
               );
             })}
           </div>
-          {extraKeys.length > 0 && (
-            <p
-              className="mt-2 text-[8px] text-muted-foreground/80 italic"
-              title={extraKeys.join(', ')}
-            >
-              {isRTL
-                ? `محفوظ ${extraKeys.length} مفتاح إضافي للنظام الخلفي`
-                : `${extraKeys.length} additional backend key(s) preserved`}
-            </p>
-          )}
         </div>
       </CardContent>
     </Card>
