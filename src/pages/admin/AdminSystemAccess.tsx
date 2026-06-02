@@ -14,7 +14,7 @@ import {
   Layers, Search, Globe, Users as UsersIcon, User as UserIcon,
   ShieldCheck, Lock, Eye, EyeOff, Sparkles, Filter, Loader2,
   AlertTriangle, RotateCcw, Info, ArrowLeft, History, Settings2,
-  Check, X as XIcon, Pencil, Building2,
+  Check, X as XIcon, Pencil, Building2, Zap,
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
@@ -420,7 +420,11 @@ const AdminSystemAccess: React.FC = () => {
         </div>
 
         {viewTab === 'audit' ? (
-          <AuditLogPanel modules={modulesQuery.data ?? []} />
+          <AuditLogPanel
+            modules={modulesQuery.data ?? []}
+            businesses={entitiesQuery.data ?? []}
+            users={usersQuery.data ?? []}
+          />
         ) : viewTab === 'super_override' ? (
           <SuperAdminBusinessOverridePanel />
         ) : (
@@ -460,8 +464,8 @@ const AdminSystemAccess: React.FC = () => {
             <div className="rounded-xl bg-warning/10 border border-warning/30 p-3 flex items-start gap-2 text-sm">
               <Info className="w-4 h-4 text-warning shrink-0 mt-0.5" />
               <span>{isRTL
-                ? 'لمنشأة محددة: يخضع لباقة المنشأة. يمكن للسوبر أدمن التجاوز بسبب إلزامي يُسجَّل في سجل العمليات.'
-                : 'Per business: subject to the business plan. Super Admin may override with a mandatory reason recorded in the audit log.'}</span>
+                ? 'لمنشأة محددة: للأدمن صلاحية التعديل المباشر بغض النظر عن باقة المنشأة، ويُسجَّل كل تغيير في سجل العمليات بوسم [admin direct].'
+                : 'Per business: admins can toggle modules directly regardless of the business plan. Every change is recorded in the audit log with an [admin direct] tag.'}</span>
             </div>
           )}
 
