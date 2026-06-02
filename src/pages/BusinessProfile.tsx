@@ -7,6 +7,7 @@ import {
   FolderOpen,
   GitBranch,
   Image as ImageIcon,
+  Inbox,
   Phone,
   Shield,
   Star,
@@ -54,6 +55,12 @@ import { BookingWidget } from "@/components/booking/BookingWidget";
 import { ContactSupplierSheet } from "@/components/business-profile/ContactSupplierSheet";
 import { BusinessProfileTrustStrip } from "@/components/business-profile/BusinessProfileTrustStrip";
 import { BusinessProfileStickyCta } from "@/components/business-profile/BusinessProfileStickyCta";
+import {
+  canViewSection,
+  useBusinessVisibility,
+  type ProfileSectionKey,
+} from "@/components/business-profile/business-profile.visibility";
+import { RequestsAsBeneficiaryTab } from "@/components/business-profile/RequestsTab";
 import { buildBreadcrumbList, buildService, ogImageFor } from "@/lib/seo/structured-data";
 import { track } from "@/lib/analytics-events";
 // JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement:
@@ -72,6 +79,17 @@ const BusinessProfile = () => {
   const { data: branches = [] } = useBranches(business?.id);
   const { data: reviews = [] } = useReviews(business?.id);
   const { data: activeOffersCount = 0 } = useActivePromotionsCount(business?.id);
+  const { data: visibility } = useBusinessVisibility(business?.id);
+
+  const isOwner = !!user && !!business && business.user_id === user.id;
+  const viewerCtx = useMemo(
+    () => ({ isAuthenticated: !!user, isOwner, isAdmin: false }),
+    [user, isOwner],
+  );
+  const canSee = (key: ProfileSectionKey): boolean => {
+    if (!visibility) return true; // optimistic until loaded
+    return canViewSection(visibility.levels[key], viewerCtx);
+  };
 
   // Record a click event when this page was opened from an embedded
   // "Verified on Qitaat" badge (?ref=badge) — visible in DashboardBadge.
@@ -405,13 +423,15 @@ const BusinessProfile = () => {
 
 
   const tabs = [
-    { value: "services", label: language === "ar" ? "الخدمات" : "Services", icon: Wrench },
-    { value: "projects", label: language === "ar" ? "المشاريع" : "Projects", icon: FolderOpen, count: projects.length },
-    { value: "portfolio", label: language === "ar" ? "الأعمال" : "Portfolio", icon: ImageIcon },
-    { value: "branches", label: language === "ar" ? "الفروع" : "Branches", icon: GitBranch, count: branches.length },
-    { value: "reviews", label: language === "ar" ? "التقييمات" : "Reviews", icon: Star, count: business.rating_count ?? 0 },
-    { value: "contact", label: language === "ar" ? "التواصل" : "Contact", icon: Phone },
-  ];
+    canSee("services") && { value: "services", label: language === "ar" ? "الخدمات" : "Services", icon: Wrench },
+    canSee("projects") && { value: "projects", label: language === "ar" ? "المشاريع" : "Projects", icon: FolderOpen, count: projects.length },
+    canSee("portfolio") && { value: "portfolio", label: language === "ar" ? "الأعمال" : "Portfolio", icon: ImageIcon },
+    canSee("requests_as_beneficiary") && { value: "requests", label: language === "ar" ? "طلبات مطروحة" : "Public requests", icon: Inbox },
+    canSee("branches") && { value: "branches", label: language === "ar" ? "الفروع" : "Branches", icon: GitBranch, count: branches.length },
+    canSee("reviews") && { value: "reviews", label: language === "ar" ? "التقييمات" : "Reviews", icon: Star, count: business.rating_count ?? 0 },
+    canSee("contact") && { value: "contact", label: language === "ar" ? "التواصل" : "Contact", icon: Phone },
+  ].filter(Boolean) as Array<{ value: string; label: string; icon: React.ElementType; count?: number }>;
+  const defaultTab = tabs[0]?.value ?? "services";
 
   return (
     <div className="min-h-screen bg-background">
@@ -485,7 +505,7 @@ const BusinessProfile = () => {
             data-lead-category-slug={(business.categories as { slug?: string } | null)?.slug || ""}
             data-lead-city={(business.cities as { slug?: string } | null)?.slug || cityName || ""}
           >
-            <Tabs defaultValue="services" dir={isRTL ? "rtl" : "ltr"} className="w-full">
+            <Tabs defaultValue={defaultTab} dir={isRTL ? "rtl" : "ltr"} className="w-full">
               <div
                 className="sticky top-12 z-30 -mx-1.5 overflow-x-auto bg-background/80 px-1.5 py-1 backdrop-blur-md no-scrollbar sm:top-14 sm:-mx-3 sm:px-3 sm:py-1.5"
                 dir={isRTL ? "rtl" : "ltr"}
@@ -510,27 +530,43 @@ const BusinessProfile = () => {
               </div>
 
               <div className="mt-3 rounded-2xl bg-background/70 p-1.5 sm:mt-6 sm:rounded-3xl sm:p-3">
-                <TabsContent value="services" className="mt-0">
-                  <ServicesTab businessId={business.id} businessName={businessName} />
-                </TabsContent>
-                <TabsContent value="projects" className="mt-0">
-                  <ProjectsTab businessId={business.id} />
-                </TabsContent>
-                <TabsContent value="portfolio" className="mt-0">
-                  <PortfolioTab businessId={business.id} />
-                </TabsContent>
-                <TabsContent value="branches" className="mt-0">
+                {canSee("services") && (
+                  <TabsContent value="services" className="mt-0">
+                    <ServicesTab businessId={business.id} businessName={businessName} />
+                  </TabsContent>
+                )}
+                {canSee("projects") && (
+                  <TabsContent value="projects" className="mt-0">
+                    <ProjectsTab businessId={business.id} />
+                  </TabsContent>
+                )}
+                {canSee("portfolio") && (
+                  <TabsContent value="portfolio" className="mt-0">
+                    <PortfolioTab businessId={business.id} />
+                  </TabsContent>
+                )}
+                {canSee("requests_as_beneficiary") && (
+                  <TabsContent value="requests" className="mt-0">
+                    <RequestsAsBeneficiaryTab businessId={business.id} />
+                  </TabsContent>
+                )}
+                {canSee("branches") && (
+                  <TabsContent value="branches" className="mt-0">
                   <BranchesTab
                     businessId={business.id}
                     isAuthenticated={!!user}
                     onRequestContact={() => handleContactClick("branches_tab")}
                     onRevealContact={handleContactReveal}
                   />
-                </TabsContent>
-                <TabsContent value="reviews" className="mt-0">
-                  <ReviewsTab business={business} />
-                </TabsContent>
-                <TabsContent value="contact" className="mt-0">
+                  </TabsContent>
+                )}
+                {canSee("reviews") && (
+                  <TabsContent value="reviews" className="mt-0">
+                    <ReviewsTab business={business} />
+                  </TabsContent>
+                )}
+                {canSee("contact") && (
+                  <TabsContent value="contact" className="mt-0">
                   <ContactTab
                     business={business}
                     isAuthenticated={!!user}
@@ -545,7 +581,8 @@ const BusinessProfile = () => {
                   <div className="mt-6">
                     <BusinessBarcodeCard businessId={business.id} businessName={businessName} />
                   </div>
-                </TabsContent>
+                  </TabsContent>
+                )}
               </div>
             </Tabs>
           </section>
