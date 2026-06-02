@@ -21,7 +21,8 @@ import {
   Plus, Trash2, Star, GripVertical, X, Pencil, Image as ImageIcon,
   Eye, EyeOff, LayoutGrid, List, Search, StarOff, CheckCircle2,
   MapPin, Calendar, FolderOpen, Layers, Copy, Loader2, Maximize2,
-  Download, AlertCircle, BarChart3, Zap, Filter,
+  Download, AlertCircle, BarChart3, Zap, Filter, Share2, ExternalLink,
+  Tag, User, Banknote, Clock, Link2, TrendingUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/ui/image-upload';
@@ -41,6 +42,9 @@ interface PortfolioItem {
   description_ar: string | null; description_en: string | null; media_url: string;
   media_type: string; is_featured: boolean; sort_order: number; created_at: string;
   category: string; project_location: string | null; completion_date: string | null;
+  view_count: number; share_count: number; last_viewed_at: string | null;
+  tags: string[] | null; client_name: string | null; project_value: number | null;
+  project_duration_days: number | null; external_url: string | null;
 }
 
 const portfolioCategories = [
