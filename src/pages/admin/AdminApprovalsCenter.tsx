@@ -21,7 +21,6 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { reviewEntityAccessRequest } from '@/modules/entities/services/access/reviewEntityAccessRequest';
 import {
   listPendingProviderReviewBusinesses,
   listPendingUsernameBusinesses,
@@ -304,6 +303,7 @@ const AdminApprovalsCenter: React.FC = () => {
           'entity_access_request.approved', 'entity_access_request.rejected',
           'service_activation.approved', 'service_activation.rejected',
           'membership_subscription_activated',
+          'business_approval_changed', 'username_status_changed',
         ])
         .order('created_at', { ascending: false })
         .limit(20);
