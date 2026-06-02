@@ -623,6 +623,30 @@ const DashboardPortfolio = () => {
                   <ImageUpload bucket="portfolio-images" value={form.media_url} onChange={url => setForm(p => ({ ...p, media_url: url }))} onRemove={() => setForm(p => ({ ...p, media_url: '' }))} compact placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'} />
                 </div>
 
+                {/* ── Pro fields: client, value, duration, external url, tags ── */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><User className="w-3.5 h-3.5" />{isRTL ? 'اسم العميل' : 'Client'}</Label>
+                    <Input value={form.client_name} onChange={e => setForm(p => ({ ...p, client_name: e.target.value }))} placeholder={isRTL ? 'اختياري' : 'Optional'} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><Banknote className="w-3.5 h-3.5" />{isRTL ? 'قيمة المشروع' : 'Project Value'}</Label>
+                    <Input type="number" min="0" step="0.01" value={form.project_value} onChange={e => setForm(p => ({ ...p, project_value: e.target.value }))} placeholder="SAR" dir="ltr" className="h-9 tech-content" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{isRTL ? 'المدة (أيام)' : 'Duration (days)'}</Label>
+                    <Input type="number" min="0" step="1" value={form.project_duration_days} onChange={e => setForm(p => ({ ...p, project_duration_days: e.target.value }))} dir="ltr" className="h-9 tech-content" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><Link2 className="w-3.5 h-3.5" />{isRTL ? 'رابط خارجي' : 'External Link'}</Label>
+                    <Input type="url" value={form.external_url} onChange={e => setForm(p => ({ ...p, external_url: e.target.value }))} placeholder="https://…" dir="ltr" className="h-9 tech-content" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{isRTL ? 'وسوم (مفصولة بفاصلة)' : 'Tags (comma-separated)'}</Label>
+                  <Input value={form.tags} onChange={e => setForm(p => ({ ...p, tags: e.target.value }))} placeholder={isRTL ? 'فلل، تجاري، الرياض' : 'villa, commercial, riyadh'} className="h-9" />
+                </div>
+
                 {/* Descriptions */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
