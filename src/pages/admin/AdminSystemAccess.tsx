@@ -98,7 +98,7 @@ const AdminSystemAccess: React.FC = () => {
         ref_id: string | null; account_type: string | null;
       }>;
     },
-    enabled: scopeTab === 'user',
+    enabled: scopeTab === 'user' || viewTab === 'audit',
   });
 
   const entitiesQuery = useQuery({
@@ -115,7 +115,7 @@ const AdminSystemAccess: React.FC = () => {
         ref_id: string | null; logo_url: string | null;
       }>;
     },
-    enabled: scopeTab === 'entity',
+    enabled: scopeTab === 'entity' || viewTab === 'audit',
   });
 
   const setMutation = useMutation({
