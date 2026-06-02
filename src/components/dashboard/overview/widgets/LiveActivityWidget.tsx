@@ -13,6 +13,7 @@ import { Activity, Bell, MessageSquare, FileText, Wifi, WifiOff } from 'lucide-r
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { resolveNotificationTitle } from '@/i18n/notificationLabels';
 
 type ActivityKind = 'all' | 'notification' | 'message' | 'contract';
 
@@ -63,7 +64,7 @@ export const LiveActivityWidget = React.memo(function LiveActivityWidget({
       (notifs.data || []).forEach((n) => rows.push({
         id: `n-${n.id}`,
         kind: 'notification',
-        title: (isRTL ? n.title_ar : (n.title_en || n.title_ar)) ?? '',
+        title: resolveNotificationTitle(n, isRTL ? 'ar' : 'en'),
         body: isRTL ? n.body_ar : (n.body_en || n.body_ar),
         url: n.action_url || '/dashboard/notifications',
         unread: !n.is_read,

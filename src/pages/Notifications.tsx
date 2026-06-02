@@ -27,6 +27,7 @@ import { formatDistanceToNow, format, isAfter, isBefore, startOfDay, endOfDay } 
 import { ar as arLocale, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getNotificationMeta, isUrgentNotification, typeFilterLabels } from '@/components/notifications/notification-types';
+import { resolveNotificationTitle } from '@/i18n/notificationLabels';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { trackNotificationOpened } from '@/lib/analytics-events';
 
@@ -273,7 +274,7 @@ const Notifications = () => {
               const meta = getNotificationMeta(n);
               const Icon = meta.icon;
               const color = meta.colorClass;
-              const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);
+              const title = resolveNotificationTitle(n, language === 'ar' ? 'ar' : 'en');
               const body = language === 'ar' ? n.body_ar : (n.body_en || n.body_ar);
               const timeAgo = formatDistanceToNow(new Date(n.created_at), {
                 addSuffix: true,

@@ -25,6 +25,7 @@ import { formatDistanceToNow, format, isToday, isThisWeek, isThisMonth } from 'd
 import { ar as arLocale, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getNotificationMeta, isUrgentNotification, typeFilterLabels } from '@/components/notifications/notification-types';
+import { resolveNotificationTitle } from '@/i18n/notificationLabels';
 import { useNoIndex } from "@/hooks/useNoIndex";
 
 /* ── Notification Item (memo) ── */
@@ -35,7 +36,7 @@ const NotificationItem = React.memo(({ notification, isRTL, language, onRead, on
   const meta = getNotificationMeta(notification);
   const Icon = meta.icon;
   const color = meta.colorClass;
-  const title = language === 'ar' ? notification.title_ar : (notification.title_en || notification.title_ar);
+  const title = resolveNotificationTitle(notification, language === 'ar' ? 'ar' : 'en');
   const body = language === 'ar' ? notification.body_ar : (notification.body_en || notification.body_ar);
   const timeAgo = formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: language === 'ar' ? arLocale : enUS });
   const isNew = isToday(new Date(notification.created_at)) && !notification.is_read;

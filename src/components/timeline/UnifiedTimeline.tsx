@@ -16,6 +16,7 @@ import {
   listBusinessActivityTimeline,
   type BusinessActivityEvent,
 } from '@/modules/businesses/notes/services/listBusinessActivityTimeline';
+import { getNotificationLabel } from '@/i18n/notificationLabels';
 
 export interface UnifiedTimelineProps {
   businessId: string;
@@ -115,6 +116,7 @@ export const UnifiedTimeline: React.FC<UnifiedTimelineProps> = ({
             const refId = (e.metadata && typeof e.metadata['ref_id'] === 'string')
               ? (e.metadata['ref_id'] as string)
               : null;
+            const lang = isRTL ? 'ar' : 'en';
             return (
               <li
                 key={e.id}
@@ -124,8 +126,8 @@ export const UnifiedTimeline: React.FC<UnifiedTimelineProps> = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-medium">{e.action}</span>
-                      <span className="text-[10px] text-muted-foreground">{e.entity_type}</span>
+                      <span className="text-xs font-medium">{getNotificationLabel(e.action, lang)}</span>
+                      <span className="text-[10px] text-muted-foreground">{getNotificationLabel(e.entity_type, lang)}</span>
                       {refId && (
                         <span className="text-[10px] font-mono text-muted-foreground tech-content">
                           {refId}

@@ -6,6 +6,7 @@ import {
   listBusinessActivityTimeline,
   type BusinessActivityEvent,
 } from "@/modules/businesses/notes";
+import { getNotificationLabel } from "@/i18n/notificationLabels";
 
 interface Props {
   businessId: string;
@@ -117,6 +118,9 @@ export function BusinessActivityTimelineCard({ businessId, limit = 50 }: Props) 
         <ol className="space-y-2">
           {events.map((e) => {
             const meta = summarizeMetadata(e.metadata);
+            const lang = isRTL ? "ar" : "en";
+            const actionLabel = getNotificationLabel(e.action, lang);
+            const entityLabel = getNotificationLabel(e.entity_type, lang);
             return (
               <li
                 key={e.id}
@@ -125,9 +129,9 @@ export function BusinessActivityTimelineCard({ businessId, limit = 50 }: Props) 
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground truncate" dir="auto">
-                      {e.action}
+                      {actionLabel}
                       <span className="text-muted-foreground font-normal ms-2 text-xs">
-                        · {e.entity_type}
+                        · {entityLabel}
                       </span>
                     </p>
                     {meta && (
