@@ -198,6 +198,7 @@ async function fetchBusinessVisibilityAudit(): Promise<BusinessVisibilityRow[]> 
 }
 
 async function fetchSubscriptionHealth(): Promise<SubscriptionHealthRow[]> {
+  type RawSubscriptionHealthRow = SubscriptionHealthRow & { business?: { id: string } | null };
   const { data, error } = await supabase
     .from('membership_subscriptions')
     .select('id, ref_id, business_id, status, created_at, business:business_id(id)')
@@ -205,8 +206,7 @@ async function fetchSubscriptionHealth(): Promise<SubscriptionHealthRow[]> {
     .order('created_at', { ascending: false })
     .limit(50);
   if (error) return [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return ((data ?? []) as any[])
+  return ((data ?? []) as unknown as RawSubscriptionHealthRow[])
     .filter((row) => row.business_id && !row.business)
     .map((row) => ({
       id: row.id,
