@@ -355,6 +355,7 @@ const AdminApprovalsCenter: React.FC = () => {
   const [visibleCount, setVisibleCount] = React.useState(PAGE_SIZE);
   const [selected, setSelected] = React.useState<Record<string, boolean>>({});
   const [bulkBusy, setBulkBusy] = React.useState(false);
+  const [auditSearch, setAuditSearch] = React.useState('');
 
   // Persist filter settings
   React.useEffect(() => {
@@ -480,6 +481,35 @@ const AdminApprovalsCenter: React.FC = () => {
     w.document.write(buildPdfHtml({
       title, isRTL, headers, meta,
       rows: exportRows.map((r) => [r.category, r.ref_id, r.name, r.detail, r.created_at]),
+    }));
+    w.document.close();
+  };
+
+  // ── Audit log: filter + export (uses shared dateRange + own search) ──
+  const filteredAudit = useMemo<AuditRow[]>(
+    () => filterAuditRows((auditQuery.data ?? []) as AuditRow[], auditSearch, dateRange),
+    [auditQuery.data, auditSearch, dateRange],
+  );
+
+  const downloadAuditCSV = () => {
+    const csv = buildAuditCsv(filteredAudit, isRTL);
+    downloadTextFile(csv, `approvals-audit-${new Date().toISOString().slice(0, 10)}.csv`);
+    toast.success(isRTL ? `تم تصدير ${filteredAudit.length} قرار` : `Exported ${filteredAudit.length} decisions`);
+  };
+
+  const downloadAuditPDF = () => {
+    const title = isRTL ? 'سجل تدقيق قرارات الموافقات' : 'Approvals Audit Log';
+    const headers = isRTL
+      ? ['الإجراء', 'نوع الكيان', 'معرف الكيان', 'المستخدم', 'تاريخ القرار']
+      : ['Action', 'Entity Type', 'Entity ID', 'User', 'Decision At'];
+    const w = window.open('', '_blank', 'width=900,height=700');
+    if (!w) { toast.error(isRTL ? 'تعذّر فتح نافذة الطباعة' : 'Print window blocked'); return; }
+    const meta = `${isRTL ? 'تاريخ التصدير' : 'Exported'}: ${new Date().toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')} · ${filteredAudit.length} ${isRTL ? 'سجل' : 'records'}`;
+    w.document.write(buildPdfHtml({
+      title, isRTL, headers, meta,
+      rows: filteredAudit.map((r) => [
+        r.action, r.entity_type ?? '', r.entity_id ?? '', r.user_id ?? '', r.created_at ?? '',
+      ]),
     }));
     w.document.close();
   };
@@ -789,7 +819,7 @@ const AdminApprovalsCenter: React.FC = () => {
                 <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   {isRTL ? 'آخر القرارات الإدارية' : 'Recent admin decisions'}
                   <Badge variant="outline" className="text-[10px] tech-content">
-                    {auditQuery.isLoading ? '…' : (auditQuery.data?.length ?? 0)}
+                    {auditQuery.isLoading ? '…' : filteredAudit.length}
                   </Badge>
                 </h2>
                 <p className="text-[11px] text-muted-foreground">
@@ -799,27 +829,68 @@ const AdminApprovalsCenter: React.FC = () => {
                 </p>
               </div>
             </div>
-            <Link
-              to="/admin/audit-log"
-              className="inline-flex items-center gap-1 text-xs px-3 h-8 rounded-lg border border-border/60 bg-card hover:border-primary/40 hover:text-primary transition-colors whitespace-nowrap"
-            >
-              <ExternalLink className="w-3 h-3" />
-              {isRTL ? 'السجل الكامل' : 'Full log'}
-            </Link>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="rounded-lg gap-1.5 h-8" disabled={filteredAudit.length === 0}>
+                    <Download className="w-3.5 h-3.5" />
+                    <span className="text-[11px]">{isRTL ? 'تصدير' : 'Export'}</span>
+                    <ChevronDown className="w-3 h-3 opacity-60" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel className="text-[11px]">
+                    {isRTL ? `تصدير ${filteredAudit.length} قرار` : `Export ${filteredAudit.length} decisions`}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={downloadAuditCSV} className="gap-2 text-xs">
+                    <FileSpreadsheet className="w-3.5 h-3.5" /> CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={downloadAuditPDF} className="gap-2 text-xs">
+                    <FileText className="w-3.5 h-3.5" /> PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Link
+                to="/admin/audit-log"
+                className="inline-flex items-center gap-1 text-xs px-3 h-8 rounded-lg border border-border/60 bg-card hover:border-primary/40 hover:text-primary transition-colors whitespace-nowrap"
+              >
+                <ExternalLink className="w-3 h-3" />
+                {isRTL ? 'السجل الكامل' : 'Full log'}
+              </Link>
+            </div>
           </header>
+          <div className="px-4 py-2 border-b border-border/40 bg-muted/10">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" style={{ insetInlineStart: '0.75rem' }} />
+              <Input
+                dir="auto"
+                value={auditSearch}
+                onChange={(e) => setAuditSearch(e.target.value)}
+                placeholder={isRTL ? 'بحث في الإجراءات أو نوع الكيان أو المعرف…' : 'Search actions, entity type, or ID…'}
+                className="h-8 rounded-lg text-xs"
+                style={{ paddingInlineStart: '2rem' }}
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1.5">
+              {isRTL
+                ? `يطبّق نفس نطاق التاريخ المحدد أعلاه (${dateRange === 'all' ? 'الكل' : dateRange}).`
+                : `Same date range as the feed above (${dateRange}).`}
+            </p>
+          </div>
           <div className="p-3">
             {auditQuery.isLoading ? (
               <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-xl" />)}
               </div>
-            ) : (auditQuery.data?.length ?? 0) === 0 ? (
+            ) : filteredAudit.length === 0 ? (
               <div className="flex items-center gap-3 px-3 py-5 text-xs text-muted-foreground">
                 <ShieldAlert className="w-4 h-4" />
                 {isRTL ? 'لا توجد قرارات حديثة.' : 'No recent decisions.'}
               </div>
             ) : (
               <ul className="divide-y divide-border/40">
-                {(auditQuery.data ?? []).map((row) => (
+                {filteredAudit.map((row) => (
                   <li key={row.id} className="flex items-center gap-3 px-3 py-2.5">
                     <div className="w-8 h-8 rounded-lg bg-muted/40 flex items-center justify-center shrink-0">
                       <History className="w-3.5 h-3.5 text-muted-foreground" />
@@ -832,7 +903,7 @@ const AdminApprovalsCenter: React.FC = () => {
                         )}
                       </div>
                       <p className="text-[10px] text-muted-foreground tech-content mt-0.5">
-                        {fmtDate(row.created_at as string)}
+                        {fmtDate(row.created_at)}
                         {row.entity_id ? ` · ${(row.entity_id as string).slice(0, 8)}` : ''}
                       </p>
                     </div>
