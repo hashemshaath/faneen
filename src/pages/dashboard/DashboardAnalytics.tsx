@@ -463,7 +463,10 @@ const DashboardAnalytics = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-5">
+      {/* `.dash-emerald` activates the bento grid + tile design tokens
+          (scoped in dashboard-emerald.css). Without it, .dash-bento /
+          .dash-tile / .bento-feature lose their grid + surface styles. */}
+      <div className="dash-emerald space-y-5">
         {/* Brand-aligned hero (Qitaat: primary green + info blue, no off-brand gold) */}
         <section
           aria-label={isRTL ? 'مركز التحليلات' : 'Analytics center'}
