@@ -867,15 +867,15 @@ const AdminMemberships = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { icon: Users, label: isRTL ? 'إجمالي الاشتراكات' : 'Total Subscriptions', value: stats.total, accent: 'border-r-primary', delta: null, empty: stats.total === 0 },
-                  { icon: UserCheck, label: isRTL ? 'نشط حالياً' : 'Currently Active', value: stats.active, accent: 'border-r-success', delta: stats.active > 0 ? 'live' : null, empty: stats.active === 0 },
-                  { icon: DollarSign, label: isRTL ? 'الإيراد الشهري' : 'Monthly Revenue', value: Math.round(stats.revenue).toLocaleString(isRTL ? 'ar-SA' : 'en-US'), suffix: 'SAR', accent: 'border-r-info', delta: null, empty: stats.revenue === 0 },
-                  { icon: AlertTriangle, label: isRTL ? 'ينتهي قريباً' : 'Expiring Soon', value: stats.expiringSoon, accent: stats.expiringSoon > 0 ? 'border-r-warning' : 'border-r-border', delta: null, empty: stats.expiringSoon === 0 },
+                  { icon: Users, label: isRTL ? 'إجمالي الاشتراكات' : 'Total Subscriptions', value: stats.total, accent: 'border-e-primary', delta: null, empty: stats.total === 0 },
+                  { icon: UserCheck, label: isRTL ? 'نشط حالياً' : 'Currently Active', value: stats.active, accent: 'border-e-success', delta: stats.active > 0 ? 'live' : null, empty: stats.active === 0 },
+                  { icon: DollarSign, label: isRTL ? 'الإيراد الشهري' : 'Monthly Revenue', value: Math.round(stats.revenue).toLocaleString(isRTL ? 'ar-SA' : 'en-US'), suffix: 'SAR', accent: 'border-e-info', delta: null, empty: stats.revenue === 0 },
+                  { icon: AlertTriangle, label: isRTL ? 'ينتهي قريباً' : 'Expiring Soon', value: stats.expiringSoon, accent: stats.expiringSoon > 0 ? 'border-e-warning' : 'border-e-border', delta: null, empty: stats.expiringSoon === 0 },
                 ].map((s, i) => (
                   <Card
                     key={i}
                     className={cn(
-                      'border border-border/60 shadow-sm rounded-2xl border-r-4 transition-all hover:shadow-md',
+                      'border border-border/60 shadow-sm rounded-2xl border-e-4 transition-all hover:shadow-md',
                       s.accent,
                       s.empty && 'bg-muted/20'
                     )}
