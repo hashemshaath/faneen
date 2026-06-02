@@ -97,6 +97,48 @@ const ALLOWED_FROM: Record<InternalIntentStatus, InternalIntentStatus[]> = {
   refunded: ['succeeded'],
 };
 
+/* ──────────────────── Subscription period helpers ──────────────────── */
+
+/**
+ * MEMBERSHIP-PAYMENT-ACTIVATION-1: compute the new `expires_at` for a
+ * membership subscription based on its billing cycle. Pure + side-effect
+ * free so it can be unit-tested without DB access.
+ *
+ * Rules:
+ *   - monthly  → +1 calendar month from the anchor
+ *   - yearly / annual → +1 calendar year from the anchor
+ *   - anything else → null (caller preserves existing expiry)
+ *
+ * Renewal vs first activation:
+ *   - If `currentExpiresAt` is in the future, the new period is anchored
+ *     to that expiry (true renewal extends the existing window).
+ *   - Otherwise, the new period is anchored to `startAt` (or now()).
+ */
+export function computeMembershipPeriodEnd(args: {
+  billingCycle: string | null | undefined;
+  startAt: Date;
+  currentExpiresAt?: Date | null;
+  now?: Date;
+}): Date | null {
+  const cycle = (args.billingCycle ?? '').trim().toLowerCase();
+  const now = args.now ?? new Date();
+  const anchor =
+    args.currentExpiresAt && args.currentExpiresAt.getTime() > now.getTime()
+      ? new Date(args.currentExpiresAt)
+      : new Date(args.startAt);
+
+  const end = new Date(anchor);
+  if (cycle === 'monthly') {
+    end.setUTCMonth(end.getUTCMonth() + 1);
+    return end;
+  }
+  if (cycle === 'yearly' || cycle === 'annual') {
+    end.setUTCFullYear(end.getUTCFullYear() + 1);
+    return end;
+  }
+  return null;
+}
+
 /* ────────────────────────── Provider fetch ─────────────────────────── */
 
 export async function fetchMoyasarPaymentStatus(args: {
@@ -265,17 +307,10 @@ export async function reconcileIntentWithProvider(args: {
 
   // Mirror onto membership_subscriptions for terminal success/refund only.
   if (target === 'succeeded') {
-    await updateMembershipSubscriptionById(admin, intent.subscription_id, {
-      payment_provider: 'moyasar',
-      payment_status: 'paid',
-      last_paid_at: snapshot.paidAt ?? new Date().toISOString(),
-      last_paid_amount: intent.amount,
-      last_paid_currency: intent.currency,
-      last_invoice_id: snapshot.invoiceId,
-      last_external_payment_id: snapshot.paymentId,
-      renewal_failure_count: 0,
-      payment_failure_reason: null,
-      updated_at: new Date().toISOString(),
+    await activateSubscriptionOnPaymentSuccess({
+      admin,
+      intent,
+      snapshot,
     });
   } else if (target === 'refunded') {
     await updateMembershipSubscriptionById(admin, intent.subscription_id, {
@@ -291,6 +326,124 @@ export async function reconcileIntentWithProvider(args: {
     intentId: intent.id,
     subscriptionId: intent.subscription_id,
   };
+}
+
+/**
+ * MEMBERSHIP-PAYMENT-ACTIVATION-1
+ *
+ * Apply payment-success mirror fields AND activate the underlying
+ * membership subscription so the tier-sync trigger fan-out fires
+ * (`trg_membership_subscriptions_sync_tier`).
+ *
+ * Invariants:
+ *   - Idempotent through `reconcileIntentWithProvider`: this helper only
+ *     runs once per intent transition because the intent guard already
+ *     prevents duplicate `succeeded` transitions.
+ *   - Does NOT directly write `businesses.membership_tier` or
+ *     `profiles.membership_tier` — the DB trigger owns those mirrors.
+ *   - Plan must be active; if a plan was hidden/deactivated between
+ *     intent creation and confirmation we still record the payment but
+ *     leave the subscription in its current lifecycle state.
+ *   - `starts_at` is preserved if it already existed; otherwise set to
+ *     payment paid-at (or now()).
+ *   - `expires_at` is computed from billing cycle. Renewals extend from
+ *     the existing `expires_at` when still in the future; otherwise the
+ *     new period anchors at `starts_at`.
+ *   - `cancelled_at` is cleared on activation (reactivation flow).
+ */
+async function activateSubscriptionOnPaymentSuccess(args: {
+  admin: SupabaseClient;
+  intent: IntentRow;
+  snapshot: ProviderPaymentSnapshot;
+}) {
+  const { admin, intent, snapshot } = args;
+  const nowIso = new Date().toISOString();
+  const paidAtIso = snapshot.paidAt ?? nowIso;
+
+  const basePatch: Record<string, unknown> = {
+    payment_provider: 'moyasar',
+    payment_status: 'paid',
+    last_paid_at: paidAtIso,
+    last_paid_amount: intent.amount,
+    last_paid_currency: intent.currency,
+    last_invoice_id: snapshot.invoiceId,
+    last_external_payment_id: snapshot.paymentId,
+    renewal_failure_count: 0,
+    payment_failure_reason: null,
+    updated_at: nowIso,
+  };
+
+  // Load current subscription + plan activeness to compute activation
+  // safely. We tolerate read failures and degrade to a mirror-only
+  // update so the payment never appears "lost".
+  const { data: subRow } = await admin
+    .from('membership_subscriptions')
+    .select('id, status, starts_at, expires_at, plan_id, billing_cycle')
+    .eq('id', intent.subscription_id)
+    .maybeSingle();
+
+  if (!subRow) {
+    await updateMembershipSubscriptionById(admin, intent.subscription_id, basePatch);
+    return;
+  }
+
+  let planActive = true;
+  if (subRow.plan_id) {
+    const { data: planRow } = await getMembershipPlanById(
+      admin,
+      subRow.plan_id as string,
+      'is_active',
+    );
+    if (planRow && (planRow as { is_active?: boolean }).is_active === false) {
+      planActive = false;
+    }
+  }
+
+  if (!planActive) {
+    // Inactive plan — record payment but never auto-activate. Admin
+    // tooling will resolve manually.
+    await updateMembershipSubscriptionById(admin, intent.subscription_id, {
+      ...basePatch,
+      payment_failure_reason: 'plan_inactive',
+    });
+    return;
+  }
+
+  const startAt =
+    subRow.starts_at && String(subRow.starts_at).length > 0
+      ? new Date(subRow.starts_at as string)
+      : new Date(paidAtIso);
+  const currentExpires = subRow.expires_at
+    ? new Date(subRow.expires_at as string)
+    : null;
+  const cycle =
+    (subRow.billing_cycle as string | null) ?? intent.billing_cycle ?? null;
+
+  const newExpires = computeMembershipPeriodEnd({
+    billingCycle: cycle,
+    startAt,
+    currentExpiresAt: currentExpires,
+  });
+
+  const activationPatch: Record<string, unknown> = {
+    ...basePatch,
+    status: 'active',
+    starts_at: startAt.toISOString(),
+    cancelled_at: null,
+    grace_period_until: null,
+  };
+  if (newExpires) {
+    activationPatch.expires_at = newExpires.toISOString();
+  } else if (currentExpires) {
+    // Preserve existing expiry when cycle is unknown.
+    activationPatch.expires_at = currentExpires.toISOString();
+  }
+
+  await updateMembershipSubscriptionById(
+    admin,
+    intent.subscription_id,
+    activationPatch,
+  );
 }
 
 function noop(intent: IntentRow): TransitionResult {
