@@ -517,7 +517,7 @@ const DashboardAnalytics = () => {
                 }
                 sub={`${stats.activeContracts + stats.completedContracts} ${isRTL ? 'عقد مُولِّد' : 'earning contracts'}`}
                 trend={trend(stats.totalRevenue, prevAnalytics?.revenue)}
-                accent="primary"
+                accent="emerald"
               />
               <BentoTile
                 icon={FileText}
@@ -539,7 +539,7 @@ const DashboardAnalytics = () => {
                 value={stats.avgRating}
                 sub={`${stats.totalReviews} ${isRTL ? 'تقييم' : 'reviews'}`}
                 trend={prevAnalytics ? trend(Number(stats.avgRating), prevAnalytics.avgRating) : undefined}
-                accent="accent"
+                accent="neutral"
               />
               <BentoTile
                 icon={Briefcase}
