@@ -25,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   listPendingProviderReviewBusinesses,
   listPendingUsernameBusinesses,
+  listBusinessVisibilityAudit,
 } from '@/modules/businesses/services/listPendingApprovalBusinesses';
 import { toast } from 'sonner';
 import {
@@ -171,7 +172,7 @@ async function fetchEntityAccess(): Promise<CategoryResult> {
 async function fetchSubscriptions(): Promise<CategoryResult> {
   const { data, count, error } = await supabase
     .from('membership_subscriptions')
-    .select('id, ref_id, tier, created_at, business:business_id(ref_id, name_ar, name_en)', { count: 'exact' })
+    .select('id, ref_id, created_at, plan:plan_id(tier, name_ar, name_en), business:business_id(ref_id, name_ar, name_en)', { count: 'exact' })
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
     .limit(PREVIEW_LIMIT);
@@ -184,10 +185,36 @@ async function fetchSubscriptions(): Promise<CategoryResult> {
       id: r.id,
       refId: r.ref_id ?? '—',
       primary: r.business?.name_ar ?? r.business?.name_en ?? r.business?.ref_id ?? '—',
-      secondary: r.tier ?? null,
+      secondary: r.plan?.name_ar ?? r.plan?.name_en ?? r.plan?.tier ?? null,
       createdAt: r.created_at,
     })),
   };
+}
+
+async function fetchBusinessVisibilityAudit(): Promise<BusinessVisibilityRow[]> {
+  const { data, error } = await listBusinessVisibilityAudit(50);
+  if (error) return [];
+  return data;
+}
+
+async function fetchSubscriptionHealth(): Promise<SubscriptionHealthRow[]> {
+  const { data, error } = await supabase
+    .from('membership_subscriptions')
+    .select('id, ref_id, business_id, status, created_at, business:business_id(id)')
+    .in('status', ['pending', 'active'])
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) return [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return ((data ?? []) as any[])
+    .filter((row) => row.business_id && !row.business)
+    .map((row) => ({
+      id: row.id,
+      ref_id: row.ref_id ?? null,
+      business_id: row.business_id ?? null,
+      status: row.status ?? null,
+      created_at: row.created_at ?? null,
+    }));
 }
 
 async function fetchUpgrades(): Promise<CategoryResult> {
