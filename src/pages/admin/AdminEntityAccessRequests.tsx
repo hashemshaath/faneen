@@ -15,6 +15,7 @@ import {
   Download, ArrowUpDown, ExternalLink, CheckCheck, ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {
   listEntityAccessRequests,
   reviewEntityAccessRequest,
