@@ -80,13 +80,15 @@ type FilterMode = 'all' | 'featured' | 'regular';
 
 /* ── Sortable Card ── */
 const SortableCard = React.memo(({
-  item, rtl, onDelete, onEdit, onToggleFeatured, onDuplicate, onPreview, viewMode, isSelected, onSelect,
+  item, rtl, onDelete, onEdit, onToggleFeatured, onDuplicate, onPreview, onShare, onOpenPublic, viewMode, isSelected, onSelect,
 }: {
   item: PortfolioItem; rtl: boolean; viewMode: ViewMode; isSelected: boolean;
   onDelete: (id: string) => void; onEdit: (item: PortfolioItem) => void;
   onToggleFeatured: (item: PortfolioItem) => void;
   onDuplicate: (item: PortfolioItem) => void;
   onPreview: (url: string) => void;
+  onShare: (item: PortfolioItem) => void;
+  onOpenPublic: (item: PortfolioItem) => void;
   onSelect: (id: string) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
