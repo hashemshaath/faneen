@@ -3667,6 +3667,7 @@ export type Database = {
           address_line1: string
           address_line2: string | null
           archived_at: string | null
+          block_number: string | null
           building_number: string | null
           business_id: string
           city_id: string | null
@@ -3679,16 +3680,25 @@ export type Database = {
           created_by: string
           district: string | null
           district_en: string | null
+          government_notes: string | null
           id: string
           is_default: boolean
           is_demo: boolean
           label: string
+          land_use_type: string | null
           last_scanned_at: string | null
           latitude: number | null
           legacy_ref_id: string | null
           longitude: number | null
           map_url: string | null
+          municipal_license_expiry_date: string | null
+          municipal_license_issue_date: string | null
+          municipal_license_no: string | null
+          owner_id_number: string | null
+          owner_name: string | null
           owner_user_id: string | null
+          plan_number: string | null
+          plot_number: string | null
           post_code: string | null
           qr_enabled: boolean
           qr_revoked_at: string | null
@@ -3703,6 +3713,8 @@ export type Database = {
           site_type: string
           street_name: string | null
           street_name_en: string | null
+          title_deed_date: string | null
+          title_deed_no: string | null
           updated_at: string
           visibility: string
         }
@@ -3713,6 +3725,7 @@ export type Database = {
           address_line1: string
           address_line2?: string | null
           archived_at?: string | null
+          block_number?: string | null
           building_number?: string | null
           business_id: string
           city_id?: string | null
@@ -3725,16 +3738,25 @@ export type Database = {
           created_by?: string
           district?: string | null
           district_en?: string | null
+          government_notes?: string | null
           id?: string
           is_default?: boolean
           is_demo?: boolean
           label: string
+          land_use_type?: string | null
           last_scanned_at?: string | null
           latitude?: number | null
           legacy_ref_id?: string | null
           longitude?: number | null
           map_url?: string | null
+          municipal_license_expiry_date?: string | null
+          municipal_license_issue_date?: string | null
+          municipal_license_no?: string | null
+          owner_id_number?: string | null
+          owner_name?: string | null
           owner_user_id?: string | null
+          plan_number?: string | null
+          plot_number?: string | null
           post_code?: string | null
           qr_enabled?: boolean
           qr_revoked_at?: string | null
@@ -3749,6 +3771,8 @@ export type Database = {
           site_type?: string
           street_name?: string | null
           street_name_en?: string | null
+          title_deed_date?: string | null
+          title_deed_no?: string | null
           updated_at?: string
           visibility?: string
         }
@@ -3759,6 +3783,7 @@ export type Database = {
           address_line1?: string
           address_line2?: string | null
           archived_at?: string | null
+          block_number?: string | null
           building_number?: string | null
           business_id?: string
           city_id?: string | null
@@ -3771,16 +3796,25 @@ export type Database = {
           created_by?: string
           district?: string | null
           district_en?: string | null
+          government_notes?: string | null
           id?: string
           is_default?: boolean
           is_demo?: boolean
           label?: string
+          land_use_type?: string | null
           last_scanned_at?: string | null
           latitude?: number | null
           legacy_ref_id?: string | null
           longitude?: number | null
           map_url?: string | null
+          municipal_license_expiry_date?: string | null
+          municipal_license_issue_date?: string | null
+          municipal_license_no?: string | null
+          owner_id_number?: string | null
+          owner_name?: string | null
           owner_user_id?: string | null
+          plan_number?: string | null
+          plot_number?: string | null
           post_code?: string | null
           qr_enabled?: boolean
           qr_revoked_at?: string | null
@@ -3795,6 +3829,8 @@ export type Database = {
           site_type?: string
           street_name?: string | null
           street_name_en?: string | null
+          title_deed_date?: string | null
+          title_deed_no?: string | null
           updated_at?: string
           visibility?: string
         }
