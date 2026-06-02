@@ -1,81 +1,81 @@
-# SYSTEM-ACCESS-MODULE-COVERAGE-2 — Plan
 
-## Scope
-Bring 5 modules under the same control surface used by other gated systems:
-`analytics`, `operations_log`, `private_sectors`, `installments`, `staff_management`.
+## الهدف
+معالجة بروفايل الجهة (مثل `qitaat.com/bayanat`) ليكون احترافيًا ومتكاملًا، مع تحكم كامل في إظهار/إخفاء الأقسام من قبل **صاحب الحساب** و**الأدمن**، وعرض **الخدمات المقدّمة** و**الطلبات/الأعمال المطروحة** بدور المزوّد والمستفيد.
 
-No RLS changes. No new business domains. No service-role in client. No scope creep into inventory/accounting/supplier-payments.
+---
 
-## Approach (incremental, behind existing infrastructure)
+## 1) قاعدة البيانات — جدول رؤية أقسام البروفايل
 
-### 1. Audit doc
-- Create `docs/system-access-module-coverage-2-audit.md` with per-module inventory (routes, sidebar entries, quick actions, command palette, feature gates, membership dep, gaps).
+إنشاء جدول `business_profile_visibility` (مماثل لـ `client_site_visibility_settings`) للتحكم بكل قسم على حدة:
 
-### 2. Module registry (DB)
-- Migration: ensure the 5 keys exist in `public.system_modules` with bilingual labels, group/category, route, default policy, and (where applicable) a membership feature key column.
-- Use idempotent `INSERT ... ON CONFLICT (key) DO UPDATE` so re-running is safe.
-- Groups: `operations` (operations_log), `insights` (analytics), `business` (private_sectors), `finance` (installments), `workspace` (staff_management).
+```text
+business_profile_visibility
+├── business_id          (FK businesses)
+├── section_key          (enum: overview, services, projects, portfolio,
+│                                branches, reviews, contact, phone, email,
+│                                address, map, requests_as_provider,
+│                                requests_as_beneficiary, ratings, social)
+├── visibility_level     (public | members_only | after_request | hidden)
+├── locked_by_admin      (boolean — لو true يمنع المالك من التعديل)
+├── admin_note           (text)
+└── updated_by / updated_at
+```
 
-### 3. Access resolution
-- `resolveEffectiveBusinessAccess()` already returns `{allowed, disabled, reasons, sources, version}` per module — verify the 5 keys flow through and add explicit unit coverage. No structural changes unless test exposes a gap.
+- RLS: المالك يقرأ/يكتب لجهته، الأدمن يقرأ/يكتب الكل، العامة تقرأ فقط.
+- دالة `get_business_visibility(business_id) → jsonb` لاسترجاع الإعدادات الفعّالة (مع defaults).
+- Trigger يمنع المالك من تعديل صف مقفول بـ `locked_by_admin=true`.
 
-### 4. Admin UI (`/admin/system-access`)
-- Surface the 5 modules under the existing grouped layout (Arabic group headings as specified). Reuse existing membership-blocked state, synced indicator, last-updated, save feedback. No popups, RTL-safe.
+## 2) جلب طلبات/أعمال الجهة
 
-### 5. Sidebar / nav / command palette / quick create / dashboard widgets
-- `useVisibleModules` already maps the 5 keys to their routes (added previously). Extend to additional aliases discovered in the audit (e.g. reports, BNPL, audit-log routes).
-- Verify `useCommandPalette`, dashboard quick-create, and dashboard cards consume `useEffectiveBusinessAccess` / `useVisibleModules`; add filters where missing.
+استعلامات جديدة في `business-profile.data.ts`:
 
-### 6. Route guards
-- Wrap the 5 module routes with the existing FeatureGate / protected pattern. When disabled, render bilingual blocked panel:
-  - AR: "هذا النظام غير مفعل لمنشأتك."
-  - EN: "This module is not enabled for your organization."
-  - Includes link to dashboard + help article when registered.
+- `useBusinessRequestsAsBeneficiary(business_id)` — يجلب من `lead_requests` + `quote_requests` + `rfq_requests` حيث الجهة هي **طالبة الخدمة**.
+- `useBusinessRequestsAsProvider(business_id)` — يجلب الطلبات التي ردّت/تقدّمت لها الجهة (rfq_quotes, quote_request_leads).
+- فلترة على الحالات العامة فقط (مفتوحة/منجزة) وإخفاء الحساسة.
 
-### 7. Help center
-- Register article keys `dashboard.analytics`, `dashboard.operations-log`, `dashboard.private-sectors`, `dashboard.installments`, `dashboard.staff-management`, `admin.system-access`. If bodies missing, add to `docs/deferred-backlog.md`.
+## 3) إعادة تصميم صفحة البروفايل
 
-### 8. Audit / observability
-- Admin write path already records `system_module_audit_log` via RPC + `console.info('[observability] system_access.updated', …)` via `updateBusinessSystemAccess`. No changes needed beyond verifying metadata fields (business ref, modules changed count) for bulk operations.
+`src/pages/BusinessProfile.tsx` + `BusinessProfileTabs.tsx`:
 
-### 9. Immediate sync
-- `useBusinessAccessInvalidation` already covers the required query keys. Verify admin UI calls it after every write for the new modules.
+- إضافة تبويبَين:
+  - **«الطلبات المطروحة»** (كمستفيد) — بطاقات احترافية لكل طلب: العنوان، الفئة، الميزانية، الموعد، الحالة، زر «تقديم عرض».
+  - **«أعمال كمزود»** (مشاريع/عروض منفذة) — مدمج/جنبًا لجنب مع المشاريع الحالية.
+- إخفاء التبويب تلقائيًا إذا كان `section_key` = `hidden` أو لا يوجد محتوى.
+- شارة 🔒 بجانب أقسام `members_only` / `after_request` للضيوف.
+- تحسين الـ Header: شريط ثقة، شارات BNPL، إحصائيات حية (عدد الطلبات، عدد المشاريع، التقييم).
 
-### 10. Tests
-- `src/tests/systemAccessModuleCoverage2.test.ts`:
-  - registry contains 5 keys (migration SQL fixture or seed assertion)
-  - admin UI source references all 5 keys
-  - `resolveEffectiveBusinessAccess` returns entries for all 5
-  - membership-blocked branch returns bilingual reason
-  - `useVisibleModules` aliases cover the 5 modules' routes
-  - command palette / quick create filter by visibility
-  - route guard components import FeatureGate for the 5 routes
-  - invalidation hook covers required keys
-  - audit/observability text present in `updateBusinessSystemAccess`
-  - no RLS edits, no service-role import in client, no inventory/accounting/supplier-payments scope creep
+## 4) لوحة تحكم المالك
 
-### 11. Validation
-- `npx tsc --noEmit`
-- Focused vitest on new test file + related (`systemAccessMembershipSync1`, `systemAccessModuleAliases`, `accessGovernanceFinal1`)
-- Existing audits: identity, business-staff, membership, credits, broken-links, RTL
-- Repair narrow fallout only.
+`src/pages/dashboard/DashboardBusinessProfileHub.tsx` — إضافة قسم **«إعدادات الظهور»**:
 
-## Files (expected)
+- شبكة inline (بدون مودال) لكل قسم: مفتاح Switch + قائمة منسدلة لمستوى الرؤية.
+- معاينة مباشرة (preview) للبروفايل بعين الزائر.
+- شارة «مقفول من الأدمن» للأقسام المقفلة (تظهر للقراءة فقط).
 
-Created:
-- `docs/system-access-module-coverage-2-audit.md`
-- `supabase/migrations/<ts>_system_access_module_coverage_2.sql`
-- `src/tests/systemAccessModuleCoverage2.test.ts`
-- (possibly) `src/components/access/ModuleDisabledPanel.tsx`
+## 5) لوحة تحكم الأدمن
 
-Modified:
-- `src/pages/admin/AdminSystemAccess.tsx` (grouped sections for the 5 modules)
-- `src/hooks/useVisibleModules.ts` (additional aliases if audit finds them)
-- Route wrappers for the 5 module routes (FeatureGate)
-- Command palette / quick create consumers (filter by visibility) — only if audit shows they bypass the hook
-- `docs/deferred-backlog.md` (help bodies if missing)
+صفحة جديدة `src/pages/admin/AdminBusinessVisibility.tsx` (مرتبطة من مركز الموافقات):
 
-## Non-goals
-- Schema/RLS changes to `system_modules`/`system_module_overrides`/`system_module_audit_log`
-- Changes to membership plan definitions
-- New routes or features
+- اختيار الجهة → عرض مصفوفة الأقسام × مستويات الرؤية.
+- زر **«قفل/إلغاء قفل»** لكل قسم — يمنع المالك من تغيير الإعداد.
+- ملاحظة الأدمن (مرئية للمالك في الـ Hub).
+- سجل تدقيق مدمج (من `activity_log` للحركات على `business_profile_visibility`).
+
+## 6) التفاصيل التقنية
+
+- تطبيق الـ visibility على الـ JSON-LD أيضًا (لا تنشر phone/email إذا كان hidden).
+- استخدام `<Bi>` و `useBi()` للنصوص ثنائية اللغة.
+- استخدام `surface` و `btn-ds` و `.hover-lift` من نظام التصميم.
+- استخدام `dir="auto"` و `.tech-content` للأرقام (مبالغ/تواريخ).
+- لا مودالات: كل التعديلات inline (وفق سياسة قِطاعات).
+- اختبارات: 
+  - وحدة لـ `get_business_visibility` (Defaults + overrides + lock).
+  - تكامل لـ visibility-aware rendering في `BusinessProfile`.
+
+---
+
+## الملفات المتأثرة (تقديريًا)
+- **جديدة**: 1 migration, `AdminBusinessVisibility.tsx`, `BusinessVisibilitySettings.tsx` (component للـ Hub), `useBusinessVisibility.ts`, اختبارَين.
+- **تعديل**: `BusinessProfile.tsx`, `BusinessProfileTabs.tsx`, `business-profile.data.ts`, `DashboardBusinessProfileHub.tsx`, `AdminApprovalsCenter.tsx` (إضافة رابط).
+
+أبدأ التنفيذ بمجرّد الموافقة. هل تود تنفيذ الكل دفعة واحدة، أم نبدأ بالأولوية: (أ) عرض الطلبات/الخدمات، ثم (ب) تحكم الرؤية للمالك، ثم (ج) تحكم الأدمن؟
