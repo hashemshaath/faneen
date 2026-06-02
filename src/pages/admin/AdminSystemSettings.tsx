@@ -476,6 +476,20 @@ const AdminSystemSettings = () => {
             </div>
           </div>
 
+          {/* ── Phase-2 Honesty Banner ── */}
+          <Card className="border-warning/40 bg-warning/[0.04]">
+            <CardContent className="p-4 flex gap-3">
+              <div className="w-9 h-9 rounded-xl bg-warning/10 flex items-center justify-center shrink-0">
+                <Info className="w-4.5 h-4.5 text-warning" />
+              </div>
+              <div className="text-xs leading-relaxed text-warning/90 dark:text-warning/90">
+                {isRTL
+                  ? 'هذه الصفحة تعرض فقط الإعدادات المرتبطة فعليًا بالتشغيل. الإعدادات غير الموصولة تظهر كعناصر مؤجلة ولا تغيّر سلوك النظام.'
+                  : 'This page only persists settings that have a real runtime consumer. Unwired entries are shown as deferred and have no effect on the platform.'}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* ── Stats Cards ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
