@@ -81,7 +81,7 @@ const PUBLIC_BUSINESS_SELECT =
   'latitude, longitude, ' +
   // trimmed joins (FK columns exposed by the view enable PostgREST embedding)
   'categories(name_ar, name_en, slug), ' +
-  'cities(name_ar, name_en, slug), ' +
+  'cities(name_ar, name_en), ' +
   'countries(name_ar, name_en, code)';
 
 export const useBusinessByUsername = (username: string) =>
