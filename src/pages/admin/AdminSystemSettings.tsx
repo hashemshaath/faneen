@@ -294,7 +294,8 @@ const AdminSystemSettings = () => {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const dirtyKeys = Array.from(dirty);
+      // Phase-2: only persist wired keys, even if state ever contained others.
+      const dirtyKeys = Array.from(dirty).filter(k => WIRED_SYSTEM_SETTING_KEYS.has(k));
       for (const key of dirtyKeys) {
         const setting = defaultSettings.find(s => s.key === key);
         if (!setting) continue;
