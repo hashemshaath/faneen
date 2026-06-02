@@ -471,8 +471,35 @@ const AdminSystemAccess: React.FC = () => {
             <div className="rounded-xl bg-info/10 border border-info/20 p-3 flex items-start gap-2 text-sm">
               <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
               <span>{isRTL
-                ? 'هذه القواعد تنطبق على جميع المستخدمين كافتراضي عام، ويمكن تجاوزها بقواعد نوع الحساب أو قواعد المستخدم.'
-                : 'These rules apply to all users as a global default; can be overridden per account type or per user.'}</span>
+                ? 'الإعداد الافتراضي العام: يطبّق على جميع المستخدمين والجهات ما لم يوجد تخصيص حسب نوع الحساب أو منشأة أو مستخدم. لا يخضع لباقة منشأة محددة.'
+                : 'Global default: applies to all users and businesses unless overridden by account type, business, or user. Not gated by any single business plan.'}</span>
+            </div>
+          )}
+
+          {scopeTab === 'account_type' && (
+            <div className="rounded-xl bg-info/10 border border-info/20 p-3 flex items-start gap-2 text-sm">
+              <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
+              <span>{isRTL
+                ? 'حسب نوع الحساب: يطبّق على كل الحسابات من هذا النوع، ويمكن تجاوزه بتخصيص منشأة أو مستخدم. لا يخضع لباقة منشأة محددة.'
+                : 'By account type: applies to all accounts of this type; can be overridden per business or per user. Not gated by any single business plan.'}</span>
+            </div>
+          )}
+
+          {scopeTab === 'entity' && selectedEntityId && (
+            <div className="rounded-xl bg-warning/10 border border-warning/30 p-3 flex items-start gap-2 text-sm">
+              <Info className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+              <span>{isRTL
+                ? 'لمنشأة محددة: يخضع لباقة المنشأة. يمكن للسوبر أدمن التجاوز بسبب إلزامي يُسجَّل في سجل العمليات.'
+                : 'Per business: subject to the business plan. Super Admin may override with a mandatory reason recorded in the audit log.'}</span>
+            </div>
+          )}
+
+          {scopeTab === 'user' && selectedUserId && (
+            <div className="rounded-xl bg-info/10 border border-info/20 p-3 flex items-start gap-2 text-sm">
+              <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
+              <span>{isRTL
+                ? 'لمستخدم محدد: يطبّق على هذا المستخدم حسب قواعد الوصول المرتبطة به، ويتجاوز قواعد نوع الحساب والافتراضي العام.'
+                : 'Per user: applies to the selected user per their access rules and overrides account-type and global defaults.'}</span>
             </div>
           )}
 
