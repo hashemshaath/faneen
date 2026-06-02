@@ -62,3 +62,27 @@ export async function listPendingUsernameBusinesses(
     error,
   };
 }
+
+export interface BusinessVisibilityAuditRow {
+  id: string;
+  ref_id: string | null;
+  name_ar: string | null;
+  name_en: string | null;
+  username: string | null;
+  approval_status: string | null;
+  username_status: string | null;
+  is_active: boolean | null;
+  is_demo: boolean | null;
+  created_at: string | null;
+}
+
+export async function listBusinessVisibilityAudit(
+  limit: number,
+): Promise<{ data: BusinessVisibilityAuditRow[]; error: unknown }> {
+  const { data, error } = await supabase
+    .from('businesses')
+    .select('id, ref_id, name_ar, name_en, username, approval_status, username_status, is_active, is_demo, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  return { data: (data ?? []) as unknown as BusinessVisibilityAuditRow[], error };
+}
