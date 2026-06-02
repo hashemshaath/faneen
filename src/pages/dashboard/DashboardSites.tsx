@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback, useTransition, useRef } from 'react';
+import { useState, useMemo, useCallback, useTransition, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +28,7 @@ import {
   MapPin, Plus, Pencil, Trash2, Search, X, Loader2, Building2, Home, Warehouse,
   Store, Briefcase, Layers, AlertCircle, CheckCircle2, FileText, Phone, User,
   ExternalLink, Star, ArrowUpRight, Map as MapIcon, FilePlus2, QrCode, ScrollText,
-  Landmark,
+  Landmark, SlidersHorizontal, Printer,
 } from 'lucide-react';
 
 type SiteType = 'apartment' | 'villa' | 'showroom' | 'office' | 'branch' | 'warehouse' | 'project' | 'commercial' | 'other';
@@ -139,6 +139,30 @@ export default function DashboardSites() {
   const [showArchived, setShowArchived] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [expandedBarcode, setExpandedBarcode] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [advLicenseNo, setAdvLicenseNo] = useState('');
+  const [advDeedNo, setAdvDeedNo] = useState('');
+  const [advOwnerId, setAdvOwnerId] = useState('');
+  const [advIssueFrom, setAdvIssueFrom] = useState('');
+  const [advIssueTo, setAdvIssueTo] = useState('');
+  const [advExpiryFrom, setAdvExpiryFrom] = useState('');
+  const [advExpiryTo, setAdvExpiryTo] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const focusRef = useRef<HTMLDivElement | null>(null);
+
+  // Consume ?focus=<site_ref or id> to auto-search and scroll to that card.
+  useEffect(() => {
+    const f = searchParams.get('focus');
+    if (f) {
+      setSearch(f);
+      requestAnimationFrame(() => focusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+      // Clean URL so refresh doesn't re-trigger.
+      const next = new URLSearchParams(searchParams);
+      next.delete('focus');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ─── Owner business ─── */
   const { data: business } = useQuery({
@@ -297,11 +321,37 @@ export default function DashboardSites() {
         (s.address_line1 || '').toLowerCase().includes(q) ||
         (s.city_name || '').toLowerCase().includes(q) ||
         (s.contact_name || '').toLowerCase().includes(q) ||
-        (s.site_ref || '').toLowerCase().includes(q)
+        (s.site_ref || '').toLowerCase().includes(q) ||
+        (s.municipal_license_no || '').toLowerCase().includes(q) ||
+        (s.title_deed_no || '').toLowerCase().includes(q) ||
+        (s.owner_name || '').toLowerCase().includes(q) ||
+        (s.owner_id_number || '').toLowerCase().includes(q)
       );
     }
+    if (advLicenseNo.trim()) {
+      const q = advLicenseNo.trim().toLowerCase();
+      r = r.filter(s => (s.municipal_license_no || '').toLowerCase().includes(q));
+    }
+    if (advDeedNo.trim()) {
+      const q = advDeedNo.trim().toLowerCase();
+      r = r.filter(s => (s.title_deed_no || '').toLowerCase().includes(q));
+    }
+    if (advOwnerId.trim()) {
+      const q = advOwnerId.trim().toLowerCase();
+      r = r.filter(s => (s.owner_id_number || '').toLowerCase().includes(q));
+    }
+    if (advIssueFrom) r = r.filter(s => !!s.municipal_license_issue_date && s.municipal_license_issue_date >= advIssueFrom);
+    if (advIssueTo)   r = r.filter(s => !!s.municipal_license_issue_date && s.municipal_license_issue_date <= advIssueTo);
+    if (advExpiryFrom) r = r.filter(s => !!s.municipal_license_expiry_date && s.municipal_license_expiry_date >= advExpiryFrom);
+    if (advExpiryTo)   r = r.filter(s => !!s.municipal_license_expiry_date && s.municipal_license_expiry_date <= advExpiryTo);
     return r;
-  }, [sites, search, typeFilter]);
+  }, [sites, search, typeFilter, advLicenseNo, advDeedNo, advOwnerId, advIssueFrom, advIssueTo, advExpiryFrom, advExpiryTo]);
+
+  const advancedActive = !!(advLicenseNo || advDeedNo || advOwnerId || advIssueFrom || advIssueTo || advExpiryFrom || advExpiryTo);
+  const resetAdvanced = () => {
+    setAdvLicenseNo(''); setAdvDeedNo(''); setAdvOwnerId('');
+    setAdvIssueFrom(''); setAdvIssueTo(''); setAdvExpiryFrom(''); setAdvExpiryTo('');
+  };
 
   const stats = useMemo(() => {
     const total = sites.filter(s => !s.archived_at).length;
@@ -648,6 +698,55 @@ export default function DashboardSites() {
               className={`px-2.5 h-8 rounded-lg text-[11px] font-medium border transition-colors ${showArchived ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border/40 text-muted-foreground hover:bg-muted/50'}`}>
               {isRTL ? 'إظهار المؤرشفة' : 'Show archived'}
             </button>
+            <button onClick={() => setShowAdvanced(v => !v)}
+              className={`px-2.5 h-8 rounded-lg text-[11px] font-medium border transition-colors flex items-center gap-1.5 ${showAdvanced || advancedActive ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border/40 text-muted-foreground hover:bg-muted/50'}`}>
+              <SlidersHorizontal className="w-3 h-3" />
+              {isRTL ? 'فلترة متقدمة' : 'Advanced filters'}
+              {advancedActive && <span className="ms-0.5 w-1.5 h-1.5 rounded-full bg-primary" />}
+            </button>
+          </div>
+        )}
+
+        {showAdvanced && (
+          <div className="rounded-xl border border-border/50 bg-card/40 p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold flex items-center gap-1.5"><Landmark className="w-3.5 h-3.5 text-primary" />{isRTL ? 'فلترة بالبيانات الحكومية' : 'Filter by government data'}</p>
+              {advancedActive && (
+                <button onClick={resetAdvanced} className="text-[10px] text-primary hover:underline">{isRTL ? 'مسح الكل' : 'Clear all'}</button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'رقم رخصة البلدية' : 'License No.'}</Label>
+                <Input dir="ltr" value={advLicenseNo} onChange={e => setAdvLicenseNo(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'رقم الصك' : 'Deed No.'}</Label>
+                <Input dir="ltr" value={advDeedNo} onChange={e => setAdvDeedNo(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'رقم هوية المالك' : 'Owner ID'}</Label>
+                <Input dir="ltr" value={advOwnerId} onChange={e => setAdvOwnerId(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'إصدار من' : 'Issued from'}</Label>
+                <Input type="date" dir="ltr" value={advIssueFrom} onChange={e => setAdvIssueFrom(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'إصدار إلى' : 'Issued to'}</Label>
+                <Input type="date" dir="ltr" value={advIssueTo} onChange={e => setAdvIssueTo(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'انتهاء من' : 'Expiry from'}</Label>
+                <Input type="date" dir="ltr" value={advExpiryFrom} onChange={e => setAdvExpiryFrom(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">{isRTL ? 'انتهاء إلى' : 'Expiry to'}</Label>
+                <Input type="date" dir="ltr" value={advExpiryTo} onChange={e => setAdvExpiryTo(e.target.value)} className="h-8 text-xs tech-content" />
+              </div>
+            </div>
           </div>
         )}
 
@@ -697,8 +796,13 @@ export default function DashboardSites() {
               const Icon = meta.icon;
               const linkedCount = contractCounts[s.id] ?? 0;
               const isArchived = !!s.archived_at;
+              const isFocused = !!search && (s.site_ref === search.trim() || s.id === search.trim());
               return (
-                <Card key={s.id} className={`hover-lift border-border/50 ${isArchived ? 'opacity-60' : ''}`}>
+                <Card
+                  key={s.id}
+                  ref={isFocused ? focusRef : undefined}
+                  className={`hover-lift border-border/50 ${isArchived ? 'opacity-60' : ''} ${isFocused ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                >
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-2.5 min-w-0">
@@ -816,13 +920,22 @@ function SiteBarcodePanel({ siteId, siteRef, label, isRTL }: { siteId: string; s
     );
   }
   return (
-    <BarcodeWidget
-      barcodeCode={code}
-      entityType="client_site"
-      title={label}
-      subtitle={siteRef ?? undefined}
-      size="sm"
-      className="border-0 shadow-none p-0 bg-transparent"
-    />
+    <div className="space-y-2">
+      <BarcodeWidget
+        barcodeCode={code}
+        entityType="client_site"
+        title={label}
+        subtitle={siteRef ?? undefined}
+        size="sm"
+        className="border-0 shadow-none p-0 bg-transparent"
+      />
+      <Link
+        to={`/dashboard/sites/${siteId}/print`}
+        className="flex items-center justify-center gap-1.5 text-[11px] text-primary hover:underline py-1.5 rounded-lg border border-primary/20 bg-primary/5"
+      >
+        <Printer className="w-3 h-3" />
+        {isRTL ? 'فتح صفحة الطباعة المخصصة (PDF / ملصق)' : 'Open dedicated print page (PDF / sticker)'}
+      </Link>
+    </div>
   );
 }

@@ -123,6 +123,8 @@ const ResolvedCard: React.FC<ResolvedCardProps> = ({ data, isRTL }) => {
   );
 
   if (data.entity_type === 'client_site') {
+    const siteData = data.data as { site_ref?: string | null };
+    const siteRef = siteData.site_ref ?? null;
     return (
       <section className="p-5 rounded-xl border border-border/40 bg-card space-y-3">
         <div className="flex items-center gap-2">
@@ -144,6 +146,13 @@ const ResolvedCard: React.FC<ResolvedCardProps> = ({ data, isRTL }) => {
             'Site details are only shown after the site owner approves access.',
           )}
         </p>
+        {siteRef && (
+          <Button asChild variant="hero" size="sm" className="h-9 text-xs w-full">
+            <Link to={`/dashboard/sites?focus=${encodeURIComponent(siteRef)}`}>
+              {bi('فتح الموقع في لوحة التحكم (للمالك/المزود)', 'Open in dashboard (owner / provider)')}
+            </Link>
+          </Button>
+        )}
       </section>
     );
   }
