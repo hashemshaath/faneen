@@ -11,7 +11,7 @@ const Progress = React.forwardRef<
   return (
     <ProgressPrimitive.Root
       ref={ref}
-      className={cn("relative h-4 w-full overflow-hidden rounded-full bg-secondary", className)}
+      className={cn("relative h-4 w-full overflow-hidden rounded-full bg-muted", className)}
       {...props}
     >
       {/* Use inline-size + start anchoring so RTL fills from the right automatically */}
