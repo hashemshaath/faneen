@@ -722,7 +722,9 @@ const DashboardAnalytics = () => {
                     <div className="h-[200px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie data={bookingPieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
+                          <Pie data={bookingPieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value"
+                            className="cursor-pointer focus:outline-none"
+                            onClick={(p: { key?: string; name?: string }) => p?.key && setDrill({ kind: 'booking', key: p.key, label: p.name ?? p.key })}>
                             {bookingPieData.map((_, i) => (
                               <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                             ))}
@@ -753,7 +755,9 @@ const DashboardAnalytics = () => {
                     <div className="h-[200px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie data={contractPieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
+                          <Pie data={contractPieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value"
+                            className="cursor-pointer focus:outline-none"
+                            onClick={(p: { key?: string; name?: string }) => p?.key && setDrill({ kind: 'contract', key: p.key, label: p.name ?? p.key })}>
                             {contractPieData.map((_, i) => (
                               <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                             ))}
@@ -783,13 +787,113 @@ const DashboardAnalytics = () => {
                         <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
                         <YAxis type="category" dataKey="stars" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" width={40} />
                         <Tooltip contentStyle={tooltipStyle} />
-                        <Bar dataKey="count" fill="hsl(var(--warning))" radius={[0, 4, 4, 0]} />
+                       <Bar dataKey="count" fill="hsl(var(--warning))" radius={[0, 4, 4, 0]} className="cursor-pointer"
+                         onClick={(p: { stars?: string }) => {
+                           const m = typeof p?.stars === 'string' ? p.stars.match(/^(\d+)/) : null;
+                           if (m) setDrill({ kind: 'rating', key: m[1], label: p.stars! });
+                         }} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Drilldown — inline table showing rows behind the clicked chart segment */}
+            {drill && (
+              <Card className="border-primary/30 shadow-[var(--elev-1)]" aria-live="polite">
+                <CardHeader className="pb-2 flex flex-row items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <CardTitle className="text-sm font-heading flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-primary" aria-hidden="true" />
+                      {isRTL ? 'تفاصيل الفلتر' : 'Filtered details'}
+                    </CardTitle>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {isRTL ? 'البند:' : 'Segment:'}{' '}
+                      <span className="font-semibold text-foreground">{drill.label}</span>
+                      {' · '}
+                      <span className="tech-content">{drillRows.length}</span>{' '}
+                      {isRTL ? 'سجل' : 'rows'}
+                      {' · '}
+                      <span>{periodOptions.find((o) => o.value === period)?.label}</span>
+                    </p>
+                  </div>
+                  <Button size="sm" variant="ghost" className="h-7 gap-1" onClick={() => setDrill(null)}>
+                    <XIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                    {isRTL ? 'إغلاق' : 'Close'}
+                  </Button>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {drillRows.length === 0 ? (
+                    <p className="text-xs text-muted-foreground py-6 text-center">
+                      {isRTL ? 'لا توجد سجلات في هذا الفلتر للفترة المحددة.' : 'No records for this filter in the selected period.'}
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto -mx-2">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="text-start text-[10px] uppercase tracking-wide text-muted-foreground border-b border-border/40">
+                            <th className="px-2 py-2 text-start">{isRTL ? 'المعرّف' : 'ID'}</th>
+                            {drill.kind === 'contract' && (
+                              <th className="px-2 py-2 text-start">{isRTL ? 'المبلغ' : 'Amount'}</th>
+                            )}
+                            <th className="px-2 py-2 text-start">
+                              {drill.kind === 'rating' ? (isRTL ? 'التقييم' : 'Rating') : (isRTL ? 'الحالة' : 'Status')}
+                            </th>
+                            <th className="px-2 py-2 text-start">{isRTL ? 'التاريخ' : 'Date'}</th>
+                            <th className="px-2 py-2 text-end">{isRTL ? 'إجراء' : 'Action'}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {drillRows.slice(0, 100).map((row) => (
+                            <tr key={String(row.id)} className="border-b border-border/20 hover:bg-muted/30 transition-colors">
+                              <td className="px-2 py-2 tech-content text-[10px] text-muted-foreground truncate max-w-[120px]">
+                                {String(row.id).slice(0, 8)}…
+                              </td>
+                              {drill.kind === 'contract' && (
+                                <td className="px-2 py-2 tech-content font-semibold">
+                                  {Number(row.amount ?? 0).toLocaleString()} {String(row.currency ?? 'SAR')}
+                                </td>
+                              )}
+                              <td className="px-2 py-2">
+                                <Badge variant="outline" className="text-[10px]">
+                                  {String(row.status ?? row.rating ?? '—')}
+                                </Badge>
+                              </td>
+                              <td className="px-2 py-2 tech-content text-[10px] text-muted-foreground whitespace-nowrap">
+                                {row.created_at ? format(new Date(String(row.created_at)), 'yyyy-MM-dd') : '—'}
+                              </td>
+                              <td className="px-2 py-2 text-end">
+                                {drill.kind === 'contract' && (
+                                  <a href={`/contracts/${row.id}`} className="text-primary text-[11px] underline-offset-2 hover:underline">
+                                    {isRTL ? 'فتح' : 'Open'}
+                                  </a>
+                                )}
+                                {drill.kind === 'booking' && (
+                                  <a href={`/dashboard/bookings`} className="text-primary text-[11px] underline-offset-2 hover:underline">
+                                    {isRTL ? 'فتح' : 'Open'}
+                                  </a>
+                                )}
+                                {drill.kind === 'rating' && (
+                                  <a href={`/dashboard/reviews`} className="text-primary text-[11px] underline-offset-2 hover:underline">
+                                    {isRTL ? 'فتح' : 'Open'}
+                                  </a>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {drillRows.length > 100 && (
+                        <p className="text-[10px] text-muted-foreground text-center mt-2">
+                          {isRTL ? `عرض أول 100 من ${drillRows.length}` : `Showing first 100 of ${drillRows.length}`}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Lead activity (P5.1) */}
             <ProviderLeadAnalytics businessId={business?.id} period={period} />
