@@ -28,6 +28,20 @@ RESET=$'\033[0m'
 
 FAILED=()
 
+# Pick a JS runner: prefer bunx (faster locally), fall back to npx on
+# CI runners that don't ship Bun. Without this fallback every
+# `bunx tsc` / `bunx vitest` step below fails with "command not found"
+# on GitHub `ubuntu-latest` (which only has Node installed), and the
+# whole "Code Quality & Security Audit" job exits 1.
+if command -v bunx >/dev/null 2>&1; then
+  RUNNER="bunx"
+elif command -v npx >/dev/null 2>&1; then
+  RUNNER="npx"
+else
+  echo "${RED}Neither bunx nor npx is available on PATH.${RESET}"
+  exit 127
+fi
+
 run_step() {
   local name="$1"
   shift
@@ -51,23 +65,23 @@ echo "Bun:  $(bun --version 2>/dev/null || echo 'n/a')"
 # ---------------------------------------------------------------------------
 # Part A — Type + test gates
 # ---------------------------------------------------------------------------
-run_step "TypeScript: bunx tsc --noEmit" \
-  bunx tsc --noEmit
+run_step "TypeScript: ${RUNNER} tsc --noEmit" \
+  ${RUNNER} tsc --noEmit
 
 run_step "Vitest: full suite" \
-  bunx vitest run
+  ${RUNNER} vitest run
 
 run_step "Vitest: contract PDF export (privacy + smoke)" \
-  bunx vitest run src/lib/__tests__/contract-pdf-export.test.ts
+  ${RUNNER} vitest run src/lib/__tests__/contract-pdf-export.test.ts
 
 run_step "Vitest: contract PDF Arabic text layer" \
-  bunx vitest run src/lib/__tests__/contract-pdf-arabic-text.test.ts
+  ${RUNNER} vitest run src/lib/__tests__/contract-pdf-arabic-text.test.ts
 
 run_step "Vitest: contract PDF performance benchmark" \
-  bunx vitest run src/lib/__tests__/contract-pdf-perf.bench.test.ts
+  ${RUNNER} vitest run src/lib/__tests__/contract-pdf-perf.bench.test.ts
 
 run_step "Vitest: contract PDF export history privacy" \
-  bunx vitest run src/components/contract/__tests__/ContractPdfExportHistory.privacy.test.tsx
+  ${RUNNER} vitest run src/components/contract/__tests__/ContractPdfExportHistory.privacy.test.tsx
 
 # ---------------------------------------------------------------------------
 # Part B — Static privacy grep
