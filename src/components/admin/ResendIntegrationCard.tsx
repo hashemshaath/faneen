@@ -22,6 +22,8 @@ interface ResendDomain {
 interface ResendStatus {
   configured: boolean;
   connected: boolean;
+  restricted?: boolean;
+  note?: string;
   error?: string;
   domains?: ResendDomain[];
   checkedAt: string;
@@ -178,6 +180,12 @@ export function ResendIntegrationCard() {
                   </li>
                 ))}
               </ul>
+            ) : s?.restricted ? (
+              <p className="text-xs text-muted-foreground/70">
+                {isRTL
+                  ? 'مفتاح مُقيَّد للإرسال فقط — لا يمكنه إدراج النطاقات.'
+                  : 'Send-only restricted key — domain listing unavailable.'}
+              </p>
             ) : (
               <p className="text-xs text-muted-foreground/70">
                 {isRTL ? 'لا توجد نطاقات. أضف واحدًا من لوحة Resend.' : 'No domains yet. Add one from the Resend dashboard.'}
