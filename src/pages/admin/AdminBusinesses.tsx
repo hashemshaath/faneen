@@ -1176,6 +1176,31 @@ const AdminBusinesses = () => {
 
   if (!isAdmin) return null;
 
+  /* ─── Saved Views (per-admin localStorage) ─── */
+  type BizViewFilters = {
+    q: string; status: string; tier: string; translation: string; origin: string; sort: string;
+  };
+  const savedViews = useAdminSavedViews<BizViewFilters>('admin.businesses');
+  const currentViewFilters: BizViewFilters = {
+    q: search,
+    status: filterStatus,
+    tier: filterTier,
+    translation: filterTranslation,
+    origin: filterOrigin,
+    sort: sortBy,
+  };
+  const applySavedView = (f: BizViewFilters) => {
+    const sp = new URLSearchParams();
+    if (f.q) sp.set('q', f.q);
+    if (f.status && f.status !== 'all') sp.set('status', f.status);
+    if (f.tier && f.tier !== 'all') sp.set('tier', f.tier);
+    if (f.translation && f.translation !== 'all') sp.set('translation', f.translation);
+    if (f.origin && f.origin !== 'all') sp.set('origin', f.origin);
+    if (f.sort && f.sort !== 'recent') sp.set('sort', f.sort);
+    setSearchInput(f.q || '');
+    setSearchParams(sp, { replace: false });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6 max-w-[1600px] mx-auto">
