@@ -16,7 +16,6 @@ import {
   AlertTriangle, RotateCcw, Info, ArrowLeft, History, Settings2,
   Check, X as XIcon, Pencil, Building2,
 } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
   listSystemModules,
@@ -72,17 +71,6 @@ const AdminSystemAccess: React.FC = () => {
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'enabled' | 'disabled' | 'overridden'>('all');
   const [search, setSearch] = useState('');
-
-  // PRICING-FORCE-OVERRIDE-1 — Super-admin "تجاوز كمسؤول" inline action.
-  // When updateBusinessSystemAccess returns blocked_by_membership for a super-admin
-  // entity-scoped attempt, we capture the blocked module so the super admin can
-  // re-submit with bypassMembership:true + a mandatory reason. The wrapper writes
-  // the same audited override (system_module_audit_log) via the existing RPC.
-  const [blockedAttempt, setBlockedAttempt] = useState<
-    | { moduleKey: string; moduleLabelAr: string; moduleLabelEn: string; nextEnabled: boolean; scopeValue: string | null }
-    | null
-  >(null);
-  const [bypassReason, setBypassReason] = useState('');
 
   const modulesQuery = useQuery({
     queryKey: ['system-modules'],
