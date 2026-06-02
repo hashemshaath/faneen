@@ -421,6 +421,10 @@ const AdminEntityAccessRequests: React.FC = () => {
                     : 'This page only lists requests by users to join an existing entity. Membership subscriptions and upgrades are managed elsewhere:'}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
+                  <Link to="/admin/provider-review" className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-card border border-border/60 hover:border-primary/40 hover:text-primary transition-colors">
+                    <ExternalLink className="w-2.5 h-2.5" />
+                    {isRTL ? 'مراجعة الناشرين (اسم المستخدم/النشر)' : 'Provider Review (username/publish)'}
+                  </Link>
                   <Link to="/admin/memberships" className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-card border border-border/60 hover:border-primary/40 hover:text-primary transition-colors">
                     <ExternalLink className="w-2.5 h-2.5" />
                     {isRTL ? 'العضويات والمدفوعات' : 'Memberships & Payments'}
