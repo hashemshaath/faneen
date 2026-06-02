@@ -391,8 +391,8 @@ const DashboardBadge: React.FC = () => {
 
   const shareUrl = encodeURIComponent(profileLink);
   const shareText = encodeURIComponent(isRTL
-    ? `تعرّف على ورشتنا الموثّقة على قِطاعات: ${displayName}`
-    : `Check out our verified workshop on Qitaat: ${displayName}`);
+    ? `تعرّف على منشأتنا الموثّقة على قِطاعات: ${displayName}`
+    : `Discover our verified establishment on Qitaat: ${displayName}`);
 
   const downloadSvg = () => {
     const blob = new Blob([svgStandalone], { type: 'image/svg+xml' });
@@ -551,24 +551,24 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
               <AlertCircle className="w-10 h-10 text-warning mx-auto" />
               <div className="space-y-1">
                 <h2 className="text-base font-semibold">
-                  {isRTL ? 'لا توجد منشأة مرتبطة بحسابك بعد' : 'No business linked to your account yet'}
+                  {isRTL ? 'لا توجد منشأة مرتبطة بحسابك بعد' : 'No establishment linked to your account yet'}
                 </h2>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
                   {isRTL
-                    ? 'أنشئ ملف منشأتك لتفعيل شارة التوثيق، أو اطلب من صاحب المنشأة إضافتك كموظف ثم اختر المنشأة من المُبدّل أعلى الصفحة.'
-                    : 'Create your business profile to enable the verified badge, or ask the owner to invite you as staff — then pick the business from the switcher above.'}
+                    ? 'أنشئ ملف منشأتك لتفعيل شارة التوثيق الرسمية، أو اطلب من مالك المنشأة إضافتك كموظف ثم اختر المنشأة من مُبدّل المنشآت أعلى الصفحة.'
+                    : 'Create your establishment profile to activate the official verification badge, or ask the owner to invite you as staff — then select the establishment from the workspace switcher above.'}
                 </p>
               </div>
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 <Button asChild size="sm" className="rounded-xl">
                   <a href="/dashboard/business-edit">
-                    {isRTL ? 'إنشاء ملف المنشأة' : 'Create business profile'}
+                    {isRTL ? 'إنشاء ملف المنشأة' : 'Create establishment profile'}
                     <ArrowRight className="w-3.5 h-3.5 ms-1.5 rtl:rotate-180" />
                   </a>
                 </Button>
                 <Button asChild size="sm" variant="outline" className="rounded-xl">
                   <a href="/dashboard/diagnostics">
-                    {isRTL ? 'تشخيص حسابي' : 'Account diagnostics'}
+                    {isRTL ? 'تشخيص الحساب' : 'Account diagnostics'}
                   </a>
                 </Button>
               </div>
@@ -587,11 +587,11 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h1 className="text-xl sm:text-2xl font-heading font-bold truncate">
-                        {isRTL ? 'شارة التوثيق' : 'Verification Badge'}
+                        {isRTL ? 'شارة التوثيق الرسمية' : 'Official Verification Badge'}
                       </h1>
                       {business.is_verified
                         ? <VerifiedBadge size="sm" />
-                        : <Badge variant="outline" className="text-warning border-warning/40 bg-warning/5">{isRTL ? 'بانتظار التوثيق' : 'Pending verification'}</Badge>}
+                        : <Badge variant="outline" className="text-warning border-warning/40 bg-warning/5">{isRTL ? 'قيد المراجعة' : 'Pending review'}</Badge>}
                     </div>
                     <p className="text-sm text-muted-foreground mt-1 truncate">
                       {displayName} · <span className="tech-content" dir="ltr">@{business.username}</span>
@@ -702,7 +702,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
 
                       <div>
                         <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block flex items-center gap-1.5">
-                          <Upload className="w-3 h-3" />{isRTL ? 'شعار الورشة' : 'Workshop logo'}
+                          <Upload className="w-3 h-3" />{isRTL ? 'شعار المنشأة' : 'Establishment logo'}
                         </Label>
                         <div className="flex items-center gap-3">
                           <label className="inline-flex items-center gap-2 px-3 h-9 rounded-md border border-dashed cursor-pointer hover:bg-muted text-xs">
@@ -742,7 +742,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                         <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
                           <div className="text-sm">
                             <div className="font-medium">{isRTL ? 'إظهار العنوان الفرعي' : 'Show sub-label'}</div>
-                            <div className="text-xs text-muted-foreground">{isRTL ? 'اسم الورشة تحت العنوان' : 'Workshop name under title'}</div>
+                            <div className="text-xs text-muted-foreground">{isRTL ? 'اسم المنشأة أسفل العنوان' : 'Establishment name below the title'}</div>
                           </div>
                           <Switch checked={showSubLabel} onCheckedChange={setShowSubLabel} />
                         </div>
@@ -1044,12 +1044,12 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                     <CardContent className="p-4 flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
                       <div className="text-sm flex-1">
-                        <p className="font-semibold">{isRTL ? 'وثّق ورشتك أولاً' : 'Get verified first'}</p>
+                        <p className="font-semibold">{isRTL ? 'وثّق منشأتك أولاً' : 'Verify your establishment first'}</p>
                         <p className="text-muted-foreground mt-1">
-                          {isRTL ? 'لا تنشر الشارة قبل توثيق ورشتك من فريق قِطاعات لتفادي تضليل العملاء.' : 'Do not publish the badge before your workshop is verified by the Qitaat team.'}
+                          {isRTL ? 'لا تنشر شارة التوثيق قبل اعتماد منشأتك من فريق قِطاعات؛ هذا يحمي مصداقيتك ويمنع تضليل العملاء.' : 'Do not publish the badge until your establishment is approved by the Qitaat team — this protects your credibility and prevents misleading customers.'}
                         </p>
                       </div>
-                      <Button size="sm" variant="outline" asChild><a href="/dashboard/settings">{isRTL ? 'ابدأ التوثيق' : 'Start verification'}</a></Button>
+                      <Button size="sm" variant="outline" asChild><a href="/dashboard/business-edit">{isRTL ? 'ابدأ التوثيق' : 'Start verification'}</a></Button>
                     </CardContent>
                   </Card>
                 )}
@@ -1093,19 +1093,19 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                   <CardContent>
                     <ul className="grid sm:grid-cols-2 gap-2 text-sm">
                       {(isRTL ? [
-                        'فوتر موقع ورشتك الإلكتروني',
-                        'صفحتي "من نحن" و "تواصل معنا"',
-                        'توقيع البريد الإلكتروني (الأسلوب المضغوط)',
-                        'Google Business Profile و LinkedIn',
-                        'عروض الأسعار وملفات PDF التعريفية',
-                        'بطاقات العمل والمنشورات الورقية (QR)',
+                        'فوتر الموقع الرسمي للمنشأة',
+                        'صفحات «من نحن» و«تواصل معنا»',
+                        'توقيع البريد الإلكتروني (النمط المضغوط)',
+                        'ملف Google للأعمال وصفحة LinkedIn',
+                        'عروض الأسعار والملفات التعريفية بصيغة PDF',
+                        'بطاقات العمل والمطبوعات الورقية عبر رمز QR',
                       ] : [
-                        'Your workshop website footer',
+                        'Your establishment website footer',
                         'About and Contact pages',
                         'Email signature (Compact style)',
-                        'Google Business Profile and LinkedIn',
-                        'Quotation PDFs and company profiles',
-                        'Business cards and printed flyers (QR)',
+                        'Google Business Profile and LinkedIn page',
+                        'Quotations and company profile PDFs',
+                        'Business cards and printed flyers (via QR code)',
                       ]).map((t, i) => (
                         <li key={i} className="flex items-start gap-2 rounded-lg border bg-card p-3">
                           <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
@@ -1210,7 +1210,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                             </div>
                             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
                               <div className="flex items-center justify-between">
-                                <dt className="text-muted-foreground">{isRTL ? 'الورشة' : 'Workshop'}</dt>
+                                <dt className="text-muted-foreground">{isRTL ? 'المنشأة' : 'Establishment'}</dt>
                                 <dd className="tech-content font-mono" dir="ltr">@{business.username}</dd>
                               </div>
                               <div className="flex items-center justify-between">
