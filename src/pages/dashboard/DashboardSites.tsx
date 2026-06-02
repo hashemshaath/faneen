@@ -7,6 +7,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { getOwnerBusiness } from '@/modules/businesses';
+import { listActiveCities } from '@/modules/locations';
+import { NationalAddressForm, type NationalAddressValue } from '@/modules/addresses';
+import { buildAddressLine } from '@/modules/addresses/helpers/buildAddressLine';
+import { LocationPicker } from '@/components/dashboard/business-edit/LocationPicker';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +24,7 @@ import { toast } from 'sonner';
 import {
   MapPin, Plus, Pencil, Trash2, Search, X, Loader2, Building2, Home, Warehouse,
   Store, Briefcase, Layers, AlertCircle, CheckCircle2, FileText, Phone, User,
-  ExternalLink, Star, ArrowUpRight, Map as MapIcon,
+  ExternalLink, Star, ArrowUpRight, Map as MapIcon, FilePlus2,
 } from 'lucide-react';
 
 type SiteType = 'apartment' | 'villa' | 'showroom' | 'office' | 'branch' | 'warehouse' | 'project' | 'commercial' | 'other';
@@ -38,8 +42,19 @@ interface ClientSite {
   visibility: Visibility;
   contact_name: string | null;
   contact_phone: string | null;
+  city_id: string | null;
   city_name: string | null;
   district: string | null;
+  district_en: string | null;
+  region: string | null;
+  region_en: string | null;
+  street_name: string | null;
+  street_name_en: string | null;
+  building_number: string | null;
+  additional_number: string | null;
+  post_code: string | null;
+  short_address: string | null;
+  address_en: string | null;
   address_line1: string;
   address_line2: string | null;
   map_url: string | null;
@@ -72,9 +87,17 @@ const VISIBILITY: { value: Visibility; ar: string; en: string }[] = [
 
 const emptyForm = {
   label: '', site_name: '', site_type: 'other' as SiteType, visibility: 'private' as Visibility,
-  contact_name: '', contact_phone: '', city_name: '', district: '',
-  address_line1: '', address_line2: '', map_url: '', latitude: '', longitude: '',
+  contact_name: '', contact_phone: '',
+  map_url: '', latitude: '', longitude: '',
   access_notes: '', is_default: false,
+};
+
+const emptyNaf: NationalAddressValue = {
+  short_address: null, region: null, region_en: null, city_id: null,
+  district: null, district_en: null,
+  street_name: null, street_name_en: null,
+  building_number: null, additional_number: null, post_code: null,
+  address: null, address_en: null, address_manual: false,
 };
 
 export default function DashboardSites() {
@@ -89,6 +112,7 @@ export default function DashboardSites() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<ClientSite | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [naf, setNaf] = useState<NationalAddressValue>(emptyNaf);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<SiteType | 'all'>('all');
   const [showArchived, setShowArchived] = useState(false);
@@ -108,6 +132,18 @@ export default function DashboardSites() {
     staleTime: 10 * 60 * 1000,
   });
   const businessId = business?.id ?? null;
+
+  /* ─── Cities reference (for resolving city name from city_id picked in NAF) ─── */
+  const { data: citiesRef = [] } = useQuery({
+    queryKey: ['active-cities-ref'],
+    queryFn: async () => {
+      const { data } = await listActiveCities<{ id: string; name_ar: string; name_en: string | null }>({
+        select: 'id, name_ar, name_en', order: 'name_ar',
+      });
+      return data ?? [];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
 
   /* ─── Sites (RLS filters automatically) ─── */
   const { data: sites = [], isLoading } = useQuery({
@@ -149,6 +185,14 @@ export default function DashboardSites() {
   const saveMut = useMutation({
     mutationFn: async () => {
       if (!businessId && !editing) throw new Error(isRTL ? 'لا توجد منشأة مرتبطة' : 'No business linked');
+      // Compose the canonical address line from the National Address fields,
+      // unless the user explicitly typed a custom Arabic line (address_manual).
+      const composedAr = (naf.address && naf.address.trim()) || buildAddressLine(naf, 'ar');
+      const composedEn = (naf.address_en && naf.address_en.trim()) || buildAddressLine(naf, 'en');
+      const city = naf.city_id ? citiesRef.find((c) => c.id === naf.city_id) : null;
+      if (!composedAr) {
+        throw new Error(isRTL ? 'أكمل بيانات العنوان الوطني (المنطقة / المدينة / الحي على الأقل)' : 'Complete the National Address (region / city / district at minimum)');
+      }
       const payload = {
         business_id: editing?.business_id ?? businessId,
         label: form.label.trim(),
@@ -157,10 +201,21 @@ export default function DashboardSites() {
         visibility: form.visibility,
         contact_name: form.contact_name.trim() || null,
         contact_phone: form.contact_phone.trim() || null,
-        city_name: form.city_name.trim() || null,
-        district: form.district.trim() || null,
-        address_line1: form.address_line1.trim(),
-        address_line2: form.address_line2.trim() || null,
+        city_id: naf.city_id,
+        city_name: city?.name_ar ?? null,
+        district: naf.district,
+        district_en: naf.district_en,
+        region: naf.region,
+        region_en: naf.region_en,
+        street_name: naf.street_name,
+        street_name_en: naf.street_name_en,
+        building_number: naf.building_number,
+        additional_number: naf.additional_number,
+        post_code: naf.post_code,
+        short_address: naf.short_address,
+        address_en: composedEn || null,
+        address_line1: composedAr,
+        address_line2: naf.short_address ? `العنوان الوطني: ${naf.short_address}` : null,
         map_url: form.map_url.trim() || null,
         latitude: form.latitude ? Number(form.latitude) : null,
         longitude: form.longitude ? Number(form.longitude) : null,
@@ -223,9 +278,9 @@ export default function DashboardSites() {
   }, [sites, contractCounts]);
 
   /* ─── Callbacks ─── */
-  const closeForm = useCallback(() => { setShowForm(false); setEditing(null); setForm(emptyForm); }, []);
+  const closeForm = useCallback(() => { setShowForm(false); setEditing(null); setForm(emptyForm); setNaf(emptyNaf); }, []);
   const openCreate = useCallback(() => {
-    setEditing(null); setForm(emptyForm); setShowForm(true);
+    setEditing(null); setForm(emptyForm); setNaf(emptyNaf); setShowForm(true);
     requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }, []);
   const openEdit = useCallback((s: ClientSite) => {
@@ -233,11 +288,18 @@ export default function DashboardSites() {
     setForm({
       label: s.label, site_name: s.site_name || '', site_type: s.site_type, visibility: s.visibility,
       contact_name: s.contact_name || '', contact_phone: s.contact_phone || '',
-      city_name: s.city_name || '', district: s.district || '',
-      address_line1: s.address_line1, address_line2: s.address_line2 || '',
       map_url: s.map_url || '', latitude: s.latitude != null ? String(s.latitude) : '',
       longitude: s.longitude != null ? String(s.longitude) : '',
       access_notes: s.access_notes || '', is_default: s.is_default,
+    });
+    setNaf({
+      short_address: s.short_address, region: s.region, region_en: s.region_en,
+      city_id: s.city_id, district: s.district, district_en: s.district_en,
+      street_name: s.street_name, street_name_en: s.street_name_en,
+      building_number: s.building_number, additional_number: s.additional_number,
+      post_code: s.post_code,
+      address: s.address_line1, address_en: s.address_en,
+      address_manual: false,
     });
     setShowForm(true);
     requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
@@ -245,6 +307,10 @@ export default function DashboardSites() {
 
   const goToContracts = useCallback((siteId: string) => {
     navigate(`/dashboard/contracts?site=${siteId}`);
+  }, [navigate]);
+
+  const goToNewContract = useCallback((siteId: string) => {
+    navigate(`/dashboard/contracts?tab=create&site=${siteId}`);
   }, [navigate]);
 
   const typeMeta = (t: SiteType) => SITE_TYPES.find(x => x.value === t) ?? SITE_TYPES[SITE_TYPES.length - 1];
