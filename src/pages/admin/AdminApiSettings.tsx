@@ -142,6 +142,26 @@ const settingIcons: Record<string, React.ElementType> = {
   SPL_API_KEY: MapPin,
 };
 
+/* ═══════════ ADMIN-SYSTEM-SETTINGS-DEEP-AUDIT-1 Phase 2 ═══════════
+ * Server-side secrets are NOT editable here. They must live in Lovable /
+ * Supabase Secrets so they are never persisted in `platform_settings` and
+ * never reach the client bundle. We expose them as status-only rows with
+ * setup instructions.
+ *
+ * SPL_API_KEY remains editable because the `national-address-lookup` edge
+ * function still has a documented DB-fallback path, but it is labeled
+ * "fallback only — prefer Supabase Secrets".
+ * ════════════════════════════════════════════════════════════════════ */
+export const SERVER_SECRET_KEYS = new Set<string>([
+  'SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASSWORD',
+  'SENDER_EMAIL', 'SENDER_NAME',
+  'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER', 'TWILIO_VERIFY_SID',
+  'OPENAI_API_KEY', 'GOOGLE_AI_KEY',
+  'GOOGLE_MAPS_KEY', 'GOOGLE_ANALYTICS_ID',
+  'GOOGLE_RECAPTCHA_KEY', 'GOOGLE_RECAPTCHA_SECRET', 'FCM_SERVER_KEY',
+]);
+export const FALLBACK_ONLY_KEYS = new Set<string>(['SPL_API_KEY']);
+
 /* ═══════════ Code Block ═══════════ */
 const CodeBlock = ({ code }: { code: string }) => (
   <div className="relative group">
