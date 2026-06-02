@@ -3662,9 +3662,12 @@ export type Database = {
       client_sites: {
         Row: {
           access_notes: string | null
+          additional_number: string | null
+          address_en: string | null
           address_line1: string
           address_line2: string | null
           archived_at: string | null
+          building_number: string | null
           business_id: string
           city_id: string | null
           city_name: string | null
@@ -3675,6 +3678,7 @@ export type Database = {
           created_at: string
           created_by: string
           district: string | null
+          district_en: string | null
           id: string
           is_default: boolean
           is_demo: boolean
@@ -3685,22 +3689,31 @@ export type Database = {
           longitude: number | null
           map_url: string | null
           owner_user_id: string | null
+          post_code: string | null
           qr_enabled: boolean
           qr_revoked_at: string | null
           qr_token_hash: string | null
           ref_id: string | null
+          region: string | null
+          region_en: string | null
           scan_count: number
+          short_address: string | null
           site_name: string | null
           site_ref: string
           site_type: string
+          street_name: string | null
+          street_name_en: string | null
           updated_at: string
           visibility: string
         }
         Insert: {
           access_notes?: string | null
+          additional_number?: string | null
+          address_en?: string | null
           address_line1: string
           address_line2?: string | null
           archived_at?: string | null
+          building_number?: string | null
           business_id: string
           city_id?: string | null
           city_name?: string | null
@@ -3711,6 +3724,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           district?: string | null
+          district_en?: string | null
           id?: string
           is_default?: boolean
           is_demo?: boolean
@@ -3721,22 +3735,31 @@ export type Database = {
           longitude?: number | null
           map_url?: string | null
           owner_user_id?: string | null
+          post_code?: string | null
           qr_enabled?: boolean
           qr_revoked_at?: string | null
           qr_token_hash?: string | null
           ref_id?: string | null
+          region?: string | null
+          region_en?: string | null
           scan_count?: number
+          short_address?: string | null
           site_name?: string | null
           site_ref: string
           site_type?: string
+          street_name?: string | null
+          street_name_en?: string | null
           updated_at?: string
           visibility?: string
         }
         Update: {
           access_notes?: string | null
+          additional_number?: string | null
+          address_en?: string | null
           address_line1?: string
           address_line2?: string | null
           archived_at?: string | null
+          building_number?: string | null
           business_id?: string
           city_id?: string | null
           city_name?: string | null
@@ -3747,6 +3770,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           district?: string | null
+          district_en?: string | null
           id?: string
           is_default?: boolean
           is_demo?: boolean
@@ -3757,14 +3781,20 @@ export type Database = {
           longitude?: number | null
           map_url?: string | null
           owner_user_id?: string | null
+          post_code?: string | null
           qr_enabled?: boolean
           qr_revoked_at?: string | null
           qr_token_hash?: string | null
           ref_id?: string | null
+          region?: string | null
+          region_en?: string | null
           scan_count?: number
+          short_address?: string | null
           site_name?: string | null
           site_ref?: string
           site_type?: string
+          street_name?: string | null
+          street_name_en?: string | null
           updated_at?: string
           visibility?: string
         }
