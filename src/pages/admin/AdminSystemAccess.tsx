@@ -16,6 +16,7 @@ import {
   AlertTriangle, RotateCcw, Info, ArrowLeft, History, Settings2,
   Check, X as XIcon, Pencil, Building2,
 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
   listSystemModules,
@@ -71,6 +72,17 @@ const AdminSystemAccess: React.FC = () => {
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'enabled' | 'disabled' | 'overridden'>('all');
   const [search, setSearch] = useState('');
+
+  // PRICING-FORCE-OVERRIDE-1 — Super-admin "تجاوز كمسؤول" inline action.
+  // When updateBusinessSystemAccess returns blocked_by_membership for a super-admin
+  // entity-scoped attempt, we capture the blocked module so the super admin can
+  // re-submit with bypassMembership:true + a mandatory reason. The wrapper writes
+  // the same audited override (system_module_audit_log) via the existing RPC.
+  const [blockedAttempt, setBlockedAttempt] = useState<
+    | { moduleKey: string; moduleLabelAr: string; moduleLabelEn: string; nextEnabled: boolean; scopeValue: string | null }
+    | null
+  >(null);
+  const [bypassReason, setBypassReason] = useState('');
 
   const modulesQuery = useQuery({
     queryKey: ['system-modules'],
@@ -128,6 +140,20 @@ const AdminSystemAccess: React.FC = () => {
       }),
     onSuccess: (res, vars) => {
       if (!res.ok && res.blocked_by_membership) {
+        // Super admin gets an inline force-override card; others see the toast.
+        if (isSuperAdmin && vars.scopeType === 'entity' && vars.scopeValue) {
+          const mod = (modulesQuery.data ?? []).find(m => m.key === vars.moduleKey);
+          setBlockedAttempt({
+            moduleKey: vars.moduleKey,
+            moduleLabelAr: mod?.label_ar ?? vars.moduleKey,
+            moduleLabelEn: mod?.label_en ?? vars.moduleKey,
+            nextEnabled: vars.enabled,
+            scopeValue: vars.scopeValue,
+          });
+          setBypassReason('');
+          toast.message(isRTL ? 'هذه الوحدة غير متاحة ضمن عضوية المنشأة الحالية.' : (res.reason_en ?? ''));
+          return;
+        }
         toast.error(isRTL ? (res.reason_ar ?? '') : (res.reason_en ?? ''));
         return;
       }
@@ -146,6 +172,40 @@ const AdminSystemAccess: React.FC = () => {
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(msg || (isRTL ? 'فشل الحفظ' : 'Save failed'));
+    },
+  });
+
+  const bypassMutation = useMutation({
+    mutationFn: (vars: { moduleKey: string; scopeValue: string; enabled: boolean; reason: string }) =>
+      updateBusinessSystemAccess({
+        moduleKey: vars.moduleKey,
+        scopeType: 'entity',
+        scopeValue: vars.scopeValue,
+        enabled: vars.enabled,
+        isAdmin: !!isAdmin,
+        actingUserId: user?.id ?? null,
+        businessId: vars.scopeValue,
+        bypassMembership: true,
+        // Tag the audit row so it's clearly identifiable as a super-admin bypass
+        // (system_module_audit_log has no dedicated column).
+        reason: `[super-admin bypass] ${vars.reason}`,
+      }),
+    onSuccess: (res, vars) => {
+      if (!res.ok) {
+        toast.error((isRTL ? res.reason_ar : res.reason_en) || (isRTL ? 'فشل التجاوز' : 'Override failed'));
+        return;
+      }
+      qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
+      qc.invalidateQueries({ queryKey: ['system-module-audit-recent'] });
+      invalidateAccess({ businessId: vars.scopeValue, includeAudit: true });
+      setLastSyncAt(Date.now());
+      setBlockedAttempt(null);
+      setBypassReason('');
+      toast.success(isRTL ? 'تم تطبيق التجاوز وتسجيله في سجل العمليات' : 'Override applied and logged');
+    },
+    onError: (e: unknown) => {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(msg || (isRTL ? 'فشل التجاوز' : 'Override failed'));
     },
   });
 
