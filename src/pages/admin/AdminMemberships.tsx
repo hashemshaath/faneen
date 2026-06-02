@@ -829,56 +829,83 @@ const AdminMemberships = () => {
   return (
     <DashboardLayout>
       <TooltipProvider delayDuration={200}>
-        <div className="space-y-5 max-w-5xl">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-                <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
-                {isRTL ? 'إدارة العضويات والاشتراكات' : 'Membership Management'}
-              </h1>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
-                {isRTL ? 'إدارة شاملة للخطط والحدود والمزايا والاشتراكات والترقيات' : 'Plans, limits, benefits, subscriptions & upgrades'}
-              </p>
+        <div className="space-y-5">
+          {/* Sub-navigation pills — header is rendered once by TabbedShell to avoid duplication */}
+          <div className="flex items-center justify-between gap-3 bg-background/60 backdrop-blur-sm border border-border/60 rounded-2xl p-1.5">
+            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+              {tabs.map(t => {
+                const isActive = activeTab === t.key;
+                return (
+                  <button key={t.key} onClick={() => setActiveTab(t.key)}
+                    className={cn(
+                      'h-10 px-4 rounded-xl text-xs font-semibold transition-all shrink-0 inline-flex items-center gap-1.5',
+                      isActive
+                        ? 'bg-card shadow-sm text-primary border border-border/50'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                    )}>
+                    <t.icon className="w-3.5 h-3.5" />
+                    {t.label}
+                    {t.count !== undefined && (
+                      <span className={cn(
+                        'text-[9px] font-bold px-1.5 py-0.5 rounded-md',
+                        isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                      )}>{t.count}</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
             {activeTab === 'subscriptions' && (
-              <Button variant="outline" size="sm" className="text-xs h-8 gap-1.5" onClick={exportCSV}>
+              <Button variant="outline" size="sm" className="text-xs h-9 gap-1.5 shrink-0" onClick={exportCSV}>
                 <Download className="w-3 h-3" />{isRTL ? 'تصدير CSV' : 'Export CSV'}
               </Button>
             )}
           </div>
 
-          {/* Tab Nav */}
-          <div className="flex gap-1 bg-muted/30 rounded-xl p-0.5 overflow-x-auto no-scrollbar">
-            {tabs.map(t => (
-              <button key={t.key} onClick={() => setActiveTab(t.key)}
-                className={cn('flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all shrink-0',
-                  activeTab === t.key ? 'bg-accent text-accent-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50')}>
-                <t.icon className="w-3.5 h-3.5" />
-                {t.label}
-                {t.count !== undefined && <Badge variant="secondary" className="text-[8px] h-4 px-1">{t.count}</Badge>}
-              </button>
-            ))}
-          </div>
-
           {/* ═══════ OVERVIEW ═══════ */}
           {activeTab === 'overview' && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { icon: Users, label: isRTL ? 'إجمالي الاشتراكات' : 'Total Subscriptions', value: stats.total, color: 'text-foreground', bg: 'bg-muted/30' },
-                  { icon: UserCheck, label: isRTL ? 'نشط حالياً' : 'Currently Active', value: stats.active, color: 'text-success', bg: 'bg-success/5' },
-                  { icon: DollarSign, label: isRTL ? 'الإيراد الشهري' : 'Monthly Revenue', value: `${Math.round(stats.revenue)} SAR`, color: 'text-accent', bg: 'bg-accent/5' },
-                  { icon: AlertTriangle, label: isRTL ? 'ينتهي قريباً' : 'Expiring Soon', value: stats.expiringSoon, color: 'text-warning', bg: 'bg-warning/5' },
+                  { icon: Users, label: isRTL ? 'إجمالي الاشتراكات' : 'Total Subscriptions', value: stats.total, accent: 'border-r-primary', delta: null, empty: stats.total === 0 },
+                  { icon: UserCheck, label: isRTL ? 'نشط حالياً' : 'Currently Active', value: stats.active, accent: 'border-r-success', delta: stats.active > 0 ? 'live' : null, empty: stats.active === 0 },
+                  { icon: DollarSign, label: isRTL ? 'الإيراد الشهري' : 'Monthly Revenue', value: Math.round(stats.revenue).toLocaleString(isRTL ? 'ar-SA' : 'en-US'), suffix: 'SAR', accent: 'border-r-info', delta: null, empty: stats.revenue === 0 },
+                  { icon: AlertTriangle, label: isRTL ? 'ينتهي قريباً' : 'Expiring Soon', value: stats.expiringSoon, accent: stats.expiringSoon > 0 ? 'border-r-warning' : 'border-r-border', delta: null, empty: stats.expiringSoon === 0 },
                 ].map((s, i) => (
-                  <Card key={i} className={cn('border-border/30', s.bg)}>
-                    <CardContent className="p-4 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-background/70 flex items-center justify-center shrink-0 shadow-sm">
-                        <s.icon className={cn('w-4 h-4', s.color)} />
+                  <Card
+                    key={i}
+                    className={cn(
+                      'border border-border/60 shadow-sm rounded-2xl border-r-4 transition-all hover:shadow-md',
+                      s.accent,
+                      s.empty && 'bg-muted/20'
+                    )}
+                  >
+                    <CardContent className="p-5 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                        <s.icon className={cn('w-3.5 h-3.5 shrink-0', s.empty ? 'text-muted-foreground/50' : 'text-muted-foreground')} />
                       </div>
-                      <div>
-                        <p className={cn('font-bold text-xl leading-none', s.color)}>{s.value}</p>
-                        <p className="text-[9px] text-muted-foreground mt-0.5">{s.label}</p>
+                      <div className="flex items-end justify-between gap-2">
+                        <div className="flex items-baseline gap-1 min-w-0">
+                          <span className={cn(
+                            'text-2xl sm:text-3xl font-bold tech-content tabular-nums leading-none',
+                            s.empty ? 'text-muted-foreground/60' : 'text-foreground'
+                          )}>{s.value}</span>
+                          {s.suffix && (
+                            <span className="text-[10px] font-bold text-muted-foreground">{s.suffix}</span>
+                          )}
+                        </div>
+                        {s.delta === 'live' && (
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-success bg-success/10 px-1.5 py-0.5 rounded-md">
+                            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                            {isRTL ? 'مباشر' : 'LIVE'}
+                          </span>
+                        )}
+                        {s.empty && !s.delta && (
+                          <span className="text-[9px] text-muted-foreground/60">
+                            {isRTL ? 'لا بيانات' : 'No data'}
+                          </span>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -886,30 +913,48 @@ const AdminMemberships = () => {
               </div>
 
               <div className="grid sm:grid-cols-2 gap-3">
-                <Card className="border-border/30">
-                  <CardContent className="p-4 sm:p-5">
-                    <h3 className="font-heading font-bold text-sm mb-4 flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-accent" />
+                <Card className="border border-border/60 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
+                    <h3 className="font-heading font-bold text-sm flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-primary" />
                       {isRTL ? 'توزيع العضويات' : 'Tier Distribution'}
                     </h3>
-                    <div className="space-y-3">
+                    <span className="px-2 py-0.5 bg-muted/40 text-muted-foreground rounded-md text-[9px] font-bold uppercase tracking-wide">
+                      {isRTL ? 'تحديث تلقائي' : 'Auto'}
+                    </span>
+                  </div>
+                  <CardContent className="p-5">
+                    <div className="space-y-4">
                       {stats.tierDist.map(({ tier, count }) => {
                         const colors = tierColors[tier];
                         const Icon = tierIcons[tier];
                         const pct = stats.active > 0 ? Math.round((count / stats.active) * 100) : 0;
+                        const isEmpty = count === 0;
                         return (
                           <div key={tier} className="flex items-center gap-3">
-                            <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', colors.badge)}>
-                              <Icon className="w-3.5 h-3.5" />
+                            <div className={cn(
+                              'w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border',
+                              isEmpty ? 'bg-muted/30 text-muted-foreground/50 border-dashed border-border' : cn(colors.badge, 'border-transparent')
+                            )}>
+                              <Icon className="w-5 h-5" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs font-medium capitalize">{tier}</span>
-                                <span className="text-[10px] text-muted-foreground">{count} ({pct}%)</span>
+                            <div className="flex-1 min-w-0 space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className={cn('text-xs font-bold capitalize', isEmpty && 'text-muted-foreground/70')}>{tier}</span>
+                                <span className={cn(
+                                  'text-[10px] font-bold tech-content tabular-nums',
+                                  isEmpty ? 'text-muted-foreground/60' : 'text-primary'
+                                )}>
+                                  <span>{count}</span>
+                                  <span className="text-muted-foreground mx-1">·</span>
+                                  <span>{pct}%</span>
+                                </span>
                               </div>
-                              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                <div className={cn('h-full rounded-full transition-all', tier === 'free' ? 'bg-muted-foreground/40' : tier === 'basic' ? 'bg-info' : tier === 'premium' ? 'bg-accent' : 'bg-secondary')}
-                                  style={{ width: `${pct}%` }} />
+                              <div className="h-1.5 bg-muted/40 rounded-full overflow-hidden">
+                                <div className={cn(
+                                  'h-full rounded-full transition-all duration-500',
+                                  tier === 'free' ? 'bg-muted-foreground/40' : tier === 'basic' ? 'bg-info' : tier === 'premium' ? 'bg-accent' : 'bg-secondary'
+                                )} style={{ width: `${pct}%` }} />
                               </div>
                             </div>
                           </div>
@@ -919,34 +964,45 @@ const AdminMemberships = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="border-border/30">
-                  <CardContent className="p-4 sm:p-5">
-                    <h3 className="font-heading font-bold text-sm mb-4 flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-accent" />
+                <Card className="border border-border/60 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
+                    <h3 className="font-heading font-bold text-sm flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-primary" />
                       {isRTL ? 'ملخص الحالة' : 'Status Summary'}
                     </h3>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="p-3 rounded-xl bg-info/5 border border-info/10 text-center">
-                        <p className="text-lg font-bold text-info">{stats.monthly}</p>
-                        <p className="text-[9px] text-muted-foreground">{isRTL ? 'شهري نشط' : 'Active Monthly'}</p>
-                      </div>
-                      <div className="p-3 rounded-xl bg-accent/5 border border-accent/10 text-center">
-                        <p className="text-lg font-bold text-accent">{stats.yearly}</p>
-                        <p className="text-[9px] text-muted-foreground">{isRTL ? 'سنوي نشط' : 'Active Yearly'}</p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      {[
-                        { label: isRTL ? 'ملغي' : 'Cancelled', value: stats.cancelled, color: 'text-destructive' },
-                        { label: isRTL ? 'منتهي' : 'Expired', value: stats.expired, color: 'text-muted-foreground' },
-                        { label: isRTL ? 'ينتهي خلال أسبوع' : 'Expiring (7d)', value: stats.expiringSoon, color: 'text-warning' },
-                      ].map((item, i) => (
-                        <div key={i} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-lg bg-muted/20">
-                          <span className="text-muted-foreground">{item.label}</span>
-                          <span className={cn('font-bold', item.color)}>{item.value}</span>
+                    <button
+                      type="button"
+                      onClick={exportCSV}
+                      className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-wide"
+                    >
+                      {isRTL ? 'تصدير التقرير' : 'Export'}
+                    </button>
+                  </div>
+                  <CardContent className="p-5 space-y-4">
+                    {[
+                      { label: isRTL ? 'شهري نشط' : 'Monthly Active', value: stats.monthly, denom: stats.active, color: 'bg-info' },
+                      { label: isRTL ? 'سنوي نشط' : 'Yearly Active', value: stats.yearly, denom: stats.active, color: 'bg-accent' },
+                      { label: isRTL ? 'ينتهي خلال أسبوع' : 'Expiring (7d)', value: stats.expiringSoon, denom: stats.active, color: 'bg-warning' },
+                      { label: isRTL ? 'ملغي' : 'Cancelled', value: stats.cancelled, denom: stats.total, color: 'bg-destructive' },
+                      { label: isRTL ? 'منتهي' : 'Expired', value: stats.expired, denom: stats.total, color: 'bg-muted-foreground/50' },
+                    ].map((row, i) => {
+                      const pct = row.denom > 0 ? Math.round((row.value / row.denom) * 100) : 0;
+                      const isEmpty = row.value === 0;
+                      return (
+                        <div key={i} className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className={cn('font-medium', isEmpty ? 'text-muted-foreground/70' : 'text-foreground')}>{row.label}</span>
+                            <span className={cn(
+                              'font-bold tech-content tabular-nums',
+                              isEmpty ? 'text-muted-foreground/50' : 'text-foreground'
+                            )}>{row.value}</span>
+                          </div>
+                          <div className={cn('h-1.5 rounded-full overflow-hidden', isEmpty ? 'bg-muted/30 border border-dashed border-border/60' : 'bg-muted/40')}>
+                            <div className={cn('h-full rounded-full transition-all duration-500', row.color)} style={{ width: `${pct}%` }} />
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </CardContent>
                 </Card>
               </div>
