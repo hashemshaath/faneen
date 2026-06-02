@@ -425,9 +425,9 @@ const AdminEntityAccessRequests: React.FC = () => {
                     <ExternalLink className="w-2.5 h-2.5" />
                     {isRTL ? 'العضويات والمدفوعات' : 'Memberships & Payments'}
                   </Link>
-                  <Link to="/admin/membership-upgrade-requests" className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-card border border-border/60 hover:border-primary/40 hover:text-primary transition-colors">
+                  <Link to="/admin/memberships?tab=providers" className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-card border border-border/60 hover:border-primary/40 hover:text-primary transition-colors">
                     <ExternalLink className="w-2.5 h-2.5" />
-                    {isRTL ? 'طلبات ترقية العضوية' : 'Membership Upgrade Requests'}
+                    {isRTL ? 'عضويات المزودين' : 'Provider Memberships'}
                   </Link>
                 </div>
               </div>
