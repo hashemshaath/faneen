@@ -15,6 +15,7 @@ import {
   Download, ArrowUpDown, ExternalLink, CheckCheck, ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {
   listEntityAccessRequests,
   reviewEntityAccessRequest,
@@ -266,25 +267,21 @@ const AdminEntityAccessRequests: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-5 pb-12">
-        {/* Header */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center shrink-0">
-              <UserPlus className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold font-heading">
-                {isRTL ? 'طلبات الانضمام للمنشآت' : 'Entity Access Requests'}
-              </h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {isRTL
-                  ? 'مراجعة طلبات المستخدمين للانضمام إلى المنشآت القائمة وإدارتها مركزياً'
-                  : 'Centrally review user requests to join existing entities'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
+      <div className="space-y-5 pb-12 max-w-[1600px] mx-auto p-4 md:p-6">
+        <AdminPageHeader
+          tone="primary"
+          icon={UserPlus}
+          eyebrow={isRTL ? 'لوحة الإدارة' : 'Admin Console'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'طلبات الانضمام' : 'Entity Access' },
+          ]}
+          title={isRTL ? 'طلبات الانضمام للمنشآت' : 'Entity Access Requests'}
+          subtitle={isRTL
+            ? 'مراجعة طلبات المستخدمين للانضمام إلى المنشآت القائمة وإدارتها مركزياً.'
+            : 'Centrally review user requests to join existing entities.'}
+          actions={
+            <>
             <Button
               variant="outline"
               size="sm"
@@ -318,8 +315,9 @@ const AdminEntityAccessRequests: React.FC = () => {
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               {isRTL ? 'تحديث' : 'Refresh'}
             </Button>
-          </div>
-        </div>
+            </>
+          }
+        />
 
         {/* KPI cards (also act as filters) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3" role="tablist">

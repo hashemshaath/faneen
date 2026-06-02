@@ -21,6 +21,7 @@ import { adminConvertLeadToContract }  from '@/modules/leads/services/adminConve
 import { sendLeadTransactionalEmail } from '@/modules/leads/services/sendLeadTransactionalEmail';
 import { getLeadProviderContactForEmail } from '@/modules/leads/services/getLeadProviderContactForEmail';
 import { ReferenceTag } from '@/components/reference/ReferenceTag';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 // SR-4A: Service Request lifecycle statuses (new vocabulary).
 type Status =
@@ -232,22 +233,24 @@ const AdminLeadRequests: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 p-4 md:p-6">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Inbox className="h-6 w-6 text-primary" />
-              {isRTL ? 'طلبات الخدمة' : 'Service Requests'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isRTL ? 'إدارة طلبات العملاء وعروض الأسعار' : 'Manage customer requests and quotes'}
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} aria-label={isRTL ? 'تحديث' : 'Refresh'}>
-            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-            {isRTL ? 'تحديث' : 'Refresh'}
-          </Button>
-        </header>
+      <div className="space-y-6 p-4 md:p-6 max-w-[1600px] mx-auto">
+        <AdminPageHeader
+          tone="primary"
+          icon={Inbox}
+          eyebrow={isRTL ? 'لوحة الإدارة' : 'Admin Console'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'طلبات الخدمة' : 'Service Requests' },
+          ]}
+          title={isRTL ? 'طلبات الخدمة' : 'Service Requests'}
+          subtitle={isRTL ? 'إدارة طلبات العملاء وعروض الأسعار وتحويلها إلى عقود.' : 'Manage customer requests, quotes, and convert to contracts.'}
+          actions={
+            <Button variant="outline" size="sm" className="h-10 rounded-xl gap-1.5" onClick={() => refetch()} disabled={isFetching} aria-label={isRTL ? 'تحديث' : 'Refresh'}>
+              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
+            </Button>
+          }
+        />
 
         {/* KPI summary row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
