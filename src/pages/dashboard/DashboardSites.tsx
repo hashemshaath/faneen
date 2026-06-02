@@ -781,3 +781,36 @@ export default function DashboardSites() {
     </DashboardLayout>
   );
 }
+
+/**
+ * Lazy-loads the site's barcode and renders the shared BarcodeWidget.
+ * Falls back to a friendly hint while the code is being provisioned.
+ */
+function SiteBarcodePanel({ siteId, siteRef, label, isRTL }: { siteId: string; siteRef: string | null; label: string; isRTL: boolean }) {
+  const { data: code, isLoading } = useEntityBarcode('client_site', siteId);
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-[11px] text-muted-foreground py-3">
+        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        {isRTL ? 'جاري تحميل الباركود...' : 'Loading barcode...'}
+      </div>
+    );
+  }
+  if (!code) {
+    return (
+      <div className="text-[11px] text-muted-foreground p-3 rounded-lg bg-muted/30 border border-dashed border-border/50">
+        {isRTL ? 'لم يتم إصدار باركود لهذا الموقع بعد. سيتم توليده تلقائياً قريباً.' : 'No barcode issued for this site yet.'}
+      </div>
+    );
+  }
+  return (
+    <BarcodeWidget
+      barcodeCode={code}
+      entityType="client_site"
+      title={label}
+      subtitle={siteRef ?? undefined}
+      size="sm"
+      className="border-0 shadow-none p-0 bg-transparent"
+    />
+  );
+}
