@@ -32,6 +32,7 @@ import {
   filterAuditRows, type AuditRow, type ExportRow, type DateRangeKey,
 } from '@/pages/admin/approvalsCenter/exportHelpers';
 import { runBulkReview } from '@/pages/admin/approvalsCenter/bulkReview';
+import { getReviewer, ACTIONABLE_CATEGORIES } from '@/pages/admin/approvalsCenter/categoryReviewers';
 
 /**
  * UNIFIED-APPROVALS-CENTER-1
@@ -311,12 +312,16 @@ const AdminApprovalsCenter: React.FC = () => {
     },
   });
 
-  const handleReview = async (id: string, action: 'approve' | 'reject') => {
+  const handleReview = async (
+    id: string,
+    category: ApprovalCategoryKey,
+    action: 'approve' | 'reject',
+  ) => {
     if (!user?.id) return;
+    const fn = getReviewer(category);
+    if (!fn) return;
     setBusyId(id);
-    const { ok, error } = await reviewEntityAccessRequest({
-      requestId: id, reviewerUserId: user.id, action,
-    });
+    const { ok, error } = await fn({ requestId: id, reviewerUserId: user.id, action });
     setBusyId(null);
     if (!ok) {
       const msg = (error as { message?: string } | null)?.message ?? 'error';
@@ -328,7 +333,7 @@ const AdminApprovalsCenter: React.FC = () => {
         ? action === 'approve' ? 'تمت الموافقة' : 'تم الرفض'
         : action === 'approve' ? 'Approved' : 'Rejected',
     );
-    queries.entity_access.refetch();
+    queries[category].refetch();
     queryClient.invalidateQueries({ queryKey: ['approvals-audit'] });
   };
 
