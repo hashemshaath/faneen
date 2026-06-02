@@ -594,6 +594,28 @@ const AdminApprovalsCenter: React.FC = () => {
     return m;
   }, []);
 
+  const visibilityRows = useMemo(() => {
+    const rows = visibilityQuery.data ?? [];
+    return rows.map((row) => {
+      const isPublic = row.is_active === true
+        && row.approval_status === 'published'
+        && row.is_demo !== true;
+      const reason = row.is_demo === true
+        ? (isRTL ? 'جهة تجريبية لا تظهر للعامة' : 'Demo business is hidden publicly')
+        : row.is_active !== true
+        ? (isRTL ? 'الجهة معطّلة' : 'Business is inactive')
+        : row.approval_status !== 'published'
+        ? (isRTL ? `حالة الاعتماد الحالية: ${row.approval_status ?? 'غير محددة'}` : `Approval status: ${row.approval_status ?? 'unset'}`)
+        : row.username_status && row.username_status !== 'approved'
+        ? (isRTL ? `حالة اسم المستخدم: ${row.username_status}` : `Username status: ${row.username_status}`)
+        : (isRTL ? 'ظاهرة للعامة' : 'Visible publicly');
+      return { ...row, isPublic, reason };
+    });
+  }, [visibilityQuery.data, isRTL]);
+
+  const hiddenBusinesses = visibilityRows.filter((row) => !row.isPublic);
+  const orphanSubscriptions = subscriptionHealthQuery.data ?? [];
+
   return (
     <DashboardLayout>
       <div className="space-y-6 pb-12">
