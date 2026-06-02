@@ -5,6 +5,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { getOwnerBusiness } from '@/modules/businesses';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -148,7 +149,7 @@ export default function DashboardSites() {
   const saveMut = useMutation({
     mutationFn: async () => {
       if (!businessId && !editing) throw new Error(isRTL ? 'لا توجد منشأة مرتبطة' : 'No business linked');
-      const payload: Record<string, unknown> = {
+      const payload = {
         business_id: editing?.business_id ?? businessId,
         label: form.label.trim(),
         site_name: form.site_name.trim() || null,
@@ -165,12 +166,12 @@ export default function DashboardSites() {
         longitude: form.longitude ? Number(form.longitude) : null,
         access_notes: form.access_notes.trim() || null,
         is_default: form.is_default,
-      };
+      } satisfies Record<string, Json | null | undefined>;
       if (editing) {
-        const { error } = await supabase.rpc('update_client_site', { _site_id: editing.id, _patch: payload });
+        const { error } = await supabase.rpc('update_client_site', { _site_id: editing.id, _patch: payload as Json });
         if (error) throw error;
       } else {
-        const { error } = await supabase.rpc('create_client_site', { _payload: payload });
+        const { error } = await supabase.rpc('create_client_site', { _payload: payload as Json });
         if (error) throw error;
       }
     },
