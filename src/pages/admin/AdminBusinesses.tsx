@@ -962,7 +962,11 @@ const AdminBusinesses = () => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [editingBiz, servicesPanel, selected.size, refetchBusinesses, isRTL, language, filtered]);
+    // `filtered` is referenced via closure; including it in deps would force this
+    // listener to be re-bound on every list change. The handler reads the latest
+    // closed-over value at fire time, which is sufficient for export.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingBiz, servicesPanel, selected.size, refetchBusinesses, isRTL, language]);
   const autoFillTranslations = useCallback(async () => {
     if (!editingBiz) return;
     setAutoTranslating(true);
