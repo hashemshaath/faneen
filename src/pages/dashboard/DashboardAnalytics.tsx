@@ -395,6 +395,59 @@ const DashboardAnalytics = () => {
     URL.revokeObjectURL(url);
   };
 
+  // PDF export — bilingual report with KPIs + breakdowns + revenue series.
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const downloadPdf = async () => {
+    if (!analytics || !stats || !business) return;
+    setIsExportingPdf(true);
+    try {
+      await exportAnalyticsPdf({
+        isRTL,
+        businessName: (isRTL ? business.name_ar : (business.name_en || business.name_ar)) ?? '—',
+        periodLabel: periodOptions.find((o) => o.value === period)?.label ?? period,
+        generatedAt: new Date(),
+        stats,
+        revenueSeries: revenueChartData,
+        contractStatusBreakdown: contractPieData,
+        bookingStatusBreakdown: bookingPieData,
+        reviewsDistribution: reviewsDist,
+        overdueCount,
+      });
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
+  // ── Drilldown: clicking a chart segment filters the analytics rows
+  //    into an inline table (no popups, fully accessible).
+  type DrillKind = 'contract' | 'booking' | 'rating';
+  const [drill, setDrill] = useState<{ kind: DrillKind; key: string; label: string } | null>(null);
+
+  const drillRows = useMemo(() => {
+    if (!drill || !analytics) return [] as Array<Record<string, string | number | null>>;
+    if (drill.kind === 'contract') {
+      return analytics.contracts
+        .filter((c) => c.status === drill.key)
+        .map((c) => ({
+          id: c.id, status: c.status,
+          amount: Number(c.total_amount ?? 0),
+          currency: c.currency_code ?? 'SAR',
+          created_at: c.created_at,
+        }));
+    }
+    if (drill.kind === 'booking') {
+      return analytics.bookings
+        .filter((b) => b.status === drill.key)
+        .map((b) => ({
+          id: b.id, status: b.status,
+          created_at: b.created_at,
+        }));
+    }
+    return analytics.reviews
+      .filter((r) => String(r.rating) === drill.key)
+      .map((r) => ({ id: r.id, rating: r.rating, created_at: r.created_at }));
+  }, [drill, analytics]);
+
   // Smart insight (best chart day / conversion ratio)
   const insight = useMemo(() => {
     if (!analytics || !stats) return null;
