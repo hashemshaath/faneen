@@ -315,10 +315,19 @@ const DashboardPortfolio = () => {
     if (categoryFilter !== 'all') result = result.filter(i => i.category === categoryFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(i => i.title_ar.toLowerCase().includes(q) || (i.title_en || '').toLowerCase().includes(q) || (i.description_ar || '').toLowerCase().includes(q));
+      result = result.filter(i =>
+        i.title_ar.toLowerCase().includes(q) ||
+        (i.title_en || '').toLowerCase().includes(q) ||
+        (i.description_ar || '').toLowerCase().includes(q) ||
+        (i.client_name || '').toLowerCase().includes(q) ||
+        (i.tags || []).some(t => t.toLowerCase().includes(q))
+      );
     }
+    if (sortBy === 'views') result.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
+    else if (sortBy === 'shares') result.sort((a, b) => (b.share_count || 0) - (a.share_count || 0));
+    else if (sortBy === 'recent') result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     return result;
-  }, [items, filterMode, categoryFilter, searchQuery]);
+  }, [items, filterMode, categoryFilter, searchQuery, sortBy]);
 
   /* ─── Mutations ─── */
   const saveMut = useMutation({
