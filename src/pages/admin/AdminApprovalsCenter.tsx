@@ -6,6 +6,7 @@ import {
   ExternalLink, RefreshCw, Loader2, CheckCircle2, Clock, Building2,
   Check, X, History, ShieldAlert, Search, Filter,
   Download, FileText, FileSpreadsheet, Calendar as CalendarIcon, ChevronDown,
+  AlertTriangle,
 } from 'lucide-react';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -62,6 +63,27 @@ interface ApprovalItem {
 interface CategoryResult {
   count: number;
   items: ApprovalItem[];
+}
+
+interface BusinessVisibilityRow {
+  id: string;
+  ref_id: string | null;
+  name_ar: string | null;
+  name_en: string | null;
+  username: string | null;
+  approval_status: string | null;
+  username_status: string | null;
+  is_active: boolean | null;
+  is_demo: boolean | null;
+  created_at: string | null;
+}
+
+interface SubscriptionHealthRow {
+  id: string;
+  ref_id: string | null;
+  business_id: string | null;
+  status: string | null;
+  created_at: string | null;
 }
 
 const PREVIEW_LIMIT = 25;
