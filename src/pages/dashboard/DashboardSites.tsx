@@ -1,0 +1,565 @@
+import { useState, useMemo, useCallback, useTransition, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
+import { getOwnerBusiness } from '@/modules/businesses';
+import { useNoIndex } from '@/hooks/useNoIndex';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import {
+  MapPin, Plus, Pencil, Trash2, Search, X, Loader2, Building2, Home, Warehouse,
+  Store, Briefcase, Layers, AlertCircle, CheckCircle2, FileText, Phone, User,
+  ExternalLink, Star, ArrowUpRight, Map as MapIcon,
+} from 'lucide-react';
+
+type SiteType = 'apartment' | 'villa' | 'showroom' | 'office' | 'branch' | 'warehouse' | 'project' | 'commercial' | 'other';
+type Visibility = 'private' | 'shared_by_qr' | 'provider_invited' | 'public_limited';
+
+interface ClientSite {
+  id: string;
+  site_ref: string | null;
+  business_id: string;
+  client_user_id: string | null;
+  owner_user_id: string | null;
+  label: string;
+  site_name: string | null;
+  site_type: SiteType;
+  visibility: Visibility;
+  contact_name: string | null;
+  contact_phone: string | null;
+  city_name: string | null;
+  district: string | null;
+  address_line1: string;
+  address_line2: string | null;
+  map_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  access_notes: string | null;
+  is_default: boolean;
+  archived_at: string | null;
+  created_at: string;
+}
+
+const SITE_TYPES: { value: SiteType; ar: string; en: string; icon: typeof Home }[] = [
+  { value: 'villa',      ar: 'فيلا',     en: 'Villa',      icon: Home },
+  { value: 'apartment',  ar: 'شقة',      en: 'Apartment',  icon: Building2 },
+  { value: 'office',     ar: 'مكتب',     en: 'Office',     icon: Briefcase },
+  { value: 'showroom',   ar: 'صالة عرض', en: 'Showroom',   icon: Store },
+  { value: 'branch',     ar: 'فرع',      en: 'Branch',     icon: Building2 },
+  { value: 'warehouse',  ar: 'مستودع',   en: 'Warehouse',  icon: Warehouse },
+  { value: 'project',    ar: 'مشروع',    en: 'Project',    icon: Layers },
+  { value: 'commercial', ar: 'تجاري',    en: 'Commercial', icon: Store },
+  { value: 'other',      ar: 'أخرى',     en: 'Other',      icon: MapPin },
+];
+
+const VISIBILITY: { value: Visibility; ar: string; en: string }[] = [
+  { value: 'private',          ar: 'خاص',                en: 'Private' },
+  { value: 'shared_by_qr',     ar: 'مشاركة عبر QR',      en: 'Shared by QR' },
+  { value: 'provider_invited', ar: 'مزود مدعو',          en: 'Provider invited' },
+  { value: 'public_limited',   ar: 'عام محدود',          en: 'Public (limited)' },
+];
+
+const emptyForm = {
+  label: '', site_name: '', site_type: 'other' as SiteType, visibility: 'private' as Visibility,
+  contact_name: '', contact_phone: '', city_name: '', district: '',
+  address_line1: '', address_line2: '', map_url: '', latitude: '', longitude: '',
+  access_notes: '', is_default: false,
+};
+
+export default function DashboardSites() {
+  useNoIndex();
+  const { isRTL } = useLanguage();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const formRef = useRef<HTMLDivElement>(null);
+  const [, startTransition] = useTransition();
+
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<ClientSite | null>(null);
+  const [form, setForm] = useState(emptyForm);
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState<SiteType | 'all'>('all');
+  const [showArchived, setShowArchived] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  /* ─── Owner business ─── */
+  const { data: business } = useQuery({
+    queryKey: ['my-business-id', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await getOwnerBusiness<{ id: string; name_ar: string | null; name_en: string | null }>({
+        userId: user.id, select: 'id, name_ar, name_en',
+      });
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000,
+  });
+  const businessId = business?.id ?? null;
+
+  /* ─── Sites (RLS filters automatically) ─── */
+  const { data: sites = [], isLoading } = useQuery({
+    queryKey: ['dashboard-sites', businessId, user?.id, showArchived],
+    queryFn: async () => {
+      if (!user) return [];
+      let q = supabase.from('client_sites').select('*').order('is_default', { ascending: false }).order('created_at', { ascending: false });
+      if (!showArchived) q = q.is('archived_at', null);
+      if (businessId) q = q.eq('business_id', businessId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as ClientSite[];
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+
+  /* ─── Contracts linked per site ─── */
+  const { data: contractCounts = {} } = useQuery({
+    queryKey: ['site-contract-counts', businessId, sites.map(s => s.id).join(',')],
+    queryFn: async () => {
+      if (!sites.length) return {} as Record<string, number>;
+      const ids = sites.map(s => s.id);
+      const { data } = await supabase
+        .from('contracts')
+        .select('execution_site_id')
+        .in('execution_site_id', ids);
+      const map: Record<string, number> = {};
+      (data ?? []).forEach((r: { execution_site_id: string | null }) => {
+        if (r.execution_site_id) map[r.execution_site_id] = (map[r.execution_site_id] ?? 0) + 1;
+      });
+      return map;
+    },
+    enabled: sites.length > 0,
+    staleTime: 60_000,
+  });
+
+  /* ─── Mutations ─── */
+  const saveMut = useMutation({
+    mutationFn: async () => {
+      if (!businessId && !editing) throw new Error(isRTL ? 'لا توجد منشأة مرتبطة' : 'No business linked');
+      const payload = {
+        business_id: editing?.business_id ?? businessId,
+        label: form.label.trim(),
+        site_name: form.site_name.trim() || null,
+        site_type: form.site_type,
+        visibility: form.visibility,
+        contact_name: form.contact_name.trim() || null,
+        contact_phone: form.contact_phone.trim() || null,
+        city_name: form.city_name.trim() || null,
+        district: form.district.trim() || null,
+        address_line1: form.address_line1.trim(),
+        address_line2: form.address_line2.trim() || null,
+        map_url: form.map_url.trim() || null,
+        latitude: form.latitude ? Number(form.latitude) : null,
+        longitude: form.longitude ? Number(form.longitude) : null,
+        access_notes: form.access_notes.trim() || null,
+        is_default: form.is_default,
+      } satisfies Record<string, Json | null | undefined>;
+      if (editing) {
+        const { error } = await supabase.rpc('update_client_site', { _site_id: editing.id, _patch: payload as Json });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.rpc('create_client_site', { _payload: payload as Json });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-sites'] });
+      toast.success(editing ? (isRTL ? 'تم تحديث الموقع' : 'Site updated') : (isRTL ? 'تم إضافة الموقع' : 'Site added'));
+      closeForm();
+    },
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : (isRTL ? 'فشل الحفظ' : 'Save failed')),
+  });
+
+  const archiveMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc('archive_client_site', { _site_id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-sites'] });
+      setDeleteConfirm(null);
+      toast.success(isRTL ? 'تم الأرشفة' : 'Archived');
+    },
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Failed'),
+  });
+
+  /* ─── Derived ─── */
+  const filtered = useMemo(() => {
+    let r = sites;
+    if (typeFilter !== 'all') r = r.filter(s => s.site_type === typeFilter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      r = r.filter(s =>
+        s.label.toLowerCase().includes(q) ||
+        (s.site_name || '').toLowerCase().includes(q) ||
+        (s.address_line1 || '').toLowerCase().includes(q) ||
+        (s.city_name || '').toLowerCase().includes(q) ||
+        (s.contact_name || '').toLowerCase().includes(q) ||
+        (s.site_ref || '').toLowerCase().includes(q)
+      );
+    }
+    return r;
+  }, [sites, search, typeFilter]);
+
+  const stats = useMemo(() => {
+    const total = sites.filter(s => !s.archived_at).length;
+    const linked = Object.values(contractCounts).reduce((a, b) => a + b, 0);
+    const types = new Set(sites.map(s => s.site_type)).size;
+    const archived = sites.filter(s => s.archived_at).length;
+    return { total, linked, types, archived };
+  }, [sites, contractCounts]);
+
+  /* ─── Callbacks ─── */
+  const closeForm = useCallback(() => { setShowForm(false); setEditing(null); setForm(emptyForm); }, []);
+  const openCreate = useCallback(() => {
+    setEditing(null); setForm(emptyForm); setShowForm(true);
+    requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }, []);
+  const openEdit = useCallback((s: ClientSite) => {
+    setEditing(s);
+    setForm({
+      label: s.label, site_name: s.site_name || '', site_type: s.site_type, visibility: s.visibility,
+      contact_name: s.contact_name || '', contact_phone: s.contact_phone || '',
+      city_name: s.city_name || '', district: s.district || '',
+      address_line1: s.address_line1, address_line2: s.address_line2 || '',
+      map_url: s.map_url || '', latitude: s.latitude != null ? String(s.latitude) : '',
+      longitude: s.longitude != null ? String(s.longitude) : '',
+      access_notes: s.access_notes || '', is_default: s.is_default,
+    });
+    setShowForm(true);
+    requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }, []);
+
+  const goToContracts = useCallback((siteId: string) => {
+    navigate(`/dashboard/contracts?site=${siteId}`);
+  }, [navigate]);
+
+  const typeMeta = (t: SiteType) => SITE_TYPES.find(x => x.value === t) ?? SITE_TYPES[SITE_TYPES.length - 1];
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-5">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
+              <MapPin className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-heading font-bold text-xl">{isRTL ? 'عناوين المواقع' : 'Site Addresses'}</h1>
+              <p className="text-xs text-muted-foreground">
+                {isRTL ? `${stats.total} موقع · ${stats.linked} عقد مرتبط` : `${stats.total} sites · ${stats.linked} linked contracts`}
+              </p>
+            </div>
+          </div>
+          {businessId && (
+            <Button variant="hero" size="sm" className="h-8 text-xs" onClick={openCreate}>
+              <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة موقع' : 'Add Site'}
+            </Button>
+          )}
+        </div>
+
+        {/* Stats */}
+        {sites.length > 0 && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+            {[
+              { l: isRTL ? 'النشطة' : 'Active', v: stats.total, icon: MapPin, cls: 'text-primary bg-primary/10' },
+              { l: isRTL ? 'العقود المرتبطة' : 'Linked Contracts', v: stats.linked, icon: FileText, cls: 'text-accent bg-accent/10' },
+              { l: isRTL ? 'أنواع المواقع' : 'Site Types', v: stats.types, icon: Layers, cls: 'text-primary bg-primary/10' },
+              { l: isRTL ? 'المؤرشفة' : 'Archived', v: stats.archived, icon: AlertCircle, cls: 'text-muted-foreground bg-muted' },
+            ].map((s, i) => (
+              <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border/40 bg-card/50">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${s.cls}`}>
+                  <s.icon className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-base font-bold leading-none tech-content">{s.v}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{s.l}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!businessId && !isLoading && (
+          <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-300/40 bg-amber-50/50 dark:bg-amber-950/20">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <p className="text-xs">
+              {isRTL ? 'تظهر لك هنا المواقع المرتبطة بحسابك فقط. لإضافة مواقع جديدة، يلزم ربط منشأة بحسابك.' : 'Showing sites linked to your account only. Link a business to add new sites.'}
+            </p>
+          </div>
+        )}
+
+        {/* Form (inline) */}
+        {showForm && (
+          <div ref={formRef}>
+            <Card className="border-primary/20 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-primary/60 via-primary/30 to-transparent" />
+              <CardHeader className="pb-3 pt-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    {editing ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
+                    {editing ? (isRTL ? 'تعديل الموقع' : 'Edit Site') : (isRTL ? 'إضافة موقع جديد' : 'New Site')}
+                  </CardTitle>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={closeForm}><X className="w-4 h-4" /></Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4 pb-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{isRTL ? 'الاسم المختصر' : 'Label'} <span className="text-destructive">*</span></Label>
+                    <Input value={form.label} onChange={e => setForm(p => ({ ...p, label: e.target.value }))} placeholder={isRTL ? 'مثال: فيلا العميل' : 'e.g. Client villa'} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{isRTL ? 'اسم الموقع' : 'Site Name'}</Label>
+                    <Input value={form.site_name} onChange={e => setForm(p => ({ ...p, site_name: e.target.value }))} placeholder={isRTL ? 'اختياري' : 'Optional'} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{isRTL ? 'نوع الموقع' : 'Site Type'}</Label>
+                    <Select value={form.site_type} onValueChange={(v) => setForm(p => ({ ...p, site_type: v as SiteType }))}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {SITE_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{isRTL ? t.ar : t.en}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{isRTL ? 'الخصوصية' : 'Visibility'}</Label>
+                    <Select value={form.visibility} onValueChange={(v) => setForm(p => ({ ...p, visibility: v as Visibility }))}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {VISIBILITY.map(t => <SelectItem key={t.value} value={t.value}>{isRTL ? t.ar : t.en}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">{isRTL ? 'العنوان (السطر 1)' : 'Address line 1'} <span className="text-destructive">*</span></Label>
+                  <Input value={form.address_line1} onChange={e => setForm(p => ({ ...p, address_line1: e.target.value }))} placeholder={isRTL ? 'الشارع، رقم المبنى' : 'Street, building no.'} className="h-9" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{isRTL ? 'السطر 2' : 'Address line 2'}</Label>
+                    <Input value={form.address_line2} onChange={e => setForm(p => ({ ...p, address_line2: e.target.value }))} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{isRTL ? 'المدينة' : 'City'}</Label>
+                    <Input value={form.city_name} onChange={e => setForm(p => ({ ...p, city_name: e.target.value }))} placeholder={isRTL ? 'الرياض' : 'Riyadh'} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{isRTL ? 'الحي' : 'District'}</Label>
+                    <Input value={form.district} onChange={e => setForm(p => ({ ...p, district: e.target.value }))} className="h-9" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><MapIcon className="w-3.5 h-3.5" />{isRTL ? 'رابط الخريطة' : 'Map URL'}</Label>
+                    <Input type="url" dir="ltr" value={form.map_url} onChange={e => setForm(p => ({ ...p, map_url: e.target.value }))} placeholder="https://maps…" className="h-9 tech-content" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{isRTL ? 'خط العرض' : 'Latitude'}</Label>
+                    <Input type="number" step="0.000001" dir="ltr" value={form.latitude} onChange={e => setForm(p => ({ ...p, latitude: e.target.value }))} className="h-9 tech-content" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{isRTL ? 'خط الطول' : 'Longitude'}</Label>
+                    <Input type="number" step="0.000001" dir="ltr" value={form.longitude} onChange={e => setForm(p => ({ ...p, longitude: e.target.value }))} className="h-9 tech-content" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><User className="w-3.5 h-3.5" />{isRTL ? 'اسم الجهة المسؤولة' : 'Contact Name'}</Label>
+                    <Input value={form.contact_name} onChange={e => setForm(p => ({ ...p, contact_name: e.target.value }))} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{isRTL ? 'رقم التواصل' : 'Contact Phone'}</Label>
+                    <Input dir="ltr" value={form.contact_phone} onChange={e => setForm(p => ({ ...p, contact_phone: e.target.value }))} className="h-9 tech-content" />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">{isRTL ? 'ملاحظات الوصول' : 'Access notes'}</Label>
+                  <Textarea value={form.access_notes} onChange={e => setForm(p => ({ ...p, access_notes: e.target.value }))} rows={2} placeholder={isRTL ? 'أرقام البوابات، أوقات الوصول...' : 'Gate numbers, access hours...'} className="text-sm resize-none" />
+                </div>
+
+                <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 border border-border/40">
+                  <input type="checkbox" id="is_default" checked={form.is_default} onChange={e => setForm(p => ({ ...p, is_default: e.target.checked }))} className="w-4 h-4 rounded border-border" />
+                  <label htmlFor="is_default" className="text-xs font-medium cursor-pointer">{isRTL ? 'تعيين كموقع افتراضي' : 'Set as default site'}</label>
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <Button onClick={() => saveMut.mutate()} disabled={!form.label.trim() || !form.address_line1.trim() || saveMut.isPending} variant="hero" className="flex-1 h-9">
+                    {saveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin me-1.5" /> : <CheckCircle2 className="w-4 h-4 me-1.5" />}
+                    {saveMut.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editing ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add')}
+                  </Button>
+                  <Button variant="outline" className="h-9" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Toolbar */}
+        {sites.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[180px] max-w-sm">
+              <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input placeholder={isRTL ? 'ابحث...' : 'Search...'} value={search}
+                onChange={e => startTransition(() => setSearch(e.target.value))}
+                className="ps-8 h-8 text-xs" />
+            </div>
+            <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as SiteType | 'all')}>
+              <SelectTrigger className="w-auto h-8 gap-1 text-[11px] border-border/40">
+                <Layers className="w-3 h-3" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{isRTL ? 'كل الأنواع' : 'All types'}</SelectItem>
+                {SITE_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{isRTL ? t.ar : t.en}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <button onClick={() => setShowArchived(v => !v)}
+              className={`px-2.5 h-8 rounded-lg text-[11px] font-medium border transition-colors ${showArchived ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border/40 text-muted-foreground hover:bg-muted/50'}`}>
+              {isRTL ? 'إظهار المؤرشفة' : 'Show archived'}
+            </button>
+          </div>
+        )}
+
+        {/* Delete confirm (inline) */}
+        {deleteConfirm && (
+          <div className="flex items-center gap-3 p-3 rounded-xl border border-destructive/30 bg-destructive/5">
+            <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">{isRTL ? 'تأكيد الأرشفة' : 'Confirm archive'}</p>
+              <p className="text-[11px] text-muted-foreground">{isRTL ? 'يمكنك استعادته لاحقًا بإظهار المؤرشفة' : 'You can restore it later from Archived'}</p>
+            </div>
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setDeleteConfirm(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+            <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => archiveMut.mutate(deleteConfirm)} disabled={archiveMut.isPending}>
+              {archiveMut.isPending && <Loader2 className="w-3 h-3 animate-spin me-1" />}{isRTL ? 'أرشفة' : 'Archive'}
+            </Button>
+          </div>
+        )}
+
+        {/* List */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-44 rounded-xl" />)}
+          </div>
+        ) : sites.length === 0 && !showForm ? (
+          <div className="flex flex-col items-center py-16 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+              <MapPin className="w-7 h-7 text-primary" />
+            </div>
+            <h3 className="text-base font-semibold mb-1">{isRTL ? 'لا توجد مواقع بعد' : 'No sites yet'}</h3>
+            <p className="text-sm text-muted-foreground max-w-xs mb-5">
+              {isRTL ? 'أضف مواقع التنفيذ لتمكين ربطها بالعقود وأوامر العمل والفنيين.' : 'Add execution sites to link them with contracts, work orders, and technicians.'}
+            </p>
+            {businessId && (
+              <Button variant="hero" size="sm" onClick={openCreate}><Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة أول موقع' : 'Add First Site'}</Button>
+            )}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center py-10 text-muted-foreground">
+            <Search className="w-7 h-7 mb-2" />
+            <p className="text-sm font-medium">{isRTL ? 'لا توجد نتائج' : 'No results'}</p>
+            <button className="text-xs text-primary mt-1 hover:underline" onClick={() => { setSearch(''); setTypeFilter('all'); }}>{isRTL ? 'إعادة تعيين' : 'Reset filters'}</button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {filtered.map(s => {
+              const meta = typeMeta(s.site_type);
+              const Icon = meta.icon;
+              const linkedCount = contractCounts[s.id] ?? 0;
+              const isArchived = !!s.archived_at;
+              return (
+                <Card key={s.id} className={`hover-lift border-border/50 ${isArchived ? 'opacity-60' : ''}`}>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h3 className="font-semibold text-sm truncate">{s.label}</h3>
+                            {s.is_default && (
+                              <Badge variant="outline" className="h-4 text-[9px] px-1 border-accent text-accent gap-0.5">
+                                <Star className="w-2.5 h-2.5 fill-current" />{isRTL ? 'افتراضي' : 'Default'}
+                              </Badge>
+                            )}
+                            {isArchived && <Badge variant="outline" className="h-4 text-[9px] px-1">{isRTL ? 'مؤرشف' : 'Archived'}</Badge>}
+                          </div>
+                          {s.site_ref && <p className="text-[10px] text-muted-foreground tech-content mt-0.5">{s.site_ref}</p>}
+                        </div>
+                      </div>
+                      <Badge variant="secondary" className="text-[9px] shrink-0">{isRTL ? meta.ar : meta.en}</Badge>
+                    </div>
+
+                    <div className="space-y-1 text-xs">
+                      <p className="text-muted-foreground line-clamp-2">{s.address_line1}{s.address_line2 ? `, ${s.address_line2}` : ''}</p>
+                      {(s.city_name || s.district) && (
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <MapPin className="w-2.5 h-2.5" />{[s.district, s.city_name].filter(Boolean).join(' · ')}
+                        </p>
+                      )}
+                      {s.contact_name && (
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <User className="w-2.5 h-2.5" />{s.contact_name}
+                          {s.contact_phone && <span className="tech-content ms-1">· {s.contact_phone}</span>}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40">
+                      <button onClick={() => goToContracts(s.id)}
+                        className={`text-[10px] flex items-center gap-1 ${linkedCount > 0 ? 'text-primary hover:underline' : 'text-muted-foreground'}`}>
+                        <FileText className="w-3 h-3" />
+                        <span className="tech-content">{linkedCount}</span>
+                        <span>{isRTL ? 'عقد' : 'contracts'}</span>
+                        {linkedCount > 0 && <ArrowUpRight className="w-2.5 h-2.5" />}
+                      </button>
+                      <div className="flex items-center gap-0.5">
+                        {s.map_url && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                            <a href={s.map_url} target="_blank" rel="noopener noreferrer" title={isRTL ? 'فتح الخريطة' : 'Open map'}>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </Button>
+                        )}
+                        {!isArchived && (
+                          <>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(s)} title={isRTL ? 'تعديل' : 'Edit'}>
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => setDeleteConfirm(s.id)} title={isRTL ? 'أرشفة' : 'Archive'}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}
