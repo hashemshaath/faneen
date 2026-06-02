@@ -687,6 +687,17 @@ const DashboardPortfolio = () => {
                   </SelectContent>
                 </Select>
               )}
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger className="w-auto h-8 gap-1 text-[11px] border-border/40">
+                  <TrendingUp className="w-3 h-3" /><SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="order">{isRTL ? 'الترتيب اليدوي' : 'Manual order'}</SelectItem>
+                  <SelectItem value="views">{isRTL ? 'الأكثر مشاهدة' : 'Most viewed'}</SelectItem>
+                  <SelectItem value="shares">{isRTL ? 'الأكثر مشاركة' : 'Most shared'}</SelectItem>
+                  <SelectItem value="recent">{isRTL ? 'الأحدث' : 'Newest'}</SelectItem>
+                </SelectContent>
+              </Select>
               <div className="flex border border-border/40 rounded-lg overflow-hidden ms-auto">
                 <button className={`p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('grid')}><LayoutGrid className="w-3.5 h-3.5" /></button>
                 <button className={`p-1.5 transition-colors ${viewMode === 'list' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('list')}><List className="w-3.5 h-3.5" /></button>
