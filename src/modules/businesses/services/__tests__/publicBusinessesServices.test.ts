@@ -203,7 +203,13 @@ describe('P-21 public/SEO businesses read migration', () => {
     }
     // PII-MASKING — sensitive contact fields must never appear in the public
     // profile select. They are fetched separately via the contact-reveal flow
-    // when the viewer is authenticated.
+    // when the viewer is authenticated. Extract just the PUBLIC_BUSINESS_SELECT
+    // literal so banned tokens inside surrounding comments don't trip the check.
+    const selectMatch = src.match(
+      /const PUBLIC_BUSINESS_SELECT\s*=\s*([\s\S]*?);/,
+    );
+    expect(selectMatch, 'PUBLIC_BUSINESS_SELECT initializer not found').toBeTruthy();
+    const selectLiteral = (selectMatch?.[1] ?? '').replace(/\/\/.*$/gm, '');
     for (const banned of [
       'phone',
       'mobile',
@@ -212,9 +218,10 @@ describe('P-21 public/SEO businesses read migration', () => {
       'unified_number',
       'customer_service_phone',
     ]) {
-      expect(src, `PUBLIC_BUSINESS_SELECT must not include ${banned}`).not.toMatch(
-        new RegExp(`['\"][^'\"]*\\b${banned}\\b[^'\"]*['\"]`),
-      );
+      expect(
+        selectLiteral.includes(banned),
+        `PUBLIC_BUSINESS_SELECT must not include ${banned}`,
+      ).toBe(false);
     }
     expect(src).toContain('queryKey: ["business", username]');
     expect(src).toContain('enabled: !!username');
