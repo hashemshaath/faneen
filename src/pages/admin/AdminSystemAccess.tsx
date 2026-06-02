@@ -16,6 +16,7 @@ import {
   AlertTriangle, RotateCcw, Info, ArrowLeft, History, Settings2,
   Check, X as XIcon, Pencil, Building2,
 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
   listSystemModules,
@@ -71,6 +72,17 @@ const AdminSystemAccess: React.FC = () => {
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'enabled' | 'disabled' | 'overridden'>('all');
   const [search, setSearch] = useState('');
+
+  // PRICING-FORCE-OVERRIDE-1 — Super-admin "تجاوز كمسؤول" inline action.
+  // When updateBusinessSystemAccess returns blocked_by_membership for a super-admin
+  // entity-scoped attempt, we capture the blocked module so the super admin can
+  // re-submit with bypassMembership:true + a mandatory reason. The wrapper writes
+  // the same audited override (system_module_audit_log) via the existing RPC.
+  const [blockedAttempt, setBlockedAttempt] = useState<
+    | { moduleKey: string; moduleLabelAr: string; moduleLabelEn: string; nextEnabled: boolean; scopeValue: string | null }
+    | null
+  >(null);
+  const [bypassReason, setBypassReason] = useState('');
 
   const modulesQuery = useQuery({
     queryKey: ['system-modules'],
@@ -128,6 +140,20 @@ const AdminSystemAccess: React.FC = () => {
       }),
     onSuccess: (res, vars) => {
       if (!res.ok && res.blocked_by_membership) {
+        // Super admin gets an inline force-override card; others see the toast.
+        if (isSuperAdmin && vars.scopeType === 'entity' && vars.scopeValue) {
+          const mod = (modulesQuery.data ?? []).find(m => m.key === vars.moduleKey);
+          setBlockedAttempt({
+            moduleKey: vars.moduleKey,
+            moduleLabelAr: mod?.label_ar ?? vars.moduleKey,
+            moduleLabelEn: mod?.label_en ?? vars.moduleKey,
+            nextEnabled: vars.enabled,
+            scopeValue: vars.scopeValue,
+          });
+          setBypassReason('');
+          toast.message(isRTL ? 'هذه الوحدة غير متاحة ضمن عضوية المنشأة الحالية.' : (res.reason_en ?? ''));
+          return;
+        }
         toast.error(isRTL ? (res.reason_ar ?? '') : (res.reason_en ?? ''));
         return;
       }
@@ -146,6 +172,40 @@ const AdminSystemAccess: React.FC = () => {
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(msg || (isRTL ? 'فشل الحفظ' : 'Save failed'));
+    },
+  });
+
+  const bypassMutation = useMutation({
+    mutationFn: (vars: { moduleKey: string; scopeValue: string; enabled: boolean; reason: string }) =>
+      updateBusinessSystemAccess({
+        moduleKey: vars.moduleKey,
+        scopeType: 'entity',
+        scopeValue: vars.scopeValue,
+        enabled: vars.enabled,
+        isAdmin: !!isAdmin,
+        actingUserId: user?.id ?? null,
+        businessId: vars.scopeValue,
+        bypassMembership: true,
+        // Tag the audit row so it's clearly identifiable as a super-admin bypass
+        // (system_module_audit_log has no dedicated column).
+        reason: `[super-admin bypass] ${vars.reason}`,
+      }),
+    onSuccess: (res, vars) => {
+      if (!res.ok) {
+        toast.error((isRTL ? res.reason_ar : res.reason_en) || (isRTL ? 'فشل التجاوز' : 'Override failed'));
+        return;
+      }
+      qc.invalidateQueries({ queryKey: ['system-module-overrides'] });
+      qc.invalidateQueries({ queryKey: ['system-module-audit-recent'] });
+      invalidateAccess({ businessId: vars.scopeValue, includeAudit: true });
+      setLastSyncAt(Date.now());
+      setBlockedAttempt(null);
+      setBypassReason('');
+      toast.success(isRTL ? 'تم تطبيق التجاوز وتسجيله في سجل العمليات' : 'Override applied and logged');
+    },
+    onError: (e: unknown) => {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(msg || (isRTL ? 'فشل التجاوز' : 'Override failed'));
     },
   });
 
@@ -625,7 +685,95 @@ const AdminSystemAccess: React.FC = () => {
 
         {/* Modules grouped by category */}
         {canEdit ? (
-          loading ? (
+          <>
+          {isSuperAdmin && blockedAttempt && scopeTab === 'entity' && selectedEntityId === blockedAttempt.scopeValue && (
+            <div
+              data-testid="super-admin-bypass-card"
+              className="rounded-2xl border border-accent/40 bg-accent/5 p-4 space-y-3 mb-4"
+            >
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm flex items-center gap-2 flex-wrap">
+                    {isRTL ? 'هذه الوحدة غير متاحة ضمن عضوية المنشأة الحالية.' : 'This module is not included in the current business plan.'}
+                    <code className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground tech-content">
+                      {blockedAttempt.moduleKey}
+                    </code>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {isRTL
+                      ? 'لديك ثلاثة خيارات: تفعيلها على مستوى الباقة (يؤثر على كل المنشآت في نفس الباقة)، أو ترقية عضوية هذه المنشأة، أو تجاوز كمسؤول (يؤثر على هذه المنشأة فقط).'
+                      : 'You have three options: enable at plan level (affects all businesses on this plan), upgrade this business membership, or override as Super Admin (affects only this business).'}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                    <a
+                      href="/admin/memberships?tab=modules"
+                      className="inline-flex items-center gap-1 text-primary hover:underline"
+                    >
+                      <Layers className="w-3 h-3" />
+                      {isRTL ? 'تفعيلها على مستوى الباقة' : 'Enable at plan level'}
+                    </a>
+                    <a
+                      href="/admin/memberships"
+                      className="inline-flex items-center gap-1 text-primary hover:underline"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      {isRTL ? 'ترقية عضوية المنشأة' : 'Upgrade business membership'}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-accent/30 bg-card p-3 space-y-2">
+                <div className="text-xs text-muted-foreground">
+                  {isRTL
+                    ? 'هذا الإجراء يتجاوز قيود العضوية لهذه المنشأة فقط، ولا يغيّر باقة المنشأة أو إعدادات الخطة. سيتم تسجيل السبب في سجل العمليات.'
+                    : 'This action bypasses membership limits for this business only. It does not change the business plan or plan settings. The reason will be recorded in the audit log.'}
+                </div>
+                <label className="text-xs font-semibold">
+                  {isRTL ? 'السبب (إلزامي)' : 'Reason (required)'}
+                </label>
+                <Textarea
+                  data-testid="super-admin-bypass-reason"
+                  value={bypassReason}
+                  onChange={(e) => setBypassReason(e.target.value)}
+                  placeholder={isRTL ? 'وضّح سبب التجاوز…' : 'Explain why this override is needed…'}
+                  rows={2}
+                />
+                <div className="flex flex-wrap items-center gap-2 justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setBlockedAttempt(null); setBypassReason(''); }}
+                    disabled={bypassMutation.isPending}
+                  >
+                    {isRTL ? 'إلغاء' : 'Cancel'}
+                  </Button>
+                  <Button
+                    data-testid="super-admin-bypass-submit"
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={!bypassReason.trim() || bypassMutation.isPending}
+                    onClick={() => {
+                      if (!blockedAttempt.scopeValue || !bypassReason.trim()) return;
+                      bypassMutation.mutate({
+                        moduleKey: blockedAttempt.moduleKey,
+                        scopeValue: blockedAttempt.scopeValue,
+                        enabled: blockedAttempt.nextEnabled,
+                        reason: bypassReason.trim(),
+                      });
+                    }}
+                  >
+                    {bypassMutation.isPending
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      : <ShieldCheck className="w-3.5 h-3.5" />}
+                    {isRTL ? 'تجاوز كمسؤول' : 'Override as Super Admin'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          {loading ? (
             <div className="space-y-3">
               {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
             </div>
@@ -733,6 +881,8 @@ const AdminSystemAccess: React.FC = () => {
               })}
             </div>
           )
+          }
+          </>
         ) : (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
             {scopeTab === 'entity'
