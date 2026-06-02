@@ -190,14 +190,31 @@ describe('P-21 public/SEO businesses read migration', () => {
       'cover_url, logo_url, is_verified, membership_tier, approval_status',
       'rating_avg, rating_count, created_at',
       'website',
-      'address, region, district, street_name, building_number, additional_number',
+      // PII-MASKING — building_number/additional_number are no longer fetched
+      // from the public view; only the safe address subset is exposed.
+      'address, region, district, street_name',
       'latitude, longitude',
-      'contact_person, phone, mobile, unified_number, customer_service_phone, email',
       'categories(name_ar, name_en, slug)',
-      'cities(name_ar, name_en, slug)',
+      // cities has no `slug` column in this schema; embed name_ar/_en only.
+      'cities(name_ar, name_en)',
       'countries(name_ar, name_en, code)',
     ]) {
       expect(src).toContain(col);
+    }
+    // PII-MASKING — sensitive contact fields must never appear in the public
+    // profile select. They are fetched separately via the contact-reveal flow
+    // when the viewer is authenticated.
+    for (const banned of [
+      'phone',
+      'mobile',
+      'email',
+      'contact_person',
+      'unified_number',
+      'customer_service_phone',
+    ]) {
+      expect(src, `PUBLIC_BUSINESS_SELECT must not include ${banned}`).not.toMatch(
+        new RegExp(`['\"][^'\"]*\\b${banned}\\b[^'\"]*['\"]`),
+      );
     }
     expect(src).toContain('queryKey: ["business", username]');
     expect(src).toContain('enabled: !!username');
