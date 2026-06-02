@@ -410,6 +410,28 @@ const AdminEntityAccessRequests: React.FC = () => {
                   ? 'ستظهر طلبات الانضمام الجديدة هنا فور إرسالها من المستخدمين.'
                   : 'New join requests will appear here as soon as users submit them.')}
             </p>
+            {!query && (
+              <div className="mt-4 mx-auto max-w-md rounded-xl border border-border/40 bg-muted/30 p-3 text-start">
+                <p className="text-[11px] font-semibold text-foreground mb-1.5">
+                  {isRTL ? 'تبحث عن طلب مختلف؟' : 'Looking for a different request type?'}
+                </p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
+                  {isRTL
+                    ? 'هذه الصفحة لطلبات انضمام مستخدم إلى منشأة قائمة فقط. اشتراكات وترقيات العضوية تُدار في مكان آخر:'
+                    : 'This page only lists requests by users to join an existing entity. Membership subscriptions and upgrades are managed elsewhere:'}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  <Link to="/admin/memberships" className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-card border border-border/60 hover:border-primary/40 hover:text-primary transition-colors">
+                    <ExternalLink className="w-2.5 h-2.5" />
+                    {isRTL ? 'العضويات والمدفوعات' : 'Memberships & Payments'}
+                  </Link>
+                  <Link to="/admin/membership-upgrade-requests" className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-card border border-border/60 hover:border-primary/40 hover:text-primary transition-colors">
+                    <ExternalLink className="w-2.5 h-2.5" />
+                    {isRTL ? 'طلبات ترقية العضوية' : 'Membership Upgrade Requests'}
+                  </Link>
+                </div>
+              </div>
+            )}
             {query && (
               <Button variant="outline" size="sm" onClick={() => setQuery('')} className="mt-3 rounded-xl">
                 {isRTL ? 'مسح البحث' : 'Clear search'}
