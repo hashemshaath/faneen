@@ -38,7 +38,10 @@ describe('ADMIN-SYSTEM-SETTINGS-DEEP-AUDIT-1: API tab', () => {
 
   it('keeps SPL_API_KEY as the only fallback-only editable key', () => {
     expect(src).toMatch(/FALLBACK_ONLY_KEYS\s*=\s*new Set<string>\(\['SPL_API_KEY'\]\)/);
-    expect(src).not.toMatch(/SERVER_SECRET_KEYS[\s\S]*'SPL_API_KEY'/);
+    // SPL_API_KEY must NOT appear inside the SERVER_SECRET_KEYS set body.
+    const m = src.match(/SERVER_SECRET_KEYS\s*=\s*new Set<string>\(\[([\s\S]*?)\]\)/);
+    expect(m).not.toBeNull();
+    expect(m![1]).not.toMatch(/SPL_API_KEY/);
   });
 
   it('renders server-secret rows as status-only with a Lovable/Supabase Secrets pointer', () => {
