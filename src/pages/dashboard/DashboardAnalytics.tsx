@@ -27,6 +27,8 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 import { ProviderLeadAnalytics } from '@/components/dashboard/ProviderLeadAnalytics';
 import { ProviderTipsCard } from '@/components/dashboard/ProviderTipsCard';
 import { BentoTile } from '@/components/dashboard/overview/BentoTile';
+import { ProviderAnalyticsCharts } from '@/components/dashboard/ProviderAnalyticsCharts';
+import { listOverdueInstallmentPayments } from '@/modules/contracts';
 import '@/styles/dashboard-emerald.css';
 
 // Brand-aligned chart palette — sourced from central design tokens.
