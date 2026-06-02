@@ -26,6 +26,7 @@ import {
 import { buildCsv, downloadCsv, printCurrentView, tsStamp } from '@/lib/admin/exportUtils';
 import { useRealtimeInvalidate } from '@/hooks/useRealtimeInvalidate';
 import { BarChart, Bar, XAxis, Tooltip as ChartTooltip, ResponsiveContainer, Cell } from 'recharts';
+import { humanizeJobName } from '@/i18n/notificationLabels';
 
 interface CronRunRow {
   id: string;
@@ -495,11 +496,15 @@ const AdminCronRuns = () => {
                                 <Zap className="h-3.5 w-3.5 text-primary" />
                               </div>
                               <div className="min-w-0">
-                                <TechnicalText className="text-xs font-semibold text-foreground block truncate max-w-[220px]">
-                                  {r.job_name}
-                                </TechnicalText>
+                                <span
+                                  className="text-xs font-semibold text-foreground block truncate max-w-[220px]"
+                                  dir="auto"
+                                  title={r.job_name}
+                                >
+                                  {humanizeJobName(r.job_name, isRTL ? 'ar' : 'en')}
+                                </span>
                                 <TechnicalText className="text-[10px] text-muted-foreground block truncate max-w-[220px]">
-                                  {r.function_name}
+                                  {r.job_name} · {r.function_name}
                                 </TechnicalText>
                               </div>
                             </div>
@@ -640,12 +645,16 @@ const AdminCronRuns = () => {
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            <TechnicalText className="text-xs font-semibold text-foreground">
-                              {r.job_name}
-                            </TechnicalText>
+                            <span
+                              className="text-xs font-semibold text-foreground"
+                              dir="auto"
+                              title={r.job_name}
+                            >
+                              {humanizeJobName(r.job_name, isRTL ? 'ar' : 'en')}
+                            </span>
                             <span className="text-[10px] text-muted-foreground">·</span>
                             <TechnicalText className="text-[11px] text-muted-foreground">
-                              {r.function_name}
+                              {r.job_name}
                             </TechnicalText>
                             {r.status && (
                               <Badge variant="outline" className="text-[10px] py-0 h-4">
