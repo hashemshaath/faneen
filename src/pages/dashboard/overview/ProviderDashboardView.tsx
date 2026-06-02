@@ -16,8 +16,8 @@ import {
 } from 'recharts';
 import {
   Wrench, Image as ImageIcon, Star, FileText, TrendingUp,
-  Plus, Send, MessageSquare, Crown, Building2, FolderOpen, Megaphone,
-  Activity, CheckCircle2, Target, ExternalLink, Sparkles, ArrowLeft, ArrowRight,
+  Plus, Send, MessageSquare, Crown, Building2,
+  CheckCircle2, ExternalLink, Sparkles, ArrowLeft, ArrowRight,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -28,6 +28,7 @@ import { ProviderEngagementPreviews } from '@/components/dashboard/ProviderEngag
 import { ProviderTipsCard } from '@/components/dashboard/ProviderTipsCard';
 import { ProviderServicesStatusCard } from '@/components/dashboard/ProviderServicesStatusCard';
 import { ProviderSmartActionFooter } from '@/components/dashboard/ProviderSmartActionFooter';
+import { ProviderStatsOverview } from '@/components/dashboard/ProviderStatsOverview';
 import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { BusinessBarcodeCard } from '@/components/business-profile/BusinessBarcodeCard';
 import {
@@ -35,7 +36,7 @@ import {
   QuickAction, OverdueAlerts, TodaySummary,
   RefreshButton, getTimeGreeting,
 } from '@/components/dashboard/overview/shared';
-import { BentoTile } from '@/components/dashboard/overview/BentoTile';
+
 
 type ProviderProfile = {
   full_name?: string | null;
@@ -165,7 +166,7 @@ export default function ProviderDashboardView({
 
   const { ref, isVisible } = useScrollAnimation(0.1);
   const animatedRevenue = useCountUp(stats?.totalRevenue ?? 0, isVisible, 1500);
-  const animatedContracts = useCountUp(stats?.contracts ?? 0, isVisible, 1200);
+
   const completionRate = stats?.contracts ? Math.round((stats.completedContracts / stats.contracts) * 100) : 0;
   const hasRevenueData = (stats?.completedContracts ?? 0) > 0 && (stats?.totalRevenue ?? 0) > 0;
   const membershipTier = (business?.membership_tier ?? profile?.membership_tier ?? 'free') as string;
@@ -262,6 +263,23 @@ export default function ProviderDashboardView({
         </div>
       </section>
 
+      {/* B — Performance overview (KPIs + secondary metrics, professional B2B) */}
+      <ProviderStatsOverview
+        isRTL={isRTL}
+        activeContracts={stats?.activeContracts ?? 0}
+        totalContracts={stats?.contracts ?? 0}
+        services={stats?.services ?? 0}
+        avgRating={stats?.avgRating ?? '0.0'}
+        reviews={stats?.reviews ?? 0}
+        completionRate={completionRate}
+        completedContracts={stats?.completedContracts ?? 0}
+        portfolio={stats?.portfolio ?? 0}
+        projects={stats?.projects ?? 0}
+        promotions={stats?.promotions ?? 0}
+        messages={stats?.messages ?? 0}
+        operations={stats?.operations ?? 0}
+      />
+
       {/* Widgets row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <OverdueAlerts isRTL={isRTL} userId={user.id} />
@@ -295,41 +313,6 @@ export default function ProviderDashboardView({
           businessName={isRTL ? business?.name_ar : (business?.name_en || business?.name_ar)}
         />
       )}
-
-      {/* B — Real-only smart stats */}
-      <div className="dash-bento">
-        <BentoTile
-          variant="feature"
-          icon={FileText}
-          label={isRTL ? 'العقود النشطة' : 'Active Contracts'}
-          value={stats?.activeContracts ?? 0}
-          sub={`${isRTL ? 'من أصل' : 'of'} ${animatedContracts}`}
-          to="/dashboard/contracts"
-        />
-        <BentoTile
-          variant="wide"
-          icon={Wrench}
-          label={isRTL ? 'الخدمات النشطة' : 'Active services'}
-          value={stats?.services ?? 0}
-          sub={isRTL ? 'انتقل لإدارتها' : 'Manage them'}
-          to="/dashboard/services"
-        />
-        <BentoTile
-          variant="tile"
-          icon={Star}
-          label={isRTL ? 'التقييم' : 'Rating'}
-          value={stats?.avgRating ?? '0.0'}
-          sub={`${stats?.reviews ?? 0} ${isRTL ? 'تقييم' : 'reviews'}`}
-          to="/dashboard/reviews"
-        />
-        <BentoTile
-          variant="tile"
-          icon={Target}
-          label={isRTL ? 'معدل الإنجاز' : 'Completion'}
-          value={`${completionRate}%`}
-          sub={`${stats?.completedContracts ?? 0} ${isRTL ? 'مكتمل' : 'done'}`}
-        />
-      </div>
 
       {/* Charts — only when real revenue data exists */}
       {hasRevenueData && (
@@ -456,28 +439,6 @@ export default function ProviderDashboardView({
           </div>
         </CardContent>
       </Card>
-
-      {/* Bottom stats */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-        {[
-          { icon: Wrench, label: isRTL ? 'خدمات' : 'Services', value: stats?.services ?? 0 },
-          { icon: ImageIcon, label: isRTL ? 'معرض' : 'Portfolio', value: stats?.portfolio ?? 0 },
-          { icon: FolderOpen, label: isRTL ? 'مشاريع' : 'Projects', value: stats?.projects ?? 0 },
-          { icon: Megaphone, label: isRTL ? 'عروض' : 'Promos', value: stats?.promotions ?? 0 },
-          { icon: MessageSquare, label: isRTL ? 'محادثات' : 'Chats', value: stats?.messages ?? 0 },
-          { icon: Activity, label: isRTL ? 'عمليات' : 'Operations', value: stats?.operations ?? 0 },
-        ].map((card) => (
-          <Card key={card.label} className="border-border/40">
-            <CardContent className="p-2 flex flex-col items-center text-center gap-0.5">
-              <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
-                <card.icon className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-              </div>
-              <span className="tech-content text-sm font-bold">{card.value}</span>
-              <span className="text-[8px] text-muted-foreground">{card.label}</span>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
       {/* J — Final dynamic CTA */}
       <ProviderSmartActionFooter
