@@ -86,6 +86,7 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'المشاريع', en: 'Projects' }, url: '/dashboard/projects', icon: FolderOpen },
       { label: { ar: 'العروض', en: 'Promotions' }, url: '/dashboard/promotions', icon: Megaphone },
       { label: { ar: 'مناطق الخدمة', en: 'Service Areas' }, url: '/dashboard/provider/service-areas', icon: MapPin },
+      { label: { ar: 'عناوين المواقع', en: 'Site Addresses' }, url: '/dashboard/sites', icon: MapPin, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
       { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/dashboard/private-sectors', icon: Layers },
       { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },
       { label: { ar: 'شارة التوثيق', en: 'Verification Badge' }, url: '/dashboard/badge', icon: ShieldCheck },
