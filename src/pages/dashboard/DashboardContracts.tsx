@@ -653,6 +653,27 @@ const DashboardContracts = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, user?.id]);
 
+  /* Consume ?site=<UUID> query param: open the create flow with the chosen
+   * execution site preselected. Strips the param afterwards so a refresh does
+   * not re-apply. Pairs with the "New contract for this site" action on
+   * /dashboard/sites. */
+  React.useEffect(() => {
+    const siteId = searchParams.get('site');
+    if (!siteId) return;
+    if (!user) return;
+    setSelectedSiteId(siteId);
+    setEditingId(null);
+    setViewSection('create');
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('site');
+      // Honor optional ?tab=create by also removing it once consumed.
+      if (next.get('tab') === 'create') next.delete('tab');
+      return next;
+    }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, user?.id]);
+
   /* Phase 5B.4 — If a suggested template version is no longer published, clear it
    * (auto-suggest effect will then pick a fallback). */
   React.useEffect(() => {
