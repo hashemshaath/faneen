@@ -4,7 +4,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { BusinessVisibilityEditor } from "@/components/business-profile/BusinessVisibilityEditor";
-import { useNoIndex } from "@/hooks/usePageMeta";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 interface BusinessLite {
   id: string;
@@ -17,7 +17,7 @@ interface BusinessLite {
 /** Admin-only inline editor with section locking. Used by Approvals Center & direct route. */
 const AdminBusinessVisibility = () => {
   const { language, isRTL } = useLanguage();
-  useNoIndex();
+  usePageMeta({ title: "Admin · Profile visibility", noindex: true });
 
   const [query, setQuery] = useState("");
   const [rows, setRows] = useState<BusinessLite[] | null>(null);
