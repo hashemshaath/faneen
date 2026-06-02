@@ -618,25 +618,21 @@ const AdminApprovalsCenter: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 pb-12">
-        {/* Header */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold font-heading">
-                {isRTL ? 'مركز الموافقات الموحّد' : 'Unified Approvals Center'}
-              </h1>
-              <p className="text-xs text-muted-foreground mt-0.5 max-w-2xl">
-                {isRTL
-                  ? 'كل طلبات الموافقة في قائمة واحدة — مرتبة حسب الأحدث، قابلة للتصفية والبحث، مع إجراءات مباشرة.'
-                  : 'Every pending approval in one feed — sorted by recency, filterable, with inline actions.'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+      <div className="space-y-6 pb-12 max-w-[1600px] mx-auto p-4 md:p-6">
+        <AdminPageHeader
+          tone="success"
+          icon={CheckCircle2}
+          eyebrow={isRTL ? 'لوحة الإدارة' : 'Admin Console'}
+          breadcrumbs={[
+            { label: isRTL ? 'الإدارة' : 'Admin', href: '/admin' },
+            { label: isRTL ? 'الموافقات' : 'Approvals' },
+          ]}
+          title={isRTL ? 'مركز الموافقات الموحّد' : 'Unified Approvals Center'}
+          subtitle={isRTL
+            ? 'كل طلبات الموافقة في قائمة واحدة — مرتبة حسب الأحدث، قابلة للتصفية والبحث، مع إجراءات مباشرة.'
+            : 'Every pending approval in one feed — sorted by recency, filterable, with inline actions.'}
+          actions={
+            <>
             <Badge variant="outline" className="rounded-xl gap-1 px-3 h-9 text-xs">
               <Clock className="w-3.5 h-3.5" />
               <span className="tech-content font-semibold">{totals.total}</span>
@@ -674,8 +670,9 @@ const AdminApprovalsCenter: React.FC = () => {
               <RefreshCw className={`w-3.5 h-3.5 ${totals.anyLoading ? 'animate-spin' : ''}`} />
               {isRTL ? 'تحديث' : 'Refresh'}
             </Button>
-          </div>
-        </div>
+            </>
+          }
+        />
 
         {/* Filter chips + Search */}
         <div className="rounded-2xl border border-border/40 bg-card p-3 space-y-3">
