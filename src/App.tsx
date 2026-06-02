@@ -17,6 +17,7 @@ import { GlobalLinkTracker } from "@/components/GlobalLinkTracker";
 import { GlobalShortcuts } from "@/components/GlobalShortcuts";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { ThemeApplier } from "@/components/ThemeApplier";
+import { BrandFaviconApplier } from "@/components/BrandFaviconApplier";
 import { lazyRetry } from "@/lib/lazyRetry";
 const Index = lazyRetry(() => import("./pages/Index"));
 const ConsentBanner = lazyRetry(() => import("./components/consent/ConsentBanner"));
@@ -495,6 +496,7 @@ const App = () => (
           <AuthProvider>
             <TooltipProvider>
               <ThemeApplier />
+              <BrandFaviconApplier />
               <Toaster />
               <Sonner />
               <AppRoutes />
