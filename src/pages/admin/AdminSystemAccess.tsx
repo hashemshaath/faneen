@@ -14,7 +14,7 @@ import {
   Layers, Search, Globe, Users as UsersIcon, User as UserIcon,
   ShieldCheck, Lock, Eye, EyeOff, Sparkles, Filter, Loader2,
   AlertTriangle, RotateCcw, Info, ArrowLeft, History, Settings2,
-  Check, X as XIcon, Pencil, Building2,
+  Check, X as XIcon, Pencil, Building2, Zap,
 } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
@@ -98,7 +98,7 @@ const AdminSystemAccess: React.FC = () => {
         ref_id: string | null; account_type: string | null;
       }>;
     },
-    enabled: scopeTab === 'user',
+    enabled: scopeTab === 'user' || viewTab === 'audit',
   });
 
   const entitiesQuery = useQuery({
@@ -115,7 +115,7 @@ const AdminSystemAccess: React.FC = () => {
         ref_id: string | null; logo_url: string | null;
       }>;
     },
-    enabled: scopeTab === 'entity',
+    enabled: scopeTab === 'entity' || viewTab === 'audit',
   });
 
   const setMutation = useMutation({
@@ -420,7 +420,11 @@ const AdminSystemAccess: React.FC = () => {
         </div>
 
         {viewTab === 'audit' ? (
-          <AuditLogPanel modules={modulesQuery.data ?? []} />
+          <AuditLogPanel
+            modules={modulesQuery.data ?? []}
+            businesses={entitiesQuery.data ?? []}
+            users={usersQuery.data ?? []}
+          />
         ) : viewTab === 'super_override' ? (
           <SuperAdminBusinessOverridePanel />
         ) : (
@@ -460,8 +464,8 @@ const AdminSystemAccess: React.FC = () => {
             <div className="rounded-xl bg-warning/10 border border-warning/30 p-3 flex items-start gap-2 text-sm">
               <Info className="w-4 h-4 text-warning shrink-0 mt-0.5" />
               <span>{isRTL
-                ? 'لمنشأة محددة: يخضع لباقة المنشأة. يمكن للسوبر أدمن التجاوز بسبب إلزامي يُسجَّل في سجل العمليات.'
-                : 'Per business: subject to the business plan. Super Admin may override with a mandatory reason recorded in the audit log.'}</span>
+                ? 'لمنشأة محددة: للأدمن صلاحية التعديل المباشر بغض النظر عن باقة المنشأة، ويُسجَّل كل تغيير في سجل العمليات بوسم [admin direct].'
+                : 'Per business: admins can toggle modules directly regardless of the business plan. Every change is recorded in the audit log with an [admin direct] tag.'}</span>
             </div>
           )}
 
@@ -854,9 +858,18 @@ const ScopeTabBtn: React.FC<{
   </button>
 );
 
-const AuditLogPanel: React.FC<{ modules: SystemModule[] }> = ({ modules }) => {
+interface AuditBusinessLite { id: string; name_ar: string | null; name_en: string | null; ref_id: string | null; }
+interface AuditUserLite { user_id: string; full_name: string | null; email: string | null; ref_id: string | null; }
+
+const AuditLogPanel: React.FC<{
+  modules: SystemModule[];
+  businesses?: AuditBusinessLite[];
+  users?: AuditUserLite[];
+}> = ({ modules, businesses = [], users = [] }) => {
   const { isRTL, language } = useLanguage();
   const [actionFilter, setActionFilter] = useState<'all' | 'grant' | 'revoke' | 'reset' | 'update'>('all');
+  const [scopeFilter, setScopeFilter] = useState<'all' | 'global_default' | 'account_type' | 'entity' | 'user' | 'admin_direct'>('all');
+  const [searchText, setSearchText] = useState('');
 
   const auditQuery = useQuery({
     queryKey: ['system-module-audit', 200],
@@ -870,11 +883,42 @@ const AuditLogPanel: React.FC<{ modules: SystemModule[] }> = ({ modules }) => {
     return map;
   }, [modules]);
 
+  const businessById = useMemo(() => {
+    const m = new Map<string, AuditBusinessLite>();
+    businesses.forEach(b => m.set(b.id, b));
+    return m;
+  }, [businesses]);
+
+  const userById = useMemo(() => {
+    const m = new Map<string, AuditUserLite>();
+    users.forEach(u => m.set(u.user_id, u));
+    return m;
+  }, [users]);
+
   const filtered = useMemo(() => {
     const list = auditQuery.data ?? [];
-    if (actionFilter === 'all') return list;
-    return list.filter(e => e.action === actionFilter);
-  }, [auditQuery.data, actionFilter]);
+    const s = searchText.trim().toLowerCase();
+    return list.filter(e => {
+      if (actionFilter !== 'all' && e.action !== actionFilter) return false;
+      if (scopeFilter === 'admin_direct') {
+        if (!(e.reason ?? '').toLowerCase().includes('[admin direct]')) return false;
+      } else if (scopeFilter !== 'all' && e.scope_type !== scopeFilter) return false;
+      if (!s) return true;
+      const moduleL = moduleLabel.get(e.module_key);
+      const biz = e.scope_type === 'entity' && e.scope_value ? businessById.get(e.scope_value) : null;
+      const usr = e.scope_type === 'user' && e.scope_value ? userById.get(e.scope_value) : null;
+      const haystack = [
+        e.module_key,
+        moduleL?.ar, moduleL?.en,
+        e.scope_value,
+        e.reason,
+        e.actor,
+        biz?.name_ar, biz?.name_en, biz?.ref_id,
+        usr?.full_name, usr?.email, usr?.ref_id,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(s);
+    });
+  }, [auditQuery.data, actionFilter, scopeFilter, searchText, moduleLabel, businessById, userById]);
 
   const formatTime = (iso: string): string => {
     const d = new Date(iso);
@@ -893,13 +937,22 @@ const AuditLogPanel: React.FC<{ modules: SystemModule[] }> = ({ modules }) => {
   const scopeLabel = (e: SystemModuleAuditEntry): string => {
     if (e.scope_type === 'global_default') return isRTL ? 'افتراضي عام' : 'Global default';
     if (e.scope_type === 'account_type') return `${isRTL ? 'نوع حساب' : 'Account type'}: ${e.scope_value}`;
-    if (e.scope_type === 'entity') return `${isRTL ? 'منشأة' : 'Business'}: ${(e.scope_value ?? '').slice(0, 8)}…`;
-    return `${isRTL ? 'مستخدم' : 'User'}: ${(e.scope_value ?? '').slice(0, 8)}…`;
+    if (e.scope_type === 'entity') {
+      const b = e.scope_value ? businessById.get(e.scope_value) : null;
+      const name = b ? (isRTL ? (b.name_ar || b.name_en) : (b.name_en || b.name_ar)) : null;
+      const ref = b?.ref_id ?? (e.scope_value ?? '').slice(0, 8) + '…';
+      return `${isRTL ? 'منشأة' : 'Business'}: ${name || ref}${name && b?.ref_id ? ` · ${b.ref_id}` : ''}`;
+    }
+    const u = e.scope_value ? userById.get(e.scope_value) : null;
+    const uname = u ? (u.full_name || u.email) : null;
+    const uref = u?.ref_id ?? (e.scope_value ?? '').slice(0, 8) + '…';
+    return `${isRTL ? 'مستخدم' : 'User'}: ${uname || uref}${uname && u?.ref_id ? ` · ${u.ref_id}` : ''}`;
   };
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-border/30 bg-card p-3 flex items-center gap-2 flex-wrap">
+      <div className="rounded-2xl border border-border/30 bg-card p-3 space-y-3" data-testid="audit-log-toolbar">
+        <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1 rounded-xl bg-muted/40 p-1">
           {(['all','grant','revoke','reset','update'] as const).map(a => (
             <button
@@ -920,6 +973,37 @@ const AuditLogPanel: React.FC<{ modules: SystemModule[] }> = ({ modules }) => {
         <span className="text-xs text-muted-foreground ms-auto tech-content">
           {filtered.length} / {(auditQuery.data ?? []).length}
         </span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 rounded-xl bg-muted/40 p-1 flex-wrap" data-testid="audit-scope-filter">
+            {(['all','global_default','account_type','entity','user','admin_direct'] as const).map(s => (
+              <button
+                key={s}
+                onClick={() => setScopeFilter(s)}
+                className={`px-3 h-8 rounded-lg text-xs font-medium transition-all ${
+                  scopeFilter === s ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {s === 'all' ? (isRTL ? 'كل النطاقات' : 'All scopes')
+                  : s === 'global_default' ? (isRTL ? 'افتراضي عام' : 'Global')
+                  : s === 'account_type' ? (isRTL ? 'نوع حساب' : 'Account type')
+                  : s === 'entity' ? (isRTL ? 'منشأة' : 'Business')
+                  : s === 'user' ? (isRTL ? 'مستخدم' : 'User')
+                  : (isRTL ? 'مباشر من الأدمن' : 'Admin direct')}
+              </button>
+            ))}
+          </div>
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder={isRTL ? 'بحث: اسم منشأة، مستخدم، معرّف، وحدة…' : 'Search: business, user, ref, module…'}
+              className="h-9 ps-9"
+              data-testid="audit-search-input"
+            />
+          </div>
+        </div>
       </div>
 
       {auditQuery.isLoading ? (
@@ -936,8 +1020,16 @@ const AuditLogPanel: React.FC<{ modules: SystemModule[] }> = ({ modules }) => {
             const meta = actionMeta(e.action);
             const Icon = meta.icon;
             const label = moduleLabel.get(e.module_key);
+            const isAdminDirect = (e.reason ?? '').toLowerCase().includes('[admin direct]');
             return (
-              <div key={e.id} className="rounded-xl border border-border/30 bg-card p-3 flex items-start gap-3">
+              <div
+                key={e.id}
+                data-testid="audit-entry"
+                data-admin-direct={isAdminDirect ? 'true' : 'false'}
+                className={`rounded-xl border bg-card p-3 flex items-start gap-3 ${
+                  isAdminDirect ? 'border-accent/40 ring-1 ring-accent/20' : 'border-border/30'
+                }`}
+              >
                 <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${meta.color}`}>
                   <Icon className="w-4 h-4" />
                 </div>
@@ -946,6 +1038,15 @@ const AuditLogPanel: React.FC<{ modules: SystemModule[] }> = ({ modules }) => {
                     <Badge className={`text-[10px] ${meta.color} border`}>
                       {isRTL ? meta.ar : meta.en}
                     </Badge>
+                    {isAdminDirect && (
+                      <Badge
+                        data-testid="audit-admin-direct-tag"
+                        className="text-[10px] bg-accent/15 text-accent border-accent/30 border inline-flex items-center gap-1"
+                      >
+                        <Zap className="w-3 h-3" />
+                        {isRTL ? 'مباشر من الأدمن' : 'admin direct'}
+                      </Badge>
+                    )}
                     <span className="font-semibold text-sm">
                       {label ? (isRTL ? label.ar : label.en) : e.module_key}
                     </span>
@@ -956,10 +1057,14 @@ const AuditLogPanel: React.FC<{ modules: SystemModule[] }> = ({ modules }) => {
                   <div className="text-[11px] text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
                     <span>{scopeLabel(e)}</span>
                     {e.previous_enabled !== null && e.new_enabled !== null && (
-                      <span>
-                        {e.previous_enabled ? (isRTL ? 'كان: ظاهر' : 'was: visible') : (isRTL ? 'كان: مخفي' : 'was: hidden')}
-                        {' → '}
-                        {e.new_enabled ? (isRTL ? 'أصبح: ظاهر' : 'now: visible') : (isRTL ? 'أصبح: مخفي' : 'now: hidden')}
+                      <span className="inline-flex items-center gap-1" data-testid="audit-before-after">
+                        <span className={e.previous_enabled ? 'text-success' : 'text-destructive'}>
+                          {e.previous_enabled ? (isRTL ? 'كان: ظاهر' : 'was: visible') : (isRTL ? 'كان: مخفي' : 'was: hidden')}
+                        </span>
+                        <span>→</span>
+                        <span className={e.new_enabled ? 'text-success font-semibold' : 'text-destructive font-semibold'}>
+                          {e.new_enabled ? (isRTL ? 'أصبح: ظاهر' : 'now: visible') : (isRTL ? 'أصبح: مخفي' : 'now: hidden')}
+                        </span>
                       </span>
                     )}
                     <span className="tech-content">{formatTime(e.created_at)}</span>
