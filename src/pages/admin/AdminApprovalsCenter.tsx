@@ -4,11 +4,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ShieldCheck, UserPlus, Crown, ArrowUp, AtSign, Inbox,
   ExternalLink, RefreshCw, Loader2, CheckCircle2, Clock, Building2,
-  Check, X, History, ShieldAlert,
+  Check, X, History, ShieldAlert, Search, Filter,
 } from 'lucide-react';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -53,7 +54,7 @@ interface CategoryResult {
   items: ApprovalItem[];
 }
 
-const PREVIEW_LIMIT = 5;
+const PREVIEW_LIMIT = 25;
 
 async function fetchProviderReview(): Promise<CategoryResult> {
   const { data, count, error } = await listPendingProviderReviewBusinesses(PREVIEW_LIMIT);
@@ -311,6 +312,40 @@ const AdminApprovalsCenter: React.FC = () => {
       year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
     }) : '—';
 
+  // ── Unified feed: merge all categories into a single sortable/filterable list ──
+  const [activeFilter, setActiveFilter] = React.useState<'all' | ApprovalCategoryKey>('all');
+  const [search, setSearch] = React.useState('');
+
+  type UnifiedRow = ApprovalItem & { category: ApprovalCategoryKey };
+  const unified = useMemo<UnifiedRow[]>(() => {
+    const rows: UnifiedRow[] = [];
+    (Object.keys(queries) as ApprovalCategoryKey[]).forEach((k) => {
+      const items = queries[k].data?.items ?? [];
+      items.forEach((it) => rows.push({ ...it, category: k }));
+    });
+    rows.sort((a, b) => {
+      const ad = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bd = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bd - ad;
+    });
+    const q = search.trim().toLowerCase();
+    return rows.filter((r) => {
+      if (activeFilter !== 'all' && r.category !== activeFilter) return false;
+      if (!q) return true;
+      return (
+        r.primary.toLowerCase().includes(q) ||
+        r.refId.toLowerCase().includes(q) ||
+        (r.secondary ?? '').toString().toLowerCase().includes(q)
+      );
+    });
+  }, [queries, activeFilter, search]);
+
+  const catMap = useMemo(() => {
+    const m = new Map<ApprovalCategoryKey, CategoryConfig>();
+    CATEGORIES.forEach((c) => m.set(c.key, c));
+    return m;
+  }, []);
+
   return (
     <DashboardLayout>
       <div className="space-y-6 pb-12">
@@ -326,8 +361,8 @@ const AdminApprovalsCenter: React.FC = () => {
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5 max-w-2xl">
                 {isRTL
-                  ? 'نقطة دخول واحدة لكل طلبات الموافقة عبر المنصة — مراجعة المزودين، أسماء المستخدمين، الانضمام للمنشآت، الاشتراكات والترقيات.'
-                  : 'A single entry point for every pending approval across the platform — provider reviews, usernames, entity access, subscriptions, and upgrades.'}
+                  ? 'كل طلبات الموافقة في قائمة واحدة — مرتبة حسب الأحدث، قابلة للتصفية والبحث، مع إجراءات مباشرة.'
+                  : 'Every pending approval in one feed — sorted by recency, filterable, with inline actions.'}
               </p>
             </div>
           </div>
@@ -346,153 +381,146 @@ const AdminApprovalsCenter: React.FC = () => {
           </div>
         </div>
 
-        {/* KPI strip */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          {CATEGORIES.map((c) => {
-            const q = queries[c.key];
-            const count = q.data?.count ?? 0;
-            const Icon = c.icon;
-            return (
-              <Link
-                key={c.key}
-                to={c.href}
-                className={`group relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br ${c.tone} p-4 transition-all hover-lift hover:border-border focus:outline-none focus-visible:ring-2 ${c.ring}`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-card/70 backdrop-blur flex items-center justify-center shrink-0">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    {q.isLoading ? (
-                      <Skeleton className="h-7 w-10" />
-                    ) : (
-                      <p className="text-2xl font-bold font-heading leading-none tech-content text-foreground">{count}</p>
-                    )}
-                    <p className="text-[11px] text-muted-foreground mt-1 truncate">{isRTL ? c.ar : c.en}</p>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Sections */}
-        <div className="space-y-4">
-          {CATEGORIES.map((c) => {
-            const q = queries[c.key];
-            const data = q.data ?? { count: 0, items: [] };
-            const Icon = c.icon;
-            return (
-              <section
-                key={c.key}
-                className="rounded-2xl border border-border/40 bg-card overflow-hidden"
-                aria-labelledby={`section-${c.key}`}
-              >
-                <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 bg-muted/20">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${c.tone} flex items-center justify-center shrink-0`}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <h2 id={`section-${c.key}`} className="text-sm font-semibold text-foreground flex items-center gap-2">
-                        {isRTL ? c.ar : c.en}
-                        <Badge variant="outline" className="text-[10px] tech-content">
-                          {q.isLoading ? '…' : data.count}
-                        </Badge>
-                      </h2>
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        {isRTL ? c.description.ar : c.description.en}
-                      </p>
-                    </div>
-                  </div>
-                  <Link
-                    to={c.href}
-                    className="inline-flex items-center gap-1 text-xs px-3 h-8 rounded-lg border border-border/60 bg-card hover:border-primary/40 hover:text-primary transition-colors whitespace-nowrap"
+        {/* Filter chips + Search */}
+        <div className="rounded-2xl border border-border/40 bg-card p-3 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {(() => {
+              const chips: Array<{ key: 'all' | ApprovalCategoryKey; label: string; count: number; Icon: typeof ShieldCheck; tone: string }> = [
+                { key: 'all', label: isRTL ? 'الكل' : 'All', count: totals.total, Icon: Filter, tone: 'from-primary/15 to-primary/5 text-primary' },
+                ...CATEGORIES.map((c) => ({
+                  key: c.key,
+                  label: isRTL ? c.ar : c.en,
+                  count: queries[c.key].data?.count ?? 0,
+                  Icon: c.icon,
+                  tone: c.tone,
+                })),
+              ];
+              return chips.map((chip) => {
+                const active = activeFilter === chip.key;
+                const Icon = chip.Icon;
+                return (
+                  <button
+                    key={chip.key}
+                    type="button"
+                    onClick={() => setActiveFilter(chip.key)}
+                    className={`inline-flex items-center gap-2 h-9 px-3 rounded-xl text-xs font-medium border transition-all ${
+                      active
+                        ? `bg-gradient-to-br ${chip.tone} border-transparent shadow-sm`
+                        : 'border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border'
+                    }`}
                   >
-                    <ExternalLink className="w-3 h-3" />
-                    {isRTL ? c.hint.ar : c.hint.en}
-                  </Link>
-                </header>
-
-                <div className="p-3">
-                  {q.isLoading ? (
-                    <div className="space-y-2">
-                      {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
-                    </div>
-                  ) : data.items.length === 0 ? (
-                    <div className="flex items-center gap-3 px-3 py-5 text-xs text-muted-foreground">
-                      <Inbox className="w-4 h-4" />
-                      {isRTL ? 'لا توجد عناصر بانتظار الموافقة في هذا القسم.' : 'No pending items in this section.'}
-                    </div>
-                  ) : (
-                    <ul className="divide-y divide-border/40">
-                      {data.items.map((it) => (
-                        <li key={it.id}>
-                          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/40 transition-colors group">
-                            <div className="w-8 h-8 rounded-lg bg-muted/40 flex items-center justify-center shrink-0">
-                              <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
-                            </div>
-                            <Link to={c.href} className="flex-1 min-w-0 block">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-medium text-foreground truncate">{it.primary}</span>
-                                <span className="tech-content text-[10px] text-muted-foreground">{it.refId}</span>
-                                {it.secondary && (
-                                  <Badge variant="outline" className="text-[10px] tech-content">{it.secondary}</Badge>
-                                )}
-                              </div>
-                              <p className="text-[10px] text-muted-foreground tech-content mt-0.5">{fmtDate(it.createdAt)}</p>
-                            </Link>
-                            {c.key === 'entity_access' ? (
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-8 px-2.5 rounded-lg gap-1 text-success hover:text-success hover:border-success/40"
-                                  disabled={busyId === it.id}
-                                  onClick={() => handleReview(it.id, 'approve')}
-                                  aria-label={isRTL ? 'موافقة' : 'Approve'}
-                                >
-                                  {busyId === it.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                                  <span className="text-[11px]">{isRTL ? 'موافقة' : 'Approve'}</span>
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-8 px-2.5 rounded-lg gap-1 text-destructive hover:text-destructive hover:border-destructive/40"
-                                  disabled={busyId === it.id}
-                                  onClick={() => handleReview(it.id, 'reject')}
-                                  aria-label={isRTL ? 'رفض' : 'Reject'}
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                  <span className="text-[11px]">{isRTL ? 'رفض' : 'Reject'}</span>
-                                </Button>
-                              </div>
-                            ) : (
-                              <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                            )}
-                          </div>
-                        </li>
-                      ))}
-                      {data.count > data.items.length && (
-                        <li className="pt-2">
-                          <Link
-                            to={c.href}
-                            className="flex items-center justify-center gap-1.5 text-[11px] text-primary hover:underline px-3 py-2"
-                          >
-                            {isRTL
-                              ? `عرض ${data.count - data.items.length}+ المزيد`
-                              : `View ${data.count - data.items.length}+ more`}
-                            <ExternalLink className="w-3 h-3" />
-                          </Link>
-                        </li>
-                      )}
-                    </ul>
-                  )}
-                </div>
-              </section>
-            );
-          })}
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{chip.label}</span>
+                    <Badge
+                      variant={active ? 'default' : 'outline'}
+                      className="text-[10px] tech-content h-5 px-1.5"
+                    >
+                      {chip.count}
+                    </Badge>
+                  </button>
+                );
+              });
+            })()}
+          </div>
+          <div className="relative">
+            <Search className="w-4 h-4 absolute top-1/2 -translate-y-1/2 ms-3 text-muted-foreground pointer-events-none" style={{ insetInlineStart: '0.75rem' }} />
+            <Input
+              dir="auto"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={isRTL ? 'بحث بالاسم، المعرف، أو القيمة…' : 'Search name, ref, or value…'}
+              className="h-10 ps-9 rounded-xl"
+              style={{ paddingInlineStart: '2.25rem' }}
+            />
+          </div>
         </div>
+
+        {/* Unified feed */}
+        <section className="rounded-2xl border border-border/40 bg-card overflow-hidden" aria-label={isRTL ? 'قائمة الموافقات' : 'Approvals feed'}>
+          {totals.anyLoading && unified.length === 0 ? (
+            <div className="p-3 space-y-2">
+              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
+            </div>
+          ) : unified.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-muted/40 flex items-center justify-center">
+                <Inbox className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-foreground">
+                {isRTL ? 'لا توجد طلبات بانتظار الموافقة' : 'No pending approvals'}
+              </p>
+              <p className="text-xs text-muted-foreground max-w-sm">
+                {isRTL
+                  ? 'كل الطلبات تمت معالجتها — جرّب تغيير التصفية أو البحث.'
+                  : 'Everything is handled — try a different filter or search.'}
+              </p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-border/40">
+              {unified.map((it) => {
+                const c = catMap.get(it.category)!;
+                const Icon = c.icon;
+                return (
+                  <li key={`${it.category}-${it.id}`}>
+                    <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group">
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${c.tone} flex items-center justify-center shrink-0`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold text-foreground truncate">{it.primary}</span>
+                          <Badge variant="outline" className="text-[10px] h-5">
+                            {isRTL ? c.ar : c.en}
+                          </Badge>
+                          <span className="tech-content text-[10px] text-muted-foreground">{it.refId}</span>
+                          {it.secondary && (
+                            <Badge variant="outline" className="text-[10px] tech-content h-5">{it.secondary}</Badge>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground tech-content mt-1 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {fmtDate(it.createdAt)}
+                        </p>
+                      </div>
+                      {it.category === 'entity_access' ? (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-2.5 rounded-lg gap-1 text-success hover:text-success hover:border-success/40"
+                            disabled={busyId === it.id}
+                            onClick={() => handleReview(it.id, 'approve')}
+                          >
+                            {busyId === it.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                            <span className="text-[11px]">{isRTL ? 'موافقة' : 'Approve'}</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-2.5 rounded-lg gap-1 text-destructive hover:text-destructive hover:border-destructive/40"
+                            disabled={busyId === it.id}
+                            onClick={() => handleReview(it.id, 'reject')}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span className="text-[11px]">{isRTL ? 'رفض' : 'Reject'}</span>
+                          </Button>
+                        </div>
+                      ) : (
+                        <Link
+                          to={c.href}
+                          className="inline-flex items-center gap-1 text-[11px] px-2.5 h-8 rounded-lg border border-border/60 bg-card hover:border-primary/40 hover:text-primary transition-colors whitespace-nowrap shrink-0"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {isRTL ? 'فتح' : 'Open'}
+                        </Link>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
         {/* Recent decisions — audit timeline */}
         <section className="rounded-2xl border border-border/40 bg-card overflow-hidden">
