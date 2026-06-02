@@ -54,7 +54,7 @@ interface CategoryResult {
   items: ApprovalItem[];
 }
 
-const PREVIEW_LIMIT = 5;
+const PREVIEW_LIMIT = 25;
 
 async function fetchProviderReview(): Promise<CategoryResult> {
   const { data, count, error } = await listPendingProviderReviewBusinesses(PREVIEW_LIMIT);
