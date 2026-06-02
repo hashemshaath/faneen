@@ -5,12 +5,17 @@ import {
   ShieldCheck, UserPlus, Crown, ArrowUp, AtSign, Inbox,
   ExternalLink, RefreshCw, Loader2, CheckCircle2, Clock, Building2,
   Check, X, History, ShieldAlert, Search, Filter,
+  Download, FileText, FileSpreadsheet, Calendar as CalendarIcon, ChevronDown,
 } from 'lucide-react';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -55,6 +60,33 @@ interface CategoryResult {
 }
 
 const PREVIEW_LIMIT = 25;
+const PAGE_SIZE = 20;
+const FILTERS_STORAGE_KEY = 'qitaat_approvals_filters_v1';
+const POLL_INTERVAL_MS = 60_000;
+
+type DateRangeKey = 'all' | '24h' | '7d' | '30d';
+
+interface PersistedFilters {
+  activeFilter: 'all' | ApprovalCategoryKey;
+  search: string;
+  dateRange: DateRangeKey;
+}
+
+function loadFilters(): PersistedFilters {
+  if (typeof window === 'undefined') return { activeFilter: 'all', search: '', dateRange: 'all' };
+  try {
+    const raw = window.localStorage.getItem(FILTERS_STORAGE_KEY);
+    if (!raw) return { activeFilter: 'all', search: '', dateRange: 'all' };
+    const parsed = JSON.parse(raw) as Partial<PersistedFilters>;
+    return {
+      activeFilter: (parsed.activeFilter as PersistedFilters['activeFilter']) ?? 'all',
+      search: typeof parsed.search === 'string' ? parsed.search : '',
+      dateRange: (parsed.dateRange as DateRangeKey) ?? 'all',
+    };
+  } catch {
+    return { activeFilter: 'all', search: '', dateRange: 'all' };
+  }
+}
 
 async function fetchProviderReview(): Promise<CategoryResult> {
   const { data, count, error } = await listPendingProviderReviewBusinesses(PREVIEW_LIMIT);
@@ -229,11 +261,11 @@ const AdminApprovalsCenter: React.FC = () => {
   useNoIndex();
 
   const queries = {
-    provider_review: useQuery({ queryKey: ['approvals', 'provider_review'], queryFn: fetchProviderReview, staleTime: 30_000 }),
-    username:        useQuery({ queryKey: ['approvals', 'username'],        queryFn: fetchUsername,       staleTime: 30_000 }),
-    entity_access:   useQuery({ queryKey: ['approvals', 'entity_access'],   queryFn: fetchEntityAccess,   staleTime: 30_000 }),
-    subscriptions:   useQuery({ queryKey: ['approvals', 'subscriptions'],   queryFn: fetchSubscriptions,  staleTime: 30_000 }),
-    upgrades:        useQuery({ queryKey: ['approvals', 'upgrades'],        queryFn: fetchUpgrades,       staleTime: 30_000 }),
+    provider_review: useQuery({ queryKey: ['approvals', 'provider_review'], queryFn: fetchProviderReview, staleTime: 30_000, refetchInterval: POLL_INTERVAL_MS, refetchOnWindowFocus: true }),
+    username:        useQuery({ queryKey: ['approvals', 'username'],        queryFn: fetchUsername,       staleTime: 30_000, refetchInterval: POLL_INTERVAL_MS, refetchOnWindowFocus: true }),
+    entity_access:   useQuery({ queryKey: ['approvals', 'entity_access'],   queryFn: fetchEntityAccess,   staleTime: 30_000, refetchInterval: POLL_INTERVAL_MS, refetchOnWindowFocus: true }),
+    subscriptions:   useQuery({ queryKey: ['approvals', 'subscriptions'],   queryFn: fetchSubscriptions,  staleTime: 30_000, refetchInterval: POLL_INTERVAL_MS, refetchOnWindowFocus: true }),
+    upgrades:        useQuery({ queryKey: ['approvals', 'upgrades'],        queryFn: fetchUpgrades,       staleTime: 30_000, refetchInterval: POLL_INTERVAL_MS, refetchOnWindowFocus: true }),
   } as const;
 
   const totals = useMemo(() => {
@@ -313,8 +345,26 @@ const AdminApprovalsCenter: React.FC = () => {
     }) : '—';
 
   // ── Unified feed: merge all categories into a single sortable/filterable list ──
-  const [activeFilter, setActiveFilter] = React.useState<'all' | ApprovalCategoryKey>('all');
-  const [search, setSearch] = React.useState('');
+  const initialFilters = React.useRef<PersistedFilters>(loadFilters()).current;
+  const [activeFilter, setActiveFilter] = React.useState<'all' | ApprovalCategoryKey>(initialFilters.activeFilter);
+  const [search, setSearch] = React.useState(initialFilters.search);
+  const [dateRange, setDateRange] = React.useState<DateRangeKey>(initialFilters.dateRange);
+  const [visibleCount, setVisibleCount] = React.useState(PAGE_SIZE);
+  const [selected, setSelected] = React.useState<Record<string, boolean>>({});
+  const [bulkBusy, setBulkBusy] = React.useState(false);
+
+  // Persist filter settings
+  React.useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        FILTERS_STORAGE_KEY,
+        JSON.stringify({ activeFilter, search, dateRange }),
+      );
+    } catch { /* ignore quota */ }
+  }, [activeFilter, search, dateRange]);
+
+  // Reset pagination when filters change
+  React.useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeFilter, search, dateRange]);
 
   type UnifiedRow = ApprovalItem & { category: ApprovalCategoryKey };
   const unified = useMemo<UnifiedRow[]>(() => {
@@ -329,8 +379,17 @@ const AdminApprovalsCenter: React.FC = () => {
       return bd - ad;
     });
     const q = search.trim().toLowerCase();
+    const now = Date.now();
+    const rangeMs: Record<DateRangeKey, number | null> = {
+      all: null, '24h': 24 * 3600_000, '7d': 7 * 24 * 3600_000, '30d': 30 * 24 * 3600_000,
+    };
+    const cutoff = rangeMs[dateRange];
     return rows.filter((r) => {
       if (activeFilter !== 'all' && r.category !== activeFilter) return false;
+      if (cutoff !== null) {
+        const t = r.createdAt ? new Date(r.createdAt).getTime() : 0;
+        if (!t || now - t > cutoff) return false;
+      }
       if (!q) return true;
       return (
         r.primary.toLowerCase().includes(q) ||
@@ -338,7 +397,123 @@ const AdminApprovalsCenter: React.FC = () => {
         (r.secondary ?? '').toString().toLowerCase().includes(q)
       );
     });
-  }, [queries, activeFilter, search]);
+  }, [queries, activeFilter, search, dateRange]);
+
+  const visibleRows = useMemo(() => unified.slice(0, visibleCount), [unified, visibleCount]);
+  const hasMore = unified.length > visibleCount;
+
+  // ── Selection helpers ──
+  const rowKey = (it: UnifiedRow) => `${it.category}-${it.id}`;
+  const selectedRows = useMemo(
+    () => unified.filter((r) => selected[rowKey(r)]),
+    [unified, selected],
+  );
+  const selectedEntityAccess = useMemo(
+    () => selectedRows.filter((r) => r.category === 'entity_access'),
+    [selectedRows],
+  );
+  const toggleRow = (it: UnifiedRow) =>
+    setSelected((s) => ({ ...s, [rowKey(it)]: !s[rowKey(it)] }));
+  const allVisibleSelected = visibleRows.length > 0 && visibleRows.every((r) => selected[rowKey(r)]);
+  const toggleAllVisible = () => {
+    const next = { ...selected };
+    const turnOn = !allVisibleSelected;
+    visibleRows.forEach((r) => { next[rowKey(r)] = turnOn; });
+    setSelected(next);
+  };
+  const clearSelection = () => setSelected({});
+
+  // ── Bulk approve/reject (entity_access only; others have no inline action) ──
+  const handleBulk = async (action: 'approve' | 'reject') => {
+    if (!user?.id || selectedEntityAccess.length === 0) return;
+    setBulkBusy(true);
+    let ok = 0, fail = 0;
+    for (const r of selectedEntityAccess) {
+      const res = await reviewEntityAccessRequest({
+        requestId: r.id, reviewerUserId: user.id, action,
+      });
+      if (res.ok) ok += 1; else fail += 1;
+    }
+    setBulkBusy(false);
+    if (ok > 0) {
+      toast.success(
+        isRTL
+          ? `تم تنفيذ ${ok} ${action === 'approve' ? 'موافقة' : 'رفض'}${fail ? ` — فشل ${fail}` : ''}`
+          : `${ok} ${action === 'approve' ? 'approved' : 'rejected'}${fail ? ` — ${fail} failed` : ''}`,
+      );
+    } else if (fail > 0) {
+      toast.error(isRTL ? `فشل التنفيذ على ${fail} عناصر` : `Failed on ${fail} items`);
+    }
+    clearSelection();
+    queries.entity_access.refetch();
+    queryClient.invalidateQueries({ queryKey: ['approvals-audit'] });
+  };
+
+  // ── Export helpers (respect current filter/search/date range) ──
+  const exportRows = useMemo(() => unified.map((r) => {
+    const c = catMapEarly(r.category);
+    return {
+      category: isRTL ? c.ar : c.en,
+      ref_id: r.refId,
+      name: r.primary,
+      detail: r.secondary ?? '',
+      created_at: r.createdAt ?? '',
+    };
+  }), [unified, isRTL]);
+
+  const downloadCSV = () => {
+    const headers = isRTL
+      ? ['النوع', 'المعرف', 'الاسم', 'التفاصيل', 'تاريخ الإنشاء']
+      : ['Category', 'Ref ID', 'Name', 'Detail', 'Created At'];
+    const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    const lines = [
+      headers.map(escape).join(','),
+      ...exportRows.map((r) => [r.category, r.ref_id, r.name, r.detail, r.created_at].map(escape).join(',')),
+    ];
+    const csv = '\uFEFF' + lines.join('\n'); // BOM for Arabic in Excel
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `approvals-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(isRTL ? `تم تصدير ${exportRows.length} صف` : `Exported ${exportRows.length} rows`);
+  };
+
+  const downloadPDF = () => {
+    const title = isRTL ? 'سجل قرارات الموافقات' : 'Approvals Decision Log';
+    const headers = isRTL
+      ? ['النوع', 'المعرف', 'الاسم', 'التفاصيل', 'تاريخ الإنشاء']
+      : ['Category', 'Ref ID', 'Name', 'Detail', 'Created At'];
+    const w = window.open('', '_blank', 'width=900,height=700');
+    if (!w) { toast.error(isRTL ? 'تعذّر فتح نافذة الطباعة' : 'Print window blocked'); return; }
+    const rowsHtml = exportRows.map((r) => `
+      <tr>
+        <td>${escapeHtml(r.category)}</td>
+        <td>${escapeHtml(r.ref_id)}</td>
+        <td>${escapeHtml(r.name)}</td>
+        <td>${escapeHtml(r.detail)}</td>
+        <td>${escapeHtml(r.created_at)}</td>
+      </tr>`).join('');
+    w.document.write(`<!doctype html><html dir="${isRTL ? 'rtl' : 'ltr'}" lang="${isRTL ? 'ar' : 'en'}"><head><meta charset="utf-8" /><title>${title}</title>
+      <style>
+        body { font-family: -apple-system, "Segoe UI", Tahoma, sans-serif; padding: 24px; color: #111; }
+        h1 { font-size: 18px; margin: 0 0 4px; }
+        .meta { font-size: 11px; color: #555; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: ${isRTL ? 'right' : 'left'}; }
+        th { background: #f3f4f6; }
+        tr:nth-child(even) td { background: #fafafa; }
+        @media print { body { padding: 0; } }
+      </style></head><body>
+      <h1>${title}</h1>
+      <div class="meta">${isRTL ? 'تاريخ التصدير' : 'Exported'}: ${new Date().toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')} · ${exportRows.length} ${isRTL ? 'سجل' : 'records'}</div>
+      <table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table>
+      <script>window.onload = () => { window.print(); };</script>
+      </body></html>`);
+    w.document.close();
+  };
 
   const catMap = useMemo(() => {
     const m = new Map<ApprovalCategoryKey, CategoryConfig>();
@@ -374,6 +549,27 @@ const AdminApprovalsCenter: React.FC = () => {
                 {isRTL ? 'إجمالي قيد الانتظار' : 'pending total'}
               </span>
             </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="rounded-xl gap-1.5" disabled={unified.length === 0}>
+                  <Download className="w-3.5 h-3.5" />
+                  {isRTL ? 'تصدير' : 'Export'}
+                  <ChevronDown className="w-3 h-3 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel className="text-[11px]">
+                  {isRTL ? `تصدير ${unified.length} صف` : `Export ${unified.length} rows`}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={downloadCSV} className="gap-2 text-xs">
+                  <FileSpreadsheet className="w-3.5 h-3.5" /> CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={downloadPDF} className="gap-2 text-xs">
+                  <FileText className="w-3.5 h-3.5" /> PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="outline" size="sm" onClick={refreshAll} disabled={totals.anyLoading} className="rounded-xl gap-1.5">
               <RefreshCw className={`w-3.5 h-3.5 ${totals.anyLoading ? 'animate-spin' : ''}`} />
               {isRTL ? 'تحديث' : 'Refresh'}
@@ -433,7 +629,67 @@ const AdminApprovalsCenter: React.FC = () => {
               style={{ paddingInlineStart: '2.25rem' }}
             />
           </div>
+          {/* Date range chips */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground px-1">
+              <CalendarIcon className="w-3 h-3" />
+              {isRTL ? 'النطاق' : 'Range'}
+            </span>
+            {([
+              { k: 'all', ar: 'الكل', en: 'All time' },
+              { k: '24h', ar: 'آخر 24 ساعة', en: 'Last 24h' },
+              { k: '7d', ar: 'آخر 7 أيام', en: 'Last 7d' },
+              { k: '30d', ar: 'آخر 30 يوم', en: 'Last 30d' },
+            ] as Array<{ k: DateRangeKey; ar: string; en: string }>).map((r) => (
+              <button
+                key={r.k}
+                type="button"
+                onClick={() => setDateRange(r.k)}
+                className={`h-7 px-2.5 rounded-lg text-[11px] border transition-all ${
+                  dateRange === r.k
+                    ? 'bg-primary/10 border-primary/40 text-primary font-medium'
+                    : 'border-border/60 text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {isRTL ? r.ar : r.en}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {/* Bulk actions bar */}
+        {selectedRows.length > 0 && (
+          <div className="rounded-2xl border border-primary/30 bg-primary/5 px-4 py-2.5 flex items-center gap-3 flex-wrap">
+            <span className="text-xs font-medium text-foreground">
+              {isRTL
+                ? `${selectedRows.length} محدد${selectedEntityAccess.length !== selectedRows.length ? ` (قابل للتنفيذ: ${selectedEntityAccess.length})` : ''}`
+                : `${selectedRows.length} selected${selectedEntityAccess.length !== selectedRows.length ? ` (actionable: ${selectedEntityAccess.length})` : ''}`}
+            </span>
+            <div className="flex items-center gap-1.5 ms-auto">
+              <Button
+                size="sm" variant="outline"
+                className="h-8 rounded-lg gap-1 text-success hover:text-success hover:border-success/40"
+                disabled={bulkBusy || selectedEntityAccess.length === 0}
+                onClick={() => handleBulk('approve')}
+              >
+                {bulkBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                <span className="text-[11px]">{isRTL ? 'موافقة دفعة' : 'Approve all'}</span>
+              </Button>
+              <Button
+                size="sm" variant="outline"
+                className="h-8 rounded-lg gap-1 text-destructive hover:text-destructive hover:border-destructive/40"
+                disabled={bulkBusy || selectedEntityAccess.length === 0}
+                onClick={() => handleBulk('reject')}
+              >
+                <X className="w-3.5 h-3.5" />
+                <span className="text-[11px]">{isRTL ? 'رفض دفعة' : 'Reject all'}</span>
+              </Button>
+              <Button size="sm" variant="ghost" className="h-8 rounded-lg text-[11px]" onClick={clearSelection}>
+                {isRTL ? 'إلغاء التحديد' : 'Clear'}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Unified feed */}
         <section className="rounded-2xl border border-border/40 bg-card overflow-hidden" aria-label={isRTL ? 'قائمة الموافقات' : 'Approvals feed'}>
@@ -456,13 +712,32 @@ const AdminApprovalsCenter: React.FC = () => {
               </p>
             </div>
           ) : (
+            <>
+            <div className="flex items-center gap-2 px-4 py-2 border-b border-border/40 bg-muted/20">
+              <Checkbox
+                checked={allVisibleSelected}
+                onCheckedChange={toggleAllVisible}
+                aria-label={isRTL ? 'تحديد الكل المرئي' : 'Select all visible'}
+              />
+              <span className="text-[11px] text-muted-foreground">
+                {isRTL
+                  ? `عرض ${visibleRows.length} من ${unified.length}`
+                  : `Showing ${visibleRows.length} of ${unified.length}`}
+              </span>
+            </div>
             <ul className="divide-y divide-border/40">
-              {unified.map((it) => {
+              {visibleRows.map((it) => {
                 const c = catMap.get(it.category)!;
                 const Icon = c.icon;
+                const isSelected = !!selected[rowKey(it)];
                 return (
                   <li key={`${it.category}-${it.id}`}>
-                    <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group">
+                    <div className={`flex items-center gap-3 px-4 py-3 transition-colors group ${isSelected ? 'bg-primary/5' : 'hover:bg-muted/30'}`}>
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleRow(it)}
+                        aria-label={isRTL ? 'تحديد' : 'Select'}
+                      />
                       <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${c.tone} flex items-center justify-center shrink-0`}>
                         <Icon className="w-4 h-4" />
                       </div>
@@ -519,6 +794,18 @@ const AdminApprovalsCenter: React.FC = () => {
                 );
               })}
             </ul>
+            {hasMore && (
+              <div className="p-3 border-t border-border/40 flex justify-center">
+                <Button
+                  variant="outline" size="sm" className="rounded-xl gap-1.5"
+                  onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                  {isRTL ? `تحميل المزيد (${unified.length - visibleCount})` : `Load more (${unified.length - visibleCount})`}
+                </Button>
+              </div>
+            )}
+            </>
           )}
         </section>
 
