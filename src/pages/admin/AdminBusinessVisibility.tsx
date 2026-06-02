@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, ShieldAlert } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
+import { searchAdminBusinessesLite } from "@/modules/businesses/services/searchAdminBusinessesLite";
 import { BusinessVisibilityEditor } from "@/components/business-profile/BusinessVisibilityEditor";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
@@ -26,16 +26,7 @@ const AdminBusinessVisibility = () => {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const q = supabase
-        .from("businesses")
-        .select("id, name_ar, name_en, username, ref_id")
-        .order("created_at", { ascending: false })
-        .limit(50);
-      const { data } = query
-        ? await q.or(
-            `name_ar.ilike.%${query}%,name_en.ilike.%${query}%,username.ilike.%${query}%,ref_id.ilike.%${query}%`,
-          )
-        : await q;
+      const { data } = await searchAdminBusinessesLite({ query, limit: 50 });
       if (cancelled) return;
       setRows((data ?? []) as BusinessLite[]);
     })();
