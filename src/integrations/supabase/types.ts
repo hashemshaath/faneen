@@ -14843,6 +14843,9 @@ export type Database = {
       businesses_public: {
         Row: {
           address: string | null
+          approval_status:
+            | Database["public"]["Enums"]["business_approval_status"]
+            | null
           business_number: number | null
           category_id: string | null
           city_id: string | null
@@ -14869,11 +14872,15 @@ export type Database = {
           short_description_en: string | null
           street_name: string | null
           updated_at: string | null
+          user_id: string | null
           username: string | null
           website: string | null
         }
         Insert: {
           address?: string | null
+          approval_status?:
+            | Database["public"]["Enums"]["business_approval_status"]
+            | null
           business_number?: number | null
           category_id?: string | null
           city_id?: string | null
@@ -14902,11 +14909,15 @@ export type Database = {
           short_description_en?: string | null
           street_name?: string | null
           updated_at?: string | null
+          user_id?: string | null
           username?: string | null
           website?: string | null
         }
         Update: {
           address?: string | null
+          approval_status?:
+            | Database["public"]["Enums"]["business_approval_status"]
+            | null
           business_number?: number | null
           category_id?: string | null
           city_id?: string | null
@@ -14935,6 +14946,7 @@ export type Database = {
           short_description_en?: string | null
           street_name?: string | null
           updated_at?: string | null
+          user_id?: string | null
           username?: string | null
           website?: string | null
         }
