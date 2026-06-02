@@ -320,6 +320,22 @@ const AdminApprovalsCenter: React.FC = () => {
     upgrades:        useQuery({ queryKey: ['approvals', 'upgrades'],        queryFn: fetchUpgrades,       staleTime: 30_000, refetchInterval: POLL_INTERVAL_MS, refetchOnWindowFocus: true }),
   } as const;
 
+  const visibilityQuery = useQuery({
+    queryKey: ['approvals', 'business-visibility-audit'],
+    queryFn: fetchBusinessVisibilityAudit,
+    staleTime: 30_000,
+    refetchInterval: POLL_INTERVAL_MS,
+    refetchOnWindowFocus: true,
+  });
+
+  const subscriptionHealthQuery = useQuery({
+    queryKey: ['approvals', 'subscription-health'],
+    queryFn: fetchSubscriptionHealth,
+    staleTime: 30_000,
+    refetchInterval: POLL_INTERVAL_MS,
+    refetchOnWindowFocus: true,
+  });
+
   const totals = useMemo(() => {
     let total = 0;
     let anyLoading = false;
@@ -333,6 +349,8 @@ const AdminApprovalsCenter: React.FC = () => {
 
   const refreshAll = () => {
     (Object.keys(queries) as ApprovalCategoryKey[]).forEach((k) => queries[k].refetch());
+    visibilityQuery.refetch();
+    subscriptionHealthQuery.refetch();
     queryClient.invalidateQueries({ queryKey: ['approvals-audit'] });
   };
 
