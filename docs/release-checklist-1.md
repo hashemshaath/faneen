@@ -257,3 +257,205 @@ Once every row in §2 is Pass (or explicitly accepted as deferred P2/P3) and §7
 - **OWNER-MANUAL-TESTING-1 (owner pass)** — owner physically executes A1–I7 on the live/sandbox environment, replaces each "Not Tested (Agent Limitation)" in §2 with the actual result, and fills in §7.
 - If owner-pass surfaces P0/P1 issues → **FINAL-FIXES-1**.
 - If owner-pass is clean → **RELEASE-SIGNOFF-1**.
+
+> **Status note (OWNER-MANUAL-TESTING-1B):** The 63 Not-Tested rows above
+> **require owner / human execution**. Do NOT mark any row as Pass unless
+> a real human actually performed the step. Agent-side automation is
+> explicitly disallowed for destructive admin/payment/membership/cron
+> mutations.
+
+---
+
+## 9. Owner Manual Execution Guide
+
+This section walks the owner through each remaining check end-to-end. Use
+the **Evidence Template** in §10 to record results inline in §2.
+
+### Environment
+
+- **Preferred:** `staging` / sandbox build with Moyasar test keys.
+- **Live (`qitaat.com`):** only for non-destructive smoke (H1–H10) and
+  read-only admin walkthroughs. Never run payment/OTP destructive tests
+  against real production user data.
+- Always use a **test account** for destructive flows; never your real
+  super-admin identity unless explicitly required.
+
+---
+
+### A. Phone OTP (rows A1–A6)
+
+1. Open `/auth` in an incognito window (mobile-sized viewport recommended).
+2. Enter a **test phone number** you control. Submit.
+3. **A1 Send:** Confirm SMS arrives within ~30s. Record arrival time only — **never paste the OTP code**.
+4. **A2 Verify success:** Enter the correct OTP. Confirm redirect to onboarding/dashboard.
+5. **A3 Wrong OTP:** Trigger a new send, enter `000000`. Confirm bilingual error message and that retry counter behaves sanely.
+6. **A4 Rate limit:** Request OTP 4–5 times rapidly. Confirm throttling kicks in with a clear bilingual message.
+7. **A5 Expiry:** Request OTP, wait past the configured TTL, then try to use it. Confirm rejection.
+8. **A6 Bilingual:** Repeat A1 with `?lang=en` and confirm copy is English-only (no Arabic leakage) and direction is LTR.
+9. **Evidence to record:** screenshots of error/success states (mask phone number), timestamps, environment.
+10. **Do NOT record:** OTP codes, full phone number, any session token.
+
+---
+
+### B. Google OAuth (rows B1–B4)
+
+1. **B1 New user:** Incognito → `/auth` → "Continue with Google" → use a fresh Google account that has never signed in before. Confirm redirect lands on onboarding, not dashboard.
+2. **B2 Returning user:** Sign out, repeat with the same Google account. Confirm direct landing on dashboard.
+3. **B3 Cancel:** Start the OAuth flow, click "Cancel" on Google's consent screen. Confirm graceful return to `/auth` with bilingual error and no half-created profile.
+4. **B4 Redirect verification:** Confirm the final URL is on `qitaat.com` (or staging host) — not localhost, lovable preview, or supabase domain.
+5. **Evidence:** screenshots of consent screen (Google email masked), landing page, console (no auth errors).
+
+---
+
+### C. Moyasar Sandbox (rows C1–C5)
+
+> Use Moyasar **test mode keys** only. Never charge a real card.
+
+1. **C1 Plan selection:** As an authenticated test provider, open `/membership`. Confirm plan cards render with correct VAT-inclusive pricing.
+2. **C2 Success card:** Pick a paid plan → use Moyasar test success card → complete payment. Confirm:
+   - Return URL lands on `/membership/payment/return` with success state.
+   - `business_memberships` row updates (visible in `/admin/memberships`).
+   - Payment row appears in admin payment log.
+3. **C3 Failure card:** Repeat with Moyasar test decline card. Confirm clear bilingual error, no membership upgrade, payment row marked failed.
+4. **C4 Cancel:** Start checkout, abandon at hosted page. Confirm no membership change and a "cancelled" log entry.
+5. **C5 Hidden plan safety:** In a separate admin window, mark a plan inactive. As the test provider, confirm:
+   - Hidden plan no longer renders.
+   - Direct API attempt (DevTools → re-issue checkout request with hidden plan id) is rejected server-side.
+6. **Evidence:** payment id (test), screenshot of return page, screenshot of admin payment log row. Mask emails.
+7. **Do NOT record:** full card numbers, CVV, real card data.
+
+---
+
+### D. Signup & Onboarding (rows D1–D6)
+
+1. **D1 Fresh buyer:** Incognito signup → choose buyer/user → complete onboarding wizard step 1→3 → confirm landing on dashboard, USR-ID assigned (`PREFIX-NNNNNNN`).
+2. **D2 Fresh provider:** Same as D1 but pick provider path → complete business onboarding → confirm business is `pending`/`active` per workflow.
+3. **D3 Business profile save:** Fill name, sector, region. Save. Re-open the page. Confirm persisted.
+4. **D4 Username uniqueness:** Try to create a second account with the same handle. Confirm bilingual rejection.
+5. **D5 Invite / request-to-join:** From a second account, request to join D2's business. As D2, accept. Confirm staff row created with correct role.
+6. **D6 Cleanup:** Note the test user IDs so they can be purged later. Do NOT delete via UI mid-test.
+7. **Evidence:** screenshots of each wizard step (mask emails), final dashboard.
+
+---
+
+### E. Admin Walkthrough (rows E1–E14)
+
+> **Use a TEST business and a TEST module wherever possible.** Note every change so it can be rolled back at the end.
+
+1. **E1 `/admin/system-access` — Global default:** open page, pick a non-core test module, toggle global default OFF. Confirm:
+   - Banner explains scope is platform-wide.
+   - No membership-block error appears (per `SYSTEM-ACCESS-DEFAULT-SCOPE-1`).
+   - Toggle back ON. Record the audit log entry id.
+2. **E2 Account-type scope:** select scope = account type (e.g. provider). Toggle test module. Confirm only the chosen account type is affected.
+3. **E3 Entity (specific business) scope:** select scope = specific business (TEST business). Toggle test module. If membership-block message appears, confirm it is correct (the plan really lacks this feature).
+4. **E4 User scope:** select scope = specific user (TEST user). Toggle. Confirm precedence: user > account type > global > default.
+5. **E5 Super-admin bypass:** as super-admin, on E3 above, click "Override (super-admin)". Confirm reason field is required, audit log captures `super_admin_bypass_membership` with reason.
+6. **E6 Audit log:** open audit table for the test module — every E1–E5 action must have a row with actor, scope, target, reason (if applicable).
+7. **E7 Core module lock:** attempt to disable a core module (e.g. `auth`, `business_info`). Confirm UI blocks it and explains why.
+8. **E8 `/admin/memberships` plan-module matrix:** open, confirm matrix renders, toggling a plan↔module mapping persists, no double-save bugs.
+9. **E9 `/admin/service-activations`:** view current activations, confirm filters work, confirm hidden-plan activations cannot be created.
+10. **E10 `/admin/businesses`:** open a TEST business → confirm masked PII for non-essentials → edit a safe field (e.g. tagline) → confirm save + audit row.
+11. **E11 `/admin/brands`:** create a TEST brand → assign to TEST business → delete. Confirm staff isolation (the TEST business owner sees it).
+12. **E12 Suspend/restore business:** suspend TEST business → confirm provider dashboard shows suspension state → restore.
+13. **E13 Role assignment:** assign a secondary admin role to TEST user → confirm RBAC menu changes → revoke.
+14. **E14 Rollback:** revert every toggle, deletion, and assignment from E1–E13. Confirm `/admin/system-access` matrix matches the starting screenshot.
+15. **Evidence:** before/after screenshots, audit log row ids, reason texts.
+
+---
+
+### F. Cron / Scheduled Jobs (rows F1–F6)
+
+1. **F1** Open Lovable Cloud → Edge Functions → cron list. Confirm the following jobs are scheduled and "enabled":
+   - `expired_memberships`
+   - `renewal_notifications`
+   - `monthly_provider_credit_grant` (or equivalent)
+   - `sitemap_refresh` (if scheduled)
+2. **F2** For each job, view last run logs. Confirm exit status `200 OK JSON` and no stack traces.
+3. **F3** Confirm no duplicate cron entries (each name appears exactly once).
+4. **F4** Confirm next-run timestamps are in the future and reasonable.
+5. **F5** Spot-check `expired_memberships` last run: pick one membership it should have touched and confirm the state matches expectations in `/admin/memberships`.
+6. **F6** Spot-check `renewal_notifications`: confirm the corresponding notification row exists for at least one targeted user.
+7. **Evidence:** screenshot of cron list, last-run timestamp, job name; logs link.
+
+---
+
+### G. Email / Notifications (rows G1–G7)
+
+Use a TEST inbox you control.
+
+1. **G1** Trigger account signup email (D1/D2). Confirm arrives, branded, no secret leakage.
+2. **G2** Trigger in-app notification (e.g. brand request). Confirm bell badge updates in realtime.
+3. **G3** Membership change → confirm email + in-app notification.
+4. **G4** Service activation toggle → confirm provider receives notification.
+5. **G5** Brand request → confirm admin receives notification.
+6. **G6** Open every email and confirm **no sensitive data** (no OTP, no password reset token shown to a third party, no raw IDs that reveal counts).
+7. **G7** Click unsubscribe link in a marketing email → confirm `/unsubscribe` works and persists.
+8. **Evidence:** screenshot of email (mask recipient address), in-app bell screenshot, timestamps.
+
+---
+
+### H. Public Smoke (rows H1–H10)
+
+> Use a **fresh incognito window with no auth**. This is the only way to verify there are no logged-in-only links leaking to anonymous visitors.
+
+1. **H1** `/` — already Pass (agent).
+2. **H2** `/for-providers` — render, hero CTA works.
+3. **H3** `/membership` — already Pass (agent).
+4. **H4** `/search` — type a query, results render, map toggles.
+5. **H5** `/compare` — pick 2 items, table renders.
+6. **H6** `/business/<TEST-slug>` — public business profile renders, no admin actions.
+7. **H7** `/profile-systems`, `/services`, `/brands` — listing pages render with ItemList JSON-LD.
+8. **H8** `/projects`, `/showcase` — listing + detail.
+9. **H9** `/blog`, `/blog/<post>`, `/help` — content renders, breadcrumb JSON-LD present.
+10. **H10** Confirm NO admin links (`/admin/*`) and NO dashboard links appear in incognito navbar/footer/sidebar.
+11. **Evidence:** screenshots of each page in incognito, View-Source check for JSON-LD on H7/H8.
+
+---
+
+### I. Provider Dashboard (rows I1–I7)
+
+Sign in as the TEST provider from D2.
+
+1. **I1** `/dashboard/services` — add a service from catalog, confirm it appears.
+2. **I2** Membership visibility: if test provider is on a free plan, confirm membership-hidden state matches `useMembershipVisibility` (no broken CTAs).
+3. **I3** Submit a brand request → confirm pending state.
+4. **I4** Submit a showcase project (if enabled) → confirm draft saves and renders correctly.
+5. **I5** Invite a staff member to TEST business → confirm RBAC enforcement.
+6. **I6** Open `/dashboard/contracts` and `/dashboard/rfq` (if module enabled by membership) — confirm list renders, gates behave.
+7. **I7** Sign out → confirm full session purge (no residual auth on refresh).
+8. **Evidence:** screenshots of each successful action; for any blocked-by-membership view, capture the gate copy.
+
+---
+
+## 10. Evidence Template
+
+For each row in §2, paste the following block as a result line. **Do not edit existing Pass rows from the agent pass.**
+
+```
+Row:        E5
+Status:     Pass | Fail | Blocked | Not Tested
+Tester:     <name or initials>
+Date/Time:  YYYY-MM-DD HH:MM (timezone)
+Environment: staging | live | sandbox
+Account:    USR-XXXXXXX (test) / role
+Evidence:   <link to screenshot, audit log row id, or note id>
+Severity:   P0 | P1 | P2 | P3 (only if Fail)
+Notes:      <one or two lines, masked>
+```
+
+### Safety: do NOT record
+
+- OTP codes
+- passwords or session tokens
+- Moyasar full card numbers / CVV
+- private user PII (full phone, full email, national id) — mask to last 4 chars
+- internal secret values, API keys, JWTs
+- screenshots containing other users' data
+
+---
+
+## 11. Release Decision Rules
+
+- **Any P0 or P1 failure** in §2 → **stop release**, open **FINAL-FIXES-1**.
+- **All required manual checks Pass** and §7 signed → open **RELEASE-SIGNOFF-1**.
+- **Only P2 / P3 issues remain** → limited beta may proceed **with caveats**; log each remaining item in the deferred backlog and link from §7 Notes.
