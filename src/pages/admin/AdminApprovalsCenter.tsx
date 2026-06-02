@@ -761,14 +761,14 @@ const AdminApprovalsCenter: React.FC = () => {
                           {fmtDate(it.createdAt)}
                         </p>
                       </div>
-                      {it.category === 'entity_access' ? (
+                      {ACTIONABLE_CATEGORIES.has(it.category) ? (
                         <div className="flex items-center gap-1.5 shrink-0">
                           <Button
                             size="sm"
                             variant="outline"
                             className="h-8 px-2.5 rounded-lg gap-1 text-success hover:text-success hover:border-success/40"
                             disabled={busyId === it.id}
-                            onClick={() => handleReview(it.id, 'approve')}
+                            onClick={() => handleReview(it.id, it.category, 'approve')}
                           >
                             {busyId === it.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                             <span className="text-[11px]">{isRTL ? 'موافقة' : 'Approve'}</span>
@@ -778,7 +778,7 @@ const AdminApprovalsCenter: React.FC = () => {
                             variant="outline"
                             className="h-8 px-2.5 rounded-lg gap-1 text-destructive hover:text-destructive hover:border-destructive/40"
                             disabled={busyId === it.id}
-                            onClick={() => handleReview(it.id, 'reject')}
+                            onClick={() => handleReview(it.id, it.category, 'reject')}
                           >
                             <X className="w-3.5 h-3.5" />
                             <span className="text-[11px]">{isRTL ? 'رفض' : 'Reject'}</span>
