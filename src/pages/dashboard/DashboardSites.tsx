@@ -20,11 +20,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import BarcodeWidget from '@/components/barcodes/BarcodeWidget';
+import { useEntityBarcode } from '@/lib/barcodes/useEntityBarcode';
 import { toast } from 'sonner';
 import {
   MapPin, Plus, Pencil, Trash2, Search, X, Loader2, Building2, Home, Warehouse,
   Store, Briefcase, Layers, AlertCircle, CheckCircle2, FileText, Phone, User,
-  ExternalLink, Star, ArrowUpRight, Map as MapIcon, FilePlus2,
+  ExternalLink, Star, ArrowUpRight, Map as MapIcon, FilePlus2, QrCode, ScrollText,
+  Landmark, ChevronDown, ChevronUp,
 } from 'lucide-react';
 
 type SiteType = 'apartment' | 'villa' | 'showroom' | 'office' | 'branch' | 'warehouse' | 'project' | 'commercial' | 'other';
@@ -64,6 +68,19 @@ interface ClientSite {
   is_default: boolean;
   archived_at: string | null;
   created_at: string;
+  /* Government / legal */
+  municipal_license_no: string | null;
+  municipal_license_issue_date: string | null;
+  municipal_license_expiry_date: string | null;
+  title_deed_no: string | null;
+  title_deed_date: string | null;
+  owner_name: string | null;
+  owner_id_number: string | null;
+  land_use_type: string | null;
+  plot_number: string | null;
+  block_number: string | null;
+  plan_number: string | null;
+  government_notes: string | null;
 }
 
 const SITE_TYPES: { value: SiteType; ar: string; en: string; icon: typeof Home }[] = [
@@ -90,6 +107,10 @@ const emptyForm = {
   contact_name: '', contact_phone: '',
   map_url: '', latitude: '', longitude: '',
   access_notes: '', is_default: false,
+  municipal_license_no: '', municipal_license_issue_date: '', municipal_license_expiry_date: '',
+  title_deed_no: '', title_deed_date: '',
+  owner_name: '', owner_id_number: '', land_use_type: '',
+  plot_number: '', block_number: '', plan_number: '', government_notes: '',
 };
 
 const emptyNaf: NationalAddressValue = {
