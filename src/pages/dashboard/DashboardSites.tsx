@@ -242,6 +242,18 @@ export default function DashboardSites() {
         longitude: form.longitude ? Number(form.longitude) : null,
         access_notes: form.access_notes.trim() || null,
         is_default: form.is_default,
+        municipal_license_no:           form.municipal_license_no.trim() || null,
+        municipal_license_issue_date:   form.municipal_license_issue_date || null,
+        municipal_license_expiry_date:  form.municipal_license_expiry_date || null,
+        title_deed_no:                  form.title_deed_no.trim() || null,
+        title_deed_date:                form.title_deed_date || null,
+        owner_name:                     form.owner_name.trim() || null,
+        owner_id_number:                form.owner_id_number.trim() || null,
+        land_use_type:                  form.land_use_type.trim() || null,
+        plot_number:                    form.plot_number.trim() || null,
+        block_number:                   form.block_number.trim() || null,
+        plan_number:                    form.plan_number.trim() || null,
+        government_notes:               form.government_notes.trim() || null,
       } satisfies Record<string, Json | null | undefined>;
       if (editing) {
         const { error } = await supabase.rpc('update_client_site', { _site_id: editing.id, _patch: payload as Json });
@@ -312,6 +324,18 @@ export default function DashboardSites() {
       map_url: s.map_url || '', latitude: s.latitude != null ? String(s.latitude) : '',
       longitude: s.longitude != null ? String(s.longitude) : '',
       access_notes: s.access_notes || '', is_default: s.is_default,
+      municipal_license_no:           s.municipal_license_no || '',
+      municipal_license_issue_date:   s.municipal_license_issue_date || '',
+      municipal_license_expiry_date:  s.municipal_license_expiry_date || '',
+      title_deed_no:                  s.title_deed_no || '',
+      title_deed_date:                s.title_deed_date || '',
+      owner_name:                     s.owner_name || '',
+      owner_id_number:                s.owner_id_number || '',
+      land_use_type:                  s.land_use_type || '',
+      plot_number:                    s.plot_number || '',
+      block_number:                   s.block_number || '',
+      plan_number:                    s.plan_number || '',
+      government_notes:               s.government_notes || '',
     });
     setNaf({
       short_address: s.short_address, region: s.region, region_en: s.region_en,
