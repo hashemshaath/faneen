@@ -67,6 +67,7 @@ const ALLOWED_FILES = new Set([
   // supabase/functions, public/, email/notification templates) here.
   'src/tests/supabaseDatabaseDeepRepair1.test.ts',
   'src/tests/brandAuditFalsePositive.test.ts',
+  'src/__tests__/brandIdentityFinalAudit.test.ts',
   'scripts/brand-audit.mjs',
 ])
 
