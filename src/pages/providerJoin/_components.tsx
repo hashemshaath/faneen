@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, Info, Plus, Search, Tag, X } from 'lucide-react';
+import { AlertCircle, Info, Plus, Search, Tag, X, Paperclip, CheckCircle2, FileText } from 'lucide-react';
 
 export interface CategoryOption {
   id: string;
@@ -11,8 +11,8 @@ export interface CategoryOption {
 
 export const SectionHeader: React.FC<{ icon: React.ReactNode; title: string }> = ({ icon, title }) => (
   <div className="flex items-center gap-2 pb-2 border-b">
-    <span className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">{icon}</span>
-    <h2 className="text-lg font-semibold">{title}</h2>
+    <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center [&_svg]:w-[18px] [&_svg]:h-[18px] sm:[&_svg]:w-5 sm:[&_svg]:h-5">{icon}</span>
+    <h2 className="text-[18px] sm:text-lg font-semibold leading-[26px]">{title}</h2>
   </div>
 );
 
@@ -27,20 +27,20 @@ export const Field: React.FC<{
   const hintId = htmlFor ? `${htmlFor}-hint` : undefined;
   const errId = htmlFor ? `${htmlFor}-err` : undefined;
   return (
-    <div className="space-y-1.5" data-field-error={error ? 'true' : undefined}>
-      <Label htmlFor={htmlFor} className="text-sm flex items-center gap-1">
+    <div className="space-y-2" data-field-error={error ? 'true' : undefined}>
+      <Label htmlFor={htmlFor} className="text-[13px] font-medium flex items-center gap-1">
         <span>{label}</span>
         {required && <span className="text-destructive" aria-hidden>*</span>}
       </Label>
       {children}
       {error ? (
-        <p id={errId} className="text-xs text-destructive flex items-start gap-1 mt-1" role="alert">
-          <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+        <p id={errId} className="text-[12px] leading-[18px] text-destructive flex items-start gap-1 mt-1" role="alert">
+          <AlertCircle className="w-3.5 h-3.5 mt-[2px] shrink-0" />
           <span>{error}</span>
         </p>
       ) : hint ? (
-        <p id={hintId} className="text-xs text-muted-foreground flex items-start gap-1 mt-1">
-          <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-70" />
+        <p id={hintId} className="text-[12px] leading-[18px] text-muted-foreground flex items-start gap-1 mt-1">
+          <Info className="w-3.5 h-3.5 mt-[2px] shrink-0 opacity-70" />
           <span>{hint}</span>
         </p>
       ) : null}
@@ -95,6 +95,7 @@ export const SpecialtiesPicker: React.FC<{
 }> = ({ catalog, values, onChange, isRTL }) => {
   const t = (ar: string, en: string) => (isRTL ? ar : en);
   const [query, setQuery] = useState('');
+  const [expanded, setExpanded] = useState(false);
 
   const catalogNames = useMemo(
     () => catalog.map((c) => (isRTL ? c.name_ar : c.name_en) || c.name_ar || c.name_en),
@@ -146,12 +147,12 @@ export const SpecialtiesPicker: React.FC<{
   return (
     <div className="space-y-3">
       {normalized.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {normalized.map((v) => (
-            <span key={v} className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 px-3 py-1 text-sm">
+            <span key={v} className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 h-[34px] px-3 py-1.5 text-[12px] leading-none">
               <Tag className="w-3.5 h-3.5" />
               <span dir="auto">{v}</span>
-              <button type="button" onClick={() => toggle(v)} className="rounded-full hover:bg-primary/20 p-0.5" aria-label={t('إزالة', 'Remove')}>
+              <button type="button" onClick={() => toggle(v)} className="rounded-full hover:bg-primary/20 p-0.5 -me-1" aria-label={t('إزالة', 'Remove')}>
                 <X className="w-3 h-3" />
               </button>
             </span>
@@ -167,10 +168,10 @@ export const SpecialtiesPicker: React.FC<{
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustom(); } }}
           placeholder={t('ابحث في الخدمات أو أضف تخصصاً جديداً', 'Search services or add a custom specialty')}
-          className="h-12 rounded-xl ps-9 pe-24"
+          className="h-[46px] sm:h-12 rounded-xl ps-9 pe-24 text-[14px] placeholder:text-[13px]"
         />
         {queryIsNew && (
-          <button type="button" onClick={addCustom} className="absolute end-1.5 top-1/2 -translate-y-1/2 h-9 px-3 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 inline-flex items-center gap-1">
+          <button type="button" onClick={addCustom} className="absolute end-1.5 top-1/2 -translate-y-1/2 h-8 px-3 rounded-lg text-[12px] font-medium bg-primary text-primary-foreground hover:opacity-90 inline-flex items-center gap-1">
             <Plus className="w-3.5 h-3.5" />
             {t('إضافة', 'Add')}
           </button>
@@ -182,27 +183,91 @@ export const SpecialtiesPicker: React.FC<{
           {t('من خدمات المنصة', 'From platform catalog')}
         </div>
         {filteredCatalog.length === 0 ? (
-          <p className="text-xs text-muted-foreground py-2">
+          <p className="text-[12px] text-muted-foreground py-2">
             {t('لا توجد نتائج — يمكنك إضافتها كتخصص مخصص.', 'No match — add as a custom specialty.')}
           </p>
         ) : (
-          <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto no-scrollbar">
-            {filteredCatalog.slice(0, 70).map((name) => {
-              const active = isSelected(name);
-              return (
-                <button
-                  key={name}
-                  type="button"
-                  onClick={() => toggle(name)}
-                  className={`text-[11px] leading-tight rounded-full border px-2.5 py-1 transition-all ${active ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-primary/5 hover:border-primary/40'}`}
-                >
-                  <span dir="auto">{name}</span>
-                </button>
-              );
-            })}
-          </div>
+          <>
+            {/* Mobile: 2-row collapse with show-more; Desktop: scroll list */}
+            <div
+              className={`flex flex-wrap gap-1.5 overflow-hidden sm:max-h-40 sm:overflow-y-auto sm:no-scrollbar ${
+                expanded ? 'max-h-none' : 'max-h-[84px]'
+              } sm:max-h-40`}
+            >
+              {filteredCatalog.slice(0, 70).map((name) => {
+                const active = isSelected(name);
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => toggle(name)}
+                    className={`h-[34px] text-[12px] leading-none rounded-full border px-3 py-1.5 transition-all inline-flex items-center gap-1 ${
+                      active
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background hover:bg-primary/5 hover:border-primary/40'
+                    }`}
+                  >
+                    {!active && <Plus className="w-3 h-3 opacity-70" />}
+                    <span dir="auto">{name}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {filteredCatalog.length > 6 && (
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                className="sm:hidden mt-2 text-[12px] font-medium text-primary hover:underline inline-flex items-center gap-1"
+              >
+                {expanded ? t('عرض أقل', 'Show less') : t('عرض المزيد', 'Show more')}
+              </button>
+            )}
+          </>
         )}
       </div>
+    </div>
+  );
+};
+
+/**
+ * FileUploadField — compact mobile-friendly file picker matching the design spec.
+ * Container 52px, button 40px × ~100px, file-name 12px.
+ */
+export const FileUploadField: React.FC<{
+  file: File | null;
+  accept?: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  buttonLabel: string;
+  emptyLabel: string;
+}> = ({ file, accept, onChange, buttonLabel, emptyLabel }) => {
+  const ref = useRef<HTMLInputElement>(null);
+  return (
+    <div className="h-[52px] rounded-xl border bg-background flex items-center gap-2 ps-3 pe-1.5 relative">
+      <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+      <span
+        className={`flex-1 min-w-0 truncate text-[12px] ${
+          file ? 'text-foreground' : 'text-muted-foreground'
+        }`}
+        dir="auto"
+      >
+        {file ? `${file.name} · ${(file.size / 1024).toFixed(0)} KB` : emptyLabel}
+      </span>
+      {file && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+      <button
+        type="button"
+        onClick={() => ref.current?.click()}
+        className="h-10 min-w-[100px] px-3 rounded-lg bg-primary text-primary-foreground text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 hover:opacity-90 shrink-0"
+      >
+        <Paperclip className="w-3.5 h-3.5" />
+        {buttonLabel}
+      </button>
+      <input
+        ref={ref}
+        type="file"
+        accept={accept}
+        onChange={onChange}
+        className="sr-only"
+      />
     </div>
   );
 };

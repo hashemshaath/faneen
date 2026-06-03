@@ -22,6 +22,7 @@ import { listActiveCategories } from '@/modules/categories';
 import coverImage from '@/assets/provider-join-cover.jpg';
 import {
   Field, SectionHeader, SpecialtiesPicker, TagInput, invalidInputClass,
+  FileUploadField,
   type CategoryOption,
 } from './providerJoin/_components';
 import type {
@@ -379,38 +380,38 @@ const ProviderJoin: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/75 to-slate-950/95" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.25),transparent_60%)]" />
           </div>
-          <div className="relative container mx-auto px-5 sm:px-6 pt-24 pb-10 sm:py-20 md:py-24 max-w-5xl text-center text-white">
-            <div className="mb-4 sm:mb-5 flex justify-center">
+          <div className="relative container mx-auto px-4 sm:px-6 pt-16 pb-6 sm:py-20 md:py-24 max-w-5xl text-center text-white">
+            <div className="mb-3 sm:mb-5 flex justify-center">
               <Badge variant="secondary" className="rounded-full bg-white/10 text-white border-white/20 backdrop-blur-sm hover:bg-white/15 text-[11px] sm:text-xs px-3 py-1.5 inline-flex items-center max-w-full whitespace-normal sm:whitespace-nowrap leading-snug text-center">
                 <Sparkles className="w-3.5 h-3.5 me-1.5 shrink-0" />
                 <span>{t('انضم إلى أكبر منصة صناعية في المملكة', 'The leading industrial directory in Saudi Arabia')}</span>
               </Badge>
             </div>
-            <h1 className="text-[26px] leading-[1.2] sm:text-4xl md:text-6xl font-bold tracking-tight">
+            <h1 className="text-[24px] leading-[32px] sm:text-4xl md:text-6xl font-bold tracking-tight">
               {t('سجّل منشأتك في قِطاعات', 'Register your business on Qitaat')}
             </h1>
-            <p className="mt-4 sm:mt-5 text-white/80 text-[14px] sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+            <p className="mt-3 sm:mt-5 text-white/80 text-[13px] leading-[20px] sm:text-lg md:text-xl max-w-2xl mx-auto sm:leading-relaxed">
               {t(
                 'وصول لعملاء محتملين، عرض احترافي لمنشأتك، وأدوات إدارة متكاملة. التسجيل مجاني ولا يتطلب إنشاء حساب.',
                 'Reach more clients, showcase your business professionally, and access powerful tools. Free registration — no account required.',
               )}
             </p>
-            <div className="mt-5 sm:mt-7 flex flex-wrap justify-center gap-x-4 sm:gap-x-5 gap-y-2 text-[12px] sm:text-sm text-white/85">
+            <div className="mt-4 sm:mt-7 flex flex-wrap justify-center gap-x-3 sm:gap-x-5 gap-y-1.5 text-[11px] sm:text-sm text-white/85">
               <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />{t('بياناتكم محمية ومشفّرة', 'Encrypted & secure')}</span>
               <span className="inline-flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-300" />{t('مراجعة خلال 24-48 ساعة', '24–48h review')}</span>
               <span className="inline-flex items-center gap-1.5"><Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" />{t('فريق متخصص', 'Specialized team')}</span>
             </div>
 
             {/* Stats strip */}
-            <div className="mt-7 sm:mt-10 grid grid-cols-3 gap-2.5 sm:gap-6 max-w-2xl mx-auto">
+            <div className="mt-5 sm:mt-10 grid grid-cols-3 gap-2 sm:gap-6 max-w-2xl mx-auto">
               {[
                 { icon: <Building2 className="w-5 h-5" />, value: fmt(stats?.businessCount), label: t('منشأة مسجّلة', 'Registered businesses') },
                 { icon: <TrendingUp className="w-5 h-5" />, value: fmt(stats?.projectCount), label: t('مشروع منشور', 'Published projects') },
                 { icon: <Users className="w-5 h-5" />, value: fmt(stats?.reviewCount), label: t('تقييم موثّق', 'Verified reviews') },
               ].map((s, i) => (
-                <div key={i} className="rounded-xl sm:rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm px-2 py-3 sm:p-5">
-                  <div className="flex items-center justify-center text-white/70 mb-1 sm:mb-1.5">{s.icon}</div>
-                  <div className="text-lg sm:text-2xl font-bold tech-content leading-tight">{s.value}</div>
+                <div key={i} className="rounded-xl sm:rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm px-2 py-2.5 sm:p-5">
+                  <div className="flex items-center justify-center text-white/70 mb-0.5 sm:mb-1.5 [&_svg]:w-4 [&_svg]:h-4 sm:[&_svg]:w-5 sm:[&_svg]:h-5">{s.icon}</div>
+                  <div className="text-base sm:text-2xl font-bold tech-content leading-tight">{s.value}</div>
                   <div className="text-[10px] sm:text-xs text-white/70 mt-0.5 leading-tight">{s.label}</div>
                 </div>
               ))}
@@ -419,26 +420,26 @@ const ProviderJoin: React.FC = () => {
         </section>
 
         {/* Form */}
-        <section className="container mx-auto px-4 sm:px-6 py-10 sm:py-14 max-w-4xl">
+        <section className="container mx-auto px-4 sm:px-6 pt-6 pb-28 sm:py-14 max-w-4xl">
           {/* Form header (logo removed — already shown in navbar) */}
-          <div className="mb-6 sm:mb-8 text-center">
-            <div className="text-xs sm:text-sm text-muted-foreground">{t('منصة قِطاعات الصناعية', 'Qitaat Industrial Platform')}</div>
-            <h2 className="text-base sm:text-xl font-semibold mt-0.5">
+          <div className="mb-4 sm:mb-8 text-center">
+            <div className="text-[11px] sm:text-sm text-muted-foreground">{t('منصة قِطاعات الصناعية', 'Qitaat Industrial Platform')}</div>
+            <h1 className="text-[20px] sm:text-xl font-semibold mt-0.5">
               {t('نموذج طلب الانضمام', 'Join Request Form')}
-            </h2>
+            </h1>
           </div>
 
-          <form ref={formRef} onSubmit={onSubmit} className="space-y-5 sm:space-y-6" noValidate aria-describedby={submitError ? 'pj-form-alert' : undefined}>
+          <form ref={formRef} onSubmit={onSubmit} className="space-y-4 sm:space-y-6" noValidate aria-describedby={submitError ? 'pj-form-alert' : undefined}>
             {/* Inline alert banner — replaces toast-only feedback */}
             {submitError && (
               <div
                 ref={alertRef}
                 id="pj-form-alert"
                 role="alert"
-                className="rounded-2xl border border-destructive/30 bg-destructive/5 text-destructive p-4 flex items-start gap-3"
+                className="rounded-2xl border border-destructive/30 bg-destructive/5 text-destructive p-3 sm:p-4 flex items-start gap-3"
               >
-                <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
-                <div className="text-sm">
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 shrink-0" />
+                <div className="text-[13px] sm:text-sm">
                   <div className="font-semibold mb-0.5">{t('تعذّر إرسال الطلب', 'Could not submit')}</div>
                   <p className="text-destructive/90">{submitError}</p>
                 </div>
@@ -446,11 +447,11 @@ const ProviderJoin: React.FC = () => {
             )}
 
             {/* Helpful tip banner — guides users while filling */}
-            <div className="rounded-2xl border border-primary/20 bg-primary/5 text-foreground p-4 flex items-start gap-3">
-              <Sparkles className="w-5 h-5 mt-0.5 shrink-0 text-primary" />
-              <div className="text-sm">
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 text-foreground p-3 sm:p-4 flex items-start gap-2.5 sm:gap-3">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 shrink-0 text-primary" />
+              <div className="text-[13px] sm:text-sm">
                 <div className="font-medium mb-0.5">{t('نصائح لإكمال الطلب بسرعة', 'Tips to complete faster')}</div>
-                <ul className="text-muted-foreground text-xs space-y-0.5 list-disc ps-4">
+                <ul className="text-muted-foreground text-[12px] leading-[18px] space-y-0.5 list-disc ps-4">
                   <li>{t('الحقول التي تحمل علامة * إلزامية فقط، والباقي اختياري.', 'Only fields marked * are required — the rest are optional.')}</li>
                   <li>{t('ارفق صورة واضحة للسجل التجاري لتسريع المراجعة.', 'Attach a clear CR document to speed up the review.')}</li>
                   <li>{t('اختر تخصصاتك من قائمة الخدمات لربط ملفك بنتائج البحث.', 'Pick specialties from the catalog to link your profile to search results.')}</li>
@@ -471,9 +472,9 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 1 — Establishment */}
             <Card className="rounded-2xl">
-              <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
+              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
                 <SectionHeader icon={<Building2 className="w-5 h-5" />} title={t('بيانات المنشأة', 'Establishment Info')} />
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   <div data-error-key="name_ar">
                     <Field label={t('اسم المنشأة بالعربي', 'Business name (Arabic)')} required error={errors.name_ar} hint={t('الاسم الرسمي كما هو في السجل التجاري.', 'Official name as written in the CR.')}>
                       <Input dir="auto" required value={form.name_ar} onChange={(e) => setField('name_ar', e.target.value)} className={`h-12 rounded-xl ${invalidInputClass(!!errors.name_ar)}`} aria-invalid={!!errors.name_ar} />
@@ -509,9 +510,9 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 2 — Contact */}
             <Card className="rounded-2xl">
-              <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
+              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
                 <SectionHeader icon={<User className="w-5 h-5" />} title={t('بيانات التواصل', 'Contact Person')} />
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   <div data-error-key="contact_name">
                     <Field label={t('اسم المسؤول', 'Contact name')} required error={errors.contact_name} hint={t('الشخص الذي سنتواصل معه لمتابعة الطلب.', 'The person we will contact about your request.')}>
                       <Input dir="auto" required value={form.contact_name} onChange={(e) => setField('contact_name', e.target.value)} className={`h-12 rounded-xl ${invalidInputClass(!!errors.contact_name)}`} aria-invalid={!!errors.contact_name} />
@@ -550,9 +551,9 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 3 — Activity & Location */}
             <Card className="rounded-2xl">
-              <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
+              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
                 <SectionHeader icon={<MapPin className="w-5 h-5" />} title={t('النشاط والموقع', 'Activity & Location')} />
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   <Field label={t('النشاط الرئيسي', 'Main activity')} hint={t('القطاع الذي تعملون فيه أساساً.', 'Your primary industrial sector.')}>
                     <Input dir="auto" value={form.main_activity} onChange={(e) => setField('main_activity', e.target.value)} className="h-12 rounded-xl" placeholder={t('مثال: ألمنيوم، زجاج، حديد', 'e.g. Aluminum, Glass, Steel')} />
                   </Field>
@@ -601,21 +602,13 @@ const ProviderJoin: React.FC = () => {
                     error={errors.cr_file}
                     hint={t('PDF أو JPG أو PNG — الحد الأقصى 5 ميغابايت.', 'PDF, JPG or PNG — 5 MB max.')}
                   >
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
-                      <input
-                        type="file"
-                        accept=".pdf,image/jpeg,image/png,application/pdf"
-                        onChange={onFileChange}
-                        className="block w-full text-sm file:me-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-primary file:text-primary-foreground file:cursor-pointer"
-                      />
-                    </div>
-                    {crFile && (
-                      <p className="text-xs text-emerald-600 mt-2 tech-content inline-flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        {crFile.name} · {(crFile.size / 1024).toFixed(0)} KB
-                      </p>
-                    )}
+                    <FileUploadField
+                      file={crFile}
+                      accept=".pdf,image/jpeg,image/png,application/pdf"
+                      onChange={onFileChange}
+                      buttonLabel={t('اختيار ملف', 'Choose file')}
+                      emptyLabel={t('لم يتم اختيار أي ملف', 'No file chosen')}
+                    />
                   </Field>
                 </div>
               </CardContent>
@@ -624,7 +617,7 @@ const ProviderJoin: React.FC = () => {
             {/* Branches */}
             {form.branches_count > 1 && (
               <Card className="rounded-2xl">
-                <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
+                <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
                   <SectionHeader
                     icon={<Store className="w-5 h-5" />}
                     title={t('بيانات الفروع الإضافية', 'Additional Branches')}
@@ -727,8 +720,8 @@ const ProviderJoin: React.FC = () => {
               </div>
             </div>
 
-            {/* Submit */}
-            <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-2">
+            {/* Submit (desktop / tablet) */}
+            <div className="hidden sm:flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-2">
               <p className="text-xs text-muted-foreground text-center sm:text-start">
                 {t('بإرسال الطلب فإنك توافق على ', 'By submitting, you agree to our ')}
                 <a href="/privacy" className="underline hover:text-primary">{t('سياسة الخصوصية', 'Privacy Policy')}</a>
@@ -743,6 +736,35 @@ const ProviderJoin: React.FC = () => {
                   t('إرسال طلب الانضمام', 'Submit join request')
                 )}
               </Button>
+            </div>
+
+            {/* Mobile: legal note inline (compact) */}
+            <p className="sm:hidden text-[11px] leading-[16px] text-muted-foreground text-center pt-1 pb-2">
+              {t('بإرسال الطلب فإنك توافق على ', 'By submitting, you agree to our ')}
+              <a href="/privacy" className="underline">{t('سياسة الخصوصية', 'Privacy Policy')}</a>
+              {t(' و', ' and ')}
+              <a href="/terms" className="underline">{t('الشروط', 'Terms')}</a>
+              {t('.', '.')}
+            </p>
+
+            {/* Mobile sticky bottom action bar */}
+            <div
+              className="sm:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75"
+              style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            >
+              <div className="container mx-auto max-w-4xl px-4 py-3">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-12 rounded-xl text-[14px] font-semibold shadow-elegant"
+                >
+                  {loading ? (
+                    <><Loader2 className="w-4 h-4 me-2 animate-spin" />{t('جاري الإرسال...', 'Sending...')}</>
+                  ) : (
+                    t('إرسال طلب الانضمام', 'Submit join request')
+                  )}
+                </Button>
+              </div>
             </div>
           </form>
         </section>
