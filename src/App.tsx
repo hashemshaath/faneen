@@ -200,6 +200,7 @@ const Diagnostics = lazyRetry(() => import("./pages/Diagnostics"));
 const DashboardAccountDiagnostics = lazyRetry(() => import("./pages/dashboard/DashboardAccountDiagnostics"));
 const ForProviders = lazyRetry(() => import("./pages/ForProviders"));
 const ProviderJoin = lazyRetry(() => import("./pages/ProviderJoin"));
+const ProviderJoinEdit = lazyRetry(() => import("./pages/ProviderJoinEdit"));
 const AdminProviderLeads = lazyRetry(() => import("./pages/admin/AdminProviderLeads"));
 const DashboardCommunicationPreferences = lazyRetry(() => import("./pages/dashboard/DashboardCommunicationPreferences"));
 const DashboardBusinessCompletion = lazyRetry(() => import("./pages/dashboard/DashboardBusinessCompletion"));
@@ -323,6 +324,7 @@ const AppRoutes = () => (
           <Route path="/for-providers" element={<ForProviders />} />
           <Route path="/join-as-provider" element={<Navigate to="/for-providers" replace />} />
           <Route path="/join/qitaat" element={<ProviderJoin />} />
+          <Route path="/join/qitaat/edit" element={<ProviderJoinEdit />} />
           <Route path="/providers/join" element={<Navigate to="/join/qitaat" replace />} />
 
           <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
