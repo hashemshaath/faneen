@@ -11,10 +11,16 @@ export const SHOWCASE_BUCKET = 'showcase' as const;
 /** Private (signed-URL only) document bucket for CR uploads. */
 export const BUSINESS_DOCUMENTS_BUCKET = 'business-documents' as const;
 
+/** Private bucket for public provider-lead intake CR uploads. */
+export const PROVIDER_LEAD_DOCUMENTS_BUCKET = 'provider-lead-documents' as const;
+
 /** Admin-only public brand asset bucket. */
 export const BRAND_ASSETS_BUCKET = 'brand-assets' as const;
 
-export const PRIVATE_DOCUMENT_BUCKETS = [BUSINESS_DOCUMENTS_BUCKET] as const;
+export const PRIVATE_DOCUMENT_BUCKETS = [
+  BUSINESS_DOCUMENTS_BUCKET,
+  PROVIDER_LEAD_DOCUMENTS_BUCKET,
+] as const;
 export type PrivateDocumentBucket = typeof PRIVATE_DOCUMENT_BUCKETS[number];
 
 export const PUBLIC_IMAGE_BUCKETS = [
