@@ -271,6 +271,8 @@ export default function DashboardSites() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [expandedBarcode, setExpandedBarcode] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [activeTab, setActiveTab] = useState<FormTab>('general');
+  const [issues, setIssues] = useState<FormIssue[]>([]);
   const [advLicenseNo, setAdvLicenseNo] = useState('');
   const [advDeedNo, setAdvDeedNo] = useState('');
   const [advOwnerId, setAdvOwnerId] = useState('');
