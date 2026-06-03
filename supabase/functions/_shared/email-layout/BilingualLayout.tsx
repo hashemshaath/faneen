@@ -1,7 +1,7 @@
 /// <reference types="npm:@types/react@18.3.1" />
 import * as React from 'npm:react@18.3.1'
 import {
-  Body, Container, Head, Heading, Html, Link, Preview, Section, Text, Hr, Button, Row, Column,
+  Body, Container, Head, Heading, Html, Link, Preview, Section, Text, Hr, Button, Row, Column, Img,
 } from 'npm:@react-email/components@0.0.22'
 import { EMAIL_BRAND as B, EMAIL_TINTS as T } from '../brandTheme.ts'
 
@@ -9,6 +9,7 @@ export const SITE_NAME_AR = 'قِطاعات'
 export const SITE_NAME_EN = 'Qitaat'
 export const SITE_URL = 'https://qitaat.com'
 export const SUPPORT_EMAIL = 'support@qitaat.com'
+export const LOGO_URL = 'https://qitaat.com/logo.png'
 
 export type BadgeTone = 'neutral' | 'success' | 'warning' | 'info' | 'danger'
 
@@ -90,7 +91,15 @@ export const BilingualEmail: React.FC<BilingualEmailProps> = ({
           <Section style={brandBar}>
             <Row>
               <Column align="center">
-                <Text style={brandMark}>ق</Text>
+                <Link href={SITE_URL} style={brandLink}>
+                  <Img
+                    src={LOGO_URL}
+                    alt="قِطاعات · Qitaat"
+                    width="56"
+                    height="56"
+                    style={brandLogo}
+                  />
+                </Link>
                 <Text style={brandName}>قِطاعات · Qitaat</Text>
                 <Text style={brandTag}>الدليل الصناعي · Industrial Directory</Text>
               </Column>
@@ -222,6 +231,13 @@ export const BilingualEmail: React.FC<BilingualEmailProps> = ({
           {/* Signature */}
           {!hideSignature && (
             <Section style={signature}>
+              <Img
+                src={LOGO_URL}
+                alt="قِطاعات · Qitaat"
+                width="36"
+                height="36"
+                style={sigLogo}
+              />
               <Text style={sigName}>فريق قِطاعات · The Qitaat Team</Text>
               <Text style={sigMeta}>
                 <Link href={SITE_URL} style={sigLink}>qitaat.com</Link>
@@ -252,18 +268,20 @@ const main = {
 }
 const outer = { maxWidth: '600px', margin: '0 auto', padding: 0 }
 const brandBar = { textAlign: 'center' as const, padding: '4px 0 18px' }
-const brandMark = {
+const brandLink = {
   display: 'inline-block',
-  width: '52px',
-  height: '52px',
-  lineHeight: '52px',
+  textDecoration: 'none',
+  margin: '0 auto 10px',
+}
+const brandLogo = {
+  display: 'block',
+  width: '56px',
+  height: '56px',
   borderRadius: '14px',
+  margin: '0 auto',
+  objectFit: 'contain' as const,
   backgroundColor: B.headerBg,
-  color: '#FFFFFF',
-  fontSize: '28px',
-  fontWeight: 700,
-  margin: '0 auto 8px',
-  textAlign: 'center' as const,
+  padding: '6px',
 }
 const brandName = {
   fontSize: '15px',
@@ -493,6 +511,17 @@ const langDividerText = {
 }
 const signature = { textAlign: 'center' as const, padding: '20px 16px 0' }
 const sigName = { fontSize: '13px', fontWeight: 600, color: B.text, margin: '0 0 4px' }
+const sigLogo = {
+  display: 'block',
+  width: '36px',
+  height: '36px',
+  borderRadius: '10px',
+  margin: '0 auto 8px',
+  objectFit: 'contain' as const,
+  backgroundColor: B.headerBg,
+  padding: '4px',
+  opacity: 0.95,
+}
 const sigMeta = { fontSize: '12px', color: B.muted, margin: '0 0 10px' }
 const sigLink = { color: B.primaryButton, textDecoration: 'none', fontWeight: 600 }
 const sigDisclaimer = { fontSize: '11px', color: B.muted, margin: '6px 0 0', lineHeight: '1.6' }
