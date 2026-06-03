@@ -53,6 +53,37 @@ export const invalidInputClass = (hasError?: boolean) =>
   hasError ? 'border-destructive focus-visible:ring-destructive/40' : '';
 
 /**
+ * Default platform services always shown alongside catalog categories.
+ */
+const DEFAULT_SERVICES_AR = [
+  'مطابخ ألمنيوم',
+  'مطابخ خشب',
+  'مطابخ عالمية',
+  'أنظمة ذكية',
+  'مصاعد',
+  'حلول استدامة',
+  'طاقة شمسية',
+  'أنظمة مراقبة',
+  'ديكورات خشبية',
+  'أعمال ديكور',
+  'خزائن ملابس',
+];
+
+const DEFAULT_SERVICES_EN = [
+  'Aluminum Kitchens',
+  'Wood Kitchens',
+  'Modern Kitchens',
+  'Smart Systems',
+  'Elevators',
+  'Sustainability Solutions',
+  'Solar Energy',
+  'Surveillance Systems',
+  'Wood Decorations',
+  'Decor Works',
+  'Wardrobes',
+];
+
+/**
  * SpecialtiesPicker — links to the site's categories catalog.
  * Users pick from existing services (chips) or add custom specialties.
  */
@@ -69,6 +100,19 @@ export const SpecialtiesPicker: React.FC<{
     () => catalog.map((c) => (isRTL ? c.name_ar : c.name_en) || c.name_ar || c.name_en),
     [catalog, isRTL],
   );
+
+  // Merge catalog with default services (defaults first, then catalog, deduplicated)
+  const allServices = useMemo(() => {
+    const defaults = isRTL ? DEFAULT_SERVICES_AR : DEFAULT_SERVICES_EN;
+    const combined = [...defaults, ...catalogNames];
+    const seen = new Set<string>();
+    return combined.filter((n) => {
+      const lower = n.toLowerCase();
+      if (seen.has(lower)) return false;
+      seen.add(lower);
+      return true;
+    });
+  }, [catalogNames, isRTL]);
 
   const normalized = values.map((v) => v.trim()).filter(Boolean);
   const isSelected = (name: string) => normalized.some((v) => v.toLowerCase() === name.toLowerCase());
@@ -90,13 +134,13 @@ export const SpecialtiesPicker: React.FC<{
 
   const filteredCatalog = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return catalogNames;
-    return catalogNames.filter((n) => n.toLowerCase().includes(q));
-  }, [catalogNames, query]);
+    if (!q) return allServices;
+    return allServices.filter((n) => n.toLowerCase().includes(q));
+  }, [allServices, query]);
 
   const queryIsNew =
     query.trim().length > 0 &&
-    !catalogNames.some((n) => n.toLowerCase() === query.trim().toLowerCase()) &&
+    !allServices.some((n) => n.toLowerCase() === query.trim().toLowerCase()) &&
     !isSelected(query.trim());
 
   return (
@@ -142,15 +186,15 @@ export const SpecialtiesPicker: React.FC<{
             {t('لا توجد نتائج — يمكنك إضافتها كتخصص مخصص.', 'No match — add as a custom specialty.')}
           </p>
         ) : (
-          <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto no-scrollbar">
-            {filteredCatalog.slice(0, 60).map((name) => {
+          <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto no-scrollbar">
+            {filteredCatalog.slice(0, 70).map((name) => {
               const active = isSelected(name);
               return (
                 <button
                   key={name}
                   type="button"
                   onClick={() => toggle(name)}
-                  className={`text-xs rounded-full border px-3 py-1.5 transition-all ${active ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-primary/5 hover:border-primary/40'}`}
+                  className={`text-[11px] leading-tight rounded-full border px-2.5 py-1 transition-all ${active ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-primary/5 hover:border-primary/40'}`}
                 >
                   <span dir="auto">{name}</span>
                 </button>
