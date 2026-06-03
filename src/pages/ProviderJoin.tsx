@@ -474,36 +474,70 @@ const ProviderJoin: React.FC = () => {
             {form.branches_count > 1 && (
               <Card className="rounded-2xl">
                 <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
-                  <div className="flex items-center justify-between">
-                    <SectionHeader icon={<Globe className="w-5 h-5" />} title={t('بيانات الفروع', 'Branch details')} />
-                    <Button type="button" size="sm" variant="outline" onClick={addBranch} className="rounded-xl">
-                      <Plus className="w-4 h-4 me-1" /> {t('إضافة فرع', 'Add branch')}
-                    </Button>
+                  <SectionHeader
+                    icon={<Store className="w-5 h-5" />}
+                    title={t('بيانات الفروع الإضافية', 'Additional Branches')}
+                  />
+                  <p className="text-xs text-muted-foreground -mt-2">
+                    {t(
+                      `الفرع الرئيسي يستخدم بيانات التواصل أعلاه. أضف بيانات ${form.branches_count - 1} فرع إضافي.`,
+                      `The main branch uses the contact info above. Provide details for ${form.branches_count - 1} additional branch${form.branches_count - 1 > 1 ? 'es' : ''}.`,
+                    )}
+                  </p>
+                  <div className="space-y-3">
+                    {branches.map((b, i) => (
+                      <details
+                        key={i}
+                        open={i === 0 || !b.branch_name}
+                        className="group rounded-xl border bg-card overflow-hidden transition-all hover:border-primary/40"
+                      >
+                        <summary className="cursor-pointer list-none flex items-center justify-between gap-3 p-4 hover:bg-muted/30">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-sm font-bold tech-content shrink-0">
+                              {i + 2}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="text-sm font-semibold truncate">
+                                {b.branch_name || t(`فرع ${i + 2} — لم يُسمَّ بعد`, `Branch ${i + 2} — unnamed`)}
+                              </div>
+                              {(b.city || b.address) && (
+                                <div className="text-xs text-muted-foreground truncate mt-0.5">
+                                  {[b.city, b.address].filter(Boolean).join(' · ')}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            {b.branch_name ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : t('غير مكتمل', 'Incomplete')}
+                          </span>
+                        </summary>
+                        <div className="border-t p-4 bg-muted/10 space-y-3">
+                          <div className="grid md:grid-cols-2 gap-3">
+                            <Field label={t('اسم الفرع *', 'Branch name *')}>
+                              <Input dir="auto" placeholder={t('مثال: فرع الرياض', 'e.g. Riyadh Branch')} value={b.branch_name} onChange={(e) => updateBranch(i, 'branch_name', e.target.value)} className="h-11 rounded-lg" />
+                            </Field>
+                            <Field label={t('المدينة', 'City')}>
+                              <Input dir="auto" value={b.city ?? ''} onChange={(e) => updateBranch(i, 'city', e.target.value)} className="h-11 rounded-lg" />
+                            </Field>
+                            <div className="md:col-span-2">
+                              <Field label={t('العنوان', 'Address')}>
+                                <Input dir="auto" value={b.address ?? ''} onChange={(e) => updateBranch(i, 'address', e.target.value)} className="h-11 rounded-lg" />
+                              </Field>
+                            </div>
+                            <Field label={t('رقم التواصل', 'Phone')}>
+                              <div className="relative">
+                                <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input dir="ltr" placeholder="05xxxxxxxx" value={b.phone ?? ''} onChange={(e) => updateBranch(i, 'phone', e.target.value)} className="h-11 rounded-lg ps-9 tech-content" />
+                              </div>
+                            </Field>
+                            <Field label={t('رابط الموقع على الخريطة', 'Map link')}>
+                              <Input dir="ltr" placeholder="https://maps.google.com/..." value={b.map_link ?? ''} onChange={(e) => updateBranch(i, 'map_link', e.target.value)} className="h-11 rounded-lg" />
+                            </Field>
+                          </div>
+                        </div>
+                      </details>
+                    ))}
                   </div>
-                  {branches.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      {t('اضغط "إضافة فرع" لتعبئة بيانات كل فرع.', 'Click "Add branch" to provide details.')}
-                    </p>
-                  )}
-                  {branches.map((b, i) => (
-                    <div key={i} className="rounded-xl border p-4 space-y-3 bg-muted/20">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">
-                          {t('فرع', 'Branch')} #{i + 1}
-                        </span>
-                        <Button type="button" size="sm" variant="ghost" onClick={() => removeBranch(i)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <Input dir="auto" placeholder={t('اسم الفرع', 'Branch name')} value={b.branch_name} onChange={(e) => updateBranch(i, 'branch_name', e.target.value)} className="h-11 rounded-lg" />
-                        <Input dir="auto" placeholder={t('المدينة', 'City')} value={b.city ?? ''} onChange={(e) => updateBranch(i, 'city', e.target.value)} className="h-11 rounded-lg" />
-                        <Input dir="auto" placeholder={t('العنوان', 'Address')} value={b.address ?? ''} onChange={(e) => updateBranch(i, 'address', e.target.value)} className="h-11 rounded-lg" />
-                        <Input dir="ltr" placeholder={t('رابط الموقع', 'Map link')} value={b.map_link ?? ''} onChange={(e) => updateBranch(i, 'map_link', e.target.value)} className="h-11 rounded-lg" />
-                        <Input dir="ltr" placeholder={t('رقم التواصل', 'Phone')} value={b.phone ?? ''} onChange={(e) => updateBranch(i, 'phone', e.target.value)} className="h-11 rounded-lg tech-content" />
-                      </div>
-                    </div>
-                  ))}
                 </CardContent>
               </Card>
             )}
