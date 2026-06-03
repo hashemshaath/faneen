@@ -472,7 +472,17 @@ export default function DashboardSites() {
       closeForm();
     },
     onError: (err: unknown) => {
-      const raw = err instanceof Error ? err.message : String(err ?? '');
+      // Supabase RPC errors are PostgrestError objects (not Error instances).
+      // Extract message/code/details/hint so the user sees a real reason
+      // instead of a useless "[object Object]".
+      const e = (err ?? {}) as { message?: string; code?: string; details?: string; hint?: string };
+      const parts = [e.message, e.details, e.hint, e.code].filter(Boolean) as string[];
+      const raw = parts.length
+        ? parts.join(' — ')
+        : (err instanceof Error ? err.message : (typeof err === 'string' ? err : ''));
+      // Surface to console for diagnostics (won't be visible to end users).
+      // eslint-disable-next-line no-console
+      console.error('[DashboardSites] save failed:', err);
       const tabFor: Record<string, FormTab> = {
         LABEL_REQUIRED: 'general', INVALID_SITE_TYPE: 'general', INVALID_VISIBILITY: 'general',
         BUSINESS_ID_REQUIRED: 'general', FORBIDDEN: 'general',
@@ -487,7 +497,7 @@ export default function DashboardSites() {
         INVALID_LATITUDE: 'latitude', INVALID_LONGITUDE: 'longitude', INVALID_MAP_URL: 'map_url',
         INVALID_LICENSE_DATES: 'municipal_license_expiry_date',
       };
-      const code = Object.keys(ISSUE_CATALOG).find(k => raw.includes(k)) ?? 'UNKNOWN';
+      const code = Object.keys(ISSUE_CATALOG).find(k => raw.toUpperCase().includes(k)) ?? 'UNKNOWN';
       const issue = issueOf(code, fieldFor[code] ?? 'label', tabFor[code] ?? 'general',
         code === 'UNKNOWN' && raw
           ? { cause_ar: `${ISSUE_CATALOG.UNKNOWN.cause_ar} (${raw})`, cause_en: `${ISSUE_CATALOG.UNKNOWN.cause_en} (${raw})` }
