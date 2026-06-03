@@ -380,37 +380,37 @@ const ProviderJoin: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/75 to-slate-950/95" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.25),transparent_60%)]" />
           </div>
-          <div className="relative container mx-auto px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-5xl text-center text-white">
-            <Badge variant="secondary" className="mb-5 rounded-full bg-white/10 text-white border-white/20 backdrop-blur-sm hover:bg-white/15">
-              <Sparkles className="w-3.5 h-3.5 me-1.5" />
+          <div className="relative container mx-auto px-5 sm:px-6 py-10 sm:py-20 md:py-24 max-w-5xl text-center text-white">
+            <Badge variant="secondary" className="mb-4 sm:mb-5 rounded-full bg-white/10 text-white border-white/20 backdrop-blur-sm hover:bg-white/15 text-[11px] sm:text-xs px-3 py-1 max-w-[95%] whitespace-normal sm:whitespace-nowrap leading-snug">
+              <Sparkles className="w-3.5 h-3.5 me-1.5 shrink-0" />
               {t('انضم إلى أكبر منصة صناعية في المملكة', 'The leading industrial directory in Saudi Arabia')}
             </Badge>
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight leading-tight">
+            <h1 className="text-[26px] leading-[1.2] sm:text-4xl md:text-6xl font-bold tracking-tight">
               {t('سجّل منشأتك في قِطاعات', 'Register your business on Qitaat')}
             </h1>
-            <p className="mt-5 text-white/80 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+            <p className="mt-4 sm:mt-5 text-white/80 text-[14px] sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
               {t(
                 'وصول لعملاء محتملين، عرض احترافي لمنشأتك، وأدوات إدارة متكاملة. التسجيل مجاني ولا يتطلب إنشاء حساب.',
                 'Reach more clients, showcase your business professionally, and access powerful tools. Free registration — no account required.',
               )}
             </p>
-            <div className="mt-7 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-white/85">
-              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-emerald-400" />{t('بياناتكم محمية ومشفّرة', 'Encrypted & secure')}</span>
-              <span className="inline-flex items-center gap-1.5"><Clock className="w-4 h-4 text-sky-300" />{t('مراجعة خلال 24-48 ساعة', '24–48h review')}</span>
-              <span className="inline-flex items-center gap-1.5"><Award className="w-4 h-4 text-amber-300" />{t('فريق متخصص', 'Specialized team')}</span>
+            <div className="mt-5 sm:mt-7 flex flex-wrap justify-center gap-x-4 sm:gap-x-5 gap-y-2 text-[12px] sm:text-sm text-white/85">
+              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />{t('بياناتكم محمية ومشفّرة', 'Encrypted & secure')}</span>
+              <span className="inline-flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-300" />{t('مراجعة خلال 24-48 ساعة', '24–48h review')}</span>
+              <span className="inline-flex items-center gap-1.5"><Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" />{t('فريق متخصص', 'Specialized team')}</span>
             </div>
 
             {/* Stats strip */}
-            <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-6 max-w-2xl mx-auto">
+            <div className="mt-7 sm:mt-10 grid grid-cols-3 gap-2.5 sm:gap-6 max-w-2xl mx-auto">
               {[
                 { icon: <Building2 className="w-5 h-5" />, value: fmt(stats?.businessCount), label: t('منشأة مسجّلة', 'Registered businesses') },
                 { icon: <TrendingUp className="w-5 h-5" />, value: fmt(stats?.projectCount), label: t('مشروع منشور', 'Published projects') },
                 { icon: <Users className="w-5 h-5" />, value: fmt(stats?.reviewCount), label: t('تقييم موثّق', 'Verified reviews') },
               ].map((s, i) => (
-                <div key={i} className="rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm px-3 py-4 sm:p-5">
-                  <div className="flex items-center justify-center text-white/70 mb-1.5">{s.icon}</div>
-                  <div className="text-xl sm:text-2xl font-bold tech-content">{s.value}</div>
-                  <div className="text-[11px] sm:text-xs text-white/70 mt-0.5">{s.label}</div>
+                <div key={i} className="rounded-xl sm:rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm px-2 py-3 sm:p-5">
+                  <div className="flex items-center justify-center text-white/70 mb-1 sm:mb-1.5">{s.icon}</div>
+                  <div className="text-lg sm:text-2xl font-bold tech-content leading-tight">{s.value}</div>
+                  <div className="text-[10px] sm:text-xs text-white/70 mt-0.5 leading-tight">{s.label}</div>
                 </div>
               ))}
             </div>
