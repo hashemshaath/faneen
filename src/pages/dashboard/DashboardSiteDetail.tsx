@@ -335,6 +335,10 @@ const DashboardSiteDetail: React.FC = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="contacts" className="mt-4">
+            <SiteContactsTab siteId={site.id} contracts={contractsForRef} canManage={canManage} />
+          </TabsContent>
+
           <TabsContent value="contracts" className="mt-4">
             <ListSection
               loading={contractsLoading}
@@ -388,6 +392,10 @@ const DashboardSiteDetail: React.FC = () => {
               }))}
               isRTL={isRTL}
             />
+          </TabsContent>
+
+          <TabsContent value="reports" className="mt-4">
+            <SiteReportsTab siteId={site.id} contacts={contactsRaw} contracts={contractsForRef} canManage={canManage} />
           </TabsContent>
 
           <TabsContent value="gallery" className="mt-4">
