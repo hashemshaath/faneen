@@ -12194,6 +12194,47 @@ export type Database = {
           },
         ]
       }
+      provider_lead_branches: {
+        Row: {
+          address: string | null
+          branch_name: string
+          city: string | null
+          created_at: string
+          id: string
+          lead_id: string
+          map_link: string | null
+          phone: string | null
+        }
+        Insert: {
+          address?: string | null
+          branch_name: string
+          city?: string | null
+          created_at?: string
+          id?: string
+          lead_id: string
+          map_link?: string | null
+          phone?: string | null
+        }
+        Update: {
+          address?: string | null
+          branch_name?: string
+          city?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string
+          map_link?: string | null
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_lead_branches_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "provider_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_lead_credit_transactions: {
         Row: {
           amount: number
@@ -12257,6 +12298,120 @@ export type Database = {
             columns: ["quote_request_lead_id"]
             isOneToOne: false
             referencedRelation: "quote_request_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_leads: {
+        Row: {
+          admin_notes: string | null
+          branches_count: number
+          brands: string[]
+          brief: string | null
+          city: string | null
+          contact_name: string
+          cr_file_path: string | null
+          cr_number: string | null
+          created_at: string
+          email: string
+          id: string
+          linked_business_id: string | null
+          main_activity: string | null
+          map_link: string | null
+          name_ar: string
+          name_en: string | null
+          national_address: string | null
+          phone: string
+          preferred_channel: Database["public"]["Enums"]["provider_lead_channel"]
+          reference_code: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          specialties: string[]
+          status: Database["public"]["Enums"]["provider_lead_status"]
+          submitted_ip_hash: string | null
+          unified_number: string | null
+          updated_at: string
+          user_agent: string | null
+          vat_number: string | null
+          website: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          branches_count?: number
+          brands?: string[]
+          brief?: string | null
+          city?: string | null
+          contact_name: string
+          cr_file_path?: string | null
+          cr_number?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          linked_business_id?: string | null
+          main_activity?: string | null
+          map_link?: string | null
+          name_ar: string
+          name_en?: string | null
+          national_address?: string | null
+          phone: string
+          preferred_channel?: Database["public"]["Enums"]["provider_lead_channel"]
+          reference_code?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          specialties?: string[]
+          status?: Database["public"]["Enums"]["provider_lead_status"]
+          submitted_ip_hash?: string | null
+          unified_number?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          vat_number?: string | null
+          website?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          branches_count?: number
+          brands?: string[]
+          brief?: string | null
+          city?: string | null
+          contact_name?: string
+          cr_file_path?: string | null
+          cr_number?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          linked_business_id?: string | null
+          main_activity?: string | null
+          map_link?: string | null
+          name_ar?: string
+          name_en?: string | null
+          national_address?: string | null
+          phone?: string
+          preferred_channel?: Database["public"]["Enums"]["provider_lead_channel"]
+          reference_code?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          specialties?: string[]
+          status?: Database["public"]["Enums"]["provider_lead_status"]
+          submitted_ip_hash?: string | null
+          unified_number?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          vat_number?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_leads_linked_business_id_fkey"
+            columns: ["linked_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_leads_linked_business_id_fkey"
+            columns: ["linked_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
             referencedColumns: ["id"]
           },
         ]
@@ -16663,6 +16818,52 @@ export type Database = {
         }
         Returns: Database["public"]["Enums"]["business_approval_status"]
       }
+      admin_update_provider_lead: {
+        Args: {
+          p_admin_notes?: string
+          p_lead_id: string
+          p_linked_business_id?: string
+          p_status: Database["public"]["Enums"]["provider_lead_status"]
+        }
+        Returns: {
+          admin_notes: string | null
+          branches_count: number
+          brands: string[]
+          brief: string | null
+          city: string | null
+          contact_name: string
+          cr_file_path: string | null
+          cr_number: string | null
+          created_at: string
+          email: string
+          id: string
+          linked_business_id: string | null
+          main_activity: string | null
+          map_link: string | null
+          name_ar: string
+          name_en: string | null
+          national_address: string | null
+          phone: string
+          preferred_channel: Database["public"]["Enums"]["provider_lead_channel"]
+          reference_code: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          specialties: string[]
+          status: Database["public"]["Enums"]["provider_lead_status"]
+          submitted_ip_hash: string | null
+          unified_number: string | null
+          updated_at: string
+          user_agent: string | null
+          vat_number: string | null
+          website: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "provider_leads"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_update_username_status: {
         Args: {
           _business_id: string
@@ -18726,6 +18927,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      submit_provider_lead: { Args: { payload: Json }; Returns: Json }
       submit_site_interest: {
         Args: {
           _estimated_budget_max?: number
@@ -19049,6 +19251,14 @@ export type Database = {
         | "rejected"
         | "suspended"
       promotion_type: "ad" | "offer" | "video"
+      provider_lead_channel: "phone" | "whatsapp" | "email"
+      provider_lead_status:
+        | "new"
+        | "under_review"
+        | "needs_info"
+        | "approved"
+        | "rejected"
+        | "converted_to_business"
       service_request_status:
         | "pending"
         | "approved"
@@ -19301,6 +19511,15 @@ export const Constants = {
         "suspended",
       ],
       promotion_type: ["ad", "offer", "video"],
+      provider_lead_channel: ["phone", "whatsapp", "email"],
+      provider_lead_status: [
+        "new",
+        "under_review",
+        "needs_info",
+        "approved",
+        "rejected",
+        "converted_to_business",
+      ],
       service_request_status: [
         "pending",
         "approved",
