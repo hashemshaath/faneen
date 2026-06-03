@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   ArrowLeft, MapPin, FileText, MessageSquareQuote, Inbox, Image as ImageIcon,
   Settings, Pencil, Phone, User, ImageOff, ClipboardList, Building2,
+  Milestone, Activity, CheckCircle2, Clock,
 } from 'lucide-react';
 import SiteCoverUploader from '@/components/sites/SiteCoverUploader';
 import SiteGalleryManager, { type GalleryImage } from '@/components/sites/SiteGalleryManager';
@@ -133,6 +134,35 @@ const DashboardSiteDetail: React.FC = () => {
     },
   });
 
+  const { data: milestones = [], isLoading: milestonesLoading } = useQuery({
+    queryKey: ['site-milestones', id, contracts.length],
+    enabled: !!id && !!site && contracts.length > 0,
+    queryFn: async () => {
+      const ids = contracts.map((c) => c.id);
+      const { data, error } = await supabase
+        .from('contract_milestones')
+        .select('id, contract_id, title_ar, title_en, amount, status, due_date, completed_at, sort_order')
+        .in('contract_id', ids)
+        .order('due_date', { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: timeline = [], isLoading: timelineLoading } = useQuery({
+    queryKey: ['site-timeline', id],
+    enabled: !!id && !!site,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_client_site_timeline', { _site_id: id, _limit: 100 });
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        event_type: string; event_id: string; ref_id: string | null;
+        title: string | null; status: string | null; amount: number | null;
+        currency: string | null; occurred_at: string;
+      }>;
+    },
+  });
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -229,6 +259,8 @@ const DashboardSiteDetail: React.FC = () => {
             <TabsTrigger value="contracts"><FileText className="h-4 w-4" /><span className="mx-2">{isRTL ? 'العقود' : 'Contracts'}</span></TabsTrigger>
             <TabsTrigger value="quotes"><MessageSquareQuote className="h-4 w-4" /><span className="mx-2">{isRTL ? 'العروض' : 'Quotes'}</span></TabsTrigger>
             <TabsTrigger value="rfq"><Inbox className="h-4 w-4" /><span className="mx-2">RFQ</span></TabsTrigger>
+            <TabsTrigger value="milestones"><Milestone className="h-4 w-4" /><span className="mx-2">{isRTL ? 'المراحل' : 'Milestones'}</span></TabsTrigger>
+            <TabsTrigger value="timeline"><Activity className="h-4 w-4" /><span className="mx-2">{isRTL ? 'السجل' : 'Timeline'}</span></TabsTrigger>
             <TabsTrigger value="gallery"><ImageIcon className="h-4 w-4" /><span className="mx-2">{isRTL ? 'المعرض' : 'Gallery'}</span></TabsTrigger>
             <TabsTrigger value="settings"><Settings className="h-4 w-4" /><span className="mx-2">{isRTL ? 'الإعدادات' : 'Settings'}</span></TabsTrigger>
           </TabsList>
@@ -312,6 +344,7 @@ const DashboardSiteDetail: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="gallery" className="mt-4">
+            {/* gallery */}
             <Card><CardContent className="p-5">
               {canManage ? (
                 <SiteGalleryManager siteId={site.id} images={gallery} onChange={(imgs) => { setLocalGallery(imgs); refetch(); }} />
@@ -324,6 +357,72 @@ const DashboardSiteDetail: React.FC = () => {
                     </div>
                   ))}
                 </div>
+              )}
+            </CardContent></Card>
+          </TabsContent>
+
+          <TabsContent value="milestones" className="mt-4">
+            <Card><CardContent className="p-5">
+              {milestonesLoading ? (
+                <Skeleton className="h-24 w-full" />
+              ) : milestones.length === 0 ? (
+                <div className="py-10 text-center text-sm text-muted-foreground">
+                  {isRTL ? 'لا توجد مراحل تنفيذية لعقود هذا الموقع.' : 'No milestones across this site\u2019s contracts.'}
+                </div>
+              ) : (
+                <ul className="space-y-2">
+                  {milestones.map((m) => {
+                    const done = m.status === 'completed' || !!m.completed_at;
+                    return (
+                      <li key={m.id} className="flex items-center gap-3 rounded-xl border border-border/40 p-3 hover-lift">
+                        {done ? <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" /> : <Clock className="h-5 w-5 text-muted-foreground shrink-0" />}
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-medium">{(isRTL ? m.title_ar : m.title_en) || m.title_ar}</div>
+                          <div className="text-xs text-muted-foreground tech-content">
+                            {m.due_date ? new Date(m.due_date).toLocaleDateString() : '—'}
+                            {m.amount ? ` · ${Number(m.amount).toLocaleString()}` : ''}
+                          </div>
+                        </div>
+                        <Badge variant={done ? 'default' : 'secondary'} className="shrink-0">{m.status}</Badge>
+                        <Link to={`/dashboard/contracts/${m.contract_id}`} className="text-xs text-primary hover:underline shrink-0">
+                          {isRTL ? 'العقد' : 'Contract'}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </CardContent></Card>
+          </TabsContent>
+
+          <TabsContent value="timeline" className="mt-4">
+            <Card><CardContent className="p-5">
+              {timelineLoading ? (
+                <Skeleton className="h-24 w-full" />
+              ) : timeline.length === 0 ? (
+                <div className="py-10 text-center text-sm text-muted-foreground">
+                  {isRTL ? 'لا توجد أحداث بعد.' : 'No events yet.'}
+                </div>
+              ) : (
+                <ol className="relative space-y-3 ps-4 border-s border-border/40">
+                  {timeline.map((e) => (
+                    <li key={`${e.event_type}-${e.event_id}`} className="relative">
+                      <span className="absolute -start-[21px] top-2 h-3 w-3 rounded-full bg-primary" />
+                      <div className="rounded-xl border border-border/40 p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <Badge variant="secondary" className="text-[10px] uppercase">{e.event_type}</Badge>
+                          <span className="text-xs text-muted-foreground tech-content">
+                            {new Date(e.occurred_at).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-sm font-medium truncate">{e.title || e.ref_id || e.event_id}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {e.status}{e.amount ? ` · ${Number(e.amount).toLocaleString()} ${e.currency ?? ''}` : ''}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
               )}
             </CardContent></Card>
           </TabsContent>

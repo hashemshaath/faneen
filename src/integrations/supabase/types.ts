@@ -17051,6 +17051,19 @@ export type Database = {
         Args: { _site_id: string }
         Returns: Json
       }
+      get_client_site_timeline: {
+        Args: { _limit?: number; _site_id: string }
+        Returns: {
+          amount: number
+          currency: string
+          event_id: string
+          event_type: string
+          occurred_at: string
+          ref_id: string
+          status: string
+          title: string
+        }[]
+      }
       get_contact_inbox_settings: {
         Args: never
         Returns: {
