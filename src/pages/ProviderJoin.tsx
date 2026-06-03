@@ -1,38 +1,42 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useMemo } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
-  Building2, User, Mail, Phone, FileText, MapPin, ShieldCheck,
- CheckCircle2, Plus, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp,
-  Store, AlertCircle, Link as LinkIcon, ChevronLeft, ChevronRight,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { submitProviderLead } from '@/modules/providers';
-import { listActiveCategories } from '@/modules/categories';
-import coverImage from '@/assets/provider-join-cover.jpg';
-import {
-  Field, SectionHeader, SpecialtiesPicker, TagInput, invalidInputClass,
-  FileUploadField,
-  type CategoryOption,
-} from './providerJoin/_components';
-import type {
-  ProviderLeadChannel,
-  ProviderLeadBranchInput,
-} from '@/modules/providers/types';
-import {
-  PROVIDER_LEAD_DOC_MAX_BYTES,
-  PROVIDER_LEAD_DOC_MIMES,
-} from '@/modules/files/domain/providerLeadDocuments';
+import { ProviderLeadFormPage } from './providerJoin/rebuild/ProviderLeadFormPage';
+
+/**
+ * Public route shell for `/join/qitaat` (alias `/providers/join`).
+ * The actual 4-step wizard lives in `./providerJoin/rebuild/ProviderLeadFormPage`.
+ * This file only owns SEO meta + JSON-LD; it intentionally contains no
+ * Supabase calls and no form logic.
+ */
+const ProviderJoin: React.FC = () => {
+  const { isRTL, language } = useLanguage();
+  const t = (ar: string, en: string) => (isRTL ? ar : en);
+
+  usePageMeta({
+    title: t('انضم إلى قِطاعات | تسجيل المنشآت', 'Join Qitaat | Provider Registration'),
+    description: t(
+      'سجّل منشأتك في قِطاعات — المنصة الصناعية الأولى للألمنيوم والزجاج والخشب والحديد.',
+      'Register your business on Qitaat — the leading industrial directory for Aluminum, Glass, Wood, and Steel providers.',
+    ),
+    canonical: 'https://qitaat.com/join/qitaat',
+    ogTitle: t('انضم إلى قِطاعات', 'Join Qitaat'),
+    ogDescription: t('قدّم طلب الانضمام إلى منصة قِطاعات.', 'Submit your join request to Qitaat.'),
+    ogImage: ogImageFor('contact'),
+  });
+
+  useMultiJsonLd(useMemo(() => {
+    const crumbs = buildBreadcrumbList([
+      { name: language === 'ar' ? 'انضم إلى قطاعات' : 'Join Qitaat', url: '/join/qitaat' },
+    ]);
+    return crumbs ? [crumbs] : null;
+  }, [language]));
+
+  return <ProviderLeadFormPage />;
+};
+
+export default ProviderJoin;
 
 interface FormState {
   name_ar: string;
