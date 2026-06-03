@@ -439,6 +439,18 @@ const ProviderJoin: React.FC = () => {
                   </Field>
                 </div>
 
+                {/* Specialties — linked to existing catalog */}
+                <Field
+                  label={t('التخصصات والخدمات', 'Specialties & Services')}
+                >
+                  <SpecialtiesPicker
+                    catalog={categories}
+                    values={form.specialties}
+                    onChange={(v) => update('specialties', v)}
+                    isRTL={isRTL}
+                  />
+                </Field>
+
                 <Field label={t('صورة أو ملف السجل التجاري (PDF/JPG/PNG، حد 5MB)', 'Commercial Registration file (PDF/JPG/PNG, 5MB max)')}>
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
