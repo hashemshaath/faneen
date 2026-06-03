@@ -748,9 +748,15 @@ export default function DashboardSites() {
 
                   <TabsContent value="general" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5" id="site-field-label">
                     <Label className="text-xs font-medium">{isRTL ? 'الاسم المختصر' : 'Label'} <span className="text-destructive">*</span></Label>
-                    <Input value={form.label} onChange={e => setForm(p => ({ ...p, label: e.target.value }))} placeholder={isRTL ? 'مثال: فيلا العميل' : 'e.g. Client villa'} className="h-9" />
+                    <Input
+                      value={form.label}
+                      onChange={e => setForm(p => ({ ...p, label: e.target.value }))}
+                      placeholder={isRTL ? 'مثال: فيلا العميل' : 'e.g. Client villa'}
+                      className={`h-9 ${errorFields.label ? 'ring-2 ring-destructive/60 border-destructive' : ''}`}
+                      aria-invalid={!!errorFields.label}
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">{isRTL ? 'اسم الموقع' : 'Site Name'}</Label>
@@ -782,8 +788,13 @@ export default function DashboardSites() {
                   </TabsContent>
 
                   <TabsContent value="address" className="space-y-4 mt-4">
-                <div className="rounded-xl border border-border/50 bg-card/40 p-3">
+                <div
+                  id="site-field-address"
+                  className={`rounded-xl border bg-card/40 p-3 ${errorFields.address || errorFields.city || errorFields.short_address ? 'border-destructive/60 ring-1 ring-destructive/30' : 'border-border/50'}`}
+                >
                   <NationalAddressForm value={naf} onChange={setNaf} isRTL={isRTL} />
+                  <span id="site-field-city" className="sr-only" />
+                  <span id="site-field-short_address" className="sr-only" />
                 </div>
 
                 {/* Interactive map picker (lat/lng + optional reverse-fill of region/district) */}
@@ -814,9 +825,17 @@ export default function DashboardSites() {
                       }));
                     }}
                   />
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5" id="site-field-map_url">
                     <Label className="text-xs font-medium">{isRTL ? 'رابط خريطة مخصص (اختياري)' : 'Custom map URL (optional)'}</Label>
-                    <Input type="url" dir="ltr" value={form.map_url} onChange={e => setForm(p => ({ ...p, map_url: e.target.value }))} placeholder="https://maps.google.com/…" className="h-9 tech-content" />
+                    <Input
+                      type="url" dir="ltr" value={form.map_url}
+                      onChange={e => setForm(p => ({ ...p, map_url: e.target.value }))}
+                      placeholder="https://maps.google.com/…"
+                      className={`h-9 tech-content ${errorFields.map_url ? 'ring-2 ring-destructive/60 border-destructive' : ''}`}
+                      aria-invalid={!!errorFields.map_url}
+                    />
+                    <span id="site-field-latitude" className="sr-only" />
+                    <span id="site-field-longitude" className="sr-only" />
                   </div>
                 </div>
                   </TabsContent>
@@ -841,9 +860,14 @@ export default function DashboardSites() {
                           <Label className="text-xs font-medium">{isRTL ? 'تاريخ الإصدار' : 'Issue Date'}</Label>
                           <Input type="date" dir="ltr" value={form.municipal_license_issue_date} onChange={e => setForm(p => ({ ...p, municipal_license_issue_date: e.target.value }))} className="h-9 tech-content" />
                         </div>
-                        <div className="space-y-1.5">
+                        <div className="space-y-1.5" id="site-field-municipal_license_expiry_date">
                           <Label className="text-xs font-medium">{isRTL ? 'تاريخ الانتهاء' : 'Expiry Date'}</Label>
-                          <Input type="date" dir="ltr" value={form.municipal_license_expiry_date} onChange={e => setForm(p => ({ ...p, municipal_license_expiry_date: e.target.value }))} className="h-9 tech-content" />
+                          <Input
+                            type="date" dir="ltr" value={form.municipal_license_expiry_date}
+                            onChange={e => setForm(p => ({ ...p, municipal_license_expiry_date: e.target.value }))}
+                            className={`h-9 tech-content ${errorFields.municipal_license_expiry_date ? 'ring-2 ring-destructive/60 border-destructive' : ''}`}
+                            aria-invalid={!!errorFields.municipal_license_expiry_date}
+                          />
                         </div>
                       </div>
                     </div>
