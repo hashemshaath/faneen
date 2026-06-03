@@ -37,7 +37,6 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "qitaat"
-const SENDER_DOMAIN = "e.qitaat.com"
 const ROOT_DOMAIN = "qitaat.com"
 const FROM_DOMAIN = "qitaat.com" // Domain shown in From address (may be root or sender subdomain)
 
@@ -236,15 +235,16 @@ async function handleWebhook(req: Request): Promise<Response> {
     plainText: true,
   })
 
-  // Enqueue email for async processing by the dispatcher (process-email-queue).
+  // Send directly via Resend (project uses Resend, not Lovable Emails infra).
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
   const messageId = crypto.randomUUID()
+  const subject = EMAIL_SUBJECTS[emailType] || 'Notification'
+  const fromAddress = `${SITE_NAME} <noreply@${FROM_DOMAIN}>`
 
-  // Log pending BEFORE enqueue so we have a record even if enqueue crashes
   await supabase.from('email_send_log').insert({
     message_id: messageId,
     template_name: emailType,
@@ -252,44 +252,94 @@ async function handleWebhook(req: Request): Promise<Response> {
     status: 'pending',
   })
 
-  const { error: enqueueError } = await supabase.rpc('enqueue_email', {
-    queue_name: 'auth_emails',
-    payload: {
-      run_id,
-      message_id: messageId,
-      to: payload.data.email,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject: EMAIL_SUBJECTS[emailType] || 'Notification',
-      html,
-      text,
-      purpose: 'transactional',
-      label: emailType,
-      queued_at: new Date().toISOString(),
-    },
-  })
-
-  if (enqueueError) {
-    console.error('Failed to enqueue auth email', { error: enqueueError, run_id, emailType })
+  const resendApiKey = Deno.env.get('RESEND_API_KEY')
+  if (!resendApiKey) {
+    console.error('RESEND_API_KEY not configured')
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: emailType,
       recipient_email: payload.data.email,
-      status: 'failed',
-      error_message: 'Failed to enqueue email',
+      status: 'dlq',
+      error_message: 'RESEND_API_KEY not configured',
     })
-    return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
+    return new Response(JSON.stringify({ error: 'Email provider not configured' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  console.log('Auth email enqueued', { emailType, email: payload.data.email, run_id })
+  try {
+    const resendResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: fromAddress,
+        to: [payload.data.email],
+        subject,
+        html,
+        text,
+        headers: {
+          'X-Entity-Ref-ID': messageId,
+          'X-Idempotency-Key': messageId,
+        },
+      }),
+    })
 
-  return new Response(
-    JSON.stringify({ success: true, queued: true }),
-    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
+    const resendJson = await resendResponse.json().catch(() => ({}))
+
+    if (!resendResponse.ok) {
+      const errMsg = `Resend API error: ${resendResponse.status} ${JSON.stringify(resendJson)}`
+      console.error('Resend send failed', { errMsg, run_id, emailType })
+      await supabase.from('email_send_log').insert({
+        message_id: messageId,
+        template_name: emailType,
+        recipient_email: payload.data.email,
+        status: 'dlq',
+        error_message: errMsg,
+      })
+      return new Response(JSON.stringify({ error: 'Email send failed' }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    await supabase.from('email_send_log').insert({
+      message_id: messageId,
+      template_name: emailType,
+      recipient_email: payload.data.email,
+      status: 'sent',
+      metadata: { provider: 'resend', provider_id: resendJson?.id ?? null },
+    })
+
+    console.log('Auth email sent via Resend', {
+      emailType,
+      email: payload.data.email,
+      run_id,
+      provider_id: resendJson?.id,
+    })
+
+    return new Response(
+      JSON.stringify({ success: true, sent: true, provider: 'resend', provider_id: resendJson?.id }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('Resend send exception', { msg, run_id, emailType })
+    await supabase.from('email_send_log').insert({
+      message_id: messageId,
+      template_name: emailType,
+      recipient_email: payload.data.email,
+      status: 'dlq',
+      error_message: `Resend exception: ${msg}`,
+    })
+    return new Response(JSON.stringify({ error: 'Email send exception' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 }
 
 Deno.serve(async (req) => {
