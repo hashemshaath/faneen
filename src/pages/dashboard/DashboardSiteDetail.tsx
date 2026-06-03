@@ -495,13 +495,13 @@ const InfoRow: React.FC<{ label: string; value: string | null | undefined; mono?
   </div>
 );
 
-const KpiCard: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; value: number; loading: boolean }> = ({ icon: Icon, label, value, loading }) => (
-  <Card className="hover-lift"><CardContent className="p-4">
+const KpiCard: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; value: number; loading: boolean; tone?: 'destructive' }> = ({ icon: Icon, label, value, loading, tone }) => (
+  <Card className={`hover-lift ${tone === 'destructive' ? 'border-destructive/40 bg-destructive/5' : ''}`}><CardContent className="p-4">
     <div className="flex items-center justify-between">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <Icon className="h-4 w-4 text-primary" />
+      <Icon className={`h-4 w-4 ${tone === 'destructive' ? 'text-destructive' : 'text-primary'}`} />
     </div>
-    <div className="mt-2 text-2xl font-bold tech-content">{loading ? '—' : value}</div>
+    <div className={`mt-2 text-2xl font-bold tech-content ${tone === 'destructive' && value > 0 ? 'text-destructive' : ''}`}>{loading ? '—' : value}</div>
   </CardContent></Card>
 );
 
