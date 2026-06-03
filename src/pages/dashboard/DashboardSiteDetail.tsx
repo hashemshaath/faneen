@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   ArrowLeft, MapPin, FileText, MessageSquareQuote, Inbox, Image as ImageIcon,
   Settings, Pencil, Phone, User, ImageOff, ClipboardList, Building2,
+  Milestone, Activity, CheckCircle2, Clock,
 } from 'lucide-react';
 import SiteCoverUploader from '@/components/sites/SiteCoverUploader';
 import SiteGalleryManager, { type GalleryImage } from '@/components/sites/SiteGalleryManager';
