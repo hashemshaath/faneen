@@ -238,9 +238,27 @@ const ProviderJoin: React.FC = () => {
                 </div>
                 <div className="font-mono text-lg tech-content">{success}</div>
               </div>
-              <Button onClick={() => { setSuccess(null); setForm(EMPTY); setBranches([]); setCrFile(null); }} variant="outline" className="rounded-xl">
-                {t('تقديم طلب جديد', 'Submit another request')}
-              </Button>
+              <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 text-start">
+                <p className="text-sm font-medium mb-1">
+                  {t('تحتاج تعديل البيانات لاحقاً؟', 'Need to update your details later?')}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    'يمكنك تعديل طلبك في أي وقت قبل المراجعة عبر رقم الطلب والبريد أو الجوال.',
+                    'Edit your request anytime before review using your reference code and email or phone.',
+                  )}
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button asChild className="rounded-xl">
+                  <a href={`/join/qitaat/edit?ref=${encodeURIComponent(success)}`}>
+                    {t('تعديل بياناتي', 'Edit my request')}
+                  </a>
+                </Button>
+                <Button onClick={() => { setSuccess(null); setForm(EMPTY); setBranches([]); setCrFile(null); }} variant="outline" className="rounded-xl">
+                  {t('تقديم طلب جديد', 'Submit another request')}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </main>
