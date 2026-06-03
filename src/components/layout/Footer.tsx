@@ -4,6 +4,7 @@ import { FooterNewsletter } from "./footer/FooterNewsletter";
 import { FooterBrand } from "./footer/FooterBrand";
 import { FooterLinks } from "./footer/FooterLinks";
 import { FooterBottom } from "./footer/FooterBottom";
+import { MobileFooter } from "./footer/MobileFooter";
 
 const useInView = (threshold = 0.1) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -40,17 +41,20 @@ export const Footer = () => {
       {/* Top accent line */}
       <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-      <FooterNewsletter visible={visible} />
+      {/* Mobile: compact footer */}
+      <MobileFooter />
 
-      {/* Main Grid */}
-      <div className="container-app py-10 sm:py-12 lg:py-14">
-        <div className={`grid grid-cols-2 md:grid-cols-5 gap-y-8 gap-x-6 sm:gap-x-8 lg:gap-x-12 transition-all duration-700 delay-150 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-          <FooterBrand />
-          <FooterLinks />
+      {/* Tablet & Desktop: full footer */}
+      <div className="hidden md:block">
+        <FooterNewsletter visible={visible} />
+        <div className="container-app py-10 sm:py-12 lg:py-14">
+          <div className={`grid grid-cols-2 md:grid-cols-5 gap-y-8 gap-x-6 sm:gap-x-8 lg:gap-x-12 transition-all duration-700 delay-150 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+            <FooterBrand />
+            <FooterLinks />
+          </div>
         </div>
+        <FooterBottom visible={visible} />
       </div>
-
-      <FooterBottom visible={visible} />
     </footer>
   );
 };
