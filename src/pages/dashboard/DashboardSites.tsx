@@ -361,6 +361,40 @@ export default function DashboardSites() {
   });
 
   /* ─── Mutations ─── */
+  /**
+   * Client-side validator — runs before we hit the RPC so we can show
+   * an inline, actionable issues panel instead of a generic toast.
+   * Mirrors the server checks in `create_client_site` / `update_client_site`.
+   */
+  const validate = useCallback((): FormIssue[] => {
+    const out: FormIssue[] = [];
+    if (!businessId && !editing) out.push(issueOf('BUSINESS_ID_REQUIRED', 'label', 'general'));
+    if (!form.label.trim()) out.push(issueOf('LABEL_REQUIRED', 'label', 'general'));
+    if (!naf.city_id) out.push(issueOf('CITY_REQUIRED', 'city', 'address'));
+    const composedAr = (naf.address && naf.address.trim()) || buildAddressLine(naf, 'ar');
+    if (!composedAr) out.push(issueOf('ADDRESS_REQUIRED', 'address', 'address'));
+    const rawShort = (naf.short_address ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (rawShort && !/^[A-Z]{4}[0-9]{4}$/.test(rawShort)) {
+      out.push(issueOf('INVALID_SHORT_ADDRESS', 'short_address', 'address'));
+    }
+    if (form.latitude) {
+      const lat = Number(form.latitude);
+      if (!Number.isFinite(lat) || lat < -90 || lat > 90) out.push(issueOf('INVALID_LATITUDE', 'latitude', 'address'));
+    }
+    if (form.longitude) {
+      const lng = Number(form.longitude);
+      if (!Number.isFinite(lng) || lng < -180 || lng > 180) out.push(issueOf('INVALID_LONGITUDE', 'longitude', 'address'));
+    }
+    if (form.map_url.trim() && !/^https?:\/\//i.test(form.map_url.trim())) {
+      out.push(issueOf('INVALID_MAP_URL', 'map_url', 'address'));
+    }
+    if (form.municipal_license_issue_date && form.municipal_license_expiry_date
+        && form.municipal_license_expiry_date < form.municipal_license_issue_date) {
+      out.push(issueOf('INVALID_LICENSE_DATES', 'municipal_license_expiry_date', 'government'));
+    }
+    return out;
+  }, [businessId, editing, form, naf]);
+
   const saveMut = useMutation({
     mutationFn: async () => {
       if (!businessId && !editing) throw new Error(isRTL ? 'لا توجد منشأة مرتبطة' : 'No business linked');
@@ -433,22 +467,28 @@ export default function DashboardSites() {
     },
     onError: (err: unknown) => {
       const raw = err instanceof Error ? err.message : String(err ?? '');
-      const map: Record<string, [string, string]> = {
-        LABEL_REQUIRED:        ['اسم/تسمية الموقع مطلوب', 'Site label is required'],
-        ADDRESS_REQUIRED:      ['أكمل بيانات العنوان الوطني', 'Complete the National Address'],
-        BUSINESS_ID_REQUIRED:  ['لا توجد منشأة مرتبطة', 'No business linked'],
-        FORBIDDEN:             ['ليست لديك صلاحية لهذا الإجراء', 'You are not allowed to do this'],
-        INVALID_LATITUDE:      ['إحداثيات خط العرض غير صحيحة', 'Invalid latitude'],
-        INVALID_LONGITUDE:     ['إحداثيات خط الطول غير صحيحة', 'Invalid longitude'],
-        INVALID_MAP_URL:       ['رابط الخريطة غير صالح (يجب أن يبدأ بـ http/https)', 'Invalid map URL (must start with http/https)'],
-        INVALID_SITE_TYPE:     ['نوع الموقع غير صالح', 'Invalid site type'],
-        INVALID_VISIBILITY:    ['إعداد الظهور غير صالح', 'Invalid visibility setting'],
-        INVALID_SHORT_ADDRESS: ['العنوان الوطني المختصر يجب أن يكون 4 أحرف + 4 أرقام (مثال: RQQA6904)', 'Short national address must be 4 letters + 4 digits (e.g. RQQA6904)'],
-        INVALID_LICENSE_DATES: ['تاريخ انتهاء الرخصة يجب أن يكون بعد تاريخ الإصدار', 'License expiry date must be on/after the issue date'],
+      const tabFor: Record<string, FormTab> = {
+        LABEL_REQUIRED: 'general', INVALID_SITE_TYPE: 'general', INVALID_VISIBILITY: 'general',
+        BUSINESS_ID_REQUIRED: 'general', FORBIDDEN: 'general',
+        ADDRESS_REQUIRED: 'address', INVALID_SHORT_ADDRESS: 'address',
+        INVALID_LATITUDE: 'address', INVALID_LONGITUDE: 'address', INVALID_MAP_URL: 'address',
+        INVALID_LICENSE_DATES: 'government',
       };
-      const code = Object.keys(map).find(k => raw.includes(k));
-      const msg = code ? map[code][isRTL ? 0 : 1] : (raw || (isRTL ? 'فشل الحفظ' : 'Save failed'));
-      toast.error(msg);
+      const fieldFor: Record<string, string> = {
+        LABEL_REQUIRED: 'label', INVALID_SITE_TYPE: 'site_type', INVALID_VISIBILITY: 'visibility',
+        BUSINESS_ID_REQUIRED: 'label', FORBIDDEN: 'label',
+        ADDRESS_REQUIRED: 'address', INVALID_SHORT_ADDRESS: 'short_address',
+        INVALID_LATITUDE: 'latitude', INVALID_LONGITUDE: 'longitude', INVALID_MAP_URL: 'map_url',
+        INVALID_LICENSE_DATES: 'municipal_license_expiry_date',
+      };
+      const code = Object.keys(ISSUE_CATALOG).find(k => raw.includes(k)) ?? 'UNKNOWN';
+      const issue = issueOf(code, fieldFor[code] ?? 'label', tabFor[code] ?? 'general',
+        code === 'UNKNOWN' && raw
+          ? { cause_ar: `${ISSUE_CATALOG.UNKNOWN.cause_ar} (${raw})`, cause_en: `${ISSUE_CATALOG.UNKNOWN.cause_en} (${raw})` }
+          : undefined);
+      setIssues([issue]);
+      setActiveTab(issue.tab);
+      toast.error(isRTL ? issue.title_ar : issue.title_en);
     },
   });
 
