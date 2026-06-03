@@ -14,7 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Building2, User, Mail, Phone, FileText, MapPin, ShieldCheck,
-  CheckCircle2, Plus, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp, FileCheck2,
+ CheckCircle2, Plus, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp,
   Store, AlertCircle, Link as LinkIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
