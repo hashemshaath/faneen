@@ -27,19 +27,19 @@ export const Field: React.FC<{
   const hintId = htmlFor ? `${htmlFor}-hint` : undefined;
   const errId = htmlFor ? `${htmlFor}-err` : undefined;
   return (
-    <div className="space-y-2" data-field-error={error ? 'true' : undefined}>
-      <Label htmlFor={htmlFor} className="text-[13px] font-medium flex items-center gap-1">
+    <div className="space-y-1.5" data-field-error={error ? 'true' : undefined}>
+      <Label htmlFor={htmlFor} className="text-[13px] font-medium leading-tight flex items-center gap-1 text-foreground/90">
         <span>{label}</span>
         {required && <span className="text-destructive" aria-hidden>*</span>}
       </Label>
       {children}
       {error ? (
-        <p id={errId} className="text-[12px] leading-[18px] text-destructive flex items-start gap-1 mt-1" role="alert">
+        <p id={errId} className="text-[12px] leading-[16px] text-destructive flex items-start gap-1" role="alert">
           <AlertCircle className="w-3.5 h-3.5 mt-[2px] shrink-0" />
           <span>{error}</span>
         </p>
       ) : hint ? (
-        <p id={hintId} className="text-[12px] leading-[18px] text-muted-foreground flex items-start gap-1 mt-1">
+        <p id={hintId} className="text-[11.5px] leading-[16px] text-muted-foreground flex items-start gap-1">
           <Info className="w-3.5 h-3.5 mt-[2px] shrink-0 opacity-70" />
           <span>{hint}</span>
         </p>
