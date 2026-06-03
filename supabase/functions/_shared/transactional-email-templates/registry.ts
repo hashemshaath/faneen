@@ -68,6 +68,7 @@ import { template as customerProjectCompleted } from './customer-project-complet
 import { template as customerProjectConfirmed } from './customer-project-confirmed.tsx'
 import { template as customerWarrantyStarted } from './customer-warranty-started.tsx'
 import { template as customerThankYouFeedback } from './customer-thank-you-feedback.tsx'
+import { template as providerLeadConfirmation } from './provider-lead-confirmation.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-confirmation': bookingConfirmation,
@@ -129,4 +130,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'customer-project-confirmed': customerProjectConfirmed,
   'customer-warranty-started': customerWarrantyStarted,
   'customer-thank-you-feedback': customerThankYouFeedback,
+  'provider-lead-confirmation': providerLeadConfirmation,
 }
