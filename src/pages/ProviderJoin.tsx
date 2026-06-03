@@ -420,16 +420,16 @@ const ProviderJoin: React.FC = () => {
         </section>
 
         {/* Form */}
-        <section className="container mx-auto px-4 sm:px-6 pt-6 pb-28 sm:py-14 max-w-4xl">
+        <section className="container mx-auto px-4 sm:px-6 pt-5 pb-28 sm:py-14 max-w-4xl">
           {/* Form header (logo removed — already shown in navbar) */}
-          <div className="mb-4 sm:mb-8 text-center">
-            <div className="text-[11px] sm:text-sm text-muted-foreground">{t('منصة قِطاعات الصناعية', 'Qitaat Industrial Platform')}</div>
-            <h1 className="text-[20px] sm:text-xl font-semibold mt-0.5">
+          <div className="mb-3 sm:mb-8 text-center">
+            <div className="text-[11px] uppercase tracking-wider sm:tracking-normal sm:normal-case sm:text-sm text-muted-foreground">{t('منصة قِطاعات الصناعية', 'Qitaat Industrial Platform')}</div>
+            <h2 className="text-[18px] sm:text-xl font-semibold mt-1 tracking-tight">
               {t('نموذج طلب الانضمام', 'Join Request Form')}
-            </h1>
+            </h2>
           </div>
 
-          <form ref={formRef} onSubmit={onSubmit} className="space-y-4 sm:space-y-6" noValidate aria-describedby={submitError ? 'pj-form-alert' : undefined}>
+          <form ref={formRef} onSubmit={onSubmit} className="space-y-3 sm:space-y-6" noValidate aria-describedby={submitError ? 'pj-form-alert' : undefined}>
             {/* Inline alert banner — replaces toast-only feedback */}
             {submitError && (
               <div
@@ -472,7 +472,7 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 1 — Establishment */}
             <Card className="rounded-2xl">
-              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
+              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4">
                 <SectionHeader icon={<Building2 className="w-5 h-5" />} title={t('بيانات المنشأة', 'Establishment Info')} />
                 <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   <div data-error-key="name_ar">
@@ -502,15 +502,15 @@ const ProviderJoin: React.FC = () => {
                   </div>
                 </div>
                 <Field label={t('نبذة مختصرة عن المنشأة', 'Short description')}>
-                  <Textarea dir="auto" rows={3} maxLength={2000} value={form.brief} onChange={(e) => setField('brief', e.target.value)} className="rounded-xl" />
+                  <Textarea dir="auto" rows={3} maxLength={2000} value={form.brief} onChange={(e) => setField('brief', e.target.value)} className="rounded-xl min-h-[88px] text-[14px]" />
                 </Field>
-                <p className="text-[11px] text-muted-foreground -mt-3 text-end tech-content">{form.brief.length}/2000</p>
+                <p className="text-[11px] text-muted-foreground -mt-2 text-end tech-content">{form.brief.length}/2000</p>
               </CardContent>
             </Card>
 
             {/* Section 2 — Contact */}
             <Card className="rounded-2xl">
-              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
+              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4">
                 <SectionHeader icon={<User className="w-5 h-5" />} title={t('بيانات التواصل', 'Contact Person')} />
                 <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   <div data-error-key="contact_name">
@@ -538,7 +538,7 @@ const ProviderJoin: React.FC = () => {
                     <select
                       value={form.preferred_channel}
                       onChange={(e) => setField('preferred_channel', e.target.value as ProviderLeadChannel)}
-                      className="h-12 w-full rounded-xl border border-input bg-background px-3"
+                      className="h-12 w-full rounded-xl border border-input bg-background px-3 text-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <option value="phone">{t('اتصال', 'Phone')}</option>
                       <option value="whatsapp">{t('واتساب', 'WhatsApp')}</option>
@@ -551,7 +551,7 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 3 — Activity & Location */}
             <Card className="rounded-2xl">
-              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
+              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4">
                 <SectionHeader icon={<MapPin className="w-5 h-5" />} title={t('النشاط والموقع', 'Activity & Location')} />
                 <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   <Field label={t('النشاط الرئيسي', 'Main activity')} hint={t('القطاع الذي تعملون فيه أساساً.', 'Your primary industrial sector.')}>
@@ -617,7 +617,7 @@ const ProviderJoin: React.FC = () => {
             {/* Branches */}
             {form.branches_count > 1 && (
               <Card className="rounded-2xl">
-                <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
+                <CardContent className="p-4 sm:p-6 md:p-8 space-y-4">
                   <SectionHeader
                     icon={<Store className="w-5 h-5" />}
                     title={t('بيانات الفروع الإضافية', 'Additional Branches')}
@@ -664,26 +664,26 @@ const ProviderJoin: React.FC = () => {
                                 placeholder={t('مثال: فرع الرياض', 'e.g. Riyadh Branch')}
                                 value={b.branch_name}
                                 onChange={(e) => { updateBranch(i, 'branch_name', e.target.value); clearError(`branch_${i}_name`); }}
-                                className={`h-11 rounded-lg ${invalidInputClass(!!errors[`branch_${i}_name`])}`}
+                                className={`h-12 rounded-xl ${invalidInputClass(!!errors[`branch_${i}_name`])}`}
                                 aria-invalid={!!errors[`branch_${i}_name`]}
                               />
                             </Field>
                             <Field label={t('المدينة', 'City')}>
-                              <Input dir="auto" value={b.city ?? ''} onChange={(e) => updateBranch(i, 'city', e.target.value)} className="h-11 rounded-lg" />
+                              <Input dir="auto" value={b.city ?? ''} onChange={(e) => updateBranch(i, 'city', e.target.value)} className="h-12 rounded-xl" />
                             </Field>
                             <div className="md:col-span-2">
                               <Field label={t('العنوان', 'Address')}>
-                                <Input dir="auto" value={b.address ?? ''} onChange={(e) => updateBranch(i, 'address', e.target.value)} className="h-11 rounded-lg" />
+                                <Input dir="auto" value={b.address ?? ''} onChange={(e) => updateBranch(i, 'address', e.target.value)} className="h-12 rounded-xl" />
                               </Field>
                             </div>
                             <Field label={t('رقم التواصل', 'Phone')}>
                               <div className="relative">
                                 <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <Input dir="ltr" placeholder="05xxxxxxxx" value={b.phone ?? ''} onChange={(e) => updateBranch(i, 'phone', e.target.value)} className="h-11 rounded-lg ps-9 tech-content" />
+                                <Input dir="ltr" placeholder="05xxxxxxxx" value={b.phone ?? ''} onChange={(e) => updateBranch(i, 'phone', e.target.value)} className="h-12 rounded-xl ps-9 tech-content" />
                               </div>
                             </Field>
                             <Field label={t('رابط الموقع على الخريطة', 'Map link')}>
-                              <Input dir="ltr" placeholder="https://maps.google.com/..." value={b.map_link ?? ''} onChange={(e) => updateBranch(i, 'map_link', e.target.value)} className="h-11 rounded-lg" />
+                              <Input dir="ltr" placeholder="https://maps.google.com/..." value={b.map_link ?? ''} onChange={(e) => updateBranch(i, 'map_link', e.target.value)} className="h-12 rounded-xl" />
                             </Field>
                           </div>
                         </div>
@@ -695,8 +695,8 @@ const ProviderJoin: React.FC = () => {
             )}
 
             {/* Submit */}
-            {/* Trust strip */}
-            <div className="rounded-2xl border bg-muted/30 p-5 sm:p-6 grid sm:grid-cols-3 gap-4 text-sm">
+            {/* Trust strip — hidden on mobile to reduce density (chips already shown in hero) */}
+            <div className="hidden sm:grid rounded-2xl border bg-muted/30 p-5 sm:p-6 sm:grid-cols-3 gap-4 text-sm">
               <div className="flex items-start gap-3">
                 <Lock className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>

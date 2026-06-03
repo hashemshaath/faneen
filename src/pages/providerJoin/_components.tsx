@@ -10,9 +10,9 @@ export interface CategoryOption {
 }
 
 export const SectionHeader: React.FC<{ icon: React.ReactNode; title: string }> = ({ icon, title }) => (
-  <div className="flex items-center gap-2 pb-2 border-b">
-    <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center [&_svg]:w-[18px] [&_svg]:h-[18px] sm:[&_svg]:w-5 sm:[&_svg]:h-5">{icon}</span>
-    <h2 className="text-[18px] sm:text-lg font-semibold leading-[26px]">{title}</h2>
+  <div className="flex items-center gap-2.5 pb-3 mb-1 border-b border-border/60">
+    <span className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center [&_svg]:w-[18px] [&_svg]:h-[18px]">{icon}</span>
+    <h2 className="text-[15px] sm:text-base font-semibold leading-snug tracking-tight">{title}</h2>
   </div>
 );
 
@@ -27,19 +27,19 @@ export const Field: React.FC<{
   const hintId = htmlFor ? `${htmlFor}-hint` : undefined;
   const errId = htmlFor ? `${htmlFor}-err` : undefined;
   return (
-    <div className="space-y-2" data-field-error={error ? 'true' : undefined}>
-      <Label htmlFor={htmlFor} className="text-[13px] font-medium flex items-center gap-1">
+    <div className="space-y-1.5" data-field-error={error ? 'true' : undefined}>
+      <Label htmlFor={htmlFor} className="text-[13px] font-medium leading-tight flex items-center gap-1 text-foreground/90">
         <span>{label}</span>
         {required && <span className="text-destructive" aria-hidden>*</span>}
       </Label>
       {children}
       {error ? (
-        <p id={errId} className="text-[12px] leading-[18px] text-destructive flex items-start gap-1 mt-1" role="alert">
+        <p id={errId} className="text-[12px] leading-[16px] text-destructive flex items-start gap-1" role="alert">
           <AlertCircle className="w-3.5 h-3.5 mt-[2px] shrink-0" />
           <span>{error}</span>
         </p>
       ) : hint ? (
-        <p id={hintId} className="text-[12px] leading-[18px] text-muted-foreground flex items-start gap-1 mt-1">
+        <p id={hintId} className="text-[11.5px] leading-[16px] text-muted-foreground flex items-start gap-1">
           <Info className="w-3.5 h-3.5 mt-[2px] shrink-0 opacity-70" />
           <span>{hint}</span>
         </p>
