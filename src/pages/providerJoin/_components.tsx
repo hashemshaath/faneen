@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Search, Tag, X } from 'lucide-react';
+import { AlertCircle, Info, Plus, Search, Tag, X } from 'lucide-react';
 
 export interface CategoryOption {
   id: string;
@@ -16,12 +16,41 @@ export const SectionHeader: React.FC<{ icon: React.ReactNode; title: string }> =
   </div>
 );
 
-export const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div className="space-y-1.5">
-    <Label className="text-sm">{label}</Label>
-    {children}
-  </div>
-);
+export const Field: React.FC<{
+  label: string;
+  children: React.ReactNode;
+  hint?: string;
+  error?: string;
+  htmlFor?: string;
+  required?: boolean;
+}> = ({ label, children, hint, error, htmlFor, required }) => {
+  const hintId = htmlFor ? `${htmlFor}-hint` : undefined;
+  const errId = htmlFor ? `${htmlFor}-err` : undefined;
+  return (
+    <div className="space-y-1.5" data-field-error={error ? 'true' : undefined}>
+      <Label htmlFor={htmlFor} className="text-sm flex items-center gap-1">
+        <span>{label}</span>
+        {required && <span className="text-destructive" aria-hidden>*</span>}
+      </Label>
+      {children}
+      {error ? (
+        <p id={errId} className="text-xs text-destructive flex items-start gap-1 mt-1" role="alert">
+          <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+          <span>{error}</span>
+        </p>
+      ) : hint ? (
+        <p id={hintId} className="text-xs text-muted-foreground flex items-start gap-1 mt-1">
+          <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-70" />
+          <span>{hint}</span>
+        </p>
+      ) : null}
+    </div>
+  );
+};
+
+/** Tailwind classes to mark an input as invalid (red ring + border). */
+export const invalidInputClass = (hasError?: boolean) =>
+  hasError ? 'border-destructive focus-visible:ring-destructive/40' : '';
 
 /**
  * SpecialtiesPicker — links to the site's categories catalog.

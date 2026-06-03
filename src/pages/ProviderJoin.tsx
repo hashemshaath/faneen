@@ -14,14 +14,14 @@ import { Badge } from '@/components/ui/badge';
 import {
   Building2, User, Mail, Phone, FileText, MapPin, ShieldCheck,
   CheckCircle2, Plus, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp, FileCheck2,
-  Store,
+  Store, AlertCircle, Link as LinkIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitProviderLead } from '@/modules/providers';
 import { listActiveCategories } from '@/modules/categories';
 import coverImage from '@/assets/provider-join-cover.jpg';
 import {
-  Field, SectionHeader, SpecialtiesPicker, TagInput,
+  Field, SectionHeader, SpecialtiesPicker, TagInput, invalidInputClass,
   type CategoryOption,
 } from './providerJoin/_components';
 import type {
@@ -71,6 +71,10 @@ const ProviderJoin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const alertRef = useRef<HTMLDivElement>(null);
   const honeypotRef = useRef<HTMLInputElement>(null);
   const startTimeRef = useRef<number>(Date.now());
 
@@ -140,6 +144,16 @@ const ProviderJoin: React.FC = () => {
   const update = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  // Clear an individual error as the user types
+  const clearError = (k: string) =>
+    setErrors((e) => (e[k] ? Object.fromEntries(Object.entries(e).filter(([key]) => key !== k)) : e));
+
+  const setField = <K extends keyof FormState>(k: K, v: FormState[K]) => {
+    update(k, v);
+    clearError(k as string);
+    if (submitError) setSubmitError(null);
+  };
+
   const updateBranch = (i: number, k: keyof ProviderLeadBranchInput, v: string) =>
     setBranches((b) => b.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)));
 
@@ -147,16 +161,62 @@ const ProviderJoin: React.FC = () => {
     const f = e.target.files?.[0] ?? null;
     if (!f) { setCrFile(null); return; }
     if (f.size > PROVIDER_LEAD_DOC_MAX_BYTES) {
-      toast.error(t('حجم الملف يتجاوز 5 ميغابايت', 'File exceeds 5 MB'));
+      const msg = t('حجم الملف يتجاوز 5 ميغابايت', 'File exceeds 5 MB');
+      setErrors((er) => ({ ...er, cr_file: msg }));
+      toast.error(msg);
       e.target.value = '';
       return;
     }
     if (!(PROVIDER_LEAD_DOC_MIMES as readonly string[]).includes(f.type)) {
-      toast.error(t('نوع الملف غير مدعوم. PDF أو JPG أو PNG فقط.', 'Unsupported file type. PDF/JPG/PNG only.'));
+      const msg = t('نوع الملف غير مدعوم. PDF أو JPG أو PNG فقط.', 'Unsupported file type. PDF/JPG/PNG only.');
+      setErrors((er) => ({ ...er, cr_file: msg }));
+      toast.error(msg);
       e.target.value = '';
       return;
     }
+    clearError('cr_file');
     setCrFile(f);
+  };
+
+  // Lightweight client-side validators
+  const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+  const isSaudiPhone = (v: string) => /^(?:\+?966|0)?5\d{8}$/.test(v.replace(/[\s-]/g, ''));
+  const isUrl = (v: string) => {
+    if (!v) return true;
+    try { new URL(v.startsWith('http') ? v : `https://${v}`); return true; } catch { return false; }
+  };
+
+  const validate = (): Record<string, string> => {
+    const er: Record<string, string> = {};
+    if (!form.name_ar.trim()) er.name_ar = t('يرجى إدخال اسم المنشأة بالعربية', 'Please enter the business name in Arabic');
+    else if (form.name_ar.trim().length < 2) er.name_ar = t('الاسم قصير جداً', 'Name is too short');
+    if (!form.contact_name.trim()) er.contact_name = t('يرجى إدخال اسم المسؤول', 'Please enter the contact name');
+    if (!form.email.trim()) er.email = t('يرجى إدخال البريد الإلكتروني', 'Please enter your email');
+    else if (!isEmail(form.email)) er.email = t('صيغة البريد الإلكتروني غير صحيحة', 'Invalid email format');
+    if (!form.phone.trim()) er.phone = t('يرجى إدخال رقم الجوال', 'Please enter your phone number');
+    else if (!isSaudiPhone(form.phone)) er.phone = t('رقم الجوال غير صحيح. مثال: 05XXXXXXXX', 'Invalid phone. Example: 05XXXXXXXX');
+    if (form.website && !isUrl(form.website)) er.website = t('رابط الموقع غير صحيح', 'Invalid website URL');
+    if (form.map_link && !isUrl(form.map_link)) er.map_link = t('رابط الخريطة غير صحيح', 'Invalid map URL');
+    if (form.branches_count < 1) er.branches_count = t('عدد الفروع يجب أن يكون 1 أو أكثر', 'Branches must be 1 or more');
+    // Validate extra branches: at minimum require a branch name
+    branches.forEach((b, i) => {
+      if (!b.branch_name.trim()) er[`branch_${i}_name`] = t(`أدخل اسم الفرع ${i + 2}`, `Enter the name of branch ${i + 2}`);
+    });
+    return er;
+  };
+
+  const focusFirstError = (er: Record<string, string>) => {
+    const first = Object.keys(er)[0];
+    if (!first) return;
+    requestAnimationFrame(() => {
+      const el = formRef.current?.querySelector<HTMLElement>(`[data-error-key="${first}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        (el.querySelector('input, select, textarea, button') as HTMLElement | null)?.focus();
+      } else {
+        alertRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -165,14 +225,24 @@ const ProviderJoin: React.FC = () => {
     // Honeypot + form-time check
     if (honeypotRef.current?.value) return;
     if (Date.now() - startTimeRef.current < 1500) {
-      toast.error(t('تعذّر التحقق من الطلب', 'Could not verify request'));
+      const msg = t('تعذّر التحقق من الطلب. حاول مرة أخرى بعد لحظات.', 'Could not verify request. Please try again in a moment.');
+      setSubmitError(msg);
+      toast.error(msg);
       return;
     }
 
-    if (!form.name_ar.trim() || !form.contact_name.trim() || !form.email.trim() || !form.phone.trim()) {
-      toast.error(t('يرجى تعبئة الحقول المطلوبة', 'Please fill required fields'));
+    const er = validate();
+    setErrors(er);
+    if (Object.keys(er).length > 0) {
+      const msg = t(
+        `يوجد ${Object.keys(er).length} حقل بحاجة إلى مراجعة. تم تمييزها بالأحمر.`,
+        `${Object.keys(er).length} field${Object.keys(er).length > 1 ? 's need' : ' needs'} attention. Highlighted in red below.`,
+      );
+      setSubmitError(msg);
+      focusFirstError(er);
       return;
     }
+    setSubmitError(null);
 
     setLoading(true);
     try {
@@ -218,12 +288,20 @@ const ProviderJoin: React.FC = () => {
           upload_failed: t('فشل رفع السجل التجاري', 'CR upload failed'),
           unknown: t('تعذّر إرسال الطلب. حاول مرة أخرى.', 'Could not submit. Please try again.'),
         };
-        toast.error(map[result.errorCode ?? 'unknown']);
+        const msg = map[result.errorCode ?? 'unknown'];
+        // Map server-side codes to inline field errors when possible
+        if (result.errorCode === 'invalid_email') setErrors((e) => ({ ...e, email: msg }));
+        if (result.errorCode === 'invalid_phone') setErrors((e) => ({ ...e, phone: msg }));
+        setSubmitError(msg);
+        toast.error(msg);
+        requestAnimationFrame(() => alertRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
         return;
       }
       setSuccess(result.data!.reference_code);
     } catch {
-      toast.error(t('حدث خطأ غير متوقع', 'Unexpected error'));
+      const msg = t('حدث خطأ غير متوقع. حاول مرة أخرى.', 'Unexpected error. Please try again.');
+      setSubmitError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -381,7 +459,36 @@ const ProviderJoin: React.FC = () => {
             </div>
           </div>
 
-          <form onSubmit={onSubmit} className="space-y-5 sm:space-y-6" noValidate>
+          <form ref={formRef} onSubmit={onSubmit} className="space-y-5 sm:space-y-6" noValidate aria-describedby={submitError ? 'pj-form-alert' : undefined}>
+            {/* Inline alert banner — replaces toast-only feedback */}
+            {submitError && (
+              <div
+                ref={alertRef}
+                id="pj-form-alert"
+                role="alert"
+                className="rounded-2xl border border-destructive/30 bg-destructive/5 text-destructive p-4 flex items-start gap-3"
+              >
+                <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+                <div className="text-sm">
+                  <div className="font-semibold mb-0.5">{t('تعذّر إرسال الطلب', 'Could not submit')}</div>
+                  <p className="text-destructive/90">{submitError}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Helpful tip banner — guides users while filling */}
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 text-foreground p-4 flex items-start gap-3">
+              <Sparkles className="w-5 h-5 mt-0.5 shrink-0 text-primary" />
+              <div className="text-sm">
+                <div className="font-medium mb-0.5">{t('نصائح لإكمال الطلب بسرعة', 'Tips to complete faster')}</div>
+                <ul className="text-muted-foreground text-xs space-y-0.5 list-disc ps-4">
+                  <li>{t('الحقول التي تحمل علامة * إلزامية فقط، والباقي اختياري.', 'Only fields marked * are required — the rest are optional.')}</li>
+                  <li>{t('ارفق صورة واضحة للسجل التجاري لتسريع المراجعة.', 'Attach a clear CR document to speed up the review.')}</li>
+                  <li>{t('اختر تخصصاتك من قائمة الخدمات لربط ملفك بنتائج البحث.', 'Pick specialties from the catalog to link your profile to search results.')}</li>
+                </ul>
+              </div>
+            </div>
+
             {/* Honeypot — hidden from real users */}
             <input
               ref={honeypotRef}
@@ -398,28 +505,36 @@ const ProviderJoin: React.FC = () => {
               <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
                 <SectionHeader icon={<Building2 className="w-5 h-5" />} title={t('بيانات المنشأة', 'Establishment Info')} />
                 <div className="grid md:grid-cols-2 gap-4">
-                  <Field label={t('اسم المنشأة بالعربي *', 'Business name (Arabic) *')}>
-                    <Input dir="auto" required value={form.name_ar} onChange={(e) => update('name_ar', e.target.value)} className="h-12 rounded-xl" />
+                  <div data-error-key="name_ar">
+                    <Field label={t('اسم المنشأة بالعربي', 'Business name (Arabic)')} required error={errors.name_ar} hint={t('الاسم الرسمي كما هو في السجل التجاري.', 'Official name as written in the CR.')}>
+                      <Input dir="auto" required value={form.name_ar} onChange={(e) => setField('name_ar', e.target.value)} className={`h-12 rounded-xl ${invalidInputClass(!!errors.name_ar)}`} aria-invalid={!!errors.name_ar} />
+                    </Field>
+                  </div>
+                  <Field label={t('اسم المنشأة بالإنجليزي', 'Business name (English)')} hint={t('اختياري — يستخدم في النسخة الإنجليزية من الملف.', 'Optional — used in the English profile.')}>
+                    <Input dir="auto" value={form.name_en} onChange={(e) => setField('name_en', e.target.value)} className="h-12 rounded-xl" />
                   </Field>
-                  <Field label={t('اسم المنشأة بالإنجليزي', 'Business name (English)')}>
-                    <Input dir="auto" value={form.name_en} onChange={(e) => update('name_en', e.target.value)} className="h-12 rounded-xl" />
+                  <Field label={t('السجل التجاري', 'Commercial Registration')} hint={t('رقم السجل (10 خانات عادةً).', 'CR number (usually 10 digits).')}>
+                    <Input dir="auto" value={form.cr_number} onChange={(e) => setField('cr_number', e.target.value)} className="h-12 rounded-xl tech-content" />
                   </Field>
-                  <Field label={t('السجل التجاري', 'Commercial Registration')}>
-                    <Input dir="auto" value={form.cr_number} onChange={(e) => update('cr_number', e.target.value)} className="h-12 rounded-xl tech-content" />
+                  <Field label={t('الرقم الموحد', 'Unified Number')} hint={t('الرقم الموحد للمنشأة من وزارة التجارة.', 'Unified Commercial Number issued by MoC.')}>
+                    <Input dir="auto" value={form.unified_number} onChange={(e) => setField('unified_number', e.target.value)} className="h-12 rounded-xl tech-content" />
                   </Field>
-                  <Field label={t('الرقم الموحد', 'Unified Number')}>
-                    <Input dir="auto" value={form.unified_number} onChange={(e) => update('unified_number', e.target.value)} className="h-12 rounded-xl tech-content" />
+                  <Field label={t('الرقم الضريبي', 'VAT Number')} hint={t('15 رقم تبدأ بـ 3 وتنتهي بـ 3.', '15 digits starting & ending with 3.')}>
+                    <Input dir="auto" value={form.vat_number} onChange={(e) => setField('vat_number', e.target.value)} className="h-12 rounded-xl tech-content" />
                   </Field>
-                  <Field label={t('الرقم الضريبي', 'VAT Number')}>
-                    <Input dir="auto" value={form.vat_number} onChange={(e) => update('vat_number', e.target.value)} className="h-12 rounded-xl tech-content" />
-                  </Field>
-                  <Field label={t('الموقع الإلكتروني', 'Website')}>
-                    <Input type="url" dir="auto" placeholder="https://" value={form.website} onChange={(e) => update('website', e.target.value)} className="h-12 rounded-xl" />
-                  </Field>
+                  <div data-error-key="website">
+                    <Field label={t('الموقع الإلكتروني', 'Website')} error={errors.website} hint={t('مثال: https://example.com', 'e.g. https://example.com')}>
+                      <div className="relative">
+                        <LinkIcon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input type="url" dir="ltr" placeholder="https://" value={form.website} onChange={(e) => setField('website', e.target.value)} className={`h-12 rounded-xl ps-9 ${invalidInputClass(!!errors.website)}`} aria-invalid={!!errors.website} />
+                      </div>
+                    </Field>
+                  </div>
                 </div>
                 <Field label={t('نبذة مختصرة عن المنشأة', 'Short description')}>
-                  <Textarea dir="auto" rows={3} maxLength={2000} value={form.brief} onChange={(e) => update('brief', e.target.value)} className="rounded-xl" />
+                  <Textarea dir="auto" rows={3} maxLength={2000} value={form.brief} onChange={(e) => setField('brief', e.target.value)} className="rounded-xl" />
                 </Field>
+                <p className="text-[11px] text-muted-foreground -mt-3 text-end tech-content">{form.brief.length}/2000</p>
               </CardContent>
             </Card>
 
@@ -428,25 +543,31 @@ const ProviderJoin: React.FC = () => {
               <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
                 <SectionHeader icon={<User className="w-5 h-5" />} title={t('بيانات التواصل', 'Contact Person')} />
                 <div className="grid md:grid-cols-2 gap-4">
-                  <Field label={t('اسم المسؤول *', 'Contact name *')}>
-                    <Input dir="auto" required value={form.contact_name} onChange={(e) => update('contact_name', e.target.value)} className="h-12 rounded-xl" />
-                  </Field>
-                  <Field label={t('البريد الإلكتروني *', 'Email *')}>
-                    <div className="relative">
-                      <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input type="email" required dir="ltr" value={form.email} onChange={(e) => update('email', e.target.value)} className="h-12 rounded-xl ps-9 tech-content" />
-                    </div>
-                  </Field>
-                  <Field label={t('رقم الجوال *', 'Phone *')}>
-                    <div className="relative">
-                      <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input type="tel" required dir="ltr" placeholder="05xxxxxxxx" value={form.phone} onChange={(e) => update('phone', e.target.value)} className="h-12 rounded-xl ps-9 tech-content" />
-                    </div>
-                  </Field>
-                  <Field label={t('وسيلة التواصل المفضلة', 'Preferred channel')}>
+                  <div data-error-key="contact_name">
+                    <Field label={t('اسم المسؤول', 'Contact name')} required error={errors.contact_name} hint={t('الشخص الذي سنتواصل معه لمتابعة الطلب.', 'The person we will contact about your request.')}>
+                      <Input dir="auto" required value={form.contact_name} onChange={(e) => setField('contact_name', e.target.value)} className={`h-12 rounded-xl ${invalidInputClass(!!errors.contact_name)}`} aria-invalid={!!errors.contact_name} />
+                    </Field>
+                  </div>
+                  <div data-error-key="email">
+                    <Field label={t('البريد الإلكتروني', 'Email')} required error={errors.email} hint={t('سنرسل إليه رقم الطلب ورابط التعديل.', 'We will send your reference code and edit link here.')}>
+                      <div className="relative">
+                        <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input type="email" required dir="ltr" placeholder="name@example.com" value={form.email} onChange={(e) => setField('email', e.target.value)} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors.email)}`} aria-invalid={!!errors.email} />
+                      </div>
+                    </Field>
+                  </div>
+                  <div data-error-key="phone">
+                    <Field label={t('رقم الجوال', 'Phone')} required error={errors.phone} hint={t('رقم سعودي يبدأ بـ 05.', 'Saudi number starting with 05.')}>
+                      <div className="relative">
+                        <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input type="tel" required dir="ltr" placeholder="05xxxxxxxx" value={form.phone} onChange={(e) => setField('phone', e.target.value)} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors.phone)}`} aria-invalid={!!errors.phone} />
+                      </div>
+                    </Field>
+                  </div>
+                  <Field label={t('وسيلة التواصل المفضلة', 'Preferred channel')} hint={t('سنبدأ التواصل عبر هذه القناة.', 'We will reach out through this channel first.')}>
                     <select
                       value={form.preferred_channel}
-                      onChange={(e) => update('preferred_channel', e.target.value as ProviderLeadChannel)}
+                      onChange={(e) => setField('preferred_channel', e.target.value as ProviderLeadChannel)}
                       className="h-12 w-full rounded-xl border border-input bg-background px-3"
                     >
                       <option value="phone">{t('اتصال', 'Phone')}</option>
@@ -463,59 +584,71 @@ const ProviderJoin: React.FC = () => {
               <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
                 <SectionHeader icon={<MapPin className="w-5 h-5" />} title={t('النشاط والموقع', 'Activity & Location')} />
                 <div className="grid md:grid-cols-2 gap-4">
-                  <Field label={t('النشاط الرئيسي', 'Main activity')}>
-                    <Input dir="auto" value={form.main_activity} onChange={(e) => update('main_activity', e.target.value)} className="h-12 rounded-xl" placeholder={t('مثال: ألمنيوم، زجاج، حديد', 'e.g. Aluminum, Glass, Steel')} />
+                  <Field label={t('النشاط الرئيسي', 'Main activity')} hint={t('القطاع الذي تعملون فيه أساساً.', 'Your primary industrial sector.')}>
+                    <Input dir="auto" value={form.main_activity} onChange={(e) => setField('main_activity', e.target.value)} className="h-12 rounded-xl" placeholder={t('مثال: ألمنيوم، زجاج، حديد', 'e.g. Aluminum, Glass, Steel')} />
                   </Field>
-                  <Field label={t('المدينة', 'City')}>
-                    <Input dir="auto" value={form.city} onChange={(e) => update('city', e.target.value)} className="h-12 rounded-xl" />
+                  <Field label={t('المدينة', 'City')} hint={t('مدينة المقر الرئيسي.', 'City of the main location.')}>
+                    <Input dir="auto" value={form.city} onChange={(e) => setField('city', e.target.value)} className="h-12 rounded-xl" />
                   </Field>
-                  <Field label={t('الوكالات / العلامات التجارية', 'Brands / Agencies')}>
+                  <Field label={t('الوكالات / العلامات التجارية', 'Brands / Agencies')} hint={t('اضغط Enter بعد كل علامة.', 'Press Enter after each brand.')}>
                     <TagInput
                       values={form.brands}
-                      onChange={(v) => update('brands', v)}
+                      onChange={(v) => setField('brands', v)}
                       placeholder={t('اكتب اسم العلامة ثم Enter', 'Type brand name and press Enter')}
                       dir="auto"
                     />
                   </Field>
-                  <Field label={t('العنوان الوطني', 'National Address')}>
-                    <Input dir="auto" value={form.national_address} onChange={(e) => update('national_address', e.target.value)} className="h-12 rounded-xl tech-content" />
+                  <Field label={t('العنوان الوطني', 'National Address')} hint={t('رمز العنوان الوطني المكوّن من 8 خانات.', '8-character national address code.')}>
+                    <Input dir="auto" value={form.national_address} onChange={(e) => setField('national_address', e.target.value)} className="h-12 rounded-xl tech-content" />
                   </Field>
-                  <Field label={t('رابط الموقع على الخريطة', 'Map link')}>
-                    <Input type="url" dir="ltr" placeholder="https://maps.google.com/..." value={form.map_link} onChange={(e) => update('map_link', e.target.value)} className="h-12 rounded-xl" />
-                  </Field>
-                  <Field label={t('عدد الفروع', 'Branches count')}>
-                    <Input type="number" min={1} dir="ltr" value={form.branches_count} onChange={(e) => update('branches_count', Number(e.target.value) || 1)} className="h-12 rounded-xl tech-content" />
-                  </Field>
+                  <div data-error-key="map_link">
+                    <Field label={t('رابط الموقع على الخريطة', 'Map link')} error={errors.map_link} hint={t('انسخ الرابط من Google Maps.', 'Copy the link from Google Maps.')}>
+                      <Input type="url" dir="ltr" placeholder="https://maps.google.com/..." value={form.map_link} onChange={(e) => setField('map_link', e.target.value)} className={`h-12 rounded-xl ${invalidInputClass(!!errors.map_link)}`} aria-invalid={!!errors.map_link} />
+                    </Field>
+                  </div>
+                  <div data-error-key="branches_count">
+                    <Field label={t('عدد الفروع', 'Branches count')} error={errors.branches_count} hint={t('شامل الفرع الرئيسي.', 'Including the main branch.')}>
+                      <Input type="number" min={1} dir="ltr" value={form.branches_count} onChange={(e) => setField('branches_count', Number(e.target.value) || 1)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.branches_count)}`} aria-invalid={!!errors.branches_count} />
+                    </Field>
+                  </div>
                 </div>
 
                 {/* Specialties — linked to existing catalog */}
                 <Field
                   label={t('التخصصات والخدمات', 'Specialties & Services')}
+                  hint={t('اختر من الكتالوج أو أضف تخصصاتك الخاصة.', 'Pick from the catalog or add your own.')}
                 >
                   <SpecialtiesPicker
                     catalog={categories}
                     values={form.specialties}
-                    onChange={(v) => update('specialties', v)}
+                    onChange={(v) => setField('specialties', v)}
                     isRTL={isRTL}
                   />
                 </Field>
 
-                <Field label={t('صورة أو ملف السجل التجاري (PDF/JPG/PNG، حد 5MB)', 'Commercial Registration file (PDF/JPG/PNG, 5MB max)')}>
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
-                    <input
-                      type="file"
-                      accept=".pdf,image/jpeg,image/png,application/pdf"
-                      onChange={onFileChange}
-                      className="block w-full text-sm file:me-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-primary file:text-primary-foreground file:cursor-pointer"
-                    />
-                  </div>
-                  {crFile && (
-                    <p className="text-xs text-muted-foreground mt-2 tech-content">
-                      {crFile.name} · {(crFile.size / 1024).toFixed(0)} KB
-                    </p>
-                  )}
-                </Field>
+                <div data-error-key="cr_file">
+                  <Field
+                    label={t('صورة أو ملف السجل التجاري', 'Commercial Registration file')}
+                    error={errors.cr_file}
+                    hint={t('PDF أو JPG أو PNG — الحد الأقصى 5 ميغابايت.', 'PDF, JPG or PNG — 5 MB max.')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
+                      <input
+                        type="file"
+                        accept=".pdf,image/jpeg,image/png,application/pdf"
+                        onChange={onFileChange}
+                        className="block w-full text-sm file:me-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-primary file:text-primary-foreground file:cursor-pointer"
+                      />
+                    </div>
+                    {crFile && (
+                      <p className="text-xs text-emerald-600 mt-2 tech-content inline-flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        {crFile.name} · {(crFile.size / 1024).toFixed(0)} KB
+                      </p>
+                    )}
+                  </Field>
+                </div>
               </CardContent>
             </Card>
 
@@ -537,8 +670,9 @@ const ProviderJoin: React.FC = () => {
                     {branches.map((b, i) => (
                       <details
                         key={i}
+                        data-error-key={`branch_${i}_name`}
                         open={i === 0 || !b.branch_name}
-                        className="group rounded-xl border bg-card overflow-hidden transition-all hover:border-primary/40"
+                        className={`group rounded-xl border bg-card overflow-hidden transition-all hover:border-primary/40 ${errors[`branch_${i}_name`] ? 'border-destructive/60' : ''}`}
                       >
                         <summary className="cursor-pointer list-none flex items-center justify-between gap-3 p-4 hover:bg-muted/30">
                           <div className="flex items-center gap-3 min-w-0">
@@ -562,8 +696,15 @@ const ProviderJoin: React.FC = () => {
                         </summary>
                         <div className="border-t p-4 bg-muted/10 space-y-3">
                           <div className="grid md:grid-cols-2 gap-3">
-                            <Field label={t('اسم الفرع *', 'Branch name *')}>
-                              <Input dir="auto" placeholder={t('مثال: فرع الرياض', 'e.g. Riyadh Branch')} value={b.branch_name} onChange={(e) => updateBranch(i, 'branch_name', e.target.value)} className="h-11 rounded-lg" />
+                            <Field label={t('اسم الفرع', 'Branch name')} required error={errors[`branch_${i}_name`]}>
+                              <Input
+                                dir="auto"
+                                placeholder={t('مثال: فرع الرياض', 'e.g. Riyadh Branch')}
+                                value={b.branch_name}
+                                onChange={(e) => { updateBranch(i, 'branch_name', e.target.value); clearError(`branch_${i}_name`); }}
+                                className={`h-11 rounded-lg ${invalidInputClass(!!errors[`branch_${i}_name`])}`}
+                                aria-invalid={!!errors[`branch_${i}_name`]}
+                              />
                             </Field>
                             <Field label={t('المدينة', 'City')}>
                               <Input dir="auto" value={b.city ?? ''} onChange={(e) => updateBranch(i, 'city', e.target.value)} className="h-11 rounded-lg" />
