@@ -177,8 +177,8 @@ const ProviderJoin: React.FC = () => {
           unified_number: form.unified_number.trim() || undefined,
           vat_number: form.vat_number.trim() || undefined,
           main_activity: form.main_activity.trim() || undefined,
-          specialties: form.specialties.split(',').map((s) => s.trim()).filter(Boolean),
-          brands: form.brands.split(',').map((s) => s.trim()).filter(Boolean),
+          specialties: form.specialties.map((s) => s.trim()).filter(Boolean),
+          brands: form.brands.map((s) => s.trim()).filter(Boolean),
           brief: form.brief.trim() || undefined,
           map_link: form.map_link.trim() || undefined,
           national_address: form.national_address.trim() || undefined,
@@ -420,11 +420,13 @@ const ProviderJoin: React.FC = () => {
                   <Field label={t('المدينة', 'City')}>
                     <Input dir="auto" value={form.city} onChange={(e) => update('city', e.target.value)} className="h-12 rounded-xl" />
                   </Field>
-                  <Field label={t('التخصصات (افصل بفاصلة)', 'Specialties (comma-separated)')}>
-                    <Input dir="auto" value={form.specialties} onChange={(e) => update('specialties', e.target.value)} className="h-12 rounded-xl" />
-                  </Field>
                   <Field label={t('الوكالات / العلامات التجارية', 'Brands / Agencies')}>
-                    <Input dir="auto" value={form.brands} onChange={(e) => update('brands', e.target.value)} className="h-12 rounded-xl" />
+                    <TagInput
+                      values={form.brands}
+                      onChange={(v) => update('brands', v)}
+                      placeholder={t('اكتب اسم العلامة ثم Enter', 'Type brand name and press Enter')}
+                      dir="auto"
+                    />
                   </Field>
                   <Field label={t('العنوان الوطني', 'National Address')}>
                     <Input dir="auto" value={form.national_address} onChange={(e) => update('national_address', e.target.value)} className="h-12 rounded-xl tech-content" />
