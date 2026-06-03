@@ -477,26 +477,26 @@ const ProviderJoin: React.FC = () => {
                 <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   <div data-error-key="name_ar">
                     <Field label={t('اسم المنشأة بالعربي', 'Business name (Arabic)')} required error={errors.name_ar} hint={t('الاسم الرسمي كما هو في السجل التجاري.', 'Official name as written in the CR.')}>
-                      <Input dir="auto" required value={form.name_ar} onChange={(e) => setField('name_ar', e.target.value)} className={`h-12 rounded-xl ${invalidInputClass(!!errors.name_ar)}`} aria-invalid={!!errors.name_ar} />
+                      <Input dir="auto" required value={form.name_ar} onChange={(e) => setField('name_ar', e.target.value)} className={`h-11 sm:h-12 rounded-xl ${invalidInputClass(!!errors.name_ar)}`} aria-invalid={!!errors.name_ar} />
                     </Field>
                   </div>
                   <Field label={t('اسم المنشأة بالإنجليزي', 'Business name (English)')} hint={t('اختياري — يستخدم في النسخة الإنجليزية من الملف.', 'Optional — used in the English profile.')}>
-                    <Input dir="auto" value={form.name_en} onChange={(e) => setField('name_en', e.target.value)} className="h-12 rounded-xl" />
+                    <Input dir="auto" value={form.name_en} onChange={(e) => setField('name_en', e.target.value)} className="h-11 sm:h-12 rounded-xl" />
                   </Field>
                   <Field label={t('السجل التجاري', 'Commercial Registration')} hint={t('رقم السجل (10 خانات عادةً).', 'CR number (usually 10 digits).')}>
-                    <Input dir="auto" value={form.cr_number} onChange={(e) => setField('cr_number', e.target.value)} className="h-12 rounded-xl tech-content" />
+                    <Input dir="auto" value={form.cr_number} onChange={(e) => setField('cr_number', e.target.value)} className="h-11 sm:h-12 rounded-xl tech-content" />
                   </Field>
                   <Field label={t('الرقم الموحد', 'Unified Number')} hint={t('الرقم الموحد للمنشأة من وزارة التجارة.', 'Unified Commercial Number issued by MoC.')}>
-                    <Input dir="auto" value={form.unified_number} onChange={(e) => setField('unified_number', e.target.value)} className="h-12 rounded-xl tech-content" />
+                    <Input dir="auto" value={form.unified_number} onChange={(e) => setField('unified_number', e.target.value)} className="h-11 sm:h-12 rounded-xl tech-content" />
                   </Field>
                   <Field label={t('الرقم الضريبي', 'VAT Number')} hint={t('15 رقم تبدأ بـ 3 وتنتهي بـ 3.', '15 digits starting & ending with 3.')}>
-                    <Input dir="auto" value={form.vat_number} onChange={(e) => setField('vat_number', e.target.value)} className="h-12 rounded-xl tech-content" />
+                    <Input dir="auto" value={form.vat_number} onChange={(e) => setField('vat_number', e.target.value)} className="h-11 sm:h-12 rounded-xl tech-content" />
                   </Field>
                   <div data-error-key="website">
                     <Field label={t('الموقع الإلكتروني', 'Website')} error={errors.website} hint={t('مثال: https://example.com', 'e.g. https://example.com')}>
                       <div className="relative">
                         <LinkIcon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input type="url" dir="ltr" placeholder="https://" value={form.website} onChange={(e) => setField('website', e.target.value)} className={`h-12 rounded-xl ps-9 ${invalidInputClass(!!errors.website)}`} aria-invalid={!!errors.website} />
+                        <Input type="url" dir="ltr" placeholder="https://" value={form.website} onChange={(e) => setField('website', e.target.value)} className={`h-11 sm:h-12 rounded-xl ps-9 ${invalidInputClass(!!errors.website)}`} aria-invalid={!!errors.website} />
                       </div>
                     </Field>
                   </div>
@@ -515,14 +515,14 @@ const ProviderJoin: React.FC = () => {
                 <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   <div data-error-key="contact_name">
                     <Field label={t('اسم المسؤول', 'Contact name')} required error={errors.contact_name} hint={t('الشخص الذي سنتواصل معه لمتابعة الطلب.', 'The person we will contact about your request.')}>
-                      <Input dir="auto" required value={form.contact_name} onChange={(e) => setField('contact_name', e.target.value)} className={`h-12 rounded-xl ${invalidInputClass(!!errors.contact_name)}`} aria-invalid={!!errors.contact_name} />
+                      <Input dir="auto" required value={form.contact_name} onChange={(e) => setField('contact_name', e.target.value)} className={`h-11 sm:h-12 rounded-xl ${invalidInputClass(!!errors.contact_name)}`} aria-invalid={!!errors.contact_name} />
                     </Field>
                   </div>
                   <div data-error-key="email">
                     <Field label={t('البريد الإلكتروني', 'Email')} required error={errors.email} hint={t('سنرسل إليه رقم الطلب ورابط التعديل.', 'We will send your reference code and edit link here.')}>
                       <div className="relative">
                         <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input type="email" required dir="ltr" placeholder="name@example.com" value={form.email} onChange={(e) => setField('email', e.target.value)} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors.email)}`} aria-invalid={!!errors.email} />
+                        <Input type="email" required dir="ltr" placeholder="name@example.com" value={form.email} onChange={(e) => setField('email', e.target.value)} className={`h-11 sm:h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors.email)}`} aria-invalid={!!errors.email} />
                       </div>
                     </Field>
                   </div>
@@ -530,7 +530,7 @@ const ProviderJoin: React.FC = () => {
                     <Field label={t('رقم الجوال', 'Phone')} required error={errors.phone} hint={t('رقم سعودي يبدأ بـ 05.', 'Saudi number starting with 05.')}>
                       <div className="relative">
                         <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input type="tel" required dir="ltr" placeholder="05xxxxxxxx" value={form.phone} onChange={(e) => setField('phone', e.target.value)} className={`h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors.phone)}`} aria-invalid={!!errors.phone} />
+                        <Input type="tel" required dir="ltr" placeholder="05xxxxxxxx" value={form.phone} onChange={(e) => setField('phone', e.target.value)} className={`h-11 sm:h-12 rounded-xl ps-9 tech-content ${invalidInputClass(!!errors.phone)}`} aria-invalid={!!errors.phone} />
                       </div>
                     </Field>
                   </div>
@@ -538,7 +538,7 @@ const ProviderJoin: React.FC = () => {
                     <select
                       value={form.preferred_channel}
                       onChange={(e) => setField('preferred_channel', e.target.value as ProviderLeadChannel)}
-                      className="h-12 w-full rounded-xl border border-input bg-background px-3"
+                      className="h-11 sm:h-12 w-full rounded-xl border border-input bg-background px-3"
                     >
                       <option value="phone">{t('اتصال', 'Phone')}</option>
                       <option value="whatsapp">{t('واتساب', 'WhatsApp')}</option>
@@ -555,10 +555,10 @@ const ProviderJoin: React.FC = () => {
                 <SectionHeader icon={<MapPin className="w-5 h-5" />} title={t('النشاط والموقع', 'Activity & Location')} />
                 <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   <Field label={t('النشاط الرئيسي', 'Main activity')} hint={t('القطاع الذي تعملون فيه أساساً.', 'Your primary industrial sector.')}>
-                    <Input dir="auto" value={form.main_activity} onChange={(e) => setField('main_activity', e.target.value)} className="h-12 rounded-xl" placeholder={t('مثال: ألمنيوم، زجاج، حديد', 'e.g. Aluminum, Glass, Steel')} />
+                    <Input dir="auto" value={form.main_activity} onChange={(e) => setField('main_activity', e.target.value)} className="h-11 sm:h-12 rounded-xl" placeholder={t('مثال: ألمنيوم، زجاج، حديد', 'e.g. Aluminum, Glass, Steel')} />
                   </Field>
                   <Field label={t('المدينة', 'City')} hint={t('مدينة المقر الرئيسي.', 'City of the main location.')}>
-                    <Input dir="auto" value={form.city} onChange={(e) => setField('city', e.target.value)} className="h-12 rounded-xl" />
+                    <Input dir="auto" value={form.city} onChange={(e) => setField('city', e.target.value)} className="h-11 sm:h-12 rounded-xl" />
                   </Field>
                   <Field label={t('الوكالات / العلامات التجارية', 'Brands / Agencies')} hint={t('اضغط Enter بعد كل علامة.', 'Press Enter after each brand.')}>
                     <TagInput
@@ -569,16 +569,16 @@ const ProviderJoin: React.FC = () => {
                     />
                   </Field>
                   <Field label={t('العنوان الوطني', 'National Address')} hint={t('رمز العنوان الوطني المكوّن من 8 خانات.', '8-character national address code.')}>
-                    <Input dir="auto" value={form.national_address} onChange={(e) => setField('national_address', e.target.value)} className="h-12 rounded-xl tech-content" />
+                    <Input dir="auto" value={form.national_address} onChange={(e) => setField('national_address', e.target.value)} className="h-11 sm:h-12 rounded-xl tech-content" />
                   </Field>
                   <div data-error-key="map_link">
                     <Field label={t('رابط الموقع على الخريطة', 'Map link')} error={errors.map_link} hint={t('انسخ الرابط من Google Maps.', 'Copy the link from Google Maps.')}>
-                      <Input type="url" dir="ltr" placeholder="https://maps.google.com/..." value={form.map_link} onChange={(e) => setField('map_link', e.target.value)} className={`h-12 rounded-xl ${invalidInputClass(!!errors.map_link)}`} aria-invalid={!!errors.map_link} />
+                      <Input type="url" dir="ltr" placeholder="https://maps.google.com/..." value={form.map_link} onChange={(e) => setField('map_link', e.target.value)} className={`h-11 sm:h-12 rounded-xl ${invalidInputClass(!!errors.map_link)}`} aria-invalid={!!errors.map_link} />
                     </Field>
                   </div>
                   <div data-error-key="branches_count">
                     <Field label={t('عدد الفروع', 'Branches count')} error={errors.branches_count} hint={t('شامل الفرع الرئيسي.', 'Including the main branch.')}>
-                      <Input type="number" min={1} dir="ltr" value={form.branches_count} onChange={(e) => setField('branches_count', Number(e.target.value) || 1)} className={`h-12 rounded-xl tech-content ${invalidInputClass(!!errors.branches_count)}`} aria-invalid={!!errors.branches_count} />
+                      <Input type="number" min={1} dir="ltr" value={form.branches_count} onChange={(e) => setField('branches_count', Number(e.target.value) || 1)} className={`h-11 sm:h-12 rounded-xl tech-content ${invalidInputClass(!!errors.branches_count)}`} aria-invalid={!!errors.branches_count} />
                     </Field>
                   </div>
                 </div>
@@ -756,7 +756,7 @@ const ProviderJoin: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 rounded-xl text-[14px] font-semibold shadow-elegant"
+                  className="w-full h-11 sm:h-12 rounded-xl text-[14px] font-semibold shadow-elegant"
                 >
                   {loading ? (
                     <><Loader2 className="w-4 h-4 me-2 animate-spin" />{t('جاري الإرسال...', 'Sending...')}</>
