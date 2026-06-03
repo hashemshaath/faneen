@@ -472,7 +472,7 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 1 — Establishment */}
             <Card className="rounded-2xl">
-              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
+              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4">
                 <SectionHeader icon={<Building2 className="w-5 h-5" />} title={t('بيانات المنشأة', 'Establishment Info')} />
                 <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   <div data-error-key="name_ar">
@@ -510,7 +510,7 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 2 — Contact */}
             <Card className="rounded-2xl">
-              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
+              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4">
                 <SectionHeader icon={<User className="w-5 h-5" />} title={t('بيانات التواصل', 'Contact Person')} />
                 <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   <div data-error-key="contact_name">
@@ -551,7 +551,7 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 3 — Activity & Location */}
             <Card className="rounded-2xl">
-              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
+              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4">
                 <SectionHeader icon={<MapPin className="w-5 h-5" />} title={t('النشاط والموقع', 'Activity & Location')} />
                 <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   <Field label={t('النشاط الرئيسي', 'Main activity')} hint={t('القطاع الذي تعملون فيه أساساً.', 'Your primary industrial sector.')}>
@@ -617,7 +617,7 @@ const ProviderJoin: React.FC = () => {
             {/* Branches */}
             {form.branches_count > 1 && (
               <Card className="rounded-2xl">
-                <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
+                <CardContent className="p-4 sm:p-6 md:p-8 space-y-4">
                   <SectionHeader
                     icon={<Store className="w-5 h-5" />}
                     title={t('بيانات الفروع الإضافية', 'Additional Branches')}
@@ -664,26 +664,26 @@ const ProviderJoin: React.FC = () => {
                                 placeholder={t('مثال: فرع الرياض', 'e.g. Riyadh Branch')}
                                 value={b.branch_name}
                                 onChange={(e) => { updateBranch(i, 'branch_name', e.target.value); clearError(`branch_${i}_name`); }}
-                                className={`h-11 rounded-lg ${invalidInputClass(!!errors[`branch_${i}_name`])}`}
+                                className={`h-12 rounded-xl ${invalidInputClass(!!errors[`branch_${i}_name`])}`}
                                 aria-invalid={!!errors[`branch_${i}_name`]}
                               />
                             </Field>
                             <Field label={t('المدينة', 'City')}>
-                              <Input dir="auto" value={b.city ?? ''} onChange={(e) => updateBranch(i, 'city', e.target.value)} className="h-11 rounded-lg" />
+                              <Input dir="auto" value={b.city ?? ''} onChange={(e) => updateBranch(i, 'city', e.target.value)} className="h-12 rounded-xl" />
                             </Field>
                             <div className="md:col-span-2">
                               <Field label={t('العنوان', 'Address')}>
-                                <Input dir="auto" value={b.address ?? ''} onChange={(e) => updateBranch(i, 'address', e.target.value)} className="h-11 rounded-lg" />
+                                <Input dir="auto" value={b.address ?? ''} onChange={(e) => updateBranch(i, 'address', e.target.value)} className="h-12 rounded-xl" />
                               </Field>
                             </div>
                             <Field label={t('رقم التواصل', 'Phone')}>
                               <div className="relative">
                                 <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <Input dir="ltr" placeholder="05xxxxxxxx" value={b.phone ?? ''} onChange={(e) => updateBranch(i, 'phone', e.target.value)} className="h-11 rounded-lg ps-9 tech-content" />
+                                <Input dir="ltr" placeholder="05xxxxxxxx" value={b.phone ?? ''} onChange={(e) => updateBranch(i, 'phone', e.target.value)} className="h-12 rounded-xl ps-9 tech-content" />
                               </div>
                             </Field>
                             <Field label={t('رابط الموقع على الخريطة', 'Map link')}>
-                              <Input dir="ltr" placeholder="https://maps.google.com/..." value={b.map_link ?? ''} onChange={(e) => updateBranch(i, 'map_link', e.target.value)} className="h-11 rounded-lg" />
+                              <Input dir="ltr" placeholder="https://maps.google.com/..." value={b.map_link ?? ''} onChange={(e) => updateBranch(i, 'map_link', e.target.value)} className="h-12 rounded-xl" />
                             </Field>
                           </div>
                         </div>
