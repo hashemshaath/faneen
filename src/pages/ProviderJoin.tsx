@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Building2, User, Mail, Phone, FileText, MapPin, ShieldCheck,
  CheckCircle2, Plus, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp,
-  Store, AlertCircle, Link as LinkIcon,
+  Store, AlertCircle, Link as LinkIcon, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitProviderLead } from '@/modules/providers';
@@ -74,6 +74,7 @@ const ProviderJoin: React.FC = () => {
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const formRef = useRef<HTMLFormElement>(null);
   const alertRef = useRef<HTMLDivElement>(null);
   const honeypotRef = useRef<HTMLInputElement>(null);
@@ -204,6 +205,32 @@ const ProviderJoin: React.FC = () => {
       if (!b.branch_name.trim()) er[`branch_${i}_name`] = t(`أدخل اسم الفرع ${i + 2}`, `Enter the name of branch ${i + 2}`);
     });
     return er;
+  };
+
+  // Per-step validation for the mobile wizard
+  const validateStep = (s: 1 | 2 | 3): Record<string, string> => {
+    const all = validate();
+    const stepKeys: Record<1 | 2 | 3, string[]> = {
+      1: ['name_ar', 'website'],
+      2: ['contact_name', 'email', 'phone'],
+      3: ['map_link', 'branches_count', 'cr_file', ...Object.keys(all).filter((k) => k.startsWith('branch_'))],
+    };
+    return Object.fromEntries(Object.entries(all).filter(([k]) => stepKeys[s].includes(k)));
+  };
+
+  const goNext = () => {
+    const er = validateStep(step);
+    if (Object.keys(er).length) {
+      setErrors((prev) => ({ ...prev, ...er }));
+      focusFirstError(er);
+      return;
+    }
+    setStep((s) => (s < 3 ? ((s + 1) as 1 | 2 | 3) : s));
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  };
+  const goBack = () => {
+    setStep((s) => (s > 1 ? ((s - 1) as 1 | 2 | 3) : s));
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   };
 
   const focusFirstError = (er: Record<string, string>) => {
