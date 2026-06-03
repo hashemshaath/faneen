@@ -513,10 +513,8 @@ Deno.serve(async (req) => {
     }
   }
 
-  // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
-  // The dispatcher (process-email-queue) handles sending, retries, and rate-limit backoff.
-
-  // Log pending BEFORE enqueue so we have a record even if enqueue crashes
+  // 5. Send directly via Resend (synchronous, no internal queue).
+  // Requires RESEND_API_KEY and a verified domain in Resend matching FROM_DOMAIN.
   await supabase.from('email_send_log').insert({
     message_id: messageId,
     template_name: templateName,
@@ -524,52 +522,101 @@ Deno.serve(async (req) => {
     status: 'pending',
   })
 
-  const { error: enqueueError } = await supabase.rpc('enqueue_email', {
-    queue_name: 'transactional_emails',
-    payload: {
-      message_id: messageId,
-      to: effectiveRecipient,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject: resolvedSubject,
-      html,
-      text: plainText,
-      purpose: 'transactional',
-      label: templateName,
-      idempotency_key: idempotencyKey,
-      unsubscribe_token: unsubscribeToken,
-      queued_at: new Date().toISOString(),
-    },
-  })
-
-  if (enqueueError) {
-    console.error('Failed to enqueue email', {
-      error: enqueueError,
-      templateName,
-      effectiveRecipient,
-    })
-
+  const resendKey = Deno.env.get('RESEND_API_KEY')
+  if (!resendKey) {
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: templateName,
       recipient_email: effectiveRecipient,
       status: 'failed',
-      error_message: 'Failed to enqueue email',
+      error_message: 'RESEND_API_KEY missing',
     })
-
-    return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
+    return new Response(JSON.stringify({ error: 'Email provider not configured' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  console.log('Transactional email enqueued', { templateName, recipient: maskEmail(effectiveRecipient) })
+  const unsubscribeUrl = buildTrackingUrl(supabaseUrl, 'handle-email-unsubscribe', {
+    token: unsubscribeToken,
+  })
 
-  return new Response(
-    JSON.stringify({ success: true, queued: true }),
-    {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  try {
+    const resp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+        to: [effectiveRecipient],
+        subject: resolvedSubject,
+        html,
+        text: plainText,
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          'X-Entity-Ref-ID': messageId,
+          'X-Idempotency-Key': idempotencyKey,
+        },
+        tags: [{ name: 'template', value: templateName.replace(/[^a-zA-Z0-9_-]/g, '_') }],
+      }),
+    })
+
+    const respText = await resp.text()
+    if (!resp.ok) {
+      await supabase.from('email_send_log').insert({
+        message_id: messageId,
+        template_name: templateName,
+        recipient_email: effectiveRecipient,
+        status: 'dlq',
+        error_message: `Resend API error: ${resp.status} ${respText}`.slice(0, 1000),
+      })
+      console.error('Resend send failed', { status: resp.status, body: respText.slice(0, 500), templateName })
+      return new Response(
+        JSON.stringify({ error: 'Failed to send email', detail: respText }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     }
-  )
+
+    let providerId: string | null = null
+    try {
+      const parsed = JSON.parse(respText) as { id?: string }
+      providerId = parsed?.id ?? null
+    } catch { /* ignore */ }
+
+    await supabase.from('email_send_log').insert({
+      message_id: messageId,
+      template_name: templateName,
+      recipient_email: effectiveRecipient,
+      status: 'sent',
+      metadata: { provider: 'resend', provider_id: providerId },
+    })
+
+    console.log('Transactional email sent via Resend', {
+      templateName,
+      recipient: maskEmail(effectiveRecipient),
+      providerId,
+    })
+
+    return new Response(
+      JSON.stringify({ success: true, sent: true, provider: 'resend', provider_id: providerId }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'unknown_error'
+    await supabase.from('email_send_log').insert({
+      message_id: messageId,
+      template_name: templateName,
+      recipient_email: effectiveRecipient,
+      status: 'dlq',
+      error_message: `Resend exception: ${msg}`.slice(0, 1000),
+    })
+    console.error('Resend send exception', err)
+    return new Response(JSON.stringify({ error: 'Email send failed' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 })
