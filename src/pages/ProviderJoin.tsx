@@ -221,25 +221,75 @@ const ProviderJoin: React.FC = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       <main className="flex-1">
-        {/* Hero */}
-        <section className="relative bg-gradient-to-b from-primary/5 via-background to-background border-b">
-          <div className="container mx-auto px-4 py-12 md:py-16 max-w-4xl text-center">
-            <Badge variant="secondary" className="mb-4 rounded-full">
-              <Sparkles className="w-3.5 h-3.5 mr-1" />
-              {t('انضم إلى أكبر منصة صناعية', 'Join the leading industrial directory')}
+        {/* Hero with cover image */}
+        <section className="relative overflow-hidden border-b">
+          <div className="absolute inset-0">
+            <img
+              src={coverImage}
+              alt=""
+              aria-hidden="true"
+              width={1920}
+              height={1080}
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/75 to-slate-950/95" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.25),transparent_60%)]" />
+          </div>
+          <div className="relative container mx-auto px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-5xl text-center text-white">
+            <Badge variant="secondary" className="mb-5 rounded-full bg-white/10 text-white border-white/20 backdrop-blur-sm hover:bg-white/15">
+              <Sparkles className="w-3.5 h-3.5 me-1.5" />
+              {t('انضم إلى أكبر منصة صناعية في المملكة', 'The leading industrial directory in Saudi Arabia')}
             </Badge>
-            <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight leading-tight">
               {t('سجّل منشأتك في قِطاعات', 'Register your business on Qitaat')}
             </h1>
-            <p className="mt-4 text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
+            <p className="mt-5 text-white/80 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
               {t(
-                'وصول واسع لعملاء محتملين، عرض احترافي لمنشأتك، وأدوات إدارة متكاملة. التسجيل مجاني ولا يحتاج إنشاء حساب.',
-                'Reach more clients, showcase your business professionally, and access powerful tools. Registration is free and requires no account.',
+                'وصول لعملاء محتملين، عرض احترافي لمنشأتك، وأدوات إدارة متكاملة. التسجيل مجاني ولا يتطلب إنشاء حساب.',
+                'Reach more clients, showcase your business professionally, and access powerful tools. Free registration — no account required.',
               )}
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-emerald-600" />{t('بياناتكم محمية', 'Your data is protected')}</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-primary" />{t('مراجعة خلال 24-48 ساعة', '24-48h review')}</span>
+            <div className="mt-7 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-white/85">
+              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-emerald-400" />{t('بياناتكم محمية ومشفّرة', 'Encrypted & secure')}</span>
+              <span className="inline-flex items-center gap-1.5"><Clock className="w-4 h-4 text-sky-300" />{t('مراجعة خلال 24-48 ساعة', '24–48h review')}</span>
+              <span className="inline-flex items-center gap-1.5"><Award className="w-4 h-4 text-amber-300" />{t('فريق متخصص', 'Specialized team')}</span>
+            </div>
+
+            {/* Stats strip */}
+            <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-6 max-w-2xl mx-auto">
+              {[
+                { icon: <Users className="w-5 h-5" />, value: '+12K', label: t('عميل شهرياً', 'Monthly clients') },
+                { icon: <Building2 className="w-5 h-5" />, value: '+800', label: t('منشأة مسجلة', 'Registered businesses') },
+                { icon: <TrendingUp className="w-5 h-5" />, value: '4×', label: t('متوسط نمو الطلبات', 'Avg. lead growth') },
+              ].map((s, i) => (
+                <div key={i} className="rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm px-3 py-4 sm:p-5">
+                  <div className="flex items-center justify-center text-white/70 mb-1.5">{s.icon}</div>
+                  <div className="text-xl sm:text-2xl font-bold tech-content">{s.value}</div>
+                  <div className="text-[11px] sm:text-xs text-white/70 mt-0.5">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Process steps */}
+        <section className="border-b bg-muted/30">
+          <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-5xl">
+            <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
+              {[
+                { n: '1', icon: <FileCheck2 className="w-5 h-5" />, title: t('املأ الطلب', 'Fill the form'), desc: t('بيانات المنشأة والتواصل والنشاط — أقل من 3 دقائق.', 'Business, contact and activity info — under 3 minutes.') },
+                { n: '2', icon: <ShieldCheck className="w-5 h-5" />, title: t('مراجعة الفريق', 'Team review'), desc: t('نراجع البيانات والسجل التجاري للتحقق.', 'We verify your data and CR documents.') },
+                { n: '3', icon: <Award className="w-5 h-5" />, title: t('تفعيل الحساب', 'Activation'), desc: t('نرسل تأكيداً برابط تفعيل الملف وإدارته.', 'Confirmation email with activation & management link.') },
+              ].map((s, i) => (
+                <div key={i} className="relative rounded-2xl border bg-card p-5 hover-lift">
+                  <div className="flex items-center gap-3">
+                    <span className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">{s.icon}</span>
+                    <span className="text-xs font-mono text-muted-foreground tech-content">STEP {s.n}</span>
+                  </div>
+                  <h3 className="mt-3 font-semibold">{s.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
