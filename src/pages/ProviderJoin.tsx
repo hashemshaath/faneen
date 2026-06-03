@@ -12,10 +12,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Building2, User, Mail, Phone, Globe, FileText, MapPin, ShieldCheck,
-  CheckCircle2, Plus, Trash2, Loader2, Sparkles,
+  CheckCircle2, Plus, Trash2, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp, FileCheck2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitProviderLead } from '@/modules/providers';
+import coverImage from '@/assets/provider-join-cover.jpg';
 import type {
   ProviderLeadChannel,
   ProviderLeadBranchInput,
