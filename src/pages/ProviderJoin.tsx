@@ -459,11 +459,37 @@ const ProviderJoin: React.FC = () => {
             )}
 
             {/* Submit */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-              <p className="text-xs text-muted-foreground">
+            {/* Trust strip */}
+            <div className="rounded-2xl border bg-muted/30 p-5 sm:p-6 grid sm:grid-cols-3 gap-4 text-sm">
+              <div className="flex items-start gap-3">
+                <Lock className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-medium">{t('خصوصية تامة', 'Full privacy')}</div>
+                  <p className="text-muted-foreground text-xs mt-0.5">{t('بياناتكم لا تُشارك مع طرف ثالث.', 'Your data is never shared with third parties.')}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-medium">{t('توثيق احترافي', 'Verified process')}</div>
+                  <p className="text-muted-foreground text-xs mt-0.5">{t('مراجعة يدوية من فريق متخصص.', 'Manual review by our specialized team.')}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Clock className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-medium">{t('استجابة سريعة', 'Fast response')}</div>
+                  <p className="text-muted-foreground text-xs mt-0.5">{t('رد رسمي خلال 24-48 ساعة عمل.', 'Official reply within 24–48 business hours.')}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Submit */}
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-2">
+              <p className="text-xs text-muted-foreground text-center sm:text-start">
                 {t('بإرسال الطلب فإنك توافق على سياسة الخصوصية والشروط.', 'By submitting, you agree to our Privacy Policy and Terms.')}
               </p>
-              <Button type="submit" disabled={loading} size="lg" className="rounded-xl min-w-[180px] hover-lift">
+              <Button type="submit" disabled={loading} size="lg" className="rounded-xl w-full sm:w-auto sm:min-w-[200px] h-12 hover-lift shadow-elegant">
                 {loading ? (
                   <><Loader2 className="w-4 h-4 me-2 animate-spin" />{t('جاري الإرسال...', 'Sending...')}</>
                 ) : (
