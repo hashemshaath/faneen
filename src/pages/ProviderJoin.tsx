@@ -14,14 +14,14 @@ import { Badge } from '@/components/ui/badge';
 import {
   Building2, User, Mail, Phone, FileText, MapPin, ShieldCheck,
   CheckCircle2, Plus, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp, FileCheck2,
-  Store,
+  Store, AlertCircle, Link as LinkIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitProviderLead } from '@/modules/providers';
 import { listActiveCategories } from '@/modules/categories';
 import coverImage from '@/assets/provider-join-cover.jpg';
 import {
-  Field, SectionHeader, SpecialtiesPicker, TagInput,
+  Field, SectionHeader, SpecialtiesPicker, TagInput, invalidInputClass,
   type CategoryOption,
 } from './providerJoin/_components';
 import type {
@@ -71,6 +71,10 @@ const ProviderJoin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const alertRef = useRef<HTMLDivElement>(null);
   const honeypotRef = useRef<HTMLInputElement>(null);
   const startTimeRef = useRef<number>(Date.now());
 
@@ -140,6 +144,16 @@ const ProviderJoin: React.FC = () => {
   const update = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  // Clear an individual error as the user types
+  const clearError = (k: string) =>
+    setErrors((e) => (e[k] ? Object.fromEntries(Object.entries(e).filter(([key]) => key !== k)) : e));
+
+  const setField = <K extends keyof FormState>(k: K, v: FormState[K]) => {
+    update(k, v);
+    clearError(k as string);
+    if (submitError) setSubmitError(null);
+  };
+
   const updateBranch = (i: number, k: keyof ProviderLeadBranchInput, v: string) =>
     setBranches((b) => b.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)));
 
@@ -147,16 +161,62 @@ const ProviderJoin: React.FC = () => {
     const f = e.target.files?.[0] ?? null;
     if (!f) { setCrFile(null); return; }
     if (f.size > PROVIDER_LEAD_DOC_MAX_BYTES) {
-      toast.error(t('حجم الملف يتجاوز 5 ميغابايت', 'File exceeds 5 MB'));
+      const msg = t('حجم الملف يتجاوز 5 ميغابايت', 'File exceeds 5 MB');
+      setErrors((er) => ({ ...er, cr_file: msg }));
+      toast.error(msg);
       e.target.value = '';
       return;
     }
     if (!(PROVIDER_LEAD_DOC_MIMES as readonly string[]).includes(f.type)) {
-      toast.error(t('نوع الملف غير مدعوم. PDF أو JPG أو PNG فقط.', 'Unsupported file type. PDF/JPG/PNG only.'));
+      const msg = t('نوع الملف غير مدعوم. PDF أو JPG أو PNG فقط.', 'Unsupported file type. PDF/JPG/PNG only.');
+      setErrors((er) => ({ ...er, cr_file: msg }));
+      toast.error(msg);
       e.target.value = '';
       return;
     }
+    clearError('cr_file');
     setCrFile(f);
+  };
+
+  // Lightweight client-side validators
+  const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+  const isSaudiPhone = (v: string) => /^(?:\+?966|0)?5\d{8}$/.test(v.replace(/[\s-]/g, ''));
+  const isUrl = (v: string) => {
+    if (!v) return true;
+    try { new URL(v.startsWith('http') ? v : `https://${v}`); return true; } catch { return false; }
+  };
+
+  const validate = (): Record<string, string> => {
+    const er: Record<string, string> = {};
+    if (!form.name_ar.trim()) er.name_ar = t('يرجى إدخال اسم المنشأة بالعربية', 'Please enter the business name in Arabic');
+    else if (form.name_ar.trim().length < 2) er.name_ar = t('الاسم قصير جداً', 'Name is too short');
+    if (!form.contact_name.trim()) er.contact_name = t('يرجى إدخال اسم المسؤول', 'Please enter the contact name');
+    if (!form.email.trim()) er.email = t('يرجى إدخال البريد الإلكتروني', 'Please enter your email');
+    else if (!isEmail(form.email)) er.email = t('صيغة البريد الإلكتروني غير صحيحة', 'Invalid email format');
+    if (!form.phone.trim()) er.phone = t('يرجى إدخال رقم الجوال', 'Please enter your phone number');
+    else if (!isSaudiPhone(form.phone)) er.phone = t('رقم الجوال غير صحيح. مثال: 05XXXXXXXX', 'Invalid phone. Example: 05XXXXXXXX');
+    if (form.website && !isUrl(form.website)) er.website = t('رابط الموقع غير صحيح', 'Invalid website URL');
+    if (form.map_link && !isUrl(form.map_link)) er.map_link = t('رابط الخريطة غير صحيح', 'Invalid map URL');
+    if (form.branches_count < 1) er.branches_count = t('عدد الفروع يجب أن يكون 1 أو أكثر', 'Branches must be 1 or more');
+    // Validate extra branches: at minimum require a branch name
+    branches.forEach((b, i) => {
+      if (!b.branch_name.trim()) er[`branch_${i}_name`] = t(`أدخل اسم الفرع ${i + 2}`, `Enter the name of branch ${i + 2}`);
+    });
+    return er;
+  };
+
+  const focusFirstError = (er: Record<string, string>) => {
+    const first = Object.keys(er)[0];
+    if (!first) return;
+    requestAnimationFrame(() => {
+      const el = formRef.current?.querySelector<HTMLElement>(`[data-error-key="${first}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        (el.querySelector('input, select, textarea, button') as HTMLElement | null)?.focus();
+      } else {
+        alertRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -165,14 +225,24 @@ const ProviderJoin: React.FC = () => {
     // Honeypot + form-time check
     if (honeypotRef.current?.value) return;
     if (Date.now() - startTimeRef.current < 1500) {
-      toast.error(t('تعذّر التحقق من الطلب', 'Could not verify request'));
+      const msg = t('تعذّر التحقق من الطلب. حاول مرة أخرى بعد لحظات.', 'Could not verify request. Please try again in a moment.');
+      setSubmitError(msg);
+      toast.error(msg);
       return;
     }
 
-    if (!form.name_ar.trim() || !form.contact_name.trim() || !form.email.trim() || !form.phone.trim()) {
-      toast.error(t('يرجى تعبئة الحقول المطلوبة', 'Please fill required fields'));
+    const er = validate();
+    setErrors(er);
+    if (Object.keys(er).length > 0) {
+      const msg = t(
+        `يوجد ${Object.keys(er).length} حقل بحاجة إلى مراجعة. تم تمييزها بالأحمر.`,
+        `${Object.keys(er).length} field${Object.keys(er).length > 1 ? 's need' : ' needs'} attention. Highlighted in red below.`,
+      );
+      setSubmitError(msg);
+      focusFirstError(er);
       return;
     }
+    setSubmitError(null);
 
     setLoading(true);
     try {
@@ -218,12 +288,20 @@ const ProviderJoin: React.FC = () => {
           upload_failed: t('فشل رفع السجل التجاري', 'CR upload failed'),
           unknown: t('تعذّر إرسال الطلب. حاول مرة أخرى.', 'Could not submit. Please try again.'),
         };
-        toast.error(map[result.errorCode ?? 'unknown']);
+        const msg = map[result.errorCode ?? 'unknown'];
+        // Map server-side codes to inline field errors when possible
+        if (result.errorCode === 'invalid_email') setErrors((e) => ({ ...e, email: msg }));
+        if (result.errorCode === 'invalid_phone') setErrors((e) => ({ ...e, phone: msg }));
+        setSubmitError(msg);
+        toast.error(msg);
+        requestAnimationFrame(() => alertRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
         return;
       }
       setSuccess(result.data!.reference_code);
     } catch {
-      toast.error(t('حدث خطأ غير متوقع', 'Unexpected error'));
+      const msg = t('حدث خطأ غير متوقع. حاول مرة أخرى.', 'Unexpected error. Please try again.');
+      setSubmitError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
