@@ -695,8 +695,8 @@ const ProviderJoin: React.FC = () => {
             )}
 
             {/* Submit */}
-            {/* Trust strip */}
-            <div className="rounded-2xl border bg-muted/30 p-5 sm:p-6 grid sm:grid-cols-3 gap-4 text-sm">
+            {/* Trust strip — hidden on mobile to reduce density (chips already shown in hero) */}
+            <div className="hidden sm:grid rounded-2xl border bg-muted/30 p-5 sm:p-6 sm:grid-cols-3 gap-4 text-sm">
               <div className="flex items-start gap-3">
                 <Lock className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
