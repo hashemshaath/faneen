@@ -517,9 +517,13 @@ export default function DashboardSites() {
   }, [sites, contractCounts]);
 
   /* ─── Callbacks ─── */
-  const closeForm = useCallback(() => { setShowForm(false); setEditing(null); setForm(emptyForm); setNaf(emptyNaf); }, []);
+  const closeForm = useCallback(() => {
+    setShowForm(false); setEditing(null); setForm(emptyForm); setNaf(emptyNaf);
+    setIssues([]); setActiveTab('general');
+  }, []);
   const openCreate = useCallback(() => {
-    setEditing(null); setForm(emptyForm); setNaf(emptyNaf); setShowForm(true);
+    setEditing(null); setForm(emptyForm); setNaf(emptyNaf);
+    setIssues([]); setActiveTab('general'); setShowForm(true);
     requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }, []);
   const openEdit = useCallback((s: ClientSite) => {
