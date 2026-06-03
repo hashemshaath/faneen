@@ -380,11 +380,13 @@ const ProviderJoin: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/75 to-slate-950/95" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.25),transparent_60%)]" />
           </div>
-          <div className="relative container mx-auto px-5 sm:px-6 py-10 sm:py-20 md:py-24 max-w-5xl text-center text-white">
-            <Badge variant="secondary" className="mb-4 sm:mb-5 rounded-full bg-white/10 text-white border-white/20 backdrop-blur-sm hover:bg-white/15 text-[11px] sm:text-xs px-3 py-1 max-w-[95%] whitespace-normal sm:whitespace-nowrap leading-snug">
-              <Sparkles className="w-3.5 h-3.5 me-1.5 shrink-0" />
-              {t('انضم إلى أكبر منصة صناعية في المملكة', 'The leading industrial directory in Saudi Arabia')}
-            </Badge>
+          <div className="relative container mx-auto px-5 sm:px-6 pt-14 pb-10 sm:py-20 md:py-24 max-w-5xl text-center text-white">
+            <div className="mb-4 sm:mb-5 flex justify-center">
+              <Badge variant="secondary" className="rounded-full bg-white/10 text-white border-white/20 backdrop-blur-sm hover:bg-white/15 text-[11px] sm:text-xs px-3 py-1.5 inline-flex items-center max-w-full whitespace-normal sm:whitespace-nowrap leading-snug text-center">
+                <Sparkles className="w-3.5 h-3.5 me-1.5 shrink-0" />
+                <span>{t('انضم إلى أكبر منصة صناعية في المملكة', 'The leading industrial directory in Saudi Arabia')}</span>
+              </Badge>
+            </div>
             <h1 className="text-[26px] leading-[1.2] sm:text-4xl md:text-6xl font-bold tracking-tight">
               {t('سجّل منشأتك في قِطاعات', 'Register your business on Qitaat')}
             </h1>
@@ -426,15 +428,15 @@ const ProviderJoin: React.FC = () => {
                 { n: '2', icon: <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />, title: t('مراجعة الفريق', 'Team review'), desc: t('نراجع البيانات والسجل التجاري للتحقق.', 'We verify your data and CR documents.') },
                 { n: '3', icon: <Award className="w-4 h-4 sm:w-5 sm:h-5" />, title: t('تفعيل الحساب', 'Activation'), desc: t('نرسل تأكيداً برابط تفعيل الملف وإدارته.', 'Confirmation email with activation & management link.') },
               ].map((s, i) => (
-                <div key={i} className="relative rounded-xl sm:rounded-2xl border bg-card p-3 sm:p-5 hover-lift">
+                <div key={i} className="relative rounded-xl sm:rounded-2xl border bg-card p-3.5 sm:p-5 hover-lift">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <span className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">{s.icon}</span>
+                    <span className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">{s.icon}</span>
                     <div className="min-w-0">
                       <span className="text-[10px] sm:text-xs font-mono text-muted-foreground tech-content block leading-none">STEP {s.n}</span>
-                      <h3 className="font-semibold text-[13px] sm:text-base leading-tight mt-0.5">{s.title}</h3>
+                      <h3 className="font-semibold text-sm sm:text-base leading-tight mt-1">{s.title}</h3>
                     </div>
                   </div>
-                  <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-sm text-muted-foreground leading-snug sm:leading-relaxed">{s.desc}</p>
+                  <p className="mt-2 text-[12.5px] sm:text-sm text-muted-foreground leading-relaxed max-w-[26ch] sm:max-w-none">{s.desc}</p>
                 </div>
               ))}
             </div>
