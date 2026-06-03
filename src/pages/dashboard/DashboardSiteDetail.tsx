@@ -21,6 +21,7 @@ import SiteGalleryManager, { type GalleryImage } from '@/components/sites/SiteGa
 import SiteContactsTab from '@/components/sites/SiteContactsTab';
 import SiteReportsTab from '@/components/sites/SiteReportsTab';
 import SiteSettingsTab from '@/components/sites/SiteSettingsTab';
+import SiteField from '@/components/sites/SiteField';
 import { Users, AlertTriangle } from 'lucide-react';
 
 type Json = Record<string, unknown>;
@@ -322,9 +323,16 @@ const DashboardSiteDetail: React.FC = () => {
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><User className="h-4 w-4" /></span>
                     {isRTL ? 'جهة الاتصال' : 'Contact'}
                   </h3>
-                  <InfoRow label={isRTL ? 'الاسم' : 'Name'} value={site.contact_name} />
-                  <InfoRow label={isRTL ? 'الهاتف' : 'Phone'} value={site.contact_phone} mono
-                    action={site.contact_phone ? { href: `tel:${site.contact_phone}`, icon: Phone } : undefined} />
+                  <SiteField label={isRTL ? 'الاسم' : 'Name'} value={site.contact_name} />
+                  <SiteField
+                    label={isRTL ? 'الهاتف' : 'Phone'}
+                    value={site.contact_phone}
+                    kind="phone"
+                    action={site.contact_phone ? { href: `tel:${site.contact_phone}`, icon: Phone, ariaLabel: isRTL ? 'اتصال' : 'Call' } : undefined}
+                  />
+                  {!site.contact_name && !site.contact_phone && (
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'لم تُضَف جهة اتصال بعد.' : 'No contact added yet.'}</p>
+                  )}
                 </CardContent>
               </Card>
               <Card className="overflow-hidden">
@@ -333,10 +341,13 @@ const DashboardSiteDetail: React.FC = () => {
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><MapPin className="h-4 w-4" /></span>
                     {isRTL ? 'العنوان' : 'Address'}
                   </h3>
-                  <InfoRow label={isRTL ? 'المدينة' : 'City'} value={site.city_name} />
-                  <InfoRow label={isRTL ? 'الحي' : 'District'} value={site.district} />
-                  <InfoRow label={isRTL ? 'العنوان' : 'Line'} value={site.address_line1} multiline />
-                  {site.short_address && <InfoRow label={isRTL ? 'العنوان الوطني' : 'NAF'} value={site.short_address} mono />}
+                  <SiteField label={isRTL ? 'المدينة' : 'City'} value={site.city_name} />
+                  <SiteField label={isRTL ? 'الحي' : 'District'} value={site.district} />
+                  <SiteField label={isRTL ? 'العنوان' : 'Line'} value={site.address_line1} multiline />
+                  <SiteField label={isRTL ? 'العنوان الوطني' : 'NAF'} value={site.short_address} kind="naf" />
+                  {!site.city_name && !site.district && !site.address_line1 && !site.short_address && (
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'لم يُضَف عنوان بعد.' : 'No address added yet.'}</p>
+                  )}
                 </CardContent>
               </Card>
               {site.access_notes && (
