@@ -825,7 +825,26 @@ export default function DashboardSites() {
                 </Tabs>
 
                 <div className="flex gap-2 pt-1">
-                  <Button onClick={() => saveMut.mutate()} disabled={!form.label.trim() || !naf.city_id || saveMut.isPending} variant="hero" className="flex-1 h-9">
+                  <Button
+                    onClick={() => {
+                      const found = validate();
+                      if (found.length > 0) {
+                        setIssues(found);
+                        setActiveTab(found[0].tab);
+                        toast.error(isRTL ? found[0].title_ar : found[0].title_en);
+                        requestAnimationFrame(() => {
+                          const el = document.getElementById(`site-field-${found[0].field}`);
+                          el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        });
+                        return;
+                      }
+                      setIssues([]);
+                      saveMut.mutate();
+                    }}
+                    disabled={saveMut.isPending}
+                    variant="hero"
+                    className="flex-1 h-9"
+                  >
                     {saveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin me-1.5" /> : <CheckCircle2 className="w-4 h-4 me-1.5" />}
                     {saveMut.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editing ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add')}
                   </Button>
