@@ -419,30 +419,6 @@ const ProviderJoin: React.FC = () => {
           </div>
         </section>
 
-        {/* Process steps */}
-        <section className="border-b bg-muted/30">
-          <div className="container mx-auto px-4 sm:px-6 py-5 sm:py-12 max-w-5xl">
-            <div className="grid sm:grid-cols-3 gap-2.5 sm:gap-6">
-              {[
-                { n: '1', icon: <FileCheck2 className="w-4 h-4 sm:w-5 sm:h-5" />, title: t('املأ الطلب', 'Fill the form'), desc: t('بيانات المنشأة والتواصل والنشاط — أقل من 3 دقائق.', 'Business, contact and activity info — under 3 minutes.') },
-                { n: '2', icon: <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />, title: t('مراجعة الفريق', 'Team review'), desc: t('نراجع البيانات والسجل التجاري للتحقق.', 'We verify your data and CR documents.') },
-                { n: '3', icon: <Award className="w-4 h-4 sm:w-5 sm:h-5" />, title: t('تفعيل الحساب', 'Activation'), desc: t('نرسل تأكيداً برابط تفعيل الملف وإدارته.', 'Confirmation email with activation & management link.') },
-              ].map((s, i) => (
-                <div key={i} className="relative rounded-xl sm:rounded-2xl border bg-card p-3.5 sm:p-5 hover-lift">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <span className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">{s.icon}</span>
-                    <div className="min-w-0">
-                      <span className="text-[10px] sm:text-xs font-mono text-muted-foreground tech-content block leading-none">STEP {s.n}</span>
-                      <h3 className="font-semibold text-sm sm:text-base leading-tight mt-1">{s.title}</h3>
-                    </div>
-                  </div>
-                  <p className="mt-2 text-[12.5px] sm:text-sm text-muted-foreground leading-relaxed max-w-[26ch] sm:max-w-none">{s.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Form */}
         <section className="container mx-auto px-4 sm:px-6 py-10 sm:py-14 max-w-4xl">
           {/* Brand header above the form */}
