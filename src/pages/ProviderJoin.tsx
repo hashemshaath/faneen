@@ -443,18 +443,10 @@ const ProviderJoin: React.FC = () => {
         <section className="container mx-auto px-4 sm:px-6 py-10 sm:py-14 max-w-4xl">
           {/* Brand header above the form */}
           <div className="mb-6 sm:mb-8 flex flex-col items-center text-center gap-3">
-            <img
-              src="/logo.png"
-              alt={t('شعار قِطاعات', 'Qitaat logo')}
-              width={72}
-              height={72}
-              className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-2xl shadow-elegant ring-1 ring-border bg-white p-1.5"
-              loading="lazy"
-              decoding="async"
-            />
+            <BrandLogo variant="full" tone="auto" size="auth" />
             <div>
-              <div className="text-sm text-muted-foreground">{t('منصة قِطاعات الصناعية', 'Qitaat Industrial Platform')}</div>
-              <h2 className="text-lg sm:text-xl font-semibold mt-0.5">
+              <div className="text-xs sm:text-sm text-muted-foreground">{t('منصة قِطاعات الصناعية', 'Qitaat Industrial Platform')}</div>
+              <h2 className="text-base sm:text-xl font-semibold mt-0.5">
                 {t('نموذج طلب الانضمام', 'Join Request Form')}
               </h2>
             </div>
