@@ -1,170 +1,228 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '@/components/common/BrandLogo';
-import { Shield, Users, Award } from 'lucide-react';
+import { ShieldCheck, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import aluminumImg from '@/assets/auth/auth-slide-aluminum.jpg';
+import glassImg from '@/assets/auth/auth-slide-glass.jpg';
+import steelImg from '@/assets/auth/auth-slide-steel.jpg';
+import woodImg from '@/assets/auth/auth-slide-wood.jpg';
 
 /**
- * Industrial showcase panel for the auth split layout.
- * No raster images — pure SVG + CSS so it's lightweight, themable, and crisp.
- * Uses brand tokens: primary (industrial green), secondary (structural blue),
- * accent (industrial orange).
+ * Image-based slideshow showcase for the auth split layout.
+ * Four bilingual motivational slides representing the platform's
+ * industrial sectors (Aluminum, Glass, Steel, Wood).
  */
-const SECTORS = [
-  { ar: 'الألمنيوم', en: 'Aluminum', token: 'primary' },
-  { ar: 'الزجاج', en: 'Glass', token: 'secondary' },
-  { ar: 'الحديد', en: 'Steel', token: 'accent' },
-  { ar: 'الأخشاب', en: 'Wood', token: 'gold' },
-] as const;
+interface Slide {
+  img: string;
+  eyebrow: { ar: string; en: string };
+  title: { ar: string; en: string };
+  caption: { ar: string; en: string };
+}
 
-const STATS = [
-  { icon: Users, ar: '+5,000 مزوّد معتمد', en: '5,000+ verified providers' },
-  { icon: Award, ar: '+10,000 مشروع منفّذ', en: '10,000+ projects delivered' },
-  { icon: Shield, ar: 'حماية وضمان جودة', en: 'Quality & escrow guarantee' },
+const SLIDES: Slide[] = [
+  {
+    img: aluminumImg,
+    eyebrow: { ar: 'الألمنيوم', en: 'Aluminum' },
+    title: { ar: 'واجهات ترتقي بمشاريعك', en: 'Facades that elevate your projects' },
+    caption: {
+      ar: 'تواصل مع مصانع وورش الألمنيوم الأكثر ثقةً في المملكة.',
+      en: 'Connect with the most trusted aluminum factories and workshops in the Kingdom.',
+    },
+  },
+  {
+    img: glassImg,
+    eyebrow: { ar: 'الزجاج', en: 'Glass' },
+    title: { ar: 'شفافية الإبداع وأناقة التنفيذ', en: 'Transparent craft. Impeccable finish.' },
+    caption: {
+      ar: 'حلول زجاج معماري احترافية لمشاريع تجارية وسكنية متميّزة.',
+      en: 'Professional architectural glass solutions for premium commercial and residential builds.',
+    },
+  },
+  {
+    img: steelImg,
+    eyebrow: { ar: 'الحديد', en: 'Steel' },
+    title: { ar: 'صناعة بقوة لا تنحني', en: 'Built with unbending strength' },
+    caption: {
+      ar: 'هياكل ومنشآت حديدية ينفّذها أمهر الحرفيين بضمان الجودة.',
+      en: 'Steel structures crafted by master fabricators — quality guaranteed.',
+    },
+  },
+  {
+    img: woodImg,
+    eyebrow: { ar: 'الأخشاب', en: 'Wood' },
+    title: { ar: 'دفء الخشب بحرفية لا تُنسى', en: 'Warmth of wood. Mastery you remember.' },
+    caption: {
+      ar: 'ورش نجارة متخصصة في الديكور الفاخر والتفاصيل الدقيقة.',
+      en: 'Carpentry studios specialized in luxury décor and fine detailing.',
+    },
+  },
 ];
+
+const AUTO_ROTATE_MS = 5500;
 
 export const AuthShowcase: React.FC = () => {
   const { isRTL } = useLanguage();
-  return (
-    <div className="relative w-full h-full overflow-hidden bg-[hsl(var(--navy))] text-white">
-      {/* Blueprint grid backdrop */}
-      <svg
-        className="absolute inset-0 w-full h-full opacity-[0.18]"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden
-      >
-        <defs>
-          <pattern id="blueprint" width="48" height="48" patternUnits="userSpaceOnUse">
-            <path d="M48 0H0V48" fill="none" stroke="hsl(var(--brand-blue-light))" strokeWidth="0.6" />
-          </pattern>
-          <pattern id="blueprintMajor" width="240" height="240" patternUnits="userSpaceOnUse">
-            <path d="M240 0H0V240" fill="none" stroke="hsl(var(--brand-blue-light))" strokeWidth="1.2" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#blueprint)" />
-        <rect width="100%" height="100%" fill="url(#blueprintMajor)" />
-      </svg>
+  const t = (ar: string, en: string) => (isRTL ? ar : en);
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
 
-      {/* Radial vignette */}
+  const go = useCallback(
+    (delta: number) => setIndex((i) => (i + delta + SLIDES.length) % SLIDES.length),
+    [],
+  );
+
+  useEffect(() => {
+    if (paused) return;
+    const reduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+    const id = window.setInterval(
+      () => setIndex((i) => (i + 1) % SLIDES.length),
+      AUTO_ROTATE_MS,
+    );
+    return () => window.clearInterval(id);
+  }, [paused]);
+
+  return (
+    <div
+      className="relative w-full h-full overflow-hidden bg-slate-950 text-white select-none"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={t('عرض القطاعات الصناعية', 'Industrial sectors showcase')}
+    >
+      {/* Slides */}
+      {SLIDES.map((slide, i) => {
+        const active = i === index;
+        return (
+          <div
+            key={slide.img}
+            className={`absolute inset-0 transition-opacity duration-[1200ms] ease-out ${
+              active ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+            aria-hidden={!active}
+          >
+            <img
+              src={slide.img}
+              alt=""
+              width={1280}
+              height={1600}
+              loading={i === 0 ? 'eager' : 'lazy'}
+              decoding="async"
+              fetchPriority={i === 0 ? 'high' : 'auto'}
+              className={`w-full h-full object-cover object-center will-change-transform transition-transform duration-[8000ms] ease-out ${
+                active ? 'scale-105' : 'scale-100'
+              }`}
+            />
+          </div>
+        );
+      })}
+
+      {/* Cinematic overlays for legibility */}
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(120% 80% at 30% 20%, hsl(var(--primary) / 0.25) 0%, transparent 55%), radial-gradient(80% 60% at 80% 90%, hsl(var(--secondary) / 0.30) 0%, transparent 60%)',
-        }}
+        className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/30"
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent mix-blend-overlay"
+        aria-hidden
       />
 
-      {/* Animated orange accent bar (industrial caution stripe) */}
-      <div className="absolute top-0 inset-x-0 h-1 overflow-hidden">
-        <div
-          className="h-full w-[200%] animate-[stripe_8s_linear_infinite]"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(135deg, hsl(var(--accent)) 0 14px, transparent 14px 28px)',
-          }}
-        />
+      {/* Brand bar */}
+      <div className="absolute top-0 inset-x-0 px-8 lg:px-12 pt-8 lg:pt-10 z-10 flex items-center justify-between">
+        <Link to="/" className="inline-flex items-center hover:opacity-90 transition-opacity">
+          <BrandLogo variant="full" tone="light" size={44} priority alt="قِطاعات — Qitaat" />
+        </Link>
+        <div className="hidden lg:inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/75">
+          <Sparkles className="w-3.5 h-3.5" />
+          {t('منصة الصناعة الأولى', 'Industrial directory')}
+        </div>
       </div>
 
-      <div className="relative h-full flex flex-col p-10 lg:p-14">
-        {/* Logo */}
-        <Link to="/" className="inline-flex items-center hover:opacity-80 transition-opacity self-start">
-          <BrandLogo variant="full" tone="dark" size="auth" priority alt="قِطاعات — Qitaat" />
-        </Link>
-
-        {/* Headline + sector blueprint */}
-        <div className="flex-1 flex flex-col justify-center gap-10 max-w-xl">
-          <div className="space-y-4">
-            <p className="inline-flex items-center gap-2 text-[11px] font-medium tracking-[0.18em] uppercase text-[hsl(var(--accent))]">
-              <span className="w-6 h-px bg-[hsl(var(--accent))]" />
-              {isRTL ? 'منصة القطاعات الصناعية' : 'Industrial Sectors Platform'}
-            </p>
-            <h2 className="font-heading font-bold leading-[1.1] tracking-tight text-[clamp(2rem,3.5vw,3rem)]">
-              {isRTL ? (
-                <>
-                  دليلك الموحّد لكل <br />
-                  <span className="text-[hsl(var(--primary))]">قطاع صناعي</span>
-                </>
-              ) : (
-                <>
-                  Your unified directory for every <br />
-                  <span className="text-[hsl(var(--primary))]">industrial sector</span>
-                </>
-              )}
-            </h2>
-            <p className="text-white/55 text-[15px] leading-relaxed max-w-md">
-              {isRTL
-                ? 'موردون، مقاولون، عقود رقمية، ومدفوعات آمنة — كل ما يحتاجه مشروعك في مكان واحد.'
-                : 'Suppliers, contractors, digital contracts and secure payments — everything your project needs, in one place.'}
-            </p>
-          </div>
-
-          {/* Sector blueprint card */}
-          <div className="relative rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-mono tracking-widest text-white/40 uppercase">
-                QTAT · BLUEPRINT · v1.0
-              </span>
-              <div className="flex gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--accent))]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--primary))]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--secondary))]" />
+      {/* Main content — anchored bottom for cinematic feel */}
+      <div className="relative z-10 w-full h-full flex flex-col justify-end px-10 lg:px-14 xl:px-16 pb-14 lg:pb-20">
+        <div className="relative max-w-xl min-h-[260px]">
+          {SLIDES.map((slide, i) => {
+            const active = i === index;
+            return (
+              <div
+                key={slide.img}
+                className={`absolute inset-0 transition-all duration-700 ${
+                  active
+                    ? 'opacity-100 translate-y-0'
+                    : 'opacity-0 translate-y-4 pointer-events-none'
+                }`}
+                aria-hidden={!active}
+              >
+                <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-white/75 mb-4">
+                  <span className="w-6 h-px bg-white/50" />
+                  {t(slide.eyebrow.ar, slide.eyebrow.en)}
+                </span>
+                <h2 className="text-3xl lg:text-[2.5rem] xl:text-5xl font-bold leading-[1.15] mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
+                  {t(slide.title.ar, slide.title.en)}
+                </h2>
+                <p className="text-white/85 leading-relaxed text-base lg:text-lg max-w-lg">
+                  {t(slide.caption.ar, slide.caption.en)}
+                </p>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {SECTORS.map((s, i) => (
-                <div
-                  key={s.en}
-                  className="group relative rounded-xl border border-white/10 bg-white/[0.03] p-4 overflow-hidden transition-all duration-500 hover:bg-white/[0.06] hover:border-white/20"
-                  style={{ animation: `auth-rise 700ms ${i * 80}ms both` }}
-                >
-                  <div
-                    className="absolute -inset-px rounded-xl opacity-30 blur-xl"
-                    style={{ background: `hsl(var(--${s.token}) / 0.35)` }}
-                  />
-                  <div className="relative flex items-center justify-between">
-                    <div>
-                      <div
-                        className="w-2 h-2 rounded-full mb-3"
-                        style={{ background: `hsl(var(--${s.token}))` }}
-                      />
-                      <p className="text-sm font-semibold text-white">
-                        {isRTL ? s.ar : s.en}
-                      </p>
-                      <p className="text-[10px] text-white/40 font-mono mt-0.5">
-                        SECTOR · 0{i + 1}
-                      </p>
-                    </div>
-                    <svg width="42" height="42" viewBox="0 0 42 42" fill="none" className="opacity-60">
-                      <rect
-                        x="6" y="6" width="30" height="30" rx="4"
-                        stroke={`hsl(var(--${s.token}))`} strokeWidth="1.2"
-                        strokeDasharray="3 3"
-                      />
-                      <rect
-                        x="14" y="14" width="14" height="14" rx="2"
-                        fill={`hsl(var(--${s.token}) / 0.25)`}
-                        stroke={`hsl(var(--${s.token}))`} strokeWidth="1"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              ))}
-            </div>
+            );
+          })}
+        </div>
+
+        {/* Controls row */}
+        <div className="mt-6 flex items-center gap-4">
+          <div
+            className="flex items-center gap-2"
+            role="tablist"
+            aria-label={t('شرائح العرض', 'Slides')}
+          >
+            {SLIDES.map((s, i) => {
+              const active = i === index;
+              return (
+                <button
+                  key={s.img}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  aria-label={t(s.eyebrow.ar, s.eyebrow.en)}
+                  onClick={() => setIndex(i)}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    active ? 'w-10 bg-white' : 'w-4 bg-white/35 hover:bg-white/60'
+                  }`}
+                />
+              );
+            })}
+          </div>
+          <div className="ms-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => go(isRTL ? 1 : -1)}
+              className="w-10 h-10 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/15 transition flex items-center justify-center"
+              aria-label={t('السابق', 'Previous')}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => go(isRTL ? -1 : 1)}
+              className="w-10 h-10 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/15 transition flex items-center justify-center"
+              aria-label={t('التالي', 'Next')}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
-        {/* Stats footer */}
-        <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/10">
-          {STATS.map((s, i) => (
-            <div key={i} className="flex items-start gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-white/[0.06] border border-white/10 flex items-center justify-center shrink-0">
-                <s.icon className="w-4 h-4 text-[hsl(var(--primary))]" strokeWidth={2} />
-              </div>
-              <p className="text-[11px] text-white/65 leading-tight pt-1">
-                {isRTL ? s.ar : s.en}
-              </p>
-            </div>
-          ))}
+        {/* Trust badge */}
+        <div className="mt-6 inline-flex items-center gap-2 text-xs text-white/75">
+          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          {t(
+            '+5,000 منشأة معتمدة · +10,000 مشروع منفّذ',
+            '5,000+ verified providers · 10,000+ projects delivered',
+          )}
         </div>
       </div>
     </div>
