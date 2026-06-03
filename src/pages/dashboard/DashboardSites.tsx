@@ -428,6 +428,7 @@ export default function DashboardSites() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-sites'] });
       toast.success(editing ? (isRTL ? 'تم تحديث الموقع' : 'Site updated') : (isRTL ? 'تم إضافة الموقع' : 'Site added'));
+      setIssues([]);
       closeForm();
     },
     onError: (err: unknown) => {
