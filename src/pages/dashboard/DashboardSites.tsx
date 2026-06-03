@@ -28,7 +28,7 @@ import {
   MapPin, Plus, Pencil, Trash2, Search, X, Loader2, Building2, Home, Warehouse,
   Store, Briefcase, Layers, AlertCircle, CheckCircle2, FileText, Phone, User,
   ExternalLink, Star, ArrowUpRight, Map as MapIcon, FilePlus2, QrCode, ScrollText,
-  Landmark, SlidersHorizontal, Printer,
+  Landmark, SlidersHorizontal, Printer, Info, HelpCircle, ChevronRight,
 } from 'lucide-react';
 
 type SiteType = 'apartment' | 'villa' | 'showroom' | 'office' | 'branch' | 'warehouse' | 'project' | 'commercial' | 'other';
@@ -121,6 +121,137 @@ const emptyNaf: NationalAddressValue = {
   address: null, address_en: null, address_manual: false,
 };
 
+/** Tabs that group form fields — used to jump to the failing tab. */
+type FormTab = 'general' | 'address' | 'government' | 'contact';
+
+/** A single validation issue surfaced to the user. */
+interface FormIssue {
+  field: string;          // input id used for scrollIntoView + ring highlight
+  tab: FormTab;           // which tab the field lives in
+  code: string;           // stable code (server or client)
+  title_ar: string;
+  title_en: string;
+  cause_ar: string;       // why it failed (plain language)
+  cause_en: string;
+  fix_ar: string;         // how to fix it
+  fix_en: string;
+}
+
+/** Stable catalogue of every error/warning we can show. */
+const ISSUE_CATALOG: Record<string, Omit<FormIssue, 'field' | 'tab'>> = {
+  LABEL_REQUIRED: {
+    code: 'LABEL_REQUIRED',
+    title_ar: 'الاسم المختصر مطلوب', title_en: 'Site label is required',
+    cause_ar: 'لم يتم إدخال اسم مختصر للموقع، وهو مطلوب لتمييز الموقع داخل القائمة.',
+    cause_en: 'No short label was entered. It is required to identify the site in the list.',
+    fix_ar: 'افتح تبويب «الأساسيات» وأدخل اسماً مختصراً مثل: فيلا العميل، المعرض الرئيسي.',
+    fix_en: 'Open the "General" tab and enter a short label such as "Client villa" or "Main showroom".',
+  },
+  BUSINESS_ID_REQUIRED: {
+    code: 'BUSINESS_ID_REQUIRED',
+    title_ar: 'لا توجد منشأة مرتبطة بحسابك', title_en: 'No business linked to your account',
+    cause_ar: 'لا يمكن إنشاء مواقع بدون منشأة مالكة. حسابك غير مرتبط بأي منشأة حالياً.',
+    cause_en: 'A site needs an owner business. Your account is not linked to any business yet.',
+    fix_ar: 'انتقل إلى «إدارة المنشأة» وأنشئ منشأتك أو اطلب من المالك ربط حسابك بها.',
+    fix_en: 'Go to "Business Management" and create your business, or ask the owner to link your account.',
+  },
+  CITY_REQUIRED: {
+    code: 'CITY_REQUIRED',
+    title_ar: 'يجب اختيار المدينة', title_en: 'City is required',
+    cause_ar: 'لم يتم اختيار المدينة من قائمة العنوان الوطني، وهي مطلوبة لربط الموقع بالعقود والتنبيهات.',
+    cause_en: 'No city was selected from the National Address list. It is required to link the site to contracts.',
+    fix_ar: 'في تبويب «العنوان والخريطة» اختر المنطقة ثم المدينة من القائمة المنسدلة.',
+    fix_en: 'In the "Address & Map" tab, pick the region then the city from the dropdown.',
+  },
+  ADDRESS_REQUIRED: {
+    code: 'ADDRESS_REQUIRED',
+    title_ar: 'أكمل بيانات العنوان الوطني', title_en: 'Complete the National Address',
+    cause_ar: 'بيانات العنوان الوطني غير كافية لتكوين سطر عنوان رسمي للموقع.',
+    cause_en: 'The National Address data is not enough to build an official address line.',
+    fix_ar: 'املأ المنطقة + المدينة + الحي على الأقل في تبويب «العنوان والخريطة».',
+    fix_en: 'Fill at least Region + City + District in the "Address & Map" tab.',
+  },
+  INVALID_SHORT_ADDRESS: {
+    code: 'INVALID_SHORT_ADDRESS',
+    title_ar: 'صيغة العنوان الوطني المختصر غير صحيحة',
+    title_en: 'Invalid Short National Address format',
+    cause_ar: 'يجب أن يتكون العنوان المختصر من 4 أحرف إنجليزية ثم 4 أرقام بدون فواصل (مثل: RQQA6904).',
+    cause_en: 'The short address must be 4 letters then 4 digits with no spaces (e.g. RQQA6904).',
+    fix_ar: 'أعد إدخال الكود من تطبيق العنوان الوطني، أو اتركه فارغاً لحفظ الموقع بدونه.',
+    fix_en: 'Re-enter the code from the National Address app, or leave it blank to save without it.',
+  },
+  INVALID_LATITUDE: {
+    code: 'INVALID_LATITUDE',
+    title_ar: 'إحداثيات خط العرض غير صحيحة', title_en: 'Invalid latitude',
+    cause_ar: 'قيمة خط العرض يجب أن تكون بين -90 و 90.',
+    cause_en: 'Latitude must be between -90 and 90.',
+    fix_ar: 'استخدم زر «تحديد على الخريطة» لاختيار النقطة تلقائياً بدلاً من الإدخال اليدوي.',
+    fix_en: 'Use "Pin on map" to set the location automatically instead of typing it.',
+  },
+  INVALID_LONGITUDE: {
+    code: 'INVALID_LONGITUDE',
+    title_ar: 'إحداثيات خط الطول غير صحيحة', title_en: 'Invalid longitude',
+    cause_ar: 'قيمة خط الطول يجب أن تكون بين -180 و 180.',
+    cause_en: 'Longitude must be between -180 and 180.',
+    fix_ar: 'استخدم زر «تحديد على الخريطة» لاختيار النقطة تلقائياً بدلاً من الإدخال اليدوي.',
+    fix_en: 'Use "Pin on map" to set the location automatically instead of typing it.',
+  },
+  INVALID_MAP_URL: {
+    code: 'INVALID_MAP_URL',
+    title_ar: 'رابط الخريطة غير صالح', title_en: 'Invalid map URL',
+    cause_ar: 'الرابط لا يبدأ بـ http:// أو https://، أو يحتوي على رموز غير مدعومة.',
+    cause_en: 'The URL does not start with http:// or https://, or contains unsupported characters.',
+    fix_ar: 'انسخ الرابط مباشرة من Google Maps أو اتركه فارغاً ليُولَّد تلقائياً عند تحديد الموقع.',
+    fix_en: 'Copy the link from Google Maps directly, or leave it empty to auto-generate from the pin.',
+  },
+  INVALID_LICENSE_DATES: {
+    code: 'INVALID_LICENSE_DATES',
+    title_ar: 'تواريخ رخصة البلدية غير منطقية',
+    title_en: 'Municipal license dates are inconsistent',
+    cause_ar: 'تاريخ انتهاء الرخصة سابق لتاريخ إصدارها، وهذا غير ممكن.',
+    cause_en: 'License expiry is earlier than its issue date, which is not allowed.',
+    fix_ar: 'صحّح أحد التاريخين في تبويب «البيانات الحكومية» بحيث يكون الانتهاء بعد الإصدار.',
+    fix_en: 'Fix one of the dates in the "Government" tab so expiry is after issue date.',
+  },
+  FORBIDDEN: {
+    code: 'FORBIDDEN',
+    title_ar: 'ليست لديك صلاحية لهذا الإجراء', title_en: 'You are not allowed to do this',
+    cause_ar: 'حسابك ليس المالك أو المدير لهذه المنشأة، لذلك لا يمكنك إضافة/تعديل مواقعها.',
+    cause_en: 'Your account is not the owner or manager of this business.',
+    fix_ar: 'تواصل مع مالك المنشأة لمنحك صلاحية «مدير» من إعدادات الفريق.',
+    fix_en: 'Ask the business owner to grant you the "Manager" role from team settings.',
+  },
+  INVALID_SITE_TYPE: {
+    code: 'INVALID_SITE_TYPE',
+    title_ar: 'نوع الموقع غير صالح', title_en: 'Invalid site type',
+    cause_ar: 'القيمة المختارة لنوع الموقع غير مدعومة في النظام.',
+    cause_en: 'The selected site type value is not supported.',
+    fix_ar: 'أعد اختيار نوع الموقع من القائمة في تبويب «الأساسيات».',
+    fix_en: 'Re-select the site type from the list in the "General" tab.',
+  },
+  INVALID_VISIBILITY: {
+    code: 'INVALID_VISIBILITY',
+    title_ar: 'إعداد الخصوصية غير صالح', title_en: 'Invalid visibility setting',
+    cause_ar: 'القيمة المختارة لخصوصية الموقع غير مدعومة.',
+    cause_en: 'The selected visibility value is not supported.',
+    fix_ar: 'اختر أحد خيارات الخصوصية من القائمة في تبويب «الأساسيات».',
+    fix_en: 'Pick one of the visibility options in the "General" tab.',
+  },
+  UNKNOWN: {
+    code: 'UNKNOWN',
+    title_ar: 'حدث خطأ غير متوقع أثناء الحفظ', title_en: 'Unexpected error while saving',
+    cause_ar: 'تعذّر إكمال الحفظ بسبب خطأ في الاتصال أو خطأ غير معروف من الخادم.',
+    cause_en: 'Save could not be completed due to a connection or unknown server error.',
+    fix_ar: 'تحقق من الاتصال بالإنترنت ثم أعد المحاولة. إن تكرّر الخطأ راسل الدعم مع الرسالة الأصلية.',
+    fix_en: 'Check your connection and try again. If it persists, contact support with the original message.',
+  },
+};
+
+const issueOf = (code: string, field: string, tab: FormTab, override?: Partial<FormIssue>): FormIssue => {
+  const base = ISSUE_CATALOG[code] ?? ISSUE_CATALOG.UNKNOWN;
+  return { ...base, ...override, field, tab };
+};
+
 export default function DashboardSites() {
   useNoIndex();
   const { isRTL } = useLanguage();
@@ -140,6 +271,14 @@ export default function DashboardSites() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [expandedBarcode, setExpandedBarcode] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [activeTab, setActiveTab] = useState<FormTab>('general');
+  const [issues, setIssues] = useState<FormIssue[]>([]);
+  /** Quick lookup: { field -> true } for ring/error highlighting on inputs. */
+  const errorFields = useMemo(() => {
+    const m: Record<string, boolean> = {};
+    issues.forEach(i => { m[i.field] = true; });
+    return m;
+  }, [issues]);
   const [advLicenseNo, setAdvLicenseNo] = useState('');
   const [advDeedNo, setAdvDeedNo] = useState('');
   const [advOwnerId, setAdvOwnerId] = useState('');
@@ -228,6 +367,40 @@ export default function DashboardSites() {
   });
 
   /* ─── Mutations ─── */
+  /**
+   * Client-side validator — runs before we hit the RPC so we can show
+   * an inline, actionable issues panel instead of a generic toast.
+   * Mirrors the server checks in `create_client_site` / `update_client_site`.
+   */
+  const validate = useCallback((): FormIssue[] => {
+    const out: FormIssue[] = [];
+    if (!businessId && !editing) out.push(issueOf('BUSINESS_ID_REQUIRED', 'label', 'general'));
+    if (!form.label.trim()) out.push(issueOf('LABEL_REQUIRED', 'label', 'general'));
+    if (!naf.city_id) out.push(issueOf('CITY_REQUIRED', 'city', 'address'));
+    const composedAr = (naf.address && naf.address.trim()) || buildAddressLine(naf, 'ar');
+    if (!composedAr) out.push(issueOf('ADDRESS_REQUIRED', 'address', 'address'));
+    const rawShort = (naf.short_address ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (rawShort && !/^[A-Z]{4}[0-9]{4}$/.test(rawShort)) {
+      out.push(issueOf('INVALID_SHORT_ADDRESS', 'short_address', 'address'));
+    }
+    if (form.latitude) {
+      const lat = Number(form.latitude);
+      if (!Number.isFinite(lat) || lat < -90 || lat > 90) out.push(issueOf('INVALID_LATITUDE', 'latitude', 'address'));
+    }
+    if (form.longitude) {
+      const lng = Number(form.longitude);
+      if (!Number.isFinite(lng) || lng < -180 || lng > 180) out.push(issueOf('INVALID_LONGITUDE', 'longitude', 'address'));
+    }
+    if (form.map_url.trim() && !/^https?:\/\//i.test(form.map_url.trim())) {
+      out.push(issueOf('INVALID_MAP_URL', 'map_url', 'address'));
+    }
+    if (form.municipal_license_issue_date && form.municipal_license_expiry_date
+        && form.municipal_license_expiry_date < form.municipal_license_issue_date) {
+      out.push(issueOf('INVALID_LICENSE_DATES', 'municipal_license_expiry_date', 'government'));
+    }
+    return out;
+  }, [businessId, editing, form, naf]);
+
   const saveMut = useMutation({
     mutationFn: async () => {
       if (!businessId && !editing) throw new Error(isRTL ? 'لا توجد منشأة مرتبطة' : 'No business linked');
@@ -295,26 +468,33 @@ export default function DashboardSites() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-sites'] });
       toast.success(editing ? (isRTL ? 'تم تحديث الموقع' : 'Site updated') : (isRTL ? 'تم إضافة الموقع' : 'Site added'));
+      setIssues([]);
       closeForm();
     },
     onError: (err: unknown) => {
       const raw = err instanceof Error ? err.message : String(err ?? '');
-      const map: Record<string, [string, string]> = {
-        LABEL_REQUIRED:        ['اسم/تسمية الموقع مطلوب', 'Site label is required'],
-        ADDRESS_REQUIRED:      ['أكمل بيانات العنوان الوطني', 'Complete the National Address'],
-        BUSINESS_ID_REQUIRED:  ['لا توجد منشأة مرتبطة', 'No business linked'],
-        FORBIDDEN:             ['ليست لديك صلاحية لهذا الإجراء', 'You are not allowed to do this'],
-        INVALID_LATITUDE:      ['إحداثيات خط العرض غير صحيحة', 'Invalid latitude'],
-        INVALID_LONGITUDE:     ['إحداثيات خط الطول غير صحيحة', 'Invalid longitude'],
-        INVALID_MAP_URL:       ['رابط الخريطة غير صالح (يجب أن يبدأ بـ http/https)', 'Invalid map URL (must start with http/https)'],
-        INVALID_SITE_TYPE:     ['نوع الموقع غير صالح', 'Invalid site type'],
-        INVALID_VISIBILITY:    ['إعداد الظهور غير صالح', 'Invalid visibility setting'],
-        INVALID_SHORT_ADDRESS: ['العنوان الوطني المختصر يجب أن يكون 4 أحرف + 4 أرقام (مثال: RQQA6904)', 'Short national address must be 4 letters + 4 digits (e.g. RQQA6904)'],
-        INVALID_LICENSE_DATES: ['تاريخ انتهاء الرخصة يجب أن يكون بعد تاريخ الإصدار', 'License expiry date must be on/after the issue date'],
+      const tabFor: Record<string, FormTab> = {
+        LABEL_REQUIRED: 'general', INVALID_SITE_TYPE: 'general', INVALID_VISIBILITY: 'general',
+        BUSINESS_ID_REQUIRED: 'general', FORBIDDEN: 'general',
+        ADDRESS_REQUIRED: 'address', INVALID_SHORT_ADDRESS: 'address',
+        INVALID_LATITUDE: 'address', INVALID_LONGITUDE: 'address', INVALID_MAP_URL: 'address',
+        INVALID_LICENSE_DATES: 'government',
       };
-      const code = Object.keys(map).find(k => raw.includes(k));
-      const msg = code ? map[code][isRTL ? 0 : 1] : (raw || (isRTL ? 'فشل الحفظ' : 'Save failed'));
-      toast.error(msg);
+      const fieldFor: Record<string, string> = {
+        LABEL_REQUIRED: 'label', INVALID_SITE_TYPE: 'site_type', INVALID_VISIBILITY: 'visibility',
+        BUSINESS_ID_REQUIRED: 'label', FORBIDDEN: 'label',
+        ADDRESS_REQUIRED: 'address', INVALID_SHORT_ADDRESS: 'short_address',
+        INVALID_LATITUDE: 'latitude', INVALID_LONGITUDE: 'longitude', INVALID_MAP_URL: 'map_url',
+        INVALID_LICENSE_DATES: 'municipal_license_expiry_date',
+      };
+      const code = Object.keys(ISSUE_CATALOG).find(k => raw.includes(k)) ?? 'UNKNOWN';
+      const issue = issueOf(code, fieldFor[code] ?? 'label', tabFor[code] ?? 'general',
+        code === 'UNKNOWN' && raw
+          ? { cause_ar: `${ISSUE_CATALOG.UNKNOWN.cause_ar} (${raw})`, cause_en: `${ISSUE_CATALOG.UNKNOWN.cause_en} (${raw})` }
+          : undefined);
+      setIssues([issue]);
+      setActiveTab(issue.tab);
+      toast.error(isRTL ? issue.title_ar : issue.title_en);
     },
   });
 
@@ -384,9 +564,13 @@ export default function DashboardSites() {
   }, [sites, contractCounts]);
 
   /* ─── Callbacks ─── */
-  const closeForm = useCallback(() => { setShowForm(false); setEditing(null); setForm(emptyForm); setNaf(emptyNaf); }, []);
+  const closeForm = useCallback(() => {
+    setShowForm(false); setEditing(null); setForm(emptyForm); setNaf(emptyNaf);
+    setIssues([]); setActiveTab('general');
+  }, []);
   const openCreate = useCallback(() => {
-    setEditing(null); setForm(emptyForm); setNaf(emptyNaf); setShowForm(true);
+    setEditing(null); setForm(emptyForm); setNaf(emptyNaf);
+    setIssues([]); setActiveTab('general'); setShowForm(true);
     requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }, []);
   const openEdit = useCallback((s: ClientSite) => {
@@ -502,7 +686,59 @@ export default function DashboardSites() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pb-5">
-                <Tabs defaultValue="general" className="w-full">
+                {issues.length > 0 && (
+                  <div
+                    role="alert"
+                    aria-live="assertive"
+                    className="rounded-xl border border-destructive/40 bg-destructive/5 p-3 space-y-2"
+                  >
+                    <div className="flex items-center gap-2 text-destructive">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <h3 className="text-xs font-bold">
+                        {isRTL
+                          ? `يوجد ${issues.length} ${issues.length === 1 ? 'مشكلة' : 'مشاكل'} يجب معالجتها قبل الحفظ`
+                          : `${issues.length} ${issues.length === 1 ? 'issue' : 'issues'} to resolve before saving`}
+                      </h3>
+                    </div>
+                    <ul className="space-y-2">
+                      {issues.map((iss, idx) => (
+                        <li key={idx} className="rounded-lg border border-destructive/30 bg-background/60 p-2.5 space-y-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveTab(iss.tab);
+                              requestAnimationFrame(() => {
+                                const el = document.getElementById(`site-field-${iss.field}`);
+                                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                (el?.querySelector('input,select,textarea') as HTMLElement | null)?.focus();
+                              });
+                            }}
+                            className="w-full flex items-start gap-2 text-start group"
+                          >
+                            <span className="mt-0.5 inline-flex w-5 h-5 items-center justify-center rounded-full bg-destructive/15 text-destructive text-[10px] font-bold shrink-0">
+                              {idx + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-destructive group-hover:underline">
+                                {isRTL ? iss.title_ar : iss.title_en}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5 flex items-start gap-1">
+                                <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                                <span>{isRTL ? iss.cause_ar : iss.cause_en}</span>
+                              </p>
+                              <p className="text-[11px] text-foreground mt-0.5 flex items-start gap-1">
+                                <HelpCircle className="w-3 h-3 mt-0.5 shrink-0 text-primary" />
+                                <span>{isRTL ? iss.fix_ar : iss.fix_en}</span>
+                              </p>
+                            </div>
+                            <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5 ${isRTL ? 'rotate-180' : ''}`} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FormTab)} className="w-full">
                   <TabsList className="w-full grid grid-cols-4 h-auto p-1">
                     <TabsTrigger value="general" className="text-[11px] gap-1.5"><Layers className="w-3.5 h-3.5" />{isRTL ? 'الأساسيات' : 'General'}</TabsTrigger>
                     <TabsTrigger value="address" className="text-[11px] gap-1.5"><MapPin className="w-3.5 h-3.5" />{isRTL ? 'العنوان والخريطة' : 'Address & Map'}</TabsTrigger>
@@ -512,9 +748,15 @@ export default function DashboardSites() {
 
                   <TabsContent value="general" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5" id="site-field-label">
                     <Label className="text-xs font-medium">{isRTL ? 'الاسم المختصر' : 'Label'} <span className="text-destructive">*</span></Label>
-                    <Input value={form.label} onChange={e => setForm(p => ({ ...p, label: e.target.value }))} placeholder={isRTL ? 'مثال: فيلا العميل' : 'e.g. Client villa'} className="h-9" />
+                    <Input
+                      value={form.label}
+                      onChange={e => setForm(p => ({ ...p, label: e.target.value }))}
+                      placeholder={isRTL ? 'مثال: فيلا العميل' : 'e.g. Client villa'}
+                      className={`h-9 ${errorFields.label ? 'ring-2 ring-destructive/60 border-destructive' : ''}`}
+                      aria-invalid={!!errorFields.label}
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">{isRTL ? 'اسم الموقع' : 'Site Name'}</Label>
@@ -546,8 +788,13 @@ export default function DashboardSites() {
                   </TabsContent>
 
                   <TabsContent value="address" className="space-y-4 mt-4">
-                <div className="rounded-xl border border-border/50 bg-card/40 p-3">
+                <div
+                  id="site-field-address"
+                  className={`rounded-xl border bg-card/40 p-3 ${errorFields.address || errorFields.city || errorFields.short_address ? 'border-destructive/60 ring-1 ring-destructive/30' : 'border-border/50'}`}
+                >
                   <NationalAddressForm value={naf} onChange={setNaf} isRTL={isRTL} />
+                  <span id="site-field-city" className="sr-only" />
+                  <span id="site-field-short_address" className="sr-only" />
                 </div>
 
                 {/* Interactive map picker (lat/lng + optional reverse-fill of region/district) */}
@@ -578,9 +825,17 @@ export default function DashboardSites() {
                       }));
                     }}
                   />
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5" id="site-field-map_url">
                     <Label className="text-xs font-medium">{isRTL ? 'رابط خريطة مخصص (اختياري)' : 'Custom map URL (optional)'}</Label>
-                    <Input type="url" dir="ltr" value={form.map_url} onChange={e => setForm(p => ({ ...p, map_url: e.target.value }))} placeholder="https://maps.google.com/…" className="h-9 tech-content" />
+                    <Input
+                      type="url" dir="ltr" value={form.map_url}
+                      onChange={e => setForm(p => ({ ...p, map_url: e.target.value }))}
+                      placeholder="https://maps.google.com/…"
+                      className={`h-9 tech-content ${errorFields.map_url ? 'ring-2 ring-destructive/60 border-destructive' : ''}`}
+                      aria-invalid={!!errorFields.map_url}
+                    />
+                    <span id="site-field-latitude" className="sr-only" />
+                    <span id="site-field-longitude" className="sr-only" />
                   </div>
                 </div>
                   </TabsContent>
@@ -605,9 +860,14 @@ export default function DashboardSites() {
                           <Label className="text-xs font-medium">{isRTL ? 'تاريخ الإصدار' : 'Issue Date'}</Label>
                           <Input type="date" dir="ltr" value={form.municipal_license_issue_date} onChange={e => setForm(p => ({ ...p, municipal_license_issue_date: e.target.value }))} className="h-9 tech-content" />
                         </div>
-                        <div className="space-y-1.5">
+                        <div className="space-y-1.5" id="site-field-municipal_license_expiry_date">
                           <Label className="text-xs font-medium">{isRTL ? 'تاريخ الانتهاء' : 'Expiry Date'}</Label>
-                          <Input type="date" dir="ltr" value={form.municipal_license_expiry_date} onChange={e => setForm(p => ({ ...p, municipal_license_expiry_date: e.target.value }))} className="h-9 tech-content" />
+                          <Input
+                            type="date" dir="ltr" value={form.municipal_license_expiry_date}
+                            onChange={e => setForm(p => ({ ...p, municipal_license_expiry_date: e.target.value }))}
+                            className={`h-9 tech-content ${errorFields.municipal_license_expiry_date ? 'ring-2 ring-destructive/60 border-destructive' : ''}`}
+                            aria-invalid={!!errorFields.municipal_license_expiry_date}
+                          />
                         </div>
                       </div>
                     </div>
@@ -687,7 +947,26 @@ export default function DashboardSites() {
                 </Tabs>
 
                 <div className="flex gap-2 pt-1">
-                  <Button onClick={() => saveMut.mutate()} disabled={!form.label.trim() || !naf.city_id || saveMut.isPending} variant="hero" className="flex-1 h-9">
+                  <Button
+                    onClick={() => {
+                      const found = validate();
+                      if (found.length > 0) {
+                        setIssues(found);
+                        setActiveTab(found[0].tab);
+                        toast.error(isRTL ? found[0].title_ar : found[0].title_en);
+                        requestAnimationFrame(() => {
+                          const el = document.getElementById(`site-field-${found[0].field}`);
+                          el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        });
+                        return;
+                      }
+                      setIssues([]);
+                      saveMut.mutate();
+                    }}
+                    disabled={saveMut.isPending}
+                    variant="hero"
+                    className="flex-1 h-9"
+                  >
                     {saveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin me-1.5" /> : <CheckCircle2 className="w-4 h-4 me-1.5" />}
                     {saveMut.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editing ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add')}
                   </Button>
