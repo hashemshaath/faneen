@@ -284,21 +284,29 @@ const DashboardSiteDetail: React.FC = () => {
         </section>
 
         {/* KPI Strip */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           <KpiCard icon={FileText} label={isRTL ? 'العقود' : 'Contracts'} value={contracts.length} loading={contractsLoading} />
-          <KpiCard icon={MessageSquareQuote} label={isRTL ? 'عروض الأسعار' : 'Quotes'} value={leads.length} loading={leadsLoading} />
-          <KpiCard icon={Inbox} label={isRTL ? 'طلبات RFQ' : 'RFQs'} value={rfqs.length} loading={rfqsLoading} />
-          <KpiCard icon={ImageIcon} label={isRTL ? 'صور المعرض' : 'Gallery'} value={gallery.length} loading={false} />
+          <KpiCard icon={MessageSquareQuote} label={isRTL ? 'عروض' : 'Quotes'} value={leads.length} loading={leadsLoading} />
+          <KpiCard icon={Inbox} label="RFQ" value={rfqs.length} loading={rfqsLoading} />
+          <KpiCard icon={Users} label={isRTL ? 'جهات' : 'Contacts'} value={contactsRaw.length} loading={contactsLoading} />
+          <KpiCard icon={AlertTriangle} label={isRTL ? 'بلاغات' : 'Reports'} value={reportsCount} loading={false} tone={reportsCount > 0 ? 'destructive' : undefined} />
+          <KpiCard icon={ImageIcon} label={isRTL ? 'الصور' : 'Gallery'} value={gallery.length} loading={false} />
         </div>
 
         {/* Tabs */}
         <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="w-full overflow-x-auto no-scrollbar justify-start">
             <TabsTrigger value="overview"><ClipboardList className="h-4 w-4" /><span className="mx-2">{isRTL ? 'نظرة عامة' : 'Overview'}</span></TabsTrigger>
+            <TabsTrigger value="contacts"><Users className="h-4 w-4" /><span className="mx-2">{isRTL ? 'جهات الاتصال' : 'Contacts'}</span></TabsTrigger>
             <TabsTrigger value="contracts"><FileText className="h-4 w-4" /><span className="mx-2">{isRTL ? 'العقود' : 'Contracts'}</span></TabsTrigger>
             <TabsTrigger value="quotes"><MessageSquareQuote className="h-4 w-4" /><span className="mx-2">{isRTL ? 'العروض' : 'Quotes'}</span></TabsTrigger>
             <TabsTrigger value="rfq"><Inbox className="h-4 w-4" /><span className="mx-2">RFQ</span></TabsTrigger>
             <TabsTrigger value="milestones"><Milestone className="h-4 w-4" /><span className="mx-2">{isRTL ? 'المراحل' : 'Milestones'}</span></TabsTrigger>
+            <TabsTrigger value="reports">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="mx-2">{isRTL ? 'البلاغات' : 'Reports'}</span>
+              {reportsCount > 0 && <Badge className="ms-1 h-5 px-1.5 text-[10px] bg-destructive text-destructive-foreground">{reportsCount}</Badge>}
+            </TabsTrigger>
             <TabsTrigger value="timeline"><Activity className="h-4 w-4" /><span className="mx-2">{isRTL ? 'السجل' : 'Timeline'}</span></TabsTrigger>
             <TabsTrigger value="gallery"><ImageIcon className="h-4 w-4" /><span className="mx-2">{isRTL ? 'المعرض' : 'Gallery'}</span></TabsTrigger>
             <TabsTrigger value="settings"><Settings className="h-4 w-4" /><span className="mx-2">{isRTL ? 'الإعدادات' : 'Settings'}</span></TabsTrigger>
