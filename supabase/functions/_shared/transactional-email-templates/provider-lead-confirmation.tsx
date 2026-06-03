@@ -35,6 +35,11 @@ const ProviderLeadConfirmationEmail: React.FC<Props> = ({
     details={referenceCode ? [
       { labelAr: 'الرقم المرجعي', labelEn: 'Reference', value: referenceCode, mono: true },
     ] : undefined}
+    cta={referenceCode ? {
+      href: `https://qitaat.com/join/qitaat/edit?ref=${encodeURIComponent(referenceCode)}`,
+      labelAr: 'تعديل بيانات الطلب',
+      labelEn: 'Edit my request',
+    } : undefined}
     tipAr="غالبية الطلبات تتم مراجعتها خلال 24–48 ساعة عمل. سنتواصل معكم عبر القناة المفضلة المختارة."
     tipEn="Most requests are reviewed within 24–48 business hours. We will reach out via your preferred contact channel."
   />
