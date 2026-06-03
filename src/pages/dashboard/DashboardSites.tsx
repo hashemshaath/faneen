@@ -273,6 +273,12 @@ export default function DashboardSites() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [activeTab, setActiveTab] = useState<FormTab>('general');
   const [issues, setIssues] = useState<FormIssue[]>([]);
+  /** Quick lookup: { field -> true } for ring/error highlighting on inputs. */
+  const errorFields = useMemo(() => {
+    const m: Record<string, boolean> = {};
+    issues.forEach(i => { m[i.field] = true; });
+    return m;
+  }, [issues]);
   const [advLicenseNo, setAdvLicenseNo] = useState('');
   const [advDeedNo, setAdvDeedNo] = useState('');
   const [advOwnerId, setAdvOwnerId] = useState('');
