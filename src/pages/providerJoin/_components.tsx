@@ -10,9 +10,9 @@ export interface CategoryOption {
 }
 
 export const SectionHeader: React.FC<{ icon: React.ReactNode; title: string }> = ({ icon, title }) => (
-  <div className="flex items-center gap-2 pb-2 border-b">
-    <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center [&_svg]:w-[18px] [&_svg]:h-[18px] sm:[&_svg]:w-5 sm:[&_svg]:h-5">{icon}</span>
-    <h2 className="text-[18px] sm:text-lg font-semibold leading-[26px]">{title}</h2>
+  <div className="flex items-center gap-2.5 pb-3 mb-1 border-b border-border/60">
+    <span className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center [&_svg]:w-[18px] [&_svg]:h-[18px]">{icon}</span>
+    <h2 className="text-[15px] sm:text-base font-semibold leading-snug tracking-tight">{title}</h2>
   </div>
 );
 
