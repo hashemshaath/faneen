@@ -295,8 +295,8 @@ const ProviderJoin: React.FC = () => {
         </section>
 
         {/* Form */}
-        <section className="container mx-auto px-4 py-10 max-w-4xl">
-          <form onSubmit={onSubmit} className="space-y-6" noValidate>
+        <section className="container mx-auto px-4 sm:px-6 py-10 sm:py-14 max-w-4xl">
+          <form onSubmit={onSubmit} className="space-y-5 sm:space-y-6" noValidate>
             {/* Honeypot — hidden from real users */}
             <input
               ref={honeypotRef}
@@ -310,7 +310,7 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 1 — Establishment */}
             <Card className="rounded-2xl">
-              <CardContent className="p-6 md:p-8 space-y-5">
+              <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
                 <SectionHeader icon={<Building2 className="w-5 h-5" />} title={t('بيانات المنشأة', 'Establishment Info')} />
                 <div className="grid md:grid-cols-2 gap-4">
                   <Field label={t('اسم المنشأة بالعربي *', 'Business name (Arabic) *')}>
@@ -340,7 +340,7 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 2 — Contact */}
             <Card className="rounded-2xl">
-              <CardContent className="p-6 md:p-8 space-y-5">
+              <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
                 <SectionHeader icon={<User className="w-5 h-5" />} title={t('بيانات التواصل', 'Contact Person')} />
                 <div className="grid md:grid-cols-2 gap-4">
                   <Field label={t('اسم المسؤول *', 'Contact name *')}>
@@ -375,7 +375,7 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 3 — Activity & Location */}
             <Card className="rounded-2xl">
-              <CardContent className="p-6 md:p-8 space-y-5">
+              <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
                 <SectionHeader icon={<MapPin className="w-5 h-5" />} title={t('النشاط والموقع', 'Activity & Location')} />
                 <div className="grid md:grid-cols-2 gap-4">
                   <Field label={t('النشاط الرئيسي', 'Main activity')}>
@@ -423,7 +423,7 @@ const ProviderJoin: React.FC = () => {
             {/* Branches */}
             {form.branches_count > 1 && (
               <Card className="rounded-2xl">
-                <CardContent className="p-6 md:p-8 space-y-5">
+                <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
                   <div className="flex items-center justify-between">
                     <SectionHeader icon={<Globe className="w-5 h-5" />} title={t('بيانات الفروع', 'Branch details')} />
                     <Button type="button" size="sm" variant="outline" onClick={addBranch} className="rounded-xl">
