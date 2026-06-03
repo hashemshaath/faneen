@@ -207,6 +207,20 @@ const ProviderJoin: React.FC = () => {
     return er;
   };
 
+  const focusFirstError = (er: Record<string, string>) => {
+    const first = Object.keys(er)[0];
+    if (!first) return;
+    requestAnimationFrame(() => {
+      const el = formRef.current?.querySelector<HTMLElement>(`[data-error-key="${first}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        (el.querySelector('input, select, textarea, button') as HTMLElement | null)?.focus();
+      } else {
+        alertRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  };
+
   // Per-step validation for the mobile wizard
   const validateStep = (s: 1 | 2 | 3): Record<string, string> => {
     const all = validate();
@@ -231,20 +245,6 @@ const ProviderJoin: React.FC = () => {
   const goBack = () => {
     setStep((s) => (s > 1 ? ((s - 1) as 1 | 2 | 3) : s));
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
-  };
-
-  const focusFirstError = (er: Record<string, string>) => {
-    const first = Object.keys(er)[0];
-    if (!first) return;
-    requestAnimationFrame(() => {
-      const el = formRef.current?.querySelector<HTMLElement>(`[data-error-key="${first}"]`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        (el.querySelector('input, select, textarea, button') as HTMLElement | null)?.focus();
-      } else {
-        alertRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    });
   };
 
   const onSubmit = async (e: React.FormEvent) => {
