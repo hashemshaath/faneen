@@ -95,8 +95,7 @@ export const ProviderLeadFormPage: React.FC = () => {
     setForm((f) => ({ ...f, [k]: v }));
     setErrors((e) => {
       if (!e[k as string]) return e;
-      const { [k as string]: _, ...rest } = e;
-      return rest;
+      return Object.fromEntries(Object.entries(e).filter(([key]) => key !== (k as string)));
     });
     if (submitError) setSubmitError(null);
   };
