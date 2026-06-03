@@ -18,6 +18,10 @@ import {
 } from 'lucide-react';
 import SiteCoverUploader from '@/components/sites/SiteCoverUploader';
 import SiteGalleryManager, { type GalleryImage } from '@/components/sites/SiteGalleryManager';
+import SiteContactsTab from '@/components/sites/SiteContactsTab';
+import SiteReportsTab from '@/components/sites/SiteReportsTab';
+import SiteSettingsTab from '@/components/sites/SiteSettingsTab';
+import { Users, AlertTriangle } from 'lucide-react';
 
 type Json = Record<string, unknown>;
 
@@ -40,6 +44,7 @@ interface SiteRow {
   access_notes: string | null;
   cover_image_url: string | null;
   gallery_images: GalleryImage[] | null;
+  qr_enabled: boolean | null;
   owner_user_id: string | null;
   client_user_id: string | null;
   business_id: string | null;
