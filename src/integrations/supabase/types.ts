@@ -18294,6 +18294,10 @@ export type Database = {
           table_name: string
         }[]
       }
+      lookup_provider_lead: {
+        Args: { p_credential: string; p_reference: string }
+        Returns: Json
+      }
       market_sector_city_stats: {
         Args: { p_days?: number }
         Returns: {
@@ -19108,6 +19112,10 @@ export type Database = {
           _time_window?: string
         }
         Returns: boolean
+      }
+      update_provider_lead_by_ref: {
+        Args: { p_credential: string; p_reference: string; payload: Json }
+        Returns: Json
       }
       update_site_section_visibility: {
         Args: {
