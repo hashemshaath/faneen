@@ -58,13 +58,13 @@ export const MembershipPaymentHistory: React.FC<Props> = ({ subscriptionId, isRT
     },
   });
 
-  if (!subscriptionId || isLoading) return null;
-
   const rows = intents ?? [];
   const filteredRows = useMemo(
     () => (filter === 'all' ? rows : rows.filter((r) => r.status === filter)),
     [rows, filter],
   );
+
+  if (!subscriptionId || isLoading) return null;
   const title = isRTL ? 'سجل المدفوعات' : 'Payment history';
   const emptyText = isRTL ? 'لا يوجد سجل مدفوعات بعد.' : 'No payment history yet.';
 
