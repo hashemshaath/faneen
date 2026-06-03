@@ -1126,7 +1126,27 @@ export default function DashboardSites() {
                   ref={isFocused ? focusRef : undefined}
                   className={`hover-lift border-border/50 ${isArchived ? 'opacity-60' : ''} ${isFocused ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                 >
-                  <CardContent className="p-4 space-y-3">
+                  <CardContent className="p-0 space-y-0 overflow-hidden">
+                    {/* Cover thumbnail — clickable to open detail page */}
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/dashboard/sites/${s.id}`)}
+                      className="group relative block w-full aspect-[16/7] overflow-hidden bg-gradient-to-br from-muted to-muted/50"
+                      title={isRTL ? 'فتح صفحة الموقع' : 'Open site page'}
+                    >
+                      {s.cover_image_url ? (
+                        <img src={s.cover_image_url} alt={s.label} loading="lazy" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-muted-foreground/60">
+                          <Icon className="w-8 h-8" />
+                        </div>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent px-3 py-2 text-[10px] text-white opacity-0 transition group-hover:opacity-100">
+                        <span>{isRTL ? 'فتح صفحة الموقع' : 'Open site page'}</span>
+                        <ArrowUpRight className="w-3 h-3" />
+                      </div>
+                    </button>
+                  <div className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-2.5 min-w-0">
                         <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -1134,7 +1154,9 @@ export default function DashboardSites() {
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <h3 className="font-semibold text-sm truncate">{s.label}</h3>
+                            <button onClick={() => navigate(`/dashboard/sites/${s.id}`)} className="font-semibold text-sm truncate text-start hover:text-primary hover:underline">
+                              {s.label}
+                            </button>
                             {s.is_default && (
                               <Badge variant="outline" className="h-4 text-[9px] px-1 border-accent text-accent gap-0.5">
                                 <Star className="w-2.5 h-2.5 fill-current" />{isRTL ? 'افتراضي' : 'Default'}
@@ -1210,6 +1232,7 @@ export default function DashboardSites() {
                         <SiteBarcodePanel siteId={s.id} siteRef={s.site_ref} label={s.label} isRTL={isRTL} />
                       </div>
                     )}
+                  </div>
                   </CardContent>
                 </Card>
               );
