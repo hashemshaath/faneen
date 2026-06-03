@@ -538,7 +538,7 @@ const ProviderJoin: React.FC = () => {
                     <select
                       value={form.preferred_channel}
                       onChange={(e) => setField('preferred_channel', e.target.value as ProviderLeadChannel)}
-                      className="h-12 w-full rounded-xl border border-input bg-background px-3"
+                      className="h-12 w-full rounded-xl border border-input bg-background px-3 text-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <option value="phone">{t('اتصال', 'Phone')}</option>
                       <option value="whatsapp">{t('واتساب', 'WhatsApp')}</option>
