@@ -40,8 +40,8 @@ interface FormState {
   unified_number: string;
   vat_number: string;
   main_activity: string;
-  specialties: string;
-  brands: string;
+  specialties: string[];
+  brands: string[];
   brief: string;
   map_link: string;
   national_address: string;
@@ -52,9 +52,15 @@ interface FormState {
 const EMPTY: FormState = {
   name_ar: '', name_en: '', contact_name: '', email: '', phone: '',
   preferred_channel: 'phone', website: '', cr_number: '', unified_number: '',
-  vat_number: '', main_activity: '', specialties: '', brands: '', brief: '',
+  vat_number: '', main_activity: '', specialties: [], brands: [], brief: '',
   map_link: '', national_address: '', city: '', branches_count: 1,
 };
+
+interface CategoryOption {
+  id: string;
+  name_ar: string;
+  name_en: string;
+}
 
 const ProviderJoin: React.FC = () => {
   const { isRTL, language } = useLanguage();
@@ -65,8 +71,36 @@ const ProviderJoin: React.FC = () => {
   const [crFile, setCrFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const honeypotRef = useRef<HTMLInputElement>(null);
   const startTimeRef = useRef<number>(Date.now());
+
+  // Load category catalog for the specialties picker
+  useEffect(() => {
+    let alive = true;
+    listActiveCategories<CategoryOption>({ select: 'id, name_ar, name_en' }).then(({ data }) => {
+      if (alive && data) setCategories(data);
+    });
+    return () => { alive = false; };
+  }, []);
+
+  // Keep branches list in sync with branches_count
+  useEffect(() => {
+    const target = Math.max(1, Number(form.branches_count) || 1);
+    setBranches((prev) => {
+      const needed = Math.max(0, target - 1); // primary branch is the main contact
+      if (prev.length === needed) return prev;
+      if (prev.length < needed) {
+        return [
+          ...prev,
+          ...Array.from({ length: needed - prev.length }, () => ({
+            branch_name: '', city: '', address: '', map_link: '', phone: '',
+          })),
+        ];
+      }
+      return prev.slice(0, needed);
+    });
+  }, [form.branches_count]);
 
   usePageMeta({
     title: t('انضم إلى قِطاعات | تسجيل المنشآت', 'Join Qitaat | Provider Registration'),
