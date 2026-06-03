@@ -3676,10 +3676,12 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           country_id: string | null
+          cover_image_url: string | null
           created_at: string
           created_by: string
           district: string | null
           district_en: string | null
+          gallery_images: Json
           government_notes: string | null
           id: string
           is_default: boolean
@@ -3734,10 +3736,12 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           country_id?: string | null
+          cover_image_url?: string | null
           created_at?: string
           created_by?: string
           district?: string | null
           district_en?: string | null
+          gallery_images?: Json
           government_notes?: string | null
           id?: string
           is_default?: boolean
@@ -3792,10 +3796,12 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           country_id?: string | null
+          cover_image_url?: string | null
           created_at?: string
           created_by?: string
           district?: string | null
           district_en?: string | null
+          gallery_images?: Json
           government_notes?: string | null
           id?: string
           is_default?: boolean
@@ -12813,6 +12819,7 @@ export type Database = {
           id: string
           industry: string
           ref_id: string | null
+          site_id: string | null
           status: string
           title: string
           updated_at: string
@@ -12828,6 +12835,7 @@ export type Database = {
           id?: string
           industry: string
           ref_id?: string | null
+          site_id?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -12843,11 +12851,20 @@ export type Database = {
           id?: string
           industry?: string
           ref_id?: string | null
+          site_id?: string | null
           status?: string
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rfq_requests_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       role_permissions: {
         Row: {
@@ -16903,6 +16920,8 @@ export type Database = {
         Returns: Json
       }
       csag_site_summary: { Args: { _site_id: string }; Returns: Json }
+      csi_object_site_id: { Args: { _name: string }; Returns: string }
+      csi_user_can_manage_site: { Args: { _site_id: string }; Returns: boolean }
       customer_confirm_appointment: {
         Args: { _apt_ref: string; _token: string; _tracking_ref: string }
         Returns: boolean

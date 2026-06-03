@@ -1,81 +1,102 @@
+# إعادة هيكلة نظام المواقع (Client Sites)
 
-## الهدف
-معالجة بروفايل الجهة (مثل `qitaat.com/bayanat`) ليكون احترافيًا ومتكاملًا، مع تحكم كامل في إظهار/إخفاء الأقسام من قبل **صاحب الحساب** و**الأدمن**، وعرض **الخدمات المقدّمة** و**الطلبات/الأعمال المطروحة** بدور المزوّد والمستفيد.
+تحويل المواقع من مجرد قائمة عناوين إلى **مركز أساسي** لكل ما يتعلق بالعميل: تفاصيل، عقود، عروض، استفسارات، زيارات، ومراحل تنفيذية. دور المزود (الذي يقدم خدمات فقط) يبقى كما هو دون تغيير.
 
----
+## 1) قاعدة البيانات
 
-## 1) قاعدة البيانات — جدول رؤية أقسام البروفايل
+### إضافة حقول الصور إلى `client_sites`
+- `cover_image_url text` — صورة الغلاف الرئيسية
+- `gallery_images jsonb default '[]'` — مصفوفة `{url, caption, sort_order}`
 
-إنشاء جدول `business_profile_visibility` (مماثل لـ `client_site_visibility_settings`) للتحكم بكل قسم على حدة:
+### Storage Bucket جديد
+- `client-site-images` (private)
+- مجلدات: `{site_id}/cover/...` و `{site_id}/gallery/...`
+- RLS: قراءة/كتابة لمالك الموقع فقط (`owner_user_id = auth.uid()` أو staff موافق عليه)
+
+### ربط الكيانات الموجودة بالموقع
+الجداول التالية تكتسب عمود `site_id uuid references client_sites(id) on delete set null` (إن لم يكن موجوداً):
+- `contracts.execution_site_id` ✅ موجود
+- `lead_requests.source_site_id` ✅ موجود
+- `service_requests` → إضافة `site_id`
+- `rfq_requests` → إضافة `site_id`
+- `customer_project_notifications` → موجود `client_site_id` (تحقق)
+
+### دالة سجل موحّد للموقع
+```text
+get_client_site_timeline(_site_id uuid)
+returns table(event_at, event_type, ref_id, title, status, actor, meta jsonb)
+```
+تجمع: زيارات (`client_site_visit_logs`) + عقود + عروض أسعار + استفسارات + مراحل تنفيذية (milestones) + طلبات الوصول.
+
+## 2) Storage + Upload
+
+- مكوّن `<SiteCoverUploader>` يرفع صورة 16:9 (max 2MB، WebP تلقائي) إلى `client-site-images/{id}/cover/`.
+- مكوّن `<SiteGalleryManager>` لإدارة معرض الصور (إضافة/حذف/إعادة ترتيب dnd-kit).
+
+## 3) صفحة الموقع `/dashboard/sites/:id`
+
+صفحة جديدة كاملة بهيكلة:
 
 ```text
-business_profile_visibility
-├── business_id          (FK businesses)
-├── section_key          (enum: overview, services, projects, portfolio,
-│                                branches, reviews, contact, phone, email,
-│                                address, map, requests_as_provider,
-│                                requests_as_beneficiary, ratings, social)
-├── visibility_level     (public | members_only | after_request | hidden)
-├── locked_by_admin      (boolean — لو true يمنع المالك من التعديل)
-├── admin_note           (text)
-└── updated_by / updated_at
+┌─────────────────────────────────────────┐
+│ Cover Image (16:9 hero)                 │
+│  └── Site name + ref + type + city      │
+└─────────────────────────────────────────┘
+[Tabs sticky]
+ • نظرة عامة     — تفاصيل، خريطة، جهة اتصال
+ • العقود        — قائمة العقود لهذا الموقع
+ • عروض الأسعار  — RFQ + Quote opportunities
+ • الاستفسارات   — Service requests + رسائل
+ • المراحل التنفيذية — milestones عبر العقود
+ • السجل الزمني  — Timeline موحد
+ • المعرض        — gallery
+ • الإعدادات     — visibility, QR, access grants
 ```
 
-- RLS: المالك يقرأ/يكتب لجهته، الأدمن يقرأ/يكتب الكل، العامة تقرأ فقط.
-- دالة `get_business_visibility(business_id) → jsonb` لاسترجاع الإعدادات الفعّالة (مع defaults).
-- Trigger يمنع المالك من تعديل صف مقفول بـ `locked_by_admin=true`.
+## 4) قائمة المواقع (`/dashboard/sites`)
 
-## 2) جلب طلبات/أعمال الجهة
+تحديث البطاقات لتعرض:
+- صورة الغلاف بدلاً من placeholder
+- عداد العقود النشطة + العروض المعلّقة
+- زر "فتح الموقع" يفتح `/dashboard/sites/:id`
 
-استعلامات جديدة في `business-profile.data.ts`:
+أزرار الإجراءات الموجودة (تعديل، أرشفة...) تبقى inline كما هي (لا popups).
 
-- `useBusinessRequestsAsBeneficiary(business_id)` — يجلب من `lead_requests` + `quote_requests` + `rfq_requests` حيث الجهة هي **طالبة الخدمة**.
-- `useBusinessRequestsAsProvider(business_id)` — يجلب الطلبات التي ردّت/تقدّمت لها الجهة (rfq_quotes, quote_request_leads).
-- فلترة على الحالات العامة فقط (مفتوحة/منجزة) وإخفاء الحساسة.
+## 5) نموذج الإضافة/التعديل
 
-## 3) إعادة تصميم صفحة البروفايل
+إضافة قسم "الصور" في الـ inline form:
+- رفع غلاف
+- إدارة معرض الصور
 
-`src/pages/BusinessProfile.tsx` + `BusinessProfileTabs.tsx`:
+## 6) دور المزود (لا تغيير)
 
-- إضافة تبويبَين:
-  - **«الطلبات المطروحة»** (كمستفيد) — بطاقات احترافية لكل طلب: العنوان، الفئة، الميزانية، الموعد، الحالة، زر «تقديم عرض».
-  - **«أعمال كمزود»** (مشاريع/عروض منفذة) — مدمج/جنبًا لجنب مع المشاريع الحالية.
-- إخفاء التبويب تلقائيًا إذا كان `section_key` = `hidden` أو لا يوجد محتوى.
-- شارة 🔒 بجانب أقسام `members_only` / `after_request` للضيوف.
-- تحسين الـ Header: شريط ثقة، شارات BNPL، إحصائيات حية (عدد الطلبات، عدد المشاريع، التقييم).
+- المزود الذي يقدم خدمة فقط: تبويب "العقود" في لوحته يبقى كما هو، مع إظهار الموقع كحقل مرجعي (`STE-NNNN-NNNNNN`) داخل بطاقة العقد.
+- لا نضيف تبويب جديد للمزود.
 
-## 4) لوحة تحكم المالك
+## 7) العقود (Source of Truth)
 
-`src/pages/dashboard/DashboardBusinessProfileHub.tsx` — إضافة قسم **«إعدادات الظهور»**:
+كل عقد **يجب** أن يكون مرتبطاً بموقع عبر `execution_site_id`:
+- نموذج إنشاء العقد: حقل الموقع مطلوب عندما يكون منشئ العقد عميلاً يملك مواقع.
+- ضمن صفحة الموقع: زر "إنشاء عقد جديد لهذا الموقع" يفتح فورم العقد مع تعبئة الموقع مسبقاً.
 
-- شبكة inline (بدون مودال) لكل قسم: مفتاح Switch + قائمة منسدلة لمستوى الرؤية.
-- معاينة مباشرة (preview) للبروفايل بعين الزائر.
-- شارة «مقفول من الأدمن» للأقسام المقفلة (تظهر للقراءة فقط).
+## التفاصيل التقنية
 
-## 5) لوحة تحكم الأدمن
+- ملفات جديدة: `src/pages/dashboard/DashboardSiteDetail.tsx`, `src/components/sites/SiteCoverHero.tsx`, `src/components/sites/SiteCoverUploader.tsx`, `src/components/sites/SiteGalleryManager.tsx`, `src/components/sites/tabs/Site{Overview,Contracts,Quotes,Inquiries,Milestones,Timeline,Gallery,Settings}Tab.tsx`, `src/modules/sites/services/getSiteTimeline.ts`.
+- Migration: إضافة `cover_image_url` + `gallery_images` + `service_requests.site_id` + `rfq_requests.site_id` + دالة `get_client_site_timeline` + bucket + RLS.
+- توسيع `DashboardSites.tsx` ببطاقة جديدة (Cover + counters) + ربط `onClick → navigate('/dashboard/sites/:id')`.
+- توسيع `App.tsx`: مسار `/dashboard/sites/:id`.
+- إعادة استخدام مكونات العقود والـ RFQ الحالية داخل التبويبات (لا نسخ منطق، فقط فلترة بـ `site_id`).
+- لا تغيير على نظام المزود بالكامل.
 
-صفحة جديدة `src/pages/admin/AdminBusinessVisibility.tsx` (مرتبطة من مركز الموافقات):
+## الموجة 1 (هذه الجلسة)
+1. Migration الصور + Storage + bucket.
+2. صفحة الموقع `/dashboard/sites/:id` بهيكل التبويبات.
+3. تبويب نظرة عامة + الغلاف + المعرض.
+4. تحديث البطاقات في القائمة لاستخدام الغلاف وعدّاد العقود.
 
-- اختيار الجهة → عرض مصفوفة الأقسام × مستويات الرؤية.
-- زر **«قفل/إلغاء قفل»** لكل قسم — يمنع المالك من تغيير الإعداد.
-- ملاحظة الأدمن (مرئية للمالك في الـ Hub).
-- سجل تدقيق مدمج (من `activity_log` للحركات على `business_profile_visibility`).
+## الموجة 2 (لاحقاً)
+5. تبويب العقود + العروض + الاستفسارات (تجميع البيانات الموجودة).
+6. تبويب السجل الزمني (`get_client_site_timeline` RPC).
+7. تبويب المراحل التنفيذية.
 
-## 6) التفاصيل التقنية
-
-- تطبيق الـ visibility على الـ JSON-LD أيضًا (لا تنشر phone/email إذا كان hidden).
-- استخدام `<Bi>` و `useBi()` للنصوص ثنائية اللغة.
-- استخدام `surface` و `btn-ds` و `.hover-lift` من نظام التصميم.
-- استخدام `dir="auto"` و `.tech-content` للأرقام (مبالغ/تواريخ).
-- لا مودالات: كل التعديلات inline (وفق سياسة قِطاعات).
-- اختبارات: 
-  - وحدة لـ `get_business_visibility` (Defaults + overrides + lock).
-  - تكامل لـ visibility-aware rendering في `BusinessProfile`.
-
----
-
-## الملفات المتأثرة (تقديريًا)
-- **جديدة**: 1 migration, `AdminBusinessVisibility.tsx`, `BusinessVisibilitySettings.tsx` (component للـ Hub), `useBusinessVisibility.ts`, اختبارَين.
-- **تعديل**: `BusinessProfile.tsx`, `BusinessProfileTabs.tsx`, `business-profile.data.ts`, `DashboardBusinessProfileHub.tsx`, `AdminApprovalsCenter.tsx` (إضافة رابط).
-
-أبدأ التنفيذ بمجرّد الموافقة. هل تود تنفيذ الكل دفعة واحدة، أم نبدأ بالأولوية: (أ) عرض الطلبات/الخدمات، ثم (ب) تحكم الرؤية للمالك، ثم (ج) تحكم الأدمن؟
+هل تعتمد البدء بالموجة 1؟
