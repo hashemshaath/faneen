@@ -512,6 +512,19 @@ const KpiCard: React.FC<{ icon: React.ComponentType<{ className?: string }>; lab
 );
 
 interface ListItem { key: string; href: string; title: string; ref: string | null; status: string | null; meta: string | null; date: string }
+
+const STATUS_COLORS: Record<string, string> = {
+  draft: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
+  pending: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+  active: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+  in_progress: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+  completed: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+  cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+  expired: 'bg-muted text-muted-foreground',
+  open: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+  closed: 'bg-muted text-muted-foreground',
+};
+
 const ListSection: React.FC<{
   loading: boolean; empty: string; items: ListItem[]; isRTL: boolean;
   cta?: { label: string; onClick: () => void };
@@ -530,17 +543,21 @@ const ListSection: React.FC<{
       <ul className="divide-y divide-border/40">
         {items.map((it) => (
           <li key={it.key}>
-            <Link to={it.href} className="flex items-center justify-between gap-3 py-3 hover:bg-muted/40 rounded-lg px-2 -mx-2">
+            <Link to={it.href} className="flex items-center justify-between gap-3 py-3 hover:bg-muted/40 rounded-lg px-2 -mx-2 transition">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {it.ref && <span className="tech-content text-xs font-mono text-muted-foreground">{it.ref}</span>}
-                  {it.status && <Badge variant="outline" className="text-xs">{it.status}</Badge>}
+                  {it.status && (
+                    <span className={`rounded-md px-2 py-0.5 text-[10px] font-medium ${STATUS_COLORS[it.status] || 'bg-muted text-muted-foreground'}`}>
+                      {it.status}
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1 truncate text-sm font-medium">{it.title}</p>
               </div>
-              <div className="text-end text-xs text-muted-foreground">
-                {it.meta && <div className="tech-content font-medium">{it.meta}</div>}
-                <div>{new Date(it.date).toLocaleDateString(isRTL ? 'ar' : 'en')}</div>
+              <div className="text-end text-xs text-muted-foreground shrink-0">
+                {it.meta && <div className="tech-content font-semibold text-foreground">{it.meta}</div>}
+                <div className="tech-content">{new Date(it.date).toLocaleDateString(isRTL ? 'ar' : 'en')}</div>
               </div>
             </Link>
           </li>
