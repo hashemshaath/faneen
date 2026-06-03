@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta, useNoIndex } from '@/hooks/usePageMeta';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -37,8 +37,8 @@ const ProviderJoinEdit: React.FC = () => {
   usePageMeta({
     title: t('تعديل طلب الانضمام | قِطاعات', 'Edit Join Request | Qitaat'),
     description: t('تعديل بيانات طلب الانضمام إلى قِطاعات.', 'Edit your Qitaat join request details.'),
+    noIndex: true,
   });
-  useNoIndex();
 
   // ---- Lookup state ----
   const [reference, setReference] = useState(search.get('ref') ?? '');
