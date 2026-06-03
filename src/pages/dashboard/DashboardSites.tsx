@@ -640,7 +640,7 @@ export default function DashboardSites() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pb-5">
-                <Tabs defaultValue="general" className="w-full">
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FormTab)} className="w-full">
                   <TabsList className="w-full grid grid-cols-4 h-auto p-1">
                     <TabsTrigger value="general" className="text-[11px] gap-1.5"><Layers className="w-3.5 h-3.5" />{isRTL ? 'الأساسيات' : 'General'}</TabsTrigger>
                     <TabsTrigger value="address" className="text-[11px] gap-1.5"><MapPin className="w-3.5 h-3.5" />{isRTL ? 'العنوان والخريطة' : 'Address & Map'}</TabsTrigger>
