@@ -779,18 +779,40 @@ const ProviderJoin: React.FC = () => {
               className="sm:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75"
               style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             >
-              <div className="container mx-auto max-w-4xl px-4 py-3">
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full h-11 sm:h-12 rounded-xl text-[14px] font-semibold shadow-elegant"
-                >
-                  {loading ? (
-                    <><Loader2 className="w-4 h-4 me-2 animate-spin" />{t('جاري الإرسال...', 'Sending...')}</>
-                  ) : (
-                    t('إرسال طلب الانضمام', 'Submit join request')
-                  )}
-                </Button>
+              <div className="container mx-auto max-w-4xl px-4 py-3 flex items-center gap-2">
+                {step > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={goBack}
+                    className="h-11 rounded-xl px-4 text-[13px] font-medium"
+                  >
+                    {isRTL ? <ChevronRight className="w-4 h-4 me-1" /> : <ChevronLeft className="w-4 h-4 me-1" />}
+                    {t('السابق', 'Back')}
+                  </Button>
+                )}
+                {step < 3 ? (
+                  <Button
+                    type="button"
+                    onClick={goNext}
+                    className="flex-1 h-11 rounded-xl text-[14px] font-semibold shadow-elegant"
+                  >
+                    {t('التالي', 'Next')}
+                    {isRTL ? <ChevronLeft className="w-4 h-4 ms-1" /> : <ChevronRight className="w-4 h-4 ms-1" />}
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 h-11 rounded-xl text-[14px] font-semibold shadow-elegant"
+                  >
+                    {loading ? (
+                      <><Loader2 className="w-4 h-4 me-2 animate-spin" />{t('جاري الإرسال...', 'Sending...')}</>
+                    ) : (
+                      t('إرسال الطلب', 'Submit')
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </form>
