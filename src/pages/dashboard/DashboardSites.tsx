@@ -239,6 +239,10 @@ export default function DashboardSites() {
       if (!composedAr) {
         throw new Error(isRTL ? 'أكمل بيانات العنوان الوطني (المنطقة / المدينة / الحي على الأقل)' : 'Complete the National Address (region / city / district at minimum)');
       }
+      // Saudi National short address must be exactly 4 letters + 4 digits.
+      // If the user typed a partial value, drop it instead of failing the whole save.
+      const rawShort = (naf.short_address ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const validShort = /^[A-Z]{4}[0-9]{4}$/.test(rawShort) ? rawShort : null;
       const payload = {
         business_id: editing?.business_id ?? businessId,
         label: form.label.trim(),
@@ -258,10 +262,10 @@ export default function DashboardSites() {
         building_number: naf.building_number,
         additional_number: naf.additional_number,
         post_code: naf.post_code,
-        short_address: naf.short_address,
+        short_address: validShort,
         address_en: composedEn || null,
         address_line1: composedAr,
-        address_line2: naf.short_address ? `العنوان الوطني: ${naf.short_address}` : null,
+        address_line2: validShort ? `العنوان الوطني: ${validShort}` : null,
         map_url: form.map_url.trim() || null,
         latitude: form.latitude ? Number(form.latitude) : null,
         longitude: form.longitude ? Number(form.longitude) : null,
