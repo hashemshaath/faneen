@@ -73,13 +73,15 @@ export async function submitProviderLead(
     user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 500) : undefined,
   };
 
-  const { data, error } = await supabase.rpc('submit_provider_lead', { payload });
+  const { data, error } = await supabase.rpc('submit_provider_lead', {
+    payload: payload as unknown as Record<string, unknown> as never,
+  });
 
   if (error) {
     return { ok: false, errorCode: mapErrorMessage(error.message) };
   }
 
-  const result = data as ProviderLeadSubmissionResult | null;
+  const result = data as unknown as ProviderLeadSubmissionResult | null;
   if (!result?.reference_code) {
     return { ok: false, errorCode: 'unknown' };
   }
