@@ -107,14 +107,14 @@ export const EmailHealthAlerts: React.FC = () => {
     if (oldestPendingMin >= PENDING_AGE_CRIT_MIN) {
       out.push({
         id: 'pending-stuck-crit', severity: 'critical', icon: Clock,
-        titleAr: 'الطابور عالق', titleEn: 'Queue appears stuck',
+        titleAr: 'رسائل قيد الإرسال عالقة', titleEn: 'Pending sends appear stuck',
         detailAr: `أقدم رسالة قيد الانتظار منذ ${oldestPendingMin} دقيقة.`,
         detailEn: `Oldest pending message is ${oldestPendingMin} min old.`,
       });
     } else if (oldestPendingMin >= PENDING_AGE_WARN_MIN) {
       out.push({
         id: 'pending-stuck-warn', severity: 'warning', icon: Clock,
-        titleAr: 'تأخر في معالجة الطابور', titleEn: 'Queue processing delay',
+        titleAr: 'تأخر في الإرسال', titleEn: 'Send processing delay',
         detailAr: `أقدم رسالة قيد الانتظار منذ ${oldestPendingMin} دقيقة.`,
         detailEn: `Oldest pending message is ${oldestPendingMin} min old.`,
       });
@@ -127,8 +127,8 @@ export const EmailHealthAlerts: React.FC = () => {
         id: 'no-matching-sender', severity: 'critical', icon: AlertTriangle,
         titleAr: 'no_matching_sender نشط (آخر 48 ساعة)',
         titleEn: 'Fresh no_matching_sender (last 48h)',
-        detailAr: `${nmsFresh.length} رسالة فشلت رغم تفعيل ${CURRENT_SENDER_DOMAIN}. إذا تكرّر، أعد نشر send-transactional-email و auth-email-hook وتأكّد أن SENDER_DOMAIN=${CURRENT_SENDER_DOMAIN}.`,
-        detailEn: `${nmsFresh.length} message(s) failed despite ${CURRENT_SENDER_DOMAIN} being verified. If recurring, redeploy send-transactional-email and auth-email-hook and verify SENDER_DOMAIN=${CURRENT_SENDER_DOMAIN}.`,
+        detailAr: `${nmsFresh.length} رسالة فشلت رغم تفعيل ${CURRENT_SENDER_DOMAIN}. إذا تكرّر، تحقق من Resend وأعد نشر دوال البريد.`,
+        detailEn: `${nmsFresh.length} message(s) failed despite ${CURRENT_SENDER_DOMAIN} being verified. If recurring, verify Resend and redeploy the email functions.`,
       });
     }
 
