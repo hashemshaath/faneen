@@ -74,7 +74,7 @@ export const MobileFooter = () => {
         <BrandLogo
           variant="full"
           tone="dark"
-          size="sm"
+          size="footer"
           alt={isRTL ? "قِطاعات — الرئيسية" : "Qitaat — Home"}
         />
         <button
