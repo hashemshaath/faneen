@@ -13271,6 +13271,290 @@ export type Database = {
           },
         ]
       }
+      site_contact_communications: {
+        Row: {
+          channel: string
+          contact_id: string
+          created_at: string
+          created_by: string
+          direction: string
+          id: string
+          occurred_at: string
+          site_id: string
+          summary: string | null
+        }
+        Insert: {
+          channel: string
+          contact_id: string
+          created_at?: string
+          created_by?: string
+          direction?: string
+          id?: string
+          occurred_at?: string
+          site_id: string
+          summary?: string | null
+        }
+        Update: {
+          channel?: string
+          contact_id?: string
+          created_at?: string
+          created_by?: string
+          direction?: string
+          id?: string
+          occurred_at?: string
+          site_id?: string
+          summary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_contact_communications_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "site_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_contact_communications_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_contact_tasks: {
+        Row: {
+          completed_at: string | null
+          contact_id: string | null
+          contract_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string
+          site_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          contact_id?: string | null
+          contract_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          site_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          contact_id?: string | null
+          contract_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          site_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_contact_tasks_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "site_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_contact_tasks_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_contact_tasks_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_contacts: {
+        Row: {
+          contract_id: string | null
+          created_at: string
+          created_by: string
+          email: string | null
+          full_name: string
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          notes: string | null
+          permissions: Json
+          phone: string | null
+          responsibilities: string | null
+          role_code: string
+          role_label: string | null
+          scope_category: string | null
+          site_id: string
+          sort_order: number
+          trade: string | null
+          updated_at: string
+          user_id: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          contract_id?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          notes?: string | null
+          permissions?: Json
+          phone?: string | null
+          responsibilities?: string | null
+          role_code?: string
+          role_label?: string | null
+          scope_category?: string | null
+          site_id: string
+          sort_order?: number
+          trade?: string | null
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          contract_id?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          notes?: string | null
+          permissions?: Json
+          phone?: string | null
+          responsibilities?: string | null
+          role_code?: string
+          role_label?: string | null
+          scope_category?: string | null
+          site_id?: string
+          sort_order?: number
+          trade?: string | null
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_contacts_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_contacts_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_reports: {
+        Row: {
+          contact_id: string | null
+          contract_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          report_type: string
+          reporter_user_id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          site_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          contact_id?: string | null
+          contract_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          report_type?: string
+          reporter_user_id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          site_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          contact_id?: string | null
+          contract_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          report_type?: string
+          reporter_user_id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          site_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_reports_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "site_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_reports_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_reports_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sitemap_audit_runs: {
         Row: {
           alert_sent: boolean

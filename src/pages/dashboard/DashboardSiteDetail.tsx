@@ -18,6 +18,10 @@ import {
 } from 'lucide-react';
 import SiteCoverUploader from '@/components/sites/SiteCoverUploader';
 import SiteGalleryManager, { type GalleryImage } from '@/components/sites/SiteGalleryManager';
+import SiteContactsTab from '@/components/sites/SiteContactsTab';
+import SiteReportsTab from '@/components/sites/SiteReportsTab';
+import SiteSettingsTab from '@/components/sites/SiteSettingsTab';
+import { Users, AlertTriangle } from 'lucide-react';
 
 type Json = Record<string, unknown>;
 
@@ -40,6 +44,7 @@ interface SiteRow {
   access_notes: string | null;
   cover_image_url: string | null;
   gallery_images: GalleryImage[] | null;
+  qr_enabled: boolean | null;
   owner_user_id: string | null;
   client_user_id: string | null;
   business_id: string | null;
@@ -77,7 +82,7 @@ const DashboardSiteDetail: React.FC = () => {
         .select(`id, site_ref, ref_id, label, site_name, site_type, visibility,
                  contact_name, contact_phone, city_name, district, address_line1,
                  short_address, latitude, longitude, access_notes,
-                 cover_image_url, gallery_images,
+                 cover_image_url, gallery_images, qr_enabled,
                  owner_user_id, client_user_id, business_id, created_at`)
         .eq('id', id)
         .maybeSingle();
@@ -163,6 +168,40 @@ const DashboardSiteDetail: React.FC = () => {
     },
   });
 
+  const { data: contactsRaw = [], isLoading: contactsLoading } = useQuery({
+    queryKey: ['site-contacts-min', id],
+    enabled: !!id && !!site,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('site_contacts')
+        .select('id, full_name, role_code')
+        .eq('site_id', id);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: reportsCount = 0 } = useQuery({
+    queryKey: ['site-reports-count', id],
+    enabled: !!id && !!site,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('site_reports').select('id', { count: 'exact', head: true })
+        .eq('site_id', id).in('status', ['open', 'in_progress']);
+      if (error) return 0;
+      return count ?? 0;
+    },
+  });
+
+  const contractsForRef = useMemo(
+    () => contracts.map((c) => ({ id: c.id, label: c.contract_number || (isRTL ? c.title_ar : c.title_en) || c.id.slice(0, 8) })),
+    [contracts, isRTL]
+  );
+  const milestonesForGallery = useMemo(
+    () => milestones.map((m) => ({ id: m.id, title: (isRTL ? m.title_ar : m.title_en) || m.title_ar || m.id.slice(0, 8) })),
+    [milestones, isRTL]
+  );
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -245,21 +284,29 @@ const DashboardSiteDetail: React.FC = () => {
         </section>
 
         {/* KPI Strip */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           <KpiCard icon={FileText} label={isRTL ? 'العقود' : 'Contracts'} value={contracts.length} loading={contractsLoading} />
-          <KpiCard icon={MessageSquareQuote} label={isRTL ? 'عروض الأسعار' : 'Quotes'} value={leads.length} loading={leadsLoading} />
-          <KpiCard icon={Inbox} label={isRTL ? 'طلبات RFQ' : 'RFQs'} value={rfqs.length} loading={rfqsLoading} />
-          <KpiCard icon={ImageIcon} label={isRTL ? 'صور المعرض' : 'Gallery'} value={gallery.length} loading={false} />
+          <KpiCard icon={MessageSquareQuote} label={isRTL ? 'عروض' : 'Quotes'} value={leads.length} loading={leadsLoading} />
+          <KpiCard icon={Inbox} label="RFQ" value={rfqs.length} loading={rfqsLoading} />
+          <KpiCard icon={Users} label={isRTL ? 'جهات' : 'Contacts'} value={contactsRaw.length} loading={contactsLoading} />
+          <KpiCard icon={AlertTriangle} label={isRTL ? 'بلاغات' : 'Reports'} value={reportsCount} loading={false} tone={reportsCount > 0 ? 'destructive' : undefined} />
+          <KpiCard icon={ImageIcon} label={isRTL ? 'الصور' : 'Gallery'} value={gallery.length} loading={false} />
         </div>
 
         {/* Tabs */}
         <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="w-full overflow-x-auto no-scrollbar justify-start">
             <TabsTrigger value="overview"><ClipboardList className="h-4 w-4" /><span className="mx-2">{isRTL ? 'نظرة عامة' : 'Overview'}</span></TabsTrigger>
+            <TabsTrigger value="contacts"><Users className="h-4 w-4" /><span className="mx-2">{isRTL ? 'جهات الاتصال' : 'Contacts'}</span></TabsTrigger>
             <TabsTrigger value="contracts"><FileText className="h-4 w-4" /><span className="mx-2">{isRTL ? 'العقود' : 'Contracts'}</span></TabsTrigger>
             <TabsTrigger value="quotes"><MessageSquareQuote className="h-4 w-4" /><span className="mx-2">{isRTL ? 'العروض' : 'Quotes'}</span></TabsTrigger>
             <TabsTrigger value="rfq"><Inbox className="h-4 w-4" /><span className="mx-2">RFQ</span></TabsTrigger>
             <TabsTrigger value="milestones"><Milestone className="h-4 w-4" /><span className="mx-2">{isRTL ? 'المراحل' : 'Milestones'}</span></TabsTrigger>
+            <TabsTrigger value="reports">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="mx-2">{isRTL ? 'البلاغات' : 'Reports'}</span>
+              {reportsCount > 0 && <Badge className="ms-1 h-5 px-1.5 text-[10px] bg-destructive text-destructive-foreground">{reportsCount}</Badge>}
+            </TabsTrigger>
             <TabsTrigger value="timeline"><Activity className="h-4 w-4" /><span className="mx-2">{isRTL ? 'السجل' : 'Timeline'}</span></TabsTrigger>
             <TabsTrigger value="gallery"><ImageIcon className="h-4 w-4" /><span className="mx-2">{isRTL ? 'المعرض' : 'Gallery'}</span></TabsTrigger>
             <TabsTrigger value="settings"><Settings className="h-4 w-4" /><span className="mx-2">{isRTL ? 'الإعدادات' : 'Settings'}</span></TabsTrigger>
@@ -286,6 +333,10 @@ const DashboardSiteDetail: React.FC = () => {
                 </CardContent></Card>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="contacts" className="mt-4">
+            <SiteContactsTab siteId={site.id} contracts={contractsForRef} canManage={canManage} />
           </TabsContent>
 
           <TabsContent value="contracts" className="mt-4">
@@ -343,11 +394,16 @@ const DashboardSiteDetail: React.FC = () => {
             />
           </TabsContent>
 
+          <TabsContent value="reports" className="mt-4">
+            <SiteReportsTab siteId={site.id} contacts={contactsRaw} contracts={contractsForRef} canManage={canManage} />
+          </TabsContent>
+
           <TabsContent value="gallery" className="mt-4">
             {/* gallery */}
             <Card><CardContent className="p-5">
               {canManage ? (
-                <SiteGalleryManager siteId={site.id} images={gallery} onChange={(imgs) => { setLocalGallery(imgs); refetch(); }} />
+                <SiteGalleryManager siteId={site.id} images={gallery} milestones={milestonesForGallery}
+                  onChange={(imgs) => { setLocalGallery(imgs); refetch(); }} />
               ) : (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                   {gallery.length === 0 && <p className="col-span-full text-center text-sm text-muted-foreground py-8">{isRTL ? 'لا توجد صور' : 'No images'}</p>}
@@ -428,10 +484,7 @@ const DashboardSiteDetail: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="settings" className="mt-4">
-            <Card><CardContent className="p-5 text-sm text-muted-foreground">
-              {isRTL ? 'إعدادات الظهور و QR متاحة من قائمة المواقع. سيتم نقلها هنا قريباً.' : 'Visibility & QR settings live in the sites list. Will move here soon.'}
-              <div className="mt-3"><Button size="sm" variant="secondary" onClick={() => navigate('/dashboard/sites')}>{isRTL ? 'فتح القائمة' : 'Open list'}</Button></div>
-            </CardContent></Card>
+            <SiteSettingsTab site={site} canManage={canManage} onSaved={() => refetch()} />
           </TabsContent>
         </Tabs>
       </div>
@@ -448,17 +501,30 @@ const InfoRow: React.FC<{ label: string; value: string | null | undefined; mono?
   </div>
 );
 
-const KpiCard: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; value: number; loading: boolean }> = ({ icon: Icon, label, value, loading }) => (
-  <Card className="hover-lift"><CardContent className="p-4">
+const KpiCard: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; value: number; loading: boolean; tone?: 'destructive' }> = ({ icon: Icon, label, value, loading, tone }) => (
+  <Card className={`hover-lift ${tone === 'destructive' ? 'border-destructive/40 bg-destructive/5' : ''}`}><CardContent className="p-4">
     <div className="flex items-center justify-between">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <Icon className="h-4 w-4 text-primary" />
+      <Icon className={`h-4 w-4 ${tone === 'destructive' ? 'text-destructive' : 'text-primary'}`} />
     </div>
-    <div className="mt-2 text-2xl font-bold tech-content">{loading ? '—' : value}</div>
+    <div className={`mt-2 text-2xl font-bold tech-content ${tone === 'destructive' && value > 0 ? 'text-destructive' : ''}`}>{loading ? '—' : value}</div>
   </CardContent></Card>
 );
 
 interface ListItem { key: string; href: string; title: string; ref: string | null; status: string | null; meta: string | null; date: string }
+
+const STATUS_COLORS: Record<string, string> = {
+  draft: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
+  pending: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+  active: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+  in_progress: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+  completed: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+  cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+  expired: 'bg-muted text-muted-foreground',
+  open: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+  closed: 'bg-muted text-muted-foreground',
+};
+
 const ListSection: React.FC<{
   loading: boolean; empty: string; items: ListItem[]; isRTL: boolean;
   cta?: { label: string; onClick: () => void };
@@ -477,17 +543,21 @@ const ListSection: React.FC<{
       <ul className="divide-y divide-border/40">
         {items.map((it) => (
           <li key={it.key}>
-            <Link to={it.href} className="flex items-center justify-between gap-3 py-3 hover:bg-muted/40 rounded-lg px-2 -mx-2">
+            <Link to={it.href} className="flex items-center justify-between gap-3 py-3 hover:bg-muted/40 rounded-lg px-2 -mx-2 transition">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {it.ref && <span className="tech-content text-xs font-mono text-muted-foreground">{it.ref}</span>}
-                  {it.status && <Badge variant="outline" className="text-xs">{it.status}</Badge>}
+                  {it.status && (
+                    <span className={`rounded-md px-2 py-0.5 text-[10px] font-medium ${STATUS_COLORS[it.status] || 'bg-muted text-muted-foreground'}`}>
+                      {it.status}
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1 truncate text-sm font-medium">{it.title}</p>
               </div>
-              <div className="text-end text-xs text-muted-foreground">
-                {it.meta && <div className="tech-content font-medium">{it.meta}</div>}
-                <div>{new Date(it.date).toLocaleDateString(isRTL ? 'ar' : 'en')}</div>
+              <div className="text-end text-xs text-muted-foreground shrink-0">
+                {it.meta && <div className="tech-content font-semibold text-foreground">{it.meta}</div>}
+                <div className="tech-content">{new Date(it.date).toLocaleDateString(isRTL ? 'ar' : 'en')}</div>
               </div>
             </Link>
           </li>
