@@ -124,10 +124,6 @@ const ProviderJoin: React.FC = () => {
   const update = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  const addBranch = () =>
-    setBranches((b) => [...b, { branch_name: '', city: '', address: '', map_link: '', phone: '' }]);
-  const removeBranch = (i: number) =>
-    setBranches((b) => b.filter((_, idx) => idx !== i));
   const updateBranch = (i: number, k: keyof ProviderLeadBranchInput, v: string) =>
     setBranches((b) => b.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)));
 
