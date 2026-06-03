@@ -122,10 +122,23 @@ export const SiteSettingsTab: React.FC<Props> = ({ site, canManage, onSaved }) =
             <div className="font-medium">{isRTL ? 'تفعيل QR الموقع' : 'Enable site QR'}</div>
             <div className="text-xs text-muted-foreground">{isRTL ? 'يتيح للزوار الوصول السريع لمعلومات الموقع' : 'Lets visitors quickly access site info'}</div>
           </div>
-          <Switch checked={f.qr_enabled} onCheckedChange={(v) => setF({ ...f, qr_enabled: v })} disabled={!canManage} />
+          <Switch
+            checked={f.qr_enabled || f.visibility === 'shared_by_qr'}
+            onCheckedChange={(v) => setF({ ...f, qr_enabled: v, visibility: v && f.visibility === 'private' ? 'shared_by_qr' : f.visibility })}
+            disabled={!canManage}
+          />
         </div>
+        {f.visibility === 'shared_by_qr' && (
+          <div className="flex items-start gap-2 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg p-2.5">
+            <QrCode className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+            <span>{isRTL ? 'الرؤية مضبوطة على «مشاركة عبر QR» — يتم تفعيل الـQR تلقائياً.' : 'Visibility is set to "Shared by QR" — QR is auto-enabled.'}</span>
+          </div>
+        )}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Badge variant="outline" className="gap-1"><span className="inline-flex items-center"><span className="me-1">{<EyeIcon visibility={f.visibility} />}</span>{f.visibility}</span></Badge>
+          <Badge variant="outline" className="gap-1">
+            <EyeIcon visibility={f.visibility} />
+            <span className="ms-1 tech-content">{f.visibility}</span>
+          </Badge>
         </div>
       </CardContent></Card>
 
