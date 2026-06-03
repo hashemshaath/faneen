@@ -908,7 +908,7 @@ const Membership = () => {
         })()}
 
         {pendingRequests.length > 0 && (
-          <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-info/30 bg-info/5 px-4 py-3 flex items-start gap-2 text-xs text-foreground/80">
+          <div id="upgrade-requests" className="scroll-mt-24 max-w-3xl mx-auto mb-6 rounded-xl border border-info/30 bg-info/5 px-4 py-3 flex items-start gap-2 text-xs text-foreground/80">
             <Clock className="w-4 h-4 text-info shrink-0 mt-0.5" />
             <p className="leading-relaxed">
               {isRTL
