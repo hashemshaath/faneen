@@ -602,21 +602,13 @@ const ProviderJoin: React.FC = () => {
                     error={errors.cr_file}
                     hint={t('PDF أو JPG أو PNG — الحد الأقصى 5 ميغابايت.', 'PDF, JPG or PNG — 5 MB max.')}
                   >
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
-                      <input
-                        type="file"
-                        accept=".pdf,image/jpeg,image/png,application/pdf"
-                        onChange={onFileChange}
-                        className="block w-full text-sm file:me-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-primary file:text-primary-foreground file:cursor-pointer"
-                      />
-                    </div>
-                    {crFile && (
-                      <p className="text-xs text-emerald-600 mt-2 tech-content inline-flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        {crFile.name} · {(crFile.size / 1024).toFixed(0)} KB
-                      </p>
-                    )}
+                    <FileUploadField
+                      file={crFile}
+                      accept=".pdf,image/jpeg,image/png,application/pdf"
+                      onChange={onFileChange}
+                      buttonLabel={t('اختيار ملف', 'Choose file')}
+                      emptyLabel={t('لم يتم اختيار أي ملف', 'No file chosen')}
+                    />
                   </Field>
                 </div>
               </CardContent>
@@ -728,8 +720,8 @@ const ProviderJoin: React.FC = () => {
               </div>
             </div>
 
-            {/* Submit */}
-            <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-2">
+            {/* Submit (desktop / tablet) */}
+            <div className="hidden sm:flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-2">
               <p className="text-xs text-muted-foreground text-center sm:text-start">
                 {t('بإرسال الطلب فإنك توافق على ', 'By submitting, you agree to our ')}
                 <a href="/privacy" className="underline hover:text-primary">{t('سياسة الخصوصية', 'Privacy Policy')}</a>
@@ -744,6 +736,35 @@ const ProviderJoin: React.FC = () => {
                   t('إرسال طلب الانضمام', 'Submit join request')
                 )}
               </Button>
+            </div>
+
+            {/* Mobile: legal note inline (compact) */}
+            <p className="sm:hidden text-[11px] leading-[16px] text-muted-foreground text-center pt-1 pb-2">
+              {t('بإرسال الطلب فإنك توافق على ', 'By submitting, you agree to our ')}
+              <a href="/privacy" className="underline">{t('سياسة الخصوصية', 'Privacy Policy')}</a>
+              {t(' و', ' and ')}
+              <a href="/terms" className="underline">{t('الشروط', 'Terms')}</a>
+              {t('.', '.')}
+            </p>
+
+            {/* Mobile sticky bottom action bar */}
+            <div
+              className="sm:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75"
+              style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            >
+              <div className="container mx-auto max-w-4xl px-4 py-3">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-12 rounded-xl text-[14px] font-semibold shadow-elegant"
+                >
+                  {loading ? (
+                    <><Loader2 className="w-4 h-4 me-2 animate-spin" />{t('جاري الإرسال...', 'Sending...')}</>
+                  ) : (
+                    t('إرسال طلب الانضمام', 'Submit join request')
+                  )}
+                </Button>
+              </div>
             </div>
           </form>
         </section>
