@@ -78,12 +78,12 @@ export function statusTone(status: string): string {
 
 export const DLQ_RECOMMENDATIONS: Record<string, { ar: string; en: string }> = {
   no_matching_sender: {
-    ar: 'تحقّق من أن SENDER_DOMAIN في الدالة يطابق نطاقاً موثّقاً (e.qitaat.com).',
-    en: 'Verify SENDER_DOMAIN matches a verified domain (e.qitaat.com).',
+    ar: 'تحقّق من أن qitaat.com موثّق في Resend وأن عنوان الإرسال noreply@qitaat.com.',
+    en: 'Verify qitaat.com is verified in Resend and the sender is noreply@qitaat.com.',
   },
   no_matching_sender_fresh: {
-    ar: 'إذا تكرّر هذا الخطأ حديثاً، أعد نشر send-transactional-email و auth-email-hook وتأكّد أن SENDER_DOMAIN=e.qitaat.com.',
-    en: 'If fresh no_matching_sender recurs, redeploy send-transactional-email and auth-email-hook and verify SENDER_DOMAIN=e.qitaat.com.',
+    ar: 'إذا تكرّر هذا الخطأ حديثاً، أعد نشر دوال البريد وتحقق من إعداد نطاق qitaat.com في Resend.',
+    en: 'If fresh no_matching_sender recurs, redeploy email functions and verify qitaat.com in Resend.',
   },
   suppressed: {
     ar: 'المستلم في قائمة المنع (ارتداد/شكوى/إلغاء اشتراك). لا يُعاد الإرسال تلقائياً.',
@@ -119,7 +119,7 @@ export function classifyError(message: string | null | undefined): keyof typeof 
   return 'other';
 }
 
-export const CURRENT_SENDER_DOMAIN = 'e.qitaat.com';
+export const CURRENT_SENDER_DOMAIN = 'qitaat.com';
 export const LEGACY_SENDER_DOMAINS = ['notify.qitaat.com', 'mail.qitaat.com'];
 /** Window (hours) within which a no_matching_sender row is treated as a FRESH active issue. */
 export const FRESH_NMS_WINDOW_HOURS = 48;
@@ -174,8 +174,8 @@ export function classifyDlqRow(row: EmailLogRow): DlqClassification {
         isFreshNoMatchingSender: true,
         disposition: 'not_retryable_historical_sender',
         retryable: false,
-        reasonAr: 'خطأ نشط: لم يُطابق مرسل موثّق (آخر 48 ساعة). أعد نشر دوال الإرسال وتأكّد أن SENDER_DOMAIN=e.qitaat.com.',
-        reasonEn: 'Active issue: no matching verified sender (last 48h). Redeploy send-transactional-email and auth-email-hook and verify SENDER_DOMAIN=e.qitaat.com.',
+        reasonAr: 'خطأ نشط: لم يُطابق مرسل موثّق (آخر 48 ساعة). أعد نشر دوال الإرسال وتأكد من qitaat.com في Resend.',
+        reasonEn: 'Active issue: no matching verified sender (last 48h). Redeploy email functions and verify qitaat.com in Resend.',
       };
     }
     return {

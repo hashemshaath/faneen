@@ -68,7 +68,7 @@ export const EmailDlqMonitor: React.FC = () => {
       const { data: res, error } = await adminRetryDlqEmail<{ ok?: boolean; error?: string; reason?: string }>({ logId });
       if (error) throw error;
       if (res?.error) throw new Error(`${res.error}${res.reason ? ` (${res.reason})` : ''}`);
-      toast.success(isRTL ? 'تم إعادة وضع الرسالة في الطابور' : 'Retry queued');
+      toast.success(isRTL ? 'تمت إعادة محاولة الإرسال' : 'Retry sent');
       setConfirmId(null);
       await qc.invalidateQueries({ queryKey: ['email-center-dlq'] });
     } catch (e) {
@@ -85,8 +85,8 @@ export const EmailDlqMonitor: React.FC = () => {
           <AlertTriangle className="size-4" />
           <AlertDescription className="text-xs">
             {isRTL
-              ? `رُصد ${freshNms} خطأ no_matching_sender حديث (آخر 48 ساعة). إذا تكرّر، أعد نشر send-transactional-email و auth-email-hook وتأكّد أن SENDER_DOMAIN=${CURRENT_SENDER_DOMAIN}.`
-              : `${freshNms} fresh no_matching_sender error(s) detected in the last 48h. If this recurs, redeploy send-transactional-email and auth-email-hook and verify SENDER_DOMAIN=${CURRENT_SENDER_DOMAIN}.`}
+              ? `رُصد ${freshNms} خطأ no_matching_sender حديث (آخر 48 ساعة). إذا تكرّر، تحقّق من أن نطاق qitaat.com موثّق في Resend وأن الدوال منشورة.`
+              : `${freshNms} fresh no_matching_sender error(s) detected in the last 48h. If this recurs, verify qitaat.com in Resend and redeploy the email functions.`}
           </AlertDescription>
         </Alert>
       )}
@@ -165,8 +165,8 @@ export const EmailDlqMonitor: React.FC = () => {
                   <div><span className="text-muted-foreground">created_at:</span> <span dir="ltr">{format(new Date(r.created_at), 'yyyy-MM-dd HH:mm:ss')}</span></div>
                   <div><span className="text-muted-foreground">recipient:</span> <span dir="ltr">{maskRecipient(r.recipient_email, false)}</span></div>
                   <div className="truncate"><span className="text-muted-foreground">message_id:</span> <span dir="ltr">{r.message_id ?? '—'}</span></div>
-                  <div><span className="text-muted-foreground">queue:</span> transactional_emails</div>
-                  <div><span className="text-muted-foreground">sender_domain:</span> <span dir="ltr">{CURRENT_SENDER_DOMAIN}</span></div>
+                  <div><span className="text-muted-foreground">provider:</span> Resend</div>
+                  <div><span className="text-muted-foreground">from:</span> <span dir="ltr">noreply@qitaat.com</span></div>
                 </div>
 
                 <p className="text-[11px] text-destructive whitespace-pre-wrap break-words" dir="ltr">{r.error_message ?? '—'}</p>

@@ -59,7 +59,7 @@ export const EmailReports: React.FC = () => {
     const byDomain = new Map<string, number>();
     const dlqByReason = new Map<string, number>();
     const errorByKind = new Map<string, number>();
-    let auth = 0, trans = 0;
+    let auth = 0, app = 0;
     let pendingCount = 0;
     let oldestPendingMs = 0;
     const now = Date.now();
@@ -69,7 +69,7 @@ export const EmailReports: React.FC = () => {
     for (const r of rows) {
       const tpl = r.template_name ?? 'unknown';
       totalByTpl.set(tpl, (totalByTpl.get(tpl) ?? 0) + 1);
-      if (tpl === 'auth_emails') auth++; else trans++;
+      if (['signup', 'invite', 'magiclink', 'recovery', 'email_change', 'reauthentication'].includes(tpl)) auth++; else app++;
       if (r.status === 'sent') {
         sentByTpl.set(tpl, (sentByTpl.get(tpl) ?? 0) + 1);
         const day = format(new Date(r.created_at), 'MM-dd');
@@ -114,7 +114,7 @@ export const EmailReports: React.FC = () => {
     const oldestPendingMin = pendingCount > 0 ? Math.round(oldestPendingMs / 60_000) : 0;
 
     return {
-      sentBars, failureRate, dayBars, dlqBars, domainBars, auth, trans,
+      sentBars, failureRate, dayBars, dlqBars, domainBars, auth, app,
       errorInsights, avgDelaySec, oldestPendingMin, pendingCount,
     };
   }, [data]);
@@ -139,10 +139,10 @@ export const EmailReports: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{isRTL ? 'متوسط زمن الطابور' : 'Avg queue delay'}</p><p className="text-lg font-bold tech-content">{reports.avgDelaySec === null ? '—' : `${reports.avgDelaySec}s`}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{isRTL ? 'متوسط زمن الإرسال' : 'Avg send delay'}</p><p className="text-lg font-bold tech-content">{reports.avgDelaySec === null ? '—' : `${reports.avgDelaySec}s`}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{isRTL ? 'أقدم انتظار' : 'Oldest pending'}</p><p className={`text-lg font-bold tech-content ${reports.oldestPendingMin >= 30 ? 'text-destructive' : reports.oldestPendingMin >= 10 ? 'text-warning' : ''}`}>{reports.pendingCount === 0 ? '—' : `${reports.oldestPendingMin}m`}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{isRTL ? 'قيد الانتظار' : 'Pending'}</p><p className="text-lg font-bold tech-content">{reports.pendingCount}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{isRTL ? 'نطاق المرسل' : 'Sender domain'}</p><p className="text-sm font-bold tech-content text-success">e.qitaat.com</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{isRTL ? 'عنوان المرسل' : 'Sender address'}</p><p className="text-sm font-bold tech-content text-success">noreply@qitaat.com</p></CardContent></Card>
       </div>
 
       <div className="grid md:grid-cols-2 gap-3">
@@ -152,11 +152,11 @@ export const EmailReports: React.FC = () => {
       <Card><CardHeader className="pb-2"><CardTitle className="text-sm">{isRTL ? 'DLQ حسب السبب' : 'DLQ by reason'}</CardTitle></CardHeader><CardContent><BarList items={reports.dlqBars} /></CardContent></Card>
       <Card><CardHeader className="pb-2"><CardTitle className="text-sm">{isRTL ? 'فئات نطاقات المستلمين' : 'Recipient domain buckets'}</CardTitle></CardHeader><CardContent><BarList items={reports.domainBars} max={8} /></CardContent></Card>
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">{isRTL ? 'مصادقة مقابل معاملات' : 'Auth vs transactional'}</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">{isRTL ? 'مصادقة مقابل رسائل التطبيق' : 'Auth vs app emails'}</CardTitle></CardHeader>
         <CardContent>
           <BarList items={[
             { label: isRTL ? 'مصادقة' : 'Auth', value: reports.auth, tone: 'bg-secondary' },
-            { label: isRTL ? 'معاملات' : 'Transactional', value: reports.trans, tone: 'bg-primary' },
+            { label: isRTL ? 'رسائل التطبيق' : 'App emails', value: reports.app, tone: 'bg-primary' },
           ]} />
         </CardContent>
       </Card>

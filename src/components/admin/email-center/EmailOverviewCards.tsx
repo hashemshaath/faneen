@@ -103,10 +103,10 @@ export const EmailOverviewCards: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="outline" className="gap-1"><Mail className="size-3" /> e.qitaat.com</Badge>
-        <Badge variant="secondary">Lovable Cloud Email</Badge>
+        <Badge variant="outline" className="gap-1"><Mail className="size-3" /> noreply@qitaat.com</Badge>
+        <Badge variant="secondary">Resend</Badge>
         <Badge variant="outline" className="gap-1">
-          <Activity className="size-3" /> {isRTL ? 'الطابور صحي' : 'Queue healthy'}
+          <Activity className="size-3" /> {isRTL ? 'الإرسال المباشر صحي' : 'Direct send healthy'}
         </Badge>
       </div>
 
