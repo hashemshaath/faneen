@@ -134,6 +134,35 @@ const DashboardSiteDetail: React.FC = () => {
     },
   });
 
+  const { data: milestones = [], isLoading: milestonesLoading } = useQuery({
+    queryKey: ['site-milestones', id, contracts.length],
+    enabled: !!id && !!site && contracts.length > 0,
+    queryFn: async () => {
+      const ids = contracts.map((c) => c.id);
+      const { data, error } = await supabase
+        .from('contract_milestones')
+        .select('id, contract_id, title_ar, title_en, amount, status, due_date, completed_at, sort_order')
+        .in('contract_id', ids)
+        .order('due_date', { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: timeline = [], isLoading: timelineLoading } = useQuery({
+    queryKey: ['site-timeline', id],
+    enabled: !!id && !!site,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_client_site_timeline', { _site_id: id, _limit: 100 });
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        event_type: string; event_id: string; ref_id: string | null;
+        title: string | null; status: string | null; amount: number | null;
+        currency: string | null; occurred_at: string;
+      }>;
+    },
+  });
+
   if (isLoading) {
     return (
       <DashboardLayout>
