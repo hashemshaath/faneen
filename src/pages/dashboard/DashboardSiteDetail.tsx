@@ -82,7 +82,7 @@ const DashboardSiteDetail: React.FC = () => {
         .select(`id, site_ref, ref_id, label, site_name, site_type, visibility,
                  contact_name, contact_phone, city_name, district, address_line1,
                  short_address, latitude, longitude, access_notes,
-                 cover_image_url, gallery_images,
+                 cover_image_url, gallery_images, qr_enabled,
                  owner_user_id, client_user_id, business_id, created_at`)
         .eq('id', id)
         .maybeSingle();
