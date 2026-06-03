@@ -394,7 +394,8 @@ const DashboardSiteDetail: React.FC = () => {
             {/* gallery */}
             <Card><CardContent className="p-5">
               {canManage ? (
-                <SiteGalleryManager siteId={site.id} images={gallery} onChange={(imgs) => { setLocalGallery(imgs); refetch(); }} />
+                <SiteGalleryManager siteId={site.id} images={gallery} milestones={milestonesForGallery}
+                  onChange={(imgs) => { setLocalGallery(imgs); refetch(); }} />
               ) : (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                   {gallery.length === 0 && <p className="col-span-full text-center text-sm text-muted-foreground py-8">{isRTL ? 'لا توجد صور' : 'No images'}</p>}
@@ -475,10 +476,7 @@ const DashboardSiteDetail: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="settings" className="mt-4">
-            <Card><CardContent className="p-5 text-sm text-muted-foreground">
-              {isRTL ? 'إعدادات الظهور و QR متاحة من قائمة المواقع. سيتم نقلها هنا قريباً.' : 'Visibility & QR settings live in the sites list. Will move here soon.'}
-              <div className="mt-3"><Button size="sm" variant="secondary" onClick={() => navigate('/dashboard/sites')}>{isRTL ? 'فتح القائمة' : 'Open list'}</Button></div>
-            </CardContent></Card>
+            <SiteSettingsTab site={site} canManage={canManage} onSaved={() => refetch()} />
           </TabsContent>
         </Tabs>
       </div>
