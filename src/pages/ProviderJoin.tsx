@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
@@ -71,6 +73,23 @@ const ProviderJoin: React.FC = () => {
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const honeypotRef = useRef<HTMLInputElement>(null);
   const startTimeRef = useRef<number>(Date.now());
+
+  // Real platform stats from the database (same RPC used on the public landing)
+  const { data: stats } = useQuery({
+    queryKey: ['provider_join_home_stats'],
+    queryFn: async () => {
+      const { data } = await supabase.rpc('get_home_stats');
+      return data as { businessCount: number; reviewCount: number; projectCount: number; satisfaction: number } | null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const fmt = (n: number | undefined) => {
+    const v = Number(n ?? 0);
+    if (v >= 1000) return `${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}K+`;
+    if (v >= 100) return `${Math.floor(v / 10) * 10}+`;
+    return `${v}`;
+  };
 
   // Load category catalog for the specialties picker
   useEffect(() => {
@@ -305,9 +324,9 @@ const ProviderJoin: React.FC = () => {
             {/* Stats strip */}
             <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-6 max-w-2xl mx-auto">
               {[
-                { icon: <Users className="w-5 h-5" />, value: '+12K', label: t('عميل شهرياً', 'Monthly clients') },
-                { icon: <Building2 className="w-5 h-5" />, value: '+800', label: t('منشأة مسجلة', 'Registered businesses') },
-                { icon: <TrendingUp className="w-5 h-5" />, value: '4×', label: t('متوسط نمو الطلبات', 'Avg. lead growth') },
+                { icon: <Building2 className="w-5 h-5" />, value: fmt(stats?.businessCount), label: t('منشأة مسجّلة', 'Registered businesses') },
+                { icon: <TrendingUp className="w-5 h-5" />, value: fmt(stats?.projectCount), label: t('مشروع منشور', 'Published projects') },
+                { icon: <Users className="w-5 h-5" />, value: fmt(stats?.reviewCount), label: t('تقييم موثّق', 'Verified reviews') },
               ].map((s, i) => (
                 <div key={i} className="rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm px-3 py-4 sm:p-5">
                   <div className="flex items-center justify-center text-white/70 mb-1.5">{s.icon}</div>
@@ -343,6 +362,25 @@ const ProviderJoin: React.FC = () => {
 
         {/* Form */}
         <section className="container mx-auto px-4 sm:px-6 py-10 sm:py-14 max-w-4xl">
+          {/* Brand header above the form */}
+          <div className="mb-6 sm:mb-8 flex flex-col items-center text-center gap-3">
+            <img
+              src="/logo.png"
+              alt={t('شعار قِطاعات', 'Qitaat logo')}
+              width={72}
+              height={72}
+              className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-2xl shadow-elegant ring-1 ring-border bg-white p-1.5"
+              loading="lazy"
+              decoding="async"
+            />
+            <div>
+              <div className="text-sm text-muted-foreground">{t('منصة قِطاعات الصناعية', 'Qitaat Industrial Platform')}</div>
+              <h2 className="text-lg sm:text-xl font-semibold mt-0.5">
+                {t('نموذج طلب الانضمام', 'Join Request Form')}
+              </h2>
+            </div>
+          </div>
+
           <form onSubmit={onSubmit} className="space-y-5 sm:space-y-6" noValidate>
             {/* Honeypot — hidden from real users */}
             <input
@@ -582,7 +620,11 @@ const ProviderJoin: React.FC = () => {
             {/* Submit */}
             <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-2">
               <p className="text-xs text-muted-foreground text-center sm:text-start">
-                {t('بإرسال الطلب فإنك توافق على سياسة الخصوصية والشروط.', 'By submitting, you agree to our Privacy Policy and Terms.')}
+                {t('بإرسال الطلب فإنك توافق على ', 'By submitting, you agree to our ')}
+                <a href="/privacy" className="underline hover:text-primary">{t('سياسة الخصوصية', 'Privacy Policy')}</a>
+                {t(' و', ' and ')}
+                <a href="/terms" className="underline hover:text-primary">{t('الشروط', 'Terms')}</a>
+                {t('.', '.')}
               </p>
               <Button type="submit" disabled={loading} size="lg" className="rounded-xl w-full sm:w-auto sm:min-w-[200px] h-12 hover-lift shadow-elegant">
                 {loading ? (
