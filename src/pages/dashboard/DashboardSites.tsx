@@ -239,6 +239,10 @@ export default function DashboardSites() {
       if (!composedAr) {
         throw new Error(isRTL ? 'أكمل بيانات العنوان الوطني (المنطقة / المدينة / الحي على الأقل)' : 'Complete the National Address (region / city / district at minimum)');
       }
+      // Saudi National short address must be exactly 4 letters + 4 digits.
+      // If the user typed a partial value, drop it instead of failing the whole save.
+      const rawShort = (naf.short_address ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const validShort = /^[A-Z]{4}[0-9]{4}$/.test(rawShort) ? rawShort : null;
       const payload = {
         business_id: editing?.business_id ?? businessId,
         label: form.label.trim(),
@@ -258,10 +262,10 @@ export default function DashboardSites() {
         building_number: naf.building_number,
         additional_number: naf.additional_number,
         post_code: naf.post_code,
-        short_address: naf.short_address,
+        short_address: validShort,
         address_en: composedEn || null,
         address_line1: composedAr,
-        address_line2: naf.short_address ? `العنوان الوطني: ${naf.short_address}` : null,
+        address_line2: validShort ? `العنوان الوطني: ${validShort}` : null,
         map_url: form.map_url.trim() || null,
         latitude: form.latitude ? Number(form.latitude) : null,
         longitude: form.longitude ? Number(form.longitude) : null,
@@ -293,7 +297,25 @@ export default function DashboardSites() {
       toast.success(editing ? (isRTL ? 'تم تحديث الموقع' : 'Site updated') : (isRTL ? 'تم إضافة الموقع' : 'Site added'));
       closeForm();
     },
-    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : (isRTL ? 'فشل الحفظ' : 'Save failed')),
+    onError: (err: unknown) => {
+      const raw = err instanceof Error ? err.message : String(err ?? '');
+      const map: Record<string, [string, string]> = {
+        LABEL_REQUIRED:        ['اسم/تسمية الموقع مطلوب', 'Site label is required'],
+        ADDRESS_REQUIRED:      ['أكمل بيانات العنوان الوطني', 'Complete the National Address'],
+        BUSINESS_ID_REQUIRED:  ['لا توجد منشأة مرتبطة', 'No business linked'],
+        FORBIDDEN:             ['ليست لديك صلاحية لهذا الإجراء', 'You are not allowed to do this'],
+        INVALID_LATITUDE:      ['إحداثيات خط العرض غير صحيحة', 'Invalid latitude'],
+        INVALID_LONGITUDE:     ['إحداثيات خط الطول غير صحيحة', 'Invalid longitude'],
+        INVALID_MAP_URL:       ['رابط الخريطة غير صالح (يجب أن يبدأ بـ http/https)', 'Invalid map URL (must start with http/https)'],
+        INVALID_SITE_TYPE:     ['نوع الموقع غير صالح', 'Invalid site type'],
+        INVALID_VISIBILITY:    ['إعداد الظهور غير صالح', 'Invalid visibility setting'],
+        INVALID_SHORT_ADDRESS: ['العنوان الوطني المختصر يجب أن يكون 4 أحرف + 4 أرقام (مثال: RQQA6904)', 'Short national address must be 4 letters + 4 digits (e.g. RQQA6904)'],
+        INVALID_LICENSE_DATES: ['تاريخ انتهاء الرخصة يجب أن يكون بعد تاريخ الإصدار', 'License expiry date must be on/after the issue date'],
+      };
+      const code = Object.keys(map).find(k => raw.includes(k));
+      const msg = code ? map[code][isRTL ? 0 : 1] : (raw || (isRTL ? 'فشل الحفظ' : 'Save failed'));
+      toast.error(msg);
+    },
   });
 
   const archiveMut = useMutation({
