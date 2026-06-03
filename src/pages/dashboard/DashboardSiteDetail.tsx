@@ -97,7 +97,7 @@ const DashboardSiteDetail: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('contracts')
-        .select('id, ref_id, title_ar, title_en, status, total_amount, currency_code, created_at, provider_id')
+        .select('id, contract_number, title_ar, title_en, status, total_amount, currency_code, created_at, provider_id')
         .eq('execution_site_id', id)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -263,8 +263,8 @@ const DashboardSiteDetail: React.FC = () => {
               items={contracts.map((c) => ({
                 key: c.id,
                 href: `/dashboard/contracts/${c.id}`,
-                title: (isRTL ? c.title_ar : c.title_en) || c.ref_id || c.id,
-                ref: c.ref_id,
+                title: (isRTL ? c.title_ar : c.title_en) || c.contract_number || c.id,
+                ref: c.contract_number,
                 status: c.status,
                 meta: c.total_amount ? `${c.total_amount} ${c.currency_code ?? ''}` : null,
                 date: c.created_at,
