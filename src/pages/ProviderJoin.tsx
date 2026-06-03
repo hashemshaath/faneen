@@ -420,16 +420,16 @@ const ProviderJoin: React.FC = () => {
         </section>
 
         {/* Form */}
-        <section className="container mx-auto px-4 sm:px-6 pt-6 pb-28 sm:py-14 max-w-4xl">
+        <section className="container mx-auto px-4 sm:px-6 pt-5 pb-28 sm:py-14 max-w-4xl">
           {/* Form header (logo removed — already shown in navbar) */}
-          <div className="mb-4 sm:mb-8 text-center">
-            <div className="text-[11px] sm:text-sm text-muted-foreground">{t('منصة قِطاعات الصناعية', 'Qitaat Industrial Platform')}</div>
-            <h1 className="text-[20px] sm:text-xl font-semibold mt-0.5">
+          <div className="mb-3 sm:mb-8 text-center">
+            <div className="text-[11px] uppercase tracking-wider sm:tracking-normal sm:normal-case sm:text-sm text-muted-foreground">{t('منصة قِطاعات الصناعية', 'Qitaat Industrial Platform')}</div>
+            <h2 className="text-[18px] sm:text-xl font-semibold mt-1 tracking-tight">
               {t('نموذج طلب الانضمام', 'Join Request Form')}
-            </h1>
+            </h2>
           </div>
 
-          <form ref={formRef} onSubmit={onSubmit} className="space-y-4 sm:space-y-6" noValidate aria-describedby={submitError ? 'pj-form-alert' : undefined}>
+          <form ref={formRef} onSubmit={onSubmit} className="space-y-3 sm:space-y-6" noValidate aria-describedby={submitError ? 'pj-form-alert' : undefined}>
             {/* Inline alert banner — replaces toast-only feedback */}
             {submitError && (
               <div
