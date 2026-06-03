@@ -472,7 +472,7 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 1 — Establishment */}
             <Card className="rounded-2xl">
-              <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
+              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
                 <SectionHeader icon={<Building2 className="w-5 h-5" />} title={t('بيانات المنشأة', 'Establishment Info')} />
                 <div className="grid md:grid-cols-2 gap-4">
                   <div data-error-key="name_ar">
@@ -510,7 +510,7 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 2 — Contact */}
             <Card className="rounded-2xl">
-              <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
+              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
                 <SectionHeader icon={<User className="w-5 h-5" />} title={t('بيانات التواصل', 'Contact Person')} />
                 <div className="grid md:grid-cols-2 gap-4">
                   <div data-error-key="contact_name">
@@ -551,7 +551,7 @@ const ProviderJoin: React.FC = () => {
 
             {/* Section 3 — Activity & Location */}
             <Card className="rounded-2xl">
-              <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
+              <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
                 <SectionHeader icon={<MapPin className="w-5 h-5" />} title={t('النشاط والموقع', 'Activity & Location')} />
                 <div className="grid md:grid-cols-2 gap-4">
                   <Field label={t('النشاط الرئيسي', 'Main activity')} hint={t('القطاع الذي تعملون فيه أساساً.', 'Your primary industrial sector.')}>
@@ -625,7 +625,7 @@ const ProviderJoin: React.FC = () => {
             {/* Branches */}
             {form.branches_count > 1 && (
               <Card className="rounded-2xl">
-                <CardContent className="p-5 sm:p-6 md:p-8 space-y-5">
+                <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5">
                   <SectionHeader
                     icon={<Store className="w-5 h-5" />}
                     title={t('بيانات الفروع الإضافية', 'Additional Branches')}
