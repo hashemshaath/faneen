@@ -419,20 +419,20 @@ const ProviderJoin: React.FC = () => {
 
         {/* Process steps */}
         <section className="border-b bg-muted/30">
-          <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-5xl">
-            <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
+          <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-12 max-w-5xl">
+            <div className="grid sm:grid-cols-3 gap-3 sm:gap-6">
               {[
                 { n: '1', icon: <FileCheck2 className="w-5 h-5" />, title: t('املأ الطلب', 'Fill the form'), desc: t('بيانات المنشأة والتواصل والنشاط — أقل من 3 دقائق.', 'Business, contact and activity info — under 3 minutes.') },
                 { n: '2', icon: <ShieldCheck className="w-5 h-5" />, title: t('مراجعة الفريق', 'Team review'), desc: t('نراجع البيانات والسجل التجاري للتحقق.', 'We verify your data and CR documents.') },
                 { n: '3', icon: <Award className="w-5 h-5" />, title: t('تفعيل الحساب', 'Activation'), desc: t('نرسل تأكيداً برابط تفعيل الملف وإدارته.', 'Confirmation email with activation & management link.') },
               ].map((s, i) => (
-                <div key={i} className="relative rounded-2xl border bg-card p-5 hover-lift">
-                  <div className="flex items-center gap-3">
-                    <span className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">{s.icon}</span>
-                    <span className="text-xs font-mono text-muted-foreground tech-content">STEP {s.n}</span>
+                <div key={i} className="relative rounded-2xl border bg-card p-4 sm:p-5 hover-lift">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">{s.icon}</span>
+                    <span className="text-[11px] sm:text-xs font-mono text-muted-foreground tech-content">STEP {s.n}</span>
                   </div>
-                  <h3 className="mt-3 font-semibold">{s.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+                  <h3 className="mt-2.5 sm:mt-3 font-semibold text-[15px] sm:text-base">{s.title}</h3>
+                  <p className="mt-1 text-[13px] sm:text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
                 </div>
               ))}
             </div>
