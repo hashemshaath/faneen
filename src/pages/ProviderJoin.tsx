@@ -13,12 +13,16 @@ import { Badge } from '@/components/ui/badge';
 import {
   Building2, User, Mail, Phone, FileText, MapPin, ShieldCheck,
   CheckCircle2, Plus, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp, FileCheck2,
-  Search, X, Tag, Store,
+  Store,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitProviderLead } from '@/modules/providers';
 import { listActiveCategories } from '@/modules/categories';
 import coverImage from '@/assets/provider-join-cover.jpg';
+import {
+  Field, SectionHeader, SpecialtiesPicker, TagInput,
+  type CategoryOption,
+} from './providerJoin/_components';
 import type {
   ProviderLeadChannel,
   ProviderLeadBranchInput,
@@ -55,12 +59,6 @@ const EMPTY: FormState = {
   vat_number: '', main_activity: '', specialties: [], brands: [], brief: '',
   map_link: '', national_address: '', city: '', branches_count: 1,
 };
-
-interface CategoryOption {
-  id: string;
-  name_ar: string;
-  name_en: string;
-}
 
 const ProviderJoin: React.FC = () => {
   const { isRTL, language } = useLanguage();
