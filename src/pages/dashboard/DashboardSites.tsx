@@ -680,6 +680,58 @@ export default function DashboardSites() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pb-5">
+                {issues.length > 0 && (
+                  <div
+                    role="alert"
+                    aria-live="assertive"
+                    className="rounded-xl border border-destructive/40 bg-destructive/5 p-3 space-y-2"
+                  >
+                    <div className="flex items-center gap-2 text-destructive">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <h3 className="text-xs font-bold">
+                        {isRTL
+                          ? `يوجد ${issues.length} ${issues.length === 1 ? 'مشكلة' : 'مشاكل'} يجب معالجتها قبل الحفظ`
+                          : `${issues.length} ${issues.length === 1 ? 'issue' : 'issues'} to resolve before saving`}
+                      </h3>
+                    </div>
+                    <ul className="space-y-2">
+                      {issues.map((iss, idx) => (
+                        <li key={idx} className="rounded-lg border border-destructive/30 bg-background/60 p-2.5 space-y-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveTab(iss.tab);
+                              requestAnimationFrame(() => {
+                                const el = document.getElementById(`site-field-${iss.field}`);
+                                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                (el?.querySelector('input,select,textarea') as HTMLElement | null)?.focus();
+                              });
+                            }}
+                            className="w-full flex items-start gap-2 text-start group"
+                          >
+                            <span className="mt-0.5 inline-flex w-5 h-5 items-center justify-center rounded-full bg-destructive/15 text-destructive text-[10px] font-bold shrink-0">
+                              {idx + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-destructive group-hover:underline">
+                                {isRTL ? iss.title_ar : iss.title_en}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5 flex items-start gap-1">
+                                <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                                <span>{isRTL ? iss.cause_ar : iss.cause_en}</span>
+                              </p>
+                              <p className="text-[11px] text-foreground mt-0.5 flex items-start gap-1">
+                                <HelpCircle className="w-3 h-3 mt-0.5 shrink-0 text-primary" />
+                                <span>{isRTL ? iss.fix_ar : iss.fix_en}</span>
+                              </p>
+                            </div>
+                            <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5 ${isRTL ? 'rotate-180' : ''}`} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FormTab)} className="w-full">
                   <TabsList className="w-full grid grid-cols-4 h-auto p-1">
                     <TabsTrigger value="general" className="text-[11px] gap-1.5"><Layers className="w-3.5 h-3.5" />{isRTL ? 'الأساسيات' : 'General'}</TabsTrigger>
