@@ -37,7 +37,7 @@ const ProviderJoinEdit: React.FC = () => {
   usePageMeta({
     title: t('تعديل طلب الانضمام | قِطاعات', 'Edit Join Request | Qitaat'),
     description: t('تعديل بيانات طلب الانضمام إلى قِطاعات.', 'Edit your Qitaat join request details.'),
-    noIndex: true,
+    noindex: true,
   });
 
   // ---- Lookup state ----
