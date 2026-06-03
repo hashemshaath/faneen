@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Save, QrCode, Eye, EyeOff, Archive, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import SiteAuditLog from './SiteAuditLog';
 
 interface Props {
   site: {
@@ -153,6 +154,8 @@ export const SiteSettingsTab: React.FC<Props> = ({ site, canManage, onSaved }) =
           </Button>
         </div>
       )}
+
+      <SiteAuditLog siteId={site.id} />
     </div>
   );
 };
