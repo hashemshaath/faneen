@@ -121,6 +121,137 @@ const emptyNaf: NationalAddressValue = {
   address: null, address_en: null, address_manual: false,
 };
 
+/** Tabs that group form fields — used to jump to the failing tab. */
+type FormTab = 'general' | 'address' | 'government' | 'contact';
+
+/** A single validation issue surfaced to the user. */
+interface FormIssue {
+  field: string;          // input id used for scrollIntoView + ring highlight
+  tab: FormTab;           // which tab the field lives in
+  code: string;           // stable code (server or client)
+  title_ar: string;
+  title_en: string;
+  cause_ar: string;       // why it failed (plain language)
+  cause_en: string;
+  fix_ar: string;         // how to fix it
+  fix_en: string;
+}
+
+/** Stable catalogue of every error/warning we can show. */
+const ISSUE_CATALOG: Record<string, Omit<FormIssue, 'field' | 'tab'>> = {
+  LABEL_REQUIRED: {
+    code: 'LABEL_REQUIRED',
+    title_ar: 'الاسم المختصر مطلوب', title_en: 'Site label is required',
+    cause_ar: 'لم يتم إدخال اسم مختصر للموقع، وهو مطلوب لتمييز الموقع داخل القائمة.',
+    cause_en: 'No short label was entered. It is required to identify the site in the list.',
+    fix_ar: 'افتح تبويب «الأساسيات» وأدخل اسماً مختصراً مثل: فيلا العميل، المعرض الرئيسي.',
+    fix_en: 'Open the "General" tab and enter a short label such as "Client villa" or "Main showroom".',
+  },
+  BUSINESS_ID_REQUIRED: {
+    code: 'BUSINESS_ID_REQUIRED',
+    title_ar: 'لا توجد منشأة مرتبطة بحسابك', title_en: 'No business linked to your account',
+    cause_ar: 'لا يمكن إنشاء مواقع بدون منشأة مالكة. حسابك غير مرتبط بأي منشأة حالياً.',
+    cause_en: 'A site needs an owner business. Your account is not linked to any business yet.',
+    fix_ar: 'انتقل إلى «إدارة المنشأة» وأنشئ منشأتك أو اطلب من المالك ربط حسابك بها.',
+    fix_en: 'Go to "Business Management" and create your business, or ask the owner to link your account.',
+  },
+  CITY_REQUIRED: {
+    code: 'CITY_REQUIRED',
+    title_ar: 'يجب اختيار المدينة', title_en: 'City is required',
+    cause_ar: 'لم يتم اختيار المدينة من قائمة العنوان الوطني، وهي مطلوبة لربط الموقع بالعقود والتنبيهات.',
+    cause_en: 'No city was selected from the National Address list. It is required to link the site to contracts.',
+    fix_ar: 'في تبويب «العنوان والخريطة» اختر المنطقة ثم المدينة من القائمة المنسدلة.',
+    fix_en: 'In the "Address & Map" tab, pick the region then the city from the dropdown.',
+  },
+  ADDRESS_REQUIRED: {
+    code: 'ADDRESS_REQUIRED',
+    title_ar: 'أكمل بيانات العنوان الوطني', title_en: 'Complete the National Address',
+    cause_ar: 'بيانات العنوان الوطني غير كافية لتكوين سطر عنوان رسمي للموقع.',
+    cause_en: 'The National Address data is not enough to build an official address line.',
+    fix_ar: 'املأ المنطقة + المدينة + الحي على الأقل في تبويب «العنوان والخريطة».',
+    fix_en: 'Fill at least Region + City + District in the "Address & Map" tab.',
+  },
+  INVALID_SHORT_ADDRESS: {
+    code: 'INVALID_SHORT_ADDRESS',
+    title_ar: 'صيغة العنوان الوطني المختصر غير صحيحة',
+    title_en: 'Invalid Short National Address format',
+    cause_ar: 'يجب أن يتكون العنوان المختصر من 4 أحرف إنجليزية ثم 4 أرقام بدون فواصل (مثل: RQQA6904).',
+    cause_en: 'The short address must be 4 letters then 4 digits with no spaces (e.g. RQQA6904).',
+    fix_ar: 'أعد إدخال الكود من تطبيق العنوان الوطني، أو اتركه فارغاً لحفظ الموقع بدونه.',
+    fix_en: 'Re-enter the code from the National Address app, or leave it blank to save without it.',
+  },
+  INVALID_LATITUDE: {
+    code: 'INVALID_LATITUDE',
+    title_ar: 'إحداثيات خط العرض غير صحيحة', title_en: 'Invalid latitude',
+    cause_ar: 'قيمة خط العرض يجب أن تكون بين -90 و 90.',
+    cause_en: 'Latitude must be between -90 and 90.',
+    fix_ar: 'استخدم زر «تحديد على الخريطة» لاختيار النقطة تلقائياً بدلاً من الإدخال اليدوي.',
+    fix_en: 'Use "Pin on map" to set the location automatically instead of typing it.',
+  },
+  INVALID_LONGITUDE: {
+    code: 'INVALID_LONGITUDE',
+    title_ar: 'إحداثيات خط الطول غير صحيحة', title_en: 'Invalid longitude',
+    cause_ar: 'قيمة خط الطول يجب أن تكون بين -180 و 180.',
+    cause_en: 'Longitude must be between -180 and 180.',
+    fix_ar: 'استخدم زر «تحديد على الخريطة» لاختيار النقطة تلقائياً بدلاً من الإدخال اليدوي.',
+    fix_en: 'Use "Pin on map" to set the location automatically instead of typing it.',
+  },
+  INVALID_MAP_URL: {
+    code: 'INVALID_MAP_URL',
+    title_ar: 'رابط الخريطة غير صالح', title_en: 'Invalid map URL',
+    cause_ar: 'الرابط لا يبدأ بـ http:// أو https://، أو يحتوي على رموز غير مدعومة.',
+    cause_en: 'The URL does not start with http:// or https://, or contains unsupported characters.',
+    fix_ar: 'انسخ الرابط مباشرة من Google Maps أو اتركه فارغاً ليُولَّد تلقائياً عند تحديد الموقع.',
+    fix_en: 'Copy the link from Google Maps directly, or leave it empty to auto-generate from the pin.',
+  },
+  INVALID_LICENSE_DATES: {
+    code: 'INVALID_LICENSE_DATES',
+    title_ar: 'تواريخ رخصة البلدية غير منطقية',
+    title_en: 'Municipal license dates are inconsistent',
+    cause_ar: 'تاريخ انتهاء الرخصة سابق لتاريخ إصدارها، وهذا غير ممكن.',
+    cause_en: 'License expiry is earlier than its issue date, which is not allowed.',
+    fix_ar: 'صحّح أحد التاريخين في تبويب «البيانات الحكومية» بحيث يكون الانتهاء بعد الإصدار.',
+    fix_en: 'Fix one of the dates in the "Government" tab so expiry is after issue date.',
+  },
+  FORBIDDEN: {
+    code: 'FORBIDDEN',
+    title_ar: 'ليست لديك صلاحية لهذا الإجراء', title_en: 'You are not allowed to do this',
+    cause_ar: 'حسابك ليس المالك أو المدير لهذه المنشأة، لذلك لا يمكنك إضافة/تعديل مواقعها.',
+    cause_en: 'Your account is not the owner or manager of this business.',
+    fix_ar: 'تواصل مع مالك المنشأة لمنحك صلاحية «مدير» من إعدادات الفريق.',
+    fix_en: 'Ask the business owner to grant you the "Manager" role from team settings.',
+  },
+  INVALID_SITE_TYPE: {
+    code: 'INVALID_SITE_TYPE',
+    title_ar: 'نوع الموقع غير صالح', title_en: 'Invalid site type',
+    cause_ar: 'القيمة المختارة لنوع الموقع غير مدعومة في النظام.',
+    cause_en: 'The selected site type value is not supported.',
+    fix_ar: 'أعد اختيار نوع الموقع من القائمة في تبويب «الأساسيات».',
+    fix_en: 'Re-select the site type from the list in the "General" tab.',
+  },
+  INVALID_VISIBILITY: {
+    code: 'INVALID_VISIBILITY',
+    title_ar: 'إعداد الخصوصية غير صالح', title_en: 'Invalid visibility setting',
+    cause_ar: 'القيمة المختارة لخصوصية الموقع غير مدعومة.',
+    cause_en: 'The selected visibility value is not supported.',
+    fix_ar: 'اختر أحد خيارات الخصوصية من القائمة في تبويب «الأساسيات».',
+    fix_en: 'Pick one of the visibility options in the "General" tab.',
+  },
+  UNKNOWN: {
+    code: 'UNKNOWN',
+    title_ar: 'حدث خطأ غير متوقع أثناء الحفظ', title_en: 'Unexpected error while saving',
+    cause_ar: 'تعذّر إكمال الحفظ بسبب خطأ في الاتصال أو خطأ غير معروف من الخادم.',
+    cause_en: 'Save could not be completed due to a connection or unknown server error.',
+    fix_ar: 'تحقق من الاتصال بالإنترنت ثم أعد المحاولة. إن تكرّر الخطأ راسل الدعم مع الرسالة الأصلية.',
+    fix_en: 'Check your connection and try again. If it persists, contact support with the original message.',
+  },
+};
+
+const issueOf = (code: string, field: string, tab: FormTab, override?: Partial<FormIssue>): FormIssue => {
+  const base = ISSUE_CATALOG[code] ?? ISSUE_CATALOG.UNKNOWN;
+  return { ...base, ...override, field, tab };
+};
+
 export default function DashboardSites() {
   useNoIndex();
   const { isRTL } = useLanguage();
