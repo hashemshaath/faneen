@@ -81,6 +81,9 @@ interface ClientSite {
   block_number: string | null;
   plan_number: string | null;
   government_notes: string | null;
+  /* Site cover + gallery (added in sites-restructure migration) */
+  cover_image_url?: string | null;
+  gallery_images?: unknown;
 }
 
 const SITE_TYPES: { value: SiteType; ar: string; en: string; icon: typeof Home }[] = [
