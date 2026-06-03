@@ -1097,7 +1097,7 @@ export default function DashboardSites() {
             </div>
             <h3 className="text-base font-semibold mb-1">{isRTL ? 'لا توجد مواقع بعد' : 'No sites yet'}</h3>
             <p className="text-sm text-muted-foreground max-w-xs mb-5">
-              {isRTL ? 'أضف مواقع التنفيذ لتمكين ربطها بالعقود وأوامر العمل والفنيين.' : 'Add execution sites to link them with contracts, work orders, and technicians.'}
+              {isRTL ? 'أضف مواقع التنفيذ لتمكين ربطها بالعقود وأوامر العمل والفِرَق.' : 'Add execution sites to link them with contracts, work orders, and teams.'}
             </p>
             {businessId && (
               <Button variant="hero" size="sm" onClick={openCreate}><Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة أول موقع' : 'Add First Site'}</Button>
