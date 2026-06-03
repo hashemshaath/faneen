@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
@@ -13,9 +13,11 @@ import { Badge } from '@/components/ui/badge';
 import {
   Building2, User, Mail, Phone, Globe, FileText, MapPin, ShieldCheck,
   CheckCircle2, Plus, Trash2, Loader2, Sparkles, Lock, Clock, Award, Users, TrendingUp, FileCheck2,
+  Search, X, Tag, Store,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitProviderLead } from '@/modules/providers';
+import { listActiveCategories } from '@/modules/categories';
 import coverImage from '@/assets/provider-join-cover.jpg';
 import type {
   ProviderLeadChannel,
