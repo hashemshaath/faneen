@@ -200,6 +200,7 @@ const Diagnostics = lazyRetry(() => import("./pages/Diagnostics"));
 const DashboardAccountDiagnostics = lazyRetry(() => import("./pages/dashboard/DashboardAccountDiagnostics"));
 const ForProviders = lazyRetry(() => import("./pages/ForProviders"));
 const ProviderJoin = lazyRetry(() => import("./pages/ProviderJoin"));
+const ProviderJoinEdit = lazyRetry(() => import("./pages/ProviderJoinEdit"));
 const AdminProviderLeads = lazyRetry(() => import("./pages/admin/AdminProviderLeads"));
 const DashboardCommunicationPreferences = lazyRetry(() => import("./pages/dashboard/DashboardCommunicationPreferences"));
 const DashboardBusinessCompletion = lazyRetry(() => import("./pages/dashboard/DashboardBusinessCompletion"));
