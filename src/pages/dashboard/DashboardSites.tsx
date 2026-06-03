@@ -458,7 +458,16 @@ export default function DashboardSites() {
         government_notes:               form.government_notes.trim() || null,
       } satisfies Record<string, Json | null | undefined>;
       if (editing) {
-        const { error } = await supabase.rpc('update_client_site', { _site_id: editing.id, _patch: payload as Json });
+        // The update RPC rejects immutable / system-managed fields with
+        // FORBIDDEN_FIELD. Strip them from the patch so editing doesn't fail.
+        const IMMUTABLE = [
+          'business_id', 'created_by', 'archived_at', 'site_ref',
+          'qr_token_hash', 'qr_enabled', 'qr_revoked_at',
+          'last_scanned_at', 'scan_count',
+        ] as const;
+        const patch: Record<string, Json | null | undefined> = { ...payload };
+        IMMUTABLE.forEach((k) => { delete patch[k]; });
+        const { error } = await supabase.rpc('update_client_site', { _site_id: editing.id, _patch: patch as Json });
         if (error) throw error;
       } else {
         const { error } = await supabase.rpc('create_client_site', { _payload: payload as Json });
