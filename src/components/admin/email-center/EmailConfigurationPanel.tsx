@@ -18,18 +18,18 @@ export const EmailConfigurationPanel: React.FC = () => {
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Mail className="size-4" />{isRTL ? 'مزود الخدمة' : 'Provider'}</CardTitle></CardHeader>
         <CardContent>
-          <Row label={isRTL ? 'مزود البريد' : 'Provider'} value={<Badge variant="outline">Lovable Cloud Email</Badge>} />
-          <Row label={isRTL ? 'النطاق الموثّق' : 'Verified sender domain'} value={<Badge variant="outline" className="text-success border-success/30 bg-success/10"><CheckCircle2 className="size-3 me-1" />e.qitaat.com</Badge>} />
-          <Row label="FROM_DOMAIN" value="qitaat.com" />
+          <Row label={isRTL ? 'مزود البريد' : 'Provider'} value={<Badge variant="outline">Resend</Badge>} />
+          <Row label={isRTL ? 'النطاق الموثّق' : 'Verified sender domain'} value={<Badge variant="outline" className="text-success border-success/30 bg-success/10"><CheckCircle2 className="size-3 me-1" />qitaat.com</Badge>} />
+          <Row label="From" value="noreply@qitaat.com" />
           <Row label={isRTL ? 'النطاق الجذر' : 'Root domain'} value="qitaat.com" />
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Send className="size-4" />{isRTL ? 'النطاقات حسب الدالة' : 'Sender domains by function'}</CardTitle></CardHeader>
         <CardContent>
-          <Row label="send-transactional-email" value="e.qitaat.com" />
-          <Row label="auth-email-hook" value="e.qitaat.com" />
-          <Row label="process-email-queue" value={<span className="text-muted-foreground">payload.sender_domain</span>} />
+          <Row label="send-transactional-email" value="noreply@qitaat.com" />
+          <Row label="auth-email-hook" value="noreply@qitaat.com" />
+          <Row label={isRTL ? 'الطابور القديم' : 'Legacy queue'} value={<span className="text-muted-foreground">{isRTL ? 'متوقف' : 'Disabled'}</span>} />
         </CardContent>
       </Card>
       <Card className="md:col-span-2">
@@ -38,7 +38,6 @@ export const EmailConfigurationPanel: React.FC = () => {
           {[
             'send-transactional-email',
             'auth-email-hook',
-            'process-email-queue',
             'preview-transactional-email',
             'handle-email-suppression',
             'handle-email-unsubscribe',
@@ -52,7 +51,7 @@ export const EmailConfigurationPanel: React.FC = () => {
           ))}
         </CardContent>
       </Card>
-      <p className="md:col-span-2 text-xs text-muted-foreground">{isRTL ? 'العرض للقراءة فقط في هذا الإصدار. أي تغيير على النطاق يجب أن يتم عبر إعداد بريد Lovable Cloud.' : 'Read-only in this release. Domain changes go through Lovable Cloud Email setup.'}</p>
+      <p className="md:col-span-2 text-xs text-muted-foreground">{isRTL ? 'العرض للقراءة فقط في هذا الإصدار. أي تغيير على نطاق الإرسال يتم من إعدادات Resend.' : 'Read-only in this release. Sender domain changes are managed in Resend.'}</p>
     </div>
   );
 };
