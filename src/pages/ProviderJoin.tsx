@@ -6,7 +6,6 @@ import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { BrandLogo } from '@/components/common/BrandLogo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -380,7 +379,7 @@ const ProviderJoin: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/75 to-slate-950/95" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.25),transparent_60%)]" />
           </div>
-          <div className="relative container mx-auto px-5 sm:px-6 pt-14 pb-10 sm:py-20 md:py-24 max-w-5xl text-center text-white">
+          <div className="relative container mx-auto px-5 sm:px-6 pt-24 pb-10 sm:py-20 md:py-24 max-w-5xl text-center text-white">
             <div className="mb-4 sm:mb-5 flex justify-center">
               <Badge variant="secondary" className="rounded-full bg-white/10 text-white border-white/20 backdrop-blur-sm hover:bg-white/15 text-[11px] sm:text-xs px-3 py-1.5 inline-flex items-center max-w-full whitespace-normal sm:whitespace-nowrap leading-snug text-center">
                 <Sparkles className="w-3.5 h-3.5 me-1.5 shrink-0" />
@@ -421,15 +420,12 @@ const ProviderJoin: React.FC = () => {
 
         {/* Form */}
         <section className="container mx-auto px-4 sm:px-6 py-10 sm:py-14 max-w-4xl">
-          {/* Brand header above the form */}
-          <div className="mb-6 sm:mb-8 flex flex-col items-center text-center gap-3">
-            <BrandLogo variant="full" tone="auto" size="auth" />
-            <div>
-              <div className="text-xs sm:text-sm text-muted-foreground">{t('منصة قِطاعات الصناعية', 'Qitaat Industrial Platform')}</div>
-              <h2 className="text-base sm:text-xl font-semibold mt-0.5">
-                {t('نموذج طلب الانضمام', 'Join Request Form')}
-              </h2>
-            </div>
+          {/* Form header (logo removed — already shown in navbar) */}
+          <div className="mb-6 sm:mb-8 text-center">
+            <div className="text-xs sm:text-sm text-muted-foreground">{t('منصة قِطاعات الصناعية', 'Qitaat Industrial Platform')}</div>
+            <h2 className="text-base sm:text-xl font-semibold mt-0.5">
+              {t('نموذج طلب الانضمام', 'Join Request Form')}
+            </h2>
           </div>
 
           <form ref={formRef} onSubmit={onSubmit} className="space-y-5 sm:space-y-6" noValidate aria-describedby={submitError ? 'pj-form-alert' : undefined}>
