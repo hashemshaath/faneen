@@ -85,9 +85,10 @@ export const SiteReportsTab: React.FC<Props> = ({ siteId, contacts, contracts, c
 
   const setStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const patch: Record<string, unknown> = { status };
-      if (status === 'resolved' || status === 'closed') patch.resolved_at = new Date().toISOString();
-      const { error } = await supabase.from('site_reports').update(patch).eq('id', id);
+      const resolved = status === 'resolved' || status === 'closed';
+      const { error } = await supabase.from('site_reports')
+        .update({ status, resolved_at: resolved ? new Date().toISOString() : null })
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['site-reports', siteId] }),
