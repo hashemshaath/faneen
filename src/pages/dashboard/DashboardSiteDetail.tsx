@@ -260,15 +260,17 @@ const DashboardSiteDetail: React.FC = () => {
             <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 text-white">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-xs opacity-90">
-                    {site.site_ref && <span className="tech-content rounded-md bg-white/20 px-2 py-0.5 font-mono">{site.site_ref}</span>}
+                  <div className="flex items-center gap-2 text-xs opacity-90 flex-wrap">
+                    {site.site_ref ? (
+                      <span dir="ltr" className="tech-content rounded-md bg-white/20 px-2 py-0.5 font-mono">{site.site_ref}</span>
+                    ) : null}
                     {typeLabel && <Badge variant="secondary" className="bg-white/20 text-white border-0">{isRTL ? typeLabel.ar : typeLabel.en}</Badge>}
                   </div>
-                  <h1 className="mt-2 text-2xl md:text-3xl font-bold">{displayName}</h1>
+                  <h1 dir="auto" className="mt-2 text-2xl md:text-3xl font-bold leading-tight">{displayName}</h1>
                   {(site.city_name || site.district) && (
-                    <p className="mt-1 flex items-center gap-1 text-sm opacity-90">
+                    <p className="mt-1 flex items-center gap-1.5 text-sm opacity-90" dir="auto">
                       <MapPin className="h-3.5 w-3.5" />
-                      {[site.district, site.city_name].filter(Boolean).join(' · ')}
+                      <span>{[site.district, site.city_name].filter(Boolean).join(' · ')}</span>
                     </p>
                   )}
                 </div>
@@ -314,22 +316,33 @@ const DashboardSiteDetail: React.FC = () => {
 
           <TabsContent value="overview" className="mt-4">
             <div className="grid gap-4 md:grid-cols-2">
-              <Card><CardContent className="p-5 space-y-3">
-                <h3 className="font-semibold flex items-center gap-2"><User className="h-4 w-4 text-primary" />{isRTL ? 'جهة الاتصال' : 'Contact'}</h3>
-                <InfoRow label={isRTL ? 'الاسم' : 'Name'} value={site.contact_name} />
-                <InfoRow label={isRTL ? 'الهاتف' : 'Phone'} value={site.contact_phone} mono />
-              </CardContent></Card>
-              <Card><CardContent className="p-5 space-y-3">
-                <h3 className="font-semibold flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" />{isRTL ? 'العنوان' : 'Address'}</h3>
-                <InfoRow label={isRTL ? 'المدينة' : 'City'} value={site.city_name} />
-                <InfoRow label={isRTL ? 'الحي' : 'District'} value={site.district} />
-                <InfoRow label={isRTL ? 'السطر' : 'Line'} value={site.address_line1} />
-                {site.short_address && <InfoRow label={isRTL ? 'العنوان الوطني' : 'NAF'} value={site.short_address} mono />}
-              </CardContent></Card>
+              <Card className="overflow-hidden">
+                <CardContent className="p-5 space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2 pb-2 border-b border-border/40">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><User className="h-4 w-4" /></span>
+                    {isRTL ? 'جهة الاتصال' : 'Contact'}
+                  </h3>
+                  <InfoRow label={isRTL ? 'الاسم' : 'Name'} value={site.contact_name} />
+                  <InfoRow label={isRTL ? 'الهاتف' : 'Phone'} value={site.contact_phone} mono
+                    action={site.contact_phone ? { href: `tel:${site.contact_phone}`, icon: Phone } : undefined} />
+                </CardContent>
+              </Card>
+              <Card className="overflow-hidden">
+                <CardContent className="p-5 space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2 pb-2 border-b border-border/40">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><MapPin className="h-4 w-4" /></span>
+                    {isRTL ? 'العنوان' : 'Address'}
+                  </h3>
+                  <InfoRow label={isRTL ? 'المدينة' : 'City'} value={site.city_name} />
+                  <InfoRow label={isRTL ? 'الحي' : 'District'} value={site.district} />
+                  <InfoRow label={isRTL ? 'العنوان' : 'Line'} value={site.address_line1} multiline />
+                  {site.short_address && <InfoRow label={isRTL ? 'العنوان الوطني' : 'NAF'} value={site.short_address} mono />}
+                </CardContent>
+              </Card>
               {site.access_notes && (
                 <Card className="md:col-span-2"><CardContent className="p-5">
                   <h3 className="font-semibold mb-2">{isRTL ? 'ملاحظات الوصول' : 'Access notes'}</h3>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{site.access_notes}</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap" dir="auto">{site.access_notes}</p>
                 </CardContent></Card>
               )}
             </div>
@@ -494,12 +507,41 @@ const DashboardSiteDetail: React.FC = () => {
 
 /* ----- helpers ----- */
 
-const InfoRow: React.FC<{ label: string; value: string | null | undefined; mono?: boolean }> = ({ label, value, mono }) => (
-  <div className="flex items-start justify-between gap-3 text-sm">
-    <span className="text-muted-foreground">{label}</span>
-    <span className={mono ? 'tech-content font-medium' : 'font-medium'}>{value || '—'}</span>
-  </div>
-);
+const InfoRow: React.FC<{
+  label: string;
+  value: string | null | undefined;
+  mono?: boolean;
+  multiline?: boolean;
+  action?: { href: string; icon: React.ComponentType<{ className?: string }> };
+}> = ({ label, value, mono, multiline, action }) => {
+  const Icon = action?.icon;
+  return (
+    <div className="flex items-start gap-4 text-sm">
+      <span className="shrink-0 w-20 text-xs uppercase tracking-wide text-muted-foreground pt-0.5">{label}</span>
+      <div className="flex-1 min-w-0 flex items-start justify-between gap-2">
+        <span
+          dir="auto"
+          className={[
+            'font-medium leading-relaxed break-words',
+            mono ? 'tech-content' : '',
+            multiline ? '' : 'truncate',
+          ].join(' ')}
+        >
+          {value || <span className="text-muted-foreground/60">—</span>}
+        </span>
+        {action && Icon && value && (
+          <a
+            href={action.href}
+            className="shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-primary hover:border-primary/40 transition"
+            aria-label={label}
+          >
+            <Icon className="h-3.5 w-3.5" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const KpiCard: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; value: number; loading: boolean; tone?: 'destructive' }> = ({ icon: Icon, label, value, loading, tone }) => (
   <Card className={`hover-lift ${tone === 'destructive' ? 'border-destructive/40 bg-destructive/5' : ''}`}><CardContent className="p-4">
