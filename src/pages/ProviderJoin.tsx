@@ -502,9 +502,9 @@ const ProviderJoin: React.FC = () => {
                   </div>
                 </div>
                 <Field label={t('نبذة مختصرة عن المنشأة', 'Short description')}>
-                  <Textarea dir="auto" rows={3} maxLength={2000} value={form.brief} onChange={(e) => setField('brief', e.target.value)} className="rounded-xl" />
+                  <Textarea dir="auto" rows={3} maxLength={2000} value={form.brief} onChange={(e) => setField('brief', e.target.value)} className="rounded-xl min-h-[88px] text-[14px]" />
                 </Field>
-                <p className="text-[11px] text-muted-foreground -mt-3 text-end tech-content">{form.brief.length}/2000</p>
+                <p className="text-[11px] text-muted-foreground -mt-2 text-end tech-content">{form.brief.length}/2000</p>
               </CardContent>
             </Card>
 
