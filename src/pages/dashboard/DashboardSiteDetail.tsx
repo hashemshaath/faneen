@@ -168,6 +168,40 @@ const DashboardSiteDetail: React.FC = () => {
     },
   });
 
+  const { data: contactsRaw = [], isLoading: contactsLoading } = useQuery({
+    queryKey: ['site-contacts-min', id],
+    enabled: !!id && !!site,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('site_contacts')
+        .select('id, full_name, role_code')
+        .eq('site_id', id);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: reportsCount = 0 } = useQuery({
+    queryKey: ['site-reports-count', id],
+    enabled: !!id && !!site,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('site_reports').select('id', { count: 'exact', head: true })
+        .eq('site_id', id).in('status', ['open', 'in_progress']);
+      if (error) return 0;
+      return count ?? 0;
+    },
+  });
+
+  const contractsForRef = useMemo(
+    () => contracts.map((c) => ({ id: c.id, label: c.contract_number || (isRTL ? c.title_ar : c.title_en) || c.id.slice(0, 8) })),
+    [contracts, isRTL]
+  );
+  const milestonesForGallery = useMemo(
+    () => milestones.map((m) => ({ id: m.id, title: (isRTL ? m.title_ar : m.title_en) || m.title_ar || m.id.slice(0, 8) })),
+    [milestones, isRTL]
+  );
+
   if (isLoading) {
     return (
       <DashboardLayout>
