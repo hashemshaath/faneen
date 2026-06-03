@@ -324,6 +324,7 @@ const AppRoutes = () => (
           <Route path="/for-providers" element={<ForProviders />} />
           <Route path="/join-as-provider" element={<Navigate to="/for-providers" replace />} />
           <Route path="/join/qitaat" element={<ProviderJoin />} />
+          <Route path="/join/qitaat/edit" element={<ProviderJoinEdit />} />
           <Route path="/providers/join" element={<Navigate to="/join/qitaat" replace />} />
 
           <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
