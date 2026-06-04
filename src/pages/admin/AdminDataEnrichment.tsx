@@ -656,5 +656,6 @@ export default function AdminDataEnrichment() {
         </Card>
       )}
     </div>
+    </DashboardLayout>
   );
 }
