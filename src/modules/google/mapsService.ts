@@ -30,20 +30,24 @@ export function getStaticMapUrl(opts: {
   return `https://maps.googleapis.com/maps/api/staticmap?center=${opts.lat},${opts.lng}&zoom=${z}&size=${w}x${h}&scale=2&markers=color:red%7C${opts.lat},${opts.lng}&key=${key}`;
 }
 
-let loaderPromise: Promise<typeof google> | null = null;
+// Loose typing — we don't ship @types/google.maps; consumers cast as needed.
+type MapsNamespace = unknown;
+let loaderPromise: Promise<MapsNamespace> | null = null;
 
 /**
  * Asynchronously loads the Google Maps JavaScript API. Idempotent.
  */
-export function loadMapsJs(libraries: string[] = ["places"]): Promise<typeof google> {
+export function loadMapsJs(libraries: string[] = ["places"]): Promise<MapsNamespace> {
   if (typeof window === "undefined") return Promise.reject(new Error("no_window"));
   if (loaderPromise) return loaderPromise;
   const key = getBrowserMapsKey();
   if (!key) return Promise.reject(new Error("missing_browser_key"));
 
   loaderPromise = new Promise((resolve, reject) => {
-    // @ts-expect-error global callback wiring
-    window.__qitaatInitGoogleMaps = () => resolve((window as unknown as { google: typeof google }).google);
+    (window as unknown as Record<string, unknown>).__qitaatInitGoogleMaps = () => {
+      const g = (window as unknown as { google?: MapsNamespace }).google;
+      resolve(g);
+    };
     const tracking = getMapsTrackingId();
     const params = new URLSearchParams({
       key, v: "weekly", libraries: libraries.join(","),
