@@ -252,13 +252,24 @@ Deno.serve(async (req) => {
       applied_entity_id = lead.id;
     }
 
-    // Update session
+    // Update session — preserve extra context so the draft remains
+    // re-openable for reference after approval.
+    const mergedPayload = {
+      approved,
+      category_slug: body.extra?.category_slug ?? null,
+      services_ar: body.extra?.services_ar ?? null,
+      services_en: body.extra?.services_en ?? null,
+      ai_enhanced: body.extra?.ai_enhanced ?? null,
+      selected_place: body.extra?.selected_place ?? null,
+      db_matches: body.extra?.db_matches ?? null,
+      diagnostics: body.extra?.diagnostics ?? null,
+    };
     // deno-lint-ignore no-explicit-any
     await admin.from("admin_enrichment_sessions").update({
       status: "applied",
       applied_entity_type,
       applied_entity_id,
-      merged: { approved },
+      merged: mergedPayload,
     } as any).eq("id", body.session_id);
 
     // Audit log
@@ -277,6 +288,8 @@ Deno.serve(async (req) => {
 
     return json({
       ok: true,
+      session_id: body.session_id,
+      status: "applied",
       applied_entity_type,
       applied_entity_id,
     });
