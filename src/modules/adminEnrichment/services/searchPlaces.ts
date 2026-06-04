@@ -23,6 +23,7 @@ export interface SearchPlacesResult {
   deferred?: boolean;
   missing?: string[];
   error?: string;
+  cached?: boolean;
 }
 
 export async function searchPlaces(input: {
