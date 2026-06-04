@@ -29,6 +29,7 @@ export interface SearchPlacesResult {
   upstreamStatus?: number;
   upstreamMs?: number;
   detail?: string;
+  fallback?: "geocoding";
 }
 
 export async function searchPlaces(input: {
