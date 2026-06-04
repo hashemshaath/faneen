@@ -692,6 +692,26 @@ export default function AdminDataEnrichment() {
               </Card>
             )}
 
+            {searchFallbackNotice && (
+              <Card className="border-border bg-muted/40 p-3 text-xs text-foreground">
+                <div className="flex flex-wrap items-start gap-2">
+                  <Wrench className="mt-0.5 h-3.5 w-3.5 text-primary" />
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="font-medium">{searchFallbackNotice.title}</div>
+                    <p className="text-muted-foreground">{searchFallbackNotice.message}</p>
+                    <p className="text-muted-foreground">
+                      <Bi ar="الحقول التي قد تكون مفقودة" en="Fields that may be missing" />: {searchFallbackNotice.fields.join("، ")}
+                    </p>
+                  </div>
+                  {searchFallbackNotice.meta.length > 0 && (
+                    <span className="tech-content text-[10px] text-muted-foreground">
+                      {searchFallbackNotice.meta.join(" · ")}
+                    </span>
+                  )}
+                </div>
+              </Card>
+            )}
+
             {searchResults.length > 0 && (
               <div className="mt-2 space-y-2">
                 <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
