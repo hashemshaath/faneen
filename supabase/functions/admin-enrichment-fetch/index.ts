@@ -187,55 +187,184 @@ async function fetchWebsite(
   firecrawlKey: string,
 ): Promise<Record<string, string | null>> {
   try {
-    const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${firecrawlKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url,
-        formats: ["markdown", "links"],
-        onlyMainContent: true,
-      }),
-    });
-    if (!res.ok) {
-      await res.text().catch(() => "");
-      return {};
-    }
-    const data = await res.json().catch(() => null);
-    const md: string =
-      (data && (data.markdown || data?.data?.markdown)) ?? "";
-    const meta = (data && (data.metadata || data?.data?.metadata)) ?? {};
-    const links: string[] =
-      (data && (data.links || data?.data?.links)) ?? [];
+    // Pull markdown + html + links from up to 3 pages: home, /contact*, /about*.
+    // We then run a single Firecrawl LLM-extract pass over the concatenated
+    // content using a strict JSON schema. This is FAR more accurate than
+    // pulling fields from <title>/<meta description> alone.
+    const baseUrl = new URL(url);
+    const origin = baseUrl.origin;
 
-    const phones = parseSAPhones(md);
-    const emails = parseEmails(md);
-    const socials = classifySocials(links);
+    async function scrapeOne(target: string): Promise<{ md: string; meta: Record<string, unknown>; links: string[] }> {
+      try {
+        const r = await fetch("https://api.firecrawl.dev/v2/scrape", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${firecrawlKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: target,
+            formats: ["markdown", "links"],
+            onlyMainContent: false,
+            waitFor: 1200,
+          }),
+        });
+        if (!r.ok) return { md: "", meta: {}, links: [] };
+        const d = await r.json().catch(() => null);
+        return {
+          md: (d?.markdown || d?.data?.markdown) ?? "",
+          meta: (d?.metadata || d?.data?.metadata) ?? {},
+          links: (d?.links || d?.data?.links) ?? [],
+        };
+      } catch {
+        return { md: "", meta: {}, links: [] };
+      }
+    }
+
+    // 1) Scrape home
+    const home = await scrapeOne(url);
+    const allLinks: string[] = Array.isArray(home.links) ? [...home.links] : [];
+    const meta = home.meta as Record<string, string | undefined>;
+
+    // 2) Discover contact / about pages from the home page's links
+    const sameOrigin = (l: string): boolean => {
+      try { return new URL(l, origin).origin === origin; } catch { return false; }
+    };
+    const pickPage = (rx: RegExp): string | null => {
+      const m = allLinks.find((l) => typeof l === "string" && sameOrigin(l) && rx.test(l));
+      return m ?? null;
+    };
+    const contactUrl = pickPage(/(contact|تواصل|اتصل|اتصال)/i);
+    const aboutUrl = pickPage(/(about|من-?نحن|عن(?:نا|-?الشركة))/i);
+
+    const extras = await Promise.all(
+      [contactUrl, aboutUrl].filter((u): u is string => !!u && u !== url).slice(0, 2).map(scrapeOne),
+    );
+
+    // Concatenate content (cap to keep prompt size reasonable).
+    const combinedMd = [home.md, ...extras.map((e) => e.md)].join("\n\n---\n\n").slice(0, 28000);
+    for (const e of extras) {
+      if (Array.isArray(e.links)) allLinks.push(...e.links);
+    }
+
+    // 3) Regex baseline (fallback + augmentation).
+    const phones = parseSAPhones(combinedMd);
+    const emails = parseEmails(combinedMd);
+    const socials = classifySocials(allLinks);
     const rawTitle = typeof meta.title === "string" ? meta.title.trim() : null;
     const rawDesc = typeof meta.description === "string" ? meta.description.trim() : null;
+    const ogImage = typeof meta["og:image"] === "string" ? meta["og:image"] as string : null;
 
+    // 4) Firecrawl LLM extract (structured JSON) over the combined content.
+    let llm: Record<string, string | null> = {};
+    try {
+      const schema = {
+        type: "object",
+        properties: {
+          name_ar: { type: "string", description: "Arabic business / brand name only (no slogans, no address)." },
+          name_en: { type: "string", description: "English business / brand name only." },
+          description_ar: { type: "string", description: "Arabic business description, 1-3 sentences, professional tone, no markdown." },
+          description_en: { type: "string", description: "English business description, 1-3 sentences, professional tone, no markdown." },
+          activity_ar: { type: "string", description: "Main activity / category in Arabic (e.g. مصنع ألمنيوم، ورشة زجاج، مقاول)." },
+          activity_en: { type: "string", description: "Main activity / category in English (e.g. aluminum factory, glass workshop)." },
+          services_ar: { type: "string", description: "Comma-separated list of services offered, in Arabic." },
+          services_en: { type: "string", description: "Comma-separated list of services offered, in English." },
+          phone_mobile: { type: "string", description: "Saudi mobile phone in +9665XXXXXXXX or 05XXXXXXXX form." },
+          phone_landline: { type: "string", description: "Saudi landline in 0XXXXXXXXX form." },
+          unified_number: { type: "string", description: "Unified Saudi number starting 920 / 800 / 9200." },
+          whatsapp: { type: "string", description: "WhatsApp number or wa.me link." },
+          customer_service: { type: "string", description: "Customer service phone if labeled as such." },
+          email: { type: "string", description: "Primary contact email." },
+          city: { type: "string", description: "Saudi city in Arabic." },
+          city_en: { type: "string", description: "Saudi city in English." },
+          district: { type: "string", description: "District / neighborhood in Arabic." },
+          street: { type: "string", description: "Street in Arabic." },
+          national_address: { type: "string", description: "Full Saudi National Address line if present." },
+          working_hours: { type: "string", description: "Working hours summary as plain text (e.g. 'السبت-الخميس 8ص-5م')." },
+          facebook: { type: "string" }, instagram: { type: "string" },
+          twitter: { type: "string" }, linkedin: { type: "string" },
+          youtube: { type: "string" }, tiktok: { type: "string" },
+          snapchat: { type: "string" },
+        },
+      };
+      const ex = await fetch("https://api.firecrawl.dev/v2/scrape", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${firecrawlKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url,
+          formats: [{
+            type: "json",
+            schema,
+            prompt:
+              "You are extracting verified facts about a Saudi industrial business from its website. " +
+              "Read the combined page content carefully (home + contact + about). " +
+              "Return ONLY facts that explicitly appear in the content — never invent. " +
+              "If a field is not present, return an empty string for it. " +
+              "name_* MUST be the brand/business name only (not the page title). " +
+              "description_* MUST be a real description of what the business does, not the address. " +
+              "Phone numbers MUST be classified correctly: mobile = 05XX, landline = 01-04XX, unified = 920/800/9200. " +
+              "Arabic must be Modern Standard, no emojis, no markdown.",
+          }],
+          onlyMainContent: false,
+          waitFor: 1200,
+        }),
+      });
+      if (ex.ok) {
+        const d = await ex.json().catch(() => null);
+        const j = (d?.json || d?.data?.json) as Record<string, string> | undefined;
+        if (j && typeof j === "object") {
+          for (const [k, v] of Object.entries(j)) {
+            if (typeof v === "string" && v.trim()) llm[k] = v.trim();
+          }
+        }
+      } else {
+        await ex.text().catch(() => "");
+      }
+    } catch {
+      // ignore — fallback to regex baseline below
+    }
+
+    const pick = (...vals: Array<string | null | undefined>): string | null => {
+      for (const v of vals) if (typeof v === "string" && v.trim()) return v.trim();
+      return null;
+    };
+
+    // 5) Merge: LLM wins; fall back to regex / meta.
     return {
-      name_ar: isArabic(rawTitle) ? rawTitle : null,
-      name_en: rawTitle && !isArabic(rawTitle) ? rawTitle : null,
-      description_ar: isArabic(rawDesc) ? rawDesc : null,
-      description_en: rawDesc && !isArabic(rawDesc) ? rawDesc : null,
-      phone: phones.mobile[0] ?? phones.landline[0] ?? phones.unified[0] ?? null,
-      phone_mobile: phones.mobile[0] ?? null,
-      phone_landline: phones.landline[0] ?? null,
-      unified_number: phones.unified[0] ?? null,
-      customer_service: phones.customer_service[0] ?? null,
-      whatsapp: socials.whatsapp,
-      email: emails[0] ?? null,
+      name_ar: pick(llm.name_ar, isArabic(rawTitle) ? rawTitle : null),
+      name_en: pick(llm.name_en, rawTitle && !isArabic(rawTitle) ? rawTitle : null),
+      description_ar: pick(llm.description_ar, isArabic(rawDesc) ? rawDesc : null),
+      description_en: pick(llm.description_en, rawDesc && !isArabic(rawDesc) ? rawDesc : null),
+      activity_ar: pick(llm.activity_ar),
+      activity_en: pick(llm.activity_en),
+      services_ar: pick(llm.services_ar),
+      services_en: pick(llm.services_en),
+      phone: pick(llm.phone_mobile, llm.phone_landline, llm.unified_number,
+        phones.mobile[0], phones.landline[0], phones.unified[0]),
+      phone_mobile: pick(llm.phone_mobile, phones.mobile[0]),
+      phone_landline: pick(llm.phone_landline, phones.landline[0]),
+      unified_number: pick(llm.unified_number, phones.unified[0]),
+      customer_service: pick(llm.customer_service, phones.customer_service[0]),
+      whatsapp: pick(llm.whatsapp, socials.whatsapp),
+      email: pick(llm.email, emails[0]),
       website: url,
-      facebook: socials.facebook,
-      instagram: socials.instagram,
-      twitter: socials.twitter,
-      linkedin: socials.linkedin,
-      youtube: socials.youtube,
-      tiktok: socials.tiktok,
-      snapchat: socials.snapchat,
+      city: pick(llm.city),
+      city_en: pick(llm.city_en),
+      district: pick(llm.district),
+      street: pick(llm.street),
+      national_address: pick(llm.national_address),
+      working_hours: pick(llm.working_hours),
+      logo_url: pick(ogImage),
+      facebook: pick(llm.facebook, socials.facebook),
+      instagram: pick(llm.instagram, socials.instagram),
+      twitter: pick(llm.twitter, socials.twitter),
+      linkedin: pick(llm.linkedin, socials.linkedin),
+      youtube: pick(llm.youtube, socials.youtube),
+      tiktok: pick(llm.tiktok, socials.tiktok),
+      snapchat: pick(llm.snapchat, socials.snapchat),
       social_links: JSON.stringify(socials),
     };
   } catch {
