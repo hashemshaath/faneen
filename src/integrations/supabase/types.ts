@@ -7433,6 +7433,45 @@ export type Database = {
           },
         ]
       }
+      images: {
+        Row: {
+          created_at: string
+          height: number | null
+          id: string
+          original_name: string | null
+          owner_id: string
+          provider_id: string | null
+          url_large: string
+          url_medium: string
+          url_thumbnail: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          height?: number | null
+          id?: string
+          original_name?: string | null
+          owner_id: string
+          provider_id?: string | null
+          url_large: string
+          url_medium: string
+          url_thumbnail: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          height?: number | null
+          id?: string
+          original_name?: string | null
+          owner_id?: string
+          provider_id?: string | null
+          url_large?: string
+          url_medium?: string
+          url_thumbnail?: string
+          width?: number | null
+        }
+        Relationships: []
+      }
       installation_appointments: {
         Row: {
           business_id: string

@@ -10,8 +10,17 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import type { ResponsiveImageSet } from '@/lib/imageCompression';
+import { BUSINESS_ASSETS_BUCKET } from '@/modules/files/constants/buckets';
 
-export const QITAAT_IMAGES_BUCKET = 'qitaat-images';
+/**
+ * Public images for the qitaat directory are stored inside the shared
+ * `business-assets` bucket because workspace policy blocks new public
+ * buckets. The first path segment is the owner's user id (required by
+ * the `business-assets` RLS policy), followed by a `qitaat/` namespace
+ * prefix, then `{providerId}/{imageId}-{size}.webp`.
+ */
+export const QITAAT_IMAGES_BUCKET = BUSINESS_ASSETS_BUCKET;
+export const QITAAT_IMAGES_PREFIX = 'qitaat';
 
 /** Cache for 1 year, immutable — file names embed a UUID so they never change. */
 export const LONG_CACHE_CONTROL = '31536000, immutable';
@@ -46,7 +55,7 @@ export function buildImagePath(
   imageId: string,
   size: ImageSizeKey,
 ): string {
-  return `${userId}/${providerId}/${imageId}-${sizeSuffix[size]}.webp`;
+  return `${userId}/${QITAAT_IMAGES_PREFIX}/${providerId}/${imageId}-${sizeSuffix[size]}.webp`;
 }
 
 /** Public CDN URL for an object in the bucket. */
