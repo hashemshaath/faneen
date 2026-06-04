@@ -655,7 +655,7 @@ const AdminBusinesses = () => {
         ? toE164({ countryCode: createForm.phone_cc || '+966', national: createForm.phone_national })
         : null;
       const region = SA_REGIONS.find((r) => r.id === createForm.region_id);
-      const ownerMode = (createForm.owner_mode || 'existing') as 'existing' | 'new' | 'invite';
+      const ownerMode = (createForm.owner_mode || 'placeholder') as 'placeholder' | 'existing' | 'new' | 'invite';
 
       // Shared business payload used by both code paths
       const bizCore: AdminCreateBusinessPayload = {
@@ -681,8 +681,12 @@ const AdminBusinesses = () => {
         address_en: createForm.address_en?.trim() || null,
       };
 
-      // Path A — Create new auth user (or invite) via edge function
-      if (ownerMode === 'new' || ownerMode === 'invite') {
+      // Path A — Use the edge function for placeholder / new / invite modes.
+      // Placeholder mode links the entity to the shared com@qitaat.com account
+      // and flags it as transferable. The entity can later be claimed by its
+      // real owner via a transfer request that an admin must approve.
+      if (ownerMode === 'placeholder' || ownerMode === 'new' || ownerMode === 'invite') {
+        if (ownerMode !== 'placeholder') {
         const email = (createForm.owner_email || '').trim().toLowerCase();
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           throw new Error(isRTL ? 'بريد المسؤول غير صالح' : 'Invalid manager email');
@@ -690,10 +694,14 @@ const AdminBusinesses = () => {
         if (ownerMode === 'new' && (createForm.owner_password || '').length < 8) {
           throw new Error(isRTL ? 'كلمة المرور يجب ألا تقل عن 8 أحرف' : 'Password must be at least 8 characters');
         }
+        }
+        const ownerEmail = ownerMode === 'placeholder'
+          ? undefined
+          : (createForm.owner_email || '').trim().toLowerCase();
         const res = await adminCreateBusinessWithOwner({
           owner: {
             mode: ownerMode,
-            email,
+            email: ownerEmail,
             password: ownerMode === 'new' ? createForm.owner_password : undefined,
             full_name: (createForm.owner_full_name || createForm.name_ar || '').trim(),
             phone: (createForm.owner_phone || '').trim() || undefined,
