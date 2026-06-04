@@ -12,6 +12,15 @@ import {
 type ApiKey = "places" | "geocoding" | "routes" | "address_validation";
 interface ProbeResult { ok: boolean; latencyMs: number; status: number; errorCode: string | null }
 
+function extractGoogleReason(text: string): string | null {
+  try {
+    const parsed = JSON.parse(text) as { error?: { details?: Array<{ reason?: string }>; status?: string; message?: string } };
+    const reason = parsed.error?.details?.find((d) => typeof d.reason === "string")?.reason;
+    return reason ?? parsed.error?.status ?? parsed.error?.message?.slice(0, 80) ?? null;
+  } catch { /* fall through */ }
+  return text.slice(0, 60).replace(/[^a-zA-Z0-9_\- ]/g, "") || "http_error";
+}
+
 async function probe(url: string, init: RequestInit): Promise<ProbeResult> {
   const t = Date.now();
   try {
@@ -19,7 +28,7 @@ async function probe(url: string, init: RequestInit): Promise<ProbeResult> {
     const latency = Date.now() - t;
     if (!res.ok) {
       const txt = await res.text().catch(() => "");
-      return { ok: false, latencyMs: latency, status: res.status, errorCode: txt.slice(0, 60).replace(/[^a-zA-Z0-9_\- ]/g, "") || "http_error" };
+      return { ok: false, latencyMs: latency, status: res.status, errorCode: extractGoogleReason(txt) };
     }
     return { ok: true, latencyMs: latency, status: res.status, errorCode: null };
   } catch (e) {
