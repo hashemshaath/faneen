@@ -171,6 +171,12 @@ export default function AdminDataEnrichment() {
   const [draftStatus, setDraftStatus] = useState<"unsaved" | "saved" | "applied">("unsaved");
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [searchFallbackNotice, setSearchFallbackNotice] = useState<{
+    title: string;
+    message: string;
+    fields: string[];
+    meta: string[];
+  } | null>(null);
   const qc = useQueryClient();
 
   const buildExtra = (): EnrichmentExtra => ({
@@ -319,6 +325,7 @@ export default function AdminDataEnrichment() {
       }).then((r) => ({ ...r, _append: opts.append === true })),
     onSuccess: (res) => {
       if (res.error) {
+        setSearchFallbackNotice(null);
         const parts: string[] = [bi("تعذر البحث في خرائط Google.", "Could not search Google Maps.")];
         parts.push(`[${res.error}]`);
         if (typeof res.upstreamStatus === "number") parts.push(`HTTP ${res.upstreamStatus}`);
@@ -336,18 +343,42 @@ export default function AdminDataEnrichment() {
       setSearchResults((prev) => res._append ? [...prev, ...(res.results ?? [])] : (res.results ?? []));
       setBypassCacheFlag(false);
       if (res.fallback === "geocoding" || res.fallback === "browser_places" || res.fallback === "browser_geocoding") {
+        const fieldLabels: Record<string, string> = {
+          phone: bi("الهاتف", "phone"),
+          rating: bi("التقييمات", "ratings"),
+          user_rating_count: bi("عدد المراجعات", "review count"),
+          website: bi("الموقع الإلكتروني", "website"),
+          business_status: bi("حالة النشاط", "business status"),
+        };
         const fallbackName = res.fallback === "browser_geocoding"
           ? bi("Geocoding من المتصفح", "browser Geocoding")
           : res.fallback === "browser_places"
           ? bi("Places من المتصفح", "browser Places")
           : "Geocoding";
-        const parts = [bi(`تم عرض نتائج بديلة عبر ${fallbackName} لأن Places API غير مفعّلة على مفتاح الخادم الحالي.`, `Showing ${fallbackName} fallback results because Places API is not enabled for the current server key.`)];
-        if (typeof res.upstreamMs === "number") parts.push(`${res.upstreamMs}ms`);
-        if (res.requestId) parts.push(`req=${res.requestId.slice(0, 8)}`);
-        setErrorMsg(parts.join(" · "));
+        const missingFields = (res.fallbackMissingFields ?? [])
+          .map((field) => fieldLabels[field] ?? field)
+          .filter((field) => field.trim().length > 0);
+        setSearchFallbackNotice({
+          title: bi("تم استخدام مسار بديل تلقائيًا", "Automatic fallback used"),
+          message: res.fallback === "browser_places"
+            ? bi(`تم عرض نتائج عبر ${fallbackName} بعد تعذّر مسار Places API على الخادم.`, `Showing ${fallbackName} results after the server Places API path failed.`)
+            : bi(`تم استخدام ${fallbackName} لأن Places API (New) محظورة أو غير مفعّلة على مفتاح Google الحالي.`, `${fallbackName} was used because Places API (New) is blocked or disabled for the current Google key.`),
+          fields: missingFields.length ? missingFields : [bi("الهاتف", "phone"), bi("التقييمات", "ratings")],
+          meta: [
+            res.fallbackReason ? `[${res.fallbackReason}]` : null,
+            typeof res.upstreamStatus === "number" ? `HTTP ${res.upstreamStatus}` : null,
+            typeof res.upstreamMs === "number" ? `${res.upstreamMs}ms` : null,
+            res.requestId ? `req=${res.requestId.slice(0, 8)}` : null,
+          ].filter((item): item is string => typeof item === "string" && item.length > 0),
+        });
+      } else {
+        setSearchFallbackNotice(null);
       }
     },
-    onError: () => setErrorMsg(bi("حدث خطأ في البحث.", "Search failed.")),
+    onError: () => {
+      setSearchFallbackNotice(null);
+      setErrorMsg(bi("حدث خطأ في البحث.", "Search failed."));
+    },
   });
 
   const clearCacheMut = useMutation({

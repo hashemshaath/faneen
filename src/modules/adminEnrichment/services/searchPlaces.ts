@@ -31,6 +31,15 @@ export interface SearchPlacesResult {
   upstreamMs?: number;
   detail?: string;
   fallback?: "browser_places" | "browser_geocoding" | "geocoding";
+  fallbackReason?: string;
+  fallbackMissingFields?: string[];
+  fallbackDiagnostics?: {
+    placesStatus?: number;
+    placesMs?: number;
+    geocodingStatus?: number;
+    geocodingMs?: number;
+    geocodingDetail?: string | null;
+  };
 }
 
 export async function searchPlaces(input: {
@@ -67,6 +76,10 @@ export async function searchPlaces(input: {
         upstreamStatus: result.upstreamStatus,
         upstreamMs: result.upstreamMs,
         fallback: fallbackKind,
+        fallbackReason: result.error,
+        fallbackMissingFields: fallbackKind === "browser_geocoding"
+          ? ["phone", "rating", "user_rating_count", "website", "business_status"]
+          : [],
         detail: result.detail,
       };
     }
