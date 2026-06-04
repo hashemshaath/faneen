@@ -744,11 +744,15 @@ const AdminBusinesses = () => {
       const mode = createForm.owner_mode;
       toast.success(
         isRTL
-          ? mode === 'invite'
+          ? mode === 'placeholder'
+            ? 'تم إنشاء المنشأة تحت الحساب المؤقت — قابلة للتحويل لاحقاً'
+            : mode === 'invite'
             ? 'تم إنشاء المنشأة وإرسال دعوة للمسؤول'
             : mode === 'new'
             ? 'تم إنشاء المنشأة وحساب المسؤول'
             : 'تم إنشاء المنشأة'
+          : mode === 'placeholder'
+          ? 'Entity created under the placeholder account — transferable later'
           : mode === 'invite'
           ? 'Business created — invitation sent to manager'
           : mode === 'new'
