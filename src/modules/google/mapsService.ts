@@ -67,14 +67,18 @@ export function loadMapsJs(libraries: string[] = ["places"]): Promise<MapsNamesp
     };
     const tracking = getMapsTrackingId();
     const params = new URLSearchParams({
-      key, v: "weekly", libraries: libraries.join(","),
+      key, v: "weekly",
       loading: "async", callback: "__qitaatInitGoogleMaps",
     });
+    if (libraries.length) params.set("libraries", libraries.join(","));
     if (tracking) params.set("channel", tracking);
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?${params.toString()}`;
     script.async = true;
-    script.onerror = () => reject(new Error("maps_js_load_failed"));
+    script.onerror = () => {
+      loaderPromise = null;
+      reject(new Error("maps_js_load_failed"));
+    };
     document.head.appendChild(script);
   });
   return loaderPromise;
@@ -113,16 +117,51 @@ function readStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
 }
 
-export async function searchPlacesBrowserFallback(opts: {
+type BrowserGoogleRoot = {
+  maps?: {
+    importLibrary?: (library: string) => Promise<unknown>;
+    Geocoder?: new () => { geocode: (request: Record<string, unknown>) => Promise<unknown> };
+  };
+};
+
+type GeocodeComponent = { long_name?: string; short_name?: string; types?: string[] };
+type GeocodeResult = {
+  place_id?: string;
+  formatted_address?: string;
+  types?: string[];
+  geometry?: { location?: unknown };
+  address_components?: GeocodeComponent[];
+};
+
+function getBrowserGoogle(): BrowserGoogleRoot | undefined {
+  return (window as unknown as { google?: BrowserGoogleRoot }).google;
+}
+
+function pickAddressComponent(components: GeocodeComponent[] | undefined, ...types: string[]): string | null {
+  if (!Array.isArray(components)) return null;
+  for (const type of types) {
+    const found = components.find((component) => Array.isArray(component.types) && component.types.includes(type));
+    if (found?.long_name || found?.short_name) return found.long_name ?? found.short_name ?? null;
+  }
+  return null;
+}
+
+function normalizeFallbackDetail(value: unknown, fallback: string): string {
+  if (value instanceof Error) return value.message || fallback;
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+async function searchPlacesAutocomplete(opts: {
   query: string;
   region?: string;
   language?: string;
   pageSize?: number;
 }): Promise<{ results: MapsSearchCandidate[]; detail?: string }> {
-  if (typeof window === "undefined") return { results: [], detail: "no_window" };
-  await loadMapsJs(["places"]);
-  const googleRoot = (window as unknown as { google?: { maps?: { importLibrary?: (library: string) => Promise<unknown> } } }).google;
-  const placesLibrary = await googleRoot?.maps?.importLibrary?.("places");
+  await loadMapsJs([]);
+  const googleRoot = getBrowserGoogle();
+  const placesLibrary = await googleRoot?.maps?.importLibrary?.("places").catch((error: unknown) => {
+    throw new Error(normalizeFallbackDetail(error, "browser_places_import_failed"));
+  });
   const places = asRecord(placesLibrary);
   const suggestionApi = asRecord(places?.AutocompleteSuggestion);
   const tokenCtor = places?.AutocompleteSessionToken;
@@ -172,5 +211,77 @@ export async function searchPlacesBrowserFallback(opts: {
       business_status: readString(place?.businessStatus),
     });
   }
-  return { results };
+  return { results, detail: "browser_places" };
+}
+
+async function searchPlacesGeocoderFallback(opts: {
+  query: string;
+  region?: string;
+  language?: string;
+  pageSize?: number;
+}): Promise<{ results: MapsSearchCandidate[]; detail?: string }> {
+  await loadMapsJs([]);
+  const googleRoot = getBrowserGoogle();
+  const geocodingLibrary = await googleRoot?.maps?.importLibrary?.("geocoding").catch(() => null);
+  const geocoding = asRecord(geocodingLibrary);
+  const GeocoderCtor = geocoding?.Geocoder ?? googleRoot?.maps?.Geocoder;
+  if (typeof GeocoderCtor !== "function") return { results: [], detail: "browser_geocoding_unavailable" };
+  const geocoder = new (GeocoderCtor as new () => { geocode: (request: Record<string, unknown>) => Promise<unknown> })();
+  const response = await geocoder.geocode({
+    address: opts.query,
+    region: (opts.region ?? "SA").toLowerCase(),
+    language: opts.language ?? "ar",
+  });
+  const records = asRecord(response);
+  const rawResults = Array.isArray(records?.results) ? records.results.slice(0, opts.pageSize ?? 10) : [];
+  const results = rawResults.map((raw): MapsSearchCandidate | null => {
+    const item = asRecord(raw) as GeocodeResult | null;
+    if (!item) return null;
+    const location = readLatLng(item.geometry?.location);
+    const id = readString(item.place_id) ?? `geocode_${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`;
+    const label = pickAddressComponent(item.address_components, "establishment", "point_of_interest", "premise")
+      ?? readString(item.formatted_address);
+    return {
+      place_id: id,
+      name: label,
+      address: readString(item.formatted_address),
+      primary_type: Array.isArray(item.types) ? item.types[0] ?? null : null,
+      types: readStringArray(item.types),
+      rating: null,
+      user_rating_count: null,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      website: null,
+      phone: null,
+      maps_url: location.latitude !== null && location.longitude !== null
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${location.latitude},${location.longitude}`)}&query_place_id=${encodeURIComponent(id)}`
+        : `https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(id)}`,
+      icon_url: null,
+      business_status: null,
+    };
+  }).filter((item): item is MapsSearchCandidate => item !== null);
+  return { results, detail: "browser_geocoding" };
+}
+
+export async function searchPlacesBrowserFallback(opts: {
+  query: string;
+  region?: string;
+  language?: string;
+  pageSize?: number;
+}): Promise<{ results: MapsSearchCandidate[]; detail?: string }> {
+  if (typeof window === "undefined") return { results: [], detail: "no_window" };
+  const autocomplete = await searchPlacesAutocomplete(opts).catch((error: unknown) => ({
+    results: [] as MapsSearchCandidate[],
+    detail: normalizeFallbackDetail(error, "browser_places_failed"),
+  }));
+  if (autocomplete.results.length) return autocomplete;
+  const geocoding = await searchPlacesGeocoderFallback(opts).catch((error: unknown) => ({
+    results: [] as MapsSearchCandidate[],
+    detail: normalizeFallbackDetail(error, "browser_geocoding_failed"),
+  }));
+  if (geocoding.results.length) return geocoding;
+  return {
+    results: [],
+    detail: [autocomplete.detail, geocoding.detail].filter(Boolean).join(" · ") || "browser_fallback_empty",
+  };
 }

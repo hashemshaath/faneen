@@ -335,8 +335,13 @@ export default function AdminDataEnrichment() {
       setNextPageToken(res.nextPageToken ?? null);
       setSearchResults((prev) => res._append ? [...prev, ...(res.results ?? [])] : (res.results ?? []));
       setBypassCacheFlag(false);
-      if (res.fallback === "geocoding" || res.fallback === "browser_places") {
-        const parts = [bi("تم عرض نتائج بديلة لأن Places API غير مفعّلة على مفتاح الخادم الحالي.", "Showing fallback results because Places API is not enabled for the current server key.")];
+      if (res.fallback === "geocoding" || res.fallback === "browser_places" || res.fallback === "browser_geocoding") {
+        const fallbackName = res.fallback === "browser_geocoding"
+          ? bi("Geocoding من المتصفح", "browser Geocoding")
+          : res.fallback === "browser_places"
+          ? bi("Places من المتصفح", "browser Places")
+          : "Geocoding";
+        const parts = [bi(`تم عرض نتائج بديلة عبر ${fallbackName} لأن Places API غير مفعّلة على مفتاح الخادم الحالي.`, `Showing ${fallbackName} fallback results because Places API is not enabled for the current server key.`)];
         if (typeof res.upstreamMs === "number") parts.push(`${res.upstreamMs}ms`);
         if (res.requestId) parts.push(`req=${res.requestId.slice(0, 8)}`);
         setErrorMsg(parts.join(" · "));
