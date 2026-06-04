@@ -426,17 +426,63 @@ const AdminOwnershipTransferRequests: React.FC = () => {
                           </Link>
                           {r.business?.ref_id && <span className="text-[10.5px] font-mono text-muted-foreground tech-content">{r.business.ref_id}</span>}
                           {r.business?.username && <span className="text-[10.5px] text-muted-foreground">@{r.business.username}</span>}
+                          {r.business?.placeholder_owner && (
+                            <button
+                              type="button"
+                              onClick={() => void copyClaimLink(r.business_id)}
+                              className="text-[10.5px] inline-flex items-center gap-1 text-primary hover:underline"
+                              title={isRTL ? 'نسخ رابط المطالبة العامة' : 'Copy public claim link'}
+                            >
+                              <Link2 className="w-3 h-3" /> {isRTL ? 'نسخ رابط المطالبة' : 'Copy claim link'}
+                            </button>
+                          )}
+                          {r.source === 'public_claim' && (
+                            <Badge variant="outline" className="rounded-md text-[9.5px] h-4 bg-primary/10 text-primary border-primary/30">
+                              {isRTL ? 'طلب عام' : 'Public claim'}
+                            </Badge>
+                          )}
                         </div>
                         <div className="text-[11.5px] text-muted-foreground mt-1 flex items-center gap-1.5 flex-wrap">
                           <User className="w-3 h-3" />
-                          <span className="font-medium text-foreground">{reqName}</span>
+                          <span className="font-medium text-foreground">{r.requester_name || reqName}</span>
                           {r.requester?.ref_id && <span className="font-mono tech-content">· {r.requester.ref_id}</span>}
-                          {r.requester?.email && <span className="tech-content truncate">· {r.requester.email}</span>}
+                          {(r.requester_email || r.requester?.email) && (
+                            <span className="tech-content truncate inline-flex items-center gap-1">
+                              · <Mail className="w-2.5 h-2.5" /> {r.requester_email || r.requester?.email}
+                            </span>
+                          )}
+                          {r.requester_phone && (
+                            <span className="tech-content inline-flex items-center gap-1">
+                              · <Phone className="w-2.5 h-2.5" /> {r.requester_phone}
+                            </span>
+                          )}
+                          {r.commercial_registration && (
+                            <span className="tech-content inline-flex items-center gap-1">
+                              · <FileText className="w-2.5 h-2.5" /> CR: {r.commercial_registration}
+                            </span>
+                          )}
                         </div>
                         {r.message && (
                           <p className="text-[12px] text-foreground/80 mt-2 leading-relaxed bg-muted/40 rounded-lg p-2" dir="auto">
                             {r.message}
                           </p>
+                        )}
+                        {r.proof_files && r.proof_files.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {r.proof_files.map((pf) => (
+                              <button
+                                key={pf.path}
+                                type="button"
+                                onClick={() => void previewProof(pf.path)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/30 hover:bg-muted/60 px-2 py-1 text-[10.5px]"
+                                title={isRTL ? 'فتح الإثبات' : 'Open proof'}
+                              >
+                                <Eye className="w-3 h-3" />
+                                <span className="truncate max-w-[140px]" dir="auto">{pf.name}</span>
+                                <span className="text-muted-foreground tech-content">{(pf.size/1024).toFixed(0)}KB</span>
+                              </button>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
