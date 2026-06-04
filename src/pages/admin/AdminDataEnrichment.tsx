@@ -365,9 +365,18 @@ export default function AdminDataEnrichment() {
                             isSelected ? "border-primary bg-primary/5" : "border-border"
                           }`}
                         >
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                            <Building2 className="h-4 w-4" />
-                          </div>
+                          {p.latitude != null && p.longitude != null && staticMapUrl(p.latitude, p.longitude) ? (
+                            <img
+                              src={staticMapUrl(p.latitude, p.longitude)!}
+                              alt=""
+                              loading="lazy"
+                              className="h-16 w-24 shrink-0 rounded-lg border object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                              <Building2 className="h-5 w-5" />
+                            </div>
+                          )}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                               <span className="truncate text-sm font-medium">{p.name ?? p.place_id}</span>
@@ -394,6 +403,18 @@ export default function AdminDataEnrichment() {
                               )}
                               {p.phone && <span>{p.phone}</span>}
                               {p.website && <span className="truncate max-w-[180px]">{p.website}</span>}
+                              {p.maps_url && (
+                                <a
+                                  href={p.maps_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-0.5 text-primary hover:underline"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  <Bi ar="فتح في Google Maps" en="Open in Google Maps" />
+                                </a>
+                              )}
                             </div>
                           </div>
                           <div className="shrink-0 self-center text-xs text-primary opacity-0 transition group-hover:opacity-100">
