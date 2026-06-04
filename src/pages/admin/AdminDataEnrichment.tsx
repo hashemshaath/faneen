@@ -354,12 +354,12 @@ export default function AdminDataEnrichment() {
                 placeholder={bi("مثل: مصنع الزجاج العالمي الرياض", "e.g. Acme Glass Factory Riyadh")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && searchQuery.trim().length >= 2) searchMut.mutate(); }}
+                onKeyDown={(e) => { if (e.key === "Enter" && searchQuery.trim().length >= 2) searchMut.mutate({}); }}
                 className="h-12 flex-1"
                 maxLength={200}
               />
               <Button
-                onClick={() => searchMut.mutate()}
+                onClick={() => searchMut.mutate({})}
                 disabled={searchMut.isPending || searchQuery.trim().length < 2}
                 className="h-12"
               >
