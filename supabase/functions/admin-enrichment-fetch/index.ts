@@ -32,19 +32,38 @@ interface MergedDraft {
   name_ar: EnrichmentField;
   name_en: EnrichmentField;
   activity: EnrichmentField;
+  activity_ar: EnrichmentField;
+  activity_en: EnrichmentField;
   description_ar: EnrichmentField;
   description_en: EnrichmentField;
   phone: EnrichmentField;
+  phone_mobile: EnrichmentField;
+  phone_landline: EnrichmentField;
+  unified_number: EnrichmentField;
+  whatsapp: EnrichmentField;
+  customer_service: EnrichmentField;
+  email: EnrichmentField;
   website: EnrichmentField;
   city: EnrichmentField;
+  city_en: EnrichmentField;
   district: EnrichmentField;
+  district_en: EnrichmentField;
   street: EnrichmentField;
+  street_en: EnrichmentField;
   national_address: EnrichmentField;
+  national_address_en: EnrichmentField;
   latitude: EnrichmentField;
   longitude: EnrichmentField;
   working_hours: EnrichmentField;
   logo_url: EnrichmentField;
   social_links: EnrichmentField;
+  facebook: EnrichmentField;
+  instagram: EnrichmentField;
+  twitter: EnrichmentField;
+  linkedin: EnrichmentField;
+  youtube: EnrichmentField;
+  tiktok: EnrichmentField;
+  snapchat: EnrichmentField;
 }
 
 function json(body: unknown, status = 200): Response {
@@ -72,24 +91,95 @@ function emptyField(): EnrichmentField {
 }
 
 function emptyDraft(): MergedDraft {
+  const f = () => emptyField();
   return {
-    name_ar: emptyField(),
-    name_en: emptyField(),
-    activity: emptyField(),
-    description_ar: emptyField(),
-    description_en: emptyField(),
-    phone: emptyField(),
-    website: emptyField(),
-    city: emptyField(),
-    district: emptyField(),
-    street: emptyField(),
-    national_address: emptyField(),
-    latitude: emptyField(),
-    longitude: emptyField(),
-    working_hours: emptyField(),
-    logo_url: emptyField(),
-    social_links: emptyField(),
+    name_ar: f(), name_en: f(),
+    activity: f(), activity_ar: f(), activity_en: f(),
+    description_ar: f(), description_en: f(),
+    phone: f(), phone_mobile: f(), phone_landline: f(),
+    unified_number: f(), whatsapp: f(), customer_service: f(), email: f(),
+    website: f(),
+    city: f(), city_en: f(),
+    district: f(), district_en: f(),
+    street: f(), street_en: f(),
+    national_address: f(), national_address_en: f(),
+    latitude: f(), longitude: f(),
+    working_hours: f(), logo_url: f(),
+    social_links: f(),
+    facebook: f(), instagram: f(), twitter: f(), linkedin: f(),
+    youtube: f(), tiktok: f(), snapchat: f(),
   };
+}
+
+function isArabic(s: string | null | undefined): boolean {
+  if (!s) return false;
+  return /[\u0600-\u06FF]/.test(s);
+}
+
+function parseSAPhones(text: string): {
+  mobile: string[];
+  landline: string[];
+  unified: string[];
+  customer_service: string[];
+} {
+  const out = { mobile: [] as string[], landline: [] as string[], unified: [] as string[], customer_service: [] as string[] };
+  if (!text) return out;
+  // Match runs of digits/spaces/dashes with optional +966/00966/0 prefix.
+  const re = /(?:\+?966|00966)?[\s\-]*0?\d[\d\s\-]{6,14}\d/g;
+  const seen = new Set<string>();
+  const matches = text.match(re) ?? [];
+  for (const raw of matches) {
+    let d = raw.replace(/[^\d+]/g, "");
+    if (d.startsWith("00966")) d = "+966" + d.slice(5);
+    else if (d.startsWith("966") && !d.startsWith("+")) d = "+966" + d.slice(3);
+    // Normalize to local-form (0XXXXXXXXX) for classification.
+    let local = d;
+    if (local.startsWith("+966")) local = "0" + local.slice(4);
+    if (seen.has(local)) continue;
+    seen.add(local);
+    if (/^9200\d{4,6}$/.test(local)) out.unified.push(local);
+    else if (/^920\d{6}$/.test(local) || /^800\d{6,7}$/.test(local)) out.unified.push(local);
+    else if (/^05\d{8}$/.test(local)) out.mobile.push(local);
+    else if (/^01\d{7,8}$/.test(local) || /^0[2-4]\d{7}$/.test(local)) out.landline.push(local);
+  }
+  // Heuristic: phones appearing near "customer", "خدمة العملاء", "support" tags.
+  const csCtx = text.match(/(?:customer|خدمة\s*العملاء|عملاء|support)[^\n]{0,80}/gi) ?? [];
+  for (const ctx of csCtx) {
+    const p = parseSAPhones(ctx);
+    out.customer_service.push(...p.mobile, ...p.landline, ...p.unified);
+  }
+  return out;
+}
+
+function parseEmails(text: string): string[] {
+  if (!text) return [];
+  const re = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+  const list = (text.match(re) ?? []).map((s) => s.toLowerCase());
+  return Array.from(new Set(list)).slice(0, 5);
+}
+
+function classifySocials(urls: string[]): {
+  facebook: string | null; instagram: string | null; twitter: string | null;
+  linkedin: string | null; youtube: string | null; tiktok: string | null;
+  snapchat: string | null; whatsapp: string | null;
+} {
+  const r = {
+    facebook: null as string | null, instagram: null as string | null, twitter: null as string | null,
+    linkedin: null as string | null, youtube: null as string | null, tiktok: null as string | null,
+    snapchat: null as string | null, whatsapp: null as string | null,
+  };
+  for (const l of urls) {
+    if (!l || typeof l !== "string") continue;
+    if (!r.facebook && /facebook\.com/i.test(l)) r.facebook = l;
+    else if (!r.instagram && /instagram\.com/i.test(l)) r.instagram = l;
+    else if (!r.twitter && /(?:^|\/\/)(?:www\.)?(?:twitter|x)\.com/i.test(l)) r.twitter = l;
+    else if (!r.linkedin && /linkedin\.com/i.test(l)) r.linkedin = l;
+    else if (!r.youtube && /(youtube\.com|youtu\.be)/i.test(l)) r.youtube = l;
+    else if (!r.tiktok && /tiktok\.com/i.test(l)) r.tiktok = l;
+    else if (!r.snapchat && /snapchat\.com/i.test(l)) r.snapchat = l;
+    else if (!r.whatsapp && /(wa\.me|whatsapp\.com|api\.whatsapp)/i.test(l)) r.whatsapp = l;
+  }
+  return r;
 }
 
 async function fetchWebsite(
@@ -120,18 +210,33 @@ async function fetchWebsite(
     const links: string[] =
       (data && (data.links || data?.data?.links)) ?? [];
 
-    const phoneMatch = md.match(/(\+?\d[\d\s\-()]{7,}\d)/);
-    const social = links.filter((l) =>
-      /(facebook|instagram|twitter|x\.com|linkedin|youtube|tiktok|snapchat|wa\.me|whatsapp)\./i
-        .test(l),
-    );
+    const phones = parseSAPhones(md);
+    const emails = parseEmails(md);
+    const socials = classifySocials(links);
+    const rawTitle = typeof meta.title === "string" ? meta.title.trim() : null;
+    const rawDesc = typeof meta.description === "string" ? meta.description.trim() : null;
 
     return {
-      name: typeof meta.title === "string" ? meta.title : null,
-      description: typeof meta.description === "string" ? meta.description : null,
-      phone: phoneMatch ? phoneMatch[1] : null,
+      name_ar: isArabic(rawTitle) ? rawTitle : null,
+      name_en: rawTitle && !isArabic(rawTitle) ? rawTitle : null,
+      description_ar: isArabic(rawDesc) ? rawDesc : null,
+      description_en: rawDesc && !isArabic(rawDesc) ? rawDesc : null,
+      phone: phones.mobile[0] ?? phones.landline[0] ?? phones.unified[0] ?? null,
+      phone_mobile: phones.mobile[0] ?? null,
+      phone_landline: phones.landline[0] ?? null,
+      unified_number: phones.unified[0] ?? null,
+      customer_service: phones.customer_service[0] ?? null,
+      whatsapp: socials.whatsapp,
+      email: emails[0] ?? null,
       website: url,
-      social_links: social.length ? JSON.stringify(social.slice(0, 10)) : null,
+      facebook: socials.facebook,
+      instagram: socials.instagram,
+      twitter: socials.twitter,
+      linkedin: socials.linkedin,
+      youtube: socials.youtube,
+      tiktok: socials.tiktok,
+      snapchat: socials.snapchat,
+      social_links: JSON.stringify(socials),
     };
   } catch {
     return {};
@@ -143,6 +248,7 @@ async function fetchGoogleMaps(
   placeId: string | null,
   googleKey: string,
   lovableKey: string,
+  lang: "ar" | "en" = "ar",
 ): Promise<{
   fields: Record<string, string | null>;
   raw: { placeId: string | null; addressComponents: Array<Record<string, unknown>>; placeRaw: Record<string, unknown> | null };
@@ -170,7 +276,7 @@ async function fetchGoogleMaps(
     let place: Record<string, unknown> | null = null;
     if (placeId) {
       const res = await fetch(
-        `https://connector-gateway.lovable.dev/google_maps/places/v1/places/${encodeURIComponent(placeId)}?languageCode=ar`,
+        `https://connector-gateway.lovable.dev/google_maps/places/v1/places/${encodeURIComponent(placeId)}?languageCode=${lang}`,
         {
           method: "GET",
           headers: {
@@ -194,7 +300,7 @@ async function fetchGoogleMaps(
             "X-Connection-Api-Key": googleKey,
             "X-Goog-FieldMask": fieldMask.split(",").map((f) => `places.${f}`).join(","),
           },
-          body: JSON.stringify({ textQuery: url, languageCode: "ar" }),
+          body: JSON.stringify({ textQuery: url, languageCode: lang }),
         },
       );
       if (res.ok) {
@@ -221,10 +327,13 @@ async function fetchGoogleMaps(
     };
     const loc = p.location as { latitude?: number; longitude?: number } | undefined;
     const oh = p.regularOpeningHours as { weekdayDescriptions?: string[] } | undefined;
+    const ohFull = p.regularOpeningHours as { weekdayDescriptions?: string[]; periods?: unknown } | undefined;
     const fields = {
       name,
       activity: (p.primaryType as string) ?? null,
-      description: addr,
+      // IMPORTANT: do NOT shove the address into description — that field is
+      // for a business description; the address has its own field.
+      description: null,
       phone: (p.internationalPhoneNumber as string) ?? (p.nationalPhoneNumber as string) ?? null,
       website: (p.websiteUri as string) ?? null,
       city: findComp("locality", "postal_town", "administrative_area_level_2", "administrative_area_level_1"),
@@ -234,7 +343,12 @@ async function fetchGoogleMaps(
       national_address: addr,
       latitude: typeof loc?.latitude === "number" ? String(loc.latitude) : null,
       longitude: typeof loc?.longitude === "number" ? String(loc.longitude) : null,
-      working_hours: oh?.weekdayDescriptions ? JSON.stringify(oh.weekdayDescriptions) : null,
+      working_hours: ohFull?.weekdayDescriptions || ohFull?.periods
+        ? JSON.stringify({
+            weekdayDescriptions: ohFull?.weekdayDescriptions ?? [],
+            periods: ohFull?.periods ?? [],
+          })
+        : null,
       logo_url: (p.iconMaskBaseUri as string) ?? null,
     };
     return {
@@ -258,6 +372,7 @@ async function geocodeFallback(
   lng: string | null,
   googleKey: string,
   lovableKey: string,
+  lang: "ar" | "en" = "ar",
 ): Promise<{
   fields: { city: string | null; district: string | null; street: string | null; region: string | null };
   raw: Array<Record<string, unknown>>;
@@ -265,7 +380,7 @@ async function geocodeFallback(
   if (!lat || !lng) return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
   try {
     const res = await fetch(
-      `https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json?latlng=${encodeURIComponent(lat)},${encodeURIComponent(lng)}&language=ar&region=sa`,
+      `https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json?latlng=${encodeURIComponent(lat)},${encodeURIComponent(lng)}&language=${lang}&region=sa`,
       {
         headers: {
           "Authorization": `Bearer ${lovableKey}`,
@@ -300,6 +415,15 @@ async function geocodeFallback(
   } catch {
     return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
   }
+}
+
+function geocodeFallbackEn(
+  lat: string | null,
+  lng: string | null,
+  googleKey: string,
+  lovableKey: string,
+) {
+  return geocodeFallback(lat, lng, googleKey, lovableKey, "en");
 }
 
 // Normalize Arabic / English text for fuzzy matching.
@@ -463,43 +587,66 @@ Deno.serve(async (req) => {
       }
     }
     let mapsData: Record<string, string | null> = {};
+    let mapsDataEn: Record<string, string | null> = {};
     let mapsRaw: { placeId: string | null; addressComponents: Array<Record<string, unknown>>; placeRaw: Record<string, unknown> | null } = { placeId: null, addressComponents: [], placeRaw: null };
     let geocodingRaw: Array<Record<string, unknown>> = [];
     let geocodingUsed = false;
     if ((placeId || mapsUrl) && googleKey && lovableKey) {
-      const mKey = `maps:${placeId ? `id:${placeId}` : mapsUrl}`;
+      const mKey = `maps:${placeId ? `id:${placeId}` : mapsUrl}:v2`;
       const cached = await readCache(mKey);
       if (cached) {
-        mapsData = (cached as Record<string, unknown>).fields as Record<string, string | null> ?? cached;
-        mapsRaw = ((cached as Record<string, unknown>).raw as typeof mapsRaw) ?? mapsRaw;
-        geocodingRaw = ((cached as Record<string, unknown>).geocodingRaw as Array<Record<string, unknown>>) ?? [];
+        const c = cached as Record<string, unknown>;
+        mapsData = (c.fields as Record<string, string | null>) ?? {};
+        mapsDataEn = (c.fieldsEn as Record<string, string | null>) ?? {};
+        mapsRaw = (c.raw as typeof mapsRaw) ?? mapsRaw;
+        geocodingRaw = (c.geocodingRaw as Array<Record<string, unknown>>) ?? [];
       } else {
-        const r = await fetchGoogleMaps(mapsUrl, placeId, googleKey, lovableKey);
-        mapsData = r.fields;
-        mapsRaw = r.raw;
-        // Geocoding fallback when key address fields are missing.
-        const needsGeocode = (!mapsData.district || !mapsData.street || !mapsData.city) && mapsData.latitude && mapsData.longitude;
+        // Fetch BOTH languages so names + address can be assigned to the correct side.
+        const [rAr, rEn] = await Promise.all([
+          fetchGoogleMaps(mapsUrl, placeId, googleKey, lovableKey, "ar"),
+          fetchGoogleMaps(mapsUrl, placeId, googleKey, lovableKey, "en"),
+        ]);
+        mapsData = rAr.fields;
+        mapsDataEn = rEn.fields;
+        mapsRaw = rAr.raw.placeId ? rAr.raw : rEn.raw;
+        // Geocoding fallback when key address fields are missing (in either language).
+        const lat = mapsData.latitude ?? mapsDataEn.latitude ?? null;
+        const lng = mapsData.longitude ?? mapsDataEn.longitude ?? null;
+        const needsGeocode = (!mapsData.district || !mapsData.street || !mapsData.city ||
+          !mapsDataEn.district || !mapsDataEn.street || !mapsDataEn.city) && lat && lng;
         if (needsGeocode) {
-          const g = await geocodeFallback(mapsData.latitude, mapsData.longitude, googleKey, lovableKey);
+          const [gAr, gEn] = await Promise.all([
+            geocodeFallback(lat, lng, googleKey, lovableKey),
+            geocodeFallbackEn(lat, lng, googleKey, lovableKey),
+          ]);
           geocodingUsed = true;
-          geocodingRaw = g.raw;
-          if (!mapsData.city) mapsData.city = g.fields.city;
-          if (!mapsData.district) mapsData.district = g.fields.district;
-          if (!mapsData.street) mapsData.street = g.fields.street;
-          if (!mapsData.region) mapsData.region = g.fields.region;
+          geocodingRaw = gAr.raw;
+          if (!mapsData.city) mapsData.city = gAr.fields.city;
+          if (!mapsData.district) mapsData.district = gAr.fields.district;
+          if (!mapsData.street) mapsData.street = gAr.fields.street;
+          if (!mapsData.region) mapsData.region = gAr.fields.region;
+          if (!mapsDataEn.city) mapsDataEn.city = gEn.fields.city;
+          if (!mapsDataEn.district) mapsDataEn.district = gEn.fields.district;
+          if (!mapsDataEn.street) mapsDataEn.street = gEn.fields.street;
+          if (!mapsDataEn.region) mapsDataEn.region = gEn.fields.region;
         }
-        if (Object.keys(mapsData).length) {
-          await writeCache(mKey, { fields: mapsData, raw: mapsRaw, geocodingRaw } as unknown as Record<string, string | null>);
+        if (Object.keys(mapsData).length || Object.keys(mapsDataEn).length) {
+          await writeCache(mKey, { fields: mapsData, fieldsEn: mapsDataEn, raw: mapsRaw, geocodingRaw } as unknown as Record<string, string | null>);
         }
       }
     }
 
+    // Names from Google: route by script. AR call may return the English name
+    // when no Arabic translation exists — guard with isArabic().
+    const gNameAr = isArabic(mapsData.name) ? mapsData.name : null;
+    const gNameEn = mapsDataEn.name && !isArabic(mapsDataEn.name) ? mapsDataEn.name : (mapsData.name && !isArabic(mapsData.name) ? mapsData.name : null);
+
     // DB matching: snap city / district / region to canonical reference rows.
-    const cityMatch = await matchCity(svc, mapsData.city ?? null);
+    const cityMatch = await matchCity(svc, mapsData.city ?? mapsDataEn.city ?? null);
     const districtMatch = await matchDistrict(
       svc,
-      cityMatch?.name_ar ?? cityMatch?.name_en ?? mapsData.city ?? null,
-      mapsData.district ?? null,
+      cityMatch?.name_ar ?? cityMatch?.name_en ?? mapsData.city ?? mapsDataEn.city ?? null,
+      mapsData.district ?? mapsDataEn.district ?? null,
     );
     const dbMatches = {
       city: cityMatch
@@ -517,26 +664,51 @@ Deno.serve(async (req) => {
         : (mapsData.region ? { name_ar: mapsData.region, name_en: mapsData.region } : null),
     };
     // Override merged values with canonical names so admin works on DB-snapped data.
-    if (cityMatch) mapsData.city = cityMatch.name_ar || cityMatch.name_en;
-    if (districtMatch) mapsData.district = districtMatch.district_ar || districtMatch.district_en;
+    if (cityMatch) { mapsData.city = cityMatch.name_ar; mapsDataEn.city = cityMatch.name_en ?? cityMatch.name_ar; }
+    if (districtMatch) {
+      mapsData.district = districtMatch.district_ar;
+      mapsDataEn.district = districtMatch.district_en ?? districtMatch.district_ar;
+    }
 
     const merged = emptyDraft();
-    merged.name_ar = pickField(null, mapsData.name ?? null);
-    merged.name_en = pickField(websiteData.name ?? null, null, true);
+    merged.name_ar = pickField(websiteData.name_ar ?? null, gNameAr);
+    merged.name_en = pickField(websiteData.name_en ?? null, gNameEn, true);
+    // Activity stays as primaryType (machine-readable). AR/EN copies for admin polish.
     merged.activity = pickField(null, mapsData.activity ?? null);
-    merged.description_ar = pickField(null, mapsData.description ?? null);
-    merged.description_en = pickField(websiteData.description ?? null, null, true);
+    merged.activity_ar = pickField(null, isArabic(mapsData.activity) ? mapsData.activity : null);
+    merged.activity_en = pickField(null, !isArabic(mapsDataEn.activity) ? mapsDataEn.activity : null, true);
+    // IMPORTANT: descriptions are NOT the formatted address. Only website
+    // meta description is a real description (script-routed). AI fills the rest.
+    merged.description_ar = pickField(websiteData.description_ar ?? null, null);
+    merged.description_en = pickField(websiteData.description_en ?? null, null, true);
     merged.phone = pickField(websiteData.phone ?? null, mapsData.phone ?? null);
+    merged.phone_mobile = pickField(websiteData.phone_mobile ?? null, null);
+    merged.phone_landline = pickField(websiteData.phone_landline ?? null, mapsData.phone ?? null);
+    merged.unified_number = pickField(websiteData.unified_number ?? null, null);
+    merged.whatsapp = pickField(websiteData.whatsapp ?? null, null);
+    merged.customer_service = pickField(websiteData.customer_service ?? null, null);
+    merged.email = pickField(websiteData.email ?? null, null);
     merged.website = pickField(websiteData.website ?? null, mapsData.website ?? null, true);
     merged.city = pickField(null, mapsData.city ?? null);
+    merged.city_en = pickField(null, mapsDataEn.city ?? null, true);
     merged.district = pickField(null, mapsData.district ?? null);
+    merged.district_en = pickField(null, mapsDataEn.district ?? null, true);
     merged.street = pickField(null, mapsData.street ?? null);
+    merged.street_en = pickField(null, mapsDataEn.street ?? null, true);
     merged.national_address = pickField(null, mapsData.national_address ?? null);
-    merged.latitude = pickField(null, mapsData.latitude ?? null);
-    merged.longitude = pickField(null, mapsData.longitude ?? null);
-    merged.working_hours = pickField(null, mapsData.working_hours ?? null);
+    merged.national_address_en = pickField(null, mapsDataEn.national_address ?? null, true);
+    merged.latitude = pickField(null, mapsData.latitude ?? mapsDataEn.latitude ?? null);
+    merged.longitude = pickField(null, mapsData.longitude ?? mapsDataEn.longitude ?? null);
+    merged.working_hours = pickField(null, mapsData.working_hours ?? mapsDataEn.working_hours ?? null);
     merged.logo_url = pickField(null, mapsData.logo_url ?? null);
     merged.social_links = pickField(websiteData.social_links ?? null, null, true);
+    merged.facebook = pickField(websiteData.facebook ?? null, null, true);
+    merged.instagram = pickField(websiteData.instagram ?? null, null, true);
+    merged.twitter = pickField(websiteData.twitter ?? null, null, true);
+    merged.linkedin = pickField(websiteData.linkedin ?? null, null, true);
+    merged.youtube = pickField(websiteData.youtube ?? null, null, true);
+    merged.tiktok = pickField(websiteData.tiktok ?? null, null, true);
+    merged.snapchat = pickField(websiteData.snapchat ?? null, null, true);
 
     // Conflict map per-field (only fields where both sources had a value).
     const conflicts: Record<string, { website: string | null; google_maps: string | null }> = {};

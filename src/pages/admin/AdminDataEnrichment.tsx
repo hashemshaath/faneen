@@ -65,19 +65,38 @@ const FIELD_LABELS: Record<EnrichmentFieldKey, { ar: string; en: string }> = {
   name_ar: { ar: "الاسم (عربي)", en: "Name (Arabic)" },
   name_en: { ar: "الاسم (إنجليزي)", en: "Name (English)" },
   activity: { ar: "النشاط", en: "Activity" },
+  activity_ar: { ar: "النشاط (عربي)", en: "Activity (Arabic)" },
+  activity_en: { ar: "النشاط (إنجليزي)", en: "Activity (English)" },
   description_ar: { ar: "الوصف (عربي)", en: "Description (Arabic)" },
   description_en: { ar: "الوصف (إنجليزي)", en: "Description (English)" },
-  phone: { ar: "الجوال / الهاتف", en: "Phone" },
+  phone: { ar: "الهاتف الأساسي", en: "Primary phone" },
+  phone_mobile: { ar: "الجوال", en: "Mobile" },
+  phone_landline: { ar: "الهاتف الأرضي", en: "Landline" },
+  unified_number: { ar: "الرقم الموحّد", en: "Unified number" },
+  whatsapp: { ar: "واتساب", en: "WhatsApp" },
+  customer_service: { ar: "خدمة العملاء", en: "Customer service" },
+  email: { ar: "البريد الإلكتروني", en: "Email" },
   website: { ar: "الموقع الإلكتروني", en: "Website" },
-  city: { ar: "المدينة", en: "City" },
-  district: { ar: "الحي", en: "District" },
-  street: { ar: "الشارع", en: "Street" },
-  national_address: { ar: "العنوان الوطني", en: "National Address" },
+  city: { ar: "المدينة (عربي)", en: "City (Arabic)" },
+  city_en: { ar: "المدينة (إنجليزي)", en: "City (English)" },
+  district: { ar: "الحي (عربي)", en: "District (Arabic)" },
+  district_en: { ar: "الحي (إنجليزي)", en: "District (English)" },
+  street: { ar: "الشارع (عربي)", en: "Street (Arabic)" },
+  street_en: { ar: "الشارع (إنجليزي)", en: "Street (English)" },
+  national_address: { ar: "العنوان الوطني (عربي)", en: "National Address (Arabic)" },
+  national_address_en: { ar: "العنوان الوطني (إنجليزي)", en: "National Address (English)" },
   latitude: { ar: "خط العرض", en: "Latitude" },
   longitude: { ar: "خط الطول", en: "Longitude" },
   working_hours: { ar: "أوقات العمل", en: "Working Hours" },
   logo_url: { ar: "اللوجو", en: "Logo" },
   social_links: { ar: "الروابط الاجتماعية", en: "Social Links" },
+  facebook: { ar: "فيسبوك", en: "Facebook" },
+  instagram: { ar: "إنستغرام", en: "Instagram" },
+  twitter: { ar: "X (تويتر)", en: "X (Twitter)" },
+  linkedin: { ar: "لينكدإن", en: "LinkedIn" },
+  youtube: { ar: "يوتيوب", en: "YouTube" },
+  tiktok: { ar: "تيك توك", en: "TikTok" },
+  snapchat: { ar: "سناب شات", en: "Snapchat" },
 };
 
 const FIELD_KEYS = Object.keys(FIELD_LABELS) as EnrichmentFieldKey[];
@@ -201,6 +220,16 @@ export default function AdminDataEnrichment() {
       for (const k of FIELD_KEYS) {
         const v = res.merged[k]?.value;
         if (v) initial[k] = v;
+      }
+      // Pretty-print working hours (stored as JSON {weekdayDescriptions,periods}).
+      if (initial.working_hours) {
+        try {
+          const parsed = JSON.parse(initial.working_hours);
+          const lines: string[] = Array.isArray(parsed?.weekdayDescriptions)
+            ? parsed.weekdayDescriptions
+            : Array.isArray(parsed) ? parsed : [];
+          if (lines.length) initial.working_hours = lines.join("\n");
+        } catch { /* keep as-is */ }
       }
       setApproved(initial);
       setStep("review");
@@ -1193,7 +1222,7 @@ export default function AdminDataEnrichment() {
                           )}
                         </td>
                         <td className="py-2">
-                          {key === "description_ar" || key === "description_en" ? (
+                          {key === "description_ar" || key === "description_en" || key === "working_hours" ? (
                             <Textarea
                               dir="auto"
                               value={approved[key] ?? ""}
