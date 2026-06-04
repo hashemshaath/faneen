@@ -122,6 +122,7 @@ const AdminActivityLog = lazyRetry(() => import("./pages/admin/AdminActivityLog"
 const AdminCategories = lazyRetry(() => import("./pages/admin/AdminCategories"));
 const AdminTags = lazyRetry(() => import("./pages/admin/AdminTags"));
 const AdminBusinesses = lazyRetry(() => import("./pages/admin/AdminBusinesses"));
+const AdminOwnershipTransferRequests = lazyRetry(() => import("./pages/admin/AdminOwnershipTransferRequests"));
 const AdminEntityAccessRequests = lazyRetry(() => import("./pages/admin/AdminEntityAccessRequests"));
 const AdminApprovalsCenter = lazyRetry(() => import("./pages/admin/AdminApprovalsCenter"));
 const AdminBusinessVisibility = lazyRetry(() => import("./pages/admin/AdminBusinessVisibility"));
@@ -411,6 +412,7 @@ const AppRoutes = () => (
           <Route path="/admin/categories" element={<ProtectedRoute requireAdmin><AdminTaxonomyHub /></ProtectedRoute>} />
           <Route path="/admin/tags" element={<ProtectedRoute requireAdmin><Navigate to="/admin/categories?tab=tags" replace /></ProtectedRoute>} />
           <Route path="/admin/businesses" element={<ProtectedRoute requireAdmin><AdminBusinesses /></ProtectedRoute>} />
+          <Route path="/admin/ownership-transfer-requests" element={<ProtectedRoute requireAdmin><AdminOwnershipTransferRequests /></ProtectedRoute>} />
           {/* SERVICE-ACTIVATION-GOVERNANCE-2 — Phase D admin control surface. */}
           <Route path="/admin/service-activations" element={<ProtectedRoute requireAdmin><AdminServiceActivations /></ProtectedRoute>} />
           <Route path="/admin/entity-access-requests" element={<ProtectedRoute requireAdmin><AdminEntityAccessRequests /></ProtectedRoute>} />
