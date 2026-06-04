@@ -394,6 +394,27 @@ export type Database = {
           },
         ]
       }
+      admin_enrichment_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          expires_at: string
+          payload: Json
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          expires_at: string
+          payload: Json
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          expires_at?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
       admin_enrichment_sessions: {
         Row: {
           actor_id: string
