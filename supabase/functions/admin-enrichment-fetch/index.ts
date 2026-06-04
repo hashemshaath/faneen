@@ -23,6 +23,13 @@ const DEFAULT_GOOGLE_REFERER = "https://qitaat.lovable.app/";
 
 type Source = "website" | "google_maps" | "ai_enhanced" | "manual";
 type Confidence = "high" | "medium" | "low";
+type DbQuery = PromiseLike<{ data: unknown }> & {
+  select: (columns: string) => DbQuery;
+  eq: (column: string, value: unknown) => DbQuery;
+  limit: (count: number) => DbQuery;
+  or: (filters: string) => DbQuery;
+};
+type DbLike = { from: (table: string) => DbQuery };
 
 interface EnrichmentField {
   value: string | null;
@@ -599,7 +606,7 @@ function tokenMatch(a: string, b: string): boolean {
 
 // Match a city name against the active `cities` table, return canonical row.
 async function matchCity(
-  svc: ReturnType<typeof createClient> | null,
+  svc: DbLike | null,
   city: string | null,
 ): Promise<{ id: string; name_ar: string; name_en: string } | null> {
   if (!svc || !city) return null;
@@ -618,7 +625,7 @@ async function matchCity(
 
 // Match district by city + district text against `districts` table.
 async function matchDistrict(
-  svc: ReturnType<typeof createClient> | null,
+  svc: DbLike | null,
   cityName: string | null,
   districtName: string | null,
 ): Promise<{ id: string; district_ar: string; district_en: string | null; region_ar: string | null; region_en: string | null; city_ar: string | null; city_en: string | null } | null> {
