@@ -201,6 +201,58 @@ export default function AdminDataEnrichment() {
     setStep("sources");
   };
 
+  const buildExportRows = () => {
+    if (!draft) return [];
+    return FIELD_KEYS.map((key) => {
+      const f = draft[key];
+      return {
+        Field: bi(FIELD_LABELS[key].ar, FIELD_LABELS[key].en),
+        Website: f.source === "website" ? f.value ?? "" : "",
+        "Google Maps": f.source === "google_maps" ? f.value ?? "" : "",
+        AI: aiEnhanced[key] ?? "",
+        Approved: approved[key] ?? "",
+        Source: f.source,
+        Confidence: f.confidence,
+      };
+    });
+  };
+
+  const exportCsv = () => {
+    const rows = buildExportRows();
+    if (!rows.length) return;
+    const headers = Object.keys(rows[0]);
+    const csv = [
+      headers.join(","),
+      ...rows.map((r) =>
+        headers
+          .map((h) => `"${String((r as Record<string, string>)[h] ?? "").replace(/"/g, '""')}"`)
+          .join(","),
+      ),
+    ].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `enrichment-${sessionId ?? Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportXlsx = () => {
+    const rows = buildExportRows();
+    if (!rows.length) return;
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Comparison");
+    XLSX.writeFile(wb, `enrichment-${sessionId ?? Date.now()}.xlsx`);
+  };
+
+  const staticMapUrl = (lat: number, lng: number) => {
+    const key = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
+    if (!key) return null;
+    return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=15&size=120x80&scale=2&markers=color:red%7C${lat},${lng}&key=${key}`;
+  };
+
   return (
     <DashboardLayout>
     <div className="container mx-auto max-w-5xl px-4 py-6">
