@@ -44,11 +44,26 @@ export interface EnrichmentFetchResult {
   deferred?: boolean;
   missing?: string[];
   error?: string;
+  diagnostics?: {
+    place_id: string | null;
+    addressComponents: Array<Record<string, unknown>>;
+    geocoding_used: boolean;
+    geocoding_components: Array<Record<string, unknown>>;
+  };
+  db_matches?: {
+    city: { id: string; name_ar: string; name_en: string } | null;
+    district: { id: string; name_ar: string; name_en: string | null } | null;
+    region: { name_ar: string | null; name_en: string | null } | null;
+  };
 }
 
 export interface EnrichmentEnhanceResult {
   ok?: boolean;
-  ai_enhanced?: Partial<Record<EnrichmentFieldKey, string>>;
+  ai_enhanced?: Partial<Record<EnrichmentFieldKey, string>> & {
+    category_slug?: string;
+    services_ar?: string;
+    services_en?: string;
+  };
   deferred?: boolean;
   missing?: string[];
 }
