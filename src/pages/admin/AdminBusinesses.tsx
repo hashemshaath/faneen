@@ -707,10 +707,12 @@ const AdminBusinesses = () => {
         return res.business as unknown as Record<string, unknown>;
       }
 
-      // Path B — Existing user (default). Falls back to current admin only if no picker.
-      const ownerId = createForm.resolved_user_id || user?.id;
+      // Path B — Existing user (default). An owner MUST be explicitly picked;
+      // we never fall back to the current admin because super_admin / admin
+      // accounts are blocked by DB trigger from owning business entities.
+      const ownerId = createForm.resolved_user_id;
       if (!ownerId) {
-        throw new Error(isRTL ? 'تعذّر تحديد المالك' : 'Cannot determine owner');
+        throw new Error('owner_id_or_ref_required');
       }
       const payload: Record<string, unknown> = {
         ...bizCore,
