@@ -435,11 +435,7 @@ async function fetchGoogleMaps(
         `https://connector-gateway.lovable.dev/google_maps/places/v1/places/${encodeURIComponent(placeId)}?languageCode=${lang}`,
         {
           method: "GET",
-          headers: {
-            "Authorization": `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": googleKey,
-            "X-Goog-FieldMask": fieldMask,
-          },
+          headers: googleGatewayHeaders(googleKey, lovableKey, { "X-Goog-FieldMask": fieldMask }),
         },
       );
       if (res.ok) place = await res.json().catch(() => null);
@@ -450,12 +446,10 @@ async function fetchGoogleMaps(
         "https://connector-gateway.lovable.dev/google_maps/places/v1/places:searchText",
         {
           method: "POST",
-          headers: {
+          headers: googleGatewayHeaders(googleKey, lovableKey, {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": googleKey,
             "X-Goog-FieldMask": fieldMask.split(",").map((f) => `places.${f}`).join(","),
-          },
+          }),
           body: JSON.stringify({ textQuery: url, languageCode: lang }),
         },
       );
@@ -537,12 +531,7 @@ async function geocodeFallback(
   try {
     const res = await fetch(
       `https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json?latlng=${encodeURIComponent(lat)},${encodeURIComponent(lng)}&language=${lang}&region=sa`,
-      {
-        headers: {
-          "Authorization": `Bearer ${lovableKey}`,
-          "X-Connection-Api-Key": googleKey,
-        },
-      },
+      { headers: googleGatewayHeaders(googleKey, lovableKey) },
     );
     if (!res.ok) {
       await res.text().catch(() => "");
