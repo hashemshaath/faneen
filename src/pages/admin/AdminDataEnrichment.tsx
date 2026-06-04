@@ -520,6 +520,8 @@ export default function AdminDataEnrichment() {
         })}
       </ol>
 
+      <GoogleStatusPanel />
+
       {errorMsg && (
         <Card className="mb-4 border-rose-200 bg-rose-50/60 p-3 text-sm text-rose-700">
           <div className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />{errorMsg}</div>
