@@ -30,7 +30,7 @@ export interface SearchPlacesResult {
   upstreamStatus?: number;
   upstreamMs?: number;
   detail?: string;
-  fallback?: "browser_places";
+  fallback?: "browser_places" | "geocoding";
 }
 
 export async function searchPlaces(input: {
