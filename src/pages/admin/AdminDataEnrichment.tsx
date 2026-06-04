@@ -235,6 +235,23 @@ export default function AdminDataEnrichment() {
 
   const conflictKeys = useMemo(() => Object.keys(conflicts ?? {}), [conflicts]);
 
+  const availableTypes = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of searchResults) if (r.primary_type) set.add(r.primary_type);
+    return Array.from(set).sort();
+  }, [searchResults]);
+
+  const displayResults = useMemo(() => {
+    let list = [...searchResults];
+    if (minRating > 0) list = list.filter((r) => (r.rating ?? 0) >= minRating);
+    if (minReviews > 0) list = list.filter((r) => (r.user_rating_count ?? 0) >= minReviews);
+    if (typeFilter !== "all") list = list.filter((r) => r.primary_type === typeFilter);
+    if (sortBy === "rating_desc") list.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+    else if (sortBy === "reviews_desc") list.sort((a, b) => (b.user_rating_count ?? -1) - (a.user_rating_count ?? -1));
+    else if (sortBy === "name_asc") list.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", undefined, { sensitivity: "base" }));
+    return list;
+  }, [searchResults, minRating, minReviews, typeFilter, sortBy]);
+
   const handleSelectPlace = (p: PlaceCandidate) => {
     setSelectedPlace(p);
     if (p.maps_url) setMapsUrl(p.maps_url);
