@@ -14,7 +14,7 @@
  */
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap, RefreshCw, Trash2, SlidersHorizontal } from "lucide-react";
+import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap, RefreshCw, Trash2, SlidersHorizontal, Bug, Database, Wrench } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -118,6 +118,12 @@ export default function AdminDataEnrichment() {
   const [missing, setMissing] = useState<string[]>([]);
   const [aiEnhanced, setAiEnhanced] = useState<Partial<Record<EnrichmentFieldKey, string>>>({});
   const [approved, setApproved] = useState<Partial<Record<EnrichmentFieldKey, string>>>({});
+  const [diagnostics, setDiagnostics] = useState<NonNullable<EnrichmentFetchResult["diagnostics"]> | null>(null);
+  const [dbMatches, setDbMatches] = useState<NonNullable<EnrichmentFetchResult["db_matches"]> | null>(null);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [categorySlug, setCategorySlug] = useState<string>("");
+  const [servicesAr, setServicesAr] = useState<string>("");
+  const [servicesEn, setServicesEn] = useState<string>("");
   const [mode, setMode] = useState<"lead" | "business">("lead");
   const [businessId, setBusinessId] = useState("");
   const [applyResult, setApplyResult] = useState<{ entity?: string; id?: string } | null>(null);
@@ -140,6 +146,8 @@ export default function AdminDataEnrichment() {
       setDraft(res.merged);
       setConflicts(res.conflicts ?? {});
       setMissing(res.missing ?? []);
+      setDiagnostics(res.diagnostics ?? null);
+      setDbMatches(res.db_matches ?? null);
       const initial: Partial<Record<EnrichmentFieldKey, string>> = {};
       for (const k of FIELD_KEYS) {
         const v = res.merged[k]?.value;
@@ -206,7 +214,12 @@ export default function AdminDataEnrichment() {
       });
     },
     onSuccess: (res) => {
-      setAiEnhanced(res.ai_enhanced ?? {});
+      const ai = res.ai_enhanced ?? {};
+      const { category_slug, services_ar, services_en, ...fieldOnly } = ai as Record<string, string>;
+      setAiEnhanced(fieldOnly as Partial<Record<EnrichmentFieldKey, string>>);
+      if (category_slug) setCategorySlug(category_slug);
+      if (services_ar) setServicesAr(services_ar);
+      if (services_en) setServicesEn(services_en);
     },
   });
 
