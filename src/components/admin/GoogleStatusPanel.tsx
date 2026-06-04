@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Bi, useBi } from "@/components/common/Bilingual";
 import { CheckCircle2, XCircle, RefreshCw, KeyRound, Activity, Loader2 } from "lucide-react";
 import { fetchGoogleHealth } from "@/modules/google";
-import type { GoogleApi, GoogleProbe } from "@/modules/google/types";
+import type { GoogleApi, GoogleProbe, GoogleHealthResponse } from "@/modules/google/types";
 
 const API_LABELS: Record<GoogleApi, { ar: string; en: string }> = {
   places: { ar: "Places (الأماكن)", en: "Places" },
@@ -29,7 +29,7 @@ export function GoogleStatusPanel() {
     import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY,
   );
 
-  const q = useQuery({
+  const q = useQuery<GoogleHealthResponse | null>({
     queryKey: ["admin", "google-health"],
     queryFn: fetchGoogleHealth,
     staleTime: 60_000,
