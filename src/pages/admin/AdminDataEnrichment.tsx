@@ -323,6 +323,10 @@ export default function AdminDataEnrichment() {
         pageToken: opts.append ? nextPageToken : null,
         bypassCache: opts.bypass ?? bypassCacheFlag,
       }).then((r) => ({ ...r, _append: opts.append === true })),
+    onMutate: () => {
+      setSearchFallbackNotice(null);
+      setErrorMsg(null);
+    },
     onSuccess: (res) => {
       if (res.error) {
         setSearchFallbackNotice(null);
