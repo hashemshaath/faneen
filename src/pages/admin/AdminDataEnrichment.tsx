@@ -230,7 +230,7 @@ export default function AdminDataEnrichment() {
       setServicesAr(merged.services_ar ?? "");
       setServicesEn(merged.services_en ?? "");
       setAiEnhanced((merged.ai_enhanced ?? {}) as Partial<Record<EnrichmentFieldKey, string>>);
-      setSelectedPlace((merged.selected_place as PlaceCandidate | null) ?? null);
+      setSelectedPlace((merged.selected_place as unknown as PlaceCandidate | null) ?? null);
       setDbMatches((merged.db_matches as NonNullable<EnrichmentFetchResult["db_matches"]> | null) ?? null);
       setDiagnostics((merged.diagnostics as NonNullable<EnrichmentFetchResult["diagnostics"]> | null) ?? null);
       setConflicts({});
