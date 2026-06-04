@@ -493,6 +493,45 @@ export default function AdminDataEnrichment() {
       {/* Step 2: Review */}
       {step === "review" && draft && (
         <div className="space-y-4">
+          {selectedPlace && (
+            <Card className="p-3">
+              <div className="flex items-center gap-3">
+                {selectedPlace.latitude != null && selectedPlace.longitude != null && staticMapUrl(selectedPlace.latitude, selectedPlace.longitude) ? (
+                  <img
+                    src={staticMapUrl(selectedPlace.latitude, selectedPlace.longitude)!}
+                    alt=""
+                    loading="lazy"
+                    className="h-16 w-24 shrink-0 rounded-lg border object-cover"
+                  />
+                ) : (
+                  <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    <Building2 className="h-5 w-5" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{selectedPlace.name ?? selectedPlace.place_id}</div>
+                  {selectedPlace.address && (
+                    <div className="truncate text-[12px] text-muted-foreground" dir="auto">
+                      <MapPin className="me-1 inline h-3 w-3" />
+                      {selectedPlace.address}
+                    </div>
+                  )}
+                </div>
+                {selectedPlace.maps_url && (
+                  <a
+                    href={selectedPlace.maps_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-md border px-2.5 py-1 text-xs text-primary hover:bg-primary/5"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    <Bi ar="Google Maps" en="Google Maps" />
+                  </a>
+                )}
+              </div>
+            </Card>
+          )}
+
           {missing.length > 0 && (
             <Card className="border-amber-200 bg-amber-50/60 p-3 text-sm text-amber-800">
               <div className="flex items-center justify-between gap-2">
@@ -530,10 +569,20 @@ export default function AdminDataEnrichment() {
               <h2 className="text-sm font-semibold">
                 <Bi ar="جدول المقارنة قبل/بعد" en="Comparison: before / after" />
               </h2>
-              <Button size="sm" variant="outline" onClick={() => enhanceMut.mutate()} disabled={enhanceMut.isPending}>
-                {enhanceMut.isPending ? <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="me-1.5 h-3.5 w-3.5" />}
-                <Bi ar="تحسين بالذكاء" en="AI enhance" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={exportCsv}>
+                  <Download className="me-1.5 h-3.5 w-3.5" />
+                  CSV
+                </Button>
+                <Button size="sm" variant="outline" onClick={exportXlsx}>
+                  <FileSpreadsheet className="me-1.5 h-3.5 w-3.5" />
+                  Excel
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => enhanceMut.mutate()} disabled={enhanceMut.isPending}>
+                  {enhanceMut.isPending ? <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="me-1.5 h-3.5 w-3.5" />}
+                  <Bi ar="تحسين بالذكاء" en="AI enhance" />
+                </Button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
