@@ -99,5 +99,11 @@ export function mapAdminCreateBizError(
   const table = locale === 'ar' ? MAP_AR : MAP_EN;
   const code = (rawError ?? '').trim();
   if (isKnownAdminCreateBizErrorCode(code)) return table[code];
+  // Map common raw Postgres / PostgREST messages → friendly codes so we
+  // never show the user a raw SQL error string.
+  const lower = code.toLowerCase();
+  if (lower.includes('super admin') && lower.includes('business')) return table.owner_cannot_be_super_admin;
+  if (lower.includes('businesses_username_key') || (lower.includes('duplicate') && lower.includes('username'))) return table.username_taken;
+  if (lower.includes('duplicate key') && lower.includes('email')) return table.owner_email_taken;
   return table.unknown;
 }
