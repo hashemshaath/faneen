@@ -70,7 +70,44 @@ export interface EnrichmentEnhanceResult {
 
 export interface EnrichmentApplyResult {
   ok?: boolean;
+  saved?: boolean;
+  session_id?: string;
+  status?: "draft" | "reviewed" | "applied" | "discarded";
   applied_entity_type?: string | null;
   applied_entity_id?: string | null;
   error?: string;
+}
+
+export interface EnrichmentDraftSummary {
+  id: string;
+  status: "reviewed" | "applied";
+  name: string | null;
+  city: string | null;
+  activity: string | null;
+  applied_entity_type: string | null;
+  applied_entity_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EnrichmentSessionRow {
+  id: string;
+  status: string;
+  website_url: string | null;
+  maps_url: string | null;
+  sources: Record<string, unknown> | null;
+  merged: {
+    approved?: Record<string, string>;
+    category_slug?: string | null;
+    services_ar?: string | null;
+    services_en?: string | null;
+    ai_enhanced?: Record<string, string> | null;
+    selected_place?: Record<string, unknown> | null;
+    db_matches?: Record<string, unknown> | null;
+    diagnostics?: Record<string, unknown> | null;
+  } | null;
+  applied_entity_type: string | null;
+  applied_entity_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
