@@ -143,7 +143,10 @@ async function fetchGoogleMaps(
   placeId: string | null,
   googleKey: string,
   lovableKey: string,
-): Promise<Record<string, string | null>> {
+): Promise<{
+  fields: Record<string, string | null>;
+  raw: { placeId: string | null; addressComponents: Array<Record<string, unknown>>; placeRaw: Record<string, unknown> | null };
+}> {
   // Prefer Place Details (GET /places/{id}) when a place_id is known — this returns
   // the exact resource. Fall back to textSearch with the URL only when no id is available
   // (e.g. admin pasted a maps URL manually without using the search step).
@@ -201,7 +204,7 @@ async function fetchGoogleMaps(
         await res.text().catch(() => "");
       }
     }
-    if (!place) return {};
+    if (!place) return { fields: {}, raw: { placeId, addressComponents: [], placeRaw: null } };
     const p = place as Record<string, unknown>;
     const dn = p.displayName as { text?: string } | undefined;
     const name = dn?.text ?? null;
@@ -218,7 +221,7 @@ async function fetchGoogleMaps(
     };
     const loc = p.location as { latitude?: number; longitude?: number } | undefined;
     const oh = p.regularOpeningHours as { weekdayDescriptions?: string[] } | undefined;
-    return {
+    const fields = {
       name,
       activity: (p.primaryType as string) ?? null,
       description: addr,
@@ -227,15 +230,140 @@ async function fetchGoogleMaps(
       city: findComp("locality", "postal_town", "administrative_area_level_2", "administrative_area_level_1"),
       district: findComp("sublocality_level_1", "sublocality_level_2", "sublocality", "neighborhood"),
       street: findComp("route"),
+      region: findComp("administrative_area_level_1"),
       national_address: addr,
       latitude: typeof loc?.latitude === "number" ? String(loc.latitude) : null,
       longitude: typeof loc?.longitude === "number" ? String(loc.longitude) : null,
       working_hours: oh?.weekdayDescriptions ? JSON.stringify(oh.weekdayDescriptions) : null,
       logo_url: (p.iconMaskBaseUri as string) ?? null,
     };
+    return {
+      fields,
+      raw: {
+        placeId: (p.id as string) ?? placeId,
+        addressComponents: comp as Array<Record<string, unknown>>,
+        placeRaw: p,
+      },
+    };
   } catch {
-    return {};
+    return { fields: {}, raw: { placeId, addressComponents: [], placeRaw: null } };
   }
+}
+
+// Reverse-geocode fallback when Places Details did not provide district / street.
+// Calls the legacy Geocoding API (latlng) — it generally returns richer
+// neighborhood / route components for Saudi addresses than Places Details.
+async function geocodeFallback(
+  lat: string | null,
+  lng: string | null,
+  googleKey: string,
+  lovableKey: string,
+): Promise<{
+  fields: { city: string | null; district: string | null; street: string | null; region: string | null };
+  raw: Array<Record<string, unknown>>;
+}> {
+  if (!lat || !lng) return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
+  try {
+    const res = await fetch(
+      `https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json?latlng=${encodeURIComponent(lat)},${encodeURIComponent(lng)}&language=ar&region=sa`,
+      {
+        headers: {
+          "Authorization": `Bearer ${lovableKey}`,
+          "X-Connection-Api-Key": googleKey,
+        },
+      },
+    );
+    if (!res.ok) {
+      await res.text().catch(() => "");
+      return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
+    }
+    const data = await res.json().catch(() => null) as { results?: Array<{ address_components?: Array<{ long_name?: string; short_name?: string; types?: string[] }> }> };
+    const results = Array.isArray(data?.results) ? data!.results! : [];
+    // Aggregate components across all returned results.
+    const all = results.flatMap((r) => Array.isArray(r.address_components) ? r.address_components! : []);
+    const find = (...types: string[]): string | null => {
+      for (const t of types) {
+        const c = all.find((c) => Array.isArray(c.types) && c.types!.includes(t));
+        if (c) return c.long_name ?? c.short_name ?? null;
+      }
+      return null;
+    };
+    return {
+      fields: {
+        city: find("locality", "postal_town", "administrative_area_level_2"),
+        district: find("sublocality_level_1", "sublocality_level_2", "sublocality", "neighborhood"),
+        street: find("route"),
+        region: find("administrative_area_level_1"),
+      },
+      raw: all as Array<Record<string, unknown>>,
+    };
+  } catch {
+    return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
+  }
+}
+
+// Normalize Arabic / English text for fuzzy matching.
+function norm(s: string | null | undefined): string {
+  if (!s) return "";
+  return s
+    .toString()
+    .toLowerCase()
+    .replace(/[إأآا]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/[\u064B-\u0652]/g, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenMatch(a: string, b: string): boolean {
+  const na = norm(a);
+  const nb = norm(b);
+  if (!na || !nb) return false;
+  if (na === nb) return true;
+  return na.includes(nb) || nb.includes(na);
+}
+
+// Match a city name against the active `cities` table, return canonical row.
+async function matchCity(
+  svc: ReturnType<typeof createClient> | null,
+  city: string | null,
+): Promise<{ id: string; name_ar: string; name_en: string } | null> {
+  if (!svc || !city) return null;
+  const { data } = await svc
+    .from("cities")
+    .select("id, name_ar, name_en")
+    .eq("is_active", true);
+  if (!Array.isArray(data)) return null;
+  for (const row of data as Array<{ id: string; name_ar: string; name_en: string }>) {
+    if (tokenMatch(row.name_ar ?? "", city) || tokenMatch(row.name_en ?? "", city)) {
+      return row;
+    }
+  }
+  return null;
+}
+
+// Match district by city + district text against `districts` table.
+async function matchDistrict(
+  svc: ReturnType<typeof createClient> | null,
+  cityName: string | null,
+  districtName: string | null,
+): Promise<{ id: string; district_ar: string; district_en: string | null; region_ar: string | null; region_en: string | null; city_ar: string | null; city_en: string | null } | null> {
+  if (!svc || !districtName) return null;
+  let q = svc.from("districts").select("id, district_ar, district_en, region_ar, region_en, city_ar, city_en, city").eq("is_active", true).limit(500);
+  if (cityName) {
+    // try filter to candidates of the matched city (best-effort, ILIKE either ar or en)
+    q = q.or(`city_ar.ilike.%${cityName}%,city_en.ilike.%${cityName}%`);
+  }
+  const { data } = await q;
+  if (!Array.isArray(data)) return null;
+  for (const row of data as Array<{ id: string; district_ar: string; district_en: string | null; region_ar: string | null; region_en: string | null; city_ar: string | null; city_en: string | null }>) {
+    if (tokenMatch(row.district_ar ?? "", districtName) || tokenMatch(row.district_en ?? "", districtName)) {
+      return row;
+    }
+  }
+  return null;
 }
 
 function pickField(
@@ -335,15 +463,62 @@ Deno.serve(async (req) => {
       }
     }
     let mapsData: Record<string, string | null> = {};
+    let mapsRaw: { placeId: string | null; addressComponents: Array<Record<string, unknown>>; placeRaw: Record<string, unknown> | null } = { placeId: null, addressComponents: [], placeRaw: null };
+    let geocodingRaw: Array<Record<string, unknown>> = [];
+    let geocodingUsed = false;
     if ((placeId || mapsUrl) && googleKey && lovableKey) {
       const mKey = `maps:${placeId ? `id:${placeId}` : mapsUrl}`;
       const cached = await readCache(mKey);
-      if (cached) mapsData = cached;
-      else {
-        mapsData = await fetchGoogleMaps(mapsUrl, placeId, googleKey, lovableKey);
-        if (Object.keys(mapsData).length) await writeCache(mKey, mapsData);
+      if (cached) {
+        mapsData = (cached as Record<string, unknown>).fields as Record<string, string | null> ?? cached;
+        mapsRaw = ((cached as Record<string, unknown>).raw as typeof mapsRaw) ?? mapsRaw;
+        geocodingRaw = ((cached as Record<string, unknown>).geocodingRaw as Array<Record<string, unknown>>) ?? [];
+      } else {
+        const r = await fetchGoogleMaps(mapsUrl, placeId, googleKey, lovableKey);
+        mapsData = r.fields;
+        mapsRaw = r.raw;
+        // Geocoding fallback when key address fields are missing.
+        const needsGeocode = (!mapsData.district || !mapsData.street || !mapsData.city) && mapsData.latitude && mapsData.longitude;
+        if (needsGeocode) {
+          const g = await geocodeFallback(mapsData.latitude, mapsData.longitude, googleKey, lovableKey);
+          geocodingUsed = true;
+          geocodingRaw = g.raw;
+          if (!mapsData.city) mapsData.city = g.fields.city;
+          if (!mapsData.district) mapsData.district = g.fields.district;
+          if (!mapsData.street) mapsData.street = g.fields.street;
+          if (!mapsData.region) mapsData.region = g.fields.region;
+        }
+        if (Object.keys(mapsData).length) {
+          await writeCache(mKey, { fields: mapsData, raw: mapsRaw, geocodingRaw } as unknown as Record<string, string | null>);
+        }
       }
     }
+
+    // DB matching: snap city / district / region to canonical reference rows.
+    const cityMatch = await matchCity(svc, mapsData.city ?? null);
+    const districtMatch = await matchDistrict(
+      svc,
+      cityMatch?.name_ar ?? cityMatch?.name_en ?? mapsData.city ?? null,
+      mapsData.district ?? null,
+    );
+    const dbMatches = {
+      city: cityMatch
+        ? { id: cityMatch.id, name_ar: cityMatch.name_ar, name_en: cityMatch.name_en }
+        : null,
+      district: districtMatch
+        ? {
+            id: districtMatch.id,
+            name_ar: districtMatch.district_ar,
+            name_en: districtMatch.district_en,
+          }
+        : null,
+      region: districtMatch
+        ? { name_ar: districtMatch.region_ar, name_en: districtMatch.region_en }
+        : (mapsData.region ? { name_ar: mapsData.region, name_en: mapsData.region } : null),
+    };
+    // Override merged values with canonical names so admin works on DB-snapped data.
+    if (cityMatch) mapsData.city = cityMatch.name_ar || cityMatch.name_en;
+    if (districtMatch) mapsData.district = districtMatch.district_ar || districtMatch.district_en;
 
     const merged = emptyDraft();
     merged.name_ar = pickField(null, mapsData.name ?? null);
@@ -406,6 +581,13 @@ Deno.serve(async (req) => {
       conflicts,
       deferred: missing.length > 0,
       missing,
+      diagnostics: {
+        place_id: mapsRaw.placeId,
+        addressComponents: mapsRaw.addressComponents,
+        geocoding_used: geocodingUsed,
+        geocoding_components: geocodingRaw,
+      },
+      db_matches: dbMatches,
     });
   } catch {
     return json({ error: "internal_error" }, 200);

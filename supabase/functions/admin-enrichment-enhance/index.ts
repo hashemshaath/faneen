@@ -59,16 +59,44 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({})) as EnhanceInput;
 
+    // Fetch top-level categories so the AI can classify the business
+    // into the existing taxonomy (prevents free-text duplicates).
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    let categoryOptions: Array<{ slug: string; name_ar: string; name_en: string }> = [];
+    if (serviceKey) {
+      const svc = createClient(supabaseUrl, serviceKey);
+      const { data } = await svc
+        .from("categories")
+        .select("slug, name_ar, name_en, parent_id")
+        .eq("is_active", true)
+        .is("parent_id", null);
+      if (Array.isArray(data)) {
+        categoryOptions = (data as Array<{ slug: string; name_ar: string; name_en: string }>).map((r) => ({
+          slug: r.slug, name_ar: r.name_ar, name_en: r.name_en,
+        }));
+      }
+    }
+
     const sys =
-      "You are a bilingual editor for Qitaat (قِطاعات), an industrial directory in Saudi Arabia (Aluminum, Glass, Wood, Steel, UPVC). " +
-      "Return ONLY a strict JSON object with these keys: name_ar, name_en, description_ar, description_en, district, street. " +
-      "Use clear, professional, factual tone. Do not invent facts. If a field cannot be derived, return an empty string for it. " +
-      "Arabic must be Modern Standard, no emojis, no markdown.";
+      "You are a bilingual editor + classifier for Qitaat (قِطاعات), a Saudi industrial directory. " +
+      "Workflow: (1) Treat Arabic as the primary language — finalize Arabic first using the source inputs (do not invent facts). " +
+      "(2) Translate the finalized Arabic into clean English. " +
+      "(3) Classify the business into ONE category_slug from the provided category_options list (match by activity / name / description). " +
+      "(4) Produce a short services list (3 to 7 items) that this kind of business typically offers, in both Arabic and English. " +
+      "Return ONLY a strict JSON object with these keys: " +
+      "name_ar, name_en, description_ar, description_en, district, street, category_slug, services_ar, services_en. " +
+      "services_ar and services_en must be comma-separated strings. " +
+      "Use clear, professional, factual tone. Arabic must be Modern Standard, no emojis, no markdown. " +
+      "Trim names to <= 80 chars and descriptions to <= 280 chars. Normalize Saudi district / street wording. " +
+      "If a value cannot be derived, return an empty string for it. " +
+      "category_slug MUST be one of the slugs from category_options or an empty string if no good match.";
 
     const userMsg = JSON.stringify({
       input: body,
+      category_options: categoryOptions,
       instructions:
-        "Translate or improve. Make ar/en parallel. Trim names to <= 80 chars, descriptions to <= 280 chars. Normalize Saudi district/street wording.",
+        "Finalize Arabic first, then translate to English. Pick category_slug strictly from category_options. Generate practical services list per the category.",
     });
 
     const res = await fetch(

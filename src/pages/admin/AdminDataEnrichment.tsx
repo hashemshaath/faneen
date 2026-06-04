@@ -14,7 +14,7 @@
  */
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap, RefreshCw, Trash2, SlidersHorizontal } from "lucide-react";
+import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap, RefreshCw, Trash2, SlidersHorizontal, Bug, Database, Wrench } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,21 @@ import {
 } from "@/modules/adminEnrichment";
 
 type Step = "search" | "sources" | "review" | "apply";
+
+// Top-level industrial categories — mirrors the active `categories` rows
+// (parent_id IS NULL). Keeps the picker offline-friendly and avoids a
+// supabase client import in this page (guarded by tests).
+const CATEGORY_OPTIONS: Array<{ slug: string; name_ar: string; name_en: string }> = [
+  { slug: "aluminum",                name_ar: "الألمنيوم",                name_en: "Aluminum" },
+  { slug: "iron-steel",              name_ar: "الحديد والاستيل",          name_en: "Iron & Steel" },
+  { slug: "glass",                   name_ar: "الزجاج",                   name_en: "Glass" },
+  { slug: "wood-cabinets",           name_ar: "الخشب والخزائن",           name_en: "Wood & Cabinets" },
+  { slug: "accessories",             name_ar: "الاكسسوارات",              name_en: "Accessories" },
+  { slug: "designers",               name_ar: "المصممين",                 name_en: "Designers" },
+  { slug: "energy-sustainability",   name_ar: "الطاقة والاستدامة",        name_en: "Energy & Sustainability" },
+  { slug: "gypsum-decorations",      name_ar: "الديكورات الجبسية",        name_en: "Gypsum Decorations" },
+  { slug: "facades-cladding",        name_ar: "الواجهات وتلبيس الواجهات", name_en: "Facades & Cladding" },
+];
 
 const FIELD_LABELS: Record<EnrichmentFieldKey, { ar: string; en: string }> = {
   name_ar: { ar: "الاسم (عربي)", en: "Name (Arabic)" },
@@ -118,6 +133,12 @@ export default function AdminDataEnrichment() {
   const [missing, setMissing] = useState<string[]>([]);
   const [aiEnhanced, setAiEnhanced] = useState<Partial<Record<EnrichmentFieldKey, string>>>({});
   const [approved, setApproved] = useState<Partial<Record<EnrichmentFieldKey, string>>>({});
+  const [diagnostics, setDiagnostics] = useState<NonNullable<EnrichmentFetchResult["diagnostics"]> | null>(null);
+  const [dbMatches, setDbMatches] = useState<NonNullable<EnrichmentFetchResult["db_matches"]> | null>(null);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [categorySlug, setCategorySlug] = useState<string>("");
+  const [servicesAr, setServicesAr] = useState<string>("");
+  const [servicesEn, setServicesEn] = useState<string>("");
   const [mode, setMode] = useState<"lead" | "business">("lead");
   const [businessId, setBusinessId] = useState("");
   const [applyResult, setApplyResult] = useState<{ entity?: string; id?: string } | null>(null);
@@ -140,6 +161,8 @@ export default function AdminDataEnrichment() {
       setDraft(res.merged);
       setConflicts(res.conflicts ?? {});
       setMissing(res.missing ?? []);
+      setDiagnostics(res.diagnostics ?? null);
+      setDbMatches(res.db_matches ?? null);
       const initial: Partial<Record<EnrichmentFieldKey, string>> = {};
       for (const k of FIELD_KEYS) {
         const v = res.merged[k]?.value;
@@ -206,7 +229,12 @@ export default function AdminDataEnrichment() {
       });
     },
     onSuccess: (res) => {
-      setAiEnhanced(res.ai_enhanced ?? {});
+      const ai = res.ai_enhanced ?? {};
+      const { category_slug, services_ar, services_en, ...fieldOnly } = ai as Record<string, string>;
+      setAiEnhanced(fieldOnly as Partial<Record<EnrichmentFieldKey, string>>);
+      if (category_slug) setCategorySlug(category_slug);
+      if (services_ar) setServicesAr(services_ar);
+      if (services_en) setServicesEn(services_en);
     },
   });
 
@@ -745,6 +773,177 @@ export default function AdminDataEnrichment() {
                   </div>
                 </div>
               </div>
+            </Card>
+          )}
+
+          {/* Missing address fields alert + targeted re-fetch */}
+          {(() => {
+            const missingDistrict = !approved.district?.trim();
+            const missingStreet = !approved.street?.trim();
+            if (!missingDistrict && !missingStreet) return null;
+            const labels: string[] = [];
+            if (missingDistrict) labels.push(bi("الحي", "District"));
+            if (missingStreet) labels.push(bi("الشارع", "Street"));
+            return (
+              <Card className="border-rose-200 bg-rose-50/60 p-3 text-sm text-rose-800">
+                <div className="flex flex-wrap items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span>
+                    <Bi
+                      ar={`حقول أساسية فارغة: ${labels.join("، ")}. جرّب إعادة الجلب من Google لإكمالها.`}
+                      en={`Missing key fields: ${labels.join(", ")}. Try re-fetching from Google to fill them.`}
+                    />
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="ms-auto h-8"
+                    onClick={() => fetchMut.mutate({ bypass: true })}
+                    disabled={fetchMut.isPending}
+                  >
+                    {fetchMut.isPending ? <Loader2 className="me-1.5 h-3 w-3 animate-spin" /> : <RefreshCw className="me-1.5 h-3 w-3" />}
+                    <Bi ar="إعادة جلب العنوان" en="Re-fetch address" />
+                  </Button>
+                </div>
+              </Card>
+            );
+          })()}
+
+          {/* DB matches: snap city / district / region to canonical reference rows */}
+          {dbMatches && (dbMatches.city || dbMatches.district || dbMatches.region) && (
+            <Card className="border-emerald-200 bg-emerald-50/40 p-3 text-sm">
+              <div className="mb-2 flex items-center gap-2 text-emerald-800">
+                <Database className="h-4 w-4" />
+                <span className="font-medium">
+                  <Bi ar="مطابقة مع قاعدة البيانات" en="Matched with database" />
+                </span>
+                <Badge variant="outline" className="ms-auto h-5 border-emerald-300 bg-white text-[10px] text-emerald-700">
+                  <Bi ar="لتجنّب التكرار" en="prevents duplicates" />
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
+                {dbMatches.region && (
+                  <div className="rounded-md border border-emerald-200 bg-white p-2">
+                    <div className="text-[10px] text-muted-foreground"><Bi ar="المنطقة" en="Region" /></div>
+                    <div className="font-medium" dir="auto">{bi(dbMatches.region.name_ar ?? "—", dbMatches.region.name_en ?? "—")}</div>
+                  </div>
+                )}
+                {dbMatches.city && (
+                  <div className="rounded-md border border-emerald-200 bg-white p-2">
+                    <div className="text-[10px] text-muted-foreground"><Bi ar="المدينة" en="City" /></div>
+                    <div className="font-medium" dir="auto">{bi(dbMatches.city.name_ar, dbMatches.city.name_en)}</div>
+                    <button
+                      type="button"
+                      className="mt-0.5 text-[10px] text-primary hover:underline"
+                      onClick={() => setApproved((p) => ({ ...p, city: bi(dbMatches.city!.name_ar, dbMatches.city!.name_en) }))}
+                    >
+                      <Bi ar="اعتماد القيمة الرسمية" en="Use canonical value" />
+                    </button>
+                  </div>
+                )}
+                {dbMatches.district && (
+                  <div className="rounded-md border border-emerald-200 bg-white p-2">
+                    <div className="text-[10px] text-muted-foreground"><Bi ar="الحي" en="District" /></div>
+                    <div className="font-medium" dir="auto">{bi(dbMatches.district.name_ar, dbMatches.district.name_en ?? dbMatches.district.name_ar)}</div>
+                    <button
+                      type="button"
+                      className="mt-0.5 text-[10px] text-primary hover:underline"
+                      onClick={() => setApproved((p) => ({ ...p, district: bi(dbMatches.district!.name_ar, dbMatches.district!.name_en ?? dbMatches.district!.name_ar) }))}
+                    >
+                      <Bi ar="اعتماد القيمة الرسمية" en="Use canonical value" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {/* Category + Services (AI enhanced) */}
+          <Card className="p-3">
+            <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+              <Wrench className="h-4 w-4 text-primary" />
+              <Bi ar="التصنيف والخدمات" en="Category & services" />
+              {categorySlug && (
+                <Badge variant="outline" className="h-5 border-primary/30 text-[10px] text-primary">
+                  <Sparkles className="me-1 h-3 w-3" />AI
+                </Badge>
+              )}
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground"><Bi ar="التصنيف الرئيسي" en="Primary category" /></Label>
+                <Select value={categorySlug || "none"} onValueChange={(v) => setCategorySlug(v === "none" ? "" : v)}>
+                  <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={bi("اختر تصنيفًا", "Pick a category")} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none"><Bi ar="— غير محدد —" en="— none —" /></SelectItem>
+                    {CATEGORY_OPTIONS.map((c) => (
+                      <SelectItem key={c.slug} value={c.slug}>{bi(c.name_ar, c.name_en)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground"><Bi ar="الخدمات (عربي)" en="Services (Arabic)" /></Label>
+                <Textarea dir="rtl" value={servicesAr} onChange={(e) => setServicesAr(e.target.value)} className="min-h-[60px] text-[12px]" placeholder={bi("افصل بفواصل…", "Comma-separated…")} />
+              </div>
+              <div className="space-y-1 sm:col-span-2">
+                <Label className="text-[11px] text-muted-foreground"><Bi ar="الخدمات (إنجليزي)" en="Services (English)" /></Label>
+                <Textarea dir="ltr" value={servicesEn} onChange={(e) => setServicesEn(e.target.value)} className="min-h-[60px] text-[12px] tech-content" placeholder="Comma-separated…" />
+              </div>
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              <Bi
+                ar="يُكتشف التصنيف وقائمة الخدمات تلقائيًا عند الضغط على «تحسين بالذكاء». التصنيف يأتي من قائمة قاعدة البيانات لتجنّب التكرار."
+                en="Category and services list are auto-detected when you click 'AI enhance'. Category is restricted to the existing database list to avoid duplicates."
+              />
+            </p>
+          </Card>
+
+          {/* Admin diagnostic mode */}
+          {diagnostics && (
+            <Card className="p-3">
+              <button
+                type="button"
+                onClick={() => setShowDiagnostics((s) => !s)}
+                className="flex w-full items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                <Bug className="h-3.5 w-3.5" />
+                <Bi ar="وضع التشخيص للمشرف" en="Admin diagnostic mode" />
+                <span className="ms-auto text-[10px]">
+                  {showDiagnostics ? bi("إخفاء", "Hide") : bi("عرض", "Show")}
+                </span>
+              </button>
+              {showDiagnostics && (
+                <div className="mt-3 space-y-3 text-[11px]">
+                  <div>
+                    <div className="mb-1 text-muted-foreground"><Bi ar="معرّف Place المستخدم" en="Place ID used" /></div>
+                    <code className="tech-content block rounded border bg-muted/30 px-2 py-1">{diagnostics.place_id ?? "—"}</code>
+                  </div>
+                  <div>
+                    <div className="mb-1 flex items-center gap-2 text-muted-foreground">
+                      <Bi ar="مكوّنات العنوان من Places" en="Places addressComponents" />
+                      <Badge variant="outline" className="h-4 text-[10px]">{diagnostics.addressComponents.length}</Badge>
+                    </div>
+                    <pre dir="ltr" className="max-h-48 overflow-auto rounded border bg-muted/30 p-2 text-[10px]">
+                      {JSON.stringify(diagnostics.addressComponents, null, 2)}
+                    </pre>
+                  </div>
+                  <div>
+                    <div className="mb-1 flex items-center gap-2 text-muted-foreground">
+                      <Bi ar="Geocoding fallback" en="Geocoding fallback" />
+                      <Badge variant={diagnostics.geocoding_used ? "default" : "outline"} className="h-4 text-[10px]">
+                        {diagnostics.geocoding_used ? bi("استُخدم", "Used") : bi("غير مستخدم", "Not used")}
+                      </Badge>
+                    </div>
+                    {diagnostics.geocoding_used && (
+                      <pre dir="ltr" className="max-h-48 overflow-auto rounded border bg-muted/30 p-2 text-[10px]">
+                        {JSON.stringify(diagnostics.geocoding_components, null, 2)}
+                      </pre>
+                    )}
+                  </div>
+                </div>
+              )}
             </Card>
           )}
 
