@@ -111,6 +111,77 @@ function emptyDraft(): MergedDraft {
   };
 }
 
+function isArabic(s: string | null | undefined): boolean {
+  if (!s) return false;
+  return /[\u0600-\u06FF]/.test(s);
+}
+
+function parseSAPhones(text: string): {
+  mobile: string[];
+  landline: string[];
+  unified: string[];
+  customer_service: string[];
+} {
+  const out = { mobile: [] as string[], landline: [] as string[], unified: [] as string[], customer_service: [] as string[] };
+  if (!text) return out;
+  // Match runs of digits/spaces/dashes with optional +966/00966/0 prefix.
+  const re = /(?:\+?966|00966)?[\s\-]*0?\d[\d\s\-]{6,14}\d/g;
+  const seen = new Set<string>();
+  const matches = text.match(re) ?? [];
+  for (const raw of matches) {
+    let d = raw.replace(/[^\d+]/g, "");
+    if (d.startsWith("00966")) d = "+966" + d.slice(5);
+    else if (d.startsWith("966") && !d.startsWith("+")) d = "+966" + d.slice(3);
+    // Normalize to local-form (0XXXXXXXXX) for classification.
+    let local = d;
+    if (local.startsWith("+966")) local = "0" + local.slice(4);
+    if (seen.has(local)) continue;
+    seen.add(local);
+    if (/^9200\d{4,6}$/.test(local)) out.unified.push(local);
+    else if (/^920\d{6}$/.test(local) || /^800\d{6,7}$/.test(local)) out.unified.push(local);
+    else if (/^05\d{8}$/.test(local)) out.mobile.push(local);
+    else if (/^01\d{7,8}$/.test(local) || /^0[2-4]\d{7}$/.test(local)) out.landline.push(local);
+  }
+  // Heuristic: phones appearing near "customer", "خدمة العملاء", "support" tags.
+  const csCtx = text.match(/(?:customer|خدمة\s*العملاء|عملاء|support)[^\n]{0,80}/gi) ?? [];
+  for (const ctx of csCtx) {
+    const p = parseSAPhones(ctx);
+    out.customer_service.push(...p.mobile, ...p.landline, ...p.unified);
+  }
+  return out;
+}
+
+function parseEmails(text: string): string[] {
+  if (!text) return [];
+  const re = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+  const list = (text.match(re) ?? []).map((s) => s.toLowerCase());
+  return Array.from(new Set(list)).slice(0, 5);
+}
+
+function classifySocials(urls: string[]): {
+  facebook: string | null; instagram: string | null; twitter: string | null;
+  linkedin: string | null; youtube: string | null; tiktok: string | null;
+  snapchat: string | null; whatsapp: string | null;
+} {
+  const r = {
+    facebook: null as string | null, instagram: null as string | null, twitter: null as string | null,
+    linkedin: null as string | null, youtube: null as string | null, tiktok: null as string | null,
+    snapchat: null as string | null, whatsapp: null as string | null,
+  };
+  for (const l of urls) {
+    if (!l || typeof l !== "string") continue;
+    if (!r.facebook && /facebook\.com/i.test(l)) r.facebook = l;
+    else if (!r.instagram && /instagram\.com/i.test(l)) r.instagram = l;
+    else if (!r.twitter && /(?:^|\/\/)(?:www\.)?(?:twitter|x)\.com/i.test(l)) r.twitter = l;
+    else if (!r.linkedin && /linkedin\.com/i.test(l)) r.linkedin = l;
+    else if (!r.youtube && /(youtube\.com|youtu\.be)/i.test(l)) r.youtube = l;
+    else if (!r.tiktok && /tiktok\.com/i.test(l)) r.tiktok = l;
+    else if (!r.snapchat && /snapchat\.com/i.test(l)) r.snapchat = l;
+    else if (!r.whatsapp && /(wa\.me|whatsapp\.com|api\.whatsapp)/i.test(l)) r.whatsapp = l;
+  }
+  return r;
+}
+
 async function fetchWebsite(
   url: string,
   firecrawlKey: string,
@@ -139,18 +210,33 @@ async function fetchWebsite(
     const links: string[] =
       (data && (data.links || data?.data?.links)) ?? [];
 
-    const phoneMatch = md.match(/(\+?\d[\d\s\-()]{7,}\d)/);
-    const social = links.filter((l) =>
-      /(facebook|instagram|twitter|x\.com|linkedin|youtube|tiktok|snapchat|wa\.me|whatsapp)\./i
-        .test(l),
-    );
+    const phones = parseSAPhones(md);
+    const emails = parseEmails(md);
+    const socials = classifySocials(links);
+    const rawTitle = typeof meta.title === "string" ? meta.title.trim() : null;
+    const rawDesc = typeof meta.description === "string" ? meta.description.trim() : null;
 
     return {
-      name: typeof meta.title === "string" ? meta.title : null,
-      description: typeof meta.description === "string" ? meta.description : null,
-      phone: phoneMatch ? phoneMatch[1] : null,
+      name_ar: isArabic(rawTitle) ? rawTitle : null,
+      name_en: rawTitle && !isArabic(rawTitle) ? rawTitle : null,
+      description_ar: isArabic(rawDesc) ? rawDesc : null,
+      description_en: rawDesc && !isArabic(rawDesc) ? rawDesc : null,
+      phone: phones.mobile[0] ?? phones.landline[0] ?? phones.unified[0] ?? null,
+      phone_mobile: phones.mobile[0] ?? null,
+      phone_landline: phones.landline[0] ?? null,
+      unified_number: phones.unified[0] ?? null,
+      customer_service: phones.customer_service[0] ?? null,
+      whatsapp: socials.whatsapp,
+      email: emails[0] ?? null,
       website: url,
-      social_links: social.length ? JSON.stringify(social.slice(0, 10)) : null,
+      facebook: socials.facebook,
+      instagram: socials.instagram,
+      twitter: socials.twitter,
+      linkedin: socials.linkedin,
+      youtube: socials.youtube,
+      tiktok: socials.tiktok,
+      snapchat: socials.snapchat,
+      social_links: JSON.stringify(socials),
     };
   } catch {
     return {};
