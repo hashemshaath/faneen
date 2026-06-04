@@ -147,7 +147,34 @@ export default function AdminDataEnrichment() {
   const [mode, setMode] = useState<"lead" | "business">("lead");
   const [businessId, setBusinessId] = useState("");
   const [applyResult, setApplyResult] = useState<{ entity?: string; id?: string } | null>(null);
+  const [draftStatus, setDraftStatus] = useState<"unsaved" | "saved" | "applied">("unsaved");
+  const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const qc = useQueryClient();
+
+  const buildExtra = (): EnrichmentExtra => ({
+    category_slug: categorySlug || null,
+    services_ar: servicesAr || null,
+    services_en: servicesEn || null,
+    ai_enhanced: Object.keys(aiEnhanced).length ? (aiEnhanced as Record<string, string>) : null,
+    selected_place: selectedPlace as unknown as Record<string, unknown> | null,
+    db_matches: dbMatches as unknown as Record<string, unknown> | null,
+    diagnostics: diagnostics as unknown as Record<string, unknown> | null,
+  });
+
+  const synthDraftFromApproved = (
+    appr: Record<string, string>,
+  ): EnrichmentDraft => {
+    const out = {} as EnrichmentDraft;
+    for (const k of FIELD_KEYS) {
+      out[k] = {
+        value: appr[k] ?? null,
+        source: "manual",
+        confidence: appr[k] ? "high" : "low",
+      } as EnrichmentDraft[typeof k];
+    }
+    return out;
+  };
 
   const fetchMut = useMutation({
     mutationFn: (opts: { bypass?: boolean } = {}) => fetchEnrichment({
@@ -177,6 +204,74 @@ export default function AdminDataEnrichment() {
       setStep("review");
     },
     onError: () => setErrorMsg(bi("حدث خطأ. حاول مجددًا.", "Something went wrong. Try again.")),
+  });
+
+  // ─── Drafts list (saved & applied) ───────────────────────────────
+  const draftsQuery = useQuery({
+    queryKey: ["admin-enrichment-drafts"],
+    queryFn: () => listEnrichmentDrafts(),
+    refetchOnWindowFocus: false,
+  });
+
+  const loadDraftMut = useMutation({
+    mutationFn: (id: string) => loadEnrichmentDraft(id),
+    onSuccess: (res) => {
+      const sess = res.session;
+      if (!sess || !sess.merged) {
+        setErrorMsg(bi("تعذر تحميل المسودة.", "Could not load draft."));
+        return;
+      }
+      const merged = sess.merged;
+      const appr = (merged.approved ?? {}) as Record<string, string>;
+      setSessionId(sess.id);
+      setDraft(synthDraftFromApproved(appr));
+      setApproved(appr);
+      setCategorySlug(merged.category_slug ?? "");
+      setServicesAr(merged.services_ar ?? "");
+      setServicesEn(merged.services_en ?? "");
+      setAiEnhanced((merged.ai_enhanced ?? {}) as Partial<Record<EnrichmentFieldKey, string>>);
+      setSelectedPlace((merged.selected_place as PlaceCandidate | null) ?? null);
+      setDbMatches((merged.db_matches as NonNullable<EnrichmentFetchResult["db_matches"]> | null) ?? null);
+      setDiagnostics((merged.diagnostics as NonNullable<EnrichmentFetchResult["diagnostics"]> | null) ?? null);
+      setConflicts({});
+      setMissing([]);
+      setApplyResult(sess.applied_entity_id ? { entity: sess.applied_entity_type ?? undefined, id: sess.applied_entity_id } : null);
+      setDraftStatus(sess.status === "applied" ? "applied" : "saved");
+      setStep("review");
+      setErrorMsg(null);
+    },
+    onError: () => setErrorMsg(bi("تعذر تحميل المسودة.", "Could not load draft.")),
+  });
+
+  const deleteDraftMut = useMutation({
+    mutationFn: (id: string) => deleteEnrichmentDraft(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-enrichment-drafts"] }),
+  });
+
+  const saveDraftMut = useMutation({
+    mutationFn: () => {
+      if (!sessionId) return Promise.resolve({ error: "no_session" });
+      const cleanApproved: Record<string, string> = {};
+      for (const [k, v] of Object.entries(approved)) {
+        if (v && v.trim()) cleanApproved[k] = v.trim();
+      }
+      return saveEnrichmentDraft({
+        session_id: sessionId,
+        approved: cleanApproved,
+        extra: buildExtra(),
+      });
+    },
+    onSuccess: (res) => {
+      if (res.error || !res.ok) {
+        setErrorMsg(bi("تعذر حفظ المسودة.", "Could not save draft."));
+        return;
+      }
+      setErrorMsg(null);
+      setDraftStatus("saved");
+      setSavedMsg(bi("تم الحفظ كمسودة قابلة للتعديل — لم يُنشأ حساب ولا رقم تعريفي.", "Saved as an editable draft — no account or Ref ID has been created."));
+      qc.invalidateQueries({ queryKey: ["admin-enrichment-drafts"] });
+      window.setTimeout(() => setSavedMsg(null), 5000);
+    },
   });
 
   const searchMut = useMutation({
@@ -251,10 +346,12 @@ export default function AdminDataEnrichment() {
         if (v && v.trim()) cleanApproved[k] = v.trim();
       }
       return applyEnrichment({
+        action: "approve",
         session_id: sessionId,
         mode,
         business_id: mode === "business" ? businessId.trim() : undefined,
         approved: cleanApproved,
+        extra: buildExtra(),
       });
     },
     onSuccess: (res) => {
@@ -264,6 +361,8 @@ export default function AdminDataEnrichment() {
       }
       setErrorMsg(null);
       setApplyResult({ entity: res.applied_entity_type ?? undefined, id: res.applied_entity_id ?? undefined });
+      setDraftStatus("applied");
+      qc.invalidateQueries({ queryKey: ["admin-enrichment-drafts"] });
     },
   });
 
