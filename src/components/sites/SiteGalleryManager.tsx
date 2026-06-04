@@ -14,6 +14,11 @@ import {
   type ResponsiveImageSet,
 } from '@/lib/imageCompression';
 import { CompressionStatus } from '@/components/common/CompressionStatus';
+import {
+  QITAAT_IMAGES_BUCKET,
+  LONG_CACHE_CONTROL,
+  cdnUrl,
+} from '@/lib/qitaatImagesStorage';
 
 export type GalleryPhase = 'before' | 'during' | 'after';
 export type GalleryCategory = 'aluminum' | 'glass' | 'wood' | 'steel' | 'general';
@@ -55,7 +60,6 @@ interface Props {
   milestones?: { id: string; title: string }[];
 }
 
-const BUCKET = 'client-site-images';
 const MAX = 40;
 const INPUT_MAX_BYTES = 15 * 1024 * 1024; // hard pre-compression cap (15MB)
 
@@ -99,6 +103,9 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
     setPercent(0);
     setCounter(null);
     try {
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth.user?.id;
+      if (!userId) throw new Error(isRTL ? 'يلزم تسجيل الدخول' : 'Sign-in required');
       const next: GalleryImage[] = [...images];
       const list = Array.from(files);
       for (let i = 0; i < list.length; i++) {
@@ -122,23 +129,27 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
           continue;
         }
 
-        // 2) Upload all 3 renditions and collect signed URLs.
+        // 2) Upload all 3 renditions to qitaat-images and collect stable
+        //    public CDN URLs (no signed-URL expiry).
         setStage('uploading');
         setPercent(100);
-        const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const imageId = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const uploaded: Partial<Record<RenditionKey, { url: string; path: string }>> = {};
         try {
           await Promise.all(RENDITION_KEYS.map(async (key) => {
             const f = renditions[key];
-            const path = `${siteId}/gallery/${stamp}-${key}.webp`;
-            const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, f, {
-              contentType: 'image/webp', cacheControl: '3600',
-            });
+            const path = `${userId}/sites/${siteId}/${imageId}-${key}.webp`;
+            const { error: upErr } = await supabase.storage
+              .from(QITAAT_IMAGES_BUCKET)
+              .upload(path, f, {
+                contentType: 'image/webp',
+                cacheControl: LONG_CACHE_CONTROL,
+                upsert: true,
+              });
             if (upErr) throw upErr;
-            const { data: signed, error: sErr } = await supabase.storage
-              .from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365);
-            if (sErr) throw sErr;
-            uploaded[key] = { url: signed.signedUrl, path };
+            uploaded[key] = { url: cdnUrl(path), path };
           }));
         } catch (err) {
           toast.error(`${file.name}: ${err instanceof Error ? err.message : String(err)}`);
@@ -188,7 +199,9 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
           img.sizes?.large?.path,
         ].filter((p): p is string => Boolean(p)),
       ));
-      if (uniq.length) await supabase.storage.from(BUCKET).remove(uniq);
+      if (uniq.length) {
+        await supabase.storage.from(QITAAT_IMAGES_BUCKET).remove(uniq);
+      }
       await persist(images.filter((i) => i.url !== img.url));
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : String(e));

@@ -10,6 +10,11 @@ import {
   type CompressionStage,
 } from '@/lib/imageCompression';
 import { CompressionStatus } from '@/components/common/CompressionStatus';
+import {
+  QITAAT_IMAGES_BUCKET,
+  LONG_CACHE_CONTROL,
+  cdnUrl,
+} from '@/lib/qitaatImagesStorage';
 
 interface Props {
   siteId: string;
@@ -17,9 +22,13 @@ interface Props {
   onUploaded: (url: string | null) => void;
 }
 
-const BUCKET = 'client-site-images';
-
-/** Site cover image uploader — 16:9, max 5MB. Stored at {siteId}/cover/cover-{ts}.ext */
+/**
+ * Site cover uploader.
+ *
+ * Stored in the public `qitaat-images` bucket at
+ * `{userId}/sites/{siteId}/cover-{ts}.webp`. The public CDN URL is
+ * stable (no signed-URL expiry) and served with long-lived caching.
+ */
 export const SiteCoverUploader: React.FC<Props> = ({ siteId, currentUrl, onUploaded }) => {
   const { isRTL } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,6 +41,10 @@ export const SiteCoverUploader: React.FC<Props> = ({ siteId, currentUrl, onUploa
     setStage('large');
     setPercent(0);
     try {
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth.user?.id;
+      if (!userId) throw new Error(isRTL ? 'يلزم تسجيل الدخول' : 'Sign-in required');
+
       // Browser-side compression — WebP, ≤1MB, max 1920px, runs in a worker.
       const compressed = await compressImageStrict(file, {
         maxWidthOrHeight: 1920,
@@ -42,20 +55,22 @@ export const SiteCoverUploader: React.FC<Props> = ({ siteId, currentUrl, onUploa
       });
       setStage('uploading');
       setPercent(100);
-      const path = `${siteId}/cover/cover-${Date.now()}.webp`;
-      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, compressed, {
-        cacheControl: '3600', upsert: true, contentType: 'image/webp',
-      });
+      const path = `${userId}/sites/${siteId}/cover-${Date.now()}.webp`;
+      const { error: upErr } = await supabase.storage
+        .from(QITAAT_IMAGES_BUCKET)
+        .upload(path, compressed, {
+          cacheControl: LONG_CACHE_CONTROL,
+          upsert: true,
+          contentType: 'image/webp',
+        });
       if (upErr) throw upErr;
-      const { data: signed, error: sErr } = await supabase.storage
-        .from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365);
-      if (sErr) throw sErr;
+      const publicUrl = cdnUrl(path);
       const { error: updErr } = await supabase
         .from('client_sites')
-        .update({ cover_image_url: signed.signedUrl })
+        .update({ cover_image_url: publicUrl })
         .eq('id', siteId);
       if (updErr) throw updErr;
-      onUploaded(signed.signedUrl);
+      onUploaded(publicUrl);
       toast.success(isRTL ? 'تم رفع الغلاف' : 'Cover uploaded');
     } catch (e: unknown) {
       const msg = e instanceof ImageCompressionError

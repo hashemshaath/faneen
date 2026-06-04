@@ -383,14 +383,17 @@ const Quote: React.FC = () => {
       // Upload files (best-effort: the request is already saved)
       if (fileObjects.length) {
         setUploadProgress({ done: 0, total: fileObjects.length });
+        const failedFiles: string[] = [];
         for (let i = 0; i < fileObjects.length; i++) {
           const f = fileObjects[i];
           const path = `${quoteId}/${Date.now()}-${i}-${safeFileName(f.name)}`;
           let uploaded = true;
+          let lastError: unknown = null;
           try {
             await uploadQuoteRequestFile({ path, file: f });
           } catch (upErr) {
             uploaded = false;
+            lastError = upErr;
             console.warn('quote file upload failed', upErr);
           }
           if (uploaded) {
@@ -403,11 +406,26 @@ const Quote: React.FC = () => {
                 file_size: f.size,
                 file_type: f.type || null,
               });
-            } catch {
-              // preserve previous fire-and-forget semantics — insert errors were not checked
+            } catch (recErr) {
+              // record insert failed even though upload succeeded — surface it
+              failedFiles.push(f.name);
+              console.warn('quote file record failed', recErr);
             }
+          } else {
+            failedFiles.push(f.name);
           }
           setUploadProgress({ done: i + 1, total: fileObjects.length });
+          void lastError; // already logged above
+        }
+        if (failedFiles.length) {
+          // Non-blocking: the quote request itself was saved successfully.
+          // Inform the user inline so they can re-attach via follow-up.
+          setSubmitError(
+            bi(
+              `تم استلام طلبك، لكن تعذّر رفع المرفقات التالية: ${failedFiles.join('، ')}. يمكنك التواصل معنا لإعادة إرسالها.`,
+              `Your request was received, but these attachments failed to upload: ${failedFiles.join(', ')}. Please contact us to resend.`,
+            ),
+          );
         }
       }
 
