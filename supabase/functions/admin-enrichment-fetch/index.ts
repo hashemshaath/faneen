@@ -27,9 +27,11 @@ type DbSelectQuery = PromiseLike<{ data: unknown }> & {
   eq: (column: string, value: unknown) => DbSelectQuery;
   limit: (count: number) => DbSelectQuery;
   or: (filters: string) => DbSelectQuery;
+  maybeSingle: () => PromiseLike<{ data: unknown }>;
 };
 type DbFromQuery = {
   select: (columns: string) => DbSelectQuery;
+  upsert: (payload: unknown) => PromiseLike<{ data: unknown; error: unknown }>;
 };
 type DbLike = { from: (table: string) => DbFromQuery };
 
