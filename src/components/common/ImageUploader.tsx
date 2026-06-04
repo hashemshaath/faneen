@@ -13,12 +13,11 @@ import { Upload, Trash2, ImagePlus, AlertCircle, Loader2, CheckCircle2 } from 'l
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-// Types for `public.images` are regenerated after the migration runs; we
-// keep a typed helper here so call-sites stay clean even if the generated
-// Database type is momentarily stale.
-const imagesTable = () => (supabase as unknown as {
-  from: (t: 'images') => ReturnType<typeof supabase.from>;
-}).from('images');
+// `public.images` types are regenerated after the migration runs. Use a
+// narrowly-scoped escape hatch so this component compiles in the
+// in-between window without leaking `any` elsewhere.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const imagesTable = () => (supabase as any).from('images');
 import {
   generateImageSizes,
   validateImage,
@@ -112,7 +111,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           onProgress: (p) => updateItem(item.key, { percent: p }),
         });
 
-        const { data: row, error } = await (imagesTable() as any)
+        const { data: row, error } = await imagesTable()
           .insert({
             owner_id: userId,
             provider_id: providerId,
@@ -215,7 +214,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     const userId = auth.user?.id;
     if (!userId) return;
     // Delete DB row first (RLS scoped to owner), then storage.
-    const { error } = await (imagesTable() as any).delete().eq('id', img.id);
+    const { error } = await imagesTable().delete().eq('id', img.id);
     if (error) {
       setTopError(error.message);
       return;
