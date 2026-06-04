@@ -43,6 +43,7 @@ import {
   ClipboardList,
   ChevronDown,
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 
 interface MenuItem {
