@@ -1212,7 +1212,7 @@ export default function AdminDataEnrichment() {
                           )}
                         </td>
                         <td className="py-2">
-                          {key === "description_ar" || key === "description_en" ? (
+                          {key === "description_ar" || key === "description_en" || key === "working_hours" ? (
                             <Textarea
                               dir="auto"
                               value={approved[key] ?? ""}
