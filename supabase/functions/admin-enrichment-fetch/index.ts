@@ -707,7 +707,7 @@ Deno.serve(async (req) => {
 
     let websiteData: Record<string, string | null> = {};
     if (website && firecrawlKey) {
-      const wKey = `web:${website}`;
+      const wKey = `web:v2:${website}`;
       const cached = await readCache(wKey);
       if (cached) websiteData = cached;
       else {
@@ -804,8 +804,8 @@ Deno.serve(async (req) => {
     merged.name_en = pickField(websiteData.name_en ?? null, gNameEn, true);
     // Activity stays as primaryType (machine-readable). AR/EN copies for admin polish.
     merged.activity = pickField(null, mapsData.activity ?? null);
-    merged.activity_ar = pickField(null, isArabic(mapsData.activity) ? mapsData.activity : null);
-    merged.activity_en = pickField(null, !isArabic(mapsDataEn.activity) ? mapsDataEn.activity : null, true);
+    merged.activity_ar = pickField(websiteData.activity_ar ?? null, isArabic(mapsData.activity) ? mapsData.activity : null);
+    merged.activity_en = pickField(websiteData.activity_en ?? null, !isArabic(mapsDataEn.activity) ? mapsDataEn.activity : null, true);
     // IMPORTANT: descriptions are NOT the formatted address. Only website
     // meta description is a real description (script-routed). AI fills the rest.
     merged.description_ar = pickField(websiteData.description_ar ?? null, null);
@@ -818,18 +818,18 @@ Deno.serve(async (req) => {
     merged.customer_service = pickField(websiteData.customer_service ?? null, null);
     merged.email = pickField(websiteData.email ?? null, null);
     merged.website = pickField(websiteData.website ?? null, mapsData.website ?? null, true);
-    merged.city = pickField(null, mapsData.city ?? null);
-    merged.city_en = pickField(null, mapsDataEn.city ?? null, true);
-    merged.district = pickField(null, mapsData.district ?? null);
+    merged.city = pickField(websiteData.city ?? null, mapsData.city ?? null);
+    merged.city_en = pickField(websiteData.city_en ?? null, mapsDataEn.city ?? null, true);
+    merged.district = pickField(websiteData.district ?? null, mapsData.district ?? null);
     merged.district_en = pickField(null, mapsDataEn.district ?? null, true);
-    merged.street = pickField(null, mapsData.street ?? null);
+    merged.street = pickField(websiteData.street ?? null, mapsData.street ?? null);
     merged.street_en = pickField(null, mapsDataEn.street ?? null, true);
-    merged.national_address = pickField(null, mapsData.national_address ?? null);
+    merged.national_address = pickField(websiteData.national_address ?? null, mapsData.national_address ?? null);
     merged.national_address_en = pickField(null, mapsDataEn.national_address ?? null, true);
     merged.latitude = pickField(null, mapsData.latitude ?? mapsDataEn.latitude ?? null);
     merged.longitude = pickField(null, mapsData.longitude ?? mapsDataEn.longitude ?? null);
-    merged.working_hours = pickField(null, mapsData.working_hours ?? mapsDataEn.working_hours ?? null);
-    merged.logo_url = pickField(null, mapsData.logo_url ?? null);
+    merged.working_hours = pickField(websiteData.working_hours ?? null, mapsData.working_hours ?? mapsDataEn.working_hours ?? null);
+    merged.logo_url = pickField(websiteData.logo_url ?? null, mapsData.logo_url ?? null);
     merged.social_links = pickField(websiteData.social_links ?? null, null, true);
     merged.facebook = pickField(websiteData.facebook ?? null, null, true);
     merged.instagram = pickField(websiteData.instagram ?? null, null, true);
