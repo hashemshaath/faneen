@@ -112,7 +112,12 @@ export async function requireAdmin(req: Request): Promise<{ ok: true } | { ok: f
       return { ok: false, res: jsonResponse({ error: "unauthorized" }, 401) };
     }
     const client = createClient(url, anon, { global: { headers: { Authorization: auth } } });
-    const { data, error } = await client.rpc("has_admin_access");
+    const { data: userRes, error: userErr } = await client.auth.getUser();
+    const uid = userRes?.user?.id;
+    if (userErr || !uid) {
+      return { ok: false, res: jsonResponse({ error: "unauthorized" }, 401) };
+    }
+    const { data, error } = await client.rpc("has_admin_access", { _user_id: uid });
     if (error || data !== true) {
       return { ok: false, res: jsonResponse({ error: "forbidden" }, 403) };
     }
