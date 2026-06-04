@@ -16880,6 +16880,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_reject_business_ownership_transfer: {
+        Args: { _admin_note?: string; _request_id: string }
+        Returns: Json
+      }
       admin_reject_provider_brand_link: {
         Args: { _link_id: string; _reason: string }
         Returns: {
@@ -17962,6 +17966,7 @@ export type Database = {
           token: string
         }[]
       }
+      get_placeholder_owner_report: { Args: never; Returns: Json }
       get_portfolio_analytics: {
         Args: { _business_id: string; _days?: number }
         Returns: {
