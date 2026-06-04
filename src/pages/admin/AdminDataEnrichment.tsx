@@ -14,7 +14,7 @@
  */
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check } from "lucide-react";
+import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,17 +23,20 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Bi, useBi } from "@/components/common/Bilingual";
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import {
   fetchEnrichment,
   enhanceEnrichment,
   applyEnrichment,
+  searchPlaces,
+  type PlaceCandidate,
   type EnrichmentDraft,
   type EnrichmentFieldKey,
   type EnrichmentFetchResult,
   type EnrichmentEnhanceResult,
 } from "@/modules/adminEnrichment";
 
-type Step = "sources" | "review" | "apply";
+type Step = "search" | "sources" | "review" | "apply";
 
 const FIELD_LABELS: Record<EnrichmentFieldKey, { ar: string; en: string }> = {
   name_ar: { ar: "الاسم (عربي)", en: "Name (Arabic)" },
