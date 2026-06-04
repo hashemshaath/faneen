@@ -352,8 +352,14 @@ export default function AdminDataEnrichment() {
 
             {searchResults.length > 0 && (
               <div className="mt-2 space-y-2">
-                <div className="text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                   <Bi ar={`${searchResults.length} نتيجة`} en={`${searchResults.length} results`} />
+                  {searchCached && (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-emerald-700">
+                      <Zap className="h-3 w-3" />
+                      <Bi ar="من الكاش" en="Cached" />
+                    </span>
+                  )}
                 </div>
                 <ul className="space-y-2">
                   {searchResults.map((p) => {
