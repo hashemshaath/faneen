@@ -3,7 +3,13 @@
 // supabase.functions.invoke directly.
 export { fetchEnrichment } from "./services/fetchEnrichment";
 export { enhanceEnrichment } from "./services/enhanceEnrichment";
-export { applyEnrichment } from "./services/applyEnrichment";
+export {
+  applyEnrichment,
+  saveEnrichmentDraft,
+  listEnrichmentDrafts,
+  loadEnrichmentDraft,
+  deleteEnrichmentDraft,
+} from "./services/applyEnrichment";
 export { searchPlaces } from "./services/searchPlaces";
 export type { PlaceCandidate, SearchPlacesResult } from "./services/searchPlaces";
 export { clearEnrichmentCache } from "./services/clearCache";
@@ -17,5 +23,7 @@ export type {
   EnrichmentFetchResult,
   EnrichmentEnhanceResult,
   EnrichmentApplyResult,
+  EnrichmentDraftSummary,
+  EnrichmentSessionRow,
 } from "./types";
-export type { ApplyEnrichmentInput } from "./services/applyEnrichment";
+export type { ApplyEnrichmentInput, EnrichmentExtra } from "./services/applyEnrichment";

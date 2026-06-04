@@ -13,8 +13,8 @@
  *  - No API keys client-side. No auto-save. No auto-publish.
  */
 import { useMemo, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap, RefreshCw, Trash2, SlidersHorizontal, Bug, Database, Wrench } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap, RefreshCw, Trash2, SlidersHorizontal, Bug, Database, Wrench, FileEdit, Save } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,10 @@ import {
   fetchEnrichment,
   enhanceEnrichment,
   applyEnrichment,
+  saveEnrichmentDraft,
+  listEnrichmentDrafts,
+  loadEnrichmentDraft,
+  deleteEnrichmentDraft,
   searchPlaces,
   clearEnrichmentCache,
   type PlaceCandidate,
@@ -37,6 +41,7 @@ import {
   type EnrichmentFieldKey,
   type EnrichmentFetchResult,
   type EnrichmentEnhanceResult,
+  type EnrichmentExtra,
 } from "@/modules/adminEnrichment";
 
 type Step = "search" | "sources" | "review" | "apply";
@@ -142,7 +147,34 @@ export default function AdminDataEnrichment() {
   const [mode, setMode] = useState<"lead" | "business">("lead");
   const [businessId, setBusinessId] = useState("");
   const [applyResult, setApplyResult] = useState<{ entity?: string; id?: string } | null>(null);
+  const [draftStatus, setDraftStatus] = useState<"unsaved" | "saved" | "applied">("unsaved");
+  const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const qc = useQueryClient();
+
+  const buildExtra = (): EnrichmentExtra => ({
+    category_slug: categorySlug || null,
+    services_ar: servicesAr || null,
+    services_en: servicesEn || null,
+    ai_enhanced: Object.keys(aiEnhanced).length ? (aiEnhanced as Record<string, string>) : null,
+    selected_place: selectedPlace as unknown as Record<string, unknown> | null,
+    db_matches: dbMatches as unknown as Record<string, unknown> | null,
+    diagnostics: diagnostics as unknown as Record<string, unknown> | null,
+  });
+
+  const synthDraftFromApproved = (
+    appr: Record<string, string>,
+  ): EnrichmentDraft => {
+    const out = {} as EnrichmentDraft;
+    for (const k of FIELD_KEYS) {
+      out[k] = {
+        value: appr[k] ?? null,
+        source: "manual",
+        confidence: appr[k] ? "high" : "low",
+      } as EnrichmentDraft[typeof k];
+    }
+    return out;
+  };
 
   const fetchMut = useMutation({
     mutationFn: (opts: { bypass?: boolean } = {}) => fetchEnrichment({
@@ -163,6 +195,8 @@ export default function AdminDataEnrichment() {
       setMissing(res.missing ?? []);
       setDiagnostics(res.diagnostics ?? null);
       setDbMatches(res.db_matches ?? null);
+      setDraftStatus("unsaved");
+      setApplyResult(null);
       const initial: Partial<Record<EnrichmentFieldKey, string>> = {};
       for (const k of FIELD_KEYS) {
         const v = res.merged[k]?.value;
@@ -172,6 +206,74 @@ export default function AdminDataEnrichment() {
       setStep("review");
     },
     onError: () => setErrorMsg(bi("حدث خطأ. حاول مجددًا.", "Something went wrong. Try again.")),
+  });
+
+  // ─── Drafts list (saved & applied) ───────────────────────────────
+  const draftsQuery = useQuery({
+    queryKey: ["admin-enrichment-drafts"],
+    queryFn: () => listEnrichmentDrafts(),
+    refetchOnWindowFocus: false,
+  });
+
+  const loadDraftMut = useMutation({
+    mutationFn: (id: string) => loadEnrichmentDraft(id),
+    onSuccess: (res) => {
+      const sess = res.session;
+      if (!sess || !sess.merged) {
+        setErrorMsg(bi("تعذر تحميل المسودة.", "Could not load draft."));
+        return;
+      }
+      const merged = sess.merged;
+      const appr = (merged.approved ?? {}) as Record<string, string>;
+      setSessionId(sess.id);
+      setDraft(synthDraftFromApproved(appr));
+      setApproved(appr);
+      setCategorySlug(merged.category_slug ?? "");
+      setServicesAr(merged.services_ar ?? "");
+      setServicesEn(merged.services_en ?? "");
+      setAiEnhanced((merged.ai_enhanced ?? {}) as Partial<Record<EnrichmentFieldKey, string>>);
+      setSelectedPlace((merged.selected_place as unknown as PlaceCandidate | null) ?? null);
+      setDbMatches((merged.db_matches as NonNullable<EnrichmentFetchResult["db_matches"]> | null) ?? null);
+      setDiagnostics((merged.diagnostics as NonNullable<EnrichmentFetchResult["diagnostics"]> | null) ?? null);
+      setConflicts({});
+      setMissing([]);
+      setApplyResult(sess.applied_entity_id ? { entity: sess.applied_entity_type ?? undefined, id: sess.applied_entity_id } : null);
+      setDraftStatus(sess.status === "applied" ? "applied" : "saved");
+      setStep("review");
+      setErrorMsg(null);
+    },
+    onError: () => setErrorMsg(bi("تعذر تحميل المسودة.", "Could not load draft.")),
+  });
+
+  const deleteDraftMut = useMutation({
+    mutationFn: (id: string) => deleteEnrichmentDraft(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-enrichment-drafts"] }),
+  });
+
+  const saveDraftMut = useMutation({
+    mutationFn: () => {
+      if (!sessionId) return Promise.resolve({ error: "no_session" });
+      const cleanApproved: Record<string, string> = {};
+      for (const [k, v] of Object.entries(approved)) {
+        if (v && v.trim()) cleanApproved[k] = v.trim();
+      }
+      return saveEnrichmentDraft({
+        session_id: sessionId,
+        approved: cleanApproved,
+        extra: buildExtra(),
+      });
+    },
+    onSuccess: (res) => {
+      if (res.error || !res.ok) {
+        setErrorMsg(bi("تعذر حفظ المسودة.", "Could not save draft."));
+        return;
+      }
+      setErrorMsg(null);
+      setDraftStatus("saved");
+      setSavedMsg(bi("تم الحفظ كمسودة قابلة للتعديل — لم يُنشأ حساب ولا رقم تعريفي.", "Saved as an editable draft — no account or Ref ID has been created."));
+      qc.invalidateQueries({ queryKey: ["admin-enrichment-drafts"] });
+      window.setTimeout(() => setSavedMsg(null), 5000);
+    },
   });
 
   const searchMut = useMutation({
@@ -246,10 +348,12 @@ export default function AdminDataEnrichment() {
         if (v && v.trim()) cleanApproved[k] = v.trim();
       }
       return applyEnrichment({
+        action: "approve",
         session_id: sessionId,
         mode,
         business_id: mode === "business" ? businessId.trim() : undefined,
         approved: cleanApproved,
+        extra: buildExtra(),
       });
     },
     onSuccess: (res) => {
@@ -259,6 +363,8 @@ export default function AdminDataEnrichment() {
       }
       setErrorMsg(null);
       setApplyResult({ entity: res.applied_entity_type ?? undefined, id: res.applied_entity_id ?? undefined });
+      setDraftStatus("applied");
+      qc.invalidateQueries({ queryKey: ["admin-enrichment-drafts"] });
     },
   });
 
@@ -388,6 +494,79 @@ export default function AdminDataEnrichment() {
 
       {/* Step 0: Google-like Search */}
       {step === "search" && (
+      <>
+        {/* Saved drafts panel — editable until approved */}
+        {(() => {
+          const drafts = draftsQuery.data?.drafts ?? [];
+          if (drafts.length === 0) return null;
+          return (
+            <Card className="mb-4 p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <FileEdit className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-semibold">
+                  <Bi ar="مسودات محفوظة" en="Saved drafts" />
+                </h2>
+                <Badge variant="outline" className="h-5 text-[10px]">{drafts.length}</Badge>
+                <span className="ms-auto text-[11px] text-muted-foreground">
+                  <Bi
+                    ar="قابلة للتعديل — لم يُنشأ حساب أو رقم تعريفي حتى الاعتماد"
+                    en="Editable — no account or Ref ID is created until approval"
+                  />
+                </span>
+              </div>
+              <ul className="divide-y">
+                {drafts.map((d) => (
+                  <li key={d.id} className="flex items-center gap-2 py-2 text-sm">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium" dir="auto">
+                        {d.name ?? bi("بدون اسم", "Untitled")}
+                      </div>
+                      <div className="truncate text-[11px] text-muted-foreground" dir="auto">
+                        {d.city ?? "—"}{d.activity ? ` · ${d.activity}` : ""}
+                      </div>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={`h-5 text-[10px] ${
+                        d.status === "applied"
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-amber-200 bg-amber-50 text-amber-700"
+                      }`}
+                    >
+                      {d.status === "applied"
+                        ? bi("معتمدة", "Approved")
+                        : bi("مسودة", "Draft")}
+                    </Badge>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7"
+                      onClick={() => loadDraftMut.mutate(d.id)}
+                      disabled={loadDraftMut.isPending}
+                    >
+                      <FileEdit className="me-1 h-3 w-3" />
+                      <Bi ar="فتح وتعديل" en="Open & edit" />
+                    </Button>
+                    {d.status !== "applied" && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                        onClick={() => deleteDraftMut.mutate(d.id)}
+                        disabled={deleteDraftMut.isPending}
+                        title={bi("حذف المسودة", "Delete draft")}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          );
+        })()}
         <Card className="p-5">
           <div className="space-y-3">
             <Label className="text-sm">
@@ -636,6 +815,7 @@ export default function AdminDataEnrichment() {
             </div>
           </div>
         </Card>
+      </>
       )}
 
       {/* Step 1: Sources */}
@@ -1051,12 +1231,20 @@ export default function AdminDataEnrichment() {
       {/* Step 3: Apply */}
       {step === "apply" && (
         <Card className="p-5">
+          {savedMsg && !applyResult && (
+            <Card className="mb-4 border-emerald-200 bg-emerald-50/60 p-3 text-sm text-emerald-800">
+              <div className="flex items-start gap-2">
+                <Save className="mt-0.5 h-4 w-4" />
+                <span>{savedMsg}</span>
+              </div>
+            </Card>
+          )}
           {applyResult ? (
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-emerald-700">
                 <Check className="h-4 w-4" />
                 <span className="text-sm font-medium">
-                  <Bi ar="تم الاعتماد بنجاح" en="Applied successfully" />
+                  <Bi ar="تم اعتماد الجهة بنجاح — تم إنشاء الحساب والرقم التعريفي" en="Approved as verified — account and Ref ID created" />
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -1069,13 +1257,14 @@ export default function AdminDataEnrichment() {
                 size="sm"
                 onClick={() => {
                   setApplyResult(null);
-                  setStep("sources");
+                  setStep("search");
                   setSessionId(null);
                   setDraft(null);
                   setApproved({});
                   setAiEnhanced({});
                   setWebsite("");
                   setMapsUrl("");
+                  setDraftStatus("unsaved");
                 }}
               >
                 <Bi ar="جلسة جديدة" en="New session" />
@@ -1083,9 +1272,37 @@ export default function AdminDataEnrichment() {
             </div>
           ) : (
             <div className="space-y-4">
+              <Card className="border-sky-200 bg-sky-50/60 p-3 text-[12px] text-sky-900">
+                <div className="flex items-start gap-2">
+                  <ShieldCheck className="mt-0.5 h-4 w-4" />
+                  <div>
+                    <div className="font-medium">
+                      <Bi
+                        ar="مرحلتان: حفظ كمسودة قابلة للتعديل، ثم اعتماد كجهة موثّقة"
+                        en="Two stages: save as an editable draft, then approve as a verified entity"
+                      />
+                    </div>
+                    <ul className="mt-1 list-disc space-y-0.5 ps-4 text-[11px]">
+                      <li>
+                        <Bi
+                          ar="«حفظ كمسودة»: تُخزَّن البيانات في قاعدة البيانات للتعديل والتحسين لاحقًا. لا يتم فتح حساب ولا إنشاء رقم تعريفي."
+                          en="“Save as draft”: data is stored in the database for later editing. No account is opened and no Ref ID is issued."
+                        />
+                      </li>
+                      <li>
+                        <Bi
+                          ar="«اعتماد كجهة موثّقة»: يتم إنشاء سجل المزوّد ورقمه التعريفي رسميًا."
+                          en="“Approve as verified”: officially creates the provider record and its Ref ID."
+                        />
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </Card>
+
               <div>
                 <Label className="text-sm">
-                  <Bi ar="وجهة الحفظ" en="Destination" />
+                  <Bi ar="وجهة الاعتماد (للمرحلة الثانية فقط)" en="Approval destination (second stage only)" />
                 </Label>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Button
@@ -1129,8 +1346,13 @@ export default function AdminDataEnrichment() {
               )}
 
               <Card className="bg-muted/40 p-3">
-                <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  <Bi ar="ملخص الحقول المعتمدة" en="Approved fields summary" />
+                <div className="mb-1.5 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <Bi ar="ملخص الحقول" en="Fields summary" />
+                  {draftStatus === "saved" && (
+                    <Badge variant="outline" className="h-4 border-amber-200 bg-amber-50 text-[10px] text-amber-700">
+                      <Bi ar="مسودة محفوظة" en="Draft saved" />
+                    </Badge>
+                  )}
                 </div>
                 <ul className="space-y-0.5 text-xs">
                   {Object.entries(approved)
@@ -1144,21 +1366,37 @@ export default function AdminDataEnrichment() {
                 </ul>
               </Card>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <Button variant="ghost" size="sm" onClick={() => setStep("review")}>
                   <Bi ar="رجوع للمراجعة" en="Back to review" />
                 </Button>
-                <Button
-                  onClick={() => applyMut.mutate()}
-                  disabled={
-                    applyMut.isPending ||
-                    (mode === "business" && !businessId.trim()) ||
-                    Object.values(approved).filter((v) => v && v.trim()).length === 0
-                  }
-                >
-                  {applyMut.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                  <Bi ar="اعتماد وحفظ" en="Approve & save" />
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => saveDraftMut.mutate()}
+                    disabled={
+                      saveDraftMut.isPending ||
+                      Object.values(approved).filter((v) => v && v.trim()).length === 0
+                    }
+                    title={bi("حفظ كمسودة بدون فتح حساب أو رقم تعريفي", "Save as a draft without creating an account or Ref ID")}
+                  >
+                    {saveDraftMut.isPending ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Save className="me-2 h-4 w-4" />}
+                    <Bi ar="حفظ كمسودة" en="Save as draft" />
+                  </Button>
+                  <Button
+                    onClick={() => applyMut.mutate()}
+                    disabled={
+                      applyMut.isPending ||
+                      (mode === "business" && !businessId.trim()) ||
+                      Object.values(approved).filter((v) => v && v.trim()).length === 0
+                    }
+                    title={bi("سيتم فتح حساب وإنشاء رقم تعريفي رسمي", "An account and official Ref ID will be created")}
+                  >
+                    {applyMut.isPending ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="me-2 h-4 w-4" />}
+                    <Bi ar="اعتماد كجهة موثّقة" en="Approve as verified" />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
