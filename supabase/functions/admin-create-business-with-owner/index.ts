@@ -133,6 +133,9 @@ Deno.serve(async (req) => {
 
     const business = body.business;
     const owner = body.owner;
+    // Normalize owner.mode defensively (default to placeholder for empty)
+    const rawMode = (owner?.mode ?? "").toString().trim().toLowerCase();
+    owner.mode = (rawMode || "placeholder") as OwnerMode;
 
     // ── Validate business fields
     const username = sanitizeUsername(business.username || "");
