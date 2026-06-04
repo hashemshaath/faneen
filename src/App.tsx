@@ -41,6 +41,7 @@ const CustomerProjectPortal = lazyRetry(() => import("./pages/CustomerProjectPor
 const QSlugDispatcher = lazyRetry(() => import("./pages/QSlugDispatcher"));
 const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
 const UsernameResolver = lazyRetry(() => import("./pages/UsernameResolver"));
+const ClaimBusiness = lazyRetry(() => import("./pages/ClaimBusiness"));
 const Search = lazyRetry(() => import("./pages/Search"));
 const Quote = lazyRetry(() => import("./pages/Quote"));
 const ProviderLeads = lazyRetry(() => import("./pages/dashboard/ProviderLeads"));
