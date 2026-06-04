@@ -577,43 +577,66 @@ Deno.serve(async (req) => {
       }
     }
     let mapsData: Record<string, string | null> = {};
+    let mapsDataEn: Record<string, string | null> = {};
     let mapsRaw: { placeId: string | null; addressComponents: Array<Record<string, unknown>>; placeRaw: Record<string, unknown> | null } = { placeId: null, addressComponents: [], placeRaw: null };
     let geocodingRaw: Array<Record<string, unknown>> = [];
     let geocodingUsed = false;
     if ((placeId || mapsUrl) && googleKey && lovableKey) {
-      const mKey = `maps:${placeId ? `id:${placeId}` : mapsUrl}`;
+      const mKey = `maps:${placeId ? `id:${placeId}` : mapsUrl}:v2`;
       const cached = await readCache(mKey);
       if (cached) {
-        mapsData = (cached as Record<string, unknown>).fields as Record<string, string | null> ?? cached;
-        mapsRaw = ((cached as Record<string, unknown>).raw as typeof mapsRaw) ?? mapsRaw;
-        geocodingRaw = ((cached as Record<string, unknown>).geocodingRaw as Array<Record<string, unknown>>) ?? [];
+        const c = cached as Record<string, unknown>;
+        mapsData = (c.fields as Record<string, string | null>) ?? {};
+        mapsDataEn = (c.fieldsEn as Record<string, string | null>) ?? {};
+        mapsRaw = (c.raw as typeof mapsRaw) ?? mapsRaw;
+        geocodingRaw = (c.geocodingRaw as Array<Record<string, unknown>>) ?? [];
       } else {
-        const r = await fetchGoogleMaps(mapsUrl, placeId, googleKey, lovableKey);
-        mapsData = r.fields;
-        mapsRaw = r.raw;
-        // Geocoding fallback when key address fields are missing.
-        const needsGeocode = (!mapsData.district || !mapsData.street || !mapsData.city) && mapsData.latitude && mapsData.longitude;
+        // Fetch BOTH languages so names + address can be assigned to the correct side.
+        const [rAr, rEn] = await Promise.all([
+          fetchGoogleMaps(mapsUrl, placeId, googleKey, lovableKey, "ar"),
+          fetchGoogleMaps(mapsUrl, placeId, googleKey, lovableKey, "en"),
+        ]);
+        mapsData = rAr.fields;
+        mapsDataEn = rEn.fields;
+        mapsRaw = rAr.raw.placeId ? rAr.raw : rEn.raw;
+        // Geocoding fallback when key address fields are missing (in either language).
+        const lat = mapsData.latitude ?? mapsDataEn.latitude ?? null;
+        const lng = mapsData.longitude ?? mapsDataEn.longitude ?? null;
+        const needsGeocode = (!mapsData.district || !mapsData.street || !mapsData.city ||
+          !mapsDataEn.district || !mapsDataEn.street || !mapsDataEn.city) && lat && lng;
         if (needsGeocode) {
-          const g = await geocodeFallback(mapsData.latitude, mapsData.longitude, googleKey, lovableKey);
+          const [gAr, gEn] = await Promise.all([
+            geocodeFallback(lat, lng, googleKey, lovableKey),
+            geocodeFallbackEn(lat, lng, googleKey, lovableKey),
+          ]);
           geocodingUsed = true;
-          geocodingRaw = g.raw;
-          if (!mapsData.city) mapsData.city = g.fields.city;
-          if (!mapsData.district) mapsData.district = g.fields.district;
-          if (!mapsData.street) mapsData.street = g.fields.street;
-          if (!mapsData.region) mapsData.region = g.fields.region;
+          geocodingRaw = gAr.raw;
+          if (!mapsData.city) mapsData.city = gAr.fields.city;
+          if (!mapsData.district) mapsData.district = gAr.fields.district;
+          if (!mapsData.street) mapsData.street = gAr.fields.street;
+          if (!mapsData.region) mapsData.region = gAr.fields.region;
+          if (!mapsDataEn.city) mapsDataEn.city = gEn.fields.city;
+          if (!mapsDataEn.district) mapsDataEn.district = gEn.fields.district;
+          if (!mapsDataEn.street) mapsDataEn.street = gEn.fields.street;
+          if (!mapsDataEn.region) mapsDataEn.region = gEn.fields.region;
         }
-        if (Object.keys(mapsData).length) {
-          await writeCache(mKey, { fields: mapsData, raw: mapsRaw, geocodingRaw } as unknown as Record<string, string | null>);
+        if (Object.keys(mapsData).length || Object.keys(mapsDataEn).length) {
+          await writeCache(mKey, { fields: mapsData, fieldsEn: mapsDataEn, raw: mapsRaw, geocodingRaw } as unknown as Record<string, string | null>);
         }
       }
     }
 
+    // Names from Google: route by script. AR call may return the English name
+    // when no Arabic translation exists — guard with isArabic().
+    const gNameAr = isArabic(mapsData.name) ? mapsData.name : null;
+    const gNameEn = mapsDataEn.name && !isArabic(mapsDataEn.name) ? mapsDataEn.name : (mapsData.name && !isArabic(mapsData.name) ? mapsData.name : null);
+
     // DB matching: snap city / district / region to canonical reference rows.
-    const cityMatch = await matchCity(svc, mapsData.city ?? null);
+    const cityMatch = await matchCity(svc, mapsData.city ?? mapsDataEn.city ?? null);
     const districtMatch = await matchDistrict(
       svc,
-      cityMatch?.name_ar ?? cityMatch?.name_en ?? mapsData.city ?? null,
-      mapsData.district ?? null,
+      cityMatch?.name_ar ?? cityMatch?.name_en ?? mapsData.city ?? mapsDataEn.city ?? null,
+      mapsData.district ?? mapsDataEn.district ?? null,
     );
     const dbMatches = {
       city: cityMatch
@@ -631,26 +654,51 @@ Deno.serve(async (req) => {
         : (mapsData.region ? { name_ar: mapsData.region, name_en: mapsData.region } : null),
     };
     // Override merged values with canonical names so admin works on DB-snapped data.
-    if (cityMatch) mapsData.city = cityMatch.name_ar || cityMatch.name_en;
-    if (districtMatch) mapsData.district = districtMatch.district_ar || districtMatch.district_en;
+    if (cityMatch) { mapsData.city = cityMatch.name_ar; mapsDataEn.city = cityMatch.name_en ?? cityMatch.name_ar; }
+    if (districtMatch) {
+      mapsData.district = districtMatch.district_ar;
+      mapsDataEn.district = districtMatch.district_en ?? districtMatch.district_ar;
+    }
 
     const merged = emptyDraft();
-    merged.name_ar = pickField(null, mapsData.name ?? null);
-    merged.name_en = pickField(websiteData.name ?? null, null, true);
+    merged.name_ar = pickField(websiteData.name_ar ?? null, gNameAr);
+    merged.name_en = pickField(websiteData.name_en ?? null, gNameEn, true);
+    // Activity stays as primaryType (machine-readable). AR/EN copies for admin polish.
     merged.activity = pickField(null, mapsData.activity ?? null);
-    merged.description_ar = pickField(null, mapsData.description ?? null);
-    merged.description_en = pickField(websiteData.description ?? null, null, true);
+    merged.activity_ar = pickField(null, isArabic(mapsData.activity) ? mapsData.activity : null);
+    merged.activity_en = pickField(null, !isArabic(mapsDataEn.activity) ? mapsDataEn.activity : null, true);
+    // IMPORTANT: descriptions are NOT the formatted address. Only website
+    // meta description is a real description (script-routed). AI fills the rest.
+    merged.description_ar = pickField(websiteData.description_ar ?? null, null);
+    merged.description_en = pickField(websiteData.description_en ?? null, null, true);
     merged.phone = pickField(websiteData.phone ?? null, mapsData.phone ?? null);
+    merged.phone_mobile = pickField(websiteData.phone_mobile ?? null, null);
+    merged.phone_landline = pickField(websiteData.phone_landline ?? null, mapsData.phone ?? null);
+    merged.unified_number = pickField(websiteData.unified_number ?? null, null);
+    merged.whatsapp = pickField(websiteData.whatsapp ?? null, null);
+    merged.customer_service = pickField(websiteData.customer_service ?? null, null);
+    merged.email = pickField(websiteData.email ?? null, null);
     merged.website = pickField(websiteData.website ?? null, mapsData.website ?? null, true);
     merged.city = pickField(null, mapsData.city ?? null);
+    merged.city_en = pickField(null, mapsDataEn.city ?? null, true);
     merged.district = pickField(null, mapsData.district ?? null);
+    merged.district_en = pickField(null, mapsDataEn.district ?? null, true);
     merged.street = pickField(null, mapsData.street ?? null);
+    merged.street_en = pickField(null, mapsDataEn.street ?? null, true);
     merged.national_address = pickField(null, mapsData.national_address ?? null);
-    merged.latitude = pickField(null, mapsData.latitude ?? null);
-    merged.longitude = pickField(null, mapsData.longitude ?? null);
-    merged.working_hours = pickField(null, mapsData.working_hours ?? null);
+    merged.national_address_en = pickField(null, mapsDataEn.national_address ?? null, true);
+    merged.latitude = pickField(null, mapsData.latitude ?? mapsDataEn.latitude ?? null);
+    merged.longitude = pickField(null, mapsData.longitude ?? mapsDataEn.longitude ?? null);
+    merged.working_hours = pickField(null, mapsData.working_hours ?? mapsDataEn.working_hours ?? null);
     merged.logo_url = pickField(null, mapsData.logo_url ?? null);
     merged.social_links = pickField(websiteData.social_links ?? null, null, true);
+    merged.facebook = pickField(websiteData.facebook ?? null, null, true);
+    merged.instagram = pickField(websiteData.instagram ?? null, null, true);
+    merged.twitter = pickField(websiteData.twitter ?? null, null, true);
+    merged.linkedin = pickField(websiteData.linkedin ?? null, null, true);
+    merged.youtube = pickField(websiteData.youtube ?? null, null, true);
+    merged.tiktok = pickField(websiteData.tiktok ?? null, null, true);
+    merged.snapchat = pickField(websiteData.snapchat ?? null, null, true);
 
     // Conflict map per-field (only fields where both sources had a value).
     const conflicts: Record<string, { website: string | null; google_maps: string | null }> = {};
