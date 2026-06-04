@@ -27,6 +27,7 @@ import { Bi, useBi } from "@/components/common/Bilingual";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { mapsService } from "@/modules/google";
+import { GoogleStatusPanel } from "@/components/admin/GoogleStatusPanel";
 import {
   fetchEnrichment,
   enhanceEnrichment,
@@ -318,7 +319,13 @@ export default function AdminDataEnrichment() {
       }).then((r) => ({ ...r, _append: opts.append === true })),
     onSuccess: (res) => {
       if (res.error) {
-        setErrorMsg(bi("تعذر البحث في خرائط Google.", "Could not search Google Maps."));
+        const parts: string[] = [bi("تعذر البحث في خرائط Google.", "Could not search Google Maps.")];
+        parts.push(`[${res.error}]`);
+        if (typeof res.upstreamStatus === "number") parts.push(`HTTP ${res.upstreamStatus}`);
+        if (typeof res.upstreamMs === "number") parts.push(`${res.upstreamMs}ms`);
+        if (res.detail) parts.push(`· ${res.detail}`);
+        if (res.requestId) parts.push(`· req=${res.requestId.slice(0, 8)}`);
+        setErrorMsg(parts.join(" "));
         if (!res._append) setSearchResults([]);
         return;
       }
