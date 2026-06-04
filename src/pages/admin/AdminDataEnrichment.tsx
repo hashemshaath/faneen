@@ -400,6 +400,9 @@ export default function AdminDataEnrichment() {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
+              <Button variant="ghost" onClick={() => setStep("search")} className="h-11">
+                <Bi ar="رجوع للبحث" en="Back to search" />
+              </Button>
               <Button
                 onClick={() => fetchMut.mutate()}
                 disabled={fetchMut.isPending || (!website.trim() && !mapsUrl.trim())}
