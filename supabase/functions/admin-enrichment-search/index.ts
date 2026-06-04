@@ -59,6 +59,9 @@ Deno.serve(async (req) => {
       query?: string;
       region?: string;
       language?: string;
+      pageToken?: string;
+      pageSize?: number;
+      bypassCache?: boolean;
     };
     const query = typeof body.query === "string" ? body.query.trim() : "";
     if (!query || query.length < 2 || query.length > 200) {
@@ -66,14 +69,19 @@ Deno.serve(async (req) => {
     }
     const region = (body.region ?? "SA").toUpperCase().slice(0, 2);
     const language = (body.language ?? "ar").toLowerCase().slice(0, 5);
+    const pageToken = typeof body.pageToken === "string" && body.pageToken.length > 0
+      ? body.pageToken.slice(0, 500)
+      : null;
+    const pageSize = Math.min(Math.max(Number(body.pageSize) || 10, 1), 20);
+    const bypassCache = body.bypassCache === true;
 
     // Cache lookup (service-role client to bypass RLS for system table).
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const svc = serviceKey
       ? createClient(supabaseUrl, serviceKey)
       : null;
-    const cacheKey = `search:${region}:${language}:${query.toLowerCase()}`;
-    if (svc) {
+    const cacheKey = `search:${region}:${language}:${pageSize}:${pageToken ?? ""}:${query.toLowerCase()}`;
+    if (svc && !bypassCache) {
       const { data: cached } = await svc
         .from("admin_enrichment_cache")
         .select("payload, expires_at")
@@ -119,7 +127,8 @@ Deno.serve(async (req) => {
           textQuery: query,
           languageCode: language,
           regionCode: region,
-          pageSize: 10,
+          pageSize,
+          ...(pageToken ? { pageToken } : {}),
         }),
       },
     );
@@ -152,7 +161,8 @@ Deno.serve(async (req) => {
       };
     }).filter((r) => r.place_id);
 
-    const payload = { ok: true, results };
+    const nextPageToken = typeof data?.nextPageToken === "string" ? data.nextPageToken : null;
+    const payload = { ok: true, results, nextPageToken };
     if (svc) {
       const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       await svc.from("admin_enrichment_cache").upsert({
