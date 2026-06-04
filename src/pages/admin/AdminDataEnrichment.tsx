@@ -14,7 +14,8 @@
  */
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2 } from "lucide-react";
+import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap } from "lucide-react";
+import * as XLSX from "xlsx";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,7 @@ export default function AdminDataEnrichment() {
   const [searchResults, setSearchResults] = useState<PlaceCandidate[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<PlaceCandidate | null>(null);
   const [searchDeferred, setSearchDeferred] = useState(false);
+  const [searchCached, setSearchCached] = useState(false);
   const [website, setWebsite] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -143,6 +145,7 @@ export default function AdminDataEnrichment() {
       }
       setErrorMsg(null);
       setSearchDeferred(Boolean(res.deferred));
+      setSearchCached(Boolean(res.cached));
       setSearchResults(res.results ?? []);
     },
     onError: () => setErrorMsg(bi("حدث خطأ في البحث.", "Search failed.")),
@@ -198,6 +201,58 @@ export default function AdminDataEnrichment() {
     if (p.maps_url) setMapsUrl(p.maps_url);
     if (p.website) setWebsite(p.website);
     setStep("sources");
+  };
+
+  const buildExportRows = () => {
+    if (!draft) return [];
+    return FIELD_KEYS.map((key) => {
+      const f = draft[key];
+      return {
+        Field: bi(FIELD_LABELS[key].ar, FIELD_LABELS[key].en),
+        Website: f.source === "website" ? f.value ?? "" : "",
+        "Google Maps": f.source === "google_maps" ? f.value ?? "" : "",
+        AI: aiEnhanced[key] ?? "",
+        Approved: approved[key] ?? "",
+        Source: f.source,
+        Confidence: f.confidence,
+      };
+    });
+  };
+
+  const exportCsv = () => {
+    const rows = buildExportRows();
+    if (!rows.length) return;
+    const headers = Object.keys(rows[0]);
+    const csv = [
+      headers.join(","),
+      ...rows.map((r) =>
+        headers
+          .map((h) => `"${String((r as Record<string, string>)[h] ?? "").replace(/"/g, '""')}"`)
+          .join(","),
+      ),
+    ].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `enrichment-${sessionId ?? Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportXlsx = () => {
+    const rows = buildExportRows();
+    if (!rows.length) return;
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Comparison");
+    XLSX.writeFile(wb, `enrichment-${sessionId ?? Date.now()}.xlsx`);
+  };
+
+  const staticMapUrl = (lat: number, lng: number) => {
+    const key = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
+    if (!key) return null;
+    return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=15&size=120x80&scale=2&markers=color:red%7C${lat},${lng}&key=${key}`;
   };
 
   return (
@@ -297,8 +352,14 @@ export default function AdminDataEnrichment() {
 
             {searchResults.length > 0 && (
               <div className="mt-2 space-y-2">
-                <div className="text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                   <Bi ar={`${searchResults.length} نتيجة`} en={`${searchResults.length} results`} />
+                  {searchCached && (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-emerald-700">
+                      <Zap className="h-3 w-3" />
+                      <Bi ar="من الكاش" en="Cached" />
+                    </span>
+                  )}
                 </div>
                 <ul className="space-y-2">
                   {searchResults.map((p) => {
@@ -312,9 +373,18 @@ export default function AdminDataEnrichment() {
                             isSelected ? "border-primary bg-primary/5" : "border-border"
                           }`}
                         >
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                            <Building2 className="h-4 w-4" />
-                          </div>
+                          {p.latitude != null && p.longitude != null && staticMapUrl(p.latitude, p.longitude) ? (
+                            <img
+                              src={staticMapUrl(p.latitude, p.longitude)!}
+                              alt=""
+                              loading="lazy"
+                              className="h-16 w-24 shrink-0 rounded-lg border object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                              <Building2 className="h-5 w-5" />
+                            </div>
+                          )}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                               <span className="truncate text-sm font-medium">{p.name ?? p.place_id}</span>
@@ -341,6 +411,18 @@ export default function AdminDataEnrichment() {
                               )}
                               {p.phone && <span>{p.phone}</span>}
                               {p.website && <span className="truncate max-w-[180px]">{p.website}</span>}
+                              {p.maps_url && (
+                                <a
+                                  href={p.maps_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-0.5 text-primary hover:underline"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  <Bi ar="فتح في Google Maps" en="Open in Google Maps" />
+                                </a>
+                              )}
                             </div>
                           </div>
                           <div className="shrink-0 self-center text-xs text-primary opacity-0 transition group-hover:opacity-100">
@@ -419,6 +501,45 @@ export default function AdminDataEnrichment() {
       {/* Step 2: Review */}
       {step === "review" && draft && (
         <div className="space-y-4">
+          {selectedPlace && (
+            <Card className="p-3">
+              <div className="flex items-center gap-3">
+                {selectedPlace.latitude != null && selectedPlace.longitude != null && staticMapUrl(selectedPlace.latitude, selectedPlace.longitude) ? (
+                  <img
+                    src={staticMapUrl(selectedPlace.latitude, selectedPlace.longitude)!}
+                    alt=""
+                    loading="lazy"
+                    className="h-16 w-24 shrink-0 rounded-lg border object-cover"
+                  />
+                ) : (
+                  <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    <Building2 className="h-5 w-5" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{selectedPlace.name ?? selectedPlace.place_id}</div>
+                  {selectedPlace.address && (
+                    <div className="truncate text-[12px] text-muted-foreground" dir="auto">
+                      <MapPin className="me-1 inline h-3 w-3" />
+                      {selectedPlace.address}
+                    </div>
+                  )}
+                </div>
+                {selectedPlace.maps_url && (
+                  <a
+                    href={selectedPlace.maps_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-md border px-2.5 py-1 text-xs text-primary hover:bg-primary/5"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    <Bi ar="Google Maps" en="Google Maps" />
+                  </a>
+                )}
+              </div>
+            </Card>
+          )}
+
           {missing.length > 0 && (
             <Card className="border-amber-200 bg-amber-50/60 p-3 text-sm text-amber-800">
               <div className="flex items-center justify-between gap-2">
@@ -456,10 +577,20 @@ export default function AdminDataEnrichment() {
               <h2 className="text-sm font-semibold">
                 <Bi ar="جدول المقارنة قبل/بعد" en="Comparison: before / after" />
               </h2>
-              <Button size="sm" variant="outline" onClick={() => enhanceMut.mutate()} disabled={enhanceMut.isPending}>
-                {enhanceMut.isPending ? <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="me-1.5 h-3.5 w-3.5" />}
-                <Bi ar="تحسين بالذكاء" en="AI enhance" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={exportCsv}>
+                  <Download className="me-1.5 h-3.5 w-3.5" />
+                  CSV
+                </Button>
+                <Button size="sm" variant="outline" onClick={exportXlsx}>
+                  <FileSpreadsheet className="me-1.5 h-3.5 w-3.5" />
+                  Excel
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => enhanceMut.mutate()} disabled={enhanceMut.isPending}>
+                  {enhanceMut.isPending ? <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="me-1.5 h-3.5 w-3.5" />}
+                  <Bi ar="تحسين بالذكاء" en="AI enhance" />
+                </Button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">

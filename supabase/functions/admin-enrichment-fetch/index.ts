@@ -265,12 +265,47 @@ Deno.serve(async (req) => {
     if (website && !firecrawlKey) missing.push("FIRECRAWL_API_KEY");
     if (mapsUrl && (!googleKey || !lovableKey)) missing.push("GOOGLE_MAPS_API_KEY");
 
-    const websiteData = website && firecrawlKey
-      ? await fetchWebsite(website, firecrawlKey)
-      : {};
-    const mapsData = mapsUrl && googleKey && lovableKey
-      ? await fetchGoogleMaps(mapsUrl, googleKey, lovableKey)
-      : {};
+    // Cache lookup per source (service-role client to bypass RLS).
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const svc = serviceKey ? createClient(supabaseUrl, serviceKey) : null;
+    const readCache = async (key: string): Promise<Record<string, string | null> | null> => {
+      if (!svc) return null;
+      const { data } = await svc
+        .from("admin_enrichment_cache")
+        .select("payload, expires_at")
+        .eq("cache_key", key)
+        .maybeSingle();
+      if (data && new Date(data.expires_at) > new Date()) {
+        return data.payload as Record<string, string | null>;
+      }
+      return null;
+    };
+    const writeCache = async (key: string, payload: Record<string, string | null>) => {
+      if (!svc) return;
+      const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString();
+      await svc.from("admin_enrichment_cache").upsert({ cache_key: key, payload, expires_at: expires });
+    };
+
+    let websiteData: Record<string, string | null> = {};
+    if (website && firecrawlKey) {
+      const wKey = `web:${website}`;
+      const cached = await readCache(wKey);
+      if (cached) websiteData = cached;
+      else {
+        websiteData = await fetchWebsite(website, firecrawlKey);
+        if (Object.keys(websiteData).length) await writeCache(wKey, websiteData);
+      }
+    }
+    let mapsData: Record<string, string | null> = {};
+    if (mapsUrl && googleKey && lovableKey) {
+      const mKey = `maps:${mapsUrl}`;
+      const cached = await readCache(mKey);
+      if (cached) mapsData = cached;
+      else {
+        mapsData = await fetchGoogleMaps(mapsUrl, googleKey, lovableKey);
+        if (Object.keys(mapsData).length) await writeCache(mKey, mapsData);
+      }
+    }
 
     const merged = emptyDraft();
     merged.name_ar = pickField(null, mapsData.name ?? null);
