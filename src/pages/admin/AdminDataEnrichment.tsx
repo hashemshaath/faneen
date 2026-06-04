@@ -525,12 +525,23 @@ export default function AdminDataEnrichment() {
                 <Bi ar="رجوع للبحث" en="Back to search" />
               </Button>
               <Button
-                onClick={() => fetchMut.mutate()}
+                onClick={() => fetchMut.mutate({})}
                 disabled={fetchMut.isPending || (!website.trim() && !mapsUrl.trim())}
                 className="h-11"
               >
                 {fetchMut.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                 <Bi ar="جلب البيانات" en="Fetch data" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fetchMut.mutate({ bypass: true })}
+                disabled={fetchMut.isPending || (!website.trim() && !mapsUrl.trim())}
+                className="h-11"
+                title={bi("تجاوز الكاش وإعادة الجلب", "Bypass cache and re-fetch")}
+              >
+                <RefreshCw className="me-2 h-4 w-4" />
+                <Bi ar="إعادة جلب" en="Re-fetch" />
               </Button>
             </div>
           </div>
