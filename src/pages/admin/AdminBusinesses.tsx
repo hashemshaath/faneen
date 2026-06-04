@@ -769,7 +769,24 @@ const AdminBusinesses = () => {
       // generic bucket inside `mapAdminCreateBizError`.
       const raw = err instanceof Error ? err.message : '';
       const msg = mapAdminCreateBizError(raw, isRTL ? 'ar' : 'en');
-      toast.error(isRTL ? 'فشل إنشاء المنشأة' : 'Failed to create business', { description: msg });
+      const isInvalidMode = raw.includes('invalid_owner_mode');
+      toast.error(
+        isRTL ? 'فشل إنشاء المنشأة' : 'Failed to create business',
+        {
+          description: msg,
+          ...(isInvalidMode
+            ? {
+                action: {
+                  label: isRTL ? 'تحويل إلى "بدون مدير"' : 'Switch to "No manager"',
+                  onClick: () => {
+                    setCreateForm((f) => ({ ...f, owner_mode: 'placeholder' }));
+                  },
+                },
+                duration: 10000,
+              }
+            : {}),
+        },
+      );
     },
   });
 
