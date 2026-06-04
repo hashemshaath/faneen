@@ -14,6 +14,37 @@ export type ValidateImageResult =
   | { ok: true }
   | { ok: false; message: string };
 
+/**
+ * Thrown when compression cannot recover (worker rejected, decoder failed,
+ * unsupported format after HEIC conversion, etc.). Always carries an
+ * Arabic user-facing message.
+ */
+export class ImageCompressionError extends Error {
+  readonly userMessage: string;
+  readonly cause?: unknown;
+  constructor(userMessage: string, cause?: unknown) {
+    super(userMessage);
+    this.name = 'ImageCompressionError';
+    this.userMessage = userMessage;
+    this.cause = cause;
+  }
+}
+
+export type CompressionStage =
+  | 'validating'
+  | 'converting-heic'
+  | 'thumbnail'
+  | 'medium'
+  | 'large'
+  | 'done';
+
+export interface CompressionProgress {
+  /** Current pipeline stage. */
+  stage: CompressionStage;
+  /** Aggregate progress 0..100 across all stages. */
+  percent: number;
+}
+
 const ACCEPTED_EXT = ['jpg', 'jpeg', 'png', 'webp', 'heic'];
 const ACCEPTED_MIME = [
   'image/jpeg',
@@ -62,7 +93,10 @@ export function validateImage(file: File): ValidateImageResult {
 }
 
 /** Convert HEIC/HEIF to JPEG. Returns original file for other formats. */
-async function ensureCompressible(file: File): Promise<File> {
+async function ensureCompressible(
+  file: File,
+  onProgress?: () => void,
+): Promise<File> {
   const ext = getExt(file.name);
   const mime = (file.type || '').toLowerCase();
   const isHeic =
@@ -71,12 +105,21 @@ async function ensureCompressible(file: File): Promise<File> {
     ext === 'heic' ||
     ext === 'heif';
   if (!isHeic) return file;
-  const { default: heic2any } = await import('heic2any');
-  const blob = (await heic2any({
-    blob: file,
-    toType: 'image/jpeg',
-    quality: 0.9,
-  })) as Blob;
+  onProgress?.();
+  let blob: Blob;
+  try {
+    const { default: heic2any } = await import('heic2any');
+    blob = (await heic2any({
+      blob: file,
+      toType: 'image/jpeg',
+      quality: 0.9,
+    })) as Blob;
+  } catch (err) {
+    throw new ImageCompressionError(
+      'تعذّر تحويل صورة HEIC — جرّب حفظها كـ JPG ثم إعادة الرفع',
+      err,
+    );
+  }
   return new File([blob], `${stripExt(file.name)}.jpg`, {
     type: 'image/jpeg',
     lastModified: Date.now(),
@@ -91,52 +134,79 @@ export interface CompressOptions {
   baseName?: string;
   /** Suffix to append to base name, e.g. "-thumb". */
   suffix?: string;
+  /** 0..100 progress from the worker. */
+  onProgress?: (percent: number) => void;
 }
 
 /**
  * Compress an image in-browser to WebP using a Web Worker.
  * Defaults: ≤1MB, max dimension 1920px, quality 0.8.
- * On failure, logs a warning and returns the original file.
+ * On failure, logs a warning and returns the original file (safe fallback).
+ * For fail-fast behavior, use {@link compressImageStrict}.
  */
 export async function compressImage(
   file: File,
   options: CompressOptions = {},
 ): Promise<File> {
   try {
-    const validation = validateImage(file);
-    if (validation.ok === false) {
-      // eslint-disable-next-line no-console
-      console.warn('[imageCompression] validation failed:', validation.message);
-      return file;
-    }
-    const source = await ensureCompressible(file);
-    const {
-      maxSizeMB = 1,
-      maxWidthOrHeight = 1920,
-      quality = 0.8,
-      baseName,
-      suffix = '',
-    } = options;
-
-    const compressedBlob = await imageCompression(source, {
-      maxSizeMB,
-      maxWidthOrHeight,
-      useWebWorker: true,
-      fileType: 'image/webp',
-      initialQuality: quality,
-    });
-
-    const finalBase = baseName ?? stripExt(source.name);
-    const outName = `${finalBase}${suffix}.webp`;
-    return new File([compressedBlob], outName, {
-      type: 'image/webp',
-      lastModified: Date.now(),
-    });
+    return await compressImageStrict(file, options);
   } catch (err) {
     // eslint-disable-next-line no-console
     console.warn('[imageCompression] failed, returning original file', err);
     return file;
   }
+}
+
+/**
+ * Same as {@link compressImage} but throws {@link ImageCompressionError}
+ * (with an Arabic `userMessage`) on failure instead of silently returning
+ * the original file. Use when the caller needs to surface a toast.
+ */
+export async function compressImageStrict(
+  file: File,
+  options: CompressOptions = {},
+): Promise<File> {
+  const validation = validateImage(file);
+  if (validation.ok === false) {
+    throw new ImageCompressionError(validation.message);
+  }
+  const source = await ensureCompressible(file);
+  const {
+    maxSizeMB = 1,
+    maxWidthOrHeight = 1920,
+    quality = 0.8,
+    baseName,
+    suffix = '',
+    onProgress,
+  } = options;
+
+  let compressedBlob: Blob;
+  try {
+    compressedBlob = await imageCompression(source, {
+      maxSizeMB,
+      maxWidthOrHeight,
+      useWebWorker: true,
+      fileType: 'image/webp',
+      initialQuality: quality,
+      onProgress: onProgress
+        ? (p: number) => {
+            try { onProgress(Math.max(0, Math.min(100, p))); } catch { /* ignore */ }
+          }
+        : undefined,
+    });
+  } catch (err) {
+    throw new ImageCompressionError(
+      'تعذّر ضغط الصورة — قد تكون تالفة أو بصيغة غير مدعومة',
+      err,
+    );
+  }
+
+  const finalBase = baseName ?? stripExt(source.name);
+  const outName = `${finalBase}${suffix}.webp`;
+  return new File([compressedBlob], outName, {
+    type: 'image/webp',
+    lastModified: Date.now(),
+  });
 }
 
 export interface ResponsiveImageSet {
@@ -145,41 +215,69 @@ export interface ResponsiveImageSet {
   large: File;
 }
 
+export interface GenerateImageSizesOptions {
+  onProgress?: (p: CompressionProgress) => void;
+}
+
 /**
  * Generate 3 responsive WebP renditions from a single input.
  * Aspect ratio is preserved (browser-image-compression scales by the
  * larger dimension, never distorts).
+ *
+ * Emits aggregate progress so callers can render a status bar.
+ * Throws {@link ImageCompressionError} on validation/decode failure.
  */
 export async function generateImageSizes(
   file: File,
+  options: GenerateImageSizesOptions = {},
 ): Promise<ResponsiveImageSet> {
+  const { onProgress } = options;
+  onProgress?.({ stage: 'validating', percent: 2 });
   const validation = validateImage(file);
   if (validation.ok === false) {
-    throw new Error(validation.message);
+    throw new ImageCompressionError(validation.message);
   }
-  const base = stripExt(file.name);
+  // HEIC conversion runs once; share the JPEG result across renditions.
+  let source = file;
+  const ext = getExt(file.name).toLowerCase();
+  const mime = (file.type || '').toLowerCase();
+  if (mime === 'image/heic' || mime === 'image/heif' || ext === 'heic' || ext === 'heif') {
+    onProgress?.({ stage: 'converting-heic', percent: 8 });
+    source = await ensureCompressible(file);
+  }
+  const base = stripExt(source.name);
+
+  // Run renditions in parallel (each uses its own worker run); track
+  // aggregate progress via per-stage weights.
+  const weights = { thumbnail: 0.2, medium: 0.35, large: 0.45 };
+  const local = { thumbnail: 0, medium: 0, large: 0 };
+  const emit = (stage: CompressionStage) => {
+    const percent =
+      10 +
+      85 *
+        (local.thumbnail * weights.thumbnail +
+          local.medium * weights.medium +
+          local.large * weights.large);
+    onProgress?.({ stage, percent: Math.min(95, percent) });
+  };
+
   const [thumbnail, medium, large] = await Promise.all([
-    compressImage(file, {
-      maxWidthOrHeight: 400,
-      quality: 0.7,
-      maxSizeMB: 0.15,
-      baseName: base,
-      suffix: '-thumb',
+    compressImageStrict(source, {
+      maxWidthOrHeight: 400, quality: 0.7, maxSizeMB: 0.15,
+      baseName: base, suffix: '-thumb',
+      onProgress: (p) => { local.thumbnail = p / 100; emit('thumbnail'); },
     }),
-    compressImage(file, {
-      maxWidthOrHeight: 1080,
-      quality: 0.8,
-      maxSizeMB: 0.6,
-      baseName: base,
-      suffix: '-medium',
+    compressImageStrict(source, {
+      maxWidthOrHeight: 1080, quality: 0.8, maxSizeMB: 0.6,
+      baseName: base, suffix: '-medium',
+      onProgress: (p) => { local.medium = p / 100; emit('medium'); },
     }),
-    compressImage(file, {
-      maxWidthOrHeight: 1920,
-      quality: 0.82,
-      maxSizeMB: 1,
-      baseName: base,
-      suffix: '-large',
+    compressImageStrict(source, {
+      maxWidthOrHeight: 1920, quality: 0.82, maxSizeMB: 1,
+      baseName: base, suffix: '-large',
+      onProgress: (p) => { local.large = p / 100; emit('large'); },
     }),
   ]);
+  onProgress?.({ stage: 'done', percent: 100 });
   return { thumbnail, medium, large };
 }
