@@ -724,8 +724,9 @@ Deno.serve(async (req) => {
         .select("payload, expires_at")
         .eq("cache_key", key)
         .maybeSingle();
-      if (data && new Date(data.expires_at) > new Date()) {
-        return data.payload as Record<string, string | null>;
+      const row = data as { payload?: unknown; expires_at?: string } | null;
+      if (row?.expires_at && new Date(row.expires_at) > new Date()) {
+        return row.payload as Record<string, string | null>;
       }
       return null;
     };
