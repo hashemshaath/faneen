@@ -41,6 +41,7 @@ const CustomerProjectPortal = lazyRetry(() => import("./pages/CustomerProjectPor
 const QSlugDispatcher = lazyRetry(() => import("./pages/QSlugDispatcher"));
 const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
 const UsernameResolver = lazyRetry(() => import("./pages/UsernameResolver"));
+const ClaimBusiness = lazyRetry(() => import("./pages/ClaimBusiness"));
 const Search = lazyRetry(() => import("./pages/Search"));
 const Quote = lazyRetry(() => import("./pages/Quote"));
 const ProviderLeads = lazyRetry(() => import("./pages/dashboard/ProviderLeads"));
@@ -413,6 +414,7 @@ const AppRoutes = () => (
           <Route path="/admin/tags" element={<ProtectedRoute requireAdmin><Navigate to="/admin/categories?tab=tags" replace /></ProtectedRoute>} />
           <Route path="/admin/businesses" element={<ProtectedRoute requireAdmin><AdminBusinesses /></ProtectedRoute>} />
           <Route path="/admin/ownership-transfer-requests" element={<ProtectedRoute requireAdmin><AdminOwnershipTransferRequests /></ProtectedRoute>} />
+          <Route path="/claim/:businessId" element={<ClaimBusiness />} />
           {/* SERVICE-ACTIVATION-GOVERNANCE-2 — Phase D admin control surface. */}
           <Route path="/admin/service-activations" element={<ProtectedRoute requireAdmin><AdminServiceActivations /></ProtectedRoute>} />
           <Route path="/admin/entity-access-requests" element={<ProtectedRoute requireAdmin><AdminEntityAccessRequests /></ProtectedRoute>} />

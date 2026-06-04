@@ -2230,36 +2230,57 @@ export type Database = {
         Row: {
           admin_note: string | null
           business_id: string
+          commercial_registration: string | null
           created_at: string
           id: string
+          ip_hash: string | null
           message: string | null
+          proof_files: Json
+          requester_email: string | null
+          requester_name: string | null
+          requester_phone: string | null
           requester_user_id: string
           reviewed_at: string | null
           reviewed_by: string | null
+          source: string
           status: string
           updated_at: string
         }
         Insert: {
           admin_note?: string | null
           business_id: string
+          commercial_registration?: string | null
           created_at?: string
           id?: string
+          ip_hash?: string | null
           message?: string | null
+          proof_files?: Json
+          requester_email?: string | null
+          requester_name?: string | null
+          requester_phone?: string | null
           requester_user_id: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source?: string
           status?: string
           updated_at?: string
         }
         Update: {
           admin_note?: string | null
           business_id?: string
+          commercial_registration?: string | null
           created_at?: string
           id?: string
+          ip_hash?: string | null
           message?: string | null
+          proof_files?: Json
+          requester_email?: string | null
+          requester_name?: string | null
+          requester_phone?: string | null
           requester_user_id?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source?: string
           status?: string
           updated_at?: string
         }
@@ -17740,6 +17761,19 @@ export type Database = {
         }[]
       }
       get_business_visibility: { Args: { _business_id: string }; Returns: Json }
+      get_claimable_business: {
+        Args: { p_business_id: string }
+        Returns: {
+          id: string
+          logo_url: string
+          name_ar: string
+          name_en: string
+          pending_claims_count: number
+          placeholder_owner: boolean
+          region: string
+          sectors: Json
+        }[]
+      }
       get_client_site_notification_preferences: {
         Args: { _site_id: string }
         Returns: Json
@@ -17966,6 +18000,7 @@ export type Database = {
           token: string
         }[]
       }
+      get_placeholder_dashboard_stats: { Args: never; Returns: Json }
       get_placeholder_owner_report: { Args: never; Returns: Json }
       get_portfolio_analytics: {
         Args: { _business_id: string; _days?: number }
@@ -19054,6 +19089,21 @@ export type Database = {
           _suggested_title_en?: string
         }
         Returns: string
+      }
+      submit_ownership_claim: {
+        Args: {
+          p_business_id: string
+          p_commercial_registration: string
+          p_message: string
+          p_proof_files?: Json
+          p_requester_email: string
+          p_requester_name: string
+          p_requester_phone: string
+        }
+        Returns: {
+          request_id: string
+          status: string
+        }[]
       }
       submit_private_sector: {
         Args: { _id: string }
