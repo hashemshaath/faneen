@@ -7,6 +7,13 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { Json } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
+import {
+  generateImageSizes,
+  ImageCompressionError,
+  type CompressionStage,
+  type ResponsiveImageSet,
+} from '@/lib/imageCompression';
+import { CompressionStatus } from '@/components/common/CompressionStatus';
 
 export type GalleryPhase = 'before' | 'during' | 'after';
 export type GalleryCategory = 'aluminum' | 'glass' | 'wood' | 'steel' | 'general';
@@ -33,6 +40,12 @@ export interface GalleryImage {
   phase?: GalleryPhase | null;
   category?: GalleryCategory | null;
   milestone_id?: string | null;
+  /** Responsive renditions generated client-side before upload. */
+  sizes?: {
+    thumbnail?: { url: string; path: string };
+    medium?: { url: string; path: string };
+    large?: { url: string; path: string };
+  };
 }
 
 interface Props {
@@ -44,6 +57,10 @@ interface Props {
 
 const BUCKET = 'client-site-images';
 const MAX = 40;
+const INPUT_MAX_BYTES = 15 * 1024 * 1024; // hard pre-compression cap (15MB)
+
+type RenditionKey = keyof ResponsiveImageSet;
+const RENDITION_KEYS: RenditionKey[] = ['thumbnail', 'medium', 'large'];
 
 export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, milestones = [] }) => {
   const { isRTL } = useLanguage();
@@ -54,6 +71,9 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
   const [uMs, setUMs] = useState<string>('');
   const [fPhase, setFPhase] = useState<GalleryPhase | 'all'>('all');
   const [fCat, setFCat] = useState<GalleryCategory | 'all'>('all');
+  const [stage, setStage] = useState<CompressionStage | 'uploading' | 'idle'>('idle');
+  const [percent, setPercent] = useState(0);
+  const [counter, setCounter] = useState<string | null>(null);
 
   const filtered = useMemo(() => images.filter((i) =>
     (fPhase === 'all' || i.phase === fPhase) &&
@@ -75,25 +95,69 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
       return;
     }
     setBusy(true);
+    setStage('validating');
+    setPercent(0);
+    setCounter(null);
     try {
       const next: GalleryImage[] = [...images];
-      for (const file of Array.from(files)) {
-        if (file.size > 5 * 1024 * 1024) {
-          toast.error(`${file.name}: ${isRTL ? 'يتجاوز 5MB' : 'exceeds 5MB'}`);
+      const list = Array.from(files);
+      for (let i = 0; i < list.length; i++) {
+        const file = list[i];
+        setCounter(`${i + 1}/${list.length}`);
+        if (file.size > INPUT_MAX_BYTES) {
+          toast.error(`${file.name}: ${isRTL ? 'حجم الصورة كبير، الحد الأقصى 15 ميجابايت' : 'exceeds 15MB'}`);
           continue;
         }
-        const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-        const path = `${siteId}/gallery/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
-          contentType: file.type, cacheControl: '3600',
-        });
-        if (upErr) throw upErr;
-        const { data: signed, error: sErr } = await supabase.storage
-          .from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365);
-        if (sErr) throw sErr;
+        // 1) Compress + generate 3 responsive sizes (Web Worker).
+        let renditions: ResponsiveImageSet;
+        try {
+          renditions = await generateImageSizes(file, {
+            onProgress: (p) => { setStage(p.stage); setPercent(p.percent); },
+          });
+        } catch (err) {
+          const msg = err instanceof ImageCompressionError
+            ? err.userMessage
+            : isRTL ? 'فشل تجهيز الصورة' : 'Failed to prepare image';
+          toast.error(`${file.name}: ${msg}`);
+          continue;
+        }
+
+        // 2) Upload all 3 renditions and collect signed URLs.
+        setStage('uploading');
+        setPercent(100);
+        const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const uploaded: Partial<Record<RenditionKey, { url: string; path: string }>> = {};
+        try {
+          await Promise.all(RENDITION_KEYS.map(async (key) => {
+            const f = renditions[key];
+            const path = `${siteId}/gallery/${stamp}-${key}.webp`;
+            const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, f, {
+              contentType: 'image/webp', cacheControl: '3600',
+            });
+            if (upErr) throw upErr;
+            const { data: signed, error: sErr } = await supabase.storage
+              .from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 365);
+            if (sErr) throw sErr;
+            uploaded[key] = { url: signed.signedUrl, path };
+          }));
+        } catch (err) {
+          toast.error(`${file.name}: ${err instanceof Error ? err.message : String(err)}`);
+          continue;
+        }
+
+        // 3) Link sizes in the gallery row (backwards-compatible: top-level
+        //    url/path point to the `large` rendition).
+        const large = uploaded.large!;
         next.push({
-          url: signed.signedUrl, path, sort_order: next.length,
+          url: large.url,
+          path: large.path,
+          sort_order: next.length,
           phase: uPhase, category: uCat, milestone_id: uMs || null,
+          sizes: {
+            thumbnail: uploaded.thumbnail,
+            medium: uploaded.medium,
+            large: uploaded.large,
+          },
         });
       }
       await persist(next);
@@ -102,6 +166,9 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
       toast.error(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
+      setStage('idle');
+      setPercent(0);
+      setCounter(null);
     }
   };
 
@@ -113,7 +180,15 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
   const handleDelete = async (img: GalleryImage) => {
     setBusy(true);
     try {
-      if (img.path) await supabase.storage.from(BUCKET).remove([img.path]);
+      const uniq = Array.from(new Set(
+        [
+          img.path,
+          img.sizes?.thumbnail?.path,
+          img.sizes?.medium?.path,
+          img.sizes?.large?.path,
+        ].filter((p): p is string => Boolean(p)),
+      ));
+      if (uniq.length) await supabase.storage.from(BUCKET).remove(uniq);
       await persist(images.filter((i) => i.url !== img.url));
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : String(e));
@@ -129,7 +204,7 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
           {isRTL ? `معرض الصور (${images.length}/${MAX})` : `Gallery (${images.length}/${MAX})`}
         </div>
         <input
-          ref={inputRef} type="file" accept="image/*" multiple className="hidden"
+          ref={inputRef} type="file" accept="image/*,.heic,.heif" multiple className="hidden"
           onChange={(e) => { const f = e.target.files; if (f && f.length) handleFiles(f); e.target.value = ''; }}
         />
         <Button size="sm" variant="secondary" disabled={busy || images.length >= MAX}
@@ -138,6 +213,10 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
           <span className="mx-2">{isRTL ? 'إضافة صور' : 'Add images'}</span>
         </Button>
       </div>
+
+      {busy && (
+        <CompressionStatus stage={stage} percent={percent} counter={counter} />
+      )}
 
       <div className="rounded-xl border border-dashed border-border/60 bg-muted/30 p-3 space-y-2">
         <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
@@ -192,7 +271,12 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
             return (
               <div key={img.url} className="group relative overflow-hidden rounded-xl border border-border/40 bg-muted">
                 <div className="aspect-square">
-                  <img src={img.url} alt="" loading="lazy" className="h-full w-full object-cover" />
+                  <img
+                    src={img.sizes?.thumbnail?.url ?? img.url}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <button
                   type="button" onClick={() => handleDelete(img)} disabled={busy}
