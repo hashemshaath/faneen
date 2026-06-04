@@ -36,27 +36,30 @@ function extractGoogleReason(text: string): string | null {
   return null;
 }
 
-function mapGoogleSearchError(status: number, body: string): { error: string; detail: string } {
+function mapGoogleSearchError(status: number, body: string): { error: string; detail: string; reason: string | null } {
   const reason = extractGoogleReason(body);
   if (reason === "SERVICE_DISABLED") {
     return {
       error: "places_api_disabled",
       detail: "Places API (New) is disabled for the linked Google Maps connection.",
+      reason,
     };
   }
   if (reason === "API_KEY_HTTP_REFERRER_BLOCKED") {
     return {
       error: "google_referrer_blocked",
       detail: "Google rejected the request because the key referrer allowlist does not include this app domain.",
+      reason,
     };
   }
   if (reason === "API_KEY_SERVICE_BLOCKED") {
     return {
       error: "places_api_blocked_for_key",
       detail: "The linked Google Maps key is restricted from calling Places API (New).",
+      reason,
     };
   }
-  return { error: "upstream_error", detail: reason ?? `Google upstream HTTP ${status}` };
+  return { error: "upstream_error", detail: reason ?? `Google upstream HTTP ${status}`, reason };
 }
 
 function json(body: unknown, status = 200): Response {
@@ -320,11 +323,12 @@ Deno.serve(async (req) => {
           upstreamStatus: res.status,
           upstreamMs,
           fallback: "geocoding",
-          fallbackReason: mapped.error,
+          fallbackReason: mapped.reason ?? mapped.error,
           fallbackMissingFields: GEOCODING_FALLBACK_MISSING_FIELDS,
           fallbackDiagnostics: {
             placesStatus: res.status,
             placesMs: upstreamMs,
+            placesReason: mapped.reason,
             geocodingStatus: fallback.upstreamStatus,
             geocodingMs: fallback.upstreamMs,
             geocodingDetail: fallback.detail,
