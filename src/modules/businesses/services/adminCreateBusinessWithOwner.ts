@@ -5,7 +5,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 
-export type OwnerMode = 'existing' | 'new' | 'invite';
+export type OwnerMode = 'existing' | 'new' | 'invite' | 'placeholder';
 
 export interface AdminCreateBusinessOwner {
   mode: OwnerMode;
