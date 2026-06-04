@@ -11,6 +11,7 @@ import {
 
 type ApiKey = "places" | "geocoding" | "routes" | "address_validation";
 interface ProbeResult { ok: boolean; latencyMs: number; status: number; errorCode: string | null }
+type ProbeValidator = (bodyText: string) => string | null;
 
 function extractGoogleReason(text: string): string | null {
   try {
@@ -21,20 +22,40 @@ function extractGoogleReason(text: string): string | null {
   return text.slice(0, 60).replace(/[^a-zA-Z0-9_\- ]/g, "") || "http_error";
 }
 
-async function probe(url: string, init: RequestInit): Promise<ProbeResult> {
+async function probe(url: string, init: RequestInit, validate?: ProbeValidator): Promise<ProbeResult> {
   const t = Date.now();
   try {
     const res = await fetch(url, init);
     const latency = Date.now() - t;
+    const txt = await res.text().catch(() => "");
     if (!res.ok) {
-      const txt = await res.text().catch(() => "");
       return { ok: false, latencyMs: latency, status: res.status, errorCode: extractGoogleReason(txt) };
     }
+    const validationError = validate?.(txt) ?? null;
+    if (validationError) return { ok: false, latencyMs: latency, status: res.status, errorCode: validationError };
     return { ok: true, latencyMs: latency, status: res.status, errorCode: null };
   } catch (e) {
     return { ok: false, latencyMs: Date.now() - t, status: 0, errorCode: e instanceof Error ? e.name : "exception" };
   }
 }
+
+const validateLegacyGoogleStatus: ProbeValidator = (text) => {
+  try {
+    const parsed = JSON.parse(text) as { status?: string; error_message?: string };
+    if (parsed.status && parsed.status !== "OK" && parsed.status !== "ZERO_RESULTS") {
+      return parsed.error_message?.slice(0, 80) ?? parsed.status;
+    }
+  } catch { return "invalid_json"; }
+  return null;
+};
+
+const validateGoogleErrorEnvelope: ProbeValidator = (text) => {
+  try {
+    const parsed = JSON.parse(text) as { error?: unknown } | Array<{ error?: unknown }>;
+    if (Array.isArray(parsed)) return parsed.some((item) => Boolean(item?.error)) ? "API_RESPONSE_ERROR" : null;
+    return parsed.error ? extractGoogleReason(text) : null;
+  } catch { return "invalid_json"; }
+};
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: googleCorsHeaders });
@@ -61,7 +82,7 @@ Deno.serve(async (req: Request) => {
     probe(gatewayUrl("/maps/api/geocode/json?address=Riyadh"), {
       method: "GET",
       headers: googleHeaders(lovableKey, googleKey),
-    }),
+    }, validateLegacyGoogleStatus),
     probe(gatewayUrl("/routes/distanceMatrix/v2:computeRouteMatrix"), {
       method: "POST",
       headers: googleHeaders(lovableKey, googleKey, { "X-Goog-FieldMask": "originIndex,destinationIndex,status" }),
@@ -70,12 +91,12 @@ Deno.serve(async (req: Request) => {
         destinations: [{ waypoint: { location: { latLng: { latitude: 24.72, longitude: 46.68 } } } }],
         travelMode: "DRIVE",
       }),
-    }),
+    }, validateGoogleErrorEnvelope),
     probe(gatewayUrl("/addressvalidation/v1:validateAddress"), {
       method: "POST",
       headers: googleHeaders(lovableKey, googleKey),
       body: JSON.stringify({ address: { regionCode: "SA", addressLines: ["King Fahd Rd"] } }),
-    }),
+    }, validateGoogleErrorEnvelope),
   ]);
 
   const apis: Record<ApiKey, ProbeResult> = { places, geocoding, routes, address_validation: addressValidation };
