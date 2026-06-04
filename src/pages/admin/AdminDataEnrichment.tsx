@@ -195,6 +195,8 @@ export default function AdminDataEnrichment() {
       setMissing(res.missing ?? []);
       setDiagnostics(res.diagnostics ?? null);
       setDbMatches(res.db_matches ?? null);
+      setDraftStatus("unsaved");
+      setApplyResult(null);
       const initial: Partial<Record<EnrichmentFieldKey, string>> = {};
       for (const k of FIELD_KEYS) {
         const v = res.merged[k]?.value;
