@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { mapsService } from "@/modules/google";
 
 export interface PlaceCandidate {
   place_id: string;
@@ -29,6 +30,7 @@ export interface SearchPlacesResult {
   upstreamStatus?: number;
   upstreamMs?: number;
   detail?: string;
+  fallback?: "browser_places" | "geocoding";
 }
 
 export async function searchPlaces(input: {
@@ -44,5 +46,30 @@ export async function searchPlaces(input: {
     { body: input },
   );
   if (error) return { error: "request_failed", results: [] };
-  return data ?? { error: "empty_response", results: [] };
+  const result = data ?? { error: "empty_response", results: [] };
+  if (result.error && ["places_api_blocked_for_key", "places_api_disabled", "google_referrer_blocked"].includes(result.error)) {
+    const fallback = await mapsService.searchPlacesBrowserFallback({
+      query: input.query,
+      region: input.region,
+      language: input.language,
+      pageSize: input.pageSize,
+    }).catch((e: unknown) => ({
+      results: [] as PlaceCandidate[],
+      detail: e instanceof Error ? e.message : "browser_fallback_failed",
+    }));
+    if (fallback.results.length) {
+      return {
+        ok: true,
+        results: fallback.results,
+        nextPageToken: null,
+        requestId: result.requestId,
+        upstreamStatus: result.upstreamStatus,
+        upstreamMs: result.upstreamMs,
+        fallback: "browser_places",
+        detail: result.detail,
+      };
+    }
+    if (fallback.detail) result.detail = `${result.detail ?? result.error} · browser=${fallback.detail}`;
+  }
+  return result;
 }

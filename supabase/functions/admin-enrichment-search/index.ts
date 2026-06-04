@@ -69,6 +69,83 @@ interface PlaceCandidate {
   business_status: string | null;
 }
 
+type GeocodeComponent = { long_name?: string; short_name?: string; types?: string[] };
+type GeocodeResult = {
+  place_id?: string;
+  formatted_address?: string;
+  types?: string[];
+  geometry?: { location?: { lat?: number; lng?: number } };
+  address_components?: GeocodeComponent[];
+};
+
+function pickAddressComponent(components: GeocodeComponent[] | undefined, ...types: string[]): string | null {
+  if (!Array.isArray(components)) return null;
+  for (const type of types) {
+    const found = components.find((c) => Array.isArray(c.types) && c.types.includes(type));
+    if (found?.long_name || found?.short_name) return found.long_name ?? found.short_name ?? null;
+  }
+  return null;
+}
+
+async function fallbackGeocodeSearch(input: {
+  query: string;
+  region: string;
+  language: string;
+  googleKey: string;
+  lovableKey: string;
+  referer: string;
+}): Promise<{ results: PlaceCandidate[]; upstreamStatus: number; upstreamMs: number; detail: string | null }> {
+  const started = Date.now();
+  const url = new URL("https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json");
+  url.searchParams.set("address", input.query);
+  url.searchParams.set("language", input.language);
+  url.searchParams.set("region", input.region.toLowerCase());
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${input.lovableKey}`,
+      "X-Connection-Api-Key": input.googleKey,
+      "Referer": input.referer,
+    },
+  });
+  const upstreamMs = Date.now() - started;
+  const data = await res.json().catch(() => null) as { status?: string; error_message?: string; results?: GeocodeResult[] } | null;
+  if (!res.ok || !data || (data.status && data.status !== "OK" && data.status !== "ZERO_RESULTS")) {
+    return {
+      results: [],
+      upstreamStatus: res.status,
+      upstreamMs,
+      detail: data?.error_message ?? data?.status ?? `Geocoding HTTP ${res.status}`,
+    };
+  }
+  const results = (Array.isArray(data.results) ? data.results : []).slice(0, 20).map((r): PlaceCandidate => {
+    const lat = r.geometry?.location?.lat;
+    const lng = r.geometry?.location?.lng;
+    const name = pickAddressComponent(r.address_components, "establishment", "point_of_interest", "premise")
+      ?? r.formatted_address
+      ?? null;
+    return {
+      place_id: r.place_id ?? `geocode_${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`,
+      name,
+      address: r.formatted_address ?? null,
+      primary_type: Array.isArray(r.types) ? r.types[0] ?? null : null,
+      types: Array.isArray(r.types) ? r.types : [],
+      rating: null,
+      user_rating_count: null,
+      latitude: typeof lat === "number" ? lat : null,
+      longitude: typeof lng === "number" ? lng : null,
+      website: null,
+      phone: null,
+      maps_url: typeof lat === "number" && typeof lng === "number"
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}${r.place_id ? `&query_place_id=${encodeURIComponent(r.place_id)}` : ""}`
+        : (r.place_id ? `https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(r.place_id)}` : null),
+      icon_url: null,
+      business_status: null,
+    };
+  });
+  return { results, upstreamStatus: res.status, upstreamMs, detail: data.status ?? null };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -213,6 +290,26 @@ Deno.serve(async (req) => {
         mappedError: mapped.error,
         body: errorText.slice(0, 500),
       });
+      if (["places_api_disabled", "places_api_blocked_for_key", "google_referrer_blocked", "upstream_unauthorized", "upstream_error"].includes(mapped.error)) {
+        const fallback = await fallbackGeocodeSearch({ query, region, language, googleKey, lovableKey, referer: googleReferer });
+        log(fallback.results.length ? "warn" : "error", "geocoding_fallback_result", {
+          count: fallback.results.length,
+          upstreamStatus: fallback.upstreamStatus,
+          upstreamMs: fallback.upstreamMs,
+          detail: fallback.detail,
+        });
+        if (fallback.results.length) {
+          return json({
+            ok: true,
+            results: fallback.results,
+            nextPageToken: null,
+            requestId,
+            upstreamMs: fallback.upstreamMs,
+            fallback: "geocoding",
+            detail: `Places unavailable (${mapped.error}); returned Geocoding fallback results.`,
+          });
+        }
+      }
       return json({
         ok: false, error: mapped.error, results: [],
         requestId, upstreamStatus: res.status, upstreamMs,

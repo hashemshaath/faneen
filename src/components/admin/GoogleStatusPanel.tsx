@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bi, useBi } from "@/components/common/Bilingual";
 import { CheckCircle2, XCircle, RefreshCw, KeyRound, Activity, Loader2 } from "lucide-react";
-import { fetchGoogleHealth } from "@/modules/google";
+import { fetchGoogleHealth, mapsService } from "@/modules/google";
 import type { GoogleApi, GoogleProbe, GoogleHealthResponse } from "@/modules/google/types";
 
 const API_LABELS: Record<GoogleApi, { ar: string; en: string }> = {
@@ -26,7 +26,7 @@ function StatusDot({ ok }: { ok: boolean }) {
 export function GoogleStatusPanel() {
   const bi = useBi();
   const browserKeyPresent = Boolean(
-    import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY,
+    mapsService.getBrowserMapsKey(),
   );
 
   const q = useQuery<GoogleHealthResponse | null>({

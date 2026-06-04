@@ -19,8 +19,21 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const DEFAULT_GOOGLE_REFERER = "https://qitaat.lovable.app/";
+
 type Source = "website" | "google_maps" | "ai_enhanced" | "manual";
 type Confidence = "high" | "medium" | "low";
+type DbSelectQuery = PromiseLike<{ data: unknown }> & {
+  eq: (column: string, value: unknown) => DbSelectQuery;
+  limit: (count: number) => DbSelectQuery;
+  or: (filters: string) => DbSelectQuery;
+  maybeSingle: () => PromiseLike<{ data: unknown }>;
+};
+type DbFromQuery = {
+  select: (columns: string) => DbSelectQuery;
+  upsert: (payload: unknown) => PromiseLike<{ data: unknown; error: unknown }>;
+};
+type DbLike = { from: (table: string) => DbFromQuery };
 
 interface EnrichmentField {
   value: string | null;
@@ -84,6 +97,31 @@ function safeUrl(input: unknown, max = 500): string | null {
   } catch {
     return null;
   }
+}
+
+function googleGatewayHeaders(googleKey: string, lovableKey: string, extra: Record<string, string> = {}): Record<string, string> {
+  return {
+    "Authorization": `Bearer ${lovableKey}`,
+    "X-Connection-Api-Key": googleKey,
+    "Referer": Deno.env.get("GOOGLE_MAPS_HTTP_REFERER") ?? DEFAULT_GOOGLE_REFERER,
+    ...extra,
+  };
+}
+
+function extractLatLng(input: string | null): { lat: string; lng: string } | null {
+  if (!input) return null;
+  const decoded = decodeURIComponent(input);
+  const patterns = [
+    /[?&]query=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i,
+    /[?&]q=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i,
+    /@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i,
+    /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/i,
+  ];
+  for (const pattern of patterns) {
+    const match = decoded.match(pattern);
+    if (match?.[1] && match?.[2]) return { lat: match[1], lng: match[2] };
+  }
+  return null;
 }
 
 function emptyField(): EnrichmentField {
@@ -408,11 +446,7 @@ async function fetchGoogleMaps(
         `https://connector-gateway.lovable.dev/google_maps/places/v1/places/${encodeURIComponent(placeId)}?languageCode=${lang}`,
         {
           method: "GET",
-          headers: {
-            "Authorization": `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": googleKey,
-            "X-Goog-FieldMask": fieldMask,
-          },
+          headers: googleGatewayHeaders(googleKey, lovableKey, { "X-Goog-FieldMask": fieldMask }),
         },
       );
       if (res.ok) place = await res.json().catch(() => null);
@@ -423,12 +457,10 @@ async function fetchGoogleMaps(
         "https://connector-gateway.lovable.dev/google_maps/places/v1/places:searchText",
         {
           method: "POST",
-          headers: {
+          headers: googleGatewayHeaders(googleKey, lovableKey, {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": googleKey,
             "X-Goog-FieldMask": fieldMask.split(",").map((f) => `places.${f}`).join(","),
-          },
+          }),
           body: JSON.stringify({ textQuery: url, languageCode: lang }),
         },
       );
@@ -503,25 +535,20 @@ async function geocodeFallback(
   lovableKey: string,
   lang: "ar" | "en" = "ar",
 ): Promise<{
-  fields: { city: string | null; district: string | null; street: string | null; region: string | null };
+  fields: { city: string | null; district: string | null; street: string | null; region: string | null; national_address: string | null; latitude: string | null; longitude: string | null };
   raw: Array<Record<string, unknown>>;
 }> {
-  if (!lat || !lng) return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
+  if (!lat || !lng) return { fields: { city: null, district: null, street: null, region: null, national_address: null, latitude: null, longitude: null }, raw: [] };
   try {
     const res = await fetch(
       `https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json?latlng=${encodeURIComponent(lat)},${encodeURIComponent(lng)}&language=${lang}&region=sa`,
-      {
-        headers: {
-          "Authorization": `Bearer ${lovableKey}`,
-          "X-Connection-Api-Key": googleKey,
-        },
-      },
+      { headers: googleGatewayHeaders(googleKey, lovableKey) },
     );
     if (!res.ok) {
       await res.text().catch(() => "");
-      return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
+      return { fields: { city: null, district: null, street: null, region: null, national_address: null, latitude: lat, longitude: lng }, raw: [] };
     }
-    const data = await res.json().catch(() => null) as { results?: Array<{ address_components?: Array<{ long_name?: string; short_name?: string; types?: string[] }> }> };
+    const data = await res.json().catch(() => null) as { results?: Array<{ formatted_address?: string; address_components?: Array<{ long_name?: string; short_name?: string; types?: string[] }> }> };
     const results = Array.isArray(data?.results) ? data!.results! : [];
     // Aggregate components across all returned results.
     const all = results.flatMap((r) => Array.isArray(r.address_components) ? r.address_components! : []);
@@ -538,11 +565,14 @@ async function geocodeFallback(
         district: find("sublocality_level_1", "sublocality_level_2", "sublocality", "neighborhood"),
         street: find("route"),
         region: find("administrative_area_level_1"),
+        national_address: results[0]?.formatted_address ?? null,
+        latitude: lat,
+        longitude: lng,
       },
       raw: all as Array<Record<string, unknown>>,
     };
   } catch {
-    return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
+    return { fields: { city: null, district: null, street: null, region: null, national_address: null, latitude: lat, longitude: lng }, raw: [] };
   }
 }
 
@@ -580,7 +610,7 @@ function tokenMatch(a: string, b: string): boolean {
 
 // Match a city name against the active `cities` table, return canonical row.
 async function matchCity(
-  svc: ReturnType<typeof createClient> | null,
+  svc: DbLike | null,
   city: string | null,
 ): Promise<{ id: string; name_ar: string; name_en: string } | null> {
   if (!svc || !city) return null;
@@ -599,7 +629,7 @@ async function matchCity(
 
 // Match district by city + district text against `districts` table.
 async function matchDistrict(
-  svc: ReturnType<typeof createClient> | null,
+  svc: DbLike | null,
   cityName: string | null,
   districtName: string | null,
 ): Promise<{ id: string; district_ar: string; district_en: string | null; region_ar: string | null; region_en: string | null; city_ar: string | null; city_en: string | null } | null> {
@@ -686,7 +716,7 @@ Deno.serve(async (req) => {
 
     // Cache lookup per source (service-role client to bypass RLS).
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const svc = serviceKey ? createClient(supabaseUrl, serviceKey) : null;
+    const svc: DbLike | null = serviceKey ? createClient(supabaseUrl, serviceKey) as unknown as DbLike : null;
     const readCache = async (key: string): Promise<Record<string, string | null> | null> => {
       if (!svc || bypassCache) return null;
       const { data } = await svc
@@ -694,8 +724,9 @@ Deno.serve(async (req) => {
         .select("payload, expires_at")
         .eq("cache_key", key)
         .maybeSingle();
-      if (data && new Date(data.expires_at) > new Date()) {
-        return data.payload as Record<string, string | null>;
+      const row = data as { payload?: unknown; expires_at?: string } | null;
+      if (row?.expires_at && new Date(row.expires_at) > new Date()) {
+        return row.payload as Record<string, string | null>;
       }
       return null;
     };
@@ -738,6 +769,13 @@ Deno.serve(async (req) => {
         mapsData = rAr.fields;
         mapsDataEn = rEn.fields;
         mapsRaw = rAr.raw.placeId ? rAr.raw : rEn.raw;
+        const urlCoords = extractLatLng(mapsUrl);
+        if (urlCoords && (!mapsData.latitude || !mapsData.longitude) && (!mapsDataEn.latitude || !mapsDataEn.longitude)) {
+          mapsData.latitude = urlCoords.lat;
+          mapsData.longitude = urlCoords.lng;
+          mapsDataEn.latitude = urlCoords.lat;
+          mapsDataEn.longitude = urlCoords.lng;
+        }
         // Geocoding fallback when key address fields are missing (in either language).
         const lat = mapsData.latitude ?? mapsDataEn.latitude ?? null;
         const lng = mapsData.longitude ?? mapsDataEn.longitude ?? null;
@@ -754,10 +792,12 @@ Deno.serve(async (req) => {
           if (!mapsData.district) mapsData.district = gAr.fields.district;
           if (!mapsData.street) mapsData.street = gAr.fields.street;
           if (!mapsData.region) mapsData.region = gAr.fields.region;
+          if (!mapsData.national_address) mapsData.national_address = gAr.fields.national_address;
           if (!mapsDataEn.city) mapsDataEn.city = gEn.fields.city;
           if (!mapsDataEn.district) mapsDataEn.district = gEn.fields.district;
           if (!mapsDataEn.street) mapsDataEn.street = gEn.fields.street;
           if (!mapsDataEn.region) mapsDataEn.region = gEn.fields.region;
+          if (!mapsDataEn.national_address) mapsDataEn.national_address = gEn.fields.national_address;
         }
         if (Object.keys(mapsData).length || Object.keys(mapsDataEn).length) {
           await writeCache(mKey, { fields: mapsData, fieldsEn: mapsDataEn, raw: mapsRaw, geocodingRaw } as unknown as Record<string, string | null>);
