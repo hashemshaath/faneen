@@ -101,6 +101,15 @@ export default function AdminDataEnrichment() {
   const [selectedPlace, setSelectedPlace] = useState<PlaceCandidate | null>(null);
   const [searchDeferred, setSearchDeferred] = useState(false);
   const [searchCached, setSearchCached] = useState(false);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [bypassCacheFlag, setBypassCacheFlag] = useState(false);
+  // Filters / Sort
+  const [minRating, setMinRating] = useState<number>(0);
+  const [minReviews, setMinReviews] = useState<number>(0);
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"relevance" | "rating_desc" | "reviews_desc" | "name_asc">("relevance");
+  const [clearMsg, setClearMsg] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [website, setWebsite] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
