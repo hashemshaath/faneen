@@ -714,7 +714,7 @@ Deno.serve(async (req) => {
 
     // Cache lookup per source (service-role client to bypass RLS).
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const svc = serviceKey ? createClient(supabaseUrl, serviceKey) : null;
+    const svc: DbLike | null = serviceKey ? createClient(supabaseUrl, serviceKey) as unknown as DbLike : null;
     const readCache = async (key: string): Promise<Record<string, string | null> | null> => {
       if (!svc || bypassCache) return null;
       const { data } = await svc
