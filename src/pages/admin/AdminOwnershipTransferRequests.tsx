@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Check, X, Building2, User, Clock, CheckCircle2, XCircle,
   RefreshCw, AlertTriangle, ArrowRightLeft, ExternalLink, Inbox,
+  Search, Link2, Download, FileText, Mail, Phone, Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,6 +32,12 @@ interface RequestRow {
   reviewed_at: string | null;
   created_at: string;
   updated_at: string;
+  requester_name?: string | null;
+  requester_phone?: string | null;
+  requester_email?: string | null;
+  commercial_registration?: string | null;
+  proof_files?: Array<{ path: string; name: string; size: number; mime: string }> | null;
+  source?: string | null;
   business?: {
     id: string;
     name_ar: string | null;
@@ -56,6 +63,15 @@ interface PlaceholderReport {
   generated_at: string;
 }
 
+interface DashboardStats {
+  total_placeholders: number;
+  pending_claims: number;
+  approved_claims: number;
+  rejected_claims: number;
+  avg_review_hours: number | null;
+  by_region: Array<{ region: string; count: number }>;
+}
+
 const STATUS_LABEL: Record<Status, { ar: string; en: string }> = {
   pending:   { ar: 'قيد المراجعة', en: 'Pending' },
   approved:  { ar: 'تمت الموافقة',  en: 'Approved' },
@@ -79,16 +95,24 @@ const AdminOwnershipTransferRequests: React.FC = () => {
 
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [report, setReport] = useState<PlaceholderReport | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<Filter>('pending');
+  const [search, setSearch] = useState('');
   const [acting, setActing] = useState<string | null>(null);
   const [noteFor, setNoteFor] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
   const [errorFor, setErrorFor] = useState<{ id: string; msg: string; action: 'approve' | 'reject' } | null>(null);
+  const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
 
   const loadReport = useCallback(async () => {
     const { data, error } = await supabase.rpc('get_placeholder_owner_report');
     if (!error && data) setReport(data as unknown as PlaceholderReport);
+  }, []);
+
+  const loadStats = useCallback(async () => {
+    const { data, error } = await supabase.rpc('get_placeholder_dashboard_stats');
+    if (!error && data) setStats(data as unknown as DashboardStats);
   }, []);
 
   const load = useCallback(async () => {
@@ -96,7 +120,7 @@ const AdminOwnershipTransferRequests: React.FC = () => {
     try {
       let q = supabase
         .from('business_ownership_transfer_requests')
-        .select('id, business_id, requester_user_id, status, message, admin_note, reviewed_by, reviewed_at, created_at, updated_at')
+        .select('id, business_id, requester_user_id, status, message, admin_note, reviewed_by, reviewed_at, created_at, updated_at, requester_name, requester_phone, requester_email, commercial_registration, proof_files, source')
         .order('created_at', { ascending: false })
         .limit(200);
       if (filter !== 'all') q = q.eq('status', filter);
@@ -123,7 +147,26 @@ const AdminOwnershipTransferRequests: React.FC = () => {
     }
   }, [filter]);
 
-  useEffect(() => { void load(); void loadReport(); }, [load, loadReport]);
+  useEffect(() => { void load(); void loadReport(); void loadStats(); }, [load, loadReport, loadStats]);
+
+  // Realtime subscription for new/updated claim requests
+  useEffect(() => {
+    const channel = supabase
+      .channel('ownership_claim_requests_admin')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'business_ownership_transfer_requests' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            toast.info(isRTL ? 'وصل طلب مطالبة جديد' : 'New ownership claim received');
+          }
+          void load();
+          void loadStats();
+        },
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [load, loadStats, isRTL]);
 
   const counts = useMemo(() => {
     const c = { pending: 0, approved: 0, rejected: 0, cancelled: 0 };
@@ -170,6 +213,68 @@ const AdminOwnershipTransferRequests: React.FC = () => {
       setActing(null);
     }
   }, [isRTL, load]);
+
+  const previewProof = useCallback(async (path: string) => {
+    if (previewUrls[path]) { window.open(previewUrls[path], '_blank', 'noopener,noreferrer'); return; }
+    const { data, error } = await supabase.storage
+      .from('ownership-claim-proofs')
+      .createSignedUrl(path, 60 * 10);
+    if (error || !data) { toast.error(error?.message ?? 'Failed to preview'); return; }
+    setPreviewUrls((u) => ({ ...u, [path]: data.signedUrl }));
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+  }, [previewUrls]);
+
+  const copyClaimLink = useCallback(async (businessId: string) => {
+    const url = `${window.location.origin}/claim/${businessId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(isRTL ? 'تم نسخ رابط المطالبة' : 'Claim link copied');
+    } catch {
+      toast.error(isRTL ? 'تعذّر النسخ' : 'Copy failed');
+    }
+  }, [isRTL]);
+
+  const filteredRows = useMemo(() => {
+    if (!search.trim()) return rows;
+    const q = search.trim().toLowerCase();
+    return rows.filter((r) => {
+      const hay = [
+        r.business?.name_ar, r.business?.name_en, r.business?.username, r.business?.ref_id,
+        r.requester?.full_name, r.requester?.full_name_ar, r.requester?.email, r.requester?.ref_id,
+        r.requester_name, r.requester_email, r.requester_phone, r.commercial_registration,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }, [rows, search]);
+
+  const exportCsv = useCallback(() => {
+    const header = ['Request ID','Business ID','Business Name','Business Ref','Requester','Email','Phone','CR','Status','Created','Reviewed','Admin Note','Source'];
+    const escape = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = [header.join(',')];
+    for (const r of filteredRows) {
+      lines.push([
+        r.id, r.business_id,
+        r.business?.name_ar || r.business?.name_en || '',
+        r.business?.ref_id || '',
+        r.requester_name || r.requester?.full_name_ar || r.requester?.full_name || '',
+        r.requester_email || r.requester?.email || '',
+        r.requester_phone || '',
+        r.commercial_registration || '',
+        r.status,
+        r.created_at,
+        r.reviewed_at || '',
+        r.admin_note || '',
+        r.source || 'admin',
+      ].map(escape).join(','));
+    }
+    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ownership-claims-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [filteredRows]);
 
   const FILTERS: { id: Filter; ar: string; en: string }[] = [
     { id: 'pending', ar: 'معلّقة', en: 'Pending' },
