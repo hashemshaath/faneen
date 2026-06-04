@@ -4,6 +4,7 @@ import type { EnrichmentFetchResult } from "../types";
 export async function fetchEnrichment(input: {
   website?: string;
   mapsUrl?: string;
+  bypassCache?: boolean;
 }): Promise<EnrichmentFetchResult> {
   const { data, error } = await supabase.functions.invoke<EnrichmentFetchResult>(
     "admin-enrichment-fetch",

@@ -6,6 +6,8 @@ export { enhanceEnrichment } from "./services/enhanceEnrichment";
 export { applyEnrichment } from "./services/applyEnrichment";
 export { searchPlaces } from "./services/searchPlaces";
 export type { PlaceCandidate, SearchPlacesResult } from "./services/searchPlaces";
+export { clearEnrichmentCache } from "./services/clearCache";
+export type { ClearCacheResult } from "./services/clearCache";
 export type {
   EnrichmentDraft,
   EnrichmentField,

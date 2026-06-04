@@ -14,7 +14,7 @@
  */
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap } from "lucide-react";
+import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap, RefreshCw, Trash2, SlidersHorizontal } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Bi, useBi } from "@/components/common/Bilingual";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -30,6 +31,7 @@ import {
   enhanceEnrichment,
   applyEnrichment,
   searchPlaces,
+  clearEnrichmentCache,
   type PlaceCandidate,
   type EnrichmentDraft,
   type EnrichmentFieldKey,
@@ -99,6 +101,15 @@ export default function AdminDataEnrichment() {
   const [selectedPlace, setSelectedPlace] = useState<PlaceCandidate | null>(null);
   const [searchDeferred, setSearchDeferred] = useState(false);
   const [searchCached, setSearchCached] = useState(false);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [bypassCacheFlag, setBypassCacheFlag] = useState(false);
+  // Filters / Sort
+  const [minRating, setMinRating] = useState<number>(0);
+  const [minReviews, setMinReviews] = useState<number>(0);
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"relevance" | "rating_desc" | "reviews_desc" | "name_asc">("relevance");
+  const [clearMsg, setClearMsg] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [website, setWebsite] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -113,7 +124,11 @@ export default function AdminDataEnrichment() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const fetchMut = useMutation({
-    mutationFn: () => fetchEnrichment({ website: website.trim() || undefined, mapsUrl: mapsUrl.trim() || undefined }),
+    mutationFn: (opts: { bypass?: boolean } = {}) => fetchEnrichment({
+      website: website.trim() || undefined,
+      mapsUrl: mapsUrl.trim() || undefined,
+      bypassCache: opts.bypass === true,
+    }),
     onSuccess: (res) => {
       if (res.error || !res.merged) {
         setErrorMsg(bi("تعذر جلب البيانات. تحقق من الروابط وحاول مرة أخرى.", "Could not fetch data. Check the URLs and try again."));
@@ -136,19 +151,43 @@ export default function AdminDataEnrichment() {
   });
 
   const searchMut = useMutation({
-    mutationFn: () => searchPlaces({ query: searchQuery.trim(), region: "SA", language: "ar" }),
+    mutationFn: (opts: { append?: boolean; bypass?: boolean } = {}) =>
+      searchPlaces({
+        query: searchQuery.trim(),
+        region: "SA",
+        language: "ar",
+        pageSize: 20,
+        pageToken: opts.append ? nextPageToken : null,
+        bypassCache: opts.bypass ?? bypassCacheFlag,
+      }).then((r) => ({ ...r, _append: opts.append === true })),
     onSuccess: (res) => {
       if (res.error) {
         setErrorMsg(bi("تعذر البحث في خرائط Google.", "Could not search Google Maps."));
-        setSearchResults([]);
+        if (!res._append) setSearchResults([]);
         return;
       }
       setErrorMsg(null);
       setSearchDeferred(Boolean(res.deferred));
       setSearchCached(Boolean(res.cached));
-      setSearchResults(res.results ?? []);
+      setNextPageToken(res.nextPageToken ?? null);
+      setSearchResults((prev) => res._append ? [...prev, ...(res.results ?? [])] : (res.results ?? []));
+      setBypassCacheFlag(false);
     },
     onError: () => setErrorMsg(bi("حدث خطأ في البحث.", "Search failed.")),
+  });
+
+  const clearCacheMut = useMutation({
+    mutationFn: () => clearEnrichmentCache("all"),
+    onSuccess: (res) => {
+      if (res.error) {
+        setClearMsg(bi("تعذر مسح الكاش.", "Could not clear cache."));
+        return;
+      }
+      setSearchCached(false);
+      setClearMsg(bi(`تم مسح ${res.deleted ?? 0} عنصر من الكاش.`, `Cleared ${res.deleted ?? 0} cached items.`));
+      window.setTimeout(() => setClearMsg(null), 3500);
+    },
+    onError: () => setClearMsg(bi("تعذر مسح الكاش.", "Could not clear cache.")),
   });
 
   const enhanceMut = useMutation({
@@ -195,6 +234,23 @@ export default function AdminDataEnrichment() {
   });
 
   const conflictKeys = useMemo(() => Object.keys(conflicts ?? {}), [conflicts]);
+
+  const availableTypes = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of searchResults) if (r.primary_type) set.add(r.primary_type);
+    return Array.from(set).sort();
+  }, [searchResults]);
+
+  const displayResults = useMemo(() => {
+    let list = [...searchResults];
+    if (minRating > 0) list = list.filter((r) => (r.rating ?? 0) >= minRating);
+    if (minReviews > 0) list = list.filter((r) => (r.user_rating_count ?? 0) >= minReviews);
+    if (typeFilter !== "all") list = list.filter((r) => r.primary_type === typeFilter);
+    if (sortBy === "rating_desc") list.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+    else if (sortBy === "reviews_desc") list.sort((a, b) => (b.user_rating_count ?? -1) - (a.user_rating_count ?? -1));
+    else if (sortBy === "name_asc") list.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", undefined, { sensitivity: "base" }));
+    return list;
+  }, [searchResults, minRating, minReviews, typeFilter, sortBy]);
 
   const handleSelectPlace = (p: PlaceCandidate) => {
     setSelectedPlace(p);
@@ -315,12 +371,12 @@ export default function AdminDataEnrichment() {
                 placeholder={bi("مثل: مصنع الزجاج العالمي الرياض", "e.g. Acme Glass Factory Riyadh")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && searchQuery.trim().length >= 2) searchMut.mutate(); }}
+                onKeyDown={(e) => { if (e.key === "Enter" && searchQuery.trim().length >= 2) searchMut.mutate({}); }}
                 className="h-12 flex-1"
                 maxLength={200}
               />
               <Button
-                onClick={() => searchMut.mutate()}
+                onClick={() => searchMut.mutate({})}
                 disabled={searchMut.isPending || searchQuery.trim().length < 2}
                 className="h-12"
               >
@@ -352,17 +408,111 @@ export default function AdminDataEnrichment() {
 
             {searchResults.length > 0 && (
               <div className="mt-2 space-y-2">
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <Bi ar={`${searchResults.length} نتيجة`} en={`${searchResults.length} results`} />
+                <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                  <Bi ar={`${displayResults.length} من ${searchResults.length} نتيجة`} en={`${displayResults.length} of ${searchResults.length} results`} />
                   {searchCached && (
                     <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-emerald-700">
                       <Zap className="h-3 w-3" />
                       <Bi ar="من الكاش" en="Cached" />
                     </span>
                   )}
+                  <div className="ms-auto flex items-center gap-1.5">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-[11px]"
+                      onClick={() => setShowFilters((s) => !s)}
+                    >
+                      <SlidersHorizontal className="me-1 h-3 w-3" />
+                      <Bi ar="تصفية وفرز" en="Filter & sort" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-[11px]"
+                      onClick={() => { setBypassCacheFlag(true); searchMut.mutate({ bypass: true }); }}
+                      disabled={searchMut.isPending || searchQuery.trim().length < 2}
+                      title={bi("إعادة الجلب من Google مباشرة", "Re-fetch directly from Google")}
+                    >
+                      <RefreshCw className={`me-1 h-3 w-3 ${searchMut.isPending ? "animate-spin" : ""}`} />
+                      <Bi ar="إعادة جلب" en="Re-fetch" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-[11px] text-rose-600 hover:text-rose-700"
+                      onClick={() => clearCacheMut.mutate()}
+                      disabled={clearCacheMut.isPending}
+                    >
+                      {clearCacheMut.isPending ? <Loader2 className="me-1 h-3 w-3 animate-spin" /> : <Trash2 className="me-1 h-3 w-3" />}
+                      <Bi ar="مسح الكاش" en="Clear cache" />
+                    </Button>
+                  </div>
                 </div>
+                {clearMsg && (
+                  <div className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-700">
+                    {clearMsg}
+                  </div>
+                )}
+                {showFilters && (
+                  <Card className="grid grid-cols-1 gap-3 border-dashed bg-muted/30 p-3 sm:grid-cols-4">
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground"><Bi ar="أدنى تقييم" en="Min rating" /></Label>
+                      <Select value={String(minRating)} onValueChange={(v) => setMinRating(Number(v))}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0"><Bi ar="الكل" en="Any" /></SelectItem>
+                          <SelectItem value="3">≥ 3.0</SelectItem>
+                          <SelectItem value="3.5">≥ 3.5</SelectItem>
+                          <SelectItem value="4">≥ 4.0</SelectItem>
+                          <SelectItem value="4.5">≥ 4.5</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground"><Bi ar="ثقة (عدد التقييمات)" en="Confidence (reviews)" /></Label>
+                      <Select value={String(minReviews)} onValueChange={(v) => setMinReviews(Number(v))}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0"><Bi ar="الكل" en="Any" /></SelectItem>
+                          <SelectItem value="5">≥ 5</SelectItem>
+                          <SelectItem value="20">≥ 20</SelectItem>
+                          <SelectItem value="50">≥ 50</SelectItem>
+                          <SelectItem value="100">≥ 100</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground"><Bi ar="نوع الجهة" en="Place type" /></Label>
+                      <Select value={typeFilter} onValueChange={setTypeFilter}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all"><Bi ar="الكل" en="All" /></SelectItem>
+                          {availableTypes.map((t) => (
+                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground"><Bi ar="فرز" en="Sort by" /></Label>
+                      <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="relevance"><Bi ar="الأكثر صلة" en="Relevance" /></SelectItem>
+                          <SelectItem value="rating_desc"><Bi ar="الأعلى تقييمًا" en="Highest rating" /></SelectItem>
+                          <SelectItem value="reviews_desc"><Bi ar="الأكثر تقييمات" en="Most reviews" /></SelectItem>
+                          <SelectItem value="name_asc"><Bi ar="الاسم (أ-ي)" en="Name (A–Z)" /></SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </Card>
+                )}
                 <ul className="space-y-2">
-                  {searchResults.map((p) => {
+                  {displayResults.map((p) => {
                     const isSelected = selectedPlace?.place_id === p.place_id;
                     return (
                       <li key={p.place_id}>
@@ -433,6 +583,20 @@ export default function AdminDataEnrichment() {
                     );
                   })}
                 </ul>
+                {nextPageToken && (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => searchMut.mutate({ append: true })}
+                      disabled={searchMut.isPending}
+                    >
+                      {searchMut.isPending ? <Loader2 className="me-2 h-3.5 w-3.5 animate-spin" /> : null}
+                      <Bi ar="تحميل المزيد" en="Load more" />
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -486,12 +650,23 @@ export default function AdminDataEnrichment() {
                 <Bi ar="رجوع للبحث" en="Back to search" />
               </Button>
               <Button
-                onClick={() => fetchMut.mutate()}
+                onClick={() => fetchMut.mutate({})}
                 disabled={fetchMut.isPending || (!website.trim() && !mapsUrl.trim())}
                 className="h-11"
               >
                 {fetchMut.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                 <Bi ar="جلب البيانات" en="Fetch data" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fetchMut.mutate({ bypass: true })}
+                disabled={fetchMut.isPending || (!website.trim() && !mapsUrl.trim())}
+                className="h-11"
+                title={bi("تجاوز الكاش وإعادة الجلب", "Bypass cache and re-fetch")}
+              >
+                <RefreshCw className="me-2 h-4 w-4" />
+                <Bi ar="إعادة جلب" en="Re-fetch" />
               </Button>
             </div>
           </div>

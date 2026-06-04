@@ -24,12 +24,16 @@ export interface SearchPlacesResult {
   missing?: string[];
   error?: string;
   cached?: boolean;
+  nextPageToken?: string | null;
 }
 
 export async function searchPlaces(input: {
   query: string;
   region?: string;
   language?: string;
+  pageToken?: string | null;
+  pageSize?: number;
+  bypassCache?: boolean;
 }): Promise<SearchPlacesResult> {
   const { data, error } = await supabase.functions.invoke<SearchPlacesResult>(
     "admin-enrichment-search",
