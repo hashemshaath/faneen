@@ -28,6 +28,7 @@ type OwnerMode = "existing" | "new" | "invite" | "placeholder";
 // Shared placeholder account for entities created without a manager.
 // Ownership can later be transferred to the real owner upon request +
 // admin approval (see admin_transfer_business_ownership RPC).
+// v2 — placeholder mode support (force redeploy)
 const PLACEHOLDER_EMAIL = "com@qitaat.com";
 const PLACEHOLDER_PASSWORD = "HasH#3070";
 const PLACEHOLDER_FULL_NAME = "Qitaat Placeholder Owner";
@@ -132,6 +133,9 @@ Deno.serve(async (req) => {
 
     const business = body.business;
     const owner = body.owner;
+    // Normalize owner.mode defensively (default to placeholder for empty)
+    const rawMode = (owner?.mode ?? "").toString().trim().toLowerCase();
+    owner.mode = (rawMode || "placeholder") as OwnerMode;
 
     // ── Validate business fields
     const username = sanitizeUsername(business.username || "");
@@ -272,7 +276,7 @@ Deno.serve(async (req) => {
         recoveryLink = linkData?.properties?.action_link ?? null;
       }
     } else {
-      return json({ error: "invalid_owner_mode" }, 400);
+      return json({ error: "invalid_owner_mode", received_mode: owner.mode }, 400);
     }
 
     if (!ownerUserId) return json({ error: "owner_resolution_failed" }, 500);
