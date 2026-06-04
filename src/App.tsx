@@ -447,6 +447,7 @@ const AppRoutes = () => (
           {/* NAVIGATION-CONSOLIDATION-1 group 16 — SEO hub. */}
           <Route path="/admin/site-audit" element={<ProtectedRoute requireAdmin><Navigate to="/admin/sitemap-status?tab=audit" replace /></ProtectedRoute>} />
           <Route path="/admin/diagnostics" element={<ProtectedRoute requireAdmin><AdminDiagnostics /></ProtectedRoute>} />
+          <Route path="/admin/data-enrichment" element={<ProtectedRoute requireAdmin><AdminDataEnrichment /></ProtectedRoute>} />
           <Route path="/admin/sector-seo" element={<ProtectedRoute requireAdmin><Navigate to="/admin/sitemap-status?tab=sector-seo" replace /></ProtectedRoute>} />
           <Route path="/admin/market-analytics" element={<ProtectedRoute requireAdmin><AdminMarketAnalytics /></ProtectedRoute>} />
           <Route path="/admin/sitemap-status" element={<ProtectedRoute requireAdmin><AdminSeoHub /></ProtectedRoute>} />
