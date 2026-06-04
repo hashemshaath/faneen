@@ -12,13 +12,27 @@ const corsHeaders = {
 
 const DEFAULT_GOOGLE_REFERER = "https://qitaat.lovable.app/";
 
+const GEOCODING_FALLBACK_MISSING_FIELDS = [
+  "phone",
+  "rating",
+  "user_rating_count",
+  "website",
+  "business_status",
+];
+
 function extractGoogleReason(text: string): string | null {
   try {
-    const parsed = JSON.parse(text) as { error?: { details?: Array<{ reason?: string }>; message?: string } };
+    const parsed = JSON.parse(text) as { error?: { details?: Array<{ reason?: string }>; status?: string; message?: string }; type?: string; message?: string };
     const reason = parsed.error?.details?.find((d) => typeof d.reason === "string")?.reason;
     if (reason) return reason;
+    if (typeof parsed.error?.status === "string") return parsed.error.status;
+    if (typeof parsed.type === "string") return parsed.type;
     if (typeof parsed.error?.message === "string") return parsed.error.message.slice(0, 180);
+    if (typeof parsed.message === "string") return parsed.message.slice(0, 180);
   } catch { /* keep generic */ }
+  if (/API_KEY_SERVICE_BLOCKED/i.test(text)) return "API_KEY_SERVICE_BLOCKED";
+  if (/SERVICE_DISABLED/i.test(text)) return "SERVICE_DISABLED";
+  if (/API_KEY_HTTP_REFERRER_BLOCKED/i.test(text)) return "API_KEY_HTTP_REFERRER_BLOCKED";
   return null;
 }
 
@@ -298,17 +312,27 @@ Deno.serve(async (req) => {
           upstreamMs: fallback.upstreamMs,
           detail: fallback.detail,
         });
-        if (fallback.results.length) {
-          return json({
-            ok: true,
-            results: fallback.results,
-            nextPageToken: null,
-            requestId,
-            upstreamMs: fallback.upstreamMs,
-            fallback: "geocoding",
-            detail: `Places unavailable (${mapped.error}); returned Geocoding fallback results.`,
-          });
-        }
+        return json({
+          ok: true,
+          results: fallback.results,
+          nextPageToken: null,
+          requestId,
+          upstreamStatus: res.status,
+          upstreamMs,
+          fallback: "geocoding",
+          fallbackReason: mapped.error,
+          fallbackMissingFields: GEOCODING_FALLBACK_MISSING_FIELDS,
+          fallbackDiagnostics: {
+            placesStatus: res.status,
+            placesMs: upstreamMs,
+            geocodingStatus: fallback.upstreamStatus,
+            geocodingMs: fallback.upstreamMs,
+            geocodingDetail: fallback.detail,
+          },
+          detail: fallback.results.length
+            ? `Places unavailable (${mapped.error}); returned Geocoding fallback results.`
+            : `Places unavailable (${mapped.error}); Geocoding fallback returned no matches.`,
+        });
       }
       return json({
         ok: false, error: mapped.error, results: [],
