@@ -335,6 +335,12 @@ export default function AdminDataEnrichment() {
       setNextPageToken(res.nextPageToken ?? null);
       setSearchResults((prev) => res._append ? [...prev, ...(res.results ?? [])] : (res.results ?? []));
       setBypassCacheFlag(false);
+      if (res.fallback === "geocoding") {
+        const parts = [bi("تم عرض نتائج بديلة من Geocoding لأن Places API غير مفعّلة على المفتاح الحالي.", "Showing Geocoding fallback results because Places API is not enabled for the current key.")];
+        if (typeof res.upstreamMs === "number") parts.push(`${res.upstreamMs}ms`);
+        if (res.requestId) parts.push(`req=${res.requestId.slice(0, 8)}`);
+        setErrorMsg(parts.join(" · "));
+      }
     },
     onError: () => setErrorMsg(bi("حدث خطأ في البحث.", "Search failed.")),
   });
