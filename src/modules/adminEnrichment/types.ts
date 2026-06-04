@@ -15,19 +15,38 @@ export interface EnrichmentDraft {
   name_ar: EnrichmentField;
   name_en: EnrichmentField;
   activity: EnrichmentField;
+  activity_ar: EnrichmentField;
+  activity_en: EnrichmentField;
   description_ar: EnrichmentField;
   description_en: EnrichmentField;
   phone: EnrichmentField;
+  phone_mobile: EnrichmentField;
+  phone_landline: EnrichmentField;
+  unified_number: EnrichmentField;
+  whatsapp: EnrichmentField;
+  customer_service: EnrichmentField;
+  email: EnrichmentField;
   website: EnrichmentField;
   city: EnrichmentField;
+  city_en: EnrichmentField;
   district: EnrichmentField;
+  district_en: EnrichmentField;
   street: EnrichmentField;
+  street_en: EnrichmentField;
   national_address: EnrichmentField;
+  national_address_en: EnrichmentField;
   latitude: EnrichmentField;
   longitude: EnrichmentField;
   working_hours: EnrichmentField;
   logo_url: EnrichmentField;
   social_links: EnrichmentField;
+  facebook: EnrichmentField;
+  instagram: EnrichmentField;
+  twitter: EnrichmentField;
+  linkedin: EnrichmentField;
+  youtube: EnrichmentField;
+  tiktok: EnrichmentField;
+  snapchat: EnrichmentField;
 }
 
 export type EnrichmentFieldKey = keyof EnrichmentDraft;
