@@ -494,6 +494,79 @@ export default function AdminDataEnrichment() {
 
       {/* Step 0: Google-like Search */}
       {step === "search" && (
+      <>
+        {/* Saved drafts panel — editable until approved */}
+        {(() => {
+          const drafts = draftsQuery.data?.drafts ?? [];
+          if (drafts.length === 0) return null;
+          return (
+            <Card className="mb-4 p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <FileEdit className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-semibold">
+                  <Bi ar="مسودات محفوظة" en="Saved drafts" />
+                </h2>
+                <Badge variant="outline" className="h-5 text-[10px]">{drafts.length}</Badge>
+                <span className="ms-auto text-[11px] text-muted-foreground">
+                  <Bi
+                    ar="قابلة للتعديل — لم يُنشأ حساب أو رقم تعريفي حتى الاعتماد"
+                    en="Editable — no account or Ref ID is created until approval"
+                  />
+                </span>
+              </div>
+              <ul className="divide-y">
+                {drafts.map((d) => (
+                  <li key={d.id} className="flex items-center gap-2 py-2 text-sm">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium" dir="auto">
+                        {d.name ?? bi("بدون اسم", "Untitled")}
+                      </div>
+                      <div className="truncate text-[11px] text-muted-foreground" dir="auto">
+                        {d.city ?? "—"}{d.activity ? ` · ${d.activity}` : ""}
+                      </div>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={`h-5 text-[10px] ${
+                        d.status === "applied"
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-amber-200 bg-amber-50 text-amber-700"
+                      }`}
+                    >
+                      {d.status === "applied"
+                        ? bi("معتمدة", "Approved")
+                        : bi("مسودة", "Draft")}
+                    </Badge>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7"
+                      onClick={() => loadDraftMut.mutate(d.id)}
+                      disabled={loadDraftMut.isPending}
+                    >
+                      <FileEdit className="me-1 h-3 w-3" />
+                      <Bi ar="فتح وتعديل" en="Open & edit" />
+                    </Button>
+                    {d.status !== "applied" && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                        onClick={() => deleteDraftMut.mutate(d.id)}
+                        disabled={deleteDraftMut.isPending}
+                        title={bi("حذف المسودة", "Delete draft")}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          );
+        })()}
         <Card className="p-5">
           <div className="space-y-3">
             <Label className="text-sm">
