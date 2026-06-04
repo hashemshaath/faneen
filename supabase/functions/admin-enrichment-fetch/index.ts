@@ -372,6 +372,7 @@ async function geocodeFallback(
   lng: string | null,
   googleKey: string,
   lovableKey: string,
+  lang: "ar" | "en" = "ar",
 ): Promise<{
   fields: { city: string | null; district: string | null; street: string | null; region: string | null };
   raw: Array<Record<string, unknown>>;
@@ -379,7 +380,7 @@ async function geocodeFallback(
   if (!lat || !lng) return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
   try {
     const res = await fetch(
-      `https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json?latlng=${encodeURIComponent(lat)},${encodeURIComponent(lng)}&language=ar&region=sa`,
+      `https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json?latlng=${encodeURIComponent(lat)},${encodeURIComponent(lng)}&language=${lang}&region=sa`,
       {
         headers: {
           "Authorization": `Bearer ${lovableKey}`,
@@ -414,6 +415,15 @@ async function geocodeFallback(
   } catch {
     return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
   }
+}
+
+function geocodeFallbackEn(
+  lat: string | null,
+  lng: string | null,
+  googleKey: string,
+  lovableKey: string,
+) {
+  return geocodeFallback(lat, lng, googleKey, lovableKey, "en");
 }
 
 // Normalize Arabic / English text for fuzzy matching.
