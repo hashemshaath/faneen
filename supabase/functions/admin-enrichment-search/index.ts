@@ -67,6 +67,23 @@ Deno.serve(async (req) => {
     const region = (body.region ?? "SA").toUpperCase().slice(0, 2);
     const language = (body.language ?? "ar").toLowerCase().slice(0, 5);
 
+    // Cache lookup (service-role client to bypass RLS for system table).
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const svc = serviceKey
+      ? createClient(supabaseUrl, serviceKey)
+      : null;
+    const cacheKey = `search:${region}:${language}:${query.toLowerCase()}`;
+    if (svc) {
+      const { data: cached } = await svc
+        .from("admin_enrichment_cache")
+        .select("payload, expires_at")
+        .eq("cache_key", cacheKey)
+        .maybeSingle();
+      if (cached && new Date(cached.expires_at) > new Date()) {
+        return json({ ...(cached.payload as Record<string, unknown>), cached: true });
+      }
+    }
+
     const googleKey = Deno.env.get("GOOGLE_MAPS_API_KEY") ?? "";
     const lovableKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
     if (!googleKey || !lovableKey) {
@@ -135,7 +152,16 @@ Deno.serve(async (req) => {
       };
     }).filter((r) => r.place_id);
 
-    return json({ ok: true, results });
+    const payload = { ok: true, results };
+    if (svc) {
+      const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      await svc.from("admin_enrichment_cache").upsert({
+        cache_key: cacheKey,
+        payload,
+        expires_at: expires,
+      });
+    }
+    return json(payload);
   } catch {
     return json({ ok: false, error: "internal_error", results: [] }, 200);
   }
