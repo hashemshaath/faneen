@@ -1454,23 +1454,24 @@ const AdminBusinesses = () => {
                     {isRTL ? '١) المدير / المسؤول للمنشأة' : '1) Entity manager / responsible person'}
                   </Label>
                   <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
-                    {isRTL ? 'إلزامي' : 'Required'}
+                    {isRTL ? 'اختياري' : 'Optional'}
                   </span>
                 </div>
                 <p className="text-[10.5px] text-muted-foreground leading-relaxed">
                   {isRTL
-                    ? 'اختر طريقة ربط المدير المسؤول عن هذه المنشأة: مستخدم موجود مسبقاً، إنشاء حساب جديد فوراً ببيانات دخول، أو إرسال دعوة بالبريد ليُعيّن المسؤول كلمة مروره بنفسه.'
-                    : 'Choose how to bind the manager for this entity: pick an existing user, create a brand-new account with credentials immediately, or send an email invite so the manager sets their own password.'}
+                    ? 'الافتراضي "بدون مدير" — تُربط المنشأة بالحساب المؤقت (com@qitaat.com) ويمكن لمالكها الحقيقي لاحقاً طلب نقل الملكية بموافقة الادمن. أو اختر مستخدماً موجوداً، أنشئ حساباً، أو أرسل دعوة بالبريد.'
+                    : 'Default is "No manager" — the entity is linked to the placeholder account (com@qitaat.com); its real owner can later request a transfer that an admin approves. You can also pick an existing user, create an account, or send an email invite.'}
                 </p>
 
-                {/* Owner mode tabs (existing / new / invite) */}
-                <div className="grid grid-cols-3 gap-1 rounded-xl border border-border/40 bg-card p-1">
+                {/* Owner mode tabs (placeholder / existing / new / invite) */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 rounded-xl border border-border/40 bg-card p-1">
                   {([
+                    { id: 'placeholder', ar: 'بدون مدير', en: 'No manager' },
                     { id: 'existing', ar: 'مستخدم موجود', en: 'Existing user' },
                     { id: 'new',      ar: 'إنشاء حساب', en: 'New account' },
                     { id: 'invite',   ar: 'دعوة بالبريد', en: 'Email invite' },
                   ] as const).map((opt) => {
-                    const active = (createForm.owner_mode || 'existing') === opt.id;
+                    const active = (createForm.owner_mode || 'placeholder') === opt.id;
                     return (
                       <button
                         key={opt.id}
@@ -1486,8 +1487,17 @@ const AdminBusinesses = () => {
                   })}
                 </div>
 
+                {/* Mode: Placeholder (no manager — default) */}
+                {(createForm.owner_mode || 'placeholder') === 'placeholder' && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 text-[11px] leading-relaxed text-foreground/80">
+                    {isRTL
+                      ? 'ستُربط المنشأة بالحساب المؤقت المشترك. عندما يطلب المالك الحقيقي تسلّم منشأته يوافق الادمن لنقل الملكية إليه.'
+                      : 'The entity will be linked to the shared placeholder account. When the real owner requests it, an admin can approve to transfer ownership.'}
+                  </div>
+                )}
+
                 {/* Mode: Existing user picker */}
-                {(createForm.owner_mode || 'existing') === 'existing' && (
+                {createForm.owner_mode === 'existing' && (
                   createForm.resolved_user_id ? (
                   <div className="flex items-center justify-between gap-2 rounded-lg border border-success/40 bg-success/10 px-3 py-2">
                     <div className="flex items-center gap-2 min-w-0">
