@@ -26,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Bi, useBi } from "@/components/common/Bilingual";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { mapsService } from "@/modules/google";
 import {
   fetchEnrichment,
   enhanceEnrichment,
@@ -469,11 +470,8 @@ export default function AdminDataEnrichment() {
     XLSX.writeFile(wb, `enrichment-${sessionId ?? Date.now()}.xlsx`);
   };
 
-  const staticMapUrl = (lat: number, lng: number) => {
-    const key = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
-    if (!key) return null;
-    return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=15&size=120x80&scale=2&markers=color:red%7C${lat},${lng}&key=${key}`;
-  };
+  const staticMapUrl = (lat: number, lng: number) =>
+    mapsService.getStaticMapUrl({ lat, lng });
 
   return (
     <DashboardLayout>
