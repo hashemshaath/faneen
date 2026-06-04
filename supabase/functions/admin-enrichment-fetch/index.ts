@@ -283,11 +283,15 @@ Deno.serve(async (req) => {
       website?: string;
       mapsUrl?: string;
       bypassCache?: boolean;
+      placeId?: string;
     };
     const website = safeUrl(body.website);
     const mapsUrl = safeUrl(body.mapsUrl);
+    const placeId = typeof body.placeId === "string" && /^[A-Za-z0-9_-]{4,200}$/.test(body.placeId.trim())
+      ? body.placeId.trim()
+      : null;
     const bypassCache = body.bypassCache === true;
-    if (!website && !mapsUrl) {
+    if (!website && !mapsUrl && !placeId) {
       return json({ error: "no_sources" }, 400);
     }
 
@@ -297,7 +301,7 @@ Deno.serve(async (req) => {
 
     const missing: string[] = [];
     if (website && !firecrawlKey) missing.push("FIRECRAWL_API_KEY");
-    if (mapsUrl && (!googleKey || !lovableKey)) missing.push("GOOGLE_MAPS_API_KEY");
+    if ((mapsUrl || placeId) && (!googleKey || !lovableKey)) missing.push("GOOGLE_MAPS_API_KEY");
 
     // Cache lookup per source (service-role client to bypass RLS).
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -331,12 +335,12 @@ Deno.serve(async (req) => {
       }
     }
     let mapsData: Record<string, string | null> = {};
-    if (mapsUrl && googleKey && lovableKey) {
-      const mKey = `maps:${mapsUrl}`;
+    if ((placeId || mapsUrl) && googleKey && lovableKey) {
+      const mKey = `maps:${placeId ? `id:${placeId}` : mapsUrl}`;
       const cached = await readCache(mKey);
       if (cached) mapsData = cached;
       else {
-        mapsData = await fetchGoogleMaps(mapsUrl, googleKey, lovableKey);
+        mapsData = await fetchGoogleMaps(mapsUrl, placeId, googleKey, lovableKey);
         if (Object.keys(mapsData).length) await writeCache(mKey, mapsData);
       }
     }
@@ -382,7 +386,7 @@ Deno.serve(async (req) => {
       .insert({
         actor_id: user.id,
         website_url: website,
-        maps_url: mapsUrl,
+        maps_url: mapsUrl ?? (placeId ? `place_id:${placeId}` : null),
         status: "draft",
         sources: { website: websiteData, google_maps: mapsData },
         merged,
