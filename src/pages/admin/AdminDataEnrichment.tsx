@@ -124,7 +124,11 @@ export default function AdminDataEnrichment() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const fetchMut = useMutation({
-    mutationFn: () => fetchEnrichment({ website: website.trim() || undefined, mapsUrl: mapsUrl.trim() || undefined }),
+    mutationFn: (opts: { bypass?: boolean } = {}) => fetchEnrichment({
+      website: website.trim() || undefined,
+      mapsUrl: mapsUrl.trim() || undefined,
+      bypassCache: opts.bypass === true,
+    }),
     onSuccess: (res) => {
       if (res.error || !res.merged) {
         setErrorMsg(bi("تعذر جلب البيانات. تحقق من الروابط وحاول مرة أخرى.", "Could not fetch data. Check the URLs and try again."));
