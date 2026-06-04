@@ -248,6 +248,7 @@ async function fetchGoogleMaps(
   placeId: string | null,
   googleKey: string,
   lovableKey: string,
+  lang: "ar" | "en" = "ar",
 ): Promise<{
   fields: Record<string, string | null>;
   raw: { placeId: string | null; addressComponents: Array<Record<string, unknown>>; placeRaw: Record<string, unknown> | null };
@@ -275,7 +276,7 @@ async function fetchGoogleMaps(
     let place: Record<string, unknown> | null = null;
     if (placeId) {
       const res = await fetch(
-        `https://connector-gateway.lovable.dev/google_maps/places/v1/places/${encodeURIComponent(placeId)}?languageCode=ar`,
+        `https://connector-gateway.lovable.dev/google_maps/places/v1/places/${encodeURIComponent(placeId)}?languageCode=${lang}`,
         {
           method: "GET",
           headers: {
@@ -299,7 +300,7 @@ async function fetchGoogleMaps(
             "X-Connection-Api-Key": googleKey,
             "X-Goog-FieldMask": fieldMask.split(",").map((f) => `places.${f}`).join(","),
           },
-          body: JSON.stringify({ textQuery: url, languageCode: "ar" }),
+          body: JSON.stringify({ textQuery: url, languageCode: lang }),
         },
       );
       if (res.ok) {
@@ -326,10 +327,13 @@ async function fetchGoogleMaps(
     };
     const loc = p.location as { latitude?: number; longitude?: number } | undefined;
     const oh = p.regularOpeningHours as { weekdayDescriptions?: string[] } | undefined;
+    const ohFull = p.regularOpeningHours as { weekdayDescriptions?: string[]; periods?: unknown } | undefined;
     const fields = {
       name,
       activity: (p.primaryType as string) ?? null,
-      description: addr,
+      // IMPORTANT: do NOT shove the address into description — that field is
+      // for a business description; the address has its own field.
+      description: null,
       phone: (p.internationalPhoneNumber as string) ?? (p.nationalPhoneNumber as string) ?? null,
       website: (p.websiteUri as string) ?? null,
       city: findComp("locality", "postal_town", "administrative_area_level_2", "administrative_area_level_1"),
@@ -339,7 +343,12 @@ async function fetchGoogleMaps(
       national_address: addr,
       latitude: typeof loc?.latitude === "number" ? String(loc.latitude) : null,
       longitude: typeof loc?.longitude === "number" ? String(loc.longitude) : null,
-      working_hours: oh?.weekdayDescriptions ? JSON.stringify(oh.weekdayDescriptions) : null,
+      working_hours: ohFull?.weekdayDescriptions || ohFull?.periods
+        ? JSON.stringify({
+            weekdayDescriptions: ohFull?.weekdayDescriptions ?? [],
+            periods: ohFull?.periods ?? [],
+          })
+        : null,
       logo_url: (p.iconMaskBaseUri as string) ?? null,
     };
     return {
