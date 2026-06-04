@@ -4,6 +4,12 @@ import { Button } from '@/components/ui/button';
 import { ImagePlus, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/i18n/LanguageContext';
+import {
+  compressImageStrict,
+  ImageCompressionError,
+  type CompressionStage,
+} from '@/lib/imageCompression';
+import { CompressionStatus } from '@/components/common/CompressionStatus';
 
 interface Props {
   siteId: string;
@@ -18,18 +24,27 @@ export const SiteCoverUploader: React.FC<Props> = ({ siteId, currentUrl, onUploa
   const { isRTL } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [stage, setStage] = useState<CompressionStage | 'uploading' | 'idle'>('idle');
+  const [percent, setPercent] = useState(0);
 
   const handleFile = async (file: File) => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error(isRTL ? 'الحد الأقصى 5 ميجابايت' : 'Max size 5MB');
-      return;
-    }
     setBusy(true);
+    setStage('large');
+    setPercent(0);
     try {
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const path = `${siteId}/cover/cover-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
-        cacheControl: '3600', upsert: true, contentType: file.type,
+      // Browser-side compression — WebP, ≤1MB, max 1920px, runs in a worker.
+      const compressed = await compressImageStrict(file, {
+        maxWidthOrHeight: 1920,
+        quality: 0.82,
+        maxSizeMB: 1,
+        suffix: '-cover',
+        onProgress: (p) => setPercent(p),
+      });
+      setStage('uploading');
+      setPercent(100);
+      const path = `${siteId}/cover/cover-${Date.now()}.webp`;
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, compressed, {
+        cacheControl: '3600', upsert: true, contentType: 'image/webp',
       });
       if (upErr) throw upErr;
       const { data: signed, error: sErr } = await supabase.storage
@@ -43,10 +58,14 @@ export const SiteCoverUploader: React.FC<Props> = ({ siteId, currentUrl, onUploa
       onUploaded(signed.signedUrl);
       toast.success(isRTL ? 'تم رفع الغلاف' : 'Cover uploaded');
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = e instanceof ImageCompressionError
+        ? e.userMessage
+        : e instanceof Error ? e.message : String(e);
       toast.error(msg);
     } finally {
       setBusy(false);
+      setStage('idle');
+      setPercent(0);
     }
   };
 
@@ -69,11 +88,12 @@ export const SiteCoverUploader: React.FC<Props> = ({ siteId, currentUrl, onUploa
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,.heic,.heif"
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
@@ -96,6 +116,8 @@ export const SiteCoverUploader: React.FC<Props> = ({ siteId, currentUrl, onUploa
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       )}
+      </div>
+      {busy && <CompressionStatus stage={stage} percent={percent} />}
     </div>
   );
 };
