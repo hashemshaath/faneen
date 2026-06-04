@@ -23,7 +23,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type OwnerMode = "existing" | "new" | "invite";
+type OwnerMode = "existing" | "new" | "invite" | "placeholder";
+
+// Shared placeholder account for entities created without a manager.
+// Ownership can later be transferred to the real owner upon request +
+// admin approval (see admin_transfer_business_ownership RPC).
+const PLACEHOLDER_EMAIL = "com@qitaat.com";
+const PLACEHOLDER_PASSWORD = "HasH#3070";
+const PLACEHOLDER_FULL_NAME = "Qitaat Placeholder Owner";
 
 interface BusinessPayload {
   username: string;
@@ -149,8 +156,45 @@ Deno.serve(async (req) => {
     let ownerEmailResolved: string | null = null;
     let ownerCreatedNow = false;
     let recoveryLink: string | null = null;
+    let isPlaceholderOwner = false;
 
-    if (owner.mode === "existing") {
+    if (owner.mode === "placeholder") {
+      // Get-or-create the shared placeholder account
+      const { data: existing } = await admin
+        .from("profiles")
+        .select("user_id, email")
+        .ilike("email", PLACEHOLDER_EMAIL)
+        .maybeSingle();
+      if (existing?.user_id) {
+        ownerUserId = existing.user_id;
+        ownerEmailResolved = existing.email ?? PLACEHOLDER_EMAIL;
+      } else {
+        const { data: created, error: createErr } = await admin.auth.admin.createUser({
+          email: PLACEHOLDER_EMAIL,
+          password: PLACEHOLDER_PASSWORD,
+          email_confirm: true,
+          user_metadata: {
+            full_name: PLACEHOLDER_FULL_NAME,
+            account_type: "business",
+            is_placeholder: true,
+          },
+        });
+        if (createErr || !created?.user) {
+          return json({ error: createErr?.message ?? "placeholder_account_create_failed" }, 400);
+        }
+        ownerUserId = created.user.id;
+        ownerEmailResolved = PLACEHOLDER_EMAIL;
+        await admin
+          .from("profiles")
+          .update({
+            full_name: PLACEHOLDER_FULL_NAME,
+            account_type: "business",
+            email: PLACEHOLDER_EMAIL,
+          })
+          .eq("user_id", ownerUserId);
+      }
+      isPlaceholderOwner = true;
+    } else if (owner.mode === "existing") {
       if (owner.user_id) {
         ownerUserId = owner.user_id;
       } else if (owner.ref_id) {
@@ -272,6 +316,7 @@ Deno.serve(async (req) => {
       membership_tier: business.membership_tier ?? "free",
       approval_status: "approved",
       is_active: true,
+      placeholder_owner: isPlaceholderOwner,
     };
 
     const { data: bizRow, error: bizErr } = await admin

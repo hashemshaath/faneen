@@ -252,7 +252,9 @@ const AdminBusinesses = () => {
   const [creatingBiz, setCreatingBiz] = useState(false);
   const emptyCreateForm = () => ({
     // Owner mode: pick existing user, create a new account, or send invite
-    owner_mode: 'existing' as 'existing' | 'new' | 'invite',
+    // Default: placeholder — entity is parked under the shared placeholder
+    // account (com@qitaat.com) and can be claimed by a real owner later.
+    owner_mode: 'placeholder' as 'placeholder' | 'existing' | 'new' | 'invite',
     owner_email: '',
     owner_password: '',
     owner_full_name: '',
@@ -653,7 +655,7 @@ const AdminBusinesses = () => {
         ? toE164({ countryCode: createForm.phone_cc || '+966', national: createForm.phone_national })
         : null;
       const region = SA_REGIONS.find((r) => r.id === createForm.region_id);
-      const ownerMode = (createForm.owner_mode || 'existing') as 'existing' | 'new' | 'invite';
+      const ownerMode = (createForm.owner_mode || 'placeholder') as 'placeholder' | 'existing' | 'new' | 'invite';
 
       // Shared business payload used by both code paths
       const bizCore: AdminCreateBusinessPayload = {
@@ -679,8 +681,12 @@ const AdminBusinesses = () => {
         address_en: createForm.address_en?.trim() || null,
       };
 
-      // Path A — Create new auth user (or invite) via edge function
-      if (ownerMode === 'new' || ownerMode === 'invite') {
+      // Path A — Use the edge function for placeholder / new / invite modes.
+      // Placeholder mode links the entity to the shared com@qitaat.com account
+      // and flags it as transferable. The entity can later be claimed by its
+      // real owner via a transfer request that an admin must approve.
+      if (ownerMode === 'placeholder' || ownerMode === 'new' || ownerMode === 'invite') {
+        if (ownerMode !== 'placeholder') {
         const email = (createForm.owner_email || '').trim().toLowerCase();
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           throw new Error(isRTL ? 'بريد المسؤول غير صالح' : 'Invalid manager email');
@@ -688,10 +694,14 @@ const AdminBusinesses = () => {
         if (ownerMode === 'new' && (createForm.owner_password || '').length < 8) {
           throw new Error(isRTL ? 'كلمة المرور يجب ألا تقل عن 8 أحرف' : 'Password must be at least 8 characters');
         }
+        }
+        const ownerEmail = ownerMode === 'placeholder'
+          ? undefined
+          : (createForm.owner_email || '').trim().toLowerCase();
         const res = await adminCreateBusinessWithOwner({
           owner: {
             mode: ownerMode,
-            email,
+            email: ownerEmail,
             password: ownerMode === 'new' ? createForm.owner_password : undefined,
             full_name: (createForm.owner_full_name || createForm.name_ar || '').trim(),
             phone: (createForm.owner_phone || '').trim() || undefined,
@@ -734,11 +744,15 @@ const AdminBusinesses = () => {
       const mode = createForm.owner_mode;
       toast.success(
         isRTL
-          ? mode === 'invite'
+          ? mode === 'placeholder'
+            ? 'تم إنشاء المنشأة تحت الحساب المؤقت — قابلة للتحويل لاحقاً'
+            : mode === 'invite'
             ? 'تم إنشاء المنشأة وإرسال دعوة للمسؤول'
             : mode === 'new'
             ? 'تم إنشاء المنشأة وحساب المسؤول'
             : 'تم إنشاء المنشأة'
+          : mode === 'placeholder'
+          ? 'Entity created under the placeholder account — transferable later'
           : mode === 'invite'
           ? 'Business created — invitation sent to manager'
           : mode === 'new'
@@ -1440,23 +1454,24 @@ const AdminBusinesses = () => {
                     {isRTL ? '١) المدير / المسؤول للمنشأة' : '1) Entity manager / responsible person'}
                   </Label>
                   <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
-                    {isRTL ? 'إلزامي' : 'Required'}
+                    {isRTL ? 'اختياري' : 'Optional'}
                   </span>
                 </div>
                 <p className="text-[10.5px] text-muted-foreground leading-relaxed">
                   {isRTL
-                    ? 'اختر طريقة ربط المدير المسؤول عن هذه المنشأة: مستخدم موجود مسبقاً، إنشاء حساب جديد فوراً ببيانات دخول، أو إرسال دعوة بالبريد ليُعيّن المسؤول كلمة مروره بنفسه.'
-                    : 'Choose how to bind the manager for this entity: pick an existing user, create a brand-new account with credentials immediately, or send an email invite so the manager sets their own password.'}
+                    ? 'الافتراضي "بدون مدير" — تُربط المنشأة بالحساب المؤقت (com@qitaat.com) ويمكن لمالكها الحقيقي لاحقاً طلب نقل الملكية بموافقة الادمن. أو اختر مستخدماً موجوداً، أنشئ حساباً، أو أرسل دعوة بالبريد.'
+                    : 'Default is "No manager" — the entity is linked to the placeholder account (com@qitaat.com); its real owner can later request a transfer that an admin approves. You can also pick an existing user, create an account, or send an email invite.'}
                 </p>
 
-                {/* Owner mode tabs (existing / new / invite) */}
-                <div className="grid grid-cols-3 gap-1 rounded-xl border border-border/40 bg-card p-1">
+                {/* Owner mode tabs (placeholder / existing / new / invite) */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 rounded-xl border border-border/40 bg-card p-1">
                   {([
+                    { id: 'placeholder', ar: 'بدون مدير', en: 'No manager' },
                     { id: 'existing', ar: 'مستخدم موجود', en: 'Existing user' },
                     { id: 'new',      ar: 'إنشاء حساب', en: 'New account' },
                     { id: 'invite',   ar: 'دعوة بالبريد', en: 'Email invite' },
                   ] as const).map((opt) => {
-                    const active = (createForm.owner_mode || 'existing') === opt.id;
+                    const active = (createForm.owner_mode || 'placeholder') === opt.id;
                     return (
                       <button
                         key={opt.id}
@@ -1472,8 +1487,17 @@ const AdminBusinesses = () => {
                   })}
                 </div>
 
+                {/* Mode: Placeholder (no manager — default) */}
+                {(createForm.owner_mode || 'placeholder') === 'placeholder' && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 text-[11px] leading-relaxed text-foreground/80">
+                    {isRTL
+                      ? 'ستُربط المنشأة بالحساب المؤقت المشترك. عندما يطلب المالك الحقيقي تسلّم منشأته يوافق الادمن لنقل الملكية إليه.'
+                      : 'The entity will be linked to the shared placeholder account. When the real owner requests it, an admin can approve to transfer ownership.'}
+                  </div>
+                )}
+
                 {/* Mode: Existing user picker */}
-                {(createForm.owner_mode || 'existing') === 'existing' && (
+                {createForm.owner_mode === 'existing' && (
                   createForm.resolved_user_id ? (
                   <div className="flex items-center justify-between gap-2 rounded-lg border border-success/40 bg-success/10 px-3 py-2">
                     <div className="flex items-center gap-2 min-w-0">
