@@ -252,7 +252,9 @@ const AdminBusinesses = () => {
   const [creatingBiz, setCreatingBiz] = useState(false);
   const emptyCreateForm = () => ({
     // Owner mode: pick existing user, create a new account, or send invite
-    owner_mode: 'existing' as 'existing' | 'new' | 'invite',
+    // Default: placeholder — entity is parked under the shared placeholder
+    // account (com@qitaat.com) and can be claimed by a real owner later.
+    owner_mode: 'placeholder' as 'placeholder' | 'existing' | 'new' | 'invite',
     owner_email: '',
     owner_password: '',
     owner_full_name: '',
