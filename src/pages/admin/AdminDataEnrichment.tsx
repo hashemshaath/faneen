@@ -12,9 +12,9 @@
  *  - No popups / dialogs. Inline only.
  *  - No API keys client-side. No auto-save. No auto-publish.
  */
-import { useMemo, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap, RefreshCw, Trash2, SlidersHorizontal, Bug, Database, Wrench } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap, RefreshCw, Trash2, SlidersHorizontal, Bug, Database, Wrench, FileEdit, Save, X } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,10 @@ import {
   fetchEnrichment,
   enhanceEnrichment,
   applyEnrichment,
+  saveEnrichmentDraft,
+  listEnrichmentDrafts,
+  loadEnrichmentDraft,
+  deleteEnrichmentDraft,
   searchPlaces,
   clearEnrichmentCache,
   type PlaceCandidate,
@@ -37,6 +41,7 @@ import {
   type EnrichmentFieldKey,
   type EnrichmentFetchResult,
   type EnrichmentEnhanceResult,
+  type EnrichmentExtra,
 } from "@/modules/adminEnrichment";
 
 type Step = "search" | "sources" | "review" | "apply";
