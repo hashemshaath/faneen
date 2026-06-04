@@ -29,7 +29,7 @@ describe("GOOGLE-INTEGRATION-GOVERNANCE-AUDIT-1", () => {
   });
 
   it("frontend never calls the Google gateway directly", () => {
-    const out = rg("-n 'connector-gateway\\.lovable\\.dev/google_maps' src/ -g '!**/__tests__/**' -g '!**/*.test.*'");
+    const out = rg("-n 'connector-gateway\\.lovable\\.dev/google_maps' src/ -g '!**/__tests__/**' -g '!**/*.test.*' -g '!**/*.md'");
     expect(out.trim()).toBe("");
   });
 
@@ -39,7 +39,7 @@ describe("GOOGLE-INTEGRATION-GOVERNANCE-AUDIT-1", () => {
   });
 
   it("browser key env var is only read inside mapsService.ts", () => {
-    const out = rg("-n 'VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY' src/");
+    const out = rg("-n 'VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY' src/ -g '!**/*.md'");
     const offenders = out
       .split("\n").filter((l) => l.trim())
       .filter((l) => !l.startsWith("src/modules/google/mapsService.ts"))
