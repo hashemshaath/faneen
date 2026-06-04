@@ -141,17 +141,19 @@ async function fetchWebsite(
 async function fetchGoogleMaps(
   url: string,
   googleKey: string,
+  lovableKey: string,
 ): Promise<Record<string, string | null>> {
   // Resolve a place via Places API (New) text search using the maps URL or its name fragment.
   // We pass the raw URL as a textQuery — Places API will resolve recognised Google Maps links.
   try {
     const res = await fetch(
-      "https://places.googleapis.com/v1/places:searchText",
+      "https://connector-gateway.lovable.dev/google_maps/places/v1/places:searchText",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Goog-Api-Key": googleKey,
+          "Authorization": `Bearer ${lovableKey}`,
+          "X-Connection-Api-Key": googleKey,
           "X-Goog-FieldMask":
             "places.id,places.displayName,places.formattedAddress,places.addressComponents,places.internationalPhoneNumber,places.nationalPhoneNumber,places.websiteUri,places.location,places.regularOpeningHours,places.types,places.primaryType,places.iconMaskBaseUri",
         },
@@ -257,16 +259,17 @@ Deno.serve(async (req) => {
 
     const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY") ?? "";
     const googleKey = Deno.env.get("GOOGLE_MAPS_API_KEY") ?? "";
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
 
     const missing: string[] = [];
     if (website && !firecrawlKey) missing.push("FIRECRAWL_API_KEY");
-    if (mapsUrl && !googleKey) missing.push("GOOGLE_MAPS_API_KEY");
+    if (mapsUrl && (!googleKey || !lovableKey)) missing.push("GOOGLE_MAPS_API_KEY");
 
     const websiteData = website && firecrawlKey
       ? await fetchWebsite(website, firecrawlKey)
       : {};
-    const mapsData = mapsUrl && googleKey
-      ? await fetchGoogleMaps(mapsUrl, googleKey)
+    const mapsData = mapsUrl && googleKey && lovableKey
+      ? await fetchGoogleMaps(mapsUrl, googleKey, lovableKey)
       : {};
 
     const merged = emptyDraft();
