@@ -28,6 +28,7 @@ type OwnerMode = "existing" | "new" | "invite" | "placeholder";
 // Shared placeholder account for entities created without a manager.
 // Ownership can later be transferred to the real owner upon request +
 // admin approval (see admin_transfer_business_ownership RPC).
+// v2 — placeholder mode support (force redeploy)
 const PLACEHOLDER_EMAIL = "com@qitaat.com";
 const PLACEHOLDER_PASSWORD = "HasH#3070";
 const PLACEHOLDER_FULL_NAME = "Qitaat Placeholder Owner";
