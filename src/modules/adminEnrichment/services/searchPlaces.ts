@@ -25,6 +25,10 @@ export interface SearchPlacesResult {
   error?: string;
   cached?: boolean;
   nextPageToken?: string | null;
+  requestId?: string;
+  upstreamStatus?: number;
+  upstreamMs?: number;
+  detail?: string;
 }
 
 export async function searchPlaces(input: {

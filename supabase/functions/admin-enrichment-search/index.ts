@@ -38,10 +38,22 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
+  const requestId = crypto.randomUUID();
+  const startedAt = Date.now();
+  const log = (level: "info" | "warn" | "error", msg: string, extra: Record<string, unknown> = {}) => {
+    const line = JSON.stringify({
+      requestId, fn: "admin-enrichment-search", level, msg,
+      durationMs: Date.now() - startedAt, ...extra,
+    });
+    if (level === "error") console.error(line);
+    else if (level === "warn") console.warn(line);
+    else console.log(line);
+  };
   try {
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) {
-      return json({ error: "unauthorized" }, 401);
+      log("warn", "missing_auth_header");
+      return json({ error: "unauthorized", requestId }, 401);
     }
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -49,11 +61,17 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user } } = await sb.auth.getUser();
-    if (!user) return json({ error: "unauthorized" }, 401);
+    if (!user) {
+      log("warn", "no_user_for_token");
+      return json({ error: "unauthorized", requestId }, 401);
+    }
     const { data: isAdmin } = await sb.rpc("has_admin_access", {
       _user_id: user.id,
     });
-    if (isAdmin !== true) return json({ error: "forbidden" }, 403);
+    if (isAdmin !== true) {
+      log("warn", "not_admin", { userId: user.id });
+      return json({ error: "forbidden", requestId }, 403);
+    }
 
     const body = await req.json().catch(() => ({})) as {
       query?: string;
@@ -65,7 +83,8 @@ Deno.serve(async (req) => {
     };
     const query = typeof body.query === "string" ? body.query.trim() : "";
     if (!query || query.length < 2 || query.length > 200) {
-      return json({ error: "invalid_query" }, 400);
+      log("warn", "invalid_query", { length: query.length });
+      return json({ error: "invalid_query", requestId }, 400);
     }
     const region = (body.region ?? "SA").toUpperCase().slice(0, 2);
     const language = (body.language ?? "ar").toLowerCase().slice(0, 5);
@@ -95,45 +114,71 @@ Deno.serve(async (req) => {
     const googleKey = Deno.env.get("GOOGLE_MAPS_API_KEY") ?? "";
     const lovableKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
     if (!googleKey || !lovableKey) {
-      return json({ ok: true, results: [], deferred: true, missing: ["GOOGLE_MAPS_API_KEY"] });
+      const missing: string[] = [];
+      if (!googleKey) missing.push("GOOGLE_MAPS_API_KEY");
+      if (!lovableKey) missing.push("LOVABLE_API_KEY");
+      log("warn", "missing_secrets", { missing });
+      return json({ ok: true, results: [], deferred: true, missing, requestId });
     }
 
-    const res = await fetch(
-      "https://connector-gateway.lovable.dev/google_maps/places/v1/places:searchText",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${lovableKey}`,
-          "X-Connection-Api-Key": googleKey,
-          "X-Goog-FieldMask": [
-            "places.id",
-            "places.displayName",
-            "places.formattedAddress",
-            "places.location",
-            "places.types",
-            "places.primaryType",
-            "places.rating",
-            "places.userRatingCount",
-            "places.websiteUri",
-            "places.internationalPhoneNumber",
-            "places.nationalPhoneNumber",
-            "places.googleMapsUri",
-            "places.iconMaskBaseUri",
-            "places.businessStatus",
-          ].join(","),
+    log("info", "calling_gateway", { query, region, language, pageSize, hasPageToken: Boolean(pageToken) });
+    const upstreamStart = Date.now();
+    let res: Response;
+    try {
+      res = await fetch(
+        "https://connector-gateway.lovable.dev/google_maps/places/v1/places:searchText",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${lovableKey}`,
+            "X-Connection-Api-Key": googleKey,
+            "X-Goog-FieldMask": [
+              "places.id",
+              "places.displayName",
+              "places.formattedAddress",
+              "places.location",
+              "places.types",
+              "places.primaryType",
+              "places.rating",
+              "places.userRatingCount",
+              "places.websiteUri",
+              "places.internationalPhoneNumber",
+              "places.nationalPhoneNumber",
+              "places.googleMapsUri",
+              "places.iconMaskBaseUri",
+              "places.businessStatus",
+            ].join(","),
+          },
+          body: JSON.stringify({
+            textQuery: query,
+            languageCode: language,
+            regionCode: region,
+            pageSize,
+            ...(pageToken ? { pageToken } : {}),
+          }),
         },
-        body: JSON.stringify({
-          textQuery: query,
-          languageCode: language,
-          regionCode: region,
-          pageSize,
-          ...(pageToken ? { pageToken } : {}),
-        }),
-      },
-    );
+      );
+    } catch (fetchErr) {
+      const message = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+      log("error", "gateway_fetch_threw", { message, upstreamMs: Date.now() - upstreamStart });
+      return json({
+        ok: false, error: "network_error", results: [],
+        requestId, upstreamMs: Date.now() - upstreamStart, detail: message.slice(0, 200),
+      }, 200);
+    }
+    const upstreamMs = Date.now() - upstreamStart;
     if (!res.ok) {
-      return json({ ok: false, error: "upstream_error", results: [] }, 200);
+      const errorText = await res.text().catch(() => "");
+      log("error", "gateway_http_error", {
+        upstreamStatus: res.status, upstreamMs,
+        body: errorText.slice(0, 500),
+      });
+      return json({
+        ok: false, error: "upstream_error", results: [],
+        requestId, upstreamStatus: res.status, upstreamMs,
+        detail: errorText.slice(0, 300).replace(/[^\x20-\x7E\u0600-\u06FF ]/g, ""),
+      }, 200);
     }
     const data = await res.json().catch(() => null);
     const places: unknown[] = Array.isArray(data?.places) ? data.places : [];
@@ -162,7 +207,8 @@ Deno.serve(async (req) => {
     }).filter((r) => r.place_id);
 
     const nextPageToken = typeof data?.nextPageToken === "string" ? data.nextPageToken : null;
-    const payload = { ok: true, results, nextPageToken };
+    const payload = { ok: true, results, nextPageToken, requestId, upstreamMs };
+    log("info", "gateway_ok", { count: results.length, upstreamMs });
     if (svc) {
       const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       await svc.from("admin_enrichment_cache").upsert({
@@ -172,7 +218,9 @@ Deno.serve(async (req) => {
       });
     }
     return json(payload);
-  } catch {
-    return json({ ok: false, error: "internal_error", results: [] }, 200);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    log("error", "unhandled_exception", { message });
+    return json({ ok: false, error: "internal_error", results: [], requestId, detail: message.slice(0, 200) }, 200);
   }
 });
