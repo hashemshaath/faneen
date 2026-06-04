@@ -104,7 +104,7 @@ export async function compressImage(
 ): Promise<File> {
   try {
     const validation = validateImage(file);
-    if (!validation.ok) {
+    if (validation.ok === false) {
       // eslint-disable-next-line no-console
       console.warn('[imageCompression] validation failed:', validation.message);
       return file;
@@ -154,7 +154,7 @@ export async function generateImageSizes(
   file: File,
 ): Promise<ResponsiveImageSet> {
   const validation = validateImage(file);
-  if (!validation.ok) {
+  if (validation.ok === false) {
     throw new Error(validation.message);
   }
   const base = stripExt(file.name);
