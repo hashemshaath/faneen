@@ -23,13 +23,15 @@ const DEFAULT_GOOGLE_REFERER = "https://qitaat.lovable.app/";
 
 type Source = "website" | "google_maps" | "ai_enhanced" | "manual";
 type Confidence = "high" | "medium" | "low";
-type DbQuery = PromiseLike<{ data: unknown }> & {
-  select: (columns: string) => DbQuery;
-  eq: (column: string, value: unknown) => DbQuery;
-  limit: (count: number) => DbQuery;
-  or: (filters: string) => DbQuery;
+type DbSelectQuery = PromiseLike<{ data: unknown }> & {
+  eq: (column: string, value: unknown) => DbSelectQuery;
+  limit: (count: number) => DbSelectQuery;
+  or: (filters: string) => DbSelectQuery;
 };
-type DbLike = { from: (table: string) => DbQuery };
+type DbFromQuery = {
+  select: (columns: string) => DbSelectQuery;
+};
+type DbLike = { from: (table: string) => DbFromQuery };
 
 interface EnrichmentField {
   value: string | null;
