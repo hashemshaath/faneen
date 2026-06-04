@@ -250,9 +250,11 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({})) as {
       website?: string;
       mapsUrl?: string;
+      bypassCache?: boolean;
     };
     const website = safeUrl(body.website);
     const mapsUrl = safeUrl(body.mapsUrl);
+    const bypassCache = body.bypassCache === true;
     if (!website && !mapsUrl) {
       return json({ error: "no_sources" }, 400);
     }
@@ -269,7 +271,7 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const svc = serviceKey ? createClient(supabaseUrl, serviceKey) : null;
     const readCache = async (key: string): Promise<Record<string, string | null> | null> => {
-      if (!svc) return null;
+      if (!svc || bypassCache) return null;
       const { data } = await svc
         .from("admin_enrichment_cache")
         .select("payload, expires_at")
