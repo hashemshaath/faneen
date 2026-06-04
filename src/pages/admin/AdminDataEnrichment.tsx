@@ -1231,12 +1231,20 @@ export default function AdminDataEnrichment() {
       {/* Step 3: Apply */}
       {step === "apply" && (
         <Card className="p-5">
+          {savedMsg && !applyResult && (
+            <Card className="mb-4 border-emerald-200 bg-emerald-50/60 p-3 text-sm text-emerald-800">
+              <div className="flex items-start gap-2">
+                <Save className="mt-0.5 h-4 w-4" />
+                <span>{savedMsg}</span>
+              </div>
+            </Card>
+          )}
           {applyResult ? (
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-emerald-700">
                 <Check className="h-4 w-4" />
                 <span className="text-sm font-medium">
-                  <Bi ar="تم الاعتماد بنجاح" en="Applied successfully" />
+                  <Bi ar="تم اعتماد الجهة بنجاح — تم إنشاء الحساب والرقم التعريفي" en="Approved as verified — account and Ref ID created" />
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -1249,13 +1257,14 @@ export default function AdminDataEnrichment() {
                 size="sm"
                 onClick={() => {
                   setApplyResult(null);
-                  setStep("sources");
+                  setStep("search");
                   setSessionId(null);
                   setDraft(null);
                   setApproved({});
                   setAiEnhanced({});
                   setWebsite("");
                   setMapsUrl("");
+                  setDraftStatus("unsaved");
                 }}
               >
                 <Bi ar="جلسة جديدة" en="New session" />
@@ -1263,9 +1272,37 @@ export default function AdminDataEnrichment() {
             </div>
           ) : (
             <div className="space-y-4">
+              <Card className="border-sky-200 bg-sky-50/60 p-3 text-[12px] text-sky-900">
+                <div className="flex items-start gap-2">
+                  <ShieldCheck className="mt-0.5 h-4 w-4" />
+                  <div>
+                    <div className="font-medium">
+                      <Bi
+                        ar="مرحلتان: حفظ كمسودة قابلة للتعديل، ثم اعتماد كجهة موثّقة"
+                        en="Two stages: save as an editable draft, then approve as a verified entity"
+                      />
+                    </div>
+                    <ul className="mt-1 list-disc space-y-0.5 ps-4 text-[11px]">
+                      <li>
+                        <Bi
+                          ar="«حفظ كمسودة»: تُخزَّن البيانات في قاعدة البيانات للتعديل والتحسين لاحقًا. لا يتم فتح حساب ولا إنشاء رقم تعريفي."
+                          en="“Save as draft”: data is stored in the database for later editing. No account is opened and no Ref ID is issued."
+                        />
+                      </li>
+                      <li>
+                        <Bi
+                          ar="«اعتماد كجهة موثّقة»: يتم إنشاء سجل المزوّد ورقمه التعريفي رسميًا."
+                          en="“Approve as verified”: officially creates the provider record and its Ref ID."
+                        />
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </Card>
+
               <div>
                 <Label className="text-sm">
-                  <Bi ar="وجهة الحفظ" en="Destination" />
+                  <Bi ar="وجهة الاعتماد (للمرحلة الثانية فقط)" en="Approval destination (second stage only)" />
                 </Label>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Button
@@ -1309,8 +1346,13 @@ export default function AdminDataEnrichment() {
               )}
 
               <Card className="bg-muted/40 p-3">
-                <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  <Bi ar="ملخص الحقول المعتمدة" en="Approved fields summary" />
+                <div className="mb-1.5 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <Bi ar="ملخص الحقول" en="Fields summary" />
+                  {draftStatus === "saved" && (
+                    <Badge variant="outline" className="h-4 border-amber-200 bg-amber-50 text-[10px] text-amber-700">
+                      <Bi ar="مسودة محفوظة" en="Draft saved" />
+                    </Badge>
+                  )}
                 </div>
                 <ul className="space-y-0.5 text-xs">
                   {Object.entries(approved)
@@ -1324,21 +1366,37 @@ export default function AdminDataEnrichment() {
                 </ul>
               </Card>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <Button variant="ghost" size="sm" onClick={() => setStep("review")}>
                   <Bi ar="رجوع للمراجعة" en="Back to review" />
                 </Button>
-                <Button
-                  onClick={() => applyMut.mutate()}
-                  disabled={
-                    applyMut.isPending ||
-                    (mode === "business" && !businessId.trim()) ||
-                    Object.values(approved).filter((v) => v && v.trim()).length === 0
-                  }
-                >
-                  {applyMut.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                  <Bi ar="اعتماد وحفظ" en="Approve & save" />
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => saveDraftMut.mutate()}
+                    disabled={
+                      saveDraftMut.isPending ||
+                      Object.values(approved).filter((v) => v && v.trim()).length === 0
+                    }
+                    title={bi("حفظ كمسودة بدون فتح حساب أو رقم تعريفي", "Save as a draft without creating an account or Ref ID")}
+                  >
+                    {saveDraftMut.isPending ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Save className="me-2 h-4 w-4" />}
+                    <Bi ar="حفظ كمسودة" en="Save as draft" />
+                  </Button>
+                  <Button
+                    onClick={() => applyMut.mutate()}
+                    disabled={
+                      applyMut.isPending ||
+                      (mode === "business" && !businessId.trim()) ||
+                      Object.values(approved).filter((v) => v && v.trim()).length === 0
+                    }
+                    title={bi("سيتم فتح حساب وإنشاء رقم تعريفي رسمي", "An account and official Ref ID will be created")}
+                  >
+                    {applyMut.isPending ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="me-2 h-4 w-4" />}
+                    <Bi ar="اعتماد كجهة موثّقة" en="Approve as verified" />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
