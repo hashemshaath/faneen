@@ -815,6 +815,7 @@ export default function AdminDataEnrichment() {
             </div>
           </div>
         </Card>
+      </>
       )}
 
       {/* Step 1: Sources */}
