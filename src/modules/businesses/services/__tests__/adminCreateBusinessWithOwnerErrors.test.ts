@@ -25,6 +25,7 @@ const CODES: AdminCreateBizErrorCode[] = [
   'profile_sync_failed',
   'auth_user_create_failed',
   'auth_create_failed',
+  'placeholder_account_create_failed',
   'unknown',
 ];
 
