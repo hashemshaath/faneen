@@ -19,6 +19,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const DEFAULT_GOOGLE_REFERER = "https://qitaat.lovable.app/";
+
 type Source = "website" | "google_maps" | "ai_enhanced" | "manual";
 type Confidence = "high" | "medium" | "low";
 
@@ -84,6 +86,31 @@ function safeUrl(input: unknown, max = 500): string | null {
   } catch {
     return null;
   }
+}
+
+function googleGatewayHeaders(googleKey: string, lovableKey: string, extra: Record<string, string> = {}): Record<string, string> {
+  return {
+    "Authorization": `Bearer ${lovableKey}`,
+    "X-Connection-Api-Key": googleKey,
+    "Referer": Deno.env.get("GOOGLE_MAPS_HTTP_REFERER") ?? DEFAULT_GOOGLE_REFERER,
+    ...extra,
+  };
+}
+
+function extractLatLng(input: string | null): { lat: string; lng: string } | null {
+  if (!input) return null;
+  const decoded = decodeURIComponent(input);
+  const patterns = [
+    /[?&]query=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i,
+    /[?&]q=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i,
+    /@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i,
+    /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/i,
+  ];
+  for (const pattern of patterns) {
+    const match = decoded.match(pattern);
+    if (match?.[1] && match?.[2]) return { lat: match[1], lng: match[2] };
+  }
+  return null;
 }
 
 function emptyField(): EnrichmentField {
