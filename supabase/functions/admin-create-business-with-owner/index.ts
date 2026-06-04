@@ -276,7 +276,7 @@ Deno.serve(async (req) => {
         recoveryLink = linkData?.properties?.action_link ?? null;
       }
     } else {
-      return json({ error: "invalid_owner_mode" }, 400);
+      return json({ error: "invalid_owner_mode", received_mode: owner.mode }, 400);
     }
 
     if (!ownerUserId) return json({ error: "owner_resolution_failed" }, 500);
