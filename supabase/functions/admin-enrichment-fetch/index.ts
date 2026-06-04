@@ -91,23 +91,23 @@ function emptyField(): EnrichmentField {
 }
 
 function emptyDraft(): MergedDraft {
+  const f = () => emptyField();
   return {
-    name_ar: emptyField(),
-    name_en: emptyField(),
-    activity: emptyField(),
-    description_ar: emptyField(),
-    description_en: emptyField(),
-    phone: emptyField(),
-    website: emptyField(),
-    city: emptyField(),
-    district: emptyField(),
-    street: emptyField(),
-    national_address: emptyField(),
-    latitude: emptyField(),
-    longitude: emptyField(),
-    working_hours: emptyField(),
-    logo_url: emptyField(),
-    social_links: emptyField(),
+    name_ar: f(), name_en: f(),
+    activity: f(), activity_ar: f(), activity_en: f(),
+    description_ar: f(), description_en: f(),
+    phone: f(), phone_mobile: f(), phone_landline: f(),
+    unified_number: f(), whatsapp: f(), customer_service: f(), email: f(),
+    website: f(),
+    city: f(), city_en: f(),
+    district: f(), district_en: f(),
+    street: f(), street_en: f(),
+    national_address: f(), national_address_en: f(),
+    latitude: f(), longitude: f(),
+    working_hours: f(), logo_url: f(),
+    social_links: f(),
+    facebook: f(), instagram: f(), twitter: f(), linkedin: f(),
+    youtube: f(), tiktok: f(), snapchat: f(),
   };
 }
 
