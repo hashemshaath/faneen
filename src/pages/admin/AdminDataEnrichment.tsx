@@ -92,7 +92,11 @@ function SourceChip({ src }: { src: string }) {
 export default function AdminDataEnrichment() {
   useNoIndex();
   const bi = useBi();
-  const [step, setStep] = useState<Step>("sources");
+  const [step, setStep] = useState<Step>("search");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<PlaceCandidate[]>([]);
+  const [selectedPlace, setSelectedPlace] = useState<PlaceCandidate | null>(null);
+  const [searchDeferred, setSearchDeferred] = useState(false);
   const [website, setWebsite] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -127,6 +131,21 @@ export default function AdminDataEnrichment() {
       setStep("review");
     },
     onError: () => setErrorMsg(bi("حدث خطأ. حاول مجددًا.", "Something went wrong. Try again.")),
+  });
+
+  const searchMut = useMutation({
+    mutationFn: () => searchPlaces({ query: searchQuery.trim(), region: "SA", language: "ar" }),
+    onSuccess: (res) => {
+      if (res.error) {
+        setErrorMsg(bi("تعذر البحث في خرائط Google.", "Could not search Google Maps."));
+        setSearchResults([]);
+        return;
+      }
+      setErrorMsg(null);
+      setSearchDeferred(Boolean(res.deferred));
+      setSearchResults(res.results ?? []);
+    },
+    onError: () => setErrorMsg(bi("حدث خطأ في البحث.", "Search failed.")),
   });
 
   const enhanceMut = useMutation({
