@@ -127,6 +127,7 @@ export default function AdminDataEnrichment() {
     mutationFn: (opts: { bypass?: boolean } = {}) => fetchEnrichment({
       website: website.trim() || undefined,
       mapsUrl: mapsUrl.trim() || undefined,
+      placeId: selectedPlace?.place_id || undefined,
       bypassCache: opts.bypass === true,
     }),
     onSuccess: (res) => {
