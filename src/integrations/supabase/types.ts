@@ -2226,6 +2226,60 @@ export type Database = {
           },
         ]
       }
+      business_ownership_transfer_requests: {
+        Row: {
+          admin_note: string | null
+          business_id: string
+          created_at: string
+          id: string
+          message: string | null
+          requester_user_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          business_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          requester_user_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          business_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          requester_user_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_ownership_transfer_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_ownership_transfer_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_profile_visibility: {
         Row: {
           admin_note: string | null
@@ -2994,6 +3048,7 @@ export type Database = {
           phone: string | null
           phone_country_code: string | null
           phone_national: string | null
+          placeholder_owner: boolean
           rating_avg: number
           rating_count: number
           ref_id: string
@@ -3081,6 +3136,7 @@ export type Database = {
           phone?: string | null
           phone_country_code?: string | null
           phone_national?: string | null
+          placeholder_owner?: boolean
           rating_avg?: number
           rating_count?: number
           ref_id?: string
@@ -3168,6 +3224,7 @@ export type Database = {
           phone?: string | null
           phone_country_code?: string | null
           phone_national?: string | null
+          placeholder_owner?: boolean
           rating_avg?: number
           rating_count?: number
           ref_id?: string
@@ -16913,6 +16970,10 @@ export type Database = {
           _reason?: string
           _transfer_to_user_id: string
         }
+        Returns: Json
+      }
+      admin_transfer_business_ownership: {
+        Args: { _admin_note?: string; _request_id: string }
         Returns: Json
       }
       admin_update_business_approval: {
