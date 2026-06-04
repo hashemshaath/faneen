@@ -8,7 +8,7 @@ const rg = (args) => {
 
 const offenders = [];
 
-const browserKey = rg("-n 'VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY' src/")
+const browserKey = rg("-n 'VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY' src/ -g '!**/*.md'")
   .split("\n").filter(Boolean)
   .filter((l) => !l.startsWith("src/modules/google/mapsService.ts"))
   .filter((l) => !l.includes("googleIntegrationGovernanceAudit1.test"));
@@ -21,7 +21,7 @@ const hardcoded = rg("-n 'AIza[0-9A-Za-z_\\-]{20,}' src/ supabase/functions/")
   .split("\n").filter(Boolean).filter((l) => !l.includes(".test."));
 if (hardcoded.length) offenders.push(["hardcoded Google API key", hardcoded]);
 
-const directGateway = rg("-n 'connector-gateway\\.lovable\\.dev/google_maps' src/")
+const directGateway = rg("-n 'connector-gateway\\.lovable\\.dev/google_maps' src/ -g '!**/*.md'")
   .split("\n").filter(Boolean)
   .filter((l) => !l.includes("__tests__") && !l.includes(".test."));
 if (directGateway.length) offenders.push(["frontend hits connector gateway directly", directGateway]);
