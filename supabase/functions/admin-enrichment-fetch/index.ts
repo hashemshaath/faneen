@@ -139,67 +139,99 @@ async function fetchWebsite(
 }
 
 async function fetchGoogleMaps(
-  url: string,
+  url: string | null,
+  placeId: string | null,
   googleKey: string,
   lovableKey: string,
 ): Promise<Record<string, string | null>> {
-  // Resolve a place via Places API (New) text search using the maps URL or its name fragment.
-  // We pass the raw URL as a textQuery — Places API will resolve recognised Google Maps links.
+  // Prefer Place Details (GET /places/{id}) when a place_id is known — this returns
+  // the exact resource. Fall back to textSearch with the URL only when no id is available
+  // (e.g. admin pasted a maps URL manually without using the search step).
+  const fieldMask = [
+    "id",
+    "displayName",
+    "formattedAddress",
+    "shortFormattedAddress",
+    "addressComponents",
+    "internationalPhoneNumber",
+    "nationalPhoneNumber",
+    "websiteUri",
+    "location",
+    "regularOpeningHours",
+    "types",
+    "primaryType",
+    "iconMaskBaseUri",
+    "googleMapsUri",
+  ].join(",");
   try {
-    const res = await fetch(
-      "https://connector-gateway.lovable.dev/google_maps/places/v1/places:searchText",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${lovableKey}`,
-          "X-Connection-Api-Key": googleKey,
-          "X-Goog-FieldMask":
-            "places.id,places.displayName,places.formattedAddress,places.addressComponents,places.internationalPhoneNumber,places.nationalPhoneNumber,places.websiteUri,places.location,places.regularOpeningHours,places.types,places.primaryType,places.iconMaskBaseUri",
+    let place: Record<string, unknown> | null = null;
+    if (placeId) {
+      const res = await fetch(
+        `https://connector-gateway.lovable.dev/google_maps/places/v1/places/${encodeURIComponent(placeId)}?languageCode=ar`,
+        {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${lovableKey}`,
+            "X-Connection-Api-Key": googleKey,
+            "X-Goog-FieldMask": fieldMask,
+          },
         },
-        body: JSON.stringify({ textQuery: url, languageCode: "ar" }),
-      },
-    );
-    if (!res.ok) {
-      await res.text().catch(() => "");
-      return {};
-    }
-    const data = await res.json().catch(() => null);
-    const place = data?.places?.[0];
-    if (!place) return {};
-    const name = place?.displayName?.text ?? null;
-    const addr = place?.formattedAddress ?? null;
-    const comp = Array.isArray(place?.addressComponents)
-      ? place.addressComponents
-      : [];
-    const findComp = (type: string): string | null => {
-      const c = comp.find((c: { types?: string[] }) =>
-        Array.isArray(c.types) && c.types.includes(type)
       );
-      return c ? (c.longText ?? c.shortText ?? null) : null;
+      if (res.ok) place = await res.json().catch(() => null);
+      else await res.text().catch(() => "");
+    }
+    if (!place && url) {
+      const res = await fetch(
+        "https://connector-gateway.lovable.dev/google_maps/places/v1/places:searchText",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${lovableKey}`,
+            "X-Connection-Api-Key": googleKey,
+            "X-Goog-FieldMask": fieldMask.split(",").map((f) => `places.${f}`).join(","),
+          },
+          body: JSON.stringify({ textQuery: url, languageCode: "ar" }),
+        },
+      );
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        place = data?.places?.[0] ?? null;
+      } else {
+        await res.text().catch(() => "");
+      }
+    }
+    if (!place) return {};
+    const p = place as Record<string, unknown>;
+    const dn = p.displayName as { text?: string } | undefined;
+    const name = dn?.text ?? null;
+    const addr = (p.formattedAddress as string) ?? null;
+    const comp = Array.isArray(p.addressComponents)
+      ? (p.addressComponents as Array<{ types?: string[]; longText?: string; shortText?: string }>)
+      : [];
+    const findComp = (...types: string[]): string | null => {
+      for (const t of types) {
+        const c = comp.find((c) => Array.isArray(c.types) && c.types.includes(t));
+        if (c) return c.longText ?? c.shortText ?? null;
+      }
+      return null;
     };
+    const loc = p.location as { latitude?: number; longitude?: number } | undefined;
+    const oh = p.regularOpeningHours as { weekdayDescriptions?: string[] } | undefined;
     return {
       name,
-      activity: place?.primaryType ?? null,
+      activity: (p.primaryType as string) ?? null,
       description: addr,
-      phone: place?.internationalPhoneNumber ?? place?.nationalPhoneNumber ??
-        null,
-      website: place?.websiteUri ?? null,
-      city: findComp("locality") ?? findComp("administrative_area_level_2"),
-      district: findComp("sublocality") ?? findComp("neighborhood"),
+      phone: (p.internationalPhoneNumber as string) ?? (p.nationalPhoneNumber as string) ?? null,
+      website: (p.websiteUri as string) ?? null,
+      city: findComp("locality", "postal_town", "administrative_area_level_2", "administrative_area_level_1"),
+      district: findComp("sublocality_level_1", "sublocality_level_2", "sublocality", "neighborhood"),
       street: findComp("route"),
       national_address: addr,
-      latitude: place?.location?.latitude != null
-        ? String(place.location.latitude)
-        : null,
-      longitude: place?.location?.longitude != null
-        ? String(place.location.longitude)
-        : null,
-      working_hours:
-        place?.regularOpeningHours?.weekdayDescriptions
-          ? JSON.stringify(place.regularOpeningHours.weekdayDescriptions)
-          : null,
-      logo_url: place?.iconMaskBaseUri ?? null,
+      latitude: typeof loc?.latitude === "number" ? String(loc.latitude) : null,
+      longitude: typeof loc?.longitude === "number" ? String(loc.longitude) : null,
+      working_hours: oh?.weekdayDescriptions ? JSON.stringify(oh.weekdayDescriptions) : null,
+      logo_url: (p.iconMaskBaseUri as string) ?? null,
     };
   } catch {
     return {};
