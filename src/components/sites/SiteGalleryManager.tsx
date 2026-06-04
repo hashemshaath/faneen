@@ -180,14 +180,14 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
   const handleDelete = async (img: GalleryImage) => {
     setBusy(true);
     try {
-      const paths = [
-        img.path,
-        img.sizes?.thumbnail?.path,
-        img.sizes?.medium?.path,
-        img.sizes?.large?.path,
-      ].filter((p): p is string => !!p && p !== img.path || !!p);
-      // de-dupe
-      const uniq = Array.from(new Set(paths.filter(Boolean) as string[]));
+      const uniq = Array.from(new Set(
+        [
+          img.path,
+          img.sizes?.thumbnail?.path,
+          img.sizes?.medium?.path,
+          img.sizes?.large?.path,
+        ].filter((p): p is string => Boolean(p)),
+      ));
       if (uniq.length) await supabase.storage.from(BUCKET).remove(uniq);
       await persist(images.filter((i) => i.url !== img.url));
     } catch (e: unknown) {
@@ -271,7 +271,12 @@ export const SiteGalleryManager: React.FC<Props> = ({ siteId, images, onChange, 
             return (
               <div key={img.url} className="group relative overflow-hidden rounded-xl border border-border/40 bg-muted">
                 <div className="aspect-square">
-                  <img src={img.url} alt="" loading="lazy" className="h-full w-full object-cover" />
+                  <img
+                    src={img.sizes?.thumbnail?.url ?? img.url}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <button
                   type="button" onClick={() => handleDelete(img)} disabled={busy}
