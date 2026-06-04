@@ -4,6 +4,8 @@
 export { fetchEnrichment } from "./services/fetchEnrichment";
 export { enhanceEnrichment } from "./services/enhanceEnrichment";
 export { applyEnrichment } from "./services/applyEnrichment";
+export { searchPlaces } from "./services/searchPlaces";
+export type { PlaceCandidate, SearchPlacesResult } from "./services/searchPlaces";
 export type {
   EnrichmentDraft,
   EnrichmentField,

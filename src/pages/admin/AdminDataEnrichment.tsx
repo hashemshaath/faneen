@@ -14,7 +14,7 @@
  */
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check } from "lucide-react";
+import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,17 +23,20 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Bi, useBi } from "@/components/common/Bilingual";
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import {
   fetchEnrichment,
   enhanceEnrichment,
   applyEnrichment,
+  searchPlaces,
+  type PlaceCandidate,
   type EnrichmentDraft,
   type EnrichmentFieldKey,
   type EnrichmentFetchResult,
   type EnrichmentEnhanceResult,
 } from "@/modules/adminEnrichment";
 
-type Step = "sources" | "review" | "apply";
+type Step = "search" | "sources" | "review" | "apply";
 
 const FIELD_LABELS: Record<EnrichmentFieldKey, { ar: string; en: string }> = {
   name_ar: { ar: "الاسم (عربي)", en: "Name (Arabic)" },
@@ -89,7 +92,11 @@ function SourceChip({ src }: { src: string }) {
 export default function AdminDataEnrichment() {
   useNoIndex();
   const bi = useBi();
-  const [step, setStep] = useState<Step>("sources");
+  const [step, setStep] = useState<Step>("search");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<PlaceCandidate[]>([]);
+  const [selectedPlace, setSelectedPlace] = useState<PlaceCandidate | null>(null);
+  const [searchDeferred, setSearchDeferred] = useState(false);
   const [website, setWebsite] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -124,6 +131,21 @@ export default function AdminDataEnrichment() {
       setStep("review");
     },
     onError: () => setErrorMsg(bi("حدث خطأ. حاول مجددًا.", "Something went wrong. Try again.")),
+  });
+
+  const searchMut = useMutation({
+    mutationFn: () => searchPlaces({ query: searchQuery.trim(), region: "SA", language: "ar" }),
+    onSuccess: (res) => {
+      if (res.error) {
+        setErrorMsg(bi("تعذر البحث في خرائط Google.", "Could not search Google Maps."));
+        setSearchResults([]);
+        return;
+      }
+      setErrorMsg(null);
+      setSearchDeferred(Boolean(res.deferred));
+      setSearchResults(res.results ?? []);
+    },
+    onError: () => setErrorMsg(bi("حدث خطأ في البحث.", "Search failed.")),
   });
 
   const enhanceMut = useMutation({
@@ -171,7 +193,15 @@ export default function AdminDataEnrichment() {
 
   const conflictKeys = useMemo(() => Object.keys(conflicts ?? {}), [conflicts]);
 
+  const handleSelectPlace = (p: PlaceCandidate) => {
+    setSelectedPlace(p);
+    if (p.maps_url) setMapsUrl(p.maps_url);
+    if (p.website) setWebsite(p.website);
+    setStep("sources");
+  };
+
   return (
+    <DashboardLayout>
     <div className="container mx-auto max-w-5xl px-4 py-6">
       <header className="mb-6">
         <h1 className="text-xl font-semibold tracking-tight">
@@ -187,11 +217,13 @@ export default function AdminDataEnrichment() {
 
       {/* Stepper */}
       <ol className="mb-6 flex items-center gap-2 text-xs">
-        {(["sources", "review", "apply"] as Step[]).map((s, i) => {
+        {(["search", "sources", "review", "apply"] as Step[]).map((s, i) => {
           const active = step === s;
-          const idx = ["sources", "review", "apply"].indexOf(step);
+          const idx = ["search", "sources", "review", "apply"].indexOf(step);
           const done = i < idx;
-          const label = s === "sources"
+          const label = s === "search"
+            ? bi("بحث", "Search")
+            : s === "sources"
             ? bi("المصادر", "Sources")
             : s === "review"
             ? bi("المراجعة", "Review")
@@ -202,7 +234,7 @@ export default function AdminDataEnrichment() {
                 active ? "bg-primary text-primary-foreground border-primary" : done ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-muted text-muted-foreground"
               }`}>{done ? <Check className="h-3.5 w-3.5" /> : i + 1}</span>
               <span className={active ? "font-medium" : "text-muted-foreground"}>{label}</span>
-              {i < 2 && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
+              {i < 3 && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
             </li>
           );
         })}
@@ -211,6 +243,123 @@ export default function AdminDataEnrichment() {
       {errorMsg && (
         <Card className="mb-4 border-rose-200 bg-rose-50/60 p-3 text-sm text-rose-700">
           <div className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />{errorMsg}</div>
+        </Card>
+      )}
+
+      {/* Step 0: Google-like Search */}
+      {step === "search" && (
+        <Card className="p-5">
+          <div className="space-y-3">
+            <Label className="text-sm">
+              <Search className="me-1 inline h-3.5 w-3.5" />
+              <Bi ar="ابحث عن المنشأة في خرائط Google" en="Search for the business on Google Maps" />
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                dir="auto"
+                placeholder={bi("مثل: مصنع الزجاج العالمي الرياض", "e.g. Acme Glass Factory Riyadh")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && searchQuery.trim().length >= 2) searchMut.mutate(); }}
+                className="h-12 flex-1"
+                maxLength={200}
+              />
+              <Button
+                onClick={() => searchMut.mutate()}
+                disabled={searchMut.isPending || searchQuery.trim().length < 2}
+                className="h-12"
+              >
+                {searchMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                <span className="ms-2"><Bi ar="بحث" en="Search" /></span>
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              <Bi
+                ar="نتائج البحث تأتي من Google Places مع الترتيب الأقرب للمدخل (الاسم/العنوان/المدينة)."
+                en="Results come from Google Places, ranked by best match to your query (name/address/city)."
+              />
+            </p>
+
+            {searchDeferred && (
+              <Card className="border-amber-200 bg-amber-50/60 p-3 text-xs text-amber-800">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <Bi
+                    ar="مفتاح Google Maps غير مفعل حاليًا — يمكنك إدخال الروابط يدويًا في الخطوة التالية."
+                    en="Google Maps API key is not configured — you can enter URLs manually in the next step."
+                  />
+                  <Button size="sm" variant="ghost" className="ms-auto h-7" onClick={() => setStep("sources")}>
+                    <Bi ar="إدخال يدوي" en="Manual entry" />
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {searchResults.length > 0 && (
+              <div className="mt-2 space-y-2">
+                <div className="text-[11px] text-muted-foreground">
+                  <Bi ar={`${searchResults.length} نتيجة`} en={`${searchResults.length} results`} />
+                </div>
+                <ul className="space-y-2">
+                  {searchResults.map((p) => {
+                    const isSelected = selectedPlace?.place_id === p.place_id;
+                    return (
+                      <li key={p.place_id}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectPlace(p)}
+                          className={`group flex w-full items-start gap-3 rounded-xl border p-3 text-start transition hover:border-primary/40 hover:bg-muted/30 ${
+                            isSelected ? "border-primary bg-primary/5" : "border-border"
+                          }`}
+                        >
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                            <Building2 className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="truncate text-sm font-medium">{p.name ?? p.place_id}</span>
+                              {p.business_status && p.business_status !== "OPERATIONAL" && (
+                                <Badge variant="outline" className="h-5 text-[10px]">{p.business_status}</Badge>
+                              )}
+                              {p.primary_type && (
+                                <Badge variant="secondary" className="h-5 text-[10px]">{p.primary_type}</Badge>
+                              )}
+                            </div>
+                            {p.address && (
+                              <div className="mt-0.5 truncate text-[12px] text-muted-foreground">
+                                <MapPin className="me-1 inline h-3 w-3" />
+                                <span dir="auto">{p.address}</span>
+                              </div>
+                            )}
+                            <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground tech-content">
+                              {p.rating != null && (
+                                <span className="inline-flex items-center gap-1">
+                                  <Star className="h-3 w-3 text-amber-500" />
+                                  {p.rating.toFixed(1)}
+                                  {p.user_rating_count != null && <span>({p.user_rating_count})</span>}
+                                </span>
+                              )}
+                              {p.phone && <span>{p.phone}</span>}
+                              {p.website && <span className="truncate max-w-[180px]">{p.website}</span>}
+                            </div>
+                          </div>
+                          <div className="shrink-0 self-center text-xs text-primary opacity-0 transition group-hover:opacity-100">
+                            <Bi ar="اختيار" en="Select" />
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end pt-2">
+              <Button variant="ghost" size="sm" onClick={() => setStep("sources")}>
+                <Bi ar="تخطي والإدخال يدويًا" en="Skip & enter manually" />
+              </Button>
+            </div>
+          </div>
         </Card>
       )}
 
@@ -251,6 +400,9 @@ export default function AdminDataEnrichment() {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
+              <Button variant="ghost" onClick={() => setStep("search")} className="h-11">
+                <Bi ar="رجوع للبحث" en="Back to search" />
+              </Button>
               <Button
                 onClick={() => fetchMut.mutate()}
                 disabled={fetchMut.isPending || (!website.trim() && !mapsUrl.trim())}
@@ -507,5 +659,6 @@ export default function AdminDataEnrichment() {
         </Card>
       )}
     </div>
+    </DashboardLayout>
   );
 }
