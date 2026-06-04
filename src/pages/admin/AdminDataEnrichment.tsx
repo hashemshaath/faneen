@@ -41,6 +41,21 @@ import {
 
 type Step = "search" | "sources" | "review" | "apply";
 
+// Top-level industrial categories — mirrors the active `categories` rows
+// (parent_id IS NULL). Keeps the picker offline-friendly and avoids a
+// supabase client import in this page (guarded by tests).
+const CATEGORY_OPTIONS: Array<{ slug: string; name_ar: string; name_en: string }> = [
+  { slug: "aluminum",                name_ar: "الألمنيوم",                name_en: "Aluminum" },
+  { slug: "iron-steel",              name_ar: "الحديد والاستيل",          name_en: "Iron & Steel" },
+  { slug: "glass",                   name_ar: "الزجاج",                   name_en: "Glass" },
+  { slug: "wood-cabinets",           name_ar: "الخشب والخزائن",           name_en: "Wood & Cabinets" },
+  { slug: "accessories",             name_ar: "الاكسسوارات",              name_en: "Accessories" },
+  { slug: "designers",               name_ar: "المصممين",                 name_en: "Designers" },
+  { slug: "energy-sustainability",   name_ar: "الطاقة والاستدامة",        name_en: "Energy & Sustainability" },
+  { slug: "gypsum-decorations",      name_ar: "الديكورات الجبسية",        name_en: "Gypsum Decorations" },
+  { slug: "facades-cladding",        name_ar: "الواجهات وتلبيس الواجهات", name_en: "Facades & Cladding" },
+];
+
 const FIELD_LABELS: Record<EnrichmentFieldKey, { ar: string; en: string }> = {
   name_ar: { ar: "الاسم (عربي)", en: "Name (Arabic)" },
   name_en: { ar: "الاسم (إنجليزي)", en: "Name (English)" },
