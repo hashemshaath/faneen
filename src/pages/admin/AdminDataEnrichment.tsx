@@ -8,7 +8,7 @@
  *
  * Strict rules:
  *  - All network calls go through @/modules/adminEnrichment (no direct
- *    supabase.functions.invoke, no supabase client import).
+ *    edge invocations, no supabase client import).
  *  - No popups / dialogs. Inline only.
  *  - No API keys client-side. No auto-save. No auto-publish.
  */
