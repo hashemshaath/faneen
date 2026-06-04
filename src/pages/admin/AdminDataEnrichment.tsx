@@ -1,0 +1,511 @@
+/**
+ * ADMIN-DATA-ENRICHMENT-MICROSERVICE-1
+ *
+ * Three-step Inline wizard for admin-only data enrichment.
+ *  1. Sources — Website URL + Google Maps URL
+ *  2. Review  — per-field comparison + confidence + conflict alert
+ *  3. Apply   — link to existing business, or create a new provider lead
+ *
+ * Strict rules:
+ *  - All network calls go through @/modules/adminEnrichment (no direct
+ *    edge invocations, no supabase client import).
+ *  - No popups / dialogs. Inline only.
+ *  - No API keys client-side. No auto-save. No auto-publish.
+ */
+import { useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Bi, useBi } from "@/components/common/Bilingual";
+import { useNoIndex } from "@/hooks/useNoIndex";
+import {
+  fetchEnrichment,
+  enhanceEnrichment,
+  applyEnrichment,
+  type EnrichmentDraft,
+  type EnrichmentFieldKey,
+  type EnrichmentFetchResult,
+  type EnrichmentEnhanceResult,
+} from "@/modules/adminEnrichment";
+
+type Step = "sources" | "review" | "apply";
+
+const FIELD_LABELS: Record<EnrichmentFieldKey, { ar: string; en: string }> = {
+  name_ar: { ar: "الاسم (عربي)", en: "Name (Arabic)" },
+  name_en: { ar: "الاسم (إنجليزي)", en: "Name (English)" },
+  activity: { ar: "النشاط", en: "Activity" },
+  description_ar: { ar: "الوصف (عربي)", en: "Description (Arabic)" },
+  description_en: { ar: "الوصف (إنجليزي)", en: "Description (English)" },
+  phone: { ar: "الجوال / الهاتف", en: "Phone" },
+  website: { ar: "الموقع الإلكتروني", en: "Website" },
+  city: { ar: "المدينة", en: "City" },
+  district: { ar: "الحي", en: "District" },
+  street: { ar: "الشارع", en: "Street" },
+  national_address: { ar: "العنوان الوطني", en: "National Address" },
+  latitude: { ar: "خط العرض", en: "Latitude" },
+  longitude: { ar: "خط الطول", en: "Longitude" },
+  working_hours: { ar: "أوقات العمل", en: "Working Hours" },
+  logo_url: { ar: "اللوجو", en: "Logo" },
+  social_links: { ar: "الروابط الاجتماعية", en: "Social Links" },
+};
+
+const FIELD_KEYS = Object.keys(FIELD_LABELS) as EnrichmentFieldKey[];
+
+function ConfidenceBadge({ level }: { level: "high" | "medium" | "low" }) {
+  const map = {
+    high: { ar: "ثقة عالية", en: "High", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    medium: { ar: "ثقة متوسطة", en: "Medium", cls: "bg-amber-50 text-amber-700 border-amber-200" },
+    low: { ar: "ثقة منخفضة", en: "Low", cls: "bg-rose-50 text-rose-700 border-rose-200" },
+  } as const;
+  const c = map[level];
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium ${c.cls}`}>
+      <ShieldCheck className="h-3 w-3" />
+      <Bi ar={c.ar} en={c.en} />
+    </span>
+  );
+}
+
+function SourceChip({ src }: { src: string }) {
+  const labels: Record<string, { ar: string; en: string }> = {
+    website: { ar: "موقع", en: "Website" },
+    google_maps: { ar: "خرائط Google", en: "Google Maps" },
+    ai_enhanced: { ar: "AI", en: "AI" },
+    manual: { ar: "يدوي", en: "Manual" },
+  };
+  const l = labels[src] ?? { ar: src, en: src };
+  return (
+    <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+      <Bi ar={l.ar} en={l.en} />
+    </span>
+  );
+}
+
+export default function AdminDataEnrichment() {
+  useNoIndex();
+  const bi = useBi();
+  const [step, setStep] = useState<Step>("sources");
+  const [website, setWebsite] = useState("");
+  const [mapsUrl, setMapsUrl] = useState("");
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<EnrichmentDraft | null>(null);
+  const [conflicts, setConflicts] = useState<EnrichmentFetchResult["conflicts"]>({});
+  const [missing, setMissing] = useState<string[]>([]);
+  const [aiEnhanced, setAiEnhanced] = useState<Partial<Record<EnrichmentFieldKey, string>>>({});
+  const [approved, setApproved] = useState<Partial<Record<EnrichmentFieldKey, string>>>({});
+  const [mode, setMode] = useState<"lead" | "business">("lead");
+  const [businessId, setBusinessId] = useState("");
+  const [applyResult, setApplyResult] = useState<{ entity?: string; id?: string } | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const fetchMut = useMutation({
+    mutationFn: () => fetchEnrichment({ website: website.trim() || undefined, mapsUrl: mapsUrl.trim() || undefined }),
+    onSuccess: (res) => {
+      if (res.error || !res.merged) {
+        setErrorMsg(bi("تعذر جلب البيانات. تحقق من الروابط وحاول مرة أخرى.", "Could not fetch data. Check the URLs and try again."));
+        return;
+      }
+      setErrorMsg(null);
+      setSessionId(res.session_id ?? null);
+      setDraft(res.merged);
+      setConflicts(res.conflicts ?? {});
+      setMissing(res.missing ?? []);
+      const initial: Partial<Record<EnrichmentFieldKey, string>> = {};
+      for (const k of FIELD_KEYS) {
+        const v = res.merged[k]?.value;
+        if (v) initial[k] = v;
+      }
+      setApproved(initial);
+      setStep("review");
+    },
+    onError: () => setErrorMsg(bi("حدث خطأ. حاول مجددًا.", "Something went wrong. Try again.")),
+  });
+
+  const enhanceMut = useMutation({
+    mutationFn: () => {
+      if (!draft) return Promise.resolve<EnrichmentEnhanceResult>({ ok: false });
+      return enhanceEnrichment({
+        name_ar: approved.name_ar ?? draft.name_ar.value,
+        name_en: approved.name_en ?? draft.name_en.value,
+        description_ar: approved.description_ar ?? draft.description_ar.value,
+        description_en: approved.description_en ?? draft.description_en.value,
+        district: approved.district ?? draft.district.value,
+        street: approved.street ?? draft.street.value,
+        city: approved.city ?? draft.city.value,
+        activity: approved.activity ?? draft.activity.value,
+      });
+    },
+    onSuccess: (res) => {
+      setAiEnhanced(res.ai_enhanced ?? {});
+    },
+  });
+
+  const applyMut = useMutation({
+    mutationFn: () => {
+      if (!sessionId) return Promise.resolve({ error: "no_session" });
+      const cleanApproved: Record<string, string> = {};
+      for (const [k, v] of Object.entries(approved)) {
+        if (v && v.trim()) cleanApproved[k] = v.trim();
+      }
+      return applyEnrichment({
+        session_id: sessionId,
+        mode,
+        business_id: mode === "business" ? businessId.trim() : undefined,
+        approved: cleanApproved,
+      });
+    },
+    onSuccess: (res) => {
+      if (res.error || !res.ok) {
+        setErrorMsg(bi("تعذر اعتماد البيانات.", "Could not apply data."));
+        return;
+      }
+      setErrorMsg(null);
+      setApplyResult({ entity: res.applied_entity_type ?? undefined, id: res.applied_entity_id ?? undefined });
+    },
+  });
+
+  const conflictKeys = useMemo(() => Object.keys(conflicts ?? {}), [conflicts]);
+
+  return (
+    <div className="container mx-auto max-w-5xl px-4 py-6">
+      <header className="mb-6">
+        <h1 className="text-xl font-semibold tracking-tight">
+          <Bi ar="إثراء بيانات المنشآت" en="Data Enrichment" />
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          <Bi
+            ar="اجلب بيانات منشأة من الموقع الإلكتروني وGoogle Maps، راجعها، ثم اعتمدها يدويًا. لا يتم الحفظ أو النشر تلقائيًا."
+            en="Pull business data from a website and Google Maps, review, then approve manually. No auto-save, no auto-publish."
+          />
+        </p>
+      </header>
+
+      {/* Stepper */}
+      <ol className="mb-6 flex items-center gap-2 text-xs">
+        {(["sources", "review", "apply"] as Step[]).map((s, i) => {
+          const active = step === s;
+          const idx = ["sources", "review", "apply"].indexOf(step);
+          const done = i < idx;
+          const label = s === "sources"
+            ? bi("المصادر", "Sources")
+            : s === "review"
+            ? bi("المراجعة", "Review")
+            : bi("الاعتماد", "Apply");
+          return (
+            <li key={s} className="flex items-center gap-2">
+              <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full border text-[11px] ${
+                active ? "bg-primary text-primary-foreground border-primary" : done ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-muted text-muted-foreground"
+              }`}>{done ? <Check className="h-3.5 w-3.5" /> : i + 1}</span>
+              <span className={active ? "font-medium" : "text-muted-foreground"}>{label}</span>
+              {i < 2 && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
+            </li>
+          );
+        })}
+      </ol>
+
+      {errorMsg && (
+        <Card className="mb-4 border-rose-200 bg-rose-50/60 p-3 text-sm text-rose-700">
+          <div className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />{errorMsg}</div>
+        </Card>
+      )}
+
+      {/* Step 1: Sources */}
+      {step === "sources" && (
+        <Card className="p-5">
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-sm">
+                <LinkIcon className="me-1 inline h-3.5 w-3.5" />
+                <Bi ar="رابط الموقع الإلكتروني" en="Website URL" />
+              </Label>
+              <Input
+                dir="ltr"
+                placeholder="https://example.com"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                className="tech-content h-12"
+                maxLength={500}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">
+                <MapPin className="me-1 inline h-3.5 w-3.5" />
+                <Bi ar="رابط Google Maps" en="Google Maps URL" />
+              </Label>
+              <Input
+                dir="ltr"
+                placeholder="https://maps.google.com/?q=..."
+                value={mapsUrl}
+                onChange={(e) => setMapsUrl(e.target.value)}
+                className="tech-content h-12"
+                maxLength={500}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                <Bi ar="يمكن إدخال مصدر واحد أو الاثنين للمقارنة." en="Use one source or both for comparison." />
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <Button
+                onClick={() => fetchMut.mutate()}
+                disabled={fetchMut.isPending || (!website.trim() && !mapsUrl.trim())}
+                className="h-11"
+              >
+                {fetchMut.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                <Bi ar="جلب البيانات" en="Fetch data" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Step 2: Review */}
+      {step === "review" && draft && (
+        <div className="space-y-4">
+          {missing.length > 0 && (
+            <Card className="border-amber-200 bg-amber-50/60 p-3 text-sm text-amber-800">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <Bi
+                    ar="بعض المصادر غير مفعّلة حاليًا — سيُعرض ما توفّر فقط."
+                    en="Some sources are deferred — only available data is shown."
+                  />
+                </div>
+                <Badge variant="outline" className="text-[10px]">Deferred</Badge>
+              </div>
+            </Card>
+          )}
+
+          {conflictKeys.length > 0 && (
+            <Card className="border-amber-200 bg-amber-50/40 p-3 text-sm text-amber-800">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4" />
+                <div>
+                  <div className="font-medium">
+                    <Bi ar="تعارض بين المصادر" en="Source conflict" />
+                  </div>
+                  <div className="mt-1 text-xs">
+                    <Bi ar="حقول بها قيم مختلفة بين الموقع وGoogle Maps:" en="Fields with differing values between Website and Google Maps:" />{" "}
+                    {conflictKeys.join(", ")}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          <Card className="p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-semibold">
+                <Bi ar="جدول المقارنة قبل/بعد" en="Comparison: before / after" />
+              </h2>
+              <Button size="sm" variant="outline" onClick={() => enhanceMut.mutate()} disabled={enhanceMut.isPending}>
+                {enhanceMut.isPending ? <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="me-1.5 h-3.5 w-3.5" />}
+                <Bi ar="تحسين بالذكاء" en="AI enhance" />
+              </Button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-xs text-muted-foreground">
+                  <tr className="border-b">
+                    <th className="py-2 text-start font-medium"><Bi ar="الحقل" en="Field" /></th>
+                    <th className="py-2 text-start font-medium"><Bi ar="الموقع" en="Website" /></th>
+                    <th className="py-2 text-start font-medium"><Bi ar="Google Maps" en="Google Maps" /></th>
+                    <th className="py-2 text-start font-medium"><Bi ar="AI" en="AI" /></th>
+                    <th className="py-2 text-start font-medium"><Bi ar="القيمة المعتمدة" en="Approved value" /></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {FIELD_KEYS.map((key) => {
+                    const field = draft[key];
+                    const wSrc = field.source === "website" ? field.value : null;
+                    const mSrc = field.source === "google_maps" ? field.value : null;
+                    const aiVal = aiEnhanced[key] ?? "";
+                    const isConflict = key in (conflicts ?? {});
+                    return (
+                      <tr key={key} className={`border-b align-top ${isConflict ? "bg-amber-50/30" : ""}`}>
+                        <td className="py-2 pe-2">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[12px] font-medium">{bi(FIELD_LABELS[key].ar, FIELD_LABELS[key].en)}</span>
+                            <div className="flex items-center gap-1">
+                              <SourceChip src={field.source} />
+                              <ConfidenceBadge level={field.confidence} />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-2 pe-2 text-xs text-muted-foreground tech-content max-w-[160px] truncate">{wSrc ?? "—"}</td>
+                        <td className="py-2 pe-2 text-xs text-muted-foreground tech-content max-w-[160px] truncate">{mSrc ?? "—"}</td>
+                        <td className="py-2 pe-2">
+                          {aiVal ? (
+                            <button
+                              type="button"
+                              className="text-start text-xs text-primary underline-offset-2 hover:underline"
+                              onClick={() => setApproved((p) => ({ ...p, [key]: aiVal }))}
+                            >
+                              {aiVal}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="py-2">
+                          {key === "description_ar" || key === "description_en" ? (
+                            <Textarea
+                              dir="auto"
+                              value={approved[key] ?? ""}
+                              onChange={(e) => setApproved((p) => ({ ...p, [key]: e.target.value }))}
+                              className="min-h-[60px] text-[12px]"
+                            />
+                          ) : (
+                            <Input
+                              dir="auto"
+                              value={approved[key] ?? ""}
+                              onChange={(e) => setApproved((p) => ({ ...p, [key]: e.target.value }))}
+                              className="h-9 text-[12px]"
+                            />
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between">
+              <Button variant="ghost" size="sm" onClick={() => setStep("sources")}>
+                <Bi ar="رجوع" en="Back" />
+              </Button>
+              <Button onClick={() => setStep("apply")}>
+                <Bi ar="متابعة للاعتماد" en="Continue to apply" />
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Step 3: Apply */}
+      {step === "apply" && (
+        <Card className="p-5">
+          {applyResult ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-emerald-700">
+                <Check className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  <Bi ar="تم الاعتماد بنجاح" en="Applied successfully" />
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                <Bi ar="النوع" en="Type" />: <span className="tech-content">{applyResult.entity}</span>
+                {" — "}
+                <Bi ar="المعرف" en="ID" />: <span className="tech-content">{applyResult.id}</span>
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setApplyResult(null);
+                  setStep("sources");
+                  setSessionId(null);
+                  setDraft(null);
+                  setApproved({});
+                  setAiEnhanced({});
+                  setWebsite("");
+                  setMapsUrl("");
+                }}
+              >
+                <Bi ar="جلسة جديدة" en="New session" />
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm">
+                  <Bi ar="وجهة الحفظ" en="Destination" />
+                </Label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant={mode === "lead" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setMode("lead")}
+                  >
+                    <Bi ar="إنشاء Lead مزود جديد" en="Create new provider lead" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={mode === "business" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setMode("business")}
+                  >
+                    <Bi ar="ربط بمنشأة موجودة" en="Link to existing business" />
+                  </Button>
+                </div>
+              </div>
+
+              {mode === "business" && (
+                <div className="space-y-1.5">
+                  <Label className="text-sm">
+                    <Bi ar="معرف المنشأة (UUID)" en="Business ID (UUID)" />
+                  </Label>
+                  <Input
+                    dir="ltr"
+                    value={businessId}
+                    onChange={(e) => setBusinessId(e.target.value)}
+                    placeholder="00000000-0000-0000-0000-000000000000"
+                    className="tech-content h-11"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    <Bi
+                      ar="سيتم تحديث الحقول الموافق عليها فقط (الوصف/الهاتف/الموقع/العنوان). لن يتم تغيير حالة النشر."
+                      en="Only approved fields (description/phone/website/address) are updated. Publish state is never changed."
+                    />
+                  </p>
+                </div>
+              )}
+
+              <Card className="bg-muted/40 p-3">
+                <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <Bi ar="ملخص الحقول المعتمدة" en="Approved fields summary" />
+                </div>
+                <ul className="space-y-0.5 text-xs">
+                  {Object.entries(approved)
+                    .filter(([, v]) => v && v.trim())
+                    .map(([k, v]) => (
+                      <li key={k} className="flex items-start gap-2">
+                        <span className="text-muted-foreground">{bi(FIELD_LABELS[k as EnrichmentFieldKey].ar, FIELD_LABELS[k as EnrichmentFieldKey].en)}:</span>
+                        <span className="tech-content truncate">{v}</span>
+                      </li>
+                    ))}
+                </ul>
+              </Card>
+
+              <div className="flex items-center justify-between">
+                <Button variant="ghost" size="sm" onClick={() => setStep("review")}>
+                  <Bi ar="رجوع للمراجعة" en="Back to review" />
+                </Button>
+                <Button
+                  onClick={() => applyMut.mutate()}
+                  disabled={
+                    applyMut.isPending ||
+                    (mode === "business" && !businessId.trim()) ||
+                    Object.values(approved).filter((v) => v && v.trim()).length === 0
+                  }
+                >
+                  {applyMut.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                  <Bi ar="اعتماد وحفظ" en="Approve & save" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+    </div>
+  );
+}

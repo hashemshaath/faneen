@@ -43,6 +43,7 @@ import {
   ClipboardList,
   ChevronDown,
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -225,6 +226,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'تشغيل المهام', en: 'Cron Runs' }, url: '/admin/cron-runs', icon: CalendarClock },
       { label: { ar: 'مركز العمليات', en: 'Operations Center' }, url: '/admin/operations', icon: Activity },
       { label: { ar: 'فحص المراجع المتعدد', en: 'Bulk Reference Triage' }, url: '/admin/ref/triage', icon: SearchIcon, badge: { ar: 'دعم', en: 'Support', tone: 'support' } },
+      { label: { ar: 'إثراء البيانات', en: 'Data Enrichment' }, url: '/admin/data-enrichment', icon: Sparkles, badge: { ar: 'جديد', en: 'New', tone: 'new' } },
     ],
   },
   {

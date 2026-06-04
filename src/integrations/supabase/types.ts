@@ -394,6 +394,51 @@ export type Database = {
           },
         ]
       }
+      admin_enrichment_sessions: {
+        Row: {
+          actor_id: string
+          applied_entity_id: string | null
+          applied_entity_type: string | null
+          created_at: string
+          id: string
+          maps_url: string | null
+          merged: Json
+          notes: string | null
+          sources: Json
+          status: Database["public"]["Enums"]["admin_enrichment_status"]
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          actor_id: string
+          applied_entity_id?: string | null
+          applied_entity_type?: string | null
+          created_at?: string
+          id?: string
+          maps_url?: string | null
+          merged?: Json
+          notes?: string | null
+          sources?: Json
+          status?: Database["public"]["Enums"]["admin_enrichment_status"]
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          actor_id?: string
+          applied_entity_id?: string | null
+          applied_entity_type?: string | null
+          created_at?: string
+          id?: string
+          maps_url?: string | null
+          merged?: Json
+          notes?: string | null
+          sources?: Json
+          status?: Database["public"]["Enums"]["admin_enrichment_status"]
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       admin_operational_notes: {
         Row: {
           created_at: string
@@ -19152,6 +19197,7 @@ export type Database = {
     }
     Enums: {
       account_type: "individual" | "business" | "company" | "admin"
+      admin_enrichment_status: "draft" | "reviewed" | "applied" | "discarded"
       app_role: "admin" | "moderator" | "user" | "super_admin"
       booking_status:
         | "pending"
@@ -19404,6 +19450,7 @@ export const Constants = {
   public: {
     Enums: {
       account_type: ["individual", "business", "company", "admin"],
+      admin_enrichment_status: ["draft", "reviewed", "applied", "discarded"],
       app_role: ["admin", "moderator", "user", "super_admin"],
       booking_status: [
         "pending",

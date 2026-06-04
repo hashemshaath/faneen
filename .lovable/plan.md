@@ -1,114 +1,72 @@
+# ADMIN-DATA-ENRICHMENT-MICROSERVICE-1
 
-# PROVIDER-LEAD-INTAKE-FORM-1 — Plan
+قسم إداري جديد على `/admin/data-enrichment` لإثراء بيانات المنشآت من Website + Google Maps + AI، مع مراجعة بشرية كاملة قبل الاعتماد.
 
-## Goal
-Public bilingual (AR/EN) provider lead intake form for Qitaat at `/join/qitaat` (with `/providers/join` as alias). No login required. Submissions land as `pending` provider leads, reviewed in admin, with confirmation email to applicant and internal admin notification.
+## المسار والصلاحيات
+- Route: `/admin/data-enrichment` (محمي عبر `has_admin_access`، `useNoIndex`).
+- إدراجه في Sidebar/Admin nav ضمن مجموعة "العمليات".
+- جميع الاستدعاءات الحساسة عبر Edge Functions — لا مفاتيح API في الواجهة، ولا `supabase.functions.invoke` مباشر داخل الصفحة (يمر عبر `@/modules/adminEnrichment`).
 
-## Scope
+## البنية (3 مراحل Inline، بدون Popups)
+1. **Sources** — إدخال Website URL و/أو Google Maps URL (validation: URL، طول، sanitize).
+2. **Review** — عرض جدول مقارنة 3 أعمدة (Website / Google Maps / AI Enhanced) لكل حقل + Badge ثقة (high/medium/low) + تنبيه تعارض، وأزرار قبول/تعديل/تجاهل لكل حقل.
+3. **Apply** — ربط بمنشأة موجودة (autocomplete بـ Ref ID) أو إنشاء Provider Lead جديد. زر تأكيد صريح فقط؛ لا حفظ تلقائي، لا نشر تلقائي.
 
-### 1. Route & Page
-- New public route: `/join/qitaat` (primary) + `/providers/join` (alias).
-- Page: `src/pages/ProviderJoin.tsx`
-  - Hero: brief value prop ("لماذا تنضم لقطاعات؟") — trust signals.
-  - Multi-section form (3 sections, accordion-style, not popup):
-    1. **بيانات المنشأة** (name AR/EN, CR, unified #, VAT, website, brief)
-    2. **بيانات التواصل والمسؤول** (contact name, email, phone, preferred channel)
-    3. **النشاط والموقع** (main activity, specialties, brands, city, national address, map link, CR file upload, branches)
-  - Inline validation. Bilingual via `<Bi>` and `useBi()`.
-  - Success state: fullscreen card with reference number + next-steps copy.
-  - `useNoIndex` excluded (page IS indexable for SEO). SEO meta (title, desc, JSON-LD `Organization`).
+## الحقول المُستخرَجة
+الاسم (ar/en)، النشاط، الوصف (ar/en)، الجوال/الهاتف، الموقع، المدينة، الحي، الشارع، الإحداثيات، العنوان الوطني، أوقات العمل، اللوجو/الصور، الروابط الاجتماعية. كل حقل يحمل `source: website | google_maps | manual | ai_enhanced` و `confidence`.
 
-### 2. Database (migration)
-New tables:
-- `public.provider_leads` — main lead row.
-  - Fields: `id`, `reference_code` (PRV-NNNNNNN via sequence starting 1000), `name_ar`, `name_en`, `contact_name`, `email` (citext), `phone`, `preferred_channel` (enum: phone/whatsapp/email), `website`, `cr_number`, `unified_number`, `vat_number`, `main_activity`, `specialties` (text[]), `brands` (text[]), `brief`, `cr_file_path`, `map_link`, `national_address`, `city`, `branches_count`, `status` (enum: new/under_review/needs_info/approved/rejected/converted_to_business), `admin_notes`, `linked_business_id` (FK nullable), `submitted_ip` (inet, hashed), `user_agent`, `created_at`, `updated_at`, `reviewed_at`, `reviewed_by`.
-- `public.provider_lead_branches` — child rows: `id`, `lead_id` (FK cascade), `branch_name`, `city`, `address`, `map_link`, `phone`, `created_at`.
-- Sequence + trigger for `reference_code` (PRV-1000001…).
-- Unique partial indexes for dedup: lowercase email, normalized phone, cr_number, unified_number (where status NOT IN rejected/converted to allow re-submit after rejection).
-- RLS:
-  - `provider_leads`: anon INSERT allowed (rate-limited via trigger checking submissions per IP/hour); admin SELECT/UPDATE; no public SELECT.
-  - `provider_lead_branches`: anon INSERT (only as part of same submission via RPC); admin SELECT.
-- GRANTs: `anon INSERT`, `authenticated INSERT, SELECT (admin via policy)`, `service_role ALL`.
-- SECURITY DEFINER RPC `submit_provider_lead(payload jsonb)` returning `{ reference_code, lead_id }` — handles dedup checks, branch inserts, IP hashing atomically.
+## Backend (Edge Functions)
+- `admin-enrichment-fetch` — يستقبل `{ website?, mapsUrl? }`، يستدعي Firecrawl للموقع + Google Places (New) للماب، يطبّع البيانات ويعيد `EnrichmentDraft` (sources + merged + conflicts). يتحقق من `has_admin_access` على JWT.
+- `admin-enrichment-enhance` — يأخذ draft ويستدعي Lovable AI Gateway لتحسين الاسم/الوصف وترجمتها ar↔en وتنسيق العنوان/الحي/الشارع. يعيد نسخة AI-Enhanced للحقول المختارة فقط.
+- `admin-enrichment-apply` — يحفظ النتيجة المعتمدة: إما تحديث `businesses` موجودة أو إنشاء `provider_leads` جديد عبر RPC. يكتب صفًا في `admin_enrichment_sessions` وصفوف `admin_activity_log` (audit).
+- Secrets المطلوبة: `FIRECRAWL_API_KEY`, `GOOGLE_MAPS_API_KEY` (server-side), `LOVABLE_API_KEY` (موجود). إذا غاب أحدها → ترجع 200 بـ `{ deferred: true, missing: [...] }` والواجهة تعرض Deferred badge بدلًا من خطأ تقني.
 
-### 3. Storage
-- New private bucket: `provider-lead-documents`.
-- Path: `provider-leads/{reference_code}/cr.{ext}`.
-- Allowed MIME: `application/pdf`, `image/jpeg`, `image/png`. Max 5MB.
-- RLS on `storage.objects`: anon INSERT to this bucket only with size/mime constraints; only admins SELECT.
-- Wrapper: `src/modules/files/domain/providerLeadDocuments.ts`.
+## Database
+Migration واحدة:
+- `admin_enrichment_sessions` (id, actor_id, website_url, maps_url, status enum: draft/reviewed/applied/discarded, sources jsonb, merged jsonb, applied_entity_type, applied_entity_id, created_at, updated_at).
+- GRANTs: `service_role ALL`، `authenticated SELECT/INSERT/UPDATE` — RLS تقيد admins فقط عبر `has_admin_access(auth.uid())`.
+- Trigger `updated_at`.
 
-### 4. Services Layer (no direct Supabase in page)
-- `src/modules/providers/services/submitProviderLead.ts` — calls RPC, uploads CR file via files module, returns reference code.
-- `src/modules/providers/services/listProviderLeads.ts` — admin list with filters.
-- `src/modules/providers/services/updateProviderLeadStatus.ts` — admin status change + notes.
-- Barrel: `src/modules/providers/index.ts`.
+## Module / Service Layer
+`src/modules/adminEnrichment/`:
+- `services/fetchEnrichment.ts`, `enhanceEnrichment.ts`, `applyEnrichment.ts` — كل واحد wrapper رفيع حول `supabase.functions.invoke`.
+- `services/listSessions.ts` — للقراءة من الجدول.
+- `types.ts` — `EnrichmentField<T>`, `EnrichmentDraft`, `FieldSource`, `Confidence`.
+- `index.ts` — Public API.
 
-### 5. Email
-- New transactional template: `supabase/functions/_shared/transactional-email-templates/provider-lead-confirmation.tsx` (bilingual, Qitaat logo, reference code, thank-you copy).
-- Register in `registry.ts`.
-- Trigger via existing `sendTransactionalEmail` wrapper from submission RPC postprocess (call from page after RPC success — call site already in services).
-- Internal admin notification: insert into `notifications` for admins (existing pattern), and optionally send email to admin distribution list using `provider-lead-admin-alert` template.
+## UI
+`src/pages/admin/AdminDataEnrichment.tsx`:
+- Stepper بـ 3 خطوات، state محلي عبر `useState` + React Query للـ mutations.
+- مكونات مساعدة: `<SourcesStep>`, `<ReviewStep>` (جدول مقارنة مع `<Bi>`, `<VerifiedBadge>`-style confidence chips, conflict alert), `<ApplyStep>`.
+- بدون Dialog/Popover/AlertDialog — كل التأكيدات Inline cards.
+- RTL/LTR via `useBi`, technical content بـ `.tech-content`.
+- Loading/skeleton + رسائل خطأ مترجَمة عامة (بدون تفاصيل تقنية).
 
-### 6. Admin Dashboard
-- New page: `src/pages/admin/AdminProviderLeads.tsx`
-  - List with status filter, search, badges per status (colored).
-  - Inline detail panel (no popup) — view all fields, CR file signed URL, branches list.
-  - Status change inline (select), notes field, link-to-business action.
-- Add nav entry under existing admin sidebar group (Requests / Leads).
-- RBAC guarded via existing admin access patterns.
+## Routing
+- إضافة المسار في `App.tsx` ضمن `<AdminRoute>` (أو نمطه الحالي).
+- رابط في Admin sidebar تحت "إثراء البيانات".
 
-### 7. Security
-- Server-side Zod validation in RPC (length limits, regex for phone/email/CR).
-- Magic-byte sniffing for CR file via existing `validateImageFile` (extended for PDF).
-- Rate limit: max 5 submissions per IP per hour (table `provider_lead_rate_limit` or check on `provider_leads.submitted_ip_hash` + `created_at`).
-- Honeypot field + minimum form-time check (anti-spam without captcha).
-- No DB errors exposed — services map to generic bilingual messages.
+## Tests
+ملف `src/tests/adminDataEnrichment1.test.ts`:
+- وجود الملفات: page, module barrel, edge function folders, migration.
+- الصفحة لا تستورد `@/integrations/supabase/client` مباشرة.
+- لا توجد سلاسل `API_KEY`/`apiKey:`/`Authorization:` في كود الصفحة.
+- الصفحة تستورد من `@/modules/adminEnrichment`.
+- الصفحة تحتوي مدخلات Website و Maps URL.
+- الصفحة لا تستدعي `.publish` ولا `update({ status: 'published' })` ولا `insert(... businesses ...)` مباشرة (لا إنشاء/نشر تلقائي من الواجهة).
+- وجود مكوّن مقارنة وعرض confidence + conflict.
+- Edge `admin-enrichment-apply` تكتب في `admin_activity_log` (grep في كود الـ function).
 
-### 8. Tests
-- `src/tests/providerLeadIntake1.test.ts`:
-  - Route exists and is public.
-  - Required fields enforced.
-  - Email/phone validation.
-  - No direct `supabase.functions.invoke` or `supabase.from` in `ProviderJoin.tsx`.
-  - Service wrapper exists.
-  - Email template registered.
-  - Admin page exists and is gated.
-- Run: `tsc`, vitest focused, `broken-links-audit`, `storage-isolation-audit`, `edge-functions-isolation-audit`.
+## Deferred (واضح في الواجهة عند الغياب)
+- Firecrawl إذا غير مربوط → خانة Website معطّلة مع شارة "Deferred".
+- Google Maps API key إذا غير موجود → خانة Maps معطّلة بنفس الشارة.
+- AI Enhance step اختياري؛ يعمل دائمًا (LOVABLE_API_KEY متوفر).
 
-## Technical Notes
-- Reference code via Postgres sequence `provider_leads_ref_seq` start 1000, formatted in BEFORE INSERT trigger: `'PRV-' || lpad(nextval(...)::text, 7, '0')`.
-- Dedup uses partial unique indexes on `lower(email)`, normalized phone (strip non-digits, prepend 966), `cr_number`, `unified_number` — all `WHERE status NOT IN ('rejected','converted_to_business')`.
-- IP stored as `encode(digest(ip || salt, 'sha256'), 'hex')` to avoid PII raw storage.
-- Uses existing `IBM Plex Sans Arabic`, `.hover-lift`, semantic tokens, `h-12 rounded-xl`.
-- Branches rendered as add/remove cards; max 20 to bound payload.
+## الأمن
+- لا API keys في bundle المتصفّح.
+- كل edge function تتحقق `has_admin_access` على JWT.
+- Sanitize URL inputs و length caps.
+- لا توجد عمليات نشر/إنشاء تلقائي — فقط بضغطة الأدمن في خطوة Apply.
+- كل تطبيق ينتج صفوف audit في `admin_activity_log` + `admin_enrichment_sessions`.
 
-## File Plan
-
-**Created:**
-- `supabase/migrations/<ts>_provider_leads.sql`
-- `src/pages/ProviderJoin.tsx`
-- `src/pages/admin/AdminProviderLeads.tsx`
-- `src/modules/providers/index.ts`
-- `src/modules/providers/services/submitProviderLead.ts`
-- `src/modules/providers/services/listProviderLeads.ts`
-- `src/modules/providers/services/updateProviderLeadStatus.ts`
-- `src/modules/providers/types.ts`
-- `src/modules/files/domain/providerLeadDocuments.ts`
-- `supabase/functions/_shared/transactional-email-templates/provider-lead-confirmation.tsx`
-- `supabase/functions/_shared/transactional-email-templates/provider-lead-admin-alert.tsx`
-- `src/tests/providerLeadIntake1.test.ts`
-
-**Edited:**
-- `src/App.tsx` (route registration)
-- `supabase/functions/_shared/transactional-email-templates/registry.ts`
-- Admin sidebar config (existing nav file)
-- `src/modules/files/constants/buckets.ts` + `constraints.ts`
-- `mem://index.md` + new memory file `mem://features/provider-lead-intake`
-
-## Final Report (after impl)
-Will include: final route, tables/services created, dedup mechanism, CR upload flow, email IDs sent, admin notification path, files touched, test results.
-
----
-
-**Note**: This is a large feature (~12-15 files). Confirm to proceed, or ask for adjustments (e.g., skip branches, simpler dedup, no admin page in this pass).
+بعد موافقتك على الخطة، أبدأ التنفيذ: migration → edge functions → module → page + route + sidebar → tests.
