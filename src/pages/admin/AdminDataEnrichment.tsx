@@ -408,17 +408,111 @@ export default function AdminDataEnrichment() {
 
             {searchResults.length > 0 && (
               <div className="mt-2 space-y-2">
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <Bi ar={`${searchResults.length} نتيجة`} en={`${searchResults.length} results`} />
+                <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                  <Bi ar={`${displayResults.length} من ${searchResults.length} نتيجة`} en={`${displayResults.length} of ${searchResults.length} results`} />
                   {searchCached && (
                     <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-emerald-700">
                       <Zap className="h-3 w-3" />
                       <Bi ar="من الكاش" en="Cached" />
                     </span>
                   )}
+                  <div className="ms-auto flex items-center gap-1.5">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-[11px]"
+                      onClick={() => setShowFilters((s) => !s)}
+                    >
+                      <SlidersHorizontal className="me-1 h-3 w-3" />
+                      <Bi ar="تصفية وفرز" en="Filter & sort" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-[11px]"
+                      onClick={() => { setBypassCacheFlag(true); searchMut.mutate({ bypass: true }); }}
+                      disabled={searchMut.isPending || searchQuery.trim().length < 2}
+                      title={bi("إعادة الجلب من Google مباشرة", "Re-fetch directly from Google")}
+                    >
+                      <RefreshCw className={`me-1 h-3 w-3 ${searchMut.isPending ? "animate-spin" : ""}`} />
+                      <Bi ar="إعادة جلب" en="Re-fetch" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-[11px] text-rose-600 hover:text-rose-700"
+                      onClick={() => clearCacheMut.mutate()}
+                      disabled={clearCacheMut.isPending}
+                    >
+                      {clearCacheMut.isPending ? <Loader2 className="me-1 h-3 w-3 animate-spin" /> : <Trash2 className="me-1 h-3 w-3" />}
+                      <Bi ar="مسح الكاش" en="Clear cache" />
+                    </Button>
+                  </div>
                 </div>
+                {clearMsg && (
+                  <div className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-700">
+                    {clearMsg}
+                  </div>
+                )}
+                {showFilters && (
+                  <Card className="grid grid-cols-1 gap-3 border-dashed bg-muted/30 p-3 sm:grid-cols-4">
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground"><Bi ar="أدنى تقييم" en="Min rating" /></Label>
+                      <Select value={String(minRating)} onValueChange={(v) => setMinRating(Number(v))}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0"><Bi ar="الكل" en="Any" /></SelectItem>
+                          <SelectItem value="3">≥ 3.0</SelectItem>
+                          <SelectItem value="3.5">≥ 3.5</SelectItem>
+                          <SelectItem value="4">≥ 4.0</SelectItem>
+                          <SelectItem value="4.5">≥ 4.5</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground"><Bi ar="ثقة (عدد التقييمات)" en="Confidence (reviews)" /></Label>
+                      <Select value={String(minReviews)} onValueChange={(v) => setMinReviews(Number(v))}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0"><Bi ar="الكل" en="Any" /></SelectItem>
+                          <SelectItem value="5">≥ 5</SelectItem>
+                          <SelectItem value="20">≥ 20</SelectItem>
+                          <SelectItem value="50">≥ 50</SelectItem>
+                          <SelectItem value="100">≥ 100</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground"><Bi ar="نوع الجهة" en="Place type" /></Label>
+                      <Select value={typeFilter} onValueChange={setTypeFilter}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all"><Bi ar="الكل" en="All" /></SelectItem>
+                          {availableTypes.map((t) => (
+                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground"><Bi ar="فرز" en="Sort by" /></Label>
+                      <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="relevance"><Bi ar="الأكثر صلة" en="Relevance" /></SelectItem>
+                          <SelectItem value="rating_desc"><Bi ar="الأعلى تقييمًا" en="Highest rating" /></SelectItem>
+                          <SelectItem value="reviews_desc"><Bi ar="الأكثر تقييمات" en="Most reviews" /></SelectItem>
+                          <SelectItem value="name_asc"><Bi ar="الاسم (أ-ي)" en="Name (A–Z)" /></SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </Card>
+                )}
                 <ul className="space-y-2">
-                  {searchResults.map((p) => {
+                  {displayResults.map((p) => {
                     const isSelected = selectedPlace?.place_id === p.place_id;
                     return (
                       <li key={p.place_id}>
@@ -489,6 +583,20 @@ export default function AdminDataEnrichment() {
                     );
                   })}
                 </ul>
+                {nextPageToken && (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => searchMut.mutate({ append: true })}
+                      disabled={searchMut.isPending}
+                    >
+                      {searchMut.isPending ? <Loader2 className="me-2 h-3.5 w-3.5 animate-spin" /> : null}
+                      <Bi ar="تحميل المزيد" en="Load more" />
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
