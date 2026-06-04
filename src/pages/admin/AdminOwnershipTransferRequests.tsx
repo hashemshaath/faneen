@@ -294,9 +294,14 @@ const AdminOwnershipTransferRequests: React.FC = () => {
             ? 'المنشآت المُنشأة تحت الحساب المؤقت (com@qitaat.com) يمكن لمالكها الحقيقي طلب تسلّمها. راجع الطلب ووافق لنقل الملكية، أو ارفض مع سبب.'
             : 'Entities created under the placeholder account (com@qitaat.com) can be claimed by their real owner. Review, then approve to transfer ownership or reject with a reason.'}
           actions={
-            <Button variant="outline" size="sm" onClick={() => { void load(); void loadReport(); }} disabled={loading} className="rounded-xl">
-              <RefreshCw className={`w-3.5 h-3.5 me-1.5 ${loading ? 'animate-spin' : ''}`} /> {isRTL ? 'تحديث' : 'Refresh'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={exportCsv} disabled={filteredRows.length === 0} className="rounded-xl">
+                <Download className="w-3.5 h-3.5 me-1.5" /> {isRTL ? 'تصدير CSV' : 'Export CSV'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { void load(); void loadReport(); void loadStats(); }} disabled={loading} className="rounded-xl">
+                <RefreshCw className={`w-3.5 h-3.5 me-1.5 ${loading ? 'animate-spin' : ''}`} /> {isRTL ? 'تحديث' : 'Refresh'}
+              </Button>
+            </div>
           }
         />
 
@@ -322,11 +327,51 @@ const AdminOwnershipTransferRequests: React.FC = () => {
           </div>
         )}
 
+        {/* Dashboard stats */}
+        {stats && (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+            <div className="rounded-xl border border-border bg-card p-3">
+              <div className="text-[10.5px] text-muted-foreground">{isRTL ? 'إجمالي Placeholder' : 'Total placeholders'}</div>
+              <div className="text-lg font-bold mt-0.5">{stats.total_placeholders}</div>
+            </div>
+            <div className="rounded-xl border border-warning/30 bg-warning/5 p-3">
+              <div className="text-[10.5px] text-muted-foreground">{isRTL ? 'طلبات معلّقة' : 'Pending'}</div>
+              <div className="text-lg font-bold text-warning mt-0.5">{stats.pending_claims}</div>
+            </div>
+            <div className="rounded-xl border border-success/30 bg-success/5 p-3">
+              <div className="text-[10.5px] text-muted-foreground">{isRTL ? 'موافق عليها' : 'Approved'}</div>
+              <div className="text-lg font-bold text-success mt-0.5">{stats.approved_claims}</div>
+            </div>
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+              <div className="text-[10.5px] text-muted-foreground">{isRTL ? 'مرفوضة' : 'Rejected'}</div>
+              <div className="text-lg font-bold text-destructive mt-0.5">{stats.rejected_claims}</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3">
+              <div className="text-[10.5px] text-muted-foreground">{isRTL ? 'متوسط زمن المراجعة' : 'Avg review time'}</div>
+              <div className="text-lg font-bold mt-0.5 tech-content">
+                {stats.avg_review_hours != null ? `${stats.avg_review_hours}h` : '—'}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Search */}
+        <div className="relative">
+          <Search className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'end-3' : 'start-3'} w-4 h-4 text-muted-foreground`} />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            dir="auto"
+            placeholder={isRTL ? 'بحث: اسم المنشأة، الطالب، البريد، الجوال، السجل التجاري…' : 'Search: business, requester, email, phone, CR…'}
+            className={`h-11 rounded-xl ${isRTL ? 'pe-9' : 'ps-9'}`}
+          />
+        </div>
+
         {/* Filter tabs */}
         <div className="flex flex-wrap gap-1.5 rounded-xl border border-border/40 bg-card p-1.5">
           {FILTERS.map((f) => {
             const active = filter === f.id;
-            const count = f.id === 'all' ? rows.length : (counts[f.id as Status] ?? 0);
+            const count = f.id === 'all' ? filteredRows.length : (counts[f.id as Status] ?? 0);
             return (
               <button
                 key={f.id}
@@ -348,16 +393,18 @@ const AdminOwnershipTransferRequests: React.FC = () => {
         {/* List */}
         {loading ? (
           <div className="space-y-2">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32 rounded-2xl" />)}</div>
-        ) : rows.length === 0 ? (
+        ) : filteredRows.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
             <Inbox className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
             <p className="text-sm text-muted-foreground">
-              {isRTL ? 'لا توجد طلبات في هذه الحالة.' : 'No requests in this state.'}
+              {search.trim()
+                ? (isRTL ? 'لا توجد نتائج مطابقة للبحث.' : 'No matches for your search.')
+                : (isRTL ? 'لا توجد طلبات في هذه الحالة.' : 'No requests in this state.')}
             </p>
           </div>
         ) : (
           <div className="space-y-2.5">
-            {rows.map((r) => {
+            {filteredRows.map((r) => {
               const StatusIcon = STATUS_ICON[r.status];
               const isOpenNote = noteFor === r.id;
               const isActing = acting === r.id;
