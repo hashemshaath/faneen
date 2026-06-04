@@ -7141,6 +7141,33 @@ export type Database = {
           },
         ]
       }
+      google_api_usage_log: {
+        Row: {
+          api: string
+          created_at: string
+          error_code: string | null
+          id: number
+          latency_ms: number | null
+          status: string
+        }
+        Insert: {
+          api: string
+          created_at?: string
+          error_code?: string | null
+          id?: number
+          latency_ms?: number | null
+          status: string
+        }
+        Update: {
+          api?: string
+          created_at?: string
+          error_code?: string | null
+          id?: number
+          latency_ms?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
       help_articles: {
         Row: {
           audience: Database["public"]["Enums"]["help_audience"]

@@ -109,6 +109,7 @@ const BlogPost = lazyRetry(() => import("./pages/BlogPost"));
 const ProfileSystems = lazyRetry(() => import("./pages/ProfileSystems"));
 const ProfileSystemDetail = lazyRetry(() => import("./pages/ProfileSystemDetail"));
 const AdminApiSettings = lazyRetry(() => import("./pages/admin/AdminApiSettings"));
+const AdminGoogleServices = lazyRetry(() => import("./pages/admin/AdminGoogleServices"));
 const AdminApiDocs = lazyRetry(() => import("./pages/admin/AdminApiDocs"));
 const AdminUsers = lazyRetry(() => import("./pages/admin/AdminUsers"));
 const AdminUserDetail = lazyRetry(() => import("./pages/admin/AdminUserDetail"));
@@ -403,6 +404,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/blog" element={<ProtectedRoute requireAdmin><DashboardBlog /></ProtectedRoute>} />
           <Route path="/dashboard/profile-systems" element={<ProtectedRoute requireAdmin><DashboardProfileSystems /></ProtectedRoute>} />
           <Route path="/admin/api-settings" element={<ProtectedRoute requireAdmin><Navigate to="/admin/system-settings?tab=api" replace /></ProtectedRoute>} />
+          <Route path="/admin/integrations/google" element={<ProtectedRoute requireAdmin><AdminGoogleServices /></ProtectedRoute>} />
           <Route path="/admin/ab-experiments" element={<ProtectedRoute requireAdmin><AdminAbExperiments /></ProtectedRoute>} />
           <Route path="/admin/showcase" element={<ProtectedRoute requireAdmin><AdminShowcase /></ProtectedRoute>} />
           <Route path="/dashboard/showcase" element={<ProtectedRoute><DashboardShowcase /></ProtectedRoute>} />
