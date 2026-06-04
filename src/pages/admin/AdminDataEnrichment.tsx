@@ -14,7 +14,7 @@
  */
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Building2, ExternalLink, Download, FileSpreadsheet, Zap, RefreshCw, Trash2, SlidersHorizontal, Bug, Database, Wrench, FileEdit, Save } from "lucide-react";
+import { Link as LinkIcon, MapPin, Sparkles, ShieldCheck, AlertTriangle, ArrowRight, Loader2, Check, Search, Star, Building2, ExternalLink, Download, FileSpreadsheet, Zap, RefreshCw, Trash2, SlidersHorizontal, Bug, Database, Wrench, FileEdit, Save } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
