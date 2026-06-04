@@ -524,10 +524,10 @@ async function geocodeFallback(
   lovableKey: string,
   lang: "ar" | "en" = "ar",
 ): Promise<{
-  fields: { city: string | null; district: string | null; street: string | null; region: string | null };
+  fields: { city: string | null; district: string | null; street: string | null; region: string | null; national_address: string | null; latitude: string | null; longitude: string | null };
   raw: Array<Record<string, unknown>>;
 }> {
-  if (!lat || !lng) return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
+  if (!lat || !lng) return { fields: { city: null, district: null, street: null, region: null, national_address: null, latitude: null, longitude: null }, raw: [] };
   try {
     const res = await fetch(
       `https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json?latlng=${encodeURIComponent(lat)},${encodeURIComponent(lng)}&language=${lang}&region=sa`,
@@ -535,9 +535,9 @@ async function geocodeFallback(
     );
     if (!res.ok) {
       await res.text().catch(() => "");
-      return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
+      return { fields: { city: null, district: null, street: null, region: null, national_address: null, latitude: lat, longitude: lng }, raw: [] };
     }
-    const data = await res.json().catch(() => null) as { results?: Array<{ address_components?: Array<{ long_name?: string; short_name?: string; types?: string[] }> }> };
+    const data = await res.json().catch(() => null) as { results?: Array<{ formatted_address?: string; address_components?: Array<{ long_name?: string; short_name?: string; types?: string[] }> }> };
     const results = Array.isArray(data?.results) ? data!.results! : [];
     // Aggregate components across all returned results.
     const all = results.flatMap((r) => Array.isArray(r.address_components) ? r.address_components! : []);
@@ -554,11 +554,14 @@ async function geocodeFallback(
         district: find("sublocality_level_1", "sublocality_level_2", "sublocality", "neighborhood"),
         street: find("route"),
         region: find("administrative_area_level_1"),
+        national_address: results[0]?.formatted_address ?? null,
+        latitude: lat,
+        longitude: lng,
       },
       raw: all as Array<Record<string, unknown>>,
     };
   } catch {
-    return { fields: { city: null, district: null, street: null, region: null }, raw: [] };
+    return { fields: { city: null, district: null, street: null, region: null, national_address: null, latitude: lat, longitude: lng }, raw: [] };
   }
 }
 
