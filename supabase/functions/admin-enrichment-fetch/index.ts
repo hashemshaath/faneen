@@ -463,15 +463,62 @@ Deno.serve(async (req) => {
       }
     }
     let mapsData: Record<string, string | null> = {};
+    let mapsRaw: { placeId: string | null; addressComponents: Array<Record<string, unknown>>; placeRaw: Record<string, unknown> | null } = { placeId: null, addressComponents: [], placeRaw: null };
+    let geocodingRaw: Array<Record<string, unknown>> = [];
+    let geocodingUsed = false;
     if ((placeId || mapsUrl) && googleKey && lovableKey) {
       const mKey = `maps:${placeId ? `id:${placeId}` : mapsUrl}`;
       const cached = await readCache(mKey);
-      if (cached) mapsData = cached;
-      else {
-        mapsData = await fetchGoogleMaps(mapsUrl, placeId, googleKey, lovableKey);
-        if (Object.keys(mapsData).length) await writeCache(mKey, mapsData);
+      if (cached) {
+        mapsData = (cached as Record<string, unknown>).fields as Record<string, string | null> ?? cached;
+        mapsRaw = ((cached as Record<string, unknown>).raw as typeof mapsRaw) ?? mapsRaw;
+        geocodingRaw = ((cached as Record<string, unknown>).geocodingRaw as Array<Record<string, unknown>>) ?? [];
+      } else {
+        const r = await fetchGoogleMaps(mapsUrl, placeId, googleKey, lovableKey);
+        mapsData = r.fields;
+        mapsRaw = r.raw;
+        // Geocoding fallback when key address fields are missing.
+        const needsGeocode = (!mapsData.district || !mapsData.street || !mapsData.city) && mapsData.latitude && mapsData.longitude;
+        if (needsGeocode) {
+          const g = await geocodeFallback(mapsData.latitude, mapsData.longitude, googleKey, lovableKey);
+          geocodingUsed = true;
+          geocodingRaw = g.raw;
+          if (!mapsData.city) mapsData.city = g.fields.city;
+          if (!mapsData.district) mapsData.district = g.fields.district;
+          if (!mapsData.street) mapsData.street = g.fields.street;
+          if (!mapsData.region) mapsData.region = g.fields.region;
+        }
+        if (Object.keys(mapsData).length) {
+          await writeCache(mKey, { fields: mapsData, raw: mapsRaw, geocodingRaw } as unknown as Record<string, string | null>);
+        }
       }
     }
+
+    // DB matching: snap city / district / region to canonical reference rows.
+    const cityMatch = await matchCity(svc, mapsData.city ?? null);
+    const districtMatch = await matchDistrict(
+      svc,
+      cityMatch?.name_ar ?? cityMatch?.name_en ?? mapsData.city ?? null,
+      mapsData.district ?? null,
+    );
+    const dbMatches = {
+      city: cityMatch
+        ? { id: cityMatch.id, name_ar: cityMatch.name_ar, name_en: cityMatch.name_en }
+        : null,
+      district: districtMatch
+        ? {
+            id: districtMatch.id,
+            name_ar: districtMatch.district_ar,
+            name_en: districtMatch.district_en,
+          }
+        : null,
+      region: districtMatch
+        ? { name_ar: districtMatch.region_ar, name_en: districtMatch.region_en }
+        : (mapsData.region ? { name_ar: mapsData.region, name_en: mapsData.region } : null),
+    };
+    // Override merged values with canonical names so admin works on DB-snapped data.
+    if (cityMatch) mapsData.city = cityMatch.name_ar || cityMatch.name_en;
+    if (districtMatch) mapsData.district = districtMatch.district_ar || districtMatch.district_en;
 
     const merged = emptyDraft();
     merged.name_ar = pickField(null, mapsData.name ?? null);
@@ -534,6 +581,13 @@ Deno.serve(async (req) => {
       conflicts,
       deferred: missing.length > 0,
       missing,
+      diagnostics: {
+        place_id: mapsRaw.placeId,
+        addressComponents: mapsRaw.addressComponents,
+        geocoding_used: geocodingUsed,
+        geocoding_components: geocodingRaw,
+      },
+      db_matches: dbMatches,
     });
   } catch {
     return json({ error: "internal_error" }, 200);
