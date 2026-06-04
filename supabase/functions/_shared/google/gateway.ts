@@ -13,6 +13,7 @@ export type GoogleApi =
   | "static_map";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/google_maps";
+const DEFAULT_GOOGLE_REFERER = "https://qitaat.lovable.app/";
 
 export function getGoogleSecrets(): {
   lovableKey: string | null;
@@ -32,10 +33,12 @@ export function googleHeaders(
   googleKey: string,
   extra: Record<string, string> = {},
 ): HeadersInit {
+  const referer = Deno.env.get("GOOGLE_MAPS_HTTP_REFERER") ?? DEFAULT_GOOGLE_REFERER;
   return {
     Authorization: `Bearer ${lovableKey}`,
     "X-Connection-Api-Key": googleKey,
     "Content-Type": "application/json",
+    Referer: referer,
     ...extra,
   };
 }

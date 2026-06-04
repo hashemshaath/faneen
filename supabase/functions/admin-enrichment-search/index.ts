@@ -10,6 +10,41 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const DEFAULT_GOOGLE_REFERER = "https://qitaat.lovable.app/";
+
+function extractGoogleReason(text: string): string | null {
+  try {
+    const parsed = JSON.parse(text) as { error?: { details?: Array<{ reason?: string }>; message?: string } };
+    const reason = parsed.error?.details?.find((d) => typeof d.reason === "string")?.reason;
+    if (reason) return reason;
+    if (typeof parsed.error?.message === "string") return parsed.error.message.slice(0, 180);
+  } catch { /* keep generic */ }
+  return null;
+}
+
+function mapGoogleSearchError(status: number, body: string): { error: string; detail: string } {
+  const reason = extractGoogleReason(body);
+  if (reason === "SERVICE_DISABLED") {
+    return {
+      error: "places_api_disabled",
+      detail: "Places API (New) is disabled for the linked Google Maps connection.",
+    };
+  }
+  if (reason === "API_KEY_HTTP_REFERRER_BLOCKED") {
+    return {
+      error: "google_referrer_blocked",
+      detail: "Google rejected the request because the key referrer allowlist does not include this app domain.",
+    };
+  }
+  if (reason === "API_KEY_SERVICE_BLOCKED") {
+    return {
+      error: "places_api_blocked_for_key",
+      detail: "The linked Google Maps key is restricted from calling Places API (New).",
+    };
+  }
+  return { error: "upstream_error", detail: reason ?? `Google upstream HTTP ${status}` };
+}
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -113,6 +148,7 @@ Deno.serve(async (req) => {
 
     const googleKey = Deno.env.get("GOOGLE_MAPS_API_KEY") ?? "";
     const lovableKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
+    const googleReferer = Deno.env.get("GOOGLE_MAPS_HTTP_REFERER") ?? DEFAULT_GOOGLE_REFERER;
     if (!googleKey || !lovableKey) {
       const missing: string[] = [];
       if (!googleKey) missing.push("GOOGLE_MAPS_API_KEY");
@@ -133,6 +169,7 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${lovableKey}`,
             "X-Connection-Api-Key": googleKey,
+            "Referer": googleReferer,
             "X-Goog-FieldMask": [
               "places.id",
               "places.displayName",
@@ -170,14 +207,16 @@ Deno.serve(async (req) => {
     const upstreamMs = Date.now() - upstreamStart;
     if (!res.ok) {
       const errorText = await res.text().catch(() => "");
+      const mapped = mapGoogleSearchError(res.status, errorText);
       log("error", "gateway_http_error", {
         upstreamStatus: res.status, upstreamMs,
+        mappedError: mapped.error,
         body: errorText.slice(0, 500),
       });
       return json({
-        ok: false, error: "upstream_error", results: [],
+        ok: false, error: mapped.error, results: [],
         requestId, upstreamStatus: res.status, upstreamMs,
-        detail: errorText.slice(0, 300).replace(/[^\x20-\x7E\u0600-\u06FF ]/g, ""),
+        detail: mapped.detail,
       }, 200);
     }
     const data = await res.json().catch(() => null);
