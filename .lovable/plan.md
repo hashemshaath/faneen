@@ -1,96 +1,101 @@
-# GOOGLE-INTEGRATION-GOVERNANCE-AUDIT-1
+# DATA-ENRICHMENT-GOVERNANCE-1
 
-## 1. Inventory (audit phase — read-only)
+Build a single governance layer through which every external data source must pass before being written to `businesses`, `providers`, `brands`, `private_sectors`, or `provider_leads`.
 
-Produce `docs/google-integration-audit.md` covering:
+## Scope
 
-**Services found in code**
-- Google Maps JavaScript API — `LocationPicker.tsx`, `ExecutionSiteSection.tsx`, `SearchMap.tsx` (currently Leaflet/OSM, not Google), `BusinessProfileTabs.tsx`
-- Places API (New) — used inside `admin-enrichment-search`, `admin-enrichment-fetch`
-- Geocoding API — referenced in enrichment edge functions
-- Routes / Address Validation — not yet wired
-- Google OAuth — `GoogleAuthButton.tsx` (managed by Lovable Cloud)
-- Google Tag Manager / Analytics — `lib/gtm.ts`, `analytics-events.ts`, `ConsentBanner.tsx`
-- Google Search Console — `ping-search-engines`, `audit-sitemap-status`
-- reCAPTCHA / Firebase / FCM — **not present** (confirm and document)
+In: unified module `src/modules/dataEnrichment`, normalization/translation/confidence/conflict engines, source registry, audit trail, admin dashboard `/admin/data-enrichment` (governance tabs), DB tables for sessions/audit/quality, guard tests + CI audit.
 
-**Keys**
-- `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY` (browser, referrer-restricted)
-- `GOOGLE_MAPS_API_KEY` (server, via connector gateway) + `LOVABLE_API_KEY`
-- Google OAuth client (managed)
-- GTM container ID (public, env)
+Out (deferred, tracked in audit doc): rewriting existing provider registration form, full CSV importer UI, brand bulk importer UI — these get wrappers that route through the engine but keep their current UI.
 
-**Architectural defects to flag** (and fix in phase 3)
-- Any frontend code that calls `connector-gateway.lovable.dev/google_maps/*` directly with browser-exposed bearer (must go through edge function).
-- Any edge function importing the browser key.
-- Any hardcoded `AIza…` strings.
-- Duplicate ad-hoc fetchers for Places/Geocoding outside a service layer.
+## Architecture
 
-## 2. New unified module — `src/modules/google/`
-
-```
-src/modules/google/
-  index.ts                  // barrel
-  mapsService.ts            // browser Maps JS loader (single source)
-  placesService.ts          // client wrapper → edge fn `google-places`
-  geocodingService.ts       // client wrapper → edge fn `google-geocoding`
-  addressValidationService.ts // → edge fn `google-address-validation`
-  routesService.ts          // → edge fn `google-routes`
-  types.ts
+```text
+src/modules/dataEnrichment/
+  index.ts                     # public barrel
+  types.ts                     # SourceKind, EnrichmentRecord, Confidence, Conflict, QualityScore
+  sourceRegistry.ts            # registry of all 11 sources + capabilities
+  engines/
+    normalizationEngine.ts     # city/district/phone/url/email/CR/VAT/national-addr/social
+    translationEngine.ts       # AR<->EN via Lovable AI gateway (edge)
+    confidenceEngine.ts        # scoring rules table
+    conflictResolver.ts        # diff + resolution strategies
+    qualityScoring.ts          # 0-100 profile quality
+  services/
+    ingestSource.ts            # supabase.functions.invoke('data-enrichment-ingest')
+    runEnrichment.ts           # invoke('data-enrichment-run')
+    resolveConflict.ts         # invoke('data-enrichment-resolve')
+    approveRecord.ts           # invoke('data-enrichment-approve')
+    listPending.ts / listAudit.ts / getQuality.ts
+  observability.ts             # emit enrichment_* events to operations log
   README.md
 ```
 
-Each *service* file is a thin client wrapper that calls a corresponding edge function — **no direct gateway calls from the browser**.
+Engines are **pure functions** (testable, no network). All network goes through edge functions + service wrappers (EF-6 compliant).
 
-## 3. Edge functions (server-side, use gateway)
+## Database (one migration)
 
-New / consolidated:
-- `supabase/functions/google-places/index.ts` — searchText, searchNearby, place details
-- `supabase/functions/google-geocoding/index.ts` — forward + reverse
-- `supabase/functions/google-address-validation/index.ts`
-- `supabase/functions/google-routes/index.ts`
-- `supabase/functions/google-health/index.ts` — calls `verify_credentials` + one cheap probe per API, returns `{ places, geocoding, routes, addressValidation } → { ok, latencyMs, lastError, checkedAt }`
+- `data_enrichment_sources` — registry mirror (seeded): `key`, `label_ar/en`, `kind`, `trust_weight`, `active`.
+- `data_enrichment_records` — one row per ingested payload: `source_key`, `external_ref`, `raw jsonb`, `normalized jsonb`, `translated jsonb`, `confidence jsonb`, `conflicts jsonb`, `quality_score int`, `status` (`imported|normalized|enriched|pending_review|approved|rejected|applied`), `target_entity_type`, `target_entity_id`, `created_by`, timestamps.
+- `data_enrichment_audit` — append-only: `record_id`, `field`, `old_value`, `new_value`, `source_key`, `actor_id`, `action`, `reason`, `created_at`.
+- `data_enrichment_quality_snapshots` — per business/provider quality score history.
+- GRANTs (`authenticated` for SELECT on registry; admins via RLS using `has_admin_access`), RLS enabled, service_role full access. Append-only trigger on audit.
 
-Migrate existing usages in `admin-enrichment-*` to import from `_shared/google/*` helpers (DRY) instead of repeating fetch boilerplate.
+## Edge functions
 
-## 4. Admin health dashboard
+`supabase/functions/data-enrichment-{ingest,run,resolve,approve,quality}/index.ts`
+- All gated by `has_admin_access` for write paths; `ingest` accepts an internal `x-source-token` for system sources (Provider Lead intake, CSV import worker).
+- `run` chains: validate → normalize → translate (Lovable AI, deferred if no key) → score → detect conflicts → persist. Emits observability events.
+- Reuse existing `_shared/google/gateway.ts` and the AI gateway pattern from `admin-enrichment-enhance`.
 
-New route `src/pages/admin/AdminGoogleServices.tsx` mounted at `/admin/integrations/google`:
-- Cards per API: status dot, latency, last success, last failure, daily call count (from a lightweight `google_api_usage_log` table written by edge functions).
-- "Re-check now" button → calls `google-health`.
-- Never prints keys; never accepts keys via UI.
-- Add to admin sidebar under Integrations.
+## Source Registry (initial 11)
 
-Tiny migration: `google_api_usage_log(id, api, status, latency_ms, error_code, created_at)` + RLS (admin read only) + GRANTs.
+google_places, google_maps, firecrawl_website, website_crawl, national_address, manual_admin, provider_registration, supplier_import, csv_import, brand_import, future_api. Each declares: trust weight (0..1), supported fields, requires_review (bool).
 
-## 5. Security hardening
+## Admin UI
 
-- Strip browser key out of any non-Maps-JS code paths.
-- Edge functions: never echo `GOOGLE_MAPS_API_KEY` or `LOVABLE_API_KEY` in error messages — central error mapper.
-- Add a CI scanner script `scripts/google-keys-isolation-audit.mjs` (parallel to existing `*-isolation-audit.mjs` family).
+New route `/admin/data-enrichment-governance` (keep existing `/admin/data-enrichment` for the legacy ADMIN-DATA-ENRICHMENT-MICROSERVICE-1 page — link both):
 
-## 6. Tests — `src/tests/googleIntegrationGovernanceAudit1.test.ts`
+Tabs:
+1. **Sources** — registry table + per-source 24h ingest stats.
+2. **Pending Reviews** — list of `pending_review` records, opens detail drawer.
+3. **Conflicts** — only records with `conflicts` array non-empty; side-by-side resolver.
+4. **Confidence** — distribution chart + low-confidence queue.
+5. **Quality** — businesses sorted by quality_score ascending.
+6. **History** — applied records timeline.
+7. **Audit Trail** — searchable append-only log.
 
-Assertions (ripgrep-based, no runtime):
-1. No `connector-gateway.lovable.dev/google_maps` references in `src/` (only `supabase/functions/`).
-2. No `AIza` literal anywhere in `src/` or `supabase/functions/`.
-3. No `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY` outside `src/modules/google/mapsService.ts`.
-4. No `import.meta.env.VITE_*GOOGLE*` references inside `supabase/functions/`.
-5. Frontend pages importing Places/Geocoding/Routes/AddressValidation only via `@/modules/google`.
-6. Edge functions `google-places|geocoding|routes|address-validation|health` exist.
-7. Admin page + sidebar entry exist.
+All UI uses inline cards/drawers (no popups — per project constraint).
 
-## 7. Final report
+## Integration wiring
 
-Append PASS/FAIL summary + cost notes (cache opportunities: dedupe geocoding by `(lat,lng)` rounded; cache Place details for 30d) to `docs/google-integration-audit.md`.
+- Existing `admin-enrichment-apply` edge function: add a call to `data-enrichment-run` to persist a parallel governance record before writing the entity. Non-blocking on failure (logs only) so we don't break the existing flow.
+- Provider Lead intake: wrap its insert path with `ingestSource({ source: 'provider_registration', ... })`.
+- Future Google/Firecrawl ingestion points call `ingestSource` instead of writing directly.
 
-## Technical notes
-- All edge functions: zod-validated input, CORS shared, `verify_jwt = false` only for `google-health` if invoked from public health probes — otherwise auth-gated to admin via `has_admin_access`.
-- Logging table writes are best-effort (`try/catch`, never block response).
-- No popups in admin UI — inline cards per project UX rule.
-- Keep Leaflet-based `SearchMap` as-is (not Google) but document it explicitly so future contributors don't "migrate" it accidentally.
+## Tests — `src/tests/dataEnrichmentGovernance1.test.ts`
 
-## Out of scope
-- Migrating `SearchMap` from Leaflet to Google Maps.
-- Refactoring GTM/Analytics (separate audit).
-- Google OAuth changes (managed, working).
+1. Module barrel exists and exports the documented surface.
+2. Source registry contains all 11 sources with valid trust weights.
+3. `normalizationEngine` normalizes Riyadh aliases, +966 phone formats, lowercases email, strips URL tracking.
+4. `confidenceEngine` returns ≥95 when google+website agree, 70 website only, 60 manual, 50 ai_only.
+5. `conflictResolver` produces a Conflict[] when two sources disagree and zero when they match.
+6. Edge functions exist (5 files) and gate on `has_admin_access` or `x-source-token`.
+7. Admin page exists at `src/pages/admin/AdminDataEnrichmentGovernance.tsx`, registered in `App.tsx`, linked from sidebar.
+8. No page/component imports an external API directly — all enrichment calls go through `@/modules/dataEnrichment`.
+9. Migration exists and creates the 4 tables with RLS + GRANTs.
+10. Observability events emitted: `enrichment_started`, `enrichment_completed`, `enrichment_failed`, `conflict_detected`, `conflict_resolved`, `enrichment_approved`.
+
+CI audit script `scripts/data-enrichment-isolation-audit.mjs` forbids direct calls to enrichment edge functions outside `src/modules/dataEnrichment/**`.
+
+## Deliverable
+
+`docs/data-enrichment-governance-1-audit.md` — final report with PASS/FAIL per test, architecture diagram, sources table, engine descriptions, conflict UX screenshots, integration map, readiness score.
+
+## Out of scope (acknowledged)
+
+- Migrating CSV/Brand import UIs (wrappers only).
+- Rebuilding provider registration UX.
+- Real-time enrichment workers (cron) — schema ready, scheduler deferred.
+
+Approve to proceed with implementation.

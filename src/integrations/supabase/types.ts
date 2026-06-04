@@ -6695,6 +6695,190 @@ export type Database = {
           },
         ]
       }
+      data_enrichment_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          field: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+          reason: string | null
+          record_id: string | null
+          source_key: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          field?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          reason?: string | null
+          record_id?: string | null
+          source_key?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          field?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          reason?: string | null
+          record_id?: string | null
+          source_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_enrichment_audit_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "data_enrichment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_enrichment_quality_snapshots: {
+        Row: {
+          breakdown: Json
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          score: number
+        }
+        Insert: {
+          breakdown?: Json
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          score: number
+        }
+        Update: {
+          breakdown?: Json
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          score?: number
+        }
+        Relationships: []
+      }
+      data_enrichment_records: {
+        Row: {
+          confidence: Json
+          conflicts: Json
+          created_at: string
+          created_by: string | null
+          external_ref: string | null
+          id: string
+          normalized: Json
+          notes: string | null
+          quality_score: number
+          raw: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_key: string
+          status: string
+          target_entity_id: string | null
+          target_entity_type: string | null
+          translated: Json
+          updated_at: string
+        }
+        Insert: {
+          confidence?: Json
+          conflicts?: Json
+          created_at?: string
+          created_by?: string | null
+          external_ref?: string | null
+          id?: string
+          normalized?: Json
+          notes?: string | null
+          quality_score?: number
+          raw?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_key: string
+          status?: string
+          target_entity_id?: string | null
+          target_entity_type?: string | null
+          translated?: Json
+          updated_at?: string
+        }
+        Update: {
+          confidence?: Json
+          conflicts?: Json
+          created_at?: string
+          created_by?: string | null
+          external_ref?: string | null
+          id?: string
+          normalized?: Json
+          notes?: string | null
+          quality_score?: number
+          raw?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_key?: string
+          status?: string
+          target_entity_id?: string | null
+          target_entity_type?: string | null
+          translated?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_enrichment_records_source_key_fkey"
+            columns: ["source_key"]
+            isOneToOne: false
+            referencedRelation: "data_enrichment_sources"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      data_enrichment_sources: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          key: string
+          kind: string
+          label_ar: string
+          label_en: string
+          requires_review: boolean
+          trust_weight: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          key: string
+          kind: string
+          label_ar: string
+          label_en: string
+          requires_review?: boolean
+          trust_weight?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          key?: string
+          kind?: string
+          label_ar?: string
+          label_en?: string
+          requires_review?: boolean
+          trust_weight?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       delegated_workspace_access: {
         Row: {
           business_id: string
