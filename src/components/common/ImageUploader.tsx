@@ -13,6 +13,12 @@ import { Upload, Trash2, ImagePlus, AlertCircle, Loader2, CheckCircle2 } from 'l
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+// Types for `public.images` are regenerated after the migration runs; we
+// keep a typed helper here so call-sites stay clean even if the generated
+// Database type is momentarily stale.
+const imagesTable = () => (supabase as unknown as {
+  from: (t: 'images') => ReturnType<typeof supabase.from>;
+}).from('images');
 import {
   generateImageSizes,
   validateImage,
@@ -106,8 +112,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           onProgress: (p) => updateItem(item.key, { percent: p }),
         });
 
-        const { data: row, error } = await supabase
-          .from('images')
+        const { data: row, error } = await (imagesTable() as any)
           .insert({
             owner_id: userId,
             provider_id: providerId,
@@ -125,7 +130,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         if (error) throw error;
 
         const result: UploadedImageRow = {
-          id: row.id,
+          id: (row as { id: string }).id,
           imageId,
           url_thumbnail: urls.thumbnail,
           url_medium: urls.medium,
@@ -182,7 +187,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           percent: 0,
           previewUrl: URL.createObjectURL(file),
         };
-        if (!v.ok) return { ...base, status: 'error', error: v.message };
+        if (v.ok === false) return { ...base, status: 'error', error: v.message };
         return base;
       });
 
@@ -210,7 +215,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     const userId = auth.user?.id;
     if (!userId) return;
     // Delete DB row first (RLS scoped to owner), then storage.
-    const { error } = await supabase.from('images').delete().eq('id', img.id);
+    const { error } = await (imagesTable() as any).delete().eq('id', img.id);
     if (error) {
       setTopError(error.message);
       return;
