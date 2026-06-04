@@ -1,72 +1,76 @@
-# ADMIN-DATA-ENRICHMENT-MICROSERVICE-1
+## النطاق
 
-قسم إداري جديد على `/admin/data-enrichment` لإثراء بيانات المنشآت من Website + Google Maps + AI، مع مراجعة بشرية كاملة قبل الاعتماد.
+تنفيذ متوازي عبر 4 محاور: تدقيق فني للبيانات/RLS، تحسين UX للأدمن، صفحة Claim عامة، وميزات احترافية جديدة.
 
-## المسار والصلاحيات
-- Route: `/admin/data-enrichment` (محمي عبر `has_admin_access`، `useNoIndex`).
-- إدراجه في Sidebar/Admin nav ضمن مجموعة "العمليات".
-- جميع الاستدعاءات الحساسة عبر Edge Functions — لا مفاتيح API في الواجهة، ولا `supabase.functions.invoke` مباشر داخل الصفحة (يمر عبر `@/modules/adminEnrichment`).
+---
 
-## البنية (3 مراحل Inline، بدون Popups)
-1. **Sources** — إدخال Website URL و/أو Google Maps URL (validation: URL، طول، sanitize).
-2. **Review** — عرض جدول مقارنة 3 أعمدة (Website / Google Maps / AI Enhanced) لكل حقل + Badge ثقة (high/medium/low) + تنبيه تعارض، وأزرار قبول/تعديل/تجاهل لكل حقل.
-3. **Apply** — ربط بمنشأة موجودة (autocomplete بـ Ref ID) أو إنشاء Provider Lead جديد. زر تأكيد صريح فقط؛ لا حفظ تلقائي، لا نشر تلقائي.
+## 1) تدقيق قواعد البيانات والربط (DB Audit)
 
-## الحقول المُستخرَجة
-الاسم (ar/en)، النشاط، الوصف (ar/en)، الجوال/الهاتف، الموقع، المدينة، الحي، الشارع، الإحداثيات، العنوان الوطني، أوقات العمل، اللوجو/الصور، الروابط الاجتماعية. كل حقل يحمل `source: website | google_maps | manual | ai_enhanced` و `confidence`.
+- **فحص RLS وGRANTS** على `business_ownership_transfer_requests`, `businesses (placeholder_owner)`, `admin_activity_log`.
+- **التحقق من triggers**: تأكد أن إنشاء المنشأة بنمط placeholder يربط تلقائياً بالمالك المؤقت (`com@qitaat.com`) ويسجّل في `admin_activity_log`.
+- **Indexes**: إضافة فهارس على `business_ownership_transfer_requests(business_id, status)` و`businesses(placeholder_owner) WHERE placeholder_owner=true`.
+- **سلامة المرجعية**: إضافة CHECK constraint لمنع طلبات الـ claim على منشآت غير placeholder.
+- **تشغيل `supabase--linter`** بعد التعديلات للتحقق من غياب أي تحذيرات أمنية.
 
-## Backend (Edge Functions)
-- `admin-enrichment-fetch` — يستقبل `{ website?, mapsUrl? }`، يستدعي Firecrawl للموقع + Google Places (New) للماب، يطبّع البيانات ويعيد `EnrichmentDraft` (sources + merged + conflicts). يتحقق من `has_admin_access` على JWT.
-- `admin-enrichment-enhance` — يأخذ draft ويستدعي Lovable AI Gateway لتحسين الاسم/الوصف وترجمتها ar↔en وتنسيق العنوان/الحي/الشارع. يعيد نسخة AI-Enhanced للحقول المختارة فقط.
-- `admin-enrichment-apply` — يحفظ النتيجة المعتمدة: إما تحديث `businesses` موجودة أو إنشاء `provider_leads` جديد عبر RPC. يكتب صفًا في `admin_enrichment_sessions` وصفوف `admin_activity_log` (audit).
-- Secrets المطلوبة: `FIRECRAWL_API_KEY`, `GOOGLE_MAPS_API_KEY` (server-side), `LOVABLE_API_KEY` (موجود). إذا غاب أحدها → ترجع 200 بـ `{ deferred: true, missing: [...] }` والواجهة تعرض Deferred badge بدلًا من خطأ تقني.
+## 2) صفحة Claim العامة `/claim/:businessId`
 
-## Database
-Migration واحدة:
-- `admin_enrichment_sessions` (id, actor_id, website_url, maps_url, status enum: draft/reviewed/applied/discarded, sources jsonb, merged jsonb, applied_entity_type, applied_entity_id, created_at, updated_at).
-- GRANTs: `service_role ALL`، `authenticated SELECT/INSERT/UPDATE` — RLS تقيد admins فقط عبر `has_admin_access(auth.uid())`.
-- Trigger `updated_at`.
+- صفحة عامة (no auth required للعرض، auth مطلوب للإرسال).
+- تعرض: اسم المنشأة، الشعار، حالة "متاحة للمطالبة" (badge أخضر)، شروط المطالبة.
+- نموذج Inline (لا popup): الاسم الكامل، رقم الجوال، البريد، السجل التجاري (رقم + ملف PDF/صورة)، رسالة، إثبات الملكية (روابط/ملفات).
+- التحقق بـ Zod، رفع الملفات إلى Supabase Storage bucket جديد `ownership-claim-proofs` (private).
+- بعد الإرسال: شاشة نجاح fullscreen مع رقم الطلب وتعليمات المتابعة.
+- زر "نسخ رابط المطالبة" في صفحة `/admin/businesses` لكل منشأة placeholder.
 
-## Module / Service Layer
-`src/modules/adminEnrichment/`:
-- `services/fetchEnrichment.ts`, `enhanceEnrichment.ts`, `applyEnrichment.ts` — كل واحد wrapper رفيع حول `supabase.functions.invoke`.
-- `services/listSessions.ts` — للقراءة من الجدول.
-- `types.ts` — `EnrichmentField<T>`, `EnrichmentDraft`, `FieldSource`, `Confidence`.
-- `index.ts` — Public API.
+## 3) تطوير صفحة `/admin/ownership-transfer-requests`
 
-## UI
-`src/pages/admin/AdminDataEnrichment.tsx`:
-- Stepper بـ 3 خطوات، state محلي عبر `useState` + React Query للـ mutations.
-- مكونات مساعدة: `<SourcesStep>`, `<ReviewStep>` (جدول مقارنة مع `<Bi>`, `<VerifiedBadge>`-style confidence chips, conflict alert), `<ApplyStep>`.
-- بدون Dialog/Popover/AlertDialog — كل التأكيدات Inline cards.
-- RTL/LTR via `useBi`, technical content بـ `.tech-content`.
-- Loading/skeleton + رسائل خطأ مترجَمة عامة (بدون تفاصيل تقنية).
+- **معاينة الإثبات**: عارض ملفات مرفقة (PDF/صور) inline مع zoom.
+- **بحث وفلترة متقدمة**: بحث نصي (اسم منشأة، اسم طالب، بريد)، فلتر بالتاريخ، فرز.
+- **Bulk Actions**: موافقة/رفض جماعي مع تأكيد inline.
+- **تصدير CSV** للطلبات حسب الفلتر الحالي.
+- **Realtime**: تحديث الحالة فور قدوم طلب جديد (Postgres Changes).
+- **تحسين البطاقات**: عرض ملخّص أوضح، أيقونات حالة ملوّنة، مدة الانتظار، عدد الطلبات المنافسة لنفس المنشأة.
+- **سجل المراجعة الكامل**: إظهار من راجع، متى، الملاحظات.
 
-## Routing
-- إضافة المسار في `App.tsx` ضمن `<AdminRoute>` (أو نمطه الحالي).
-- رابط في Admin sidebar تحت "إثراء البيانات".
+## 4) تنظيف الكود وإعادة الهيكلة
 
-## Tests
-ملف `src/tests/adminDataEnrichment1.test.ts`:
-- وجود الملفات: page, module barrel, edge function folders, migration.
-- الصفحة لا تستورد `@/integrations/supabase/client` مباشرة.
-- لا توجد سلاسل `API_KEY`/`apiKey:`/`Authorization:` في كود الصفحة.
-- الصفحة تستورد من `@/modules/adminEnrichment`.
-- الصفحة تحتوي مدخلات Website و Maps URL.
-- الصفحة لا تستدعي `.publish` ولا `update({ status: 'published' })` ولا `insert(... businesses ...)` مباشرة (لا إنشاء/نشر تلقائي من الواجهة).
-- وجود مكوّن مقارنة وعرض confidence + conflict.
-- Edge `admin-enrichment-apply` تكتب في `admin_activity_log` (grep في كود الـ function).
+- **تقسيم `AdminBusinesses.tsx`** (2835 سطر) إلى مكونات أصغر: `BusinessCreateForm`, `BusinessListTable`, `BusinessFilters`, `PlaceholderBadge`.
+- **استخراج Hooks**: `useAdminBusinesses`, `useCreateBusiness`, `usePlaceholderReport`.
+- **إزالة `any`**: استبدالها بأنواع دقيقة (التزاماً بسياسة المشروع).
+- **توحيد رسائل الأخطاء** عبر `adminCreateBusinessWithOwnerErrors`.
 
-## Deferred (واضح في الواجهة عند الغياب)
-- Firecrawl إذا غير مربوط → خانة Website معطّلة مع شارة "Deferred".
-- Google Maps API key إذا غير موجود → خانة Maps معطّلة بنفس الشارة.
-- AI Enhance step اختياري؛ يعمل دائمًا (LOVABLE_API_KEY متوفر).
+## 5) ميزات احترافية جديدة
 
-## الأمن
-- لا API keys في bundle المتصفّح.
-- كل edge function تتحقق `has_admin_access` على JWT.
-- Sanitize URL inputs و length caps.
-- لا توجد عمليات نشر/إنشاء تلقائي — فقط بضغطة الأدمن في خطوة Apply.
-- كل تطبيق ينتج صفوف audit في `admin_activity_log` + `admin_enrichment_sessions`.
+- **Audit Timeline View** لكل منشأة: سجل أحداث الـ placeholder (إنشاء، طلبات claim، موافقات، رفض، نقل ملكية).
+- **Auto-suggestions في الـ Admin**: عند إنشاء placeholder، اقتراح ربط بمزودين موجودين بناءً على التشابه (الاسم/المدينة).
+- **تقرير لوحة معلومات**: إجمالي placeholder، متوسط زمن المطالبة، نسبة الموافقة، أكثر القطاعات placeholder.
+- **إشعارات بريدية** (عبر بنية Lovable Emails) للأدمن عند طلب claim جديد، وللمستخدم عند موافقة/رفض طلبه.
+- **Rate limiting** على إرسال طلبات claim (3 طلبات/ساعة لكل IP) لمنع الإساءة.
 
-بعد موافقتك على الخطة، أبدأ التنفيذ: migration → edge functions → module → page + route + sidebar → tests.
+---
+
+## التفاصيل التقنية
+
+```text
+DB Changes (migration):
+- ALTER business_ownership_transfer_requests
+    ADD COLUMN proof_files jsonb DEFAULT '[]'::jsonb
+    ADD COLUMN requester_name text
+    ADD COLUMN requester_phone text
+    ADD COLUMN requester_email text
+    ADD COLUMN commercial_registration text
+    ADD COLUMN ip_hash text
+- CREATE INDEX idx_botr_business_status ON ... (business_id, status)
+- CREATE INDEX idx_businesses_placeholder ON businesses(id) WHERE placeholder_owner=true
+- Storage bucket: ownership-claim-proofs (private)
+- RPC: submit_ownership_claim(business_id, ...) SECURITY DEFINER with rate limit check
+- RPC: get_placeholder_dashboard_stats() returning aggregate JSON
+
+Routes:
+- /claim/:businessId (public, lazy-loaded)
+- /admin/ownership-transfer-requests (enhanced)
+
+Realtime:
+- ALTER PUBLICATION supabase_realtime ADD TABLE business_ownership_transfer_requests
+```
+
+ملف plan قابل للتعديل حسب رغبتك — قل لي إن أردت حذف أو إضافة أي محور قبل التنفيذ.
