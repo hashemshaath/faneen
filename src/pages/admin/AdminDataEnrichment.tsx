@@ -98,6 +98,7 @@ export default function AdminDataEnrichment() {
   const [searchResults, setSearchResults] = useState<PlaceCandidate[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<PlaceCandidate | null>(null);
   const [searchDeferred, setSearchDeferred] = useState(false);
+  const [searchCached, setSearchCached] = useState(false);
   const [website, setWebsite] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -144,6 +145,7 @@ export default function AdminDataEnrichment() {
       }
       setErrorMsg(null);
       setSearchDeferred(Boolean(res.deferred));
+      setSearchCached(Boolean(res.cached));
       setSearchResults(res.results ?? []);
     },
     onError: () => setErrorMsg(bi("حدث خطأ في البحث.", "Search failed.")),
