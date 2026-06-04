@@ -7,3 +7,4 @@ export * as geocodingService from "./geocodingService";
 export * as addressValidationService from "./addressValidationService";
 export * as routesService from "./routesService";
 export * as healthService from "./healthService";
+export { fetchGoogleHealth } from "./healthService";
