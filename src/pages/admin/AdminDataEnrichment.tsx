@@ -151,19 +151,43 @@ export default function AdminDataEnrichment() {
   });
 
   const searchMut = useMutation({
-    mutationFn: () => searchPlaces({ query: searchQuery.trim(), region: "SA", language: "ar" }),
+    mutationFn: (opts: { append?: boolean; bypass?: boolean } = {}) =>
+      searchPlaces({
+        query: searchQuery.trim(),
+        region: "SA",
+        language: "ar",
+        pageSize: 20,
+        pageToken: opts.append ? nextPageToken : null,
+        bypassCache: opts.bypass ?? bypassCacheFlag,
+      }).then((r) => ({ ...r, _append: opts.append === true })),
     onSuccess: (res) => {
       if (res.error) {
         setErrorMsg(bi("تعذر البحث في خرائط Google.", "Could not search Google Maps."));
-        setSearchResults([]);
+        if (!res._append) setSearchResults([]);
         return;
       }
       setErrorMsg(null);
       setSearchDeferred(Boolean(res.deferred));
       setSearchCached(Boolean(res.cached));
-      setSearchResults(res.results ?? []);
+      setNextPageToken(res.nextPageToken ?? null);
+      setSearchResults((prev) => res._append ? [...prev, ...(res.results ?? [])] : (res.results ?? []));
+      setBypassCacheFlag(false);
     },
     onError: () => setErrorMsg(bi("حدث خطأ في البحث.", "Search failed.")),
+  });
+
+  const clearCacheMut = useMutation({
+    mutationFn: () => clearEnrichmentCache("all"),
+    onSuccess: (res) => {
+      if (res.error) {
+        setClearMsg(bi("تعذر مسح الكاش.", "Could not clear cache."));
+        return;
+      }
+      setSearchCached(false);
+      setClearMsg(bi(`تم مسح ${res.deleted ?? 0} عنصر من الكاش.`, `Cleared ${res.deleted ?? 0} cached items.`));
+      window.setTimeout(() => setClearMsg(null), 3500);
+    },
+    onError: () => setClearMsg(bi("تعذر مسح الكاش.", "Could not clear cache.")),
   });
 
   const enhanceMut = useMutation({
