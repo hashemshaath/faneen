@@ -68,17 +68,19 @@ Deno.serve(async (req) => {
     const language = (body.language ?? "ar").toLowerCase().slice(0, 5);
 
     const googleKey = Deno.env.get("GOOGLE_MAPS_API_KEY") ?? "";
-    if (!googleKey) {
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
+    if (!googleKey || !lovableKey) {
       return json({ ok: true, results: [], deferred: true, missing: ["GOOGLE_MAPS_API_KEY"] });
     }
 
     const res = await fetch(
-      "https://places.googleapis.com/v1/places:searchText",
+      "https://connector-gateway.lovable.dev/google_maps/places/v1/places:searchText",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Goog-Api-Key": googleKey,
+          "Authorization": `Bearer ${lovableKey}`,
+          "X-Connection-Api-Key": googleKey,
           "X-Goog-FieldMask": [
             "places.id",
             "places.displayName",
