@@ -757,6 +757,13 @@ Deno.serve(async (req) => {
         mapsData = rAr.fields;
         mapsDataEn = rEn.fields;
         mapsRaw = rAr.raw.placeId ? rAr.raw : rEn.raw;
+        const urlCoords = extractLatLng(mapsUrl);
+        if (urlCoords && (!mapsData.latitude || !mapsData.longitude) && (!mapsDataEn.latitude || !mapsDataEn.longitude)) {
+          mapsData.latitude = urlCoords.lat;
+          mapsData.longitude = urlCoords.lng;
+          mapsDataEn.latitude = urlCoords.lat;
+          mapsDataEn.longitude = urlCoords.lng;
+        }
         // Geocoding fallback when key address fields are missing (in either language).
         const lat = mapsData.latitude ?? mapsDataEn.latitude ?? null;
         const lng = mapsData.longitude ?? mapsDataEn.longitude ?? null;
@@ -773,10 +780,12 @@ Deno.serve(async (req) => {
           if (!mapsData.district) mapsData.district = gAr.fields.district;
           if (!mapsData.street) mapsData.street = gAr.fields.street;
           if (!mapsData.region) mapsData.region = gAr.fields.region;
+          if (!mapsData.national_address) mapsData.national_address = gAr.fields.national_address;
           if (!mapsDataEn.city) mapsDataEn.city = gEn.fields.city;
           if (!mapsDataEn.district) mapsDataEn.district = gEn.fields.district;
           if (!mapsDataEn.street) mapsDataEn.street = gEn.fields.street;
           if (!mapsDataEn.region) mapsDataEn.region = gEn.fields.region;
+          if (!mapsDataEn.national_address) mapsDataEn.national_address = gEn.fields.national_address;
         }
         if (Object.keys(mapsData).length || Object.keys(mapsDataEn).length) {
           await writeCache(mKey, { fields: mapsData, fieldsEn: mapsDataEn, raw: mapsRaw, geocodingRaw } as unknown as Record<string, string | null>);
