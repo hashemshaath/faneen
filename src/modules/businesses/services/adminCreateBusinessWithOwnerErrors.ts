@@ -31,6 +31,7 @@ export type AdminCreateBizErrorCode =
   | 'profile_sync_failed'
   | 'auth_user_create_failed'
   | 'auth_create_failed'
+  | 'placeholder_account_create_failed'
   | 'unknown';
 
 const MAP_AR: Record<AdminCreateBizErrorCode, string> = {
@@ -53,6 +54,7 @@ const MAP_AR: Record<AdminCreateBizErrorCode, string> = {
   profile_sync_failed: 'تم إنشاء الحساب لكن تعذّر تحديث ملفه الشخصي.',
   auth_user_create_failed: 'تعذّر إنشاء حساب الدخول للمسؤول.',
   auth_create_failed: 'تعذّر إنشاء حساب الدخول للمسؤول.',
+  placeholder_account_create_failed: 'تعذّر تجهيز الحساب المؤقت المشترك. حاول مجدداً.',
   unknown: 'حدث خطأ غير متوقع. حاول مجدداً.',
 };
 
@@ -76,6 +78,7 @@ const MAP_EN: Record<AdminCreateBizErrorCode, string> = {
   profile_sync_failed: 'Account was created but the profile sync failed.',
   auth_user_create_failed: "Could not create the manager's login account.",
   auth_create_failed: "Could not create the manager's login account.",
+  placeholder_account_create_failed: 'Could not provision the shared placeholder account. Please retry.',
   unknown: 'Something went wrong. Please try again.',
 };
 
