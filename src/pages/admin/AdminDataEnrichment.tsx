@@ -221,6 +221,16 @@ export default function AdminDataEnrichment() {
         const v = res.merged[k]?.value;
         if (v) initial[k] = v;
       }
+      // Pretty-print working hours (stored as JSON {weekdayDescriptions,periods}).
+      if (initial.working_hours) {
+        try {
+          const parsed = JSON.parse(initial.working_hours);
+          const lines: string[] = Array.isArray(parsed?.weekdayDescriptions)
+            ? parsed.weekdayDescriptions
+            : Array.isArray(parsed) ? parsed : [];
+          if (lines.length) initial.working_hours = lines.join("\n");
+        } catch { /* keep as-is */ }
+      }
       setApproved(initial);
       setStep("review");
     },
