@@ -24,6 +24,8 @@ import {
   type GrowthPipelineRow,
 } from '@/modules/providers/services/providerGrowthQueries';
 import { ProviderInsightCard } from '@/components/admin/provider-growth/GrowthDashboardWidgets';
+import { ProviderInsightDrawer } from '@/components/admin/provider-growth/ProviderInsightDrawer';
+import { emitProviderGrowthEvent } from '@/modules/providers/growthEvents';
 
 const PAGE_KEY = 'admin.provider-growth-queue';
 
@@ -45,6 +47,7 @@ const AdminProviderGrowthQueue: React.FC = () => {
   const t = (ar: string, en: string) => (isRTL ? ar : en);
   const [filter, setFilter] = useState<GrowthQueueFilter>('all');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [insightId, setInsightId] = useState<string | null>(null);
 
   const businessesQ = useQuery({
     queryKey: ['admin', 'provider-growth', 'queue', 'businesses'],
@@ -70,6 +73,23 @@ const AdminProviderGrowthQueue: React.FC = () => {
     [businessesQ.data, pipelineByBiz],
   );
   const filtered = useMemo(() => filterGrowthInsights(insights, filter), [insights, filter]);
+  const activeInsight = useMemo(
+    () => insights.find((i) => i.business.id === insightId) ?? null,
+    [insights, insightId],
+  );
+  const openInsight = (id: string) => {
+    setInsightId(id);
+    const ins = insights.find((i) => i.business.id === id);
+    if (ins) {
+      emitProviderGrowthEvent('provider_review_requested', {
+        business_ref: ins.business.ref_id,
+        stage: ins.stage,
+        source: ins.source,
+        readiness_score: ins.readiness.score,
+        quality_score: ins.quality.score,
+      });
+    }
+  };
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -158,11 +178,23 @@ const AdminProviderGrowthQueue: React.FC = () => {
                     aria-label={t('تحديد', 'Select')}
                   />
                 </div>
-                <ProviderInsightCard insight={i} />
+                <button
+                  type="button"
+                  onClick={() => openInsight(i.business.id)}
+                  className="block w-full text-start"
+                  data-testid={`open-insight-${i.business.id}`}
+                >
+                  <ProviderInsightCard insight={i} />
+                </button>
               </div>
             ))}
           </div>
         )}
+        <ProviderInsightDrawer
+          insight={activeInsight}
+          open={insightId !== null}
+          onOpenChange={(o) => { if (!o) setInsightId(null); }}
+        />
       </main>
       <Footer />
     </div>

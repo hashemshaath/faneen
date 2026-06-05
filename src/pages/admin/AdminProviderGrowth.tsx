@@ -2,7 +2,7 @@
  * PROVIDER-GROWTH-ENGINE-2 — Admin dashboard at /admin/provider-growth.
  * All data flows through the providerGrowthQueries service wrapper.
  */
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Navbar } from '@/components/layout/Navbar';
@@ -26,6 +26,8 @@ import {
   MissingDataWidget,
   TopPriorityWidget,
 } from '@/components/admin/provider-growth/GrowthDashboardWidgets';
+import { ProviderInsightDrawer } from '@/components/admin/provider-growth/ProviderInsightDrawer';
+import { emitProviderGrowthEvent } from '@/modules/providers/growthEvents';
 
 const PAGE_KEY = 'admin.provider-growth';
 
@@ -48,6 +50,24 @@ const AdminProviderGrowth: React.FC = () => {
   const rows = businessesQ.data?.rows ?? [];
   const kpis = useMemo(() => computeGrowthKPIs(rows), [rows]);
   const insights = useMemo(() => rows.map((r) => buildProviderInsight(r)), [rows]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedInsight = useMemo(
+    () => insights.find((i) => i.business.id === selectedId) ?? null,
+    [insights, selectedId],
+  );
+  const openInsight = (id: string) => {
+    setSelectedId(id);
+    const ins = insights.find((i) => i.business.id === id);
+    if (ins) {
+      emitProviderGrowthEvent('provider_review_requested', {
+        business_ref: ins.business.ref_id,
+        stage: ins.stage,
+        source: ins.source,
+        readiness_score: ins.readiness.score,
+        quality_score: ins.quality.score,
+      });
+    }
+  };
   const byStage = pipelineQ.data?.byStage ?? {
     discovered: 0, imported: 0, enriched: 0, review_pending: 0,
     verified: 0, published: 0, rejected: 0, archived: 0,
@@ -83,13 +103,18 @@ const AdminProviderGrowth: React.FC = () => {
             <KpiSummary kpis={kpis} />
             <div className="grid lg:grid-cols-2 gap-4">
               <PipelineFunnelWidget byStage={byStage} />
-              <TopPriorityWidget rows={rows} />
+              <TopPriorityWidget rows={rows} onSelect={openInsight} />
             </div>
             <div className="grid lg:grid-cols-2 gap-4">
               <ReadinessDistribution insights={insights} />
               <QualityDistribution insights={insights} />
             </div>
             <MissingDataWidget rows={rows} />
+            <ProviderInsightDrawer
+              insight={selectedInsight}
+              open={selectedId !== null}
+              onOpenChange={(o) => { if (!o) setSelectedId(null); }}
+            />
           </div>
         )}
       </main>
