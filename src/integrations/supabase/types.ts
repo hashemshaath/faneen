@@ -1114,6 +1114,8 @@ export type Database = {
           category: string
           content_ar: string | null
           content_en: string | null
+          cover_alt_ar: string | null
+          cover_alt_en: string | null
           cover_image_url: string | null
           created_at: string
           excerpt_ar: string | null
@@ -1147,6 +1149,8 @@ export type Database = {
           category?: string
           content_ar?: string | null
           content_en?: string | null
+          cover_alt_ar?: string | null
+          cover_alt_en?: string | null
           cover_image_url?: string | null
           created_at?: string
           excerpt_ar?: string | null
@@ -1180,6 +1184,8 @@ export type Database = {
           category?: string
           content_ar?: string | null
           content_en?: string | null
+          cover_alt_ar?: string | null
+          cover_alt_en?: string | null
           cover_image_url?: string | null
           created_at?: string
           excerpt_ar?: string | null
@@ -1662,6 +1668,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          brand_keywords: string[] | null
           brand_owner_company: string | null
           country_of_origin_code: string | null
           country_of_origin_name_ar: string | null
@@ -1680,9 +1687,14 @@ export type Database = {
           metadata: Json
           name_ar: string
           name_en: string | null
+          og_image_url: string | null
           ref_id: string | null
           rejection_reason: string | null
           sector_id: string | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
           slug: string | null
           source: string
           status: string
@@ -1694,6 +1706,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          brand_keywords?: string[] | null
           brand_owner_company?: string | null
           country_of_origin_code?: string | null
           country_of_origin_name_ar?: string | null
@@ -1712,9 +1725,14 @@ export type Database = {
           metadata?: Json
           name_ar: string
           name_en?: string | null
+          og_image_url?: string | null
           ref_id?: string | null
           rejection_reason?: string | null
           sector_id?: string | null
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
           slug?: string | null
           source?: string
           status?: string
@@ -1726,6 +1744,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          brand_keywords?: string[] | null
           brand_owner_company?: string | null
           country_of_origin_code?: string | null
           country_of_origin_name_ar?: string | null
@@ -1744,9 +1763,14 @@ export type Database = {
           metadata?: Json
           name_ar?: string
           name_en?: string | null
+          og_image_url?: string | null
           ref_id?: string | null
           rejection_reason?: string | null
           sector_id?: string | null
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
           slug?: string | null
           source?: string
           status?: string
@@ -3244,6 +3268,7 @@ export type Database = {
           name_ar: string
           name_en: string | null
           national_id: string | null
+          og_image: string | null
           onboarding_completion: number
           phone: string | null
           phone_country_code: string | null
@@ -3257,6 +3282,11 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           sectors: string[]
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_keywords: string[] | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
           short_address: string | null
           short_description_ar: string | null
           short_description_en: string | null
@@ -3332,6 +3362,7 @@ export type Database = {
           name_ar: string
           name_en?: string | null
           national_id?: string | null
+          og_image?: string | null
           onboarding_completion?: number
           phone?: string | null
           phone_country_code?: string | null
@@ -3345,6 +3376,11 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           sectors?: string[]
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_keywords?: string[] | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
           short_address?: string | null
           short_description_ar?: string | null
           short_description_en?: string | null
@@ -3420,6 +3456,7 @@ export type Database = {
           name_ar?: string
           name_en?: string | null
           national_id?: string | null
+          og_image?: string | null
           onboarding_completion?: number
           phone?: string | null
           phone_country_code?: string | null
@@ -3433,6 +3470,11 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           sectors?: string[]
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_keywords?: string[] | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
           short_address?: string | null
           short_description_ar?: string | null
           short_description_en?: string | null
@@ -3487,12 +3529,17 @@ export type Database = {
           created_at: string
           description_ar: string | null
           description_en: string | null
+          featured_keywords: string[] | null
           icon: string | null
           id: string
           is_active: boolean
           name_ar: string
           name_en: string
           parent_id: string | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
           slug: string
           sort_order: number
           updated_at: string
@@ -3501,12 +3548,17 @@ export type Database = {
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
+          featured_keywords?: string[] | null
           icon?: string | null
           id?: string
           is_active?: boolean
           name_ar: string
           name_en: string
           parent_id?: string | null
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
           slug: string
           sort_order?: number
           updated_at?: string
@@ -3515,12 +3567,17 @@ export type Database = {
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
+          featured_keywords?: string[] | null
           icon?: string | null
           id?: string
           is_active?: boolean
           name_ar?: string
           name_en?: string
           parent_id?: string | null
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
           slug?: string
           sort_order?: number
           updated_at?: string
@@ -15962,6 +16019,7 @@ export type Database = {
     Views: {
       brands_public: {
         Row: {
+          brand_keywords: string[] | null
           brand_owner_company: string | null
           country_of_origin_code: string | null
           country_of_origin_name_ar: string | null
@@ -15976,13 +16034,19 @@ export type Database = {
           logo_url: string | null
           name_ar: string | null
           name_en: string | null
+          og_image_url: string | null
           ref_id: string | null
           sector_id: string | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
           slug: string | null
           verification_status: string | null
           website: string | null
         }
         Insert: {
+          brand_keywords?: string[] | null
           brand_owner_company?: string | null
           country_of_origin_code?: string | null
           country_of_origin_name_ar?: string | null
@@ -15997,13 +16061,19 @@ export type Database = {
           logo_url?: string | null
           name_ar?: string | null
           name_en?: string | null
+          og_image_url?: string | null
           ref_id?: string | null
           sector_id?: string | null
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
           slug?: string | null
           verification_status?: string | null
           website?: string | null
         }
         Update: {
+          brand_keywords?: string[] | null
           brand_owner_company?: string | null
           country_of_origin_code?: string | null
           country_of_origin_name_ar?: string | null
@@ -16018,8 +16088,13 @@ export type Database = {
           logo_url?: string | null
           name_ar?: string | null
           name_en?: string | null
+          og_image_url?: string | null
           ref_id?: string | null
           sector_id?: string | null
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
           slug?: string | null
           verification_status?: string | null
           website?: string | null
@@ -16894,6 +16969,7 @@ export type Database = {
         Returns: {
           approved_at: string | null
           approved_by: string | null
+          brand_keywords: string[] | null
           brand_owner_company: string | null
           country_of_origin_code: string | null
           country_of_origin_name_ar: string | null
@@ -16912,9 +16988,14 @@ export type Database = {
           metadata: Json
           name_ar: string
           name_en: string | null
+          og_image_url: string | null
           ref_id: string | null
           rejection_reason: string | null
           sector_id: string | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
           slug: string | null
           source: string
           status: string
@@ -16967,6 +17048,7 @@ export type Database = {
         Returns: {
           approved_at: string | null
           approved_by: string | null
+          brand_keywords: string[] | null
           brand_owner_company: string | null
           country_of_origin_code: string | null
           country_of_origin_name_ar: string | null
@@ -16985,9 +17067,14 @@ export type Database = {
           metadata: Json
           name_ar: string
           name_en: string | null
+          og_image_url: string | null
           ref_id: string | null
           rejection_reason: string | null
           sector_id: string | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
           slug: string | null
           source: string
           status: string
@@ -17271,6 +17358,7 @@ export type Database = {
         Returns: {
           approved_at: string | null
           approved_by: string | null
+          brand_keywords: string[] | null
           brand_owner_company: string | null
           country_of_origin_code: string | null
           country_of_origin_name_ar: string | null
@@ -17289,9 +17377,14 @@ export type Database = {
           metadata: Json
           name_ar: string
           name_en: string | null
+          og_image_url: string | null
           ref_id: string | null
           rejection_reason: string | null
           sector_id: string | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
           slug: string | null
           source: string
           status: string
@@ -17320,6 +17413,7 @@ export type Database = {
         Returns: {
           approved_at: string | null
           approved_by: string | null
+          brand_keywords: string[] | null
           brand_owner_company: string | null
           country_of_origin_code: string | null
           country_of_origin_name_ar: string | null
@@ -17338,9 +17432,14 @@ export type Database = {
           metadata: Json
           name_ar: string
           name_en: string | null
+          og_image_url: string | null
           ref_id: string | null
           rejection_reason: string | null
           sector_id: string | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
           slug: string | null
           source: string
           status: string
