@@ -9,7 +9,7 @@ import {
 
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 import {
   listBranchServiceIds,
   listBranchPromotionIds,
@@ -22,6 +22,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { BranchReviews } from '@/components/branch/BranchReviews';
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
