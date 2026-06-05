@@ -689,7 +689,16 @@ export const BranchesTab = ({
                     </p>
                   )}
                   <div className="flex items-center gap-2">
-                    <h3 className="truncate font-heading text-sm font-bold text-foreground sm:text-base">{name}</h3>
+                    {branch.slug && businessUsername ? (
+                      <Link
+                        to={`/${businessUsername}/${branch.slug}`}
+                        className="truncate font-heading text-sm font-bold text-foreground hover:text-accent transition sm:text-base"
+                      >
+                        {name}
+                      </Link>
+                    ) : (
+                      <h3 className="truncate font-heading text-sm font-bold text-foreground sm:text-base">{name}</h3>
+                    )}
                     {branch.is_main && (
                       <Badge className="shrink-0 border-accent/30 bg-accent/10 text-[10px] text-accent">
                         {language === "ar" ? "رئيسي" : "Main"}

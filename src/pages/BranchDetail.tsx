@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   MapPin, Phone, Mail, Globe, MessageCircle, ArrowLeft, ExternalLink,
   Star, UserCog, Instagram, Linkedin, Facebook, Youtube, Building2,
-  Loader2, Boxes, Tag, Navigation, Share2, Check,
+  Loader2, Boxes, Tag, Navigation, Heart, ChevronRight,
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +25,11 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { BranchReviews } from '@/components/branch/BranchReviews';
 import { toast } from 'sonner';
+import { RevealPhoneButton } from '@/components/branch/RevealPhoneButton';
+import { ShareMenu } from '@/components/branch/ShareMenu';
+import { BranchVisitCounter } from '@/components/branch/BranchVisitCounter';
+import { useBranchVisits } from '@/hooks/useBranchVisits';
+import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
@@ -79,7 +84,6 @@ const BranchDetail: React.FC = () => {
   const usernameParam = params.branchSlug ? params.username : undefined;
   const { isRTL } = useLanguage();
   const navigate = useNavigate();
-  const [copied, setCopied] = useState(false);
 
   // 0) When the URL is nested, resolve the parent business first so we can scope the lookup.
   const { data: scopedBusinessId } = useQuery({
@@ -373,6 +377,10 @@ const BranchDetail: React.FC = () => {
   }, [branch, business, businessName, branchName, isRTL]);
   useJsonLd(breadcrumbJsonLd);
 
+  // Hooks that depend on branch — must run unconditionally (use null-safe id).
+  const { count: visitCount } = useBranchVisits(branch?.id ?? null);
+  const { isFavorite, toggleFavorite } = useBusinessFavorites();
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -405,17 +413,12 @@ const BranchDetail: React.FC = () => {
   ].filter(Boolean) as Array<{ url: string; Icon: React.ComponentType<{ className?: string }>; label: string }>;
 
   const shareUrl = canonicalBranchUrl ?? window.location.href;
-  const handleShare = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: `${branchName} — ${businessName}`, url: shareUrl });
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        setCopied(true);
-        toast.success(t(isRTL, 'تم نسخ الرابط', 'Link copied'));
-        setTimeout(() => setCopied(false), 1800);
-      }
-    } catch { /* user cancelled */ }
+  const fav = isFavorite(branch.business_id);
+  const onToggleFav = () => {
+    const nowFav = toggleFavorite(branch.business_id, branch.ref_id);
+    toast.success(nowFav
+      ? t(isRTL, 'تمت إضافته إلى المفضلة', 'Added to favorites')
+      : t(isRTL, 'تمت إزالته من المفضلة', 'Removed from favorites'));
   };
 
   const sectionNav = [
@@ -542,10 +545,26 @@ const BranchDetail: React.FC = () => {
                     </a>
                   </Button>
                 )}
-                <Button size="sm" variant="ghost" onClick={handleShare} className="gap-2 rounded-xl">
-                  {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                  {t(isRTL, 'مشاركة', 'Share')}
+                <Button
+                  size="sm"
+                  variant={fav ? 'default' : 'outline'}
+                  onClick={onToggleFav}
+                  className="gap-2 rounded-xl"
+                  aria-pressed={fav}
+                >
+                  <Heart className={`w-3.5 h-3.5 ${fav ? 'fill-current' : ''}`} />
+                  {fav ? t(isRTL, 'محفوظ', 'Saved') : t(isRTL, 'حفظ', 'Save')}
                 </Button>
+                <ShareMenu
+                  branchId={branch.id}
+                  url={shareUrl}
+                  title={`${branchName} — ${businessName}`}
+                  recommendText={t(
+                    isRTL,
+                    `أنصحك بالاطلاع على ${branchName} — مزود معتمد على قِطاعات`,
+                    `I recommend checking out ${branchName} — verified on Qitaat`,
+                  )}
+                />
             </div>
           </div>
         </div>
@@ -555,6 +574,7 @@ const BranchDetail: React.FC = () => {
       <div className="sticky top-16 z-30 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="container max-w-6xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2 text-xs text-muted-foreground me-2">
+            <BranchVisitCounter count={visitCount} />
             {reviewStats && reviewStats.count > 0 && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
                 <Star className="w-3 h-3 fill-current" />
@@ -597,10 +617,18 @@ const BranchDetail: React.FC = () => {
               {t(isRTL, 'بيانات الاتصال بالفرع', 'Branch contact details')}
             </h2>
             <Separator />
-            <ContactRow icon={Phone}    label={t(isRTL,'هاتف ثابت','Phone')}        value={branch.phone}        href={branch.phone ? `tel:${branch.phone}` : null} />
-            <ContactRow icon={Phone}    label={t(isRTL,'جوال','Mobile')}             value={branch.mobile}       href={branch.mobile ? `tel:${branch.mobile}` : null} />
-            <ContactRow icon={MessageCircle} label="WhatsApp"                         value={branch.whatsapp}     href={branch.whatsapp ? `https://wa.me/${branch.whatsapp.replace(/[^0-9]/g,'')}` : null} />
-            <ContactRow icon={Phone}    label={t(isRTL,'خدمة العملاء','Customer service')} value={branch.customer_service_phone} href={branch.customer_service_phone ? `tel:${branch.customer_service_phone}` : null} />
+            {branch.phone && (
+              <RevealPhoneButton branchId={branch.id} kind="phone" label={t(isRTL,'هاتف ثابت','Phone')} value={branch.phone} />
+            )}
+            {branch.mobile && (
+              <RevealPhoneButton branchId={branch.id} kind="phone" label={t(isRTL,'جوال','Mobile')} value={branch.mobile} />
+            )}
+            {branch.whatsapp && (
+              <RevealPhoneButton branchId={branch.id} kind="whatsapp" label="WhatsApp" value={branch.whatsapp} />
+            )}
+            {branch.customer_service_phone && (
+              <RevealPhoneButton branchId={branch.id} kind="phone" label={t(isRTL,'خدمة العملاء','Customer service')} value={branch.customer_service_phone} />
+            )}
             <ContactRow icon={Mail}     label={t(isRTL,'البريد','Email')}            value={branch.email}        href={branch.email ? `mailto:${branch.email}` : null} />
             <ContactRow icon={Globe}    label={t(isRTL,'الموقع','Website')}          value={branch.website}      href={branch.website} external />
             {branch.address && (
@@ -698,13 +726,24 @@ const BranchDetail: React.FC = () => {
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {services!.map(s => (
-                    <div key={s.id} className="p-4 rounded-xl border border-border/60 hover-lift">
-                      <p className="font-medium" dir="auto">{isRTL ? s.name_ar : (s.name_en || s.name_ar)}</p>
-                      {s.price_from != null && (
-                        <p className="text-sm text-muted-foreground tech-content mt-1">
-                          {t(isRTL, 'من', 'From')} {s.price_from} {s.currency_code}
-                        </p>
-                      )}
+                    <div key={s.id} className="group p-4 rounded-xl border border-border/60 hover-lift hover:border-primary/40 transition flex flex-col gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-medium leading-snug" dir="auto">{isRTL ? s.name_ar : (s.name_en || s.name_ar)}</p>
+                        <Badge variant="outline" className="shrink-0 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px]">
+                          {t(isRTL, 'متوفّر', 'Available')}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between mt-auto pt-2">
+                        {s.price_from != null ? (
+                          <p className="text-sm text-primary font-semibold tech-content">
+                            {t(isRTL, 'من', 'From')} {s.price_from} <span className="text-xs text-muted-foreground">{s.currency_code}</span>
+                          </p>
+                        ) : <span />}
+                        <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground group-hover:text-primary transition">
+                          {t(isRTL, 'استفسار', 'Inquire')}
+                          <ChevronRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
