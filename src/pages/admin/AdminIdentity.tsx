@@ -697,10 +697,12 @@ const AdminIdentity: React.FC = () => {
         </div>
 
         {/* ─── Footer hint ─── */}
+        </>)}
+
         <p className="text-[11px] text-muted-foreground text-center pt-2">
           {isRTL
-            ? 'هذه الصفحة للنظرة العامة والإحصائيات فقط. كل عمليات الإدارة (تعديل، حذف، توثيق، فروع، صلاحيات…) متاحة في الصفحات المخصّصة أعلاه.'
-            : 'This page is overview-only. All admin operations (edit, delete, verify, branches, roles…) live in the dedicated pages above.'}
+            ? 'مركز موحّد للحسابات والموافقات. الإدارة التفصيلية (تعديل، حذف، توثيق، فروع، صلاحيات…) متاحة عبر روابط الإجراءات.'
+            : 'Unified accounts & approvals hub. Detailed management (edit, delete, verify, branches, roles…) is reachable via row actions.'}
         </p>
       </div>
       <IdentityCommandPalette
