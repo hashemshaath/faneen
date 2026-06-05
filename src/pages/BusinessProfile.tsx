@@ -48,6 +48,8 @@ import {
   useProjects,
   useServices,
   useActivePromotionsCount,
+  useActiveBranchPromotionsCount,
+  useBranchBySlug,
 } from "@/components/business-profile/business-profile.data";
 import { useReviews } from "@/components/business-profile/business-profile.data";
 import { BnplBadges } from "@/components/bnpl/BnplBadges";
@@ -67,19 +69,50 @@ import { track } from "@/lib/analytics-events";
 // JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement:
 
 const BusinessProfile = () => {
-  const { username } = useParams<{ username: string }>();
+  const { username, branchSlug } = useParams<{ username: string; branchSlug?: string }>();
   const { t, language, isRTL } = useLanguage();
   const { BackIcon } = useDirection();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [contactSheetOpen, setContactSheetOpen] = useState(false);
-  const { data: business, isLoading, error } = useBusinessByUsername(username || "");
+  const { data: businessRow, isLoading, error } = useBusinessByUsername(username || "");
+  const { data: branch } = useBranchBySlug(businessRow?.id, branchSlug);
+
+  // When viewing `/:username/:branchSlug`, swap the contact/location fields
+  // on the business row with the selected branch's values. The screen
+  // (header, tabs, layout) stays identical — only the data changes.
+  const business = useMemo(() => {
+    if (!businessRow) return businessRow;
+    if (!branchSlug || !branch) return businessRow;
+    return {
+      ...businessRow,
+      phone: branch.phone ?? businessRow.phone ?? null,
+      mobile: branch.mobile ?? businessRow.mobile ?? null,
+      whatsapp: branch.whatsapp ?? (businessRow as { whatsapp?: string | null }).whatsapp ?? null,
+      customer_service_phone:
+        branch.customer_service_phone ?? businessRow.customer_service_phone ?? null,
+      unified_number: branch.unified_number ?? businessRow.unified_number ?? null,
+      email: branch.email ?? businessRow.email ?? null,
+      website: branch.website ?? businessRow.website ?? null,
+      address: branch.address ?? businessRow.address ?? null,
+      region: branch.region ?? businessRow.region ?? null,
+      district: branch.district ?? businessRow.district ?? null,
+      street_name: branch.street_name ?? businessRow.street_name ?? null,
+      building_number: branch.building_number ?? businessRow.building_number ?? null,
+      additional_number: branch.additional_number ?? businessRow.additional_number ?? null,
+      latitude: branch.latitude ?? businessRow.latitude ?? null,
+      longitude: branch.longitude ?? businessRow.longitude ?? null,
+    } as typeof businessRow;
+  }, [businessRow, branchSlug, branch]);
+
   const { data: projects = [] } = useProjects(business?.id);
   const { data: services = [] } = useServices(business?.id);
   const { data: branches = [] } = useBranches(business?.id);
   const { data: reviews = [] } = useReviews(business?.id);
-  const { data: activeOffersCount = 0 } = useActivePromotionsCount(business?.id);
+  const { data: businessOffersCount = 0 } = useActivePromotionsCount(business?.id);
+  const { data: branchOffersCount = 0 } = useActiveBranchPromotionsCount(business?.id, branch?.id);
+  const activeOffersCount = branch?.id ? branchOffersCount : businessOffersCount;
   const { data: visibility } = useBusinessVisibility(business?.id);
 
   const isOwner = !!user && !!business && business.user_id === user.id;
@@ -145,7 +178,9 @@ const BusinessProfile = () => {
         title: businessName,
         subtitle: [categoryName, cityName].filter(Boolean).join(' — ') || 'قِطاعات',
       }),
-    canonical: business ? `https://qitaat.com/${business.username}` : undefined,
+    canonical: business
+      ? `https://qitaat.com/${business.username}${branch?.slug ? `/${branch.slug}` : ''}`
+      : undefined,
     keywords: business ? [businessName, categoryName, cityName, 'قِطاعات', 'دليل أعمال'].filter(Boolean).join(', ') : undefined,
   });
 
