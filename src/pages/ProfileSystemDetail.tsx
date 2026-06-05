@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { useContentTracking } from '@/hooks/useContentTracking';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 import { useParams, Link } from 'react-router-dom';
@@ -291,8 +292,8 @@ const ProfileSystemDetail = () => {
   const profileDesc = profile ? (language === 'ar' ? (profile.description_ar || '') : (profile.description_en || profile.description_ar || '')) : '';
 
   usePageMeta({
-    title: profileName,
-    description: profileDesc?.slice(0, 160) || '',
+    title: buildSeoTitle({ kind: 'product', lang: language === 'ar' ? 'ar' : 'en', name: profileName }),
+    description: buildSeoDescription({ kind: 'product', lang: language === 'ar' ? 'ar' : 'en', name: profileName, rawDescription: profileDesc }),
     ogImage: profile?.cover_image_url || undefined,
     ogType: 'article',
     canonical: slug ? `https://qitaat.com/profile-systems/${slug}` : undefined,
