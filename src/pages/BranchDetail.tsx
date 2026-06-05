@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   MapPin, Phone, Mail, Globe, MessageCircle, ArrowLeft, ExternalLink,
   Star, UserCog, Instagram, Linkedin, Facebook, Youtube, Building2,
-  Loader2, Boxes, Tag, ShieldCheck, Navigation,
+  Loader2, Boxes, Tag, ShieldCheck, Navigation, Share2, Copy, Check,
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { BranchReviews } from '@/components/branch/BranchReviews';
+import { toast } from 'sonner';
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
@@ -72,6 +73,7 @@ const BranchDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { isRTL } = useLanguage();
   const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
 
   // 1) Branch (public view)
   const { data: branch, isLoading } = useQuery({
@@ -252,6 +254,45 @@ const BranchDetail: React.FC = () => {
   }, [branch, business, branchName, businessName, reviewStats]);
   useJsonLd(jsonLd);
 
+  // Sibling branches (other branches of same business) — strengthens internal linking & SEO.
+  const { data: siblings } = useQuery({
+    queryKey: ['public-branch-siblings', branch?.business_id, branch?.id],
+    enabled: Boolean(branch?.business_id && branch?.id),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('business_branches_public' as 'business_branches')
+        .select('id, name_ar, name_en, slug, region, district, is_main')
+        .eq('business_id', branch!.business_id)
+        .neq('id', branch!.id)
+        .limit(6);
+      return (data ?? []) as Array<{
+        id: string; name_ar: string; name_en: string | null; slug: string | null;
+        region: string | null; district: string | null; is_main: boolean;
+      }>;
+    },
+  });
+
+  // BreadcrumbList JSON-LD (separate from LocalBusiness graph).
+  const breadcrumbJsonLd = useMemo(() => {
+    if (!branch) return null;
+    const items = [
+      { name: t(isRTL, 'الرئيسية', 'Home'), url: 'https://qitaat.com/' },
+      business?.username ? { name: businessName, url: `https://qitaat.com/${business.username}` } : null,
+      { name: branchName, url: branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined },
+    ].filter(Boolean) as Array<{ name: string; url?: string }>;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: items.map((it, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: it.name,
+        item: it.url,
+      })),
+    };
+  }, [branch, business, businessName, branchName, isRTL]);
+  useJsonLd(breadcrumbJsonLd);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -282,6 +323,29 @@ const BranchDetail: React.FC = () => {
     branch.social_tiktok && { url: branch.social_tiktok, Icon: Globe, label: 'TikTok' },
     branch.social_snapchat && { url: branch.social_snapchat, Icon: Globe, label: 'Snapchat' },
   ].filter(Boolean) as Array<{ url: string; Icon: React.ComponentType<{ className?: string }>; label: string }>;
+
+  const shareUrl = branch.slug ? `https://qitaat.com/branch/${branch.slug}` : window.location.href;
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${branchName} — ${businessName}`, url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        setCopied(true);
+        toast.success(t(isRTL, 'تم نسخ الرابط', 'Link copied'));
+        setTimeout(() => setCopied(false), 1800);
+      }
+    } catch { /* user cancelled */ }
+  };
+
+  const sectionNav = [
+    { id: 'contact',   label: t(isRTL, 'التواصل',  'Contact') },
+    salesManager && { id: 'manager',  label: t(isRTL, 'مدير المبيعات', 'Sales manager') },
+    (services?.length ?? 0) > 0    && { id: 'services',  label: t(isRTL, 'الخدمات',  'Services') },
+    (promotions?.length ?? 0) > 0  && { id: 'promotions',label: t(isRTL, 'العروض',   'Offers') },
+    { id: 'reviews',   label: t(isRTL, 'التقييمات','Reviews') },
+    (siblings?.length ?? 0) > 0    && { id: 'siblings',  label: t(isRTL, 'فروع أخرى','Other branches') },
+  ].filter(Boolean) as Array<{ id: string; label: string }>;
 
   return (
     <div className="min-h-screen bg-background">
@@ -380,16 +444,56 @@ const BranchDetail: React.FC = () => {
                     </a>
                   </Button>
                 )}
+                <Button size="sm" variant="ghost" onClick={handleShare} className="gap-2 rounded-xl">
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                  {t(isRTL, 'مشاركة', 'Share')}
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </section>
 
+      {/* KPI strip + Section nav */}
+      <div className="sticky top-16 z-30 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <div className="container max-w-6xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground me-2">
+            {reviewStats && reviewStats.count > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                <Star className="w-3 h-3 fill-current" />
+                <span className="tech-content font-semibold">{reviewStats.avg.toFixed(1)}</span>
+                <span className="tech-content opacity-70">({reviewStats.count})</span>
+              </span>
+            )}
+            {(services?.length ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                <Boxes className="w-3 h-3" />
+                <span className="tech-content">{services!.length}</span>
+                <span>{t(isRTL, 'خدمة', 'services')}</span>
+              </span>
+            )}
+            {(promotions?.length ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                <Tag className="w-3 h-3" />
+                <span className="tech-content">{promotions!.length}</span>
+                <span>{t(isRTL, 'عرض', 'offers')}</span>
+              </span>
+            )}
+          </div>
+          <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar ms-auto" aria-label={t(isRTL,'أقسام الصفحة','Page sections')}>
+            {sectionNav.map(s => (
+              <a key={s.id} href={`#${s.id}`} className="text-xs px-3 py-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition whitespace-nowrap">
+                {s.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </div>
+
       {/* Body */}
       <section className="container max-w-6xl mx-auto px-4 py-8 grid gap-6 lg:grid-cols-3">
         {/* Contact card */}
-        <Card className="lg:col-span-1 lg:sticky lg:top-20 h-fit">
+        <Card id="contact" className="lg:col-span-1 lg:sticky lg:top-32 h-fit scroll-mt-32">
           <CardContent className="p-6 space-y-4">
             <h2 className="font-semibold text-lg flex items-center gap-2">
               <Phone className="w-4 h-4 text-primary" />
@@ -451,7 +555,7 @@ const BranchDetail: React.FC = () => {
         {/* Right column */}
         <div className="lg:col-span-2 space-y-6">
           {salesManager && (
-            <Card>
+            <Card id="manager" className="scroll-mt-32">
               <CardContent className="p-6 space-y-3">
                 <h2 className="font-semibold text-lg flex items-center gap-2">
                   <UserCog className="w-4 h-4 text-primary" />
@@ -489,7 +593,7 @@ const BranchDetail: React.FC = () => {
           )}
 
           {(services?.length ?? 0) > 0 && (
-            <Card>
+            <Card id="services" className="scroll-mt-32">
               <CardContent className="p-6 space-y-4">
                 <h2 className="font-semibold text-lg flex items-center gap-2">
                   <Boxes className="w-4 h-4 text-primary" />
@@ -512,7 +616,7 @@ const BranchDetail: React.FC = () => {
           )}
 
           {(promotions?.length ?? 0) > 0 && (
-            <Card>
+            <Card id="promotions" className="scroll-mt-32">
               <CardContent className="p-6 space-y-4">
                 <h2 className="font-semibold text-lg flex items-center gap-2">
                   <Tag className="w-4 h-4 text-primary" />
@@ -541,7 +645,57 @@ const BranchDetail: React.FC = () => {
             </Card>
           )}
 
-          <BranchReviews branchId={branch.id} businessId={branch.business_id} />
+          <div id="reviews" className="scroll-mt-32">
+            <BranchReviews branchId={branch.id} businessId={branch.business_id} />
+          </div>
+
+          {(siblings?.length ?? 0) > 0 && (
+            <Card id="siblings" className="scroll-mt-32">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <h2 className="font-semibold text-lg flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-primary" />
+                    {t(isRTL, 'فروع أخرى للشركة', 'Other branches of this company')}
+                  </h2>
+                  {business?.username && (
+                    <Button asChild size="sm" variant="ghost" className="gap-1">
+                      <Link to={`/${business.username}#branches`}>
+                        {t(isRTL, 'عرض الكل', 'View all')}
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {siblings!.map(s => {
+                    const name = isRTL ? s.name_ar : (s.name_en || s.name_ar);
+                    const loc  = [s.region, s.district].filter(Boolean).join('، ');
+                    return (
+                      <Link
+                        key={s.id}
+                        to={s.slug ? `/branch/${s.slug}` : '#'}
+                        className="group p-4 rounded-xl border border-border/60 hover-lift hover:border-primary/40 transition"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-medium leading-tight group-hover:text-primary transition" dir="auto">{name}</p>
+                          {s.is_main && (
+                            <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 shrink-0">
+                              <Star className="w-2.5 h-2.5 fill-current" />
+                            </Badge>
+                          )}
+                        </div>
+                        {loc && (
+                          <p className="mt-1 text-xs text-muted-foreground inline-flex items-center gap-1" dir="auto">
+                            <MapPin className="w-3 h-3" />{loc}
+                          </p>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </section>
     </div>
