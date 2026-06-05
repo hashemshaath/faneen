@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -209,6 +209,21 @@ const BranchDetail: React.FC = () => {
 
   const branchName = branch ? (isRTL ? branch.name_ar : (branch.name_en || branch.name_ar)) : '';
   const businessName = business ? (isRTL ? (business.name_ar || business.name_en || '') : (business.name_en || business.name_ar || '')) : '';
+
+  // Canonical-URL redirect: never expose numeric/ref_id slugs like /branch/loc1000005.
+  // Once we know the business username and the branch's real slug, send the user to
+  // the nested, name-based URL: /{username}/{branchSlug}.
+  useEffect(() => {
+    if (!branch || !business?.username || !branch.slug) return;
+    const desired = `/${encodeURIComponent(business.username)}/${encodeURIComponent(branch.slug)}`;
+    const current = window.location.pathname;
+    const isLegacy = !params.branchSlug; // came in via /branch/:slug
+    const slugMismatch = !!params.branchSlug && params.branchSlug !== branch.slug;
+    const usernameMismatch = !!usernameParam && usernameParam.toLowerCase() !== business.username.toLowerCase();
+    if (current !== desired && (isLegacy || slugMismatch || usernameMismatch)) {
+      navigate(desired, { replace: true });
+    }
+  }, [branch, business?.username, params.branchSlug, usernameParam, navigate]);
 
   const locationLabel = branch
     ? [branch.region, branch.district].filter(Boolean).join('، ')
