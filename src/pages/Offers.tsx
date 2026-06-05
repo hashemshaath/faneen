@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -20,9 +21,10 @@ import { getMembershipTierLabel } from '@/modules/memberships';
 
 const Offers = () => {
   const { isRTL, language } = useLanguage();
+  const lang = language === 'ar' ? 'ar' as const : 'en' as const;
   usePageMeta({
-    title: language === 'ar' ? 'العروض والتخفيضات - خصومات على خدمات الألمنيوم والحديد | قِطاعات' : 'Offers & Deals - Aluminum & Iron Discounts | Qitaat',
-    description: language === 'ar' ? 'اكتشف أحدث العروض والتخفيضات من مزودي خدمات الألمنيوم والحديد والزجاج والخشب.' : 'Discover the latest offers and deals from aluminum, iron, glass and wood service providers.',
+    title: buildSeoTitle({ kind: 'offer', lang, name: language === 'ar' ? 'العروض والتخفيضات' : 'Offers & Deals' }),
+    description: buildSeoDescription({ kind: 'offer', lang, name: language === 'ar' ? 'العروض والتخفيضات' : 'Offers & Deals', customDescription: language === 'ar' ? 'اكتشف أحدث العروض والتخفيضات من مزودي خدمات الألمنيوم والحديد والزجاج والخشب.' : 'Discover the latest offers and deals from aluminum, iron, glass and wood service providers.' }),
     canonical: 'https://qitaat.com/offers',
   });
 
