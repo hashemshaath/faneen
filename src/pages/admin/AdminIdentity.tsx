@@ -377,55 +377,44 @@ const AdminIdentity: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 pb-12">
-        {/* ─── Header ─── */}
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+      <div className="mx-auto w-full max-w-7xl space-y-6 md:space-y-8 pb-12 px-1 sm:px-0">
+        {/* ─── Header — compact title + primary actions ─── */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-start gap-3 min-w-0">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center shrink-0">
+            <div className="hidden sm:flex w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 items-center justify-center shrink-0">
               <Users className="w-5 h-5 text-primary" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl md:text-2xl font-bold font-heading leading-tight">
+              <h1 className="text-lg md:text-2xl font-bold font-heading leading-tight">
                 {isRTL ? 'مركز الحسابات والموافقات' : 'Accounts & Approvals'}
               </h1>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              <p className="text-[11px] md:text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">
                 {isRTL
-                  ? 'سطح واحد موحّد للحسابات والمنشآت وكل الموافقات المعلّقة — نظرة عامة، صندوق موافقات، ودليل بحث.'
-                  : 'One unified surface for accounts, businesses, and every pending approval — overview, inbox, and directory.'}
+                  ? 'سطح موحّد للحسابات والمنشآت والموافقات — نظرة عامة، صندوق، ودليل.'
+                  : 'Unified surface for accounts, businesses, and approvals — overview, inbox, and directory.'}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap xl:flex-nowrap">
-            <Button
-              variant="outline" size="sm" className="rounded-xl gap-1.5 h-10"
-              onClick={() => setPaletteOpen(true)}
-              aria-label={isRTL ? 'فتح لوحة الأوامر' : 'Open command palette'}
-            >
-              <Command className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{isRTL ? 'الأوامر' : 'Command'}</span>
-              <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 rounded border border-border/40 bg-muted/40 text-[10px] font-mono">
-                <Command className="w-2.5 h-2.5" />K
-              </kbd>
-            </Button>
+          <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
             <Button
               type="button" variant="outline" size="sm" className="rounded-xl gap-1.5 h-10"
               onClick={refreshAll} disabled={isLoading}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>{isRTL ? 'تحديث' : 'Refresh'}</span>
+              <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
             </Button>
             {isSuperAdmin && (
               <>
                 <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5 h-10">
                   <Link to="/admin/users?create=individual">
                     <UserPlus className="w-3.5 h-3.5" />
-                    <span>{isRTL ? 'مستخدم جديد' : 'New user'}</span>
+                    <span className="hidden sm:inline">{isRTL ? 'مستخدم' : 'User'}</span>
                   </Link>
                 </Button>
                 <Button asChild size="sm" className="rounded-xl gap-1.5 h-10">
                   <Link to="/admin/businesses">
                     <Plus className="w-3.5 h-3.5" />
-                    <span>{isRTL ? 'منشأة جديدة' : 'New business'}</span>
+                    <span className="hidden sm:inline">{isRTL ? 'منشأة' : 'Business'}</span>
                   </Link>
                 </Button>
               </>
@@ -433,63 +422,71 @@ const AdminIdentity: React.FC = () => {
           </div>
         </div>
 
-        {/* ─── Tab strip — Overview / Workspace (Approvals+Directory) / Audit ─── */}
-        <div className="flex flex-wrap gap-2 border-b border-border/40 pb-0" role="tablist" aria-label={isRTL ? 'أقسام المركز' : 'Center sections'}>
-          {([
-            { key: 'overview',  ar: 'النظرة العامة', en: 'Overview',  icon: LayoutDashboard },
-            { key: 'workspace', ar: 'سطح العمل — موافقات ودليل', en: 'Workspace — Approvals & Directory', icon: Inbox, badge: pendingTotal },
-            { key: 'audit',     ar: 'سجل العمليات',  en: 'Audit Log', icon: FileText },
-          ] as Array<{ key: TabKey; ar: string; en: string; icon: React.ElementType; badge?: number }>).map((t) => {
-            const active = tab === t.key;
-            const Icon = t.icon;
-            return (
-              <button
-                key={t.key}
-                role="tab"
-                aria-selected={active}
-                onClick={() => setTabSafe(t.key)}
-                className={`relative inline-flex items-center gap-2 px-4 h-11 rounded-t-xl text-sm font-medium transition-colors border border-b-0 -mb-px ${
-                  active
-                    ? 'bg-card border-border text-foreground shadow-sm'
-                    : 'bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{isRTL ? t.ar : t.en}</span>
-                {typeof t.badge === 'number' && t.badge > 0 && (
-                  <span className={`tech-content rounded-full px-2 py-0.5 text-[10px] ${active ? 'bg-warning/15 text-warning' : 'bg-warning/10 text-warning'}`}>
-                    {t.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        {/* ─── Unified Command Search — always visible, hero-style ─── */}
+        <div className="relative">
+          <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" style={{ insetInlineStart: '16px' }} />
+          <Input
+            ref={searchRef}
+            value={searchTerm}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder={
+              tab === 'audit'
+                ? (isRTL ? 'بحث في السجل: مسؤول، إجراء، كيان…' : 'Search audit: actor, action, entity…')
+                : (isRTL ? 'بحث موحّد: اسم المنشأة، البريد، الهاتف، USR-… أو BIZ-…' : 'Unified: business name, email, phone, USR-… or BIZ-…')
+            }
+            className="ps-12 pe-24 h-14 rounded-2xl bg-card border-border/60 shadow-sm focus-visible:ring-2 focus-visible:ring-primary/30 text-sm md:text-base"
+            dir="auto"
+            onFocus={() => { if (tab === 'overview') setTabSafe('workspace'); }}
+          />
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 rounded-md border border-border/40 bg-muted/40 hover:bg-muted text-[10px] text-muted-foreground font-mono transition-colors"
+            style={{ insetInlineEnd: '14px' }}
+            aria-label={isRTL ? 'فتح لوحة الأوامر' : 'Open command palette'}
+          >
+            <Command className="w-2.5 h-2.5" />K
+          </button>
         </div>
 
-        {/* Unified search bar — visible on approvals / directory / audit; per-tab persisted. */}
-        {tab !== 'overview' && (
-          <div className="relative">
-            <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '14px' }} />
-            <Input
-              ref={searchRef}
-              value={searchTerm}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder={
-                tab === 'audit'
-                  ? (isRTL ? 'بحث في السجل: مسؤول، إجراء، كيان…' : 'Search audit: actor, action, entity…')
-                  : (isRTL ? 'بحث موحّد: اسم، بريد، هاتف، USR-… BIZ-… أو موافقات معلّقة' : 'Unified: name, email, phone, USR-… BIZ-… or pending approvals')
-              }
-              className="ps-11 pe-20 h-12 rounded-2xl bg-card border-border/40 focus:bg-background"
-              dir="auto"
-            />
-            <kbd
-              className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 items-center gap-0.5 px-2 py-0.5 rounded-md border border-border/40 bg-muted/50 text-[10px] text-muted-foreground font-mono pointer-events-none"
-              style={{ insetInlineEnd: '14px' }}
-            >
-              <Command className="w-2.5 h-2.5" />K
-            </kbd>
+        {/* ─── Sticky Tab strip — segmented pills, mobile scrollable ─── */}
+        <div className="sticky top-0 z-20 -mx-1 sm:mx-0 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 py-2">
+          <div
+            className="inline-flex w-full md:w-auto items-center gap-1 p-1 rounded-2xl bg-muted/50 border border-border/40 overflow-x-auto no-scrollbar"
+            role="tablist"
+            aria-label={isRTL ? 'أقسام المركز' : 'Center sections'}
+          >
+            {([
+              { key: 'overview',  ar: 'نظرة عامة',  en: 'Overview',  icon: LayoutDashboard },
+              { key: 'workspace', ar: 'سطح العمل', en: 'Workspace', icon: Inbox, badge: pendingTotal },
+              { key: 'audit',     ar: 'السجل',     en: 'Audit',     icon: FileText },
+            ] as Array<{ key: TabKey; ar: string; en: string; icon: React.ElementType; badge?: number }>).map((t) => {
+              const active = tab === t.key;
+              const Icon = t.icon;
+              return (
+                <button
+                  key={t.key}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setTabSafe(t.key)}
+                  className={`relative inline-flex items-center gap-2 px-3 md:px-4 min-h-[40px] rounded-xl text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
+                    active
+                      ? 'bg-card text-foreground shadow-sm border border-border/40'
+                      : 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/50'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{isRTL ? t.ar : t.en}</span>
+                  {typeof t.badge === 'number' && t.badge > 0 && (
+                    <span className="tech-content rounded-full px-1.5 py-0.5 text-[10px] bg-warning/15 text-warning font-bold">
+                      {t.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
-        )}
+        </div>
 
         {tab === 'audit' && (
           <div className="pt-2">
