@@ -24,4 +24,11 @@ export default tseslint.config(
       "@typescript-eslint/no-explicit-any": "off",
     },
   },
+  {
+    // Deno edge functions are server-side; Vite HMR rules don't apply.
+    files: ["supabase/functions/**/*.{ts,tsx}"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
 );
