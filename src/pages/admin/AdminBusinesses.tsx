@@ -2760,6 +2760,26 @@ const AdminBusinesses = () => {
                             </SelectContent>
                           </Select>
 
+                          <Select
+                            value={biz.approval_status || 'draft'}
+                            onValueChange={(status) => approvalStatusMutation.mutate({ id: biz.id, status })}
+                          >
+                            <SelectTrigger
+                              className="h-8 text-xs w-32 rounded-xl shrink-0"
+                              title={isRTL ? 'حالة النشر' : 'Publication status'}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              <SelectItem value="draft">📝 {isRTL ? 'مسودة' : 'Draft'}</SelectItem>
+                              <SelectItem value="submitted">📨 {isRTL ? 'مُرسلة' : 'Submitted'}</SelectItem>
+                              <SelectItem value="under_review">🔍 {isRTL ? 'قيد المراجعة' : 'Under review'}</SelectItem>
+                              <SelectItem value="approved">✅ {isRTL ? 'معتمدة' : 'Approved'}</SelectItem>
+                              <SelectItem value="published">🌐 {isRTL ? 'منشورة' : 'Published'}</SelectItem>
+                              <SelectItem value="rejected">⛔ {isRTL ? 'مرفوضة' : 'Rejected'}</SelectItem>
+                            </SelectContent>
+                          </Select>
+
                           <Button variant={biz.is_verified ? 'default' : 'outline'} size="sm" className="h-8 text-xs gap-1.5 rounded-xl shrink-0"
                             onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_verified', value: !biz.is_verified })}>
                             {biz.is_verified ? <CheckCircle className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
