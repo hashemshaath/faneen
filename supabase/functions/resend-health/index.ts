@@ -10,7 +10,12 @@ Deno.serve(async (req) => {
     key ? [] : ["RESEND_API_KEY"],
     "https://api.resend.com/domains",
     { headers: { Authorization: `Bearer ${key}` } },
-    (status) => (status === 200 ? null : `http_${status}`),
+    (status, body) => {
+      if (status === 200) return null;
+      // Restricted/send-only API keys can't list /domains but ARE valid.
+      if (status === 401 && /restricted_api_key/i.test(body)) return null;
+      return `http_${status}`;
+    },
   );
-  return healthJson({ service: "resend", ...out });
+  return healthJson({ service: "resend", ...out, restricted: out.status === 401 });
 });
