@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, Filter, Languages, FlaskConical, ArrowUpDown } from 'lucide-react';
+import { Search, X, Filter, Languages, FlaskConical, ArrowUpDown, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -16,8 +16,12 @@ interface Props {
   onClearSearch: () => void;
   filterStatus: string;
   setFilterStatus: (v: string) => void;
-  filterTier: string;
-  setFilterTier: (v: string) => void;
+  /** Currently selected tiers (multi-select). Empty array = all. */
+  selectedTiers: string[];
+  /** Toggle a single tier on/off. */
+  onToggleTier: (value: string) => void;
+  /** Clear all selected tiers (reset to "all"). */
+  onClearTiers: () => void;
   filterTranslation: string;
   onTranslationChange: (v: string) => void;
   filterOrigin: string;
@@ -42,13 +46,13 @@ interface Props {
  */
 export const BusinessFiltersToolbar: React.FC<Props> = ({
   searchInputRef, searchInput, search, onSearchInput, onClearSearch,
-  filterStatus, setFilterStatus, filterTier, setFilterTier,
+  filterStatus, setFilterStatus, selectedTiers, onToggleTier, onClearTiers,
   filterTranslation, onTranslationChange, filterOrigin, setFilterOrigin,
   sortBy, setSortBy, tiers, language, isRTL, resultsCount, onClearAll,
   tierDistribution, totalCount = 0,
 }) => {
   const hasActive =
-    !!search || filterStatus !== 'all' || filterTier !== 'all' ||
+    !!search || filterStatus !== 'all' || selectedTiers.length > 0 ||
     filterTranslation !== 'all' || filterOrigin !== 'all' || sortBy !== 'recent';
 
   const tierColor: Record<string, string> = {
@@ -57,13 +61,22 @@ export const BusinessFiltersToolbar: React.FC<Props> = ({
     premium: 'bg-accent',
     enterprise: 'bg-secondary',
   };
+  const tierAccent: Record<string, string> = {
+    free: 'border-muted-foreground/40 bg-muted/50 text-foreground',
+    basic: 'border-info/50 bg-info/10 text-info',
+    premium: 'border-accent/50 bg-accent/10 text-accent',
+    enterprise: 'border-secondary/50 bg-secondary/10 text-secondary',
+  };
   const showDistribution = !!tierDistribution && totalCount > 0;
+  const selectedSet = React.useMemo(() => new Set(selectedTiers), [selectedTiers]);
 
   return (
     <div className="rounded-2xl border border-border/30 bg-card p-4 sticky top-0 z-20 backdrop-blur-md bg-card/95">
       {showDistribution && (
-        <div className="flex items-center gap-3 mb-3 pb-3 border-b border-border/20">
-          <div className="flex h-1.5 rounded-full overflow-hidden bg-muted/50 flex-1 min-w-0">
+        <div className="mb-3 pb-3 border-b border-border/20 space-y-2.5">
+          {/* Distribution strip */}
+          <div className="flex items-center gap-2">
+            <div className="flex h-2 rounded-full overflow-hidden bg-muted/50 flex-1 min-w-0">
             {tiers.map(t => {
               const c = tierDistribution![t.value] || 0;
               const pct = (c / totalCount) * 100;
@@ -77,22 +90,47 @@ export const BusinessFiltersToolbar: React.FC<Props> = ({
                 />
               );
             })}
+            </div>
+            <span className="text-[11px] text-muted-foreground tabular-nums shrink-0 hidden xs:inline">
+              {totalCount}
+            </span>
           </div>
-          <div className="hidden md:flex items-center gap-3 shrink-0">
+          {/* Multi-select tier chips — horizontally scrollable on mobile */}
+          <div
+            className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-1 px-1 snap-x"
+            role="group"
+            aria-label={isRTL ? 'تصفية حسب العضوية (متعدد)' : 'Filter by membership (multi)'}
+          >
+            <button
+              type="button"
+              onClick={onClearTiers}
+              className={`shrink-0 snap-start h-9 px-3 inline-flex items-center gap-1.5 rounded-full border text-[12px] font-medium transition-colors ${
+                selectedTiers.length === 0
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-card text-muted-foreground border-border/40 hover:bg-muted/50'
+              }`}
+              aria-pressed={selectedTiers.length === 0}
+            >
+              {isRTL ? 'الكل' : 'All'}
+              <span className="tabular-nums opacity-70">{totalCount}</span>
+            </button>
             {tiers.map(t => (
               <button
                 key={t.value}
                 type="button"
-                onClick={() => setFilterTier(filterTier === t.value ? 'all' : t.value)}
-                className={`flex items-center gap-1 text-[11px] transition-colors ${
-                  filterTier === t.value
-                    ? 'text-foreground font-semibold'
-                    : 'text-muted-foreground hover:text-foreground'
+                onClick={() => onToggleTier(t.value)}
+                className={`shrink-0 snap-start h-9 px-3 inline-flex items-center gap-1.5 rounded-full border text-[12px] font-medium transition-all ${
+                  selectedSet.has(t.value)
+                    ? `${tierAccent[t.value] || 'border-foreground bg-foreground/5'} shadow-sm`
+                    : 'bg-card text-muted-foreground border-border/40 hover:bg-muted/50'
                 }`}
-                aria-pressed={filterTier === t.value}
+                aria-pressed={selectedSet.has(t.value)}
+                title={language === 'ar' ? t.label_ar : t.label_en}
               >
-                <span className={`inline-block w-2 h-2 rounded-full ${tierColor[t.value] || 'bg-muted-foreground/30'}`} />
-                {language === 'ar' ? t.label_ar : t.label_en}
+                {selectedSet.has(t.value)
+                  ? <Check className="w-3 h-3" />
+                  : <span className={`inline-block w-2 h-2 rounded-full ${tierColor[t.value] || 'bg-muted-foreground/30'}`} />}
+                <span>{language === 'ar' ? t.label_ar : t.label_en}</span>
                 <span className="tech-content tabular-nums opacity-70">{tierDistribution![t.value] || 0}</span>
               </button>
             ))}
@@ -135,18 +173,6 @@ export const BusinessFiltersToolbar: React.FC<Props> = ({
             <SelectItem value="contract">{isRTL ? 'مرتبط بعقود' : 'With Contracts'}</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={filterTier} onValueChange={setFilterTier}>
-          <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl"><SelectValue /></SelectTrigger>
-          <SelectContent className="rounded-xl">
-            <SelectItem value="all">{isRTL ? 'كل العضويات' : 'All Tiers'}</SelectItem>
-            {tiers.map(t => (
-              <SelectItem key={t.value} value={t.value}>
-                {t.icon} {language === 'ar' ? t.label_ar : t.label_en}
-                {tierDistribution ? ` · ${tierDistribution[t.value] || 0}` : ''}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select value={filterTranslation} onValueChange={onTranslationChange}>
           <SelectTrigger className="w-full sm:w-44 h-10 rounded-xl">
             <Languages className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue />
@@ -159,13 +185,18 @@ export const BusinessFiltersToolbar: React.FC<Props> = ({
           </SelectContent>
         </Select>
         <Select value={filterOrigin} onValueChange={setFilterOrigin}>
-          <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl">
+          <SelectTrigger
+            className="w-full sm:w-44 h-10 rounded-xl"
+            title={isRTL
+              ? 'منشآت تجريبية = حسابات اختبار/عرض. منشآت إنتاج = حسابات حقيقية.'
+              : 'Demo = test/showcase accounts. Production = real customers.'}
+          >
             <FlaskConical className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
-            <SelectItem value="all">{isRTL ? 'الكل (تجريبي + إنتاج)' : 'All (Demo + Production)'}</SelectItem>
-            <SelectItem value="demo">{isRTL ? 'تجريبي فقط' : 'Demo only'}</SelectItem>
-            <SelectItem value="production">{isRTL ? 'إنتاج فقط' : 'Production only'}</SelectItem>
+            <SelectItem value="all">{isRTL ? 'كل المنشآت (حقيقية + تجريبية)' : 'All entities (real + test)'}</SelectItem>
+            <SelectItem value="production">{isRTL ? 'حقيقية فقط' : 'Real customers only'}</SelectItem>
+            <SelectItem value="demo">{isRTL ? 'تجريبية فقط (اختبار/عرض)' : 'Test/demo only'}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={sortBy} onValueChange={setSortBy}>
@@ -195,11 +226,12 @@ export const BusinessFiltersToolbar: React.FC<Props> = ({
               {filterStatus} <X className="w-2.5 h-2.5" />
             </Badge>
           )}
-          {filterTier !== 'all' && (
-            <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterTier('all')}>
-              {filterTier} <X className="w-2.5 h-2.5" />
+          {selectedTiers.map(t => (
+            <Badge key={t} variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => onToggleTier(t)}>
+              {tiers.find(x => x.value === t)?.[language === 'ar' ? 'label_ar' : 'label_en'] || t}
+              <X className="w-2.5 h-2.5" />
             </Badge>
-          )}
+          ))}
           {filterTranslation !== 'all' && (
             <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => onTranslationChange('all')}>
               {filterTranslation} <X className="w-2.5 h-2.5" />
@@ -207,7 +239,7 @@ export const BusinessFiltersToolbar: React.FC<Props> = ({
           )}
           {filterOrigin !== 'all' && (
             <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterOrigin('all')}>
-              {filterOrigin === 'demo' ? (isRTL ? 'تجريبي' : 'Demo') : (isRTL ? 'إنتاج' : 'Production')}
+              {filterOrigin === 'demo' ? (isRTL ? 'تجريبية' : 'Test/demo') : (isRTL ? 'حقيقية' : 'Real')}
               <X className="w-2.5 h-2.5" />
             </Badge>
           )}
