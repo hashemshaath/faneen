@@ -1,53 +1,83 @@
-# دمج "مركز الموافقات" الموحّد
+# خطة SEO-TITLES-METADATA-OPTIMIZER-1
 
-الصفحات الثلاث الحالية ضخمة (~4,500 سطر إجمالاً) ومتشعّبة الصلاحيات والـ RLS:
+النظام الحالي يستخدم `usePageMeta` + `useMultiJsonLd` في `src/hooks/usePageMeta.ts`. سنبني فوقه بدلاً من استبداله، وننفّذ على 4 مراحل قابلة للموافقة منفصلة.
 
-- `AdminApprovalsCenter.tsx` (1,127 سطر) — موافقات المزوّدين، أسماء المستخدمين، طلبات الوصول، الاشتراكات، العروض.
-- `AdminBusinesses.tsx` (2,861 سطر) — إدارة كاملة للمنشآت (CRUD، توثيق، فئات عضوية، إجراءات جماعية، فلاتر متقدّمة).
-- `AdminEntityAccessRequests.tsx` (555 سطر) — طلبات الانضمام للكيانات.
+---
 
-دمجها دفعة واحدة في PR واحد عالي المخاطر (يكسر روابط، اختبارات audit، RBAC، تصدير). أقترح **مرحلتين** نفّذهما متتاليتين بنفس الجلسة:
+## المرحلة 1 — محرّك العناوين الموحّد (Frontend فقط، لا تغييرات DB)
 
-## المرحلة 1 — التوحيد البصري والوظيفي (هذه الجولة)
+**ملف جديد:** `src/modules/seo/seoTitleBuilder.ts`
 
-صفحة جديدة واحدة `/admin/approvals` مُعاد تصميمها كـ "مركز موافقات شامل" مع:
+يصدّر:
+- `PageKind = 'company' | 'category' | 'brand' | 'service' | 'blog' | 'search' | 'project' | 'offer' | 'help' | 'home'`
+- `buildSeoTitle({ kind, lang, name, activity?, city?, ... }) → string` يطبّق القواعد العربية/الإنجليزية المذكورة في الطلب مع fallback آمن.
+- `buildSeoDescription(...)` يقص عند 155 حرفاً مع إزالة الحشو وإضافة CTA طبيعي.
+- `truncate`, `cleanText`, `withSite` (لإضافة `| قطاعات` / `| Qitaat`).
 
-1. **رأس موحّد**: KPIs (قيد المراجعة، طلبات انضمام، أسماء معلّقة، منشآت غير موثّقة، اشتراكات معلّقة) بكروت `surface-raised` مع `shadow-elev-2`.
-2. **شريط فلترة ذكي واحد**: بحث (اسم/Ref/username)، نوع الكيان، الحالة، السائق الزمني (اليوم/الأسبوع/الكل)، الفرز.
-3. **Tabs موحّدة** بدل الصفحات الثلاث:
-   - الكل (Inbox)
-   - موافقات المزوّدين
-   - أسماء المستخدمين
-   - طلبات الانضمام (entity_access)
-   - الاشتراكات والترقيات
-   - العروض الترويجية
-   - **المنشآت** (قائمة موجزة قابلة للتصفية مع رابط للصفحة الكاملة لأي إجراء عميق)
-4. **بطاقة طلب موحّدة** `<ApprovalRequestCard>` بأيقونة الفئة، شارة الحالة (`EntityVerificationStatusBadge`)، Ref ID، الأزرار السريعة (موافقة/رفض/فتح).
-5. **إجراءات جماعية** عبر `runBulkReview` + `getReviewer` (موجود).
-6. **اختصارات لوحة المفاتيح**: `A` موافقة، `R` رفض، `O` فتح، `/` بحث.
-7. **روابط عميقة** بدل التكرار: زر "إدارة كاملة" يفتح `AdminBusinesses` للحالات التي تحتاج CRUD ثقيل.
-8. تحديث `App.tsx` لإبقاء `/admin/businesses` و `/admin/entity-access-requests` كروابط داخلية شفّافة (redirect → `/admin/approvals?tab=...`).
-9. تنظيف الكود: استخراج `useApprovalsInbox` hook، حذف الفلاتر/الحالات المتكرّرة.
+**ملف جديد:** `src/modules/seo/useSeoPage.ts` — wrapper رقيق فوق `usePageMeta` يأخذ `{ kind, lang, ... }` ويستدعي `usePageMeta` + `useMultiJsonLd` بالنتائج.
 
-## المرحلة 2 — مؤجّلة (لا تُنفّذ الآن)
+**اختبار:** `src/tests/seoTitleBuilder.test.ts` — يتحقق من كل قاعدة لغة + fallback + عدم تجاوز الطول + عدم وجود UUID.
 
-دمج `AdminBusinesses` الكامل (CRUD + bulk + 2,800 سطر) داخل نفس الصفحة. هذا يتطلّب refactor مستقل لتقسيمه أولاً إلى مكوّنات أصغر (BusinessTable, BusinessFiltersBar, BusinessCreateInline) ثم استيرادها في تبويب داخل المركز. تنفيذها الآن مع المرحلة 1 يكسر الـ audits ويُنتج ملفاً > 3,000 سطر.
+**لا تغييرات على الصفحات في هذه المرحلة** — فقط الأساس + الاختبارات.
 
-## الملفات
+---
 
-- جديد: `src/pages/admin/approvalsCenter/ApprovalsInbox.tsx`
-- جديد: `src/pages/admin/approvalsCenter/ApprovalKpiStrip.tsx`
-- جديد: `src/pages/admin/approvalsCenter/ApprovalRequestCard.tsx`
-- جديد: `src/pages/admin/approvalsCenter/useApprovalsInbox.ts`
-- تعديل: `src/pages/admin/AdminApprovalsCenter.tsx` (تبسيط — يستهلك المكوّنات الجديدة)
-- تعديل: `src/App.tsx` (redirect aliases)
-- تعديل: `mem://features/admin-controls` (تحديث)
+## المرحلة 2 — ربط الصفحات العامة بالمحرّك
 
-## التحقّق
+تحديث الصفحات لاستخدام `useSeoPage` بدل استدعاءات `usePageMeta` العامة:
 
-- `bunx tsc --noEmit`
-- `bunx eslint . --max-warnings=80`
-- `bunx vitest run src/pages/admin/approvalsCenter`
-- فحص بصري على `/admin/approvals`
+- `src/pages/BusinessProfile.tsx` → `kind:'company'`
+- `src/pages/BranchDetail.tsx` → `kind:'company'` (فرع)
+- `src/pages/Category*.tsx` → `kind:'category'`
+- `src/pages/BrandDetail*.tsx` → `kind:'brand'`
+- `src/pages/ServiceDetail.tsx` / `ProductDetail.tsx` → `kind:'service'`
+- `src/pages/Blog*.tsx` → `kind:'blog'`
+- `src/pages/Search.tsx` → `kind:'search'`
+- `src/pages/ProjectDetail.tsx` → `kind:'project'`
+- `src/pages/Offers*.tsx` → `kind:'offer'`
+- `src/pages/Help*.tsx` → `kind:'help'`
 
-هل أبدأ بالمرحلة 1 الآن؟
+كل صفحة تمرّر اللغة الحالية (من `useBi`/AppDirectionShell) واسم المدينة/التصنيف/النشاط من بياناتها.
+
+**fallback:** عند نقص أي حقل، يولّد المحرّك صياغة عامة آمنة بدل إفشال الـ render.
+
+---
+
+## المرحلة 3 — حقول SEO في الإدارة + SEOPreviewCard
+
+**Migration DB** (additive فقط، nullable):
+- `businesses`: `seo_title_ar/en`, `seo_description_ar/en`, `seo_keywords text[]`, `og_image`
+- `categories`: `seo_title_ar/en`, `seo_description_ar/en`, `featured_keywords text[]`
+- `blog_posts`: `seo_title_ar/en`, `seo_description_ar/en`, `cover_alt_ar/en` (excerpt موجود)
+- `brands`: `seo_title_ar/en`, `seo_description_ar/en`, `brand_keywords text[]`
+
+**مكوّن جديد:** `src/components/seo/SEOPreviewCard.tsx` يعرض:
+- معاينة Google (title + URL + description)
+- شريط طول العنوان (50–60 جيد) + الوصف (140–160 جيد)
+- تحذيرات: مفتاح ناقص، عنوان مكرر، slug طويل، OG image مفقود
+- يقبل override يدوي + يستخدم نتيجة `buildSeoTitle` كـ fallback
+
+يُضاف داخل: `AdminBusinesses`, `AdminCategories`, `AdminBrands`, `DashboardBlog` (محرر).
+
+**أولوية القراءة:** `seo_title_*` المخصّص → `buildSeoTitle` التلقائي.
+
+---
+
+## المرحلة 4 — JSON-LD / Canonical / Sitemap / noindex + اختبارات
+
+- مراجعة JSON-LD في الصفحات: `LocalBusiness`, `Brand`, `BlogPosting`, `BreadcrumbList`, `ItemList`, `Service`, `FAQPage` — التأكد من تطابق `name/headline` مع لغة الصفحة، ولا UUIDs، ولا تقييمات وهمية.
+- `useNoIndex` على كل صفحات `/admin/*` و `/dashboard/*` و `/auth/*` (تحقّق فقط — موجود غالباً).
+- `scripts/generate-sitemap.ts` / edge sitemap: تأكيد استبعاد الصفحات الخاصة + استبعاد أي UUIDs.
+- اختبارات: `src/tests/seoTitlesMetadataOptimizer1.test.ts` يغطّي القواعد، اللغة، الطول، عدم وجود UUID، وجود OG/Twitter/JSON-LD، fallback، sitemap لا يحوي خاص.
+
+---
+
+## التنفيذ
+
+سأبدأ فوراً بالمرحلة 1 بعد موافقتك على هذه الخطة. كل مرحلة لاحقة تأتي في رسالة منفصلة لتسهيل المراجعة والرجوع.
+
+## نقاط تحتاج قراراً منك
+
+1. **Slugs الحالية:** الطلب يمنع تغييرها بدون redirect. هل تريد إضافة جدول `slug_redirects` لاحقاً، أم نكتفي بعدم لمس الـ slugs القائمة؟
+2. **og:image الافتراضية:** نُبقي `qitaat.com/og-image.jpg` الحالية، أم تريد توليد صورة افتراضية لكل `PageKind`؟
+3. **حقول DB في المرحلة 3:** هل أوافق على إنشاء الهجرة عند الوصول لها، أم تفضّل تخطّيها والاكتفاء بـ fallback تلقائي من البيانات الحالية فقط؟
