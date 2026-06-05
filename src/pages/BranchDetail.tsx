@@ -572,7 +572,8 @@ const BranchDetail: React.FC = () => {
                   <Heart className={`w-3.5 h-3.5 ${fav ? 'fill-current' : ''}`} />
                   {fav ? t(isRTL, 'محفوظ', 'Saved') : t(isRTL, 'حفظ', 'Save')}
                 </Button>
-                <ShareMenu
+                <Suspense fallback={<span className="inline-block w-9 h-9" />}>
+                  <ShareMenu
                   branchId={branch.id}
                   url={shareUrl}
                   title={`${branchName} — ${businessName}`}
@@ -581,7 +582,8 @@ const BranchDetail: React.FC = () => {
                     `أنصحك بالاطلاع على ${branchName} — مزود معتمد على قِطاعات`,
                     `I recommend checking out ${branchName} — verified on Qitaat`,
                   )}
-                />
+                  />
+                </Suspense>
             </div>
           </div>
         </div>
