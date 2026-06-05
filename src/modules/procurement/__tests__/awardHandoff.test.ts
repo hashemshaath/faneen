@@ -4,10 +4,10 @@ const addComment = vi.fn(async (..._a: unknown[]) => ({ data: { id: 'c1' }, erro
 const notifyFaf = vi.fn((..._a: unknown[]) => undefined);
 
 vi.mock('@/modules/workOrders', () => ({
-  addWorkOrderComment: (...a: unknown[]) => addComment.apply(null, a),
+  addWorkOrderComment: (...a: unknown[]) => addComment(...a),
 }));
 vi.mock('@/modules/notifications', () => ({
-  createNotificationFireAndForget: (...a: unknown[]) => notifyFaf.apply(null, a),
+  createNotificationFireAndForget: (...a: unknown[]) => notifyFaf(...a),
 }));
 vi.mock('../services/rfqs', () => ({
   getRfqById: vi.fn(async () => ({
