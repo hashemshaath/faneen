@@ -42,10 +42,10 @@ interface Props {
 }
 
 const AdminClientSiteInlineDetail: React.FC<Props> = ({ data, bi, isRTL, onClose }) => {
-  if (!data.site) return null;
   const site = data.site;
+  const { data: barcodeCode } = useEntityBarcode('client_site', site?.id ?? '');
+  if (!site) return null;
   const qr = getQrStatus({ qr_enabled: site.qr_enabled, qr_revoked_at: site.qr_revoked_at });
-  const { data: barcodeCode } = useEntityBarcode('client_site', site.id);
 
   return (
     <div className="space-y-4 text-sm">
