@@ -2591,7 +2591,7 @@ const AdminBusinesses = () => {
         )}
 
         {/* ─── Business List ─── */}
-        {isLoading ? (
+        {!panelOpen && (isLoading ? (
           <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}</div>
         ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-border/30 bg-card p-12 text-center">
