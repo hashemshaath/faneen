@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { CheckCircle2, Building2, UserPlus, ShieldCheck, ArrowUpRight } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useUnifiedApprovalsCounts } from './useUnifiedApprovalsCounts';
 
 /**
  * UNIFIED-APPROVALS-CENTER-2
@@ -68,21 +69,44 @@ export const UnifiedApprovalsCenterBanner: React.FC = () => {
   const { isRTL } = useLanguage();
   const { pathname } = useLocation();
   const active = detectActive(pathname);
+  const { data: counts, isLoading } = useUnifiedApprovalsCounts();
+  const countFor = (k: SurfaceKey): number => {
+    if (!counts) return 0;
+    if (k === 'approvals')  return counts.approvalsPending;
+    if (k === 'businesses') return counts.businessesPending;
+    return counts.accessPending;
+  };
+  const totalPending = (counts?.approvalsPending ?? 0)
+    + (counts?.businessesPending ?? 0)
+    + (counts?.accessPending ?? 0);
   return (
     <nav
       aria-label={isRTL ? 'مركز الموافقات الموحّد' : 'Unified Approvals Center'}
       className="rounded-2xl border border-border/40 bg-gradient-to-br from-card to-muted/20 p-2 sm:p-3 shadow-elev-1"
     >
-      <div className="flex items-center gap-2 mb-2 px-1">
-        <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-        <span className="text-[11px] font-medium text-muted-foreground tracking-wide uppercase">
-          {isRTL ? 'مركز الموافقات الموحّد' : 'Unified Approvals Center'}
+      <div className="flex items-center justify-between gap-2 mb-2 px-1">
+        <span className="inline-flex items-center gap-2">
+          <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[11px] font-medium text-muted-foreground tracking-wide uppercase">
+            {isRTL ? 'مركز الموافقات الموحّد' : 'Unified Approvals Center'}
+          </span>
         </span>
+        {!isLoading && totalPending > 0 && (
+          <span className="inline-flex items-center gap-1 text-[10.5px] text-warning font-medium">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning/60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-warning" />
+            </span>
+            <span className="tech-content">{totalPending}</span>
+            {isRTL ? 'تحتاج إجراءً' : 'need action'}
+          </span>
+        )}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         {SURFACES.map((s) => {
           const isActive = s.key === active;
           const Icon = s.icon;
+          const cnt = countFor(s.key);
           return (
             <Link
               key={s.key}
@@ -105,9 +129,23 @@ export const UnifiedApprovalsCenterBanner: React.FC = () => {
                     <span className={`text-xs font-semibold truncate ${isActive ? '' : 'text-foreground'}`}>
                       {isRTL ? s.ar : s.en}
                     </span>
-                    {!isActive && (
-                      <ArrowUpRight className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity rtl-flip" />
-                    )}
+                    <span className="inline-flex items-center gap-1 shrink-0">
+                      {cnt > 0 && (
+                        <span
+                          className={`tech-content text-[10px] font-bold h-5 min-w-[20px] px-1.5 rounded-full inline-flex items-center justify-center ${
+                            isActive
+                              ? 'bg-card/70 text-foreground'
+                              : 'bg-warning/15 text-warning border border-warning/30'
+                          }`}
+                          title={isRTL ? `${cnt} عنصر بانتظار الإجراء` : `${cnt} items awaiting action`}
+                        >
+                          {cnt > 99 ? '99+' : cnt}
+                        </span>
+                      )}
+                      {!isActive && (
+                        <ArrowUpRight className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity rtl-flip" />
+                      )}
+                    </span>
                   </div>
                   <p className="text-[10.5px] text-muted-foreground mt-0.5 truncate">
                     {isRTL ? s.hint.ar : s.hint.en}
