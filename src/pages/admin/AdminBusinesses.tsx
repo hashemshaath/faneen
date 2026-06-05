@@ -102,6 +102,7 @@ import { SavedViewsMenu } from '@/components/admin/SavedViewsMenu';
 import { useAdminSavedViews } from '@/hooks/useAdminSavedViews';
 import { BusinessFiltersToolbar } from '@/components/admin/businesses/BusinessFiltersToolbar';
 import { BusinessBulkActionBar } from '@/components/admin/businesses/BusinessBulkActionBar';
+import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -581,6 +582,10 @@ const AdminBusinesses = () => {
         longitude: editForm.longitude || null, category_id: editForm.category_id || null,
         country_id: editForm.country_id || null, city_id: editForm.city_id || null,
         logo_url: editForm.logo_url || null, cover_url: editForm.cover_url || null,
+        seo_title_ar: editForm.seo_title_ar || null, seo_title_en: editForm.seo_title_en || null,
+        seo_description_ar: editForm.seo_description_ar || null, seo_description_en: editForm.seo_description_en || null,
+        seo_keywords: String(editForm.seo_keywords || '').split(',').map(k => k.trim()).filter(Boolean),
+        og_image: editForm.og_image || null,
         unified_number: editForm.unified_number || null, contact_person: editForm.contact_person || null,
         mobile: editForm.mobile || null, customer_service_phone: editForm.customer_service_phone || null,
         region_en: editForm.region_en || null, district_en: editForm.district_en || null,
@@ -1179,6 +1184,10 @@ const AdminBusinesses = () => {
       address: biz.address || '', category_id: biz.category_id || '',
       country_id: biz.country_id || '', city_id: biz.city_id || '',
       logo_url: biz.logo_url || '', cover_url: biz.cover_url || '',
+      seo_title_ar: biz.seo_title_ar || '', seo_title_en: biz.seo_title_en || '',
+      seo_description_ar: biz.seo_description_ar || '', seo_description_en: biz.seo_description_en || '',
+      seo_keywords: Array.isArray(biz.seo_keywords) ? biz.seo_keywords.join(', ') : '',
+      og_image: biz.og_image || '',
       national_id: biz.national_id || '', additional_number: biz.additional_number || '',
       region: biz.region || '', district: biz.district || '',
       street_name: biz.street_name || '', building_number: biz.building_number || '',
