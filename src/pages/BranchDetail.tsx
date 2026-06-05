@@ -232,7 +232,9 @@ const BranchDetail: React.FC = () => {
     ogDescription: seoDescription,
     ogImage: business?.logo_url || undefined,
     ogType: 'business.business',
-    canonical: branch?.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined,
+    canonical: branch?.slug && business?.username
+      ? `https://qitaat.com/${business.username}/${branch.slug}`
+      : (branch?.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined),
   });
 
   // Aggregate review stats for SEO (AggregateRating in JSON-LD).
@@ -268,7 +270,9 @@ const BranchDetail: React.FC = () => {
       } : undefined,
       telephone: branch.phone || branch.mobile || undefined,
       email: branch.email || undefined,
-      url: branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined,
+      url: branch.slug && business.username
+        ? `https://qitaat.com/${business.username}/${branch.slug}`
+        : (branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined),
       geo: branch.latitude && branch.longitude ? {
         '@type': 'GeoCoordinates',
         latitude: branch.latitude, longitude: branch.longitude,
@@ -306,7 +310,9 @@ const BranchDetail: React.FC = () => {
     const items = [
       { name: t(isRTL, 'الرئيسية', 'Home'), url: 'https://qitaat.com/' },
       business?.username ? { name: businessName, url: `https://qitaat.com/${business.username}` } : null,
-      { name: branchName, url: branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined },
+      { name: branchName, url: branch.slug && business?.username
+          ? `https://qitaat.com/${business.username}/${branch.slug}`
+          : (branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined) },
     ].filter(Boolean) as Array<{ name: string; url?: string }>;
     return {
       '@context': 'https://schema.org',
@@ -352,7 +358,9 @@ const BranchDetail: React.FC = () => {
     branch.social_snapchat && { url: branch.social_snapchat, Icon: Globe, label: 'Snapchat' },
   ].filter(Boolean) as Array<{ url: string; Icon: React.ComponentType<{ className?: string }>; label: string }>;
 
-  const shareUrl = branch.slug ? `https://qitaat.com/branch/${branch.slug}` : window.location.href;
+  const shareUrl = branch.slug && business?.username
+    ? `https://qitaat.com/${business.username}/${branch.slug}`
+    : (branch.slug ? `https://qitaat.com/branch/${branch.slug}` : window.location.href);
   const handleShare = async () => {
     try {
       if (navigator.share) {
@@ -718,7 +726,7 @@ const BranchDetail: React.FC = () => {
                     return (
                       <Link
                         key={s.id}
-                        to={s.slug ? `/branch/${s.slug}` : '#'}
+                        to={s.slug && business?.username ? `/${business.username}/${s.slug}` : (s.slug ? `/branch/${s.slug}` : '#')}
                         className="group p-4 rounded-xl border border-border/60 hover-lift hover:border-primary/40 transition"
                       >
                         <div className="flex items-start justify-between gap-2">
