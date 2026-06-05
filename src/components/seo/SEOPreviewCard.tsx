@@ -7,33 +7,27 @@ import {
   buildSeoDescription,
   TITLE_MAX,
   DESCRIPTION_MAX,
+  type Lang,
   type PageKind,
 } from '@/modules/seo/seoTitleBuilder';
 
 interface SEOPreviewCardProps {
   kind: PageKind;
-  /** Editor-supplied SEO title (override). */
-  customTitle?: string | null;
+  /** Editor-supplied SEO title (override) per language. */
   customTitleAr?: string | null;
   customTitleEn?: string | null;
-  /** Editor-supplied meta description (override). */
-  customDescription?: string | null;
+  /** Editor-supplied meta description (override) per language. */
   customDescriptionAr?: string | null;
   customDescriptionEn?: string | null;
-  /** Auto-build fallbacks. */
-  name?: string | null;
+  /** Auto-build fallbacks per language. */
   nameAr?: string | null;
   nameEn?: string | null;
-  activity?: string | null;
   activityAr?: string | null;
   activityEn?: string | null;
-  city?: string | null;
   cityAr?: string | null;
   cityEn?: string | null;
-  category?: string | null;
   categoryAr?: string | null;
   categoryEn?: string | null;
-  rawDescription?: string | null;
   rawDescriptionAr?: string | null;
   rawDescriptionEn?: string | null;
   /** URL preview (e.g. https://qitaat.com/slug). */
@@ -43,30 +37,27 @@ interface SEOPreviewCardProps {
   focusKeyword?: string | null;
 }
 
-function lenBand(len: number, min: number, max: number) {
+type LenBand = 'empty' | 'short' | 'good' | 'long';
+
+function lenBand(len: number, min: number, max: number): LenBand {
   if (len === 0) return 'empty';
   if (len < min) return 'short';
   if (len > max) return 'long';
   return 'good';
 }
 
-function bandColor(b: string) {
-  switch (b) {
-    case 'good': return 'bg-success';
-    case 'short': return 'bg-warning';
-    case 'long': return 'bg-destructive';
-    default: return 'bg-muted';
-  }
-}
-
-function bandTextColor(b: string) {
-  switch (b) {
-    case 'good': return 'text-success';
-    case 'short': return 'text-warning';
-    case 'long': return 'text-destructive';
-    default: return 'text-muted-foreground';
-  }
-}
+const BAND_BG: Record<LenBand, string> = {
+  good: 'bg-success',
+  short: 'bg-warning',
+  long: 'bg-destructive',
+  empty: 'bg-muted',
+};
+const BAND_TEXT: Record<LenBand, string> = {
+  good: 'text-success',
+  short: 'text-warning',
+  long: 'text-destructive',
+  empty: 'text-muted-foreground',
+};
 
 /**
  * Google-style SEO preview + length meters + warnings.
@@ -75,22 +66,22 @@ function bandTextColor(b: string) {
 export function SEOPreviewCard(props: SEOPreviewCardProps) {
   const { isRTL } = useLanguage();
   const {
-    kind, customTitle, customTitleAr, customTitleEn, customDescription,
-    customDescriptionAr, customDescriptionEn, name, nameAr, nameEn, activity,
-    activityAr, activityEn, city, cityAr, cityEn, category, categoryAr,
-    categoryEn, rawDescription, rawDescriptionAr, rawDescriptionEn, url,
-    ogImageUrl, focusKeyword,
+    kind, customTitleAr, customTitleEn, customDescriptionAr, customDescriptionEn,
+    nameAr, nameEn, activityAr, activityEn, cityAr, cityEn, categoryAr, categoryEn,
+    rawDescriptionAr, rawDescriptionEn, url, ogImageUrl, focusKeyword,
   } = props;
 
-  const ar = useMemo(() => ({
-    title: buildSeoTitle({ kind, lang: 'ar', customTitle: customTitleAr ?? customTitle, name: nameAr ?? name, activity: activityAr ?? activity, city: cityAr ?? city, category: categoryAr ?? category }),
-    desc: buildSeoDescription({ kind, lang: 'ar', customDescription: customDescriptionAr ?? customDescription, name: nameAr ?? name, activity: activityAr ?? activity, city: cityAr ?? city, category: categoryAr ?? category, rawDescription: rawDescriptionAr ?? rawDescription }),
-  }), [kind, customTitle, customTitleAr, customDescription, customDescriptionAr, name, nameAr, activity, activityAr, city, cityAr, category, categoryAr, rawDescription, rawDescriptionAr]);
+  const ar = useMemo(() => buildSide('ar', kind, {
+    customTitle: customTitleAr, customDescription: customDescriptionAr,
+    name: nameAr, activity: activityAr, city: cityAr, category: categoryAr,
+    rawDescription: rawDescriptionAr,
+  }), [kind, customTitleAr, customDescriptionAr, nameAr, activityAr, cityAr, categoryAr, rawDescriptionAr]);
 
-  const en = useMemo(() => ({
-    title: buildSeoTitle({ kind, lang: 'en', customTitle: customTitleEn ?? customTitle, name: nameEn ?? name, activity: activityEn ?? activity, city: cityEn ?? city, category: categoryEn ?? category }),
-    desc: buildSeoDescription({ kind, lang: 'en', customDescription: customDescriptionEn ?? customDescription, name: nameEn ?? name, activity: activityEn ?? activity, city: cityEn ?? city, category: categoryEn ?? category, rawDescription: rawDescriptionEn ?? rawDescription }),
-  }), [kind, customTitle, customTitleEn, customDescription, customDescriptionEn, name, nameEn, activity, activityEn, city, cityEn, category, categoryEn, rawDescription, rawDescriptionEn]);
+  const en = useMemo(() => buildSide('en', kind, {
+    customTitle: customTitleEn, customDescription: customDescriptionEn,
+    name: nameEn, activity: activityEn, city: cityEn, category: categoryEn,
+    rawDescription: rawDescriptionEn,
+  }), [kind, customTitleEn, customDescriptionEn, nameEn, activityEn, cityEn, categoryEn, rawDescriptionEn]);
 
   const warnings: string[] = [];
   if (!ogImageUrl) warnings.push(isRTL ? 'لا توجد صورة OG — قد تظهر معاينة فقيرة على وسائل التواصل.' : 'No OG image — social previews will be poor.');
@@ -102,12 +93,11 @@ export function SEOPreviewCard(props: SEOPreviewCardProps) {
     }
   }
 
-  const renderSide = (lang: 'ar' | 'en', t: string, d: string) => {
+  const renderSide = (lang: Lang, t: string, d: string) => {
     const tBand = lenBand(t.length, 30, TITLE_MAX);
     const dBand = lenBand(d.length, 70, DESCRIPTION_MAX);
-    const dir = lang === 'ar' ? 'rtl' : 'ltr';
     return (
-      <div className="space-y-3" dir={dir}>
+      <div className="space-y-3" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Globe className="w-3.5 h-3.5" />
           <span className="uppercase tracking-wide">{lang === 'ar' ? 'العربية' : 'English'}</span>
@@ -120,19 +110,19 @@ export function SEOPreviewCard(props: SEOPreviewCardProps) {
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">{lang === 'ar' ? 'العنوان' : 'Title'}</span>
-            <span className={`tech-content ${bandTextColor(tBand)}`}>{t.length}/{TITLE_MAX}</span>
+            <span className={`tech-content ${BAND_TEXT[tBand]}`}>{t.length}/{TITLE_MAX}</span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-            <div className={`h-full ${bandColor(tBand)}`} style={{ width: `${Math.min(100, (t.length / TITLE_MAX) * 100)}%` }} />
+            <div className={`h-full ${BAND_BG[tBand]}`} style={{ width: `${Math.min(100, (t.length / TITLE_MAX) * 100)}%` }} />
           </div>
         </div>
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">{lang === 'ar' ? 'الوصف' : 'Description'}</span>
-            <span className={`tech-content ${bandTextColor(dBand)}`}>{d.length}/{DESCRIPTION_MAX}</span>
+            <span className={`tech-content ${BAND_TEXT[dBand]}`}>{d.length}/{DESCRIPTION_MAX}</span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-            <div className={`h-full ${bandColor(dBand)}`} style={{ width: `${Math.min(100, (d.length / DESCRIPTION_MAX) * 100)}%` }} />
+            <div className={`h-full ${BAND_BG[dBand]}`} style={{ width: `${Math.min(100, (d.length / DESCRIPTION_MAX) * 100)}%` }} />
           </div>
         </div>
       </div>
@@ -159,8 +149,8 @@ export function SEOPreviewCard(props: SEOPreviewCardProps) {
       </div>
       {warnings.length > 0 && (
         <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 space-y-1">
-          {warnings.map((w, i) => (
-            <div key={i} className="flex items-start gap-2 text-xs text-warning">
+          {warnings.map((w) => (
+            <div key={w} className="flex items-start gap-2 text-xs text-warning">
               <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
               <span>{w}</span>
             </div>
@@ -169,6 +159,23 @@ export function SEOPreviewCard(props: SEOPreviewCardProps) {
       )}
     </Card>
   );
+}
+
+interface SideInputs {
+  customTitle?: string | null;
+  customDescription?: string | null;
+  name?: string | null;
+  activity?: string | null;
+  city?: string | null;
+  category?: string | null;
+  rawDescription?: string | null;
+}
+
+function buildSide(lang: Lang, kind: PageKind, i: SideInputs): { title: string; desc: string } {
+  return {
+    title: buildSeoTitle({ kind, lang, customTitle: i.customTitle, name: i.name, activity: i.activity, city: i.city, category: i.category }),
+    desc: buildSeoDescription({ kind, lang, customDescription: i.customDescription, name: i.name, activity: i.activity, city: i.city, category: i.category, rawDescription: i.rawDescription }),
+  };
 }
 
 export default SEOPreviewCard;
