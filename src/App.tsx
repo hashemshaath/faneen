@@ -223,6 +223,7 @@ const AdminPdfExportAudit = lazyRetry(() => import("./pages/admin/AdminPdfExport
 const AdminPdfVisualQa = lazyRetry(() => import("./pages/admin/AdminPdfVisualQa"));
 // NAVIGATION-CONSOLIDATION-1 — unified tabbed hubs (Phase 2).
 const DashboardBusinessProfileHub = lazyRetry(() => import("./pages/dashboard/DashboardBusinessProfileHub"));
+const DashboardBranches = lazyRetry(() => import("./pages/dashboard/DashboardBranches"));
 const DashboardRequestsHub = lazyRetry(() => import("./pages/dashboard/DashboardRequestsHub"));
 const DashboardRfqHub = lazyRetry(() => import("./pages/dashboard/DashboardRfqHub"));
 const DashboardContractsHub = lazyRetry(() => import("./pages/dashboard/DashboardContractsHub"));
