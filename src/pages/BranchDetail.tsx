@@ -444,16 +444,56 @@ const BranchDetail: React.FC = () => {
                     </a>
                   </Button>
                 )}
+                <Button size="sm" variant="ghost" onClick={handleShare} className="gap-2 rounded-xl">
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                  {t(isRTL, 'مشاركة', 'Share')}
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </section>
 
+      {/* KPI strip + Section nav */}
+      <div className="sticky top-16 z-30 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <div className="container max-w-6xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground me-2">
+            {reviewStats && reviewStats.count > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                <Star className="w-3 h-3 fill-current" />
+                <span className="tech-content font-semibold">{reviewStats.avg.toFixed(1)}</span>
+                <span className="tech-content opacity-70">({reviewStats.count})</span>
+              </span>
+            )}
+            {(services?.length ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                <Boxes className="w-3 h-3" />
+                <span className="tech-content">{services!.length}</span>
+                <span>{t(isRTL, 'خدمة', 'services')}</span>
+              </span>
+            )}
+            {(promotions?.length ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                <Tag className="w-3 h-3" />
+                <span className="tech-content">{promotions!.length}</span>
+                <span>{t(isRTL, 'عرض', 'offers')}</span>
+              </span>
+            )}
+          </div>
+          <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar ms-auto" aria-label={t(isRTL,'أقسام الصفحة','Page sections')}>
+            {sectionNav.map(s => (
+              <a key={s.id} href={`#${s.id}`} className="text-xs px-3 py-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition whitespace-nowrap">
+                {s.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </div>
+
       {/* Body */}
       <section className="container max-w-6xl mx-auto px-4 py-8 grid gap-6 lg:grid-cols-3">
         {/* Contact card */}
-        <Card className="lg:col-span-1 lg:sticky lg:top-20 h-fit">
+        <Card id="contact" className="lg:col-span-1 lg:sticky lg:top-32 h-fit scroll-mt-32">
           <CardContent className="p-6 space-y-4">
             <h2 className="font-semibold text-lg flex items-center gap-2">
               <Phone className="w-4 h-4 text-primary" />
@@ -515,7 +555,7 @@ const BranchDetail: React.FC = () => {
         {/* Right column */}
         <div className="lg:col-span-2 space-y-6">
           {salesManager && (
-            <Card>
+            <Card id="manager" className="scroll-mt-32">
               <CardContent className="p-6 space-y-3">
                 <h2 className="font-semibold text-lg flex items-center gap-2">
                   <UserCog className="w-4 h-4 text-primary" />
@@ -553,7 +593,7 @@ const BranchDetail: React.FC = () => {
           )}
 
           {(services?.length ?? 0) > 0 && (
-            <Card>
+            <Card id="services" className="scroll-mt-32">
               <CardContent className="p-6 space-y-4">
                 <h2 className="font-semibold text-lg flex items-center gap-2">
                   <Boxes className="w-4 h-4 text-primary" />
@@ -576,7 +616,7 @@ const BranchDetail: React.FC = () => {
           )}
 
           {(promotions?.length ?? 0) > 0 && (
-            <Card>
+            <Card id="promotions" className="scroll-mt-32">
               <CardContent className="p-6 space-y-4">
                 <h2 className="font-semibold text-lg flex items-center gap-2">
                   <Tag className="w-4 h-4 text-primary" />
@@ -605,7 +645,57 @@ const BranchDetail: React.FC = () => {
             </Card>
           )}
 
-          <BranchReviews branchId={branch.id} businessId={branch.business_id} />
+          <div id="reviews" className="scroll-mt-32">
+            <BranchReviews branchId={branch.id} businessId={branch.business_id} />
+          </div>
+
+          {(siblings?.length ?? 0) > 0 && (
+            <Card id="siblings" className="scroll-mt-32">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <h2 className="font-semibold text-lg flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-primary" />
+                    {t(isRTL, 'فروع أخرى للشركة', 'Other branches of this company')}
+                  </h2>
+                  {business?.username && (
+                    <Button asChild size="sm" variant="ghost" className="gap-1">
+                      <Link to={`/${business.username}#branches`}>
+                        {t(isRTL, 'عرض الكل', 'View all')}
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {siblings!.map(s => {
+                    const name = isRTL ? s.name_ar : (s.name_en || s.name_ar);
+                    const loc  = [s.region, s.district].filter(Boolean).join('، ');
+                    return (
+                      <Link
+                        key={s.id}
+                        to={s.slug ? `/branch/${s.slug}` : '#'}
+                        className="group p-4 rounded-xl border border-border/60 hover-lift hover:border-primary/40 transition"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-medium leading-tight group-hover:text-primary transition" dir="auto">{name}</p>
+                          {s.is_main && (
+                            <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 shrink-0">
+                              <Star className="w-2.5 h-2.5 fill-current" />
+                            </Badge>
+                          )}
+                        </div>
+                        {loc && (
+                          <p className="mt-1 text-xs text-muted-foreground inline-flex items-center gap-1" dir="auto">
+                            <MapPin className="w-3 h-3" />{loc}
+                          </p>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </section>
     </div>
