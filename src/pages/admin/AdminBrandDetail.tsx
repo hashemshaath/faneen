@@ -314,7 +314,7 @@ const AdminBrandDetail: React.FC = () => {
               </div>
               <div>
                 <Label className="text-xs mb-2 block">{isRTL ? 'صورة OG' : 'OG image'}</Label>
-                <ImageUpload bucket="brand-assets" value={seoForm.og_image_url}
+                <ImageUpload bucket="business-assets" value={seoForm.og_image_url}
                   onChange={(url) => setSeoForm(f => ({ ...f, og_image_url: url || '' }))}
                   onRemove={() => setSeoForm(f => ({ ...f, og_image_url: '' }))}
                   placeholder={isRTL ? 'رفع صورة المشاركة' : 'Upload share image'} />
