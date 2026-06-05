@@ -452,6 +452,31 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false,
     }
   }
 
+  /**
+   * Quick-fix action that flips an `approved` business to `published`
+   * so it becomes visible inside the public `businesses_public` view
+   * (and therefore inside the user-facing search). Hidden on rows that
+   * are already published, demo, or in a non-approved state.
+   */
+  async function publishNow(item: UnifiedItem) {
+    if (!item.businessId) return;
+    setPublishing((p) => ({ ...p, [item.uid]: true }));
+    try {
+      const { error } = await supabase
+        .from('businesses')
+        .update({ approval_status: 'published' as never })
+        .eq('id', item.businessId);
+      if (error) {
+        toast.error((isRTL ? 'تعذّر النشر: ' : 'Publish failed: ') + (error.message ?? ''));
+      } else {
+        toast.success(isRTL ? 'تم النشر — أصبحت الجهة ظاهرة في البحث' : 'Published — entity is now visible in search');
+        refreshAll();
+      }
+    } finally {
+      setPublishing((p) => ({ ...p, [item.uid]: false }));
+    }
+  }
+
   const categoryChips: Array<{ key: CategoryKey | 'all'; ar: string; en: string; count?: number }> = [
     { key: 'all', ar: 'الكل', en: 'All', count: stats.totalPending },
     { key: 'all_businesses',        ar: 'كل الجهات',        en: 'All entities',  count: stats.counters.all_businesses },
