@@ -2213,10 +2213,14 @@ const AdminBusinesses = () => {
                     customTitleEn={editForm.seo_title_en}
                     customDescriptionAr={editForm.seo_description_ar}
                     customDescriptionEn={editForm.seo_description_en}
-                    name={isRTL ? editForm.name_ar : editForm.name_en}
-                    activity={editCategoryName ? (language === 'ar' ? editCategoryName.name_ar : editCategoryName.name_en) : null}
-                    city={editCityName ? (language === 'ar' ? editCityName.name_ar : editCityName.name_en) : null}
-                    rawDescription={isRTL ? editForm.description_ar : editForm.description_en}
+                    nameAr={editForm.name_ar}
+                    nameEn={editForm.name_en}
+                    activityAr={editCategoryName?.name_ar ?? null}
+                    activityEn={editCategoryName?.name_en ?? null}
+                    cityAr={editCityName?.name_ar ?? null}
+                    cityEn={editCityName?.name_en ?? null}
+                    rawDescriptionAr={editForm.description_ar}
+                    rawDescriptionEn={editForm.description_en}
                     url={editingBiz.username ? `https://qitaat.com/${editingBiz.username}` : null}
                     ogImageUrl={editForm.og_image || editForm.cover_url || editForm.logo_url || null}
                     focusKeyword={String(editForm.seo_keywords || '').split(',').map(k => k.trim()).filter(Boolean)[0] ?? null}
