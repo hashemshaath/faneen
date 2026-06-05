@@ -20,8 +20,9 @@ import {
   CheckCircle2, XCircle, Shield, Key, Server, Lock, Bot, Sparkles,
   Map, BarChart3, Copy, ExternalLink, ChevronDown, ChevronUp,
   BookOpen, Zap, Info, Search, X, Code2, Hash, Activity,
-  MapPin,
+  MapPin, Plug, ArrowRight,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 /* ═══════════ Types ═══════════ */
 interface PlatformSetting {
