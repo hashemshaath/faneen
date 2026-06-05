@@ -210,6 +210,33 @@ const BranchDetail: React.FC = () => {
   const branchName = branch ? (isRTL ? branch.name_ar : (branch.name_en || branch.name_ar)) : '';
   const businessName = business ? (isRTL ? (business.name_ar || business.name_en || '') : (business.name_en || business.name_ar || '')) : '';
 
+  // Canonical branch URL — strictly {username}/{branch-slug}. We never expose
+  // ref_id-based paths (e.g. /branch/loc1000005) as canonical/share targets.
+  const canonicalBranchUrl = (branch?.slug && business?.username)
+    ? `https://qitaat.com/${business.username}/${branch.slug}`
+    : undefined;
+
+  // Block indexing while the visitor is on a legacy URL (/branch/:slug or any
+  // mismatched path). The canonical {username}/{slug} variant remains indexable.
+  useEffect(() => {
+    const isCanonicalPath = !!(branch && business?.username && branch.slug
+      && window.location.pathname === `/${business.username}/${branch.slug}`);
+    if (isCanonicalPath) return; // leave default robots policy in place
+    let el = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    const created = !el;
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute('name', 'robots');
+      document.head.appendChild(el);
+    }
+    const prev = el.getAttribute('content');
+    el.setAttribute('content', 'noindex, follow');
+    return () => {
+      if (created) { el?.remove(); return; }
+      el?.setAttribute('content', prev ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+    };
+  }, [branch, business?.username, params.branchSlug, usernameParam]);
+
   // Canonical-URL redirect: never expose numeric/ref_id slugs like /branch/loc1000005.
   // Once we know the business username and the branch's real slug, send the user to
   // the nested, name-based URL: /{username}/{branchSlug}.
