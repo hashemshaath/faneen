@@ -1333,7 +1333,7 @@ const AdminBusinesses = () => {
               <Button
                 size="sm"
                 className="h-10 text-xs gap-1.5 rounded-xl"
-                onClick={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); }}
+                onClick={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); scrollToTop(); }}
               >
                 <Plus className="w-3.5 h-3.5" />
                 {isRTL ? 'منشأة جديدة' : 'New Business'}
