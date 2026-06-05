@@ -41,6 +41,14 @@
 
 **fallback:** عند نقص أي حقل، يولّد المحرّك صياغة عامة آمنة بدل إفشال الـ render.
 
+### تقدّم المرحلة 2 (دفعة 1)
+- ✅ `src/pages/BusinessProfile.tsx`
+- ✅ `src/pages/BranchDetail.tsx`
+- ✅ `src/pages/BlogPost.tsx`
+- ✅ `src/pages/ProjectDetail.tsx`
+- ✅ `src/pages/ServiceDetail.tsx`
+- ⏳ متبقّي: `Category*`, `BrandDetail*`, `Search`, `Offers*`, `Help*`, `Sector*`, `Blog` (قائمة)، `Projects` (قائمة)، `Compare*`، `PublicUserProfile`، `ProfileSystem*`.
+
 ---
 
 ## المرحلة 3 — حقول SEO في الإدارة + SEOPreviewCard
