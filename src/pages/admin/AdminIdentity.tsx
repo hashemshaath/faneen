@@ -132,13 +132,32 @@ const AdminIdentity: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
   usePageMeta({
-    title: isRTL ? 'المستخدمون والمنشآت | إدارة قِطاعات' : 'Users & Businesses | Qitaat Admin',
+    title: isRTL ? 'مركز الحسابات والموافقات | إدارة قِطاعات' : 'Accounts & Approvals | Qitaat Admin',
     noindex: true,
   });
   const { isSuperAdmin } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [, startTransition] = useTransition();
   const queryClient = useQueryClient();
+
+  // Tabs: overview | approvals | directory  (query-string controlled)
+  type TabKey = 'overview' | 'approvals' | 'directory';
+  const initialTab = (searchParams.get('tab') as TabKey) || 'overview';
+  const [tab, setTab] = useState<TabKey>(
+    ['overview', 'approvals', 'directory'].includes(initialTab) ? initialTab : 'overview',
+  );
+  const setTabSafe = useCallback((next: TabKey) => {
+    setTab(next);
+    const sp = new URLSearchParams(searchParams);
+    if (next === 'overview') sp.delete('tab'); else sp.set('tab', next);
+    setSearchParams(sp, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const { data: approvalsCounts } = useUnifiedApprovalsCounts();
+  const pendingTotal =
+    (approvalsCounts?.approvalsPending ?? 0) +
+    (approvalsCounts?.businessesPending ?? 0) +
+    (approvalsCounts?.accessPending ?? 0);
 
   // Legacy ?view=... deep-link redirect to standalone management pages.
   const legacyView = searchParams.get('view');
