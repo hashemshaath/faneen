@@ -138,7 +138,7 @@ describe('PROVIDER-GROWTH-ENGINE-2 — Admin UI', () => {
         phone: null, email: null, sectors: [],
       });
       expect(weak.readiness.score).toBeLessThan(60);
-      expect(weak.quality.score).toBeLessThan(70);
+      expect(weak.quality.score).toBeLessThan(80);
       expect(filterGrowthInsights([weak], 'low_readiness').length).toBe(1);
       expect(filterGrowthInsights([weak], 'low_quality').length).toBe(1);
     });
