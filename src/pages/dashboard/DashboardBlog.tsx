@@ -33,6 +33,7 @@ import { ArticlePreview } from '@/components/blog/ArticlePreview';
 import { DraftVersions } from '@/components/blog/DraftVersions';
 import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore, stripMarkdown, sanitizeSlug, validateMetaFields, hasMetaErrors } from '@/lib/blog-ai-utils';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { SEOPreviewCard } from "@/components/seo/SEOPreviewCard";
 
 const blogCategories = [
   { value: 'general', ar: 'عام', en: 'General' },
@@ -829,7 +830,19 @@ const DashboardBlog = () => {
                         </div>
                       )}
 
-                      {/* Google Previews */}
+                      {/* Unified SEO Preview (builder-driven) */}
+                      <SEOPreviewCard
+                        kind="blog"
+                        customTitle={isRTL ? form.meta_title_ar : form.meta_title_en}
+                        customDescription={isRTL ? form.meta_description_ar : form.meta_description_en}
+                        name={isRTL ? form.title_ar : form.title_en}
+                        rawDescription={isRTL ? form.excerpt_ar : form.excerpt_en}
+                        url={form.slug ? `https://qitaat.com/blog/${form.slug}` : null}
+                        ogImageUrl={form.og_image_url || form.cover_image_url || null}
+                        focusKeyword={form.focus_keyword}
+                      />
+
+                      {/* Google Previews (legacy side-by-side) */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
                           <p className="text-[10px] text-muted-foreground mb-2 font-bold uppercase tracking-wider flex items-center gap-1"><Globe className="w-3 h-3" /> Google AR</p>

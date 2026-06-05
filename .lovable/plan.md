@@ -91,6 +91,11 @@
 
 **أولوية القراءة:** `seo_title_*` المخصّص → `buildSeoTitle` التلقائي.
 
+### تقدّم المرحلة 3
+- ✅ `src/components/seo/SEOPreviewCard.tsx` — معاينة Google ثنائية اللغة + شريط طول العنوان/الوصف + تحذيرات OG/canonical/keyword.
+- ✅ مدمج في `src/pages/dashboard/DashboardBlog.tsx` (تبويب SEO) يقرأ من `meta_title_*` و `meta_description_*` و `og_image_url`.
+- ⏳ مدمج لاحقاً في `AdminBusinesses`, `AdminCategories`, `AdminBrands` بعد موافقة على الهجرة (تتطلب إضافة أعمدة `seo_title_*` / `seo_description_*` / `og_image` لجداول `businesses` / `categories` / `brands`).
+
 ---
 
 ## المرحلة 4 — JSON-LD / Canonical / Sitemap / noindex + اختبارات
