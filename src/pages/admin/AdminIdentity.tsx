@@ -407,7 +407,46 @@ const AdminIdentity: React.FC = () => {
           </div>
         </div>
 
-        {/* ─── Unified search ─── */}
+        {/* ─── Tab strip — Overview / Approvals / Directory ─── */}
+        <div className="flex flex-wrap gap-2 border-b border-border/40 pb-0" role="tablist" aria-label={isRTL ? 'أقسام المركز' : 'Center sections'}>
+          {([
+            { key: 'overview',  ar: 'النظرة العامة', en: 'Overview',  icon: LayoutDashboard },
+            { key: 'approvals', ar: 'صندوق الموافقات', en: 'Approvals Inbox', icon: Inbox, badge: pendingTotal },
+            { key: 'directory', ar: 'دليل وبحث',     en: 'Directory', icon: Search },
+          ] as Array<{ key: 'overview' | 'approvals' | 'directory'; ar: string; en: string; icon: React.ElementType; badge?: number }>).map((t) => {
+            const active = tab === t.key;
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.key}
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTabSafe(t.key)}
+                className={`relative inline-flex items-center gap-2 px-4 h-11 rounded-t-xl text-sm font-medium transition-colors border border-b-0 -mb-px ${
+                  active
+                    ? 'bg-card border-border text-foreground shadow-sm'
+                    : 'bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{isRTL ? t.ar : t.en}</span>
+                {typeof t.badge === 'number' && t.badge > 0 && (
+                  <span className={`tech-content rounded-full px-2 py-0.5 text-[10px] ${active ? 'bg-warning/15 text-warning' : 'bg-warning/10 text-warning'}`}>
+                    {t.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {tab === 'approvals' && (
+          <div className="pt-2">
+            <ApprovalsInbox />
+          </div>
+        )}
+
+        {tab === 'directory' && (
         <div className="relative">
           <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '14px' }} />
           <Input
@@ -427,6 +466,7 @@ const AdminIdentity: React.FC = () => {
             <Command className="w-2.5 h-2.5" />K
           </kbd>
         </div>
+        )}
 
         {/* ─── Live search results ─── */}
         {searchResults && (
