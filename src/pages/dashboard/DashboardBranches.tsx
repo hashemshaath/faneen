@@ -15,6 +15,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
 import {
   getOwnerBusiness,
+  listBusinessesByIds,
   listBusinessStaffByBusiness,
 } from '@/modules/businesses';
 import { listProfilesByUserIds } from '@/modules/users';
@@ -126,6 +127,18 @@ const DashboardBranches: React.FC = () => {
       const { data } = await getOwnerBusiness({ userId: user!.id, select: 'id' });
        
       return ((data as any)?.id ?? null) as string | null;
+    },
+  });
+
+  // Business username — required to build canonical /:username/:branch-slug links.
+  const { data: businessUsername } = useQuery({
+    queryKey: ['owner-business-username', businessId],
+    enabled: Boolean(businessId),
+    queryFn: async () => {
+      const { data } = await listBusinessesByIds<{ id: string; username: string | null }>({
+        ids: [businessId!], select: 'id, username',
+      });
+      return data?.[0]?.username ?? null;
     },
   });
 
@@ -344,6 +357,7 @@ const DashboardBranches: React.FC = () => {
             <BranchCard
               key={branch.id}
               branch={branch}
+              businessUsername={businessUsername ?? null}
               isExpanded={expandedId === branch.id}
               onToggle={() => setExpandedId(p => (p === branch.id ? null : branch.id))}
               onSetMain={() => handleSetMain(branch.id)}
