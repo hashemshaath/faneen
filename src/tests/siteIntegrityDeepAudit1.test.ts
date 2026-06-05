@@ -99,7 +99,11 @@ describe("SITE-INTEGRITY-DEEP-AUDIT-1", () => {
 
   it("no stale routes (/dashboard/business, /admin/help-center) referenced", () => {
     const offenders: string[] = [];
-    const re = /(\/dashboard\/business\b(?!-)|\/admin\/help-center\b)/;
+    // Flag navigation literals only (to=/href=/navigate) targeting the
+    // removed exact paths. Legacy-alias maps that intentionally list the
+    // old slug as a fallback (e.g. useVisibleModules MODULE_ROUTE_ALIASES,
+    // HelpLauncher pattern table, NBA card help links) are out of scope.
+    const re = /(?:to|href)=["']\/(?:dashboard\/business|admin\/help-center)["']|navigate\(["']\/(?:dashboard\/business|admin\/help-center)["']/;
     for (const f of productionFiles) {
       if (re.test(readFileSync(f, "utf8"))) offenders.push(relative(process.cwd(), f));
     }
