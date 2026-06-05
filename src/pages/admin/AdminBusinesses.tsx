@@ -2711,14 +2711,15 @@ const AdminBusinesses = () => {
                   className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
                     ${isSel ? 'border-accent ring-2 ring-accent/30' : (!biz.is_active ? 'opacity-60 border-destructive/40' : 'border-border/30 hover:border-primary/20')}`}
                   style={{ animationDelay: `${idx * 0.03}s` }}>
-                  <div className="p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <button onClick={() => toggleSelect(biz.id)} className="mt-1 text-muted-foreground hover:text-foreground" aria-label="select">
+                  <div className="p-3 sm:p-4">
+                    <div className="flex flex-col gap-3">
+                      {/* ── Identity row ── */}
+                      <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                        <button onClick={() => toggleSelect(biz.id)} className="mt-1 text-muted-foreground hover:text-foreground shrink-0" aria-label="select">
                           {isSel ? <CheckSquare className="w-4 h-4 text-accent" /> : <Square className="w-4 h-4" />}
                         </button>
-                        <div className="relative">
-                          <Avatar className="w-12 h-12 shrink-0 ring-2 ring-border/10">
+                        <div className="relative shrink-0">
+                          <Avatar className="w-11 h-11 sm:w-12 sm:h-12 ring-2 ring-border/10">
                             <AvatarImage src={biz.logo_url || undefined} />
                             <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
                               {biz.name_ar?.charAt(0)}
@@ -2732,7 +2733,7 @@ const AdminBusinesses = () => {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-heading font-bold text-sm truncate" dir="auto">
+                            <h3 className="font-heading font-bold text-sm sm:text-base leading-tight break-words min-w-0" dir="auto">
                               {language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}
                             </h3>
                             {!biz.is_active && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطل' : 'Disabled'}</Badge>}
@@ -2748,11 +2749,11 @@ const AdminBusinesses = () => {
                               </Badge>
                             )}
                           </div>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
                             <span className="text-[11px] text-muted-foreground tech-content">@{biz.username}</span>
                             <span className="text-[11px] text-muted-foreground tech-content">{biz.ref_id}</span>
-                            {biz.phone && <span className="flex items-center gap-1 text-[11px] text-muted-foreground tech-content" dir="ltr"><Phone className="w-3 h-3 shrink-0" />{biz.phone}</span>}
-                            {biz.email && <span className="flex items-center gap-1 text-[11px] text-muted-foreground tech-content truncate max-w-[200px]" dir="ltr"><Mail className="w-3 h-3 shrink-0" />{biz.email}</span>}
+                            {biz.phone && <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground tech-content" dir="ltr"><Phone className="w-3 h-3 shrink-0" />{biz.phone}</span>}
+                            {biz.email && <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground tech-content truncate max-w-[220px]" dir="ltr"><Mail className="w-3 h-3 shrink-0" />{biz.email}</span>}
                           </div>
                           <div className="flex flex-wrap items-center gap-1.5 mt-2">
                             <Badge className={`${tierInfo.color} text-[10px] border px-1.5 py-0`}>
@@ -2769,47 +2770,50 @@ const AdminBusinesses = () => {
                             )}
                           </div>
                         </div>
+                        {/* Quick view button — always visible top-corner */}
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-xl shrink-0" asChild title={isRTL ? 'عرض الملف' : 'View profile'}>
+                          <Link to={`/${biz.username}`}><Eye className="w-4 h-4" /></Link>
+                        </Button>
                       </div>
 
-                      <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
-                        <Select value={biz.membership_tier} onValueChange={tier => tierMutation.mutate({ id: biz.id, tier: tier as MembershipTier })}>
-                          <SelectTrigger className="h-8 text-xs w-28 border-dashed rounded-xl"><SelectValue /></SelectTrigger>
-                          <SelectContent className="rounded-xl">
-                            {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                      {/* ── Actions row ── full-width, scrolls on mobile */}
+                      <div className="-mx-1 px-1 pt-2 border-t border-border/30 overflow-x-auto no-scrollbar">
+                        <div className="flex items-center gap-1.5 min-w-max">
+                          <Select value={biz.membership_tier} onValueChange={tier => tierMutation.mutate({ id: biz.id, tier: tier as MembershipTier })}>
+                            <SelectTrigger className="h-8 text-xs w-28 border-dashed rounded-xl shrink-0"><SelectValue /></SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
 
-                        <Button variant={biz.is_verified ? 'default' : 'outline'} size="sm" className="h-8 text-xs gap-1.5 rounded-xl"
-                          onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_verified', value: !biz.is_verified })}>
-                          {biz.is_verified ? <CheckCircle className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
-                          {biz.is_verified ? (isRTL ? 'موثق' : 'Verified') : (isRTL ? 'توثيق' : 'Verify')}
-                        </Button>
+                          <Button variant={biz.is_verified ? 'default' : 'outline'} size="sm" className="h-8 text-xs gap-1.5 rounded-xl shrink-0"
+                            onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_verified', value: !biz.is_verified })}>
+                            {biz.is_verified ? <CheckCircle className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
+                            <span className="hidden md:inline">{biz.is_verified ? (isRTL ? 'موثق' : 'Verified') : (isRTL ? 'توثيق' : 'Verify')}</span>
+                          </Button>
 
-                        <Button variant="outline" size="sm"
-                          className={`h-8 text-xs gap-1.5 rounded-xl ${!biz.is_active ? 'text-success border-success' : 'text-warning border-warning'}`}
-                          onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_active', value: !biz.is_active })}>
-                          {biz.is_active ? <Ban className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
-                          {biz.is_active ? (isRTL ? 'تعطيل' : 'Disable') : (isRTL ? 'تفعيل' : 'Enable')}
-                        </Button>
+                          <Button variant="outline" size="sm"
+                            className={`h-8 text-xs gap-1.5 rounded-xl shrink-0 ${!biz.is_active ? 'text-success border-success' : 'text-warning border-warning'}`}
+                            onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_active', value: !biz.is_active })}>
+                            {biz.is_active ? <Ban className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
+                            <span className="hidden md:inline">{biz.is_active ? (isRTL ? 'تعطيل' : 'Disable') : (isRTL ? 'تفعيل' : 'Enable')}</span>
+                          </Button>
 
-                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl"
-                          onClick={() => openServices(biz.id)}>
-                          <Package className="w-3 h-3" /> {isRTL ? 'خدمات' : 'Services'}
-                        </Button>
+                          <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl shrink-0"
+                            onClick={() => openServices(biz.id)} title={isRTL ? 'خدمات' : 'Services'}>
+                            <Package className="w-3 h-3" /> <span className="hidden md:inline">{isRTL ? 'خدمات' : 'Services'}</span>
+                          </Button>
 
-                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl" asChild>
-                          <Link to={`/admin/service-activations?businessId=${biz.id}`}>
-                            <ShieldCheck className="w-3 h-3" />{isRTL ? 'خدمات الجهة' : 'Activations'}
-                          </Link>
-                        </Button>
+                          <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl shrink-0" asChild title={isRTL ? 'خدمات الجهة' : 'Activations'}>
+                            <Link to={`/admin/service-activations?businessId=${biz.id}`}>
+                              <ShieldCheck className="w-3 h-3" /><span className="hidden lg:inline">{isRTL ? 'خدمات الجهة' : 'Activations'}</span>
+                            </Link>
+                          </Button>
 
-                        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl" onClick={() => openEdit(biz)}>
-                          <Edit className="w-3 h-3" />{isRTL ? 'تعديل' : 'Edit'}
-                        </Button>
-
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-xl" asChild>
-                          <Link to={`/${biz.username}`}><Eye className="w-3 h-3" /></Link>
-                        </Button>
+                          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl shrink-0 ms-auto" onClick={() => openEdit(biz)}>
+                            <Edit className="w-3 h-3" /><span className="hidden md:inline">{isRTL ? 'تعديل' : 'Edit'}</span>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
