@@ -709,7 +709,15 @@ const BranchDetail: React.FC = () => {
                 <div className="flex items-center gap-4">
                   {salesManager.avatar_url ? (
                      
-                    <img src={salesManager.avatar_url} alt="" loading="lazy" className="w-14 h-14 rounded-full object-cover border" />
+                    <img
+                      src={salesManager.avatar_url}
+                      alt={salesManager.full_name ?? ''}
+                      width={56}
+                      height={56}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-14 h-14 rounded-full object-cover border"
+                    />
                   ) : (
                     <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
                       {(salesManager.full_name ?? '?').slice(0,1)}
