@@ -2880,11 +2880,11 @@ const AdminBusinesses = () => {
               <AlertDialogDescription>
                 {verifyConfirm?.value
                   ? (isRTL
-                    ? `هل أنت متأكد من توثيق حساب «${verifyConfirm.name}»؟ سيتم منحه علامة التوثيق الرسمية.`
-                    : `Are you sure you want to verify «${verifyConfirm.name}»? This will grant the official verification badge.`)
+                    ? `هل أنت متأكد من توثيق حساب «${verifyConfirm?.name ?? ''}»؟ سيتم منحه علامة التوثيق الرسمية.`
+                    : `Are you sure you want to verify «${verifyConfirm?.name ?? ''}»? This will grant the official verification badge.`)
                   : (isRTL
-                    ? `هل أنت متأكد من إلغاء توثيق حساب «${verifyConfirm.name}»؟ ستُحذف علامة التوثيق الرسمية.`
-                    : `Are you sure you want to unverify «${verifyConfirm.name}»? The official verification badge will be removed.`)
+                    ? `هل أنت متأكد من إلغاء توثيق حساب «${verifyConfirm?.name ?? ''}»؟ ستُحذف علامة التوثيق الرسمية.`
+                    : `Are you sure you want to unverify «${verifyConfirm?.name ?? ''}»? The official verification badge will be removed.`)
                 }
               </AlertDialogDescription>
             </AlertDialogHeader>
