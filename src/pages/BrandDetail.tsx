@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 import {
   getBrandBySlug,
@@ -76,17 +77,8 @@ const BrandDetail: React.FC = () => {
     : '';
 
   usePageMeta({
-    title: brand
-      ? (isRTL
-          ? `${display} | العلامات التجارية في قِطاعات`
-          : `${display} | Brands on Qitaat`)
-      : (isRTL ? 'علامة تجارية | قِطاعات' : 'Brand | Qitaat'),
-    description: brand
-      ? (desc
-          || (isRTL
-              ? `استعرض الجهات المرتبطة بعلامة ${display} والخدمات والقطاعات التي تعمل بها ضمن منصة قِطاعات.`
-              : `Explore firms associated with the ${display} brand, their services and the sectors they operate in on Qitaat.`))
-      : (isRTL ? 'صفحة علامة تجارية معتمدة على قِطاعات.' : 'Approved brand on Qitaat.'),
+    title: buildSeoTitle({ kind: 'brand', lang: locale, name: display || undefined }),
+    description: buildSeoDescription({ kind: 'brand', lang: locale, name: display || undefined, rawDescription: desc || undefined }),
     canonical: brand?.slug ? `${SITE}/brands/${brand.slug}` : `${SITE}/brands`,
     ogType: 'website',
     ogImage: brand?.logo_url || undefined,
