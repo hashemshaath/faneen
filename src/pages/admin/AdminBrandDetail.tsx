@@ -274,6 +274,58 @@ const AdminBrandDetail: React.FC = () => {
             </CardContent>
           </Card>
 
+          {/* SEO */}
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Globe className="w-4 h-4" />SEO</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <SEOPreviewCard
+                kind="brand"
+                customTitleAr={seoForm.seo_title_ar}
+                customTitleEn={seoForm.seo_title_en}
+                customDescriptionAr={seoForm.seo_description_ar}
+                customDescriptionEn={seoForm.seo_description_en}
+                name={locale === 'ar' ? brand.name_ar : (brand.name_en ?? brand.name_ar)}
+                rawDescription={locale === 'ar' ? brand.description_ar : brand.description_en}
+                url={brand.slug ? `https://qitaat.com/brands/${brand.slug}` : null}
+                ogImageUrl={seoForm.og_image_url || brand.logo_url}
+                focusKeyword={seoForm.brand_keywords.split(',').map(k => k.trim()).filter(Boolean)[0] ?? null}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                  <Input value={seoForm.seo_title_ar} onChange={(e) => setSeoForm(f => ({ ...f, seo_title_ar: e.target.value }))} className="mt-1" dir="auto" />
+                </div>
+                <div>
+                  <Label className="text-xs">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                  <Input value={seoForm.seo_title_en} onChange={(e) => setSeoForm(f => ({ ...f, seo_title_en: e.target.value }))} className="mt-1" dir="ltr" />
+                </div>
+                <div>
+                  <Label className="text-xs">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                  <Textarea value={seoForm.seo_description_ar} onChange={(e) => setSeoForm(f => ({ ...f, seo_description_ar: e.target.value }))} rows={2} className="mt-1" dir="auto" />
+                </div>
+                <div>
+                  <Label className="text-xs">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                  <Textarea value={seoForm.seo_description_en} onChange={(e) => setSeoForm(f => ({ ...f, seo_description_en: e.target.value }))} rows={2} className="mt-1" dir="ltr" />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">{isRTL ? 'كلمات العلامة' : 'Brand keywords'}</Label>
+                <Input value={seoForm.brand_keywords} onChange={(e) => setSeoForm(f => ({ ...f, brand_keywords: e.target.value }))} className="mt-1" dir="auto" />
+              </div>
+              <div>
+                <Label className="text-xs mb-2 block">{isRTL ? 'صورة OG' : 'OG image'}</Label>
+                <ImageUpload bucket="brand-assets" value={seoForm.og_image_url}
+                  onChange={(url) => setSeoForm(f => ({ ...f, og_image_url: url || '' }))}
+                  onRemove={() => setSeoForm(f => ({ ...f, og_image_url: '' }))}
+                  placeholder={isRTL ? 'رفع صورة المشاركة' : 'Upload share image'} />
+              </div>
+              <Button onClick={() => saveSeo.mutate()} disabled={saveSeo.isPending} className="w-full gap-2">
+                {saveSeo.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {isRTL ? 'حفظ SEO' : 'Save SEO'}
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Manufacturing countries */}
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-base">{isRTL ? 'دول التصنيع' : 'Manufacturing countries'}</CardTitle></CardHeader>
