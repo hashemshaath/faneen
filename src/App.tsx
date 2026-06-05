@@ -235,6 +235,7 @@ const DashboardContractsHub = lazyRetry(() => import("./pages/dashboard/Dashboar
 const DashboardLoyaltyHub = lazyRetry(() => import("./pages/dashboard/DashboardLoyaltyHub"));
 const DashboardStaffHub = lazyRetry(() => import("./pages/dashboard/DashboardStaffHub"));
 const AdminOperationsHub = lazyRetry(() => import("./pages/admin/AdminOperationsHub"));
+const AdminOperationsCenterUnified = lazyRetry(() => import("./pages/admin/AdminOperationsCenterUnified"));
 const AdminReportsHub = lazyRetry(() => import("./pages/admin/AdminReportsHub"));
 const AdminEmailHub = lazyRetry(() => import("./pages/admin/AdminEmailHub"));
 const AdminSeoHub = lazyRetry(() => import("./pages/admin/AdminSeoHub"));
