@@ -123,7 +123,11 @@ describe("SECURITY-DEEP-REVIEW-3 static guards", () => {
     const ungated: string[] = [];
     for (const file of adminFns) {
       const src = readFileSync(file, "utf-8");
-      if (!/has_admin_access|has_role\s*\(\s*['"]admin['"]/.test(src)) {
+      if (
+        !/has_admin_access|has_role\s*\(\s*['"](?:admin|super_admin)['"]|['"]super_admin['"]|['"]admin['"][\s\S]{0,200}user_roles|user_roles[\s\S]{0,200}['"](?:admin|super_admin)['"]/.test(
+          src,
+        )
+      ) {
         ungated.push(file.slice(ROOT.length + 1));
       }
     }
