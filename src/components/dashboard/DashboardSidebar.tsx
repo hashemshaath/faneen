@@ -245,10 +245,10 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'مركز الحسابات', en: 'Account Center' }, url: '/admin/identity', icon: Users, end: true },
       // Unified approvals — single entry point for every pending approval
       { label: { ar: 'مركز الموافقات', en: 'Approvals Center' }, url: '/admin/approvals', icon: CheckCircle2 },
-      // Entities (direct CRUD page)
-      { label: { ar: 'المنشآت والكيانات', en: 'Businesses & Entities' }, url: '/admin/businesses', icon: Building2 },
-      // Access lifecycle
-      { label: { ar: 'طلبات الانضمام', en: 'Access Requests' }, url: '/admin/entity-access-requests', icon: UserPlus },
+      // NOTE: `/admin/businesses` and `/admin/entity-access-requests` are
+      // intentionally hidden from the sidebar. Both are fully merged into
+      // the Approvals Center above (unified filterable list). They remain
+      // reachable as deep-link CRUD targets from row actions and search.
       { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: Shield, superAdminOnly: true },
       { label: { ar: 'إظهار الأنظمة', en: 'System Access' }, url: '/admin/system-access', icon: Layers },
       // Provider operations
