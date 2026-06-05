@@ -465,6 +465,7 @@ const BranchCard: React.FC<BranchCardProps> = ({
 
 interface BranchEditorProps {
   branch: BranchRow;
+  businessUsername: string | null;
   staffOptions: Array<{ staffId: string; label: string; phone: string | null; role: string }>;
   services: ServiceLite[];
   promotions: PromotionLite[];
@@ -473,7 +474,7 @@ interface BranchEditorProps {
 }
 
 const BranchEditor: React.FC<BranchEditorProps> = ({
-  branch, staffOptions, services, promotions, isRTL, onSaved,
+  branch, businessUsername, staffOptions, services, promotions, isRTL, onSaved,
 }) => {
   const qc = useQueryClient();
   const [form, setForm] = useState<BranchRow>(branch);
@@ -755,9 +756,9 @@ const BranchEditor: React.FC<BranchEditorProps> = ({
       {/* Save bar */}
       <div className="flex items-center justify-between gap-3 mt-6 pt-4 border-t border-border/60">
         <div className="text-xs text-muted-foreground flex items-center gap-2">
-          {branch.slug && (
+          {branch.slug && businessUsername && (
             <Link
-              to={`/branch/${branch.slug}`}
+              to={`/${businessUsername}/${branch.slug}`}
               target="_blank"
               rel="noopener"
               className="hover:text-primary inline-flex items-center gap-1"
