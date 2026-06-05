@@ -44,6 +44,7 @@ import {
   ChevronDown,
   CheckCircle2,
   Sparkles,
+  Plug,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -316,6 +317,7 @@ const adminBaseGroups: MenuGroup[] = [
     icon: Cog,
     items: [
       { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: Cog, superAdminOnly: true },
+      { label: { ar: 'صحة التكاملات', en: 'Integrations Health' }, url: '/admin/integrations', icon: Plug, superAdminOnly: true },
     ],
   },
   {
