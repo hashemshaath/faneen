@@ -492,6 +492,8 @@ const AppRoutes = () => (
           {/* NAVIGATION-CONSOLIDATION-1 group 9 — Operations hub. */}
           <Route path="/admin/operations" element={<ProtectedRoute requireAdmin><AdminOperationsHub /></ProtectedRoute>} />
           <Route path="/admin/operations/console" element={<ProtectedRoute requireAdmin><Navigate to="/admin/operations?tab=console" replace /></ProtectedRoute>} />
+          {/* OPERATIONS-CENTER-UNIFICATION-1 — unified read-only routing hub. */}
+          <Route path="/admin/operations-center" element={<ProtectedRoute requireAdmin><AdminOperationsCenterUnified /></ProtectedRoute>} />
          <Route path="/admin/ref/triage" element={<ProtectedRoute requireAdmin><AdminBulkReferenceTriage /></ProtectedRoute>} />
          <Route path="/admin/ref/:refId" element={<ProtectedRoute requireAdmin><AdminReferenceInspector /></ProtectedRoute>} />
           <Route path="/admin/analytics-settings" element={<ProtectedRoute requireAdmin><Navigate to="/admin/system-settings?tab=analytics" replace /></ProtectedRoute>} />
