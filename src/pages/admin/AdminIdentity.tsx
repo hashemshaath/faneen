@@ -377,24 +377,58 @@ const AdminIdentity: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="mx-auto w-full max-w-7xl space-y-6 md:space-y-8 pb-12 px-1 sm:px-0">
-        {/* ─── Header — compact title + primary actions ─── */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="hidden sm:flex w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 items-center justify-center shrink-0">
-              <Users className="w-5 h-5 text-primary" />
+        {/* ─── Hero header — premium gradient banner with primary actions ─── */}
+        <section
+          aria-label={isRTL ? 'مركز الحسابات' : 'Accounts hub'}
+          className="relative overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br from-card via-card to-muted/40 p-5 md:p-7 shadow-[var(--elev-1)]"
+        >
+          {/* decorative blobs */}
+          <div className="pointer-events-none absolute -top-24 -end-24 h-64 w-64 rounded-full bg-gradient-to-br from-primary/20 via-accent/10 to-transparent blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -start-24 h-64 w-64 rounded-full bg-gradient-to-tr from-info/15 via-success/5 to-transparent blur-3xl" />
+
+          <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-4 min-w-0">
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary to-accent blur-md opacity-50" aria-hidden />
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary to-accent text-white shadow-lg ring-1 ring-white/10">
+                  <Users className="h-6 w-6" />
+                </div>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80 mb-1">
+                  {isRTL ? 'لوحة الإدارة' : 'Admin'}
+                </p>
+                <h1 className="text-xl md:text-3xl font-bold font-heading leading-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  {isRTL ? 'مركز الحسابات والموافقات' : 'Accounts & Approvals'}
+                </h1>
+                <p className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-relaxed line-clamp-2 max-w-prose">
+                  {isRTL
+                    ? 'سطح موحّد للحسابات والمنشآت والموافقات — نظرة عامة، صندوق، ودليل.'
+                    : 'Unified surface for accounts, businesses, and approvals — overview, inbox, and directory.'}
+                </p>
+                {/* inline mini-stats */}
+                {!isLoading && (
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px]">
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                      {isRTL ? `${kpis.totalUsers.toLocaleString('ar-SA')} حساب` : `${kpis.totalUsers.toLocaleString()} accounts`}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <Building2 className="w-3 h-3 text-success" />
+                      {isRTL ? `${kpis.totalBusinesses.toLocaleString('ar-SA')} منشأة` : `${kpis.totalBusinesses.toLocaleString()} businesses`}
+                    </span>
+                    {pendingTotal > 0 && (
+                      <Link to="/admin/identity?tab=workspace" onClick={() => setTabSafe('workspace')}
+                        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-warning/10 text-warning font-semibold ring-1 ring-warning/30 hover:bg-warning/20 transition-colors">
+                        <Inbox className="w-3 h-3" />
+                        {isRTL ? `${pendingTotal} بانتظار المراجعة` : `${pendingTotal} pending review`}
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="min-w-0">
-              <h1 className="text-lg md:text-2xl font-bold font-heading leading-tight">
-                {isRTL ? 'مركز الحسابات والموافقات' : 'Accounts & Approvals'}
-              </h1>
-              <p className="text-[11px] md:text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">
-                {isRTL
-                  ? 'سطح موحّد للحسابات والمنشآت والموافقات — نظرة عامة، صندوق، ودليل.'
-                  : 'Unified surface for accounts, businesses, and approvals — overview, inbox, and directory.'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
+            <div className="flex items-center gap-2 flex-wrap md:flex-nowrap shrink-0">
             <Button
               type="button" variant="outline" size="sm" className="rounded-xl gap-1.5 h-10"
               onClick={refreshAll} disabled={isLoading}
@@ -410,7 +444,7 @@ const AdminIdentity: React.FC = () => {
                     <span className="hidden sm:inline">{isRTL ? 'مستخدم' : 'User'}</span>
                   </Link>
                 </Button>
-                <Button asChild size="sm" className="rounded-xl gap-1.5 h-10">
+                <Button asChild size="sm" className="rounded-xl gap-1.5 h-10 bg-gradient-to-br from-primary to-accent text-white shadow-md hover:shadow-lg hover:opacity-95 transition-all">
                   <Link to="/admin/businesses">
                     <Plus className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">{isRTL ? 'منشأة' : 'Business'}</span>
@@ -418,8 +452,9 @@ const AdminIdentity: React.FC = () => {
                 </Button>
               </>
             )}
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* ─── Unified Command Search — always visible, hero-style ─── */}
         <div className="relative">
