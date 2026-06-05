@@ -67,7 +67,7 @@
 - ✅ `src/pages/help/HelpCenterHome.tsx`
 - ✅ `src/pages/help/HelpCategoryPage.tsx`
 - ✅ `src/pages/help/HelpArticlePage.tsx`
-- ⏳ متبقّي اختياري: `BrandsCatalog`, `SectorSeoLanding`, صفحات legacy.
+- ✅ `src/pages/BrandsCatalog.tsx` و `src/pages/SectorSeoLanding.tsx` تمّت ترحيلهما إلى `useSeoPage` مع الإبقاء على JSON-LD المخصّص.
 
 تحديث المحرّك: `withSite` يتعرّف الآن على `قِطاعات` (بـ كسرة) كي لا يضاعف لاحقة الموقع للعناوين المخصصة القائمة.
 

@@ -22,7 +22,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 
 import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { useSeoPage } from '@/modules/seo/useSeoPage';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 import { listApprovedBrands, listSectorsLite } from '@/modules/brands';
 
@@ -35,15 +35,6 @@ const BrandsCatalog: React.FC = () => {
   const [sectorId, setSectorId] = useState<string>(ALL);
   const [country, setCountry] = useState<string>(ALL);
   const [verifiedOnly, setVerifiedOnly] = useState<string>(ALL);
-
-  usePageMeta({
-    title: isRTL ? 'سجل العلامات التجارية الصناعية' : 'Industrial Brands Registry',
-    description: isRTL
-      ? 'استكشف العلامات التجارية الصناعية المعتمدة في قِطاعات: ألمنيوم، زجاج، حديد، أخشاب وأكثر.'
-      : 'Browse approved industrial brands on Qitaat — aluminium, glass, steel, wood, and more.',
-    canonical: `${SITE}/brands`,
-    ogType: 'website',
-  });
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['brands-sectors-lite'],
@@ -81,8 +72,18 @@ const BrandsCatalog: React.FC = () => {
     return Array.from(set.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [brands, isRTL]);
 
-  useMultiJsonLd([
-    buildBreadcrumbList(
+  useSeoPage({
+    kind: 'brand',
+    lang: isRTL ? 'ar' : 'en',
+    name: isRTL ? 'سجل العلامات التجارية الصناعية' : 'Industrial Brands Registry',
+    customTitle: isRTL ? 'سجل العلامات التجارية الصناعية' : 'Industrial Brands Registry',
+    rawDescription: isRTL
+      ? 'استكشف العلامات التجارية الصناعية المعتمدة في قِطاعات: ألمنيوم، زجاج، حديد، أخشاب وأكثر.'
+      : 'Browse approved industrial brands on Qitaat — aluminium, glass, steel, wood, and more.',
+    canonical: `${SITE}/brands`,
+    ogType: 'website',
+    jsonLd: [
+      buildBreadcrumbList(
       [{ name: isRTL ? 'العلامات التجارية' : 'Brands', url: '/brands' }],
       { homeName: isRTL ? 'الرئيسية' : 'Home', id: `${SITE}/brands#breadcrumb` },
     )!,
@@ -97,7 +98,7 @@ const BrandsCatalog: React.FC = () => {
     // `filtered` is sourced from listApprovedBrands → brands_public view, so
     // pending / rejected / archived / merged brands are never enumerated.
     ...(filtered.length > 0
-      ? [{
+        ? [{
           '@context': 'https://schema.org',
           '@type': 'ItemList',
           '@id': `${SITE}/brands#brands`,
@@ -112,8 +113,9 @@ const BrandsCatalog: React.FC = () => {
               name: (isRTL ? b.name_ar : (b.name_en || b.name_ar)) || b.name_ar,
             })),
         }]
-      : []),
-  ]);
+        : []),
+    ],
+  });
 
   return (
     <div className="min-h-screen flex flex-col">
