@@ -1412,7 +1412,7 @@ const AdminBusinesses = () => {
         )}
 
         {/* ─── Filters ─── */}
-        <BusinessFiltersToolbar
+        {!panelOpen && <BusinessFiltersToolbar
           searchInputRef={searchRef}
           searchInput={searchInput}
           search={search}
@@ -1433,9 +1433,9 @@ const AdminBusinesses = () => {
           isRTL={isRTL}
           resultsCount={filtered.length}
           onClearAll={() => { setSearchInput(''); setSearchParams(new URLSearchParams(), { replace: false }); }}
-        />
+        />}
 
-        <BusinessBulkActionBar
+        {!panelOpen && <BusinessBulkActionBar
           count={selected.size}
           language={language === 'ar' ? 'ar' : 'en'}
           isRTL={isRTL}
@@ -1462,7 +1462,7 @@ const AdminBusinesses = () => {
             clearSelected();
           }}
           onClear={clearSelected}
-        />
+        />}
 
         {/* ─── Inline Create Panel ─── */}
         {creatingBiz && (
