@@ -141,12 +141,15 @@ const AdminIdentity: React.FC = () => {
   const [, startTransition] = useTransition();
   const queryClient = useQueryClient();
 
-  // Tabs: overview | approvals | directory  (query-string controlled)
-  type TabKey = 'overview' | 'approvals' | 'directory' | 'audit';
-  const initialTab = (searchParams.get('tab') as TabKey) || 'overview';
-  const [tab, setTab] = useState<TabKey>(
-    ['overview', 'approvals', 'directory', 'audit'].includes(initialTab) ? initialTab : 'overview',
-  );
+  // Tabs: overview | workspace (merged approvals+directory) | audit
+  type TabKey = 'overview' | 'workspace' | 'audit';
+  // Legacy keys ('approvals', 'directory') redirect to the unified workspace.
+  const rawTab = searchParams.get('tab');
+  const initialTab: TabKey =
+    rawTab === 'overview' || rawTab === 'audit' ? rawTab
+    : rawTab === 'workspace' || rawTab === 'approvals' || rawTab === 'directory' ? 'workspace'
+    : 'overview';
+  const [tab, setTab] = useState<TabKey>(initialTab);
   const setTabSafe = useCallback((next: TabKey) => {
     setTab(next);
     const sp = new URLSearchParams(searchParams);
@@ -420,12 +423,11 @@ const AdminIdentity: React.FC = () => {
           </div>
         </div>
 
-        {/* ─── Tab strip — Overview / Approvals / Directory ─── */}
+        {/* ─── Tab strip — Overview / Workspace (Approvals+Directory) / Audit ─── */}
         <div className="flex flex-wrap gap-2 border-b border-border/40 pb-0" role="tablist" aria-label={isRTL ? 'أقسام المركز' : 'Center sections'}>
           {([
             { key: 'overview',  ar: 'النظرة العامة', en: 'Overview',  icon: LayoutDashboard },
-            { key: 'approvals', ar: 'صندوق الموافقات', en: 'Approvals Inbox', icon: Inbox, badge: pendingTotal },
-            { key: 'directory', ar: 'دليل وبحث',     en: 'Directory', icon: Search },
+            { key: 'workspace', ar: 'سطح العمل — موافقات ودليل', en: 'Workspace — Approvals & Directory', icon: Inbox, badge: pendingTotal },
             { key: 'audit',     ar: 'سجل العمليات',  en: 'Audit Log', icon: FileText },
           ] as Array<{ key: TabKey; ar: string; en: string; icon: React.ElementType; badge?: number }>).map((t) => {
             const active = tab === t.key;
@@ -463,11 +465,9 @@ const AdminIdentity: React.FC = () => {
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={
-                tab === 'approvals'
-                  ? (isRTL ? 'بحث في صندوق الموافقات: اسم، مرجع، اسم مستخدم…' : 'Search approvals: name, ref, username…')
-                : tab === 'audit'
+                tab === 'audit'
                   ? (isRTL ? 'بحث في السجل: مسؤول، إجراء، كيان…' : 'Search audit: actor, action, entity…')
-                  : (isRTL ? 'بحث موحّد: اسم، بريد، هاتف، USR-… أو BIZ-…' : 'Unified search: name, email, phone, USR-… or BIZ-…')
+                  : (isRTL ? 'بحث موحّد: اسم، بريد، هاتف، USR-… BIZ-… أو موافقات معلّقة' : 'Unified: name, email, phone, USR-… BIZ-… or pending approvals')
               }
               className="ps-11 pe-20 h-12 rounded-2xl bg-card border-border/40 focus:bg-background"
               dir="auto"
@@ -481,24 +481,18 @@ const AdminIdentity: React.FC = () => {
           </div>
         )}
 
-        {tab === 'approvals' && (
-          <div className="pt-2">
-            <ApprovalsInbox externalSearch={deferredSearch} />
-          </div>
-        )}
-
         {tab === 'audit' && (
           <div className="pt-2">
             <AdminActivityLog externalSearch={deferredSearch} />
           </div>
         )}
 
-        {/* ─── Live search results ─── */}
-        {tab === 'directory' && searchResults && (
+        {/* ─── Workspace: live directory results + approvals inbox stacked ─── */}
+        {tab === 'workspace' && searchResults && (
           <div className="rounded-2xl border border-accent/30 bg-accent/5 p-4 animate-in slide-in-from-top-1 duration-200">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-bold text-muted-foreground">
-                {isRTL ? 'نتائج البحث الموحّد' : 'Unified search results'}
+                {isRTL ? 'نتائج الدليل (مستخدمون ومنشآت)' : 'Directory results (users & businesses)'}
               </p>
               <button onClick={() => handleSearchChange('')} className="text-[11px] text-muted-foreground hover:text-foreground">
                 {isRTL ? 'مسح' : 'Clear'}
@@ -554,6 +548,26 @@ const AdminIdentity: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {tab === 'workspace' && (
+          <div className="pt-2">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-heading font-bold text-sm flex items-center gap-2">
+                <Inbox className="w-4 h-4 text-warning" />
+                {isRTL ? 'صندوق الموافقات' : 'Approvals inbox'}
+                {pendingTotal > 0 && (
+                  <Badge className="bg-warning/15 text-warning border-warning/30 text-[10px] px-1.5 py-0">
+                    {pendingTotal}
+                  </Badge>
+                )}
+              </h2>
+              <p className="text-[11px] text-muted-foreground hidden sm:block">
+                {isRTL ? 'الفلاتر، التحديد المتعدد، وتغيير الحالة — كلها في الأسفل' : 'Filters, multi-select, and status changes below'}
+              </p>
+            </div>
+            <ApprovalsInbox externalSearch={deferredSearch} />
           </div>
         )}
 
