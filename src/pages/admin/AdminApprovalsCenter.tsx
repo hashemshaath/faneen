@@ -325,7 +325,7 @@ const AdminApprovalsCenter: React.FC = () => {
                 key={c.key}
                 onClick={() => setCategory(c.key)}
                 className={`group inline-flex items-center gap-2 rounded-xl border px-3.5 h-10 text-sm transition-all hover-lift ${
-                  active ? 'bg-primary text-primary-foreground border-primary shadow-elev-1' : 'bg-card border-border hover:border-primary/40'
+                  active ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-card border-border hover:border-primary/40'
                 }`}
               >
                 <span className="font-medium">{isRTL ? c.ar : c.en}</span>
@@ -340,7 +340,7 @@ const AdminApprovalsCenter: React.FC = () => {
         </div>
 
         {/* Filter bar */}
-        <div className="rounded-2xl border bg-card p-3 md:p-4 shadow-elev-1">
+        <div className="rounded-2xl border bg-card p-3 md:p-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[220px]">
               <Search className={`h-4 w-4 absolute top-1/2 -translate-y-1/2 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
