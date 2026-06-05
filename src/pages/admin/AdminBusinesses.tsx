@@ -329,6 +329,7 @@ const AdminBusinesses = () => {
   const [branchForm, setBranchForm] = useState<any | null>(null);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [verifyConfirm, setVerifyConfirm] = useState<{ id: string; name: string; value: boolean } | null>(null);
 
   const setField = useCallback((key: string, value: string | number | boolean | null) => {
     setEditForm((f) => ({ ...f, [key]: value }));
