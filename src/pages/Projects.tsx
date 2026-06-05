@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, SITE_URL } from '@/lib/seo/structured-data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
@@ -41,8 +42,8 @@ const ProjectSkeleton = () => (
 const Projects = () => {
   const { isRTL, language } = useLanguage();
   usePageMeta({
-    title: language === 'ar' ? 'المشاريع - معرض أعمال الألمنيوم والحديد | قِطاعات' : 'Projects - Aluminum & Iron Portfolio | Qitaat',
-    description: language === 'ar' ? 'تصفح مشاريع وأعمال مصانع ومحلات الألمنيوم والحديد والزجاج والخشب.' : 'Browse aluminum, iron, glass and wood projects and portfolios.',
+    title: buildSeoTitle({ kind: 'project', lang: language === 'ar' ? 'ar' : 'en', name: language === 'ar' ? 'المشاريع - معرض أعمال الألمنيوم والحديد' : 'Projects - Aluminum & Iron Portfolio' }),
+    description: buildSeoDescription({ kind: 'project', lang: language === 'ar' ? 'ar' : 'en', customDescription: language === 'ar' ? 'تصفح مشاريع وأعمال مصانع ومحلات الألمنيوم والحديد والزجاج والخشب.' : 'Browse aluminum, iron, glass and wood projects and portfolios.' }),
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
