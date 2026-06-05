@@ -43,6 +43,7 @@ export interface SeoInputs {
 }
 
 export const SITE_NAME_AR = 'قطاعات';
+export const SITE_NAME_AR_DIACRITIC = 'قِطاعات';
 export const SITE_NAME_EN = 'Qitaat';
 export const COUNTRY_AR = 'السعودية';
 export const COUNTRY_EN = 'Saudi Arabia';
@@ -90,7 +91,11 @@ function siteSuffix(lang: Lang): string {
 function withSite(title: string, lang: Lang): string {
   const trimmed = title.trim();
   if (!trimmed) return lang === 'ar' ? SITE_NAME_AR : SITE_NAME_EN;
-  if (trimmed.includes(SITE_NAME_AR) || trimmed.includes(SITE_NAME_EN)) {
+  if (
+    trimmed.includes(SITE_NAME_AR) ||
+    trimmed.includes(SITE_NAME_AR_DIACRITIC) ||
+    trimmed.includes(SITE_NAME_EN)
+  ) {
     return truncate(trimmed, TITLE_MAX);
   }
   // Budget the prefix so the final length stays within TITLE_MAX.
