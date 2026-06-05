@@ -457,8 +457,9 @@ const AdminIdentity: React.FC = () => {
         </section>
 
         {/* ─── Unified Command Search — always visible, hero-style ─── */}
-        <div className="relative">
-          <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" style={{ insetInlineStart: '16px' }} />
+        <div className="relative group/search">
+          <div className="pointer-events-none absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary/40 via-accent/30 to-info/40 opacity-0 blur-md group-focus-within/search:opacity-60 transition-opacity duration-500" aria-hidden />
+          <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5 z-10" style={{ insetInlineStart: '16px' }} />
           <Input
             ref={searchRef}
             value={searchTerm}
@@ -468,18 +469,18 @@ const AdminIdentity: React.FC = () => {
                 ? (isRTL ? 'بحث في السجل: مسؤول، إجراء، كيان…' : 'Search audit: actor, action, entity…')
                 : (isRTL ? 'بحث موحّد: اسم المنشأة، البريد، الهاتف، USR-… أو BIZ-…' : 'Unified: business name, email, phone, USR-… or BIZ-…')
             }
-            className="ps-12 pe-24 h-14 rounded-2xl bg-card border-border/60 shadow-sm focus-visible:ring-2 focus-visible:ring-primary/30 text-sm md:text-base"
+            className="relative ps-12 pe-24 h-14 rounded-2xl bg-card border-border/60 shadow-sm focus-visible:ring-2 focus-visible:ring-primary/30 text-sm md:text-base"
             dir="auto"
             onFocus={() => { if (tab === 'overview') setTabSafe('workspace'); }}
           />
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
-            className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 rounded-md border border-border/40 bg-muted/40 hover:bg-muted text-[10px] text-muted-foreground font-mono transition-colors"
+            className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 z-10 items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border/50 bg-muted/60 hover:bg-muted hover:border-primary/40 text-[10px] text-muted-foreground hover:text-foreground font-mono transition-all"
             style={{ insetInlineEnd: '14px' }}
             aria-label={isRTL ? 'فتح لوحة الأوامر' : 'Open command palette'}
           >
-            <Command className="w-2.5 h-2.5" />K
+            <Command className="w-3 h-3" />K
           </button>
         </div>
 
