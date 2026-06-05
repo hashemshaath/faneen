@@ -58,7 +58,7 @@ export async function loadCatalogServices(opts: { limit?: number } = {}) {
     .eq('is_demo', false)
     .order('updated_at', { ascending: false })
     .limit(limit);
-  return { rows: (data ?? []) as CatalogServiceRow[], error };
+  return { rows: (data ?? []) as unknown as CatalogServiceRow[], error };
 }
 
 export async function loadServiceBrandCounts(serviceIds: string[]) {
