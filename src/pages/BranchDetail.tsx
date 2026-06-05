@@ -15,6 +15,8 @@ import {
   listBranchPromotionIds,
   listServicesByBusiness,
 } from '@/modules/catalog';
+import { listBusinessesByIds } from '@/modules/businesses';
+import { listProfilesByUserIds } from '@/modules/users';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -90,12 +92,11 @@ const BranchDetail: React.FC = () => {
     queryKey: ['public-branch-business', branch?.business_id],
     enabled: Boolean(branch?.business_id),
     queryFn: async () => {
-      const { data } = await supabase
-        .from('businesses')
-        .select('id, username, name_ar, name_en, logo_url')
-        .eq('id', branch!.business_id)
-        .maybeSingle();
-      return data as unknown as BusinessLite | null;
+      const { data } = await listBusinessesByIds<BusinessLite>({
+        ids: [branch!.business_id],
+        select: 'id, username, name_ar, name_en, logo_url',
+      });
+      return (data?.[0] ?? null) as BusinessLite | null;
     },
   });
 
@@ -110,12 +111,13 @@ const BranchDetail: React.FC = () => {
         .eq('id', branch!.sales_manager_staff_id!)
         .maybeSingle();
       if (!staff) return null;
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone, email, avatar_url')
-        .eq('id', (staff as { user_id: string }).user_id)
-        .maybeSingle();
-      return profile as { full_name: string | null; phone: string | null; email: string | null; avatar_url: string | null } | null;
+      const uid = (staff as { user_id: string }).user_id;
+      const { data: profiles } = await listProfilesByUserIds<{
+        user_id: string; full_name: string | null; phone: string | null;
+        email: string | null; avatar_url: string | null;
+      }>({ userIds: [uid], select: 'user_id, full_name, phone, email, avatar_url' });
+      const p = profiles?.[0];
+      return p ? { full_name: p.full_name, phone: p.phone, email: p.email, avatar_url: p.avatar_url } : null;
     },
   });
 
