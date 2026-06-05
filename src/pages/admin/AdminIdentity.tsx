@@ -364,14 +364,24 @@ const AdminIdentity: React.FC = () => {
   ];
 
   const toneRing: Record<string, string> = {
-    info: 'hover:border-info/50 hover:bg-info/5',
-    success: 'hover:border-success/50 hover:bg-success/5',
-    warning: 'hover:border-warning/50 hover:bg-warning/5',
-    accent: 'hover:border-accent/50 hover:bg-accent/5',
-    primary: 'hover:border-primary/50 hover:bg-primary/5',
+    info:    'hover:border-info/60 hover:shadow-[0_10px_30px_-15px_hsl(var(--info)/0.4)]',
+    success: 'hover:border-success/60 hover:shadow-[0_10px_30px_-15px_hsl(var(--success)/0.4)]',
+    warning: 'hover:border-warning/60 hover:shadow-[0_10px_30px_-15px_hsl(var(--warning)/0.4)]',
+    accent:  'hover:border-accent/60 hover:shadow-[0_10px_30px_-15px_hsl(var(--accent)/0.4)]',
+    primary: 'hover:border-primary/60 hover:shadow-[0_10px_30px_-15px_hsl(var(--primary)/0.4)]',
   };
   const toneText: Record<string, string> = {
     info: 'text-info', success: 'text-success', warning: 'text-warning', accent: 'text-accent', primary: 'text-primary',
+  };
+  const toneBg: Record<string, string> = {
+    info: 'bg-info/10 ring-info/20', success: 'bg-success/10 ring-success/20',
+    warning: 'bg-warning/10 ring-warning/20', accent: 'bg-accent/10 ring-accent/20',
+    primary: 'bg-primary/10 ring-primary/20',
+  };
+  const toneGrad: Record<string, string> = {
+    info: 'from-info/10 to-transparent', success: 'from-success/10 to-transparent',
+    warning: 'from-warning/10 to-transparent', accent: 'from-accent/10 to-transparent',
+    primary: 'from-primary/10 to-transparent',
   };
 
   return (
