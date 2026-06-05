@@ -10,6 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -22,6 +28,7 @@ import {
   listPendingUsernameBusinesses,
 } from '@/modules/businesses/services/listPendingApprovalBusinesses';
 import { getReviewer } from '@/pages/admin/approvalsCenter/categoryReviewers';
+import { runBulkReview } from '@/pages/admin/approvalsCenter/bulkReview';
 
 /**
  * ApprovalsInbox — extracted, layout-free unified approvals list.
@@ -163,19 +170,40 @@ async function fetchSubscriptions(): Promise<UnifiedItem[]> {
 export interface ApprovalsInboxProps {
   /** Compact mode hides the secondary text helper at the bottom of the filter bar. */
   compact?: boolean;
+  /** When provided, overrides the internal search box (unified tab search). */
+  externalSearch?: string;
 }
 
-export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false }) => {
+const FILTERS_KEY = 'qitaat_approvals_inbox_filters_v1';
+interface PersistedFilters { category: CategoryKey | 'all'; status: StatusKey; sort: SortKey }
+function loadFilters(): PersistedFilters | null {
+  try {
+    const raw = localStorage.getItem(FILTERS_KEY);
+    return raw ? JSON.parse(raw) as PersistedFilters : null;
+  } catch { return null; }
+}
+
+export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false, externalSearch }) => {
   const { user } = useAuth();
   const { isRTL } = useLanguage();
   const qc = useQueryClient();
 
+  const persisted = useMemo(() => loadFilters(), []);
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<CategoryKey | 'all'>('all');
-  const [status, setStatus] = useState<StatusKey>('pending');
-  const [sort, setSort] = useState<SortKey>('newest');
+  const [category, setCategory] = useState<CategoryKey | 'all'>(persisted?.category ?? 'all');
+  const [status, setStatus] = useState<StatusKey>(persisted?.status ?? 'pending');
+  const [sort, setSort] = useState<SortKey>(persisted?.sort ?? 'newest');
   const [page, setPage] = useState(1);
   const [busy, setBusy] = useState<Record<string, 'approve' | 'reject' | null>>({});
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirm, setConfirm] = useState<null | { action: 'approve' | 'reject'; items: UnifiedItem[] }>(null);
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const effectiveSearch = (externalSearch ?? '') || search;
+
+  // Persist filter selections (per-tab feel; this tab's state lives here).
+  useEffect(() => {
+    try { localStorage.setItem(FILTERS_KEY, JSON.stringify({ category, status, sort })); } catch { /* ignore */ }
+  }, [category, status, sort]);
 
   const queries = [
     useQuery({ queryKey: ['ua', 'provider_review'],       queryFn: fetchProviderReview,       staleTime: 30_000 }),
@@ -209,7 +237,7 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false 
   }, [allItems]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = effectiveSearch.trim().toLowerCase();
     let arr = allItems;
     if (category !== 'all') arr = arr.filter((i) => i.category === category);
     if (status !== 'all') arr = arr.filter((i) => i.status === status);
@@ -226,9 +254,9 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false 
       return sort === 'newest' ? tb - ta : ta - tb;
     });
     return arr;
-  }, [allItems, search, category, status, sort]);
+  }, [allItems, effectiveSearch, category, status, sort]);
 
-  useEffect(() => { setPage(1); }, [search, category, status, sort]);
+  useEffect(() => { setPage(1); setSelected(new Set()); }, [effectiveSearch, category, status, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -237,6 +265,41 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false 
     queries.forEach((q) => q.refetch());
     qc.invalidateQueries({ queryKey: ['unified-approvals-counts'] });
   };
+
+  // Realtime: toast + refetch when a new pending item lands in any tracked surface.
+  useEffect(() => {
+    const notify = (msgAr: string, msgEn: string) => {
+      toast.message(isRTL ? msgAr : msgEn, {
+        description: isRTL ? 'تم تحديث صندوق الموافقات.' : 'Approvals inbox updated.',
+      });
+    };
+    const ch = supabase
+      .channel('approvals-inbox-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'entity_access_requests' }, () => {
+        notify('طلب انضمام جديد', 'New access request');
+        qc.invalidateQueries({ queryKey: ['ua', 'entity_access'] });
+        qc.invalidateQueries({ queryKey: ['unified-approvals-counts'] });
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'entity_access_requests' }, () => {
+        qc.invalidateQueries({ queryKey: ['ua', 'entity_access'] });
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'businesses' }, () => {
+        notify('منشأة جديدة بانتظار المراجعة', 'New business pending review');
+        qc.invalidateQueries({ queryKey: ['ua', 'business_verification'] });
+        qc.invalidateQueries({ queryKey: ['ua', 'provider_review'] });
+        qc.invalidateQueries({ queryKey: ['unified-approvals-counts'] });
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'businesses' }, () => {
+        qc.invalidateQueries({ queryKey: ['ua', 'business_verification'] });
+        qc.invalidateQueries({ queryKey: ['ua', 'provider_review'] });
+        qc.invalidateQueries({ queryKey: ['ua', 'username'] });
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'membership_subscriptions' }, () => {
+        qc.invalidateQueries({ queryKey: ['ua', 'subscription'] });
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [qc, isRTL]);
 
   async function actOn(item: UnifiedItem, action: 'approve' | 'reject') {
     if (!user?.id) { toast.error(isRTL ? 'يلزم تسجيل الدخول' : 'Sign-in required'); return; }
@@ -262,6 +325,60 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false 
     }
   }
 
+  // Selection helpers
+  const selectableOnPage = pageItems.filter((i) => i.status === 'pending' && !!getReviewer(i.category));
+  const allOnPageSelected = selectableOnPage.length > 0 && selectableOnPage.every((i) => selected.has(i.uid));
+  function toggleOne(uid: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(uid)) next.delete(uid); else next.add(uid);
+      return next;
+    });
+  }
+  function togglePage() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allOnPageSelected) selectableOnPage.forEach((i) => next.delete(i.uid));
+      else selectableOnPage.forEach((i) => next.add(i.uid));
+      return next;
+    });
+  }
+  function clearSelection() { setSelected(new Set()); }
+
+  const selectedItems = useMemo(
+    () => filtered.filter((i) => selected.has(i.uid) && !!getReviewer(i.category)),
+    [filtered, selected],
+  );
+
+  function requestBulk(action: 'approve' | 'reject') {
+    if (selectedItems.length === 0) return;
+    setConfirm({ action, items: selectedItems });
+  }
+
+  async function runBulk() {
+    if (!confirm || !user?.id) return;
+    setBulkRunning(true);
+    const summary = await runBulkReview({
+      items: confirm.items.map((i) => ({ id: i.id, category: i.category })),
+      action: confirm.action,
+      reviewerUserId: user.id,
+      getReviewer,
+    });
+    setBulkRunning(false);
+    setConfirm(null);
+    clearSelection();
+    refreshAll();
+    if (summary.fail === 0) {
+      toast.success(isRTL
+        ? `تم تنفيذ ${summary.ok} عنصر`
+        : `Completed ${summary.ok} item(s)`);
+    } else {
+      toast.warning(isRTL
+        ? `نجاح ${summary.ok} · فشل ${summary.fail}`
+        : `${summary.ok} ok · ${summary.fail} failed`);
+    }
+  }
+
   const categoryChips: Array<{ key: CategoryKey | 'all'; ar: string; en: string; count?: number }> = [
     { key: 'all', ar: 'الكل', en: 'All', count: stats.totalPending },
     { key: 'provider_review',       ar: 'مزوّدون',         en: 'Providers',     count: stats.counters.provider_review },
@@ -284,10 +401,30 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false 
             </Badge>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={refreshAll} disabled={isFetching} className="gap-2 h-9">
-          {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          {isRTL ? 'تحديث' : 'Refresh'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {selected.size > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                {isRTL ? `محدّد: ${selected.size}` : `${selected.size} selected`}
+              </span>
+              <Button size="sm" variant="outline" className="h-9 gap-1.5 border-success/40 text-success hover:bg-success/10"
+                onClick={() => requestBulk('approve')}>
+                <Check className="h-4 w-4" /> {isRTL ? 'موافقة الكل' : 'Approve all'}
+              </Button>
+              <Button size="sm" variant="outline" className="h-9 gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10"
+                onClick={() => requestBulk('reject')}>
+                <X className="h-4 w-4" /> {isRTL ? 'رفض الكل' : 'Reject all'}
+              </Button>
+              <Button size="sm" variant="ghost" className="h-9" onClick={clearSelection}>
+                {isRTL ? 'إلغاء' : 'Clear'}
+              </Button>
+            </>
+          )}
+          <Button variant="outline" size="sm" onClick={refreshAll} disabled={isFetching} className="gap-2 h-9">
+            {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            {isRTL ? 'تحديث' : 'Refresh'}
+          </Button>
+        </div>
       </div>
 
       {/* Category chips */}
@@ -316,16 +453,18 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false 
       {/* Filter bar */}
       <div className="rounded-2xl border bg-card p-3 md:p-4 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[220px]">
-            <Search className={`h-4 w-4 absolute top-1/2 -translate-y-1/2 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={isRTL ? 'بحث بالاسم، الرقم التعريفي، أو اسم المستخدم…' : 'Search by name, reference, or username…'}
-              className={`h-11 ${isRTL ? 'pr-9' : 'pl-9'}`}
-              dir="auto"
-            />
-          </div>
+          {externalSearch === undefined && (
+            <div className="relative flex-1 min-w-[220px]">
+              <Search className={`h-4 w-4 absolute top-1/2 -translate-y-1/2 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={isRTL ? 'بحث بالاسم، الرقم التعريفي، أو اسم المستخدم…' : 'Search by name, reference, or username…'}
+                className={`h-11 ${isRTL ? 'pr-9' : 'pl-9'}`}
+                dir="auto"
+              />
+            </div>
+          )}
           <Select value={status} onValueChange={(v) => setStatus(v as StatusKey)}>
             <SelectTrigger className="h-11 w-[160px] gap-2"><Filter className="h-4 w-4" /><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -345,7 +484,15 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false 
         </div>
         {!compact && (
           <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-            <span>{isRTL ? `${filtered.length} عنصر` : `${filtered.length} items`}</span>
+            <span className="flex items-center gap-3">
+              {selectableOnPage.length > 0 && (
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={allOnPageSelected} onCheckedChange={togglePage} aria-label="select page" />
+                  <span>{isRTL ? 'تحديد كل ما في الصفحة' : 'Select all on page'}</span>
+                </label>
+              )}
+              <span>{isRTL ? `${filtered.length} عنصر` : `${filtered.length} items`}</span>
+            </span>
             <span>{isRTL ? `صفحة ${page} من ${totalPages}` : `Page ${page} of ${totalPages}`}</span>
           </div>
         )}
@@ -374,9 +521,20 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false 
               const StIcon = st.icon;
               const b = busy[it.uid];
               const canAct = it.status === 'pending' && !!getReviewer(it.category);
+              const isSelected = selected.has(it.uid);
               return (
                 <li key={it.uid} className="p-3 md:p-4 hover:bg-muted/30 transition-colors">
                   <div className="flex items-center gap-3">
+                    {canAct ? (
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleOne(it.uid)}
+                        className="shrink-0"
+                        aria-label="select row"
+                      />
+                    ) : (
+                      <span className="w-4 h-4 shrink-0" aria-hidden />
+                    )}
                     <div className={`shrink-0 h-10 w-10 rounded-xl grid place-items-center ${cat.toneBg} ${cat.toneFg}`}>
                       <CatIcon className="h-5 w-5" />
                     </div>
@@ -436,6 +594,37 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false 
           </ul>
         )}
       </div>
+
+      {/* Bulk confirm dialog */}
+      <AlertDialog open={!!confirm} onOpenChange={(o) => { if (!o && !bulkRunning) setConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirm?.action === 'approve'
+                ? (isRTL ? 'تأكيد الموافقة الجماعية' : 'Confirm bulk approval')
+                : (isRTL ? 'تأكيد الرفض الجماعي' : 'Confirm bulk rejection')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isRTL
+                ? `سيتم تنفيذ الإجراء على ${confirm?.items.length ?? 0} عنصر. لا يمكن التراجع.`
+                : `This will run on ${confirm?.items.length ?? 0} item(s) and cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkRunning}>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); void runBulk(); }}
+              disabled={bulkRunning}
+              className={confirm?.action === 'reject' ? 'bg-destructive hover:bg-destructive/90' : ''}
+            >
+              {bulkRunning && <Loader2 className="h-4 w-4 animate-spin me-2" />}
+              {confirm?.action === 'approve'
+                ? (isRTL ? 'موافقة' : 'Approve')
+                : (isRTL ? 'رفض' : 'Reject')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Pagination */}
       {filtered.length > PAGE_SIZE && (

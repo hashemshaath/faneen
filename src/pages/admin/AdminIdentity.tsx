@@ -38,6 +38,7 @@ import { IdentityCommandPalette } from '@/components/admin/identity/IdentityComm
 import { IdentityActivityFeed } from '@/components/admin/identity/IdentityActivityFeed';
 import { IdentitySignupsChart } from '@/components/admin/identity/IdentitySignupsChart';
 import { ApprovalsInbox } from '@/pages/admin/approvalsCenter/ApprovalsInbox';
+import { AdminActivityLog } from '@/pages/admin/approvalsCenter/AdminActivityLog';
 import { useUnifiedApprovalsCounts } from '@/components/admin/useUnifiedApprovalsCounts';
 import { listProfiles } from '@/modules/users';
 import { listAllUserRoles } from '@/modules/identity';
@@ -48,7 +49,7 @@ import {
   Users, Building2, Search, Command, Shield, Crown, ShieldCheck, Briefcase,
   TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, Plus,
   UserPlus, Activity, ExternalLink, KeyRound, BarChart3,
-  RefreshCw, Stethoscope, MapPin, ArrowUpRight, LayoutDashboard, Inbox,
+  RefreshCw, Stethoscope, MapPin, ArrowUpRight, LayoutDashboard, Inbox, FileText,
 } from 'lucide-react';
 
 /**
@@ -141,10 +142,10 @@ const AdminIdentity: React.FC = () => {
   const queryClient = useQueryClient();
 
   // Tabs: overview | approvals | directory  (query-string controlled)
-  type TabKey = 'overview' | 'approvals' | 'directory';
+  type TabKey = 'overview' | 'approvals' | 'directory' | 'audit';
   const initialTab = (searchParams.get('tab') as TabKey) || 'overview';
   const [tab, setTab] = useState<TabKey>(
-    ['overview', 'approvals', 'directory'].includes(initialTab) ? initialTab : 'overview',
+    ['overview', 'approvals', 'directory', 'audit'].includes(initialTab) ? initialTab : 'overview',
   );
   const setTabSafe = useCallback((next: TabKey) => {
     setTab(next);
@@ -175,10 +176,22 @@ const AdminIdentity: React.FC = () => {
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
+  // Per-tab persisted search — survives navigation & reload.
+  const tabSearchKey = `qitaat_admin_identity_search_${tab}`;
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(tabSearchKey) ?? '';
+      setSearchTerm(v);
+      setDeferredSearch(v);
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
   const handleSearchChange = useCallback((val: string) => {
     setSearchTerm(val);
+    try { localStorage.setItem(tabSearchKey, val); } catch { /* ignore */ }
     startTransition(() => setDeferredSearch(val));
-  }, []);
+  }, [tabSearchKey]);
 
   // ⌘K command palette
   useEffect(() => {
@@ -413,7 +426,8 @@ const AdminIdentity: React.FC = () => {
             { key: 'overview',  ar: 'النظرة العامة', en: 'Overview',  icon: LayoutDashboard },
             { key: 'approvals', ar: 'صندوق الموافقات', en: 'Approvals Inbox', icon: Inbox, badge: pendingTotal },
             { key: 'directory', ar: 'دليل وبحث',     en: 'Directory', icon: Search },
-          ] as Array<{ key: 'overview' | 'approvals' | 'directory'; ar: string; en: string; icon: React.ElementType; badge?: number }>).map((t) => {
+            { key: 'audit',     ar: 'سجل العمليات',  en: 'Audit Log', icon: FileText },
+          ] as Array<{ key: TabKey; ar: string; en: string; icon: React.ElementType; badge?: number }>).map((t) => {
             const active = tab === t.key;
             const Icon = t.icon;
             return (
@@ -440,32 +454,43 @@ const AdminIdentity: React.FC = () => {
           })}
         </div>
 
-        {tab === 'approvals' && (
-          <div className="pt-2">
-            <ApprovalsInbox />
+        {/* Unified search bar — visible on approvals / directory / audit; per-tab persisted. */}
+        {tab !== 'overview' && (
+          <div className="relative">
+            <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '14px' }} />
+            <Input
+              ref={searchRef}
+              value={searchTerm}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder={
+                tab === 'approvals'
+                  ? (isRTL ? 'بحث في صندوق الموافقات: اسم، مرجع، اسم مستخدم…' : 'Search approvals: name, ref, username…')
+                : tab === 'audit'
+                  ? (isRTL ? 'بحث في السجل: مسؤول، إجراء، كيان…' : 'Search audit: actor, action, entity…')
+                  : (isRTL ? 'بحث موحّد: اسم، بريد، هاتف، USR-… أو BIZ-…' : 'Unified search: name, email, phone, USR-… or BIZ-…')
+              }
+              className="ps-11 pe-20 h-12 rounded-2xl bg-card border-border/40 focus:bg-background"
+              dir="auto"
+            />
+            <kbd
+              className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 items-center gap-0.5 px-2 py-0.5 rounded-md border border-border/40 bg-muted/50 text-[10px] text-muted-foreground font-mono pointer-events-none"
+              style={{ insetInlineEnd: '14px' }}
+            >
+              <Command className="w-2.5 h-2.5" />K
+            </kbd>
           </div>
         )}
 
-        {tab === 'directory' && (
-        <div className="relative">
-          <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '14px' }} />
-          <Input
-            ref={searchRef}
-            value={searchTerm}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder={isRTL
-              ? 'بحث موحّد: اسم، بريد، هاتف، USR-… أو BIZ-…'
-              : 'Unified search: name, email, phone, USR-… or BIZ-…'}
-            className="ps-11 pe-20 h-12 rounded-2xl bg-card border-border/40 focus:bg-background"
-            dir="auto"
-          />
-          <kbd
-            className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 items-center gap-0.5 px-2 py-0.5 rounded-md border border-border/40 bg-muted/50 text-[10px] text-muted-foreground font-mono pointer-events-none"
-            style={{ insetInlineEnd: '14px' }}
-          >
-            <Command className="w-2.5 h-2.5" />K
-          </kbd>
-        </div>
+        {tab === 'approvals' && (
+          <div className="pt-2">
+            <ApprovalsInbox externalSearch={deferredSearch} />
+          </div>
+        )}
+
+        {tab === 'audit' && (
+          <div className="pt-2">
+            <AdminActivityLog externalSearch={deferredSearch} />
+          </div>
         )}
 
         {/* ─── Live search results ─── */}
