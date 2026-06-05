@@ -30,6 +30,7 @@ import { nationalAddressLookup } from '@/modules/locations';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import { RegionCitySelector } from '@/components/forms/RegionCitySelector';
 import { SA_REGIONS, findRegionByLabel, type SaRegionId } from '@/data/sa-regions';
+import { NationalAddressForm, type NationalAddressValue } from '@/modules/addresses';
 import { setBusinessMembershipTier, type MembershipTier } from '@/modules/memberships';
 import { getProfileDisplayName } from '@/modules/profiles/utils/displayName';
 import { notifyMembershipChangeForBusiness, setProviderServiceStatus } from '@/modules/providerServices';
