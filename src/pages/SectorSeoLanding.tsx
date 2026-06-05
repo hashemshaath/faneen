@@ -8,7 +8,7 @@ import {
   CheckCircle2, ChevronLeft, ListChecks, MapPin, FileText,
   Send, ShieldCheck, Building2, ArrowLeft, Hammer,
 } from 'lucide-react';
-import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { useSeoPage } from '@/modules/seo/useSeoPage';
 import {
   SECTORS_SEO, SECTORS_SEO_LIST, type SeoSectorSlug,
 } from '@/lib/sectors-seo';
@@ -37,17 +37,7 @@ const SectorSeoLanding: React.FC = () => {
   const searchHref = sector?.searchSector ? `/search?sector=${sector.searchSector}` : '/search';
   const pageUrl = sector ? `https://qitaat.com/sectors/${sector.slug}` : 'https://qitaat.com/sectors';
 
-  usePageMeta({
-    title: sector?.metaTitle ?? 'القطاعات | قطاعات',
-    description: sector?.metaDescription ?? '',
-    canonical: pageUrl,
-    ogType: 'website',
-    ogTitle: sector?.h1,
-    ogDescription: sector?.hero,
-  });
-
-  useMultiJsonLd(
-    useMemo(() => {
+  const jsonLdBlocks = useMemo(() => {
       if (!sector) return null;
       const blocks: Record<string, unknown>[] = [];
       blocks.push({
@@ -76,8 +66,18 @@ const SectorSeoLanding: React.FC = () => {
       const faq = buildFaqPage(sector.faqs);
       if (faq) blocks.push(faq);
       return blocks;
-    }, [sector, pageUrl]),
-  );
+    }, [sector, pageUrl]);
+
+  useSeoPage({
+    kind: 'category',
+    lang: 'ar',
+    name: sector?.shortName ?? 'القطاعات',
+    customTitle: sector?.metaTitle,
+    rawDescription: sector?.metaDescription,
+    canonical: pageUrl,
+    ogType: 'website',
+    jsonLd: jsonLdBlocks,
+  });
 
   if (!slug || !sector) {
     return <Navigate to="/sectors" replace />;
