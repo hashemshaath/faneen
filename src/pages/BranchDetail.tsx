@@ -547,10 +547,26 @@ const BranchDetail: React.FC = () => {
                     </a>
                   </Button>
                 )}
-                <Button size="sm" variant="ghost" onClick={handleShare} className="gap-2 rounded-xl">
-                  {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                  {t(isRTL, 'مشاركة', 'Share')}
+                <Button
+                  size="sm"
+                  variant={fav ? 'default' : 'outline'}
+                  onClick={onToggleFav}
+                  className="gap-2 rounded-xl"
+                  aria-pressed={fav}
+                >
+                  <Heart className={`w-3.5 h-3.5 ${fav ? 'fill-current' : ''}`} />
+                  {fav ? t(isRTL, 'محفوظ', 'Saved') : t(isRTL, 'حفظ', 'Save')}
                 </Button>
+                <ShareMenu
+                  branchId={branch.id}
+                  url={shareUrl}
+                  title={`${branchName} — ${businessName}`}
+                  recommendText={t(
+                    isRTL,
+                    `أنصحك بالاطلاع على ${branchName} — مزود معتمد على قِطاعات`,
+                    `I recommend checking out ${branchName} — verified on Qitaat`,
+                  )}
+                />
             </div>
           </div>
         </div>
