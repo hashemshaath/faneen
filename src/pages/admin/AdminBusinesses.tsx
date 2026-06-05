@@ -2058,28 +2058,26 @@ const AdminBusinesses = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div>
-                      <Label className="text-xs">{isRTL ? 'المدينة' : 'City'}</Label>
-                      <Select value={editForm.city_id} onValueChange={v => setField('city_id', v)}>
-                        <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
-                        <SelectContent>
-                          {filteredCities.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
+                  {/* Unified Region → City selector (single source of truth — same component used in create form & branch editor) */}
+                  <RegionCitySelector
+                    value={{ region_id: editForm.region_id as SaRegionId | '', city_id: editForm.city_id || '' }}
+                    onChange={(next) => {
+                      const r = next.region_id ? SA_REGIONS.find((x) => x.id === next.region_id) : null;
+                      setEditForm((f: Record<string, unknown>) => ({
+                        ...f,
+                        region_id: next.region_id || '',
+                        city_id: next.city_id || '',
+                        // Keep stored region name in sync for legacy display fields
+                        region: r ? r.name_ar : '',
+                        region_en: r ? r.name_en : '',
+                      }));
+                    }}
+                  />
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs">{isRTL ? 'المنطقة' : 'Region'}</Label>
-                      <Input value={editForm.region} onChange={e => setField('region', e.target.value)} className="mt-1" />
-                    </div>
-                    <div>
                       <Label className="text-xs">{isRTL ? 'الحي' : 'District'}</Label>
-                      <Input value={editForm.district} onChange={e => setField('district', e.target.value)} className="mt-1" />
-                    </div>
-                    <div>
-                      <Label className="text-xs">{isRTL ? 'المنطقة (EN)' : 'Region (EN)'}</Label>
-                      <Input value={editForm.region_en || ''} onChange={e => setField('region_en', e.target.value)} dir="ltr" className="mt-1" />
+                      <Input value={editForm.district} onChange={e => setField('district', e.target.value)} dir="auto" className="mt-1" />
                     </div>
                     <div>
                       <Label className="text-xs">{isRTL ? 'الحي (EN)' : 'District (EN)'}</Label>
