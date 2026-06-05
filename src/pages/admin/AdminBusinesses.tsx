@@ -1364,6 +1364,8 @@ const AdminBusinesses = () => {
           }
         />
 
+        <UnifiedApprovalsCenterBanner />
+
         {/* ─── Tier Distribution Bar ─── */}
         {stats.total > 0 && (
           <div className="rounded-2xl border border-border/30 bg-card p-4">

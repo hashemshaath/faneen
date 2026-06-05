@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { UnifiedApprovalsCenterBanner } from '@/components/admin/UnifiedApprovalsCenterBanner';
 import {
   listEntityAccessRequests,
   reviewEntityAccessRequest,
@@ -318,6 +319,8 @@ const AdminEntityAccessRequests: React.FC = () => {
             </>
           }
         />
+
+        <UnifiedApprovalsCenterBanner />
 
         {/* KPI cards (also act as filters) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3" role="tablist">
