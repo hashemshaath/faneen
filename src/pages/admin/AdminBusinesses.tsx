@@ -29,7 +29,7 @@ import { mapAdminCreateBizError } from '@/modules/businesses/services/adminCreat
 import { nationalAddressLookup } from '@/modules/locations';
 import { BilingualNameField } from '@/components/forms/BilingualNameField';
 import { RegionCitySelector } from '@/components/forms/RegionCitySelector';
-import { SA_REGIONS, type SaRegionId } from '@/data/sa-regions';
+import { SA_REGIONS, findRegionByLabel, type SaRegionId } from '@/data/sa-regions';
 import { setBusinessMembershipTier, type MembershipTier } from '@/modules/memberships';
 import { getProfileDisplayName } from '@/modules/profiles/utils/displayName';
 import { notifyMembershipChangeForBusiness, setProviderServiceStatus } from '@/modules/providerServices';
