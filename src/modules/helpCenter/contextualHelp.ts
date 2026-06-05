@@ -42,6 +42,8 @@ export const contextualHelpRegistry: Record<string, string[]> = {
   'admin.catalog-governance-queue': ['approve-providers', 'readiness-checklist', 'how-publishing-works', 'completeness'],
   // OPERATIONS-CENTER-UNIFICATION-1 — unified read-only routing hub.
   'admin.operations-center-unified': ['overview', 'how-publishing-works', 'readiness-checklist', 'approve-providers'],
+  // MARKETPLACE-CONVERSION-OPTIMIZATION-1 — read-only conversion dashboard.
+  'admin.conversion-optimization': ['overview', 'how-publishing-works', 'completeness', 'readiness-checklist', 'create-quote'],
   'dashboard.membership': ['how-publishing-works', 'lead-credits'],
   'dashboard.customer-experience': ['tracking-link', 'what-you-see'],
   'customer.feedback': ['tracking-link', 'support'],
