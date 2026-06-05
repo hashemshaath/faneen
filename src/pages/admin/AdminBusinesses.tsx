@@ -2834,9 +2834,9 @@ const AdminBusinesses = () => {
               );
             })}
           </div>
-        )}
+        ))}
 
-        {!isLoading && filtered.length > 0 && (
+        {!panelOpen && !isLoading && filtered.length > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/30">
             <p className="text-[11px] text-muted-foreground tech-content">
               {isRTL
