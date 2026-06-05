@@ -15,7 +15,7 @@ import {
   listBranchPromotionIds,
   listServicesByBusiness,
 } from '@/modules/catalog';
-import { listBusinessesByIds } from '@/modules/businesses';
+import { listBusinessesByIds, getBusinessIdByUsername } from '@/modules/businesses';
 import { listProfilesByUserIds } from '@/modules/users';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -70,17 +70,45 @@ interface ServiceCard { id: string; name_ar: string; name_en: string | null; pri
 interface PromotionCard { id: string; title_ar: string; title_en: string | null; image_url: string | null; offer_price: number | null; original_price: number | null; currency_code: string }
 
 const BranchDetail: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
+  // Supports two URL shapes:
+  //   /branch/:slug                (legacy global slug)
+  //   /:username/:branchSlug       (nested under business — preferred)
+  const params = useParams<{ slug?: string; branchSlug?: string; username?: string }>();
+  const slug = params.branchSlug ?? params.slug;
+  const usernameParam = params.branchSlug ? params.username : undefined;
   const { isRTL } = useLanguage();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
+  // 0) When the URL is nested, resolve the parent business first so we can scope the lookup.
+  const { data: scopedBusinessId } = useQuery({
+    queryKey: ['branch-scope-business', usernameParam?.toLowerCase()],
+    enabled: Boolean(usernameParam),
+    queryFn: async () => {
+      const { data } = await getBusinessIdByUsername({ username: usernameParam! });
+      return data?.id ?? null;
+    },
+    staleTime: 60_000,
+  });
+
   // 1) Branch (public view)
   const { data: branch, isLoading } = useQuery({
-    queryKey: ['public-branch', slug],
-    enabled: Boolean(slug),
+    queryKey: ['public-branch', slug, scopedBusinessId ?? null],
+    enabled: Boolean(slug) && (!usernameParam || scopedBusinessId !== undefined),
     queryFn: async () => {
-      // Primary lookup by slug
+      // Nested form: scope by business_id (slug is unique per business).
+      if (scopedBusinessId) {
+        const { data, error } = await supabase
+          .from('business_branches_public' as 'business_branches')
+          .select('*')
+          .eq('business_id', scopedBusinessId)
+          .eq('slug', slug!)
+          .maybeSingle();
+        if (error) throw error;
+        if (data) return data as unknown as PublicBranch | null;
+      }
+
+      // Legacy global lookup by slug
       const { data, error } = await supabase
         .from('business_branches_public' as 'business_branches')
         .select('*')
@@ -204,7 +232,9 @@ const BranchDetail: React.FC = () => {
     ogDescription: seoDescription,
     ogImage: business?.logo_url || undefined,
     ogType: 'business.business',
-    canonical: branch?.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined,
+    canonical: branch?.slug && business?.username
+      ? `https://qitaat.com/${business.username}/${branch.slug}`
+      : (branch?.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined),
   });
 
   // Aggregate review stats for SEO (AggregateRating in JSON-LD).
@@ -240,7 +270,9 @@ const BranchDetail: React.FC = () => {
       } : undefined,
       telephone: branch.phone || branch.mobile || undefined,
       email: branch.email || undefined,
-      url: branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined,
+      url: branch.slug && business.username
+        ? `https://qitaat.com/${business.username}/${branch.slug}`
+        : (branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined),
       geo: branch.latitude && branch.longitude ? {
         '@type': 'GeoCoordinates',
         latitude: branch.latitude, longitude: branch.longitude,
@@ -278,7 +310,9 @@ const BranchDetail: React.FC = () => {
     const items = [
       { name: t(isRTL, 'الرئيسية', 'Home'), url: 'https://qitaat.com/' },
       business?.username ? { name: businessName, url: `https://qitaat.com/${business.username}` } : null,
-      { name: branchName, url: branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined },
+      { name: branchName, url: branch.slug && business?.username
+          ? `https://qitaat.com/${business.username}/${branch.slug}`
+          : (branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined) },
     ].filter(Boolean) as Array<{ name: string; url?: string }>;
     return {
       '@context': 'https://schema.org',
@@ -324,7 +358,9 @@ const BranchDetail: React.FC = () => {
     branch.social_snapchat && { url: branch.social_snapchat, Icon: Globe, label: 'Snapchat' },
   ].filter(Boolean) as Array<{ url: string; Icon: React.ComponentType<{ className?: string }>; label: string }>;
 
-  const shareUrl = branch.slug ? `https://qitaat.com/branch/${branch.slug}` : window.location.href;
+  const shareUrl = branch.slug && business?.username
+    ? `https://qitaat.com/${business.username}/${branch.slug}`
+    : (branch.slug ? `https://qitaat.com/branch/${branch.slug}` : window.location.href);
   const handleShare = async () => {
     try {
       if (navigator.share) {
@@ -690,7 +726,7 @@ const BranchDetail: React.FC = () => {
                     return (
                       <Link
                         key={s.id}
-                        to={s.slug ? `/branch/${s.slug}` : '#'}
+                        to={s.slug && business?.username ? `/${business.username}/${s.slug}` : (s.slug ? `/branch/${s.slug}` : '#')}
                         className="group p-4 rounded-xl border border-border/60 hover-lift hover:border-primary/40 transition"
                       >
                         <div className="flex items-start justify-between gap-2">
