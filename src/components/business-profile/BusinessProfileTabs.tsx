@@ -553,7 +553,7 @@ export const BranchesTab = ({
 }: BranchesTabProps) => {
   const { language } = useLanguage();
   const { data: branches, isLoading } = useBranches(businessId);
-  const [regionFilter, setRegionFilter] = React.useState<string>("all");
+  const [regionFilter, setRegionFilter] = useState<string>("all");
 
   if (isLoading) {
     return (
