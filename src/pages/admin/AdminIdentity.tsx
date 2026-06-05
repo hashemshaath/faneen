@@ -92,35 +92,34 @@ const Kpi: React.FC<{
   tone: 'primary' | 'success' | 'info' | 'warning' | 'accent';
   to?: string; hint?: string; trend?: string;
 }> = ({ icon: Icon, label, value, tone, to, hint, trend }) => {
-  const toneText = {
-    primary: 'text-primary',
-    success: 'text-success',
-    info:    'text-info',
-    warning: 'text-warning',
-    accent:  'text-accent',
+  const toneCfg = {
+    primary: { text: 'text-primary',  bg: 'bg-primary/10',  ring: 'ring-primary/20',  grad: 'from-primary/15 via-primary/5 to-transparent',  glow: 'group-hover/kpi:shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.35)]' },
+    success: { text: 'text-success',  bg: 'bg-success/10',  ring: 'ring-success/20',  grad: 'from-success/15 via-success/5 to-transparent',  glow: 'group-hover/kpi:shadow-[0_8px_30px_-12px_hsl(var(--success)/0.35)]' },
+    info:    { text: 'text-info',     bg: 'bg-info/10',     ring: 'ring-info/20',     grad: 'from-info/15 via-info/5 to-transparent',        glow: 'group-hover/kpi:shadow-[0_8px_30px_-12px_hsl(var(--info)/0.35)]' },
+    warning: { text: 'text-warning',  bg: 'bg-warning/10',  ring: 'ring-warning/20',  grad: 'from-warning/15 via-warning/5 to-transparent',  glow: 'group-hover/kpi:shadow-[0_8px_30px_-12px_hsl(var(--warning)/0.35)]' },
+    accent:  { text: 'text-accent',   bg: 'bg-accent/10',   ring: 'ring-accent/20',   grad: 'from-accent/15 via-accent/5 to-transparent',    glow: 'group-hover/kpi:shadow-[0_8px_30px_-12px_hsl(var(--accent)/0.35)]' },
   } as const;
-  const trendBg = {
-    primary: 'bg-primary/10 text-primary',
-    success: 'bg-success/10 text-success',
-    info:    'bg-info/10 text-info',
-    warning: 'bg-warning/10 text-warning',
-    accent:  'bg-accent/10 text-accent',
-  } as const;
+  const t = toneCfg[tone];
   const body = (
-    <div className="group/kpi relative h-full rounded-2xl border border-border/50 bg-card p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-border transition-all">
-      <div className="flex items-center justify-between gap-2">
+    <div className={`group/kpi relative h-full overflow-hidden rounded-2xl border border-border/50 bg-card p-4 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-border ${t.glow}`}>
+      {/* decorative tone gradient */}
+      <div className={`pointer-events-none absolute -top-12 -end-12 h-32 w-32 rounded-full bg-gradient-to-br ${t.grad} blur-2xl opacity-70`} />
+      <div className="relative flex items-center justify-between gap-2">
         <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{label}</p>
-        <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg bg-muted/40 ${toneText[tone]} shrink-0`}>
-          <Icon className="w-3.5 h-3.5" />
+        <span className={`inline-flex h-9 w-9 items-center justify-center rounded-xl ${t.bg} ${t.text} ring-1 ${t.ring} shrink-0 transition-transform duration-300 group-hover/kpi:scale-110 group-hover/kpi:rotate-3`}>
+          <Icon className="w-4 h-4" />
         </span>
       </div>
-      <div className="flex items-end justify-between gap-2 mt-2">
-        <h3 className="text-2xl sm:text-3xl font-bold font-heading leading-none tech-content text-foreground">{value}</h3>
+      <div className="relative flex items-end justify-between gap-2 mt-3">
+        <h3 className="text-2xl sm:text-3xl font-bold font-heading leading-none tech-content tabular-nums text-foreground">{value}</h3>
         {trend && (
-          <span className={`text-[10px] font-semibold px-2 py-1 rounded-full ${trendBg[tone]} shrink-0`}>{trend}</span>
+          <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-1 rounded-full ${t.bg} ${t.text} ring-1 ${t.ring} shrink-0`}>
+            <TrendingUp className="w-2.5 h-2.5" />
+            {trend}
+          </span>
         )}
       </div>
-      {hint && <p className="text-[10px] text-muted-foreground mt-2 truncate">{hint}</p>}
+      {hint && <p className="relative text-[10px] text-muted-foreground mt-2 truncate">{hint}</p>}
       {to && <DirectionalIcon kind="forward" className="absolute top-3 w-3 h-3 text-muted-foreground/40 opacity-0 group-hover/kpi:opacity-100 transition-opacity" style={{ insetInlineEnd: '0.75rem' }} />}
     </div>
   );
@@ -365,37 +364,81 @@ const AdminIdentity: React.FC = () => {
   ];
 
   const toneRing: Record<string, string> = {
-    info: 'hover:border-info/50 hover:bg-info/5',
-    success: 'hover:border-success/50 hover:bg-success/5',
-    warning: 'hover:border-warning/50 hover:bg-warning/5',
-    accent: 'hover:border-accent/50 hover:bg-accent/5',
-    primary: 'hover:border-primary/50 hover:bg-primary/5',
+    info:    'hover:border-info/60 hover:shadow-[0_10px_30px_-15px_hsl(var(--info)/0.4)]',
+    success: 'hover:border-success/60 hover:shadow-[0_10px_30px_-15px_hsl(var(--success)/0.4)]',
+    warning: 'hover:border-warning/60 hover:shadow-[0_10px_30px_-15px_hsl(var(--warning)/0.4)]',
+    accent:  'hover:border-accent/60 hover:shadow-[0_10px_30px_-15px_hsl(var(--accent)/0.4)]',
+    primary: 'hover:border-primary/60 hover:shadow-[0_10px_30px_-15px_hsl(var(--primary)/0.4)]',
   };
   const toneText: Record<string, string> = {
     info: 'text-info', success: 'text-success', warning: 'text-warning', accent: 'text-accent', primary: 'text-primary',
+  };
+  const toneBg: Record<string, string> = {
+    info: 'bg-info/10 ring-info/20', success: 'bg-success/10 ring-success/20',
+    warning: 'bg-warning/10 ring-warning/20', accent: 'bg-accent/10 ring-accent/20',
+    primary: 'bg-primary/10 ring-primary/20',
+  };
+  const toneGrad: Record<string, string> = {
+    info: 'from-info/10 to-transparent', success: 'from-success/10 to-transparent',
+    warning: 'from-warning/10 to-transparent', accent: 'from-accent/10 to-transparent',
+    primary: 'from-primary/10 to-transparent',
   };
 
   return (
     <DashboardLayout>
       <div className="mx-auto w-full max-w-7xl space-y-6 md:space-y-8 pb-12 px-1 sm:px-0">
-        {/* ─── Header — compact title + primary actions ─── */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="hidden sm:flex w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 items-center justify-center shrink-0">
-              <Users className="w-5 h-5 text-primary" />
+        {/* ─── Hero header — premium gradient banner with primary actions ─── */}
+        <section
+          aria-label={isRTL ? 'مركز الحسابات' : 'Accounts hub'}
+          className="relative overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br from-card via-card to-muted/40 p-5 md:p-7 shadow-[var(--elev-1)]"
+        >
+          {/* decorative blobs */}
+          <div className="pointer-events-none absolute -top-24 -end-24 h-64 w-64 rounded-full bg-gradient-to-br from-primary/20 via-accent/10 to-transparent blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -start-24 h-64 w-64 rounded-full bg-gradient-to-tr from-info/15 via-success/5 to-transparent blur-3xl" />
+
+          <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-4 min-w-0">
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary to-accent blur-md opacity-50" aria-hidden />
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary to-accent text-white shadow-lg ring-1 ring-white/10">
+                  <Users className="h-6 w-6" />
+                </div>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80 mb-1">
+                  {isRTL ? 'لوحة الإدارة' : 'Admin'}
+                </p>
+                <h1 className="text-xl md:text-3xl font-bold font-heading leading-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  {isRTL ? 'مركز الحسابات والموافقات' : 'Accounts & Approvals'}
+                </h1>
+                <p className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-relaxed line-clamp-2 max-w-prose">
+                  {isRTL
+                    ? 'سطح موحّد للحسابات والمنشآت والموافقات — نظرة عامة، صندوق، ودليل.'
+                    : 'Unified surface for accounts, businesses, and approvals — overview, inbox, and directory.'}
+                </p>
+                {/* inline mini-stats */}
+                {!isLoading && (
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px]">
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                      {isRTL ? `${kpis.totalUsers.toLocaleString('ar-SA')} حساب` : `${kpis.totalUsers.toLocaleString()} accounts`}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <Building2 className="w-3 h-3 text-success" />
+                      {isRTL ? `${kpis.totalBusinesses.toLocaleString('ar-SA')} منشأة` : `${kpis.totalBusinesses.toLocaleString()} businesses`}
+                    </span>
+                    {pendingTotal > 0 && (
+                      <Link to="/admin/identity?tab=workspace" onClick={() => setTabSafe('workspace')}
+                        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-warning/10 text-warning font-semibold ring-1 ring-warning/30 hover:bg-warning/20 transition-colors">
+                        <Inbox className="w-3 h-3" />
+                        {isRTL ? `${pendingTotal} بانتظار المراجعة` : `${pendingTotal} pending review`}
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="min-w-0">
-              <h1 className="text-lg md:text-2xl font-bold font-heading leading-tight">
-                {isRTL ? 'مركز الحسابات والموافقات' : 'Accounts & Approvals'}
-              </h1>
-              <p className="text-[11px] md:text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">
-                {isRTL
-                  ? 'سطح موحّد للحسابات والمنشآت والموافقات — نظرة عامة، صندوق، ودليل.'
-                  : 'Unified surface for accounts, businesses, and approvals — overview, inbox, and directory.'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
+            <div className="flex items-center gap-2 flex-wrap md:flex-nowrap shrink-0">
             <Button
               type="button" variant="outline" size="sm" className="rounded-xl gap-1.5 h-10"
               onClick={refreshAll} disabled={isLoading}
@@ -411,7 +454,7 @@ const AdminIdentity: React.FC = () => {
                     <span className="hidden sm:inline">{isRTL ? 'مستخدم' : 'User'}</span>
                   </Link>
                 </Button>
-                <Button asChild size="sm" className="rounded-xl gap-1.5 h-10">
+                <Button asChild size="sm" className="rounded-xl gap-1.5 h-10 bg-gradient-to-br from-primary to-accent text-white shadow-md hover:shadow-lg hover:opacity-95 transition-all">
                   <Link to="/admin/businesses">
                     <Plus className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">{isRTL ? 'منشأة' : 'Business'}</span>
@@ -419,12 +462,14 @@ const AdminIdentity: React.FC = () => {
                 </Button>
               </>
             )}
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* ─── Unified Command Search — always visible, hero-style ─── */}
-        <div className="relative">
-          <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" style={{ insetInlineStart: '16px' }} />
+        <div className="relative group/search">
+          <div className="pointer-events-none absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary/40 via-accent/30 to-info/40 opacity-0 blur-md group-focus-within/search:opacity-60 transition-opacity duration-500" aria-hidden />
+          <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5 z-10" style={{ insetInlineStart: '16px' }} />
           <Input
             ref={searchRef}
             value={searchTerm}
@@ -434,18 +479,18 @@ const AdminIdentity: React.FC = () => {
                 ? (isRTL ? 'بحث في السجل: مسؤول، إجراء، كيان…' : 'Search audit: actor, action, entity…')
                 : (isRTL ? 'بحث موحّد: اسم المنشأة، البريد، الهاتف، USR-… أو BIZ-…' : 'Unified: business name, email, phone, USR-… or BIZ-…')
             }
-            className="ps-12 pe-24 h-14 rounded-2xl bg-card border-border/60 shadow-sm focus-visible:ring-2 focus-visible:ring-primary/30 text-sm md:text-base"
+            className="relative ps-12 pe-24 h-14 rounded-2xl bg-card border-border/60 shadow-sm focus-visible:ring-2 focus-visible:ring-primary/30 text-sm md:text-base"
             dir="auto"
             onFocus={() => { if (tab === 'overview') setTabSafe('workspace'); }}
           />
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
-            className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 rounded-md border border-border/40 bg-muted/40 hover:bg-muted text-[10px] text-muted-foreground font-mono transition-colors"
+            className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 z-10 items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border/50 bg-muted/60 hover:bg-muted hover:border-primary/40 text-[10px] text-muted-foreground hover:text-foreground font-mono transition-all"
             style={{ insetInlineEnd: '14px' }}
             aria-label={isRTL ? 'فتح لوحة الأوامر' : 'Open command palette'}
           >
-            <Command className="w-2.5 h-2.5" />K
+            <Command className="w-3 h-3" />K
           </button>
         </div>
 
@@ -469,18 +514,21 @@ const AdminIdentity: React.FC = () => {
                   role="tab"
                   aria-selected={active}
                   onClick={() => setTabSafe(t.key)}
-                  className={`relative inline-flex items-center gap-2 px-3 md:px-4 min-h-[40px] rounded-xl text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
+                  className={`relative inline-flex items-center gap-2 px-3.5 md:px-5 min-h-[42px] rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
                     active
-                      ? 'bg-card text-foreground shadow-sm border border-border/40'
-                      : 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/50'
+                      ? 'bg-gradient-to-br from-card to-card/80 text-foreground shadow-md border border-border/60 ring-1 ring-primary/10'
+                      : 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/60'
                   }`}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
+                  <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-primary' : ''}`} />
                   <span>{isRTL ? t.ar : t.en}</span>
                   {typeof t.badge === 'number' && t.badge > 0 && (
-                    <span className="tech-content rounded-full px-1.5 py-0.5 text-[10px] bg-warning/15 text-warning font-bold">
+                    <span className="tech-content rounded-full px-2 py-0.5 text-[10px] bg-warning text-warning-foreground font-bold tabular-nums shadow-sm animate-in zoom-in duration-300">
                       {t.badge}
                     </span>
+                  )}
+                  {active && (
+                    <span className="absolute -bottom-1 start-1/2 -translate-x-1/2 h-1 w-8 rounded-full bg-gradient-to-r from-primary to-accent" aria-hidden />
                   )}
                 </button>
               );
@@ -608,34 +656,51 @@ const AdminIdentity: React.FC = () => {
         </div>
 
         {/* ─── Management navigation grid ─── */}
-        <section aria-labelledby="mgmt-heading" className="rounded-2xl border border-border/40 bg-card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 id="mgmt-heading" className="font-heading font-bold text-sm flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-accent" />
-              {isRTL ? 'الإدارة التفصيلية' : 'Detailed management'}
-            </h2>
-            <p className="text-[11px] text-muted-foreground">
-              {isRTL ? 'صفحات مستقلّة لكل جانب' : 'Dedicated page per surface'}
-            </p>
+        <section aria-labelledby="mgmt-heading" className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-muted/20 p-5 md:p-6">
+          <div className="pointer-events-none absolute -top-20 -end-20 h-48 w-48 rounded-full bg-gradient-to-br from-accent/15 to-transparent blur-3xl" />
+          <div className="relative flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-accent/10 text-accent ring-1 ring-accent/20">
+                <Sparkles className="w-4 h-4" />
+              </span>
+              <div>
+                <h2 id="mgmt-heading" className="font-heading font-bold text-sm md:text-base">
+                  {isRTL ? 'الإدارة التفصيلية' : 'Detailed management'}
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {isRTL ? 'صفحات مستقلّة لكل جانب من جوانب الإدارة' : 'Dedicated page per surface'}
+                </p>
+              </div>
+            </div>
+            <Badge variant="outline" className="text-[10px] tabular-nums hidden sm:inline-flex">
+              {managementSurfaces.length} {isRTL ? 'سطح' : 'surfaces'}
+            </Badge>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {managementSurfaces.map((s) => (
               <Link
                 key={s.to}
                 to={s.to}
-                className={`group rounded-xl border border-border/40 bg-background/40 p-3.5 transition-all hover-lift ${toneRing[s.tone]}`}
+                className={`group relative overflow-hidden rounded-2xl border border-border/40 bg-card/80 backdrop-blur p-4 transition-all duration-300 hover:-translate-y-0.5 ${toneRing[s.tone]}`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <span className={`inline-flex h-9 w-9 items-center justify-center rounded-lg bg-card ${toneText[s.tone]}`}>
-                    <s.icon className="w-4 h-4" />
+                <div className={`pointer-events-none absolute -top-10 -end-10 h-24 w-24 rounded-full bg-gradient-to-br ${toneGrad[s.tone]} blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                <div className="relative flex items-start justify-between gap-2">
+                  <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${toneBg[s.tone]} ${toneText[s.tone]} ring-1 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3`}>
+                    <s.icon className="w-5 h-5" />
                   </span>
-                  {typeof s.count === 'number' && !isLoading && (
-                    <Badge variant="outline" className="tech-content text-[10px] tabular-nums">{s.count}</Badge>
-                  )}
-                  <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-foreground transition-colors ms-auto" />
+                  <div className="flex items-center gap-1.5 ms-auto">
+                    {typeof s.count === 'number' && !isLoading && (
+                      <Badge variant="outline" className={`tech-content text-[10px] tabular-nums font-bold ${toneText[s.tone]} border-current/30`}>
+                        {s.count.toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                      </Badge>
+                    )}
+                    <ArrowUpRight className={`w-4 h-4 text-muted-foreground/40 transition-all duration-300 group-hover:text-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${isRTL ? 'rtl-flip' : ''}`} />
+                  </div>
                 </div>
-                <p className="mt-2 font-heading text-sm font-bold leading-tight">{isRTL ? s.ar : s.en}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
+                <p className="relative mt-3 font-heading text-sm md:text-[15px] font-bold leading-tight text-foreground">
+                  {isRTL ? s.ar : s.en}
+                </p>
+                <p className="relative mt-1 text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
                   {isRTL ? s.desc_ar : s.desc_en}
                 </p>
               </Link>
