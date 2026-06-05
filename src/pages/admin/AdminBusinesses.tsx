@@ -311,6 +311,16 @@ const AdminBusinesses = () => {
     setEditForm((f) => ({ ...f, [key]: value }));
   }, []);
 
+  // When a workflow panel (create / edit / services) is open we collapse
+  // the heavy header, KPI strip, approvals banner and tier distribution
+  // so the active task gets full vertical priority at the top of the page.
+  const panelOpen = creatingBiz || !!editingBiz || !!servicesPanel;
+  const scrollToTop = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, []);
+
   const setServiceField = useCallback((key: string, value: string | number | boolean | null) => {
     setNewService(s => ({ ...s, [key]: value }));
   }, []);
@@ -989,6 +999,7 @@ const AdminBusinesses = () => {
         e.preventDefault();
         setEditingBiz(null); setServicesPanel(null);
         setCreateForm(emptyCreateForm()); setCreatingBiz(true);
+        scrollToTop();
       }
       if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
@@ -1130,11 +1141,13 @@ const AdminBusinesses = () => {
       membership_tier: biz.membership_tier,
     });
     setEditingBiz(biz);
+    scrollToTop();
   };
 
   const openServices = (bizId: string) => {
     setEditingBiz(null);
     setServicesPanel(bizId);
+    scrollToTop();
   };
 
   /* ─── Filters ─── */
@@ -1256,11 +1269,11 @@ const AdminBusinesses = () => {
             { label: isRTL ? 'إدارة الأعمال' : 'Business Management' },
           ]}
           title={isRTL ? 'إدارة الأعمال والمنشآت' : 'Business Management'}
-          subtitle={
+          subtitle={panelOpen ? undefined : (
             isRTL
               ? `${stats.total} منشأة مسجلة • تحكم كامل في الملفات والخدمات والفروع والعضويات`
               : `${stats.total} registered businesses • Full control of profiles, services, branches & memberships`
-          }
+          )}
           actions={
             <>
               <div className="flex bg-muted/40 border border-border/40 rounded-xl overflow-hidden p-0.5">
@@ -1320,14 +1333,14 @@ const AdminBusinesses = () => {
               <Button
                 size="sm"
                 className="h-10 text-xs gap-1.5 rounded-xl"
-                onClick={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); }}
+                onClick={() => { setEditingBiz(null); setServicesPanel(null); setCreateForm(emptyCreateForm()); setCreatingBiz(true); scrollToTop(); }}
               >
                 <Plus className="w-3.5 h-3.5" />
                 {isRTL ? 'منشأة جديدة' : 'New Business'}
               </Button>
             </>
           }
-          kpiSlot={
+          kpiSlot={panelOpen ? undefined : (
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
               <AdminKpiCard
                 label={isRTL ? 'إجمالي المنشآت' : 'Total Businesses'}
@@ -1361,13 +1374,13 @@ const AdminBusinesses = () => {
                 tone="secondary"
               />
             </div>
-          }
+          )}
         />
 
-        <UnifiedApprovalsCenterBanner />
+        {!panelOpen && <UnifiedApprovalsCenterBanner />}
 
         {/* ─── Tier Distribution Bar ─── */}
-        {stats.total > 0 && (
+        {!panelOpen && stats.total > 0 && (
           <div className="rounded-2xl border border-border/30 bg-card p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-heading font-bold text-sm flex items-center gap-2">
@@ -1400,7 +1413,7 @@ const AdminBusinesses = () => {
         )}
 
         {/* ─── Filters ─── */}
-        <BusinessFiltersToolbar
+        {!panelOpen && <BusinessFiltersToolbar
           searchInputRef={searchRef}
           searchInput={searchInput}
           search={search}
@@ -1421,9 +1434,9 @@ const AdminBusinesses = () => {
           isRTL={isRTL}
           resultsCount={filtered.length}
           onClearAll={() => { setSearchInput(''); setSearchParams(new URLSearchParams(), { replace: false }); }}
-        />
+        />}
 
-        <BusinessBulkActionBar
+        {!panelOpen && <BusinessBulkActionBar
           count={selected.size}
           language={language === 'ar' ? 'ar' : 'en'}
           isRTL={isRTL}
@@ -1450,7 +1463,7 @@ const AdminBusinesses = () => {
             clearSelected();
           }}
           onClear={clearSelected}
-        />
+        />}
 
         {/* ─── Inline Create Panel ─── */}
         {creatingBiz && (
@@ -2579,7 +2592,7 @@ const AdminBusinesses = () => {
         )}
 
         {/* ─── Business List ─── */}
-        {isLoading ? (
+        {!panelOpen && (isLoading ? (
           <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}</div>
         ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-border/30 bg-card p-12 text-center">
@@ -2822,9 +2835,9 @@ const AdminBusinesses = () => {
               );
             })}
           </div>
-        )}
+        ))}
 
-        {!isLoading && filtered.length > 0 && (
+        {!panelOpen && !isLoading && filtered.length > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/30">
             <p className="text-[11px] text-muted-foreground tech-content">
               {isRTL
