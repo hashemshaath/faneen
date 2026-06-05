@@ -95,7 +95,7 @@ describe('PROVIDER-GROWTH-ENGINE-1 — Foundation', () => {
         longitude: 46.7,
         sectors: ['aluminum'],
         updated_at: new Date().toISOString(),
-        enrichment_confidence: 0.95,
+        enrichment_confidence: 1,
       });
       expect(q.score).toBeGreaterThanOrEqual(85);
       expect(q.band).toBe('excellent');
