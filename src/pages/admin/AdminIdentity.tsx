@@ -514,18 +514,21 @@ const AdminIdentity: React.FC = () => {
                   role="tab"
                   aria-selected={active}
                   onClick={() => setTabSafe(t.key)}
-                  className={`relative inline-flex items-center gap-2 px-3 md:px-4 min-h-[40px] rounded-xl text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
+                  className={`relative inline-flex items-center gap-2 px-3.5 md:px-5 min-h-[42px] rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
                     active
-                      ? 'bg-card text-foreground shadow-sm border border-border/40'
-                      : 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/50'
+                      ? 'bg-gradient-to-br from-card to-card/80 text-foreground shadow-md border border-border/60 ring-1 ring-primary/10'
+                      : 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/60'
                   }`}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
+                  <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-primary' : ''}`} />
                   <span>{isRTL ? t.ar : t.en}</span>
                   {typeof t.badge === 'number' && t.badge > 0 && (
-                    <span className="tech-content rounded-full px-1.5 py-0.5 text-[10px] bg-warning/15 text-warning font-bold">
+                    <span className="tech-content rounded-full px-2 py-0.5 text-[10px] bg-warning text-warning-foreground font-bold tabular-nums shadow-sm animate-in zoom-in duration-300">
                       {t.badge}
                     </span>
+                  )}
+                  {active && (
+                    <span className="absolute -bottom-1 start-1/2 -translate-x-1/2 h-1 w-8 rounded-full bg-gradient-to-r from-primary to-accent" aria-hidden />
                   )}
                 </button>
               );
