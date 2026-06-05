@@ -775,7 +775,15 @@ const BranchDetail: React.FC = () => {
                     <div key={p.id} className="p-4 rounded-xl border border-border/60 hover-lift">
                       {p.image_url && (
                          
-                        <img src={p.image_url} alt="" loading="lazy" className="w-full aspect-video object-cover rounded-lg mb-3" />
+                        <img
+                          src={p.image_url}
+                          alt={isRTL ? p.title_ar : (p.title_en || p.title_ar)}
+                          width={640}
+                          height={360}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full aspect-video object-cover rounded-lg mb-3"
+                        />
                       )}
                       <p className="font-medium" dir="auto">{isRTL ? p.title_ar : (p.title_en || p.title_ar)}</p>
                       {p.offer_price != null && (
