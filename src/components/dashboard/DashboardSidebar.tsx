@@ -242,9 +242,10 @@ const adminBaseGroups: MenuGroup[] = [
     icon: Users,
     items: [
       // People
-      { label: { ar: 'مركز الحسابات', en: 'Account Center' }, url: '/admin/identity', icon: Users, end: true },
-      // Unified approvals — single entry point for every pending approval
-      { label: { ar: 'مركز الموافقات', en: 'Approvals Center' }, url: '/admin/approvals', icon: CheckCircle2 },
+      { label: { ar: 'مركز الحسابات والموافقات', en: 'Accounts & Approvals' }, url: '/admin/identity', icon: Users, end: true },
+      // NOTE: `/admin/approvals` is merged into Accounts & Approvals
+      // (tabbed inbox at `/admin/identity?tab=approvals`). Standalone
+      // route redirects to the inbox tab automatically.
       // NOTE: `/admin/businesses` and `/admin/entity-access-requests` are
       // intentionally hidden from the sidebar. Both are fully merged into
       // the Approvals Center above (unified filterable list). They remain
