@@ -96,4 +96,37 @@ describe("SITE-INTEGRITY-DEEP-AUDIT-1", () => {
     }
     expect(offenders).toEqual([]);
   });
+
+  it("no stale routes (/dashboard/business, /admin/help-center) referenced", () => {
+    const offenders: string[] = [];
+    // Flag navigation literals only (to=/href=/navigate) targeting the
+    // removed exact paths. Legacy-alias maps that intentionally list the
+    // old slug as a fallback (e.g. useVisibleModules MODULE_ROUTE_ALIASES,
+    // HelpLauncher pattern table, NBA card help links) are out of scope.
+    const re = /(?:to|href)=["']\/(?:dashboard\/business|admin\/help-center)["']|navigate\(["']\/(?:dashboard\/business|admin\/help-center)["']/;
+    for (const f of productionFiles) {
+      if (re.test(readFileSync(f, "utf8"))) offenders.push(relative(process.cwd(), f));
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("all required SITE-INTEGRITY audit docs exist", () => {
+    const required = [
+      "docs/site-integrity-audit.md",
+      "docs/broken-links-audit-full.md",
+      "docs/external-links-audit.md",
+      "docs/fake-data-audit.md",
+      "docs/content-quality-audit.md",
+      "docs/image-asset-integrity-audit.md",
+      "docs/form-cta-integrity-audit.md",
+      "docs/naming-consistency-audit.md",
+      "docs/seo-integrity-audit.md",
+      "docs/admin-surface-audit.md",
+      "docs/dead-code-audit.md",
+    ];
+    const missing = required.filter((p) => {
+      try { return !statSync(join(process.cwd(), p)).isFile(); } catch { return true; }
+    });
+    expect(missing).toEqual([]);
+  });
 });
