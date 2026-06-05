@@ -101,7 +101,9 @@ describe('PSG-1 — Catalog Governance', () => {
     ];
     for (const f of required) expect(CATALOG_QUEUE_FILTERS).toContain(f);
     const src = read(QUEUE);
-    for (const f of required) expect(src).toContain(`catalog-queue-filter-${f}`);
+    expect(src).toContain('catalog-queue-filter-${f}');
+    expect(src).toContain('CATALOG_QUEUE_FILTERS');
+    for (const f of required) expect(src).toContain(`${f}:`);
   });
 
   it('queue offers bulk assign/enrichment/revision — never bulk publish', () => {
