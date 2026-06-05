@@ -505,6 +505,8 @@ const AppRoutes = () => (
           <Route path="/dashboard/loyalty/store" element={<Navigate to="/dashboard/loyalty?tab=store" replace />} />
 
           <Route path="/:username" element={<UsernameResolver />} />
+          {/* Nested branch URL: /{business-username}/{branch-slug} */}
+          <Route path="/:username/:branchSlug" element={<BranchDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
