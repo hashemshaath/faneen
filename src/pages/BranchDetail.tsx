@@ -349,69 +349,87 @@ const BranchDetail: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background border-b border-border/60">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-60"
-          style={{
-            background:
-              'radial-gradient(60% 60% at 20% 0%, hsl(var(--primary) / 0.10), transparent 60%), radial-gradient(40% 40% at 100% 20%, hsl(var(--accent) / 0.10), transparent 60%)',
-          }}
-        />
-        <div className="relative container max-w-6xl mx-auto px-4 py-10">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-            <Link to="/" className="hover:text-primary">{t(isRTL, 'الرئيسية', 'Home')}</Link>
-            <span>/</span>
+      {/* Hero — matches BusinessProfile visual language (cover band + overlapping card) */}
+      <header className="relative">
+        <div className="relative h-28 overflow-hidden bg-primary sm:h-52 md:h-64">
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-20"
+            style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, hsl(var(--accent) / 0.4) 0%, transparent 60%)' }}
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-10"
+            style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.3) 0%, transparent 50%)' }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+        </div>
+
+        <div className="container max-w-6xl mx-auto relative z-10 -mt-10 px-3 sm:-mt-20 sm:px-4">
+          <nav className="flex items-center gap-2 text-xs text-primary-foreground/90 mb-3 px-1" aria-label="breadcrumb">
+            <Link to="/" className="hover:text-accent">{t(isRTL, 'الرئيسية', 'Home')}</Link>
+            <span className="opacity-60">/</span>
             {business?.username && (
               <>
-                <Link to={`/${business.username}`} className="hover:text-primary truncate max-w-[200px]">{businessName}</Link>
-                <span>/</span>
+                <Link to={`/${business.username}`} className="hover:text-accent truncate max-w-[200px]">{businessName}</Link>
+                <span className="opacity-60">/</span>
               </>
             )}
-            <span className="text-foreground truncate">{branchName}</span>
-          </div>
+            <span className="text-primary-foreground truncate">{branchName}</span>
+          </nav>
 
-          <div className="flex items-start gap-4 flex-wrap">
-            {business?.logo_url && (
-               
-              <img src={business.logo_url} alt={businessName} loading="lazy" className="w-20 h-20 rounded-2xl object-cover border border-border shadow-sm bg-card" />
-            )}
-            <div className="flex-1 min-w-[240px]">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl md:text-4xl font-bold tracking-tight" dir="auto">
-                  {branchName}
-                  {businessName && (
-                    <span className="block text-base md:text-lg font-medium text-muted-foreground mt-1">
-                      {t(isRTL, 'فرع تابع لـ', 'A branch of')} {businessName}
-                    </span>
-                  )}
-                </h1>
-                {branch.is_main && (
-                  <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1">
-                    <Star className="w-3 h-3 fill-current" />
-                    {t(isRTL, 'الفرع الرئيسي', 'Main branch')}
-                  </Badge>
-                )}
-                {locationLabel && (
-                  <Badge variant="outline" className="gap-1">
-                    <MapPin className="w-3 h-3" />
-                    <span dir="auto">{locationLabel}</span>
-                  </Badge>
-                )}
-                {branch.ref_id && (
-                  <Badge variant="secondary" className="gap-1 tech-content">
-                    <ShieldCheck className="w-3 h-3" />
-                    {branch.ref_id}
-                  </Badge>
+          <div className="rounded-2xl border border-border/50 bg-card/95 p-4 shadow-xl backdrop-blur-xl dark:border-border/30 dark:bg-card/80 sm:rounded-[1.75rem] sm:p-6">
+            <div className="flex flex-row items-start gap-3 sm:gap-6">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-accent/20 bg-background shadow-lg dark:border-accent/30 sm:h-24 sm:w-24 sm:rounded-3xl">
+                {business?.logo_url ? (
+                  
+                  <img src={business.logo_url} alt={businessName} className="h-full w-full object-cover" loading="lazy" />
+                ) : (
+                  <span className="font-heading text-2xl font-black text-accent sm:text-4xl">
+                    {(branchName || businessName || 'ق').charAt(0)}
+                  </span>
                 )}
               </div>
-              {(branch.description_ar || branch.description_en) && (
-                <p className="mt-3 text-sm text-muted-foreground max-w-2xl" dir="auto">
-                  {isRTL ? (branch.description_ar || branch.description_en) : (branch.description_en || branch.description_ar)}
-                </p>
-              )}
-              <div className="mt-4 flex items-center gap-2 flex-wrap">
+
+              <div className="flex-1 min-w-0">
+                <h1 className="font-heading text-xl sm:text-3xl font-bold tracking-tight leading-tight" dir="auto">
+                  {branchName}
+                </h1>
+                {businessName && business?.username && (
+                  <Link
+                    to={`/${business.username}`}
+                    className="mt-1 inline-flex items-center gap-1.5 text-sm sm:text-base text-muted-foreground hover:text-primary transition"
+                    dir="auto"
+                  >
+                    <Building2 className="w-3.5 h-3.5" />
+                    {t(isRTL, 'فرع تابع لـ', 'A branch of')}
+                    <span className="font-semibold text-foreground">{businessName}</span>
+                  </Link>
+                )}
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  {branch.is_main && (
+                    <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1">
+                      <Star className="w-3 h-3 fill-current" />
+                      {t(isRTL, 'الفرع الرئيسي', 'Main branch')}
+                    </Badge>
+                  )}
+                  {locationLabel && (
+                    <Badge variant="outline" className="gap-1">
+                      <MapPin className="w-3 h-3" />
+                      <span dir="auto">{locationLabel}</span>
+                    </Badge>
+                  )}
+                </div>
+                {(branch.description_ar || branch.description_en) && (
+                  <p className="mt-3 text-sm text-muted-foreground max-w-2xl line-clamp-2" dir="auto">
+                    {isRTL ? (branch.description_ar || branch.description_en) : (branch.description_en || branch.description_ar)}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* CTA row */}
+            <div className="mt-5 flex items-center gap-2 flex-wrap">
                 {business?.username && (
                   <Button asChild size="sm" variant="outline" className="gap-2 rounded-xl">
                     <Link to={`/${business.username}`}>
@@ -448,11 +466,10 @@ const BranchDetail: React.FC = () => {
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
                   {t(isRTL, 'مشاركة', 'Share')}
                 </Button>
-              </div>
             </div>
           </div>
         </div>
-      </section>
+      </header>
 
       {/* KPI strip + Section nav */}
       <div className="sticky top-16 z-30 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
