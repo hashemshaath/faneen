@@ -57,6 +57,7 @@ export {
 export { listAllBusinessServicesLite } from './services/services/admin';
 export {
   insertBusinessBranch,
+  insertBusinessBranchReturning,
   updateBusinessBranchById,
   deleteBusinessBranchById,
   setMainBranch,
