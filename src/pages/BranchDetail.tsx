@@ -463,6 +463,8 @@ const BranchDetail: React.FC = () => {
               </CardContent>
             </Card>
           )}
+
+          <BranchReviews branchId={branch.id} businessId={branch.business_id} />
         </div>
       </section>
     </div>
