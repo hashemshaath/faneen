@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+import { execSync } from 'node:child_process';
 
 const DIRECT_INVOKE = /supabase\.functions\.invoke\(\s*['"]send-transactional-email['"]/;
 
 function read(relativePath: string): string {
-  const fs = require('fs');
-  const path = require('path');
   return fs.readFileSync(path.resolve(process.cwd(), relativePath), 'utf-8');
 }
 
@@ -87,7 +88,6 @@ describe('Global send-transactional-email cleanliness (post E-Mail-10)', () => {
   });
 
   it('shared wrapper is the only direct caller in src/', () => {
-    const { execSync } = require('child_process');
     const out = execSync(
       `grep -rln --exclude-dir=__tests__ "supabase.functions.invoke('send-transactional-email'" src/ || true`,
       { encoding: 'utf-8' },
