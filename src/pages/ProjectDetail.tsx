@@ -20,6 +20,7 @@ import {
   ShieldCheck, MessageSquare
 } from 'lucide-react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { track } from '@/lib/analytics-events';
 import { detectSectorFromCategorySlug } from '@/lib/sector-keywords';
@@ -84,9 +85,20 @@ const ProjectDetail = () => {
   const projectTitle = project ? (language === 'ar' ? project.title_ar : (project.title_en || project.title_ar)) : '';
   const projectDesc = project ? (language === 'ar' ? project.description_ar : (project.description_en || project.description_ar)) : '';
 
+  const projectLang: 'ar' | 'en' = language === 'ar' ? 'ar' : 'en';
+  const projectCategoryName = category ? (language === 'ar' ? category.name_ar : (category.name_en || category.name_ar)) : '';
+  const projectSeoTitle = projectTitle
+    ? buildSeoTitle({ kind: 'project', lang: projectLang, name: projectTitle, category: projectCategoryName })
+    : (isRTL ? 'تفاصيل المشروع' : 'Project Details');
+  const projectSeoDesc = buildSeoDescription({
+    kind: 'project',
+    lang: projectLang,
+    name: projectTitle,
+    rawDescription: projectDesc,
+  });
   usePageMeta({
-    title: projectTitle || (isRTL ? 'تفاصيل المشروع' : 'Project Details'),
-    description: projectDesc?.slice(0, 160) || '',
+    title: projectSeoTitle,
+    description: projectSeoDesc,
     ogImage:
       project?.cover_image_url ||
       ogImageFor(id ? `project-${id}` : 'project', {
@@ -97,7 +109,7 @@ const ProjectDetail = () => {
     ogType: 'article',
     canonical: id ? `https://qitaat.com/projects/${id}` : undefined,
     ogTitle: projectTitle || undefined,
-    ogDescription: projectDesc?.slice(0, 160) || undefined,
+    ogDescription: projectSeoDesc,
   });
 
   const projectJsonLd = useMemo(() => {
