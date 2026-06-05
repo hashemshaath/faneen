@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { listPublicBusinessesForSector } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import {
   buildBreadcrumbList, buildFaqPage, ogImageFor, SITE_URL,
 } from '@/lib/seo/structured-data';
@@ -152,17 +153,24 @@ const SectorCity: React.FC = () => {
   const cityName = city ? (isRTL ? city.nameAr : city.nameEn) : '';
   const cityIn = city ? (isRTL ? (city.inAr || `في ${city.nameAr}`) : `in ${city.nameEn}`) : '';
 
-  const title = sector && city
-    ? (isRTL
-        ? `${meta!.name} في ${city.nameAr} | قِطاعات`
-        : `${meta!.name} in ${city.nameEn} | Qitaat`)
-    : (isRTL ? 'صفحة غير موجودة | قِطاعات' : 'Not found | Qitaat');
-
-  const description = sector && city
-    ? (isRTL
-        ? `اعثر على مزودي ${meta!.name} في ${city.nameAr}، واستعرض الجهات والخدمات المناسبة لمشاريع البناء والتشييد عبر منصة قِطاعات.`
-        : `Find ${meta!.name} providers in ${city.nameEn}. Browse vetted firms and services for construction projects on Qitaat.`)
-    : '';
+  const lang = isRTL ? 'ar' as const : 'en' as const;
+  const title = buildSeoTitle({
+    kind: 'category',
+    lang,
+    name: meta?.name,
+    city: city ? (isRTL ? city.nameAr : city.nameEn) : undefined,
+  });
+  const description = buildSeoDescription({
+    kind: 'category',
+    lang,
+    name: meta?.name,
+    city: city ? (isRTL ? city.nameAr : city.nameEn) : undefined,
+    customDescription: sector && city
+      ? (isRTL
+          ? `اعثر على مزودي ${meta!.name} في ${city.nameAr}، واستعرض الجهات والخدمات المناسبة لمشاريع البناء والتشييد عبر منصة قِطاعات.`
+          : `Find ${meta!.name} providers in ${city.nameEn}. Browse vetted firms and services for construction projects on Qitaat.`)
+      : undefined,
+  });
 
   const keywords = sector && city
     ? [
