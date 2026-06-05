@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useBi } from '@/modules/i18n/useBi';
+import { useBi } from '@/components/common/Bilingual';
 import { Card } from '@/components/ui/card';
 import { AlertTriangle, CheckCircle2, Globe, ImageOff } from 'lucide-react';
 import {
