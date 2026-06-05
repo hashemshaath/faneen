@@ -1,0 +1,1 @@
+ALTER VIEW public.brands_public SET (security_invoker = true);
