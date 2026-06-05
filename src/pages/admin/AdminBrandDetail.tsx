@@ -284,8 +284,10 @@ const AdminBrandDetail: React.FC = () => {
                 customTitleEn={seoForm.seo_title_en}
                 customDescriptionAr={seoForm.seo_description_ar}
                 customDescriptionEn={seoForm.seo_description_en}
-                name={locale === 'ar' ? brand.name_ar : (brand.name_en ?? brand.name_ar)}
-                rawDescription={locale === 'ar' ? brand.description_ar : brand.description_en}
+                nameAr={brand.name_ar}
+                nameEn={brand.name_en ?? brand.name_ar}
+                rawDescriptionAr={brand.description_ar}
+                rawDescriptionEn={brand.description_en}
                 url={brand.slug ? `https://qitaat.com/brands/${brand.slug}` : null}
                 ogImageUrl={seoForm.og_image_url || brand.logo_url}
                 focusKeyword={seoForm.brand_keywords.split(',').map(k => k.trim()).filter(Boolean)[0] ?? null}
