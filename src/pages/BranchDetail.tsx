@@ -576,6 +576,7 @@ const BranchDetail: React.FC = () => {
       <div className="sticky top-16 z-30 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="container max-w-6xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2 text-xs text-muted-foreground me-2">
+            <BranchVisitCounter count={visitCount} />
             {reviewStats && reviewStats.count > 0 && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
                 <Star className="w-3 h-3 fill-current" />
