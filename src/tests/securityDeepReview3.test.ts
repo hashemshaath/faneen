@@ -21,7 +21,10 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-const srcFiles = walk(join(ROOT, "src")).filter((f) => /\.(ts|tsx)$/.test(f));
+const srcFiles = walk(join(ROOT, "src"))
+  .filter((f) => /\.(ts|tsx)$/.test(f))
+  // Exclude tests — they may contain raw HTML strings for fixtures.
+  .filter((f) => !/__tests__|\.test\.tsx?$|\/tests\//.test(f));
 const edgeFiles = walk(join(ROOT, "supabase", "functions")).filter((f) =>
   /\.ts$/.test(f),
 );
@@ -99,6 +102,15 @@ describe("SECURITY-DEEP-REVIEW-3 static guards", () => {
       "supabase/functions/verify-login-otp/index.ts",
       // KNOWN PARTIAL (M-2 in deep review 3): pending host allowlist.
       "supabase/functions/check-badge-backlinks/index.ts",
+      // AI gateway clients — all fetch hardcoded api.lovable.dev / openai endpoints.
+      "supabase/functions/ai-center/index.ts",
+      "supabase/functions/analyze-contract-document/index.ts",
+      "supabase/functions/blog-ai-tools/index.ts",
+      "supabase/functions/contracts-ai-suggest-clauses/index.ts",
+      "supabase/functions/triage-contact-message/index.ts",
+      // Internal cron / DB sweep workers (no external URL input).
+      "supabase/functions/data-enrichment-run/index.ts",
+      "supabase/functions/membership-lifecycle-dispatcher/index.ts",
     ]);
     const offenders: string[] = [];
     for (const file of edgeFiles) {
