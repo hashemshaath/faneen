@@ -71,7 +71,7 @@ const MAX_FILES = 8;
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 function safeFileName(name: string): string {
-  const cleaned = name.replace(/[^\w.\-]+/g, '_').replace(/_+/g, '_');
+  const cleaned = name.replace(/[^\w.-]+/g, '_').replace(/_+/g, '_');
   return cleaned.slice(-120) || 'file';
 }
 
