@@ -10,7 +10,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity, RefreshCw, Loader2, CheckCircle2, XCircle, AlertTriangle,
   ChevronDown, ChevronUp, MapPin, Mail, CreditCard, Sparkles, Globe, BarChart3,
-  KeyRound, ShieldCheck, Copy, Check, HelpCircle, Timer, Filter,
+  KeyRound, ShieldCheck, Copy, Check, HelpCircle, Timer, Filter as FilterIcon,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -87,7 +87,7 @@ const CATEGORIES: Array<{ id: Category; label: { ar: string; en: string }; icon:
   { id: "analytics", label: { ar: "التحليلات", en: "Analytics" }, icon: BarChart3 },
 ];
 
-type Filter = "all" | "ok" | "fail" | "deferred";
+type StatusFilter = "all" | "ok" | "fail" | "deferred";
 
 /** Inline diagnostic hint generator. Maps common error codes / states to
  *  actionable bilingual guidance — keeps users from leaving the page. */
@@ -300,7 +300,7 @@ const AdminIntegrations = () => {
   const qc = useQueryClient();
   const [nonce, setNonce] = useState(0);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<StatusFilter>("all");
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [recheckingId, setRecheckingId] = useState<string | null>(null);
@@ -439,9 +439,9 @@ const AdminIntegrations = () => {
             <span className="text-xs font-semibold tabular-nums tech-content min-w-fit" dir="ltr">{healthPct}%</span>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+            <FilterIcon className="w-3.5 h-3.5 text-muted-foreground" />
             {(["all", "ok", "fail", "deferred"] as const).map((f) => {
-              const labels: Record<Filter, { ar: string; en: string }> = {
+              const labels: Record<StatusFilter, { ar: string; en: string }> = {
                 all: { ar: "الكل", en: "All" },
                 ok: { ar: "تعمل", en: "Healthy" },
                 fail: { ar: "معطّلة", en: "Failing" },
