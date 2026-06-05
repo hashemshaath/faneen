@@ -553,6 +553,7 @@ export const BranchesTab = ({
 }: BranchesTabProps) => {
   const { language } = useLanguage();
   const { data: branches, isLoading } = useBranches(businessId);
+  const [regionFilter, setRegionFilter] = React.useState<string>("all");
 
   if (isLoading) {
     return (
@@ -567,6 +568,12 @@ export const BranchesTab = ({
   if (!branches?.length) {
     return <EmptyState icon={GitBranch} text={language === "ar" ? "لا توجد فروع بعد" : "No branches yet"} />;
   }
+
+  const regions = Array.from(
+    new Set(branches.map((b) => b.region).filter((r): r is string => !!r)),
+  );
+  const visibleBranches =
+    regionFilter === "all" ? branches : branches.filter((b) => b.region === regionFilter);
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
@@ -589,7 +596,44 @@ export const BranchesTab = ({
           </Button>
         </div>
       )}
-      {branches.map((branch, index) => {
+      {regions.length > 1 && (
+        <div className="sm:col-span-2 flex flex-wrap items-center gap-2">
+          <span className="text-[11px] text-muted-foreground">
+            {language === "ar" ? "تصفية حسب المنطقة:" : "Filter by region:"}
+          </span>
+          <button
+            type="button"
+            onClick={() => setRegionFilter("all")}
+            className={cn(
+              "rounded-full border px-3 py-1 text-[11px] transition-colors",
+              regionFilter === "all"
+                ? "border-accent bg-accent/10 text-accent"
+                : "border-border/40 text-muted-foreground hover:border-accent/30",
+            )}
+          >
+            {language === "ar" ? `الكل (${branches.length})` : `All (${branches.length})`}
+          </button>
+          {regions.map((r) => {
+            const count = branches.filter((b) => b.region === r).length;
+            return (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRegionFilter(r)}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-[11px] transition-colors",
+                  regionFilter === r
+                    ? "border-accent bg-accent/10 text-accent"
+                    : "border-border/40 text-muted-foreground hover:border-accent/30",
+                )}
+              >
+                {r} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {visibleBranches.map((branch, index) => {
         const name = getLocalizedValue(language, branch.name_ar, branch.name_en);
         const addressParts = [
           branch.district,
