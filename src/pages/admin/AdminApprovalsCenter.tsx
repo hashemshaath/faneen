@@ -1,31 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  ShieldCheck, AtSign, UserPlus, Building2, Crown,
-  Search, RefreshCw, Loader2, Check, X, Pencil, Inbox,
-  CheckCircle2, Clock, XCircle, Filter, ArrowUpDown,
-} from 'lucide-react';
-import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
-import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta } from '@/hooks/usePageMeta';
-import { useNoIndex } from '@/hooks/useNoIndex';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import {
-  listPendingProviderReviewBusinesses,
-  listPendingUsernameBusinesses,
-} from '@/modules/businesses/services/listPendingApprovalBusinesses';
-import { getReviewer } from '@/pages/admin/approvalsCenter/categoryReviewers';
+import React from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
+
+/**
+ * UNIFIED-ACCOUNTS-APPROVALS — `/admin/approvals` is now merged into
+ * the Account & Approvals Center at `/admin/identity?tab=approvals`.
+ * Preserve query-string for any deep links.
+ */
+const AdminApprovalsCenter: React.FC = () => {
+  const [sp] = useSearchParams();
+  const qs = new URLSearchParams(sp);
+  if (!qs.get('tab')) qs.set('tab', 'approvals');
+  return <Navigate to={`/admin/identity?${qs.toString()}`} replace />;
+};
+
+export default AdminApprovalsCenter;
 
 /**
  * UNIFIED-APPROVALS-CENTER-FINAL
