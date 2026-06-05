@@ -833,10 +833,14 @@ const DashboardBlog = () => {
                       {/* Unified SEO Preview (builder-driven) */}
                       <SEOPreviewCard
                         kind="blog"
-                        customTitle={isRTL ? form.meta_title_ar : form.meta_title_en}
-                        customDescription={isRTL ? form.meta_description_ar : form.meta_description_en}
-                        name={isRTL ? form.title_ar : form.title_en}
-                        rawDescription={isRTL ? form.excerpt_ar : form.excerpt_en}
+                        customTitleAr={form.meta_title_ar}
+                        customTitleEn={form.meta_title_en}
+                        customDescriptionAr={form.meta_description_ar}
+                        customDescriptionEn={form.meta_description_en}
+                        nameAr={form.title_ar}
+                        nameEn={form.title_en}
+                        rawDescriptionAr={form.excerpt_ar}
+                        rawDescriptionEn={form.excerpt_en}
                         url={form.slug ? `https://qitaat.com/blog/${form.slug}` : null}
                         ogImageUrl={form.og_image_url || form.cover_image_url || null}
                         focusKeyword={form.focus_keyword}

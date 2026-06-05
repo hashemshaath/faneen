@@ -102,6 +102,7 @@ import { SavedViewsMenu } from '@/components/admin/SavedViewsMenu';
 import { useAdminSavedViews } from '@/hooks/useAdminSavedViews';
 import { BusinessFiltersToolbar } from '@/components/admin/businesses/BusinessFiltersToolbar';
 import { BusinessBulkActionBar } from '@/components/admin/businesses/BusinessBulkActionBar';
+import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -581,6 +582,10 @@ const AdminBusinesses = () => {
         longitude: editForm.longitude || null, category_id: editForm.category_id || null,
         country_id: editForm.country_id || null, city_id: editForm.city_id || null,
         logo_url: editForm.logo_url || null, cover_url: editForm.cover_url || null,
+        seo_title_ar: editForm.seo_title_ar || null, seo_title_en: editForm.seo_title_en || null,
+        seo_description_ar: editForm.seo_description_ar || null, seo_description_en: editForm.seo_description_en || null,
+        seo_keywords: String(editForm.seo_keywords || '').split(',').map(k => k.trim()).filter(Boolean),
+        og_image: editForm.og_image || null,
         unified_number: editForm.unified_number || null, contact_person: editForm.contact_person || null,
         mobile: editForm.mobile || null, customer_service_phone: editForm.customer_service_phone || null,
         region_en: editForm.region_en || null, district_en: editForm.district_en || null,
@@ -1179,6 +1184,10 @@ const AdminBusinesses = () => {
       address: biz.address || '', category_id: biz.category_id || '',
       country_id: biz.country_id || '', city_id: biz.city_id || '',
       logo_url: biz.logo_url || '', cover_url: biz.cover_url || '',
+      seo_title_ar: biz.seo_title_ar || '', seo_title_en: biz.seo_title_en || '',
+      seo_description_ar: biz.seo_description_ar || '', seo_description_en: biz.seo_description_en || '',
+      seo_keywords: Array.isArray(biz.seo_keywords) ? biz.seo_keywords.join(', ') : '',
+      og_image: biz.og_image || '',
       national_id: biz.national_id || '', additional_number: biz.additional_number || '',
       region: biz.region || '', district: biz.district || '',
       street_name: biz.street_name || '', building_number: biz.building_number || '',
@@ -1283,6 +1292,8 @@ const AdminBusinesses = () => {
   const filteredCities = editForm.country_id
     ? cities.filter((c) => c.country_id === editForm.country_id)
     : cities;
+  const editCategoryName = categories.find((c) => c.id === editForm.category_id);
+  const editCityName = cities.find((c) => c.id === editForm.city_id);
 
   /* ─── Saved Views (per-admin localStorage) ─── */
   type BizViewFilters = {
@@ -1925,12 +1936,13 @@ const AdminBusinesses = () => {
               </div>
             </div>
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full grid grid-cols-9 h-9 rounded-xl">
+                <TabsList className="w-full grid grid-cols-10 h-9 rounded-xl">
                   <TabsTrigger value="info" className="text-[10px] rounded-lg">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
                   <TabsTrigger value="owner" className="text-[10px] rounded-lg">{isRTL ? 'المسؤول' : 'Owner'}</TabsTrigger>
                   <TabsTrigger value="address" className="text-[10px] rounded-lg">{isRTL ? 'العنوان' : 'Address'}</TabsTrigger>
                   <TabsTrigger value="content" className="text-[10px] rounded-lg">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
                   <TabsTrigger value="media" className="text-[10px] rounded-lg">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
+                  <TabsTrigger value="seo" className="text-[10px] rounded-lg">SEO</TabsTrigger>
                   <TabsTrigger value="contact" className="text-[10px] rounded-lg">{isRTL ? 'التواصل' : 'Contact'}</TabsTrigger>
                   <TabsTrigger value="branches" className="text-[10px] rounded-lg">{isRTL ? 'الفروع' : 'Branches'} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
                   <TabsTrigger value="controls" className="text-[10px] rounded-lg">{isRTL ? 'التحكم' : 'Controls'}</TabsTrigger>
@@ -2190,6 +2202,56 @@ const AdminBusinesses = () => {
                           onChange={(url) => addPortfolioMutation.mutate(url)} placeholder={isRTL ? 'إضافة صورة' : 'Add image'} />
                       </div>
                     </div>
+                  </div>
+                </TabsContent>
+
+                {/* ── SEO Tab ── */}
+                <TabsContent value="seo" className="space-y-4 mt-3">
+                  <SEOPreviewCard
+                    kind="company"
+                    customTitleAr={editForm.seo_title_ar}
+                    customTitleEn={editForm.seo_title_en}
+                    customDescriptionAr={editForm.seo_description_ar}
+                    customDescriptionEn={editForm.seo_description_en}
+                    nameAr={editForm.name_ar}
+                    nameEn={editForm.name_en}
+                    activityAr={editCategoryName?.name_ar ?? null}
+                    activityEn={editCategoryName?.name_en ?? null}
+                    cityAr={editCityName?.name_ar ?? null}
+                    cityEn={editCityName?.name_en ?? null}
+                    rawDescriptionAr={editForm.description_ar}
+                    rawDescriptionEn={editForm.description_en}
+                    url={editingBiz.username ? `https://qitaat.com/${editingBiz.username}` : null}
+                    ogImageUrl={editForm.og_image || editForm.cover_url || editForm.logo_url || null}
+                    focusKeyword={String(editForm.seo_keywords || '').split(',').map(k => k.trim()).filter(Boolean)[0] ?? null}
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs font-semibold">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                      <Input value={editForm.seo_title_ar} onChange={e => setField('seo_title_ar', e.target.value)} dir="auto" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                      <Input value={editForm.seo_title_en} onChange={e => setField('seo_title_en', e.target.value)} dir="ltr" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                      <Textarea value={editForm.seo_description_ar} onChange={e => setField('seo_description_ar', e.target.value)} rows={2} dir="auto" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                      <Textarea value={editForm.seo_description_en} onChange={e => setField('seo_description_en', e.target.value)} rows={2} dir="ltr" className="mt-1" />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold">{isRTL ? 'كلمات SEO' : 'SEO keywords'}</Label>
+                    <Input value={editForm.seo_keywords} onChange={e => setField('seo_keywords', e.target.value)} dir="auto" className="mt-1" placeholder={isRTL ? 'ألمنيوم, زجاج, تركيب' : 'aluminum, glass, installation'} />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'صورة OG' : 'OG image'}</Label>
+                    <ImageUpload bucket="business-assets" value={editForm.og_image}
+                      onChange={(url) => setField('og_image', url)} onRemove={() => setField('og_image', '')}
+                      placeholder={isRTL ? 'رفع صورة المشاركة' : 'Upload share image'} />
                   </div>
                 </TabsContent>
 

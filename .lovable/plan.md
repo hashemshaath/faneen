@@ -93,8 +93,13 @@
 
 ### تقدّم المرحلة 3
 - ✅ `src/components/seo/SEOPreviewCard.tsx` — معاينة Google ثنائية اللغة + شريط طول العنوان/الوصف + تحذيرات OG/canonical/keyword.
+- ✅ Migration additive: أضافت حقول SEO إلى `businesses`, `categories`, `blog_posts`, و `brand_catalog`، وحدّثت `brands_public` لإظهار حقول العلامات المعتمدة فقط.
+- ✅ أمان الواجهة العامة: تم ضبط `brands_public` كـ `security_invoker` بعد تحديثها.
 - ✅ مدمج في `src/pages/dashboard/DashboardBlog.tsx` (تبويب SEO) يقرأ من `meta_title_*` و `meta_description_*` و `og_image_url`.
-- ⏳ مدمج لاحقاً في `AdminBusinesses`, `AdminCategories`, `AdminBrands` بعد موافقة على الهجرة (تتطلب إضافة أعمدة `seo_title_*` / `seo_description_*` / `og_image` لجداول `businesses` / `categories` / `brands`).
+- ✅ مدمج في `src/pages/admin/AdminBusinesses.tsx` عبر تبويب SEO inline مع `seo_title_*`, `seo_description_*`, `seo_keywords`, و `og_image`.
+- ✅ مدمج في `src/pages/admin/AdminCategories.tsx` داخل نموذج التصنيف inline مع `seo_title_*`, `seo_description_*`, و `featured_keywords`.
+- ✅ مدمج في `src/pages/admin/AdminBrandDetail.tsx` مع حفظ `seo_title_*`, `seo_description_*`, `brand_keywords`, و `og_image_url`.
+- ⏳ تحسين لاحق اختياري: إضافة مولدات AI لهذه الحقول في شاشات الأعمال/التصنيفات/العلامات كما هو موجود في محرر المدونة.
 
 ---
 

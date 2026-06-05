@@ -32,6 +32,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -40,6 +41,9 @@ import {
 interface Category {
   id: string; name_ar: string; name_en: string; slug: string;
   description_ar: string | null; description_en: string | null;
+  seo_title_ar: string | null; seo_title_en: string | null;
+  seo_description_ar: string | null; seo_description_en: string | null;
+  featured_keywords: string[] | null;
   icon: string | null; parent_id: string | null; is_active: boolean;
   sort_order: number; created_at: string;
 }
@@ -47,12 +51,17 @@ interface Category {
 interface CategoryForm {
   name_ar: string; name_en: string; slug: string; description_ar: string;
   description_en: string; icon: string; parent_id: string | null;
+  seo_title_ar: string; seo_title_en: string;
+  seo_description_ar: string; seo_description_en: string;
+  featured_keywords: string;
   is_active: boolean; sort_order: number;
 }
 
 const emptyForm: CategoryForm = {
   name_ar: '', name_en: '', slug: '', description_ar: '', description_en: '',
-  icon: '', parent_id: null, is_active: true, sort_order: 0,
+  icon: '', parent_id: null, seo_title_ar: '', seo_title_en: '',
+  seo_description_ar: '', seo_description_en: '', featured_keywords: '',
+  is_active: true, sort_order: 0,
 };
 
 interface TreeNode extends Category {
@@ -387,6 +396,9 @@ const AdminCategories = () => {
         name_ar: form.name_ar.trim(), name_en: form.name_en.trim(),
         slug: form.slug.trim() || form.name_en.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
         description_ar: form.description_ar || null, description_en: form.description_en || null,
+        seo_title_ar: form.seo_title_ar || null, seo_title_en: form.seo_title_en || null,
+        seo_description_ar: form.seo_description_ar || null, seo_description_en: form.seo_description_en || null,
+        featured_keywords: form.featured_keywords.split(',').map(k => k.trim()).filter(Boolean),
         icon: form.icon || null, parent_id: form.parent_id || null,
         is_active: form.is_active, sort_order: form.sort_order,
       };
@@ -436,6 +448,9 @@ const AdminCategories = () => {
     setForm({
       name_ar: cat.name_ar, name_en: cat.name_en, slug: cat.slug,
       description_ar: cat.description_ar || '', description_en: cat.description_en || '',
+      seo_title_ar: cat.seo_title_ar || '', seo_title_en: cat.seo_title_en || '',
+      seo_description_ar: cat.seo_description_ar || '', seo_description_en: cat.seo_description_en || '',
+      featured_keywords: (cat.featured_keywords ?? []).join(', '),
       icon: cat.icon || '', parent_id: cat.parent_id, is_active: cat.is_active, sort_order: cat.sort_order,
     });
     setShowForm(true);
@@ -448,6 +463,9 @@ const AdminCategories = () => {
       name_en: cat.name_en + ' (copy)',
       slug: cat.slug + '-copy',
       description_ar: cat.description_ar || '', description_en: cat.description_en || '',
+      seo_title_ar: cat.seo_title_ar || '', seo_title_en: cat.seo_title_en || '',
+      seo_description_ar: cat.seo_description_ar || '', seo_description_en: cat.seo_description_en || '',
+      featured_keywords: (cat.featured_keywords ?? []).join(', '),
       icon: cat.icon || '', parent_id: cat.parent_id,
       is_active: cat.is_active, sort_order: cat.sort_order + 1,
     });
@@ -676,6 +694,47 @@ const AdminCategories = () => {
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
                     <Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={2} className="text-sm rounded-lg" />
+                  </div>
+                </div>
+                <div className="rounded-xl border border-border/40 bg-muted/20 p-3 space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <FileText className="w-4 h-4 text-primary" />
+                    {isRTL ? 'حقول SEO' : 'SEO fields'}
+                  </div>
+                  <SEOPreviewCard
+                    kind="category"
+                    customTitleAr={form.seo_title_ar}
+                    customTitleEn={form.seo_title_en}
+                    customDescriptionAr={form.seo_description_ar}
+                    customDescriptionEn={form.seo_description_en}
+                    nameAr={form.name_ar}
+                    nameEn={form.name_en}
+                    rawDescriptionAr={form.description_ar}
+                    rawDescriptionEn={form.description_en}
+                    url={form.slug ? `https://qitaat.com/categories/${form.slug}` : null}
+                    focusKeyword={form.featured_keywords.split(',').map(k => k.trim()).filter(Boolean)[0] ?? null}
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                      <Input value={form.seo_title_ar} onChange={e => setForm(f => ({ ...f, seo_title_ar: e.target.value }))} className="h-9 rounded-lg" dir="auto" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                      <Input value={form.seo_title_en} onChange={e => setForm(f => ({ ...f, seo_title_en: e.target.value }))} className="h-9 rounded-lg" dir="ltr" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                      <Textarea value={form.seo_description_ar} onChange={e => setForm(f => ({ ...f, seo_description_ar: e.target.value }))} rows={2} className="text-sm rounded-lg" dir="auto" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                      <Textarea value={form.seo_description_en} onChange={e => setForm(f => ({ ...f, seo_description_en: e.target.value }))} rows={2} className="text-sm rounded-lg" dir="ltr" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{isRTL ? 'كلمات مفتاحية مميزة' : 'Featured keywords'}</Label>
+                    <Input value={form.featured_keywords} onChange={e => setForm(f => ({ ...f, featured_keywords: e.target.value }))} className="h-9 rounded-lg" dir="auto" placeholder={isRTL ? 'ألمنيوم, زجاج, تصنيع' : 'aluminum, glass, fabrication'} />
                   </div>
                 </div>
                 <div className="flex items-center gap-6 flex-wrap">

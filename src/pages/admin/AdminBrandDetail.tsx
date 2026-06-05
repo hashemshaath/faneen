@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -17,6 +17,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 
 import {
   adminGetBrand, adminApproveBrand, adminRejectBrand, adminArchiveBrand,
@@ -42,6 +46,10 @@ const AdminBrandDetail: React.FC = () => {
   const [mergeTarget, setMergeTarget] = useState('');
   const [rejectingLinkId, setRejectingLinkId] = useState<string | null>(null);
   const [linkReason, setLinkReason] = useState('');
+  const [seoForm, setSeoForm] = useState({
+    seo_title_ar: '', seo_title_en: '', seo_description_ar: '', seo_description_en: '',
+    brand_keywords: '', og_image_url: '',
+  });
 
   const brandQ = useQuery({
     queryKey: ['admin-brand-detail', id],
@@ -49,6 +57,18 @@ const AdminBrandDetail: React.FC = () => {
     enabled: !!id,
   });
   const brand = brandQ.data;
+
+  useEffect(() => {
+    if (!brand) return;
+    setSeoForm({
+      seo_title_ar: brand.seo_title_ar ?? '',
+      seo_title_en: brand.seo_title_en ?? '',
+      seo_description_ar: brand.seo_description_ar ?? '',
+      seo_description_en: brand.seo_description_en ?? '',
+      brand_keywords: (brand.brand_keywords ?? []).join(', '),
+      og_image_url: brand.og_image_url ?? '',
+    });
+  }, [brand]);
 
   usePageMeta({
     title: brand
@@ -132,6 +152,18 @@ const AdminBrandDetail: React.FC = () => {
       verification_status: brand?.is_verified ? 'unverified' : 'verified',
     }),
     onSuccess: () => { toast.success(isRTL ? 'تم التحديث' : 'Updated'); invalidate(); },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+  const saveSeo = useMutation({
+    mutationFn: () => adminUpdateBrand(id, {
+      seo_title_ar: seoForm.seo_title_ar || null,
+      seo_title_en: seoForm.seo_title_en || null,
+      seo_description_ar: seoForm.seo_description_ar || null,
+      seo_description_en: seoForm.seo_description_en || null,
+      brand_keywords: seoForm.brand_keywords.split(',').map(k => k.trim()).filter(Boolean),
+      og_image_url: seoForm.og_image_url || null,
+    }),
+    onSuccess: () => { toast.success(isRTL ? 'تم حفظ SEO' : 'SEO saved'); invalidate(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
@@ -239,6 +271,60 @@ const AdminBrandDetail: React.FC = () => {
               <Info label={isRTL ? 'الشركة المالكة' : 'Brand owner'} value={brand.brand_owner_company ?? '—'} />
               <Info label={isRTL ? 'سنة التأسيس' : 'Founded'} value={brand.founded_year ? String(brand.founded_year) : '—'} />
               <Info label={isRTL ? 'المصدر' : 'Source'} value={brand.source} />
+            </CardContent>
+          </Card>
+
+          {/* SEO */}
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Globe className="w-4 h-4" />SEO</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <SEOPreviewCard
+                kind="brand"
+                customTitleAr={seoForm.seo_title_ar}
+                customTitleEn={seoForm.seo_title_en}
+                customDescriptionAr={seoForm.seo_description_ar}
+                customDescriptionEn={seoForm.seo_description_en}
+                nameAr={brand.name_ar}
+                nameEn={brand.name_en ?? brand.name_ar}
+                rawDescriptionAr={brand.description_ar}
+                rawDescriptionEn={brand.description_en}
+                url={brand.slug ? `https://qitaat.com/brands/${brand.slug}` : null}
+                ogImageUrl={seoForm.og_image_url || brand.logo_url}
+                focusKeyword={seoForm.brand_keywords.split(',').map(k => k.trim()).filter(Boolean)[0] ?? null}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                  <Input value={seoForm.seo_title_ar} onChange={(e) => setSeoForm(f => ({ ...f, seo_title_ar: e.target.value }))} className="mt-1" dir="auto" />
+                </div>
+                <div>
+                  <Label className="text-xs">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                  <Input value={seoForm.seo_title_en} onChange={(e) => setSeoForm(f => ({ ...f, seo_title_en: e.target.value }))} className="mt-1" dir="ltr" />
+                </div>
+                <div>
+                  <Label className="text-xs">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                  <Textarea value={seoForm.seo_description_ar} onChange={(e) => setSeoForm(f => ({ ...f, seo_description_ar: e.target.value }))} rows={2} className="mt-1" dir="auto" />
+                </div>
+                <div>
+                  <Label className="text-xs">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                  <Textarea value={seoForm.seo_description_en} onChange={(e) => setSeoForm(f => ({ ...f, seo_description_en: e.target.value }))} rows={2} className="mt-1" dir="ltr" />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">{isRTL ? 'كلمات العلامة' : 'Brand keywords'}</Label>
+                <Input value={seoForm.brand_keywords} onChange={(e) => setSeoForm(f => ({ ...f, brand_keywords: e.target.value }))} className="mt-1" dir="auto" />
+              </div>
+              <div>
+                <Label className="text-xs mb-2 block">{isRTL ? 'صورة OG' : 'OG image'}</Label>
+                <ImageUpload bucket="business-assets" value={seoForm.og_image_url}
+                  onChange={(url) => setSeoForm(f => ({ ...f, og_image_url: url || '' }))}
+                  onRemove={() => setSeoForm(f => ({ ...f, og_image_url: '' }))}
+                  placeholder={isRTL ? 'رفع صورة المشاركة' : 'Upload share image'} />
+              </div>
+              <Button onClick={() => saveSeo.mutate()} disabled={saveSeo.isPending} className="w-full gap-2">
+                {saveSeo.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {isRTL ? 'حفظ SEO' : 'Save SEO'}
+              </Button>
             </CardContent>
           </Card>
 
