@@ -236,6 +236,7 @@ const DashboardLoyaltyHub = lazyRetry(() => import("./pages/dashboard/DashboardL
 const DashboardStaffHub = lazyRetry(() => import("./pages/dashboard/DashboardStaffHub"));
 const AdminOperationsHub = lazyRetry(() => import("./pages/admin/AdminOperationsHub"));
 const AdminOperationsCenterUnified = lazyRetry(() => import("./pages/admin/AdminOperationsCenterUnified"));
+const AdminConversionOptimization = lazyRetry(() => import("./pages/admin/AdminConversionOptimization"));
 const AdminReportsHub = lazyRetry(() => import("./pages/admin/AdminReportsHub"));
 const AdminEmailHub = lazyRetry(() => import("./pages/admin/AdminEmailHub"));
 const AdminSeoHub = lazyRetry(() => import("./pages/admin/AdminSeoHub"));
@@ -494,6 +495,8 @@ const AppRoutes = () => (
           <Route path="/admin/operations/console" element={<ProtectedRoute requireAdmin><Navigate to="/admin/operations?tab=console" replace /></ProtectedRoute>} />
           {/* OPERATIONS-CENTER-UNIFICATION-1 — unified read-only routing hub. */}
           <Route path="/admin/operations-center" element={<ProtectedRoute requireAdmin><AdminOperationsCenterUnified /></ProtectedRoute>} />
+          {/* MARKETPLACE-CONVERSION-OPTIMIZATION-1 — read-only conversion dashboard. */}
+          <Route path="/admin/conversion-optimization" element={<ProtectedRoute requireAdmin><AdminConversionOptimization /></ProtectedRoute>} />
          <Route path="/admin/ref/triage" element={<ProtectedRoute requireAdmin><AdminBulkReferenceTriage /></ProtectedRoute>} />
          <Route path="/admin/ref/:refId" element={<ProtectedRoute requireAdmin><AdminReferenceInspector /></ProtectedRoute>} />
           <Route path="/admin/analytics-settings" element={<ProtectedRoute requireAdmin><Navigate to="/admin/system-settings?tab=analytics" replace /></ProtectedRoute>} />
