@@ -15,7 +15,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { HelpLauncher } from '@/components/help-center/HelpLauncher';
+import { HelpLauncher } from '@/components/help/HelpLauncher';
 import {
   loadProviderGrowthBusinesses,
   loadProviderGrowthPipeline,
