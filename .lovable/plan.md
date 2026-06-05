@@ -99,7 +99,7 @@
 - ✅ مدمج في `src/pages/admin/AdminBusinesses.tsx` عبر تبويب SEO inline مع `seo_title_*`, `seo_description_*`, `seo_keywords`, و `og_image`.
 - ✅ مدمج في `src/pages/admin/AdminCategories.tsx` داخل نموذج التصنيف inline مع `seo_title_*`, `seo_description_*`, و `featured_keywords`.
 - ✅ مدمج في `src/pages/admin/AdminBrandDetail.tsx` مع حفظ `seo_title_*`, `seo_description_*`, `brand_keywords`, و `og_image_url`.
-- ⏳ تحسين لاحق اختياري: إضافة مولدات AI لهذه الحقول في شاشات الأعمال/التصنيفات/العلامات كما هو موجود في محرر المدونة.
+- ✅ مولدات AI (`FieldAiActions`: ترجمة + تحسين) أُضيفت لحقول `seo_title_*` و `seo_description_*` في `AdminBusinesses`، `AdminCategories`، و `AdminBrandDetail` — بنفس النمط المستخدم في `DashboardBlog`.
 
 ---
 

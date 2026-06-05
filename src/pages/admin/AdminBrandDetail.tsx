@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
+import { FieldAiActions } from '@/components/blog/FieldAiActions';
 
 import {
   adminGetBrand, adminApproveBrand, adminRejectBrand, adminArchiveBrand,
@@ -294,19 +295,39 @@ const AdminBrandDetail: React.FC = () => {
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                    <FieldAiActions value={seoForm.seo_title_ar || brand.name_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_title" compact
+                      onTranslated={(t) => setSeoForm(f => ({ ...f, seo_title_ar: t }))}
+                      onImproved={(t) => setSeoForm(f => ({ ...f, seo_title_ar: t }))} />
+                  </div>
                   <Input value={seoForm.seo_title_ar} onChange={(e) => setSeoForm(f => ({ ...f, seo_title_ar: e.target.value }))} className="mt-1" dir="auto" />
                 </div>
                 <div>
-                  <Label className="text-xs">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                    <FieldAiActions value={seoForm.seo_title_en || brand.name_en || ''} lang="en" isRTL={isRTL} fieldType="meta_title" compact
+                      onTranslated={(t) => setSeoForm(f => ({ ...f, seo_title_en: t }))}
+                      onImproved={(t) => setSeoForm(f => ({ ...f, seo_title_en: t }))} />
+                  </div>
                   <Input value={seoForm.seo_title_en} onChange={(e) => setSeoForm(f => ({ ...f, seo_title_en: e.target.value }))} className="mt-1" dir="ltr" />
                 </div>
                 <div>
-                  <Label className="text-xs">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                    <FieldAiActions value={seoForm.seo_description_ar || brand.description_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_description" compact
+                      onTranslated={(t) => setSeoForm(f => ({ ...f, seo_description_ar: t }))}
+                      onImproved={(t) => setSeoForm(f => ({ ...f, seo_description_ar: t }))} />
+                  </div>
                   <Textarea value={seoForm.seo_description_ar} onChange={(e) => setSeoForm(f => ({ ...f, seo_description_ar: e.target.value }))} rows={2} className="mt-1" dir="auto" />
                 </div>
                 <div>
-                  <Label className="text-xs">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                    <FieldAiActions value={seoForm.seo_description_en || brand.description_en || ''} lang="en" isRTL={isRTL} fieldType="meta_description" compact
+                      onTranslated={(t) => setSeoForm(f => ({ ...f, seo_description_en: t }))}
+                      onImproved={(t) => setSeoForm(f => ({ ...f, seo_description_en: t }))} />
+                  </div>
                   <Textarea value={seoForm.seo_description_en} onChange={(e) => setSeoForm(f => ({ ...f, seo_description_en: e.target.value }))} rows={2} className="mt-1" dir="ltr" />
                 </div>
               </div>

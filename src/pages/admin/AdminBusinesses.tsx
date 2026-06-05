@@ -2227,19 +2227,35 @@ const AdminBusinesses = () => {
                   />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs font-semibold">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-xs font-semibold">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                        <FieldAiActions value={editForm.seo_title_ar || editForm.name_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_title" compact
+                          onTranslated={(t) => setField('seo_title_ar', t)} onImproved={(t) => setField('seo_title_ar', t)} />
+                      </div>
                       <Input value={editForm.seo_title_ar} onChange={e => setField('seo_title_ar', e.target.value)} dir="auto" className="mt-1" />
                     </div>
                     <div>
-                      <Label className="text-xs font-semibold">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-xs font-semibold">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                        <FieldAiActions value={editForm.seo_title_en || editForm.name_en || ''} lang="en" isRTL={isRTL} fieldType="meta_title" compact
+                          onTranslated={(t) => setField('seo_title_en', t)} onImproved={(t) => setField('seo_title_en', t)} />
+                      </div>
                       <Input value={editForm.seo_title_en} onChange={e => setField('seo_title_en', e.target.value)} dir="ltr" className="mt-1" />
                     </div>
                     <div>
-                      <Label className="text-xs font-semibold">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-xs font-semibold">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                        <FieldAiActions value={editForm.seo_description_ar || editForm.description_ar || editForm.short_description_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_description" compact
+                          onTranslated={(t) => setField('seo_description_ar', t)} onImproved={(t) => setField('seo_description_ar', t)} />
+                      </div>
                       <Textarea value={editForm.seo_description_ar} onChange={e => setField('seo_description_ar', e.target.value)} rows={2} dir="auto" className="mt-1" />
                     </div>
                     <div>
-                      <Label className="text-xs font-semibold">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-xs font-semibold">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                        <FieldAiActions value={editForm.seo_description_en || editForm.description_en || editForm.short_description_en || ''} lang="en" isRTL={isRTL} fieldType="meta_description" compact
+                          onTranslated={(t) => setField('seo_description_en', t)} onImproved={(t) => setField('seo_description_en', t)} />
+                      </div>
                       <Textarea value={editForm.seo_description_en} onChange={e => setField('seo_description_en', e.target.value)} rows={2} dir="ltr" className="mt-1" />
                     </div>
                   </div>

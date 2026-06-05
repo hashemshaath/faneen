@@ -33,6 +33,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
+import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -716,19 +717,39 @@ const AdminCategories = () => {
                   />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-medium">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-xs font-medium">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                        <FieldAiActions value={form.seo_title_ar || form.name_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_title" compact
+                          onTranslated={(t) => setForm(f => ({ ...f, seo_title_ar: t }))}
+                          onImproved={(t) => setForm(f => ({ ...f, seo_title_ar: t }))} />
+                      </div>
                       <Input value={form.seo_title_ar} onChange={e => setForm(f => ({ ...f, seo_title_ar: e.target.value }))} className="h-9 rounded-lg" dir="auto" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-medium">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-xs font-medium">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                        <FieldAiActions value={form.seo_title_en || form.name_en || ''} lang="en" isRTL={isRTL} fieldType="meta_title" compact
+                          onTranslated={(t) => setForm(f => ({ ...f, seo_title_en: t }))}
+                          onImproved={(t) => setForm(f => ({ ...f, seo_title_en: t }))} />
+                      </div>
                       <Input value={form.seo_title_en} onChange={e => setForm(f => ({ ...f, seo_title_en: e.target.value }))} className="h-9 rounded-lg" dir="ltr" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-medium">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-xs font-medium">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                        <FieldAiActions value={form.seo_description_ar || form.name_ar || ''} lang="ar" isRTL={isRTL} fieldType="meta_description" compact
+                          onTranslated={(t) => setForm(f => ({ ...f, seo_description_ar: t }))}
+                          onImproved={(t) => setForm(f => ({ ...f, seo_description_ar: t }))} />
+                      </div>
                       <Textarea value={form.seo_description_ar} onChange={e => setForm(f => ({ ...f, seo_description_ar: e.target.value }))} rows={2} className="text-sm rounded-lg" dir="auto" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-medium">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-xs font-medium">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                        <FieldAiActions value={form.seo_description_en || form.name_en || ''} lang="en" isRTL={isRTL} fieldType="meta_description" compact
+                          onTranslated={(t) => setForm(f => ({ ...f, seo_description_en: t }))}
+                          onImproved={(t) => setForm(f => ({ ...f, seo_description_en: t }))} />
+                      </div>
                       <Textarea value={form.seo_description_en} onChange={e => setForm(f => ({ ...f, seo_description_en: e.target.value }))} rows={2} className="text-sm rounded-lg" dir="ltr" />
                     </div>
                   </div>
