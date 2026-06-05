@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ShieldCheck, AtSign, UserPlus, Building2, Crown,
   Search, RefreshCw, Loader2, Check, X, Pencil, Inbox,
-  CheckCircle2, Clock, XCircle, Filter, ArrowUpDown,
+  CheckCircle2, Clock, XCircle, Filter, ArrowUpDown, Layers, Globe,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import {
   listPendingProviderReviewBusinesses,
   listPendingUsernameBusinesses,
+  listAllBusinessesEnriched,
 } from '@/modules/businesses/services/listPendingApprovalBusinesses';
 import { getReviewer } from '@/pages/admin/approvalsCenter/categoryReviewers';
 import { runBulkReview } from '@/pages/admin/approvalsCenter/bulkReview';
@@ -41,7 +42,8 @@ type CategoryKey =
   | 'username'
   | 'entity_access'
   | 'business_verification'
-  | 'subscription';
+  | 'subscription'
+  | 'all_businesses';
 
 type StatusKey = 'pending' | 'approved' | 'rejected' | 'all';
 type SortKey = 'newest' | 'oldest';
@@ -56,6 +58,18 @@ interface UnifiedItem {
   primary: string;
   secondary?: string | null;
   createdAt: string | null;
+  /** Optional enriched payload used by the "all_businesses" comprehensive view. */
+  meta?: {
+    approvalStatus?: string | null;
+    usernameStatus?: string | null;
+    isActive?: boolean | null;
+    isVerified?: boolean | null;
+    isDemo?: boolean | null;
+    tier?: string | null;
+    completion?: number | null;
+    lastActiveAt?: string | null;
+    username?: string | null;
+  };
 }
 
 const PAGE_SIZE = 25;
@@ -65,6 +79,7 @@ const CATEGORY_META: Record<CategoryKey, {
   ar: string; en: string;
   toneBg: string; toneFg: string;
 }> = {
+  all_businesses:        { icon: Layers,      ar: 'كل الجهات',          en: 'All entities',        toneBg: 'bg-info/10',        toneFg: 'text-info' },
   provider_review:       { icon: ShieldCheck, ar: 'مراجعة مزوّد',     en: 'Provider review',     toneBg: 'bg-primary/10',     toneFg: 'text-primary' },
   username:              { icon: AtSign,      ar: 'اسم مستخدم',        en: 'Username',            toneBg: 'bg-accent/10',      toneFg: 'text-accent-foreground' },
   entity_access:         { icon: UserPlus,    ar: 'طلب انضمام',         en: 'Access request',      toneBg: 'bg-success/10',     toneFg: 'text-success' },
@@ -167,6 +182,49 @@ async function fetchSubscriptions(): Promise<UnifiedItem[]> {
   }));
 }
 
+/**
+ * Comprehensive enriched listing of every registered business — drives the
+ * "All entities" category so admins see status, approval, username, tier,
+ * verification, completion %, last activity and demo flag in one place.
+ */
+async function fetchAllBusinesses(): Promise<UnifiedItem[]> {
+  const { data } = await listAllBusinessesEnriched(500);
+  return data.map((r) => {
+    // Map approval_status to the inbox' status taxonomy so the global
+    // status filter still works on this category.
+    const status: UnifiedItem['status'] =
+      r.approval_status === 'published' || r.approval_status === 'approved'
+        ? 'approved'
+        : r.approval_status === 'rejected'
+        ? 'rejected'
+        : r.approval_status === 'submitted' || r.approval_status === 'under_review'
+        ? 'pending'
+        : (r.approval_status ?? 'pending');
+    return {
+      uid: `all_businesses:${r.id}`,
+      id: r.id,
+      businessId: r.id,
+      category: 'all_businesses',
+      status,
+      refId: r.ref_id ?? '—',
+      primary: r.name_ar ?? r.name_en ?? r.username ?? r.ref_id ?? '—',
+      secondary: r.username ? `@${r.username}` : (r.name_en ?? null),
+      createdAt: r.last_active_at ?? r.updated_at ?? r.created_at,
+      meta: {
+        approvalStatus: r.approval_status,
+        usernameStatus: r.username_status,
+        isActive: r.is_active,
+        isVerified: r.is_verified,
+        isDemo: r.is_demo,
+        tier: r.membership_tier,
+        completion: r.onboarding_completion,
+        lastActiveAt: r.last_active_at,
+        username: r.username,
+      },
+    };
+  });
+}
+
 export interface ApprovalsInboxProps {
   /** Compact mode hides the secondary text helper at the bottom of the filter bar. */
   compact?: boolean;
@@ -211,6 +269,7 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false,
     useQuery({ queryKey: ['ua', 'entity_access'],         queryFn: fetchEntityAccess,         staleTime: 30_000 }),
     useQuery({ queryKey: ['ua', 'business_verification'], queryFn: fetchBusinessVerification, staleTime: 30_000 }),
     useQuery({ queryKey: ['ua', 'subscription'],          queryFn: fetchSubscriptions,        staleTime: 30_000 }),
+    useQuery({ queryKey: ['ua', 'all_businesses'],        queryFn: fetchAllBusinesses,        staleTime: 60_000 }),
   ];
   const isLoading = queries.some((q) => q.isLoading);
   const isFetching = queries.some((q) => q.isFetching);
@@ -223,7 +282,7 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false,
 
   const stats = useMemo(() => {
     const counters: Record<CategoryKey, number> = {
-      provider_review: 0, username: 0, entity_access: 0,
+      all_businesses: 0, provider_review: 0, username: 0, entity_access: 0,
       business_verification: 0, subscription: 0,
     };
     let totalPending = 0;
@@ -231,6 +290,11 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false,
       if (it.status === 'pending') {
         counters[it.category] += 1;
         totalPending += 1;
+      }
+      // For the all-entities view we want the chip count to reflect total
+      // registered businesses, not just pending ones.
+      if (it.category === 'all_businesses' && it.status !== 'pending') {
+        counters.all_businesses += 1;
       }
     }
     return { counters, totalPending };
@@ -381,6 +445,7 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false,
 
   const categoryChips: Array<{ key: CategoryKey | 'all'; ar: string; en: string; count?: number }> = [
     { key: 'all', ar: 'الكل', en: 'All', count: stats.totalPending },
+    { key: 'all_businesses',        ar: 'كل الجهات',        en: 'All entities',  count: stats.counters.all_businesses },
     { key: 'provider_review',       ar: 'مزوّدون',         en: 'Providers',     count: stats.counters.provider_review },
     { key: 'business_verification', ar: 'توثيق منشآت',     en: 'Verification',  count: stats.counters.business_verification },
     { key: 'username',              ar: 'أسماء مستخدمين',  en: 'Usernames',     count: stats.counters.username },
