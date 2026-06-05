@@ -189,7 +189,7 @@ const ProviderServiceAreas: React.FC = () => {
   // ── Selection helpers ──
   const toggleRegion = (rid: SaRegionId) => {
     setSelectedRegions((prev) => {
-      const n = new Set(prev); n.has(rid) ? n.delete(rid) : n.add(rid); return n;
+      const n = new Set(prev); if (n.has(rid)) n.delete(rid); else n.add(rid); return n;
     });
   };
   const selectAllRegions = () => setSelectedRegions(new Set(SA_REGIONS.map((r) => r.id)));
@@ -230,7 +230,7 @@ const ProviderServiceAreas: React.FC = () => {
       const n = new Map(prev);
       const cur = n.get(cityName) ?? { mode: 'specific', districts: new Set<string>() };
       const ds = new Set(cur.districts);
-      ds.has(district) ? ds.delete(district) : ds.add(district);
+      if (ds.has(district)) ds.delete(district); else ds.add(district);
       n.set(cityName, { mode: 'specific', districts: ds });
       return n;
     });
