@@ -21,7 +21,7 @@ export function dispatchAmendmentEvent(amendmentId: string, event: AmendmentEven
   void supabase.functions
     .invoke('notify-amendment-event', { body: { amendmentId, event } })
     .catch((err) => {
-      // eslint-disable-next-line no-console
+       
       console.warn('[amendment-notify] dispatch failed', event, err);
     });
 }

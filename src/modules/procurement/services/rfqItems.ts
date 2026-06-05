@@ -49,7 +49,7 @@ export async function createRfqItem(
   const brand_lock = requested_brand_id ? (input.brand_lock ?? null) : null;
   const { data, error } = await supabase
     .from('procurement_rfq_items')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .insert({
       business_id: input.business_id,
       rfq_id: input.rfq_id,
@@ -111,7 +111,7 @@ export async function updateRfqItem(
 
   const { data, error } = await supabase
     .from('procurement_rfq_items')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .update(writePatch as any)
     .eq('id', id)
     .select(SELECT)

@@ -38,7 +38,7 @@ interface Sample {
 const samples: Sample[] = [];
 
 afterAll(() => {
-  /* eslint-disable no-console */
+   
   console.log('\nPDF-PERF1 results');
   console.log('─'.repeat(78));
   console.log('fixture'.padEnd(18), 'ms'.padStart(8), 'KB'.padStart(8),
@@ -54,7 +54,7 @@ afterAll(() => {
     );
   }
   console.log('─'.repeat(78));
-  /* eslint-enable no-console */
+   
 });
 
 describe('PDF-PERF1 — buildContractPDF benchmark', () => {

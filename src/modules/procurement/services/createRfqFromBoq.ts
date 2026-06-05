@@ -38,7 +38,7 @@ export async function createProcurementRfqFromBoq(
   input: CreateRfqFromBoqInput,
 ): Promise<CreateRfqFromBoqResult> {
   // 1. Idempotency check — is there already an RFQ for this BOQ?
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data: existing } = await (supabase
     .from('procurement_rfqs') as any)
     .select(RFQ_SELECT)
@@ -80,7 +80,7 @@ export async function createProcurementRfqFromBoq(
   if (reqErr || !req) return { rfq: null, created: false, itemCount: 0, error: reqErr ?? new Error('request_failed') };
 
   // 4. Create RFQ header with source_boq_id back-link.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data: rfq, error: rfqErr } = await (supabase
     .from('procurement_rfqs') as any)
     .insert({

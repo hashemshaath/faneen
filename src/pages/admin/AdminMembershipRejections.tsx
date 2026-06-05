@@ -80,7 +80,7 @@ const SortBtn: React.FC<{
 
 /** Apply current filters to a Supabase filter builder. Shared by table query + export. */
 // Supabase chainable builder typing is intentionally loose here.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function applyFilters(q: any, f: { reason: string; refId: string; businessId: string; userId: string; dateFrom: string; dateTo: string }): any {
   let qq = q;
   if (f.reason !== 'all') qq = qq.eq('reason_code', f.reason);

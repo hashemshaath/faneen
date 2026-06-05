@@ -128,7 +128,7 @@ export async function recordBusinessSourceAudit(
     };
     await supabase
       .from("business_audit_log")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       .insert(payload as any);
   } catch {
     /* swallow — audit is observability-only */

@@ -151,7 +151,7 @@ export async function compressImage(
   try {
     return await compressImageStrict(file, options);
   } catch (err) {
-    // eslint-disable-next-line no-console
+     
     console.warn('[imageCompression] failed, returning original file', err);
     return file;
   }

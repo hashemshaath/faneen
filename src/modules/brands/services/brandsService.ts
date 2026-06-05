@@ -15,7 +15,7 @@ import { normalizeArabicBrandName, normalizeEnglishBrandName, generateBrandSlugC
 
 // Generated Supabase types lag behind the brands governance migration —
 // we cast through `unknown` for the new columns until types refresh.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type Loose = any;
 const sb: Loose = supabase;
 
@@ -590,7 +590,7 @@ async function writeBrandAuditLog(payload: {
       new_values: payload.new_values ?? null,
     });
   } catch (e) {
-    // eslint-disable-next-line no-console
+     
     console.warn('[writeBrandAuditLog]', e);
   }
 }
@@ -697,7 +697,7 @@ export async function adminApproveBrandRequestRpc(args: {
           (req as BrandRequest).proposed_sector_ids[0],
         );
       } catch (e) {
-        // eslint-disable-next-line no-console
+         
         console.warn('[adminApproveBrandRequestRpc setBrandSectors]', e);
       }
     }

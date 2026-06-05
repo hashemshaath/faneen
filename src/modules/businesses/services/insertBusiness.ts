@@ -23,7 +23,7 @@ export async function insertBusiness(
   options: InsertBusinessOptions,
 ): Promise<{ data: unknown; error: unknown }> {
   const { payload, select, terminal = 'none' } = options;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const base: any = supabase.from('businesses').insert(payload as any);
 
   if (terminal === 'none' || !select) {

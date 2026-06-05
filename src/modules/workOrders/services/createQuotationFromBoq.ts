@@ -52,7 +52,7 @@ export async function createQuotationFromBoq(
 
   const { data: header, error: headerErr } = await supabase
     .from("work_order_quotations")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .insert({
       work_order_id: input.boq.work_order_id,
       boq_id: input.boq.id,
@@ -94,7 +94,7 @@ export async function createQuotationFromBoq(
     }));
     const { data: rows, error: itemErr } = await supabase
       .from("work_order_quotation_items")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       .insert(payload as any)
       .select(
         "id, ref_id, quotation_id, boq_item_id, item_type, title_ar, title_en, quantity, unit, unit_price, total_price, metadata, sort_order, created_at, updated_at, deleted_at",

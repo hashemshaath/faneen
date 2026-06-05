@@ -25,7 +25,7 @@ const BETA_TEMP_CODE_ENABLED = import.meta.env.VITE_ENABLE_BETA_TEMP_CODE !== 'f
 
 // Dev-only hint: surface when the flag is missing entirely so devs notice silent fallbacks.
 if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_BETA_TEMP_CODE === undefined) {
-  // eslint-disable-next-line no-console
+   
   console.info('[auth] VITE_ENABLE_BETA_TEMP_CODE is not set — temp code tab is visible by default (beta).');
 }
 

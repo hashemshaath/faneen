@@ -108,7 +108,7 @@ describe('2O — requestManualRealRun ALWAYS rejected', () => {
     const r = await requestManualRealRun(
       baseRequest({
         approval: validApproval({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           scope: 'something_else' as any,
         }),
       }),
@@ -151,7 +151,7 @@ describe('2O — evaluateProductionApproval contract', () => {
     expect(evaluateProductionApproval(undefined).valid).toBe(false);
   });
   it('rejects malformed approved flag', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     expect(evaluateProductionApproval({ approved: 'yes' as any, scope: MANUAL_REAL_RUN_SCOPE }).valid).toBe(false);
   });
   it('rejects malformed expiresAt', () => {

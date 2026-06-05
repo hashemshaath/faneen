@@ -16,14 +16,14 @@ export async function getMeasurementTemplateByKey(input: {
   const key = (input.templateKey ?? "").trim();
   if (!key) return { data: null, error: new Error("template_key_required") };
   const { data, error } = await supabase
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .from("work_order_measurement_templates" as any)
     .select(COLS)
     .eq("template_key", key)
     .eq("is_active", true)
     .maybeSingle();
   if (error || !data) return { data: null, error };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const row = data as any;
   return {
     data: {

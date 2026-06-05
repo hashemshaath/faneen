@@ -64,7 +64,7 @@ export async function createContractTemplateSection<TRow = unknown>(
   payload: Record<string, unknown>,
   select?: string,
 ) {
-  let q = supabase.from('contract_template_sections').insert(payload as never);
+  const q = supabase.from('contract_template_sections').insert(payload as never);
   if (select !== undefined) {
     return await q.select(select).single() as unknown as { data: TRow | null; error: unknown };
   }

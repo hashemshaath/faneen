@@ -13,7 +13,7 @@ const NotFound = () => {
   usePageMeta({ title: isRTL ? 'الصفحة غير موجودة | قِطاعات' : 'Page Not Found | Qitaat' });
 
   useEffect(() => {
-    // eslint-disable-next-line no-console
+     
     console.error('[NotFound] 404 — no route matched', {
       path: location.pathname,
       search: location.search,

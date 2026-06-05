@@ -708,7 +708,7 @@ const AdminMemberships = () => {
             },
           });
         } catch (err) {
-          // eslint-disable-next-line no-console
+           
           console.warn('[AdminMemberships] immediate-cancel email failed', err);
         }
       }

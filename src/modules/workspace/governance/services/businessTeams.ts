@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
  * `supabase.from('business_teams' | ...)` access in components is forbidden.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const db = supabase as any;
 
 export interface ListBusinessTeamsOptions {

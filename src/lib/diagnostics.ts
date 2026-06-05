@@ -239,7 +239,7 @@ export function installDiagnostics() {
     ) {
       this.__diagUrl = typeof url === "string" ? url : url.toString();
       this.__diagMethod = method;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       return origOpen.apply(this, [method, url, ...rest] as any);
     };
     OrigXHR.prototype.send = function (
@@ -257,7 +257,7 @@ export function installDiagnostics() {
           });
         }
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       return origSend.apply(this, args as any);
     };
   }

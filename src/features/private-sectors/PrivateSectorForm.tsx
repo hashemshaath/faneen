@@ -41,7 +41,7 @@ export const PrivateSectorForm: React.FC<Props> = ({ initial, onCancel, onSubmit
   const [reason, setReason] = useState('');
   const [keywordInput, setKeywordInput] = useState((initial?.seo_keywords ?? []).join(', '));
 
-  useEffect(() => { setKeywordInput((form.seo_keywords ?? []).join(', ')); /* on initial load */ /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => { setKeywordInput((form.seo_keywords ?? []).join(', ')); /* on initial load */   }, []);
 
   const { data: cities = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string }>>({
     queryKey: ['cities-active'],

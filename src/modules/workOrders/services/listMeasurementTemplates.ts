@@ -20,7 +20,7 @@ export async function listMeasurementTemplates(
   options: ListMeasurementTemplatesOptions = {},
 ): Promise<{ data: WorkOrderMeasurementTemplateRow[] | null; error: unknown }> {
   let q = supabase
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .from("work_order_measurement_templates" as any)
     .select(COLS)
     .eq("is_active", true)
@@ -29,7 +29,7 @@ export async function listMeasurementTemplates(
   if (options.sectorKey) q = q.eq("sector_key", options.sectorKey);
   const { data, error } = await q;
   if (error || !data) return { data: null, error };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const rows = (data as any[]).map((r) => ({
     ...r,
     fields: Array.isArray(r.fields)

@@ -113,7 +113,7 @@ const Membership = () => {
   // Privacy-safe: tier of current user (or 'anonymous') — no PII.
   React.useEffect(() => {
     track.membershipPlanView({});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
   const previousStatusRef = React.useRef<string | null>(null);
 
@@ -327,7 +327,7 @@ const Membership = () => {
       if (!subId) return;
       const deliveryEmail = getEmailDeliveryAddress({ authEmail: user?.email, profileEmail: profile?.email });
       if (!deliveryEmail) {
-        // eslint-disable-next-line no-console
+         
         console.info('[Membership] activated email suppressed', { reason: MISSING_OFFICIAL_EMAIL_REASON });
         return;
       }
@@ -342,7 +342,7 @@ const Membership = () => {
           templateData: { recipientName: user.user_metadata?.full_name as string | undefined, businessName, tierName },
         });
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.warn('[Membership] activated email failed', err);
       }
     },
@@ -405,7 +405,7 @@ const Membership = () => {
           action_url: '/membership',
         });
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.warn('[Membership] notification insert failed', err);
       }
       const upgradeDeliveryEmail = getEmailDeliveryAddress({ authEmail: user.email, profileEmail: profile?.email });
@@ -418,11 +418,11 @@ const Membership = () => {
             templateData: { businessName, requestedTier: res?.tier },
           });
         } catch (err) {
-          // eslint-disable-next-line no-console
+           
           console.warn('[Membership] upgrade-submitted email failed', err);
         }
       } else {
-        // eslint-disable-next-line no-console
+         
         console.info('[Membership] upgrade-submitted email suppressed', { reason: MISSING_OFFICIAL_EMAIL_REASON });
       }
     },
@@ -457,7 +457,7 @@ const Membership = () => {
         billingCycle,
       }).then((res) => {
         if (res.error) {
-          // eslint-disable-next-line no-console
+           
           console.warn('[Membership] failed to log upgrade rejection', res.error);
           return;
         }
@@ -525,7 +525,7 @@ const Membership = () => {
           action_url: '/membership',
         });
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.warn('[Membership] cancel notification failed', err);
       }
       const cancelDeliveryEmail = getEmailDeliveryAddress({ authEmail: user.email, profileEmail: profile?.email });
@@ -538,11 +538,11 @@ const Membership = () => {
             templateData: { businessName },
           });
         } catch (err) {
-          // eslint-disable-next-line no-console
+           
           console.warn('[Membership] cancel email failed', err);
         }
       } else {
-        // eslint-disable-next-line no-console
+         
         console.info('[Membership] cancel email suppressed', { reason: MISSING_OFFICIAL_EMAIL_REASON });
       }
     },

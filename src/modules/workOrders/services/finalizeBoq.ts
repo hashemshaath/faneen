@@ -18,7 +18,7 @@ export async function finalizeBoq(input: {
 
   const { data, error } = await supabase
     .from("work_order_boqs")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .update({
       status: "finalized",
       finalized_by: input.actor_id,

@@ -26,7 +26,7 @@ export async function updateWorkOrderTask(
 
   const { data, error } = await supabase
     .from("work_order_tasks")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .update(patch as any)
     .eq("id", input.taskId)
     .select(

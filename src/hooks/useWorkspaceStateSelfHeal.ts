@@ -45,7 +45,7 @@ export function useWorkspaceStateSelfHeal(): void {
       state.setActiveEntity(fallback);
       if (import.meta.env.DEV) {
         // No PII: only ids are logged.
-        // eslint-disable-next-line no-console
+         
         console.warn(
           '[workspace] cleared stale active_entity_id',
           { stale: current, fallback, accessible: accessibleIds.length },
@@ -79,7 +79,7 @@ export function resetWorkspaceSelection(
 ): void {
   setActiveEntity(null);
   if (import.meta.env.DEV) {
-    // eslint-disable-next-line no-console
+     
     console.warn('[workspace] manual reset of active_entity_id');
   }
 }

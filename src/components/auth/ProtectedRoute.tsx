@@ -71,7 +71,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     if (shouldDeny && !loggedRef.current) {
       loggedRef.current = true;
       const role = requireSuperAdmin ? 'super_admin' : requireAdmin ? 'admin' : 'provider';
-      // eslint-disable-next-line no-console
+       
       console.warn('[ProtectedRoute] ACCESS DENIED → showing Forbidden', {
         path: location.pathname,
         required: role,
@@ -105,7 +105,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Redirect unauthenticated users
   if (requireAuth && !user) {
-    // eslint-disable-next-line no-console
+     
     console.info('[ProtectedRoute] not authenticated → /auth', { from: location.pathname });
     return <NavigateToAuth from={location.pathname} />;
   }

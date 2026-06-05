@@ -121,7 +121,7 @@ const noopAudit: OperationsApprovalAuditWriter = async () => ({
 function readEnv(env: OperationsGuardEnv | undefined): Record<string, string | undefined> {
   if (env?.env) return env.env;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const p = (globalThis as any).process;
     if (p && typeof p === 'object' && p.env) {
       return p.env as Record<string, string | undefined>;

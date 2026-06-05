@@ -9,7 +9,7 @@ export async function softDeleteWorkOrderMeasurement(options: {
 }): Promise<{ error: unknown }> {
   const { error } = await supabase
     .from("work_order_measurements")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .update({ deleted_at: new Date().toISOString() } as any)
     .eq("id", options.measurementId);
 

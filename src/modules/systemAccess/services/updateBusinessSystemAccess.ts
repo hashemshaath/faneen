@@ -60,7 +60,7 @@ const NOT_ADMIN_EN = 'Admin permission required.';
  */
 function recordObservability(payload: Record<string, unknown>): boolean {
   try {
-    // eslint-disable-next-line no-console
+     
     console.info('[observability] system_access.updated', payload);
     return true;
   } catch {

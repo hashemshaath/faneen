@@ -69,7 +69,7 @@ export async function insertWorkOrderMeasurement(
 
   const { data, error } = await supabase
     .from("work_order_measurements")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .insert(payload as any)
     .select(
       "id, ref_id, work_order_id, task_id, business_id, recorded_by_user_id, measurement_type, label, width, height, depth, length, quantity, unit, notes, metadata, created_at, updated_at, deleted_at",

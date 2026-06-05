@@ -42,7 +42,7 @@ export function usePermissionParity(permission: string | null | undefined): Perm
     if (isProductionEnv()) return;
     warned.current = true;
     try {
-      // eslint-disable-next-line no-console
+       
       console.warn(
         `[rbac-parity] mismatch for "${permission}": client=${client} server=${server}`,
       );

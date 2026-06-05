@@ -156,7 +156,7 @@ async function fetchEntityAccess(): Promise<CategoryResult> {
     .order('created_at', { ascending: false })
     .limit(PREVIEW_LIMIT);
   if (error) return { count: 0, items: [] };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const rows = (data ?? []) as any[];
   return {
     count: count ?? 0,
@@ -178,7 +178,7 @@ async function fetchSubscriptions(): Promise<CategoryResult> {
     .order('created_at', { ascending: false })
     .limit(PREVIEW_LIMIT);
   if (error) return { count: 0, items: [] };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const rows = (data ?? []) as any[];
   return {
     count: count ?? 0,
@@ -226,7 +226,7 @@ async function fetchUpgrades(): Promise<CategoryResult> {
     .order('created_at', { ascending: false })
     .limit(PREVIEW_LIMIT);
   if (error) return { count: 0, items: [] };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const rows = (data ?? []) as any[];
   return {
     count: count ?? 0,

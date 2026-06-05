@@ -26,7 +26,7 @@ function bytesToHex(bytes: Uint8Array): string {
 export function generateQuotationApprovalToken(): string {
   const arr = new Uint8Array(48);
   // crypto is available in browsers and modern Node (vitest/jsdom).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const g: any = globalThis as any;
   if (g.crypto && typeof g.crypto.getRandomValues === "function") {
     g.crypto.getRandomValues(arr);
@@ -37,7 +37,7 @@ export function generateQuotationApprovalToken(): string {
 }
 
 async function sha256Hex(input: string): Promise<string> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const g: any = globalThis as any;
   const subtle = g.crypto?.subtle;
   if (!subtle) throw new Error("subtle_crypto_unavailable");
@@ -82,7 +82,7 @@ export async function sendWorkOrderQuotation(
 
   const { data, error } = await supabase
     .from("work_order_quotations")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .update(patch as any)
     .eq("id", input.quotation_id)
     .eq("status", "draft")

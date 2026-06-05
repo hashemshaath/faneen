@@ -48,7 +48,7 @@ export async function insertWorkOrderAttachment(
 
   const { data, error } = await supabase
     .from("work_order_attachments")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .insert(payload as any)
     .select(
       "id, ref_id, work_order_id, task_id, business_id, uploaded_by_user_id, file_path, file_name, file_type, file_size, attachment_type, created_at, deleted_at",
