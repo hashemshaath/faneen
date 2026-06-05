@@ -7,7 +7,13 @@ export {
   listServicesByBusiness,
   countServicesByBusiness,
 } from './services/services/reads';
-export { listBranchesByBusiness } from './services/branches/reads';
+export {
+  listBranchesByBusiness,
+  getBranchById,
+  getPublicBranchBySlug,
+  listBranchServiceIds,
+  listBranchPromotionIds,
+} from './services/branches/reads';
 export {
   listAvailabilityByBusiness,
   listPublicAvailabilityByBusiness,
@@ -53,6 +59,11 @@ export {
   insertBusinessBranch,
   updateBusinessBranchById,
   deleteBusinessBranchById,
+  setMainBranch,
+  attachServiceToBranch,
+  detachServiceFromBranch,
+  attachPromotionToBranch,
+  detachPromotionFromBranch,
 } from './services/branches/mutations';
 export {
   listAdminServiceAreasWithBusinesses,
