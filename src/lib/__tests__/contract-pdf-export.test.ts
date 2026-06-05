@@ -83,7 +83,7 @@ describe('PDF-QA1 — buildContractPDF: smoke + regression', () => {
   it.each(Object.entries(ALL_FIXTURES))('builds without throwing: %s', async (_name, fx) => {
     const doc = await buildContractPDF(fx);
     expect(doc).toBeTruthy();
-    expect(typeof (doc as unknown as { output: Function }).output).toBe('function');
+    expect(typeof (doc as unknown as { output: (...args: unknown[]) => unknown }).output).toBe('function');
   });
 
   it('legacy contract still exports', async () => {
