@@ -110,6 +110,7 @@ const ProfileSystems = lazyRetry(() => import("./pages/ProfileSystems"));
 const ProfileSystemDetail = lazyRetry(() => import("./pages/ProfileSystemDetail"));
 const AdminApiSettings = lazyRetry(() => import("./pages/admin/AdminApiSettings"));
 const AdminGoogleServices = lazyRetry(() => import("./pages/admin/AdminGoogleServices"));
+const AdminIntegrations = lazyRetry(() => import("./pages/admin/AdminIntegrations"));
 const AdminApiDocs = lazyRetry(() => import("./pages/admin/AdminApiDocs"));
 const AdminUsers = lazyRetry(() => import("./pages/admin/AdminUsers"));
 const AdminUserDetail = lazyRetry(() => import("./pages/admin/AdminUserDetail"));
