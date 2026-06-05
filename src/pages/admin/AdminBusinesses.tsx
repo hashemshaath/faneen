@@ -65,6 +65,16 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import { toast } from 'sonner';
 import { ReferenceTag } from '@/components/reference/ReferenceTag';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
