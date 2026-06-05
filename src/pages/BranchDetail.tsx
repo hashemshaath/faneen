@@ -619,10 +619,18 @@ const BranchDetail: React.FC = () => {
               {t(isRTL, 'بيانات الاتصال بالفرع', 'Branch contact details')}
             </h2>
             <Separator />
-            <ContactRow icon={Phone}    label={t(isRTL,'هاتف ثابت','Phone')}        value={branch.phone}        href={branch.phone ? `tel:${branch.phone}` : null} />
-            <ContactRow icon={Phone}    label={t(isRTL,'جوال','Mobile')}             value={branch.mobile}       href={branch.mobile ? `tel:${branch.mobile}` : null} />
-            <ContactRow icon={MessageCircle} label="WhatsApp"                         value={branch.whatsapp}     href={branch.whatsapp ? `https://wa.me/${branch.whatsapp.replace(/[^0-9]/g,'')}` : null} />
-            <ContactRow icon={Phone}    label={t(isRTL,'خدمة العملاء','Customer service')} value={branch.customer_service_phone} href={branch.customer_service_phone ? `tel:${branch.customer_service_phone}` : null} />
+            {branch.phone && (
+              <RevealPhoneButton branchId={branch.id} kind="phone" label={t(isRTL,'هاتف ثابت','Phone')} value={branch.phone} />
+            )}
+            {branch.mobile && (
+              <RevealPhoneButton branchId={branch.id} kind="phone" label={t(isRTL,'جوال','Mobile')} value={branch.mobile} />
+            )}
+            {branch.whatsapp && (
+              <RevealPhoneButton branchId={branch.id} kind="whatsapp" label="WhatsApp" value={branch.whatsapp} />
+            )}
+            {branch.customer_service_phone && (
+              <RevealPhoneButton branchId={branch.id} kind="phone" label={t(isRTL,'خدمة العملاء','Customer service')} value={branch.customer_service_phone} />
+            )}
             <ContactRow icon={Mail}     label={t(isRTL,'البريد','Email')}            value={branch.email}        href={branch.email ? `mailto:${branch.email}` : null} />
             <ContactRow icon={Globe}    label={t(isRTL,'الموقع','Website')}          value={branch.website}      href={branch.website} external />
             {branch.address && (
