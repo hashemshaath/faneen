@@ -738,12 +738,10 @@ const SectorLanding: React.FC = () => {
 export const SectorsIndex: React.FC = () => {
   const { isRTL } = useLanguage();
   usePageMeta({
-    title: isRTL
-      ? 'قطاعات الصناعات: ألمنيوم، حديد، زجاج، خشب، خزائن | قِطاعات'
-      : 'Industrial Sectors: Aluminum, Iron, Glass, Wood, Cabinets | Qitaat',
-    description: isRTL
+    title: buildSeoTitle({ kind: 'category', lang: isRTL ? 'ar' : 'en', name: isRTL ? 'القطاعات الصناعية' : 'Industrial Sectors' }),
+    description: buildSeoDescription({ kind: 'category', lang: isRTL ? 'ar' : 'en', customDescription: isRTL
       ? 'استعرض القطاعات الصناعية الرئيسية في دليل قِطاعات: الألمنيوم، الحديد، الزجاج، الخشب، والخزائن. اختر القطاع لاستكشاف أفضل المصانع والورش.'
-      : 'Browse Qitaat top industrial sectors: aluminum, iron, glass, wood and cabinets. Pick a sector to explore the best factories and workshops.',
+      : 'Browse Qitaat top industrial sectors: aluminum, iron, glass, wood and cabinets. Pick a sector to explore the best factories and workshops.' }),
     keywords: ALL_SECTORS.flatMap((s) => (isRTL ? s.keywords_ar : s.keywords_en)).slice(0, 24).join(', '),
     canonical: 'https://qitaat.com/sectors',
   });
