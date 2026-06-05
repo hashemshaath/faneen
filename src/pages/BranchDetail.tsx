@@ -273,11 +273,6 @@ const BranchDetail: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {jsonLd && (
-         
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      )}
-
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-primary/10 via-background to-background border-b border-border/60">
         <div className="container max-w-6xl mx-auto px-4 py-10">
@@ -343,6 +338,20 @@ const BranchDetail: React.FC = () => {
             <ContactRow icon={Globe}    label={t(isRTL,'الموقع','Website')}          value={branch.website}      href={branch.website} external />
             {branch.address && (
               <ContactRow icon={MapPin} label={t(isRTL,'العنوان','Address')} value={[branch.region, branch.district, branch.address].filter(Boolean).join('، ')} />
+            )}
+
+            {(branch.latitude && branch.longitude) && (
+              <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-xl">
+                <a
+                  href={`https://www.google.com/maps?q=${branch.latitude},${branch.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MapPin className="w-4 h-4" />
+                  {t(isRTL, 'فتح في خرائط Google', 'Open in Google Maps')}
+                  <ExternalLink className="w-3 h-3 opacity-60" />
+                </a>
+              </Button>
             )}
 
             {socials.length > 0 && (
