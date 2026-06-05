@@ -40,6 +40,7 @@ const QuotationViewer = lazyRetry(() => import("./pages/QuotationViewer"));
 const CustomerProjectPortal = lazyRetry(() => import("./pages/CustomerProjectPortal"));
 const QSlugDispatcher = lazyRetry(() => import("./pages/QSlugDispatcher"));
 const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
+const BranchDetail = lazyRetry(() => import("./pages/BranchDetail"));
 const UsernameResolver = lazyRetry(() => import("./pages/UsernameResolver"));
 const ClaimBusiness = lazyRetry(() => import("./pages/ClaimBusiness"));
 const Search = lazyRetry(() => import("./pages/Search"));
@@ -320,6 +321,7 @@ const AppRoutes = () => (
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/v/c/:number" element={<VerifyContract />} />
           <Route path="/v/b/:username" element={<VerifyBusiness />} />
+          <Route path="/branch/:slug" element={<BranchDetail />} />
           <Route path="/invite/:token" element={<InviteAccept />} />
           <Route path="/staff-invite/:token" element={<StaffInviteAccept />} />
           <Route path="/s/:token" element={<PublicSiteScan />} />
