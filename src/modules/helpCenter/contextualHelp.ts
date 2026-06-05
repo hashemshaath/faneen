@@ -37,6 +37,9 @@ export const contextualHelpRegistry: Record<string, string[]> = {
   // PROVIDER-GROWTH-ENGINE-2 — admin surfaces.
   'admin.provider-growth': ['how-publishing-works', 'readiness-checklist', 'approve-providers', 'completeness'],
   'admin.provider-growth-queue': ['approve-providers', 'readiness-checklist', 'how-publishing-works'],
+  // PSG-1 — Catalog Governance admin surfaces.
+  'admin.catalog-governance': ['readiness-checklist', 'how-publishing-works', 'completeness', 'approve-providers'],
+  'admin.catalog-governance-queue': ['approve-providers', 'readiness-checklist', 'how-publishing-works', 'completeness'],
   'dashboard.membership': ['how-publishing-works', 'lead-credits'],
   'dashboard.customer-experience': ['tracking-link', 'what-you-see'],
   'customer.feedback': ['tracking-link', 'support'],
