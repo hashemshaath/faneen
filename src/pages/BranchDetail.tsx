@@ -435,6 +435,7 @@ const BranchDetail: React.FC = () => {
     salesManager && { id: 'manager',  label: t(isRTL, 'مدير المبيعات', 'Sales manager') },
     (services?.length ?? 0) > 0    && { id: 'services',  label: t(isRTL, 'الخدمات',  'Services') },
     (promotions?.length ?? 0) > 0  && { id: 'promotions',label: t(isRTL, 'العروض',   'Offers') },
+    { id: 'inquiry',   label: t(isRTL, 'استفسار',   'Inquiry') },
     { id: 'reviews',   label: t(isRTL, 'التقييمات','Reviews') },
     (siblings?.length ?? 0) > 0    && { id: 'siblings',  label: t(isRTL, 'فروع أخرى','Other branches') },
   ].filter(Boolean) as Array<{ id: string; label: string }>;
