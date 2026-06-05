@@ -730,6 +730,14 @@ const AdminBusinesses = () => {
         approval_status: 'approved',
         is_active: true,
       };
+      // Mirror admin_update_business_approval: when an admin creates an
+      // already-approved business with a username, auto-activate the
+      // public profile (username_status + is_verified) in the same insert
+      // so the /<username> page is reachable immediately.
+      if (typeof payload.username === 'string' && payload.username.trim() !== '') {
+        payload.username_status = 'approved';
+        payload.is_verified = true;
+      }
       const { data, error } = await insertBusiness({
         payload,
         select: '*',
