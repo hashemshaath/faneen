@@ -377,6 +377,10 @@ const BranchDetail: React.FC = () => {
   }, [branch, business, businessName, branchName, isRTL]);
   useJsonLd(breadcrumbJsonLd);
 
+  // Hooks that depend on branch — must run unconditionally (use null-safe id).
+  const { count: visitCount } = useBranchVisits(branch?.id ?? null);
+  const { isFavorite, toggleFavorite } = useBusinessFavorites();
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -409,12 +413,6 @@ const BranchDetail: React.FC = () => {
   ].filter(Boolean) as Array<{ url: string; Icon: React.ComponentType<{ className?: string }>; label: string }>;
 
   const shareUrl = canonicalBranchUrl ?? window.location.href;
-
-  // Real visit counter (records once per session)
-  const { count: visitCount } = useBranchVisits(branch.id);
-
-  // Favorites — keyed by business_id with ref_id snapshot
-  const { isFavorite, toggleFavorite } = useBusinessFavorites();
   const fav = isFavorite(branch.business_id);
   const onToggleFav = () => {
     const nowFav = toggleFavorite(branch.business_id, branch.ref_id);
