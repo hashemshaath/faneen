@@ -60,7 +60,8 @@ export interface GrowthBusinessRow {
   is_verified: boolean;
   approval_status: string | null;
   updated_at: string | null;
-  // joined / derived
+  category_id: string | null;
+  // derived counts (best-effort; 0 when not surfaced by the base read)
   sectors: string[];
   sub_services: string[];
   brands_count: number;
@@ -107,22 +108,15 @@ export async function loadProviderGrowthBusinesses(opts: { limit?: number } = {}
 }> {
   const { data, error } = await listAdminBusinesses<Record<string, unknown>>({
     select:
-      'id, ref_id, name_ar, name_en, username, logo_url, cover_url, phone, email, website, city_id, address, latitude, longitude, is_active, is_verified, approval_status, updated_at',
+      'id, ref_id, name_ar, name_en, username, logo_url, cover_url, phone, email, website, city_id, address, latitude, longitude, is_active, is_verified, approval_status, updated_at, category_id, website',
     orderBy: { column: 'updated_at', ascending: false },
     limit: opts.limit ?? 500,
   });
   if (error) return { rows: [], error: error as Error };
 
-  const ids = (data ?? []).map((r) => r.id as string);
-  // Best-effort sectors / sub_services / counts — degrade silently when tables are absent.
-  const [sectorsByBiz, galleryByBiz, brandsByBiz] = await Promise.all([
-    fetchSectors(ids),
-    fetchGalleryCounts(ids),
-    fetchBrandCounts(ids),
-  ]);
-
   const rows: GrowthBusinessRow[] = (data ?? []).map((r) => {
     const id = r.id as string;
+    const categoryId = (r.category_id as string | null) ?? null;
     return {
       id,
       ref_id: (r.ref_id as string | null) ?? null,
@@ -143,56 +137,14 @@ export async function loadProviderGrowthBusinesses(opts: { limit?: number } = {}
       is_verified: r.is_verified === true,
       approval_status: (r.approval_status as string | null) ?? null,
       updated_at: (r.updated_at as string | null) ?? null,
-      sectors: sectorsByBiz.get(id) ?? [],
+      category_id: categoryId,
+      sectors: categoryId ? [categoryId] : [],
       sub_services: [],
-      brands_count: brandsByBiz.get(id) ?? 0,
-      gallery_count: galleryByBiz.get(id) ?? 0,
+      brands_count: 0,
+      gallery_count: 0,
     };
   });
   return { rows, error: null };
-}
-
-async function fetchSectors(ids: string[]): Promise<Map<string, string[]>> {
-  const out = new Map<string, string[]>();
-  if (ids.length === 0) return out;
-  const { data } = await supabase
-    .from('business_categories')
-    .select('business_id, category:categories(slug)')
-    .in('business_id', ids);
-  for (const row of (data ?? []) as Array<{ business_id: string; category: { slug: string } | null }>) {
-    const slug = row.category?.slug;
-    if (!slug) continue;
-    const list = out.get(row.business_id) ?? [];
-    list.push(slug);
-    out.set(row.business_id, list);
-  }
-  return out;
-}
-
-async function fetchGalleryCounts(ids: string[]): Promise<Map<string, number>> {
-  const out = new Map<string, number>();
-  if (ids.length === 0) return out;
-  const { data } = await supabase
-    .from('business_gallery')
-    .select('business_id')
-    .in('business_id', ids);
-  for (const row of (data ?? []) as Array<{ business_id: string }>) {
-    out.set(row.business_id, (out.get(row.business_id) ?? 0) + 1);
-  }
-  return out;
-}
-
-async function fetchBrandCounts(ids: string[]): Promise<Map<string, number>> {
-  const out = new Map<string, number>();
-  if (ids.length === 0) return out;
-  const { data } = await supabase
-    .from('business_brands')
-    .select('business_id')
-    .in('business_id', ids);
-  for (const row of (data ?? []) as Array<{ business_id: string }>) {
-    out.set(row.business_id, (out.get(row.business_id) ?? 0) + 1);
-  }
-  return out;
 }
 
 export async function loadProviderGrowthPipeline(): Promise<{
@@ -248,7 +200,7 @@ export function computeGrowthKPIs(rows: GrowthBusinessRow[]): GrowthDirectoryKPI
   const sum = (xs: number[]) => xs.reduce((s, v) => s + v, 0);
   return {
     totalProviders: rows.length,
-    publishedProviders: rows.filter((b) => b.approval_status === 'published' && b.is_active && !b.cover_url ? true : b.approval_status === 'published').length,
+    publishedProviders: rows.filter((b) => b.approval_status === 'published').length,
     verifiedProviders: rows.filter((b) => b.is_verified).length,
     readyToPublish: insights.filter((i) => i.readiness.band === 'ready').length,
     withWebsite: rows.filter((b) => !!b.website).length,
