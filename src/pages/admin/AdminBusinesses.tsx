@@ -1379,39 +1379,6 @@ const AdminBusinesses = () => {
 
         {!panelOpen && <UnifiedApprovalsCenterBanner />}
 
-        {/* ─── Tier Distribution Bar ─── */}
-        {!panelOpen && stats.total > 0 && (
-          <div className="rounded-2xl border border-border/30 bg-card p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-heading font-bold text-sm flex items-center gap-2">
-                <Zap className="w-4 h-4 text-accent" />
-                {isRTL ? 'توزيع العضويات' : 'Membership Distribution'}
-              </h3>
-              <div className="flex items-center gap-3">
-                {tiers.map(t => (
-                  <span key={t.value} className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                    <span className="text-xs">{t.icon}</span>
-                    {language === 'ar' ? t.label_ar : t.label_en}: {tierDistribution[t.value] || 0}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="flex h-3 rounded-full overflow-hidden bg-muted/50">
-              {tiers.map(t => {
-                const pct = stats.total ? (tierDistribution[t.value] || 0) / stats.total * 100 : 0;
-                if (!pct) return null;
-                const colorMap: Record<string, string> = {
-                  free: 'bg-muted-foreground/30',
-                  basic: 'bg-info',
-                  premium: 'bg-accent',
-                  enterprise: 'bg-secondary',
-                };
-                return <div key={t.value} className={`${colorMap[t.value]} transition-all`} style={{ width: `${pct}%` }} />;
-              })}
-            </div>
-          </div>
-        )}
-
         {/* ─── Filters ─── */}
         {!panelOpen && <BusinessFiltersToolbar
           searchInputRef={searchRef}
@@ -1434,6 +1401,8 @@ const AdminBusinesses = () => {
           isRTL={isRTL}
           resultsCount={filtered.length}
           onClearAll={() => { setSearchInput(''); setSearchParams(new URLSearchParams(), { replace: false }); }}
+          tierDistribution={tierDistribution}
+          totalCount={stats.total}
         />}
 
         {!panelOpen && <BusinessBulkActionBar

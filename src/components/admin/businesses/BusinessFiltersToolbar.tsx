@@ -29,6 +29,10 @@ interface Props {
   isRTL: boolean;
   resultsCount: number;
   onClearAll: () => void;
+  /** Optional per-tier counts; enables the embedded distribution strip + inline counts. */
+  tierDistribution?: Record<string, number>;
+  /** Total businesses for percentage math. */
+  totalCount?: number;
 }
 
 /**
@@ -41,13 +45,60 @@ export const BusinessFiltersToolbar: React.FC<Props> = ({
   filterStatus, setFilterStatus, filterTier, setFilterTier,
   filterTranslation, onTranslationChange, filterOrigin, setFilterOrigin,
   sortBy, setSortBy, tiers, language, isRTL, resultsCount, onClearAll,
+  tierDistribution, totalCount = 0,
 }) => {
   const hasActive =
     !!search || filterStatus !== 'all' || filterTier !== 'all' ||
     filterTranslation !== 'all' || filterOrigin !== 'all' || sortBy !== 'recent';
 
+  const tierColor: Record<string, string> = {
+    free: 'bg-muted-foreground/40',
+    basic: 'bg-info',
+    premium: 'bg-accent',
+    enterprise: 'bg-secondary',
+  };
+  const showDistribution = !!tierDistribution && totalCount > 0;
+
   return (
     <div className="rounded-2xl border border-border/30 bg-card p-4 sticky top-0 z-20 backdrop-blur-md bg-card/95">
+      {showDistribution && (
+        <div className="flex items-center gap-3 mb-3 pb-3 border-b border-border/20">
+          <div className="flex h-1.5 rounded-full overflow-hidden bg-muted/50 flex-1 min-w-0">
+            {tiers.map(t => {
+              const c = tierDistribution![t.value] || 0;
+              const pct = (c / totalCount) * 100;
+              if (!pct) return null;
+              return (
+                <div
+                  key={t.value}
+                  className={`${tierColor[t.value] || 'bg-muted-foreground/30'} transition-all`}
+                  style={{ width: `${pct}%` }}
+                  title={`${language === 'ar' ? t.label_ar : t.label_en}: ${c}`}
+                />
+              );
+            })}
+          </div>
+          <div className="hidden md:flex items-center gap-3 shrink-0">
+            {tiers.map(t => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setFilterTier(filterTier === t.value ? 'all' : t.value)}
+                className={`flex items-center gap-1 text-[11px] transition-colors ${
+                  filterTier === t.value
+                    ? 'text-foreground font-semibold'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                aria-pressed={filterTier === t.value}
+              >
+                <span className={`inline-block w-2 h-2 rounded-full ${tierColor[t.value] || 'bg-muted-foreground/30'}`} />
+                {language === 'ar' ? t.label_ar : t.label_en}
+                <span className="tech-content tabular-nums opacity-70">{tierDistribution![t.value] || 0}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" style={{ insetInlineStart: '12px' }} />
@@ -91,6 +142,7 @@ export const BusinessFiltersToolbar: React.FC<Props> = ({
             {tiers.map(t => (
               <SelectItem key={t.value} value={t.value}>
                 {t.icon} {language === 'ar' ? t.label_ar : t.label_en}
+                {tierDistribution ? ` · ${tierDistribution[t.value] || 0}` : ''}
               </SelectItem>
             ))}
           </SelectContent>
