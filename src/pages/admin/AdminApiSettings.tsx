@@ -439,6 +439,30 @@ const AdminApiSettings = () => {
           {/* ── Resend integration hero ── */}
           <ResendIntegrationCard />
 
+          {/* ── Unified Integrations cross-link (prevents duplication with /admin/integrations) ── */}
+          <Link
+            to="/admin/integrations"
+            className="block group rounded-xl border border-primary/20 bg-gradient-to-br from-primary/[0.06] via-primary/[0.03] to-transparent p-4 hover:border-primary/40 hover:shadow-sm transition-all"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Plug className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold flex items-center gap-2">
+                  {isRTL ? 'صحة التكاملات الحية' : 'Live Integrations Health'}
+                  <Badge variant="outline" className="text-[10px] h-4 px-1.5">{isRTL ? 'موحّد' : 'Unified'}</Badge>
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {isRTL
+                    ? 'فحص حي للمفاتيح المخزّنة في أسرار النظام (Resend، Google، Lovable AI، Moyasar، Firecrawl) — مفاتيح هذه الصفحة تُخزَّن في قاعدة البيانات فقط.'
+                    : 'Live probes for keys stored in system secrets (Resend, Google, Lovable AI, Moyasar, Firecrawl) — keys on this page are DB-stored configuration only.'}
+                </p>
+              </div>
+              <ArrowRight className={`w-4 h-4 text-primary shrink-0 transition-transform ${isRTL ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'}`} />
+            </div>
+          </Link>
+
           {/* ── Status Cards ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {availableCategories.map(cat => {
