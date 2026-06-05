@@ -13423,6 +13423,7 @@ export type Database = {
       }
       reviews: {
         Row: {
+          branch_id: string | null
           business_id: string
           content: string | null
           created_at: string
@@ -13431,11 +13432,13 @@ export type Database = {
           is_verified: boolean
           project_id: string | null
           rating: number
+          service_id: string | null
           title: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          branch_id?: string | null
           business_id: string
           content?: string | null
           created_at?: string
@@ -13444,11 +13447,13 @@ export type Database = {
           is_verified?: boolean
           project_id?: string | null
           rating: number
+          service_id?: string | null
           title?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          branch_id?: string | null
           business_id?: string
           content?: string | null
           created_at?: string
@@ -13457,11 +13462,26 @@ export type Database = {
           is_verified?: boolean
           project_id?: string | null
           rating?: number
+          service_id?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reviews_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reviews_business_id_fkey"
             columns: ["business_id"]
@@ -13481,6 +13501,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "business_services"
             referencedColumns: ["id"]
           },
         ]

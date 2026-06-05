@@ -9,7 +9,7 @@ import {
 
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 import {
   listBranchServiceIds,
   listBranchPromotionIds,
@@ -22,6 +22,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { BranchReviews } from '@/components/branch/BranchReviews';
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
@@ -169,35 +170,75 @@ const BranchDetail: React.FC = () => {
   const branchName = branch ? (isRTL ? branch.name_ar : (branch.name_en || branch.name_ar)) : '';
   const businessName = business ? (isRTL ? (business.name_ar || business.name_en || '') : (business.name_en || business.name_ar || '')) : '';
 
+  const locationLabel = branch
+    ? [branch.region, branch.district].filter(Boolean).join('، ')
+    : '';
+  const seoDescription = branch
+    ? (
+        (isRTL ? branch.description_ar : (branch.description_en || branch.description_ar)) ||
+        (isRTL
+          ? `فرع ${branchName} التابع لـ${businessName}${locationLabel ? ` في ${locationLabel}` : ''} — العنوان، أرقام التواصل، الخدمات والتقييمات على قِطاعات.`
+          : `${branchName} branch of ${businessName}${locationLabel ? ` in ${locationLabel}` : ''} — address, contact numbers, services and reviews on Qitaat.`)
+      )
+    : undefined;
   usePageMeta({
     title: branch
       ? `${branchName} — ${businessName} | قِطاعات`
       : t(isRTL, 'فرع | قِطاعات', 'Branch | Qitaat'),
-    description: branch?.description_ar || branch?.description_en || undefined,
+    description: seoDescription,
+    ogTitle: branch ? `${branchName} — ${businessName}` : undefined,
+    ogDescription: seoDescription,
+    ogImage: business?.logo_url || undefined,
+    ogType: 'business.business',
+    canonical: branch?.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined,
   });
 
-  // JSON-LD LocalBusiness
+  // Aggregate review stats for SEO (AggregateRating in JSON-LD).
+  const { data: reviewStats } = useQuery({
+    queryKey: ['branch-review-stats', branch?.id],
+    enabled: Boolean(branch?.id),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('branch_id', branch!.id);
+      const rows = (data ?? []) as Array<{ rating: number }>;
+      const count = rows.length;
+      const avg = count > 0 ? rows.reduce((s, r) => s + r.rating, 0) / count : 0;
+      return { count, avg };
+    },
+  });
+
+  // JSON-LD LocalBusiness with AggregateRating + breadcrumbs
   const jsonLd = useMemo(() => {
     if (!branch || !business) return null;
     return {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
       name: `${branchName} — ${businessName}`,
-      address: branch.address ? {
+      image: business.logo_url ?? undefined,
+      address: (branch.address || branch.region || branch.district) ? {
         '@type': 'PostalAddress',
-        streetAddress: branch.address,
+        streetAddress: branch.address ?? undefined,
+        addressLocality: branch.district ?? undefined,
         addressRegion: branch.region ?? undefined,
         addressCountry: 'SA',
       } : undefined,
       telephone: branch.phone || branch.mobile || undefined,
       email: branch.email || undefined,
-      url: branch.website || undefined,
+      url: branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined,
       geo: branch.latitude && branch.longitude ? {
         '@type': 'GeoCoordinates',
         latitude: branch.latitude, longitude: branch.longitude,
       } : undefined,
+      aggregateRating: (reviewStats && reviewStats.count > 0) ? {
+        '@type': 'AggregateRating',
+        ratingValue: Number(reviewStats.avg.toFixed(1)),
+        reviewCount: reviewStats.count,
+      } : undefined,
     };
-  }, [branch, business, branchName, businessName]);
+  }, [branch, business, branchName, businessName, reviewStats]);
+  useJsonLd(jsonLd);
 
   if (isLoading) {
     return (
@@ -232,11 +273,6 @@ const BranchDetail: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {jsonLd && (
-         
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      )}
-
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-primary/10 via-background to-background border-b border-border/60">
         <div className="container max-w-6xl mx-auto px-4 py-10">
@@ -302,6 +338,20 @@ const BranchDetail: React.FC = () => {
             <ContactRow icon={Globe}    label={t(isRTL,'الموقع','Website')}          value={branch.website}      href={branch.website} external />
             {branch.address && (
               <ContactRow icon={MapPin} label={t(isRTL,'العنوان','Address')} value={[branch.region, branch.district, branch.address].filter(Boolean).join('، ')} />
+            )}
+
+            {(branch.latitude && branch.longitude) && (
+              <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-xl">
+                <a
+                  href={`https://www.google.com/maps?q=${branch.latitude},${branch.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MapPin className="w-4 h-4" />
+                  {t(isRTL, 'فتح في خرائط Google', 'Open in Google Maps')}
+                  <ExternalLink className="w-3 h-3 opacity-60" />
+                </a>
+              </Button>
             )}
 
             {socials.length > 0 && (
@@ -413,6 +463,8 @@ const BranchDetail: React.FC = () => {
               </CardContent>
             </Card>
           )}
+
+          <BranchReviews branchId={branch.id} businessId={branch.business_id} />
         </div>
       </section>
     </div>
