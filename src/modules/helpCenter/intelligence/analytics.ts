@@ -112,6 +112,7 @@ function suggestTitle(term: string): string {
   const t = term.trim();
   if (!t) return '';
   // If ASCII → English title case suggestion
+  // eslint-disable-next-line no-control-regex -- ASCII-range detection
   if (/^[\x00-\x7F]+$/.test(t)) return `Guide: ${t.replace(/\b\w/g, (c) => c.toUpperCase())}`;
   return `دليل: ${t}`;
 }
