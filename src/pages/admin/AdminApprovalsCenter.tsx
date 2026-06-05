@@ -405,16 +405,6 @@ const AdminApprovalsCenter: React.FC = () => {
     queryClient.invalidateQueries({ queryKey: ['approvals-audit'] });
   };
 
-  if (!isAdmin && !isSuperAdmin) {
-    return (
-      <DashboardLayout>
-        <div className="p-6 text-sm text-muted-foreground">
-          {isRTL ? 'هذه الصفحة للمشرفين فقط.' : 'This page is admin-only.'}
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   const fmtDate = (s: string | null) =>
     s ? new Date(s).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
       year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
