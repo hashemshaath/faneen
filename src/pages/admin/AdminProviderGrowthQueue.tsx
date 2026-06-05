@@ -1,8 +1,6 @@
 /**
  * PROVIDER-GROWTH-ENGINE-2 — Operations queue at /admin/provider-growth/queue.
- *
- * Bulk actions are limited to: assign reviewer, request enrichment,
- * request verification. NEVER bulk publish.
+ * Bulk actions: assign reviewer, request enrichment, request verification.
  */
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -100,12 +98,12 @@ const AdminProviderGrowthQueue: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold">{t('قائمة عمليات نمو المزودين', 'Provider growth queue')}</h1>
             <p className="text-sm text-muted-foreground">
-              {t('فلترة المزودين بحسب البيانات المفقودة أو الجودة المنخفضة، وتنفيذ إجراءات مجمعة (بدون نشر مجمع).',
-                 'Filter providers by missing data or low quality, then run bulk actions (no bulk publishing).')}
+              {t('فلترة المزودين بحسب البيانات المفقودة أو الجودة المنخفضة، وتنفيذ إجراءات مجمعة.',
+                 'Filter providers by missing data or low quality, then run bulk actions.')}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <HelpLauncher pageKey={PAGE_KEY} />
+            <HelpLauncher pageKey="admin.provider-growth-queue" />
             <Button asChild variant="outline" className="rounded-xl">
               <Link to="/admin/provider-growth">{t('عودة للوحة', 'Back to dashboard')}</Link>
             </Button>
@@ -140,8 +138,8 @@ const AdminProviderGrowthQueue: React.FC = () => {
             <ShieldCheck className="w-4 h-4" /> {t('طلب توثيق', 'Request verification')}
           </Button>
           <div className="text-xs text-muted-foreground self-center ms-2">
-            {t('النشر المجمع غير مدعوم — يتم النشر فرديًا بعد التوثيق.',
-               'Bulk publishing is not supported — publish individually after verification.')}
+            {t('يتم النشر فرديًا بعد التوثيق.',
+               'Publishing happens individually after verification.')}
           </div>
         </div>
 
