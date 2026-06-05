@@ -18,7 +18,7 @@ const TABLES = ['contract_measurements', 'contract_milestones', 'contract_notes'
 describe('CT-8 re-audit: no direct app-layer access to target tables', () => {
   for (const table of TABLES) {
     it(`no .from('${table}') outside service/test layer`, () => {
-      const pattern = `\\.from\\(['\\\"]${table}['\\\"]\\)`;
+      const pattern = `\\.from\\(['"]${table}['"]\\)`;
       let out = '';
       try {
         out = execSync(
