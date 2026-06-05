@@ -91,8 +91,7 @@ describe('BRANDS-HELP-CONTENT-1', () => {
 
   it('does not introduce RFQ brand picker or SLA cron in this phase', () => {
     // simple grep guards: there must be no new picker component or cron file added under brands
-    const fs = require('node:fs') as typeof import('node:fs');
-    const exists = (p: string) => fs.existsSync(resolve(p));
+    const exists = (p: string) => existsSync(resolve(p));
     expect(exists('src/components/rfq/RfqBrandPicker.tsx')).toBe(false);
     expect(exists('supabase/functions/brand-request-sla-cron')).toBe(false);
   });
