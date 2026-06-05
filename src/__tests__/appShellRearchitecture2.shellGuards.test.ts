@@ -65,7 +65,7 @@ describe('APP-SHELL-2 — only DashboardLayout mounts shell-2 widgets', () => {
     for (const file of walk(resolve(ROOT, 'src/pages'))) {
       const src = readFileSync(file, 'utf8');
       for (const b of banned) {
-        if (new RegExp(`<${b}[\\s/>]`).test(src) || new RegExp(`from ['\"]@/components/workspace/shell/${b}`).test(src)) {
+        if (new RegExp(`<${b}[\\s/>]`).test(src) || new RegExp(`from ['"]@/components/workspace/shell/${b}`).test(src)) {
           offenders.push(`${file} imports ${b}`);
         }
       }
