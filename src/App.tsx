@@ -40,6 +40,7 @@ const QuotationViewer = lazyRetry(() => import("./pages/QuotationViewer"));
 const CustomerProjectPortal = lazyRetry(() => import("./pages/CustomerProjectPortal"));
 const QSlugDispatcher = lazyRetry(() => import("./pages/QSlugDispatcher"));
 const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
+const BranchDetail = lazyRetry(() => import("./pages/BranchDetail"));
 const UsernameResolver = lazyRetry(() => import("./pages/UsernameResolver"));
 const ClaimBusiness = lazyRetry(() => import("./pages/ClaimBusiness"));
 const Search = lazyRetry(() => import("./pages/Search"));
@@ -222,6 +223,7 @@ const AdminPdfExportAudit = lazyRetry(() => import("./pages/admin/AdminPdfExport
 const AdminPdfVisualQa = lazyRetry(() => import("./pages/admin/AdminPdfVisualQa"));
 // NAVIGATION-CONSOLIDATION-1 — unified tabbed hubs (Phase 2).
 const DashboardBusinessProfileHub = lazyRetry(() => import("./pages/dashboard/DashboardBusinessProfileHub"));
+const DashboardBranches = lazyRetry(() => import("./pages/dashboard/DashboardBranches"));
 const DashboardRequestsHub = lazyRetry(() => import("./pages/dashboard/DashboardRequestsHub"));
 const DashboardRfqHub = lazyRetry(() => import("./pages/dashboard/DashboardRfqHub"));
 const DashboardContractsHub = lazyRetry(() => import("./pages/dashboard/DashboardContractsHub"));
@@ -320,6 +322,7 @@ const AppRoutes = () => (
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/v/c/:number" element={<VerifyContract />} />
           <Route path="/v/b/:username" element={<VerifyBusiness />} />
+          <Route path="/branch/:slug" element={<BranchDetail />} />
           <Route path="/invite/:token" element={<InviteAccept />} />
           <Route path="/staff-invite/:token" element={<StaffInviteAccept />} />
           <Route path="/s/:token" element={<PublicSiteScan />} />
@@ -363,6 +366,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/business-draft" element={<ProtectedRoute><DashboardBusinessDraft /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 1 — Business Profile hub. */}
           <Route path="/dashboard/business-edit" element={<ProtectedRoute><DashboardBusinessProfileHub /></ProtectedRoute>} />
+          <Route path="/dashboard/branches" element={<ProtectedRoute><DashboardBranches /></ProtectedRoute>} />
           <Route path="/dashboard/entities" element={<Navigate to="/dashboard/business-edit?tab=entities" replace />} />
           <Route path="/dashboard/entities/:id" element={<ProtectedRoute><DashboardEntityDetail /></ProtectedRoute>} />
           <Route path="/dashboard/communication-preferences" element={<ProtectedRoute><DashboardCommunicationPreferences /></ProtectedRoute>} />

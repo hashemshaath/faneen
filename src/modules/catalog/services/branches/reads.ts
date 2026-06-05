@@ -43,3 +43,55 @@ export async function listBranchesByBusiness<T = unknown>({
   const { data, error } = await q;
   return { data: data as unknown as T[] | null, error };
 }
+
+// ---------- BRANCHES-PRO additional readers ----------
+
+/** Fetch a single branch by id (private, owner/staff RLS). */
+export async function getBranchById<T = unknown>(
+  id: string,
+  select = '*',
+): Promise<{ data: T | null; error: unknown }> {
+  const { data, error } = await supabase
+    .from('business_branches')
+    .select(select)
+    .eq('id', id)
+    .maybeSingle();
+  return { data: data as unknown as T | null, error };
+}
+
+/** Fetch a public branch by business_id + slug for the public BranchDetail page. */
+export async function getPublicBranchBySlug<T = unknown>(
+  businessId: string,
+  slug: string,
+  select = '*',
+): Promise<{ data: T | null; error: unknown }> {
+  const { data, error } = await supabase
+    .from('business_branches_public' as 'business_branches')
+    .select(select)
+    .eq('business_id', businessId)
+    .eq('slug', slug)
+    .maybeSingle();
+  return { data: data as unknown as T | null, error };
+}
+
+/** List service_id values linked to a branch. */
+export async function listBranchServiceIds(branchId: string): Promise<{ data: string[] | null; error: unknown }> {
+   
+  const { data, error } = await (supabase as any)
+    .from('branch_services')
+    .select('service_id')
+    .eq('branch_id', branchId);
+  const ids = (data as Array<{ service_id: string }> | null)?.map(r => r.service_id) ?? null;
+  return { data: ids, error };
+}
+
+/** List promotion_id values linked to a branch. */
+export async function listBranchPromotionIds(branchId: string): Promise<{ data: string[] | null; error: unknown }> {
+   
+  const { data, error } = await (supabase as any)
+    .from('branch_promotions')
+    .select('promotion_id')
+    .eq('branch_id', branchId);
+  const ids = (data as Array<{ promotion_id: string }> | null)?.map(r => r.promotion_id) ?? null;
+  return { data: ids, error };
+}

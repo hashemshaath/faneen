@@ -1347,6 +1347,120 @@ export type Database = {
           },
         ]
       }
+      branch_promotions: {
+        Row: {
+          branch_id: string
+          business_id: string
+          created_at: string
+          promotion_id: string
+        }
+        Insert: {
+          branch_id: string
+          business_id: string
+          created_at?: string
+          promotion_id: string
+        }
+        Update: {
+          branch_id?: string
+          business_id?: string
+          created_at?: string
+          promotion_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_promotions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_promotions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_promotions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_promotions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_promotions_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      branch_services: {
+        Row: {
+          branch_id: string
+          business_id: string
+          created_at: string
+          service_id: string
+        }
+        Insert: {
+          branch_id: string
+          business_id: string
+          created_at?: string
+          service_id: string
+        }
+        Update: {
+          branch_id?: string
+          business_id?: string
+          created_at?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_services_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_services_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_services_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_services_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "business_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_addition_requests: {
         Row: {
           admin_notes: string | null
@@ -1982,6 +2096,7 @@ export type Database = {
         Row: {
           additional_number: string | null
           address: string | null
+          address_id: string | null
           building_number: string | null
           business_id: string
           city_id: string | null
@@ -1989,8 +2104,11 @@ export type Database = {
           country_id: string | null
           created_at: string
           customer_service_phone: string | null
+          description_ar: string | null
+          description_en: string | null
           district: string | null
           email: string | null
+          floor_number: string | null
           id: string
           is_active: boolean
           is_demo: boolean
@@ -2008,15 +2126,29 @@ export type Database = {
           phone_national: string | null
           ref_id: string | null
           region: string | null
+          sales_manager_staff_id: string | null
+          short_address: string | null
+          slug: string | null
+          social_facebook: string | null
+          social_instagram: string | null
+          social_linkedin: string | null
+          social_snapchat: string | null
+          social_tiktok: string | null
+          social_x: string | null
+          social_youtube: string | null
           sort_order: number
           street_name: string | null
           unified_number: string | null
+          unit_number: string | null
           updated_at: string
           website: string | null
+          whatsapp: string | null
+          working_hours: Json | null
         }
         Insert: {
           additional_number?: string | null
           address?: string | null
+          address_id?: string | null
           building_number?: string | null
           business_id: string
           city_id?: string | null
@@ -2024,8 +2156,11 @@ export type Database = {
           country_id?: string | null
           created_at?: string
           customer_service_phone?: string | null
+          description_ar?: string | null
+          description_en?: string | null
           district?: string | null
           email?: string | null
+          floor_number?: string | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
@@ -2043,15 +2178,29 @@ export type Database = {
           phone_national?: string | null
           ref_id?: string | null
           region?: string | null
+          sales_manager_staff_id?: string | null
+          short_address?: string | null
+          slug?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_snapchat?: string | null
+          social_tiktok?: string | null
+          social_x?: string | null
+          social_youtube?: string | null
           sort_order?: number
           street_name?: string | null
           unified_number?: string | null
+          unit_number?: string | null
           updated_at?: string
           website?: string | null
+          whatsapp?: string | null
+          working_hours?: Json | null
         }
         Update: {
           additional_number?: string | null
           address?: string | null
+          address_id?: string | null
           building_number?: string | null
           business_id?: string
           city_id?: string | null
@@ -2059,8 +2208,11 @@ export type Database = {
           country_id?: string | null
           created_at?: string
           customer_service_phone?: string | null
+          description_ar?: string | null
+          description_en?: string | null
           district?: string | null
           email?: string | null
+          floor_number?: string | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
@@ -2078,13 +2230,33 @@ export type Database = {
           phone_national?: string | null
           ref_id?: string | null
           region?: string | null
+          sales_manager_staff_id?: string | null
+          short_address?: string | null
+          slug?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_snapchat?: string | null
+          social_tiktok?: string | null
+          social_x?: string | null
+          social_youtube?: string | null
           sort_order?: number
           street_name?: string | null
           unified_number?: string | null
+          unit_number?: string | null
           updated_at?: string
           website?: string | null
+          whatsapp?: string | null
+          working_hours?: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "business_branches_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "addresses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "business_branches_business_id_fkey"
             columns: ["business_id"]
@@ -2111,6 +2283,13 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_branches_sales_manager_staff_id_fkey"
+            columns: ["sales_manager_staff_id"]
+            isOneToOne: false
+            referencedRelation: "business_staff"
             referencedColumns: ["id"]
           },
         ]
@@ -19260,6 +19439,7 @@ export type Database = {
         }
         Returns: string
       }
+      set_main_branch: { Args: { p_branch_id: string }; Returns: undefined }
       set_my_inbox_notification_mute: {
         Args: { _muted: boolean }
         Returns: undefined
