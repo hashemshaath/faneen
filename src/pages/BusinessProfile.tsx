@@ -210,9 +210,9 @@ const BusinessProfile = () => {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
       '@id': `https://qitaat.com/${business.username}`,
-      name: business.name_ar,
-      alternateName: business.name_en,
-      description: business.description_ar,
+      name: businessName || business.name_ar,
+      alternateName: language === 'ar' ? business.name_en : business.name_ar,
+      description: (language === 'ar' ? business.description_ar : business.description_en) || business.description_ar,
       url: `https://qitaat.com/${business.username}`,
       image: business.logo_url || business.cover_url,
       logo: business.logo_url,
@@ -242,12 +242,14 @@ const BusinessProfile = () => {
       } : undefined,
       priceRange: business.membership_tier === 'free' ? '$$' : '$$$',
       areaServed: cityName ? { '@type': 'City', name: cityName } : undefined,
-      serviceType: services.length > 0 ? services.map(s => s.name_ar) : undefined,
+      serviceType: services.length > 0
+        ? services.map(s => (language === 'ar' ? s.name_ar : (s.name_en || s.name_ar)))
+        : undefined,
     };
 
     const breadcrumb = buildBreadcrumbList([
       ...(categoryName ? [{ name: categoryName, url: `/categories/${business.categories?.slug || ''}` }] : []),
-      { name: business.name_ar, url: `/${business.username}` },
+      { name: businessName || business.name_ar, url: `/${business.username}` },
     ]);
 
     // Up to 5 Service entries reflecting the provider's offered services so
@@ -258,7 +260,7 @@ const BusinessProfile = () => {
         description: language === 'ar'
           ? (s.description_ar || undefined)
           : (s.description_en || s.description_ar || undefined),
-        providerName: business.name_ar,
+        providerName: businessName || business.name_ar,
         providerUrl: `/${business.username}`,
         areaServed: cityName || undefined,
         serviceType: categoryName || undefined,
@@ -271,7 +273,7 @@ const BusinessProfile = () => {
       '@type': 'Review',
       itemReviewed: {
         '@type': 'LocalBusiness',
-        name: business.name_ar,
+        name: businessName || business.name_ar,
         '@id': `https://qitaat.com/${business.username}`,
       },
       author: {

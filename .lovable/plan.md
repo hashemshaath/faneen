@@ -121,7 +121,10 @@
   - تأكيد توفر `useNoIndex` كـ hook قابل للاستيراد (مستخدم بالفعل في كل صفحات admin/dashboard/auth).
 - ✅ تحقّق `useNoIndex` على لوحات `admin/*` و `dashboard/*` و auth: `rg` يظهر استخدامه في ~150 شاشة خاصة (شامل `ProtectedRoute` و كل `Admin*`/`Dashboard*`).
 - ✅ sitemap edge function تم تدقيقها: لا تنشر أي مسار `/admin/*` أو `/dashboard/*`؛ كل القوائم تستخدم slugs عامة (ما عدا `/projects/:id` و `/search?...` المُمررة عمداً).
-- ⏳ مراجعة فردية لـ JSON-LD لكل صفحة (مطابقة `name/headline` للّغة + إزالة أي تقييمات وهمية) — اختياري في دفعة منفصلة عند الحاجة، خارج نطاق الاختبار الآلي.
+- ✅ JSON-LD matching للّغة الحالية على الصفحات عالية الأثر:
+  - `BusinessProfile`: `LocalBusiness.name/alternateName/description/serviceType` + breadcrumbs + Review.itemReviewed تستخدم اللغة النشطة.
+  - `BlogPost`: `BlogPosting.headline/alternativeHeadline/description` + breadcrumb item تستخدم اللغة النشطة مع fallback.
+  - `ProjectDetail`: `CreativeWork.creator.name` يلتزم باللغة النشطة.
 
 ---
 
