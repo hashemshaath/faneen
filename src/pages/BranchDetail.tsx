@@ -274,9 +274,7 @@ const BranchDetail: React.FC = () => {
     ogDescription: seoDescription,
     ogImage: business?.logo_url || undefined,
     ogType: 'business.business',
-    canonical: branch?.slug && business?.username
-      ? `https://qitaat.com/${business.username}/${branch.slug}`
-      : (branch?.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined),
+    canonical: canonicalBranchUrl,
   });
 
   // Aggregate review stats for SEO (AggregateRating in JSON-LD).
@@ -312,9 +310,7 @@ const BranchDetail: React.FC = () => {
       } : undefined,
       telephone: branch.phone || branch.mobile || undefined,
       email: branch.email || undefined,
-      url: branch.slug && business.username
-        ? `https://qitaat.com/${business.username}/${branch.slug}`
-        : (branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined),
+      url: canonicalBranchUrl,
       geo: branch.latitude && branch.longitude ? {
         '@type': 'GeoCoordinates',
         latitude: branch.latitude, longitude: branch.longitude,
@@ -352,9 +348,7 @@ const BranchDetail: React.FC = () => {
     const items = [
       { name: t(isRTL, 'الرئيسية', 'Home'), url: 'https://qitaat.com/' },
       business?.username ? { name: businessName, url: `https://qitaat.com/${business.username}` } : null,
-      { name: branchName, url: branch.slug && business?.username
-          ? `https://qitaat.com/${business.username}/${branch.slug}`
-          : (branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined) },
+      { name: branchName, url: canonicalBranchUrl },
     ].filter(Boolean) as Array<{ name: string; url?: string }>;
     return {
       '@context': 'https://schema.org',
@@ -400,9 +394,7 @@ const BranchDetail: React.FC = () => {
     branch.social_snapchat && { url: branch.social_snapchat, Icon: Globe, label: 'Snapchat' },
   ].filter(Boolean) as Array<{ url: string; Icon: React.ComponentType<{ className?: string }>; label: string }>;
 
-  const shareUrl = branch.slug && business?.username
-    ? `https://qitaat.com/${business.username}/${branch.slug}`
-    : (branch.slug ? `https://qitaat.com/branch/${branch.slug}` : window.location.href);
+  const shareUrl = canonicalBranchUrl ?? window.location.href;
   const handleShare = async () => {
     try {
       if (navigator.share) {
