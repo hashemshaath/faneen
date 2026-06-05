@@ -84,13 +84,16 @@ describe('PROVIDER-GROWTH-ENGINE-2 — Admin UI', () => {
   describe('Queue', () => {
     const src = read(QUEUE);
     it('renders all eight queue filters', () => {
-      for (const f of [
+      const required = [
         'missing_logo','missing_services','missing_brands','missing_address',
         'low_quality','low_readiness','pending_verification','pending_enrichment',
-      ]) {
-        expect(GROWTH_QUEUE_FILTERS).toContain(f);
-        expect(src).toContain(`queue-filter-${f}`);
-      }
+      ];
+      for (const f of required) expect(GROWTH_QUEUE_FILTERS).toContain(f);
+      // Source contains the GROWTH_QUEUE_FILTERS constant used by .map((f) => `queue-filter-${f}`).
+      expect(src).toContain('GROWTH_QUEUE_FILTERS');
+      expect(src).toContain('queue-filter-${f}');
+      // FILTER_LABEL covers each required filter.
+      for (const f of required) expect(src).toContain(`${f}:`);
     });
     it('offers bulk assign / enrichment / verification — never bulk publish', () => {
       expect(src).toContain('Assign reviewer');
@@ -129,9 +132,15 @@ describe('PROVIDER-GROWTH-ENGINE-2 — Admin UI', () => {
       expect(r.map((x) => x.business.id)).toEqual(['a']);
     });
     it('low_readiness and low_quality narrow the list', () => {
-      const i = buildProviderInsight(base);
-      expect(filterGrowthInsights([i], 'low_readiness').length).toBe(1);
-      expect(filterGrowthInsights([i], 'low_quality').length).toBe(1);
+      // A near-empty record scores low on both dimensions.
+      const weak = buildProviderInsight({
+        ...base, id: 'weak', name_ar: null, name_en: null, username: null,
+        phone: null, email: null, sectors: [],
+      });
+      expect(weak.readiness.score).toBeLessThan(60);
+      expect(weak.quality.score).toBeLessThan(70);
+      expect(filterGrowthInsights([weak], 'low_readiness').length).toBe(1);
+      expect(filterGrowthInsights([weak], 'low_quality').length).toBe(1);
     });
     it('computeGrowthKPIs returns all required metric keys', () => {
       const k = computeGrowthKPIs([base]);
