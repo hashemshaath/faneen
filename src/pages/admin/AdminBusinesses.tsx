@@ -83,6 +83,7 @@ import { parseMembershipLimitError } from '@/lib/membership-errors';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
 import { BusinessOwnerPanel } from '@/components/admin/BusinessOwnerPanel';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { UnifiedApprovalsCenterBanner } from '@/components/admin/UnifiedApprovalsCenterBanner';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
 import { SavedViewsMenu } from '@/components/admin/SavedViewsMenu';
 import { useAdminSavedViews } from '@/hooks/useAdminSavedViews';
@@ -1362,6 +1363,8 @@ const AdminBusinesses = () => {
             </div>
           }
         />
+
+        <UnifiedApprovalsCenterBanner />
 
         {/* ─── Tier Distribution Bar ─── */}
         {stats.total > 0 && (

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { MaybeDashboardLayout as DashboardLayout } from '@/components/admin/MaybeDashboardLayout';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { UnifiedApprovalsCenterBanner } from '@/components/admin/UnifiedApprovalsCenterBanner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -676,6 +677,8 @@ const AdminApprovalsCenter: React.FC = () => {
             </>
           }
         />
+
+        <UnifiedApprovalsCenterBanner />
 
         {/* Filter chips + Search */}
         <div className="rounded-2xl border border-border/40 bg-card p-3 space-y-3">
