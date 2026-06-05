@@ -1353,6 +1353,99 @@ export type Database = {
           },
         ]
       }
+      branch_inquiries: {
+        Row: {
+          branch_id: string
+          budget: number | null
+          business_id: string
+          created_at: string
+          currency_code: string
+          email: string | null
+          id: string
+          message: string
+          name: string
+          phone: string
+          responded_at: string | null
+          responded_by: string | null
+          service_id: string | null
+          status: Database["public"]["Enums"]["branch_inquiry_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          branch_id: string
+          budget?: number | null
+          business_id: string
+          created_at?: string
+          currency_code?: string
+          email?: string | null
+          id?: string
+          message: string
+          name: string
+          phone: string
+          responded_at?: string | null
+          responded_by?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["branch_inquiry_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          branch_id?: string
+          budget?: number | null
+          business_id?: string
+          created_at?: string
+          currency_code?: string
+          email?: string | null
+          id?: string
+          message?: string
+          name?: string
+          phone?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["branch_inquiry_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_inquiries_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_inquiries_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_inquiries_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_inquiries_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_inquiries_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "business_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branch_promotions: {
         Row: {
           branch_id: string
@@ -20053,6 +20146,7 @@ export type Database = {
         | "cancelled"
         | "completed"
         | "no_show"
+      branch_inquiry_status: "pending" | "in_review" | "responded" | "closed"
       business_approval_status:
         | "draft"
         | "submitted"
@@ -20307,6 +20401,7 @@ export const Constants = {
         "completed",
         "no_show",
       ],
+      branch_inquiry_status: ["pending", "in_review", "responded", "closed"],
       business_approval_status: [
         "draft",
         "submitted",
