@@ -579,20 +579,32 @@ const AdminIdentity: React.FC = () => {
         )}
 
         {tab === 'overview' && (<>
-        {/* ─── KPI strip ─── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Kpi icon={Users} label={isRTL ? 'إجمالي الحسابات' : 'Total accounts'} value={isLoading ? '…' : kpis.totalUsers} tone="primary" to="/admin/users"
-               hint={isRTL ? `+${kpis.newUsers7d} هذا الأسبوع` : `+${kpis.newUsers7d} this week`} />
-          <Kpi icon={Building2} label={isRTL ? 'المنشآت المسجّلة' : 'Registered businesses'} value={isLoading ? '…' : kpis.totalBusinesses} tone="success" to="/admin/businesses"
-               hint={isRTL ? `+${kpis.newBiz7d} هذا الأسبوع` : `+${kpis.newBiz7d} this week`} />
-          <Kpi icon={UserCheck} label={isRTL ? 'مزودو الخدمات' : 'Service providers'} value={isLoading ? '…' : kpis.providers} tone="info" to="/admin/users?type=business" />
-          <Kpi icon={CheckCircle2} label={isRTL ? 'منشآت موثّقة' : 'Verified'} value={isLoading ? '…' : kpis.verifiedBiz} tone="accent" to="/admin/businesses" />
+        {/* ─── Hero KPIs (primary) ─── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <Kpi icon={Users} label={isRTL ? 'إجمالي الحسابات' : 'Total accounts'}
+               value={isLoading ? '…' : kpis.totalUsers} tone="primary" to="/admin/users"
+               trend={kpis.newUsers7d > 0 ? `+${kpis.newUsers7d}` : undefined}
+               hint={isRTL ? 'هذا الأسبوع' : 'this week'} />
+          <Kpi icon={Building2} label={isRTL ? 'المنشآت المسجّلة' : 'Registered businesses'}
+               value={isLoading ? '…' : kpis.totalBusinesses} tone="success" to="/admin/businesses"
+               trend={kpis.newBiz7d > 0 ? `+${kpis.newBiz7d}` : undefined}
+               hint={isRTL ? 'هذا الأسبوع' : 'this week'} />
+          <Kpi icon={Sparkles} label={isRTL ? 'بانتظار المراجعة' : 'Pending review'}
+               value={isLoading ? '…' : kpis.pendingBiz} tone="warning" to="/admin/provider-review"
+               trend={kpis.pendingBiz > 0 ? (isRTL ? 'عاجل' : 'urgent') : undefined} />
+          <Kpi icon={CheckCircle2} label={isRTL ? 'منشآت موثّقة' : 'Verified'}
+               value={isLoading ? '…' : kpis.verifiedBiz} tone="accent" to="/admin/businesses" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Kpi icon={Crown} label={isRTL ? 'فريق الإدارة' : 'Admin staff'} value={isLoading ? '…' : kpis.staffCount} tone="warning" to="/admin/users?role=admin" />
-          <Kpi icon={Sparkles} label={isRTL ? 'بانتظار المراجعة' : 'Pending review'} value={isLoading ? '…' : kpis.pendingBiz} tone="warning" to="/admin/provider-review" />
-          <Kpi icon={Ban} label={isRTL ? 'حسابات معطّلة' : 'Disabled accounts'} value={isLoading ? '…' : kpis.bannedUsers} tone="warning" to="/admin/users?tab=disabled" />
-          <Kpi icon={Shield} label={isRTL ? 'إجمالي الأدوار' : 'Role grants'} value={isLoading ? '…' : roles.length} tone="info" to="/admin/access-management" />
+        {/* ─── Secondary KPIs (compact) ─── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <Kpi icon={UserCheck} label={isRTL ? 'مزودو الخدمات' : 'Service providers'}
+               value={isLoading ? '…' : kpis.providers} tone="info" to="/admin/users?type=business" />
+          <Kpi icon={Crown} label={isRTL ? 'فريق الإدارة' : 'Admin staff'}
+               value={isLoading ? '…' : kpis.staffCount} tone="warning" to="/admin/users?role=admin" />
+          <Kpi icon={Ban} label={isRTL ? 'حسابات معطّلة' : 'Disabled accounts'}
+               value={isLoading ? '…' : kpis.bannedUsers} tone="warning" to="/admin/users?tab=disabled" />
+          <Kpi icon={Shield} label={isRTL ? 'إجمالي الأدوار' : 'Role grants'}
+               value={isLoading ? '…' : roles.length} tone="info" to="/admin/access-management" />
         </div>
 
         {/* ─── Management navigation grid ─── */}
