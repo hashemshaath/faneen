@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { Card } from '@/components/ui/card';
 import { AlertTriangle, CheckCircle2, Globe, ImageOff } from 'lucide-react';
 import {
