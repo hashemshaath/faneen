@@ -1,65 +1,49 @@
+## نطاق العمل لصفحة الفرع `/{username}/{branch-slug}`
 
-## الهدف
-تحويل `qitaat.com/ajanetworking/loc1000003` إلى صفحة احترافية بروابط مقروءة وميزات مدعومة بقاعدة البيانات.
+سأنفذ خمس مجموعات تحسينات على ملف `src/pages/BranchDetail.tsx` ومكوناته، مع ترحيلات قاعدة بيانات لازمة. التنفيذ مرتب حسب التبعية.
 
-## نطاق التغيير
+### 1) الأداء والتحميل الكسول + OpenGraph دقيق
+- إضافة `loading="lazy"` و`decoding="async"` و`width/height` لجميع صور الخدمات والمعرض والشعار (ما عدا صورة الهيرو = `eager` + `fetchpriority=high`).
+- تقسيم المكونات الثقيلة عبر `React.lazy` + `Suspense`: `ShareMenu`, `BranchVisitCounter`, `BranchReviews` (جديد), `BranchInquiryForm` (جديد), خريطة Leaflet.
+- إضافة Helmet ديناميكي لكل فرع: `title`, `description` (من `about_ar/en` أو خدمات الفرع)، `og:title`, `og:description`, `og:image` (شعار/صورة الفرع)، `og:url` (canonical)، `og:locale` (ar_SA / en_US)، `twitter:card=summary_large_image`.
 
-### 1. روابط الفروع بأسماء بدل `loc1000003`
-- إنشاء migration `backfill_branch_slugs` يولّد `slug` تلقائياً من `name_en` (أو `name_ar` معرّب لاتيني) لكل فرع لا يملك `slug`.
-- إضافة DB trigger `branch_auto_slug` يضمن أن أي فرع جديد يحصل على slug فوراً.
-- تحديث جميع روابط الفروع في `BusinessProfile.tsx` و `BranchDetail.tsx` (siblings) لاستخدام `/{username}/{branch.slug}` فقط.
-- الإبقاء على fallback في `BranchDetail` لاستقبال `loc1000003` و302→الـ slug الجديد (موجود مسبقاً، تأكيد فقط).
+### 2) نموذج "استفسار / طلب خدمة"
+- جدول جديد `branch_inquiries` (branch_id, business_id, user_id, service_id?, name, phone, email?, message, budget?, status[`pending|in_review|responded|closed`], created_at, updated_at).
+- RLS:
+  - INSERT: مفتوح للمستخدمين المسجلين (auth.uid()).
+  - SELECT: المستخدم يرى استفساراته فقط، ومالك المنشأة/الطاقم يرى استفسارات منشأته (`has_business_access`).
+  - UPDATE (تغيير الحالة): مالك المنشأة/الطاقم فقط.
+- مكون `BranchInquiryForm.tsx` (inline، بدون popup) + قسم "استفساراتي" داخل لوحة المستخدم لاحقًا (سأضيف الكارد + الجدول الآن).
+- إشعار للمنشأة عند إنشاء استفسار جديد (insert في `notifications` عبر trigger).
 
-### 2. عدّاد زيارات حقيقي
-- جدول جديد `branch_visits` (branch_id, visitor_hash, day, count) + RPC `record_branch_visit(branch_id)` لمنع التضخيم.
-- جدول مُجمَّع `branch_visit_stats_view` للقراءة السريعة (total + last 30 days).
-- استدعاء RPC من `BranchDetail` عند التحميل (مرة لكل جلسة/فرع عبر sessionStorage).
-- عرض العدّاد في شريط الإحصائيات مع animated count-up.
+### 3) نظام تقييم ومراجعات
+- جدول جديد `branch_reviews` (branch_id, business_id, user_id, rating[1-5], title?, comment, status[`pending|approved|rejected`], approved_by?, approved_at?, created_at, updated_at). Unique على (branch_id, user_id).
+- RLS:
+  - SELECT: عام للمراجعات `approved`؛ المالك/الطاقم يرى الكل.
+  - INSERT/UPDATE: مستخدم مسجل على مراجعته فقط.
+  - APPROVE/REJECT: مالك المنشأة/الطاقم أو admin.
+- View `branch_review_stats_view` (branch_id, avg_rating, total_approved, dist_5..1).
+- مكونات: `BranchReviews.tsx` (قائمة + متوسط نجوم + توزيع)، `BranchReviewForm.tsx` (inline)، `StarRating.tsx`.
 
-### 3. مفضلة مرتبطة بقاعدة البيانات
-- جدول `user_favorite_businesses` (user_id, business_id, ref_id_snapshot, created_at) مع RLS لكل مستخدم.
-- توسعة `useBusinessFavorites` لتدمج localStorage (زوّار) + Supabase (مسجَّلين): الكتابة المزدوجة + الدمج عند تسجيل الدخول.
-- زر قلب في رأس `BranchDetail` يخزن `business_id + ref_id` ويعرض حالة "محفوظ" مع toast.
+### 4) قسم الخدمات داخل صفحة الفرع
+- استخدام `business_services` المرتبطة بالمنشأة مع شريط فلترة بحسب `category` (نوع الخدمة).
+- بطاقات خدمة بتصميم موحد + شارة "متاح" + CTA: "اطلب عرض سعر" → يفتح `BranchInquiryForm` مع `service_id` مملوء مسبقًا.
+- بحث نصي محلي + ترتيب (الأحدث/السعر).
 
-### 4. تحسين الخدمات + رقم الهاتف عند الضغط
-- بطاقات الخدمات: شارة سعر، تأثير `hover-lift`، رابط لصفحة الخدمة، شارة "متوفر" حسب `is_active`.
-- مكوّن `RevealPhoneButton`: يخفي الرقم خلف زر "اضغط لإظهار الرقم"، يكشفه + يسجّل حدث `phone_reveal` في `branch_visits` كنوع منفصل، ثم زر اتصال/واتساب.
-- نفس المكوّن يُستخدم لـ phone/mobile/whatsapp/customer_service_phone.
+### 5) SEO لصفحة الفرع
+- Helmet (البند 1) + JSON-LD `LocalBusiness` لكل فرع (الاسم، العنوان، الهاتف، `geo`، `openingHours` إن وجدت، `aggregateRating` من `branch_review_stats_view`).
+- JSON-LD `BreadcrumbList`: الرئيسية → المنشأة → الفرع.
+- ترقية `supabase/functions/sitemap/index.ts` لإضافة روابط الفروع `/{username}/{branch.slug}` بلغتين (`hreflang` ar/en) واستبعاد slugs الرقمية القديمة.
+- `<link rel="alternate" hreflang="ar" />` و`hreflang="en"` للفرع.
 
-### 5. زر مشاركة احترافي
-- مكوّن `ShareMenu` (inline popover، لا modal): WhatsApp, X, Facebook, LinkedIn, Telegram, Email, نسخ الرابط، QR صغير.
-- يستخدم `navigator.share` على الجوال + fallback القائمة على الحاسوب.
-- زر "أوصِ بهذا الفرع" يفتح صفحة المراجعات داخلياً.
+### الملفات المعدلة/المنشأة
+- ترحيل واحد: `branch_inquiries`, `branch_reviews`, `branch_review_stats_view`, trigger للإشعار.
+- جديد: `src/components/branch/BranchInquiryForm.tsx`, `BranchReviews.tsx`, `BranchReviewForm.tsx`, `BranchServicesSection.tsx`, `src/components/ui/StarRating.tsx`, `src/hooks/useBranchReviews.ts`, `src/hooks/useBranchInquiries.ts`.
+- معدّل: `src/pages/BranchDetail.tsx`, `supabase/functions/sitemap/index.ts`.
 
-### 6. تحسينات صفحة BranchDetail عامة
-- Hero مع logo + breadcrumb + شارات (Verified, Main branch, Rating).
-- شريط إحصائيات: زيارات، تقييم متوسط، عدد المراجعات، عدد الخدمات.
-- خريطة مصغّرة (إذا متوفّر lat/lng) مع زر "افتح في الخرائط".
-- قسم "فروع أخرى" — استبدال الروابط لتستخدم slug الاسم.
-- تحسين تجاوب الموبايل + skeleton أثناء التحميل.
-
-## التفاصيل التقنية
-
-### Migrations
-1. `backfill_branch_slugs.sql` — function `public.gen_branch_slug(name_en, name_ar, business_id)` + UPDATE للفروع الموجودة.
-2. `branch_visits.sql` — جدول + GRANT + RLS (insert من الجميع، select admin/owner) + RPC `record_branch_visit`.
-3. `user_favorite_businesses.sql` — جدول + GRANT + RLS (user_id = auth.uid()).
-
-### ملفات الواجهة
-- `src/pages/BranchDetail.tsx` — إعادة هيكلة الأقسام، دمج المكوّنات الجديدة.
-- `src/components/branch/RevealPhoneButton.tsx` (جديد).
-- `src/components/branch/ShareMenu.tsx` (جديد) — مشترك مع BusinessProfile.
-- `src/components/branch/BranchVisitCounter.tsx` (جديد) — count-up.
-- `src/hooks/useBranchVisits.ts` (جديد) — RPC wrapper + React Query.
-- `src/hooks/useBusinessFavorites.ts` — توسعة لدعم Supabase.
-- `src/pages/BusinessProfile.tsx` — تحديث روابط الفروع.
-
-## خارج النطاق
-- إعادة تصميم BusinessProfile بالكامل (سيظل كما هو، فقط روابط الفروع تتحدّث).
-- تحليلات متقدّمة (heatmaps, conversion funnels).
-
-## التحقق
-- ESLint + TypeScript.
-- اختبار يدوي: `/ajanetworking/loc1000003` يعيد التوجيه إلى slug الاسم.
-- التحقق من العدّاد يزداد مرة لكل جلسة.
-- المفضلة تستمر بين الجلسات للزوّار والمسجَّلين.
+### ملاحظات تقنية
+- بدون popups (التزامًا بقاعدة المشروع): النماذج inline داخل بطاقات قابلة للطي.
+- بدون `any`، أخطاء كـ `unknown` مع `instanceof Error`.
+- `tech-content` لأرقام الهواتف والأسعار، `dir="auto"` للمدخلات.
+- VAT/تنسيق العملات يتبع الإعدادات الحالية.
+- جميع GRANTs الإلزامية لجداول `public` ستضاف في نفس الترحيل.
