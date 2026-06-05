@@ -1,139 +1,65 @@
-# خطة SEO-TITLES-METADATA-OPTIMIZER-1
 
-النظام الحالي يستخدم `usePageMeta` + `useMultiJsonLd` في `src/hooks/usePageMeta.ts`. سنبني فوقه بدلاً من استبداله، وننفّذ على 4 مراحل قابلة للموافقة منفصلة.
+## الهدف
+تحويل `qitaat.com/ajanetworking/loc1000003` إلى صفحة احترافية بروابط مقروءة وميزات مدعومة بقاعدة البيانات.
 
----
+## نطاق التغيير
 
-## المرحلة 1 — محرّك العناوين الموحّد (Frontend فقط، لا تغييرات DB)
+### 1. روابط الفروع بأسماء بدل `loc1000003`
+- إنشاء migration `backfill_branch_slugs` يولّد `slug` تلقائياً من `name_en` (أو `name_ar` معرّب لاتيني) لكل فرع لا يملك `slug`.
+- إضافة DB trigger `branch_auto_slug` يضمن أن أي فرع جديد يحصل على slug فوراً.
+- تحديث جميع روابط الفروع في `BusinessProfile.tsx` و `BranchDetail.tsx` (siblings) لاستخدام `/{username}/{branch.slug}` فقط.
+- الإبقاء على fallback في `BranchDetail` لاستقبال `loc1000003` و302→الـ slug الجديد (موجود مسبقاً، تأكيد فقط).
 
-**ملف جديد:** `src/modules/seo/seoTitleBuilder.ts`
+### 2. عدّاد زيارات حقيقي
+- جدول جديد `branch_visits` (branch_id, visitor_hash, day, count) + RPC `record_branch_visit(branch_id)` لمنع التضخيم.
+- جدول مُجمَّع `branch_visit_stats_view` للقراءة السريعة (total + last 30 days).
+- استدعاء RPC من `BranchDetail` عند التحميل (مرة لكل جلسة/فرع عبر sessionStorage).
+- عرض العدّاد في شريط الإحصائيات مع animated count-up.
 
-يصدّر:
-- `PageKind = 'company' | 'category' | 'brand' | 'service' | 'blog' | 'search' | 'project' | 'offer' | 'help' | 'home'`
-- `buildSeoTitle({ kind, lang, name, activity?, city?, ... }) → string` يطبّق القواعد العربية/الإنجليزية المذكورة في الطلب مع fallback آمن.
-- `buildSeoDescription(...)` يقص عند 155 حرفاً مع إزالة الحشو وإضافة CTA طبيعي.
-- `truncate`, `cleanText`, `withSite` (لإضافة `| قطاعات` / `| Qitaat`).
+### 3. مفضلة مرتبطة بقاعدة البيانات
+- جدول `user_favorite_businesses` (user_id, business_id, ref_id_snapshot, created_at) مع RLS لكل مستخدم.
+- توسعة `useBusinessFavorites` لتدمج localStorage (زوّار) + Supabase (مسجَّلين): الكتابة المزدوجة + الدمج عند تسجيل الدخول.
+- زر قلب في رأس `BranchDetail` يخزن `business_id + ref_id` ويعرض حالة "محفوظ" مع toast.
 
-**ملف جديد:** `src/modules/seo/useSeoPage.ts` — wrapper رقيق فوق `usePageMeta` يأخذ `{ kind, lang, ... }` ويستدعي `usePageMeta` + `useMultiJsonLd` بالنتائج.
+### 4. تحسين الخدمات + رقم الهاتف عند الضغط
+- بطاقات الخدمات: شارة سعر، تأثير `hover-lift`، رابط لصفحة الخدمة، شارة "متوفر" حسب `is_active`.
+- مكوّن `RevealPhoneButton`: يخفي الرقم خلف زر "اضغط لإظهار الرقم"، يكشفه + يسجّل حدث `phone_reveal` في `branch_visits` كنوع منفصل، ثم زر اتصال/واتساب.
+- نفس المكوّن يُستخدم لـ phone/mobile/whatsapp/customer_service_phone.
 
-**اختبار:** `src/tests/seoTitleBuilder.test.ts` — يتحقق من كل قاعدة لغة + fallback + عدم تجاوز الطول + عدم وجود UUID.
+### 5. زر مشاركة احترافي
+- مكوّن `ShareMenu` (inline popover، لا modal): WhatsApp, X, Facebook, LinkedIn, Telegram, Email, نسخ الرابط، QR صغير.
+- يستخدم `navigator.share` على الجوال + fallback القائمة على الحاسوب.
+- زر "أوصِ بهذا الفرع" يفتح صفحة المراجعات داخلياً.
 
-**لا تغييرات على الصفحات في هذه المرحلة** — فقط الأساس + الاختبارات.
+### 6. تحسينات صفحة BranchDetail عامة
+- Hero مع logo + breadcrumb + شارات (Verified, Main branch, Rating).
+- شريط إحصائيات: زيارات، تقييم متوسط، عدد المراجعات، عدد الخدمات.
+- خريطة مصغّرة (إذا متوفّر lat/lng) مع زر "افتح في الخرائط".
+- قسم "فروع أخرى" — استبدال الروابط لتستخدم slug الاسم.
+- تحسين تجاوب الموبايل + skeleton أثناء التحميل.
 
----
+## التفاصيل التقنية
 
-## المرحلة 2 — ربط الصفحات العامة بالمحرّك
+### Migrations
+1. `backfill_branch_slugs.sql` — function `public.gen_branch_slug(name_en, name_ar, business_id)` + UPDATE للفروع الموجودة.
+2. `branch_visits.sql` — جدول + GRANT + RLS (insert من الجميع، select admin/owner) + RPC `record_branch_visit`.
+3. `user_favorite_businesses.sql` — جدول + GRANT + RLS (user_id = auth.uid()).
 
-تحديث الصفحات لاستخدام `useSeoPage` بدل استدعاءات `usePageMeta` العامة:
+### ملفات الواجهة
+- `src/pages/BranchDetail.tsx` — إعادة هيكلة الأقسام، دمج المكوّنات الجديدة.
+- `src/components/branch/RevealPhoneButton.tsx` (جديد).
+- `src/components/branch/ShareMenu.tsx` (جديد) — مشترك مع BusinessProfile.
+- `src/components/branch/BranchVisitCounter.tsx` (جديد) — count-up.
+- `src/hooks/useBranchVisits.ts` (جديد) — RPC wrapper + React Query.
+- `src/hooks/useBusinessFavorites.ts` — توسعة لدعم Supabase.
+- `src/pages/BusinessProfile.tsx` — تحديث روابط الفروع.
 
-- `src/pages/BusinessProfile.tsx` → `kind:'company'`
-- `src/pages/BranchDetail.tsx` → `kind:'company'` (فرع)
-- `src/pages/Category*.tsx` → `kind:'category'`
-- `src/pages/BrandDetail*.tsx` → `kind:'brand'`
-- `src/pages/ServiceDetail.tsx` / `ProductDetail.tsx` → `kind:'service'`
-- `src/pages/Blog*.tsx` → `kind:'blog'`
-- `src/pages/Search.tsx` → `kind:'search'`
-- `src/pages/ProjectDetail.tsx` → `kind:'project'`
-- `src/pages/Offers*.tsx` → `kind:'offer'`
-- `src/pages/Help*.tsx` → `kind:'help'`
+## خارج النطاق
+- إعادة تصميم BusinessProfile بالكامل (سيظل كما هو، فقط روابط الفروع تتحدّث).
+- تحليلات متقدّمة (heatmaps, conversion funnels).
 
-كل صفحة تمرّر اللغة الحالية (من `useBi`/AppDirectionShell) واسم المدينة/التصنيف/النشاط من بياناتها.
-
-**fallback:** عند نقص أي حقل، يولّد المحرّك صياغة عامة آمنة بدل إفشال الـ render.
-
-### تقدّم المرحلة 2 (دفعة 1)
-- ✅ `src/pages/BusinessProfile.tsx`
-- ✅ `src/pages/BranchDetail.tsx`
-- ✅ `src/pages/BlogPost.tsx`
-- ✅ `src/pages/ProjectDetail.tsx`
-- ✅ `src/pages/ServiceDetail.tsx`
-
-### تقدّم المرحلة 2 (دفعة 2)
-- ✅ `src/pages/Categories.tsx`
-- ✅ `src/pages/BrandDetail.tsx`
-- ✅ `src/pages/Search.tsx`
-- ✅ `src/pages/Offers.tsx`
-- ✅ `src/pages/Blog.tsx`
-- ✅ `src/pages/Projects.tsx`
-- ✅ `src/pages/SectorLanding.tsx` (sector + sectors index)
-- ✅ `src/pages/SectorCity.tsx`
-- ✅ `src/pages/SectorBrief.tsx`
-- ✅ `src/pages/SectorsHub.tsx`
-- ✅ `src/pages/ProfileSystems.tsx`
-- ✅ `src/pages/ProfileSystemDetail.tsx`
-- ✅ `src/pages/Compare.tsx`
-- ✅ `src/pages/CompareProfiles.tsx`
-- ✅ `src/pages/PublicUserProfile.tsx`
-- ✅ `src/pages/help/HelpCenterHome.tsx`
-- ✅ `src/pages/help/HelpCategoryPage.tsx`
-- ✅ `src/pages/help/HelpArticlePage.tsx`
-- ✅ `src/pages/BrandsCatalog.tsx` و `src/pages/SectorSeoLanding.tsx` تمّت ترحيلهما إلى `useSeoPage` مع الإبقاء على JSON-LD المخصّص.
-
-تحديث المحرّك: `withSite` يتعرّف الآن على `قِطاعات` (بـ كسرة) كي لا يضاعف لاحقة الموقع للعناوين المخصصة القائمة.
-
----
-
-## المرحلة 3 — حقول SEO في الإدارة + SEOPreviewCard
-
-**Migration DB** (additive فقط، nullable):
-- `businesses`: `seo_title_ar/en`, `seo_description_ar/en`, `seo_keywords text[]`, `og_image`
-- `categories`: `seo_title_ar/en`, `seo_description_ar/en`, `featured_keywords text[]`
-- `blog_posts`: `seo_title_ar/en`, `seo_description_ar/en`, `cover_alt_ar/en` (excerpt موجود)
-- `brands`: `seo_title_ar/en`, `seo_description_ar/en`, `brand_keywords text[]`
-
-**مكوّن جديد:** `src/components/seo/SEOPreviewCard.tsx` يعرض:
-- معاينة Google (title + URL + description)
-- شريط طول العنوان (50–60 جيد) + الوصف (140–160 جيد)
-- تحذيرات: مفتاح ناقص، عنوان مكرر، slug طويل، OG image مفقود
-- يقبل override يدوي + يستخدم نتيجة `buildSeoTitle` كـ fallback
-
-يُضاف داخل: `AdminBusinesses`, `AdminCategories`, `AdminBrands`, `DashboardBlog` (محرر).
-
-**أولوية القراءة:** `seo_title_*` المخصّص → `buildSeoTitle` التلقائي.
-
-### تقدّم المرحلة 3
-- ✅ `src/components/seo/SEOPreviewCard.tsx` — معاينة Google ثنائية اللغة + شريط طول العنوان/الوصف + تحذيرات OG/canonical/keyword.
-- ✅ Migration additive: أضافت حقول SEO إلى `businesses`, `categories`, `blog_posts`, و `brand_catalog`، وحدّثت `brands_public` لإظهار حقول العلامات المعتمدة فقط.
-- ✅ أمان الواجهة العامة: تم ضبط `brands_public` كـ `security_invoker` بعد تحديثها.
-- ✅ مدمج في `src/pages/dashboard/DashboardBlog.tsx` (تبويب SEO) يقرأ من `meta_title_*` و `meta_description_*` و `og_image_url`.
-- ✅ مدمج في `src/pages/admin/AdminBusinesses.tsx` عبر تبويب SEO inline مع `seo_title_*`, `seo_description_*`, `seo_keywords`, و `og_image`.
-- ✅ مدمج في `src/pages/admin/AdminCategories.tsx` داخل نموذج التصنيف inline مع `seo_title_*`, `seo_description_*`, و `featured_keywords`.
-- ✅ مدمج في `src/pages/admin/AdminBrandDetail.tsx` مع حفظ `seo_title_*`, `seo_description_*`, `brand_keywords`, و `og_image_url`.
-- ✅ مولدات AI (`FieldAiActions`: ترجمة + تحسين) أُضيفت لحقول `seo_title_*` و `seo_description_*` في `AdminBusinesses`، `AdminCategories`، و `AdminBrandDetail` — بنفس النمط المستخدم في `DashboardBlog`.
-
----
-
-## المرحلة 4 — JSON-LD / Canonical / Sitemap / noindex + اختبارات
-
-- مراجعة JSON-LD في الصفحات: `LocalBusiness`, `Brand`, `BlogPosting`, `BreadcrumbList`, `ItemList`, `Service`, `FAQPage` — التأكد من تطابق `name/headline` مع لغة الصفحة، ولا UUIDs، ولا تقييمات وهمية.
-- `useNoIndex` على كل صفحات `/admin/*` و `/dashboard/*` و `/auth/*` (تحقّق فقط — موجود غالباً).
-- `scripts/generate-sitemap.ts` / edge sitemap: تأكيد استبعاد الصفحات الخاصة + استبعاد أي UUIDs.
-- اختبارات: `src/tests/seoTitlesMetadataOptimizer1.test.ts` يغطّي القواعد، اللغة، الطول، عدم وجود UUID، وجود OG/Twitter/JSON-LD، fallback، sitemap لا يحوي خاص.
-
-### تقدّم المرحلة 4
-- ✅ `src/tests/seoTitlesMetadataOptimizer1.test.ts` — 18 اختباراً ناجحاً يغطّي:
-  - قواعد اللغة (ar/en) لكل `PageKind`.
-  - حدود الطول `TITLE_MAX=60` و `DESCRIPTION_MAX=158` على كل المسارات (بما فيها custom titles طويلة جداً).
-  - تنظيف UUID و Ref IDs من العناوين المخصّصة + التأكد من عدم تسرّبها في العناوين التلقائية.
-  - أولوية `customTitle`/`customDescription`، ثم `rawDescription`، ثم القالب العام.
-  - دمج keywords مع dedupe وحد أعلى 12 عنصراً.
-  - فحص المصدر لـ `supabase/functions/sitemap/index.ts`: لا أنواع `admin`/`dashboard`/`auth`، فلاتر `businesses` (is_active + approval_status='published' + is_demo=false)، `blog_posts.status='published'`، رؤوس `Content-Type=application/xml` و `Cache-Control` طويل.
-  - تأكيد توفر `useNoIndex` كـ hook قابل للاستيراد (مستخدم بالفعل في كل صفحات admin/dashboard/auth).
-- ✅ تحقّق `useNoIndex` على لوحات `admin/*` و `dashboard/*` و auth: `rg` يظهر استخدامه في ~150 شاشة خاصة (شامل `ProtectedRoute` و كل `Admin*`/`Dashboard*`).
-- ✅ sitemap edge function تم تدقيقها: لا تنشر أي مسار `/admin/*` أو `/dashboard/*`؛ كل القوائم تستخدم slugs عامة (ما عدا `/projects/:id` و `/search?...` المُمررة عمداً).
-- ✅ JSON-LD matching للّغة الحالية على الصفحات عالية الأثر:
-  - `BusinessProfile`: `LocalBusiness.name/alternateName/description/serviceType` + breadcrumbs + Review.itemReviewed تستخدم اللغة النشطة.
-  - `BlogPost`: `BlogPosting.headline/alternativeHeadline/description` + breadcrumb item تستخدم اللغة النشطة مع fallback.
-  - `ProjectDetail`: `CreativeWork.creator.name` يلتزم باللغة النشطة.
-
----
-
-## التنفيذ
-
-سأبدأ فوراً بالمرحلة 1 بعد موافقتك على هذه الخطة. كل مرحلة لاحقة تأتي في رسالة منفصلة لتسهيل المراجعة والرجوع.
-
-## نقاط تحتاج قراراً منك
-
-1. **Slugs الحالية:** الطلب يمنع تغييرها بدون redirect. هل تريد إضافة جدول `slug_redirects` لاحقاً، أم نكتفي بعدم لمس الـ slugs القائمة؟
-2. **og:image الافتراضية:** نُبقي `qitaat.com/og-image.jpg` الحالية، أم تريد توليد صورة افتراضية لكل `PageKind`؟
-3. **حقول DB في المرحلة 3:** هل أوافق على إنشاء الهجرة عند الوصول لها، أم تفضّل تخطّيها والاكتفاء بـ fallback تلقائي من البيانات الحالية فقط؟
+## التحقق
+- ESLint + TypeScript.
+- اختبار يدوي: `/ajanetworking/loc1000003` يعيد التوجيه إلى slug الاسم.
+- التحقق من العدّاد يزداد مرة لكل جلسة.
+- المفضلة تستمر بين الجلسات للزوّار والمسجَّلين.
