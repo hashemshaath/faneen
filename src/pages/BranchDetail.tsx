@@ -760,7 +760,7 @@ const BranchDetail: React.FC = () => {
                     return (
                       <Link
                         key={s.id}
-                        to={s.slug && business?.username ? `/${business.username}/${s.slug}` : (s.slug ? `/branch/${s.slug}` : '#')}
+                        to={s.slug && business?.username ? `/${business.username}/${s.slug}` : '#'}
                         className="group p-4 rounded-xl border border-border/60 hover-lift hover:border-primary/40 transition"
                       >
                         <div className="flex items-start justify-between gap-2">
