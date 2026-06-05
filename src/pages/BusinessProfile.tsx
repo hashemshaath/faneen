@@ -554,6 +554,7 @@ const BusinessProfile = () => {
                   <TabsContent value="branches" className="mt-0">
                   <BranchesTab
                     businessId={business.id}
+                    businessName={language === "ar" ? business.name_ar : (business.name_en || business.name_ar)}
                     isAuthenticated={!!user}
                     onRequestContact={() => handleContactClick("branches_tab")}
                     onRevealContact={handleContactReveal}
