@@ -488,6 +488,21 @@ const AdminBusinesses = () => {
     onError: () => toast.error(isRTL ? 'فشل التحديث' : 'Update failed'),
   });
 
+  const approvalStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const payload: Record<string, unknown> = { approval_status: status };
+      if (status === 'published') payload.published_at = new Date().toISOString();
+      const { error } = await updateBusinessById({ id, values: payload as never });
+      if (error) throw error;
+      await logAction(`business_approval_status_${status}`, id, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+      toast.success(isRTL ? 'تم تحديث الحالة' : 'Status updated');
+    },
+    onError: () => toast.error(isRTL ? 'فشل تحديث الحالة' : 'Status update failed'),
+  });
+
   const tierMutation = useMutation({
     mutationFn: async ({ id, tier }: { id: string; tier: MembershipTier }) => {
       // R4E-2C-4-PHASE-3: route through membership-owned RPC. RPC writes
@@ -2742,6 +2757,26 @@ const AdminBusinesses = () => {
                             <SelectTrigger className="h-8 text-xs w-28 border-dashed rounded-xl shrink-0"><SelectValue /></SelectTrigger>
                             <SelectContent className="rounded-xl">
                               {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+
+                          <Select
+                            value={biz.approval_status || 'draft'}
+                            onValueChange={(status) => approvalStatusMutation.mutate({ id: biz.id, status })}
+                          >
+                            <SelectTrigger
+                              className="h-8 text-xs w-32 rounded-xl shrink-0"
+                              title={isRTL ? 'حالة النشر' : 'Publication status'}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              <SelectItem value="draft">📝 {isRTL ? 'مسودة' : 'Draft'}</SelectItem>
+                              <SelectItem value="submitted">📨 {isRTL ? 'مُرسلة' : 'Submitted'}</SelectItem>
+                              <SelectItem value="under_review">🔍 {isRTL ? 'قيد المراجعة' : 'Under review'}</SelectItem>
+                              <SelectItem value="approved">✅ {isRTL ? 'معتمدة' : 'Approved'}</SelectItem>
+                              <SelectItem value="published">🌐 {isRTL ? 'منشورة' : 'Published'}</SelectItem>
+                              <SelectItem value="rejected">⛔ {isRTL ? 'مرفوضة' : 'Rejected'}</SelectItem>
                             </SelectContent>
                           </Select>
 
