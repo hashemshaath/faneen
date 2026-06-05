@@ -37,6 +37,8 @@ import { EntityLink } from '@/components/admin/identity/EntityLink';
 import { IdentityCommandPalette } from '@/components/admin/identity/IdentityCommandPalette';
 import { IdentityActivityFeed } from '@/components/admin/identity/IdentityActivityFeed';
 import { IdentitySignupsChart } from '@/components/admin/identity/IdentitySignupsChart';
+import { ApprovalsInbox } from '@/pages/admin/approvalsCenter/ApprovalsInbox';
+import { useUnifiedApprovalsCounts } from '@/components/admin/useUnifiedApprovalsCounts';
 import { listProfiles } from '@/modules/users';
 import { listAllUserRoles } from '@/modules/identity';
 import { listAdminBusinesses } from '@/modules/businesses';
@@ -46,7 +48,7 @@ import {
   Users, Building2, Search, Command, Shield, Crown, ShieldCheck, Briefcase,
   TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, Plus,
   UserPlus, Activity, ExternalLink, KeyRound, BarChart3,
-  RefreshCw, Stethoscope, MapPin, ArrowUpRight,
+  RefreshCw, Stethoscope, MapPin, ArrowUpRight, LayoutDashboard, Inbox,
 } from 'lucide-react';
 
 /**
@@ -130,13 +132,32 @@ const AdminIdentity: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
   usePageMeta({
-    title: isRTL ? 'المستخدمون والمنشآت | إدارة قِطاعات' : 'Users & Businesses | Qitaat Admin',
+    title: isRTL ? 'مركز الحسابات والموافقات | إدارة قِطاعات' : 'Accounts & Approvals | Qitaat Admin',
     noindex: true,
   });
   const { isSuperAdmin } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [, startTransition] = useTransition();
   const queryClient = useQueryClient();
+
+  // Tabs: overview | approvals | directory  (query-string controlled)
+  type TabKey = 'overview' | 'approvals' | 'directory';
+  const initialTab = (searchParams.get('tab') as TabKey) || 'overview';
+  const [tab, setTab] = useState<TabKey>(
+    ['overview', 'approvals', 'directory'].includes(initialTab) ? initialTab : 'overview',
+  );
+  const setTabSafe = useCallback((next: TabKey) => {
+    setTab(next);
+    const sp = new URLSearchParams(searchParams);
+    if (next === 'overview') sp.delete('tab'); else sp.set('tab', next);
+    setSearchParams(sp, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const { data: approvalsCounts } = useUnifiedApprovalsCounts();
+  const pendingTotal =
+    (approvalsCounts?.approvalsPending ?? 0) +
+    (approvalsCounts?.businessesPending ?? 0) +
+    (approvalsCounts?.accessPending ?? 0);
 
   // Legacy ?view=... deep-link redirect to standalone management pages.
   const legacyView = searchParams.get('view');
@@ -339,12 +360,12 @@ const AdminIdentity: React.FC = () => {
             </div>
             <div className="min-w-0">
               <h1 className="text-xl md:text-2xl font-bold font-heading leading-tight">
-                {isRTL ? 'المستخدمون والمنشآت' : 'Users & Businesses'}
+                {isRTL ? 'مركز الحسابات والموافقات' : 'Accounts & Approvals'}
               </h1>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                 {isRTL
-                  ? 'نظرة شاملة بالإحصائيات والمؤشرات. للإدارة التفصيلية، استخدم الصفحات المخصّصة أدناه.'
-                  : 'A consolidated stats overview. For full management, use the dedicated pages below.'}
+                  ? 'سطح واحد موحّد للحسابات والمنشآت وكل الموافقات المعلّقة — نظرة عامة، صندوق موافقات، ودليل بحث.'
+                  : 'One unified surface for accounts, businesses, and every pending approval — overview, inbox, and directory.'}
               </p>
             </div>
           </div>
@@ -386,7 +407,46 @@ const AdminIdentity: React.FC = () => {
           </div>
         </div>
 
-        {/* ─── Unified search ─── */}
+        {/* ─── Tab strip — Overview / Approvals / Directory ─── */}
+        <div className="flex flex-wrap gap-2 border-b border-border/40 pb-0" role="tablist" aria-label={isRTL ? 'أقسام المركز' : 'Center sections'}>
+          {([
+            { key: 'overview',  ar: 'النظرة العامة', en: 'Overview',  icon: LayoutDashboard },
+            { key: 'approvals', ar: 'صندوق الموافقات', en: 'Approvals Inbox', icon: Inbox, badge: pendingTotal },
+            { key: 'directory', ar: 'دليل وبحث',     en: 'Directory', icon: Search },
+          ] as Array<{ key: 'overview' | 'approvals' | 'directory'; ar: string; en: string; icon: React.ElementType; badge?: number }>).map((t) => {
+            const active = tab === t.key;
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.key}
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTabSafe(t.key)}
+                className={`relative inline-flex items-center gap-2 px-4 h-11 rounded-t-xl text-sm font-medium transition-colors border border-b-0 -mb-px ${
+                  active
+                    ? 'bg-card border-border text-foreground shadow-sm'
+                    : 'bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{isRTL ? t.ar : t.en}</span>
+                {typeof t.badge === 'number' && t.badge > 0 && (
+                  <span className={`tech-content rounded-full px-2 py-0.5 text-[10px] ${active ? 'bg-warning/15 text-warning' : 'bg-warning/10 text-warning'}`}>
+                    {t.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {tab === 'approvals' && (
+          <div className="pt-2">
+            <ApprovalsInbox />
+          </div>
+        )}
+
+        {tab === 'directory' && (
         <div className="relative">
           <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ insetInlineStart: '14px' }} />
           <Input
@@ -406,9 +466,10 @@ const AdminIdentity: React.FC = () => {
             <Command className="w-2.5 h-2.5" />K
           </kbd>
         </div>
+        )}
 
         {/* ─── Live search results ─── */}
-        {searchResults && (
+        {tab === 'directory' && searchResults && (
           <div className="rounded-2xl border border-accent/30 bg-accent/5 p-4 animate-in slide-in-from-top-1 duration-200">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-bold text-muted-foreground">
@@ -471,6 +532,7 @@ const AdminIdentity: React.FC = () => {
           </div>
         )}
 
+        {tab === 'overview' && (<>
         {/* ─── KPI strip ─── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Kpi icon={Users} label={isRTL ? 'إجمالي الحسابات' : 'Total accounts'} value={isLoading ? '…' : kpis.totalUsers} tone="primary" to="/admin/users"
@@ -635,10 +697,12 @@ const AdminIdentity: React.FC = () => {
         </div>
 
         {/* ─── Footer hint ─── */}
+        </>)}
+
         <p className="text-[11px] text-muted-foreground text-center pt-2">
           {isRTL
-            ? 'هذه الصفحة للنظرة العامة والإحصائيات فقط. كل عمليات الإدارة (تعديل، حذف، توثيق، فروع، صلاحيات…) متاحة في الصفحات المخصّصة أعلاه.'
-            : 'This page is overview-only. All admin operations (edit, delete, verify, branches, roles…) live in the dedicated pages above.'}
+            ? 'مركز موحّد للحسابات والموافقات. الإدارة التفصيلية (تعديل، حذف، توثيق، فروع، صلاحيات…) متاحة عبر روابط الإجراءات.'
+            : 'Unified accounts & approvals hub. Detailed management (edit, delete, verify, branches, roles…) is reachable via row actions.'}
         </p>
       </div>
       <IdentityCommandPalette
