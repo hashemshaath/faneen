@@ -22,10 +22,20 @@ interface SEOPreviewCardProps {
   customDescriptionEn?: string | null;
   /** Auto-build fallbacks. */
   name?: string | null;
+  nameAr?: string | null;
+  nameEn?: string | null;
   activity?: string | null;
+  activityAr?: string | null;
+  activityEn?: string | null;
   city?: string | null;
+  cityAr?: string | null;
+  cityEn?: string | null;
   category?: string | null;
+  categoryAr?: string | null;
+  categoryEn?: string | null;
   rawDescription?: string | null;
+  rawDescriptionAr?: string | null;
+  rawDescriptionEn?: string | null;
   /** URL preview (e.g. https://qitaat.com/slug). */
   url?: string | null;
   ogImageUrl?: string | null;
@@ -66,19 +76,21 @@ export function SEOPreviewCard(props: SEOPreviewCardProps) {
   const { isRTL } = useLanguage();
   const {
     kind, customTitle, customTitleAr, customTitleEn, customDescription,
-    customDescriptionAr, customDescriptionEn, name, activity, city, category,
-    rawDescription, url, ogImageUrl, focusKeyword,
+    customDescriptionAr, customDescriptionEn, name, nameAr, nameEn, activity,
+    activityAr, activityEn, city, cityAr, cityEn, category, categoryAr,
+    categoryEn, rawDescription, rawDescriptionAr, rawDescriptionEn, url,
+    ogImageUrl, focusKeyword,
   } = props;
 
   const ar = useMemo(() => ({
-    title: buildSeoTitle({ kind, lang: 'ar', customTitle: customTitleAr ?? customTitle, name, activity, city, category }),
-    desc: buildSeoDescription({ kind, lang: 'ar', customDescription: customDescriptionAr ?? customDescription, name, activity, city, category, rawDescription }),
-  }), [kind, customTitle, customTitleAr, customDescription, customDescriptionAr, name, activity, city, category, rawDescription]);
+    title: buildSeoTitle({ kind, lang: 'ar', customTitle: customTitleAr ?? customTitle, name: nameAr ?? name, activity: activityAr ?? activity, city: cityAr ?? city, category: categoryAr ?? category }),
+    desc: buildSeoDescription({ kind, lang: 'ar', customDescription: customDescriptionAr ?? customDescription, name: nameAr ?? name, activity: activityAr ?? activity, city: cityAr ?? city, category: categoryAr ?? category, rawDescription: rawDescriptionAr ?? rawDescription }),
+  }), [kind, customTitle, customTitleAr, customDescription, customDescriptionAr, name, nameAr, activity, activityAr, city, cityAr, category, categoryAr, rawDescription, rawDescriptionAr]);
 
   const en = useMemo(() => ({
-    title: buildSeoTitle({ kind, lang: 'en', customTitle: customTitleEn ?? customTitle, name, activity, city, category }),
-    desc: buildSeoDescription({ kind, lang: 'en', customDescription: customDescriptionEn ?? customDescription, name, activity, city, category, rawDescription }),
-  }), [kind, customTitle, customTitleEn, customDescription, customDescriptionEn, name, activity, city, category, rawDescription]);
+    title: buildSeoTitle({ kind, lang: 'en', customTitle: customTitleEn ?? customTitle, name: nameEn ?? name, activity: activityEn ?? activity, city: cityEn ?? city, category: categoryEn ?? category }),
+    desc: buildSeoDescription({ kind, lang: 'en', customDescription: customDescriptionEn ?? customDescription, name: nameEn ?? name, activity: activityEn ?? activity, city: cityEn ?? city, category: categoryEn ?? category, rawDescription: rawDescriptionEn ?? rawDescription }),
+  }), [kind, customTitle, customTitleEn, customDescription, customDescriptionEn, name, nameEn, activity, activityEn, city, cityEn, category, categoryEn, rawDescription, rawDescriptionEn]);
 
   const warnings: string[] = [];
   if (!ogImageUrl) warnings.push(isRTL ? 'لا توجد صورة OG — قد تظهر معاينة فقيرة على وسائل التواصل.' : 'No OG image — social previews will be poor.');
