@@ -239,6 +239,18 @@ const AdminBusinesses = () => {
   }, [searchInput]);
   const setFilterStatus = (v: string) => updateParam({ status: v === 'all' ? null : v, page: null });
   const setFilterTier = (v: string) => updateParam({ tier: v === 'all' ? null : v, page: null });
+  // Multi-tier: URL `tier` may be comma-separated (e.g. tier=basic,premium).
+  const selectedTiers = React.useMemo(
+    () => (filterTier === 'all' ? [] : filterTier.split(',').filter(Boolean)),
+    [filterTier],
+  );
+  const toggleTier = (value: string) => {
+    const next = new Set(selectedTiers);
+    if (next.has(value)) next.delete(value); else next.add(value);
+    const arr = Array.from(next);
+    updateParam({ tier: arr.length === 0 ? null : arr.join(','), page: null });
+  };
+  const clearTiers = () => updateParam({ tier: null, page: null });
   const setFilterOrigin = (v: string) => updateParam({ origin: v === 'all' ? null : v, page: null });
   const setSortBy = (v: string) => updateParam({ sort: v === 'recent' ? null : v });
   const setViewMode = (v: 'cards' | 'table') => updateParam({ view: v === 'cards' ? null : v });
@@ -1169,7 +1181,7 @@ const AdminBusinesses = () => {
         (filterStatus === 'unverified' && !b.is_verified) ||
         (filterStatus === 'inactive' && !b.is_active) ||
         (filterStatus === 'contract' && contractBusinessIds.includes(b.id));
-      const matchTier = filterTier === 'all' || b.membership_tier === filterTier;
+      const matchTier = selectedTiers.length === 0 || selectedTiers.includes(b.membership_tier);
       const matchOrigin = filterOrigin === 'all'
         || (filterOrigin === 'demo' && b.is_demo === true)
         || (filterOrigin === 'production' && !b.is_demo);
@@ -1194,7 +1206,7 @@ const AdminBusinesses = () => {
       }
     });
     return arr;
-  }, [businesses, search, filterStatus, filterTier, filterTranslation, filterOrigin, sortBy, language, contractBusinessIds, translationCompleteness]);
+  }, [businesses, search, filterStatus, selectedTiers, filterTranslation, filterOrigin, sortBy, language, contractBusinessIds, translationCompleteness]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   // Keep the keyboard-export ref pointed at the latest filtered list.
