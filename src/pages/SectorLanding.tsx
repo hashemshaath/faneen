@@ -354,15 +354,6 @@ const SectorLanding: React.FC = () => {
     }, [sector, meta, isRTL, language, filtered, selectedCityName, selectedCitySlug]),
   );
 
-  // Unknown sector → soft 404 to /sectors index (handled below).
-  if (slug && !sector) {
-    return <Navigate to="/sectors" replace />;
-  }
-
-  if (!sector || !meta) return null;
-
-  const Arrow = isRTL ? ArrowLeft : ArrowRight;
-  const guides = getSectorGuides(sector.slug);
   const topTechnicians = useMemo(
     () =>
       [...businesses]
@@ -372,6 +363,16 @@ const SectorLanding: React.FC = () => {
         .slice(0, 4),
     [businesses, cityId],
   );
+
+  // Unknown sector → soft 404 to /sectors index (handled below).
+  if (slug && !sector) {
+    return <Navigate to="/sectors" replace />;
+  }
+
+  if (!sector || !meta) return null;
+
+  const Arrow = isRTL ? ArrowLeft : ArrowRight;
+  const guides = getSectorGuides(sector.slug);
   const relatedSectors = sector.relatedSlugs
     .map((s) => {
       const m = getSectorMeta(s, isRTL);
