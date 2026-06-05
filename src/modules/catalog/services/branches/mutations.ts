@@ -43,3 +43,63 @@ export async function updateBusinessBranchById(
 export async function deleteBusinessBranchById(id: string) {
   return await supabase.from('business_branches').delete().eq('id', id);
 }
+
+/**
+ * BRANCHES-PRO: atomically set a branch as the main branch for its business
+ * via the `set_main_branch(branch_id)` RPC. Clears the previous main flag
+ * and sets the target in a single SECURITY DEFINER transaction.
+ */
+export async function setMainBranch(branchId: string) {
+   
+  return await (supabase as any).rpc('set_main_branch', { p_branch_id: branchId });
+}
+
+// ---------- branch_services (link products/services to a branch) ----------
+export async function attachServiceToBranch(params: {
+  branchId: string; serviceId: string; businessId: string;
+}) {
+   
+  return await (supabase as any)
+    .from('branch_services')
+    .upsert({
+      branch_id: params.branchId,
+      service_id: params.serviceId,
+      business_id: params.businessId,
+    }, { onConflict: 'branch_id,service_id' });
+}
+
+export async function detachServiceFromBranch(params: {
+  branchId: string; serviceId: string;
+}) {
+   
+  return await (supabase as any)
+    .from('branch_services')
+    .delete()
+    .eq('branch_id', params.branchId)
+    .eq('service_id', params.serviceId);
+}
+
+// ---------- branch_promotions (link offers to a branch) ----------
+export async function attachPromotionToBranch(params: {
+  branchId: string; promotionId: string; businessId: string;
+}) {
+   
+  return await (supabase as any)
+    .from('branch_promotions')
+    .upsert({
+      branch_id: params.branchId,
+      promotion_id: params.promotionId,
+      business_id: params.businessId,
+    }, { onConflict: 'branch_id,promotion_id' });
+}
+
+export async function detachPromotionFromBranch(params: {
+  branchId: string; promotionId: string;
+}) {
+   
+  return await (supabase as any)
+    .from('branch_promotions')
+    .delete()
+    .eq('branch_id', params.branchId)
+    .eq('promotion_id', params.promotionId);
+}
