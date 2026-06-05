@@ -58,6 +58,18 @@ const AdminBrandDetail: React.FC = () => {
   });
   const brand = brandQ.data;
 
+  useEffect(() => {
+    if (!brand) return;
+    setSeoForm({
+      seo_title_ar: brand.seo_title_ar ?? '',
+      seo_title_en: brand.seo_title_en ?? '',
+      seo_description_ar: brand.seo_description_ar ?? '',
+      seo_description_en: brand.seo_description_en ?? '',
+      brand_keywords: (brand.brand_keywords ?? []).join(', '),
+      og_image_url: brand.og_image_url ?? '',
+    });
+  }, [brand]);
+
   usePageMeta({
     title: brand
       ? (isRTL ? `${brand.name_ar} — إدارة العلامات` : `${brand.name_en ?? brand.name_ar} — Brand Admin`)
@@ -140,6 +152,18 @@ const AdminBrandDetail: React.FC = () => {
       verification_status: brand?.is_verified ? 'unverified' : 'verified',
     }),
     onSuccess: () => { toast.success(isRTL ? 'تم التحديث' : 'Updated'); invalidate(); },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+  const saveSeo = useMutation({
+    mutationFn: () => adminUpdateBrand(id, {
+      seo_title_ar: seoForm.seo_title_ar || null,
+      seo_title_en: seoForm.seo_title_en || null,
+      seo_description_ar: seoForm.seo_description_ar || null,
+      seo_description_en: seoForm.seo_description_en || null,
+      brand_keywords: seoForm.brand_keywords.split(',').map(k => k.trim()).filter(Boolean),
+      og_image_url: seoForm.og_image_url || null,
+    }),
+    onSuccess: () => { toast.success(isRTL ? 'تم حفظ SEO' : 'SEO saved'); invalidate(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
