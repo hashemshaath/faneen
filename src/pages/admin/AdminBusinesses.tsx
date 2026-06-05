@@ -1140,11 +1140,13 @@ const AdminBusinesses = () => {
       membership_tier: biz.membership_tier,
     });
     setEditingBiz(biz);
+    scrollToTop();
   };
 
   const openServices = (bizId: string) => {
     setEditingBiz(null);
     setServicesPanel(bizId);
+    scrollToTop();
   };
 
   /* ─── Filters ─── */
