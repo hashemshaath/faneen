@@ -126,7 +126,9 @@ const ProjectDetail = () => {
           ? {
               creator: {
                 '@type': 'Organization',
-                name: project.businesses.name_ar || project.businesses.name_en,
+                name: language === 'ar'
+                  ? (project.businesses.name_ar || project.businesses.name_en)
+                  : (project.businesses.name_en || project.businesses.name_ar),
                 url: `https://qitaat.com/${project.businesses.username}`,
               },
             }
