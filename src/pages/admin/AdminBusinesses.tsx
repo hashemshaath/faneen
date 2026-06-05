@@ -1339,7 +1339,7 @@ const AdminBusinesses = () => {
               </Button>
             </>
           }
-          kpiSlot={
+          kpiSlot={panelOpen ? undefined : (
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
               <AdminKpiCard
                 label={isRTL ? 'إجمالي المنشآت' : 'Total Businesses'}
@@ -1373,13 +1373,13 @@ const AdminBusinesses = () => {
                 tone="secondary"
               />
             </div>
-          }
+          )}
         />
 
-        <UnifiedApprovalsCenterBanner />
+        {!panelOpen && <UnifiedApprovalsCenterBanner />}
 
         {/* ─── Tier Distribution Bar ─── */}
-        {stats.total > 0 && (
+        {!panelOpen && stats.total > 0 && (
           <div className="rounded-2xl border border-border/30 bg-card p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-heading font-bold text-sm flex items-center gap-2">
