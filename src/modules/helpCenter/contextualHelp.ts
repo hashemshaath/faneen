@@ -40,6 +40,8 @@ export const contextualHelpRegistry: Record<string, string[]> = {
   // PSG-1 — Catalog Governance admin surfaces.
   'admin.catalog-governance': ['readiness-checklist', 'how-publishing-works', 'completeness', 'approve-providers'],
   'admin.catalog-governance-queue': ['approve-providers', 'readiness-checklist', 'how-publishing-works', 'completeness'],
+  // OPERATIONS-CENTER-UNIFICATION-1 — unified read-only routing hub.
+  'admin.operations-center-unified': ['overview', 'how-publishing-works', 'readiness-checklist', 'approve-providers'],
   'dashboard.membership': ['how-publishing-works', 'lead-credits'],
   'dashboard.customer-experience': ['tracking-link', 'what-you-see'],
   'customer.feedback': ['tracking-link', 'support'],
