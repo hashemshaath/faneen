@@ -728,13 +728,24 @@ const BranchDetail: React.FC = () => {
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {services!.map(s => (
-                    <div key={s.id} className="p-4 rounded-xl border border-border/60 hover-lift">
-                      <p className="font-medium" dir="auto">{isRTL ? s.name_ar : (s.name_en || s.name_ar)}</p>
-                      {s.price_from != null && (
-                        <p className="text-sm text-muted-foreground tech-content mt-1">
-                          {t(isRTL, 'من', 'From')} {s.price_from} {s.currency_code}
-                        </p>
-                      )}
+                    <div key={s.id} className="group p-4 rounded-xl border border-border/60 hover-lift hover:border-primary/40 transition flex flex-col gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-medium leading-snug" dir="auto">{isRTL ? s.name_ar : (s.name_en || s.name_ar)}</p>
+                        <Badge variant="outline" className="shrink-0 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px]">
+                          {t(isRTL, 'متوفّر', 'Available')}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between mt-auto pt-2">
+                        {s.price_from != null ? (
+                          <p className="text-sm text-primary font-semibold tech-content">
+                            {t(isRTL, 'من', 'From')} {s.price_from} <span className="text-xs text-muted-foreground">{s.currency_code}</span>
+                          </p>
+                        ) : <span />}
+                        <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground group-hover:text-primary transition">
+                          {t(isRTL, 'استفسار', 'Inquire')}
+                          <ChevronRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
