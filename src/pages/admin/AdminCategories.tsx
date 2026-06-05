@@ -696,6 +696,45 @@ const AdminCategories = () => {
                     <Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={2} className="text-sm rounded-lg" />
                   </div>
                 </div>
+                <div className="rounded-xl border border-border/40 bg-muted/20 p-3 space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <FileText className="w-4 h-4 text-primary" />
+                    {isRTL ? 'حقول SEO' : 'SEO fields'}
+                  </div>
+                  <SEOPreviewCard
+                    kind="category"
+                    customTitleAr={form.seo_title_ar}
+                    customTitleEn={form.seo_title_en}
+                    customDescriptionAr={form.seo_description_ar}
+                    customDescriptionEn={form.seo_description_en}
+                    name={isRTL ? form.name_ar : form.name_en}
+                    rawDescription={isRTL ? form.description_ar : form.description_en}
+                    url={form.slug ? `https://qitaat.com/categories/${form.slug}` : null}
+                    focusKeyword={form.featured_keywords.split(',').map(k => k.trim()).filter(Boolean)[0] ?? null}
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                      <Input value={form.seo_title_ar} onChange={e => setForm(f => ({ ...f, seo_title_ar: e.target.value }))} className="h-9 rounded-lg" dir="auto" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                      <Input value={form.seo_title_en} onChange={e => setForm(f => ({ ...f, seo_title_en: e.target.value }))} className="h-9 rounded-lg" dir="ltr" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                      <Textarea value={form.seo_description_ar} onChange={e => setForm(f => ({ ...f, seo_description_ar: e.target.value }))} rows={2} className="text-sm rounded-lg" dir="auto" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                      <Textarea value={form.seo_description_en} onChange={e => setForm(f => ({ ...f, seo_description_en: e.target.value }))} rows={2} className="text-sm rounded-lg" dir="ltr" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{isRTL ? 'كلمات مفتاحية مميزة' : 'Featured keywords'}</Label>
+                    <Input value={form.featured_keywords} onChange={e => setForm(f => ({ ...f, featured_keywords: e.target.value }))} className="h-9 rounded-lg" dir="auto" placeholder={isRTL ? 'ألمنيوم, زجاج, تصنيع' : 'aluminum, glass, fabrication'} />
+                  </div>
+                </div>
                 <div className="flex items-center gap-6 flex-wrap">
                   <div className="flex items-center gap-2.5">
                     <Label className="text-xs font-medium">{isRTL ? 'الترتيب' : 'Order'}</Label>
