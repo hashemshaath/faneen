@@ -8,6 +8,44 @@ const corsHeaders = {
 const SITE_HOSTS = ["qitaat.com", "www.qitaat.com", "qitaat.lovable.app"];
 const FETCH_TIMEOUT_MS = 12000;
 const MAX_HTML_BYTES = 1_500_000;
+const MAX_REDIRECTS = 5;
+
+// SSRF defense: block private/loopback/link-local/metadata ranges.
+function isPrivateIPv4(ip: string): boolean {
+  const parts = ip.split(".").map((p) => Number(p));
+  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return true;
+  const [a, b] = parts;
+  if (a === 10) return true;
+  if (a === 127) return true;
+  if (a === 0) return true;
+  if (a === 169 && b === 254) return true; // link-local + AWS/GCP metadata 169.254.169.254
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+  if (a >= 224) return true; // multicast/reserved
+  return false;
+}
+
+function isBlockedHost(hostname: string): boolean {
+  const h = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (!h) return true;
+  if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".local") || h.endsWith(".internal")) return true;
+  // IPv6 loopback/link-local/ULA
+  if (h === "::1" || h === "::" || h.startsWith("fc") || h.startsWith("fd") || h.startsWith("fe80:")) return true;
+  if (h === "metadata.google.internal") return true;
+  // IPv4 literal
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(h)) return isPrivateIPv4(h);
+  return false;
+}
+
+function validateOutboundUrl(raw: string): URL | null {
+  let u: URL;
+  try { u = new URL(raw); } catch { return null; }
+  if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+  if (u.username || u.password) return null;
+  if (isBlockedHost(u.hostname)) return null;
+  return u;
+}
 
 function normalizeUrl(input: string): string | null {
   try {
@@ -18,18 +56,34 @@ function normalizeUrl(input: string): string | null {
   }
 }
 
-async function fetchHtml(url: string): Promise<{ status: number; html: string }> {
+async function fetchHtml(url: string): Promise<{ status: number; html: string; finalUrl: string }> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(url, {
-      redirect: "follow",
-      signal: ctrl.signal,
-      headers: {
-        "User-Agent": "QitaatBadgeChecker/1.0 (+https://qitaat.com)",
-        Accept: "text/html,application/xhtml+xml",
-      },
-    });
+    // Manual redirect walk so we re-validate each hop against the SSRF allowlist.
+    let current = url;
+    let res: Response | null = null;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      const checked = validateOutboundUrl(current);
+      if (!checked) throw new Error(`blocked_host_or_scheme:${current}`);
+      res = await fetch(checked.toString(), {
+        redirect: "manual",
+        signal: ctrl.signal,
+        headers: {
+          "User-Agent": "QitaatBadgeChecker/1.0 (+https://qitaat.com)",
+          Accept: "text/html,application/xhtml+xml",
+        },
+      });
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get("location");
+        if (!loc) break;
+        try { current = new URL(loc, checked).toString(); } catch { throw new Error("invalid_redirect_target"); }
+        if (hop === MAX_REDIRECTS) throw new Error("too_many_redirects");
+        continue;
+      }
+      break;
+    }
+    if (!res) throw new Error("no_response");
     const reader = res.body?.getReader();
     let received = 0;
     const chunks: Uint8Array[] = [];
@@ -51,7 +105,7 @@ async function fetchHtml(url: string): Promise<{ status: number; html: string }>
     let offset = 0;
     for (const c of chunks) { merged.set(c, offset); offset += c.byteLength; }
     const html = new TextDecoder("utf-8", { fatal: false }).decode(merged);
-    return { status: res.status, html };
+    return { status: res.status, html, finalUrl: res.url || current };
   } finally {
     clearTimeout(timer);
   }
