@@ -210,6 +210,33 @@ const BranchDetail: React.FC = () => {
   const branchName = branch ? (isRTL ? branch.name_ar : (branch.name_en || branch.name_ar)) : '';
   const businessName = business ? (isRTL ? (business.name_ar || business.name_en || '') : (business.name_en || business.name_ar || '')) : '';
 
+  // Canonical branch URL — strictly {username}/{branch-slug}. We never expose
+  // ref_id-based paths (e.g. /branch/loc1000005) as canonical/share targets.
+  const canonicalBranchUrl = (branch?.slug && business?.username)
+    ? `https://qitaat.com/${business.username}/${branch.slug}`
+    : undefined;
+
+  // Block indexing while the visitor is on a legacy URL (/branch/:slug or any
+  // mismatched path). The canonical {username}/{slug} variant remains indexable.
+  useEffect(() => {
+    const isCanonicalPath = !!(branch && business?.username && branch.slug
+      && window.location.pathname === `/${business.username}/${branch.slug}`);
+    if (isCanonicalPath) return; // leave default robots policy in place
+    let el = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    const created = !el;
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute('name', 'robots');
+      document.head.appendChild(el);
+    }
+    const prev = el.getAttribute('content');
+    el.setAttribute('content', 'noindex, follow');
+    return () => {
+      if (created) { el?.remove(); return; }
+      el?.setAttribute('content', prev ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+    };
+  }, [branch, business?.username, params.branchSlug, usernameParam]);
+
   // Canonical-URL redirect: never expose numeric/ref_id slugs like /branch/loc1000005.
   // Once we know the business username and the branch's real slug, send the user to
   // the nested, name-based URL: /{username}/{branchSlug}.
@@ -247,9 +274,7 @@ const BranchDetail: React.FC = () => {
     ogDescription: seoDescription,
     ogImage: business?.logo_url || undefined,
     ogType: 'business.business',
-    canonical: branch?.slug && business?.username
-      ? `https://qitaat.com/${business.username}/${branch.slug}`
-      : (branch?.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined),
+    canonical: canonicalBranchUrl,
   });
 
   // Aggregate review stats for SEO (AggregateRating in JSON-LD).
@@ -285,9 +310,7 @@ const BranchDetail: React.FC = () => {
       } : undefined,
       telephone: branch.phone || branch.mobile || undefined,
       email: branch.email || undefined,
-      url: branch.slug && business.username
-        ? `https://qitaat.com/${business.username}/${branch.slug}`
-        : (branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined),
+      url: canonicalBranchUrl,
       geo: branch.latitude && branch.longitude ? {
         '@type': 'GeoCoordinates',
         latitude: branch.latitude, longitude: branch.longitude,
@@ -325,9 +348,7 @@ const BranchDetail: React.FC = () => {
     const items = [
       { name: t(isRTL, 'الرئيسية', 'Home'), url: 'https://qitaat.com/' },
       business?.username ? { name: businessName, url: `https://qitaat.com/${business.username}` } : null,
-      { name: branchName, url: branch.slug && business?.username
-          ? `https://qitaat.com/${business.username}/${branch.slug}`
-          : (branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined) },
+      { name: branchName, url: canonicalBranchUrl },
     ].filter(Boolean) as Array<{ name: string; url?: string }>;
     return {
       '@context': 'https://schema.org',
@@ -373,9 +394,7 @@ const BranchDetail: React.FC = () => {
     branch.social_snapchat && { url: branch.social_snapchat, Icon: Globe, label: 'Snapchat' },
   ].filter(Boolean) as Array<{ url: string; Icon: React.ComponentType<{ className?: string }>; label: string }>;
 
-  const shareUrl = branch.slug && business?.username
-    ? `https://qitaat.com/${business.username}/${branch.slug}`
-    : (branch.slug ? `https://qitaat.com/branch/${branch.slug}` : window.location.href);
+  const shareUrl = canonicalBranchUrl ?? window.location.href;
   const handleShare = async () => {
     try {
       if (navigator.share) {
@@ -741,7 +760,7 @@ const BranchDetail: React.FC = () => {
                     return (
                       <Link
                         key={s.id}
-                        to={s.slug && business?.username ? `/${business.username}/${s.slug}` : (s.slug ? `/branch/${s.slug}` : '#')}
+                        to={s.slug && business?.username ? `/${business.username}/${s.slug}` : '#'}
                         className="group p-4 rounded-xl border border-border/60 hover-lift hover:border-primary/40 transition"
                       >
                         <div className="flex items-start justify-between gap-2">
