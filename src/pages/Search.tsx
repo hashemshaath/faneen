@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useDeferredValue } from 'react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Footer } from '@/components/layout/Footer';
@@ -104,30 +105,33 @@ const SearchPage = () => {
 
   // Title segment that surfaces the city in the page title (e.g. "— الرياض").
   const cityTitleSuffix = cityMeta ? (isRTL ? ` — ${cityMeta.name}` : ` — ${cityMeta.name}`) : '';
+  const lang = isRTL ? 'ar' as const : 'en' as const;
+  const _legacyTitle = sectorMeta
+    ? (isRTL
+        ? `${sectorMeta.name}${cityTitleSuffix} — نتائج "${searchQuery}"`
+        : `${sectorMeta.name}${cityTitleSuffix} — results for "${searchQuery}"`)
+    : searchQuery
+      ? (isRTL ? `نتائج البحث عن "${searchQuery}"${cityTitleSuffix}` : `Search results for "${searchQuery}"${cityTitleSuffix}`)
+      : cityMeta
+        ? (isRTL ? `مزودو الخدمات في ${cityMeta.name}` : `Service providers in ${cityMeta.name}`)
+        : '';
+  const _legacyDesc = sectorMeta
+    ? (cityMeta
+        ? (isRTL
+            ? `${sectorMeta.description} — متوفر في ${cityMeta.name} (${cityMeta.region}).`
+            : `${sectorMeta.description} — available in ${cityMeta.name} (${cityMeta.region}).`)
+        : sectorMeta.description)
+    : searchQuery
+      ? (isRTL ? `نتائج البحث عن ${searchQuery}${cityMeta ? ` في ${cityMeta.name}` : ''} في دليل قِطاعات` : `Search results for ${searchQuery}${cityMeta ? ` in ${cityMeta.name}` : ''} in Qitaat directory`)
+      : cityMeta
+        ? (isRTL
+            ? `استعرض أفضل مصانع وورش الألمنيوم والحديد والزجاج والخشب والخزائن في ${cityMeta.name} و${cityMeta.region}.`
+            : `Browse the best aluminum, iron, glass, wood and cabinet providers in ${cityMeta.name} and the ${cityMeta.region}.`)
+        : '';
 
   usePageMeta({
-    title: sectorMeta
-      ? (isRTL
-          ? `${sectorMeta.name}${cityTitleSuffix} — نتائج "${searchQuery}" | قِطاعات`
-          : `${sectorMeta.name}${cityTitleSuffix} — results for "${searchQuery}" | Qitaat`)
-      : searchQuery
-        ? (isRTL ? `نتائج البحث عن "${searchQuery}"${cityTitleSuffix} | قِطاعات` : `Search results for "${searchQuery}"${cityTitleSuffix} | Qitaat`)
-        : cityMeta
-          ? (isRTL ? `مزودو الخدمات في ${cityMeta.name} | قِطاعات` : `Service providers in ${cityMeta.name} | Qitaat`)
-          : (isRTL ? 'البحث عن مزودي خدمات الألمنيوم والحديد والزجاج والخشب والخزائن | قِطاعات' : 'Search Aluminum, Iron, Glass, Wood & Cabinet Providers | Qitaat'),
-    description: sectorMeta
-      ? (cityMeta
-          ? (isRTL
-              ? `${sectorMeta.description} — متوفر في ${cityMeta.name} (${cityMeta.region}).`
-              : `${sectorMeta.description} — available in ${cityMeta.name} (${cityMeta.region}).`)
-          : sectorMeta.description)
-      : searchQuery
-        ? (isRTL ? `نتائج البحث عن ${searchQuery}${cityMeta ? ` في ${cityMeta.name}` : ''} في دليل قِطاعات` : `Search results for ${searchQuery}${cityMeta ? ` in ${cityMeta.name}` : ''} in Qitaat directory`)
-        : cityMeta
-          ? (isRTL
-              ? `استعرض أفضل مصانع وورش الألمنيوم والحديد والزجاج والخشب والخزائن في ${cityMeta.name} و${cityMeta.region}.`
-              : `Browse the best aluminum, iron, glass, wood and cabinet providers in ${cityMeta.name} and the ${cityMeta.region}.`)
-          : (isRTL ? 'ابحث عن أفضل مصانع ومحلات الألمنيوم والحديد والزجاج والخشب والخزائن. قارن الأسعار والتقييمات واختر المزود المناسب.' : 'Find the best aluminum, iron, glass, wood and cabinet factories and shops.'),
+    title: buildSeoTitle({ kind: 'search', lang, service: searchQuery || undefined, city: cityMeta?.name, customTitle: _legacyTitle || undefined }),
+    description: buildSeoDescription({ kind: 'search', lang, service: searchQuery || undefined, city: cityMeta?.name, customDescription: _legacyDesc || undefined }),
     keywords: mergeKeywords(
       sectorMeta ? sectorMeta.keywords : allSectorKeywords,
       cityMeta?.keywords,
