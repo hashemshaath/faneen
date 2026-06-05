@@ -2780,17 +2780,22 @@ const AdminBusinesses = () => {
                             </SelectContent>
                           </Select>
 
-                          <Button variant={biz.is_verified ? 'default' : 'outline'} size="sm" className="h-8 text-xs gap-1.5 rounded-xl shrink-0"
-                            onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_verified', value: !biz.is_verified })}>
+                          <Button
+                            variant={biz.is_verified ? 'default' : 'outline'}
+                            size="sm"
+                            className={`h-8 text-xs gap-1.5 rounded-xl shrink-0 ${biz.is_verified ? 'bg-info text-info-foreground hover:bg-info/90' : 'text-info border-info/40'}`}
+                            onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_verified', value: !biz.is_verified })}
+                            title={isRTL ? 'تبديل حالة التوثيق الرسمي' : 'Toggle official verification'}
+                          >
                             {biz.is_verified ? <CheckCircle className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
-                            <span className="hidden md:inline">{biz.is_verified ? (isRTL ? 'موثق' : 'Verified') : (isRTL ? 'توثيق' : 'Verify')}</span>
+                            <span>{biz.is_verified ? (isRTL ? 'موثّق — إلغاء' : 'Verified — Unverify') : (isRTL ? 'توثيق الحساب' : 'Verify')}</span>
                           </Button>
 
                           <Button variant="outline" size="sm"
                             className={`h-8 text-xs gap-1.5 rounded-xl shrink-0 ${!biz.is_active ? 'text-success border-success' : 'text-warning border-warning'}`}
                             onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_active', value: !biz.is_active })}>
                             {biz.is_active ? <Ban className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
-                            <span className="hidden md:inline">{biz.is_active ? (isRTL ? 'تعطيل' : 'Disable') : (isRTL ? 'تفعيل' : 'Enable')}</span>
+                            <span>{biz.is_active ? (isRTL ? 'تعطيل' : 'Disable') : (isRTL ? 'تفعيل' : 'Enable')}</span>
                           </Button>
 
                           <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl shrink-0"
