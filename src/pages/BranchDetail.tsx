@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   MapPin, Phone, Mail, Globe, MessageCircle, ArrowLeft, ExternalLink,
   Star, UserCog, Instagram, Linkedin, Facebook, Youtube, Building2,
-  Loader2, Boxes, Tag, ShieldCheck, Navigation,
+  Loader2, Boxes, Tag, ShieldCheck, Navigation, Share2, Copy, Check,
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { BranchReviews } from '@/components/branch/BranchReviews';
+import { toast } from 'sonner';
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
@@ -72,6 +73,7 @@ const BranchDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { isRTL } = useLanguage();
   const navigate = useNavigate();
+  const [copied, setCopied] = React.useState(false);
 
   // 1) Branch (public view)
   const { data: branch, isLoading } = useQuery({
@@ -252,6 +254,45 @@ const BranchDetail: React.FC = () => {
   }, [branch, business, branchName, businessName, reviewStats]);
   useJsonLd(jsonLd);
 
+  // Sibling branches (other branches of same business) — strengthens internal linking & SEO.
+  const { data: siblings } = useQuery({
+    queryKey: ['public-branch-siblings', branch?.business_id, branch?.id],
+    enabled: Boolean(branch?.business_id && branch?.id),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('business_branches_public' as 'business_branches')
+        .select('id, name_ar, name_en, slug, region, district, is_main')
+        .eq('business_id', branch!.business_id)
+        .neq('id', branch!.id)
+        .limit(6);
+      return (data ?? []) as Array<{
+        id: string; name_ar: string; name_en: string | null; slug: string | null;
+        region: string | null; district: string | null; is_main: boolean;
+      }>;
+    },
+  });
+
+  // BreadcrumbList JSON-LD (separate from LocalBusiness graph).
+  const breadcrumbJsonLd = useMemo(() => {
+    if (!branch) return null;
+    const items = [
+      { name: t(isRTL, 'الرئيسية', 'Home'), url: 'https://qitaat.com/' },
+      business?.username ? { name: businessName, url: `https://qitaat.com/${business.username}` } : null,
+      { name: branchName, url: branch.slug ? `https://qitaat.com/branch/${branch.slug}` : undefined },
+    ].filter(Boolean) as Array<{ name: string; url?: string }>;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: items.map((it, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: it.name,
+        item: it.url,
+      })),
+    };
+  }, [branch, business, businessName, branchName, isRTL]);
+  useJsonLd(breadcrumbJsonLd);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -282,6 +323,29 @@ const BranchDetail: React.FC = () => {
     branch.social_tiktok && { url: branch.social_tiktok, Icon: Globe, label: 'TikTok' },
     branch.social_snapchat && { url: branch.social_snapchat, Icon: Globe, label: 'Snapchat' },
   ].filter(Boolean) as Array<{ url: string; Icon: React.ComponentType<{ className?: string }>; label: string }>;
+
+  const shareUrl = branch.slug ? `https://qitaat.com/branch/${branch.slug}` : window.location.href;
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${branchName} — ${businessName}`, url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        setCopied(true);
+        toast.success(t(isRTL, 'تم نسخ الرابط', 'Link copied'));
+        setTimeout(() => setCopied(false), 1800);
+      }
+    } catch { /* user cancelled */ }
+  };
+
+  const sectionNav = [
+    { id: 'contact',   label: t(isRTL, 'التواصل',  'Contact') },
+    salesManager && { id: 'manager',  label: t(isRTL, 'مدير المبيعات', 'Sales manager') },
+    (services?.length ?? 0) > 0    && { id: 'services',  label: t(isRTL, 'الخدمات',  'Services') },
+    (promotions?.length ?? 0) > 0  && { id: 'promotions',label: t(isRTL, 'العروض',   'Offers') },
+    { id: 'reviews',   label: t(isRTL, 'التقييمات','Reviews') },
+    (siblings?.length ?? 0) > 0    && { id: 'siblings',  label: t(isRTL, 'فروع أخرى','Other branches') },
+  ].filter(Boolean) as Array<{ id: string; label: string }>;
 
   return (
     <div className="min-h-screen bg-background">
