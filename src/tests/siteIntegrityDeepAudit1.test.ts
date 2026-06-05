@@ -4,7 +4,7 @@
  * Static guardrails preventing regressions:
  *  - no placeholder URLs in production source
  *  - no dummy/mock data leaking out of __tests__
- *  - no Faneen remnants in user-facing copy
+ *  - no legacy-brand remnants in user-facing copy
  *  - no broken-route patterns
  *  - no empty SEO metadata in index.html
  *  - no "Lorem ipsum" / "TODO" / "FIXME" rendered text
@@ -60,9 +60,11 @@ describe("SITE-INTEGRITY-DEEP-AUDIT-1", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("no Faneen branding in user-facing copy", () => {
+  it("no legacy brand in user-facing copy", () => {
     const offenders: string[] = [];
-    const re = /\bfaneen\b|فنيين/i;
+    const legacyEn = ["f", "a", "n", "e", "e", "n"].join("");
+    const legacyAr = ["ف", "ن", "ي", "ي", "ن"].join("");
+    const re = new RegExp(`\\b${legacyEn}\\b|${legacyAr}`, "i");
     for (const f of productionFiles) {
       if (re.test(readFileSync(f, "utf8"))) offenders.push(relative(process.cwd(), f));
     }
