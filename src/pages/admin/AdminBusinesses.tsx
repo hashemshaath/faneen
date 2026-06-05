@@ -1146,6 +1146,11 @@ const AdminBusinesses = () => {
       street_name: biz.street_name || '', building_number: biz.building_number || '',
       region_en: biz.region_en || '', district_en: biz.district_en || '',
       street_name_en: biz.street_name_en || '', address_en: biz.address_en || '',
+      // Derive canonical region_id from the stored Arabic/English region label
+      // so the unified RegionCitySelector hydrates correctly on edit.
+      region_id: (findRegionByLabel(
+        (biz.region as string | null) ?? (biz.region_en as string | null),
+      ) ?? '') as SaRegionId | '',
       latitude: biz.latitude || '', longitude: biz.longitude || '',
       unified_number: biz.unified_number || '', contact_person: biz.contact_person || '',
       mobile: biz.mobile || '', customer_service_phone: biz.customer_service_phone || '',
