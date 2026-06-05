@@ -75,7 +75,7 @@ export async function updateWorkOrderMeasurement(options: {
 
   const { data, error } = await supabase
     .from("work_order_measurements")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .update(clean as any)
     .eq("id", options.measurementId)
     .select(

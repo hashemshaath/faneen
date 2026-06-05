@@ -37,14 +37,14 @@ export async function recordContractPdfExport(
       _export_locale: locale ?? null,
     });
     if (error) {
-      // eslint-disable-next-line no-console
+       
       console.warn('[pdf-export-log] failed', error.message);
       return null;
     }
     const row = Array.isArray(data) ? (data as unknown[])[0] : data;
     return (row ?? null) as PdfExportLogResult | null;
   } catch (e) {
-    // eslint-disable-next-line no-console
+     
     console.warn('[pdf-export-log] threw', e instanceof Error ? e.message : e);
     return null;
   }

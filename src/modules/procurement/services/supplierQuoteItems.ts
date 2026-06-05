@@ -211,7 +211,7 @@ export async function updateSupplierQuoteItemProposedBrand(
   itemId: string,
   input: UpdateProposedBrandInput,
 ): Promise<{ data: ProcurementSupplierQuoteItemRow | null; error: unknown }> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const patch: Record<string, any> = {};
   if (input.proposed_brand_id !== undefined) {
     patch.proposed_brand_id = input.proposed_brand_id;

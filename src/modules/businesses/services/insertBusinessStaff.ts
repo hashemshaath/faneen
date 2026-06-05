@@ -18,7 +18,7 @@ export async function insertBusinessStaff(
   const { payload } = options;
   const { data, error } = await supabase
     .from('business_staff')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .insert(payload as any);
   return { data, error };
 }

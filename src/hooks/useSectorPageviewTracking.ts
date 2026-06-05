@@ -25,7 +25,7 @@ export function useSectorPageviewTracking(
       try {
         const referrer = document.referrer || '';
         const path = window.location.pathname || '';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (supabase.rpc as any)('log_sector_pageview', {
           p_sector: sectorSlug,
           p_city: citySlug ?? null,

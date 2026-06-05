@@ -185,7 +185,7 @@ function resync(state: ConsentState, decisionLabel: string, reason: string): voi
     lastResyncAt: Date.now(),
     resyncCount: h.resyncCount + 1,
   });
-  // eslint-disable-next-line no-console
+   
   console.info(`[consent-watchdog] resynced (${reason})`);
 }
 

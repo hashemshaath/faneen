@@ -181,7 +181,7 @@ export default function AdminProviderReview() {
             action_url: '/dashboard',
           });
         } catch (err) {
-          // eslint-disable-next-line no-console
+           
           console.warn('[AdminProviderReview] notification insert failed', err);
         }
       }
@@ -204,7 +204,7 @@ export default function AdminProviderReview() {
             },
           });
         } catch (err) {
-          // eslint-disable-next-line no-console
+           
           console.warn('[AdminProviderReview] email send failed', err);
         }
       }

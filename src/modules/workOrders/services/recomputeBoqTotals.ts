@@ -49,7 +49,7 @@ export async function recomputeBoqTotals(
 
   const { data, error } = await supabase
     .from("work_order_boqs")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .update({
       subtotal: totals.subtotal,
       tax: totals.tax,

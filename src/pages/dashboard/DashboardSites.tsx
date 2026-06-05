@@ -493,7 +493,7 @@ export default function DashboardSites() {
         ? parts.join(' — ')
         : (err instanceof Error ? err.message : (typeof err === 'string' ? err : ''));
       // Surface to console for diagnostics (won't be visible to end users).
-      // eslint-disable-next-line no-console
+       
       console.error('[DashboardSites] save failed:', err);
       const tabFor: Record<string, FormTab> = {
         LABEL_REQUIRED: 'general', INVALID_SITE_TYPE: 'general', INVALID_VISIBILITY: 'general',

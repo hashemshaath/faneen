@@ -138,7 +138,7 @@ export async function logManualSlaPreviewRun(
   const rpc =
     deps.rpc ??
     (async (args: LogCronRunArgs) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const { data, error } = await (supabase.rpc as any)('log_cron_run', args);
       return { data, error };
     });

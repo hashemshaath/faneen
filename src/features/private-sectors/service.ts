@@ -142,7 +142,7 @@ export interface PublicSectorFilter {
 }
 
 export async function listPublicSectors(filter: PublicSectorFilter = {}): Promise<PrivateSectorPublic[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   let q: any = supabase.from('private_sectors_public').select('*').order('is_featured', { ascending: false }).order('sort_order').order('created_at', { ascending: false });
   if (filter.parent_sector) q = q.eq('parent_sector', filter.parent_sector);
   if (filter.city_id) q = q.eq('city_id', filter.city_id);

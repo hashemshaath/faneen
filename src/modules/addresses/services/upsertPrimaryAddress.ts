@@ -22,7 +22,7 @@ export async function upsertPrimaryAddress(
   const addressType: AddressType = options.addressType ?? fields.address_type ?? 'national_address';
 
   // Find existing primary for (owner, type). Cast to break deep generic inference.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const sb: any = supabase;
   const { data: existing, error: findErr } = await sb
     .from('addresses')
@@ -35,7 +35,7 @@ export async function upsertPrimaryAddress(
 
   if (findErr) return { data: null, error: findErr };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const payload: any = {
     owner_type: ownerType,
     owner_id: ownerId,

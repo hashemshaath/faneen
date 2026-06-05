@@ -321,7 +321,7 @@ const DashboardProfile: React.FC = () => {
       };
       const raw = extract(e) || t(isRTL, 'حدث خطأ أثناء الحفظ. حاول مرة أخرى.', 'An error occurred while saving. Please try again.');
       // Log full object for debugging
-      // eslint-disable-next-line no-console
+       
       console.error('[DashboardProfile] save failed:', e);
       const map: Record<string, { ar: string; en: string }> = {
         INVALID_NATIONAL_ID: {

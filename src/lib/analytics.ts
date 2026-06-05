@@ -2,7 +2,7 @@
 export function trackEvent(name: string, payload?: Record<string, unknown>): void {
   try {
     if (import.meta.env?.DEV) {
-      // eslint-disable-next-line no-console
+       
       console.debug('[track]', name, payload ?? {});
     }
     // Future: forward to GA4 / Plausible / internal endpoint.

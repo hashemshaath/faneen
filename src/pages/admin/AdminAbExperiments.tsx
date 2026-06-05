@@ -207,7 +207,7 @@ const AdminAbExperiments: React.FC = () => {
       void qc.invalidateQueries({ queryKey: ['ab-experiments'] });
       void qc.invalidateQueries({ queryKey: ['ab-stats'] });
       toast.success('تم التقييم');
-      // eslint-disable-next-line no-console
+       
       console.log('ab-evaluate result:', data);
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'فشل التقييم'),

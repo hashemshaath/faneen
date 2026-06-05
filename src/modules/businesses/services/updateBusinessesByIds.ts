@@ -20,7 +20,7 @@ export async function updateBusinessesByIds(
   const { ids, values } = options;
   const { data, error } = await supabase
     .from('businesses')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .update(values as any)
     .in('id', ids);
   return { data, error };

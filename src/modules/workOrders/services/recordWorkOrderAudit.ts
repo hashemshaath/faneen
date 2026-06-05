@@ -61,7 +61,7 @@ export async function recordWorkOrderAudit(
     // Supabase typed-overload variance — cast at the boundary only.
     await supabase
       .from("business_audit_log")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       .insert(payload as any);
   } catch {
     /* swallow — observability only */

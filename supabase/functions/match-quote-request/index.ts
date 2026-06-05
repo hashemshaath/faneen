@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
 
   // Service areas for those providers
   const providerIds = (providers ?? []).map((p) => p.id);
-  let areasByBiz = new Map<string, { city: string; district: string | null; is_primary: boolean }[]>();
+  const areasByBiz = new Map<string, { city: string; district: string | null; is_primary: boolean }[]>();
   if (providerIds.length) {
     const { data: areas } = await admin
       .from('business_service_areas')
@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
 
   // Resolve provider business city name for normalize compare
   const cityIdsNeeded = Array.from(new Set((providers ?? []).map((p) => p.city_id).filter(Boolean) as string[]));
-  let cityNameById = new Map<string, string>();
+  const cityNameById = new Map<string, string>();
   if (cityIdsNeeded.length) {
     const { data: cityRows } = await admin
       .from('cities').select('id, name_ar, name_en').in('id', cityIdsNeeded);

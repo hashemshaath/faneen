@@ -495,7 +495,7 @@ const AdminBusinesses = () => {
           }
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.warn('[AdminBusinesses] tier-change email failed', err);
       }
       // SERVICE-ACTIVATION-GOVERNANCE-4 — single summary in-app notification

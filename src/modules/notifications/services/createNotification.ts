@@ -55,12 +55,12 @@ export function createNotificationFireAndForget(
     .then((res) => {
       const err = (res as { error?: unknown } | null | undefined)?.error;
       if (err) {
-        // eslint-disable-next-line no-console
+         
         console.warn(tag, err);
       }
     })
     .catch((err: unknown) => {
-      // eslint-disable-next-line no-console
+       
       console.warn(tag, err);
     });
 }

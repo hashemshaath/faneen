@@ -294,7 +294,7 @@ async function fetchWebsite(
     const ogImage = typeof meta["og:image"] === "string" ? meta["og:image"] as string : null;
 
     // 4) Firecrawl LLM extract (structured JSON) over the combined content.
-    let llm: Record<string, string | null> = {};
+    const llm: Record<string, string | null> = {};
     try {
       const schema = {
         type: "object",

@@ -127,7 +127,7 @@ describe("BUSINESS-WORKFLOW-4: services & module barrel", () => {
     const { insertWorkOrderMeasurement } = await import("@/modules/workOrders");
     const base = { work_order_id: "x", business_id: "y", recorded_by_user_id: "u", measurement_type: "site" };
     expect(((await insertWorkOrderMeasurement({ ...base, label: "" })).error as Error).message).toBe("label_required");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     expect(((await insertWorkOrderMeasurement({ ...base, label: "L", unit: "feet" as any })).error as Error).message).toBe("unit_invalid");
     expect(((await insertWorkOrderMeasurement({ ...base, label: "L", width: -3 })).error as Error).message).toBe("numeric_invalid");
   });
@@ -137,7 +137,7 @@ describe("BUSINESS-WORKFLOW-4: services & module barrel", () => {
     const r = await updateWorkOrderMeasurement({ measurementId: "m", patch: {} });
     expect((r.error as Error).message).toBe("no_fields");
     // unknown fields are silently dropped — verify by passing unknown only
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const r2 = await updateWorkOrderMeasurement({ measurementId: "m", patch: { hacker: 1, business_id: "z" } as any });
     expect((r2.error as Error).message).toBe("no_fields");
   });

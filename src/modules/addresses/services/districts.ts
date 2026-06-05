@@ -37,7 +37,7 @@ export async function listDistrictsByCity(
 ): Promise<{ data: DistrictRow[]; error: unknown }> {
   if (!region || !city) return { data: [], error: null };
   const { data, error } = await supabase
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .from('districts' as any)
     .select('id, country_code, region, city, district_ar, district_en, city_ar, city_en, region_ar, region_en, is_active')
     .eq('is_active', true)
@@ -54,7 +54,7 @@ export async function searchDistricts(
   filters: { region?: string; city?: string } = {},
 ): Promise<{ data: DistrictRow[]; error: unknown }> {
   let q = supabase
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .from('districts' as any)
     .select('id, country_code, region, city, district_ar, district_en, city_ar, city_en, region_ar, region_en, is_active')
     .eq('is_active', true);

@@ -34,7 +34,7 @@ export async function createEntityAccessRequest(
   };
   const { data, error } = await supabase
     .from('entity_access_requests')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .insert(payload as any)
     .select('id, ref_id, status')
     .maybeSingle();

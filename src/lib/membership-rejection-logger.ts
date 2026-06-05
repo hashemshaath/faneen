@@ -78,7 +78,7 @@ export async function logUpgradeRejection(
         : null;
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const { data, error } = await (client.rpc as any)('log_upgrade_rejection', {
       _attempted_business_id: input.attemptedBusinessId,
       _attempted_business_ref_id: input.attemptedBusinessRefId,

@@ -20,7 +20,7 @@ export async function updateBusinessStaffById(
   const { id, values } = options;
   const { data, error } = await supabase
     .from('business_staff')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .update(values as any)
     .eq('id', id);
   return { data, error };

@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 
 // Supabase chainable builder typing is intentionally loose.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type Builder = any;
 
 export interface QueryMembershipUpgradeRejectionsOptions {

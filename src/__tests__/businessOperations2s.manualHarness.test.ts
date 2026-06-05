@@ -171,7 +171,7 @@ describe('2S — invokeManualSlaRealRunHarness fail-closed gates', () => {
 
   it('denies without pre-run logger', async () => {
     const r = await invokeManualSlaRealRunHarness(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       makeInput({ preRunLogger: undefined as any }),
     );
     expect(r.reason).toBe(

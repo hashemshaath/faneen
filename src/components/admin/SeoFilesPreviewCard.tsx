@@ -74,7 +74,7 @@ export const SeoFilesPreviewCard = () => {
     setLoading(false);
   };
 
-  useEffect(() => { loadAll(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => { loadAll();   }, []);
 
   const active = FILES.find(f => f.key === activeKey)!;
   const preview = previews[activeKey];

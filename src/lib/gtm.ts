@@ -149,7 +149,7 @@ export function getGtmId(): string | null {
   if (!raw) return null;
   if (!GTM_ID_PATTERN.test(raw)) {
     // Invalid format — refuse to load.
-    // eslint-disable-next-line no-console
+     
     console.warn(`[gtm] Ignoring invalid VITE_GTM_ID "${raw}" (expected GTM-XXXXXX).`);
     return null;
   }

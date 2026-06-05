@@ -51,7 +51,7 @@ export async function createBoqFromMeasurements(
   // 1) Insert header.
   const { data: header, error: headerError } = await supabase
     .from("work_order_boqs")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .insert({
       work_order_id: input.work_order_id,
       business_id: input.business_id,
@@ -90,7 +90,7 @@ export async function createBoqFromMeasurements(
     }));
     const { data: itemRows, error: itemErr } = await supabase
       .from("work_order_boq_items")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       .insert(payload as any)
       .select(
         "id, ref_id, boq_id, measurement_id, item_type, title_ar, title_en, quantity, unit, unit_price, total_price, metadata, sort_order, brand_id, brand_lock, created_at, updated_at, deleted_at",
