@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card } from '@/components/ui/card';
 import { AlertTriangle, CheckCircle2, Globe, ImageOff } from 'lucide-react';
@@ -63,7 +63,7 @@ const BAND_TEXT: Record<LenBand, string> = {
  * Google-style SEO preview + length meters + warnings.
  * Renders BOTH languages (AR + EN) side-by-side using shared design tokens.
  */
-export function SEOPreviewCard(props: SEOPreviewCardProps) {
+function SEOPreviewCardImpl(props: SEOPreviewCardProps) {
   const { isRTL } = useLanguage();
   const {
     kind, customTitleAr, customTitleEn, customDescriptionAr, customDescriptionEn,
@@ -178,4 +178,5 @@ function buildSide(lang: Lang, kind: PageKind, i: SideInputs): { title: string; 
   };
 }
 
+export const SEOPreviewCard = memo(SEOPreviewCardImpl);
 export default SEOPreviewCard;
