@@ -1467,6 +1467,65 @@ export type Database = {
           },
         ]
       }
+      branch_visits: {
+        Row: {
+          branch_id: string
+          business_id: string
+          created_at: string
+          day: string
+          event_type: string
+          id: string
+          visitor_hash: string
+        }
+        Insert: {
+          branch_id: string
+          business_id: string
+          created_at?: string
+          day?: string
+          event_type?: string
+          id?: string
+          visitor_hash: string
+        }
+        Update: {
+          branch_id?: string
+          business_id?: string
+          created_at?: string
+          day?: string
+          event_type?: string
+          id?: string
+          visitor_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_visits_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_visits_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "business_branches_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_visits_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_visits_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_addition_requests: {
         Row: {
           admin_notes: string | null
@@ -14759,6 +14818,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_favorite_businesses: {
+        Row: {
+          business_id: string
+          business_ref_id: string | null
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          business_ref_id?: string | null
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          business_ref_id?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorite_businesses_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_favorite_businesses_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_locale_settings: {
         Row: {
           created_at: string
@@ -18262,6 +18360,15 @@ export type Database = {
           user_id: string
         }[]
       }
+      gen_unique_branch_slug: {
+        Args: {
+          _business_id: string
+          _exclude_id?: string
+          _name_ar: string
+          _name_en: string
+        }
+        Returns: string
+      }
       generate_barcode_code: { Args: { _entity_type: string }; Returns: string }
       generate_client_site_ref: { Args: never; Returns: string }
       generate_invite_key: {
@@ -18298,6 +18405,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_branch_visit_count: { Args: { _branch_id: string }; Returns: number }
       get_business_staff_with_profiles: {
         Args: { _business_id: string }
         Returns: {
@@ -19226,6 +19334,14 @@ export type Database = {
         }
         Returns: string
       }
+      record_branch_visit: {
+        Args: {
+          _branch_id: string
+          _event_type?: string
+          _visitor_hash: string
+        }
+        Returns: number
+      }
       record_contract_pdf_export: {
         Args: {
           _contract_id: string
@@ -19612,6 +19728,7 @@ export type Database = {
         Args: { _reason: string }
         Returns: undefined
       }
+      slugify_branch: { Args: { _text: string }; Returns: string }
       split_phone: {
         Args: { _phone: string }
         Returns: {
