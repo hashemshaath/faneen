@@ -9,7 +9,8 @@
  * regressions were introduced.
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import * as fs from 'node:fs';
 import { resolve } from 'node:path';
 
 const read = (p: string) => readFileSync(resolve(p), 'utf8');
@@ -40,7 +41,6 @@ describe('SYSTEM-ACCESS-MODULE-COVERAGE-2', () => {
   it('migration registers operations_log and staff_management in system_modules', () => {
     // The migration tool assigns its own timestamp; locate the file containing both keys.
     const dir = 'supabase/migrations';
-    const fs = require('node:fs') as typeof import('node:fs');
     const files = fs.readdirSync(dir);
     const match = files
       .map((f) => `${dir}/${f}`)
@@ -96,7 +96,6 @@ describe('SYSTEM-ACCESS-MODULE-COVERAGE-2', () => {
   });
 
   it('no scope creep into inventory/accounting/supplier-payments', () => {
-    const fs = require('node:fs') as typeof import('node:fs');
     const dir = 'supabase/migrations';
     const match = fs
       .readdirSync(dir)

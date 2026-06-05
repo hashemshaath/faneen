@@ -37,7 +37,7 @@ describe('UX-REDESIGN-1 — Homepage redesign', () => {
 
   it('FinalCTA exposes secondary links to sectors/services/brands/showcase', () => {
     for (const route of ['/sectors', '/services', '/brands', '/showcase']) {
-      expect(finalCta).toContain(`to=\"${route}\"`);
+      expect(finalCta).toContain(`to="${route}"`);
     }
   });
 

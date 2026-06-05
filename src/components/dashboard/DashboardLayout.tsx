@@ -145,6 +145,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   if (embedded) {
     return <>{children}</>;
   }
+  return <DashboardLayoutShell>{children}</DashboardLayoutShell>;
+};
+
+// Inner shell — split so hooks are never called after the `embedded`
+// early-return above (react-hooks/rules-of-hooks).
+const DashboardLayoutShell: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { isRTL, language } = useLanguage();
   const { user, loading, profile, isAdmin, isSuperAdmin, isProvider, signOut, refreshProfile } = useAuth();
   const displayRefId = useDisplayRefId();

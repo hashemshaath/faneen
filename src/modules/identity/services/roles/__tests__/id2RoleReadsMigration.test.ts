@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
+import * as fs from 'node:fs';
 
 const ROOT = resolve(__dirname, '../../../../../../');
 
@@ -67,7 +68,6 @@ describe('ID-2 role read migration guard', () => {
       'src/pages/admin/AdminUsers.tsx',
       'src/pages/admin/AdminAccessManagement.tsx',
     ];
-    const fs = require('node:fs') as typeof import('node:fs');
     for (const f of files) {
       const src = fs.readFileSync(resolve(ROOT, f), 'utf8');
       expect(src).toMatch(/from ['"]@\/modules\/identity['"]/);

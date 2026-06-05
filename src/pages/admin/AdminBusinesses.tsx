@@ -1207,13 +1207,14 @@ const AdminBusinesses = () => {
     ? cities.filter((c) => c.country_id === editForm.country_id)
     : cities;
 
-  if (!isAdmin) return null;
-
   /* ─── Saved Views (per-admin localStorage) ─── */
   type BizViewFilters = {
     q: string; status: string; tier: string; translation: string; origin: string; sort: string;
   };
   const savedViews = useAdminSavedViews<BizViewFilters>('admin.businesses');
+
+  if (!isAdmin) return null;
+
   const currentViewFilters: BizViewFilters = {
     q: search,
     status: filterStatus,

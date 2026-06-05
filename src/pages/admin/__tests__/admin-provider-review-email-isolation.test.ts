@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const DIRECT_INVOKE = /supabase\.functions\.invoke\(\s*['"]send-transactional-email['"]/;
 
 function read(relativePath: string): string {
-  const fs = require('fs');
-  const path = require('path');
   const absolute = path.resolve(process.cwd(), relativePath);
   return fs.readFileSync(absolute, 'utf-8');
 }

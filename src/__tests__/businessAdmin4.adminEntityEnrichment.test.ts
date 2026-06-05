@@ -19,7 +19,7 @@ function read(rel: string): string {
   return readFileSync(resolve(__dirname, rel), "utf8");
 }
 
-/** Strip /* … *​/ block comments and // line comments so static safety
+/** Strip block and line comments so static safety
  *  scans only inspect executable code, not the JSDoc that purposefully
  *  enumerates the very fields we want to keep out of the result. */
 function stripComments(src: string): string {

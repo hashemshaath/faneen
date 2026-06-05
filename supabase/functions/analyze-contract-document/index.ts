@@ -82,7 +82,7 @@ function cleanJsonString(s: string): string {
     out = out.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
   }
   // Strip BOM / stray leading chars before the first { or [
-  const firstBrace = out.search(/[\[{]/);
+  const firstBrace = out.search(/[[{]/);
   if (firstBrace > 0) out = out.slice(firstBrace);
   return out;
 }

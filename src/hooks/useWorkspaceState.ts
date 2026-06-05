@@ -51,19 +51,26 @@ export function useWorkspaceState(): UseWorkspaceState {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  const wrap = <T extends unknown[]>(fn: (...args: T) => WorkspaceStateV1) =>
-    useCallback((...args: T) => { setState(fn(...args)); }, [fn]);
+  const setActiveEntity = useCallback((...args: Parameters<typeof _setActiveEntity>) => { setState(_setActiveEntity(...args)); }, []);
+  const setActiveTeam = useCallback((...args: Parameters<typeof _setActiveTeam>) => { setState(_setActiveTeam(...args)); }, []);
+  const setLastModule = useCallback((...args: Parameters<typeof _setLastModule>) => { setState(_setLastModule(...args)); }, []);
+  const setLastContext = useCallback((...args: Parameters<typeof _setLastContext>) => { setState(_setLastContext(...args)); }, []);
+  const pushRecentRef = useCallback((...args: Parameters<typeof _pushRecentRef>) => { setState(_pushRecentRef(...args)); }, []);
+  const pushRecentRoute = useCallback((...args: Parameters<typeof _pushRecentRoute>) => { setState(_pushRecentRoute(...args)); }, []);
+  const togglePinnedRef = useCallback((...args: Parameters<typeof _togglePinnedRef>) => { setState(_togglePinnedRef(...args)); }, []);
+  const pushRecentSearch = useCallback((...args: Parameters<typeof _pushRecentSearch>) => { setState(_pushRecentSearch(...args)); }, []);
+  const clear = useCallback(() => { _clearWorkspaceState(); setState(readWorkspaceState()); }, []);
 
   return {
     ...state,
-    setActiveEntity: wrap(_setActiveEntity),
-    setActiveTeam: wrap(_setActiveTeam),
-    setLastModule: wrap(_setLastModule),
-    setLastContext: wrap(_setLastContext),
-    pushRecentRef: wrap(_pushRecentRef),
-    pushRecentRoute: wrap(_pushRecentRoute),
-    togglePinnedRef: wrap(_togglePinnedRef),
-    pushRecentSearch: wrap(_pushRecentSearch),
-    clear: useCallback(() => { _clearWorkspaceState(); setState(readWorkspaceState()); }, []),
+    setActiveEntity,
+    setActiveTeam,
+    setLastModule,
+    setLastContext,
+    pushRecentRef,
+    pushRecentRoute,
+    togglePinnedRef,
+    pushRecentSearch,
+    clear,
   };
 }

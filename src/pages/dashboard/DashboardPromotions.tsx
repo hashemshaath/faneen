@@ -379,7 +379,7 @@ const DashboardPromotions = () => {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const useTemplateInForm = useCallback((tpl: PromotionTemplate) => {
+  const applyTemplateToForm = useCallback((tpl: PromotionTemplate) => {
     setEditingId(null);
     setForm({
       title_ar: tpl.title_ar,
@@ -636,7 +636,7 @@ const DashboardPromotions = () => {
                         <Button size="sm" variant="hero" className="h-7 text-[10px] rounded-lg flex-1" onClick={() => insertTemplateMut.mutate(tpl)} disabled={insertTemplateMut.isPending || !businessId}>
                           <PackagePlus className="w-3 h-3 me-1" />{rtl ? 'إضافة' : 'Add'}
                         </Button>
-                        <Button size="sm" variant="outline" className="h-7 text-[10px] rounded-lg" onClick={() => useTemplateInForm(tpl)}>
+                        <Button size="sm" variant="outline" className="h-7 text-[10px] rounded-lg" onClick={() => applyTemplateToForm(tpl)}>
                           <Pencil className="w-3 h-3 me-1" />{rtl ? 'تعديل' : 'Edit'}
                         </Button>
                       </div>

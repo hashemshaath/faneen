@@ -41,15 +41,18 @@ import {
 } from '@/components/admin/contract-templates/types';
 
 const AdminContractTemplates: React.FC = () => {
+  const { isAdmin } = useAuth();
+  if (!isAdmin) return <Navigate to="/forbidden" replace />;
+  return <AdminContractTemplatesInner />;
+};
+
+const AdminContractTemplatesInner: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const { isAdmin } = useAuth();
   const qc = useQueryClient();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-
-  if (!isAdmin) return <Navigate to="/forbidden" replace />;
 
   const templatesQ = useQuery({
     queryKey: ['ct-templates'],

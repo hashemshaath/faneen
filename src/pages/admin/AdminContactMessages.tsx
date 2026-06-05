@@ -533,7 +533,7 @@ const AdminContactMessages = () => {
     setTimeout(() => w.print(), 250);
   };
 
-  const useReplyTemplate = (tplId: string) => {
+  const applyReplyTemplate = (tplId: string) => {
     if (!focused || !isSuperAdmin) return;
     const tpl = replyTemplates.find(t => t.id === tplId);
     if (!tpl) return;
@@ -987,7 +987,7 @@ const AdminContactMessages = () => {
               copyDeepLink={copyDeepLink}
               closeMessage={closeMessage}
               printMessage={printMessage}
-              useReplyTemplate={useReplyTemplate}
+              applyReplyTemplate={applyReplyTemplate}
             />
           )}
 
@@ -1154,7 +1154,7 @@ const AdminContactMessages = () => {
                 copyDeepLink={copyDeepLink}
                 closeMessage={closeMessage}
                 printMessage={printMessage}
-                useReplyTemplate={useReplyTemplate}
+                applyReplyTemplate={applyReplyTemplate}
               />
             </div>
           )}
@@ -1185,7 +1185,7 @@ interface FocusedProps {
   copyDeepLink: (id: string) => void;
   closeMessage: () => void;
   printMessage: () => void;
-  useReplyTemplate: (id: string) => void;
+  applyReplyTemplate: (id: string) => void;
 }
 type Locale = typeof ar;
 
@@ -1193,7 +1193,7 @@ const FocusedMessage: React.FC<FocusedProps> = ({
   focused, isRTL, isSuperAdmin, dateLocale,
   currentUserId, assignees, assigneeMap, events,
   noteDraft, setNoteDraft, editingNoteId, setEditingNoteId,
-  updateMutation, deleteMutation, copyDeepLink, closeMessage, printMessage, useReplyTemplate,
+  updateMutation, deleteMutation, copyDeepLink, closeMessage, printMessage, applyReplyTemplate,
 }) => {
   const responseHrs = focused.replied_at
     ? differenceInHours(new Date(focused.replied_at), new Date(focused.created_at))
@@ -1417,7 +1417,7 @@ const FocusedMessage: React.FC<FocusedProps> = ({
                   size="sm"
                   variant="outline"
                   className="h-8 gap-1.5 text-xs"
-                  onClick={() => useReplyTemplate(tpl.id)}
+                  onClick={() => applyReplyTemplate(tpl.id)}
                 >
                   <Reply className="w-3 h-3" />
                   {isRTL ? tpl.labelAr : tpl.labelEn}

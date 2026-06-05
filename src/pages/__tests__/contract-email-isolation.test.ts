@@ -108,7 +108,7 @@ describe('E-Mail-4: Contract transactional email isolation', () => {
       ];
       for (const template of unrelatedTemplates) {
         expect(combined).not.toMatch(
-          new RegExp(`templateName:\s*['"]${template}['"]`),
+          new RegExp(`templateName:\\s*['"]${template}['"]`),
         );
       }
     });
