@@ -64,6 +64,12 @@ export interface Brand {
   slug: string | null;
   description_ar: string | null;
   description_en: string | null;
+  seo_title_ar: string | null;
+  seo_title_en: string | null;
+  seo_description_ar: string | null;
+  seo_description_en: string | null;
+  brand_keywords: string[] | null;
+  og_image_url: string | null;
   logo_url: string | null;
   website: string | null;
   sector_id: string | null;
