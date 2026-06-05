@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
+import { FieldAiActions } from '@/components/blog/FieldAiActions';
 
 import {
   adminGetBrand, adminApproveBrand, adminRejectBrand, adminArchiveBrand,
