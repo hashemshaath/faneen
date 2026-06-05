@@ -4,6 +4,8 @@ import { getPublicBusinessByUsername } from "@/modules/businesses";
 import {
   listServicesByBusiness,
   listBranchesByBusiness,
+  listBranchServiceIds,
+  listBranchPromotionIds,
 } from "@/modules/catalog";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -241,4 +243,99 @@ export const useActivePromotionsCount = (businessId: string | undefined) =>
     },
     enabled: !!businessId,
     staleTime: 5 * 60 * 1000,
+  });
+
+/**
+ * Branch-scoped variant: counts active promotions restricted to those
+ * explicitly linked to a branch via `branch_promotions`. When no links
+ * exist for the branch, the count falls back to 0 (the branch has no
+ * dedicated offers — distinct from the business-wide count).
+ */
+export const useActiveBranchPromotionsCount = (
+  businessId: string | undefined,
+  branchId: string | undefined,
+) =>
+  useQuery({
+    queryKey: ["promotions-active-count", businessId, "branch", branchId],
+    queryFn: async () => {
+      const { data: linked } = await listBranchPromotionIds(branchId!);
+      const ids = linked ?? [];
+      if (ids.length === 0) return 0;
+      const today = new Date().toISOString().slice(0, 10);
+      const { count } = await supabase
+        .from("promotions")
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", businessId!)
+        .eq("is_active", true)
+        .in("id", ids)
+        .or(`end_date.is.null,end_date.gte.${today}`);
+      return count ?? 0;
+    },
+    enabled: !!businessId && !!branchId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+/**
+ * Fetch a single branch (public view) by parent business id + slug.
+ * Used by BusinessProfile when the URL is `/:username/:branchSlug` to
+ * render the same screen with branch-specific contact / location /
+ * services / offers data without changing the design.
+ */
+export interface PublicBranchFull {
+  id: string;
+  business_id: string;
+  slug: string | null;
+  is_main: boolean;
+  name_ar: string;
+  name_en: string | null;
+  description_ar: string | null;
+  description_en: string | null;
+  phone: string | null;
+  mobile: string | null;
+  whatsapp: string | null;
+  customer_service_phone: string | null;
+  unified_number: string | null;
+  email: string | null;
+  website: string | null;
+  address: string | null;
+  region: string | null;
+  district: string | null;
+  street_name: string | null;
+  building_number: string | null;
+  additional_number: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+export const useBranchBySlug = (
+  businessId: string | undefined,
+  branchSlug: string | undefined,
+) =>
+  useQuery({
+    queryKey: ["branch-by-slug", businessId, branchSlug],
+    enabled: !!businessId && !!branchSlug,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("business_branches_public" as "business_branches")
+        .select(
+          "id, business_id, slug, is_main, name_ar, name_en, " +
+          "description_ar, description_en, " +
+          "phone, mobile, whatsapp, customer_service_phone, unified_number, " +
+          "email, website, " +
+          "address, region, district, street_name, building_number, additional_number, " +
+          "latitude, longitude"
+        )
+        .eq("business_id", businessId!)
+        .eq("slug", branchSlug!)
+        .maybeSingle();
+      return (data as unknown as PublicBranchFull | null) ?? null;
+    },
+  });
+
+/** Branch → linked service ids (for filtering ServicesTab to a branch). */
+export const useBranchServiceIds = (branchId: string | undefined) =>
+  useQuery({
+    queryKey: ["branch-service-ids", branchId],
+    enabled: !!branchId,
+    queryFn: async () => (await listBranchServiceIds(branchId!)).data ?? [],
   });

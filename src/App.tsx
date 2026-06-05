@@ -508,7 +508,10 @@ const AppRoutes = () => (
 
           <Route path="/:username" element={<UsernameResolver />} />
           {/* Nested branch URL: /{business-username}/{branch-slug} */}
-          <Route path="/:username/:branchSlug" element={<BranchDetail />} />
+          {/* Renders the same BusinessProfile screen but scoped to the
+              selected branch (contact, location, services, offers swap
+              to branch values; design stays identical). */}
+          <Route path="/:username/:branchSlug" element={<BusinessProfile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

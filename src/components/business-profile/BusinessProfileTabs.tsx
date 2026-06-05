@@ -35,6 +35,7 @@ import {
   useProjects,
   useReviews,
   useServices,
+  useBranchServiceIds,
 } from "./business-profile.data";
 import { Stars } from "./BusinessProfileHeader";
 
@@ -73,12 +74,25 @@ const getVideoEmbedUrl = (url: string) => {
 export const ServicesTab = ({
   businessId,
   businessName,
+  branchId,
 }: {
   businessId: string;
   businessName: string;
+  branchId?: string;
 }) => {
   const { language } = useLanguage();
-  const { data: services, isLoading } = useServices(businessId);
+  const { data: allServices, isLoading } = useServices(businessId);
+  const { data: branchServiceIds } = useBranchServiceIds(branchId);
+  // When viewing a branch, restrict to services explicitly linked to that
+  // branch. If the branch has no explicit links, show all business services
+  // (mirrors BranchDetail's behaviour so a brand-new branch isn't empty).
+  const services = (() => {
+    if (!branchId) return allServices;
+    const ids = branchServiceIds ?? [];
+    if (!allServices) return allServices;
+    if (ids.length === 0) return allServices;
+    return allServices.filter((s) => ids.includes(s.id));
+  })();
 
   if (isLoading) {
     return (
