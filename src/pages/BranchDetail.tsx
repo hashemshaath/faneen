@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   MapPin, Phone, Mail, Globe, MessageCircle, ArrowLeft, ExternalLink,
   Star, UserCog, Instagram, Linkedin, Facebook, Youtube, Building2,
-  Loader2, Boxes, Tag, Navigation, Heart, ChevronRight,
+  Loader2, Tag, Navigation, Heart, Send, MessageSquare,
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -23,13 +23,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { BranchReviews } from '@/components/branch/BranchReviews';
 import { toast } from 'sonner';
 import { RevealPhoneButton } from '@/components/branch/RevealPhoneButton';
-import { ShareMenu } from '@/components/branch/ShareMenu';
 import { BranchVisitCounter } from '@/components/branch/BranchVisitCounter';
 import { useBranchVisits } from '@/hooks/useBranchVisits';
 import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
+
+// Lazy-load heavy / below-the-fold pieces to keep BranchDetail's first paint light.
+const ShareMenu = lazy(() => import('@/components/branch/ShareMenu').then(m => ({ default: m.ShareMenu })));
+const BranchReviews = lazy(() => import('@/components/branch/BranchReviews').then(m => ({ default: m.BranchReviews })));
+const BranchReviewForm = lazy(() => import('@/components/branch/BranchReviewForm').then(m => ({ default: m.BranchReviewForm })));
+const BranchInquiryForm = lazy(() => import('@/components/branch/BranchInquiryForm').then(m => ({ default: m.BranchInquiryForm })));
+const BranchServicesSection = lazy(() => import('@/components/branch/BranchServicesSection').then(m => ({ default: m.BranchServicesSection })));
+
+const LazyFallback: React.FC = () => (
+  <div className="flex justify-center py-6"><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /></div>
+);
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
@@ -72,7 +81,7 @@ interface BusinessLite {
   logo_url: string | null;
 }
 
-interface ServiceCard { id: string; name_ar: string; name_en: string | null; price_from: number | null; currency_code: string }
+interface ServiceCard { id: string; name_ar: string; name_en: string | null; price_from: number | null; currency_code: string; category_id: string | null }
 interface PromotionCard { id: string; title_ar: string; title_en: string | null; image_url: string | null; offer_price: number | null; original_price: number | null; currency_code: string }
 
 const BranchDetail: React.FC = () => {
@@ -187,7 +196,7 @@ const BranchDetail: React.FC = () => {
       // If branch has explicit links → show only those. Else show all active business services.
       const { data } = await listServicesByBusiness<ServiceCard>({
         businessId: branch!.business_id,
-        select: 'id, name_ar, name_en, price_from, currency_code, is_active',
+        select: 'id, name_ar, name_en, price_from, currency_code, is_active, category_id',
         activeOnly: true,
       });
       const all = (data ?? []) as ServiceCard[];
