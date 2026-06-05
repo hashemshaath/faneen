@@ -99,6 +99,7 @@ const DashboardBookings = lazyRetry(() => import("./pages/dashboard/DashboardBoo
 const DashboardAnalytics = lazyRetry(() => import("./pages/dashboard/DashboardAnalytics"));
 const DashboardContractAnalytics = lazyRetry(() => import("./pages/dashboard/DashboardContractAnalytics"));
 const DashboardNotifications = lazyRetry(() => import("./pages/dashboard/DashboardNotifications"));
+const DashboardInquiries = lazyRetry(() => import("./pages/DashboardInquiries"));
 const Offers = lazyRetry(() => import("./pages/Offers"));
 const Compare = lazyRetry(() => import("./pages/Compare"));
 const CompareProfiles = lazyRetry(() => import("./pages/CompareProfiles"));
@@ -355,6 +356,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/messages" element={<ProtectedRoute><DashboardMessages /></ProtectedRoute>} />
           <Route path="/dashboard/bookmarks" element={<ProtectedRoute><DashboardBookmarks /></ProtectedRoute>} />
           <Route path="/dashboard/notifications" element={<ProtectedRoute><DashboardNotifications /></ProtectedRoute>} />
+          <Route path="/dashboard/inquiries" element={<ProtectedRoute><DashboardInquiries /></ProtectedRoute>} />
           <Route path="/dashboard/bookings" element={<ProtectedRoute><DashboardBookings /></ProtectedRoute>} />
           <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 8 — Staff hub. */}
