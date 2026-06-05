@@ -1292,6 +1292,8 @@ const AdminBusinesses = () => {
   const filteredCities = editForm.country_id
     ? cities.filter((c) => c.country_id === editForm.country_id)
     : cities;
+  const editCategoryName = categories.find((c) => c.id === editForm.category_id);
+  const editCityName = cities.find((c) => c.id === editForm.city_id);
 
   /* ─── Saved Views (per-admin localStorage) ─── */
   type BizViewFilters = {
@@ -1934,12 +1936,13 @@ const AdminBusinesses = () => {
               </div>
             </div>
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full grid grid-cols-9 h-9 rounded-xl">
+                <TabsList className="w-full grid grid-cols-10 h-9 rounded-xl">
                   <TabsTrigger value="info" className="text-[10px] rounded-lg">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
                   <TabsTrigger value="owner" className="text-[10px] rounded-lg">{isRTL ? 'المسؤول' : 'Owner'}</TabsTrigger>
                   <TabsTrigger value="address" className="text-[10px] rounded-lg">{isRTL ? 'العنوان' : 'Address'}</TabsTrigger>
                   <TabsTrigger value="content" className="text-[10px] rounded-lg">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
                   <TabsTrigger value="media" className="text-[10px] rounded-lg">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
+                  <TabsTrigger value="seo" className="text-[10px] rounded-lg">SEO</TabsTrigger>
                   <TabsTrigger value="contact" className="text-[10px] rounded-lg">{isRTL ? 'التواصل' : 'Contact'}</TabsTrigger>
                   <TabsTrigger value="branches" className="text-[10px] rounded-lg">{isRTL ? 'الفروع' : 'Branches'} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
                   <TabsTrigger value="controls" className="text-[10px] rounded-lg">{isRTL ? 'التحكم' : 'Controls'}</TabsTrigger>
