@@ -33,6 +33,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
+import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
