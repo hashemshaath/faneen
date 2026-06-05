@@ -384,6 +384,7 @@ export default DashboardBranches;
 
 interface BranchCardProps {
   branch: BranchRow;
+  businessUsername: string | null;
   isExpanded: boolean;
   onToggle: () => void;
   onSetMain: () => void;
@@ -397,7 +398,7 @@ interface BranchCardProps {
 }
 
 const BranchCard: React.FC<BranchCardProps> = ({
-  branch, isExpanded, onToggle, onSetMain, onDelete,
+  branch, businessUsername, isExpanded, onToggle, onSetMain, onDelete,
   staffOptions, services, promotions, isRTL, busy, onSaved,
 }) => {
   return (
@@ -445,6 +446,7 @@ const BranchCard: React.FC<BranchCardProps> = ({
           <Separator className="mb-5" />
           <BranchEditor
             branch={branch}
+            businessUsername={businessUsername}
             staffOptions={staffOptions}
             services={services}
             promotions={promotions}
