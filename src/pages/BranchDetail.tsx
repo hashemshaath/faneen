@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   MapPin, Phone, Mail, Globe, MessageCircle, ArrowLeft, ExternalLink,
   Star, UserCog, Instagram, Linkedin, Facebook, Youtube, Building2,
-  Loader2, Tag, Navigation, Heart, Send, MessageSquare,
+  Loader2, Tag, Navigation, Heart, Send, MessageSquare, Boxes,
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
