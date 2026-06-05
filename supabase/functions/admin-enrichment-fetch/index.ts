@@ -163,7 +163,7 @@ function parseSAPhones(text: string): {
   const out = { mobile: [] as string[], landline: [] as string[], unified: [] as string[], customer_service: [] as string[] };
   if (!text) return out;
   // Match runs of digits/spaces/dashes with optional +966/00966/0 prefix.
-  const re = /(?:\+?966|00966)?[\s\-]*0?\d[\d\s\-]{6,14}\d/g;
+  const re = /(?:\+?966|00966)?[\s-]*0?\d[\d\s-]{6,14}\d/g;
   const seen = new Set<string>();
   const matches = text.match(re) ?? [];
   for (const raw of matches) {
