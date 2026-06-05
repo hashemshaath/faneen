@@ -239,8 +239,8 @@ const DashboardBranches: React.FC = () => {
   };
 
   const handleSetMain = async (branchId: string) => {
-    const currentMain = branches.find((b) => b.is_main && b.id !== branchId);
-    const target = branches.find((b) => b.id === branchId);
+    const currentMain = (branches ?? []).find((b) => b.is_main && b.id !== branchId);
+    const target = (branches ?? []).find((b) => b.id === branchId);
     const msg = currentMain
       ? t(isRTL,
           `سيتم إلغاء "${currentMain.name_ar}" كفرع رئيسي وتعيين "${target?.name_ar ?? ''}" بدلاً منه. متابعة؟`,
