@@ -960,7 +960,7 @@ const AdminBusinesses = () => {
         // Insert without is_main; if wantsMain we promote via RPC below.
         const { data, error } = await insertBusinessBranchReturning(payload, 'id', 'single');
         if (error) throw error;
-        targetBranchId = (data as { id: string } | null)?.id ?? null;
+        targetBranchId = (data as unknown as { id: string } | null)?.id ?? null;
       }
       if (wantsMain && targetBranchId) {
         // Atomic swap: clears previous main + sets this one in a single transaction.
