@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { contextualHelpRegistry } from '@/modules/helpCenter/contextualHelp';
 
@@ -17,7 +17,6 @@ const SLUGS = [
 
 const MIGRATION_PATH = (() => {
   // newest migration that contains the brand help seed
-  const { readdirSync } = require('node:fs') as typeof import('node:fs');
   const dir = resolve('supabase/migrations');
   const candidates = readdirSync(dir)
     .filter((f) => f.endsWith('.sql'))
