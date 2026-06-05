@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
+import { buildSeoTitle, buildSeoDescription } from "@/modules/seo/seoTitleBuilder";
 import {
   CalendarClock,
   FolderOpen,
@@ -112,11 +113,24 @@ const BusinessProfile = () => {
   }, [business?.username, business?.categories, categoryName, cityName]);
 
   const seoTitle = business
-    ? `${businessName}${categoryName ? ` — ${categoryName}` : ''}${cityName ? ` في ${cityName}` : ''} | قِطاعات`
+    ? buildSeoTitle({
+        kind: 'company',
+        lang: language === 'ar' ? 'ar' : 'en',
+        name: businessName,
+        activity: categoryName,
+        city: cityName,
+      })
     : (isRTL ? 'جاري التحميل... | قِطاعات' : 'Loading... | Qitaat');
 
   const seoDesc = business
-    ? (businessDesc.substring(0, 140) || `${businessName}${categoryName ? ` - ${categoryName}` : ''}${cityName ? ` في ${cityName}` : ''} — مزود خدمات معتمد على منصة قِطاعات`)
+    ? buildSeoDescription({
+        kind: 'company',
+        lang: language === 'ar' ? 'ar' : 'en',
+        name: businessName,
+        activity: categoryName,
+        city: cityName,
+        rawDescription: businessDesc,
+      })
     : undefined;
 
   usePageMeta({
