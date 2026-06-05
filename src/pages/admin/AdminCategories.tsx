@@ -32,6 +32,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -40,6 +41,9 @@ import {
 interface Category {
   id: string; name_ar: string; name_en: string; slug: string;
   description_ar: string | null; description_en: string | null;
+  seo_title_ar: string | null; seo_title_en: string | null;
+  seo_description_ar: string | null; seo_description_en: string | null;
+  featured_keywords: string[] | null;
   icon: string | null; parent_id: string | null; is_active: boolean;
   sort_order: number; created_at: string;
 }
@@ -47,12 +51,17 @@ interface Category {
 interface CategoryForm {
   name_ar: string; name_en: string; slug: string; description_ar: string;
   description_en: string; icon: string; parent_id: string | null;
+  seo_title_ar: string; seo_title_en: string;
+  seo_description_ar: string; seo_description_en: string;
+  featured_keywords: string;
   is_active: boolean; sort_order: number;
 }
 
 const emptyForm: CategoryForm = {
   name_ar: '', name_en: '', slug: '', description_ar: '', description_en: '',
-  icon: '', parent_id: null, is_active: true, sort_order: 0,
+  icon: '', parent_id: null, seo_title_ar: '', seo_title_en: '',
+  seo_description_ar: '', seo_description_en: '', featured_keywords: '',
+  is_active: true, sort_order: 0,
 };
 
 interface TreeNode extends Category {
