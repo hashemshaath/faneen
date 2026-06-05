@@ -2583,9 +2583,9 @@ const AdminBusinesses = () => {
             </div>
             <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد نتائج' : 'No results found'}</p>
             <p className="text-xs text-muted-foreground">{isRTL ? 'جرّب تعديل معايير البحث' : 'Try adjusting your search criteria'}</p>
-            {(search || filterStatus !== 'all' || filterTier !== 'all') && (
+            {(search || filterStatus !== 'all' || selectedTiers.length > 0) && (
               <Button variant="outline" size="sm" className="mt-4 gap-1.5 rounded-xl"
-                onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
+                onClick={() => { setSearch(''); setFilterStatus('all'); clearTiers(); }}>
                 <X className="w-3.5 h-3.5" /> {isRTL ? 'مسح الفلاتر' : 'Clear Filters'}
               </Button>
             )}
