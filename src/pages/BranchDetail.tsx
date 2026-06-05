@@ -89,20 +89,11 @@ const BranchDetail: React.FC = () => {
     queryKey: ['public-branch-business', branch?.business_id],
     enabled: Boolean(branch?.business_id),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('businesses_public_basic' as 'businesses')
+      const { data } = await supabase
+        .from('businesses')
         .select('id, username, name_ar, name_en, logo_url')
         .eq('id', branch!.business_id)
         .maybeSingle();
-      if (error) {
-        // fallback to main table if public view doesn't exist
-        const { data: d2 } = await supabase
-          .from('businesses')
-          .select('id, username, name_ar, name_en, logo_url')
-          .eq('id', branch!.business_id)
-          .maybeSingle();
-        return d2 as unknown as BusinessLite | null;
-      }
       return data as unknown as BusinessLite | null;
     },
   });
