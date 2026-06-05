@@ -15,7 +15,7 @@ const BASE = "https://qitaat.com";
 // don't leak the internal Supabase Functions host in robots/sitemap output.
 const FUNC = `${BASE}/functions/v1/sitemap`;
 
-const TYPES = ["static", "businesses", "blog", "categories", "cities", "profiles", "projects", "sectors", "services", "brands", "help"] as const;
+const TYPES = ["static", "businesses", "branches", "blog", "categories", "cities", "profiles", "projects", "sectors", "services", "brands", "help"] as const;
 type SitemapType = (typeof TYPES)[number];
 
 function esc(s: string) {
@@ -149,6 +149,39 @@ Deno.serve(async (req) => {
         for (const b of data) {
           if (!b.username) continue;
           entries.push(entry(`${BASE}/${encodeURIComponent(b.username)}`, { lastmod: toDate(b.updated_at), changefreq: "weekly", priority: "0.8" }));
+        }
+      }
+    } else if (type === "branches") {
+      // Public branch pages live at `/{username}/{branch.slug}`. Only emit entries
+      // that have a real slug — never expose ref-based ids like `loc1000003`.
+      const { data: branches } = await supabase
+        .from("business_branches_public")
+        .select("business_id, slug, updated_at")
+        .not("slug", "is", null)
+        .limit(50000);
+      if (branches && branches.length > 0) {
+        const bizIds = Array.from(new Set(branches.map((b) => b.business_id).filter(Boolean) as string[]));
+        const { data: bizRows } = await supabase
+          .from("businesses")
+          .select("id, username, is_active, approval_status, is_demo")
+          .in("id", bizIds);
+        const usernameByBiz = new Map<string, string>();
+        for (const b of bizRows ?? []) {
+          if (b.is_active && b.approval_status === "published" && !b.is_demo && b.username) {
+            usernameByBiz.set(b.id as string, b.username as string);
+          }
+        }
+        for (const br of branches) {
+          const slug = (br as { slug?: string | null }).slug;
+          // Skip legacy numeric/ref-style slugs to keep the index clean
+          if (!slug || /^loc\d+$/i.test(slug)) continue;
+          const uname = usernameByBiz.get(br.business_id as string);
+          if (!uname) continue;
+          entries.push(entry(`${BASE}/${encodeURIComponent(uname)}/${encodeURIComponent(slug)}`, {
+            lastmod: toDate((br as { updated_at?: string | null }).updated_at ?? null),
+            changefreq: "weekly",
+            priority: "0.75",
+          }));
         }
       }
     } else if (type === "blog") {
