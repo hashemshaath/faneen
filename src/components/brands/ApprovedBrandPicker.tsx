@@ -80,7 +80,7 @@ export const ApprovedBrandPicker: React.FC<ApprovedBrandPickerProps> = (props) =
       setSelected(new Map([[id, row]]));
     } else {
       const set = new Set(props.value);
-      set.has(id) ? set.delete(id) : set.add(id);
+      if (set.has(id)) set.delete(id); else set.add(id);
       props.onChange(Array.from(set));
       const next = new Map(selected);
       next.set(id, row);
