@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   MapPin, Phone, Mail, Globe, MessageCircle, ArrowLeft, ExternalLink,
   Star, UserCog, Instagram, Linkedin, Facebook, Youtube, Building2,
-  Loader2, Boxes, Tag,
+  Loader2, Boxes, Tag, ShieldCheck, Navigation,
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -78,13 +78,23 @@ const BranchDetail: React.FC = () => {
     queryKey: ['public-branch', slug],
     enabled: Boolean(slug),
     queryFn: async () => {
+      // Primary lookup by slug
       const { data, error } = await supabase
         .from('business_branches_public' as 'business_branches')
         .select('*')
         .eq('slug', slug!)
         .maybeSingle();
       if (error) throw error;
-      return data as unknown as PublicBranch | null;
+      if (data) return data as unknown as PublicBranch | null;
+
+      // Backward-compat: old URLs like /branch/loc1000002 → match by ref_id (LOC-1000002)
+      const refGuess = slug!.toUpperCase().replace(/^([A-Z]+)(\d+)$/, '$1-$2');
+      const { data: byRef } = await supabase
+        .from('business_branches_public' as 'business_branches')
+        .select('*')
+        .eq('ref_id', refGuess)
+        .maybeSingle();
+      return (byRef as unknown as PublicBranch | null) ?? null;
     },
   });
 
@@ -183,10 +193,12 @@ const BranchDetail: React.FC = () => {
     : undefined;
   usePageMeta({
     title: branch
-      ? `${branchName} — ${businessName} | قِطاعات`
+      ? (isRTL
+          ? `${branchName} — ${businessName}${locationLabel ? ` · ${locationLabel}` : ''} | قِطاعات`
+          : `${branchName} — ${businessName}${locationLabel ? ` · ${locationLabel}` : ''} | Qitaat`)
       : t(isRTL, 'فرع | قِطاعات', 'Branch | Qitaat'),
     description: seoDescription,
-    ogTitle: branch ? `${branchName} — ${businessName}` : undefined,
+    ogTitle: branch ? `${branchName} — ${businessName}${locationLabel ? ` · ${locationLabel}` : ''}` : undefined,
     ogDescription: seoDescription,
     ogImage: business?.logo_url || undefined,
     ogType: 'business.business',
@@ -274,8 +286,16 @@ const BranchDetail: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <section className="relative bg-gradient-to-br from-primary/10 via-background to-background border-b border-border/60">
-        <div className="container max-w-6xl mx-auto px-4 py-10">
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background border-b border-border/60">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            background:
+              'radial-gradient(60% 60% at 20% 0%, hsl(var(--primary) / 0.10), transparent 60%), radial-gradient(40% 40% at 100% 20%, hsl(var(--accent) / 0.10), transparent 60%)',
+          }}
+        />
+        <div className="relative container max-w-6xl mx-auto px-4 py-10">
           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
             <Link to="/" className="hover:text-primary">{t(isRTL, 'الرئيسية', 'Home')}</Link>
             <span>/</span>
@@ -291,30 +311,76 @@ const BranchDetail: React.FC = () => {
           <div className="flex items-start gap-4 flex-wrap">
             {business?.logo_url && (
                
-              <img src={business.logo_url} alt={businessName} loading="lazy" className="w-16 h-16 rounded-xl object-cover border border-border" />
+              <img src={business.logo_url} alt={businessName} loading="lazy" className="w-20 h-20 rounded-2xl object-cover border border-border shadow-sm bg-card" />
             )}
             <div className="flex-1 min-w-[240px]">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl md:text-3xl font-bold" dir="auto">{branchName}</h1>
+                <h1 className="text-2xl md:text-4xl font-bold tracking-tight" dir="auto">
+                  {branchName}
+                  {businessName && (
+                    <span className="block text-base md:text-lg font-medium text-muted-foreground mt-1">
+                      {t(isRTL, 'فرع تابع لـ', 'A branch of')} {businessName}
+                    </span>
+                  )}
+                </h1>
                 {branch.is_main && (
                   <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1">
                     <Star className="w-3 h-3 fill-current" />
                     {t(isRTL, 'الفرع الرئيسي', 'Main branch')}
                   </Badge>
                 )}
+                {locationLabel && (
+                  <Badge variant="outline" className="gap-1">
+                    <MapPin className="w-3 h-3" />
+                    <span dir="auto">{locationLabel}</span>
+                  </Badge>
+                )}
+                {branch.ref_id && (
+                  <Badge variant="secondary" className="gap-1 tech-content">
+                    <ShieldCheck className="w-3 h-3" />
+                    {branch.ref_id}
+                  </Badge>
+                )}
               </div>
-              {business?.username && (
-                <Link to={`/${business.username}`} className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1 mt-1">
-                  <Building2 className="w-3.5 h-3.5" />
-                  {businessName}
-                  <ExternalLink className="w-3 h-3" />
-                </Link>
-              )}
               {(branch.description_ar || branch.description_en) && (
                 <p className="mt-3 text-sm text-muted-foreground max-w-2xl" dir="auto">
                   {isRTL ? (branch.description_ar || branch.description_en) : (branch.description_en || branch.description_ar)}
                 </p>
               )}
+              <div className="mt-4 flex items-center gap-2 flex-wrap">
+                {business?.username && (
+                  <Button asChild size="sm" variant="outline" className="gap-2 rounded-xl">
+                    <Link to={`/${business.username}`}>
+                      <Building2 className="w-3.5 h-3.5" />
+                      {t(isRTL, 'صفحة الشركة', 'Company page')}
+                    </Link>
+                  </Button>
+                )}
+                {(branch.phone || branch.mobile) && (
+                  <Button asChild size="sm" className="gap-2 rounded-xl">
+                    <a href={`tel:${branch.phone || branch.mobile}`}>
+                      <Phone className="w-3.5 h-3.5" />
+                      {t(isRTL, 'اتصل بالفرع', 'Call branch')}
+                    </a>
+                  </Button>
+                )}
+                {branch.whatsapp && (
+                  <Button asChild size="sm" variant="outline" className="gap-2 rounded-xl">
+                    <a href={`https://wa.me/${branch.whatsapp.replace(/[^0-9]/g,'')}`} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      WhatsApp
+                    </a>
+                  </Button>
+                )}
+                {(branch.latitude && branch.longitude) && (
+                  <Button asChild size="sm" variant="outline" className="gap-2 rounded-xl">
+                    <a href={`https://www.google.com/maps?q=${branch.latitude},${branch.longitude}`} target="_blank" rel="noopener noreferrer">
+                      <Navigation className="w-3.5 h-3.5" />
+                      {t(isRTL, 'الاتجاهات', 'Directions')}
+                    </a>
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -323,11 +389,11 @@ const BranchDetail: React.FC = () => {
       {/* Body */}
       <section className="container max-w-6xl mx-auto px-4 py-8 grid gap-6 lg:grid-cols-3">
         {/* Contact card */}
-        <Card className="lg:col-span-1">
+        <Card className="lg:col-span-1 lg:sticky lg:top-20 h-fit">
           <CardContent className="p-6 space-y-4">
             <h2 className="font-semibold text-lg flex items-center gap-2">
               <Phone className="w-4 h-4 text-primary" />
-              {t(isRTL, 'تواصل مباشر', 'Contact')}
+              {t(isRTL, 'بيانات الاتصال بالفرع', 'Branch contact details')}
             </h2>
             <Separator />
             <ContactRow icon={Phone}    label={t(isRTL,'هاتف ثابت','Phone')}        value={branch.phone}        href={branch.phone ? `tel:${branch.phone}` : null} />
@@ -341,17 +407,28 @@ const BranchDetail: React.FC = () => {
             )}
 
             {(branch.latitude && branch.longitude) && (
-              <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-xl">
-                <a
-                  href={`https://www.google.com/maps?q=${branch.latitude},${branch.longitude}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MapPin className="w-4 h-4" />
-                  {t(isRTL, 'فتح في خرائط Google', 'Open in Google Maps')}
-                  <ExternalLink className="w-3 h-3 opacity-60" />
-                </a>
-              </Button>
+              <div className="space-y-2">
+                <div className="relative overflow-hidden rounded-xl border border-border/60 bg-muted/20">
+                  <iframe
+                    title={t(isRTL, 'موقع الفرع على الخريطة', 'Branch map')}
+                    src={`https://maps.google.com/maps?q=${branch.latitude},${branch.longitude}&z=15&output=embed`}
+                    className="w-full h-48 border-0"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+                <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-xl">
+                  <a
+                    href={`https://www.google.com/maps?q=${branch.latitude},${branch.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Navigation className="w-4 h-4" />
+                    {t(isRTL, 'افتح في خرائط Google', 'Open in Google Maps')}
+                    <ExternalLink className="w-3 h-3 opacity-60" />
+                  </a>
+                </Button>
+              </div>
             )}
 
             {socials.length > 0 && (
