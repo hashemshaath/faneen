@@ -1273,7 +1273,6 @@ const AdminBusinesses = () => {
               ? `${stats.total} منشأة مسجلة • تحكم كامل في الملفات والخدمات والفروع والعضويات`
               : `${stats.total} registered businesses • Full control of profiles, services, branches & memberships`
           )}
-          dense={panelOpen}
           actions={
             <>
               <div className="flex bg-muted/40 border border-border/40 rounded-xl overflow-hidden p-0.5">
