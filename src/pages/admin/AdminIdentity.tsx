@@ -37,6 +37,8 @@ import { EntityLink } from '@/components/admin/identity/EntityLink';
 import { IdentityCommandPalette } from '@/components/admin/identity/IdentityCommandPalette';
 import { IdentityActivityFeed } from '@/components/admin/identity/IdentityActivityFeed';
 import { IdentitySignupsChart } from '@/components/admin/identity/IdentitySignupsChart';
+import { ApprovalsInbox } from '@/pages/admin/approvalsCenter/ApprovalsInbox';
+import { useUnifiedApprovalsCounts } from '@/components/admin/useUnifiedApprovalsCounts';
 import { listProfiles } from '@/modules/users';
 import { listAllUserRoles } from '@/modules/identity';
 import { listAdminBusinesses } from '@/modules/businesses';
@@ -46,7 +48,7 @@ import {
   Users, Building2, Search, Command, Shield, Crown, ShieldCheck, Briefcase,
   TrendingUp, UserCheck, Ban, CheckCircle2, Sparkles, Plus,
   UserPlus, Activity, ExternalLink, KeyRound, BarChart3,
-  RefreshCw, Stethoscope, MapPin, ArrowUpRight,
+  RefreshCw, Stethoscope, MapPin, ArrowUpRight, LayoutDashboard, Inbox,
 } from 'lucide-react';
 
 /**
