@@ -308,6 +308,7 @@ describe('2I buildSafeSlaNotificationContent', () => {
       expect(/[\u0600-\u06FF]/.test(c.titleAr!)).toBe(true);
       expect(/[\u0600-\u06FF]/.test(c.bodyAr!)).toBe(true);
       // English copy is ASCII letters
+      // eslint-disable-next-line no-control-regex -- ASCII-range check
       expect(/^[\x00-\x7F]+$/.test(c.titleEn!)).toBe(true);
       expect(c.notificationType).toBe(`operational_alert.${reason}`);
       expect(c.referenceType).toBe('operational_alert');
