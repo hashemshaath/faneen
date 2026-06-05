@@ -366,6 +366,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/business-draft" element={<ProtectedRoute><DashboardBusinessDraft /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 1 — Business Profile hub. */}
           <Route path="/dashboard/business-edit" element={<ProtectedRoute><DashboardBusinessProfileHub /></ProtectedRoute>} />
+          <Route path="/dashboard/branches" element={<ProtectedRoute><DashboardBranches /></ProtectedRoute>} />
           <Route path="/dashboard/entities" element={<Navigate to="/dashboard/business-edit?tab=entities" replace />} />
           <Route path="/dashboard/entities/:id" element={<ProtectedRoute><DashboardEntityDetail /></ProtectedRoute>} />
           <Route path="/dashboard/communication-preferences" element={<ProtectedRoute><DashboardCommunicationPreferences /></ProtectedRoute>} />
