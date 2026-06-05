@@ -238,7 +238,7 @@ export function filterGrowthInsights(
     case 'missing_services':     return insights.filter((i) => i.business.sectors.length === 0);
     case 'missing_brands':       return insights.filter((i) => i.business.brands_count === 0);
     case 'missing_address':      return insights.filter((i) => !i.business.address || typeof i.business.latitude !== 'number');
-    case 'low_quality':          return insights.filter((i) => i.quality.score < 70);
+    case 'low_quality':          return insights.filter((i) => i.quality.score < 80);
     case 'low_readiness':        return insights.filter((i) => i.readiness.score < 60);
     case 'pending_verification': return insights.filter((i) => !i.business.is_verified || i.stage === 'review_pending');
     case 'pending_enrichment':   return insights.filter((i) => i.stage === 'imported' || i.stage === 'discovered');
