@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   MapPin, Phone, Mail, Globe, MessageCircle, ArrowLeft, ExternalLink,
   Star, UserCog, Instagram, Linkedin, Facebook, Youtube, Building2,
-  Loader2, Boxes, Tag, Navigation, Heart, ChevronRight,
+  Loader2, Tag, Navigation, Heart, Send, MessageSquare, Boxes,
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -23,13 +23,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { BranchReviews } from '@/components/branch/BranchReviews';
 import { toast } from 'sonner';
 import { RevealPhoneButton } from '@/components/branch/RevealPhoneButton';
-import { ShareMenu } from '@/components/branch/ShareMenu';
 import { BranchVisitCounter } from '@/components/branch/BranchVisitCounter';
 import { useBranchVisits } from '@/hooks/useBranchVisits';
 import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
+
+// Lazy-load heavy / below-the-fold pieces to keep BranchDetail's first paint light.
+const ShareMenu = lazy(() => import('@/components/branch/ShareMenu').then(m => ({ default: m.ShareMenu })));
+const BranchReviews = lazy(() => import('@/components/branch/BranchReviews').then(m => ({ default: m.BranchReviews })));
+const BranchReviewForm = lazy(() => import('@/components/branch/BranchReviewForm').then(m => ({ default: m.BranchReviewForm })));
+const BranchInquiryForm = lazy(() => import('@/components/branch/BranchInquiryForm').then(m => ({ default: m.BranchInquiryForm })));
+const BranchServicesSection = lazy(() => import('@/components/branch/BranchServicesSection').then(m => ({ default: m.BranchServicesSection })));
+
+const LazyFallback: React.FC = () => (
+  <div className="flex justify-center py-6"><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /></div>
+);
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
@@ -72,7 +81,7 @@ interface BusinessLite {
   logo_url: string | null;
 }
 
-interface ServiceCard { id: string; name_ar: string; name_en: string | null; price_from: number | null; currency_code: string }
+interface ServiceCard { id: string; name_ar: string; name_en: string | null; price_from: number | null; currency_code: string; category_id: string | null }
 interface PromotionCard { id: string; title_ar: string; title_en: string | null; image_url: string | null; offer_price: number | null; original_price: number | null; currency_code: string }
 
 const BranchDetail: React.FC = () => {
@@ -187,7 +196,7 @@ const BranchDetail: React.FC = () => {
       // If branch has explicit links → show only those. Else show all active business services.
       const { data } = await listServicesByBusiness<ServiceCard>({
         businessId: branch!.business_id,
-        select: 'id, name_ar, name_en, price_from, currency_code, is_active',
+        select: 'id, name_ar, name_en, price_from, currency_code, is_active, category_id',
         activeOnly: true,
       });
       const all = (data ?? []) as ServiceCard[];
@@ -426,6 +435,7 @@ const BranchDetail: React.FC = () => {
     salesManager && { id: 'manager',  label: t(isRTL, 'مدير المبيعات', 'Sales manager') },
     (services?.length ?? 0) > 0    && { id: 'services',  label: t(isRTL, 'الخدمات',  'Services') },
     (promotions?.length ?? 0) > 0  && { id: 'promotions',label: t(isRTL, 'العروض',   'Offers') },
+    { id: 'inquiry',   label: t(isRTL, 'استفسار',   'Inquiry') },
     { id: 'reviews',   label: t(isRTL, 'التقييمات','Reviews') },
     (siblings?.length ?? 0) > 0    && { id: 'siblings',  label: t(isRTL, 'فروع أخرى','Other branches') },
   ].filter(Boolean) as Array<{ id: string; label: string }>;
@@ -465,8 +475,15 @@ const BranchDetail: React.FC = () => {
             <div className="flex flex-row items-start gap-3 sm:gap-6">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-accent/20 bg-background shadow-lg dark:border-accent/30 sm:h-24 sm:w-24 sm:rounded-3xl">
                 {business?.logo_url ? (
-                  
-                  <img src={business.logo_url} alt={businessName} className="h-full w-full object-cover" loading="lazy" />
+                  <img
+                    src={business.logo_url}
+                    alt={businessName}
+                    width={96}
+                    height={96}
+                    decoding="async"
+                    fetchPriority="high"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <span className="font-heading text-2xl font-black text-accent sm:text-4xl">
                     {(branchName || businessName || 'ق').charAt(0)}
@@ -555,7 +572,8 @@ const BranchDetail: React.FC = () => {
                   <Heart className={`w-3.5 h-3.5 ${fav ? 'fill-current' : ''}`} />
                   {fav ? t(isRTL, 'محفوظ', 'Saved') : t(isRTL, 'حفظ', 'Save')}
                 </Button>
-                <ShareMenu
+                <Suspense fallback={<span className="inline-block w-9 h-9" />}>
+                  <ShareMenu
                   branchId={branch.id}
                   url={shareUrl}
                   title={`${branchName} — ${businessName}`}
@@ -564,7 +582,8 @@ const BranchDetail: React.FC = () => {
                     `أنصحك بالاطلاع على ${branchName} — مزود معتمد على قِطاعات`,
                     `I recommend checking out ${branchName} — verified on Qitaat`,
                   )}
-                />
+                  />
+                </Suspense>
             </div>
           </div>
         </div>
@@ -690,7 +709,15 @@ const BranchDetail: React.FC = () => {
                 <div className="flex items-center gap-4">
                   {salesManager.avatar_url ? (
                      
-                    <img src={salesManager.avatar_url} alt="" loading="lazy" className="w-14 h-14 rounded-full object-cover border" />
+                    <img
+                      src={salesManager.avatar_url}
+                      alt={salesManager.full_name ?? ''}
+                      width={56}
+                      height={56}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-14 h-14 rounded-full object-cover border"
+                    />
                   ) : (
                     <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
                       {(salesManager.full_name ?? '?').slice(0,1)}
@@ -718,38 +745,31 @@ const BranchDetail: React.FC = () => {
           )}
 
           {(services?.length ?? 0) > 0 && (
-            <Card id="services" className="scroll-mt-32">
-              <CardContent className="p-6 space-y-4">
-                <h2 className="font-semibold text-lg flex items-center gap-2">
-                  <Boxes className="w-4 h-4 text-primary" />
-                  {t(isRTL, 'المنتجات والخدمات', 'Products & Services')}
-                </h2>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {services!.map(s => (
-                    <div key={s.id} className="group p-4 rounded-xl border border-border/60 hover-lift hover:border-primary/40 transition flex flex-col gap-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-medium leading-snug" dir="auto">{isRTL ? s.name_ar : (s.name_en || s.name_ar)}</p>
-                        <Badge variant="outline" className="shrink-0 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px]">
-                          {t(isRTL, 'متوفّر', 'Available')}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between mt-auto pt-2">
-                        {s.price_from != null ? (
-                          <p className="text-sm text-primary font-semibold tech-content">
-                            {t(isRTL, 'من', 'From')} {s.price_from} <span className="text-xs text-muted-foreground">{s.currency_code}</span>
-                          </p>
-                        ) : <span />}
-                        <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground group-hover:text-primary transition">
-                          {t(isRTL, 'استفسار', 'Inquire')}
-                          <ChevronRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <Suspense fallback={<LazyFallback />}>
+              <BranchServicesSection
+                branchId={branch.id}
+                businessId={branch.business_id}
+                services={services!}
+              />
+            </Suspense>
           )}
+
+          <Card id="inquiry" className="scroll-mt-32">
+            <CardContent className="p-6 space-y-3">
+              <h2 className="font-semibold text-lg flex items-center gap-2">
+                <Send className="w-4 h-4 text-primary" />
+                {t(isRTL, 'استفسار عام عن الفرع', 'General branch inquiry')}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {t(isRTL,
+                  'أرسل استفسارك وسيتم إنشاء سجل داخل حسابك مع متابعة حالة الطلب.',
+                  'Send an inquiry — a record will be created in your account with live status tracking.')}
+              </p>
+              <Suspense fallback={<LazyFallback />}>
+                <BranchInquiryForm branchId={branch.id} businessId={branch.business_id} compact />
+              </Suspense>
+            </CardContent>
+          </Card>
 
           {(promotions?.length ?? 0) > 0 && (
             <Card id="promotions" className="scroll-mt-32">
@@ -763,7 +783,15 @@ const BranchDetail: React.FC = () => {
                     <div key={p.id} className="p-4 rounded-xl border border-border/60 hover-lift">
                       {p.image_url && (
                          
-                        <img src={p.image_url} alt="" loading="lazy" className="w-full aspect-video object-cover rounded-lg mb-3" />
+                        <img
+                          src={p.image_url}
+                          alt={isRTL ? p.title_ar : (p.title_en || p.title_ar)}
+                          width={640}
+                          height={360}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full aspect-video object-cover rounded-lg mb-3"
+                        />
                       )}
                       <p className="font-medium" dir="auto">{isRTL ? p.title_ar : (p.title_en || p.title_ar)}</p>
                       {p.offer_price != null && (
@@ -781,8 +809,13 @@ const BranchDetail: React.FC = () => {
             </Card>
           )}
 
-          <div id="reviews" className="scroll-mt-32">
-            <BranchReviews branchId={branch.id} businessId={branch.business_id} />
+          <div id="reviews" className="scroll-mt-32 space-y-4">
+            <Suspense fallback={<LazyFallback />}>
+              <BranchReviews branchId={branch.id} businessId={branch.business_id} />
+            </Suspense>
+            <Suspense fallback={<LazyFallback />}>
+              <BranchReviewForm branchId={branch.id} businessId={branch.business_id} />
+            </Suspense>
           </div>
 
           {(siblings?.length ?? 0) > 0 && (
