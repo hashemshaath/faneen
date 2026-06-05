@@ -554,6 +554,7 @@ const BusinessProfile = () => {
                   <TabsContent value="branches" className="mt-0">
                   <BranchesTab
                     businessId={business.id}
+                    businessName={businessName}
                     isAuthenticated={!!user}
                     onRequestContact={() => handleContactClick("branches_tab")}
                     onRevealContact={handleContactReveal}

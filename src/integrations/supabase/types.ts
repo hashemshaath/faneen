@@ -16002,53 +16002,77 @@ export type Database = {
       business_branches_public: {
         Row: {
           address: string | null
+          building_number: string | null
           business_id: string | null
+          city_id: string | null
+          country_id: string | null
           created_at: string | null
+          customer_service_phone: string | null
           district: string | null
           id: string | null
           is_active: boolean | null
           is_main: boolean | null
           latitude: number | null
           longitude: number | null
+          mobile: string | null
           name_ar: string | null
           name_en: string | null
+          phone: string | null
           region: string | null
+          slug: string | null
           sort_order: number | null
           street_name: string | null
+          unified_number: string | null
           website: string | null
         }
         Insert: {
           address?: string | null
+          building_number?: string | null
           business_id?: string | null
+          city_id?: string | null
+          country_id?: string | null
           created_at?: string | null
+          customer_service_phone?: string | null
           district?: string | null
           id?: string | null
           is_active?: boolean | null
           is_main?: boolean | null
           latitude?: number | null
           longitude?: number | null
+          mobile?: string | null
           name_ar?: string | null
           name_en?: string | null
+          phone?: string | null
           region?: string | null
+          slug?: string | null
           sort_order?: number | null
           street_name?: string | null
+          unified_number?: string | null
           website?: string | null
         }
         Update: {
           address?: string | null
+          building_number?: string | null
           business_id?: string | null
+          city_id?: string | null
+          country_id?: string | null
           created_at?: string | null
+          customer_service_phone?: string | null
           district?: string | null
           id?: string | null
           is_active?: boolean | null
           is_main?: boolean | null
           latitude?: number | null
           longitude?: number | null
+          mobile?: string | null
           name_ar?: string | null
           name_en?: string | null
+          phone?: string | null
           region?: string | null
+          slug?: string | null
           sort_order?: number | null
           street_name?: string | null
+          unified_number?: string | null
           website?: string | null
         }
         Relationships: [
@@ -16064,6 +16088,20 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_branches_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_branches_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
             referencedColumns: ["id"]
           },
         ]

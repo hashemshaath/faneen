@@ -202,24 +202,15 @@ export const useBranches = (businessId: string | undefined) =>
     queryFn: async () => {
       const { data } = await listBranchesByBusiness<BranchWithJoins>({
         businessId: businessId!,
-        // PERF-1D.3 — explicit branch fields used by BranchesTab. Joins unchanged.
-        // sort_order/is_main filters/order applied server-side by wrapper.
-        // DB-GOVERNANCE-2 — kept on the private `business_branches` table because
-        // BranchesTab renders contact_person/phone/email/customer_service_phone/
-        // unified_number/building_number/cities/countries which are intentionally
-        // not exposed by `business_branches_public`. Anonymous visitors are
-        // therefore filtered out by table RLS (no anon SELECT policy), which is
-        // the existing safe behavior. Authenticated owners/staff/admins keep
-        // full visibility. The view was strengthened (parent approval enforced)
-        // and `source: 'public'` on the wrapper is reserved for a future,
-        // explicitly-anon BusinessProfile branches surface.
+        // Public BusinessProfile is consumed by anonymous visitors, so route through
+        // the public view (parent approval + is_active enforced). City/country joins
+        // are not available on the view; UI falls back to district/region/street_name.
+        source: 'public',
         select:
-          "id, name_ar, name_en, is_main, " +
-          "district, street_name, building_number, " +
-          "contact_person, phone, mobile, unified_number, customer_service_phone, " +
-          "email, website, latitude, longitude, " +
-          "cities(name_ar, name_en), countries(name_ar, name_en)",
-        activeOnly: true,
+          "id, name_ar, name_en, slug, is_main, " +
+          "district, region, street_name, building_number, " +
+          "phone, mobile, unified_number, customer_service_phone, " +
+          "website, latitude, longitude",
         order: [
           { column: "is_main", ascending: false },
           { column: "sort_order" },

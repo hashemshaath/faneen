@@ -538,6 +538,7 @@ export const ReviewsTab = ({ business }: { business: any }) => {
 
 interface BranchesTabProps {
   businessId: string;
+  businessName?: string;
   isAuthenticated?: boolean;
   onRequestContact?: () => void;
   onRevealContact?: (kind: "phone" | "email") => void;
@@ -545,6 +546,7 @@ interface BranchesTabProps {
 
 export const BranchesTab = ({
   businessId,
+  businessName,
   isAuthenticated = false,
   onRequestContact,
   onRevealContact,
@@ -589,10 +591,9 @@ export const BranchesTab = ({
       )}
       {branches.map((branch, index) => {
         const name = getLocalizedValue(language, branch.name_ar, branch.name_en);
-        const cityName = getLocalizedValue(language, branch.cities?.name_ar, branch.cities?.name_en);
-        const countryName = getLocalizedValue(language, branch.countries?.name_ar, branch.countries?.name_en);
         const addressParts = [
           branch.district,
+          branch.region,
           branch.street_name,
           branch.building_number && (language === "ar" ? `مبنى ${branch.building_number}` : `Bldg ${branch.building_number}`),
         ].filter(Boolean);
@@ -636,6 +637,11 @@ export const BranchesTab = ({
                   <MapPinned className="h-5 w-5 text-accent sm:h-6 sm:w-6" />
                 </div>
                 <div className="min-w-0 flex-1">
+                  {businessName && (
+                    <p className="truncate text-[11px] font-medium text-muted-foreground/80">
+                      {businessName}
+                    </p>
+                  )}
                   <div className="flex items-center gap-2">
                     <h3 className="truncate font-heading text-sm font-bold text-foreground sm:text-base">{name}</h3>
                     {branch.is_main && (
@@ -643,11 +649,6 @@ export const BranchesTab = ({
                         {language === "ar" ? "رئيسي" : "Main"}
                       </Badge>
                     )}
-                  </div>
-                  <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    {cityName && <span>{cityName}</span>}
-                    {cityName && countryName && <span>•</span>}
-                    {countryName && <span>{countryName}</span>}
                   </div>
                 </div>
               </div>
@@ -704,15 +705,35 @@ export const BranchesTab = ({
 
             {branch.latitude && branch.longitude && (
               <div className="px-4 pb-4 sm:px-5 sm:pb-5">
-                <a
-                  href={`https://www.google.com/maps?q=${branch.latitude},${branch.longitude}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[10px] text-accent hover:underline sm:text-xs"
+                <div className="flex flex-wrap items-center gap-3">
+                  <a
+                    href={`https://www.google.com/maps?q=${branch.latitude},${branch.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-[10px] text-accent hover:underline sm:text-xs"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    {language === "ar" ? "فتح في خرائط Google" : "Open in Google Maps"}
+                  </a>
+                  {branch.slug && (
+                    <Link
+                      to={`/branch/${branch.slug}`}
+                      className="inline-flex items-center gap-1.5 text-[10px] font-medium text-accent hover:underline sm:text-xs"
+                    >
+                      {language === "ar" ? "صفحة الفرع" : "Branch page"}
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
+            {!(branch.latitude && branch.longitude) && branch.slug && (
+              <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+                <Link
+                  to={`/branch/${branch.slug}`}
+                  className="inline-flex items-center gap-1.5 text-[10px] font-medium text-accent hover:underline sm:text-xs"
                 >
-                  <ExternalLink className="h-3 w-3" />
-                  {language === "ar" ? "فتح في الخرائط" : "Open in Maps"}
-                </a>
+                  {language === "ar" ? "صفحة الفرع" : "Branch page"}
+                </Link>
               </div>
             )}
           </article>
