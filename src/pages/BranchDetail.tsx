@@ -475,8 +475,15 @@ const BranchDetail: React.FC = () => {
             <div className="flex flex-row items-start gap-3 sm:gap-6">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-accent/20 bg-background shadow-lg dark:border-accent/30 sm:h-24 sm:w-24 sm:rounded-3xl">
                 {business?.logo_url ? (
-                  
-                  <img src={business.logo_url} alt={businessName} className="h-full w-full object-cover" loading="lazy" />
+                  <img
+                    src={business.logo_url}
+                    alt={businessName}
+                    width={96}
+                    height={96}
+                    decoding="async"
+                    fetchPriority="high"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <span className="font-heading text-2xl font-black text-accent sm:text-4xl">
                     {(branchName || businessName || 'ق').charAt(0)}
