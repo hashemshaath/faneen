@@ -86,35 +86,45 @@ interface BizRow {
   created_at: string;
 }
 
-/* ─── KPI card ─── */
+/* ─── KPI card — Fluent/industrial cleaner look ─── */
 const Kpi: React.FC<{
   icon: React.ElementType; label: string; value: number | string;
   tone: 'primary' | 'success' | 'info' | 'warning' | 'accent';
-  to?: string; hint?: string;
-}> = ({ icon: Icon, label, value, tone, to, hint }) => {
-  const toneMap = {
-    primary: 'from-primary/10 to-primary/5 text-primary',
-    success: 'from-success/10 to-success/5 text-success',
-    info:    'from-info/10 to-info/5 text-info',
-    warning: 'from-warning/10 to-warning/5 text-warning',
-    accent:  'from-accent/10 to-accent/5 text-accent',
+  to?: string; hint?: string; trend?: string;
+}> = ({ icon: Icon, label, value, tone, to, hint, trend }) => {
+  const toneText = {
+    primary: 'text-primary',
+    success: 'text-success',
+    info:    'text-info',
+    warning: 'text-warning',
+    accent:  'text-accent',
+  } as const;
+  const trendBg = {
+    primary: 'bg-primary/10 text-primary',
+    success: 'bg-success/10 text-success',
+    info:    'bg-info/10 text-info',
+    warning: 'bg-warning/10 text-warning',
+    accent:  'bg-accent/10 text-accent',
   } as const;
   const body = (
-    <div className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${toneMap[tone]} p-4 transition-all hover:shadow-md hover-lift h-full`}>
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-card/60 backdrop-blur flex items-center justify-center">
-          <Icon className="w-5 h-5" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-2xl font-bold font-heading leading-none tech-content text-foreground">{value}</p>
-          <p className="text-[11px] text-muted-foreground mt-1 truncate">{label}</p>
-          {hint && <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate">{hint}</p>}
-        </div>
-        {to && <DirectionalIcon kind="forward" className="w-3.5 h-3.5 text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity" />}
+    <div className="group/kpi relative h-full rounded-2xl border border-border/50 bg-card p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-border transition-all">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{label}</p>
+        <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg bg-muted/40 ${toneText[tone]} shrink-0`}>
+          <Icon className="w-3.5 h-3.5" />
+        </span>
       </div>
+      <div className="flex items-end justify-between gap-2 mt-2">
+        <h3 className="text-2xl sm:text-3xl font-bold font-heading leading-none tech-content text-foreground">{value}</h3>
+        {trend && (
+          <span className={`text-[10px] font-semibold px-2 py-1 rounded-full ${trendBg[tone]} shrink-0`}>{trend}</span>
+        )}
+      </div>
+      {hint && <p className="text-[10px] text-muted-foreground mt-2 truncate">{hint}</p>}
+      {to && <DirectionalIcon kind="forward" className="absolute top-3 w-3 h-3 text-muted-foreground/40 opacity-0 group-hover/kpi:opacity-100 transition-opacity" style={{ insetInlineEnd: '0.75rem' }} />}
     </div>
   );
-  return to ? <Link to={to} className="group block">{body}</Link> : body;
+  return to ? <Link to={to} className="block h-full">{body}</Link> : body;
 };
 
 /* ─── Tier color helper ─── */
