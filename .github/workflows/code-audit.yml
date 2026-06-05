@@ -44,6 +44,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: ESLint (zero errors, warnings ceiling)
+        # Enforces 0 ESLint errors and prevents regression beyond the
+        # current warning baseline. Lower this number as warnings are fixed.
+        run: npx eslint . --max-warnings=80
+
       - name: Brand Audit (faneen residue check)
         run: node scripts/brand-audit.mjs
 
