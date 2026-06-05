@@ -396,6 +396,9 @@ const AdminCategories = () => {
         name_ar: form.name_ar.trim(), name_en: form.name_en.trim(),
         slug: form.slug.trim() || form.name_en.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
         description_ar: form.description_ar || null, description_en: form.description_en || null,
+        seo_title_ar: form.seo_title_ar || null, seo_title_en: form.seo_title_en || null,
+        seo_description_ar: form.seo_description_ar || null, seo_description_en: form.seo_description_en || null,
+        featured_keywords: form.featured_keywords.split(',').map(k => k.trim()).filter(Boolean),
         icon: form.icon || null, parent_id: form.parent_id || null,
         is_active: form.is_active, sort_order: form.sort_order,
       };
@@ -445,6 +448,9 @@ const AdminCategories = () => {
     setForm({
       name_ar: cat.name_ar, name_en: cat.name_en, slug: cat.slug,
       description_ar: cat.description_ar || '', description_en: cat.description_en || '',
+      seo_title_ar: cat.seo_title_ar || '', seo_title_en: cat.seo_title_en || '',
+      seo_description_ar: cat.seo_description_ar || '', seo_description_en: cat.seo_description_en || '',
+      featured_keywords: (cat.featured_keywords ?? []).join(', '),
       icon: cat.icon || '', parent_id: cat.parent_id, is_active: cat.is_active, sort_order: cat.sort_order,
     });
     setShowForm(true);
@@ -457,6 +463,9 @@ const AdminCategories = () => {
       name_en: cat.name_en + ' (copy)',
       slug: cat.slug + '-copy',
       description_ar: cat.description_ar || '', description_en: cat.description_en || '',
+      seo_title_ar: cat.seo_title_ar || '', seo_title_en: cat.seo_title_en || '',
+      seo_description_ar: cat.seo_description_ar || '', seo_description_en: cat.seo_description_en || '',
+      featured_keywords: (cat.featured_keywords ?? []).join(', '),
       icon: cat.icon || '', parent_id: cat.parent_id,
       is_active: cat.is_active, sort_order: cat.sort_order + 1,
     });
