@@ -339,9 +339,11 @@ const BlogPost = () => {
     return {
       '@context': 'https://schema.org',
       '@type': 'BlogPosting',
-      headline: post.title_ar,
-      alternativeHeadline: post.title_en,
-      description: post.meta_description_ar || post.excerpt_ar,
+      headline: language === 'ar' ? (post.title_ar || post.title_en) : (post.title_en || post.title_ar),
+      alternativeHeadline: language === 'ar' ? post.title_en : post.title_ar,
+      description: language === 'ar'
+        ? (post.meta_description_ar || post.excerpt_ar || post.meta_description_en || post.excerpt_en)
+        : (post.meta_description_en || post.excerpt_en || post.meta_description_ar || post.excerpt_ar),
       image,
       ...(datePublished ? { datePublished: datePublished } : {}),
       ...(dateModified ? { dateModified: dateModified } : {}),
@@ -365,7 +367,7 @@ const BlogPost = () => {
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
           { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'المدونة' : 'Blog', item: 'https://qitaat.com/blog' },
-          { '@type': 'ListItem', position: 3, name: post.title_ar },
+          { '@type': 'ListItem', position: 3, name: language === 'ar' ? (post.title_ar || post.title_en) : (post.title_en || post.title_ar) },
         ],
       },
     };
