@@ -12547,6 +12547,93 @@ export type Database = {
           },
         ]
       }
+      provider_growth_pipeline: {
+        Row: {
+          assigned_to: string | null
+          business_id: string | null
+          created_at: string
+          id: string
+          lead_id: string | null
+          metadata: Json
+          notes: string | null
+          previous_stage:
+            | Database["public"]["Enums"]["provider_growth_stage"]
+            | null
+          published_at: string | null
+          quality_score: number | null
+          readiness_score: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: string | null
+          source_ref: string | null
+          stage: Database["public"]["Enums"]["provider_growth_stage"]
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          metadata?: Json
+          notes?: string | null
+          previous_stage?:
+            | Database["public"]["Enums"]["provider_growth_stage"]
+            | null
+          published_at?: string | null
+          quality_score?: number | null
+          readiness_score?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string | null
+          source_ref?: string | null
+          stage?: Database["public"]["Enums"]["provider_growth_stage"]
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          metadata?: Json
+          notes?: string | null
+          previous_stage?:
+            | Database["public"]["Enums"]["provider_growth_stage"]
+            | null
+          published_at?: string | null
+          quality_score?: number | null
+          readiness_score?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string | null
+          source_ref?: string | null
+          stage?: Database["public"]["Enums"]["provider_growth_stage"]
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_growth_pipeline_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_growth_pipeline_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_installment_settings: {
         Row: {
           business_id: string
@@ -20247,6 +20334,15 @@ export type Database = {
         | "rejected"
         | "suspended"
       promotion_type: "ad" | "offer" | "video"
+      provider_growth_stage:
+        | "discovered"
+        | "imported"
+        | "enriched"
+        | "review_pending"
+        | "verified"
+        | "published"
+        | "rejected"
+        | "archived"
       provider_lead_channel: "phone" | "whatsapp" | "email"
       provider_lead_status:
         | "new"
@@ -20509,6 +20605,16 @@ export const Constants = {
         "suspended",
       ],
       promotion_type: ["ad", "offer", "video"],
+      provider_growth_stage: [
+        "discovered",
+        "imported",
+        "enriched",
+        "review_pending",
+        "verified",
+        "published",
+        "rejected",
+        "archived",
+      ],
       provider_lead_channel: ["phone", "whatsapp", "email"],
       provider_lead_status: [
         "new",
