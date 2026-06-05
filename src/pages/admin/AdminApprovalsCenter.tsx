@@ -678,6 +678,8 @@ const AdminApprovalsCenter: React.FC = () => {
           }
         />
 
+        <UnifiedApprovalsCenterBanner />
+
         {/* Filter chips + Search */}
         <div className="rounded-2xl border border-border/40 bg-card p-3 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
