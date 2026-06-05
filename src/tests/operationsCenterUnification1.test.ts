@@ -69,7 +69,9 @@ describe('OPERATIONS-CENTER-UNIFICATION-1', () => {
     const src = read(PAGE);
     // The page renders SOURCE_SYSTEM_ROUTES via .map; the import alone proves
     // wiring, and we additionally check the registry covers all 15 systems.
-    expect(src).toContain('SOURCE_SYSTEM_ROUTES');
+    // The page renders the routes via snap.sources.map (snap.sources comes
+    // from the service wrapper which re-exports SOURCE_SYSTEM_ROUTES).
+    expect(src).toMatch(/snap\.sources\.map/);
     expect(SOURCE_SYSTEM_ROUTES.length).toBeGreaterThanOrEqual(15);
     for (const s of SOURCE_SYSTEM_ROUTES) {
       expect(typeof s.route).toBe('string');
