@@ -13,6 +13,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import {
   listBranchServiceIds,
   listBranchPromotionIds,
+  listServicesByBusiness,
 } from '@/modules/catalog';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -136,14 +137,15 @@ const BranchDetail: React.FC = () => {
     enabled: Boolean(branch?.business_id),
     queryFn: async () => {
       // If branch has explicit links → show only those. Else show all active business services.
-      const base = supabase
-        .from('business_services')
-        .select('id, name_ar, name_en, price_from, currency_code, is_active')
-        .eq('business_id', branch!.business_id)
-        .eq('is_active', true);
-      const q = (linkedServiceIds?.length ?? 0) > 0 ? base.in('id', linkedServiceIds!) : base;
-      const { data } = await q.limit(24);
-      return (data ?? []) as ServiceCard[];
+      const { data } = await listServicesByBusiness<ServiceCard>({
+        businessId: branch!.business_id,
+        select: 'id, name_ar, name_en, price_from, currency_code, is_active',
+        activeOnly: true,
+      });
+      const all = (data ?? []) as ServiceCard[];
+      const linked = linkedServiceIds ?? [];
+      const filtered = linked.length > 0 ? all.filter(s => linked.includes(s.id)) : all;
+      return filtered.slice(0, 24);
     },
   });
 
