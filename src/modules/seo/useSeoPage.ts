@@ -20,34 +20,36 @@ export interface UseSeoPageOptions extends SeoInputs {
 }
 
 export function useSeoPage(options: UseSeoPageOptions) {
-  const built = useMemo(() => buildSeo(options), [
-    options.kind,
-    options.lang,
-    options.name,
-    options.activity,
-    options.city,
-    options.category,
-    options.brand,
-    options.service,
-    options.customTitle,
-    options.customDescription,
-    options.rawDescription,
-    options.keywords?.join('|'),
-  ]);
+  const {
+    kind, lang, name, activity, city, category, brand, service,
+    customTitle, customDescription, rawDescription, keywords,
+    canonical, ogImage, ogType, noindex, jsonLd,
+  } = options;
+  const keywordsKey = keywords?.join('|');
+  const built = useMemo(
+    () => buildSeo({
+      kind, lang, name, activity, city, category, brand, service,
+      customTitle, customDescription, rawDescription, keywords,
+    }),
+    // keywordsKey stands in for the keywords array identity
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [kind, lang, name, activity, city, category, brand, service,
+     customTitle, customDescription, rawDescription, keywordsKey],
+  );
 
   usePageMeta({
     title: built.title,
     description: built.description,
     keywords: built.keywords,
-    canonical: options.canonical,
-    ogImage: options.ogImage,
-    ogType: options.ogType,
-    noindex: options.noindex,
+    canonical,
+    ogImage,
+    ogType,
+    noindex,
     ogTitle: built.title,
     ogDescription: built.description,
   });
 
-  useMultiJsonLd(options.jsonLd ?? null);
+  useMultiJsonLd(jsonLd ?? null);
 
   return built;
 }
