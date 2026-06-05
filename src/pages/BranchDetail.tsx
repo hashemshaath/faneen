@@ -727,38 +727,31 @@ const BranchDetail: React.FC = () => {
           )}
 
           {(services?.length ?? 0) > 0 && (
-            <Card id="services" className="scroll-mt-32">
-              <CardContent className="p-6 space-y-4">
-                <h2 className="font-semibold text-lg flex items-center gap-2">
-                  <Boxes className="w-4 h-4 text-primary" />
-                  {t(isRTL, 'المنتجات والخدمات', 'Products & Services')}
-                </h2>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {services!.map(s => (
-                    <div key={s.id} className="group p-4 rounded-xl border border-border/60 hover-lift hover:border-primary/40 transition flex flex-col gap-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-medium leading-snug" dir="auto">{isRTL ? s.name_ar : (s.name_en || s.name_ar)}</p>
-                        <Badge variant="outline" className="shrink-0 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px]">
-                          {t(isRTL, 'متوفّر', 'Available')}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between mt-auto pt-2">
-                        {s.price_from != null ? (
-                          <p className="text-sm text-primary font-semibold tech-content">
-                            {t(isRTL, 'من', 'From')} {s.price_from} <span className="text-xs text-muted-foreground">{s.currency_code}</span>
-                          </p>
-                        ) : <span />}
-                        <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground group-hover:text-primary transition">
-                          {t(isRTL, 'استفسار', 'Inquire')}
-                          <ChevronRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <Suspense fallback={<LazyFallback />}>
+              <BranchServicesSection
+                branchId={branch.id}
+                businessId={branch.business_id}
+                services={services!}
+              />
+            </Suspense>
           )}
+
+          <Card id="inquiry" className="scroll-mt-32">
+            <CardContent className="p-6 space-y-3">
+              <h2 className="font-semibold text-lg flex items-center gap-2">
+                <Send className="w-4 h-4 text-primary" />
+                {t(isRTL, 'استفسار عام عن الفرع', 'General branch inquiry')}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {t(isRTL,
+                  'أرسل استفسارك وسيتم إنشاء سجل داخل حسابك مع متابعة حالة الطلب.',
+                  'Send an inquiry — a record will be created in your account with live status tracking.')}
+              </p>
+              <Suspense fallback={<LazyFallback />}>
+                <BranchInquiryForm branchId={branch.id} businessId={branch.business_id} compact />
+              </Suspense>
+            </CardContent>
+          </Card>
 
           {(promotions?.length ?? 0) > 0 && (
             <Card id="promotions" className="scroll-mt-32">
@@ -790,8 +783,13 @@ const BranchDetail: React.FC = () => {
             </Card>
           )}
 
-          <div id="reviews" className="scroll-mt-32">
-            <BranchReviews branchId={branch.id} businessId={branch.business_id} />
+          <div id="reviews" className="scroll-mt-32 space-y-4">
+            <Suspense fallback={<LazyFallback />}>
+              <BranchReviews branchId={branch.id} businessId={branch.business_id} />
+            </Suspense>
+            <Suspense fallback={<LazyFallback />}>
+              <BranchReviewForm branchId={branch.id} businessId={branch.business_id} />
+            </Suspense>
           </div>
 
           {(siblings?.length ?? 0) > 0 && (
