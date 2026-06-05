@@ -256,7 +256,16 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false,
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirm, setConfirm] = useState<null | { action: 'approve' | 'reject'; items: UnifiedItem[] }>(null);
   const [bulkRunning, setBulkRunning] = useState(false);
+  const [publishing, setPublishing] = useState<Record<string, boolean>>({});
   const effectiveSearch = (externalSearch ?? '') || search;
+
+  // Switching into "All entities" should not be hidden by the default
+  // pending-only filter — auto-broaden to "all statuses" the first time.
+  useEffect(() => {
+    if (category === 'all_businesses' && status === 'pending') {
+      setStatus('all');
+    }
+  }, [category]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist filter selections (per-tab feel; this tab's state lives here).
   useEffect(() => {
