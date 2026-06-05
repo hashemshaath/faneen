@@ -6,14 +6,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Send, Building2, Layers, MessageSquare, Compass, Wrench, Tag, FileText, ShieldCheck } from 'lucide-react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { SECTORS_SEO_LIST } from '@/lib/sectors-seo';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 
 const SectorsHub: React.FC = () => {
   usePageMeta({
-    title: 'القطاعات | مزودو خدمات الألمنيوم والحديد والخشب والزجاج | قطاعات',
-    description:
-      'استكشف قطاعات الخدمات في منصة قطاعات، وابحث عن مزودي خدمات الألمنيوم، الحديد، الخشب، الزجاج، الستانلس ستيل، والتصنيع والتركيب في السعودية.',
+    title: buildSeoTitle({ kind: 'category', lang: 'ar', name: 'القطاعات' }),
+    description: buildSeoDescription({ kind: 'category', lang: 'ar', name: 'القطاعات', customDescription: 'استكشف قطاعات الخدمات في منصة قطاعات، وابحث عن مزودي خدمات الألمنيوم، الحديد، الخشب، الزجاج، الستانلس ستيل، والتصنيع والتركيب في السعودية.' }),
     canonical: 'https://qitaat.com/sectors',
     ogType: 'website',
   });
