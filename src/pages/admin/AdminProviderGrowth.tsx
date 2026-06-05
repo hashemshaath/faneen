@@ -1,10 +1,6 @@
 /**
  * PROVIDER-GROWTH-ENGINE-2 — Admin dashboard at /admin/provider-growth.
- *
- * Strict rules (verified by providerGrowthEngine2.test.ts):
- *  - No direct `@/integrations/supabase/client` imports. All data through
- *    `@/modules/providers/services/providerGrowthQueries`.
- *  - No bulk publishing. No crawlers. No outreach.
+ * All data flows through the providerGrowthQueries service wrapper.
  */
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
@@ -73,7 +69,7 @@ const AdminProviderGrowth: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <HelpLauncher pageKey={PAGE_KEY} />
+            <HelpLauncher pageKey="admin.provider-growth" />
             <Button asChild variant="outline" className="rounded-xl">
               <Link to="/admin/provider-growth/queue">{t('فتح قائمة العمليات', 'Open ops queue')}</Link>
             </Button>
