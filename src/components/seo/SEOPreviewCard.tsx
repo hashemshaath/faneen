@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useBi } from '@/components/common/Bilingual';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Card } from '@/components/ui/card';
 import { AlertTriangle, CheckCircle2, Globe, ImageOff } from 'lucide-react';
 import {
@@ -50,7 +50,7 @@ function bandColor(b: string) {
  * Renders BOTH languages (AR + EN) side-by-side using shared design tokens.
  */
 export function SEOPreviewCard(props: SEOPreviewCardProps) {
-  const { isRTL } = useBi();
+  const { isRTL } = useLanguage();
   const {
     kind, customTitle, customDescription, name, activity, city, category,
     rawDescription, url, ogImageUrl, focusKeyword,
