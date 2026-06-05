@@ -10,6 +10,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import {
   listBranchServiceIds,
   listBranchPromotionIds,
@@ -255,20 +256,29 @@ const BranchDetail: React.FC = () => {
   const locationLabel = branch
     ? [branch.region, branch.district].filter(Boolean).join('، ')
     : '';
+  const branchLang: 'ar' | 'en' = isRTL ? 'ar' : 'en';
+  const branchRawDesc = branch
+    ? ((isRTL ? branch.description_ar : (branch.description_en || branch.description_ar)) || '')
+    : '';
+  const seoBranchTitle = branch
+    ? buildSeoTitle({
+        kind: 'company',
+        lang: branchLang,
+        name: `${branchName} — ${businessName}`,
+        city: locationLabel || undefined,
+      })
+    : t(isRTL, 'فرع | قِطاعات', 'Branch | Qitaat');
   const seoDescription = branch
-    ? (
-        (isRTL ? branch.description_ar : (branch.description_en || branch.description_ar)) ||
-        (isRTL
-          ? `فرع ${branchName} التابع لـ${businessName}${locationLabel ? ` في ${locationLabel}` : ''} — العنوان، أرقام التواصل، الخدمات والتقييمات على قِطاعات.`
-          : `${branchName} branch of ${businessName}${locationLabel ? ` in ${locationLabel}` : ''} — address, contact numbers, services and reviews on Qitaat.`)
-      )
+    ? buildSeoDescription({
+        kind: 'company',
+        lang: branchLang,
+        name: `${branchName} — ${businessName}`,
+        city: locationLabel || undefined,
+        rawDescription: branchRawDesc,
+      })
     : undefined;
   usePageMeta({
-    title: branch
-      ? (isRTL
-          ? `${branchName} — ${businessName}${locationLabel ? ` · ${locationLabel}` : ''} | قِطاعات`
-          : `${branchName} — ${businessName}${locationLabel ? ` · ${locationLabel}` : ''} | Qitaat`)
-      : t(isRTL, 'فرع | قِطاعات', 'Branch | Qitaat'),
+    title: seoBranchTitle,
     description: seoDescription,
     ogTitle: branch ? `${branchName} — ${businessName}${locationLabel ? ` · ${locationLabel}` : ''}` : undefined,
     ogDescription: seoDescription,

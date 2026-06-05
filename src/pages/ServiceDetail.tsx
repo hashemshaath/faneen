@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, buildFaqPage, buildService, SITE_URL } from '@/lib/seo/structured-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,16 +27,13 @@ const ServiceDetail: React.FC = () => {
   const sectorName = service ? (isRTL ? SECTOR_LABEL[service.sector].ar : SECTOR_LABEL[service.sector].en) : '';
   const unitLabel = service ? (isRTL ? UNIT_LABEL[service.unit].ar : UNIT_LABEL[service.unit].en) : '';
 
+  const svcLang: 'ar' | 'en' = language === 'ar' ? 'ar' : 'en';
   usePageMeta({
     title: service
-      ? (isRTL
-          ? `${name} | مزودو خدمات البناء والتشييد | قِطاعات`
-          : `${name} | Construction service providers | Qitaat`)
+      ? buildSeoTitle({ kind: 'service', lang: svcLang, name, category: sectorName })
       : (isRTL ? 'الخدمة غير موجودة' : 'Service not found'),
     description: service
-      ? (isRTL
-          ? `استعرض مزودي خدمة ${name} ضمن قطاعات البناء والتشييد، مع تصنيف حسب القطاع والموقع والجهات المتخصصة على قِطاعات.`
-          : `Browse ${name} providers across construction sectors on Qitaat, filtered by sector, location and specialised firms.`)
+      ? buildSeoDescription({ kind: 'service', lang: svcLang, name, category: sectorName, rawDescription: desc })
       : (isRTL ? 'الخدمة غير موجودة' : 'Service not found'),
     keywords: service?.keywords.join(', '),
     canonical: service ? `${SITE_URL}/services/${service.slug}` : `${SITE_URL}/services`,

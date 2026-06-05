@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { usePageMeta, useJsonLd, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { useContentTracking } from '@/hooks/useContentTracking';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -273,9 +274,16 @@ const BlogPost = () => {
   const postTitle = post ? (language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)) : '';
   const postDesc = post ? (language === 'ar' ? (post.meta_description_ar || post.excerpt_ar) : (post.meta_description_en || post.excerpt_en || post.meta_description_ar || post.excerpt_ar)) : '';
 
+  const blogLang: 'ar' | 'en' = language === 'ar' ? 'ar' : 'en';
+  const blogSeoTitle = post
+    ? buildSeoTitle({ kind: 'blog', lang: blogLang, name: postTitle })
+    : 'جاري التحميل... | قِطاعات';
+  const blogSeoDesc = post
+    ? buildSeoDescription({ kind: 'blog', lang: blogLang, name: postTitle, rawDescription: postDesc })
+    : undefined;
   usePageMeta({
-    title: post ? `${postTitle} | مدونة قِطاعات` : 'جاري التحميل... | قِطاعات',
-    description: postDesc?.substring(0, 160) || undefined,
+    title: blogSeoTitle,
+    description: blogSeoDesc,
     canonical: post ? `https://qitaat.com/blog/${post.slug}` : undefined,
     ogType: 'article',
     ogImage:
@@ -287,7 +295,7 @@ const BlogPost = () => {
         subtitle: postDesc?.substring(0, 160) || undefined,
       }),
     ogTitle: post ? postTitle : undefined,
-    ogDescription: postDesc?.substring(0, 160) || undefined,
+    ogDescription: blogSeoDesc,
     keywords: post?.keywords?.join(', ') || post?.tags?.join(', ') || undefined,
   });
 
