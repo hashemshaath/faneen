@@ -2869,6 +2869,51 @@ const AdminBusinesses = () => {
             </div>
           </div>
         )}
+        {/* ─── Verify Confirmation Dialog ─── */}
+        <AlertDialog open={!!verifyConfirm} onOpenChange={(open) => { if (!open) setVerifyConfirm(null); }}>
+          <AlertDialogContent className="rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-info" />
+                {isRTL ? 'تأكيد التوثيق' : 'Confirm Verification'}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {verifyConfirm?.value
+                  ? (isRTL
+                    ? `هل أنت متأكد من توثيق حساب «${verifyConfirm.name}»؟ سيتم منحه علامة التوثيق الرسمية.`
+                    : `Are you sure you want to verify «${verifyConfirm.name}»? This will grant the official verification badge.`)
+                  : (isRTL
+                    ? `هل أنت متأكد من إلغاء توثيق حساب «${verifyConfirm.name}»؟ ستُحذف علامة التوثيق الرسمية.`
+                    : `Are you sure you want to unverify «${verifyConfirm.name}»? The official verification badge will be removed.`)
+                }
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-2">
+              <AlertDialogCancel asChild>
+                <Button variant="outline" className="rounded-xl">
+                  {isRTL ? 'إلغاء' : 'Cancel'}
+                </Button>
+              </AlertDialogCancel>
+              <AlertDialogAction asChild>
+                <Button
+                  variant={verifyConfirm?.value ? 'default' : 'destructive'}
+                  className="rounded-xl"
+                  onClick={() => {
+                    if (verifyConfirm) {
+                      toggleMutation.mutate({ id: verifyConfirm.id, field: 'is_verified', value: verifyConfirm.value });
+                      setVerifyConfirm(null);
+                    }
+                  }}
+                >
+                  {verifyConfirm?.value
+                    ? (isRTL ? 'نعم، توثيق' : 'Yes, Verify')
+                    : (isRTL ? 'نعم، إلغاء التوثيق' : 'Yes, Unverify')
+                  }
+                </Button>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
