@@ -25,6 +25,7 @@ import {
   type HelpAudience,
 } from '@/modules/helpCenter';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { fmtNum, fmtDate } from '@/lib/format';
 
 const pickTitle = (a: HelpArticle | HelpCategory, lang: 'ar' | 'en') => (lang === 'ar' ? a.title_ar : a.title_en);
