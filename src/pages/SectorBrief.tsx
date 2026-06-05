@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { ArrowLeft, Building2, MapPin, Send, Star } from 'lucide-react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { SECTORS_SEO, type SeoSectorSlug } from '@/lib/sectors-seo';
 import { SA_CITIES } from '@/lib/sa-cities';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
@@ -45,8 +46,8 @@ const SectorBrief: React.FC = () => {
   const searchHref = sector?.searchSector ? `/search?sector=${sector.searchSector}` : '/search';
 
   usePageMeta({
-    title: sector ? `${sector.shortName} – مزودون حسب المدينة | قطاعات` : 'القطاعات | قطاعات',
-    description: sector?.metaDescription ?? '',
+    title: buildSeoTitle({ kind: 'category', lang: 'ar', name: sector?.shortName }),
+    description: buildSeoDescription({ kind: 'category', lang: 'ar', name: sector?.shortName, customDescription: sector?.metaDescription ?? undefined }),
     canonical: pageUrl,
     ogType: 'website',
     ogTitle: sector?.h1,

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -48,8 +49,8 @@ const CompareProfiles = () => {
   }, [searchParams]);
 
   usePageMeta({
-    title: isRTL ? 'مقارنة أنظمة القطاعات | قِطاعات' : 'Compare Profile Systems | Qitaat',
-    description: isRTL ? 'قارن بين أنظمة قطاعات الألمنيوم والحديد من حيث المواصفات والمزايا' : 'Compare aluminum and iron profile systems by specifications and features',
+    title: buildSeoTitle({ kind: 'product', lang: isRTL ? 'ar' : 'en', name: isRTL ? 'مقارنة أنظمة القطاعات' : 'Compare Profile Systems' }),
+    description: buildSeoDescription({ kind: 'product', lang: isRTL ? 'ar' : 'en', customDescription: isRTL ? 'قارن بين أنظمة قطاعات الألمنيوم والحديد من حيث المواصفات والمزايا' : 'Compare aluminum and iron profile systems by specifications and features' }),
     canonical: selectedIds.length
       ? `https://qitaat.com/compare-profiles?ids=${[...selectedIds].sort().join(',')}`
       : 'https://qitaat.com/compare-profiles',

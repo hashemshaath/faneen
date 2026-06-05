@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -64,8 +65,8 @@ const Compare = () => {
   useEffect(() => { track.compareStart({}); }, []);
 
   usePageMeta({
-    title: isRTL ? 'مقارنة مزودي الخدمات | قِطاعات' : 'Compare Service Providers | Qitaat',
-    description: isRTL ? 'قارن بين مزودي خدمات الألمنيوم والحديد من حيث الأسعار والتقييمات والخدمات.' : 'Compare aluminum and iron service providers by price, ratings and services.',
+    title: buildSeoTitle({ kind: 'category', lang: isRTL ? 'ar' : 'en', name: isRTL ? 'مقارنة مزودي الخدمات' : 'Compare Service Providers' }),
+    description: buildSeoDescription({ kind: 'category', lang: isRTL ? 'ar' : 'en', customDescription: isRTL ? 'قارن بين مزودي خدمات الألمنيوم والحديد من حيث الأسعار والتقييمات والخدمات.' : 'Compare aluminum and iron service providers by price, ratings and services.' }),
     canonical: selectedIds.length
       ? `https://qitaat.com/compare?ids=${[...selectedIds].sort().join(',')}`
       : 'https://qitaat.com/compare',

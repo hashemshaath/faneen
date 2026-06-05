@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 // JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement:
 import { Navbar } from '@/components/layout/Navbar';
@@ -47,6 +48,7 @@ type CategoryBusinessRow = {
 const Categories = () => {
   const { slug } = useParams<{ slug?: string }>();
   const { isRTL, language } = useLanguage();
+  const lang = isRTL ? 'ar' as const : 'en' as const;
 
   const { data: categories = [], isLoading } = useQuery<CategoryRow[]>({
     queryKey: ['categories-page'],
@@ -93,19 +95,21 @@ const Categories = () => {
     enabled: !!selectedCategory?.id,
   });
 
+  const _legacyTitle = selectedCategory
+    ? sectorMeta
+      ? (isRTL
+          ? `${catName} — ${sectorMeta.tagline}`
+          : `${catName} — ${sectorMeta.tagline}`)
+      : (language === 'ar' ? `${catName} - دليل مزودي الخدمات` : `${catName} - Service Providers`)
+    : (language === 'ar' ? 'تصفح الأقسام والفئات' : 'Browse Categories');
+  const _legacyDesc = selectedCategory
+    ? sectorMeta
+      ? sectorMeta.description
+      : (language === 'ar' ? `تصفح أفضل مزودي خدمات ${catName} مع التقييمات والأسعار` : `Browse the best ${catName} service providers`)
+    : (language === 'ar' ? 'تصفح جميع أقسام وفئات خدمات الألمنيوم والحديد والزجاج والخشب' : 'Browse all aluminum, iron, glass and wood categories');
   usePageMeta({
-    title: selectedCategory
-      ? sectorMeta
-        ? (isRTL
-            ? `${catName} — ${sectorMeta.tagline} | قِطاعات`
-            : `${catName} — ${sectorMeta.tagline} | Qitaat`)
-        : (language === 'ar' ? `${catName} - دليل مزودي الخدمات | قِطاعات` : `${catName} - Service Providers | Qitaat`)
-      : (language === 'ar' ? 'تصفح الأقسام والفئات | قِطاعات' : 'Browse Categories | Qitaat'),
-    description: selectedCategory
-      ? sectorMeta
-        ? sectorMeta.description
-        : (language === 'ar' ? `تصفح أفضل مزودي خدمات ${catName} مع التقييمات والأسعار` : `Browse the best ${catName} service providers`)
-      : (language === 'ar' ? 'تصفح جميع أقسام وفئات خدمات الألمنيوم والحديد والزجاج والخشب' : 'Browse all aluminum, iron, glass and wood categories'),
+    title: buildSeoTitle({ kind: selectedCategory ? 'category' : 'home', lang, name: catName, customTitle: _legacyTitle }),
+    description: buildSeoDescription({ kind: selectedCategory ? 'category' : 'home', lang, name: catName, customDescription: _legacyDesc }),
     keywords: selectedCategory
       ? (sectorMeta ? sectorMeta.keywords : `${catName}, قِطاعات, دليل, مزودي خدمات`)
       : allSectorKeywords,

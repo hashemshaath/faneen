@@ -47,7 +47,29 @@
 - ✅ `src/pages/BlogPost.tsx`
 - ✅ `src/pages/ProjectDetail.tsx`
 - ✅ `src/pages/ServiceDetail.tsx`
-- ⏳ متبقّي: `Category*`, `BrandDetail*`, `Search`, `Offers*`, `Help*`, `Sector*`, `Blog` (قائمة)، `Projects` (قائمة)، `Compare*`، `PublicUserProfile`، `ProfileSystem*`.
+
+### تقدّم المرحلة 2 (دفعة 2)
+- ✅ `src/pages/Categories.tsx`
+- ✅ `src/pages/BrandDetail.tsx`
+- ✅ `src/pages/Search.tsx`
+- ✅ `src/pages/Offers.tsx`
+- ✅ `src/pages/Blog.tsx`
+- ✅ `src/pages/Projects.tsx`
+- ✅ `src/pages/SectorLanding.tsx` (sector + sectors index)
+- ✅ `src/pages/SectorCity.tsx`
+- ✅ `src/pages/SectorBrief.tsx`
+- ✅ `src/pages/SectorsHub.tsx`
+- ✅ `src/pages/ProfileSystems.tsx`
+- ✅ `src/pages/ProfileSystemDetail.tsx`
+- ✅ `src/pages/Compare.tsx`
+- ✅ `src/pages/CompareProfiles.tsx`
+- ✅ `src/pages/PublicUserProfile.tsx`
+- ✅ `src/pages/help/HelpCenterHome.tsx`
+- ✅ `src/pages/help/HelpCategoryPage.tsx`
+- ✅ `src/pages/help/HelpArticlePage.tsx`
+- ⏳ متبقّي اختياري: `BrandsCatalog`, `SectorSeoLanding`, صفحات legacy.
+
+تحديث المحرّك: `withSite` يتعرّف الآن على `قِطاعات` (بـ كسرة) كي لا يضاعف لاحقة الموقع للعناوين المخصصة القائمة.
 
 ---
 

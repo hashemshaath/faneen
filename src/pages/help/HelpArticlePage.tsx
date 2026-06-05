@@ -19,6 +19,7 @@ import {
   getNextBestAction,
 } from '@/modules/helpCenter';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { toast } from 'sonner';
 import { fmtNum, fmtDate } from '@/lib/format';
 
@@ -105,8 +106,8 @@ const HelpArticlePage: React.FC = () => {
   }, []);
 
   usePageMeta({
-    title: article ? `${articleTitle} | Qitaat` : 'Help | Qitaat',
-    description: articleSummary || (isRTL ? 'مقالة في مركز مساعدة قِطاعات.' : 'Qitaat Help Center article.'),
+    title: buildSeoTitle({ kind: 'help', lang: isRTL ? 'ar' : 'en', name: article ? articleTitle : undefined }),
+    description: buildSeoDescription({ kind: 'help', lang: isRTL ? 'ar' : 'en', name: articleTitle, rawDescription: articleSummary, customDescription: !articleSummary ? (isRTL ? 'مقالة في مركز مساعدة قِطاعات.' : 'Qitaat Help Center article.') : undefined }),
     canonical: article ? `https://qitaat.com/help/article/${article.slug}` : undefined,
     ogType: 'article',
   });

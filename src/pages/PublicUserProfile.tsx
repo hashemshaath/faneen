@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 
 interface PublicProfile {
   username: string;
@@ -54,15 +55,17 @@ export const PublicUserProfile: React.FC = () => {
     '';
 
   usePageMeta({
-    title: data
-      ? `${displayName} (@${data.username}) | قِطاعات`
-      : t('ملف شخصي | قِطاعات', 'Profile | Qitaat'),
-    description: data
-      ? t(
-          `حساب ${displayName} على قِطاعات`,
-          `${displayName}'s profile on Qitaat`,
-        )
-      : undefined,
+    title: buildSeoTitle({
+      kind: 'company',
+      lang: language === 'ar' ? 'ar' : 'en',
+      name: data ? `${displayName} (@${data.username})` : undefined,
+    }),
+    description: buildSeoDescription({
+      kind: 'company',
+      lang: language === 'ar' ? 'ar' : 'en',
+      name: displayName || undefined,
+      customDescription: data ? t(`حساب ${displayName} على قِطاعات`, `${displayName}'s profile on Qitaat`) : undefined,
+    }),
     canonical: data ? `https://qitaat.com/${data.username}` : undefined,
   });
 

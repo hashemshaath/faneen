@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getHelpCategoryBySlug, listPublishedArticles } from '@/modules/helpCenter';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { BookOpen, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fmtNum } from '@/lib/format';
 
@@ -46,8 +47,8 @@ const HelpCategoryPage: React.FC = () => {
     ? ((language === 'ar' ? category.description_ar : category.description_en) ?? '')
     : '';
   usePageMeta({
-    title: `${title} | ${isRTL ? 'مركز المساعدة' : 'Help Center'} | Qitaat`,
-    description: description || (isRTL ? 'تصفّح مقالات هذا القسم في مركز مساعدة قِطاعات.' : 'Browse articles in this Qitaat Help Center category.'),
+    title: buildSeoTitle({ kind: 'help', lang: isRTL ? 'ar' : 'en', name: title }),
+    description: buildSeoDescription({ kind: 'help', lang: isRTL ? 'ar' : 'en', name: title, rawDescription: description, customDescription: !description ? (isRTL ? 'تصفّح مقالات هذا القسم في مركز مساعدة قِطاعات.' : 'Browse articles in this Qitaat Help Center category.') : undefined }),
     canonical: category ? `https://qitaat.com/help/category/${category.slug}` : undefined,
   });
 

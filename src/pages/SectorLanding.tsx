@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { listPublicBusinessesForSector } from '@/modules/businesses';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, buildFaqPage, ogImageFor } from '@/lib/seo/structured-data';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -201,25 +202,21 @@ const SectorLanding: React.FC = () => {
 
   // ── SEO ────────────────────────────────────────────────────────────────
   const meta = sector ? getSectorMeta(sector.slug, isRTL) : null;
+  const lang = isRTL ? 'ar' as const : 'en' as const;
   usePageMeta({
-    title: meta
-      ? selectedCityName
+    title: buildSeoTitle({ kind: 'category', lang, name: meta?.name, city: selectedCityName || undefined }),
+    description: buildSeoDescription({
+      kind: 'category',
+      lang,
+      name: meta?.name,
+      city: selectedCityName || undefined,
+      rawDescription: meta?.description,
+      customDescription: meta && selectedCityName
         ? (isRTL
-            ? `${meta.name} في ${selectedCityName} | قِطاعات`
-            : `${meta.name} in ${selectedCityName} | Qitaat`)
-        : (isRTL
-            ? `${meta.name} في السعودية | قِطاعات`
-            : `${meta.name} in Saudi Arabia | Qitaat`)
-      : isRTL
-        ? 'قطاع غير معروف | قِطاعات'
-        : 'Unknown sector | Qitaat',
-    description: meta
-      ? (selectedCityName
-          ? (isRTL
-              ? `اعثر على مزودي ${meta.name} في ${selectedCityName}، واستعرض الجهات والخدمات المناسبة لمشاريع البناء والتشييد عبر منصة قِطاعات.`
-              : `Find ${meta.name} providers in ${selectedCityName}. Browse vetted firms and services for construction projects on Qitaat.`)
-          : meta.description)
-      : '',
+            ? `اعثر على مزودي ${meta.name} في ${selectedCityName}، واستعرض الجهات والخدمات المناسبة لمشاريع البناء والتشييد عبر منصة قِطاعات.`
+            : `Find ${meta.name} providers in ${selectedCityName}. Browse vetted firms and services for construction projects on Qitaat.`)
+        : undefined,
+    }),
     keywords: meta?.keywords,
     canonical: selectedCitySlug
       ? `https://qitaat.com/sectors/${sectorSlug}/${selectedCitySlug}`
@@ -741,12 +738,10 @@ const SectorLanding: React.FC = () => {
 export const SectorsIndex: React.FC = () => {
   const { isRTL } = useLanguage();
   usePageMeta({
-    title: isRTL
-      ? 'قطاعات الصناعات: ألمنيوم، حديد، زجاج، خشب، خزائن | قِطاعات'
-      : 'Industrial Sectors: Aluminum, Iron, Glass, Wood, Cabinets | Qitaat',
-    description: isRTL
+    title: buildSeoTitle({ kind: 'category', lang: isRTL ? 'ar' : 'en', name: isRTL ? 'القطاعات الصناعية' : 'Industrial Sectors' }),
+    description: buildSeoDescription({ kind: 'category', lang: isRTL ? 'ar' : 'en', customDescription: isRTL
       ? 'استعرض القطاعات الصناعية الرئيسية في دليل قِطاعات: الألمنيوم، الحديد، الزجاج، الخشب، والخزائن. اختر القطاع لاستكشاف أفضل المصانع والورش.'
-      : 'Browse Qitaat top industrial sectors: aluminum, iron, glass, wood and cabinets. Pick a sector to explore the best factories and workshops.',
+      : 'Browse Qitaat top industrial sectors: aluminum, iron, glass, wood and cabinets. Pick a sector to explore the best factories and workshops.' }),
     keywords: ALL_SECTORS.flatMap((s) => (isRTL ? s.keywords_ar : s.keywords_en)).slice(0, 24).join(', '),
     canonical: 'https://qitaat.com/sectors',
   });

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -313,7 +314,11 @@ const ProfileSystems = () => {
     ? `https://qitaat.com/profile-systems/category/${activeCatMeta.value}`
     : 'https://qitaat.com/profile-systems';
 
-  usePageMeta({ title: seoTitle, description: seoDesc, canonical });
+  usePageMeta({
+    title: buildSeoTitle({ kind: 'category', lang: isRTL ? 'ar' : 'en', name: activeCatMeta ? (isRTL ? activeCatMeta.ar : activeCatMeta.en) : undefined, customTitle: seoTitle }),
+    description: buildSeoDescription({ kind: 'category', lang: isRTL ? 'ar' : 'en', customDescription: seoDesc }),
+    canonical,
+  });
 
   // Page-view telemetry — fires once per category/route change.
   useEffect(() => {
