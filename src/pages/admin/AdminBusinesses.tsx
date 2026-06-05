@@ -999,6 +999,7 @@ const AdminBusinesses = () => {
         e.preventDefault();
         setEditingBiz(null); setServicesPanel(null);
         setCreateForm(emptyCreateForm()); setCreatingBiz(true);
+        scrollToTop();
       }
       if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
