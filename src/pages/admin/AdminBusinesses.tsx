@@ -103,6 +103,7 @@ import { useAdminSavedViews } from '@/hooks/useAdminSavedViews';
 import { BusinessFiltersToolbar } from '@/components/admin/businesses/BusinessFiltersToolbar';
 import { BusinessBulkActionBar } from '@/components/admin/businesses/BusinessBulkActionBar';
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
+import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
