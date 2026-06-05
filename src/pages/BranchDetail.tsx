@@ -73,7 +73,7 @@ const BranchDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { isRTL } = useLanguage();
   const navigate = useNavigate();
-  const [copied, setCopied] = React.useState(false);
+  const [copied, setCopied] = useState(false);
 
   // 1) Branch (public view)
   const { data: branch, isLoading } = useQuery({
