@@ -539,6 +539,7 @@ export const ReviewsTab = ({ business }: { business: any }) => {
 interface BranchesTabProps {
   businessId: string;
   businessName?: string;
+  businessUsername?: string | null;
   isAuthenticated?: boolean;
   onRequestContact?: () => void;
   onRevealContact?: (kind: "phone" | "email") => void;
@@ -547,6 +548,7 @@ interface BranchesTabProps {
 export const BranchesTab = ({
   businessId,
   businessName,
+  businessUsername,
   isAuthenticated = false,
   onRequestContact,
   onRevealContact,
@@ -759,9 +761,9 @@ export const BranchesTab = ({
                     <ExternalLink className="h-3 w-3" />
                     {language === "ar" ? "فتح في خرائط Google" : "Open in Google Maps"}
                   </a>
-                  {branch.slug && (
+                  {branch.slug && businessUsername && (
                     <Link
-                      to={`/branch/${branch.slug}`}
+                      to={`/${businessUsername}/${branch.slug}`}
                       className="inline-flex items-center gap-1.5 text-[10px] font-medium text-accent hover:underline sm:text-xs"
                     >
                       {language === "ar" ? "صفحة الفرع" : "Branch page"}
@@ -770,10 +772,10 @@ export const BranchesTab = ({
                 </div>
               </div>
             )}
-            {!(branch.latitude && branch.longitude) && branch.slug && (
+            {!(branch.latitude && branch.longitude) && branch.slug && businessUsername && (
               <div className="px-4 pb-4 sm:px-5 sm:pb-5">
                 <Link
-                  to={`/branch/${branch.slug}`}
+                  to={`/${businessUsername}/${branch.slug}`}
                   className="inline-flex items-center gap-1.5 text-[10px] font-medium text-accent hover:underline sm:text-xs"
                 >
                   {language === "ar" ? "صفحة الفرع" : "Branch page"}

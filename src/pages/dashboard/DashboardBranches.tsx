@@ -15,6 +15,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
 import {
   getOwnerBusiness,
+  listBusinessesByIds,
   listBusinessStaffByBusiness,
 } from '@/modules/businesses';
 import { listProfilesByUserIds } from '@/modules/users';
@@ -126,6 +127,18 @@ const DashboardBranches: React.FC = () => {
       const { data } = await getOwnerBusiness({ userId: user!.id, select: 'id' });
        
       return ((data as any)?.id ?? null) as string | null;
+    },
+  });
+
+  // Business username — required to build canonical /:username/:branch-slug links.
+  const { data: businessUsername } = useQuery({
+    queryKey: ['owner-business-username', businessId],
+    enabled: Boolean(businessId),
+    queryFn: async () => {
+      const { data } = await listBusinessesByIds<{ id: string; username: string | null }>({
+        ids: [businessId!], select: 'id, username',
+      });
+      return data?.[0]?.username ?? null;
     },
   });
 
@@ -344,6 +357,7 @@ const DashboardBranches: React.FC = () => {
             <BranchCard
               key={branch.id}
               branch={branch}
+              businessUsername={businessUsername ?? null}
               isExpanded={expandedId === branch.id}
               onToggle={() => setExpandedId(p => (p === branch.id ? null : branch.id))}
               onSetMain={() => handleSetMain(branch.id)}
@@ -370,6 +384,7 @@ export default DashboardBranches;
 
 interface BranchCardProps {
   branch: BranchRow;
+  businessUsername: string | null;
   isExpanded: boolean;
   onToggle: () => void;
   onSetMain: () => void;
@@ -383,7 +398,7 @@ interface BranchCardProps {
 }
 
 const BranchCard: React.FC<BranchCardProps> = ({
-  branch, isExpanded, onToggle, onSetMain, onDelete,
+  branch, businessUsername, isExpanded, onToggle, onSetMain, onDelete,
   staffOptions, services, promotions, isRTL, busy, onSaved,
 }) => {
   return (
@@ -431,6 +446,7 @@ const BranchCard: React.FC<BranchCardProps> = ({
           <Separator className="mb-5" />
           <BranchEditor
             branch={branch}
+            businessUsername={businessUsername}
             staffOptions={staffOptions}
             services={services}
             promotions={promotions}
@@ -449,6 +465,7 @@ const BranchCard: React.FC<BranchCardProps> = ({
 
 interface BranchEditorProps {
   branch: BranchRow;
+  businessUsername: string | null;
   staffOptions: Array<{ staffId: string; label: string; phone: string | null; role: string }>;
   services: ServiceLite[];
   promotions: PromotionLite[];
@@ -457,7 +474,7 @@ interface BranchEditorProps {
 }
 
 const BranchEditor: React.FC<BranchEditorProps> = ({
-  branch, staffOptions, services, promotions, isRTL, onSaved,
+  branch, businessUsername, staffOptions, services, promotions, isRTL, onSaved,
 }) => {
   const qc = useQueryClient();
   const [form, setForm] = useState<BranchRow>(branch);
@@ -739,9 +756,9 @@ const BranchEditor: React.FC<BranchEditorProps> = ({
       {/* Save bar */}
       <div className="flex items-center justify-between gap-3 mt-6 pt-4 border-t border-border/60">
         <div className="text-xs text-muted-foreground flex items-center gap-2">
-          {branch.slug && (
+          {branch.slug && businessUsername && (
             <Link
-              to={`/branch/${branch.slug}`}
+              to={`/${businessUsername}/${branch.slug}`}
               target="_blank"
               rel="noopener"
               className="hover:text-primary inline-flex items-center gap-1"
