@@ -57,8 +57,8 @@ const translateKeywordToAr = (k: string): string => KEYWORD_AR[k] ?? k;
 const HelpCenterHome: React.FC = () => {
   const { isRTL, language } = useLanguage();
   usePageMeta({
-    title: isRTL ? 'مركز المساعدة | قِطاعات' : 'Help Center | Qitaat',
-    description: isRTL ? 'دليلك للبدء، الإجابات السريعة، وإعداد التقارير.' : 'Your guide for getting started, quick answers, and reports.',
+    title: buildSeoTitle({ kind: 'help', lang: isRTL ? 'ar' : 'en', name: isRTL ? 'مركز المساعدة' : 'Help Center' }),
+    description: buildSeoDescription({ kind: 'help', lang: isRTL ? 'ar' : 'en', name: isRTL ? 'مركز المساعدة' : 'Help Center', customDescription: isRTL ? 'دليلك للبدء، الإجابات السريعة، وإعداد التقارير.' : 'Your guide for getting started, quick answers, and reports.' }),
     canonical: 'https://qitaat.com/help',
   });
   const [q, setQ] = useState('');
