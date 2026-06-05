@@ -469,7 +469,7 @@ const AdminIdentity: React.FC = () => {
         )}
 
         {/* ─── Live search results ─── */}
-        {searchResults && (
+        {tab === 'directory' && searchResults && (
           <div className="rounded-2xl border border-accent/30 bg-accent/5 p-4 animate-in slide-in-from-top-1 duration-200">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-bold text-muted-foreground">
@@ -532,6 +532,7 @@ const AdminIdentity: React.FC = () => {
           </div>
         )}
 
+        {tab === 'overview' && (<>
         {/* ─── KPI strip ─── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Kpi icon={Users} label={isRTL ? 'إجمالي الحسابات' : 'Total accounts'} value={isLoading ? '…' : kpis.totalUsers} tone="primary" to="/admin/users"
