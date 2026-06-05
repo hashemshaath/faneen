@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   MapPin, Phone, Mail, Globe, MessageCircle, ArrowLeft, ExternalLink,
   Star, UserCog, Instagram, Linkedin, Facebook, Youtube, Building2,
-  Loader2, Boxes, Tag, Navigation, Share2, Check,
+  Loader2, Boxes, Tag, Navigation, Heart, ChevronRight,
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +25,11 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { BranchReviews } from '@/components/branch/BranchReviews';
 import { toast } from 'sonner';
+import { RevealPhoneButton } from '@/components/branch/RevealPhoneButton';
+import { ShareMenu } from '@/components/branch/ShareMenu';
+import { BranchVisitCounter } from '@/components/branch/BranchVisitCounter';
+import { useBranchVisits } from '@/hooks/useBranchVisits';
+import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
 
 const t = (isRTL: boolean, ar: string, en: string) => (isRTL ? ar : en);
 
@@ -79,7 +84,6 @@ const BranchDetail: React.FC = () => {
   const usernameParam = params.branchSlug ? params.username : undefined;
   const { isRTL } = useLanguage();
   const navigate = useNavigate();
-  const [copied, setCopied] = useState(false);
 
   // 0) When the URL is nested, resolve the parent business first so we can scope the lookup.
   const { data: scopedBusinessId } = useQuery({
