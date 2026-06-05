@@ -95,8 +95,8 @@ describe('admin sidebar — routing integrity', () => {
     const adminHrefs = hrefs.filter((h) => h.startsWith('/admin/'));
     const unprotected = adminHrefs.filter((h) => {
       const re = new RegExp(
-        `path="${h.replace(/[/\-]/g, (c) => '\\' + c)}"[^>]*requireAdmin|` +
-        `path="${h.replace(/[/\-]/g, (c) => '\\' + c)}"[^>]*requireSuperAdmin`,
+        `path="${h.replace(/[/-]/g, (c) => '\\' + c)}"[^>]*requireAdmin|` +
+        `path="${h.replace(/[/-]/g, (c) => '\\' + c)}"[^>]*requireSuperAdmin`,
       );
       return !re.test(APP);
     });
