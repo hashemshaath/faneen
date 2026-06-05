@@ -2021,95 +2021,55 @@ const AdminBusinesses = () => {
                     </div>
                   </div>
                   <Separator />
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-xs">{isRTL ? 'الرقم الوطني' : 'National ID'}</Label>
-                      <Input value={editForm.national_id} onChange={e => setField('national_id', e.target.value)} dir="ltr" className="mt-1" />
-                    </div>
-                    <div>
-                      <Label className="text-xs">{isRTL ? 'الرقم الإضافي' : 'Additional Number'}</Label>
-                      <Input value={editForm.additional_number} onChange={e => setField('additional_number', e.target.value)} dir="ltr" className="mt-1" />
-                    </div>
+                  <div>
+                    <Label className="text-xs">{isRTL ? 'الدولة' : 'Country'}</Label>
+                    <Select value={editForm.country_id} onValueChange={v => { setField('country_id', v); setField('city_id', ''); }}>
+                      <SelectTrigger className="mt-1 max-w-xs"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
+                      <SelectContent>
+                        {countries.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 space-y-2">
-                    <Label className="text-xs font-semibold flex items-center gap-1">
-                      <MapPinned className="w-3 h-3" />
-                      {isRTL ? 'العنوان الوطني المختصر (SPL)' : 'Short National Address (SPL)'}
-                    </Label>
-                    <p className="text-[10px] text-muted-foreground">
-                      {isRTL ? 'أدخل الرمز (4 أحرف + 4 أرقام مثال: RRRD2402) لجلب الحقول بالعربية والإنجليزية تلقائياً.' : 'Enter code (4 letters + 4 digits, e.g. RRRD2402) to autofill AR + EN fields.'}
-                    </p>
-                    <div className="flex gap-2">
-                      <Input value={shortAddress} onChange={e => setShortAddress(e.target.value.toUpperCase())}
-                        placeholder="RRRD2402" dir="ltr" className="h-9 text-xs tech-content" maxLength={8} />
-                      <Button type="button" size="sm" onClick={handleShortAddressLookup}
-                        disabled={splBusy || shortAddress.trim().length < 8} className="gap-1">
-                        {splBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
-                        {isRTL ? 'جلب' : 'Fetch'}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-xs">{isRTL ? 'الدولة' : 'Country'}</Label>
-                      <Select value={editForm.country_id} onValueChange={v => { setField('country_id', v); setField('city_id', ''); }}>
-                        <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
-                        <SelectContent>
-                          {countries.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  {/* Unified Region → City selector (single source of truth — same component used in create form & branch editor) */}
-                  <RegionCitySelector
-                    value={{ region_id: editForm.region_id as SaRegionId | '', city_id: editForm.city_id || '' }}
-                    onChange={(next) => {
-                      const r = next.region_id ? SA_REGIONS.find((x) => x.id === next.region_id) : null;
-                      setEditForm((f: Record<string, unknown>) => ({
-                        ...f,
-                        region_id: next.region_id || '',
-                        city_id: next.city_id || '',
-                        // Keep stored region name in sync for legacy display fields
-                        region: r ? r.name_ar : '',
-                        region_en: r ? r.name_en : '',
-                      }));
-                    }}
+                  {/* Unified address microservice — same component used in branch editor (SPL + Region → City → District + street/building/additional). */}
+                  <NationalAddressForm
+                    isRTL={isRTL}
+                    value={{
+                      short_address: editForm.short_address ?? null,
+                      region: editForm.region ?? null,
+                      region_en: editForm.region_en ?? null,
+                      city_id: editForm.city_id ?? null,
+                      district: editForm.district ?? null,
+                      district_en: editForm.district_en ?? null,
+                      street_name: editForm.street_name ?? null,
+                      street_name_en: editForm.street_name_en ?? null,
+                      building_number: editForm.building_number ?? null,
+                      additional_number: editForm.additional_number ?? null,
+                      post_code: editForm.post_code ?? null,
+                      address: editForm.address ?? null,
+                      address_en: editForm.address_en ?? null,
+                      address_manual: editForm.address_manual ?? false,
+                    } as NationalAddressValue}
+                    onChange={(next) => setEditForm((f: Record<string, unknown>) => ({
+                      ...f,
+                      short_address: next.short_address ?? '',
+                      region: next.region ?? '',
+                      region_en: next.region_en ?? '',
+                      city_id: next.city_id ?? '',
+                      district: next.district ?? '',
+                      district_en: next.district_en ?? '',
+                      street_name: next.street_name ?? '',
+                      street_name_en: next.street_name_en ?? '',
+                      building_number: next.building_number ?? '',
+                      additional_number: next.additional_number ?? '',
+                      post_code: next.post_code ?? '',
+                      address: next.address ?? '',
+                      address_en: next.address_en ?? '',
+                      address_manual: next.address_manual ?? false,
+                    }))}
                   />
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-xs">{isRTL ? 'الحي' : 'District'}</Label>
-                      <Input value={editForm.district} onChange={e => setField('district', e.target.value)} dir="auto" className="mt-1" />
-                    </div>
-                    <div>
-                      <Label className="text-xs">{isRTL ? 'الحي (EN)' : 'District (EN)'}</Label>
-                      <Input value={editForm.district_en || ''} onChange={e => setField('district_en', e.target.value)} dir="ltr" className="mt-1" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-xs">{isRTL ? 'اسم الشارع' : 'Street Name'}</Label>
-                      <Input value={editForm.street_name} onChange={e => setField('street_name', e.target.value)} className="mt-1" />
-                    </div>
-                    <div>
-                      <Label className="text-xs">{isRTL ? 'رقم المبنى' : 'Building Number'}</Label>
-                      <Input value={editForm.building_number} onChange={e => setField('building_number', e.target.value)} dir="ltr" className="mt-1" />
-                    </div>
-                    <div className="col-span-2">
-                      <Label className="text-xs">{isRTL ? 'اسم الشارع (EN)' : 'Street Name (EN)'}</Label>
-                      <Input value={editForm.street_name_en || ''} onChange={e => setField('street_name_en', e.target.value)} dir="ltr" className="mt-1" />
-                    </div>
-                  </div>
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs flex items-center gap-1"><MapPin className="w-3 h-3" /> {isRTL ? 'العنوان الكامل' : 'Full Address'}</Label>
-                      <FieldAiActions compact value={editForm.address} lang="ar" isRTL={isRTL} fieldType="short_text"
-                        onTranslated={() => {}} onImproved={(v) => setField('address', v)} />
-                    </div>
-                    <Textarea value={editForm.address} onChange={e => setField('address', e.target.value)} rows={2} />
-                  </div>
-                  <div>
-                    <Label className="text-xs flex items-center gap-1"><MapPin className="w-3 h-3" /> {isRTL ? 'العنوان الكامل (EN)' : 'Full Address (EN)'}</Label>
-                    <Textarea value={editForm.address_en || ''} onChange={e => setField('address_en', e.target.value)} rows={2} dir="ltr" className="mt-1" />
+                    <Label className="text-xs">{isRTL ? 'الرقم الوطني' : 'National ID'}</Label>
+                    <Input value={editForm.national_id} onChange={e => setField('national_id', e.target.value)} dir="ltr" className="mt-1 max-w-xs" />
                   </div>
                 </TabsContent>
 
