@@ -360,12 +360,12 @@ const AdminIdentity: React.FC = () => {
             </div>
             <div className="min-w-0">
               <h1 className="text-xl md:text-2xl font-bold font-heading leading-tight">
-                {isRTL ? 'المستخدمون والمنشآت' : 'Users & Businesses'}
+                {isRTL ? 'مركز الحسابات والموافقات' : 'Accounts & Approvals'}
               </h1>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                 {isRTL
-                  ? 'نظرة شاملة بالإحصائيات والمؤشرات. للإدارة التفصيلية، استخدم الصفحات المخصّصة أدناه.'
-                  : 'A consolidated stats overview. For full management, use the dedicated pages below.'}
+                  ? 'سطح واحد موحّد للحسابات والمنشآت وكل الموافقات المعلّقة — نظرة عامة، صندوق موافقات، ودليل بحث.'
+                  : 'One unified surface for accounts, businesses, and every pending approval — overview, inbox, and directory.'}
               </p>
             </div>
           </div>
