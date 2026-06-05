@@ -1400,8 +1400,9 @@ const AdminBusinesses = () => {
           onClearSearch={() => { setSearchInput(''); updateParam({ q: null }); }}
           filterStatus={filterStatus}
           setFilterStatus={setFilterStatus}
-          filterTier={filterTier}
-          setFilterTier={setFilterTier}
+          selectedTiers={selectedTiers}
+          onToggleTier={toggleTier}
+          onClearTiers={clearTiers}
           filterTranslation={filterTranslation}
           onTranslationChange={(v) => updateParam({ translation: v === 'all' ? null : v, page: null })}
           filterOrigin={filterOrigin}
