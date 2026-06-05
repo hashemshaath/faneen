@@ -707,8 +707,10 @@ const AdminCategories = () => {
                     customTitleEn={form.seo_title_en}
                     customDescriptionAr={form.seo_description_ar}
                     customDescriptionEn={form.seo_description_en}
-                    name={isRTL ? form.name_ar : form.name_en}
-                    rawDescription={isRTL ? form.description_ar : form.description_en}
+                    nameAr={form.name_ar}
+                    nameEn={form.name_en}
+                    rawDescriptionAr={form.description_ar}
+                    rawDescriptionEn={form.description_en}
                     url={form.slug ? `https://qitaat.com/categories/${form.slug}` : null}
                     focusKeyword={form.featured_keywords.split(',').map(k => k.trim()).filter(Boolean)[0] ?? null}
                   />
