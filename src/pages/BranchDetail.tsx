@@ -409,17 +409,18 @@ const BranchDetail: React.FC = () => {
   ].filter(Boolean) as Array<{ url: string; Icon: React.ComponentType<{ className?: string }>; label: string }>;
 
   const shareUrl = canonicalBranchUrl ?? window.location.href;
-  const handleShare = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: `${branchName} — ${businessName}`, url: shareUrl });
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        setCopied(true);
-        toast.success(t(isRTL, 'تم نسخ الرابط', 'Link copied'));
-        setTimeout(() => setCopied(false), 1800);
-      }
-    } catch { /* user cancelled */ }
+
+  // Real visit counter (records once per session)
+  const { count: visitCount } = useBranchVisits(branch.id);
+
+  // Favorites — keyed by business_id with ref_id snapshot
+  const { isFavorite, toggleFavorite } = useBusinessFavorites();
+  const fav = isFavorite(branch.business_id);
+  const onToggleFav = () => {
+    const nowFav = toggleFavorite(branch.business_id, branch.ref_id);
+    toast.success(nowFav
+      ? t(isRTL, 'تمت إضافته إلى المفضلة', 'Added to favorites')
+      : t(isRTL, 'تمت إزالته من المفضلة', 'Removed from favorites'));
   };
 
   const sectionNav = [
