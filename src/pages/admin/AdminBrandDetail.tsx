@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -17,6 +17,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 
 import {
   adminGetBrand, adminApproveBrand, adminRejectBrand, adminArchiveBrand,
@@ -42,6 +46,10 @@ const AdminBrandDetail: React.FC = () => {
   const [mergeTarget, setMergeTarget] = useState('');
   const [rejectingLinkId, setRejectingLinkId] = useState<string | null>(null);
   const [linkReason, setLinkReason] = useState('');
+  const [seoForm, setSeoForm] = useState({
+    seo_title_ar: '', seo_title_en: '', seo_description_ar: '', seo_description_en: '',
+    brand_keywords: '', og_image_url: '',
+  });
 
   const brandQ = useQuery({
     queryKey: ['admin-brand-detail', id],
