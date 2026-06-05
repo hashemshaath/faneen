@@ -239,6 +239,14 @@ const DashboardBranches: React.FC = () => {
   };
 
   const handleSetMain = async (branchId: string) => {
+    const currentMain = (branches ?? []).find((b) => b.is_main && b.id !== branchId);
+    const target = (branches ?? []).find((b) => b.id === branchId);
+    const msg = currentMain
+      ? t(isRTL,
+          `سيتم إلغاء "${currentMain.name_ar}" كفرع رئيسي وتعيين "${target?.name_ar ?? ''}" بدلاً منه. متابعة؟`,
+          `"${currentMain.name_ar}" will be unset as main and "${target?.name_ar ?? ''}" will replace it. Continue?`)
+      : t(isRTL, 'تعيين هذا الفرع كرئيسي؟', 'Set this branch as main?');
+    if (!confirm(msg)) return;
     setBusy(true);
     const { error } = await setMainBranch(branchId);
     setBusy(false);

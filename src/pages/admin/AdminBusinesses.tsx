@@ -45,8 +45,10 @@ import {
   updateBusinessServiceById,
   deleteBusinessServiceById,
   insertBusinessBranch,
+  insertBusinessBranchReturning,
   updateBusinessBranchById,
   deleteBusinessBranchById,
+  setMainBranch,
 } from '@/modules/catalog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -934,10 +936,11 @@ const AdminBusinesses = () => {
   const saveBranchMutation = useMutation({
     mutationFn: async () => {
       if (!branchForm || !editingBiz) return;
+      const wantsMain = !!branchForm.is_main;
       const payload: any = {
         business_id: editingBiz.id,
         name_ar: branchForm.name_ar, name_en: branchForm.name_en || null,
-        is_main: branchForm.is_main, is_active: branchForm.is_active,
+        is_active: branchForm.is_active,
         contact_person: branchForm.contact_person || null, phone: branchForm.phone || null,
         mobile: branchForm.mobile || null, unified_number: branchForm.unified_number || null,
         customer_service_phone: branchForm.customer_service_phone || null,
@@ -949,12 +952,20 @@ const AdminBusinesses = () => {
         address: branchForm.address || null, latitude: branchForm.latitude || null,
         longitude: branchForm.longitude || null,
       };
+      let targetBranchId = editingBranchId as string | null;
       if (editingBranchId) {
         const { error } = await updateBusinessBranchById(editingBranchId, payload);
         if (error) throw error;
       } else {
-        const { error } = await insertBusinessBranch(payload);
+        // Insert without is_main; if wantsMain we promote via RPC below.
+        const { data, error } = await insertBusinessBranchReturning(payload, 'id', 'single');
         if (error) throw error;
+        targetBranchId = (data as unknown as { id: string } | null)?.id ?? null;
+      }
+      if (wantsMain && targetBranchId) {
+        // Atomic swap: clears previous main + sets this one in a single transaction.
+        const { error: mainErr } = await setMainBranch(targetBranchId);
+        if (mainErr) throw mainErr;
       }
     },
     onSuccess: () => {
@@ -2381,7 +2392,21 @@ const AdminBusinesses = () => {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                          <Switch checked={branchForm.is_main} onCheckedChange={v => setBranchForm((f) => ({ ...f, is_main: v }))} />
+                          <Switch checked={branchForm.is_main} onCheckedChange={v => {
+                            if (v) {
+                              const currentMain = branches.find((b: any) => b.is_main && b.id !== editingBranchId);
+                              if (currentMain && !confirm(isRTL
+                                ? `سيتم إلغاء "${currentMain.name_ar}" كفرع رئيسي وتعيين هذا الفرع بدلاً منه. متابعة؟`
+                                : `"${currentMain.name_ar}" will be unset as main and this branch will replace it. Continue?`)) {
+                                return;
+                              }
+                            } else if (branchForm.is_main && !confirm(isRTL
+                              ? 'هل تريد إلغاء كون هذا الفرع رئيسياً؟ يجب تعيين فرع آخر كرئيسي.'
+                              : 'Unset this branch as main? You must set another branch as main.')) {
+                              return;
+                            }
+                            setBranchForm((f) => ({ ...f, is_main: v }));
+                          }} />
                           <span className="text-xs">{isRTL ? 'فرع رئيسي' : 'Main Branch'}</span>
                         </div>
                         <div className="flex items-center gap-2">
