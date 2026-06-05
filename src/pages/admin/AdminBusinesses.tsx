@@ -2205,6 +2205,52 @@ const AdminBusinesses = () => {
                   </div>
                 </TabsContent>
 
+                {/* ── SEO Tab ── */}
+                <TabsContent value="seo" className="space-y-4 mt-3">
+                  <SEOPreviewCard
+                    kind="company"
+                    customTitleAr={editForm.seo_title_ar}
+                    customTitleEn={editForm.seo_title_en}
+                    customDescriptionAr={editForm.seo_description_ar}
+                    customDescriptionEn={editForm.seo_description_en}
+                    name={isRTL ? editForm.name_ar : editForm.name_en}
+                    activity={editCategoryName ? (language === 'ar' ? editCategoryName.name_ar : editCategoryName.name_en) : null}
+                    city={editCityName ? (language === 'ar' ? editCityName.name_ar : editCityName.name_en) : null}
+                    rawDescription={isRTL ? editForm.description_ar : editForm.description_en}
+                    url={editingBiz.username ? `https://qitaat.com/${editingBiz.username}` : null}
+                    ogImageUrl={editForm.og_image || editForm.cover_url || editForm.logo_url || null}
+                    focusKeyword={String(editForm.seo_keywords || '').split(',').map(k => k.trim()).filter(Boolean)[0] ?? null}
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs font-semibold">{isRTL ? 'عنوان SEO (عربي)' : 'SEO Title (AR)'}</Label>
+                      <Input value={editForm.seo_title_ar} onChange={e => setField('seo_title_ar', e.target.value)} dir="auto" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold">{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO Title (EN)'}</Label>
+                      <Input value={editForm.seo_title_en} onChange={e => setField('seo_title_en', e.target.value)} dir="ltr" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold">{isRTL ? 'وصف SEO (عربي)' : 'SEO Description (AR)'}</Label>
+                      <Textarea value={editForm.seo_description_ar} onChange={e => setField('seo_description_ar', e.target.value)} rows={2} dir="auto" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold">{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO Description (EN)'}</Label>
+                      <Textarea value={editForm.seo_description_en} onChange={e => setField('seo_description_en', e.target.value)} rows={2} dir="ltr" className="mt-1" />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold">{isRTL ? 'كلمات SEO' : 'SEO keywords'}</Label>
+                    <Input value={editForm.seo_keywords} onChange={e => setField('seo_keywords', e.target.value)} dir="auto" className="mt-1" placeholder={isRTL ? 'ألمنيوم, زجاج, تركيب' : 'aluminum, glass, installation'} />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'صورة OG' : 'OG image'}</Label>
+                    <ImageUpload bucket="business-assets" value={editForm.og_image}
+                      onChange={(url) => setField('og_image', url)} onRemove={() => setField('og_image', '')}
+                      placeholder={isRTL ? 'رفع صورة المشاركة' : 'Upload share image'} />
+                  </div>
+                </TabsContent>
+
                 {/* ── Contact Tab ── */}
                 <TabsContent value="contact" className="space-y-4 mt-3">
                   <div>
