@@ -2421,7 +2421,13 @@ const AdminBusinesses = () => {
                       </Button>
                     </div>
                   ) : (
-                    <Button variant="outline" className="w-full gap-1.5" onClick={() => { setBranchForm(emptyBranch()); setEditingBranchId(null); }}>
+                    <Button variant="outline" className="w-full gap-1.5" onClick={() => {
+                      // First branch auto-syncs as main (DB trigger guarantees this);
+                      // pre-check the switch so the form mirrors what will be saved.
+                      const isFirst = branches.length === 0;
+                      setBranchForm({ ...emptyBranch(), is_main: isFirst });
+                      setEditingBranchId(null);
+                    }}>
                       <Plus className="w-3.5 h-3.5" /> {isRTL ? 'إضافة فرع جديد' : 'Add New Branch'}
                     </Button>
                   )}
