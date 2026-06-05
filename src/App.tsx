@@ -161,6 +161,8 @@ const AdminSystemAccess = lazyRetry(() => import("./pages/admin/AdminSystemAcces
 const AdminProviderReview = lazyRetry(() => import("./pages/admin/AdminProviderReview"));
 const AdminProviderGrowth = lazyRetry(() => import("./pages/admin/AdminProviderGrowth"));
 const AdminProviderGrowthQueue = lazyRetry(() => import("./pages/admin/AdminProviderGrowthQueue"));
+const AdminCatalogGovernance = lazyRetry(() => import("./pages/admin/AdminCatalogGovernance"));
+const AdminCatalogGovernanceQueue = lazyRetry(() => import("./pages/admin/AdminCatalogGovernanceQueue"));
 const AdminProviderAnalytics = lazyRetry(() => import("./pages/admin/AdminProviderAnalytics"));
 const AdminContractAnalytics = lazyRetry(() => import("./pages/admin/AdminContractAnalytics"));
 const AdminContracts = lazyRetry(() => import("./pages/admin/AdminContracts"));
@@ -444,6 +446,8 @@ const AppRoutes = () => (
           {/* PROVIDER-GROWTH-ENGINE-2 — admin growth dashboard + ops queue */}
           <Route path="/admin/provider-growth" element={<ProtectedRoute requireAdmin><AdminProviderGrowth /></ProtectedRoute>} />
           <Route path="/admin/provider-growth/queue" element={<ProtectedRoute requireAdmin><AdminProviderGrowthQueue /></ProtectedRoute>} />
+          <Route path="/admin/catalog-governance" element={<ProtectedRoute requireAdmin><AdminCatalogGovernance /></ProtectedRoute>} />
+          <Route path="/admin/catalog-governance/queue" element={<ProtectedRoute requireAdmin><AdminCatalogGovernanceQueue /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 13 — Memberships hub. */}
           <Route path="/admin/memberships" element={<ProtectedRoute requireAdmin><AdminMembershipsHub /></ProtectedRoute>} />
           <Route path="/admin/membership-rejections" element={<ProtectedRoute requireAdmin><Navigate to="/admin/memberships?tab=rejections" replace /></ProtectedRoute>} />
