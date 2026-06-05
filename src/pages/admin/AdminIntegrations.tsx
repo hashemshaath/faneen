@@ -5,12 +5,12 @@
  * No keys are ever displayed. No navigation away from this page —
  * all sub-details (Google sub-APIs, GTM info, etc.) render inline.
  */
-import { useState, useCallback, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity, RefreshCw, Loader2, CheckCircle2, XCircle, AlertTriangle,
   ChevronDown, ChevronUp, MapPin, Mail, CreditCard, Sparkles, Globe, BarChart3,
-  KeyRound, ShieldCheck,
+  KeyRound, ShieldCheck, Copy, Check, HelpCircle, Timer, Filter,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -86,6 +86,50 @@ const CATEGORIES: Array<{ id: Category; label: { ar: string; en: string }; icon:
   { id: "ai", label: { ar: "الذكاء الاصطناعي والإثراء", en: "AI & Enrichment" }, icon: Sparkles },
   { id: "analytics", label: { ar: "التحليلات", en: "Analytics" }, icon: BarChart3 },
 ];
+
+type Filter = "all" | "ok" | "fail" | "deferred";
+
+/** Inline diagnostic hint generator. Maps common error codes / states to
+ *  actionable bilingual guidance — keeps users from leaving the page. */
+function diagnoseHint(svcId: string, r?: ProbeResult): { ar: string; en: string } | null {
+  if (!r) return null;
+  if (r.deferred || (r.missing && r.missing.length > 0)) {
+    const keys = r.missing?.join(", ") ?? "";
+    return {
+      ar: `أضف المفاتيح التالية في الإعدادات → الأسرار: ${keys || "—"}.`,
+      en: `Add the following secrets in Settings → Secrets: ${keys || "—"}.`,
+    };
+  }
+  const code = (r.errorCode ?? "").toLowerCase();
+  if (!code) return null;
+  if (code.includes("401") || code.includes("unauthorized") || code.includes("invalid_key")) {
+    return { ar: "المفتاح غير صالح أو منتهي. حدّث السر وأعد الفحص.", en: "Invalid or expired key. Update the secret and re-probe." };
+  }
+  if (code.includes("403") || code.includes("permission") || code.includes("denied")) {
+    return { ar: "تم رفض الوصول. تأكد من تفعيل الواجهات المطلوبة في حساب المزوّد.", en: "Access denied. Ensure required APIs are enabled in the provider account." };
+  }
+  if (code.includes("429") || code.includes("rate")) {
+    return { ar: "تم تجاوز حد الاستخدام. انتظر قليلاً أو ارفع الحصة.", en: "Rate limit hit. Wait a moment or raise the quota." };
+  }
+  if (code.includes("timeout") || code.includes("network") || code.includes("exception")) {
+    return { ar: "تعذّر الوصول للخدمة. تحقق من الاتصال وحالة المزوّد.", en: "Could not reach service. Check network & provider status." };
+  }
+  if (code.includes("http_5") || code.match(/5\d\d/)) {
+    return { ar: "خطأ من المزوّد. أعد المحاولة بعد دقيقة.", en: "Provider-side error. Retry in a minute." };
+  }
+  return { ar: "افتح التفاصيل ثم انسخ التشخيص لمشاركته مع الدعم.", en: "Open details and copy the diagnostic to share with support." };
+}
+
+function relativeTime(iso?: string, isAr?: boolean): string {
+  if (!iso) return "—";
+  const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+  const s = Math.round(diff / 1000);
+  if (s < 60) return isAr ? `قبل ${s} ث` : `${s}s ago`;
+  const m = Math.round(s / 60);
+  if (m < 60) return isAr ? `قبل ${m} د` : `${m}m ago`;
+  const h = Math.round(m / 60);
+  return isAr ? `قبل ${h} س` : `${h}h ago`;
+}
 
 interface GoogleApiProbe { ok: boolean; latencyMs: number; status: number; errorCode: string | null }
 
@@ -252,8 +296,15 @@ function GtmDetail({ r }: { r?: ProbeResult }) {
 
 const AdminIntegrations = () => {
   useNoIndex();
+  const bi = useBi();
+  const qc = useQueryClient();
   const [nonce, setNonce] = useState(0);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [filter, setFilter] = useState<Filter>("all");
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [recheckingId, setRecheckingId] = useState<string | null>(null);
+  const [tick, setTick] = useState(0); // forces relativeTime re-render
 
   const { data, isFetching, refetch } = useQuery({
     queryKey: ["admin", "integrations", nonce],
@@ -269,6 +320,47 @@ const AdminIntegrations = () => {
   const onRefresh = useCallback(() => { setNonce((n) => n + 1); refetch(); }, [refetch]);
   const toggle = useCallback((id: string) => setExpanded((m) => ({ ...m, [id]: !m[id] })), []);
 
+  // Auto-refresh: every 30s. Also bump tick every 15s so relative
+  // timestamps stay fresh without a full re-probe.
+  useEffect(() => {
+    const t = setInterval(() => setTick((n) => n + 1), 15_000);
+    return () => clearInterval(t);
+  }, []);
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const t = setInterval(() => { onRefresh(); }, 30_000);
+    return () => clearInterval(t);
+  }, [autoRefresh, onRefresh]);
+
+  const recheckOne = useCallback(async (svc: ServiceCard) => {
+    setRecheckingId(svc.id);
+    try {
+      const next = svc.fn ? await invokeProbe(svc.fn) : clientDetect(svc.id);
+      qc.setQueryData<Record<string, ProbeResult>>(
+        ["admin", "integrations", nonce],
+        (prev) => ({ ...(prev ?? {}), [svc.id]: next }),
+      );
+    } finally {
+      setRecheckingId(null);
+    }
+  }, [qc, nonce]);
+
+  const copyDiag = useCallback(async (svc: ServiceCard, r?: ProbeResult) => {
+    const payload = {
+      service: svc.id,
+      name: svc.name.en,
+      source: svc.source,
+      result: r ?? null,
+      ua: navigator.userAgent,
+      at: new Date().toISOString(),
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      setCopied(svc.id);
+      setTimeout(() => setCopied((c) => (c === svc.id ? null : c)), 1500);
+    } catch { /* clipboard blocked — no-op */ }
+  }, []);
+
   const counts = useMemo(() => {
     const c = { ok: 0, fail: 0, deferred: 0, total: SERVICES.length };
     for (const svc of SERVICES) {
@@ -279,6 +371,10 @@ const AdminIntegrations = () => {
     }
     return c;
   }, [data]);
+
+  const healthPct = counts.total > 0 ? Math.round((counts.ok / counts.total) * 100) : 0;
+  // touch `tick` so relative timestamps re-render on interval
+  void tick;
 
   return (
     <DashboardLayout>
@@ -296,10 +392,24 @@ const AdminIntegrations = () => {
               />
             </p>
           </div>
-          <Button variant="outline" size="sm" className="hover-lift" onClick={onRefresh} disabled={isFetching}>
-            {isFetching ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <RefreshCw className="w-4 h-4 me-1" />}
-            <Bi ar="تحديث الكل" en="Refresh all" />
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              type="button"
+              variant={autoRefresh ? "default" : "outline"}
+              size="sm"
+              className="hover-lift"
+              onClick={() => setAutoRefresh((v) => !v)}
+              aria-pressed={autoRefresh}
+              title={bi("تحديث تلقائي كل 30 ثانية", "Auto-refresh every 30s")}
+            >
+              <Timer className="w-4 h-4 me-1" />
+              <Bi ar="تحديث تلقائي" en="Auto" />
+            </Button>
+            <Button variant="outline" size="sm" className="hover-lift" onClick={onRefresh} disabled={isFetching}>
+              {isFetching ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <RefreshCw className="w-4 h-4 me-1" />}
+              <Bi ar="تحديث الكل" en="Refresh all" />
+            </Button>
+          </div>
         </header>
 
         {/* Summary */}
@@ -314,9 +424,55 @@ const AdminIntegrations = () => {
             label={<Bi ar="غير مهيّأة" en="Deferred" />} />
         </section>
 
+        {/* Health progress + filter bar */}
+        <Card className="p-3 space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium text-muted-foreground min-w-fit">
+              <Bi ar="درجة الجاهزية" en="Readiness" />
+            </span>
+            <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+              <div
+                className={`h-full transition-all ${healthPct >= 80 ? "bg-emerald-500" : healthPct >= 50 ? "bg-amber-500" : "bg-rose-500"}`}
+                style={{ width: `${healthPct}%` }}
+              />
+            </div>
+            <span className="text-xs font-semibold tabular-nums tech-content min-w-fit" dir="ltr">{healthPct}%</span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+            {(["all", "ok", "fail", "deferred"] as const).map((f) => {
+              const labels: Record<Filter, { ar: string; en: string }> = {
+                all: { ar: "الكل", en: "All" },
+                ok: { ar: "تعمل", en: "Healthy" },
+                fail: { ar: "معطّلة", en: "Failing" },
+                deferred: { ar: "غير مهيّأة", en: "Deferred" },
+              };
+              const count = f === "all" ? counts.total : counts[f];
+              const active = filter === f;
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFilter(f)}
+                  aria-pressed={active}
+                  className={`h-7 px-2.5 rounded-full text-[11px] font-medium border transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background hover:bg-muted border-border text-muted-foreground"
+                  }`}
+                >
+                  <Bi ar={labels[f].ar} en={labels[f].en} />
+                  <span className="ms-1.5 opacity-70 tech-content" dir="ltr">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+
         {/* Categorized service grid — everything inline, no external nav */}
         {CATEGORIES.map((cat) => {
-          const items = SERVICES.filter((s) => s.category === cat.id);
+          const items = SERVICES.filter((s) => s.category === cat.id)
+            .filter((s) => filter === "all" || statusOf(data?.[s.id]) === filter);
           if (items.length === 0) return null;
           const CatIcon = cat.icon;
           return (
@@ -324,6 +480,7 @@ const AdminIntegrations = () => {
               <h2 id={`cat-${cat.id}`} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                 <CatIcon className="w-3.5 h-3.5" />
                 <Bi ar={cat.label.ar} en={cat.label.en} />
+                <Badge variant="outline" className="h-4 text-[9px] tech-content ms-1" >{items.length}</Badge>
               </h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 {items.map((svc) => {
@@ -331,6 +488,8 @@ const AdminIntegrations = () => {
                   const s = statusOf(r);
                   const Icon = svc.icon;
                   const isOpen = !!expanded[svc.id];
+                  const hint = diagnoseHint(svc.id, r);
+                  const isRechecking = recheckingId === svc.id;
                   return (
                     <Card key={svc.id} className="p-4 hover-lift">
                       <div className="flex items-start justify-between gap-2">
@@ -364,8 +523,8 @@ const AdminIntegrations = () => {
                         </div>
                         <div>
                           <dt className="opacity-70"><Bi ar="آخر فحص" en="Checked" /></dt>
-                          <dd className="tech-content" dir="ltr">
-                            {r?.checkedAt ? new Date(r.checkedAt).toLocaleTimeString() : "—"}
+                          <dd title={r?.checkedAt ? new Date(r.checkedAt).toLocaleString() : ""}>
+                            {relativeTime(r?.checkedAt, bi("ar", "en") === "ar")}
                           </dd>
                         </div>
                       </dl>
@@ -376,24 +535,56 @@ const AdminIntegrations = () => {
                         </p>
                       )}
 
-                      {svc.hasDetail && (
-                        <>
+                      {hint && (
+                        <div className="mt-2 rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-1.5 text-[11px] text-amber-800 dark:text-amber-200 flex items-start gap-1.5">
+                          <HelpCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                          <span><Bi ar={hint.ar} en={hint.en} /></span>
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex items-center gap-1.5">
+                        <Button
+                          type="button" variant="outline" size="sm"
+                          className="h-8 text-xs flex-1"
+                          onClick={() => recheckOne(svc)}
+                          disabled={isRechecking}
+                          aria-label={bi(`إعادة فحص ${svc.name.ar}`, `Re-probe ${svc.name.en}`)}
+                        >
+                          {isRechecking
+                            ? <Loader2 className="w-3.5 h-3.5 me-1 animate-spin" />
+                            : <RefreshCw className="w-3.5 h-3.5 me-1" />}
+                          <Bi ar="إعادة فحص" en="Re-probe" />
+                        </Button>
+                        <Button
+                          type="button" variant="ghost" size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => copyDiag(svc, r)}
+                          aria-label={bi("نسخ التشخيص", "Copy diagnostic")}
+                          title={bi("نسخ التشخيص بصيغة JSON", "Copy JSON diagnostic")}
+                        >
+                          {copied === svc.id
+                            ? <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            : <Copy className="w-3.5 h-3.5" />}
+                        </Button>
+                        {svc.hasDetail && (
                           <Button
                             type="button" variant="ghost" size="sm"
-                            className="mt-3 h-8 text-xs w-full justify-between"
+                            className="h-8 px-2 text-xs"
                             onClick={() => toggle(svc.id)}
                             aria-expanded={isOpen}
+                            aria-label={bi("عرض التفاصيل", "Show details")}
                           >
-                            <span><Bi ar="تفاصيل مضمّنة" en="Inline details" /></span>
-                            {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            <Bi ar="تفاصيل" en="Details" />
+                            {isOpen ? <ChevronUp className="w-3.5 h-3.5 ms-1" /> : <ChevronDown className="w-3.5 h-3.5 ms-1" />}
                           </Button>
-                          {isOpen && (
-                            <div className="mt-2 rounded-lg border bg-muted/20 p-3">
-                              {svc.id === "google" && <GoogleDetail r={r} />}
-                              {svc.id === "gtm" && <GtmDetail r={r} />}
-                            </div>
-                          )}
-                        </>
+                        )}
+                      </div>
+
+                      {svc.hasDetail && isOpen && (
+                        <div className="mt-2 rounded-lg border bg-muted/20 p-3">
+                          {svc.id === "google" && <GoogleDetail r={r} />}
+                          {svc.id === "gtm" && <GtmDetail r={r} />}
+                        </div>
                       )}
                     </Card>
                   );
@@ -402,6 +593,13 @@ const AdminIntegrations = () => {
             </section>
           );
         })}
+
+        {/* Empty state for filter */}
+        {filter !== "all" && SERVICES.filter((s) => statusOf(data?.[s.id]) === filter).length === 0 && (
+          <Card className="p-6 text-center text-sm text-muted-foreground">
+            <Bi ar="لا توجد خدمات تطابق هذا الفلتر." en="No services match this filter." />
+          </Card>
+        )}
 
         <Card className="p-4 bg-muted/30 border-dashed">
           <p className="text-xs text-muted-foreground flex items-start gap-2">
