@@ -17,6 +17,7 @@ import {
   getOwnerBusiness,
   listBusinessStaffByBusiness,
 } from '@/modules/businesses';
+import { listProfilesByUserIds } from '@/modules/users';
 import {
   listBranchesByBusiness,
   insertBusinessBranchReturning,
@@ -165,12 +166,15 @@ const DashboardBranches: React.FC = () => {
     queryKey: ['staff-profiles', staffUserIds.join(',')],
     enabled: staffUserIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone, email')
-        .in('id', staffUserIds);
+      const { data, error } = await listProfilesByUserIds<ProfileLite>({
+        userIds: staffUserIds,
+        select: 'user_id, full_name, phone, email',
+      });
       if (error) throw error;
-      return (data ?? []) as ProfileLite[];
+      // Normalize user_id -> id so the rest of the page keeps working
+      return ((data ?? []) as Array<ProfileLite & { user_id: string }>).map(r => ({
+        id: r.user_id, full_name: r.full_name, phone: r.phone, email: r.email,
+      })) as ProfileLite[];
     },
   });
 
