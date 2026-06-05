@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -132,12 +133,18 @@ const Blog = () => {
 
   // SEO meta + JSON-LD (Breadcrumb + CollectionPage + ItemList of latest articles + WebSite SearchAction)
   usePageMeta({
-    title: language === 'ar'
-      ? 'مدونة قِطاعات — مقالات الألمنيوم والزجاج والحديد'
-      : 'Qitaat Blog — Aluminum, Glass & Steel Articles',
-    description: language === 'ar'
-      ? `${posts.length}+ مقال احترافي في صناعة الألمنيوم والزجاج والحديد والخشب. أدلة شاملة، نصائح خبراء، وأخبار قطاعات السوق السعودي والخليجي.`
-      : `${posts.length}+ professional articles on aluminum, glass, iron and wood industries. Comprehensive guides, expert tips and sector news for the Saudi & Gulf market.`,
+    title: buildSeoTitle({
+      kind: 'blog',
+      lang: language === 'ar' ? 'ar' : 'en',
+      name: language === 'ar' ? 'مدونة قِطاعات — مقالات الألمنيوم والزجاج والحديد' : 'Qitaat Blog — Aluminum, Glass & Steel Articles',
+    }),
+    description: buildSeoDescription({
+      kind: 'blog',
+      lang: language === 'ar' ? 'ar' : 'en',
+      customDescription: language === 'ar'
+        ? `${posts.length}+ مقال احترافي في صناعة الألمنيوم والزجاج والحديد والخشب. أدلة شاملة، نصائح خبراء، وأخبار قطاعات السوق السعودي والخليجي.`
+        : `${posts.length}+ professional articles on aluminum, glass, iron and wood industries. Comprehensive guides, expert tips and sector news for the Saudi & Gulf market.`,
+    }),
     canonical: 'https://qitaat.com/blog',
     ogType: 'website',
     keywords: language === 'ar'
