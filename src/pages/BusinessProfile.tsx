@@ -583,7 +583,7 @@ const BusinessProfile = () => {
               <div className="mt-3 rounded-2xl bg-background/70 p-1.5 sm:mt-6 sm:rounded-3xl sm:p-3">
                 {canSee("services") && (
                   <TabsContent value="services" className="mt-0">
-                    <ServicesTab businessId={business.id} businessName={businessName} />
+                    <ServicesTab businessId={business.id} businessName={businessName} branchId={branch?.id} />
                   </TabsContent>
                 )}
                 {canSee("projects") && (
