@@ -2342,61 +2342,56 @@ const AdminBusinesses = () => {
                       </div>
                       <Separator />
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{isRTL ? 'العنوان' : 'Address'}</p>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs">{isRTL ? 'الدولة' : 'Country'}</Label>
-                          <Select value={branchForm.country_id} onValueChange={v => setBranchForm((f) => ({ ...f, country_id: v, city_id: '' }))}>
-                            <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
-                            <SelectContent>
-                              {countries.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className="text-xs">{isRTL ? 'المدينة' : 'City'}</Label>
-                          <Select value={branchForm.city_id} onValueChange={v => setBranchForm((f) => ({ ...f, city_id: v }))}>
-                            <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
-                            <SelectContent>
-                              {(branchForm.country_id ? cities.filter((c) => c.country_id === branchForm.country_id) : cities).map((c) => (
-                                <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs">{isRTL ? 'المنطقة' : 'Region'}</Label>
-                          <Input value={branchForm.region} onChange={e => setBranchForm((f) => ({ ...f, region: e.target.value }))} className="mt-1" />
-                        </div>
-                        <div>
-                          <Label className="text-xs">{isRTL ? 'الحي' : 'District'}</Label>
-                          <Input value={branchForm.district} onChange={e => setBranchForm((f) => ({ ...f, district: e.target.value }))} className="mt-1" />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs">{isRTL ? 'اسم الشارع' : 'Street'}</Label>
-                          <Input value={branchForm.street_name} onChange={e => setBranchForm((f) => ({ ...f, street_name: e.target.value }))} className="mt-1" />
-                        </div>
-                        <div>
-                          <Label className="text-xs">{isRTL ? 'رقم المبنى' : 'Building No.'}</Label>
-                          <Input value={branchForm.building_number} onChange={e => setBranchForm((f) => ({ ...f, building_number: e.target.value }))} dir="ltr" className="mt-1" />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs">{isRTL ? 'الرقم الوطني' : 'National ID'}</Label>
-                          <Input value={branchForm.national_id} onChange={e => setBranchForm((f) => ({ ...f, national_id: e.target.value }))} dir="ltr" className="mt-1" />
-                        </div>
-                        <div>
-                          <Label className="text-xs">{isRTL ? 'الرقم الإضافي' : 'Additional No.'}</Label>
-                          <Input value={branchForm.additional_number} onChange={e => setBranchForm((f) => ({ ...f, additional_number: e.target.value }))} dir="ltr" className="mt-1" />
-                        </div>
-                      </div>
                       <div>
-                        <Label className="text-xs">{isRTL ? 'العنوان الكامل' : 'Full Address'}</Label>
-                        <Textarea value={branchForm.address} onChange={e => setBranchForm((f) => ({ ...f, address: e.target.value }))} rows={2} className="mt-1" />
+                        <Label className="text-xs">{isRTL ? 'الدولة' : 'Country'}</Label>
+                        <Select value={branchForm.country_id} onValueChange={v => setBranchForm((f) => ({ ...f, country_id: v, city_id: '' }))}>
+                          <SelectTrigger className="mt-1 max-w-xs"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
+                          <SelectContent>
+                            {countries.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {/* Unified address microservice — Region → City → District (typeable) + SPL + street/building/national-id. */}
+                      <NationalAddressForm
+                        isRTL={isRTL}
+                        value={{
+                          short_address: branchForm.short_address ?? null,
+                          region: branchForm.region ?? null,
+                          region_en: branchForm.region_en ?? null,
+                          city_id: branchForm.city_id ?? null,
+                          district: branchForm.district ?? null,
+                          district_en: branchForm.district_en ?? null,
+                          street_name: branchForm.street_name ?? null,
+                          street_name_en: branchForm.street_name_en ?? null,
+                          building_number: branchForm.building_number ?? null,
+                          additional_number: branchForm.additional_number ?? null,
+                          post_code: branchForm.post_code ?? null,
+                          address: branchForm.address ?? null,
+                          address_en: branchForm.address_en ?? null,
+                          address_manual: branchForm.address_manual ?? false,
+                        } as NationalAddressValue}
+                        onChange={(next) => setBranchForm((f) => ({
+                          ...f,
+                          short_address: next.short_address ?? '',
+                          region: next.region ?? '',
+                          region_en: next.region_en ?? '',
+                          city_id: next.city_id ?? '',
+                          district: next.district ?? '',
+                          district_en: next.district_en ?? '',
+                          street_name: next.street_name ?? '',
+                          street_name_en: next.street_name_en ?? '',
+                          building_number: next.building_number ?? '',
+                          additional_number: next.additional_number ?? '',
+                          post_code: next.post_code ?? '',
+                          address: next.address ?? '',
+                          address_en: next.address_en ?? '',
+                          address_manual: next.address_manual ?? false,
+                          national_id: f.national_id,
+                        }))}
+                      />
+                      <div>
+                        <Label className="text-xs">{isRTL ? 'الرقم الوطني' : 'National ID'}</Label>
+                        <Input value={branchForm.national_id} onChange={e => setBranchForm((f) => ({ ...f, national_id: e.target.value }))} dir="ltr" className="mt-1 max-w-xs" />
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
