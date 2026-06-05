@@ -33,16 +33,19 @@ interface BranchReviewsProps {
 export const BranchReviews: React.FC<BranchReviewsProps> = ({ branchId, businessId }) => {
   const { isRTL } = useLanguage();
   const [serviceFilter, setServiceFilter] = useState<string>('all');
+  const [showAll, setShowAll] = useState<boolean>(false);
 
   const { data: reviews = [] } = useQuery({
-    queryKey: ['branch-reviews', branchId],
+    queryKey: ['branch-reviews', branchId, showAll],
     queryFn: async () => {
-      const { data } = await supabase
+      let q = supabase
         .from('reviews')
         .select('id, rating, title, content, created_at, service_id, is_verified')
         .eq('branch_id', branchId)
         .order('created_at', { ascending: false })
         .limit(100);
+      if (!showAll) q = q.eq('is_verified', true);
+      const { data } = await q;
       return (data ?? []) as BranchReviewRow[];
     },
   });
@@ -116,6 +119,15 @@ export const BranchReviews: React.FC<BranchReviewsProps> = ({ branchId, business
                 ))}
               </SelectContent>
             </Select>
+            <button
+              type="button"
+              onClick={() => setShowAll(v => !v)}
+              className="text-[11px] underline text-muted-foreground hover:text-foreground"
+            >
+              {showAll
+                ? (isRTL ? 'عرض المعتمدة فقط' : 'Approved only')
+                : (isRTL ? 'عرض كل المراجعات' : 'Show all reviews')}
+            </button>
           </div>
         )}
 
@@ -132,6 +144,11 @@ export const BranchReviews: React.FC<BranchReviewsProps> = ({ branchId, business
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star key={i} className={`w-3 h-3 ${i < r.rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
                     ))}
+                    {r.is_verified && (
+                      <Badge variant="outline" className="ms-2 text-[10px] bg-emerald-500/10 text-emerald-700 border-emerald-500/30">
+                        {isRTL ? 'معتمد' : 'Verified'}
+                      </Badge>
+                    )}
                   </div>
                   <span className="text-[11px] text-muted-foreground tech-content">
                     {new Date(r.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
