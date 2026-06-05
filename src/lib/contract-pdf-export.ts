@@ -1280,6 +1280,13 @@ export const printMeasurements = (opts: {
   isRTL: boolean;
 }) => {
   const locale = opts.isRTL ? 'ar-SA-u-nu-latn' : 'en-US';
+  const esc = (s: unknown): string =>
+    String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   const totalArea = opts.measurements.reduce((s, m) => s + m.areaSqm, 0);
   const totalCost = opts.measurements.reduce((s, m) => s + m.totalCost, 0);
   const _mvc = calculateVatBreakdown({ amount: totalCost, vatRate: opts.vatRate, vatInclusive: opts.vatInclusive });
@@ -1288,18 +1295,18 @@ export const printMeasurements = (opts: {
 
   const rows = opts.measurements.map((m, i) => `
     <tr>
-      <td>${i + 1}</td><td>${m.pieceNumber}</td><td>${m.name}</td>
-      <td>${m.location || '-'}</td><td>${m.floor || '-'}</td>
+      <td>${i + 1}</td><td>${esc(m.pieceNumber)}</td><td>${esc(m.name)}</td>
+      <td>${esc(m.location || '-')}</td><td>${esc(m.floor || '-')}</td>
       <td class="num">${m.lengthMm}</td><td class="num">${m.widthMm}</td>
       <td class="num">${m.areaSqm.toFixed(3)}</td><td class="num">${m.quantity}</td>
       <td class="num">${m.unitPrice.toLocaleString(locale)}</td>
       <td class="num">${m.totalCost.toLocaleString(locale)}</td>
-      <td>${m.status}</td>
+      <td>${esc(m.status)}</td>
     </tr>`).join('');
 
   const html = `
     <h1>${opts.isRTL ? 'جدول المقاسات' : 'Measurements Schedule'}</h1>
-    <p style="text-align:center;color:#6B7689;margin-bottom:6mm;">${opts.contractNumber}${opts.businessName ? ' — ' + opts.businessName : ''}</p>
+    <p style="text-align:center;color:#6B7689;margin-bottom:6mm;">${esc(opts.contractNumber)}${opts.businessName ? ' — ' + esc(opts.businessName) : ''}</p>
     <table>
       <thead><tr>
         <th>#</th><th>${opts.isRTL ? 'رقم القطعة' : 'Piece #'}</th><th>${opts.isRTL ? 'الاسم' : 'Name'}</th>
