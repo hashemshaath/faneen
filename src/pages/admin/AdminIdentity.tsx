@@ -653,34 +653,51 @@ const AdminIdentity: React.FC = () => {
         </div>
 
         {/* ─── Management navigation grid ─── */}
-        <section aria-labelledby="mgmt-heading" className="rounded-2xl border border-border/40 bg-card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 id="mgmt-heading" className="font-heading font-bold text-sm flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-accent" />
-              {isRTL ? 'الإدارة التفصيلية' : 'Detailed management'}
-            </h2>
-            <p className="text-[11px] text-muted-foreground">
-              {isRTL ? 'صفحات مستقلّة لكل جانب' : 'Dedicated page per surface'}
-            </p>
+        <section aria-labelledby="mgmt-heading" className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-muted/20 p-5 md:p-6">
+          <div className="pointer-events-none absolute -top-20 -end-20 h-48 w-48 rounded-full bg-gradient-to-br from-accent/15 to-transparent blur-3xl" />
+          <div className="relative flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-accent/10 text-accent ring-1 ring-accent/20">
+                <Sparkles className="w-4 h-4" />
+              </span>
+              <div>
+                <h2 id="mgmt-heading" className="font-heading font-bold text-sm md:text-base">
+                  {isRTL ? 'الإدارة التفصيلية' : 'Detailed management'}
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {isRTL ? 'صفحات مستقلّة لكل جانب من جوانب الإدارة' : 'Dedicated page per surface'}
+                </p>
+              </div>
+            </div>
+            <Badge variant="outline" className="text-[10px] tabular-nums hidden sm:inline-flex">
+              {managementSurfaces.length} {isRTL ? 'سطح' : 'surfaces'}
+            </Badge>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {managementSurfaces.map((s) => (
               <Link
                 key={s.to}
                 to={s.to}
-                className={`group rounded-xl border border-border/40 bg-background/40 p-3.5 transition-all hover-lift ${toneRing[s.tone]}`}
+                className={`group relative overflow-hidden rounded-2xl border border-border/40 bg-card/80 backdrop-blur p-4 transition-all duration-300 hover:-translate-y-0.5 ${toneRing[s.tone]}`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <span className={`inline-flex h-9 w-9 items-center justify-center rounded-lg bg-card ${toneText[s.tone]}`}>
-                    <s.icon className="w-4 h-4" />
+                <div className={`pointer-events-none absolute -top-10 -end-10 h-24 w-24 rounded-full bg-gradient-to-br ${toneGrad[s.tone]} blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                <div className="relative flex items-start justify-between gap-2">
+                  <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${toneBg[s.tone]} ${toneText[s.tone]} ring-1 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3`}>
+                    <s.icon className="w-5 h-5" />
                   </span>
-                  {typeof s.count === 'number' && !isLoading && (
-                    <Badge variant="outline" className="tech-content text-[10px] tabular-nums">{s.count}</Badge>
-                  )}
-                  <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-foreground transition-colors ms-auto" />
+                  <div className="flex items-center gap-1.5 ms-auto">
+                    {typeof s.count === 'number' && !isLoading && (
+                      <Badge variant="outline" className={`tech-content text-[10px] tabular-nums font-bold ${toneText[s.tone]} border-current/30`}>
+                        {s.count.toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                      </Badge>
+                    )}
+                    <ArrowUpRight className={`w-4 h-4 text-muted-foreground/40 transition-all duration-300 group-hover:text-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${isRTL ? 'rtl-flip' : ''}`} />
+                  </div>
                 </div>
-                <p className="mt-2 font-heading text-sm font-bold leading-tight">{isRTL ? s.ar : s.en}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
+                <p className="relative mt-3 font-heading text-sm md:text-[15px] font-bold leading-tight text-foreground">
+                  {isRTL ? s.ar : s.en}
+                </p>
+                <p className="relative mt-1 text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
                   {isRTL ? s.desc_ar : s.desc_en}
                 </p>
               </Link>
