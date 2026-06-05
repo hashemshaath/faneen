@@ -92,35 +92,34 @@ const Kpi: React.FC<{
   tone: 'primary' | 'success' | 'info' | 'warning' | 'accent';
   to?: string; hint?: string; trend?: string;
 }> = ({ icon: Icon, label, value, tone, to, hint, trend }) => {
-  const toneText = {
-    primary: 'text-primary',
-    success: 'text-success',
-    info:    'text-info',
-    warning: 'text-warning',
-    accent:  'text-accent',
+  const toneCfg = {
+    primary: { text: 'text-primary',  bg: 'bg-primary/10',  ring: 'ring-primary/20',  grad: 'from-primary/15 via-primary/5 to-transparent',  glow: 'group-hover/kpi:shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.35)]' },
+    success: { text: 'text-success',  bg: 'bg-success/10',  ring: 'ring-success/20',  grad: 'from-success/15 via-success/5 to-transparent',  glow: 'group-hover/kpi:shadow-[0_8px_30px_-12px_hsl(var(--success)/0.35)]' },
+    info:    { text: 'text-info',     bg: 'bg-info/10',     ring: 'ring-info/20',     grad: 'from-info/15 via-info/5 to-transparent',        glow: 'group-hover/kpi:shadow-[0_8px_30px_-12px_hsl(var(--info)/0.35)]' },
+    warning: { text: 'text-warning',  bg: 'bg-warning/10',  ring: 'ring-warning/20',  grad: 'from-warning/15 via-warning/5 to-transparent',  glow: 'group-hover/kpi:shadow-[0_8px_30px_-12px_hsl(var(--warning)/0.35)]' },
+    accent:  { text: 'text-accent',   bg: 'bg-accent/10',   ring: 'ring-accent/20',   grad: 'from-accent/15 via-accent/5 to-transparent',    glow: 'group-hover/kpi:shadow-[0_8px_30px_-12px_hsl(var(--accent)/0.35)]' },
   } as const;
-  const trendBg = {
-    primary: 'bg-primary/10 text-primary',
-    success: 'bg-success/10 text-success',
-    info:    'bg-info/10 text-info',
-    warning: 'bg-warning/10 text-warning',
-    accent:  'bg-accent/10 text-accent',
-  } as const;
+  const t = toneCfg[tone];
   const body = (
-    <div className="group/kpi relative h-full rounded-2xl border border-border/50 bg-card p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-border transition-all">
-      <div className="flex items-center justify-between gap-2">
+    <div className={`group/kpi relative h-full overflow-hidden rounded-2xl border border-border/50 bg-card p-4 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-border ${t.glow}`}>
+      {/* decorative tone gradient */}
+      <div className={`pointer-events-none absolute -top-12 -end-12 h-32 w-32 rounded-full bg-gradient-to-br ${t.grad} blur-2xl opacity-70`} />
+      <div className="relative flex items-center justify-between gap-2">
         <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{label}</p>
-        <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg bg-muted/40 ${toneText[tone]} shrink-0`}>
-          <Icon className="w-3.5 h-3.5" />
+        <span className={`inline-flex h-9 w-9 items-center justify-center rounded-xl ${t.bg} ${t.text} ring-1 ${t.ring} shrink-0 transition-transform duration-300 group-hover/kpi:scale-110 group-hover/kpi:rotate-3`}>
+          <Icon className="w-4 h-4" />
         </span>
       </div>
-      <div className="flex items-end justify-between gap-2 mt-2">
-        <h3 className="text-2xl sm:text-3xl font-bold font-heading leading-none tech-content text-foreground">{value}</h3>
+      <div className="relative flex items-end justify-between gap-2 mt-3">
+        <h3 className="text-2xl sm:text-3xl font-bold font-heading leading-none tech-content tabular-nums text-foreground">{value}</h3>
         {trend && (
-          <span className={`text-[10px] font-semibold px-2 py-1 rounded-full ${trendBg[tone]} shrink-0`}>{trend}</span>
+          <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-1 rounded-full ${t.bg} ${t.text} ring-1 ${t.ring} shrink-0`}>
+            <TrendingUp className="w-2.5 h-2.5" />
+            {trend}
+          </span>
         )}
       </div>
-      {hint && <p className="text-[10px] text-muted-foreground mt-2 truncate">{hint}</p>}
+      {hint && <p className="relative text-[10px] text-muted-foreground mt-2 truncate">{hint}</p>}
       {to && <DirectionalIcon kind="forward" className="absolute top-3 w-3 h-3 text-muted-foreground/40 opacity-0 group-hover/kpi:opacity-100 transition-opacity" style={{ insetInlineEnd: '0.75rem' }} />}
     </div>
   );
