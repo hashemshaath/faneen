@@ -654,8 +654,69 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({ compact = false,
                           </span>
                         )}
                       </div>
+                      {it.meta && (
+                        <div className="mt-2 flex items-center flex-wrap gap-1.5">
+                          {it.meta.approvalStatus && (
+                            <Badge variant="outline" className={`text-[10px] ${
+                              it.meta.approvalStatus === 'published' ? 'border-success/40 text-success' :
+                              it.meta.approvalStatus === 'approved' ? 'border-info/40 text-info' :
+                              it.meta.approvalStatus === 'rejected' ? 'border-destructive/40 text-destructive' :
+                              it.meta.approvalStatus === 'draft' ? 'border-border text-muted-foreground' :
+                              'border-warning/40 text-warning'
+                            }`}>
+                              {isRTL ? 'الاعتماد: ' : 'Approval: '}{it.meta.approvalStatus}
+                            </Badge>
+                          )}
+                          {it.meta.usernameStatus && it.meta.usernameStatus !== 'approved' && (
+                            <Badge variant="outline" className="text-[10px] border-accent/40">
+                              {isRTL ? 'اسم المستخدم: ' : 'Username: '}{it.meta.usernameStatus}
+                            </Badge>
+                          )}
+                          <Badge variant="outline" className={`text-[10px] ${
+                            it.meta.isActive ? 'border-success/40 text-success' : 'border-muted text-muted-foreground'
+                          }`}>
+                            {it.meta.isActive ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'موقوف' : 'Inactive')}
+                          </Badge>
+                          {it.meta.isVerified && (
+                            <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-600">
+                              <ShieldCheck className="h-2.5 w-2.5 me-1" />{isRTL ? 'موثّقة' : 'Verified'}
+                            </Badge>
+                          )}
+                          {it.meta.isDemo && (
+                            <Badge variant="outline" className="text-[10px] border-warning/40 text-warning">
+                              {isRTL ? 'تجريبي' : 'Demo'}
+                            </Badge>
+                          )}
+                          {it.meta.tier && (
+                            <Badge variant="outline" className="text-[10px]">
+                              <Crown className="h-2.5 w-2.5 me-1" />{it.meta.tier}
+                            </Badge>
+                          )}
+                          {typeof it.meta.completion === 'number' && (
+                            <Badge variant="outline" className={`text-[10px] tech-content ${
+                              it.meta.completion >= 80 ? 'border-success/40 text-success' :
+                              it.meta.completion >= 40 ? 'border-warning/40 text-warning' :
+                              'border-destructive/40 text-destructive'
+                            }`}>
+                              {isRTL ? 'الاكتمال: ' : 'Completion: '}{it.meta.completion}%
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
+                      {it.meta && it.meta.approvalStatus === 'approved' && !it.meta.isDemo && (
+                        <Button
+                          size="sm" variant="outline"
+                          className="h-9 px-3 gap-1.5 border-info/40 text-info hover:bg-info/10"
+                          disabled={!!publishing[it.uid]}
+                          onClick={() => publishNow(it)}
+                          title={isRTL ? 'نشر الجهة لتظهر في البحث' : 'Publish to make it discoverable'}
+                        >
+                          {publishing[it.uid] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+                          <span className="hidden md:inline">{isRTL ? 'نشر' : 'Publish'}</span>
+                        </Button>
+                      )}
                       {canAct && (
                         <>
                           <Button
