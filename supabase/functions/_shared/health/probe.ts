@@ -58,9 +58,8 @@ export async function probeHttp(
   try {
     const res = await fetch(url, init);
     const txt = await res.text().catch(() => "");
-    void txt;
     const latency = Date.now() - t;
-    const err = validate ? validate(res.status, "") : (res.ok ? null : `http_${res.status}`);
+    const err = validate ? validate(res.status, txt) : (res.ok ? null : `http_${res.status}`);
     return {
       ok: !err, deferred: false, latencyMs: latency, status: res.status,
       errorCode: err, missing: [], checkedAt,
