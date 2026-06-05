@@ -441,6 +441,9 @@ const AppRoutes = () => (
           <Route path="/admin/barcode-registry" element={<ProtectedRoute requireAdmin><AdminBarcodeRegistry /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 10 — Provider Review hub. */}
           <Route path="/admin/provider-review" element={<ProtectedRoute requireAdmin><AdminProviderReviewHub /></ProtectedRoute>} />
+          {/* PROVIDER-GROWTH-ENGINE-2 — admin growth dashboard + ops queue */}
+          <Route path="/admin/provider-growth" element={<ProtectedRoute requireAdmin><AdminProviderGrowth /></ProtectedRoute>} />
+          <Route path="/admin/provider-growth/queue" element={<ProtectedRoute requireAdmin><AdminProviderGrowthQueue /></ProtectedRoute>} />
           {/* NAVIGATION-CONSOLIDATION-1 group 13 — Memberships hub. */}
           <Route path="/admin/memberships" element={<ProtectedRoute requireAdmin><AdminMembershipsHub /></ProtectedRoute>} />
           <Route path="/admin/membership-rejections" element={<ProtectedRoute requireAdmin><Navigate to="/admin/memberships?tab=rejections" replace /></ProtectedRoute>} />
