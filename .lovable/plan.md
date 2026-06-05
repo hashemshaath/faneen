@@ -110,6 +110,19 @@
 - `scripts/generate-sitemap.ts` / edge sitemap: تأكيد استبعاد الصفحات الخاصة + استبعاد أي UUIDs.
 - اختبارات: `src/tests/seoTitlesMetadataOptimizer1.test.ts` يغطّي القواعد، اللغة، الطول، عدم وجود UUID، وجود OG/Twitter/JSON-LD، fallback، sitemap لا يحوي خاص.
 
+### تقدّم المرحلة 4
+- ✅ `src/tests/seoTitlesMetadataOptimizer1.test.ts` — 18 اختباراً ناجحاً يغطّي:
+  - قواعد اللغة (ar/en) لكل `PageKind`.
+  - حدود الطول `TITLE_MAX=60` و `DESCRIPTION_MAX=158` على كل المسارات (بما فيها custom titles طويلة جداً).
+  - تنظيف UUID و Ref IDs من العناوين المخصّصة + التأكد من عدم تسرّبها في العناوين التلقائية.
+  - أولوية `customTitle`/`customDescription`، ثم `rawDescription`، ثم القالب العام.
+  - دمج keywords مع dedupe وحد أعلى 12 عنصراً.
+  - فحص المصدر لـ `supabase/functions/sitemap/index.ts`: لا أنواع `admin`/`dashboard`/`auth`، فلاتر `businesses` (is_active + approval_status='published' + is_demo=false)، `blog_posts.status='published'`، رؤوس `Content-Type=application/xml` و `Cache-Control` طويل.
+  - تأكيد توفر `useNoIndex` كـ hook قابل للاستيراد (مستخدم بالفعل في كل صفحات admin/dashboard/auth).
+- ✅ تحقّق `useNoIndex` على لوحات `admin/*` و `dashboard/*` و auth: `rg` يظهر استخدامه في ~150 شاشة خاصة (شامل `ProtectedRoute` و كل `Admin*`/`Dashboard*`).
+- ✅ sitemap edge function تم تدقيقها: لا تنشر أي مسار `/admin/*` أو `/dashboard/*`؛ كل القوائم تستخدم slugs عامة (ما عدا `/projects/:id` و `/search?...` المُمررة عمداً).
+- ⏳ مراجعة فردية لـ JSON-LD لكل صفحة (مطابقة `name/headline` للّغة + إزالة أي تقييمات وهمية) — اختياري في دفعة منفصلة عند الحاجة، خارج نطاق الاختبار الآلي.
+
 ---
 
 ## التنفيذ
