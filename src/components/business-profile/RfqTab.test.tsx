@@ -5,7 +5,8 @@ import { RfqTab } from "./RfqTab";
 
 // ── Mocks ────────────────────────────────────────────────────────────────
 
-const insertMock = vi.fn(async () => ({ error: null }));
+type InsertPayload = Record<string, unknown>;
+const insertMock = vi.fn(async (_row: InsertPayload) => ({ error: null }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({ insert: insertMock })),
