@@ -247,7 +247,7 @@ const AdminBrands: React.FC = () => {
                 </p>
               </div>
               <Button asChild variant="outline" size="sm" className="h-10 rounded-xl">
-                <Link to="/admin/services-catalog"><Building2 className="w-4 h-4 me-2" />{isRTL ? 'إسناد الخدمات' : 'Assign services'}</Link>
+                <Link to="/admin/businesses"><Building2 className="w-4 h-4 me-2" />{isRTL ? 'إسناد عبر الشركات' : 'Assign via businesses'}</Link>
               </Button>
             </CardContent>
           </Card>
