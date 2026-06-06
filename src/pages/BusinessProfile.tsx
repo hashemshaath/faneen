@@ -9,6 +9,7 @@ import {
   GitBranch,
   Image as ImageIcon,
   Inbox,
+  LayoutDashboard,
   Phone,
   Shield,
   Star,
@@ -58,6 +59,8 @@ import { BookingWidget } from "@/components/booking/BookingWidget";
 import { ContactSupplierSheet } from "@/components/business-profile/ContactSupplierSheet";
 import { BusinessProfileTrustStrip } from "@/components/business-profile/BusinessProfileTrustStrip";
 import { BusinessProfileStickyCta } from "@/components/business-profile/BusinessProfileStickyCta";
+import { OverviewTab } from "@/components/business-profile/OverviewTab";
+import { ShareMenu } from "@/components/business-profile/ShareMenu";
 import {
   canViewSection,
   useBusinessVisibility,
