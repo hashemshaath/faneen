@@ -617,7 +617,7 @@ export const CrDocumentScanner: React.FC<Props> = ({ businessId, defaults, onSav
                 {isPdf ? (
                   <iframe src={previewUrl} title="cr-preview" className="w-full h-[280px]" />
                 ) : (
-                  <img src={previewUrl} alt="cr-preview" className="w-full max-h-[280px] object-contain mx-auto" />
+                  <img src={previewUrl} alt="cr-preview" className="w-full max-h-[280px] object-contain mx-auto" loading="lazy" decoding="async"/>
                 )}
               </div>
             )}

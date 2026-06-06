@@ -1562,8 +1562,8 @@ const ContractDetail = () => {
       </div>
       <div className="p-4 space-y-0.5">
         <div className="flex items-center gap-3 mb-3">
-          {profile?.avatar_url ? <img src={profile.avatar_url} alt={getProfileName(profile)} className="w-12 h-12 rounded-full object-cover border-2 border-border shrink-0" />
-           : isBiz && biz?.logo_url ? <img src={biz.logo_url} alt={bizName || ''} className="w-12 h-12 rounded-xl object-cover border-2 border-border shrink-0" />
+          {profile?.avatar_url ? <img src={profile.avatar_url} alt={getProfileName(profile)} className="w-12 h-12 rounded-full object-cover border-2 border-border shrink-0" loading="lazy" decoding="async"/>
+           : isBiz && biz?.logo_url ? <img src={biz.logo_url} alt={bizName || ''} className="w-12 h-12 rounded-xl object-cover border-2 border-border shrink-0" loading="lazy" decoding="async"/>
            : <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center shrink-0"><PIcon className="w-6 h-6 text-muted-foreground" /></div>}
           <div className="min-w-0 flex-1">
             <p className="font-heading font-bold text-sm truncate">{getProfileName(profile)}</p>
@@ -1632,7 +1632,7 @@ const ContractDetail = () => {
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               {business?.logo_url ? (
                 <Link to={`/${business.username}`}>
-                  <img src={business.logo_url} alt={bizName} className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border-2 border-primary-foreground/20 shrink-0 hover:border-primary-foreground/40 transition-colors" />
+                  <img src={business.logo_url} alt={bizName} className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border-2 border-primary-foreground/20 shrink-0 hover:border-primary-foreground/40 transition-colors" loading="lazy" decoding="async"/>
                 </Link>
               ) : (
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary-foreground/10 border-2 border-primary-foreground/20 flex items-center justify-center shrink-0">

@@ -388,7 +388,7 @@ const AdminBranding: React.FC = () => {
                 src={values[field]}
                 alt="preview"
                 className="max-h-20 max-w-[80%] object-contain"
-              />
+              loading="lazy" decoding="async"/>
             ) : (
               <span className="text-xs text-muted-foreground">{isRTL ? 'لا يوجد' : 'None'}</span>
             )}

@@ -665,7 +665,7 @@ const ProfileSystems = () => {
                     <CardContent className="p-3 sm:p-4 space-y-2.5 sm:space-y-3">
                       {/* Title row */}
                       <div className="flex items-start gap-2">
-                        {p.logo_url && <img src={p.logo_url} alt={language === 'ar' ? p.name_ar : (p.name_en || p.name_ar)} className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain bg-muted p-1 shrink-0" />}
+                        {p.logo_url && <img src={p.logo_url} alt={language === 'ar' ? p.name_ar : (p.name_en || p.name_ar)} className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain bg-muted p-1 shrink-0" loading="lazy" decoding="async"/>}
                         <div className="min-w-0">
                           <h3 className="font-heading font-bold text-sm sm:text-base group-hover:text-accent transition-colors truncate">
                             {language === 'ar' ? p.name_ar : (p.name_en || p.name_ar)}
@@ -732,7 +732,7 @@ const ProfileSystems = () => {
                 {selectedProfiles.slice(0, 4).map((p) => (
                   <div key={p.id} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full ring-2 ring-primary bg-muted overflow-hidden shrink-0">
                     {p.cover_image_url ? (
-                      <img src={p.cover_image_url} alt={p.name_ar} className="w-full h-full object-cover" />
+                      <img src={p.cover_image_url} alt={p.name_ar} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
                     ) : (
                       <div className="w-full h-full grid place-items-center"><Layers className="w-3 h-3 text-muted-foreground" /></div>
                     )}

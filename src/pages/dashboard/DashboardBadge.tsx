@@ -713,7 +713,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                           {logoDataUrl && (
                             <>
                               <span className="inline-flex h-9 w-9 rounded-full overflow-hidden border bg-card">
-                                <img src={logoDataUrl} alt="logo preview" className="h-full w-full object-cover" />
+                                <img src={logoDataUrl} alt="logo preview" className="h-full w-full object-cover" loading="lazy" decoding="async"/>
                               </span>
                               <Button type="button" size="sm" variant="ghost" className="h-9 w-9 p-0" onClick={() => setLogoDataUrl('')} aria-label={isRTL ? 'إزالة الشعار' : 'Remove logo'}>
                                 <X className="w-3.5 h-3.5" />

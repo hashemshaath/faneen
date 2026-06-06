@@ -154,7 +154,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       return (
         <div className={cn('flex items-center gap-3 p-2 rounded-xl border border-border/50 bg-muted/30 group', className)}>
           <div className="w-20 h-14 rounded-lg overflow-hidden bg-muted shrink-0 border border-border/30">
-            <img src={value} alt={placeholder || 'Uploaded image'} className="w-full h-full object-cover" />
+            <img src={value} alt={placeholder || 'Uploaded image'} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] text-muted-foreground truncate">{value.split('/').pop()}</p>
@@ -175,7 +175,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     }
     return (
       <div className={cn('relative rounded-lg overflow-hidden border border-border/50 group', aspectClass, className)}>
-        <img src={value} alt={placeholder || 'Uploaded image'} className="w-full h-full object-cover" />
+        <img src={value} alt={placeholder || 'Uploaded image'} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
           <Button type="button" variant="secondary" size="sm" onClick={() => inputRef.current?.click()} disabled={uploading}>
             <Upload className="w-4 h-4 me-1" />{tx.change}
@@ -364,7 +364,7 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
         {images.map((url, i) => (
           <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-border/50 group">
-            <img src={url} alt={`Image ${i + 1}`} className="w-full h-full object-cover" />
+            <img src={url} alt={`Image ${i + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
             <button
               type="button"
               onClick={() => removeImage(i)}

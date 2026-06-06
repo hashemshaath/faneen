@@ -59,7 +59,7 @@ export const ProjectSidebar = ({ project, category, city }: Props) => {
             <h3 className="font-heading font-bold text-base sm:text-lg mb-4">{isRTL ? 'مزود الخدمة' : 'Service Provider'}</h3>
             <Link to={`/${biz.username}`} className="flex items-center gap-3 group mb-3">
               {biz.logo_url ? (
-                <img src={biz.logo_url} alt={bizName} className="w-14 h-14 rounded-xl object-cover border border-border/30 shrink-0" />
+                <img src={biz.logo_url} alt={bizName} className="w-14 h-14 rounded-xl object-cover border border-border/30 shrink-0" loading="lazy" decoding="async"/>
               ) : (
                 <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
                   <Building2 className="w-7 h-7 text-accent" />

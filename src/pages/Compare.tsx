@@ -222,7 +222,7 @@ const Compare = () => {
                     className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 text-start"
                   >
                     <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-                      {b.logo_url ? <img src={b.logo_url} alt={isRTL ? b.name_ar : (b.name_en || b.name_ar)} className="w-full h-full object-cover" /> : <span className="text-xs font-bold">{b.name_ar[0]}</span>}
+                      {b.logo_url ? <img src={b.logo_url} alt={isRTL ? b.name_ar : (b.name_en || b.name_ar)} className="w-full h-full object-cover" loading="lazy" decoding="async"/> : <span className="text-xs font-bold">{b.name_ar[0]}</span>}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{isRTL ? b.name_ar : (b.name_en || b.name_ar)}</p>
@@ -380,7 +380,7 @@ const Compare = () => {
                           <X className="w-3 h-3" />
                         </button>
                         <div className="w-14 h-14 rounded-xl bg-muted overflow-hidden">
-                          {b.logo_url ? <img src={b.logo_url} alt={isRTL ? b.name_ar : (b.name_en || b.name_ar)} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center font-bold text-xl">{b.name_ar[0]}</div>}
+                          {b.logo_url ? <img src={b.logo_url} alt={isRTL ? b.name_ar : (b.name_en || b.name_ar)} className="w-full h-full object-cover" loading="lazy" decoding="async"/> : <div className="w-full h-full flex items-center justify-center font-bold text-xl">{b.name_ar[0]}</div>}
                         </div>
                         <Link to={`/${b.username}`} className="font-medium text-sm hover:text-gold transition-colors text-center">
                           {isRTL ? b.name_ar : (b.name_en || b.name_ar)}

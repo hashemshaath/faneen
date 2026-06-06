@@ -407,7 +407,7 @@ export const PortfolioTab = ({ businessId }: { businessId: string }) => {
               src={activeItem.media_url}
               alt={getLocalizedValue(language, activeItem.title_ar, activeItem.title_en)}
               className="max-h-[85vh] max-w-full rounded-lg object-contain"
-              onClick={(event) => event.stopPropagation()}
+              onClick={(event) = loading="lazy" decoding="async"> event.stopPropagation()}
             />
           ) : activeEmbedUrl ? (
             <div className="w-full max-w-5xl overflow-hidden rounded-2xl" onClick={(event) => event.stopPropagation()}>
@@ -525,7 +525,7 @@ export const ReviewsTab = ({ business }: { business: any }) => {
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent/20 to-accent/5 ring-2 ring-accent/10 sm:h-11 sm:w-11">
                     {profile?.avatar_url ? (
-                      <img src={profile.avatar_url} alt={reviewerName} className="h-full w-full rounded-full object-cover" />
+                      <img src={profile.avatar_url} alt={reviewerName} className="h-full w-full rounded-full object-cover" loading="lazy" decoding="async"/>
                     ) : (
                       <span className="text-sm font-bold text-accent">{reviewerName.charAt(0)}</span>
                     )}

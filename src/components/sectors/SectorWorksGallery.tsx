@@ -227,7 +227,7 @@ export const SectorWorksGallery: React.FC<Props> = ({
                   src={current.projects.businesses.logo_url}
                   alt=""
                   className="w-9 h-9 rounded-lg object-cover bg-white/10"
-                />
+                loading="lazy" decoding="async"/>
               ) : (
                 <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
                   <Building2 className="w-4 h-4" />
@@ -284,7 +284,7 @@ export const SectorWorksGallery: React.FC<Props> = ({
               src={current.image_url}
               alt={current.caption_ar ?? current.projects?.title_ar ?? 'صورة عمل'}
               className="max-h-full max-w-full object-contain rounded-lg mx-3"
-            />
+            loading="lazy" decoding="async"/>
             <button
               type="button"
               onClick={() =>

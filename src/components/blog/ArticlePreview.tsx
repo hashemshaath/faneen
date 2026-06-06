@@ -36,7 +36,7 @@ export const ArticlePreview: React.FC<Props> = ({
       {/* Cover */}
       {coverImage && (
         <div className="rounded-xl overflow-hidden mb-6 aspect-[2/1]">
-          <img src={coverImage} alt={title} className="w-full h-full object-cover" />
+          <img src={coverImage} alt={title} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
         </div>
       )}
 

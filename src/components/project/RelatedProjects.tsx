@@ -66,7 +66,7 @@ export const RelatedProjects = ({ projectId, businessId, categoryId, cityId }: P
       >
         <div className="media-16-10 bg-muted overflow-hidden relative">
           {p.cover_image_url ? (
-            <img src={p.cover_image_url} alt={title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            <img src={p.cover_image_url} alt={title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" decoding="async"/>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <FolderOpen className="w-10 h-10 text-muted-foreground/20" />
@@ -74,7 +74,7 @@ export const RelatedProjects = ({ projectId, businessId, categoryId, cityId }: P
           )}
           {showBusiness && p.businesses?.logo_url && (
             <div className="absolute top-2.5 start-2.5">
-              <img src={p.businesses.logo_url} alt={p.businesses.name_ar || ''} className="w-8 h-8 rounded-lg border-2 border-background object-cover" />
+              <img src={p.businesses.logo_url} alt={p.businesses.name_ar || ''} className="w-8 h-8 rounded-lg border-2 border-background object-cover" loading="lazy" decoding="async"/>
             </div>
           )}
         </div>

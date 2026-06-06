@@ -246,7 +246,7 @@ const DashboardSiteDetail: React.FC = () => {
         <section className="relative overflow-hidden rounded-2xl border border-border/40 bg-card shadow-sm">
           <div className="relative aspect-[16/7] w-full bg-gradient-to-br from-muted via-muted/60 to-muted/30">
             {cover ? (
-              <img src={cover} alt={displayName} className="h-full w-full object-cover" />
+              <img src={cover} alt={displayName} className="h-full w-full object-cover" loading="lazy" decoding="async"/>
             ) : (
               <div className="flex h-full w-full items-center justify-center text-muted-foreground">
                 <ImageOff className="h-10 w-10" />

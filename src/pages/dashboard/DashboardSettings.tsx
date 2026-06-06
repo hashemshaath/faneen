@@ -416,7 +416,7 @@ const DashboardSettings = () => {
                     ) : (
                       <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-accent/10 flex items-center justify-center overflow-hidden ring-4 ring-background shadow-lg">
                         {profile?.avatar_url ? (
-                          <img src={profile.avatar_url} alt={profile?.full_name || (isRTL ? 'صورة الملف الشخصي' : 'Profile photo')} className="w-full h-full object-cover" />
+                          <img src={profile.avatar_url} alt={profile?.full_name || (isRTL ? 'صورة الملف الشخصي' : 'Profile photo')} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
                         ) : (
                           <User className="w-8 h-8 text-accent" />
                         )}
