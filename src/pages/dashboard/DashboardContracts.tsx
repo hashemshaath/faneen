@@ -1398,6 +1398,89 @@ const DashboardContracts = () => {
     toast.success(isRTL ? `تم تصدير ${filtered.length} عقد` : `Exported ${filtered.length} contracts`);
   }, [filtered, isRTL]);
 
+  /* ── Excel (.xlsx) export of filtered contracts list. ── */
+  const handleExportXlsx = useCallback(async () => {
+    if (filtered.length === 0) {
+      toast.info(isRTL ? 'لا توجد عقود للتصدير' : 'No contracts to export');
+      return;
+    }
+    try {
+      const XLSX = await import('xlsx');
+      const headers = isRTL
+        ? ['الرقم', 'العنوان', 'الحالة', 'الدور', 'المبلغ', 'العملة', 'تاريخ الإنشاء', 'تاريخ البدء', 'تاريخ الانتهاء']
+        : ['Number', 'Title', 'Status', 'Role', 'Amount', 'Currency', 'Created', 'Start', 'End'];
+      const rows = filtered.map((c) => [
+        c.contract_number,
+        isRTL ? c.title_ar : (c.title_en || c.title_ar),
+        c.status,
+        c._role,
+        Number(c.total_amount),
+        c.currency_code,
+        c.created_at?.slice(0, 10) ?? '',
+        c.start_date ?? '',
+        c.end_date ?? '',
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, isRTL ? 'العقود' : 'Contracts');
+      XLSX.writeFile(wb, `contracts-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      toast.success(isRTL ? `تم تصدير ${filtered.length} عقد` : `Exported ${filtered.length} contracts`);
+    } catch (err) {
+      toast.error(isRTL ? 'فشل التصدير' : 'Export failed');
+    }
+  }, [filtered, isRTL]);
+
+  /* ── PDF summary of filtered contracts list (uses jspdf-autotable). ── */
+  const handleExportListPdf = useCallback(async () => {
+    if (filtered.length === 0) {
+      toast.info(isRTL ? 'لا توجد عقود للتصدير' : 'No contracts to export');
+      return;
+    }
+    try {
+      const { jsPDF } = await import('jspdf');
+      const autoTable = (await import('jspdf-autotable')).default;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt' });
+      doc.setFontSize(14);
+      doc.text('Contracts Report', 40, 40);
+      doc.setFontSize(9);
+      doc.text(new Date().toLocaleString('en-US'), 40, 56);
+      autoTable(doc, {
+        startY: 72,
+        head: [[
+          'Number', 'Title', 'Status', 'Role', 'Amount', 'Currency', 'Created', 'Start', 'End',
+        ]],
+        body: filtered.map((c) => [
+          c.contract_number,
+          (c.title_en || c.title_ar)?.slice(0, 60) ?? '',
+          c.status,
+          c._role,
+          Number(c.total_amount).toLocaleString(),
+          c.currency_code,
+          c.created_at?.slice(0, 10) ?? '',
+          c.start_date ?? '',
+          c.end_date ?? '',
+        ]),
+        styles: { fontSize: 8, cellPadding: 4 },
+        headStyles: { fillColor: [30, 41, 59], textColor: 255 },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+      });
+      doc.save(`contracts-${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast.success(isRTL ? `تم تصدير ${filtered.length} عقد` : `Exported ${filtered.length} contracts`);
+    } catch (err) {
+      toast.error(isRTL ? 'فشل التصدير' : 'Export failed');
+    }
+  }, [filtered, isRTL]);
+
+  /* ── Pagination — reset to page 1 when filters/sort change. ── */
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, roleFilter, searchQuery, sortBy, pageSize]);
+
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage, pageSize]);
+
   /* ── Phase 8 — Keyboard shortcuts: "/" focus search, "n" new contract, "Esc" close form. ── */
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
