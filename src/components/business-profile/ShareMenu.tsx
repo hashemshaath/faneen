@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useBi } from "@/components/common/Bilingual";
 import { downloadVCard, type BusinessVCardInput } from "@/lib/business-vcard";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ShareMenuProps {
   businessId: string;
@@ -58,13 +60,28 @@ export const ShareMenu = ({
   className,
 }: ShareMenuProps) => {
   const bi = useBi();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [isFav, setIsFav] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setIsFav(readFavorites().includes(businessId));
-  }, [businessId]);
+    let cancelled = false;
+    if (user) {
+      void supabase
+        .from("user_favorite_businesses")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("business_id", businessId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (!cancelled) setIsFav(!!data);
+        });
+    } else {
+      setIsFav(readFavorites().includes(businessId));
+    }
+    return () => { cancelled = true; };
+  }, [businessId, user]);
 
   useEffect(() => {
     if (!open) return;
@@ -105,18 +122,42 @@ export const ShareMenu = ({
     }
   };
 
-  const toggleFavorite = () => {
-    const current = readFavorites();
-    const next = current.includes(businessId)
-      ? current.filter((id) => id !== businessId)
-      : [...current, businessId];
-    writeFavorites(next);
-    setIsFav(next.includes(businessId));
-    toast.success(
-      next.includes(businessId)
-        ? bi("تمت الإضافة إلى المفضّلة", "Added to favorites")
-        : bi("تم الحذف من المفضّلة", "Removed from favorites"),
-    );
+  const toggleFavorite = async () => {
+    if (!user) {
+      const current = readFavorites();
+      const next = current.includes(businessId)
+        ? current.filter((id) => id !== businessId)
+        : [...current, businessId];
+      writeFavorites(next);
+      setIsFav(next.includes(businessId));
+      toast.success(
+        next.includes(businessId)
+          ? bi("تمت الإضافة إلى المفضّلة", "Added to favorites")
+          : bi("تم الحذف من المفضّلة", "Removed from favorites"),
+      );
+      return;
+    }
+    try {
+      if (isFav) {
+        const { error } = await supabase
+          .from("user_favorite_businesses")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("business_id", businessId);
+        if (error) throw error;
+        setIsFav(false);
+        toast.success(bi("تم الحذف من المفضّلة", "Removed from favorites"));
+      } else {
+        const { error } = await supabase
+          .from("user_favorite_businesses")
+          .insert({ user_id: user.id, business_id: businessId });
+        if (error) throw error;
+        setIsFav(true);
+        toast.success(bi("تمت الإضافة إلى المفضّلة", "Added to favorites"));
+      }
+    } catch {
+      toast.error(bi("تعذّر تحديث المفضّلة", "Could not update favorites"));
+    }
   };
 
   const handleVCard = () => {
