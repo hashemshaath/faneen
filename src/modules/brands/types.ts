@@ -25,6 +25,66 @@ export type BrandRequestType =
 export type BrandRequestStatus =
   | 'pending' | 'in_review' | 'approved' | 'rejected' | 'needs_more_info';
 
+export type BrandProductStatus =
+  | 'draft' | 'pending' | 'approved' | 'rejected' | 'archived';
+
+export type BrandProductRequestStatus =
+  | 'pending' | 'in_review' | 'approved' | 'rejected' | 'needs_more_info';
+
+export interface BrandProduct {
+  id: string;
+  ref_id: string | null;
+  brand_id: string;
+  name_ar: string;
+  name_en: string | null;
+  slug: string | null;
+  model_number: string | null;
+  sku: string | null;
+  description_ar: string | null;
+  description_en: string | null;
+  category_id: string | null;
+  image_url: string | null;
+  gallery: Array<{ url: string; alt?: string }>;
+  specs: Record<string, unknown>;
+  status: BrandProductStatus;
+  is_verified: boolean;
+  is_featured: boolean;
+  created_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  rejection_reason: string | null;
+  source: 'admin' | 'provider_request' | 'import';
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BrandProductRequest {
+  id: string;
+  ref_id: string | null;
+  brand_id: string;
+  business_id: string | null;
+  requested_by: string;
+  name_ar: string;
+  name_en: string | null;
+  model_number: string | null;
+  description_ar: string | null;
+  description_en: string | null;
+  category_id: string | null;
+  image_url: string | null;
+  gallery: Array<{ url: string; alt?: string }>;
+  specs: Record<string, unknown>;
+  status: BrandProductRequestStatus;
+  admin_notes: string | null;
+  reject_reason: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  approved_product_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ProviderBrandLink {
   id: string;
   ref_id: string | null;
