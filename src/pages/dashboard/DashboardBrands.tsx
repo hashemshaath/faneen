@@ -37,6 +37,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DashboardEmptyState } from '@/components/dashboard/DashboardEmptyState';
+import { BrandRequestForm, type BrandRequestFormPayload } from '@/components/brands/BrandRequestForm';
+import { LinkedBrandProductsInline } from '@/components/brands/LinkedBrandProductsInline';
 
 import {
   listApprovedBrandsForProviderPicker,
@@ -80,53 +82,6 @@ const statusBadgeClass = (status: string | null | undefined): string => {
     default:
       return 'bg-muted text-muted-foreground border-border';
   }
-};
-
-/**
- * Inline approved-product browser for a single linked brand row.
- * Lazy-fetches `brand_products` (approved/active only) via the brands module
- * and renders a compact pill list. Lets a provider quickly see which
- * products exist in the central catalog for a brand they work with.
- */
-const LinkedBrandProductsInline: React.FC<{ brandId: string; isRTL: boolean; locale: Loc }> = ({
-  brandId, isRTL, locale,
-}) => {
-  const { data = [], isLoading } = useQuery({
-    queryKey: ['brand-approved-products', brandId],
-    queryFn: () => listApprovedBrandProducts(brandId),
-    staleTime: 60_000,
-  });
-  if (isLoading) return <Skeleton className="h-8 w-full mt-2" />;
-  if (data.length === 0) {
-    return (
-      <p className="text-xs text-muted-foreground mt-2">
-        {isRTL ? 'لا توجد منتجات معتمدة بعد لهذه العلامة.' : 'No approved products yet for this brand.'}
-      </p>
-    );
-  }
-  return (
-    <div className="mt-2 flex flex-wrap gap-1.5">
-      {data.slice(0, 24).map((p) => {
-        const lbl = locale === 'ar' ? p.name_ar : (p.name_en ?? p.name_ar);
-        return (
-          <span
-            key={p.id}
-            className="inline-flex items-center gap-1 text-[11px] bg-muted/60 border rounded-full px-2 py-0.5"
-            title={p.model_number ?? undefined}
-          >
-            <Package className="w-2.5 h-2.5" />
-            <span className="truncate max-w-[10rem]">{lbl}</span>
-            {p.model_number && <code className="tech-content opacity-70">{p.model_number}</code>}
-          </span>
-        );
-      })}
-      {data.length > 24 && (
-        <span className="text-[11px] text-muted-foreground">
-          {isRTL ? `+${data.length - 24} أخرى` : `+${data.length - 24} more`}
-        </span>
-      )}
-    </div>
-  );
 };
 
 const DashboardBrands: React.FC = () => {
