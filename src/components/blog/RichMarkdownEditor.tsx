@@ -280,7 +280,7 @@ export const RichMarkdownEditor: React.FC<RichEditorProps> = ({
               {imageUrl && (
                 <div className="rounded-lg overflow-hidden bg-muted h-24 flex items-center justify-center">
                   <img src={imageUrl} alt="preview" className="max-h-full max-w-full object-contain"
-                    onError={(e) = loading="lazy" decoding="async"> { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 </div>
               )}
               <div><Label className="text-[10px]">{isRTL ? 'النص البديل (SEO)' : 'Alt Text (SEO)'}</Label>
