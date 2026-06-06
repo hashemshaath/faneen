@@ -1,7 +1,6 @@
-import { BookOpen, FileText, Plus, X, BarChart3, RefreshCw, FileSearch } from 'lucide-react';
+import { BookOpen, Plus, X, RefreshCw, FileSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
 
 interface ContractPageHeaderProps {
   isRTL: boolean;
@@ -44,14 +43,6 @@ export function ContractPageHeader({
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
               </Button>
-            )}
-            {showAnalytics && (
-              <Link to="/dashboard/contract-analytics">
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9 hover-lift">
-                  <BarChart3 className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-                  {isRTL ? 'التحليلات' : 'Analytics'}
-                </Button>
-              </Link>
             )}
             <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9 hover-lift" onClick={onOpenTemplates}>
               <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
