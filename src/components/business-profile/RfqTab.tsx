@@ -124,7 +124,7 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
             "The provider will reach out within 24–48 business hours.",
           )}
         </p>
-        <Button variant="outline" size="sm" className="mt-4" onClick={() => { setSubmitted(false); setForm({ name: "", email: "", phone: "", title: "", description: "", budget_min: "", budget_max: "", deadline: "" }); }}>
+        <Button variant="outline" size="sm" className="mt-4" onClick={() => { setSubmitted(false); setForm({ name: "", email: "", phone: "", title: "", description: "", budget_min: "", budget_max: "", deadline: "", contact_method: "whatsapp", timeline: "1_3_months", service_location: "project_site" }); }}>
           {bi("إرسال طلب آخر", "Send another RFQ")}
         </Button>
       </div>

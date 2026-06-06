@@ -620,7 +620,12 @@ const BusinessProfile = () => {
                   <OverviewTab business={business} onJumpToTab={setActiveTab} />
                 </TabsContent>
                 <TabsContent value="rfq" className="mt-0">
-                  <RfqTab businessId={business.id} businessName={businessName} />
+                  <RfqTab
+                    businessId={business.id}
+                    businessName={businessName}
+                    sector={(business.categories as { slug?: string } | null)?.slug || categoryName || "other"}
+                    city={cityName || (business.cities as { name_ar?: string } | null)?.name_ar || "—"}
+                  />
                 </TabsContent>
                 <TabsContent value="qa" className="mt-0">
                   <QATab businessId={business.id} businessName={businessName} />
