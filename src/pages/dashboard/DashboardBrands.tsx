@@ -704,6 +704,142 @@ const DashboardBrands: React.FC = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* My brand product requests */}
+        <Card data-testid="my-brand-product-requests-panel">
+          <CardHeader className="pb-3 flex flex-row items-start justify-between gap-3">
+            <div>
+              <CardTitle className="text-base">
+                {isRTL ? 'طلبات منتجات العلامات' : 'Brand product requests'}
+              </CardTitle>
+              <CardDescription>
+                {isRTL
+                  ? 'اقترح منتجاً جديداً لإحدى علاماتك المرتبطة. تخضع جميع الاقتراحات لموافقة الإدارة قبل ظهورها في الكتالوج المركزي.'
+                  : 'Suggest a new product for one of your linked brands. All proposals are reviewed by admins before they appear in the central catalog.'}
+              </CardDescription>
+            </div>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                if (!businessId) {
+                  toast.error(isRTL ? 'لا توجد منشأة نشطة' : 'No active business');
+                  return;
+                }
+                if (linkedBrandOptions.length === 0) {
+                  toast.error(isRTL ? 'اربط علامة أولاً' : 'Link a brand first');
+                  return;
+                }
+                setProdBrandId(linkedBrandOptions[0]?.id ?? '');
+                setProdOpen((v) => !v);
+              }}
+              data-testid="propose-product-cta"
+            >
+              <Package className="w-4 h-4 me-2" />
+              {isRTL ? 'اقتراح منتج' : 'Propose product'}
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {prodOpen && (
+              <div className="border rounded-xl p-3 space-y-3" data-testid="product-request-form">
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>{isRTL ? 'العلامة *' : 'Brand *'}</Label>
+                    <Select value={prodBrandId} onValueChange={setProdBrandId}>
+                      <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {linkedBrandOptions.map((o) => (
+                          <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{isRTL ? 'رقم/كود الموديل' : 'Model number'}</Label>
+                    <Input value={prodModel} onChange={(e) => setProdModel(e.target.value)} className="h-11 tech-content" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{isRTL ? 'اسم المنتج بالعربية *' : 'Arabic name *'}</Label>
+                    <Input value={prodNameAr} onChange={(e) => setProdNameAr(e.target.value)} className="h-11" dir="auto" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{isRTL ? 'اسم المنتج بالإنجليزية' : 'English name'}</Label>
+                    <Input value={prodNameEn} onChange={(e) => setProdNameEn(e.target.value)} className="h-11" dir="auto" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>{isRTL ? 'وصف مختصر' : 'Short description'}</Label>
+                  <Textarea value={prodDesc} onChange={(e) => setProdDesc(e.target.value)} rows={2} dir="auto" />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" onClick={() => setProdOpen(false)}>
+                    {isRTL ? 'إلغاء' : 'Cancel'}
+                  </Button>
+                  <Button
+                    onClick={() => submitProduct.mutate()}
+                    disabled={!prodBrandId || !prodNameAr.trim() || submitProduct.isPending}
+                    data-testid="submit-product-request-btn"
+                  >
+                    <Send className="w-4 h-4 me-2" />
+                    {isRTL ? 'إرسال للمراجعة' : 'Submit for review'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {loadingProdReq ? (
+              <Skeleton className="h-16 w-full" />
+            ) : myProductRequests.length === 0 ? (
+              <DashboardEmptyState
+                icon={<Package className="w-8 h-8" />}
+                title={isRTL ? 'لا توجد طلبات منتجات' : 'No product requests yet'}
+                description={isRTL
+                  ? 'اقترح منتجاً جديداً لإثراء الكتالوج المركزي للعلامات.'
+                  : 'Propose a new product to enrich the central brand catalog.'}
+              />
+            ) : (
+              <div className="space-y-2">
+                {myProductRequests.map((r) => {
+                  const Icon = r.status === 'approved' ? ShieldCheck
+                    : r.status === 'rejected' ? XCircle
+                    : Clock;
+                  const color = r.status === 'approved' ? 'text-success'
+                    : r.status === 'rejected' ? 'text-destructive'
+                    : 'text-warning';
+                  return (
+                    <div
+                      key={r.id}
+                      className="flex items-start gap-3 p-3 border rounded-xl"
+                      data-testid="product-request-row"
+                    >
+                      <Icon className={`w-5 h-5 mt-0.5 ${color}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium">{r.name_ar}</span>
+                          {r.model_number && (
+                            <code className="tech-content text-xs bg-muted px-2 py-0.5 rounded">{r.model_number}</code>
+                          )}
+                          {r.ref_id && (
+                            <code className="tech-content text-xs bg-muted px-2 py-0.5 rounded">{r.ref_id}</code>
+                          )}
+                          <Badge variant="secondary" className="text-xs">
+                            {pick(brandProductRequestStatusLabel[r.status], locale)}
+                          </Badge>
+                        </div>
+                        {r.reject_reason && (
+                          <p className="text-xs text-destructive mt-1">{r.reject_reason}</p>
+                        )}
+                        {r.admin_notes && r.status === 'needs_more_info' && (
+                          <p className="text-xs text-warning mt-1">{r.admin_notes}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
