@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Inbox, Shield, Timer, Send, Download, Share2, ExternalLink,
+  Inbox, User, Shield, Timer, Send, Download, Share2, ExternalLink,
   ChevronDown, CircleCheck, DollarSign, TrendingUp, Ruler, ListChecks,
   CheckCircle2, StickyNote, Paperclip, Phone, Mail,
 } from 'lucide-react';
