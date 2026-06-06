@@ -79,6 +79,7 @@ const BusinessProfile = () => {
   const navigate = useNavigate();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [contactSheetOpen, setContactSheetOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("overview");
   const { data: businessRow, isLoading, error } = useBusinessByUsername(username || "");
   const { data: branch } = useBranchBySlug(businessRow?.id, branchSlug);
 
