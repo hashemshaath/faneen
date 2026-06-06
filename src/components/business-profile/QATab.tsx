@@ -94,7 +94,7 @@ export const QATab = ({ businessId, businessName }: QATabProps) => {
         <header className="mb-3 flex items-center gap-2">
           <MessageCircleQuestion className="h-5 w-5 text-accent" />
           <h3 className="font-heading text-base font-bold text-foreground sm:text-lg">
-            {bi("اطرح سؤالاً على " + businessName, "Ask " + businessName + " a question")}
+            {bi(`اطرح سؤالاً على ${businessName}`, `Ask ${businessName} a question`)}
           </h3>
         </header>
         <p className="mb-3 text-xs leading-relaxed text-muted-foreground sm:text-sm">

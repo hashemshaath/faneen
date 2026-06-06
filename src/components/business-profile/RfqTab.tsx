@@ -26,25 +26,50 @@ interface RfqTabProps {
   city: string;
 }
 
+type ContactMethod = "whatsapp" | "call" | "email";
+type Timeline = "urgent" | "1_month" | "1_3_months" | "3_6_months" | "flexible";
+type ServiceLocation = "project_site" | "provider_location" | "not_sure";
+
+interface RfqFormState {
+  name: string;
+  email: string;
+  phone: string;
+  title: string;
+  description: string;
+  budget_min: string;
+  budget_max: string;
+  deadline: string;
+  contact_method: ContactMethod;
+  timeline: Timeline;
+  service_location: ServiceLocation;
+}
+
+const INITIAL_FORM: RfqFormState = {
+  name: "",
+  email: "",
+  phone: "",
+  title: "",
+  description: "",
+  budget_min: "",
+  budget_max: "",
+  deadline: "",
+  contact_method: "whatsapp",
+  timeline: "1_3_months",
+  service_location: "project_site",
+};
+
 export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) => {
   const bi = useBi();
   const { user } = useAuth();
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    title: "",
-    description: "",
-    budget_min: "",
-    budget_max: "",
-    deadline: "",
-    contact_method: "whatsapp" as "whatsapp" | "call" | "email",
-    timeline: "1_3_months" as "urgent" | "1_month" | "1_3_months" | "3_6_months" | "flexible",
-    service_location: "project_site" as "project_site" | "provider_location" | "not_sure",
-  });
+  const [form, setForm] = useState<RfqFormState>(INITIAL_FORM);
   const [submitted, setSubmitted] = useState(false);
 
-  const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const reset = () => {
+    setSubmitted(false);
+    setForm(INITIAL_FORM);
+  };
+
+  const update = (k: keyof RfqFormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({ ...prev, [k]: e.target.value }));
 
   const submit = useMutation({
@@ -124,7 +149,7 @@ export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) 
             "The provider will reach out within 24–48 business hours.",
           )}
         </p>
-        <Button variant="outline" size="sm" className="mt-4" onClick={() => { setSubmitted(false); setForm({ name: "", email: "", phone: "", title: "", description: "", budget_min: "", budget_max: "", deadline: "", contact_method: "whatsapp", timeline: "1_3_months", service_location: "project_site" }); }}>
+        <Button variant="outline" size="sm" className="mt-4" onClick={reset}>
           {bi("إرسال طلب آخر", "Send another RFQ")}
         </Button>
       </div>
