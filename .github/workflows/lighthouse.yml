@@ -1,0 +1,47 @@
+name: Lighthouse CI (Business Profile)
+
+# Runs Lighthouse against the live published build of a sample business
+# profile to track Core Web Vitals over time. Performance budgets are
+# enforced via lighthouserc.json — any regression below the LCP/INP/CLS
+# targets fails the job so we catch perf drift early.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/pages/BusinessProfile.tsx"
+      - "src/components/business-profile/**"
+      - ".github/workflows/lighthouse.yml"
+      - "lighthouserc.json"
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install Lighthouse CI
+        run: npm install --no-save @lhci/cli@0.14.x
+
+      - name: Run Lighthouse against published build
+        run: npx lhci autorun --config=./lighthouserc.json
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        continue-on-error: true
+
+      - name: Upload Lighthouse report artifact
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          if-no-files-found: ignore

@@ -31,4 +31,19 @@ export default tseslint.config(
       "react-refresh/only-export-components": "off",
     },
   },
+  {
+    // Stricter bar for recently-refactored Business Profile surface.
+    // Lock in zero-`any`, zero-unused, and exhaustive React hook deps so
+    // future regressions are caught in CI before merge.
+    files: ["src/components/business-profile/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+      "react-hooks/exhaustive-deps": "error",
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+    },
+  },
 );
