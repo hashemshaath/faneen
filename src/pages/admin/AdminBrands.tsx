@@ -22,7 +22,7 @@ import {
   type Brand, type BrandStatus,
 } from '@/modules/brands';
 
-const STATUS_FILTERS: Array<BrandStatus | 'all'> = ['pending', 'in_review', 'approved', 'rejected', 'archived', 'all'];
+const STATUS_FILTERS: Array<BrandStatus | 'all'> = ['all', 'approved', 'pending', 'in_review', 'rejected', 'archived'];
 
 const AdminBrands: React.FC = () => {
   useNoIndex();
@@ -31,7 +31,7 @@ const AdminBrands: React.FC = () => {
   usePageMeta({ title: isRTL ? 'سجل العلامات التجارية — إدارة' : 'Brands Registry — Admin', noindex: true });
   const qc = useQueryClient();
 
-  const [status, setStatus] = useState<BrandStatus | 'all'>('pending');
+  const [status, setStatus] = useState<BrandStatus | 'all'>('all');
   const [q, setQ] = useState('');
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [reason, setReason] = useState('');
