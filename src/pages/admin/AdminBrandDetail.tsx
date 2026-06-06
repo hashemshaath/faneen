@@ -354,11 +354,6 @@ const AdminBrandDetail: React.FC = () => {
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
-              {brand.website && (
-                <Button asChild size="sm" variant="outline">
-                  <a href={brand.website} target="_blank" rel="noopener noreferrer"><Globe className="w-4 h-4 me-1" />{isRTL ? 'الموقع' : 'Website'}<ExternalLink className="w-3 h-3 ms-1" /></a>
-                </Button>
-              )}
               {(brand.status === 'pending' || brand.status === 'in_review' || brand.status === 'draft') && (
                 <>
                   <Button size="sm" onClick={() => approve.mutate()} disabled={approve.isPending}>
