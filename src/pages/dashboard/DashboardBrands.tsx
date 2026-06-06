@@ -17,7 +17,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   Search, Send, ShieldCheck, Clock, XCircle, ExternalLink, Link2, Unlink,
-  PackagePlus, Tag, Globe2, AlertCircle, Package,
+  PackagePlus, Tag, Globe2, AlertCircle, Package, Layers, CheckSquare, ChevronDown, ChevronUp, Sparkles,
 } from 'lucide-react';
 
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -35,6 +35,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DashboardEmptyState } from '@/components/dashboard/DashboardEmptyState';
 
 import {
@@ -52,6 +53,7 @@ import {
   listBrandProductRequests,
   submitBrandProductRequest,
   brandProductRequestStatusLabel,
+  listApprovedBrandProducts,
 } from '@/modules/brands';
 import { listServicesByBusiness } from '@/modules/catalog';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
@@ -78,6 +80,53 @@ const statusBadgeClass = (status: string | null | undefined): string => {
     default:
       return 'bg-muted text-muted-foreground border-border';
   }
+};
+
+/**
+ * Inline approved-product browser for a single linked brand row.
+ * Lazy-fetches `brand_products` (approved/active only) via the brands module
+ * and renders a compact pill list. Lets a provider quickly see which
+ * products exist in the central catalog for a brand they work with.
+ */
+const LinkedBrandProductsInline: React.FC<{ brandId: string; isRTL: boolean; locale: Loc }> = ({
+  brandId, isRTL, locale,
+}) => {
+  const { data = [], isLoading } = useQuery({
+    queryKey: ['brand-approved-products', brandId],
+    queryFn: () => listApprovedBrandProducts(brandId),
+    staleTime: 60_000,
+  });
+  if (isLoading) return <Skeleton className="h-8 w-full mt-2" />;
+  if (data.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground mt-2">
+        {isRTL ? 'لا توجد منتجات معتمدة بعد لهذه العلامة.' : 'No approved products yet for this brand.'}
+      </p>
+    );
+  }
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {data.slice(0, 24).map((p) => {
+        const lbl = locale === 'ar' ? p.name_ar : (p.name_en ?? p.name_ar);
+        return (
+          <span
+            key={p.id}
+            className="inline-flex items-center gap-1 text-[11px] bg-muted/60 border rounded-full px-2 py-0.5"
+            title={p.model_number ?? undefined}
+          >
+            <Package className="w-2.5 h-2.5" />
+            <span className="truncate max-w-[10rem]">{lbl}</span>
+            {p.model_number && <code className="tech-content opacity-70">{p.model_number}</code>}
+          </span>
+        );
+      })}
+      {data.length > 24 && (
+        <span className="text-[11px] text-muted-foreground">
+          {isRTL ? `+${data.length - 24} أخرى` : `+${data.length - 24} more`}
+        </span>
+      )}
+    </div>
+  );
 };
 
 const DashboardBrands: React.FC = () => {
@@ -184,19 +233,38 @@ const DashboardBrands: React.FC = () => {
   });
 
   // ─────────── Link mutation (inline panel state) ───────────
-  const [linkPanel, setLinkPanel] = useState<{ brandId: string; serviceId: string } | null>(null);
+  const [linkPanel, setLinkPanel] = useState<{ brandId: string; serviceIds: string[] } | null>(null);
+  const [expandedBrandId, setExpandedBrandId] = useState<string | null>(null);
 
   const linkMut = useMutation({
-    mutationFn: async (args: { brandId: string; serviceId: string }) => {
+    mutationFn: async (args: { brandId: string; serviceIds: string[] }) => {
       if (!businessId) throw new Error(isRTL ? 'لا توجد منشأة نشطة' : 'No active business');
-      await linkBrandToMyServiceOrBusiness({
-        businessServiceId: args.serviceId,
-        businessId,
-        brandId: args.brandId,
-      });
+      if (args.serviceIds.length === 0) {
+        throw new Error(isRTL ? 'اختر تخصصاً واحداً على الأقل' : 'Pick at least one specialization');
+      }
+      const results = await Promise.allSettled(
+        args.serviceIds.map((sid) =>
+          linkBrandToMyServiceOrBusiness({
+            businessServiceId: sid,
+            businessId,
+            brandId: args.brandId,
+          }),
+        ),
+      );
+      const ok = results.filter((r) => r.status === 'fulfilled').length;
+      const fail = results.length - ok;
+      return { ok, fail };
     },
-    onSuccess: () => {
-      toast.success(isRTL ? 'تم ربط العلامة' : 'Brand linked');
+    onSuccess: ({ ok, fail }) => {
+      if (ok > 0) {
+        toast.success(
+          isRTL
+            ? `تم ربط العلامة بـ ${ok} تخصص${fail ? ` (تعذّر ${fail})` : ''}`
+            : `Linked to ${ok} specialization${ok > 1 ? 's' : ''}${fail ? ` (${fail} failed)` : ''}`,
+        );
+      } else {
+        toast.error(isRTL ? 'تعذّر ربط أي تخصص' : 'No specialization linked');
+      }
       setLinkPanel(null);
       qc.invalidateQueries({ queryKey: ['provider-brand-links', businessId] });
     },
@@ -256,18 +324,33 @@ const DashboardBrands: React.FC = () => {
   const submitProduct = useMutation({
     mutationFn: async () => {
       if (!prodBrandId) throw new Error(isRTL ? 'اختر العلامة' : 'Pick a brand');
-      if (!prodNameAr.trim()) throw new Error(isRTL ? 'اسم المنتج مطلوب' : 'Product name required');
-      return submitBrandProductRequest({
-        brand_id: prodBrandId,
-        business_id: businessId,
-        name_ar: prodNameAr.trim(),
-        name_en: prodNameEn.trim() || null,
-        model_number: prodModel.trim() || null,
-        description_ar: prodDesc.trim() || null,
-      });
+      // Multi-product mode: each newline in the Arabic name field becomes a
+      // separate product request, so providers can propose a batch in one shot.
+      const lines = prodNameAr.split('\n').map((s) => s.trim()).filter(Boolean);
+      if (lines.length === 0) throw new Error(isRTL ? 'اسم المنتج مطلوب' : 'Product name required');
+      const enLines = prodNameEn.split('\n').map((s) => s.trim());
+      const modelLines = prodModel.split('\n').map((s) => s.trim());
+      const results = await Promise.allSettled(
+        lines.map((nameAr, i) =>
+          submitBrandProductRequest({
+            brand_id: prodBrandId,
+            business_id: businessId,
+            name_ar: nameAr,
+            name_en: enLines[i] || null,
+            model_number: modelLines[i] || null,
+            description_ar: lines.length === 1 ? (prodDesc.trim() || null) : null,
+          }),
+        ),
+      );
+      const ok = results.filter((r) => r.status === 'fulfilled').length;
+      return { ok, total: results.length };
     },
-    onSuccess: () => {
-      toast.success(isRTL ? 'تم إرسال طلب المنتج للمراجعة' : 'Product request submitted');
+    onSuccess: ({ ok, total }) => {
+      toast.success(
+        isRTL
+          ? `تم إرسال ${ok} من ${total} منتج للمراجعة`
+          : `${ok} of ${total} product${total > 1 ? 's' : ''} submitted`,
+      );
       setProdNameAr(''); setProdNameEn(''); setProdModel(''); setProdDesc('');
       setProdOpen(false);
       qc.invalidateQueries({ queryKey: ['provider-brand-product-requests', businessId] });
@@ -321,6 +404,26 @@ const DashboardBrands: React.FC = () => {
             <PackagePlus className="w-4 h-4 me-2" />
             {isRTL ? 'طلب علامة جديدة' : 'Request new brand'}
           </Button>
+        </div>
+
+        {/* Stats strip — quick at-a-glance counts */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="brands-stats-strip">
+          {[
+            { icon: Tag, label: isRTL ? 'علامات مرتبطة' : 'Linked brands', value: myLinks.length, tone: 'text-primary' },
+            { icon: Layers, label: isRTL ? 'تخصصاتي' : 'My specializations', value: services.length, tone: 'text-info' },
+            { icon: Clock, label: isRTL ? 'طلبات قيد المراجعة' : 'Pending requests', value: myRequests.filter((r) => r.status === 'pending').length + myProductRequests.filter((r) => r.status === 'pending').length, tone: 'text-warning' },
+            { icon: Sparkles, label: isRTL ? 'منتجات معتمدة' : 'Approved products', value: myProductRequests.filter((r) => r.status === 'approved').length, tone: 'text-success' },
+          ].map((s) => (
+            <div key={s.label} className="rounded-xl border bg-card p-3 flex items-center gap-3 hover-lift">
+              <div className={`w-9 h-9 rounded-lg bg-muted flex items-center justify-center ${s.tone}`}>
+                <s.icon className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xl font-semibold leading-none tech-content">{s.value}</div>
+                <div className="text-[11px] text-muted-foreground mt-1 truncate">{s.label}</div>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Inline request form */}
@@ -416,12 +519,20 @@ const DashboardBrands: React.FC = () => {
                   const display = b
                     ? (locale === 'ar' ? b.name_ar : (b.name_en ?? b.name_ar))
                     : (isRTL ? 'علامة محذوفة' : 'Removed brand');
+                  const linkedService = services.find((s) => s.id === link.business_service_id);
+                  const linkedServiceLbl = linkedService
+                    ? (locale === 'ar'
+                        ? (linkedService.name_ar ?? linkedService.id)
+                        : (linkedService.name_en ?? linkedService.name_ar ?? linkedService.id))
+                    : null;
+                  const expanded = expandedBrandId === (b?.id ?? link.id);
                   return (
                     <div
                       key={link.id}
-                      className="flex items-start gap-3 p-3 border rounded-xl hover-lift"
+                      className="p-3 border rounded-xl hover-lift"
                       data-testid="linked-brand-row"
                     >
+                    <div className="flex items-start gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium truncate">{display}</span>
@@ -434,12 +545,31 @@ const DashboardBrands: React.FC = () => {
                           {link.relationship_type && (
                             <Badge variant="secondary" className="text-xs">{link.relationship_type}</Badge>
                           )}
+                          {linkedServiceLbl && (
+                            <Badge variant="outline" className="text-[10px] gap-1">
+                              <Layers className="w-3 h-3" />
+                              {linkedServiceLbl}
+                            </Badge>
+                          )}
                         </div>
                         {link.rejection_reason && (
                           <p className="text-xs text-destructive mt-1">{link.rejection_reason}</p>
                         )}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
+                        {b?.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setExpandedBrandId(expanded ? null : b.id)}
+                            data-testid="toggle-brand-products"
+                          >
+                            {expanded
+                              ? <ChevronUp className="w-4 h-4 me-1" />
+                              : <ChevronDown className="w-4 h-4 me-1" />}
+                            {isRTL ? 'المنتجات' : 'Products'}
+                          </Button>
+                        )}
                         {b?.slug && (
                           <Button asChild variant="ghost" size="sm">
                             <Link to={`/brands/${b.slug}`} target="_blank" rel="noopener">
@@ -459,6 +589,10 @@ const DashboardBrands: React.FC = () => {
                           {isRTL ? 'إلغاء الربط' : 'Unlink'}
                         </Button>
                       </div>
+                    </div>
+                    {expanded && b?.id && (
+                      <LinkedBrandProductsInline brandId={b.id} isRTL={isRTL} locale={locale} />
+                    )}
                     </div>
                   );
                 })}
@@ -581,7 +715,13 @@ const DashboardBrands: React.FC = () => {
                               toast.error(isRTL ? 'لا توجد منشأة نشطة' : 'No active business');
                               return;
                             }
-                            setLinkPanel(panelOpen ? null : { brandId: b.id, serviceId: services[0]?.id ?? '' });
+                            // Pre-select the services already linked to this
+                            // brand so the multi-select reflects current state
+                            // (and toggling adds only new ones).
+                            const preselected = myLinks
+                              .filter((l) => l.brand_id === b.id)
+                              .map((l) => l.business_service_id);
+                            setLinkPanel(panelOpen ? null : { brandId: b.id, serviceIds: preselected });
                           }}
                           data-testid="link-brand-btn"
                         >
@@ -593,43 +733,82 @@ const DashboardBrands: React.FC = () => {
                       </div>
                       {panelOpen && (
                         <div className="border-t pt-2 mt-1 space-y-2" data-testid="inline-link-form">
-                          <Label className="text-xs">{isRTL ? 'اختر خدمة' : 'Pick a service'}</Label>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs flex items-center gap-1">
+                              <Layers className="w-3 h-3" />
+                              {isRTL ? 'اختر تخصصاتك المرتبطة بهذه العلامة' : 'Pick specializations for this brand'}
+                            </Label>
+                            {services.length > 0 && (
+                              <button
+                                type="button"
+                                className="text-[11px] text-primary hover:underline"
+                                onClick={() => {
+                                  const all = services.map((s) => s.id);
+                                  const allSelected = linkPanel?.serviceIds.length === all.length;
+                                  setLinkPanel({ brandId: b.id, serviceIds: allSelected ? [] : all });
+                                }}
+                              >
+                                <CheckSquare className="inline w-3 h-3 me-1" />
+                                {linkPanel?.serviceIds.length === services.length
+                                  ? (isRTL ? 'إلغاء تحديد الكل' : 'Clear all')
+                                  : (isRTL ? 'تحديد الكل' : 'Select all')}
+                              </button>
+                            )}
+                          </div>
                           {services.length === 0 ? (
                             <p className="text-xs text-muted-foreground">
                               {isRTL
-                                ? 'لا توجد خدمات نشطة. أضف خدمة من '
-                                : 'No active services. Add one from '}
+                                ? 'لا توجد تخصصات نشطة. أضف خدمة من '
+                                : 'No active specializations. Add one from '}
                               <Link to="/dashboard/services" className="text-primary underline">
                                 /dashboard/services
                               </Link>
                             </p>
                           ) : (
                             <>
-                              <Select
-                                value={linkPanel?.serviceId ?? ''}
-                                onValueChange={(v) => setLinkPanel({ brandId: b.id, serviceId: v })}
-                              >
-                                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  {services.map((s) => (
-                                    <SelectItem key={s.id} value={s.id}>
-                                      {locale === 'ar' ? (s.name_ar ?? s.id) : (s.name_en ?? s.name_ar ?? s.id)}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" onClick={() => setLinkPanel(null)}>
-                                  {isRTL ? 'إلغاء' : 'Cancel'}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  disabled={!linkPanel?.serviceId || linkMut.isPending}
-                                  onClick={() => linkPanel && linkMut.mutate(linkPanel)}
-                                  data-testid="confirm-link-btn"
-                                >
-                                  {isRTL ? 'تأكيد الربط' : 'Confirm link'}
-                                </Button>
+                              <div className="max-h-40 overflow-y-auto no-scrollbar space-y-1 rounded-lg border bg-muted/30 p-2">
+                                {services.map((s) => {
+                                  const checked = linkPanel?.serviceIds.includes(s.id) ?? false;
+                                  const lbl = locale === 'ar' ? (s.name_ar ?? s.id) : (s.name_en ?? s.name_ar ?? s.id);
+                                  return (
+                                    <label
+                                      key={s.id}
+                                      className="flex items-center gap-2 text-sm px-2 py-1.5 rounded hover:bg-background cursor-pointer"
+                                    >
+                                      <Checkbox
+                                        checked={checked}
+                                        onCheckedChange={(v) => {
+                                          const cur = linkPanel?.serviceIds ?? [];
+                                          const next = v
+                                            ? Array.from(new Set([...cur, s.id]))
+                                            : cur.filter((id) => id !== s.id);
+                                          setLinkPanel({ brandId: b.id, serviceIds: next });
+                                        }}
+                                      />
+                                      <span className="truncate">{lbl}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[11px] text-muted-foreground">
+                                  {isRTL
+                                    ? `محدّد: ${linkPanel?.serviceIds.length ?? 0} / ${services.length}`
+                                    : `Selected: ${linkPanel?.serviceIds.length ?? 0} / ${services.length}`}
+                                </span>
+                                <div className="flex gap-2">
+                                  <Button variant="ghost" size="sm" onClick={() => setLinkPanel(null)}>
+                                    {isRTL ? 'إلغاء' : 'Cancel'}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    disabled={!linkPanel?.serviceIds.length || linkMut.isPending}
+                                    onClick={() => linkPanel && linkMut.mutate(linkPanel)}
+                                    data-testid="confirm-link-btn"
+                                  >
+                                    {isRTL ? 'تأكيد الربط' : 'Confirm links'}
+                                  </Button>
+                                </div>
                               </div>
                             </>
                           )}
@@ -756,15 +935,33 @@ const DashboardBrands: React.FC = () => {
                   </div>
                   <div className="space-y-1">
                     <Label>{isRTL ? 'رقم/كود الموديل' : 'Model number'}</Label>
-                    <Input value={prodModel} onChange={(e) => setProdModel(e.target.value)} className="h-11 tech-content" />
+                    <Textarea
+                      value={prodModel}
+                      onChange={(e) => setProdModel(e.target.value)}
+                      rows={2}
+                      className="tech-content"
+                      placeholder={isRTL ? 'سطر لكل موديل (اختياري)' : 'One model per line (optional)'}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRTL ? 'اسم المنتج بالعربية *' : 'Arabic name *'}</Label>
-                    <Input value={prodNameAr} onChange={(e) => setProdNameAr(e.target.value)} className="h-11" dir="auto" />
+                    <Label>{isRTL ? 'أسماء المنتجات بالعربية *' : 'Arabic product names *'}</Label>
+                    <Textarea
+                      value={prodNameAr}
+                      onChange={(e) => setProdNameAr(e.target.value)}
+                      rows={3}
+                      dir="auto"
+                      placeholder={isRTL ? 'منتج لكل سطر — يمكنك اقتراح عدة منتجات دفعة واحدة' : 'One product per line — propose several at once'}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRTL ? 'اسم المنتج بالإنجليزية' : 'English name'}</Label>
-                    <Input value={prodNameEn} onChange={(e) => setProdNameEn(e.target.value)} className="h-11" dir="auto" />
+                    <Label>{isRTL ? 'الأسماء بالإنجليزية' : 'English names'}</Label>
+                    <Textarea
+                      value={prodNameEn}
+                      onChange={(e) => setProdNameEn(e.target.value)}
+                      rows={3}
+                      dir="auto"
+                      placeholder={isRTL ? 'سطر لكل منتج (اختياري)' : 'One per line (optional)'}
+                    />
                   </div>
                 </div>
                 <div className="space-y-1">
