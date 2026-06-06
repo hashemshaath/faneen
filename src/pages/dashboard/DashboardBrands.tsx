@@ -374,45 +374,17 @@ const DashboardBrands: React.FC = () => {
           ))}
         </div>
 
-        {/* Inline request form */}
+        {/* Inline request form (full professional intake) */}
         {requestOpen && (
-          <Card data-testid="brand-request-form">
-            <CardHeader>
-              <CardTitle className="text-base">
-                {isRTL ? 'طلب إضافة علامة جديدة' : 'Request a new brand'}
-              </CardTitle>
-              <CardDescription>
-                {isRTL
-                  ? 'تخضع جميع الطلبات لمراجعة الإدارة قبل ظهور العلامة في السجل العام.'
-                  : 'All requests are reviewed by admins before the brand becomes publicly visible.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid md:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label>{isRTL ? 'الاسم بالعربية *' : 'Arabic name *'}</Label>
-                  <Input value={nameAr} onChange={(e) => setNameAr(e.target.value)} className="h-11" dir="auto" />
-                </div>
-                <div className="space-y-1">
-                  <Label>{isRTL ? 'الاسم بالإنجليزية' : 'English name'}</Label>
-                  <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} className="h-11" dir="auto" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label>{isRTL ? 'ملاحظات' : 'Notes'}</Label>
-                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} dir="auto" />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="ghost" onClick={() => setRequestOpen(false)}>
-                  {isRTL ? 'إلغاء' : 'Cancel'}
-                </Button>
-                <Button onClick={() => submit.mutate()} disabled={!nameAr.trim() || submit.isPending}>
-                  <Send className="w-4 h-4 me-2" />
-                  {isRTL ? 'إرسال الطلب' : 'Submit request'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <BrandRequestForm
+            isRTL={isRTL}
+            locale={locale}
+            sectors={sectors}
+            countries={filterOpts?.countries ?? []}
+            isSubmitting={submit.isPending}
+            onCancel={() => setRequestOpen(false)}
+            onSubmit={(payload) => submit.mutate(payload)}
+          />
         )}
 
         {/* My linked brands */}
