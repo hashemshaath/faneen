@@ -499,12 +499,20 @@ const DashboardBrands: React.FC = () => {
                   const display = b
                     ? (locale === 'ar' ? b.name_ar : (b.name_en ?? b.name_ar))
                     : (isRTL ? 'علامة محذوفة' : 'Removed brand');
+                  const linkedService = services.find((s) => s.id === link.business_service_id);
+                  const linkedServiceLbl = linkedService
+                    ? (locale === 'ar'
+                        ? (linkedService.name_ar ?? linkedService.id)
+                        : (linkedService.name_en ?? linkedService.name_ar ?? linkedService.id))
+                    : null;
+                  const expanded = expandedBrandId === (b?.id ?? link.id);
                   return (
                     <div
                       key={link.id}
-                      className="flex items-start gap-3 p-3 border rounded-xl hover-lift"
+                      className="p-3 border rounded-xl hover-lift"
                       data-testid="linked-brand-row"
                     >
+                    <div className="flex items-start gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium truncate">{display}</span>
@@ -517,12 +525,31 @@ const DashboardBrands: React.FC = () => {
                           {link.relationship_type && (
                             <Badge variant="secondary" className="text-xs">{link.relationship_type}</Badge>
                           )}
+                          {linkedServiceLbl && (
+                            <Badge variant="outline" className="text-[10px] gap-1">
+                              <Layers className="w-3 h-3" />
+                              {linkedServiceLbl}
+                            </Badge>
+                          )}
                         </div>
                         {link.rejection_reason && (
                           <p className="text-xs text-destructive mt-1">{link.rejection_reason}</p>
                         )}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
+                        {b?.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setExpandedBrandId(expanded ? null : b.id)}
+                            data-testid="toggle-brand-products"
+                          >
+                            {expanded
+                              ? <ChevronUp className="w-4 h-4 me-1" />
+                              : <ChevronDown className="w-4 h-4 me-1" />}
+                            {isRTL ? 'المنتجات' : 'Products'}
+                          </Button>
+                        )}
                         {b?.slug && (
                           <Button asChild variant="ghost" size="sm">
                             <Link to={`/brands/${b.slug}`} target="_blank" rel="noopener">
@@ -542,6 +569,10 @@ const DashboardBrands: React.FC = () => {
                           {isRTL ? 'إلغاء الربط' : 'Unlink'}
                         </Button>
                       </div>
+                    </div>
+                    {expanded && b?.id && (
+                      <LinkedBrandProductsInline brandId={b.id} isRTL={isRTL} locale={locale} />
+                    )}
                     </div>
                   );
                 })}
