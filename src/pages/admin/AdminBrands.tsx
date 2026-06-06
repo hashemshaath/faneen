@@ -51,6 +51,10 @@ interface SectorLite {
   is_active: boolean;
 }
 
+const EMPTY_BRANDS: Brand[] = [];
+const EMPTY_SECTORS: SectorLite[] = [];
+const EMPTY_CATEGORIES: CategoryLite[] = [];
+
 function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
@@ -76,14 +80,14 @@ const AdminBrands: React.FC = () => {
     queryFn: () => adminListBrands({ status: 'all', q: q.trim() || undefined }),
     staleTime: 20_000,
   });
-  const allBrands = brandsQuery.data ?? [];
+  const allBrands = brandsQuery.data ?? EMPTY_BRANDS;
 
   const sectorsQuery = useQuery({
     queryKey: ['admin-brand-sectors-lite'],
     queryFn: listSectorsLite,
     staleTime: 5 * 60_000,
   });
-  const sectors = sectorsQuery.data ?? [];
+  const sectors = sectorsQuery.data ?? EMPTY_SECTORS;
 
   const categoriesQuery = useQuery({
     queryKey: ['admin-brand-category-reference'],
@@ -97,7 +101,7 @@ const AdminBrands: React.FC = () => {
     },
     staleTime: 5 * 60_000,
   });
-  const categories = categoriesQuery.data ?? [];
+  const categories = categoriesQuery.data ?? EMPTY_CATEGORIES;
 
   const summariesQuery = useQuery({
     queryKey: ['admin-brand-link-summaries', allBrands.map((b) => b.id).join(',')],
