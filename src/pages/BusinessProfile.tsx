@@ -529,7 +529,6 @@ const BusinessProfile = () => {
           serviceCount={services.length}
           projectCount={projects.length}
           businessId={business.id}
-          businessUsername={business.username}
         />
 
         <main className="container-app pb-10 pt-4 sm:pb-16 sm:pt-8">
