@@ -1999,6 +1999,247 @@ export type Database = {
           },
         ]
       }
+      brand_product_requests: {
+        Row: {
+          admin_notes: string | null
+          approved_product_id: string | null
+          brand_id: string
+          business_id: string | null
+          category_id: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          gallery: Json
+          id: string
+          image_url: string | null
+          metadata: Json
+          model_number: string | null
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          reject_reason: string | null
+          requested_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          specs: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_product_id?: string | null
+          brand_id: string
+          business_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          gallery?: Json
+          id?: string
+          image_url?: string | null
+          metadata?: Json
+          model_number?: string | null
+          name_ar: string
+          name_en?: string | null
+          ref_id?: string | null
+          reject_reason?: string | null
+          requested_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          specs?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_product_id?: string | null
+          brand_id?: string
+          business_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          gallery?: Json
+          id?: string
+          image_url?: string | null
+          metadata?: Json
+          model_number?: string | null
+          name_ar?: string
+          name_en?: string | null
+          ref_id?: string | null
+          reject_reason?: string | null
+          requested_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          specs?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_product_requests_approved_product_id_fkey"
+            columns: ["approved_product_id"]
+            isOneToOne: false
+            referencedRelation: "brand_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_product_requests_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_product_requests_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_product_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_product_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_product_requests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_product_requests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+        ]
+      }
+      brand_products: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          brand_id: string
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          description_ar: string | null
+          description_en: string | null
+          gallery: Json
+          id: string
+          image_url: string | null
+          is_featured: boolean
+          is_verified: boolean
+          metadata: Json
+          model_number: string | null
+          name_ar: string
+          name_en: string | null
+          ref_id: string | null
+          rejection_reason: string | null
+          sku: string | null
+          slug: string | null
+          source: string
+          specs: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          brand_id: string
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          gallery?: Json
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean
+          is_verified?: boolean
+          metadata?: Json
+          model_number?: string | null
+          name_ar: string
+          name_en?: string | null
+          ref_id?: string | null
+          rejection_reason?: string | null
+          sku?: string | null
+          slug?: string | null
+          source?: string
+          specs?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          brand_id?: string
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          gallery?: Json
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean
+          is_verified?: boolean
+          metadata?: Json
+          model_number?: string | null
+          name_ar?: string
+          name_en?: string | null
+          ref_id?: string | null
+          rejection_reason?: string | null
+          sku?: string | null
+          slug?: string | null
+          source?: string
+          specs?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+        ]
+      }
       brand_sector_links: {
         Row: {
           brand_id: string
@@ -17388,6 +17629,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_approve_brand_product_request: {
+        Args: { _req_id: string }
+        Returns: string
+      }
       admin_approve_provider_brand_link: {
         Args: { _link_id: string }
         Returns: {
@@ -17831,6 +18076,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_reject_brand_product_request: {
+        Args: { _reason: string; _req_id: string }
+        Returns: undefined
       }
       admin_reject_business_ownership_transfer: {
         Args: { _admin_note?: string; _request_id: string }

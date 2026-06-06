@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  Archive, Building2, Check, ExternalLink, Filter, Globe2, Inbox, Link2,
+  Archive, Building2, Check, Filter, Globe2, Inbox, Link2,
   RefreshCw, Search, ShieldCheck, SlidersHorizontal, Tag as TagIcon, X,
 } from 'lucide-react';
 
@@ -417,6 +417,12 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
               {brand.slug && <span>/{brand.slug}</span>}
               {brand.country_of_origin_code && <span>{isRTL ? 'بلد المنشأ:' : 'Origin:'} {brand.country_of_origin_code}</span>}
               {sectorLabel && <span>{isRTL ? 'القطاع:' : 'Sector:'} {sectorLabel}</span>}
+              {brand.website && (
+                <span className="inline-flex items-center gap-1 tech-content">
+                  <Globe2 className="h-3 w-3" />
+                  {brand.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </span>
+              )}
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge variant={(summary?.sector_ids.length ?? 0) > 0 ? 'secondary' : 'outline'} className="text-xs gap-1">
@@ -425,9 +431,6 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
               <Badge variant={providerCount > 0 ? 'secondary' : 'outline'} className="text-xs gap-1">
                 <Building2 className="h-3 w-3" />{isRTL ? 'إسناد مزودين/خدمات' : 'Provider/service links'}: {providerCount}
               </Badge>
-              {brand.website && (
-                <Badge variant="outline" className="text-xs gap-1"><Globe2 className="h-3 w-3" />{isRTL ? 'موقع رسمي' : 'Official website'}</Badge>
-              )}
             </div>
             {categoryHints.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -441,7 +444,6 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {brand.website && <Button asChild size="sm" variant="ghost"><a href={brand.website} target="_blank" rel="noopener noreferrer" aria-label={isRTL ? 'فتح موقع العلامة' : 'Open brand website'}><ExternalLink className="w-4 h-4" /></a></Button>}
           <Button asChild size="sm" variant="outline"><Link to={`/admin/brands/${brand.id}`}><Link2 className="w-4 h-4 me-1" />{isRTL ? 'تحسين وربط' : 'Improve & link'}</Link></Button>
           {(brand.status === 'pending' || brand.status === 'in_review' || brand.status === 'draft') && (
             <>

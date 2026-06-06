@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import {
   ArrowLeft, ArrowRight, Loader2, Check, X, Archive, ExternalLink,
   Globe, Building2, Shield, History, AlertTriangle, Edit3,
+  Save, Plus, Package, Inbox, Trash2,
 } from 'lucide-react';
 
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -32,6 +33,11 @@ import {
   adminApproveProviderBrandLink, adminRejectProviderBrandLink,
   brandStatusLabel, verificationLabel, relationshipLabel,
   requestStatusLabel, requestTypeLabel, authStatusLabel, pick,
+  adminListBrandProducts, adminCreateBrandProduct, adminUpdateBrandProduct,
+  adminDeleteBrandProduct,
+  listBrandProductRequests, adminApproveBrandProductRequest, adminRejectBrandProductRequest,
+  brandProductStatusLabel, brandProductRequestStatusLabel,
+  type BrandProduct, type BrandProductRequest,
 } from '@/modules/brands';
 
 const AdminBrandDetail: React.FC = () => {
@@ -51,6 +57,23 @@ const AdminBrandDetail: React.FC = () => {
     seo_title_ar: '', seo_title_en: '', seo_description_ar: '', seo_description_en: '',
     brand_keywords: '', og_image_url: '',
   });
+  const [identityForm, setIdentityForm] = useState({
+    name_ar: '', name_en: '', description_ar: '', description_en: '',
+    website: '', brand_owner_company: '', founded_year: '',
+    country_of_origin_code: '', country_of_origin_name_ar: '', country_of_origin_name_en: '',
+    logo_url: '', is_local: false,
+  });
+  const [identityDirty, setIdentityDirty] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name_ar: '', name_en: '', model_number: '', sku: '',
+    description_ar: '', image_url: '',
+  });
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editProduct, setEditProduct] = useState({
+    name_ar: '', name_en: '', model_number: '', sku: '', description_ar: '', image_url: '',
+  });
+  const [rejectingReqId, setRejectingReqId] = useState<string | null>(null);
+  const [reqRejectReason, setReqRejectReason] = useState('');
 
   const brandQ = useQuery({
     queryKey: ['admin-brand-detail', id],
@@ -69,6 +92,21 @@ const AdminBrandDetail: React.FC = () => {
       brand_keywords: (brand.brand_keywords ?? []).join(', '),
       og_image_url: brand.og_image_url ?? '',
     });
+    setIdentityForm({
+      name_ar: brand.name_ar ?? '',
+      name_en: brand.name_en ?? '',
+      description_ar: brand.description_ar ?? '',
+      description_en: brand.description_en ?? '',
+      website: brand.website ?? '',
+      brand_owner_company: brand.brand_owner_company ?? '',
+      founded_year: brand.founded_year ? String(brand.founded_year) : '',
+      country_of_origin_code: brand.country_of_origin_code ?? '',
+      country_of_origin_name_ar: brand.country_of_origin_name_ar ?? '',
+      country_of_origin_name_en: brand.country_of_origin_name_en ?? '',
+      logo_url: brand.logo_url ?? '',
+      is_local: !!brand.is_local,
+    });
+    setIdentityDirty(false);
   }, [brand]);
 
   usePageMeta({
@@ -109,6 +147,17 @@ const AdminBrandDetail: React.FC = () => {
     staleTime: 5 * 60_000,
   });
 
+  const productsQ = useQuery({
+    queryKey: ['admin-brand-products', id],
+    queryFn: () => adminListBrandProducts(id, { status: 'all' }),
+    enabled: !!id,
+  });
+  const productRequestsQ = useQuery({
+    queryKey: ['admin-brand-product-requests', id],
+    queryFn: () => listBrandProductRequests({ brandId: id, status: 'all' }),
+    enabled: !!id,
+  });
+
   const businessIds = (linksQ.data ?? []).map((l) => l.business_id);
   const bizQ = useQuery({
     queryKey: ['admin-brand-provider-businesses', businessIds.join(',')],
@@ -125,6 +174,10 @@ const AdminBrandDetail: React.FC = () => {
     qc.invalidateQueries({ queryKey: ['admin-brand-audit', id] });
     qc.invalidateQueries({ queryKey: ['admin-brand-provider-links', id] });
     qc.invalidateQueries({ queryKey: ['brand-ops-counts'] });
+  };
+  const invalidateProducts = () => {
+    qc.invalidateQueries({ queryKey: ['admin-brand-products', id] });
+    qc.invalidateQueries({ queryKey: ['admin-brand-product-requests', id] });
   };
 
   const approve = useMutation({
@@ -165,6 +218,84 @@ const AdminBrandDetail: React.FC = () => {
       og_image_url: seoForm.og_image_url || null,
     }),
     onSuccess: () => { toast.success(isRTL ? 'تم حفظ SEO' : 'SEO saved'); invalidate(); },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const saveIdentity = useMutation({
+    mutationFn: () => adminUpdateBrand(id, {
+      name_ar: identityForm.name_ar.trim() || brand?.name_ar || '',
+      name_en: identityForm.name_en.trim() || null,
+      description_ar: identityForm.description_ar.trim() || null,
+      description_en: identityForm.description_en.trim() || null,
+      website: identityForm.website.trim() || null,
+      brand_owner_company: identityForm.brand_owner_company.trim() || null,
+      founded_year: identityForm.founded_year.trim() ? Number(identityForm.founded_year) : null,
+      country_of_origin_code: identityForm.country_of_origin_code.trim().toUpperCase() || null,
+      country_of_origin_name_ar: identityForm.country_of_origin_name_ar.trim() || null,
+      country_of_origin_name_en: identityForm.country_of_origin_name_en.trim() || null,
+      logo_url: identityForm.logo_url || null,
+      is_local: identityForm.is_local,
+    }),
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم حفظ التعديلات' : 'Changes saved');
+      setIdentityDirty(false); invalidate();
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const createProduct = useMutation({
+    mutationFn: () => adminCreateBrandProduct({
+      brand_id: id,
+      name_ar: newProduct.name_ar.trim(),
+      name_en: newProduct.name_en.trim() || null,
+      model_number: newProduct.model_number.trim() || null,
+      sku: newProduct.sku.trim() || null,
+      description_ar: newProduct.description_ar.trim() || null,
+      image_url: newProduct.image_url || null,
+      status: 'approved',
+    }),
+    onSuccess: () => {
+      toast.success(isRTL ? 'تمت إضافة المنتج' : 'Product added');
+      setNewProduct({ name_ar: '', name_en: '', model_number: '', sku: '', description_ar: '', image_url: '' });
+      invalidateProducts();
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const updateProduct = useMutation({
+    mutationFn: (vars: { productId: string }) => adminUpdateBrandProduct(vars.productId, {
+      name_ar: editProduct.name_ar.trim(),
+      name_en: editProduct.name_en.trim() || null,
+      model_number: editProduct.model_number.trim() || null,
+      sku: editProduct.sku.trim() || null,
+      description_ar: editProduct.description_ar.trim() || null,
+      image_url: editProduct.image_url || null,
+    }),
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم التحديث' : 'Updated');
+      setEditingProductId(null); invalidateProducts();
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const deleteProduct = useMutation({
+    mutationFn: (productId: string) => adminDeleteBrandProduct(productId),
+    onSuccess: () => { toast.success(isRTL ? 'تم الحذف' : 'Deleted'); invalidateProducts(); },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const approveProductReq = useMutation({
+    mutationFn: (reqId: string) => adminApproveBrandProductRequest(reqId),
+    onSuccess: () => { toast.success(isRTL ? 'تم اعتماد المنتج' : 'Product approved'); invalidateProducts(); },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+  const rejectProductReq = useMutation({
+    mutationFn: (vars: { reqId: string; reason: string }) =>
+      adminRejectBrandProductRequest(vars.reqId, vars.reason),
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم الرفض' : 'Rejected');
+      setRejectingReqId(null); setReqRejectReason(''); invalidateProducts();
+    },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
@@ -219,15 +350,16 @@ const AdminBrandDetail: React.FC = () => {
                   <Badge variant="outline" className="text-xs">{pick(brandStatusLabel[brand.status], locale)}</Badge>
                   <Badge variant="secondary" className="text-xs">{pick(verificationLabel[brand.verification_status], locale)}</Badge>
                   {brand.is_local && <Badge variant="outline" className="text-xs">{isRTL ? 'محلي' : 'Local'}</Badge>}
+                  {brand.website && (
+                    <span className="inline-flex items-center gap-1 tech-content">
+                      <Globe className="w-3 h-3" />
+                      {brand.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
-              {brand.website && (
-                <Button asChild size="sm" variant="outline">
-                  <a href={brand.website} target="_blank" rel="noopener noreferrer"><Globe className="w-4 h-4 me-1" />{isRTL ? 'الموقع' : 'Website'}<ExternalLink className="w-3 h-3 ms-1" /></a>
-                </Button>
-              )}
               {(brand.status === 'pending' || brand.status === 'in_review' || brand.status === 'draft') && (
                 <>
                   <Button size="sm" onClick={() => approve.mutate()} disabled={approve.isPending}>
@@ -261,17 +393,76 @@ const AdminBrandDetail: React.FC = () => {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-4">
-          {/* General */}
+          {/* Identity & origin — inline editor */}
           <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Edit3 className="w-4 h-4" />{isRTL ? 'البيانات الأساسية' : 'Identity & origin'}</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3 text-sm">
-              <Info label={isRTL ? 'العربية' : 'Arabic'} value={brand.name_ar} />
-              <Info label={isRTL ? 'الإنجليزية' : 'English'} value={brand.name_en ?? '—'} />
-              <Info label={isRTL ? 'بلد المنشأ' : 'Country of origin'}
-                    value={`${brand.country_of_origin_code ?? '—'}${brand.country_of_origin_name_ar ? ' • ' + (locale === 'ar' ? brand.country_of_origin_name_ar : brand.country_of_origin_name_en) : ''}`} />
-              <Info label={isRTL ? 'الشركة المالكة' : 'Brand owner'} value={brand.brand_owner_company ?? '—'} />
-              <Info label={isRTL ? 'سنة التأسيس' : 'Founded'} value={brand.founded_year ? String(brand.founded_year) : '—'} />
-              <Info label={isRTL ? 'المصدر' : 'Source'} value={brand.source} />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2"><Edit3 className="w-4 h-4" />{isRTL ? 'البيانات الأساسية' : 'Identity & origin'}</span>
+                {identityDirty && <Badge variant="warning" className="text-[10px]">{isRTL ? 'تعديلات غير محفوظة' : 'Unsaved'}</Badge>}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <FieldLabeled label={isRTL ? 'الاسم (عربي) *' : 'Name (AR) *'}>
+                  <Input dir="auto" value={identityForm.name_ar}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, name_ar: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'}>
+                  <Input dir="ltr" value={identityForm.name_en}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, name_en: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'الموقع الرسمي' : 'Official website'}>
+                  <Input dir="ltr" placeholder="https://example.com" className="tech-content" value={identityForm.website}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, website: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'الشركة المالكة' : 'Brand owner'}>
+                  <Input dir="auto" value={identityForm.brand_owner_company}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, brand_owner_company: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'سنة التأسيس' : 'Founded year'}>
+                  <Input type="number" inputMode="numeric" className="tech-content" value={identityForm.founded_year}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, founded_year: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'كود البلد (ISO)' : 'Country code (ISO)'}>
+                  <Input maxLength={3} dir="ltr" className="tech-content uppercase" value={identityForm.country_of_origin_code}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, country_of_origin_code: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'اسم البلد (عربي)' : 'Country (AR)'}>
+                  <Input dir="auto" value={identityForm.country_of_origin_name_ar}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, country_of_origin_name_ar: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'اسم البلد (إنجليزي)' : 'Country (EN)'}>
+                  <Input dir="ltr" value={identityForm.country_of_origin_name_en}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, country_of_origin_name_en: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+              </div>
+              <FieldLabeled label={isRTL ? 'وصف العلامة (عربي)' : 'Description (AR)'}>
+                <Textarea dir="auto" rows={2} value={identityForm.description_ar}
+                  onChange={(e) => { setIdentityForm(f => ({ ...f, description_ar: e.target.value })); setIdentityDirty(true); }} />
+              </FieldLabeled>
+              <FieldLabeled label={isRTL ? 'وصف العلامة (إنجليزي)' : 'Description (EN)'}>
+                <Textarea dir="ltr" rows={2} value={identityForm.description_en}
+                  onChange={(e) => { setIdentityForm(f => ({ ...f, description_en: e.target.value })); setIdentityDirty(true); }} />
+              </FieldLabeled>
+              <div>
+                <Label className="text-xs mb-2 block">{isRTL ? 'الشعار (يُضغط تلقائياً إلى WebP)' : 'Logo (auto-compressed to WebP)'}</Label>
+                <ImageUpload bucket="business-assets" value={identityForm.logo_url}
+                  onChange={(url) => { setIdentityForm(f => ({ ...f, logo_url: url || '' })); setIdentityDirty(true); }}
+                  onRemove={() => { setIdentityForm(f => ({ ...f, logo_url: '' })); setIdentityDirty(true); }}
+                  placeholder={isRTL ? 'رفع شعار العلامة' : 'Upload brand logo'} />
+              </div>
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" className="h-4 w-4" checked={identityForm.is_local}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, is_local: e.target.checked })); setIdentityDirty(true); }} />
+                  <span>{isRTL ? 'علامة محلية' : 'Local brand'}</span>
+                </label>
+                <Button size="sm" onClick={() => saveIdentity.mutate()}
+                  disabled={!identityDirty || saveIdentity.isPending || !identityForm.name_ar.trim()}>
+                  {saveIdentity.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Save className="w-4 h-4 me-1" />}
+                  {isRTL ? 'حفظ التعديلات' : 'Save changes'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -414,6 +605,11 @@ const AdminBrandDetail: React.FC = () => {
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Building2 className="w-4 h-4" />{isRTL ? 'علاقات المزودين' : 'Provider relationships'} <span className="text-xs text-muted-foreground">({linksQ.data?.length ?? 0})</span></CardTitle></CardHeader>
           <CardContent>
+            <p className="text-xs text-muted-foreground mb-3">
+              {isRTL
+                ? 'نوع العلاقة (وكيل حصري، موزع معتمد، مُصنِّع، إلخ) يُحدَّد من قِبل المزود ويُعتمَد من هنا.'
+                : 'Relationship type (exclusive agent, authorized distributor, manufacturer, etc.) is declared by the provider and approved here.'}
+            </p>
             {linksQ.isLoading ? <Skeleton className="h-24" /> : (linksQ.data ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد علاقات بعد' : 'No provider links yet'}</p>
             ) : (
@@ -471,6 +667,166 @@ const AdminBrandDetail: React.FC = () => {
         </Card>
 
         {/* Related requests */}
+        {/* Brand products — central catalog */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Package className="w-4 h-4" />{isRTL ? 'منتجات العلامة' : 'Brand products'}
+              <span className="text-xs text-muted-foreground">({productsQ.data?.length ?? 0})</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="border rounded-xl p-3 bg-muted/30 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold"><Plus className="w-4 h-4" />{isRTL ? 'إضافة منتج مركزياً (معتمد فوراً)' : 'Add product centrally (instantly approved)'}</div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <Input dir="auto" placeholder={isRTL ? 'الاسم (عربي) *' : 'Name (AR) *'} value={newProduct.name_ar}
+                  onChange={(e) => setNewProduct(p => ({ ...p, name_ar: e.target.value }))} />
+                <Input dir="ltr" placeholder={isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'} value={newProduct.name_en}
+                  onChange={(e) => setNewProduct(p => ({ ...p, name_en: e.target.value }))} />
+                <Input dir="ltr" placeholder={isRTL ? 'رقم الموديل' : 'Model number'} className="tech-content" value={newProduct.model_number}
+                  onChange={(e) => setNewProduct(p => ({ ...p, model_number: e.target.value }))} />
+                <Input dir="ltr" placeholder="SKU" className="tech-content" value={newProduct.sku}
+                  onChange={(e) => setNewProduct(p => ({ ...p, sku: e.target.value }))} />
+              </div>
+              <Textarea dir="auto" rows={2} placeholder={isRTL ? 'وصف موجز' : 'Short description'} value={newProduct.description_ar}
+                onChange={(e) => setNewProduct(p => ({ ...p, description_ar: e.target.value }))} />
+              <div>
+                <Label className="text-xs mb-2 block">{isRTL ? 'صورة المنتج (تُضغط تلقائياً)' : 'Product image (auto-compressed)'}</Label>
+                <ImageUpload bucket="business-assets" value={newProduct.image_url}
+                  onChange={(url) => setNewProduct(p => ({ ...p, image_url: url || '' }))}
+                  onRemove={() => setNewProduct(p => ({ ...p, image_url: '' }))}
+                  placeholder={isRTL ? 'رفع صورة' : 'Upload image'} />
+              </div>
+              <Button size="sm" onClick={() => createProduct.mutate()}
+                disabled={!newProduct.name_ar.trim() || createProduct.isPending}>
+                {createProduct.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Plus className="w-4 h-4 me-1" />}
+                {isRTL ? 'إضافة' : 'Add'}
+              </Button>
+            </div>
+
+            {productsQ.isLoading ? <Skeleton className="h-24" /> : (productsQ.data ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">{isRTL ? 'لا توجد منتجات بعد' : 'No products yet'}</p>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {(productsQ.data ?? []).map((p: BrandProduct) => editingProductId === p.id ? (
+                  <div key={p.id} className="border rounded-xl p-3 space-y-2 bg-card">
+                    <Input dir="auto" value={editProduct.name_ar} onChange={(e) => setEditProduct(s => ({ ...s, name_ar: e.target.value }))} placeholder={isRTL ? 'العربية' : 'Arabic'} />
+                    <Input dir="ltr" value={editProduct.name_en} onChange={(e) => setEditProduct(s => ({ ...s, name_en: e.target.value }))} placeholder="English" />
+                    <Input dir="ltr" value={editProduct.model_number} onChange={(e) => setEditProduct(s => ({ ...s, model_number: e.target.value }))} placeholder="Model" className="tech-content" />
+                    <Input dir="ltr" value={editProduct.sku} onChange={(e) => setEditProduct(s => ({ ...s, sku: e.target.value }))} placeholder="SKU" className="tech-content" />
+                    <Textarea dir="auto" rows={2} value={editProduct.description_ar} onChange={(e) => setEditProduct(s => ({ ...s, description_ar: e.target.value }))} />
+                    <ImageUpload bucket="business-assets" value={editProduct.image_url}
+                      onChange={(url) => setEditProduct(s => ({ ...s, image_url: url || '' }))}
+                      onRemove={() => setEditProduct(s => ({ ...s, image_url: '' }))} />
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => updateProduct.mutate({ productId: p.id })} disabled={updateProduct.isPending}>
+                        <Save className="w-4 h-4 me-1" />{isRTL ? 'حفظ' : 'Save'}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingProductId(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={p.id} className="border rounded-xl p-3 bg-card hover-lift">
+                    {p.image_url ? (
+                      <img src={p.image_url} alt={p.name_ar} className="w-full h-28 object-cover rounded-lg border bg-background mb-2" loading="lazy" decoding="async" />
+                    ) : (
+                      <div className="w-full h-28 rounded-lg bg-muted grid place-items-center text-xs text-muted-foreground mb-2"><Package className="w-6 h-6 opacity-40" /></div>
+                    )}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-medium text-sm truncate" dir="auto">{locale === 'ar' ? p.name_ar : (p.name_en ?? p.name_ar)}</div>
+                        {p.model_number && <div className="text-[10px] text-muted-foreground tech-content">{p.model_number}</div>}
+                      </div>
+                      <Badge variant="outline" className="text-[10px] shrink-0">{pick(brandProductStatusLabel[p.status], locale)}</Badge>
+                    </div>
+                    {p.ref_id && <code className="tech-content text-[10px] text-muted-foreground">{p.ref_id}</code>}
+                    <div className="flex gap-1 mt-2">
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => {
+                        setEditingProductId(p.id);
+                        setEditProduct({
+                          name_ar: p.name_ar, name_en: p.name_en ?? '',
+                          model_number: p.model_number ?? '', sku: p.sku ?? '',
+                          description_ar: p.description_ar ?? '', image_url: p.image_url ?? '',
+                        });
+                      }}><Edit3 className="w-3 h-3 me-1" />{isRTL ? 'تعديل' : 'Edit'}</Button>
+                      <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive"
+                        onClick={() => deleteProduct.mutate(p.id)} disabled={deleteProduct.isPending}>
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Brand product requests — provider proposals awaiting approval */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Inbox className="w-4 h-4" />{isRTL ? 'طلبات منتجات من المزودين' : 'Provider product requests'}
+              <span className="text-xs text-muted-foreground">({productRequestsQ.data?.length ?? 0})</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {productRequestsQ.isLoading ? <Skeleton className="h-20" /> : (productRequestsQ.data ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-3">{isRTL ? 'لا توجد طلبات' : 'No requests'}</p>
+            ) : (
+              <ul className="space-y-2">
+                {(productRequestsQ.data ?? []).map((r: BrandProductRequest) => (
+                  <li key={r.id} className="border rounded-xl p-3">
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        {r.image_url ? (
+                          <img src={r.image_url} alt={r.name_ar} className="w-12 h-12 rounded-lg object-cover border" loading="lazy" decoding="async" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-muted grid place-items-center"><Package className="w-4 h-4 opacity-40" /></div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm" dir="auto">{locale === 'ar' ? r.name_ar : (r.name_en ?? r.name_ar)}</span>
+                            <Badge variant="outline" className="text-[10px]">{pick(brandProductRequestStatusLabel[r.status], locale)}</Badge>
+                            {r.ref_id && <code className="tech-content text-[10px] text-muted-foreground">{r.ref_id}</code>}
+                          </div>
+                          {r.model_number && <div className="text-[11px] text-muted-foreground tech-content">{r.model_number}</div>}
+                          {(r.description_ar || r.description_en) && <p className="text-xs text-muted-foreground mt-1 line-clamp-2" dir="auto">{locale === 'ar' ? r.description_ar : (r.description_en ?? r.description_ar)}</p>}
+                          {r.reject_reason && <p className="text-xs text-destructive mt-1" dir="auto">{r.reject_reason}</p>}
+                        </div>
+                      </div>
+                      {(r.status === 'pending' || r.status === 'in_review' || r.status === 'needs_more_info') && (
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => approveProductReq.mutate(r.id)} disabled={approveProductReq.isPending}>
+                            <Check className="w-4 h-4 me-1" />{isRTL ? 'اعتماد' : 'Approve'}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => { setRejectingReqId(r.id); setReqRejectReason(''); }}>
+                            <X className="w-4 h-4 me-1" />{isRTL ? 'رفض' : 'Reject'}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    {rejectingReqId === r.id && (
+                      <div className="mt-2 p-2 rounded-lg bg-muted/40 space-y-2">
+                        <Input value={reqRejectReason} onChange={(e) => setReqRejectReason(e.target.value)}
+                          placeholder={isRTL ? 'سبب الرفض…' : 'Rejection reason…'} className="h-9" />
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="destructive"
+                            onClick={() => rejectProductReq.mutate({ reqId: r.id, reason: reqRejectReason })}
+                            disabled={!reqRejectReason.trim() || rejectProductReq.isPending}>
+                            {isRTL ? 'تأكيد' : 'Confirm'}
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => { setRejectingReqId(null); setReqRejectReason(''); }}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Related requests (legacy brand requests) */}
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base">{isRTL ? 'الطلبات المرتبطة' : 'Related requests'} <span className="text-xs text-muted-foreground">({reqsQ.data?.length ?? 0})</span></CardTitle></CardHeader>
           <CardContent>
@@ -524,6 +880,15 @@ function Info({ label, value }: { label: string; value: string }) {
     <div>
       <div className="text-[11px] text-muted-foreground">{label}</div>
       <div className="text-sm mt-0.5 break-words" dir="auto">{value}</div>
+    </div>
+  );
+}
+
+function FieldLabeled({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <Label className="text-xs">{label}</Label>
+      <div className="mt-1">{children}</div>
     </div>
   );
 }

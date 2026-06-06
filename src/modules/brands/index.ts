@@ -2,3 +2,4 @@
 export * from './types';
 export * from './helpers/labels';
 export * from './services/brandsService';
+export * from './services/brandProductsService';
