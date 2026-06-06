@@ -407,7 +407,7 @@ export const PortfolioTab = ({ businessId }: { businessId: string }) => {
               src={activeItem.media_url}
               alt={getLocalizedValue(language, activeItem.title_ar, activeItem.title_en)}
               className="max-h-[85vh] max-w-full rounded-lg object-contain"
-              onClick={(event) = loading="lazy" decoding="async"> event.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
             />
           ) : activeEmbedUrl ? (
             <div className="w-full max-w-5xl overflow-hidden rounded-2xl" onClick={(event) => event.stopPropagation()}>

@@ -75,7 +75,7 @@ function analyzeContent(text: string) {
     headings: (text.match(/^#{1,6}\s/gm) || []).length,
     images: (text.match(/!\[.*?\]\(.*?\)/g) || []).length + (text.match(/<img\s/gi) || []).length,
     links: (text.match(/\[.*?\]\(.*?\)/g) || []).length,
-    paragraphs: text.split(/\n\s*\n/).filter(p = loading="lazy" decoding="async"> p.trim()).length,
+    paragraphs: text.split(/\n\s*\n/).filter(p => p.trim()).length,
   };
 }
 

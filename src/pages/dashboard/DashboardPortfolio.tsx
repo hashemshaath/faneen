@@ -818,7 +818,7 @@ const DashboardPortfolio = () => {
           <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-primary-foreground hover:bg-primary-foreground/10 z-10" onClick={() => setPreviewUrl(null)}>
             <X className="w-6 h-6" />
           </Button>
-          <img src={previewUrl} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" onClick={e = loading="lazy" decoding="async"> e.stopPropagation()} />
+          <img src={previewUrl} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()} />
         </div>
       )}
     </DashboardLayout>
