@@ -1740,10 +1740,38 @@ const DashboardContracts = () => {
         {viewSection === 'templates' && (
           <Card className="border-accent/20 bg-gradient-to-br from-accent/[0.02] to-transparent">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-accent" />
-                {isRTL ? 'قوالب العقود الاحترافية' : 'Professional Contract Templates'}
-              </CardTitle>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-accent" />
+                  {isRTL ? 'قوالب العقود الاحترافية' : 'Professional Contract Templates'}
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">{templates.length}</Badge>
+                </CardTitle>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs h-9 hover-lift"
+                    onClick={() => { setViewSection('import'); }}
+                  >
+                    <Upload className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
+                    {isRTL ? 'استيراد عقد' : 'Import contract'}
+                  </Button>
+                  <Button
+                    variant="hero"
+                    size="sm"
+                    className="gap-1.5 text-xs h-9 shadow-lg shadow-accent/20 hover-lift"
+                    onClick={() => { closeForm(); setViewSection('create'); }}
+                  >
+                    <Plus className="w-4 h-4" aria-hidden="true" />
+                    {isRTL ? 'عقد جديد' : 'New Contract'}
+                  </Button>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {isRTL
+                  ? 'اختر قالباً جاهزاً، استورد عقداً موجوداً، أو ابدأ من الصفر.'
+                  : 'Pick a ready template, import an existing contract, or start from scratch.'}
+              </p>
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
