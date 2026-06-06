@@ -3066,9 +3066,11 @@ const DashboardContracts = () => {
                           </CardContent>
                         </Card>
                       )}
-                    </div>
+                      </div>
+                    </React.Fragment>
                   );
-                })}
+                });
+                })()}
               </div>
             )}
             {!isLoading && filtered.length > 0 && (
