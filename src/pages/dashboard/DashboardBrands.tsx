@@ -935,15 +935,33 @@ const DashboardBrands: React.FC = () => {
                   </div>
                   <div className="space-y-1">
                     <Label>{isRTL ? 'رقم/كود الموديل' : 'Model number'}</Label>
-                    <Input value={prodModel} onChange={(e) => setProdModel(e.target.value)} className="h-11 tech-content" />
+                    <Textarea
+                      value={prodModel}
+                      onChange={(e) => setProdModel(e.target.value)}
+                      rows={2}
+                      className="tech-content"
+                      placeholder={isRTL ? 'سطر لكل موديل (اختياري)' : 'One model per line (optional)'}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRTL ? 'اسم المنتج بالعربية *' : 'Arabic name *'}</Label>
-                    <Input value={prodNameAr} onChange={(e) => setProdNameAr(e.target.value)} className="h-11" dir="auto" />
+                    <Label>{isRTL ? 'أسماء المنتجات بالعربية *' : 'Arabic product names *'}</Label>
+                    <Textarea
+                      value={prodNameAr}
+                      onChange={(e) => setProdNameAr(e.target.value)}
+                      rows={3}
+                      dir="auto"
+                      placeholder={isRTL ? 'منتج لكل سطر — يمكنك اقتراح عدة منتجات دفعة واحدة' : 'One product per line — propose several at once'}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRTL ? 'اسم المنتج بالإنجليزية' : 'English name'}</Label>
-                    <Input value={prodNameEn} onChange={(e) => setProdNameEn(e.target.value)} className="h-11" dir="auto" />
+                    <Label>{isRTL ? 'الأسماء بالإنجليزية' : 'English names'}</Label>
+                    <Textarea
+                      value={prodNameEn}
+                      onChange={(e) => setProdNameEn(e.target.value)}
+                      rows={3}
+                      dir="auto"
+                      placeholder={isRTL ? 'سطر لكل منتج (اختياري)' : 'One per line (optional)'}
+                    />
                   </div>
                 </div>
                 <div className="space-y-1">
