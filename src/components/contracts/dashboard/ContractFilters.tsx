@@ -1,10 +1,14 @@
-import { Search, LayoutGrid, List, Download } from 'lucide-react';
+import { Search, LayoutGrid, List, Download, FileText, FileSpreadsheet, FileJson } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenuLabel, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 export type ContractSortKey = 'date' | 'amount' | 'status' | 'health';
 export type ContractViewMode = 'cards' | 'compact';
@@ -29,6 +33,8 @@ interface ContractFiltersProps {
   viewMode?: ContractViewMode;
   onViewModeChange?: (value: ContractViewMode) => void;
   onExport?: () => void;
+  onExportExcel?: () => void;
+  onExportPdf?: () => void;
   searchInputRef?: React.Ref<HTMLInputElement>;
 }
 
@@ -41,7 +47,7 @@ export function ContractFilters({
   sortBy, onSortChange,
   searchQuery, onSearchChange,
   counts, isRTL,
-  viewMode, onViewModeChange, onExport, searchInputRef,
+  viewMode, onViewModeChange, onExport, onExportExcel, onExportPdf, searchInputRef,
 }: ContractFiltersProps) {
   const filters = [
     { key: 'all', label: isRTL ? 'الكل' : 'All', count: counts.total },
@@ -103,17 +109,44 @@ export function ContractFilters({
             </button>
           </div>
         )}
-        {onExport && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 px-2.5 gap-1 text-[11px] rounded-lg shrink-0 hidden md:inline-flex"
-            onClick={onExport}
-            aria-label={isRTL ? 'تصدير CSV' : 'Export CSV'}
-          >
-            <Download className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>CSV</span>
-          </Button>
+        {(onExport || onExportExcel || onExportPdf) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-2.5 gap-1 text-[11px] rounded-lg shrink-0 hidden md:inline-flex"
+                aria-label={isRTL ? 'تصدير' : 'Export'}
+              >
+                <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{isRTL ? 'تصدير' : 'Export'}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="text-[10px] text-muted-foreground">
+                {isRTL ? 'تصدير القائمة' : 'Export list'}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {onExportExcel && (
+                <DropdownMenuItem onClick={onExportExcel} className="text-xs gap-2">
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-success" aria-hidden="true" />
+                  Excel (.xlsx)
+                </DropdownMenuItem>
+              )}
+              {onExport && (
+                <DropdownMenuItem onClick={onExport} className="text-xs gap-2">
+                  <FileJson className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
+                  CSV
+                </DropdownMenuItem>
+              )}
+              {onExportPdf && (
+                <DropdownMenuItem onClick={onExportPdf} className="text-xs gap-2">
+                  <FileText className="w-3.5 h-3.5 text-destructive" aria-hidden="true" />
+                  PDF
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
       <div
