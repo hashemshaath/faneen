@@ -537,12 +537,30 @@ const BusinessProfile = () => {
         />
 
         <main className="container-app pb-10 pt-4 sm:pb-16 sm:pt-8">
-          {/* Booking quick action — desktop only (mobile has inline button in header) */}
-          <div className="mb-4 hidden items-center justify-end gap-2 sm:flex">
+          {/* Quick actions — share menu, favorites, booking */}
+          <div className="mb-4 flex items-center justify-end gap-2">
+            <ShareMenu
+              businessId={business.id}
+              businessName={businessName}
+              shareUrl={typeof window !== "undefined" ? window.location.href : `https://qitaat.com/${business.username}`}
+              vCardInput={{
+                name: businessName,
+                org: businessName,
+                title: categoryName || undefined,
+                url: `https://qitaat.com/${business.username}`,
+                address: {
+                  street: business.address || undefined,
+                  city: cityName || undefined,
+                  region: business.region || undefined,
+                  country: business.countries?.code || "SA",
+                },
+                note: businessDesc?.slice(0, 240) || undefined,
+              }}
+            />
             <Button
               variant="outline"
               size="app"
-              className="gap-2"
+              className="hidden gap-2 sm:inline-flex"
               onClick={() => {
                 void recordBadgeConversion(business?.id, 'booking', 'desktop_quick_action');
                 setBookingOpen(true);
@@ -562,7 +580,12 @@ const BusinessProfile = () => {
             data-lead-category-slug={(business.categories as { slug?: string } | null)?.slug || ""}
             data-lead-city={(business.cities as { slug?: string } | null)?.slug || cityName || ""}
           >
-            <Tabs defaultValue={defaultTab} dir={isRTL ? "rtl" : "ltr"} className="w-full">
+            <Tabs
+              value={tabs.some((tab) => tab.value === activeTab) ? activeTab : defaultTab}
+              onValueChange={setActiveTab}
+              dir={isRTL ? "rtl" : "ltr"}
+              className="w-full"
+            >
               <div
                 className="sticky top-12 z-30 -mx-1.5 overflow-x-auto bg-background/80 px-1.5 py-1 backdrop-blur-md no-scrollbar sm:top-14 sm:-mx-3 sm:px-3 sm:py-1.5"
                 dir={isRTL ? "rtl" : "ltr"}
@@ -587,6 +610,9 @@ const BusinessProfile = () => {
               </div>
 
               <div className="mt-3 rounded-2xl bg-background/70 p-1.5 sm:mt-6 sm:rounded-3xl sm:p-3">
+                <TabsContent value="overview" className="mt-0">
+                  <OverviewTab business={business} onJumpToTab={setActiveTab} />
+                </TabsContent>
                 {canSee("services") && (
                   <TabsContent value="services" className="mt-0">
                     <ServicesTab businessId={business.id} businessName={businessName} branchId={branch?.id} />
