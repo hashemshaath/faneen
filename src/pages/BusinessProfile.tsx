@@ -5,11 +5,13 @@ import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
 import { buildSeoTitle, buildSeoDescription } from "@/modules/seo/seoTitleBuilder";
 import {
   CalendarClock,
+  ClipboardList,
   FolderOpen,
   GitBranch,
   Image as ImageIcon,
   Inbox,
   LayoutDashboard,
+  MessageCircleQuestion,
   Phone,
   Shield,
   Star,
@@ -61,6 +63,8 @@ import { BusinessProfileTrustStrip } from "@/components/business-profile/Busines
 import { BusinessProfileStickyCta } from "@/components/business-profile/BusinessProfileStickyCta";
 import { OverviewTab } from "@/components/business-profile/OverviewTab";
 import { ShareMenu } from "@/components/business-profile/ShareMenu";
+import { QATab } from "@/components/business-profile/QATab";
+import { RfqTab } from "@/components/business-profile/RfqTab";
 import {
   canViewSection,
   useBusinessVisibility,
