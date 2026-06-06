@@ -93,7 +93,7 @@ export const HeroV2 = () => {
   // toggles the OS setting while the page is open.
   const [reducedMotion, setReducedMotion] = useState(false);
 
-  // Lazy-mount slides: only render <img> for slides we've actually shown.
+  // Lazy-mount slides: only render <img loading="lazy" decoding="async"> for slides we've actually shown.
   // Slide 0 is always mounted (LCP); others mount on-demand to save bandwidth.
   const [mounted, setMounted] = useState<Set<number>>(() => new Set([0]));
 

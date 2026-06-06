@@ -381,7 +381,7 @@ const Offers = () => {
                           <Link to={`/${biz.username}`} className="flex items-center gap-2.5 group/biz">
                             <div className="w-9 h-9 rounded-full bg-muted overflow-hidden ring-2 ring-transparent transition-all duration-300 group-hover/biz:ring-accent/30 shrink-0">
                               {biz.logo_url ? (
-                                <img src={biz.logo_url} alt={isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)} className="w-full h-full object-cover" />
+                                <img src={biz.logo_url} alt={isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
                               ) : (
                                 <span className="flex items-center justify-center w-full h-full text-xs font-bold bg-accent/10 text-accent">
                                   {biz.name_ar[0]}

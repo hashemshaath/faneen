@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { compressImage } from '@/lib/image-compress';
 
 /**
  * Upload a single quote-request attachment to the `quote-request-files`
@@ -16,9 +17,13 @@ export async function uploadQuoteRequestFile({
   path,
   file,
 }: UploadQuoteRequestFileParams): Promise<{ path: string }> {
+  // Auto-compress image attachments before upload (no-op for non-images).
+  const toUpload = (file.type || '').startsWith('image/')
+    ? await compressImage(file)
+    : file;
   const { error } = await supabase.storage
     .from('quote-request-files')
-    .upload(path, file, { upsert: false, contentType: file.type || undefined });
+    .upload(path, toUpload, { upsert: false, contentType: toUpload.type || undefined });
   if (error) throw error;
   return { path };
 }

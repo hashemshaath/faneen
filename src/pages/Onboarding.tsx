@@ -395,14 +395,17 @@ const Onboarding = () => {
     try {
       const ext = file.type === 'image/png' ? 'png' : 'jpg';
       const path = `${createdBusinessId}/logo-${Date.now()}.${ext}`;
+      const { compressImage } = await import('@/lib/image-compress');
+      const toUpload = await compressImage(file);
+      const finalPath = path.replace(/\.(png|jpg|jpeg)$/i, '.webp');
       const { error: upErr } = await uploadPublicImage({
         bucket: BUSINESS_ASSETS_BUCKET,
-        path,
-        file,
-        options: { upsert: true, contentType: file.type },
+        path: finalPath,
+        file: toUpload,
+        options: { upsert: true, contentType: toUpload.type || 'image/webp' },
       });
       if (upErr) throw upErr;
-      const { data: pub } = getPublicImageUrl({ bucket: BUSINESS_ASSETS_BUCKET, path });
+      const { data: pub } = getPublicImageUrl({ bucket: BUSINESS_ASSETS_BUCKET, path: finalPath });
       setLogoUrl(pub.publicUrl);
       toast.success(isRTL ? 'تم رفع الشعار' : 'Logo uploaded');
     } catch (err) {
@@ -904,7 +907,7 @@ const Onboarding = () => {
               <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <img src={logoUrl} alt="logo"
-                    className="w-14 h-14 rounded-lg object-cover border border-border/60 shrink-0" />
+                    className="w-14 h-14 rounded-lg object-cover border border-border/60 shrink-0" loading="lazy" decoding="async"/>
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-foreground truncate">
                       {isRTL ? 'تم رفع الشعار' : 'Logo uploaded'}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAttachmentSignedUrl, type AttachmentRow } from '@/lib/contract-attachments';
 
-/** Resolves a private bucket attachment to a short-lived signed URL for <img>. */
+/** Resolves a private bucket attachment to a short-lived signed URL for <img loading="lazy" decoding="async">. */
 export const SignedAttachmentImage: React.FC<{
   att: AttachmentRow;
   className?: string;

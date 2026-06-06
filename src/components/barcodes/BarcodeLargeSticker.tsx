@@ -236,7 +236,7 @@ export function renderBarcodeLargeSticker(opts: BarcodeLargeStickerOptions): voi
             <div class="seal-text">${isRTL ? 'موثّق' : 'Verified'}</div>
           </div>
           <div class="qr-label">${isRTL ? 'امسح الكود' : 'Scan Code'}</div>
-          <img class="qr-img" alt="QR ${safeCode}" src="${qrDataUrl}" />
+          <img class="qr-img" alt="QR ${safeCode}" src="${qrDataUrl}" loading="lazy" decoding="async"/>
           <div class="code-pill">${safeCode}</div>
           ${entityLabel ? `<div class="type-pill">${entityLabel}</div>` : ''}
           <div class="url-line">${safeUrl}</div>

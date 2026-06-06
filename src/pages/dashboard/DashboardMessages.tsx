@@ -1399,7 +1399,7 @@ const DashboardMessages = () => {
                     <div className="px-4 pt-2 border-t border-border/20 animate-in slide-in-from-bottom-1 duration-200">
                       <div className="flex items-center gap-2.5 p-2.5 bg-muted/40 rounded-xl border border-border/20">
                         {attachedPreview ? (
-                          <img src={attachedPreview} alt={attachedFile?.name || (isRTL ? 'معاينة المرفق' : 'Attachment preview')} className="w-12 h-12 rounded-xl object-cover border border-border/20" />
+                          <img src={attachedPreview} alt={attachedFile?.name || (isRTL ? 'معاينة المرفق' : 'Attachment preview')} className="w-12 h-12 rounded-xl object-cover border border-border/20" loading="lazy" decoding="async"/>
                         ) : (
                           <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center border border-border/20">
                             <FileText className="w-5 h-5 text-muted-foreground" />

@@ -87,9 +87,9 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   if (tone === 'auto') {
     return (
       <span className={cn('inline-flex items-center', gapClass, className)} aria-label={alt}>
-        {showMarkAlongside && <img {...markImgProps} />}
-        <img {...commonImgProps} src={lightSrc} alt={alt} aria-hidden="true" className={cn(commonImgProps.className, 'block dark:hidden')} />
-        <img {...commonImgProps} src={darkSrc}  alt={alt} aria-hidden="true" className={cn(commonImgProps.className, 'hidden dark:block')} />
+        {showMarkAlongside && <img {...markImgProps} loading="lazy" decoding="async"/>}
+        <img {...commonImgProps} src={lightSrc} alt={alt} aria-hidden="true" className={cn(commonImgProps.className, 'block dark:hidden')} loading="lazy" decoding="async"/>
+        <img {...commonImgProps} src={darkSrc}  alt={alt} aria-hidden="true" className={cn(commonImgProps.className, 'hidden dark:block')} loading="lazy" decoding="async"/>
       </span>
     );
   }
@@ -97,8 +97,8 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   const src = tone === 'dark' ? darkSrc : lightSrc;
   return (
     <span className={cn('inline-flex items-center', gapClass, className)}>
-      {showMarkAlongside && <img {...markImgProps} />}
-      <img {...commonImgProps} alt={alt} src={src} />
+      {showMarkAlongside && <img {...markImgProps} loading="lazy" decoding="async"/>}
+      <img {...commonImgProps} alt={alt} src={src} loading="lazy" decoding="async"/>
     </span>
   );
 };

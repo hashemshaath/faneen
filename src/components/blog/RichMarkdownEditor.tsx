@@ -280,7 +280,7 @@ export const RichMarkdownEditor: React.FC<RichEditorProps> = ({
               {imageUrl && (
                 <div className="rounded-lg overflow-hidden bg-muted h-24 flex items-center justify-center">
                   <img src={imageUrl} alt="preview" className="max-h-full max-w-full object-contain"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    onError={(e) = loading="lazy" decoding="async"> { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 </div>
               )}
               <div><Label className="text-[10px]">{isRTL ? 'النص البديل (SEO)' : 'Alt Text (SEO)'}</Label>
@@ -401,7 +401,7 @@ const BlogImageLibrary: React.FC<{ isRTL: boolean; onSelect: (url: string) => vo
         {images.map((img, i) => (
           <button key={i} onClick={() => onSelect(img.url)}
             className="aspect-square rounded-md overflow-hidden border border-border/40 hover:border-primary transition-colors">
-            <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+            <img src={img.url} alt={img.name} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
           </button>
         ))}
       </div>

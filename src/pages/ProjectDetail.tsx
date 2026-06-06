@@ -239,7 +239,7 @@ const ProjectDetail = () => {
                   src={project.businesses.logo_url}
                   alt={bizName || ''}
                   className="w-14 h-14 md:w-16 md:h-16 rounded-xl object-cover border-2 border-primary-foreground/20 hover:border-primary-foreground/40 transition-colors"
-                />
+                loading="lazy" decoding="async"/>
               </Link>
             ) : project.businesses ? (
               <Link to={`/${project.businesses.username}`} className="shrink-0 hidden sm:block">

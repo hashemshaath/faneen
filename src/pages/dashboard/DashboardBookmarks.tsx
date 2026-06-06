@@ -192,7 +192,7 @@ const DashboardBookmarks = () => {
                     <CardContent className="p-0 flex h-36">
                       <Link to={`/blog/${post!.slug}`} className="w-36 shrink-0 overflow-hidden relative">
                         {post!.cover_image_url ? (
-                          <img src={post!.cover_image_url} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <img src={post!.cover_image_url} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" decoding="async"/>
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-muted to-accent/5 flex items-center justify-center">
                             <BookOpen className="w-8 h-8 text-muted-foreground/20" />

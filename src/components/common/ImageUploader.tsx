@@ -356,7 +356,7 @@ const QueueRow: React.FC<{ item: QueueItem; onRemove: () => void }> = ({ item, o
           src={item.previewUrl}
           alt=""
           className="h-12 w-12 flex-none rounded-lg object-cover"
-        />
+        loading="lazy" decoding="async"/>
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">

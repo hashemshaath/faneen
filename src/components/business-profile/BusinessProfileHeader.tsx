@@ -170,7 +170,7 @@ export const BusinessProfileHeader = ({
           <div className="flex flex-row items-start gap-3 sm:gap-6">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-accent/20 bg-background shadow-lg dark:border-accent/30 sm:h-28 sm:w-28 sm:rounded-3xl">
               {business.logo_url ? (
-                <img src={business.logo_url} alt={name} className="h-full w-full object-cover" />
+                <img src={business.logo_url} alt={name} className="h-full w-full object-cover" loading="lazy" decoding="async"/>
               ) : (
                 <span className="font-heading text-2xl font-black text-accent sm:text-4xl">
                   {name.charAt(0) || "ق"}

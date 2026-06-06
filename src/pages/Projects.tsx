@@ -400,7 +400,7 @@ const Projects = () => {
                       {p.businesses && (
                         <div className="flex items-center gap-2 pt-2 border-t border-border/30 dark:border-border/20 transition-colors duration-300 group-hover:border-accent/20">
                           {p.businesses.logo_url ? (
-                            <img src={p.businesses.logo_url} alt={language === 'ar' ? p.businesses.name_ar : (p.businesses.name_en || p.businesses.name_ar)} className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover ring-2 ring-transparent transition-all duration-300 group-hover:ring-accent/30" />
+                            <img src={p.businesses.logo_url} alt={language === 'ar' ? p.businesses.name_ar : (p.businesses.name_en || p.businesses.name_ar)} className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover ring-2 ring-transparent transition-all duration-300 group-hover:ring-accent/30" loading="lazy" decoding="async"/>
                           ) : (
                             <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-accent/10 dark:bg-accent/15 flex items-center justify-center transition-colors duration-300 group-hover:bg-accent/20">
                               <Building2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-accent" />

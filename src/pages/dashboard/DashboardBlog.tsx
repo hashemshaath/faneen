@@ -75,7 +75,7 @@ function analyzeContent(text: string) {
     headings: (text.match(/^#{1,6}\s/gm) || []).length,
     images: (text.match(/!\[.*?\]\(.*?\)/g) || []).length + (text.match(/<img\s/gi) || []).length,
     links: (text.match(/\[.*?\]\(.*?\)/g) || []).length,
-    paragraphs: text.split(/\n\s*\n/).filter(p => p.trim()).length,
+    paragraphs: text.split(/\n\s*\n/).filter(p = loading="lazy" decoding="async"> p.trim()).length,
   };
 }
 
@@ -908,7 +908,7 @@ const DashboardBlog = () => {
                         <div className="rounded-xl border border-border/30 overflow-hidden">
                           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground p-3 bg-muted/20">{isRTL ? 'معاينة البطاقة الاجتماعية' : 'Social Card Preview'}</p>
                           <div className="aspect-video overflow-hidden">
-                            <img src={form.og_image_url} alt="OG" className="w-full h-full object-cover" />
+                            <img src={form.og_image_url} alt="OG" className="w-full h-full object-cover" loading="lazy" decoding="async"/>
                           </div>
                           <div className="p-3 bg-background">
                             <p className="text-[10px] text-muted-foreground">qitaat.com</p>

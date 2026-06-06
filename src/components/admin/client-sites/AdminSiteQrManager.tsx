@@ -105,7 +105,7 @@ const AdminSiteQrManager: React.FC<Props> = ({ siteId, siteRef, visibility, qrEn
       img{width:280px;height:280px}
       .url{font-size:11px;word-break:break-all;color:#666;max-width:300px;text-align:center}
       @media print{button{display:none}}</style></head>
-      <body><img src="${pngDataUrl}" alt="QR"/>
+      <body><img src="${pngDataUrl}" alt="QR" loading="lazy" decoding="async"/>
       <div class="ref">${result.site_ref}</div>
       <div class="url">${publicUrl}</div>
       <button onclick="window.print()">Print</button></body></html>`);

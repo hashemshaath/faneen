@@ -233,7 +233,7 @@ const Categories = () => {
                   <Card className="hover:shadow-lg hover:border-gold/30 transition-all group">
                     <CardContent className="card-pad-md flex items-center gap-4">
                       <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                        {b.logo_url ? <img src={b.logo_url} alt={b.name_ar} className="w-full h-full object-cover" /> : <Building2 className="ic-xl text-muted-foreground/40" />}
+                        {b.logo_url ? <img src={b.logo_url} alt={b.name_ar} className="w-full h-full object-cover" loading="lazy" decoding="async"/> : <Building2 className="ic-xl text-muted-foreground/40" />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-heading font-bold text-sm text-foreground truncate group-hover:text-gold transition-colors">{language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)}</h3>

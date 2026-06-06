@@ -124,7 +124,7 @@ export function renderBarcodePrintCard(opts: BarcodePrintCardOptions): void {
       </div>
       <div class="body">
         <div class="ttl">${cardTitle}</div>
-        <div class="qr-frame"><img alt="QR ${safeCode}" src="${qrDataUrl}" /></div>
+        <div class="qr-frame"><img alt="QR ${safeCode}" src="${qrDataUrl}" loading="lazy" decoding="async"/></div>
         <div><span class="code">${safeCode}</span></div>
         ${entityLabel ? `<div class="type">${entityLabel}</div>` : ''}
         <div class="inst">${instruction}</div>

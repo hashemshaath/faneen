@@ -376,7 +376,7 @@ const ProviderJoin: React.FC = () => {
               width={1920}
               height={1080}
               className="w-full h-full object-cover object-center"
-            />
+            loading="lazy" decoding="async"/>
             <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/75 to-slate-950/95" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.25),transparent_60%)]" />
           </div>

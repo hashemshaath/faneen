@@ -145,7 +145,7 @@ const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: 
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <img src={img?.image_url} alt={language === 'ar' ? (img?.caption_ar || name) : (img?.caption_en || img?.caption_ar || name)} className="max-w-full max-h-[75vh] sm:max-h-[80vh] object-contain rounded-lg mx-auto" />
+        <img src={img?.image_url} alt={language === 'ar' ? (img?.caption_ar || name) : (img?.caption_en || img?.caption_ar || name)} className="max-w-full max-h-[75vh] sm:max-h-[80vh] object-contain rounded-lg mx-auto" loading="lazy" decoding="async"/>
         {img?.caption_ar && <p className="text-white/80 text-center text-xs sm:text-sm mt-3">{language === 'ar' ? img.caption_ar : (img.caption_en || img.caption_ar)}</p>}
         <div className="flex items-center justify-center gap-1.5 mt-2">
           {images.map((_, i: number) => (
@@ -622,7 +622,7 @@ const ProfileSystemDetail = () => {
               <div className="flex items-start gap-3 sm:gap-4">
                 {profile.logo_url && (
                   <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-background/90 backdrop-blur-sm p-1.5 sm:p-2.5 border border-border/40 shadow-lg shrink-0">
-                    <img src={profile.logo_url} alt={name} className="w-full h-full object-contain" />
+                    <img src={profile.logo_url} alt={name} className="w-full h-full object-contain" loading="lazy" decoding="async"/>
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
@@ -984,7 +984,7 @@ const ProfileSystemDetail = () => {
                     <Card className="border-border/40 hover:border-accent/30 active:border-accent/50 transition-all group overflow-hidden">
                       <CardContent className="p-3.5 sm:card-pad-md flex items-center gap-3 sm:gap-4">
                         {s.businesses?.logo_url ? (
-                          <img src={s.businesses.logo_url} alt={language === 'ar' ? s.businesses.name_ar : (s.businesses.name_en || s.businesses.name_ar)} className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover ring-1 ring-border/50" />
+                          <img src={s.businesses.logo_url} alt={language === 'ar' ? s.businesses.name_ar : (s.businesses.name_en || s.businesses.name_ar)} className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover ring-1 ring-border/50" loading="lazy" decoding="async"/>
                         ) : (
                           <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-accent/10 flex items-center justify-center shrink-0"><Building2 className="ic-lg sm:w-7 sm:h-7 text-accent" /></div>
                         )}
@@ -1069,7 +1069,7 @@ const ProfileSystemDetail = () => {
                         <div className="flex items-start gap-2.5 sm:gap-3">
                           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-xs sm:text-sm shrink-0">
                             {((r as any).profiles)?.avatar_url ? (
-                              <img src={((r as any).profiles).avatar_url} alt={((r as any).profiles)?.full_name || ''} className="w-full h-full rounded-full object-cover" />
+                              <img src={((r as any).profiles).avatar_url} alt={((r as any).profiles)?.full_name || ''} className="w-full h-full rounded-full object-cover" loading="lazy" decoding="async"/>
                             ) : (
                               ((r as any).profiles)?.full_name?.charAt(0) || '؟'
                             )}

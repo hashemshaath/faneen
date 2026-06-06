@@ -84,7 +84,7 @@ export function WorkOrderQuotationPdf({ data, isRTL }: Props) {
               src={data.business.logo_url}
               alt={businessName}
               className="h-12 w-auto object-contain mb-2"
-            />
+            loading="lazy" decoding="async"/>
           ) : null}
           <div className="font-semibold text-base truncate">{businessName}</div>
         </div>
