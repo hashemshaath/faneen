@@ -40,6 +40,7 @@ const QuotationViewer = lazyRetry(() => import("./pages/QuotationViewer"));
 const CustomerProjectPortal = lazyRetry(() => import("./pages/CustomerProjectPortal"));
 const QSlugDispatcher = lazyRetry(() => import("./pages/QSlugDispatcher"));
 const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
+const BusinessWorks = lazyRetry(() => import("./pages/BusinessWorks"));
 const BranchDetail = lazyRetry(() => import("./pages/BranchDetail"));
 const UsernameResolver = lazyRetry(() => import("./pages/UsernameResolver"));
 const ClaimBusiness = lazyRetry(() => import("./pages/ClaimBusiness"));
@@ -521,6 +522,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/loyalty" element={<ProtectedRoute><DashboardLoyaltyHub /></ProtectedRoute>} />
           <Route path="/dashboard/loyalty/store" element={<Navigate to="/dashboard/loyalty?tab=store" replace />} />
 
+          <Route path="/works/:username" element={<BusinessWorks />} />
           <Route path="/:username" element={<UsernameResolver />} />
           {/* Nested branch URL: /{business-username}/{branch-slug} */}
           {/* Renders the same BusinessProfile screen but scoped to the
