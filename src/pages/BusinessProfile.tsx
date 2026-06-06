@@ -477,15 +477,16 @@ const BusinessProfile = () => {
 
 
   const tabs = [
-    canSee("services") && { value: "services", label: language === "ar" ? "الخدمات" : "Services", icon: Wrench },
-    canSee("projects") && { value: "projects", label: language === "ar" ? "المشاريع" : "Projects", icon: FolderOpen, count: projects.length },
+    { value: "overview", label: language === "ar" ? "نظرة عامة" : "Overview", icon: LayoutDashboard },
+    canSee("services") && services.length > 0 && { value: "services", label: language === "ar" ? "الخدمات" : "Services", icon: Wrench, count: services.length },
+    canSee("projects") && projects.length > 0 && { value: "projects", label: language === "ar" ? "المشاريع" : "Projects", icon: FolderOpen, count: projects.length },
     canSee("portfolio") && { value: "portfolio", label: language === "ar" ? "الأعمال" : "Portfolio", icon: ImageIcon },
     canSee("requests_as_beneficiary") && { value: "requests", label: language === "ar" ? "طلبات مطروحة" : "Public requests", icon: Inbox },
-    canSee("branches") && { value: "branches", label: language === "ar" ? "الفروع" : "Branches", icon: GitBranch, count: branches.length },
+    canSee("branches") && branches.length > 0 && { value: "branches", label: language === "ar" ? "الفروع" : "Branches", icon: GitBranch, count: branches.length },
     canSee("reviews") && { value: "reviews", label: language === "ar" ? "التقييمات" : "Reviews", icon: Star, count: business.rating_count ?? 0 },
     canSee("contact") && { value: "contact", label: language === "ar" ? "التواصل" : "Contact", icon: Phone },
   ].filter(Boolean) as Array<{ value: string; label: string; icon: React.ElementType; count?: number }>;
-  const defaultTab = tabs[0]?.value ?? "services";
+  const defaultTab = tabs[0]?.value ?? "overview";
 
   return (
     <div className="min-h-screen bg-background">
