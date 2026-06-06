@@ -2425,7 +2425,15 @@ const DashboardContracts = () => {
                   const hasAnyLineVat = lineVatTotals.vat > 0 || lineVatRows.some(r => r.breakdown.vatHandling !== 'inherit');
 
                   return (
-                    <div key={c.id} className="space-y-0">
+                    <React.Fragment key={c.id}>
+                      {headerMeta && (
+                        <div className={`flex items-center gap-2 mt-2 first:mt-0 px-1 py-1 text-[10px] font-medium uppercase tracking-wide ${headerMeta.text || 'text-muted-foreground'}`}>
+                          <headerMeta.icon className="w-3 h-3" aria-hidden="true" />
+                          <span>{isRTL ? headerMeta.label_ar : headerMeta.label_en}</span>
+                          <span className="flex-1 h-px bg-border/40" aria-hidden="true" />
+                        </div>
+                      )}
+                      <div className="space-y-0">
                       <ContractCard
                         c={c} isRTL={isRTL} user={user} milestones={milestones} notes={notes}
                         attachments={attachments} payments={payments} measurements={measurements} profiles={profiles}
