@@ -2321,7 +2321,7 @@ const DashboardContracts = () => {
               />
             ) : viewMode === 'compact' ? (
               <div className="space-y-1.5">
-                {filtered.map((c) => (
+                {paginated.map((c) => (
                   <ContractCompactRow
                     key={c.id + c._role}
                     c={c}
@@ -2333,7 +2333,7 @@ const DashboardContracts = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {filtered.map((c) => {
+                {paginated.map((c) => {
                   const milestones = allMilestones.filter((m) => m.contract_id === c.id);
                   const notes = allNotes.filter((n) => n.contract_id === c.id);
                   const attachments = allAttachments.filter((a) => a.contract_id === c.id);
