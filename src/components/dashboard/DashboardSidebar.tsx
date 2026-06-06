@@ -45,6 +45,7 @@ import {
   CheckCircle2,
   Sparkles,
   Plug,
+  Award,
 } from 'lucide-react';
 
 interface MenuItem {
