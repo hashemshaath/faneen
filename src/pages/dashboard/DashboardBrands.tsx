@@ -55,7 +55,6 @@ import {
   listBrandProductRequests,
   submitBrandProductRequest,
   brandProductRequestStatusLabel,
-  listApprovedBrandProducts,
 } from '@/modules/brands';
 import { listServicesByBusiness } from '@/modules/catalog';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
