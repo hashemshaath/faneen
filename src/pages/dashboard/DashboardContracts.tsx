@@ -210,6 +210,8 @@ const DashboardContracts = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [viewSection, setViewSection] = useState<ViewSection>('list');
   const [form, setForm] = useState<ContractForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
