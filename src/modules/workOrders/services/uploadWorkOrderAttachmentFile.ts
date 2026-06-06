@@ -5,6 +5,7 @@
  * the caller can branch without leaking provider details.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { compressImage } from "@/lib/image-compress";
 
 export const WORK_ORDER_ATTACHMENTS_BUCKET = "work-order-files" as const;
 
@@ -26,12 +27,20 @@ export async function uploadWorkOrderAttachmentFile(
   if (!path || path.startsWith("/") || path.includes("..")) {
     return { data: null, error: new Error("invalid_path") };
   }
+  // Auto-compress image attachments (no-op for PDFs/Word/Excel).
+  let file: Blob | File = input.file;
+  let contentType = input.contentType;
+  if (file instanceof File && (file.type || "").startsWith("image/")) {
+    const compressed = await compressImage(file);
+    file = compressed;
+    contentType = compressed.type || contentType;
+  }
   const { data, error } = await supabase.storage
     .from(WORK_ORDER_ATTACHMENTS_BUCKET)
-    .upload(path, input.file, {
+    .upload(path, file, {
       cacheControl: "3600",
       upsert: false,
-      contentType: input.contentType,
+      contentType,
     });
   return { data: data ? { path: data.path } : null, error };
 }
