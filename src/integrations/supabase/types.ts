@@ -2704,6 +2704,138 @@ export type Database = {
           },
         ]
       }
+      business_qa: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          asked_at: string
+          asker_name: string | null
+          asker_user_id: string | null
+          business_id: string
+          created_at: string
+          id: string
+          is_published: boolean
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          asked_at?: string
+          asker_name?: string | null
+          asker_user_id?: string | null
+          business_id: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          asked_at?: string
+          asker_name?: string | null
+          asker_user_id?: string | null
+          business_id?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          question?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_qa_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_qa_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_rfqs: {
+        Row: {
+          attachments: Json | null
+          budget_max: number | null
+          budget_min: number | null
+          business_id: string
+          created_at: string
+          currency_code: string | null
+          deadline: string | null
+          description: string
+          id: string
+          provider_note: string | null
+          requester_email: string | null
+          requester_name: string
+          requester_phone: string | null
+          requester_user_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json | null
+          budget_max?: number | null
+          budget_min?: number | null
+          business_id: string
+          created_at?: string
+          currency_code?: string | null
+          deadline?: string | null
+          description: string
+          id?: string
+          provider_note?: string | null
+          requester_email?: string | null
+          requester_name: string
+          requester_phone?: string | null
+          requester_user_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json | null
+          budget_max?: number | null
+          budget_min?: number | null
+          business_id?: string
+          created_at?: string
+          currency_code?: string | null
+          deadline?: string | null
+          description?: string
+          id?: string
+          provider_note?: string | null
+          requester_email?: string | null
+          requester_name?: string
+          requester_phone?: string | null
+          requester_user_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_rfqs_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_rfqs_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_service_areas: {
         Row: {
           business_id: string
@@ -15037,6 +15169,42 @@ export type Database = {
           },
         ]
       }
+      user_favorites: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_favorites_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_locale_settings: {
         Row: {
           created_at: string
@@ -16482,6 +16650,48 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_qa_public: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          asked_at: string | null
+          business_id: string | null
+          id: string | null
+          question: string | null
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          asked_at?: string | null
+          business_id?: string | null
+          id?: string | null
+          question?: string | null
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          asked_at?: string | null
+          business_id?: string | null
+          id?: string | null
+          question?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_qa_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_qa_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
             referencedColumns: ["id"]
           },
         ]

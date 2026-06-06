@@ -5,11 +5,13 @@ import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
 import { buildSeoTitle, buildSeoDescription } from "@/modules/seo/seoTitleBuilder";
 import {
   CalendarClock,
+  ClipboardList,
   FolderOpen,
   GitBranch,
   Image as ImageIcon,
   Inbox,
   LayoutDashboard,
+  MessageCircleQuestion,
   Phone,
   Shield,
   Star,
@@ -61,6 +63,8 @@ import { BusinessProfileTrustStrip } from "@/components/business-profile/Busines
 import { BusinessProfileStickyCta } from "@/components/business-profile/BusinessProfileStickyCta";
 import { OverviewTab } from "@/components/business-profile/OverviewTab";
 import { ShareMenu } from "@/components/business-profile/ShareMenu";
+import { QATab } from "@/components/business-profile/QATab";
+import { RfqTab } from "@/components/business-profile/RfqTab";
 import {
   canViewSection,
   useBusinessVisibility,
@@ -479,9 +483,11 @@ const BusinessProfile = () => {
 
   const tabs = [
     { value: "overview", label: language === "ar" ? "نظرة عامة" : "Overview", icon: LayoutDashboard },
+    { value: "rfq", label: language === "ar" ? "طلب عرض سعر" : "Request quote", icon: ClipboardList },
     canSee("services") && services.length > 0 && { value: "services", label: language === "ar" ? "الخدمات" : "Services", icon: Wrench, count: services.length },
     canSee("projects") && projects.length > 0 && { value: "projects", label: language === "ar" ? "المشاريع" : "Projects", icon: FolderOpen, count: projects.length },
     canSee("portfolio") && { value: "portfolio", label: language === "ar" ? "الأعمال" : "Portfolio", icon: ImageIcon },
+    { value: "qa", label: language === "ar" ? "أسئلة وأجوبة" : "Q&A", icon: MessageCircleQuestion },
     canSee("requests_as_beneficiary") && { value: "requests", label: language === "ar" ? "طلبات مطروحة" : "Public requests", icon: Inbox },
     canSee("branches") && branches.length > 0 && { value: "branches", label: language === "ar" ? "الفروع" : "Branches", icon: GitBranch, count: branches.length },
     canSee("reviews") && { value: "reviews", label: language === "ar" ? "التقييمات" : "Reviews", icon: Star, count: business.rating_count ?? 0 },
@@ -612,6 +618,12 @@ const BusinessProfile = () => {
               <div className="mt-3 rounded-2xl bg-background/70 p-1.5 sm:mt-6 sm:rounded-3xl sm:p-3">
                 <TabsContent value="overview" className="mt-0">
                   <OverviewTab business={business} onJumpToTab={setActiveTab} />
+                </TabsContent>
+                <TabsContent value="rfq" className="mt-0">
+                  <RfqTab businessId={business.id} businessName={businessName} />
+                </TabsContent>
+                <TabsContent value="qa" className="mt-0">
+                  <QATab businessId={business.id} businessName={businessName} />
                 </TabsContent>
                 {canSee("services") && (
                   <TabsContent value="services" className="mt-0">
