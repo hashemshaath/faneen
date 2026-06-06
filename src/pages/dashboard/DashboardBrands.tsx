@@ -617,7 +617,13 @@ const DashboardBrands: React.FC = () => {
                               toast.error(isRTL ? 'لا توجد منشأة نشطة' : 'No active business');
                               return;
                             }
-                            setLinkPanel(panelOpen ? null : { brandId: b.id, serviceId: services[0]?.id ?? '' });
+                            // Pre-select the services already linked to this
+                            // brand so the multi-select reflects current state
+                            // (and toggling adds only new ones).
+                            const preselected = myLinks
+                              .filter((l) => l.brand_id === b.id)
+                              .map((l) => l.business_service_id);
+                            setLinkPanel(panelOpen ? null : { brandId: b.id, serviceIds: preselected });
                           }}
                           data-testid="link-brand-btn"
                         >
@@ -629,43 +635,82 @@ const DashboardBrands: React.FC = () => {
                       </div>
                       {panelOpen && (
                         <div className="border-t pt-2 mt-1 space-y-2" data-testid="inline-link-form">
-                          <Label className="text-xs">{isRTL ? 'اختر خدمة' : 'Pick a service'}</Label>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs flex items-center gap-1">
+                              <Layers className="w-3 h-3" />
+                              {isRTL ? 'اختر تخصصاتك المرتبطة بهذه العلامة' : 'Pick specializations for this brand'}
+                            </Label>
+                            {services.length > 0 && (
+                              <button
+                                type="button"
+                                className="text-[11px] text-primary hover:underline"
+                                onClick={() => {
+                                  const all = services.map((s) => s.id);
+                                  const allSelected = linkPanel?.serviceIds.length === all.length;
+                                  setLinkPanel({ brandId: b.id, serviceIds: allSelected ? [] : all });
+                                }}
+                              >
+                                <CheckSquare className="inline w-3 h-3 me-1" />
+                                {linkPanel?.serviceIds.length === services.length
+                                  ? (isRTL ? 'إلغاء تحديد الكل' : 'Clear all')
+                                  : (isRTL ? 'تحديد الكل' : 'Select all')}
+                              </button>
+                            )}
+                          </div>
                           {services.length === 0 ? (
                             <p className="text-xs text-muted-foreground">
                               {isRTL
-                                ? 'لا توجد خدمات نشطة. أضف خدمة من '
-                                : 'No active services. Add one from '}
+                                ? 'لا توجد تخصصات نشطة. أضف خدمة من '
+                                : 'No active specializations. Add one from '}
                               <Link to="/dashboard/services" className="text-primary underline">
                                 /dashboard/services
                               </Link>
                             </p>
                           ) : (
                             <>
-                              <Select
-                                value={linkPanel?.serviceId ?? ''}
-                                onValueChange={(v) => setLinkPanel({ brandId: b.id, serviceId: v })}
-                              >
-                                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  {services.map((s) => (
-                                    <SelectItem key={s.id} value={s.id}>
-                                      {locale === 'ar' ? (s.name_ar ?? s.id) : (s.name_en ?? s.name_ar ?? s.id)}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" onClick={() => setLinkPanel(null)}>
-                                  {isRTL ? 'إلغاء' : 'Cancel'}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  disabled={!linkPanel?.serviceId || linkMut.isPending}
-                                  onClick={() => linkPanel && linkMut.mutate(linkPanel)}
-                                  data-testid="confirm-link-btn"
-                                >
-                                  {isRTL ? 'تأكيد الربط' : 'Confirm link'}
-                                </Button>
+                              <div className="max-h-40 overflow-y-auto no-scrollbar space-y-1 rounded-lg border bg-muted/30 p-2">
+                                {services.map((s) => {
+                                  const checked = linkPanel?.serviceIds.includes(s.id) ?? false;
+                                  const lbl = locale === 'ar' ? (s.name_ar ?? s.id) : (s.name_en ?? s.name_ar ?? s.id);
+                                  return (
+                                    <label
+                                      key={s.id}
+                                      className="flex items-center gap-2 text-sm px-2 py-1.5 rounded hover:bg-background cursor-pointer"
+                                    >
+                                      <Checkbox
+                                        checked={checked}
+                                        onCheckedChange={(v) => {
+                                          const cur = linkPanel?.serviceIds ?? [];
+                                          const next = v
+                                            ? Array.from(new Set([...cur, s.id]))
+                                            : cur.filter((id) => id !== s.id);
+                                          setLinkPanel({ brandId: b.id, serviceIds: next });
+                                        }}
+                                      />
+                                      <span className="truncate">{lbl}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[11px] text-muted-foreground">
+                                  {isRTL
+                                    ? `محدّد: ${linkPanel?.serviceIds.length ?? 0} / ${services.length}`
+                                    : `Selected: ${linkPanel?.serviceIds.length ?? 0} / ${services.length}`}
+                                </span>
+                                <div className="flex gap-2">
+                                  <Button variant="ghost" size="sm" onClick={() => setLinkPanel(null)}>
+                                    {isRTL ? 'إلغاء' : 'Cancel'}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    disabled={!linkPanel?.serviceIds.length || linkMut.isPending}
+                                    onClick={() => linkPanel && linkMut.mutate(linkPanel)}
+                                    data-testid="confirm-link-btn"
+                                  >
+                                    {isRTL ? 'تأكيد الربط' : 'Confirm links'}
+                                  </Button>
+                                </div>
                               </div>
                             </>
                           )}
