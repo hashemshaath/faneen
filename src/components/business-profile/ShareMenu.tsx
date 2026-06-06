@@ -67,20 +67,23 @@ export const ShareMenu = ({
 
   useEffect(() => {
     let cancelled = false;
-    if (user) {
-      void supabase
+    if (!user) {
+      setIsFav(readFavorites().includes(businessId));
+      return;
+    }
+    const load = async () => {
+      const { data } = await supabase
         .from("user_favorite_businesses")
         .select("id")
         .eq("user_id", user.id)
         .eq("business_id", businessId)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (!cancelled) setIsFav(!!data);
-        });
-    } else {
-      setIsFav(readFavorites().includes(businessId));
-    }
-    return () => { cancelled = true; };
+        .maybeSingle();
+      if (!cancelled) setIsFav(!!data);
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [businessId, user]);
 
   useEffect(() => {
