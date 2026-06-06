@@ -9,6 +9,7 @@ import {
   GitBranch,
   Image as ImageIcon,
   Inbox,
+  LayoutDashboard,
   Phone,
   Shield,
   Star,
@@ -58,6 +59,8 @@ import { BookingWidget } from "@/components/booking/BookingWidget";
 import { ContactSupplierSheet } from "@/components/business-profile/ContactSupplierSheet";
 import { BusinessProfileTrustStrip } from "@/components/business-profile/BusinessProfileTrustStrip";
 import { BusinessProfileStickyCta } from "@/components/business-profile/BusinessProfileStickyCta";
+import { OverviewTab } from "@/components/business-profile/OverviewTab";
+import { ShareMenu } from "@/components/business-profile/ShareMenu";
 import {
   canViewSection,
   useBusinessVisibility,
@@ -76,6 +79,7 @@ const BusinessProfile = () => {
   const navigate = useNavigate();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [contactSheetOpen, setContactSheetOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("overview");
   const { data: businessRow, isLoading, error } = useBusinessByUsername(username || "");
   const { data: branch } = useBranchBySlug(businessRow?.id, branchSlug);
 
@@ -474,15 +478,16 @@ const BusinessProfile = () => {
 
 
   const tabs = [
-    canSee("services") && { value: "services", label: language === "ar" ? "الخدمات" : "Services", icon: Wrench },
-    canSee("projects") && { value: "projects", label: language === "ar" ? "المشاريع" : "Projects", icon: FolderOpen, count: projects.length },
+    { value: "overview", label: language === "ar" ? "نظرة عامة" : "Overview", icon: LayoutDashboard },
+    canSee("services") && services.length > 0 && { value: "services", label: language === "ar" ? "الخدمات" : "Services", icon: Wrench, count: services.length },
+    canSee("projects") && projects.length > 0 && { value: "projects", label: language === "ar" ? "المشاريع" : "Projects", icon: FolderOpen, count: projects.length },
     canSee("portfolio") && { value: "portfolio", label: language === "ar" ? "الأعمال" : "Portfolio", icon: ImageIcon },
     canSee("requests_as_beneficiary") && { value: "requests", label: language === "ar" ? "طلبات مطروحة" : "Public requests", icon: Inbox },
-    canSee("branches") && { value: "branches", label: language === "ar" ? "الفروع" : "Branches", icon: GitBranch, count: branches.length },
+    canSee("branches") && branches.length > 0 && { value: "branches", label: language === "ar" ? "الفروع" : "Branches", icon: GitBranch, count: branches.length },
     canSee("reviews") && { value: "reviews", label: language === "ar" ? "التقييمات" : "Reviews", icon: Star, count: business.rating_count ?? 0 },
     canSee("contact") && { value: "contact", label: language === "ar" ? "التواصل" : "Contact", icon: Phone },
   ].filter(Boolean) as Array<{ value: string; label: string; icon: React.ElementType; count?: number }>;
-  const defaultTab = tabs[0]?.value ?? "services";
+  const defaultTab = tabs[0]?.value ?? "overview";
 
   return (
     <div className="min-h-screen bg-background">
@@ -532,12 +537,30 @@ const BusinessProfile = () => {
         />
 
         <main className="container-app pb-10 pt-4 sm:pb-16 sm:pt-8">
-          {/* Booking quick action — desktop only (mobile has inline button in header) */}
-          <div className="mb-4 hidden items-center justify-end gap-2 sm:flex">
+          {/* Quick actions — share menu, favorites, booking */}
+          <div className="mb-4 flex items-center justify-end gap-2">
+            <ShareMenu
+              businessId={business.id}
+              businessName={businessName}
+              shareUrl={typeof window !== "undefined" ? window.location.href : `https://qitaat.com/${business.username}`}
+              vCardInput={{
+                name: businessName,
+                org: businessName,
+                title: categoryName || undefined,
+                url: `https://qitaat.com/${business.username}`,
+                address: {
+                  street: business.address || undefined,
+                  city: cityName || undefined,
+                  region: business.region || undefined,
+                  country: business.countries?.code || "SA",
+                },
+                note: businessDesc?.slice(0, 240) || undefined,
+              }}
+            />
             <Button
               variant="outline"
               size="app"
-              className="gap-2"
+              className="hidden gap-2 sm:inline-flex"
               onClick={() => {
                 void recordBadgeConversion(business?.id, 'booking', 'desktop_quick_action');
                 setBookingOpen(true);
@@ -557,7 +580,12 @@ const BusinessProfile = () => {
             data-lead-category-slug={(business.categories as { slug?: string } | null)?.slug || ""}
             data-lead-city={(business.cities as { slug?: string } | null)?.slug || cityName || ""}
           >
-            <Tabs defaultValue={defaultTab} dir={isRTL ? "rtl" : "ltr"} className="w-full">
+            <Tabs
+              value={tabs.some((tab) => tab.value === activeTab) ? activeTab : defaultTab}
+              onValueChange={setActiveTab}
+              dir={isRTL ? "rtl" : "ltr"}
+              className="w-full"
+            >
               <div
                 className="sticky top-12 z-30 -mx-1.5 overflow-x-auto bg-background/80 px-1.5 py-1 backdrop-blur-md no-scrollbar sm:top-14 sm:-mx-3 sm:px-3 sm:py-1.5"
                 dir={isRTL ? "rtl" : "ltr"}
@@ -582,6 +610,9 @@ const BusinessProfile = () => {
               </div>
 
               <div className="mt-3 rounded-2xl bg-background/70 p-1.5 sm:mt-6 sm:rounded-3xl sm:p-3">
+                <TabsContent value="overview" className="mt-0">
+                  <OverviewTab business={business} onJumpToTab={setActiveTab} />
+                </TabsContent>
                 {canSee("services") && (
                   <TabsContent value="services" className="mt-0">
                     <ServicesTab businessId={business.id} businessName={businessName} branchId={branch?.id} />
