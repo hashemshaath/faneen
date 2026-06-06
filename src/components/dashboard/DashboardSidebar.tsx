@@ -85,6 +85,7 @@ const providerGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'بيانات المنشأة', en: 'Business Profile' }, url: '/dashboard/business-edit', icon: Building2 },
       { label: { ar: 'الخدمات', en: 'Services' }, url: '/dashboard/services', icon: Wrench },
+      { label: { ar: 'العلامات التجارية', en: 'Brands' }, url: '/dashboard/brands', icon: Award },
       { label: { ar: 'معرض الأعمال', en: 'Portfolio' }, url: '/dashboard/portfolio', icon: Image },
       { label: { ar: 'المشاريع', en: 'Projects' }, url: '/dashboard/projects', icon: FolderOpen },
       { label: { ar: 'العروض', en: 'Promotions' }, url: '/dashboard/promotions', icon: Megaphone },
