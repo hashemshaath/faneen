@@ -417,6 +417,12 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
               {brand.slug && <span>/{brand.slug}</span>}
               {brand.country_of_origin_code && <span>{isRTL ? 'بلد المنشأ:' : 'Origin:'} {brand.country_of_origin_code}</span>}
               {sectorLabel && <span>{isRTL ? 'القطاع:' : 'Sector:'} {sectorLabel}</span>}
+              {brand.website && (
+                <span className="inline-flex items-center gap-1 tech-content">
+                  <Globe2 className="h-3 w-3" />
+                  {brand.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </span>
+              )}
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge variant={(summary?.sector_ids.length ?? 0) > 0 ? 'secondary' : 'outline'} className="text-xs gap-1">
