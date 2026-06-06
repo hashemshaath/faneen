@@ -121,6 +121,7 @@ import { ContractStatsSummary } from '@/components/contracts/dashboard/ContractS
 import { ContractCard } from '@/components/contracts/dashboard/ContractCard';
 import { ContractCompactRow } from '@/components/contracts/dashboard/ContractCompactRow';
 import { ContractActiveFilters } from '@/components/contracts/dashboard/ContractActiveFilters';
+import { ContractsPagination } from '@/components/contracts/dashboard/ContractsPagination';
 import { getContractHealth } from '@/components/contracts/dashboard/contract-helpers';
 import { ContractCreateStepper } from '@/components/contracts/dashboard/create/ContractCreateStepper';
 import { ContractReviewSummary } from '@/components/contracts/dashboard/create/ContractReviewSummary';
