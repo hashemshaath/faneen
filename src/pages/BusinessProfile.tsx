@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
@@ -55,25 +55,50 @@ import {
   useBranchBySlug,
 } from "@/components/business-profile/business-profile.data";
 import { useReviews } from "@/components/business-profile/business-profile.data";
-import { BnplBadges } from "@/components/bnpl/BnplBadges";
-import { BusinessBarcodeCard } from "@/components/business-profile/BusinessBarcodeCard";
-import { BookingWidget } from "@/components/booking/BookingWidget";
-import { ContactSupplierSheet } from "@/components/business-profile/ContactSupplierSheet";
 import { BusinessProfileTrustStrip } from "@/components/business-profile/BusinessProfileTrustStrip";
 import { BusinessProfileStickyCta } from "@/components/business-profile/BusinessProfileStickyCta";
 import { OverviewTab } from "@/components/business-profile/OverviewTab";
 import { ShareMenu } from "@/components/business-profile/ShareMenu";
-import { QATab } from "@/components/business-profile/QATab";
-import { RfqTab } from "@/components/business-profile/RfqTab";
 import {
   canViewSection,
   useBusinessVisibility,
   type ProfileSectionKey,
 } from "@/components/business-profile/business-profile.visibility";
-import { RequestsAsBeneficiaryTab } from "@/components/business-profile/RequestsTab";
-import { buildBreadcrumbList, buildService, ogImageFor } from "@/lib/seo/structured-data";
+import { ogImageFor } from "@/lib/seo/structured-data";
+import { useBusinessStructuredData } from "@/components/business-profile/useBusinessStructuredData";
 import { track } from "@/lib/analytics-events";
-// JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement:
+
+// Heavy / below-the-fold tabs + widgets are code-split so the initial
+// profile render only ships the Overview tab + Header chunks.
+const RfqTab = lazy(() =>
+  import("@/components/business-profile/RfqTab").then((m) => ({ default: m.RfqTab })),
+);
+const QATab = lazy(() =>
+  import("@/components/business-profile/QATab").then((m) => ({ default: m.QATab })),
+);
+const RequestsAsBeneficiaryTab = lazy(() =>
+  import("@/components/business-profile/RequestsTab").then((m) => ({
+    default: m.RequestsAsBeneficiaryTab,
+  })),
+);
+const BookingWidget = lazy(() =>
+  import("@/components/booking/BookingWidget").then((m) => ({ default: m.BookingWidget })),
+);
+const ContactSupplierSheet = lazy(() =>
+  import("@/components/business-profile/ContactSupplierSheet").then((m) => ({
+    default: m.ContactSupplierSheet,
+  })),
+);
+const BnplBadges = lazy(() =>
+  import("@/components/bnpl/BnplBadges").then((m) => ({ default: m.BnplBadges })),
+);
+const BusinessBarcodeCard = lazy(() =>
+  import("@/components/business-profile/BusinessBarcodeCard").then((m) => ({
+    default: m.BusinessBarcodeCard,
+  })),
+);
+
+const TabFallback = () => <Skeleton className="h-48 w-full rounded-2xl" />;
 
 const BusinessProfile = () => {
   const { username, branchSlug } = useParams<{ username: string; branchSlug?: string }>();
