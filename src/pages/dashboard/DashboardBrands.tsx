@@ -37,6 +37,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DashboardEmptyState } from '@/components/dashboard/DashboardEmptyState';
+import { BrandRequestForm, type BrandRequestFormPayload } from '@/components/brands/BrandRequestForm';
+import { LinkedBrandProductsInline } from '@/components/brands/LinkedBrandProductsInline';
 
 import {
   listApprovedBrandsForProviderPicker,
@@ -53,7 +55,6 @@ import {
   listBrandProductRequests,
   submitBrandProductRequest,
   brandProductRequestStatusLabel,
-  listApprovedBrandProducts,
 } from '@/modules/brands';
 import { listServicesByBusiness } from '@/modules/catalog';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
@@ -80,53 +81,6 @@ const statusBadgeClass = (status: string | null | undefined): string => {
     default:
       return 'bg-muted text-muted-foreground border-border';
   }
-};
-
-/**
- * Inline approved-product browser for a single linked brand row.
- * Lazy-fetches `brand_products` (approved/active only) via the brands module
- * and renders a compact pill list. Lets a provider quickly see which
- * products exist in the central catalog for a brand they work with.
- */
-const LinkedBrandProductsInline: React.FC<{ brandId: string; isRTL: boolean; locale: Loc }> = ({
-  brandId, isRTL, locale,
-}) => {
-  const { data = [], isLoading } = useQuery({
-    queryKey: ['brand-approved-products', brandId],
-    queryFn: () => listApprovedBrandProducts(brandId),
-    staleTime: 60_000,
-  });
-  if (isLoading) return <Skeleton className="h-8 w-full mt-2" />;
-  if (data.length === 0) {
-    return (
-      <p className="text-xs text-muted-foreground mt-2">
-        {isRTL ? 'لا توجد منتجات معتمدة بعد لهذه العلامة.' : 'No approved products yet for this brand.'}
-      </p>
-    );
-  }
-  return (
-    <div className="mt-2 flex flex-wrap gap-1.5">
-      {data.slice(0, 24).map((p) => {
-        const lbl = locale === 'ar' ? p.name_ar : (p.name_en ?? p.name_ar);
-        return (
-          <span
-            key={p.id}
-            className="inline-flex items-center gap-1 text-[11px] bg-muted/60 border rounded-full px-2 py-0.5"
-            title={p.model_number ?? undefined}
-          >
-            <Package className="w-2.5 h-2.5" />
-            <span className="truncate max-w-[10rem]">{lbl}</span>
-            {p.model_number && <code className="tech-content opacity-70">{p.model_number}</code>}
-          </span>
-        );
-      })}
-      {data.length > 24 && (
-        <span className="text-[11px] text-muted-foreground">
-          {isRTL ? `+${data.length - 24} أخرى` : `+${data.length - 24} more`}
-        </span>
-      )}
-    </div>
-  );
 };
 
 const DashboardBrands: React.FC = () => {
@@ -282,25 +236,19 @@ const DashboardBrands: React.FC = () => {
 
   // ─────────── Request form ───────────
   const [requestOpen, setRequestOpen] = useState(false);
-  const [nameAr, setNameAr] = useState('');
-  const [nameEn, setNameEn] = useState('');
-  const [notes, setNotes] = useState('');
-
   const submit = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (payload: BrandRequestFormPayload) => {
       if (!user) throw new Error(isRTL ? 'يجب تسجيل الدخول' : 'Not signed in');
       return createMyBrandRequest({
         request_type: 'create_brand',
         business_id: businessId,
         user_id: user.id,
-        name_ar: nameAr.trim(),
-        name_en: nameEn.trim() || null,
-        notes: notes.trim() || null,
+        ...payload,
       });
     },
     onSuccess: () => {
       toast.success(isRTL ? 'تم إرسال الطلب للمراجعة' : 'Request submitted for review');
-      setNameAr(''); setNameEn(''); setNotes(''); setRequestOpen(false);
+      setRequestOpen(false);
       qc.invalidateQueries({ queryKey: ['provider-brand-requests', user?.id] });
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
@@ -426,45 +374,17 @@ const DashboardBrands: React.FC = () => {
           ))}
         </div>
 
-        {/* Inline request form */}
+        {/* Inline request form (full professional intake) */}
         {requestOpen && (
-          <Card data-testid="brand-request-form">
-            <CardHeader>
-              <CardTitle className="text-base">
-                {isRTL ? 'طلب إضافة علامة جديدة' : 'Request a new brand'}
-              </CardTitle>
-              <CardDescription>
-                {isRTL
-                  ? 'تخضع جميع الطلبات لمراجعة الإدارة قبل ظهور العلامة في السجل العام.'
-                  : 'All requests are reviewed by admins before the brand becomes publicly visible.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid md:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label>{isRTL ? 'الاسم بالعربية *' : 'Arabic name *'}</Label>
-                  <Input value={nameAr} onChange={(e) => setNameAr(e.target.value)} className="h-11" dir="auto" />
-                </div>
-                <div className="space-y-1">
-                  <Label>{isRTL ? 'الاسم بالإنجليزية' : 'English name'}</Label>
-                  <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} className="h-11" dir="auto" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label>{isRTL ? 'ملاحظات' : 'Notes'}</Label>
-                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} dir="auto" />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="ghost" onClick={() => setRequestOpen(false)}>
-                  {isRTL ? 'إلغاء' : 'Cancel'}
-                </Button>
-                <Button onClick={() => submit.mutate()} disabled={!nameAr.trim() || submit.isPending}>
-                  <Send className="w-4 h-4 me-2" />
-                  {isRTL ? 'إرسال الطلب' : 'Submit request'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <BrandRequestForm
+            isRTL={isRTL}
+            locale={locale}
+            sectors={sectors}
+            countries={filterOpts?.countries ?? []}
+            isSubmitting={submit.isPending}
+            onCancel={() => setRequestOpen(false)}
+            onSubmit={(payload) => submit.mutate(payload)}
+          />
         )}
 
         {/* My linked brands */}
