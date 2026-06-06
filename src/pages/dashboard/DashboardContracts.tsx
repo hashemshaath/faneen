@@ -113,7 +113,6 @@ import { SupervisorSection } from '@/components/contracts/dashboard/create/Super
 import { ContractTermsSection } from '@/components/contracts/dashboard/create/ContractTermsSection';
 import { ContractImportPanel } from '@/components/contracts/dashboard/import/ContractImportPanel';
 import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
-import { ContractRoleTabs } from '@/components/contracts/dashboard/ContractRoleTabs';
 import { ContractFilters } from '@/components/contracts/dashboard/ContractFilters';
 import { ContractRoleSplitHero } from '@/components/contracts/dashboard/ContractRoleSplitHero';
 import { ContractEmptyState } from '@/components/contracts/dashboard/ContractEmptyState';
