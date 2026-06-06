@@ -542,38 +542,55 @@ const AdminCategories = () => {
   return (
     <DashboardLayout>
       <TooltipProvider delayDuration={200}>
-        <div className="space-y-5">
-          {/* ── Header ── */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="font-heading font-bold text-2xl flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center shadow-sm">
-                  <FolderTree className="w-5 h-5 text-primary" />
+        <div className="space-y-8">
+          {/* ── Page Header ── */}
+          <header className="rounded-2xl border border-border/40 bg-gradient-to-br from-primary/[0.04] via-background to-accent/[0.03] p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                <span>{isRTL ? 'لوحة الإدارة' : 'Admin'}</span>
+                <span className="text-muted-foreground/40">/</span>
+                <span>{isRTL ? 'المحتوى و SEO' : 'Content & SEO'}</span>
+              </div>
+              <h1 className="font-heading font-bold text-2xl sm:text-[28px] flex items-center gap-3 leading-tight">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center shadow-sm shrink-0">
+                  <FolderTree className="w-6 h-6 text-primary" />
                 </div>
                 {isRTL ? 'إدارة التصنيفات' : 'Categories Management'}
               </h1>
-              <p className="text-muted-foreground text-sm mt-1.5 max-w-md">
-                {isRTL ? 'تنظيم وإدارة التصنيفات الهرمية للقطاعات الصناعية بالسحب والإفلات' : 'Organize industrial sector categories with drag & drop hierarchy'}
+              <p className="text-muted-foreground text-sm mt-2 max-w-xl leading-relaxed">
+                {isRTL
+                  ? 'تنظيم شجرة التصنيفات الصناعية، تحرير التسميات والأوصاف، وضبط حقول SEO وترتيب العرض بالسحب والإفلات.'
+                  : 'Organize the industrial category tree, edit labels and descriptions, and tune SEO fields and ordering via drag & drop.'}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2 rounded-xl h-9">
+                  <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2 rounded-xl h-10">
                     <Download className="w-4 h-4" />
                     <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{isRTL ? 'تصدير CSV' : 'Export CSV'}</TooltipContent>
               </Tooltip>
-              <Button onClick={() => { closeForm(); setShowForm(true); }} className="gap-2 rounded-xl h-9 shadow-sm">
+              <Button onClick={() => { closeForm(); setShowForm(true); }} className="gap-2 rounded-xl h-10 shadow-sm">
                 <Plus className="w-4 h-4" />{isRTL ? 'تصنيف جديد' : 'New Category'}
               </Button>
             </div>
-          </div>
+          </header>
 
-          {/* ── Stats Cards ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* ── Section 1 · Overview ── */}
+          <section aria-labelledby="sec-overview" className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 id="sec-overview" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <BarChart3 className="w-3.5 h-3.5" />
+                {isRTL ? 'نظرة عامة' : 'Overview'}
+              </h2>
+              <span className="text-[11px] text-muted-foreground/60">
+                {isRTL ? 'مؤشرات حالة شجرة التصنيفات' : 'Category tree health indicators'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {statCards.map((s, i) => (
               <Card key={i} className="border-border/40 overflow-hidden hover-lift transition-all duration-200">
                 <CardContent className="p-4 flex items-center gap-3.5">
@@ -587,10 +604,9 @@ const AdminCategories = () => {
                 </CardContent>
               </Card>
             ))}
-          </div>
+            </div>
 
-          {/* ── Distribution Bar ── */}
-          {rootDistribution.length > 0 && (
+            {rootDistribution.length > 0 && (
             <Card className="border-border/40">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -635,10 +651,21 @@ const AdminCategories = () => {
                 </div>
               </CardContent>
             </Card>
-          )}
+            )}
+          </section>
 
-          {/* ── Inline Form ── */}
+          {/* ── Section 2 · Editor (inline form) ── */}
           {showForm && (
+            <section aria-labelledby="sec-editor" className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 id="sec-editor" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                  <Pencil className="w-3.5 h-3.5" />
+                  {editingId ? (isRTL ? 'محرّر التصنيف' : 'Category Editor') : (isRTL ? 'إنشاء تصنيف' : 'Create Category')}
+                </h2>
+                <span className="text-[11px] text-muted-foreground/60">
+                  {isRTL ? 'الاسم، الوصف، الترتيب، وحقول SEO' : 'Name, description, ordering, and SEO fields'}
+                </span>
+              </div>
             <Card className="border-primary/20 shadow-sm bg-gradient-to-b from-primary/[0.02] to-transparent">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -652,6 +679,9 @@ const AdminCategories = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pb-1">
+                  {isRTL ? '١. الهوية الأساسية' : '1. Core Identity'}
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">{isRTL ? 'الاسم (عربي) *' : 'Name (Arabic) *'}</Label>
@@ -687,6 +717,9 @@ const AdminCategories = () => {
                     </Select>
                   </div>
                 </div>
+                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pt-2 pb-1 border-t border-border/40">
+                  {isRTL ? '٢. الوصف' : '2. Description'}
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
@@ -696,6 +729,9 @@ const AdminCategories = () => {
                     <Label className="text-xs font-medium">{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
                     <Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={2} className="text-sm rounded-lg" />
                   </div>
+                </div>
+                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pt-2 pb-1 border-t border-border/40">
+                  {isRTL ? '٣. تحسين محركات البحث (SEO)' : '3. Search Engine (SEO)'}
                 </div>
                 <div className="rounded-xl border border-border/40 bg-muted/20 p-3 space-y-3">
                   <div className="flex items-center gap-2 text-sm font-semibold">
@@ -758,6 +794,9 @@ const AdminCategories = () => {
                     <Input value={form.featured_keywords} onChange={e => setForm(f => ({ ...f, featured_keywords: e.target.value }))} className="h-9 rounded-lg" dir="auto" placeholder={isRTL ? 'ألمنيوم, زجاج, تصنيع' : 'aluminum, glass, fabrication'} />
                   </div>
                 </div>
+                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pt-2 pb-1 border-t border-border/40">
+                  {isRTL ? '٤. الحالة والترتيب' : '4. Status & Ordering'}
+                </div>
                 <div className="flex items-center gap-6 flex-wrap">
                   <div className="flex items-center gap-2.5">
                     <Label className="text-xs font-medium">{isRTL ? 'الترتيب' : 'Order'}</Label>
@@ -777,10 +816,21 @@ const AdminCategories = () => {
                 </div>
               </CardContent>
             </Card>
+            </section>
           )}
 
-          {/* ── Toolbar ── */}
-          <Card className="border-border/40">
+          {/* ── Section 3 · Tree Manager ── */}
+          <section aria-labelledby="sec-tree" className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 id="sec-tree" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <TreePine className="w-3.5 h-3.5" />
+                {isRTL ? 'شجرة التصنيفات' : 'Category Tree'}
+              </h2>
+              <span className="text-[11px] text-muted-foreground/60">
+                {isRTL ? 'بحث، تصفية، طي/توسيع، وسحب لإعادة الترتيب' : 'Search, filter, collapse/expand, and drag to reorder'}
+              </span>
+            </div>
+            <Card className="border-border/40">
             <CardContent className="p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="relative flex-1">
                 <Search className="absolute top-2.5 text-muted-foreground/50 w-4 h-4" style={{ insetInlineStart: '10px' }} />
@@ -921,6 +971,7 @@ const AdminCategories = () => {
               </div>
             </Card>
           )}
+          </section>
 
           {/* ── Delete dialog ── */}
           <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
