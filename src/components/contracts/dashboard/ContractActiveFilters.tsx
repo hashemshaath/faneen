@@ -31,9 +31,9 @@ export function ContractActiveFilters({
 
   const statusMeta = statusFilter !== 'all' ? getContractStatusMeta(statusFilter) : null;
   const roleLabel = roleFilter === 'provider'
-    ? (isRTL ? 'كمزود خدمة' : 'As Provider')
+    ? (isRTL ? 'صادرة' : 'Outgoing')
     : roleFilter === 'client'
-      ? (isRTL ? 'كعميل' : 'As Client')
+      ? (isRTL ? 'واردة' : 'Incoming')
       : '';
 
   const Chip = ({ label, onRemove }: { label: string; onRemove: () => void }) => (
