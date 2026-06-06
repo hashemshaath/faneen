@@ -406,6 +406,26 @@ const DashboardBrands: React.FC = () => {
           </Button>
         </div>
 
+        {/* Stats strip — quick at-a-glance counts */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="brands-stats-strip">
+          {[
+            { icon: Tag, label: isRTL ? 'علامات مرتبطة' : 'Linked brands', value: myLinks.length, tone: 'text-primary' },
+            { icon: Layers, label: isRTL ? 'تخصصاتي' : 'My specializations', value: services.length, tone: 'text-info' },
+            { icon: Clock, label: isRTL ? 'طلبات قيد المراجعة' : 'Pending requests', value: myRequests.filter((r) => r.status === 'pending').length + myProductRequests.filter((r) => r.status === 'pending').length, tone: 'text-warning' },
+            { icon: Sparkles, label: isRTL ? 'منتجات معتمدة' : 'Approved products', value: myProductRequests.filter((r) => r.status === 'approved').length, tone: 'text-success' },
+          ].map((s) => (
+            <div key={s.label} className="rounded-xl border bg-card p-3 flex items-center gap-3 hover-lift">
+              <div className={`w-9 h-9 rounded-lg bg-muted flex items-center justify-center ${s.tone}`}>
+                <s.icon className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xl font-semibold leading-none tech-content">{s.value}</div>
+                <div className="text-[11px] text-muted-foreground mt-1 truncate">{s.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {/* Inline request form */}
         {requestOpen && (
           <Card data-testid="brand-request-form">
