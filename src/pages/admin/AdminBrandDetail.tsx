@@ -719,4 +719,13 @@ function Info({ label, value }: { label: string; value: string }) {
   );
 }
 
+function FieldLabeled({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <Label className="text-xs">{label}</Label>
+      <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
 export default AdminBrandDetail;
