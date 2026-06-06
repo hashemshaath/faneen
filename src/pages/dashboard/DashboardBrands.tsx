@@ -277,18 +277,33 @@ const DashboardBrands: React.FC = () => {
   const submitProduct = useMutation({
     mutationFn: async () => {
       if (!prodBrandId) throw new Error(isRTL ? 'اختر العلامة' : 'Pick a brand');
-      if (!prodNameAr.trim()) throw new Error(isRTL ? 'اسم المنتج مطلوب' : 'Product name required');
-      return submitBrandProductRequest({
-        brand_id: prodBrandId,
-        business_id: businessId,
-        name_ar: prodNameAr.trim(),
-        name_en: prodNameEn.trim() || null,
-        model_number: prodModel.trim() || null,
-        description_ar: prodDesc.trim() || null,
-      });
+      // Multi-product mode: each newline in the Arabic name field becomes a
+      // separate product request, so providers can propose a batch in one shot.
+      const lines = prodNameAr.split('\n').map((s) => s.trim()).filter(Boolean);
+      if (lines.length === 0) throw new Error(isRTL ? 'اسم المنتج مطلوب' : 'Product name required');
+      const enLines = prodNameEn.split('\n').map((s) => s.trim());
+      const modelLines = prodModel.split('\n').map((s) => s.trim());
+      const results = await Promise.allSettled(
+        lines.map((nameAr, i) =>
+          submitBrandProductRequest({
+            brand_id: prodBrandId,
+            business_id: businessId,
+            name_ar: nameAr,
+            name_en: enLines[i] || null,
+            model_number: modelLines[i] || null,
+            description_ar: lines.length === 1 ? (prodDesc.trim() || null) : null,
+          }),
+        ),
+      );
+      const ok = results.filter((r) => r.status === 'fulfilled').length;
+      return { ok, total: results.length };
     },
-    onSuccess: () => {
-      toast.success(isRTL ? 'تم إرسال طلب المنتج للمراجعة' : 'Product request submitted');
+    onSuccess: ({ ok, total }) => {
+      toast.success(
+        isRTL
+          ? `تم إرسال ${ok} من ${total} منتج للمراجعة`
+          : `${ok} of ${total} product${total > 1 ? 's' : ''} submitted`,
+      );
       setProdNameAr(''); setProdNameEn(''); setProdModel(''); setProdDesc('');
       setProdOpen(false);
       qc.invalidateQueries({ queryKey: ['provider-brand-product-requests', businessId] });
