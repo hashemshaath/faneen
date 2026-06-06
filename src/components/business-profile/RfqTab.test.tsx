@@ -5,8 +5,6 @@ import { RfqTab } from "./RfqTab";
 
 // ── Mocks ────────────────────────────────────────────────────────────────
 
-type InsertPayload = Record<string, unknown>;
-
 const hoisted = vi.hoisted(() => {
   return {
     insertMock: vi.fn(async (_row: Record<string, unknown>) => ({ error: null })),

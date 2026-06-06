@@ -10,7 +10,6 @@ import {
   MessageSquare,
   Share2,
   Star,
-  ShieldCheck,
   TicketPercent,
   User,
   Wrench,
@@ -106,7 +105,7 @@ export const BusinessProfileHeader = ({
 }: BusinessProfileHeaderProps) => {
   const { user } = useAuth();
   const isOwner = !!user?.id && user.id === business?.user_id;
-  const { t, language, isRTL } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const name = getLocalizedValue(language, business.name_ar, business.name_en);
   const shortDesc = getLocalizedValue(
     language,

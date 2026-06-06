@@ -21,7 +21,7 @@ export const BusinessProfileTrustStrip = ({
   projectCount,
   businessId,
 }: BusinessProfileTrustStripProps) => {
-  const { language, isRTL } = useLanguage();
+  const { isRTL } = useLanguage();
 
   const items: Array<{ icon: typeof ShieldCheck; label: string; tone: "ok" | "muted" }> = [];
 
