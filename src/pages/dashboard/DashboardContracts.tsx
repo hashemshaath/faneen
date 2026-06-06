@@ -2182,10 +2182,11 @@ const DashboardContracts = () => {
         {viewSection === 'list' && (
           <>
             <div className="sticky top-2 z-20 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-md shadow-[var(--elev-1)] p-3 space-y-3">
-              <ContractRoleTabs
+              <ContractRoleSplitHero
                 value={roleFilter}
                 onChange={(v) => startTransition(() => setRoleFilter(v))}
-                counts={{ all: stats.total, provider: stats.asProvider, client: stats.asClient }}
+                providerContracts={providerContracts}
+                clientContracts={clientContracts}
                 isRTL={isRTL}
               />
               <ContractFilters
