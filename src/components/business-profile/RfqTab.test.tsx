@@ -53,15 +53,25 @@ const renderTab = (overrides: Partial<React.ComponentProps<typeof RfqTab>> = {})
   );
 };
 
+// shadcn `<Label>` and `<Input>` are siblings without htmlFor/id wiring, so
+// `getByLabelText` can't find them. We resolve labels by visible text and
+// pick the first sibling input/textarea in the same group.
+const inputForLabel = (label: RegExp): HTMLInputElement | HTMLTextAreaElement => {
+  const labelEl = screen.getByText(label);
+  const container = labelEl.closest("div");
+  const field = container?.querySelector("input, textarea");
+  if (!field) throw new Error(`No input found for label matching ${label}`);
+  return field as HTMLInputElement | HTMLTextAreaElement;
+};
+
+const setField = (label: RegExp, value: string) =>
+  fireEvent.change(inputForLabel(label), { target: { value } });
+
 const fillRequired = () => {
-  fireEvent.change(screen.getByLabelText(/الاسم/i), { target: { value: "أحمد" } });
-  fireEvent.change(screen.getByLabelText(/الجوال/i), { target: { value: "0555555555" } });
-  fireEvent.change(screen.getByLabelText(/عنوان الطلب/i), {
-    target: { value: "تركيب واجهات ألمنيوم لمشروع تجاري" },
-  });
-  fireEvent.change(screen.getByLabelText(/الوصف التفصيلي/i), {
-    target: { value: "مساحة 200 متر، تنفيذ خلال شهرين، مع الزجاج المعزول." },
-  });
+  setField(/^الاسم$/, "أحمد");
+  setField(/^الجوال$/, "0555555555");
+  setField(/^عنوان الطلب$/, "تركيب واجهات ألمنيوم لمشروع تجاري");
+  setField(/^الوصف التفصيلي$/, "مساحة 200 متر، تنفيذ خلال شهرين، مع الزجاج المعزول.");
 };
 
 const clickSubmit = () => {
@@ -81,8 +91,8 @@ describe("RfqTab", () => {
   it("renders the form heading and name/email fields for guests", () => {
     renderTab();
     expect(screen.getByText(/اطلب عرض سعر/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/الاسم/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/البريد الإلكتروني/i)).toBeInTheDocument();
+    expect(screen.getByText(/^الاسم$/)).toBeInTheDocument();
+    expect(screen.getByText(/^البريد الإلكتروني$/)).toBeInTheDocument();
   });
 
   it("hides guest name/email fields when a user is authenticated", () => {
@@ -90,18 +100,14 @@ describe("RfqTab", () => {
       user: { id: "u-1", email: "a@b.com", user_metadata: { full_name: "Sara" } },
     });
     renderTab();
-    expect(screen.queryByLabelText(/البريد الإلكتروني/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^البريد الإلكتروني$/)).not.toBeInTheDocument();
   });
 
   it("rejects submissions when phone is empty", async () => {
     renderTab();
-    fireEvent.change(screen.getByLabelText(/الاسم/i), { target: { value: "أحمد" } });
-    fireEvent.change(screen.getByLabelText(/عنوان الطلب/i), {
-      target: { value: "عنوان كافٍ للطلب" },
-    });
-    fireEvent.change(screen.getByLabelText(/الوصف التفصيلي/i), {
-      target: { value: "وصف تفصيلي طويل بما يكفي للاختبار" },
-    });
+    setField(/^الاسم$/, "أحمد");
+    setField(/^عنوان الطلب$/, "عنوان كافٍ للطلب");
+    setField(/^الوصف التفصيلي$/, "وصف تفصيلي طويل بما يكفي للاختبار");
     clickSubmit();
     await waitFor(() => {
       expect(toastError).toHaveBeenCalled();
@@ -111,10 +117,10 @@ describe("RfqTab", () => {
 
   it("rejects submissions when the description is too short", async () => {
     renderTab();
-    fireEvent.change(screen.getByLabelText(/الاسم/i), { target: { value: "أحمد" } });
-    fireEvent.change(screen.getByLabelText(/الجوال/i), { target: { value: "0555555555" } });
-    fireEvent.change(screen.getByLabelText(/عنوان الطلب/i), { target: { value: "عنوان كافٍ" } });
-    fireEvent.change(screen.getByLabelText(/الوصف التفصيلي/i), { target: { value: "قصير" } });
+    setField(/^الاسم$/, "أحمد");
+    setField(/^الجوال$/, "0555555555");
+    setField(/^عنوان الطلب$/, "عنوان كافٍ");
+    setField(/^الوصف التفصيلي$/, "قصير");
     clickSubmit();
     await waitFor(() => {
       expect(toastError).toHaveBeenCalled();
@@ -153,13 +159,9 @@ describe("RfqTab", () => {
       user: { id: "u-42", email: "a@b.com", user_metadata: { full_name: "سارة" } },
     });
     renderTab();
-    fireEvent.change(screen.getByLabelText(/الجوال/i), { target: { value: "0512345678" } });
-    fireEvent.change(screen.getByLabelText(/عنوان الطلب/i), {
-      target: { value: "تركيب أبواب زجاجية" },
-    });
-    fireEvent.change(screen.getByLabelText(/الوصف التفصيلي/i), {
-      target: { value: "خمسة أبواب زجاج مقسّى، مع المقابض والإكسسوارات." },
-    });
+    setField(/^الجوال$/, "0512345678");
+    setField(/^عنوان الطلب$/, "تركيب أبواب زجاجية");
+    setField(/^الوصف التفصيلي$/, "خمسة أبواب زجاج مقسّى، مع المقابض والإكسسوارات.");
     clickSubmit();
     await waitFor(() => {
       expect(insertMock).toHaveBeenCalledTimes(1);
@@ -175,8 +177,8 @@ describe("RfqTab", () => {
   it("computes budget_amount and budget_note when both bounds are supplied", async () => {
     renderTab();
     fillRequired();
-    fireEvent.change(screen.getByLabelText(/الميزانية من/i), { target: { value: "10000" } });
-    fireEvent.change(screen.getByLabelText(/الميزانية إلى/i), { target: { value: "25000" } });
+    setField(/الميزانية من/, "10000");
+    setField(/الميزانية إلى/, "25000");
     clickSubmit();
     await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(1));
     const payload = insertMock.mock.calls[0][0] as Record<string, unknown>;
