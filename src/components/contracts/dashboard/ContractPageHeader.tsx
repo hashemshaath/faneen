@@ -30,20 +30,7 @@ export function ContractPageHeader({
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-card via-card to-accent/[0.04] shadow-[var(--elev-1)]">
       <div className="pointer-events-none absolute -top-16 -end-16 w-48 h-48 rounded-full bg-accent/10 blur-3xl" aria-hidden="true" />
-      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 sm:p-5">
-        <div className="flex items-start gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center shadow-lg shadow-accent/30 shrink-0">
-            <FileText className="w-5 h-5 text-accent-foreground" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="font-heading font-bold text-lg sm:text-2xl leading-tight">
-              {isRTL ? 'إدارة العقود' : 'Contract Management'}
-            </h1>
-            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-relaxed">
-              {isRTL ? 'إنشاء ومتابعة وتصدير العقود الاحترافية' : 'Create, track, and export professional contracts'}
-            </p>
-          </div>
-        </div>
+      <div className="relative flex flex-wrap items-center justify-end gap-2 p-3 sm:p-4">
         {showListActions ? (
           <div className="flex flex-wrap items-center gap-2">
             {onRefresh && (
