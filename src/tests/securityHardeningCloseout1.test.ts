@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const repoRoot = process.cwd();
@@ -9,7 +9,6 @@ const edgeFn = readFileSync(
 );
 
 function latestMigrationFor(needle: string): string {
-  const { readdirSync } = require("node:fs");
   const dir = join(repoRoot, "supabase/migrations");
   const files = readdirSync(dir).filter((f: string) => f.endsWith(".sql")).sort();
   for (const f of [...files].reverse()) {
