@@ -17,7 +17,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   Search, Send, ShieldCheck, Clock, XCircle, ExternalLink, Link2, Unlink,
-  PackagePlus, Tag, Globe2, AlertCircle, Package,
+  PackagePlus, Tag, Globe2, AlertCircle, Package, Layers, CheckSquare, ChevronDown, ChevronUp, Sparkles,
 } from 'lucide-react';
 
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -35,6 +35,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DashboardEmptyState } from '@/components/dashboard/DashboardEmptyState';
 
 import {
@@ -52,6 +53,7 @@ import {
   listBrandProductRequests,
   submitBrandProductRequest,
   brandProductRequestStatusLabel,
+  listApprovedBrandProducts,
 } from '@/modules/brands';
 import { listServicesByBusiness } from '@/modules/catalog';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
