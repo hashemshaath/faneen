@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
@@ -55,25 +55,50 @@ import {
   useBranchBySlug,
 } from "@/components/business-profile/business-profile.data";
 import { useReviews } from "@/components/business-profile/business-profile.data";
-import { BnplBadges } from "@/components/bnpl/BnplBadges";
-import { BusinessBarcodeCard } from "@/components/business-profile/BusinessBarcodeCard";
-import { BookingWidget } from "@/components/booking/BookingWidget";
-import { ContactSupplierSheet } from "@/components/business-profile/ContactSupplierSheet";
 import { BusinessProfileTrustStrip } from "@/components/business-profile/BusinessProfileTrustStrip";
 import { BusinessProfileStickyCta } from "@/components/business-profile/BusinessProfileStickyCta";
 import { OverviewTab } from "@/components/business-profile/OverviewTab";
 import { ShareMenu } from "@/components/business-profile/ShareMenu";
-import { QATab } from "@/components/business-profile/QATab";
-import { RfqTab } from "@/components/business-profile/RfqTab";
 import {
   canViewSection,
   useBusinessVisibility,
   type ProfileSectionKey,
 } from "@/components/business-profile/business-profile.visibility";
-import { RequestsAsBeneficiaryTab } from "@/components/business-profile/RequestsTab";
-import { buildBreadcrumbList, buildService, ogImageFor } from "@/lib/seo/structured-data";
+import { ogImageFor } from "@/lib/seo/structured-data";
+import { useBusinessStructuredData } from "@/components/business-profile/useBusinessStructuredData";
 import { track } from "@/lib/analytics-events";
-// JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement:
+
+// Heavy / below-the-fold tabs + widgets are code-split so the initial
+// profile render only ships the Overview tab + Header chunks.
+const RfqTab = lazy(() =>
+  import("@/components/business-profile/RfqTab").then((m) => ({ default: m.RfqTab })),
+);
+const QATab = lazy(() =>
+  import("@/components/business-profile/QATab").then((m) => ({ default: m.QATab })),
+);
+const RequestsAsBeneficiaryTab = lazy(() =>
+  import("@/components/business-profile/RequestsTab").then((m) => ({
+    default: m.RequestsAsBeneficiaryTab,
+  })),
+);
+const BookingWidget = lazy(() =>
+  import("@/components/booking/BookingWidget").then((m) => ({ default: m.BookingWidget })),
+);
+const ContactSupplierSheet = lazy(() =>
+  import("@/components/business-profile/ContactSupplierSheet").then((m) => ({
+    default: m.ContactSupplierSheet,
+  })),
+);
+const BnplBadges = lazy(() =>
+  import("@/components/bnpl/BnplBadges").then((m) => ({ default: m.BnplBadges })),
+);
+const BusinessBarcodeCard = lazy(() =>
+  import("@/components/business-profile/BusinessBarcodeCard").then((m) => ({
+    default: m.BusinessBarcodeCard,
+  })),
+);
+
+const TabFallback = () => <Skeleton className="h-48 w-full rounded-2xl" />;
 
 const BusinessProfile = () => {
   const { username, branchSlug } = useParams<{ username: string; branchSlug?: string }>();
@@ -192,149 +217,15 @@ const BusinessProfile = () => {
     keywords: business ? [businessName, categoryName, cityName, 'قِطاعات', 'دليل أعمال'].filter(Boolean).join(', ') : undefined,
   });
 
-  const structuredDataArray = useMemo(() => {
-    if (!business) return null;
-
-    // ── sameAs enrichment ──
-    // Only the `website` column exists in the public `businesses` schema today;
-    // a future migration could add dedicated social_links. To stay forward-
-    // compatible we accept an optional `business.social_links` array of strings
-    // as well, but never read private contact fields (phone/email).
-    //
-    // Validation rules per URL candidate:
-    //   1. Must parse as a valid URL via the WHATWG `URL` constructor.
-    //   2. Protocol must be exactly `https:` (no http, javascript:, data:, etc.).
-    //   3. Hostname must be either:
-    //        - the official website (any host, but stripped of credentials), OR
-    //        - on the whitelist of public social platforms below.
-    //   4. No userinfo (user:pass@), no localhost / IP literals, no fragments
-    //      that look like tracking junk longer than 200 chars.
-    //   5. Trimmed, deduplicated, capped at 8 entries.
-    const SOCIAL_HOSTS = [
-      'linkedin.com', 'x.com', 'twitter.com', 'instagram.com',
-      'facebook.com', 'fb.com', 'youtube.com', 'youtu.be',
-    ];
-    const isPublicSocial = (host: string) =>
-      SOCIAL_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
-    const sanitizeUrl = (raw: unknown, requireSocial: boolean): string | null => {
-      if (typeof raw !== 'string') return null;
-      const trimmed = raw.trim();
-      if (!trimmed || trimmed.length > 300) return null;
-      let parsed: URL;
-      try { parsed = new URL(trimmed); } catch { return null; }
-      if (parsed.protocol !== 'https:') return null;
-      if (parsed.username || parsed.password) return null;
-      const host = parsed.hostname.toLowerCase();
-      if (!host || host === 'localhost') return null;
-      if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null; // IPv4
-      if (host.includes(':')) return null; // IPv6
-      if (requireSocial && !isPublicSocial(host)) return null;
-      // Strip fragments to keep the canonical profile URL clean.
-      parsed.hash = '';
-      return parsed.toString();
-    };
-
-    const candidates: Array<{ raw: unknown; requireSocial: boolean }> = [
-      { raw: (business as { website?: unknown }).website, requireSocial: false },
-    ];
-    const extraSocials = (business as { social_links?: unknown }).social_links;
-    if (Array.isArray(extraSocials)) {
-      for (const link of extraSocials) candidates.push({ raw: link, requireSocial: true });
-    }
-    const sameAs = Array.from(
-      new Set(
-        candidates
-          .map((c) => sanitizeUrl(c.raw, c.requireSocial))
-          .filter((u): u is string => !!u),
-      ),
-    ).slice(0, 8);
-
-    const localBusiness: Record<string, any> = {
-      '@context': 'https://schema.org',
-      '@type': 'LocalBusiness',
-      '@id': `https://qitaat.com/${business.username}`,
-      name: businessName || business.name_ar,
-      alternateName: language === 'ar' ? business.name_en : business.name_ar,
-      description: (language === 'ar' ? business.description_ar : business.description_en) || business.description_ar,
-      url: `https://qitaat.com/${business.username}`,
-      image: business.logo_url || business.cover_url,
-      logo: business.logo_url,
-      // Phone/email intentionally omitted from JSON-LD to prevent scraper harvesting.
-      // Visitors see the contact details inside the page (rendered client-side).
-      telephone: undefined,
-      email: undefined,
-      ...(sameAs.length > 0 ? { sameAs } : {}),
-      address: {
-        '@type': 'PostalAddress',
-        streetAddress: business.address || undefined,
-        addressRegion: business.region || undefined,
-        addressLocality: cityName || undefined,
-        addressCountry: business.countries?.code || 'SA',
-      },
-      geo: business.latitude && business.longitude ? {
-        '@type': 'GeoCoordinates',
-        latitude: business.latitude,
-        longitude: business.longitude,
-      } : undefined,
-      aggregateRating: Number(business.rating_count) > 0 ? {
-        '@type': 'AggregateRating',
-        ratingValue: Number(business.rating_avg).toFixed(1),
-        reviewCount: business.rating_count,
-        bestRating: '5',
-        worstRating: '1',
-      } : undefined,
-      priceRange: business.membership_tier === 'free' ? '$$' : '$$$',
-      areaServed: cityName ? { '@type': 'City', name: cityName } : undefined,
-      serviceType: services.length > 0
-        ? services.map(s => (language === 'ar' ? s.name_ar : (s.name_en || s.name_ar)))
-        : undefined,
-    };
-
-    const breadcrumb = buildBreadcrumbList([
-      ...(categoryName ? [{ name: categoryName, url: `/categories/${business.categories?.slug || ''}` }] : []),
-      { name: businessName || business.name_ar, url: `/${business.username}` },
-    ]);
-
-    // Up to 5 Service entries reflecting the provider's offered services so
-    // search and AI engines can index them as discrete offerings.
-    const serviceEntities = (services || []).slice(0, 5).map((s: any) =>
-      buildService({
-        name: language === 'ar' ? s.name_ar : (s.name_en || s.name_ar),
-        description: language === 'ar'
-          ? (s.description_ar || undefined)
-          : (s.description_en || s.description_ar || undefined),
-        providerName: businessName || business.name_ar,
-        providerUrl: `/${business.username}`,
-        areaServed: cityName || undefined,
-        serviceType: categoryName || undefined,
-      }),
-    ).filter(Boolean) as Record<string, unknown>[];
-
-    // Individual Review entities (up to 5 most recent)
-    const reviewEntities = reviews.slice(0, 5).map((review: any) => ({
-      '@context': 'https://schema.org',
-      '@type': 'Review',
-      itemReviewed: {
-        '@type': 'LocalBusiness',
-        name: businessName || business.name_ar,
-        '@id': `https://qitaat.com/${business.username}`,
-      },
-      author: {
-        '@type': 'Person',
-        name: review.profiles?.full_name || (language === 'ar' ? 'عميل' : 'Customer'),
-      },
-      reviewRating: {
-        '@type': 'Rating',
-        ratingValue: String(review.rating),
-        bestRating: '5',
-        worstRating: '1',
-      },
-      ...(review.comment ? { reviewBody: review.comment } : {}),
-      datePublished: review.created_at ? new Date(review.created_at).toISOString().split('T')[0] : undefined,
-    }));
-
-    return [localBusiness, ...(breadcrumb ? [breadcrumb] : []), ...serviceEntities, ...reviewEntities];
-  }, [business, services, reviews, categoryName, cityName, language]);
+  const structuredDataArray = useBusinessStructuredData({
+    business,
+    services,
+    reviews,
+    categoryName,
+    cityName,
+    language,
+    businessName,
+  });
 
   useMultiJsonLd(structuredDataArray);
 
@@ -620,15 +511,19 @@ const BusinessProfile = () => {
                   <OverviewTab business={business} onJumpToTab={setActiveTab} />
                 </TabsContent>
                 <TabsContent value="rfq" className="mt-0">
-                  <RfqTab
-                    businessId={business.id}
-                    businessName={businessName}
-                    sector={(business.categories as { slug?: string } | null)?.slug || categoryName || "other"}
-                    city={cityName || (business.cities as { name_ar?: string } | null)?.name_ar || "—"}
-                  />
+                  <Suspense fallback={<TabFallback />}>
+                    <RfqTab
+                      businessId={business.id}
+                      businessName={businessName}
+                      sector={(business.categories as { slug?: string } | null)?.slug || categoryName || "other"}
+                      city={cityName || (business.cities as { name_ar?: string } | null)?.name_ar || "—"}
+                    />
+                  </Suspense>
                 </TabsContent>
                 <TabsContent value="qa" className="mt-0">
-                  <QATab businessId={business.id} businessName={businessName} />
+                  <Suspense fallback={<TabFallback />}>
+                    <QATab businessId={business.id} businessName={businessName} />
+                  </Suspense>
                 </TabsContent>
                 {canSee("services") && (
                   <TabsContent value="services" className="mt-0">
@@ -647,7 +542,9 @@ const BusinessProfile = () => {
                 )}
                 {canSee("requests_as_beneficiary") && (
                   <TabsContent value="requests" className="mt-0">
-                    <RequestsAsBeneficiaryTab businessId={business.id} />
+                    <Suspense fallback={<TabFallback />}>
+                      <RequestsAsBeneficiaryTab businessId={business.id} />
+                    </Suspense>
                   </TabsContent>
                 )}
                 {canSee("branches") && (
@@ -677,11 +574,15 @@ const BusinessProfile = () => {
                   />
                   {/* BNPL section */}
                   <div className="mt-6">
-                    <BnplBadges businessId={business.id} />
+                    <Suspense fallback={null}>
+                      <BnplBadges businessId={business.id} />
+                    </Suspense>
                   </div>
                   {/* Business barcode + printable 30x20 cm sticker */}
                   <div className="mt-6">
-                    <BusinessBarcodeCard businessId={business.id} businessName={businessName} />
+                    <Suspense fallback={null}>
+                      <BusinessBarcodeCard businessId={business.id} businessName={businessName} />
+                    </Suspense>
                   </div>
                   </TabsContent>
                 )}
@@ -759,20 +660,28 @@ const BusinessProfile = () => {
         </main>
       </div>
 
-      <BookingWidget
-        businessId={business.id}
-        businessName={businessName}
-        open={bookingOpen}
-        onOpenChange={setBookingOpen}
-      />
+      {bookingOpen && (
+        <Suspense fallback={null}>
+          <BookingWidget
+            businessId={business.id}
+            businessName={businessName}
+            open={bookingOpen}
+            onOpenChange={setBookingOpen}
+          />
+        </Suspense>
+      )}
 
-      <ContactSupplierSheet
-        open={contactSheetOpen}
-        onOpenChange={setContactSheetOpen}
-        businessId={business.id}
-        businessName={businessName}
-        source="business-profile"
-      />
+      {contactSheetOpen && (
+        <Suspense fallback={null}>
+          <ContactSupplierSheet
+            open={contactSheetOpen}
+            onOpenChange={setContactSheetOpen}
+            businessId={business.id}
+            businessName={businessName}
+            source="business-profile"
+          />
+        </Suspense>
+      )}
 
       {/* Mobile-only sticky CTA — hidden when the owner views their own
           profile to keep authoring UX clean. */}
