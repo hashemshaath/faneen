@@ -2349,19 +2349,40 @@ const DashboardContracts = () => {
               />
             ) : viewMode === 'compact' ? (
               <div className="space-y-1.5">
-                {paginated.map((c) => (
-                  <ContractCompactRow
-                    key={c.id + c._role}
-                    c={c}
-                    isRTL={isRTL}
-                    onOpen={(contract) => setExpandedId(expandedId === contract.id ? null : contract.id)}
-                    onNavigate={navigate}
-                  />
-                ))}
+                {(() => {
+                  let lastStatus: string | null = null;
+                  return paginated.map((c) => {
+                    const showHeader = sortBy === 'status' && c.status !== lastStatus;
+                    lastStatus = c.status;
+                    const meta = getContractStatusMeta(c.status);
+                    return (
+                      <React.Fragment key={c.id + c._role}>
+                        {showHeader && (
+                          <div className={`flex items-center gap-2 mt-2 first:mt-0 px-1 py-1 text-[10px] font-medium uppercase tracking-wide ${meta.text || 'text-muted-foreground'}`}>
+                            <meta.icon className="w-3 h-3" aria-hidden="true" />
+                            <span>{isRTL ? meta.label_ar : meta.label_en}</span>
+                            <span className="flex-1 h-px bg-border/40" aria-hidden="true" />
+                          </div>
+                        )}
+                        <ContractCompactRow
+                          c={c}
+                          isRTL={isRTL}
+                          onOpen={(contract) => setExpandedId(expandedId === contract.id ? null : contract.id)}
+                          onNavigate={navigate}
+                        />
+                      </React.Fragment>
+                    );
+                  });
+                })()}
               </div>
             ) : (
               <div className="space-y-4">
-                {paginated.map((c) => {
+                {(() => {
+                  let lastStatus: string | null = null;
+                  return paginated.map((c) => {
+                  const showHeader = sortBy === 'status' && c.status !== lastStatus;
+                  lastStatus = c.status;
+                  const headerMeta = showHeader ? getContractStatusMeta(c.status) : null;
                   const milestones = allMilestones.filter((m) => m.contract_id === c.id);
                   const notes = allNotes.filter((n) => n.contract_id === c.id);
                   const attachments = allAttachments.filter((a) => a.contract_id === c.id);
