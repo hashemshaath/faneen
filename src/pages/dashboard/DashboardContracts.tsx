@@ -3014,6 +3014,16 @@ const DashboardContracts = () => {
                 })}
               </div>
             )}
+            {!isLoading && filtered.length > 0 && (
+              <ContractsPagination
+                isRTL={isRTL}
+                page={currentPage}
+                pageSize={pageSize}
+                totalItems={filtered.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            )}
           </>
         )}
       </div>
