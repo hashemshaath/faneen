@@ -395,14 +395,17 @@ const Onboarding = () => {
     try {
       const ext = file.type === 'image/png' ? 'png' : 'jpg';
       const path = `${createdBusinessId}/logo-${Date.now()}.${ext}`;
+      const { compressImage } = await import('@/lib/image-compress');
+      const toUpload = await compressImage(file);
+      const finalPath = path.replace(/\.(png|jpg|jpeg)$/i, '.webp');
       const { error: upErr } = await uploadPublicImage({
         bucket: BUSINESS_ASSETS_BUCKET,
-        path,
-        file,
-        options: { upsert: true, contentType: file.type },
+        path: finalPath,
+        file: toUpload,
+        options: { upsert: true, contentType: toUpload.type || 'image/webp' },
       });
       if (upErr) throw upErr;
-      const { data: pub } = getPublicImageUrl({ bucket: BUSINESS_ASSETS_BUCKET, path });
+      const { data: pub } = getPublicImageUrl({ bucket: BUSINESS_ASSETS_BUCKET, path: finalPath });
       setLogoUrl(pub.publicUrl);
       toast.success(isRTL ? 'تم رفع الشعار' : 'Logo uploaded');
     } catch (err) {

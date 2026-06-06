@@ -135,12 +135,16 @@ const ClaimBusiness: React.FC = () => {
           throw new Error(isRTL ? `حجم الملف يتجاوز ${MAX_FILE_MB}MB` : `File exceeds ${MAX_FILE_MB}MB`);
         }
         const ext = f.name.split('.').pop()?.toLowerCase() ?? 'bin';
-        const path = `${user.id}/${businessId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        // Compress images before upload (PDFs pass through untouched).
+        const { compressImage } = await import('@/lib/image-compress');
+        const toUpload = f.type.startsWith('image/') ? await compressImage(f) : f;
+        const finalExt = toUpload.type === 'image/webp' ? 'webp' : ext;
+        const path = `${user.id}/${businessId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${finalExt}`;
         const { error: upErr } = await supabase.storage
           .from('ownership-claim-proofs')
-          .upload(path, f, { upsert: false, contentType: f.type });
+          .upload(path, toUpload, { upsert: false, contentType: toUpload.type || f.type });
         if (upErr) throw upErr;
-        next.push({ path, name: f.name, size: f.size, mime: f.type });
+        next.push({ path, name: f.name, size: toUpload.size, mime: toUpload.type || f.type });
       }
       setFiles(next);
     } catch (err) {
