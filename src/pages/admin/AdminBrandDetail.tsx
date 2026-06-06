@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import {
   ArrowLeft, ArrowRight, Loader2, Check, X, Archive, ExternalLink,
   Globe, Building2, Shield, History, AlertTriangle, Edit3,
+  Save, Plus, Package, Inbox, Trash2,
 } from 'lucide-react';
 
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -32,6 +33,11 @@ import {
   adminApproveProviderBrandLink, adminRejectProviderBrandLink,
   brandStatusLabel, verificationLabel, relationshipLabel,
   requestStatusLabel, requestTypeLabel, authStatusLabel, pick,
+  adminListBrandProducts, adminCreateBrandProduct, adminUpdateBrandProduct,
+  adminDeleteBrandProduct,
+  listBrandProductRequests, adminApproveBrandProductRequest, adminRejectBrandProductRequest,
+  brandProductStatusLabel, brandProductRequestStatusLabel,
+  type BrandProduct, type BrandProductRequest,
 } from '@/modules/brands';
 
 const AdminBrandDetail: React.FC = () => {
@@ -51,6 +57,23 @@ const AdminBrandDetail: React.FC = () => {
     seo_title_ar: '', seo_title_en: '', seo_description_ar: '', seo_description_en: '',
     brand_keywords: '', og_image_url: '',
   });
+  const [identityForm, setIdentityForm] = useState({
+    name_ar: '', name_en: '', description_ar: '', description_en: '',
+    website: '', brand_owner_company: '', founded_year: '',
+    country_of_origin_code: '', country_of_origin_name_ar: '', country_of_origin_name_en: '',
+    logo_url: '', is_local: false,
+  });
+  const [identityDirty, setIdentityDirty] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name_ar: '', name_en: '', model_number: '', sku: '',
+    description_ar: '', image_url: '',
+  });
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editProduct, setEditProduct] = useState({
+    name_ar: '', name_en: '', model_number: '', sku: '', description_ar: '', image_url: '',
+  });
+  const [rejectingReqId, setRejectingReqId] = useState<string | null>(null);
+  const [reqRejectReason, setReqRejectReason] = useState('');
 
   const brandQ = useQuery({
     queryKey: ['admin-brand-detail', id],
@@ -69,6 +92,21 @@ const AdminBrandDetail: React.FC = () => {
       brand_keywords: (brand.brand_keywords ?? []).join(', '),
       og_image_url: brand.og_image_url ?? '',
     });
+    setIdentityForm({
+      name_ar: brand.name_ar ?? '',
+      name_en: brand.name_en ?? '',
+      description_ar: brand.description_ar ?? '',
+      description_en: brand.description_en ?? '',
+      website: brand.website ?? '',
+      brand_owner_company: brand.brand_owner_company ?? '',
+      founded_year: brand.founded_year ? String(brand.founded_year) : '',
+      country_of_origin_code: brand.country_of_origin_code ?? '',
+      country_of_origin_name_ar: brand.country_of_origin_name_ar ?? '',
+      country_of_origin_name_en: brand.country_of_origin_name_en ?? '',
+      logo_url: brand.logo_url ?? '',
+      is_local: !!brand.is_local,
+    });
+    setIdentityDirty(false);
   }, [brand]);
 
   usePageMeta({
@@ -109,6 +147,17 @@ const AdminBrandDetail: React.FC = () => {
     staleTime: 5 * 60_000,
   });
 
+  const productsQ = useQuery({
+    queryKey: ['admin-brand-products', id],
+    queryFn: () => adminListBrandProducts(id, { status: 'all' }),
+    enabled: !!id,
+  });
+  const productRequestsQ = useQuery({
+    queryKey: ['admin-brand-product-requests', id],
+    queryFn: () => listBrandProductRequests({ brandId: id, status: 'all' }),
+    enabled: !!id,
+  });
+
   const businessIds = (linksQ.data ?? []).map((l) => l.business_id);
   const bizQ = useQuery({
     queryKey: ['admin-brand-provider-businesses', businessIds.join(',')],
@@ -125,6 +174,10 @@ const AdminBrandDetail: React.FC = () => {
     qc.invalidateQueries({ queryKey: ['admin-brand-audit', id] });
     qc.invalidateQueries({ queryKey: ['admin-brand-provider-links', id] });
     qc.invalidateQueries({ queryKey: ['brand-ops-counts'] });
+  };
+  const invalidateProducts = () => {
+    qc.invalidateQueries({ queryKey: ['admin-brand-products', id] });
+    qc.invalidateQueries({ queryKey: ['admin-brand-product-requests', id] });
   };
 
   const approve = useMutation({
@@ -165,6 +218,84 @@ const AdminBrandDetail: React.FC = () => {
       og_image_url: seoForm.og_image_url || null,
     }),
     onSuccess: () => { toast.success(isRTL ? 'تم حفظ SEO' : 'SEO saved'); invalidate(); },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const saveIdentity = useMutation({
+    mutationFn: () => adminUpdateBrand(id, {
+      name_ar: identityForm.name_ar.trim() || brand?.name_ar || '',
+      name_en: identityForm.name_en.trim() || null,
+      description_ar: identityForm.description_ar.trim() || null,
+      description_en: identityForm.description_en.trim() || null,
+      website: identityForm.website.trim() || null,
+      brand_owner_company: identityForm.brand_owner_company.trim() || null,
+      founded_year: identityForm.founded_year.trim() ? Number(identityForm.founded_year) : null,
+      country_of_origin_code: identityForm.country_of_origin_code.trim().toUpperCase() || null,
+      country_of_origin_name_ar: identityForm.country_of_origin_name_ar.trim() || null,
+      country_of_origin_name_en: identityForm.country_of_origin_name_en.trim() || null,
+      logo_url: identityForm.logo_url || null,
+      is_local: identityForm.is_local,
+    }),
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم حفظ التعديلات' : 'Changes saved');
+      setIdentityDirty(false); invalidate();
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const createProduct = useMutation({
+    mutationFn: () => adminCreateBrandProduct({
+      brand_id: id,
+      name_ar: newProduct.name_ar.trim(),
+      name_en: newProduct.name_en.trim() || null,
+      model_number: newProduct.model_number.trim() || null,
+      sku: newProduct.sku.trim() || null,
+      description_ar: newProduct.description_ar.trim() || null,
+      image_url: newProduct.image_url || null,
+      status: 'approved',
+    }),
+    onSuccess: () => {
+      toast.success(isRTL ? 'تمت إضافة المنتج' : 'Product added');
+      setNewProduct({ name_ar: '', name_en: '', model_number: '', sku: '', description_ar: '', image_url: '' });
+      invalidateProducts();
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const updateProduct = useMutation({
+    mutationFn: (vars: { productId: string }) => adminUpdateBrandProduct(vars.productId, {
+      name_ar: editProduct.name_ar.trim(),
+      name_en: editProduct.name_en.trim() || null,
+      model_number: editProduct.model_number.trim() || null,
+      sku: editProduct.sku.trim() || null,
+      description_ar: editProduct.description_ar.trim() || null,
+      image_url: editProduct.image_url || null,
+    }),
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم التحديث' : 'Updated');
+      setEditingProductId(null); invalidateProducts();
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const deleteProduct = useMutation({
+    mutationFn: (productId: string) => adminDeleteBrandProduct(productId),
+    onSuccess: () => { toast.success(isRTL ? 'تم الحذف' : 'Deleted'); invalidateProducts(); },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const approveProductReq = useMutation({
+    mutationFn: (reqId: string) => adminApproveBrandProductRequest(reqId),
+    onSuccess: () => { toast.success(isRTL ? 'تم اعتماد المنتج' : 'Product approved'); invalidateProducts(); },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+  const rejectProductReq = useMutation({
+    mutationFn: (vars: { reqId: string; reason: string }) =>
+      adminRejectBrandProductRequest(vars.reqId, vars.reason),
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم الرفض' : 'Rejected');
+      setRejectingReqId(null); setReqRejectReason(''); invalidateProducts();
+    },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
