@@ -50,7 +50,6 @@ export const ContractRoleSplitHero = React.memo(function ContractRoleSplitHero({
     };
   }, [providerContracts, clientContracts]);
 
-  const allTotal = agg.provider.total + agg.client.total;
   const allAgg = useMemo(() => ({
     total: agg.provider.total + agg.client.total,
     pending: agg.provider.pending + agg.client.pending,
