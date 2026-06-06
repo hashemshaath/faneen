@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBi } from "@/components/common/Bilingual";
 import { useMultiJsonLd } from "@/hooks/usePageMeta";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface QATabProps {
   businessId: string;
@@ -26,6 +27,7 @@ interface PublicQA {
 export const QATab = ({ businessId, businessName }: QATabProps) => {
   const bi = useBi();
   const { user } = useAuth();
+  const { language } = useLanguage();
   const qc = useQueryClient();
   const [question, setQuestion] = useState("");
   const [askerName, setAskerName] = useState("");
@@ -51,10 +53,17 @@ export const QATab = ({ businessId, businessName }: QATabProps) => {
           {
             "@context": "https://schema.org",
             "@type": "FAQPage",
+            inLanguage: language === "ar" ? "ar" : "en",
+            name: bi(`أسئلة وأجوبة عن ${businessName}`, `Q&A about ${businessName}`),
+            url: typeof window !== "undefined" ? window.location.href : undefined,
             mainEntity: items.slice(0, 20).map((q) => ({
               "@type": "Question",
               name: q.question,
-              acceptedAnswer: { "@type": "Answer", text: q.answer },
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: q.answer,
+                ...(q.answered_at ? { dateCreated: q.answered_at } : {}),
+              },
             })),
           },
         ]
