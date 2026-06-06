@@ -431,9 +431,6 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
               <Badge variant={providerCount > 0 ? 'secondary' : 'outline'} className="text-xs gap-1">
                 <Building2 className="h-3 w-3" />{isRTL ? 'إسناد مزودين/خدمات' : 'Provider/service links'}: {providerCount}
               </Badge>
-              {brand.website && (
-                <Badge variant="outline" className="text-xs gap-1"><Globe2 className="h-3 w-3" />{isRTL ? 'موقع رسمي' : 'Official website'}</Badge>
-              )}
             </div>
             {categoryHints.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1.5">
