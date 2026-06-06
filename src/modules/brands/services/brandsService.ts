@@ -258,6 +258,9 @@ export async function createBrandRequest(payload: {
   documents?: Array<{ url: string; name?: string }>;
   notes?: string | null;
   sector_id?: string | null;
+  website?: string | null;
+  logo_url?: string | null;
+  description?: string | null;
 }) {
   const { data, error } = await sb
     .from('brand_addition_requests')
@@ -275,6 +278,9 @@ export async function createBrandRequest(payload: {
       relationship_type: payload.relationship_type ?? null,
       documents: payload.documents ?? [],
       notes: payload.notes ?? null,
+      website: payload.website ?? null,
+      logo_url: payload.logo_url ?? null,
+      description: payload.description ?? null,
       status: 'pending',
     })
     .select('*').single();
