@@ -121,6 +121,7 @@ import { ContractStatsSummary } from '@/components/contracts/dashboard/ContractS
 import { ContractCard } from '@/components/contracts/dashboard/ContractCard';
 import { ContractCompactRow } from '@/components/contracts/dashboard/ContractCompactRow';
 import { ContractActiveFilters } from '@/components/contracts/dashboard/ContractActiveFilters';
+import { ContractsPagination } from '@/components/contracts/dashboard/ContractsPagination';
 import { getContractHealth } from '@/components/contracts/dashboard/contract-helpers';
 import { ContractCreateStepper } from '@/components/contracts/dashboard/create/ContractCreateStepper';
 import { ContractReviewSummary } from '@/components/contracts/dashboard/create/ContractReviewSummary';
@@ -209,6 +210,8 @@ const DashboardContracts = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [viewSection, setViewSection] = useState<ViewSection>('list');
   const [form, setForm] = useState<ContractForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -1395,6 +1398,89 @@ const DashboardContracts = () => {
     toast.success(isRTL ? `تم تصدير ${filtered.length} عقد` : `Exported ${filtered.length} contracts`);
   }, [filtered, isRTL]);
 
+  /* ── Excel (.xlsx) export of filtered contracts list. ── */
+  const handleExportXlsx = useCallback(async () => {
+    if (filtered.length === 0) {
+      toast.info(isRTL ? 'لا توجد عقود للتصدير' : 'No contracts to export');
+      return;
+    }
+    try {
+      const XLSX = await import('xlsx');
+      const headers = isRTL
+        ? ['الرقم', 'العنوان', 'الحالة', 'الدور', 'المبلغ', 'العملة', 'تاريخ الإنشاء', 'تاريخ البدء', 'تاريخ الانتهاء']
+        : ['Number', 'Title', 'Status', 'Role', 'Amount', 'Currency', 'Created', 'Start', 'End'];
+      const rows = filtered.map((c) => [
+        c.contract_number,
+        isRTL ? c.title_ar : (c.title_en || c.title_ar),
+        c.status,
+        c._role,
+        Number(c.total_amount),
+        c.currency_code,
+        c.created_at?.slice(0, 10) ?? '',
+        c.start_date ?? '',
+        c.end_date ?? '',
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, isRTL ? 'العقود' : 'Contracts');
+      XLSX.writeFile(wb, `contracts-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      toast.success(isRTL ? `تم تصدير ${filtered.length} عقد` : `Exported ${filtered.length} contracts`);
+    } catch (err) {
+      toast.error(isRTL ? 'فشل التصدير' : 'Export failed');
+    }
+  }, [filtered, isRTL]);
+
+  /* ── PDF summary of filtered contracts list (uses jspdf-autotable). ── */
+  const handleExportListPdf = useCallback(async () => {
+    if (filtered.length === 0) {
+      toast.info(isRTL ? 'لا توجد عقود للتصدير' : 'No contracts to export');
+      return;
+    }
+    try {
+      const { jsPDF } = await import('jspdf');
+      const autoTable = (await import('jspdf-autotable')).default;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt' });
+      doc.setFontSize(14);
+      doc.text('Contracts Report', 40, 40);
+      doc.setFontSize(9);
+      doc.text(new Date().toLocaleString('en-US'), 40, 56);
+      autoTable(doc, {
+        startY: 72,
+        head: [[
+          'Number', 'Title', 'Status', 'Role', 'Amount', 'Currency', 'Created', 'Start', 'End',
+        ]],
+        body: filtered.map((c) => [
+          c.contract_number,
+          (c.title_en || c.title_ar)?.slice(0, 60) ?? '',
+          c.status,
+          c._role,
+          Number(c.total_amount).toLocaleString(),
+          c.currency_code,
+          c.created_at?.slice(0, 10) ?? '',
+          c.start_date ?? '',
+          c.end_date ?? '',
+        ]),
+        styles: { fontSize: 8, cellPadding: 4 },
+        headStyles: { fillColor: [30, 41, 59], textColor: 255 },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+      });
+      doc.save(`contracts-${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast.success(isRTL ? `تم تصدير ${filtered.length} عقد` : `Exported ${filtered.length} contracts`);
+    } catch (err) {
+      toast.error(isRTL ? 'فشل التصدير' : 'Export failed');
+    }
+  }, [filtered, isRTL]);
+
+  /* ── Pagination — reset to page 1 when filters/sort change. ── */
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, roleFilter, searchQuery, sortBy, pageSize]);
+
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage, pageSize]);
+
   /* ── Phase 8 — Keyboard shortcuts: "/" focus search, "n" new contract, "Esc" close form. ── */
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -2206,6 +2292,8 @@ const DashboardContracts = () => {
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
                 onExport={handleExportCsv}
+                onExportExcel={handleExportXlsx}
+                onExportPdf={handleExportListPdf}
                 searchInputRef={searchInputRef}
               />
               <ContractActiveFilters
@@ -2233,7 +2321,7 @@ const DashboardContracts = () => {
               />
             ) : viewMode === 'compact' ? (
               <div className="space-y-1.5">
-                {filtered.map((c) => (
+                {paginated.map((c) => (
                   <ContractCompactRow
                     key={c.id + c._role}
                     c={c}
@@ -2245,7 +2333,7 @@ const DashboardContracts = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {filtered.map((c) => {
+                {paginated.map((c) => {
                   const milestones = allMilestones.filter((m) => m.contract_id === c.id);
                   const notes = allNotes.filter((n) => n.contract_id === c.id);
                   const attachments = allAttachments.filter((a) => a.contract_id === c.id);
@@ -2925,6 +3013,16 @@ const DashboardContracts = () => {
                   );
                 })}
               </div>
+            )}
+            {!isLoading && filtered.length > 0 && (
+              <ContractsPagination
+                isRTL={isRTL}
+                page={currentPage}
+                pageSize={pageSize}
+                totalItems={filtered.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
             )}
           </>
         )}
