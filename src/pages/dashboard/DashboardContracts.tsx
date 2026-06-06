@@ -2292,6 +2292,8 @@ const DashboardContracts = () => {
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
                 onExport={handleExportCsv}
+                onExportExcel={handleExportXlsx}
+                onExportPdf={handleExportListPdf}
                 searchInputRef={searchInputRef}
               />
               <ContractActiveFilters
