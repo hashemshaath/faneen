@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBi } from "@/components/common/Bilingual";
@@ -13,9 +20,13 @@ import { useBi } from "@/components/common/Bilingual";
 interface RfqTabProps {
   businessId: string;
   businessName: string;
+  /** Sector slug or label used by `quote_requests.sector` (required). */
+  sector: string;
+  /** City name used by `quote_requests.city` (required). */
+  city: string;
 }
 
-export const RfqTab = ({ businessId, businessName }: RfqTabProps) => {
+export const RfqTab = ({ businessId, businessName, sector, city }: RfqTabProps) => {
   const bi = useBi();
   const { user } = useAuth();
   const [form, setForm] = useState({
@@ -27,6 +38,9 @@ export const RfqTab = ({ businessId, businessName }: RfqTabProps) => {
     budget_min: "",
     budget_max: "",
     deadline: "",
+    contact_method: "whatsapp" as "whatsapp" | "call" | "email",
+    timeline: "1_3_months" as "urgent" | "1_month" | "1_3_months" | "3_6_months" | "flexible",
+    service_location: "project_site" as "project_site" | "provider_location" | "not_sure",
   });
   const [submitted, setSubmitted] = useState(false);
 
@@ -37,21 +51,42 @@ export const RfqTab = ({ businessId, businessName }: RfqTabProps) => {
     mutationFn: async () => {
       const name = (user?.user_metadata?.full_name as string | undefined) || form.name.trim();
       const email = user?.email || form.email.trim();
+      const phone = form.phone.trim();
       if (!name) throw new Error("name_required");
+      if (!phone) throw new Error("phone_required");
       if (form.title.trim().length < 4) throw new Error("title_required");
       if (form.description.trim().length < 15) throw new Error("desc_required");
+      if (!sector) throw new Error("sector_missing");
+      if (!city) throw new Error("city_missing");
 
-      const { error } = await supabase.from("business_rfqs").insert({
-        business_id: businessId,
-        requester_user_id: user?.id ?? null,
-        requester_name: name,
-        requester_email: email || null,
-        requester_phone: form.phone.trim() || null,
-        title: form.title.trim(),
-        description: form.description.trim(),
-        budget_min: form.budget_min ? Number(form.budget_min) : null,
-        budget_max: form.budget_max ? Number(form.budget_max) : null,
-        deadline: form.deadline || null,
+      const description = `${form.title.trim()}\n\n${form.description.trim()}`;
+      const budgetMax = form.budget_max ? Number(form.budget_max) : null;
+      const budgetMin = form.budget_min ? Number(form.budget_min) : null;
+      const hasBudget = budgetMin !== null || budgetMax !== null;
+
+      const { error } = await supabase.from("quote_requests").insert({
+        user_id: user?.id ?? null,
+        target_entity_id: businessId,
+        customer_name: name,
+        customer_phone: phone,
+        customer_email: email || null,
+        customer_type: "individual",
+        preferred_contact_method: form.contact_method,
+        sector,
+        city,
+        service_location_type: form.service_location,
+        project_description: description,
+        execution_timeline: form.timeline,
+        has_budget: hasBudget,
+        budget_amount: budgetMax ?? budgetMin,
+        budget_note: budgetMin && budgetMax ? `${budgetMin} - ${budgetMax}` : null,
+        source: "business_profile_rfq",
+        metadata: {
+          title: form.title.trim(),
+          budget_min: budgetMin,
+          budget_max: budgetMax,
+          deadline: form.deadline || null,
+        },
       });
       if (error) throw error;
     },
@@ -63,8 +98,11 @@ export const RfqTab = ({ businessId, businessName }: RfqTabProps) => {
       const msg = e instanceof Error ? e.message : "unknown";
       const map: Record<string, [string, string]> = {
         name_required: ["الاسم مطلوب", "Name is required"],
+        phone_required: ["رقم الجوال مطلوب", "Phone is required"],
         title_required: ["عنوان الطلب قصير جداً", "Title is too short"],
         desc_required: ["الوصف قصير جداً (15 حرفاً على الأقل)", "Description is too short (min 15 chars)"],
+        sector_missing: ["تعذّر تحديد القطاع", "Could not determine sector"],
+        city_missing: ["تعذّر تحديد المدينة", "Could not determine city"],
       };
       const [ar, en] = map[msg] ?? ["تعذّر إرسال الطلب", "Could not send request"];
       toast.error(bi(ar, en));
@@ -121,8 +159,22 @@ export const RfqTab = ({ businessId, businessName }: RfqTabProps) => {
           </>
         )}
         <div>
-          <Label className="text-xs">{bi("الجوال", "Phone")}</Label>
+          <Label className="text-xs">{bi("الجوال", "Phone")} *</Label>
           <Input type="tel" value={form.phone} onChange={update("phone")} className="h-11 rounded-xl tech-content" maxLength={30} />
+        </div>
+        <div>
+          <Label className="text-xs">{bi("طريقة التواصل المفضّلة", "Preferred contact")}</Label>
+          <Select
+            value={form.contact_method}
+            onValueChange={(v) => setForm((p) => ({ ...p, contact_method: v as typeof p.contact_method }))}
+          >
+            <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="whatsapp">{bi("واتساب", "WhatsApp")}</SelectItem>
+              <SelectItem value="call">{bi("اتصال", "Call")}</SelectItem>
+              <SelectItem value="email">{bi("بريد إلكتروني", "Email")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="sm:col-span-2">
           <Label className="text-xs">{bi("عنوان الطلب", "Title")} *</Label>
@@ -131,6 +183,36 @@ export const RfqTab = ({ businessId, businessName }: RfqTabProps) => {
         <div className="sm:col-span-2">
           <Label className="text-xs">{bi("الوصف التفصيلي", "Detailed description")} *</Label>
           <Textarea value={form.description} onChange={update("description")} dir="auto" maxLength={2000} className="min-h-[120px] rounded-xl" placeholder={bi("المواصفات، الكميات، الموقع، أي ملاحظات...", "Specs, quantities, location, notes...")} />
+        </div>
+        <div>
+          <Label className="text-xs">{bi("الإطار الزمني للتنفيذ", "Execution timeline")}</Label>
+          <Select
+            value={form.timeline}
+            onValueChange={(v) => setForm((p) => ({ ...p, timeline: v as typeof p.timeline }))}
+          >
+            <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="urgent">{bi("عاجل", "Urgent")}</SelectItem>
+              <SelectItem value="1_month">{bi("خلال شهر", "Within a month")}</SelectItem>
+              <SelectItem value="1_3_months">{bi("1–3 أشهر", "1–3 months")}</SelectItem>
+              <SelectItem value="3_6_months">{bi("3–6 أشهر", "3–6 months")}</SelectItem>
+              <SelectItem value="flexible">{bi("مرن", "Flexible")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs">{bi("موقع الخدمة", "Service location")}</Label>
+          <Select
+            value={form.service_location}
+            onValueChange={(v) => setForm((p) => ({ ...p, service_location: v as typeof p.service_location }))}
+          >
+            <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="project_site">{bi("في موقع المشروع", "Project site")}</SelectItem>
+              <SelectItem value="provider_location">{bi("في مقر الجهة", "Provider location")}</SelectItem>
+              <SelectItem value="not_sure">{bi("غير محدد", "Not sure")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label className="flex items-center gap-1 text-xs">
