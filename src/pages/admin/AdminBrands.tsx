@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  Archive, Building2, Check, ExternalLink, Filter, Globe2, Inbox, Link2,
+  Archive, Building2, Check, Filter, Globe2, Inbox, Link2,
   RefreshCw, Search, ShieldCheck, SlidersHorizontal, Tag as TagIcon, X,
 } from 'lucide-react';
 
@@ -441,7 +441,6 @@ function BrandRow({ brand, locale, isRTL, summary, sectorLabel, categoryHints, o
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {brand.website && <Button asChild size="sm" variant="ghost"><a href={brand.website} target="_blank" rel="noopener noreferrer" aria-label={isRTL ? 'فتح موقع العلامة' : 'Open brand website'}><ExternalLink className="w-4 h-4" /></a></Button>}
           <Button asChild size="sm" variant="outline"><Link to={`/admin/brands/${brand.id}`}><Link2 className="w-4 h-4 me-1" />{isRTL ? 'تحسين وربط' : 'Improve & link'}</Link></Button>
           {(brand.status === 'pending' || brand.status === 'in_review' || brand.status === 'draft') && (
             <>
