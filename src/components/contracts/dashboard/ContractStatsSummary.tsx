@@ -43,7 +43,14 @@ export function ContractStatsSummary({ stats, isRTL }: Props) {
     : n >= 1_000 ? `${(n / 1_000).toFixed(1)}k`
     : n.toLocaleString();
 
-  const supportKpis = [
+  const supportKpis: Array<{
+    icon: typeof FileText;
+    label: string;
+    value: string;
+    sub?: string;
+    hint?: string;
+    tone: 'primary' | 'success' | 'warning' | 'destructive' | 'accent';
+  }> = [
     {
       icon: FileText,
       label: isRTL ? 'إجمالي العقود' : 'Total contracts',
@@ -77,7 +84,7 @@ export function ContractStatsSummary({ stats, isRTL }: Props) {
         : (isRTL ? 'لا يوجد' : 'None'),
       tone: stats.overdueCount > 0 ? 'destructive' : 'success',
     },
-  ] as const;
+  ];
 
   const quick = [
     { icon: CheckCircle2, label: isRTL ? 'مكتملة' : 'Completed', value: stats.completed, color: 'text-info bg-info/10' },
