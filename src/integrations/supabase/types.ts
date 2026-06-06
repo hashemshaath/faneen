@@ -2761,81 +2761,6 @@ export type Database = {
           },
         ]
       }
-      business_rfqs: {
-        Row: {
-          attachments: Json | null
-          budget_max: number | null
-          budget_min: number | null
-          business_id: string
-          created_at: string
-          currency_code: string | null
-          deadline: string | null
-          description: string
-          id: string
-          provider_note: string | null
-          requester_email: string | null
-          requester_name: string
-          requester_phone: string | null
-          requester_user_id: string | null
-          status: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          attachments?: Json | null
-          budget_max?: number | null
-          budget_min?: number | null
-          business_id: string
-          created_at?: string
-          currency_code?: string | null
-          deadline?: string | null
-          description: string
-          id?: string
-          provider_note?: string | null
-          requester_email?: string | null
-          requester_name: string
-          requester_phone?: string | null
-          requester_user_id?: string | null
-          status?: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          attachments?: Json | null
-          budget_max?: number | null
-          budget_min?: number | null
-          business_id?: string
-          created_at?: string
-          currency_code?: string | null
-          deadline?: string | null
-          description?: string
-          id?: string
-          provider_note?: string | null
-          requester_email?: string | null
-          requester_name?: string
-          requester_phone?: string | null
-          requester_user_id?: string | null
-          status?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_rfqs_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_rfqs_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses_public"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       business_service_areas: {
         Row: {
           business_id: string
@@ -15162,42 +15087,6 @@ export type Database = {
           },
           {
             foreignKeyName: "user_favorite_businesses_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses_public"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_favorites: {
-        Row: {
-          business_id: string
-          created_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          business_id: string
-          created_at?: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          business_id?: string
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_favorites_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_favorites_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
