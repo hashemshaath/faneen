@@ -528,6 +528,7 @@ const BusinessProfile = () => {
           isVerified={!!business.is_verified}
           serviceCount={services.length}
           projectCount={projects.length}
+          businessId={business.id}
         />
 
         <main className="container-app pb-10 pt-4 sm:pb-16 sm:pt-8">

@@ -1,10 +1,12 @@
-import { CheckCircle2, FileCheck2, FolderOpen, ShieldCheck, Wrench } from "lucide-react";
+import { CheckCircle2, FileCheck2, FolderOpen, ShieldCheck, Wrench, BadgeCheck, ArrowLeft, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 interface BusinessProfileTrustStripProps {
   isVerified: boolean;
   serviceCount: number;
   projectCount: number;
+  businessId?: string;
 }
 
 /**
@@ -17,6 +19,7 @@ export const BusinessProfileTrustStrip = ({
   isVerified,
   serviceCount,
   projectCount,
+  businessId,
 }: BusinessProfileTrustStripProps) => {
   const { language, isRTL } = useLanguage();
 
@@ -83,6 +86,24 @@ export const BusinessProfileTrustStrip = ({
             ? "نراجع بيانات الظهور قبل النشر، ولا نضمن نتائج التنفيذ."
             : "Listings are reviewed before publishing. Execution outcomes are not guaranteed."}
         </p>
+        {!isVerified && businessId && (
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-warning/30 bg-warning/5 px-3 py-2">
+            <p className="text-[11px] leading-relaxed text-foreground/80 sm:text-xs">
+              {isRTL
+                ? "هل هذه جهتك؟ قم بتوثيق ملكيتها للحصول على شارة موثّق وإدارة بياناتها."
+                : "Is this your business? Claim ownership to get the verified badge and manage its data."}
+            </p>
+            <Link
+              to={`/claim/${businessId}`}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-sm transition-all hover:shadow-md hover-lift sm:text-xs"
+              data-testid="business-claim-cta"
+            >
+              <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{isRTL ? "المطالبة بهذه الجهة" : "Claim this business"}</span>
+              {isRTL ? <ArrowLeft className="h-3 w-3" aria-hidden="true" /> : <ArrowRight className="h-3 w-3" aria-hidden="true" />}
+            </Link>
+          </div>
+        )}
         {/* Marker for static audits to confirm the disclaimer is rendered. */}
         <span data-trust-disclaimer="qitaat-review-no-guarantee" className="sr-only">
           <CheckCircle2 className="h-0 w-0" aria-hidden="true" />
