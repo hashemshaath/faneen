@@ -971,6 +971,7 @@ const AdminCategories = () => {
               </div>
             </Card>
           )}
+          </section>
 
           {/* ── Delete dialog ── */}
           <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
