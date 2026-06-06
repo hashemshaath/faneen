@@ -45,7 +45,7 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
           onClick={() => openLightbox(0)}
         >
           <div className="media-16-9 md:aspect-[2/1]">
-          <img src={images[0].image_url} alt={title || 'Project image'} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" decoding="async"/>
+          <img src={images[0].image_url} alt={title || 'Project image'} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="eager" decoding="async" fetchPriority="high"/>
           </div>
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-full p-3">
