@@ -393,17 +393,76 @@ const AdminBrandDetail: React.FC = () => {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-4">
-          {/* General */}
+          {/* Identity & origin — inline editor */}
           <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Edit3 className="w-4 h-4" />{isRTL ? 'البيانات الأساسية' : 'Identity & origin'}</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3 text-sm">
-              <Info label={isRTL ? 'العربية' : 'Arabic'} value={brand.name_ar} />
-              <Info label={isRTL ? 'الإنجليزية' : 'English'} value={brand.name_en ?? '—'} />
-              <Info label={isRTL ? 'بلد المنشأ' : 'Country of origin'}
-                    value={`${brand.country_of_origin_code ?? '—'}${brand.country_of_origin_name_ar ? ' • ' + (locale === 'ar' ? brand.country_of_origin_name_ar : brand.country_of_origin_name_en) : ''}`} />
-              <Info label={isRTL ? 'الشركة المالكة' : 'Brand owner'} value={brand.brand_owner_company ?? '—'} />
-              <Info label={isRTL ? 'سنة التأسيس' : 'Founded'} value={brand.founded_year ? String(brand.founded_year) : '—'} />
-              <Info label={isRTL ? 'المصدر' : 'Source'} value={brand.source} />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2"><Edit3 className="w-4 h-4" />{isRTL ? 'البيانات الأساسية' : 'Identity & origin'}</span>
+                {identityDirty && <Badge variant="warning" className="text-[10px]">{isRTL ? 'تعديلات غير محفوظة' : 'Unsaved'}</Badge>}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <FieldLabeled label={isRTL ? 'الاسم (عربي) *' : 'Name (AR) *'}>
+                  <Input dir="auto" value={identityForm.name_ar}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, name_ar: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'}>
+                  <Input dir="ltr" value={identityForm.name_en}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, name_en: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'الموقع الرسمي' : 'Official website'}>
+                  <Input dir="ltr" placeholder="https://example.com" className="tech-content" value={identityForm.website}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, website: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'الشركة المالكة' : 'Brand owner'}>
+                  <Input dir="auto" value={identityForm.brand_owner_company}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, brand_owner_company: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'سنة التأسيس' : 'Founded year'}>
+                  <Input type="number" inputMode="numeric" className="tech-content" value={identityForm.founded_year}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, founded_year: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'كود البلد (ISO)' : 'Country code (ISO)'}>
+                  <Input maxLength={3} dir="ltr" className="tech-content uppercase" value={identityForm.country_of_origin_code}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, country_of_origin_code: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'اسم البلد (عربي)' : 'Country (AR)'}>
+                  <Input dir="auto" value={identityForm.country_of_origin_name_ar}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, country_of_origin_name_ar: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+                <FieldLabeled label={isRTL ? 'اسم البلد (إنجليزي)' : 'Country (EN)'}>
+                  <Input dir="ltr" value={identityForm.country_of_origin_name_en}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, country_of_origin_name_en: e.target.value })); setIdentityDirty(true); }} />
+                </FieldLabeled>
+              </div>
+              <FieldLabeled label={isRTL ? 'وصف العلامة (عربي)' : 'Description (AR)'}>
+                <Textarea dir="auto" rows={2} value={identityForm.description_ar}
+                  onChange={(e) => { setIdentityForm(f => ({ ...f, description_ar: e.target.value })); setIdentityDirty(true); }} />
+              </FieldLabeled>
+              <FieldLabeled label={isRTL ? 'وصف العلامة (إنجليزي)' : 'Description (EN)'}>
+                <Textarea dir="ltr" rows={2} value={identityForm.description_en}
+                  onChange={(e) => { setIdentityForm(f => ({ ...f, description_en: e.target.value })); setIdentityDirty(true); }} />
+              </FieldLabeled>
+              <div>
+                <Label className="text-xs mb-2 block">{isRTL ? 'الشعار (يُضغط تلقائياً إلى WebP)' : 'Logo (auto-compressed to WebP)'}</Label>
+                <ImageUpload bucket="business-assets" value={identityForm.logo_url}
+                  onChange={(url) => { setIdentityForm(f => ({ ...f, logo_url: url || '' })); setIdentityDirty(true); }}
+                  onRemove={() => { setIdentityForm(f => ({ ...f, logo_url: '' })); setIdentityDirty(true); }}
+                  placeholder={isRTL ? 'رفع شعار العلامة' : 'Upload brand logo'} />
+              </div>
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" className="h-4 w-4" checked={identityForm.is_local}
+                    onChange={(e) => { setIdentityForm(f => ({ ...f, is_local: e.target.checked })); setIdentityDirty(true); }} />
+                  <span>{isRTL ? 'علامة محلية' : 'Local brand'}</span>
+                </label>
+                <Button size="sm" onClick={() => saveIdentity.mutate()}
+                  disabled={!identityDirty || saveIdentity.isPending || !identityForm.name_ar.trim()}>
+                  {saveIdentity.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Save className="w-4 h-4 me-1" />}
+                  {isRTL ? 'حفظ التعديلات' : 'Save changes'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
