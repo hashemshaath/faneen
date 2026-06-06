@@ -1,4 +1,4 @@
-import { Briefcase, LayoutGrid, User } from 'lucide-react';
+import { Inbox, LayoutGrid, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export type ContractRoleFilter = 'all' | 'provider' | 'client';
@@ -16,9 +16,12 @@ interface ContractRoleTabsProps {
  */
 export function ContractRoleTabs({ value, onChange, counts, isRTL }: ContractRoleTabsProps) {
   const tabs = [
-    { key: 'all' as const, label: isRTL ? 'الكل' : 'All', count: counts.all, icon: LayoutGrid },
-    { key: 'provider' as const, label: isRTL ? 'كمزود خدمة' : 'As Provider', count: counts.provider, icon: Briefcase },
-    { key: 'client' as const, label: isRTL ? 'كعميل' : 'As Client', count: counts.client, icon: User },
+    { key: 'all' as const, label: isRTL ? 'الكل' : 'All', count: counts.all, icon: LayoutGrid,
+      hint: isRTL ? 'جميع العقود' : 'All contracts' },
+    { key: 'provider' as const, label: isRTL ? 'صادرة' : 'Outgoing', count: counts.provider, icon: Send,
+      hint: isRTL ? 'عقود أنشأتها وأرسلتها للطرف الآخر للموافقة' : 'Contracts you issued and sent for approval' },
+    { key: 'client' as const, label: isRTL ? 'واردة' : 'Incoming', count: counts.client, icon: Inbox,
+      hint: isRTL ? 'عقود استلمتها من طرف آخر للموافقة عليها' : 'Contracts received from another party for your approval' },
   ];
   return (
     <div
@@ -34,6 +37,7 @@ export function ContractRoleTabs({ value, onChange, counts, isRTL }: ContractRol
             type="button"
             role="tab"
             aria-selected={active}
+            title={tab.hint}
             onClick={() => onChange(tab.key)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${active ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
           >
