@@ -350,6 +350,12 @@ const AdminBrandDetail: React.FC = () => {
                   <Badge variant="outline" className="text-xs">{pick(brandStatusLabel[brand.status], locale)}</Badge>
                   <Badge variant="secondary" className="text-xs">{pick(verificationLabel[brand.verification_status], locale)}</Badge>
                   {brand.is_local && <Badge variant="outline" className="text-xs">{isRTL ? 'محلي' : 'Local'}</Badge>}
+                  {brand.website && (
+                    <span className="inline-flex items-center gap-1 tech-content">
+                      <Globe className="w-3 h-3" />
+                      {brand.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
