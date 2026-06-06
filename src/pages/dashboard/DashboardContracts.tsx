@@ -29,17 +29,8 @@ import {
   listContractsForRole,
   getContractParticipantProfiles,
 } from '@/modules/contracts/services/list';
-import {
-  listMilestonesForContracts,
-  listNotesForContracts,
-  listAttachmentsForContracts,
-  listInstallmentPaymentsForContracts,
-  listMeasurementsForContracts,
-  listWarrantiesForContracts,
-  listMaintenanceRequestsForContracts,
-  listAmendmentsForContracts,
-  listLineItemsForContracts,
-} from '@/modules/contracts/services/aggregates';
+import { useContractAggregates } from '@/hooks/useContractAggregates';
+import { useContractPricingRules } from '@/hooks/useContractPricingRules';
 import {
   acceptContract,
   sendContractForApproval,
@@ -342,108 +333,20 @@ const DashboardContracts = () => {
 
   const contractIds = useMemo(() => contracts.map((c) => c.id), [contracts]);
 
-  const { data: allMilestones = [] } = useQuery({
-    queryKey: ['dashboard-milestones', contractIds],
-    queryFn: () => listMilestonesForContracts(contractIds),
-    enabled: contractIds.length > 0,
-  });
-
-  const { data: allNotes = [] } = useQuery({
-    queryKey: ['dashboard-contract-notes', contractIds],
-    queryFn: () => listNotesForContracts(contractIds),
-    enabled: contractIds.length > 0,
-  });
-
-  const { data: allAttachments = [] } = useQuery({
-    queryKey: ['dashboard-contract-attachments', contractIds],
-    queryFn: () => listAttachmentsForContracts(contractIds),
-    enabled: contractIds.length > 0,
-  });
-
-  const { data: allPayments = [] } = useQuery({
-    queryKey: ['dashboard-contract-payments', contractIds],
-    queryFn: () => listInstallmentPaymentsForContracts(contractIds),
-    enabled: contractIds.length > 0,
-  });
-
-  const { data: allMeasurements = [] } = useQuery({
-    queryKey: ['dashboard-contract-measurements', contractIds],
-    queryFn: () => listMeasurementsForContracts(contractIds),
-    enabled: contractIds.length > 0,
-  });
-
-  const { data: allWarranties = [] } = useQuery({
-    queryKey: ['dashboard-contract-warranties', contractIds],
-    queryFn: () => listWarrantiesForContracts(contractIds),
-    enabled: contractIds.length > 0,
-  });
-
-  const { data: allMaintenanceRequests = [] } = useQuery({
-    queryKey: ['dashboard-contract-maintenance', contractIds],
-    queryFn: () => listMaintenanceRequestsForContracts(contractIds),
-    enabled: contractIds.length > 0,
-  });
-
-  const { data: allAmendments = [] } = useQuery({
-    queryKey: ['dashboard-contract-amendments', contractIds],
-    queryFn: () => listAmendmentsForContracts(contractIds),
-    enabled: contractIds.length > 0,
-  });
-
-  const { data: allLineItems = [] } = useQuery({
-    queryKey: ['dashboard-contract-line-items', contractIds],
-    queryFn: () => listLineItemsForContracts(contractIds),
-    enabled: contractIds.length > 0,
-  });
+  const {
+    allMilestones,
+    allNotes,
+    allAttachments,
+    allPayments,
+    allMeasurements,
+    allWarranties,
+    allMaintenanceRequests,
+    allAmendments,
+    allLineItems,
+  } = useContractAggregates(contractIds);
 
   // CT5D — allowed pricing methods per active contract template version.
-  const contractTemplateVersionIds = useMemo(() => {
-    const set = new Set<string>();
-    for (const c of contracts) {
-      const v = (c as { template_version_id?: string | null }).template_version_id;
-      if (v) set.add(v);
-    }
-    return Array.from(set);
-  }, [contracts]);
-
-  const { data: contractPricingRules = [] } = useQuery({
-    queryKey: ['dashboard-contract-pricing-rules', contractTemplateVersionIds],
-    queryFn: async () => {
-      if (contractTemplateVersionIds.length === 0) return [];
-      const { data } = await supabase
-        .from('contract_template_pricing_rules')
-        .select('version_id, method, vat_handling')
-        .in('version_id', contractTemplateVersionIds);
-      return data ?? [];
-    },
-    enabled: contractTemplateVersionIds.length > 0,
-  });
-
-  /** Map of template_version_id → allowed pricing methods (empty array if no rules configured). */
-  const allowedMethodsByVersion = useMemo(() => {
-    const map = new Map<string, string[]>();
-    for (const r of contractPricingRules) {
-      const list = map.get(r.version_id) ?? [];
-      list.push(r.method);
-      map.set(r.version_id, list);
-    }
-    return map;
-  }, [contractPricingRules]);
-
-  /**
-   * CT5G.2 — Map of template_version_id → (pricing_method → vat_handling).
-   * Used to derive per-line VAT breakdown for display only. Defaults to
-   * 'inherit' when no rule is configured for a given (version, method).
-   */
-  const vatHandlingByVersionMethod = useMemo(() => {
-    const map = new Map<string, Map<string, string>>();
-    for (const r of contractPricingRules as Array<{ version_id: string; method: string; vat_handling?: string | null }>) {
-      const inner = map.get(r.version_id) ?? new Map<string, string>();
-      inner.set(r.method, (r.vat_handling || 'inherit'));
-      map.set(r.version_id, inner);
-    }
-    return map;
-  }, [contractPricingRules]);
+  const { allowedMethodsByVersion, vatHandlingByVersionMethod } = useContractPricingRules(contracts);
 
   const { data: profiles = [] } = useQuery({
     queryKey: ['contract-profiles', contractIds],
