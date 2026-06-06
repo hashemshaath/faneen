@@ -19,6 +19,13 @@ import { normalizeArabicBrandName, normalizeEnglishBrandName, generateBrandSlugC
 type Loose = any;
 const sb: Loose = supabase;
 
+export interface AdminBrandLinkSummary {
+  brand_id: string;
+  sector_ids: string[];
+  business_count: number;
+  service_count: number;
+}
+
 // ------------------------- PUBLIC / PROVIDER READ ------------------------
 
 export async function listApprovedBrands(filters?: {
@@ -98,6 +105,52 @@ export async function adminListBrands(filters?: {
   const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as Brand[];
+}
+
+export async function adminListBrandLinkSummaries(brandIds: string[]): Promise<AdminBrandLinkSummary[]> {
+  const uniqueIds = Array.from(new Set(brandIds.filter(Boolean)));
+  if (uniqueIds.length === 0) return [];
+
+  const summaries = new Map<string, {
+    sectorIds: Set<string>;
+    businessIds: Set<string>;
+    serviceIds: Set<string>;
+  }>();
+  uniqueIds.forEach((id) => summaries.set(id, {
+    sectorIds: new Set<string>(),
+    businessIds: new Set<string>(),
+    serviceIds: new Set<string>(),
+  }));
+
+  const { data: sectorRows, error: sectorError } = await sb
+    .from('brand_sector_links')
+    .select('brand_id, sector_id')
+    .in('brand_id', uniqueIds);
+  if (sectorError) throw sectorError;
+
+  for (const row of (sectorRows ?? []) as Array<{ brand_id: string; sector_id: string | null }>) {
+    if (row.sector_id) summaries.get(row.brand_id)?.sectorIds.add(row.sector_id);
+  }
+
+  const { data: providerRows, error: providerError } = await sb
+    .from('business_service_brands')
+    .select('brand_id, business_id, business_service_id')
+    .in('brand_id', uniqueIds);
+  if (providerError) throw providerError;
+
+  for (const row of (providerRows ?? []) as Array<{ brand_id: string; business_id: string | null; business_service_id: string | null }>) {
+    const summary = summaries.get(row.brand_id);
+    if (!summary) continue;
+    if (row.business_id) summary.businessIds.add(row.business_id);
+    if (row.business_service_id) summary.serviceIds.add(row.business_service_id);
+  }
+
+  return Array.from(summaries.entries()).map(([brandId, summary]) => ({
+    brand_id: brandId,
+    sector_ids: Array.from(summary.sectorIds),
+    business_count: summary.businessIds.size,
+    service_count: summary.serviceIds.size,
+  }));
 }
 
 export async function adminGetBrand(id: string) {
