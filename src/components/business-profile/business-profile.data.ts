@@ -86,6 +86,10 @@ const PUBLIC_BUSINESS_SELECT =
   'cities(name_ar, name_en), ' +
   'countries(name_ar, name_en, code)';
 
+// Public profile data rarely changes between visits; a 5-minute stale window
+// keeps tab switches and revisits instant while still picking up edits.
+const PROFILE_STALE_MS = 5 * 60 * 1000;
+
 export const useBusinessByUsername = (username: string) =>
   useQuery({
     queryKey: ["business", username],
@@ -99,6 +103,7 @@ export const useBusinessByUsername = (username: string) =>
       return data;
     },
     enabled: !!username,
+    staleTime: PROFILE_STALE_MS,
   });
 
 export const usePortfolio = (businessId: string | undefined) =>
@@ -117,6 +122,7 @@ export const usePortfolio = (businessId: string | undefined) =>
       return data ?? [];
     },
     enabled: !!businessId,
+    staleTime: PROFILE_STALE_MS,
   });
 
 export const useServices = (businessId: string | undefined) =>
@@ -137,6 +143,7 @@ export const useServices = (businessId: string | undefined) =>
       return data ?? [];
     },
     enabled: !!businessId,
+    staleTime: PROFILE_STALE_MS,
   });
 
 export const useProjects = (businessId: string | undefined) =>
@@ -162,6 +169,7 @@ export const useProjects = (businessId: string | undefined) =>
       return data ?? [];
     },
     enabled: !!businessId,
+    staleTime: PROFILE_STALE_MS,
   });
 
 export const useReviews = (businessId: string | undefined) =>
@@ -196,6 +204,7 @@ export const useReviews = (businessId: string | undefined) =>
       return reviews.map((r) => ({ ...r, profiles: byId.get(r.user_id) ?? null }));
     },
     enabled: !!businessId,
+    staleTime: PROFILE_STALE_MS,
   });
 
 export const useBranches = (businessId: string | undefined) =>
@@ -222,6 +231,7 @@ export const useBranches = (businessId: string | undefined) =>
       return data ?? [];
     },
     enabled: !!businessId,
+    staleTime: PROFILE_STALE_MS,
   });
 
 /**
@@ -314,6 +324,7 @@ export const useBranchBySlug = (
   useQuery({
     queryKey: ["branch-by-slug", businessId, branchSlug],
     enabled: !!businessId && !!branchSlug,
+    staleTime: PROFILE_STALE_MS,
     queryFn: async () => {
       const { data } = await supabase
         .from("business_branches_public" as "business_branches")
