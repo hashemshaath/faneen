@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Briefcase, User, Shield, Timer, Send, Download, Share2, ExternalLink,
+  Inbox, Shield, Timer, Send, Download, Share2, ExternalLink,
   ChevronDown, CircleCheck, DollarSign, TrendingUp, Ruler, ListChecks,
   CheckCircle2, StickyNote, Paperclip, Phone, Mail,
 } from 'lucide-react';
@@ -155,9 +155,15 @@ export const ContractCard = React.memo(({
               </div>
               <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground">
                 <span className="font-mono bg-muted px-2 py-0.5 rounded text-[11px] text-foreground/80 tech-content">{c.contract_number}</span>
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 gap-1 border-border/60">
-                  {isProvider ? <Briefcase className="w-3 h-3" aria-hidden="true" /> : <User className="w-3 h-3" aria-hidden="true" />}
-                  {isProvider ? (isRTL ? 'مزود خدمة' : 'Provider') : (isRTL ? 'عميل' : 'Client')}
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] px-1.5 py-0 h-5 gap-1 border ${isProvider ? 'border-primary/40 text-primary bg-primary/5' : 'border-info/40 text-info bg-info/5'}`}
+                  title={isProvider
+                    ? (isRTL ? 'عقد صادر — أنشأته وأرسلته للطرف الآخر' : 'Outgoing — issued by you for the other party')
+                    : (isRTL ? 'عقد وارد — استلمته من طرف آخر للموافقة' : 'Incoming — received from another party for approval')}
+                >
+                  {isProvider ? <Send className="w-3 h-3" aria-hidden="true" /> : <Inbox className="w-3 h-3" aria-hidden="true" />}
+                  {isProvider ? (isRTL ? 'صادر' : 'Outgoing') : (isRTL ? 'وارد' : 'Incoming')}
                 </Badge>
                 {daysRemaining !== null && c.status === 'active' && (
                   <Badge
