@@ -236,25 +236,19 @@ const DashboardBrands: React.FC = () => {
 
   // ─────────── Request form ───────────
   const [requestOpen, setRequestOpen] = useState(false);
-  const [nameAr, setNameAr] = useState('');
-  const [nameEn, setNameEn] = useState('');
-  const [notes, setNotes] = useState('');
-
   const submit = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (payload: BrandRequestFormPayload) => {
       if (!user) throw new Error(isRTL ? 'يجب تسجيل الدخول' : 'Not signed in');
       return createMyBrandRequest({
         request_type: 'create_brand',
         business_id: businessId,
         user_id: user.id,
-        name_ar: nameAr.trim(),
-        name_en: nameEn.trim() || null,
-        notes: notes.trim() || null,
+        ...payload,
       });
     },
     onSuccess: () => {
       toast.success(isRTL ? 'تم إرسال الطلب للمراجعة' : 'Request submitted for review');
-      setNameAr(''); setNameEn(''); setNotes(''); setRequestOpen(false);
+      setRequestOpen(false);
       qc.invalidateQueries({ queryKey: ['provider-brand-requests', user?.id] });
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
