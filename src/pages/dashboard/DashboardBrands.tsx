@@ -17,7 +17,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   Search, Send, ShieldCheck, Clock, XCircle, ExternalLink, Link2, Unlink,
-  PackagePlus, Tag, Globe2, AlertCircle,
+  PackagePlus, Tag, Globe2, AlertCircle, Package,
 } from 'lucide-react';
 
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -47,6 +47,11 @@ import {
   getBrandFilterOptions,
   listSectorsLite,
   requestTypeLabel, requestStatusLabel, authStatusLabel, pick,
+} from '@/modules/brands';
+import {
+  listBrandProductRequests,
+  submitBrandProductRequest,
+  brandProductRequestStatusLabel,
 } from '@/modules/brands';
 import { listServicesByBusiness } from '@/modules/catalog';
 import { getOwnerBusiness, listBusinessesByIds } from '@/modules/businesses';
@@ -232,6 +237,53 @@ const DashboardBrands: React.FC = () => {
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
+
+  // ─────────── Product request form (per linked brand) ───────────
+  const [prodOpen, setProdOpen] = useState(false);
+  const [prodBrandId, setProdBrandId] = useState<string>('');
+  const [prodNameAr, setProdNameAr] = useState('');
+  const [prodNameEn, setProdNameEn] = useState('');
+  const [prodModel, setProdModel] = useState('');
+  const [prodDesc, setProdDesc] = useState('');
+
+  const { data: myProductRequests = [], isLoading: loadingProdReq } = useQuery({
+    queryKey: ['provider-brand-product-requests', businessId],
+    enabled: !!businessId,
+    queryFn: () => listBrandProductRequests({ businessId: businessId as string }),
+    staleTime: 20_000,
+  });
+
+  const submitProduct = useMutation({
+    mutationFn: async () => {
+      if (!prodBrandId) throw new Error(isRTL ? 'اختر العلامة' : 'Pick a brand');
+      if (!prodNameAr.trim()) throw new Error(isRTL ? 'اسم المنتج مطلوب' : 'Product name required');
+      return submitBrandProductRequest({
+        brand_id: prodBrandId,
+        business_id: businessId,
+        name_ar: prodNameAr.trim(),
+        name_en: prodNameEn.trim() || null,
+        model_number: prodModel.trim() || null,
+        description_ar: prodDesc.trim() || null,
+      });
+    },
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم إرسال طلب المنتج للمراجعة' : 'Product request submitted');
+      setProdNameAr(''); setProdNameEn(''); setProdModel(''); setProdDesc('');
+      setProdOpen(false);
+      qc.invalidateQueries({ queryKey: ['provider-brand-product-requests', businessId] });
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
+  });
+
+  const linkedBrandOptions = useMemo(
+    () => myLinks
+      .filter((l) => l.brand)
+      .map((l) => ({
+        id: l.brand!.id,
+        label: locale === 'ar' ? l.brand!.name_ar : (l.brand!.name_en ?? l.brand!.name_ar),
+      })),
+    [myLinks, locale],
+  );
 
   const sectorLabelMap = useMemo(() => {
     const m = new Map<string, { ar: string; en: string }>();
