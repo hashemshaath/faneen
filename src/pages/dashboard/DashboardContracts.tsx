@@ -113,8 +113,8 @@ import { SupervisorSection } from '@/components/contracts/dashboard/create/Super
 import { ContractTermsSection } from '@/components/contracts/dashboard/create/ContractTermsSection';
 import { ContractImportPanel } from '@/components/contracts/dashboard/import/ContractImportPanel';
 import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
-import { ContractRoleTabs } from '@/components/contracts/dashboard/ContractRoleTabs';
 import { ContractFilters } from '@/components/contracts/dashboard/ContractFilters';
+import { ContractRoleSplitHero } from '@/components/contracts/dashboard/ContractRoleSplitHero';
 import { ContractEmptyState } from '@/components/contracts/dashboard/ContractEmptyState';
 import { ContractPageHeader } from '@/components/contracts/dashboard/ContractPageHeader';
 import { ContractStatsSummary } from '@/components/contracts/dashboard/ContractStatsSummary';
@@ -2181,10 +2181,11 @@ const DashboardContracts = () => {
         {viewSection === 'list' && (
           <>
             <div className="sticky top-2 z-20 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-md shadow-[var(--elev-1)] p-3 space-y-3">
-              <ContractRoleTabs
+              <ContractRoleSplitHero
                 value={roleFilter}
                 onChange={(v) => startTransition(() => setRoleFilter(v))}
-                counts={{ all: stats.total, provider: stats.asProvider, client: stats.asClient }}
+                providerContracts={providerContracts}
+                clientContracts={clientContracts}
                 isRTL={isRTL}
               />
               <ContractFilters
