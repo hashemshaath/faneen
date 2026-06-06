@@ -511,15 +511,19 @@ const BusinessProfile = () => {
                   <OverviewTab business={business} onJumpToTab={setActiveTab} />
                 </TabsContent>
                 <TabsContent value="rfq" className="mt-0">
-                  <RfqTab
-                    businessId={business.id}
-                    businessName={businessName}
-                    sector={(business.categories as { slug?: string } | null)?.slug || categoryName || "other"}
-                    city={cityName || (business.cities as { name_ar?: string } | null)?.name_ar || "—"}
-                  />
+                  <Suspense fallback={<TabFallback />}>
+                    <RfqTab
+                      businessId={business.id}
+                      businessName={businessName}
+                      sector={(business.categories as { slug?: string } | null)?.slug || categoryName || "other"}
+                      city={cityName || (business.cities as { name_ar?: string } | null)?.name_ar || "—"}
+                    />
+                  </Suspense>
                 </TabsContent>
                 <TabsContent value="qa" className="mt-0">
-                  <QATab businessId={business.id} businessName={businessName} />
+                  <Suspense fallback={<TabFallback />}>
+                    <QATab businessId={business.id} businessName={businessName} />
+                  </Suspense>
                 </TabsContent>
                 {canSee("services") && (
                   <TabsContent value="services" className="mt-0">
@@ -538,7 +542,9 @@ const BusinessProfile = () => {
                 )}
                 {canSee("requests_as_beneficiary") && (
                   <TabsContent value="requests" className="mt-0">
-                    <RequestsAsBeneficiaryTab businessId={business.id} />
+                    <Suspense fallback={<TabFallback />}>
+                      <RequestsAsBeneficiaryTab businessId={business.id} />
+                    </Suspense>
                   </TabsContent>
                 )}
                 {canSee("branches") && (
@@ -568,11 +574,15 @@ const BusinessProfile = () => {
                   />
                   {/* BNPL section */}
                   <div className="mt-6">
-                    <BnplBadges businessId={business.id} />
+                    <Suspense fallback={null}>
+                      <BnplBadges businessId={business.id} />
+                    </Suspense>
                   </div>
                   {/* Business barcode + printable 30x20 cm sticker */}
                   <div className="mt-6">
-                    <BusinessBarcodeCard businessId={business.id} businessName={businessName} />
+                    <Suspense fallback={null}>
+                      <BusinessBarcodeCard businessId={business.id} businessName={businessName} />
+                    </Suspense>
                   </div>
                   </TabsContent>
                 )}
@@ -650,20 +660,28 @@ const BusinessProfile = () => {
         </main>
       </div>
 
-      <BookingWidget
-        businessId={business.id}
-        businessName={businessName}
-        open={bookingOpen}
-        onOpenChange={setBookingOpen}
-      />
+      {bookingOpen && (
+        <Suspense fallback={null}>
+          <BookingWidget
+            businessId={business.id}
+            businessName={businessName}
+            open={bookingOpen}
+            onOpenChange={setBookingOpen}
+          />
+        </Suspense>
+      )}
 
-      <ContactSupplierSheet
-        open={contactSheetOpen}
-        onOpenChange={setContactSheetOpen}
-        businessId={business.id}
-        businessName={businessName}
-        source="business-profile"
-      />
+      {contactSheetOpen && (
+        <Suspense fallback={null}>
+          <ContactSupplierSheet
+            open={contactSheetOpen}
+            onOpenChange={setContactSheetOpen}
+            businessId={business.id}
+            businessName={businessName}
+            source="business-profile"
+          />
+        </Suspense>
+      )}
 
       {/* Mobile-only sticky CTA — hidden when the owner views their own
           profile to keep authoring UX clean. */}
