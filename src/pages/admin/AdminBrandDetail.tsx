@@ -605,13 +605,11 @@ const AdminBrandDetail: React.FC = () => {
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Building2 className="w-4 h-4" />{isRTL ? 'علاقات المزودين' : 'Provider relationships'} <span className="text-xs text-muted-foreground">({linksQ.data?.length ?? 0})</span></CardTitle></CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground mb-2">
+            <p className="text-xs text-muted-foreground mb-3">
               {isRTL
                 ? 'نوع العلاقة (وكيل حصري، موزع معتمد، مُصنِّع، إلخ) يُحدَّد من قِبل المزود ويُعتمَد من هنا.'
                 : 'Relationship type (exclusive agent, authorized distributor, manufacturer, etc.) is declared by the provider and approved here.'}
             </p>
-          </CardContent>
-          <CardContent>
             {linksQ.isLoading ? <Skeleton className="h-24" /> : (linksQ.data ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد علاقات بعد' : 'No provider links yet'}</p>
             ) : (
