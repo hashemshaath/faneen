@@ -7,7 +7,6 @@ interface BusinessProfileTrustStripProps {
   serviceCount: number;
   projectCount: number;
   businessId?: string;
-  businessUsername?: string | null;
 }
 
 /**
@@ -21,7 +20,6 @@ export const BusinessProfileTrustStrip = ({
   serviceCount,
   projectCount,
   businessId,
-  businessUsername,
 }: BusinessProfileTrustStripProps) => {
   const { language, isRTL } = useLanguage();
 
@@ -88,17 +86,6 @@ export const BusinessProfileTrustStrip = ({
             ? "نراجع بيانات الظهور قبل النشر، ولا نضمن نتائج التنفيذ."
             : "Listings are reviewed before publishing. Execution outcomes are not guaranteed."}
         </p>
-        {businessUsername && projectCount > 0 && (
-          <Link
-            to={`/works/${businessUsername}`}
-            className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:underline sm:text-xs"
-            data-testid="business-works-link"
-          >
-            <FolderOpen className="h-3.5 w-3.5" />
-            <span>{isRTL ? "عرض كل الأعمال في صفحة المعرض" : "View all works in the showcase page"}</span>
-            {isRTL ? <ArrowLeft className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
-          </Link>
-        )}
         {!isVerified && businessId && (
           <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-warning/30 bg-warning/5 px-3 py-2">
             <p className="text-[11px] leading-relaxed text-foreground/80 sm:text-xs">
