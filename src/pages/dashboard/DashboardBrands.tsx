@@ -186,19 +186,38 @@ const DashboardBrands: React.FC = () => {
   });
 
   // ─────────── Link mutation (inline panel state) ───────────
-  const [linkPanel, setLinkPanel] = useState<{ brandId: string; serviceId: string } | null>(null);
+  const [linkPanel, setLinkPanel] = useState<{ brandId: string; serviceIds: string[] } | null>(null);
+  const [expandedBrandId, setExpandedBrandId] = useState<string | null>(null);
 
   const linkMut = useMutation({
-    mutationFn: async (args: { brandId: string; serviceId: string }) => {
+    mutationFn: async (args: { brandId: string; serviceIds: string[] }) => {
       if (!businessId) throw new Error(isRTL ? 'لا توجد منشأة نشطة' : 'No active business');
-      await linkBrandToMyServiceOrBusiness({
-        businessServiceId: args.serviceId,
-        businessId,
-        brandId: args.brandId,
-      });
+      if (args.serviceIds.length === 0) {
+        throw new Error(isRTL ? 'اختر تخصصاً واحداً على الأقل' : 'Pick at least one specialization');
+      }
+      const results = await Promise.allSettled(
+        args.serviceIds.map((sid) =>
+          linkBrandToMyServiceOrBusiness({
+            businessServiceId: sid,
+            businessId,
+            brandId: args.brandId,
+          }),
+        ),
+      );
+      const ok = results.filter((r) => r.status === 'fulfilled').length;
+      const fail = results.length - ok;
+      return { ok, fail };
     },
-    onSuccess: () => {
-      toast.success(isRTL ? 'تم ربط العلامة' : 'Brand linked');
+    onSuccess: ({ ok, fail }) => {
+      if (ok > 0) {
+        toast.success(
+          isRTL
+            ? `تم ربط العلامة بـ ${ok} تخصص${fail ? ` (تعذّر ${fail})` : ''}`
+            : `Linked to ${ok} specialization${ok > 1 ? 's' : ''}${fail ? ` (${fail} failed)` : ''}`,
+        );
+      } else {
+        toast.error(isRTL ? 'تعذّر ربط أي تخصص' : 'No specialization linked');
+      }
       setLinkPanel(null);
       qc.invalidateQueries({ queryKey: ['provider-brand-links', businessId] });
     },
