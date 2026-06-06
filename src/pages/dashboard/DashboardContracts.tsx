@@ -115,6 +115,7 @@ import { ContractImportPanel } from '@/components/contracts/dashboard/import/Con
 import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
 import { ContractRoleTabs } from '@/components/contracts/dashboard/ContractRoleTabs';
 import { ContractFilters } from '@/components/contracts/dashboard/ContractFilters';
+import { ContractRoleSplitHero } from '@/components/contracts/dashboard/ContractRoleSplitHero';
 import { ContractEmptyState } from '@/components/contracts/dashboard/ContractEmptyState';
 import { ContractPageHeader } from '@/components/contracts/dashboard/ContractPageHeader';
 import { ContractStatsSummary } from '@/components/contracts/dashboard/ContractStatsSummary';
