@@ -296,6 +296,7 @@ const adminBaseGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'المدونة', en: 'Blog' }, url: '/dashboard/blog', icon: PenSquare },
       { label: { ar: 'التصنيفات والوسوم', en: 'Categories & Tags' }, url: '/admin/categories', icon: FolderTree },
+      { label: { ar: 'العلامات التجارية', en: 'Brands' }, url: '/admin/brands', icon: Award },
       { label: { ar: 'القطاعات', en: 'Sectors' }, url: '/dashboard/profile-systems', icon: Layers },
       { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/admin/private-sectors', icon: Layers },
       { label: { ar: 'مركز SEO', en: 'SEO Center' }, url: '/admin/sitemap-status', icon: SearchIcon },
