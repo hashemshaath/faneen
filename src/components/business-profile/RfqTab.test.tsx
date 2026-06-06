@@ -6,16 +6,25 @@ import { RfqTab } from "./RfqTab";
 // ── Mocks ────────────────────────────────────────────────────────────────
 
 type InsertPayload = Record<string, unknown>;
-const insertMock = vi.fn(async (_row: InsertPayload) => ({ error: null }));
+
+const hoisted = vi.hoisted(() => {
+  return {
+    insertMock: vi.fn(async (_row: Record<string, unknown>) => ({ error: null })),
+    useAuthMock: vi.fn(() => ({ user: null as unknown })),
+    toastSuccess: vi.fn(),
+    toastError: vi.fn(),
+  };
+});
+const { insertMock, useAuthMock, toastSuccess, toastError } = hoisted;
+
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
-    from: vi.fn(() => ({ insert: insertMock })),
+    from: vi.fn(() => ({ insert: hoisted.insertMock })),
   },
 }));
 
-const useAuthMock = vi.fn(() => ({ user: null as unknown }));
 vi.mock("@/contexts/AuthContext", () => ({
-  useAuth: () => useAuthMock(),
+  useAuth: () => hoisted.useAuthMock(),
 }));
 
 vi.mock("@/components/common/Bilingual", () => ({
@@ -23,10 +32,8 @@ vi.mock("@/components/common/Bilingual", () => ({
   Bi: ({ ar }: { ar: string; en: string }) => ar,
 }));
 
-const toastSuccess = vi.fn();
-const toastError = vi.fn();
 vi.mock("sonner", () => ({
-  toast: { success: toastSuccess, error: toastError },
+  toast: { success: hoisted.toastSuccess, error: hoisted.toastError },
 }));
 
 // ── Helpers ──────────────────────────────────────────────────────────────
