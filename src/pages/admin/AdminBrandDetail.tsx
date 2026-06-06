@@ -669,6 +669,166 @@ const AdminBrandDetail: React.FC = () => {
         </Card>
 
         {/* Related requests */}
+        {/* Brand products — central catalog */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Package className="w-4 h-4" />{isRTL ? 'منتجات العلامة' : 'Brand products'}
+              <span className="text-xs text-muted-foreground">({productsQ.data?.length ?? 0})</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="border rounded-xl p-3 bg-muted/30 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold"><Plus className="w-4 h-4" />{isRTL ? 'إضافة منتج مركزياً (معتمد فوراً)' : 'Add product centrally (instantly approved)'}</div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <Input dir="auto" placeholder={isRTL ? 'الاسم (عربي) *' : 'Name (AR) *'} value={newProduct.name_ar}
+                  onChange={(e) => setNewProduct(p => ({ ...p, name_ar: e.target.value }))} />
+                <Input dir="ltr" placeholder={isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'} value={newProduct.name_en}
+                  onChange={(e) => setNewProduct(p => ({ ...p, name_en: e.target.value }))} />
+                <Input dir="ltr" placeholder={isRTL ? 'رقم الموديل' : 'Model number'} className="tech-content" value={newProduct.model_number}
+                  onChange={(e) => setNewProduct(p => ({ ...p, model_number: e.target.value }))} />
+                <Input dir="ltr" placeholder="SKU" className="tech-content" value={newProduct.sku}
+                  onChange={(e) => setNewProduct(p => ({ ...p, sku: e.target.value }))} />
+              </div>
+              <Textarea dir="auto" rows={2} placeholder={isRTL ? 'وصف موجز' : 'Short description'} value={newProduct.description_ar}
+                onChange={(e) => setNewProduct(p => ({ ...p, description_ar: e.target.value }))} />
+              <div>
+                <Label className="text-xs mb-2 block">{isRTL ? 'صورة المنتج (تُضغط تلقائياً)' : 'Product image (auto-compressed)'}</Label>
+                <ImageUpload bucket="business-assets" value={newProduct.image_url}
+                  onChange={(url) => setNewProduct(p => ({ ...p, image_url: url || '' }))}
+                  onRemove={() => setNewProduct(p => ({ ...p, image_url: '' }))}
+                  placeholder={isRTL ? 'رفع صورة' : 'Upload image'} />
+              </div>
+              <Button size="sm" onClick={() => createProduct.mutate()}
+                disabled={!newProduct.name_ar.trim() || createProduct.isPending}>
+                {createProduct.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Plus className="w-4 h-4 me-1" />}
+                {isRTL ? 'إضافة' : 'Add'}
+              </Button>
+            </div>
+
+            {productsQ.isLoading ? <Skeleton className="h-24" /> : (productsQ.data ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">{isRTL ? 'لا توجد منتجات بعد' : 'No products yet'}</p>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {(productsQ.data ?? []).map((p: BrandProduct) => editingProductId === p.id ? (
+                  <div key={p.id} className="border rounded-xl p-3 space-y-2 bg-card">
+                    <Input dir="auto" value={editProduct.name_ar} onChange={(e) => setEditProduct(s => ({ ...s, name_ar: e.target.value }))} placeholder={isRTL ? 'العربية' : 'Arabic'} />
+                    <Input dir="ltr" value={editProduct.name_en} onChange={(e) => setEditProduct(s => ({ ...s, name_en: e.target.value }))} placeholder="English" />
+                    <Input dir="ltr" value={editProduct.model_number} onChange={(e) => setEditProduct(s => ({ ...s, model_number: e.target.value }))} placeholder="Model" className="tech-content" />
+                    <Input dir="ltr" value={editProduct.sku} onChange={(e) => setEditProduct(s => ({ ...s, sku: e.target.value }))} placeholder="SKU" className="tech-content" />
+                    <Textarea dir="auto" rows={2} value={editProduct.description_ar} onChange={(e) => setEditProduct(s => ({ ...s, description_ar: e.target.value }))} />
+                    <ImageUpload bucket="business-assets" value={editProduct.image_url}
+                      onChange={(url) => setEditProduct(s => ({ ...s, image_url: url || '' }))}
+                      onRemove={() => setEditProduct(s => ({ ...s, image_url: '' }))} />
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => updateProduct.mutate({ productId: p.id })} disabled={updateProduct.isPending}>
+                        <Save className="w-4 h-4 me-1" />{isRTL ? 'حفظ' : 'Save'}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingProductId(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={p.id} className="border rounded-xl p-3 bg-card hover-lift">
+                    {p.image_url ? (
+                      <img src={p.image_url} alt={p.name_ar} className="w-full h-28 object-cover rounded-lg border bg-background mb-2" loading="lazy" decoding="async" />
+                    ) : (
+                      <div className="w-full h-28 rounded-lg bg-muted grid place-items-center text-xs text-muted-foreground mb-2"><Package className="w-6 h-6 opacity-40" /></div>
+                    )}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-medium text-sm truncate" dir="auto">{locale === 'ar' ? p.name_ar : (p.name_en ?? p.name_ar)}</div>
+                        {p.model_number && <div className="text-[10px] text-muted-foreground tech-content">{p.model_number}</div>}
+                      </div>
+                      <Badge variant="outline" className="text-[10px] shrink-0">{pick(brandProductStatusLabel[p.status], locale)}</Badge>
+                    </div>
+                    {p.ref_id && <code className="tech-content text-[10px] text-muted-foreground">{p.ref_id}</code>}
+                    <div className="flex gap-1 mt-2">
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => {
+                        setEditingProductId(p.id);
+                        setEditProduct({
+                          name_ar: p.name_ar, name_en: p.name_en ?? '',
+                          model_number: p.model_number ?? '', sku: p.sku ?? '',
+                          description_ar: p.description_ar ?? '', image_url: p.image_url ?? '',
+                        });
+                      }}><Edit3 className="w-3 h-3 me-1" />{isRTL ? 'تعديل' : 'Edit'}</Button>
+                      <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive"
+                        onClick={() => deleteProduct.mutate(p.id)} disabled={deleteProduct.isPending}>
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Brand product requests — provider proposals awaiting approval */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Inbox className="w-4 h-4" />{isRTL ? 'طلبات منتجات من المزودين' : 'Provider product requests'}
+              <span className="text-xs text-muted-foreground">({productRequestsQ.data?.length ?? 0})</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {productRequestsQ.isLoading ? <Skeleton className="h-20" /> : (productRequestsQ.data ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-3">{isRTL ? 'لا توجد طلبات' : 'No requests'}</p>
+            ) : (
+              <ul className="space-y-2">
+                {(productRequestsQ.data ?? []).map((r: BrandProductRequest) => (
+                  <li key={r.id} className="border rounded-xl p-3">
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        {r.image_url ? (
+                          <img src={r.image_url} alt={r.name_ar} className="w-12 h-12 rounded-lg object-cover border" loading="lazy" decoding="async" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-muted grid place-items-center"><Package className="w-4 h-4 opacity-40" /></div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm" dir="auto">{locale === 'ar' ? r.name_ar : (r.name_en ?? r.name_ar)}</span>
+                            <Badge variant="outline" className="text-[10px]">{pick(brandProductRequestStatusLabel[r.status], locale)}</Badge>
+                            {r.ref_id && <code className="tech-content text-[10px] text-muted-foreground">{r.ref_id}</code>}
+                          </div>
+                          {r.model_number && <div className="text-[11px] text-muted-foreground tech-content">{r.model_number}</div>}
+                          {(r.description_ar || r.description_en) && <p className="text-xs text-muted-foreground mt-1 line-clamp-2" dir="auto">{locale === 'ar' ? r.description_ar : (r.description_en ?? r.description_ar)}</p>}
+                          {r.reject_reason && <p className="text-xs text-destructive mt-1" dir="auto">{r.reject_reason}</p>}
+                        </div>
+                      </div>
+                      {(r.status === 'pending' || r.status === 'in_review' || r.status === 'needs_more_info') && (
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => approveProductReq.mutate(r.id)} disabled={approveProductReq.isPending}>
+                            <Check className="w-4 h-4 me-1" />{isRTL ? 'اعتماد' : 'Approve'}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => { setRejectingReqId(r.id); setReqRejectReason(''); }}>
+                            <X className="w-4 h-4 me-1" />{isRTL ? 'رفض' : 'Reject'}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    {rejectingReqId === r.id && (
+                      <div className="mt-2 p-2 rounded-lg bg-muted/40 space-y-2">
+                        <Input value={reqRejectReason} onChange={(e) => setReqRejectReason(e.target.value)}
+                          placeholder={isRTL ? 'سبب الرفض…' : 'Rejection reason…'} className="h-9" />
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="destructive"
+                            onClick={() => rejectProductReq.mutate({ reqId: r.id, reason: reqRejectReason })}
+                            disabled={!reqRejectReason.trim() || rejectProductReq.isPending}>
+                            {isRTL ? 'تأكيد' : 'Confirm'}
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => { setRejectingReqId(null); setReqRejectReason(''); }}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Related requests (legacy brand requests) */}
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base">{isRTL ? 'الطلبات المرتبطة' : 'Related requests'} <span className="text-xs text-muted-foreground">({reqsQ.data?.length ?? 0})</span></CardTitle></CardHeader>
           <CardContent>
