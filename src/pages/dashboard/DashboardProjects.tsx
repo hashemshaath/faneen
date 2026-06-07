@@ -579,11 +579,11 @@ const DashboardProjects = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{isRTL ? 'التصنيف' : 'Category'}</Label>
-                    <Select value={form.category_id || 'none'} onValueChange={v => setForm(f => ({ ...f, category_id: v === 'none' ? '' : v }))}>
-                      <SelectTrigger className="h-9"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
+                    <Select value={form.taxonomy_category_id || 'none'} onValueChange={v => setForm(f => ({ ...f, taxonomy_category_id: v === 'none' ? '' : v }))}>
+                      <SelectTrigger className="h-9"><SelectValue placeholder={isRTL ? 'غير مصنّف' : 'Uncategorized'} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">{isRTL ? 'بدون' : 'None'}</SelectItem>
-                        {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.parent_id ? '  └ ' : ''}{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                        <SelectItem value="none">{isRTL ? 'غير مصنّف' : 'Uncategorized'}</SelectItem>
+                        {pickerCategories.map((c) => <SelectItem key={c.id} value={c.id}>{c.parent_id ? '  └ ' : ''}{language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
