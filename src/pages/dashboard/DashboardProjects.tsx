@@ -6,8 +6,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
-import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
+import {
+  getProjectTaxonomyPickerCategories,
+  getProjectTaxonomyCategoriesByProjects,
+  getProjectTaxonomyCategories,
+  setProjectTaxonomyCategories,
+} from '@/modules/taxonomy/project-services';
+import type { TaxonomyCategory } from '@/modules/taxonomy/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,17 +47,18 @@ type StatusFilter = 'all' | 'published' | 'draft' | 'featured';
 
 /* ── Sortable Project Card ── */
 const SortableProjectCard = React.memo(({
-  project: p, rtl, language, viewMode, isSelected,
+  project: p, rtl, language, viewMode, isSelected, taxonomyName,
   onEdit, onGallery, onDelete, onToggleFeatured, onDuplicate, onPreview, onSelect,
 }: {
   project: any; rtl: boolean; language: string; viewMode: ViewMode; isSelected: boolean;
+  taxonomyName: string | null;
   onEdit: (p) => void; onGallery: (id: string) => void; onDelete: (id: string) => void;
   onToggleFeatured: (p) => void; onDuplicate: (p) => void;
   onPreview: (url: string) => void; onSelect: (id: string) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : undefined };
-  const catName = p.categories ? (language === 'ar' ? p.categories.name_ar : p.categories.name_en) : null;
+  const catName = taxonomyName ?? (rtl ? 'غير مصنّف' : 'Uncategorized');
   const cityName = p.cities ? (language === 'ar' ? p.cities.name_ar : p.cities.name_en) : null;
   const title = language === 'ar' ? p.title_ar : (p.title_en || p.title_ar);
   const desc = language === 'ar' ? p.description_ar : (p.description_en || p.description_ar);
@@ -195,7 +202,8 @@ const DashboardProjects = () => {
     title_ar: '', title_en: '', description_ar: '', description_en: '',
     cover_image_url: '', client_name: '', project_cost: '',
     duration_days: '', completion_date: '', status: 'published',
-    category_id: '', city_id: '', is_featured: false, currency_code: 'SAR',
+    city_id: '', is_featured: false, currency_code: 'SAR',
+    taxonomy_category_id: '',
   }), []);
   const [form, setForm] = useState(emptyForm);
 
@@ -218,12 +226,9 @@ const DashboardProjects = () => {
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: categories = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string; parent_id: string | null }>>({
-    queryKey: ['categories-list'],
-    queryFn: async () => {
-      const { data } = await listActiveCategories<{ id: string; name_ar: string; name_en: string; parent_id: string | null }>({ select: 'id, name_ar, name_en, parent_id' });
-      return data ?? [];
-    },
+  const { data: pickerCategories = [] } = useQuery<TaxonomyCategory[]>({
+    queryKey: ['project-taxonomy-picker'],
+    queryFn: getProjectTaxonomyPickerCategories,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -242,7 +247,7 @@ const DashboardProjects = () => {
     queryKey: ['dashboard-projects', businessId],
     queryFn: async () => {
       const { data, error } = await supabase.from('projects')
-        .select('*, categories(name_ar, name_en), cities(name_ar, name_en)')
+        .select('*, cities(name_ar, name_en)')
         .eq('business_id', businessId!)
         .order('is_featured', { ascending: false })
         .order('sort_order');
@@ -252,6 +257,26 @@ const DashboardProjects = () => {
     enabled: !!businessId,
     staleTime: 3 * 60 * 1000,
   });
+
+  const projectIds = useMemo(() => projects.map((p) => p.id), [projects]);
+  const { data: taxonomyLinks = [] } = useQuery({
+    queryKey: ['dashboard-project-taxonomy', businessId, projectIds.length],
+    queryFn: () => getProjectTaxonomyCategoriesByProjects(projectIds),
+    enabled: projectIds.length > 0,
+    staleTime: 3 * 60 * 1000,
+  });
+
+  // projectId → primary TaxonomyCategory (first primary_activity link).
+  const primaryByProject = useMemo(() => {
+    const byId = new Map(pickerCategories.map((c) => [c.id, c]));
+    const map = new Map<string, TaxonomyCategory | null>();
+    for (const link of taxonomyLinks) {
+      if (link.role !== 'primary_activity') continue;
+      const cat = byId.get(link.category_id);
+      if (cat && !map.has(link.project_id)) map.set(link.project_id, cat);
+    }
+    return map;
+  }, [taxonomyLinks, pickerCategories]);
 
   const { data: galleryImages = [] } = useQuery({
     queryKey: ['project-images', galleryProjectId],
@@ -274,15 +299,20 @@ const DashboardProjects = () => {
     return { total, published, draft, featured, totalCost, completeness };
   }, [projects]);
 
-  const usedCategoryIds = useMemo(() => [...new Set(projects.map((p) => p.category_id).filter(Boolean))], [projects]);
-  const usedCategories = categories.filter((c) => usedCategoryIds.includes(c.id));
+  const usedCategories = useMemo(() => {
+    const ids = new Set<string>();
+    primaryByProject.forEach((c) => { if (c) ids.add(c.id); });
+    return pickerCategories.filter((c) => ids.has(c.id));
+  }, [primaryByProject, pickerCategories]);
 
   const filteredProjects = useMemo(() => {
     let result = [...projects];
     if (statusFilter === 'published') result = result.filter((p) => p.status === 'published');
     else if (statusFilter === 'draft') result = result.filter((p) => p.status === 'draft');
     else if (statusFilter === 'featured') result = result.filter((p) => p.is_featured);
-    if (categoryFilter !== 'all') result = result.filter((p) => p.category_id === categoryFilter);
+    if (categoryFilter !== 'all') {
+      result = result.filter((p) => primaryByProject.get(p.id)?.id === categoryFilter);
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((p) => p.title_ar.toLowerCase().includes(q) || (p.title_en || '').toLowerCase().includes(q) || (p.client_name || '').toLowerCase().includes(q));
@@ -300,19 +330,34 @@ const DashboardProjects = () => {
         project_cost: form.project_cost ? Number(form.project_cost) : null,
         duration_days: form.duration_days ? Number(form.duration_days) : null,
         completion_date: form.completion_date || null, status: form.status,
-        category_id: form.category_id || null, city_id: form.city_id || null,
+        // Phase 8: classification now comes from `project_taxonomy_categories`.
+        // We deliberately leave `category_id` untouched (null on insert) — the
+        // legacy column is preserved in DB for read-only fallback only.
+        category_id: null as string | null,
+        city_id: form.city_id || null,
         is_featured: form.is_featured, currency_code: form.currency_code,
       };
+      const taxonomyId = form.taxonomy_category_id || null;
       if (editId) {
         const { error } = await supabase.from('projects').update(payload).eq('id', editId);
         if (error) throw error;
+        await setProjectTaxonomyCategories(editId, { primaryCategoryId: taxonomyId });
       } else {
         (payload as any).sort_order = projects.length;
-        const { error } = await supabase.from('projects').insert(payload as any);
+        const { data: inserted, error } = await supabase
+          .from('projects').insert(payload as any).select('id').single();
         if (error) throw error;
+        if (inserted?.id) {
+          await setProjectTaxonomyCategories(inserted.id, { primaryCategoryId: taxonomyId });
+        }
       }
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); closeForm(); toast.success(editId ? (isRTL ? 'تم التحديث' : 'Updated') : (isRTL ? 'تم الإضافة' : 'Added')); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-project-taxonomy'] });
+      closeForm();
+      toast.success(editId ? (isRTL ? 'تم التحديث' : 'Updated') : (isRTL ? 'تم الإضافة' : 'Added'));
+    },
     onError: (err: Error) => toast.error(err.message),
   });
 
@@ -347,21 +392,26 @@ const DashboardProjects = () => {
   const closeForm = useCallback(() => { setShowForm(false); setEditId(null); setForm(emptyForm); }, [emptyForm]);
   const scrollToForm = useCallback(() => { requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }, []);
 
-  const openEdit = useCallback((p) => {
+  const openEdit = useCallback(async (p) => {
+    const links = await getProjectTaxonomyCategories(p.id);
+    const primary = links.find((l) => l.role === 'primary_activity');
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', description_ar: p.description_ar || '',
       description_en: p.description_en || '', cover_image_url: p.cover_image_url || '',
       client_name: p.client_name || '', project_cost: p.project_cost?.toString() || '',
       duration_days: p.duration_days?.toString() || '', completion_date: p.completion_date || '',
-      status: p.status, category_id: p.category_id || '', city_id: p.city_id || '',
+      status: p.status, city_id: p.city_id || '',
       is_featured: p.is_featured || false, currency_code: p.currency_code || 'SAR',
+      taxonomy_category_id: primary?.category_id || '',
     });
     setEditId(p.id);
     setShowForm(true);
     scrollToForm();
   }, [scrollToForm]);
 
-  const duplicateProject = useCallback((p) => {
+  const duplicateProject = useCallback(async (p) => {
+    const links = await getProjectTaxonomyCategories(p.id);
+    const primary = links.find((l) => l.role === 'primary_activity');
     setEditId(null);
     setForm({
       title_ar: p.title_ar + (isRTL ? ' (نسخة)' : ' (copy)'),
@@ -370,8 +420,9 @@ const DashboardProjects = () => {
       cover_image_url: p.cover_image_url || '', client_name: p.client_name || '',
       project_cost: p.project_cost?.toString() || '', duration_days: p.duration_days?.toString() || '',
       completion_date: p.completion_date || '', status: 'draft',
-      category_id: p.category_id || '', city_id: p.city_id || '',
+      city_id: p.city_id || '',
       is_featured: false, currency_code: p.currency_code || 'SAR',
+      taxonomy_category_id: primary?.category_id || '',
     });
     setShowForm(true);
     scrollToForm();
@@ -528,11 +579,11 @@ const DashboardProjects = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{isRTL ? 'التصنيف' : 'Category'}</Label>
-                    <Select value={form.category_id || 'none'} onValueChange={v => setForm(f => ({ ...f, category_id: v === 'none' ? '' : v }))}>
-                      <SelectTrigger className="h-9"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
+                    <Select value={form.taxonomy_category_id || 'none'} onValueChange={v => setForm(f => ({ ...f, taxonomy_category_id: v === 'none' ? '' : v }))}>
+                      <SelectTrigger className="h-9"><SelectValue placeholder={isRTL ? 'غير مصنّف' : 'Uncategorized'} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">{isRTL ? 'بدون' : 'None'}</SelectItem>
-                        {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.parent_id ? '  └ ' : ''}{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                        <SelectItem value="none">{isRTL ? 'غير مصنّف' : 'Uncategorized'}</SelectItem>
+                        {pickerCategories.map((c) => <SelectItem key={c.id} value={c.id}>{c.parent_id ? '  └ ' : ''}{language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -751,6 +802,10 @@ const DashboardProjects = () => {
                 {filteredProjects.map((p) => (
                   <SortableProjectCard key={p.id} project={p} rtl={isRTL} language={language} viewMode={viewMode}
                     isSelected={selectedIds.has(p.id)}
+                    taxonomyName={(() => {
+                      const c = primaryByProject.get(p.id);
+                      return c ? (language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)) : null;
+                    })()}
                     onEdit={openEdit} onGallery={setGalleryProjectId}
                     onDelete={id => setDeleteConfirm(id)}
                     onToggleFeatured={proj => toggleFeaturedMut.mutate(proj)}

@@ -12729,6 +12729,48 @@ export type Database = {
           },
         ]
       }
+      project_taxonomy_categories: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          is_primary: boolean
+          project_id: string
+          role: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          project_id: string
+          role?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          project_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_taxonomy_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_taxonomy_categories_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           business_id: string
@@ -20687,6 +20729,14 @@ export type Database = {
       }
       set_private_sector_reason: {
         Args: { _reason: string }
+        Returns: undefined
+      }
+      set_project_taxonomy_categories: {
+        Args: {
+          p_primary_category_id: string
+          p_project_id: string
+          p_secondary_category_ids?: string[]
+        }
         Returns: undefined
       }
       slugify_branch: { Args: { _text: string }; Returns: string }

@@ -5,8 +5,12 @@ import { buildBreadcrumbList, SITE_URL } from '@/lib/seo/structured-data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
+import {
+  getProjectTaxonomyPickerCategories,
+  getProjectTaxonomyCategoriesByProjects,
+} from '@/modules/taxonomy/project-services';
+import type { TaxonomyCategory } from '@/modules/taxonomy/types';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
@@ -54,17 +58,12 @@ const Projects = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
 
-  // TODO(phase-13.b): switch this filter source to `taxonomy_categories` once a
-  // `project_taxonomy_categories` link table (or explicit project→taxonomy mapping)
-  // exists. The filter currently matches `projects.category_id` (UUID), so we
-  // cannot swap the source list without losing filter semantics. Keeping legacy
-  // `listActiveCategories` until project taxonomy migration ships.
-  const { data: categories = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string }>>({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      const { data } = await listActiveCategories<{ id: string; name_ar: string; name_en: string }>();
-      return data || [];
-    },
+  // Phase 8: filter source is taxonomy-only. Pulls primary-activity /
+  // sector categories visible in search or registration. Projects are
+  // matched via the `project_taxonomy_categories` link table loaded below.
+  const { data: categories = [] } = useQuery<TaxonomyCategory[]>({
+    queryKey: ['projects-filter-taxonomy'],
+    queryFn: getProjectTaxonomyPickerCategories,
   });
 
   const { data: cities = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string }>>({
@@ -88,6 +87,22 @@ const Projects = () => {
     },
   });
 
+  const allProjectIds = useMemo(() => allProjects.map((p) => p.id), [allProjects]);
+  const { data: taxonomyLinks = [] } = useQuery({
+    queryKey: ['public-projects-taxonomy', allProjectIds.length],
+    queryFn: () => getProjectTaxonomyCategoriesByProjects(allProjectIds),
+    enabled: allProjectIds.length > 0,
+  });
+  // projectId → Set<categoryId> for filter matching.
+  const projectCategoryIds = useMemo(() => {
+    const m = new Map<string, Set<string>>();
+    for (const link of taxonomyLinks) {
+      if (!m.has(link.project_id)) m.set(link.project_id, new Set());
+      m.get(link.project_id)!.add(link.category_id);
+    }
+    return m;
+  }, [taxonomyLinks]);
+
   const filtered = useMemo(() => {
     const result = allProjects.filter((p) => {
       if (searchQuery) {
@@ -101,7 +116,10 @@ const Projects = () => {
           p.businesses?.name_en?.toLowerCase().includes(q);
         if (!match) return false;
       }
-      if (selectedCategory !== 'all' && p.category_id !== selectedCategory) return false;
+      if (selectedCategory !== 'all') {
+        const ids = projectCategoryIds.get(p.id);
+        if (!ids || !ids.has(selectedCategory)) return false;
+      }
       if (selectedCity !== 'all' && p.city_id !== selectedCity) return false;
       if (minCost && p.project_cost != null && Number(p.project_cost) < Number(minCost)) return false;
       if (maxCost && p.project_cost != null && Number(p.project_cost) > Number(maxCost)) return false;
@@ -116,7 +134,7 @@ const Projects = () => {
       result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     }
     return result;
-  }, [allProjects, searchQuery, selectedCategory, selectedCity, minCost, maxCost, sortBy]);
+  }, [allProjects, searchQuery, selectedCategory, selectedCity, minCost, maxCost, sortBy, projectCategoryIds]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const projects = useMemo(() => {
