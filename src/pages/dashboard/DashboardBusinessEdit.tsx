@@ -796,36 +796,49 @@ const DashboardBusinessEdit: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="sectors" className="space-y-6 mt-4">
-            {/* Sectors */}
-            <Card>
-          <CardHeader>
-            <CardTitle className={sectionTitle}><Layers className="w-4 h-4 text-primary" />{t(isRTL, 'القطاعات والخدمات', 'Sectors & services')}</CardTitle>
-            <CardDescription>{t(isRTL, 'اختر القطاعات الصناعية وخدماتك الفرعية.', 'Pick the industrial sectors and sub-services.')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <SectorPicker
-              selectedSectors={(form.sectors ?? []) as SectorId[]}
-              selectedSubServices={form.sub_services ?? []}
-              onSectorsChange={(s) => update('sectors', s)}
-              onSubServicesChange={(s) => update('sub_services', s)}
-            />
-          </CardContent>
-        </Card>
+            {/*
+              Phase 13.d — Taxonomy-first. The central taxonomy section is now
+              the primary classifier; the legacy SectorPicker remains as a
+              collapsed fallback until search/matching/showcase fully migrate.
+            */}
+            {business?.id && (
+              <BusinessTaxonomySection
+                businessId={business.id}
+                legacySectors={form.sectors ?? null}
+                legacySubServices={form.sub_services ?? null}
+              />
+            )}
 
-        {/*
-          Phase 3 — Central taxonomy section. Additive; legacy SectorPicker
-          above stays the source of truth for search/matching/showcase until
-          Phase 4 migrates those readers.
-          TODO(phase-5): remove legacy `sectors` / `sub_services` fields once
-          taxonomy migration is complete and verified across surfaces.
-        */}
-        {business?.id && (
-          <BusinessTaxonomySection
-            businessId={business.id}
-            legacySectors={form.sectors ?? null}
-            legacySubServices={form.sub_services ?? null}
-          />
-        )}
+            <Card>
+              <CardHeader>
+                <CardTitle className={sectionTitle}>
+                  <Layers className="w-4 h-4 text-muted-foreground" />
+                  {t(isRTL, 'التصنيف القديم (اختياري)', 'Legacy classification (optional)')}
+                </CardTitle>
+                <CardDescription>
+                  {t(
+                    isRTL,
+                    'يُستخدم كاحتياطي للبحث والمطابقة حتى اكتمال الهجرة. التصنيف الأساسي أعلاه.',
+                    'Used as a fallback for search & matching until migration completes. Use the primary classifier above.',
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <details>
+                  <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground select-none">
+                    {t(isRTL, 'عرض التصنيف القديم', 'Show legacy classification')}
+                  </summary>
+                  <div className="mt-4">
+                    <SectorPicker
+                      selectedSectors={(form.sectors ?? []) as SectorId[]}
+                      selectedSubServices={form.sub_services ?? []}
+                      onSectorsChange={(s) => update('sectors', s)}
+                      onSubServicesChange={(s) => update('sub_services', s)}
+                    />
+                  </div>
+                </details>
+              </CardContent>
+            </Card>
 
         {/* Legal */}
           </TabsContent>
