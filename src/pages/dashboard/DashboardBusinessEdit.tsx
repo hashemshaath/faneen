@@ -31,9 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ImageUpload } from '@/components/ui/image-upload';
-import { SectorPicker } from '@/components/onboarding/SectorPicker';
-import type { SectorId } from '@/data/onboarding-sectors';
-import { BusinessTaxonomySection } from '@/modules/taxonomy';
+import { BusinessTaxonomySection, useBusinessTaxonomyPresence } from '@/modules/taxonomy';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
 
 import type { BusinessRow } from '@/components/dashboard/business-edit/types';
@@ -283,25 +281,10 @@ const DashboardBusinessEdit: React.FC = () => {
       };
       const { error: updateError } = await updateBusinessById({ id: form.id, values: payload });
       if (updateError) throw updateError;
-
-      // Bidirectional sync — diff sub_services and apply via RPCs so that
-      // `business_services` rows are created/cleaned to match /dashboard/services.
-      const initialSubs: string[] = (business?.sub_services ?? []) as string[];
-      const nextSubs: string[] = (form.sub_services ?? []) as string[];
-      const toAdd = nextSubs.filter((s) => !initialSubs.includes(s));
-      const toRemove = initialSubs.filter((s) => !nextSubs.includes(s));
-      for (const subId of toAdd) {
-        const { error: addErr } = await supabase.rpc('add_business_sub_service', {
-          p_business_id: form.id, p_sub_service_id: subId,
-        });
-        if (addErr) throw addErr;
-      }
-      for (const subId of toRemove) {
-        const { error: rmErr } = await supabase.rpc('remove_business_sub_service', {
-          p_business_id: form.id, p_sub_service_id: subId,
-        });
-        if (rmErr) throw rmErr;
-      }
+      // Phase 18g — legacy `businesses.sub_services` sync removed.
+      // Sectors/services are taxonomy-only now and managed via
+      // BusinessTaxonomySection (writes to `business_taxonomy_categories`)
+      // and /dashboard/services (writes to `business_services`).
 
       // Persist the National Address (single write path).
       const hasAddress = !!(
