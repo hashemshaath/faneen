@@ -20,8 +20,8 @@ export interface SidebarItemProps {
 }
 
 export const SidebarItem: React.FC<SidebarItemProps> = ({ label, to, icon: Icon, badge, end, visible = true }) => {
-  if (!visible) return null;
   const { pathname } = useLocation();
+  if (!visible) return null;
   const isActive = end
     ? pathname === to
     : !!matchPath({ path: to, end: false }, pathname);
