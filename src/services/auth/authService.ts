@@ -206,8 +206,6 @@ export const authService = {
     businessName: string,
     username: string,
     extras?: {
-      sectors?: string[];
-      sub_services?: string[];
       description_ar?: string;
       recipientEmail?: string;
       entity_type?: string;
