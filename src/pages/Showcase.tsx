@@ -229,7 +229,7 @@ const Showcase = () => {
                   onClick={() => setSector(o.slug)}
                   className="rounded-full"
                 >
-                  {bi(o.display_ar, o.display_en || o.display_ar)}
+                  {o.display_ar}
                 </Button>
               ))}
             </div>
