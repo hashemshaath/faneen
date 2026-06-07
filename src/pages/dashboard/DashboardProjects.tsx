@@ -6,8 +6,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
-import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
+import {
+  getProjectTaxonomyPickerCategories,
+  getProjectTaxonomyCategoriesByProjects,
+  getProjectTaxonomyCategories,
+  setProjectTaxonomyCategories,
+} from '@/modules/taxonomy/project-services';
+import type { TaxonomyCategory } from '@/modules/taxonomy/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,13 +51,14 @@ const SortableProjectCard = React.memo(({
   onEdit, onGallery, onDelete, onToggleFeatured, onDuplicate, onPreview, onSelect,
 }: {
   project: any; rtl: boolean; language: string; viewMode: ViewMode; isSelected: boolean;
+  taxonomyName: string | null;
   onEdit: (p) => void; onGallery: (id: string) => void; onDelete: (id: string) => void;
   onToggleFeatured: (p) => void; onDuplicate: (p) => void;
   onPreview: (url: string) => void; onSelect: (id: string) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : undefined };
-  const catName = p.categories ? (language === 'ar' ? p.categories.name_ar : p.categories.name_en) : null;
+  const catName = arguments[0].taxonomyName ?? null;
   const cityName = p.cities ? (language === 'ar' ? p.cities.name_ar : p.cities.name_en) : null;
   const title = language === 'ar' ? p.title_ar : (p.title_en || p.title_ar);
   const desc = language === 'ar' ? p.description_ar : (p.description_en || p.description_ar);
