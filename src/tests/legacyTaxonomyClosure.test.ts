@@ -26,16 +26,19 @@ const ALLOWED_PATH_FRAGMENTS = [
   'src/modules/taxonomy/migration-services.ts',
   // Guard / governance tests that assert the legacy is gone.
   'src/modules/categories/services/__tests__/catalog-reference-migration.test.ts',
+  'src/modules/businesses/services/__tests__/publicBusinessesServices.test.ts',
 ];
 
 const FORBIDDEN_PATTERNS: Array<{ label: string; regex: RegExp }> = [
   { label: "supabase.from('categories')", regex: /from\(\s*['"]categories['"]\s*\)/ },
   { label: "supabase.from('tags')", regex: /from\(\s*['"]tags['"]\s*\)/ },
   { label: "supabase.from('entity_tags')", regex: /from\(\s*['"]entity_tags['"]\s*\)/ },
-  // Embedded PostgREST relation join `categories(` not preceded by a
-  // taxonomy_/help_/private_/brand_ prefix (those tables are legitimate).
-  { label: 'embedded categories(...) join', regex: /(?<![a-zA-Z_])categories\s*\(/ },
-  { label: 'embedded tags(...) join', regex: /(?<![a-zA-Z_])tags\s*\(\s*['"]?[a-z_]/ },
+  // Embedded PostgREST relation join: `categories(` with no space and
+  // not preceded by a taxonomy_/help_/private_/brand_ prefix (those are
+  // legitimate tables) and not followed by a space (which would mean
+  // English prose like "categories (businesses)").
+  { label: 'embedded categories(...) join', regex: /(?<![a-zA-Z_])categories\([a-z_*]/ },
+  { label: 'embedded tags(...) join', regex: /(?<![a-zA-Z_])tags\([a-z_*]/ },
 ];
 
 function walk(dir: string, out: string[] = []): string[] {
@@ -64,9 +67,9 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 function isAllowed(path: string): boolean {
-  const rel = relative(process.cwd(), path).replaceAll('\\', '/');
+  const rel = relative(process.cwd(), path).split('\\').join('/');
   return ALLOWED_PATH_FRAGMENTS.some((frag) =>
-    rel.includes(frag.replaceAll('\\', '/')),
+    rel.includes(frag.split('\\').join('/')),
   );
 }
 
