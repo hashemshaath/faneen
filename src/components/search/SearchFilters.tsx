@@ -26,15 +26,11 @@ interface SearchFiltersProps {
   hasActiveFilters: boolean;
   showFilters: boolean;
   onToggleFilters: () => void;
-  selectedTags?: string[];
-  onToggleTag?: (tagId: string) => void;
-  onClearTags?: () => void;
 }
 
 export const SearchFilters = ({
   filters, onFilterChange, onClearFilters, categories, cities,
   hasActiveFilters, showFilters, onToggleFilters,
-  selectedTags = [], onToggleTag, onClearTags,
 }: SearchFiltersProps) => {
   const { t, language, isRTL } = useLanguage();
 

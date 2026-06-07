@@ -8071,38 +8071,6 @@ export type Database = {
           },
         ]
       }
-      entity_tags: {
-        Row: {
-          created_at: string
-          entity_id: string
-          entity_type: string
-          id: string
-          tag_id: string
-        }
-        Insert: {
-          created_at?: string
-          entity_id: string
-          entity_type: string
-          id?: string
-          tag_id: string
-        }
-        Update: {
-          created_at?: string
-          entity_id?: string
-          entity_type?: string
-          id?: string
-          tag_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "entity_tags_tag_id_fkey"
-            columns: ["tag_id"]
-            isOneToOne: false
-            referencedRelation: "tags"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       google_api_usage_log: {
         Row: {
           api: string
@@ -15385,45 +15353,6 @@ export type Database = {
           route?: string | null
           sort_order?: number
           updated_at?: string
-        }
-        Relationships: []
-      }
-      tags: {
-        Row: {
-          color: string | null
-          created_at: string
-          icon: string | null
-          id: string
-          is_active: boolean
-          name_ar: string
-          name_en: string
-          slug: string
-          sort_order: number
-          tag_group: string
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string
-          icon?: string | null
-          id?: string
-          is_active?: boolean
-          name_ar: string
-          name_en: string
-          slug: string
-          sort_order?: number
-          tag_group?: string
-        }
-        Update: {
-          color?: string | null
-          created_at?: string
-          icon?: string | null
-          id?: string
-          is_active?: boolean
-          name_ar?: string
-          name_en?: string
-          slug?: string
-          sort_order?: number
-          tag_group?: string
         }
         Relationships: []
       }

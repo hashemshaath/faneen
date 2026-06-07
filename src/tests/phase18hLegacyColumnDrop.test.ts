@@ -63,6 +63,8 @@ describe('Phase 18h — legacy sectors/sub_services writes removed', () => {
   it('does NOT drop blocker columns kept for views/runtime', () => {
     expect(sql).not.toMatch(/ALTER TABLE\s+public\.businesses\s+DROP COLUMN[^;]*\bcategory_id/i);
     expect(sql).not.toMatch(/ALTER TABLE\s+public\.business_services\s+DROP COLUMN[^;]*\bcategory_id/i);
-    expect(sql).not.toMatch(/DROP TABLE[^;]*\b(categories|tags|entity_tags)\b/i);
+    // `tags` / `entity_tags` are dropped in Phase 19b — only `categories` is
+    // still protected here (Edge/SEO dependency).
+    expect(sql).not.toMatch(/DROP TABLE[^;]*\bcategories\b/i);
   });
 });

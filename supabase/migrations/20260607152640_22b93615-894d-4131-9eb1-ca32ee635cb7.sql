@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS public.entity_tags CASCADE;
+DROP TABLE IF EXISTS public.tags CASCADE;

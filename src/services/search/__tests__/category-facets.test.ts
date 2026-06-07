@@ -70,7 +70,7 @@ describe('expandCategoryIds', () => {
 describe('filterAndSort — taxonomy-first category & service facet (Phase 18a)', () => {
   it('category filter uses taxonomyBusinessIds as the sole source', () => {
     const res = filterAndSort(
-      businesses, '', { ...defaultFilters, categoryId: 'cat-alu' }, [], [], 'ar', categories,
+      businesses, '', { ...defaultFilters, categoryId: 'cat-alu' }, 'ar', categories,
       new Set<string>(['b1', 'b2']),
     );
     expect(res.map((b) => b.id).sort()).toEqual(['b1', 'b2']);
@@ -78,7 +78,7 @@ describe('filterAndSort — taxonomy-first category & service facet (Phase 18a)'
 
   it('category filter narrows to zero when no taxonomy ids resolve', () => {
     const res = filterAndSort(
-      businesses, '', { ...defaultFilters, categoryId: 'aluminum' }, [], [], 'ar', categories,
+      businesses, '', { ...defaultFilters, categoryId: 'aluminum' }, 'ar', categories,
       // No taxonomyBusinessIds → legacy column is NOT consulted, so empty.
       undefined,
     );
@@ -90,7 +90,7 @@ describe('filterAndSort — taxonomy-first category & service facet (Phase 18a)'
     // must be excluded unless they appear in taxonomyBusinessIds.
     const stale = [{ ...businesses[0], category_id: 'cat-alu' }];
     const res = filterAndSort(
-      stale, '', { ...defaultFilters, categoryId: 'cat-alu' }, [], [], 'ar', categories,
+      stale, '', { ...defaultFilters, categoryId: 'cat-alu' }, 'ar', categories,
       new Set<string>(),
     );
     expect(res).toEqual([]);
@@ -99,7 +99,7 @@ describe('filterAndSort — taxonomy-first category & service facet (Phase 18a)'
   it('serviceCategoryId uses serviceCategoryBusinessIds as the sole source', () => {
     const res = filterAndSort(
       businesses, '', { ...defaultFilters, serviceCategoryId: 'cat-mirrors' },
-      [], [], 'ar', categories,
+      'ar', categories,
       undefined,
       new Set<string>(['b3']),
     );
@@ -115,7 +115,7 @@ describe('filterAndSort — taxonomy-first category & service facet (Phase 18a)'
     }];
     const res = filterAndSort(
       stale, '', { ...defaultFilters, serviceCategoryId: 'cat-mirrors' },
-      [], [], 'ar', categories,
+      'ar', categories,
       undefined,
       new Set<string>(),
     );

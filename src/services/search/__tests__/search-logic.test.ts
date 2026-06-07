@@ -112,12 +112,12 @@ describe('filterAndSort', () => {
   ];
 
   it('returns all when no filters applied', () => {
-    const result = filterAndSort(businesses, '', defaultFilters, [], [], 'ar');
+    const result = filterAndSort(businesses, '', defaultFilters, 'ar');
     expect(result).toHaveLength(3);
   });
 
   it('filters by text query', () => {
-    const result = filterAndSort(businesses, 'Factory', defaultFilters, [], [], 'en');
+    const result = filterAndSort(businesses, 'Factory', defaultFilters, 'en');
     expect(result).toHaveLength(2);
     expect(result.every(b => b.name_en?.includes('Factory'))).toBe(true);
   });
@@ -129,42 +129,42 @@ describe('filterAndSort', () => {
     const taxonomyIds = new Set(
       businesses.filter((b) => b.category_id === 'cat-1').map((b) => b.id),
     );
-    const result = filterAndSort(businesses, '', filters, [], [], 'ar', undefined, taxonomyIds);
+    const result = filterAndSort(businesses, '', filters, 'ar', undefined, taxonomyIds);
     expect(result).toHaveLength(2);
   });
 
   it('filters by city', () => {
     const filters: SearchFilterValues = { ...defaultFilters, cityId: 'city-2' };
-    const result = filterAndSort(businesses, '', filters, [], [], 'ar');
+    const result = filterAndSort(businesses, '', filters, 'ar');
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('2');
   });
 
   it('filters by minimum rating', () => {
     const filters: SearchFilterValues = { ...defaultFilters, minRating: 4 };
-    const result = filterAndSort(businesses, '', filters, [], [], 'ar');
+    const result = filterAndSort(businesses, '', filters, 'ar');
     expect(result).toHaveLength(2);
   });
 
   it('filters verified only', () => {
     const filters: SearchFilterValues = { ...defaultFilters, verifiedOnly: true };
-    const result = filterAndSort(businesses, '', filters, [], [], 'ar');
+    const result = filterAndSort(businesses, '', filters, 'ar');
     expect(result).toHaveLength(2);
     expect(result.every(b => b.is_verified)).toBe(true);
   });
 
   it('sorts by rating descending', () => {
-    const result = filterAndSort(businesses, '', { ...defaultFilters, sortBy: 'rating' }, [], [], 'ar');
+    const result = filterAndSort(businesses, '', { ...defaultFilters, sortBy: 'rating' }, 'ar');
     expect(Number(result[0].rating_avg)).toBeGreaterThanOrEqual(Number(result[1].rating_avg));
   });
 
   it('sorts by name', () => {
-    const result = filterAndSort(businesses, '', { ...defaultFilters, sortBy: 'name' }, [], [], 'en');
+    const result = filterAndSort(businesses, '', { ...defaultFilters, sortBy: 'name' }, 'en');
     expect(result[0].name_en).toBe('Factory A');
   });
 
   it('uses relevance sort when query is present', () => {
-    const result = filterAndSort(businesses, 'Shop', { ...defaultFilters, sortBy: 'rating' }, [], [], 'en');
+    const result = filterAndSort(businesses, 'Shop', { ...defaultFilters, sortBy: 'rating' }, 'en');
     expect(result[0].name_en).toBe('Shop C');
   });
 
@@ -175,17 +175,7 @@ describe('filterAndSort', () => {
       biz({ id: '3', business_services: [] }),
     ];
     const filters: SearchFilterValues = { ...defaultFilters, priceMin: 200, priceMax: 600 };
-    const result = filterAndSort(withServices, '', filters, [], [], 'ar');
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe('1');
-  });
-
-  it('filters by tags', () => {
-    const tags = [
-      { entity_id: '1', tag_id: 'tag-a' },
-      { entity_id: '2', tag_id: 'tag-b' },
-    ];
-    const result = filterAndSort(businesses, '', defaultFilters, ['tag-a'], tags, 'ar');
+    const result = filterAndSort(withServices, '', filters, 'ar');
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('1');
   });
@@ -195,7 +185,7 @@ describe('filterAndSort', () => {
     const taxonomyIds = new Set(
       businesses.filter((b) => b.category_id === 'cat-1').map((b) => b.id),
     );
-    const result = filterAndSort(businesses, '', filters, [], [], 'ar', undefined, taxonomyIds);
+    const result = filterAndSort(businesses, '', filters, 'ar', undefined, taxonomyIds);
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('1');
   });

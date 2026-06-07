@@ -252,16 +252,9 @@ export const useBusinesses = () =>
     gcTime: 30 * 60 * 1000,
   });
 
-export const useEntityTags = () =>
-  useQuery({
-    queryKey: ['entity-tags-businesses'],
-    queryFn: async () => {
-      const { data } = await supabase.from('entity_tags').select('entity_id, tag_id').eq('entity_type', 'business');
-      return data ?? [];
-    },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-  });
+// Phase 19b — `useEntityTags` / `useTags` removed. The legacy `tags` and
+// `entity_tags` tables were dropped. Search no longer offers tag facets; the
+// taxonomy category and service-category filters are the only runtime path.
 
 /**
  * Phase 18a — taxonomy-only resolver for the service-category facet.
@@ -394,8 +387,6 @@ export const filterAndSort = (
   businesses: any[],
   query: string,
   filters: SearchFilterValues,
-  selectedTags: string[],
-  entityTags: any[] | undefined,
   language: string,
   categories?: CategoryLite[],
   /**
@@ -466,14 +457,6 @@ export const filterAndSort = (
   if (filters.minRating > 0) results = results.filter(b => Number(b.rating_avg) >= filters.minRating);
   // Verified filter
   if (filters.verifiedOnly) results = results.filter(b => b.is_verified);
-
-  // Tags filter
-  if (selectedTags.length > 0 && entityTags) {
-    const bizIdsWithTags = new Set(
-      entityTags.filter(et => selectedTags.includes(et.tag_id)).map(et => et.entity_id)
-    );
-    results = results.filter(b => bizIdsWithTags.has(b.id));
-  }
 
   // Price filter
   if (filters.priceMin > 0 || filters.priceMax > 0) {
