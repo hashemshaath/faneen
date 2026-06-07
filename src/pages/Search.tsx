@@ -26,6 +26,7 @@ import {
 } from '@/services/search';
 import { detectSectorFromQuery, getSectorMeta, ALL_SECTORS } from '@/lib/sector-keywords';
 import { findCityKeywords, getCityKeywordsString, mergeKeywords } from '@/lib/city-keywords';
+import { SA_REGIONS, findRegionForCity } from '@/data/sa-regions';
 import { track } from '@/lib/analytics-events';
 import { useSearchTaxonomyContext, useBusinessTaxonomyDisplayBatch } from '@/modules/taxonomy/search-integration';
 
@@ -79,6 +80,7 @@ const SearchPage = () => {
     priceMin: Number(searchParams.get('price_min')) || 0,
     priceMax: Number(searchParams.get('price_max')) || 0,
     serviceCategoryId: searchParams.get('serviceCategory') || 'all',
+    regionId: searchParams.get('region') || 'all',
   });
 
   // Phase 7 — Taxonomy-first augmentation. Resolves URL params (category /
@@ -211,12 +213,14 @@ const SearchPage = () => {
       categoryId: 'category', cityId: 'city', minRating: 'rating',
       verifiedOnly: 'verified', sortBy: 'sort', priceMin: 'price_min', priceMax: 'price_max',
       serviceCategoryId: 'serviceCategory',
+      regionId: 'region',
     };
     const paramKey = paramMap[key];
     const defaultVals: Record<string, any> = {
       categoryId: 'all', cityId: 'all', minRating: 0,
       verifiedOnly: false, sortBy: 'rating', priceMin: 0, priceMax: 0,
       serviceCategoryId: 'all',
+      regionId: 'all',
     };
     if (value === defaultVals[key]) params.delete(paramKey); else params.set(paramKey, String(value));
     setSearchParams(params, { replace: true });
@@ -226,7 +230,7 @@ const SearchPage = () => {
     handleFilterChange('categoryId', filters.categoryId === id ? 'all' : id);
   }, [filters.categoryId, handleFilterChange]);
 
-  const hasActiveFilters = filters.categoryId !== 'all' || filters.cityId !== 'all' || filters.minRating > 0 || filters.verifiedOnly || filters.priceMin > 0 || filters.priceMax > 0 || filters.serviceCategoryId !== 'all';
+  const hasActiveFilters = filters.categoryId !== 'all' || filters.cityId !== 'all' || filters.minRating > 0 || filters.verifiedOnly || filters.priceMin > 0 || filters.priceMax > 0 || filters.serviceCategoryId !== 'all' || filters.regionId !== 'all';
 
   const clearFilters = useCallback(() => {
     setFilters({ ...defaultFilters });
@@ -246,6 +250,15 @@ const SearchPage = () => {
       taxonomyBusinessIds,
       serviceCategoryBusinessIds,
     );
+    // Region filter — narrow by SA admin region using city → region mapping.
+    if (filters.regionId !== 'all' && cities) {
+      const cityById = new Map(cities.map((c) => [c.id, c]));
+      res = res.filter((b: { city_id?: string | null }) => {
+        const city = b.city_id ? cityById.get(b.city_id) : null;
+        if (!city) return false;
+        return findRegionForCity(city.name_ar, city.name_en) === filters.regionId;
+      });
+    }
     if (favoritesOnly) {
       try {
         const raw = localStorage.getItem('qitaat_fav_businesses_v1');
@@ -257,7 +270,7 @@ const SearchPage = () => {
       }
     }
     return res;
-  }, [businesses, debouncedQuery, filters, language, favoritesOnly, categories, taxonomyBusinessIds, serviceCategoryBusinessIds]);
+  }, [businesses, debouncedQuery, filters, language, favoritesOnly, categories, cities, taxonomyBusinessIds, serviceCategoryBusinessIds]);
 
   // Defer the heavy filtered list so typing/filter clicks stay responsive.
   const deferredFiltered = useDeferredValue(filtered);
@@ -412,6 +425,7 @@ const SearchPage = () => {
       priceMin: Number(sp.get('price_min')) || 0,
       priceMax: Number(sp.get('price_max')) || 0,
       serviceCategoryId: sp.get('serviceCategory') || 'all',
+      regionId: sp.get('region') || 'all',
     };
     setFilters(next);
     setQuery(sp.get('q') || '');

@@ -6,6 +6,7 @@ import { buildSeoTitle, buildSeoDescription } from "@/modules/seo/seoTitleBuilde
 import {
   CalendarClock,
   ClipboardList,
+  FileSignature,
   FolderOpen,
   GitBranch,
   Image as ImageIcon,
@@ -60,6 +61,7 @@ import { BusinessProfileTrustStrip } from "@/components/business-profile/Busines
 import { BusinessProfileStickyCta } from "@/components/business-profile/BusinessProfileStickyCta";
 import { OverviewTab } from "@/components/business-profile/OverviewTab";
 import { ShareMenu } from "@/components/business-profile/ShareMenu";
+import { SimilarBusinesses } from "@/components/business-profile/SimilarBusinesses";
 import {
   canViewSection,
   useBusinessVisibility,
@@ -478,6 +480,16 @@ const BusinessProfile = () => {
               <CalendarClock className="ic-sm" />
               {language === "ar" ? "حجز موعد" : "Book appointment"}
             </Button>
+            <Button
+              variant="default"
+              size="app"
+              className="gap-2"
+              onClick={() => setActiveTab("rfq")}
+              aria-label={language === "ar" ? "طلب عقد" : "Request a contract"}
+            >
+              <FileSignature className="ic-sm" />
+              {language === "ar" ? "طلب عقد" : "Request contract"}
+            </Button>
           </div>
 
           <section
@@ -669,6 +681,14 @@ const BusinessProfile = () => {
               </ul>
             </div>
           </nav>
+
+          <SimilarBusinesses
+            currentBusinessId={business.id}
+            cityId={(business as { city_id?: string | null }).city_id ?? null}
+            categorySlug={(business.categories as { slug?: string } | null)?.slug || null}
+            cityName={cityName || undefined}
+            categoryName={categoryName || undefined}
+          />
         </main>
       </div>
 

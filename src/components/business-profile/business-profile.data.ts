@@ -103,7 +103,8 @@ const PUBLIC_BUSINESS_SELECT =
   // geo (Contact tab map + JSON-LD GeoCoordinates)
   'latitude, longitude, ' +
   // trimmed joins (FK columns exposed by the view enable PostgREST embedding)
-  'cities(name_ar, name_en), ' +
+  'city_id, ' +
+  'cities(id, name_ar, name_en, slug), ' +
   'countries(name_ar, name_en, code)';
 
 // Public profile data rarely changes between visits; a 5-minute stale window
