@@ -294,12 +294,13 @@ const OperationsCenter = () => {
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6" data-testid="operations-center">
-      <header>
-        <h1 className="text-2xl font-bold">Operations Center · مركز العمليات</h1>
-        <p className="text-sm text-muted-foreground">
-          Executive view of contracts, production, and procurement health.
-        </p>
-      </header>
+      <PageHeader
+        icon={Activity}
+        tone="primary"
+        eyebrow="Operations"
+        title="مركز العمليات · Operations Center"
+        subtitle="Executive view of contracts, production, and procurement health."
+      />
 
       <Card data-testid="system-health-section">
         <CardHeader className="flex flex-row items-center justify-between gap-3">
