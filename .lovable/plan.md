@@ -1,86 +1,106 @@
-## خطة تطوير صفحة الجهة (`/:username`)
+# خطة: إزالة نظام التصنيفات القديم (Legacy Categories Sunset)
 
-نُقسّم العمل على مرحلتين لتقليل المخاطر وضمان معاينة سريعة بعد كل مرحلة.
-
----
-
-### المرحلة 1 — تنظيف الواجهة + مزايا فورية (بدون قاعدة بيانات)
-
-**أ. تنظيف الهيدر والتبويبات**
-- توحيد شريط الإحصاءات داخل الهيدر (تقليل التكرار مع `BusinessProfileTrustStrip`).
-- نقل شارة "كوبون / Tier / تحقق" إلى صفّ واحد منسّق.
-- تبويبات أصغر مع أيقونات أوضح، والاحتفاظ بـ sticky.
-- إخفاء التبويبات الفارغة تلقائياً (اليوم تظهر دائماً).
-
-**ب. تبويب جديد "نظرة عامة" (Overview) كافتراضي**
-يجمع في صفحة واحدة:
-- بطاقة "حول الجهة" + قيم العمل + سنوات الخبرة.
-- أبرز 3 مشاريع (Featured) + أبرز 3 خدمات.
-- بطاقة الموقع (خريطة Leaflet مصغّرة) + ساعات العمل.
-- ملخّص التقييمات (متوسط + توزيع نجوم).
-- شارات الثقة (تحقق، BNPL، شهادات).
-
-**ج. تعزيز المعرض/المشاريع بصرياً**
-- شبكة Masonry للمعرض (أحجام متغيّرة).
-- Lightbox محسّن مع لوحة معلومات جانبية (عنوان، فئة، تاريخ، رابط مشروع).
-- فلاتر حسب الفئة + تبديل بين Grid/Masonry.
-
-**د. مزايا "مشاركة وحفظ احترافي"**
-- قائمة مشاركة موسّعة: نسخ الرابط، WhatsApp، X، LinkedIn، Email.
-- تنزيل **vCard (.vcf)** للجهة (للضيوف يستخدم الحقول العامة فقط).
-- **QR Code** للصفحة (يستخدم `BusinessBarcodeCard` الموجود).
-- زر "حفظ في المفضّلة" (للزوار: `localStorage`، للمستخدم المسجّل سيُربط لاحقاً بـ DB).
-
-**هـ. شارة استجابة وتوفّر — نسخة عرضية**
-- "متاح الآن / خارج ساعات العمل" بناءً على `business_hours` الموجودة.
-- "عادةً يردّ خلال X" يُحسب من بيانات المحادثات الموجودة (لا جداول جديدة).
-
-كل ما سبق تعديلات Frontend فقط على:
-- `src/pages/BusinessProfile.tsx`
-- `src/components/business-profile/BusinessProfileHeader.tsx`
-- `src/components/business-profile/BusinessProfileTabs.tsx`
-- ملفات جديدة: `OverviewTab.tsx`, `ShareMenu.tsx`, `AvailabilityBadge.tsx`, `vcard.ts`.
+نطاق ضخم جدًا — سأنفّذه على مراحل مع التزام كامل بالقيود (لا حذف جداول/أعمدة، لا كسر صفحات، لا حذف SECTORS_SEO). قبل أي تعديل، سأبدأ بمرحلة الفحص لأعطيك خريطة دقيقة ثم نتفق على ما يُستبدل الآن وما يُؤجَّل.
 
 ---
 
-### المرحلة 2 — مزايا تفاعلية مدعومة بقاعدة بيانات
+## المرحلة 0 — الفحص الشامل (Read-only، بدون أي تعديل كود)
 
-**أ. طلب عرض سعر سريع (RFQ)**
-- جدول `business_rfqs` (business_id, requester_user_id/contact, title, description, attachments, budget_range, deadline, status).
-- نموذج مدمج (Inline، بدون Dialog) داخل تبويب جديد "اطلب عرض سعر".
-- إشعار للمزود + بريد.
-- في لوحة التحكم: قسم RFQ لإدارة العروض.
+أشغّل subagent لمسح كامل المشروع وإصدار التقرير المطلوب في "أولًا":
 
-**ب. أسئلة وأجوبة عامة (Public Q&A)**
-- جدول `business_qa` (business_id, asker_user_id, question, answer, is_published, asked_at, answered_at).
-- تبويب "أسئلة شائعة" يعرض المنشور فقط.
-- المزوّد يجيب من لوحة التحكم.
-- يُولَّد JSON-LD من نوع `FAQPage` لتحسين SEO.
+- كل استدعاءات الجداول: `categories`, `tags`, `business_services.category_id`
+- كل قراءة/كتابة للحقول: `businesses.category_id`, `businesses.sectors`, `businesses.sub_services`, `showcase_submissions.sector_slug`, `quote_requests.sector`, `projects.category_id`
+- كل المكونات: `AdminCategories`, `AdminTags`, `CategoryTree`, `SectorPicker`, `ONBOARDING_SECTORS`, `SECTORS_SEO*`, `SECTOR_KEYWORDS`, `ALL_SECTORS`, `BrandsCatalogLegacy`, `BranchServicesSection`
+- كل Edge Functions تلمس الحقول القديمة
+- كل الـ hooks/services: `listActiveCategories`, queries القديم
 
-**ج. مقاييس استجابة وتوفّر حقيقية**
-- View تجميعي `business_response_metrics` من `messages` + `conversations`.
-- عرض نسبة الرد، متوسط زمن الرد، آخر نشاط.
+**المخرج**: جدول لكل ملف يتضمن: الاستخدام القديم / البديل الجديد / إجراء الآن أم تأجيل / السبب.
 
-**د. المفضّلة المسجّلة**
-- جدول `user_favorites` (user_id, business_id).
-- مزامنة مع `localStorage` للضيوف عند تسجيل الدخول.
-
-كل تغيير DB سيُقدَّم عبر migration منفصلة للموافقة، مع `GRANT` و `RLS` كاملة.
+**قرار التأجيل التلقائي** (لن أعدّلها الآن إلا بعد موافقتك):
+- `SectorLanding`, `SectorCity`, `SectorBrief` — تعتمد على `SECTORS_SEO` للـ SEO وصفحات القطاعات العامة، خارج النطاق المسموح في المراحل السابقة.
+- `sitemap` edge function — ممنوع تعديله.
+- `match-quote-request` edge function — ممنوع تعديله.
+- `quote_requests.sector` — يستخدمه RPC المطابقة.
+- `projects.category_id` — يحتاج migration `project_taxonomy_categories` منفصلة، TODO فقط.
 
 ---
 
-### تفاصيل تقنية
+## المرحلة 1 — تعطيل صفحات الإدارة القديمة
 
-- التزام بـ Design Tokens (لا ألوان مباشرة).
-- Bilingual عبر `<Bi>` / `useBi()`.
-- لا Popups: كل النماذج Inline أو Fullscreen.
-- TypeScript strict، أخطاء `unknown + instanceof Error`.
-- لا تغييرات على `src/integrations/supabase/*`.
+- إزالة `/admin/categories` و `/admin/tags` من Sidebar.
+- إبقاء الـ routes لكن استبدال محتواها بصفحة "تم استبدال هذه الصفحة" + زر "فتح مركز التصنيفات" → `/admin/taxonomy`.
+- لا يُعرض `AdminCategories` أو `AdminTags` للأدمن نهائيًا.
 
-### المخرجات بعد كل مرحلة
-- **بعد المرحلة 1**: صفحة جديدة قابلة للمعاينة فوراً.
-- **بعد المرحلة 2**: مزايا RFQ + Q&A فعّالة من طرفَي الزائر والمزوّد.
+## المرحلة 2 — الواجهات (Taxonomy-only display & write)
+
+استبدال واجهة المستخدم في:
+
+1. **Onboarding** — إخفاء `SectorPicker` نهائيًا (يبقى الكود fallback داخلي فقط). لا كتابة لـ `sectors`/`sub_services` من هنا.
+2. **Business edit** (`/dashboard/business/edit` + `/admin/businesses` edit) — حذف بطاقة "التصنيف القديم"، إبقاء `BusinessTaxonomySection` فقط.
+3. **BusinessCard** — عرض taxonomy فقط. غياب التصنيف → "غير مصنّف" (للأدمن: "تحتاج ربط تصنيف"). إزالة `category.name_*` fallback.
+4. **BusinessProfile** — نفس قاعدة BusinessCard.
+5. **Search filters** — `taxonomy_categories` فقط، حذف `CategoryTree` القديم من الـ UI. روابط `?sector=` تعمل عبر `taxonomy_legacy_mappings` فقط (موجودة).
+6. **Showcase upload/admin** — كتابة `taxonomy_category_id` فقط، إخفاء `sector_slug` من الواجهة (يُقرأ للمطابقة الداخلية فقط).
+7. **Dashboard Services** — اختيار التصنيف من taxonomy (service/product_category/product_type).
+
+## المرحلة 3 — منع الكتابة للحقول القديمة
+
+تنقيح كل mutations لتمرير `null` للحقول القديمة بدل قيم جديدة، مع تعليق:
+```
+// TODO(legacy-sunset): retained for rollback only. Do not write new data.
+```
+
+## المرحلة 4 — خدمات موحّدة
+
+التأكد أن كل الشاشات الجديدة تمر عبر:
+`getTaxonomyCategoriesForRegistration`, `…ForSearch`, `…ForServices`, `getBusinessTaxonomyDisplayBatch`, `setBusinessTaxonomyCategories`, `getShowcaseTaxonomyCategories`. إنشاء ما هو ناقص.
+
+## المرحلة 5 — تقرير "استخدام النظام القديم" داخل `/admin/taxonomy`
+
+كرت جديد بجانب كرت الاعتماد:
+- عدد الصفوف في `categories` / `tags`
+- عدد المنشآت ذات `category_id` غير null
+- عدد المنشآت ذات `sectors`/`sub_services` غير فارغة
+- آخر تاريخ كتابة (إن أمكن من `updated_at`)
+
+## المرحلة 6 — Migration حذف مؤجَّلة (ملف TODO فقط)
+
+إنشاء ملف توثيق: `docs/legacy-categories-deprecation-plan.md` يتضمن SQL النهائي للحذف **معلَّق كـ comments** ولا يُنفَّذ. خطوات الحذف:
+1. `ALTER TABLE businesses DROP COLUMN category_id, DROP COLUMN sectors, DROP COLUMN sub_services;`
+2. `ALTER TABLE business_services DROP COLUMN category_id;`
+3. `ALTER TABLE showcase_submissions DROP COLUMN sector_slug;`
+4. `DROP TABLE tags; DROP TABLE categories;`
+
+شرط التنفيذ: تقرير اعتماد taxonomy 100% + موافقة صريحة منك.
+
+## المرحلة 7 — اختبارات
+
+إضافة/تحديث:
+- `onboarding.legacy-hidden.test.tsx`
+- `business-edit.taxonomy-only.test.tsx`
+- `business-card.no-legacy-fallback.test.tsx`
+- `admin-categories.replaced.test.tsx`
+- `showcase-upload.taxonomy-only.test.ts`
+- `no-legacy-writes.audit.test.ts` (grep يضمن عدم وجود `insert/update` على الحقول القديمة في `src/`)
 
 ---
 
-هل أبدأ بالمرحلة 1 الآن؟ أم تفضّل تعديل النطاق قبل البدء؟
+## القيود المؤكَّدة (لن أكسرها)
+
+- ✅ لا حذف جداول/أعمدة
+- ✅ لا تعديل `SectorLanding`/`SectorCity`/`SectorBrief`
+- ✅ لا تعديل `sitemap` / `match-quote-request` / أي Edge Function
+- ✅ لا حذف `SECTORS_SEO` / `SECTOR_KEYWORDS`
+- ✅ روابط `?sector=` القديمة تستمر بالعمل عبر `taxonomy_legacy_mappings`
+- ✅ Onboarding/Showcase/Dashboard Services/إنشاء المنشأة لا تنكسر
+
+---
+
+## كيف نبدأ
+
+نظرًا لضخامة المسح (عشرات الملفات) أقترح:
+
+**خطوة 1 الآن**: أشغّل subagent للفحص الشامل وأعود إليك بتقرير "أولًا" الكامل (جدول لكل ملف).
+**خطوة 2 بعد موافقتك على الجدول**: أنفّذ المراحل 1→7 بالترتيب في رسائل متتابعة قصيرة، كل مرحلة بتعديلات محدودة وقابلة للمراجعة.
+
+هل أبدأ بمرحلة الفحص؟ أم تريد تعديل النطاق/الأولويات قبل ذلك؟

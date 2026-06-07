@@ -124,8 +124,11 @@ const AdminOperationsConsole = lazyRetry(() => import("./pages/admin/AdminOperat
 const AdminReferenceInspector = lazyRetry(() => import("./pages/admin/AdminReferenceInspector"));
 const AdminBulkReferenceTriage = lazyRetry(() => import("./pages/admin/AdminBulkReferenceTriage"));
 const AdminActivityLog = lazyRetry(() => import("./pages/admin/AdminActivityLog"));
-const AdminCategories = lazyRetry(() => import("./pages/admin/AdminCategories"));
-const AdminTags = lazyRetry(() => import("./pages/admin/AdminTags"));
+// Legacy taxonomy CRUD pages (AdminCategories / AdminTags / AdminTaxonomyHub)
+// were retired in favor of /admin/taxonomy. Routes now render a replacement
+// notice. TODO(legacy-sunset): remove the underlying files once /admin/taxonomy
+// adoption is verified at 100%.
+const AdminLegacyTaxonomyReplaced = lazyRetry(() => import("./pages/admin/AdminLegacyTaxonomyReplaced"));
 const AdminBusinesses = lazyRetry(() => import("./pages/admin/AdminBusinesses"));
 const AdminOwnershipTransferRequests = lazyRetry(() => import("./pages/admin/AdminOwnershipTransferRequests"));
 const AdminEntityAccessRequests = lazyRetry(() => import("./pages/admin/AdminEntityAccessRequests"));
@@ -244,7 +247,8 @@ const AdminSeoHub = lazyRetry(() => import("./pages/admin/AdminSeoHub"));
 const AdminProviderReviewHub = lazyRetry(() => import("./pages/admin/AdminProviderReviewHub"));
 const AdminContractsHub = lazyRetry(() => import("./pages/admin/AdminContractsHub"));
 const AdminMembershipsHub = lazyRetry(() => import("./pages/admin/AdminMembershipsHub"));
-const AdminTaxonomyHub = lazyRetry(() => import("./pages/admin/AdminTaxonomyHub"));
+// AdminTaxonomyHub retired — legacy /admin/categories and /admin/tags now render
+// AdminLegacyTaxonomyReplaced. TODO(legacy-sunset): delete the file once verified.
 const AdminSystemSettingsHub = lazyRetry(() => import("./pages/admin/AdminSystemSettingsHub"));
 // Taxonomy & Reference Data Center — Phase 2.
 const AdminTaxonomyCenter = lazyRetry(() => import("./pages/admin/AdminTaxonomyCenter"));
@@ -428,9 +432,9 @@ const AppRoutes = () => (
           <Route path="/showcase" element={<Showcase />} />
           <Route path="/admin/api-docs" element={<ProtectedRoute requireAdmin><AdminApiDocs /></ProtectedRoute>} />
           <Route path="/admin/activity-log" element={<ProtectedRoute requireAdmin><AdminActivityLog /></ProtectedRoute>} />
-          {/* NAVIGATION-CONSOLIDATION-1 group 15 — Taxonomy hub. */}
-          <Route path="/admin/categories" element={<ProtectedRoute requireAdmin><AdminTaxonomyHub /></ProtectedRoute>} />
-          <Route path="/admin/tags" element={<ProtectedRoute requireAdmin><Navigate to="/admin/categories?tab=tags" replace /></ProtectedRoute>} />
+          {/* Legacy taxonomy routes — show replacement notice pointing to /admin/taxonomy. */}
+          <Route path="/admin/categories" element={<ProtectedRoute requireAdmin><AdminLegacyTaxonomyReplaced /></ProtectedRoute>} />
+          <Route path="/admin/tags" element={<ProtectedRoute requireAdmin><AdminLegacyTaxonomyReplaced /></ProtectedRoute>} />
           <Route path="/admin/taxonomy" element={<ProtectedRoute requireAdmin><AdminTaxonomyCenter /></ProtectedRoute>} />
           <Route path="/admin/businesses" element={<ProtectedRoute requireAdmin><AdminBusinesses /></ProtectedRoute>} />
           <Route path="/admin/ownership-transfer-requests" element={<ProtectedRoute requireAdmin><AdminOwnershipTransferRequests /></ProtectedRoute>} />

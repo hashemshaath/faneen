@@ -223,7 +223,7 @@ const AdminBrands: React.FC = () => {
           actions={
             <div className="flex flex-wrap items-center gap-2">
               <Button asChild variant="outline" size="sm">
-                <Link to="/admin/categories"><Filter className="w-4 h-4 me-2" />{isRTL ? 'التصنيفات' : 'Categories'}</Link>
+                <Link to="/admin/taxonomy"><Filter className="w-4 h-4 me-2" />{isRTL ? 'مركز التصنيفات' : 'Taxonomy Center'}</Link>
               </Button>
               <Button asChild variant="outline" size="sm">
                 <Link to="/admin/brand-requests"><Inbox className="w-4 h-4 me-2" />{isRTL ? 'طلبات العلامات' : 'Brand requests'}</Link>
