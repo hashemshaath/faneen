@@ -555,7 +555,25 @@ const DashboardBusinessEdit: React.FC = () => {
                 <ImageUpload bucket="business-assets" folder={`logos/${form.id}`}
                   value={form.logo_url ?? undefined}
                   onChange={(url) => update('logo_url', url)}
-                  onRemove={() => update('logo_url', null)}
+                  onRemove={() => {
+                    setForm((prev) => prev ? {
+                      ...prev,
+                      logo_url: null,
+                      logo_image_asset_id: null,
+                      logo_image_variants: null,
+                    } : prev);
+                    setDirty(true);
+                  }}
+                  pipeline="business"
+                  businessKind="logo"
+                  onUploadedMeta={(meta) => {
+                    setForm((prev) => prev ? {
+                      ...prev,
+                      logo_image_asset_id: meta.imageAssetId ?? null,
+                      logo_image_variants: (meta.variants as Record<string, string> | undefined) ?? null,
+                    } : prev);
+                    setDirty(true);
+                  }}
                   aspectRatio="square" className="mt-1"
                   placeholder={t(isRTL, 'ارفع شعار المنشأة', 'Upload business logo')} />
                 <FieldHint>
@@ -569,7 +587,25 @@ const DashboardBusinessEdit: React.FC = () => {
                 <ImageUpload bucket="business-assets" folder={`covers/${form.id}`}
                   value={form.cover_url ?? undefined}
                   onChange={(url) => update('cover_url', url)}
-                  onRemove={() => update('cover_url', null)}
+                  onRemove={() => {
+                    setForm((prev) => prev ? {
+                      ...prev,
+                      cover_url: null,
+                      cover_image_asset_id: null,
+                      cover_image_variants: null,
+                    } : prev);
+                    setDirty(true);
+                  }}
+                  pipeline="business"
+                  businessKind="cover"
+                  onUploadedMeta={(meta) => {
+                    setForm((prev) => prev ? {
+                      ...prev,
+                      cover_image_asset_id: meta.imageAssetId ?? null,
+                      cover_image_variants: (meta.variants as Record<string, string> | undefined) ?? null,
+                    } : prev);
+                    setDirty(true);
+                  }}
                   aspectRatio="video" className="mt-1"
                   placeholder={t(isRTL, 'ارفع صورة الغلاف', 'Upload cover image')} />
                 <FieldHint>
