@@ -74,7 +74,7 @@ async function backfillOne(c: BackfillCandidate): Promise<void> {
   const file = await fetchAsFile(c.image_url);
 
   const pipeline = await processImage(file);
-  if (!pipeline.ok) {
+  if (pipeline.ok === false) {
     throw new Error(pipeline.message);
   }
 
