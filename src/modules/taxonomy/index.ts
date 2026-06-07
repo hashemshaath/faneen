@@ -10,3 +10,6 @@ export * as taxonomyBusinessServices from './business-services';
 // Phase 4 — resolution layer + legacy mapping
 export * as taxonomyResolution from './resolution';
 export * from './legacy-mapping';
+
+// Phase 8 — unification / migration registry
+export * as taxonomyMigration from './migration-services';

@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { FolderTree, AlertTriangle, Activity, Plus, Download, LayoutList, TreePine } from 'lucide-react';
+import { FolderTree, AlertTriangle, Activity, Plus, Download, LayoutList, TreePine, ArrowRightLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -33,6 +33,7 @@ import { TaxonomyTreeView } from './TaxonomyTreeView';
 import { TaxonomyEditorPanel } from './TaxonomyEditorPanel';
 import { TaxonomyQualityPanel } from './TaxonomyQualityPanel';
 import { TaxonomyFallbackReportCard } from './TaxonomyFallbackReportCard';
+import { TaxonomyMigrationPanel } from './TaxonomyMigrationPanel';
 
 const QK = {
   types: ['taxonomy', 'types'] as const,
@@ -295,6 +296,7 @@ export const TaxonomyAdminPage: React.FC = () => {
                 <TabsTrigger value="manage" className="rounded-lg gap-1.5"><FolderTree className="w-3.5 h-3.5" />{isRTL ? 'التصنيفات' : 'Categories'}</TabsTrigger>
                 <TabsTrigger value="quality" className="rounded-lg gap-1.5"><AlertTriangle className="w-3.5 h-3.5" />{isRTL ? 'مراجعة الجودة' : 'Quality'} <span className="text-[10px] tech-content opacity-70">({issues.length})</span></TabsTrigger>
                 <TabsTrigger value="usage" className="rounded-lg gap-1.5"><Activity className="w-3.5 h-3.5" />{isRTL ? 'الاستخدام' : 'Usage'}</TabsTrigger>
+                <TabsTrigger value="migration" className="rounded-lg gap-1.5"><ArrowRightLeft className="w-3.5 h-3.5" />{isRTL ? 'الهجرة والتوحيد' : 'Migration'}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="manage" className="space-y-4 mt-4">
@@ -389,6 +391,10 @@ export const TaxonomyAdminPage: React.FC = () => {
                     </ul>
                   </div>
                 )}
+              </TabsContent>
+
+              <TabsContent value="migration" className="mt-4">
+                <TaxonomyMigrationPanel />
               </TabsContent>
             </Tabs>
           </>

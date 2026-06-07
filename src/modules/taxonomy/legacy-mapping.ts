@@ -56,6 +56,23 @@ export function resolveLegacySectorToTaxonomy(input: string | null | undefined):
   return LEGACY_SECTOR_TO_TAXONOMY_SLUG[key] ?? null;
 }
 
+/**
+ * Phase 8 — Runtime-overridable variant. Accepts an extra `overrides` map
+ * sourced from `taxonomy_legacy_mappings` (admin-managed) and falls back to
+ * the static table when no override exists. Edge functions and unit tests
+ * stay on the static map.
+ */
+export function resolveLegacySectorWithOverrides(
+  input: string | null | undefined,
+  overrides?: Record<string, string> | null,
+): string | null {
+  if (!input) return null;
+  const key = String(input).trim().toLowerCase();
+  if (!key) return null;
+  if (overrides && overrides[key]) return overrides[key];
+  return LEGACY_SECTOR_TO_TAXONOMY_SLUG[key] ?? null;
+}
+
 /** Returns all legacy keys that map to the given taxonomy slug. */
 export function legacyAliasesForTaxonomy(taxonomySlug: string): string[] {
   return Object.entries(LEGACY_SECTOR_TO_TAXONOMY_SLUG)
