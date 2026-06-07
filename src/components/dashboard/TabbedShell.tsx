@@ -7,6 +7,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { EmbeddedPageContext } from '@/contexts/AdminTabsContext';
 import { lazyRetry } from '@/lib/lazyRetry';
 import { Loader2, type LucideIcon } from 'lucide-react';
+import { PageHeader } from '@/components/shared';
 
 /**
  * NAVIGATION-CONSOLIDATION-1 — generic tabbed shell.
@@ -75,19 +76,12 @@ const TabbedShellInner: React.FC<TabbedShellProps> = ({ icon: Icon, title, descr
     <DashboardLayout>
       <EmbeddedPageContext.Provider value={true}>
         <div className="space-y-4 max-w-7xl mx-auto">
-          <header className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-primary/10 grid place-items-center text-primary">
-              <Icon className="size-5" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl font-bold">{isRTL ? title.ar : title.en}</h1>
-              {description ? (
-                <p className="text-xs text-muted-foreground">
-                  {isRTL ? description.ar : description.en}
-                </p>
-              ) : null}
-            </div>
-          </header>
+          <PageHeader
+            icon={Icon}
+            title={isRTL ? title.ar : title.en}
+            subtitle={description ? (isRTL ? description.ar : description.en) : undefined}
+            tone="primary"
+          />
 
           <Tabs value={active} onValueChange={onChange} className="space-y-4">
             <TabsList className="flex flex-wrap h-auto justify-start gap-1 overflow-x-auto">
