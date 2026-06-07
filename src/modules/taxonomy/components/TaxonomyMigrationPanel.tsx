@@ -341,6 +341,130 @@ export const TaxonomyMigrationPanel: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Secondary-activity backfill */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <ArrowRightLeft className="w-4 h-4" />
+            {isRTL ? 'ربط التخصصات الإضافية' : 'Link secondary specialties'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-[12px] text-muted-foreground mb-3">
+            {isRTL
+              ? 'يربط القطاعات القديمة الإضافية كتخصصات فرعية دون تغيير النشاط الرئيسي الحالي.'
+              : 'Links extra legacy sectors as secondary specialties without changing any current primary activity.'}
+          </p>
+
+          {secondaryQ.isLoading || !secondary ? (
+            <Skeleton className="h-20" />
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <Stat label={isRTL ? 'قابل للربط' : 'Resolvable'} value={secondary.totals.secondary_resolvable} tone="text-emerald-600" />
+                <Stat label={isRTL ? 'مرتبط مسبقًا' : 'Already linked'} value={secondary.totals.already_linked_extras} />
+                <Stat label={isRTL ? 'يحتاج مراجعة' : 'Needs review'} value={secondary.totals.needs_review_values} tone="text-orange-600" />
+                <Stat label={isRTL ? 'منشآت بقطاع قديم' : 'Businesses w/ legacy'} value={secondary.totals.businesses_with_legacy} />
+              </div>
+
+              {(secondary.rows ?? []).length > 0 && (
+                <div className="mt-4 rounded-xl border border-border/60 overflow-hidden">
+                  <div className="overflow-x-auto max-h-72">
+                    <table className="w-full text-[11px]">
+                      <thead className="text-muted-foreground sticky top-0 bg-card">
+                        <tr className="border-b border-border/60">
+                          <th className="text-start py-1.5 px-2">{isRTL ? 'المنشأة' : 'Business'}</th>
+                          <th className="text-start py-1.5 px-2">{isRTL ? 'الرئيسي' : 'Primary'}</th>
+                          <th className="text-start py-1.5 px-2">{isRTL ? 'سيُضاف' : 'Will add'}</th>
+                          <th className="text-start py-1.5 px-2">{isRTL ? 'يحتاج مراجعة' : 'Needs review'}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(secondary.rows ?? []).map((r) => (
+                          <tr key={r.business_id} className="border-b border-border/40 align-top">
+                            <td className="py-1.5 px-2">{r.name_ar ?? r.business_id}</td>
+                            <td className="py-1.5 px-2 tech-content">{r.primary_slug ?? '—'}</td>
+                            <td className="py-1.5 px-2">
+                              {(r.resolvable_extras ?? []).length === 0 ? (
+                                <span className="text-muted-foreground">—</span>
+                              ) : (
+                                <div className="flex flex-wrap gap-1">
+                                  {(r.resolvable_extras ?? []).map((x, i) => (
+                                    <Badge key={`${x.legacy_value}-${i}`} className="bg-emerald-500/10 text-emerald-700 border-0 tech-content text-[10px]">
+                                      {x.legacy_value} → {x.target_slug}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-1.5 px-2">
+                              {(r.needs_review_values ?? []).length === 0 ? (
+                                <span className="text-muted-foreground">—</span>
+                              ) : (
+                                <div className="flex flex-wrap gap-1">
+                                  {(r.needs_review_values ?? []).map((v, i) => (
+                                    <Badge key={`${v}-${i}`} className="bg-orange-500/10 text-orange-700 border-0 tech-content text-[10px]">
+                                      {v}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {!confirmingSecondary ? (
+                  <Button
+                    size="sm"
+                    onClick={() => setConfirmingSecondary(true)}
+                    disabled={!canApplySecondary || applyingSecondary}
+                    className="gap-1.5"
+                  >
+                    <PlayCircle className="w-3.5 h-3.5" />
+                    {isRTL ? 'تطبيق ربط التخصصات الإضافية' : 'Apply secondary backfill'}
+                  </Button>
+                ) : (
+                  <>
+                    <Button size="sm" variant="destructive" onClick={handleApplySecondary} disabled={applyingSecondary} className="gap-1.5">
+                      {applyingSecondary ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                      {isRTL ? 'تأكيد التطبيق' : 'Confirm apply'}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setConfirmingSecondary(false)} disabled={applyingSecondary}>
+                      {isRTL ? 'إلغاء' : 'Cancel'}
+                    </Button>
+                  </>
+                )}
+                {!canApplySecondary && (
+                  <span className="text-[11px] text-muted-foreground">
+                    {isRTL ? 'لا توجد تخصصات إضافية قابلة للربط' : 'No secondary specialties to backfill'}
+                  </span>
+                )}
+              </div>
+
+              {lastSecondaryResult && (
+                <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-[12px]">
+                  <div className="font-medium text-emerald-700 dark:text-emerald-400 mb-1 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    {isRTL ? 'تم ربط التخصصات الإضافية بنجاح' : 'Secondary backfill applied'}
+                  </div>
+                  <ul className="space-y-0.5 text-muted-foreground tech-content">
+                    <li>secondary_linked: {lastSecondaryResult.secondary_linked}</li>
+                    <li>skipped_existing: {lastSecondaryResult.skipped_existing}</li>
+                    <li>skipped_needs_review: {lastSecondaryResult.skipped_needs_review}</li>
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Mapping registry */}
       <Card>
         <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2">
