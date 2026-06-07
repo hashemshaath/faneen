@@ -802,6 +802,10 @@ const DashboardProjects = () => {
                 {filteredProjects.map((p) => (
                   <SortableProjectCard key={p.id} project={p} rtl={isRTL} language={language} viewMode={viewMode}
                     isSelected={selectedIds.has(p.id)}
+                    taxonomyName={(() => {
+                      const c = primaryByProject.get(p.id);
+                      return c ? (language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)) : null;
+                    })()}
                     onEdit={openEdit} onGallery={setGalleryProjectId}
                     onDelete={id => setDeleteConfirm(id)}
                     onToggleFeatured={proj => toggleFeaturedMut.mutate(proj)}
