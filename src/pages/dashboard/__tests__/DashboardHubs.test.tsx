@@ -138,7 +138,7 @@ describe('Dashboard Hubs — PageHeader + TabbedShell integration', () => {
 
   it.each(cases)(
     '$name renders PageHeader title, all tab triggers, and routes are wired',
-    ({ Component, titleAr, tabKeys, firstTabLabelAr, secondTabLabelAr, secondTabKey }) => {
+    async ({ Component, titleAr, tabKeys, firstTabLabelAr, secondTabLabelAr, secondTabKey }) => {
       let lastParams = new URLSearchParams();
       renderHub(Component, (p) => {
         lastParams = p;
