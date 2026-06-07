@@ -198,19 +198,42 @@ const Showcase = () => {
 
         {/* Filters */}
         <section className="container mx-auto px-4 py-6">
-          <div className="flex flex-wrap gap-2">
-            {SECTORS.map((s) => (
+          {taxonomyOptionsQ.isLoading ? (
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-20 rounded-full" />
+              ))}
+            </div>
+          ) : taxonomyOptionsQ.isError ? (
+            <p className="text-xs text-muted-foreground">
+              {bi(
+                "تعذر تحميل التصنيفات حاليًا، حاول لاحقًا.",
+                "Failed to load categories. Please try again later.",
+              )}
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
               <Button
-                key={s.slug}
                 size="sm"
-                variant={sector === s.slug ? "default" : "outline"}
-                onClick={() => setSector(s.slug)}
+                variant={sector === "all" ? "default" : "outline"}
+                onClick={() => setSector("all")}
                 className="rounded-full"
               >
-                {bi(s.ar, s.en)}
+                {bi("الكل", "All")}
               </Button>
-            ))}
-          </div>
+              {taxonomyOptions.map((o) => (
+                <Button
+                  key={o.id}
+                  size="sm"
+                  variant={sector === o.slug ? "default" : "outline"}
+                  onClick={() => setSector(o.slug)}
+                  className="rounded-full"
+                >
+                  {bi(o.display_ar, o.display_en || o.display_ar)}
+                </Button>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Logos strip */}
