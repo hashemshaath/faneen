@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, FileText, Play,
   History, Shield, Mail, Activity, Link2, Copy, Download, Send, Globe2,
+  Wrench, Lightbulb, Zap,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { auditSitemapStatus, pingSearchEngines } from '@/modules/seo';
@@ -207,6 +208,128 @@ export default function AdminSitemapStatus() {
     a.click(); URL.revokeObjectURL(url);
   };
 
+  // ─── Recommendations engine ─────────────────────────────────────────
+  type Severity = 'critical' | 'warning' | 'info';
+  interface Recommendation {
+    id: string;
+    severity: Severity;
+    title: string;
+    detail: string;
+    affected?: string[];
+    actionLabel?: string;
+    action?: () => void;
+    actionPending?: boolean;
+    secondary?: { label: string; onClick: () => void };
+  }
+
+  const recommendations = useMemo<Recommendation[]>(() => {
+    const rows = data ?? [];
+    if (!rows.length) return [];
+    const recs: Recommendation[] = [];
+
+    const spaRows = rows.filter((r) => r.result.isSpaFallback);
+    if (spaRows.length) {
+      recs.push({
+        id: 'spa-fallback',
+        severity: 'critical',
+        title: isAr ? 'يتم إرجاع HTML بدلاً من XML' : 'HTML returned instead of XML',
+        detail: isAr
+          ? 'بعض النقاط ترجع صفحة SPA بدلاً من ملف Sitemap صحيح. أعد تشغيل دالة sitemap وتأكد من إعدادات التوجيه (rewrites) قبل الـ SPA.'
+          : 'Some endpoints return the SPA HTML instead of a valid sitemap. Re-run the sitemap function and ensure routing rewrites take precedence over the SPA shell.',
+        affected: spaRows.map((r) => r.url),
+        actionLabel: isAr ? 'إعادة فحص وحفظ' : 'Re-run audit',
+        action: () => runAndSave.mutate(),
+        actionPending: runAndSave.isPending,
+      });
+    }
+
+    const networkErrors = rows.filter((r) => r.result.status === 0);
+    if (networkErrors.length) {
+      recs.push({
+        id: 'network-errors',
+        severity: 'critical',
+        title: isAr ? 'تعذر الوصول لبعض النقاط' : 'Some endpoints are unreachable',
+        detail: isAr
+          ? 'فشل الجلب (CORS أو 5xx). جرّب التشغيل من جانب الخادم عبر "تشغيل وحفظ" للحصول على نتيجة دقيقة.'
+          : 'Fetch failed (CORS or 5xx). Run the server-side audit via "Run & save" for an accurate result.',
+        affected: networkErrors.map((r) => r.url),
+        actionLabel: isAr ? 'تشغيل فحص الخادم' : 'Run server audit',
+        action: () => runAndSave.mutate(),
+        actionPending: runAndSave.isPending,
+      });
+    }
+
+    const httpErrors = rows.filter((r) => r.result.status >= 400);
+    if (httpErrors.length) {
+      recs.push({
+        id: 'http-errors',
+        severity: 'critical',
+        title: isAr ? `أخطاء HTTP (${httpErrors.length})` : `HTTP errors (${httpErrors.length})`,
+        detail: isAr
+          ? 'تحقق من سجلات دالة sitemap لمعرفة السبب (مفتاح ناقص، استعلام DB، أو timeout).'
+          : 'Inspect the sitemap edge function logs to identify the cause (missing key, DB query, or timeout).',
+        affected: httpErrors.map((r) => `${r.url} [${r.result.status}]`),
+      });
+    }
+
+    const emptyTypes = rows.filter((r) => r.url.includes('?type=') && r.result.ok && r.result.urlCount === 0);
+    if (emptyTypes.length) {
+      recs.push({
+        id: 'empty-types',
+        severity: 'warning',
+        title: isAr ? 'sitemaps بدون روابط' : 'Sitemaps with zero URLs',
+        detail: isAr
+          ? 'هذه الأنواع تُرجع XML صحيح لكن بدون روابط — تأكد من وجود بيانات منشورة في الجداول المرتبطة.'
+          : 'These types return valid XML but contain no URLs — verify the underlying tables have published rows.',
+        affected: emptyTypes.map((r) => r.label),
+      });
+    }
+
+    const badRobots = robotsRows.filter((r) => !r.ok);
+    if (badRobots.length) {
+      recs.push({
+        id: 'robots-mismatch',
+        severity: 'warning',
+        title: isAr ? 'قواعد robots.txt غير مطابقة' : 'robots.txt rules mismatch',
+        detail: isAr
+          ? 'حدّث public/robots.txt ليطابق القواعد المتوقعة لكل مسار.'
+          : 'Update public/robots.txt so it matches the expected rules per path.',
+        affected: badRobots.map((r) => `${r.path} → ${isAr ? 'متوقع' : 'expected'} ${r.expected}, ${isAr ? 'فعلي' : 'actual'} ${r.actual}`),
+      });
+    }
+
+    if (!latest) {
+      recs.push({
+        id: 'no-history',
+        severity: 'info',
+        title: isAr ? 'لا يوجد فحص محفوظ' : 'No saved audit yet',
+        detail: isAr ? 'شغّل أول فحص لتفعيل المقارنة التاريخية والتنبيهات.' : 'Run the first audit to enable history comparison and alerts.',
+        actionLabel: isAr ? 'تشغيل وحفظ' : 'Run & save',
+        action: () => runAndSave.mutate(),
+        actionPending: runAndSave.isPending,
+      });
+    }
+
+    if (errorCount === 0 && spaCount === 0 && rows.length > 0) {
+      recs.push({
+        id: 'ping-engines',
+        severity: 'info',
+        title: isAr ? 'كل شيء سليم — أعلم محركات البحث' : 'Everything healthy — notify search engines',
+        detail: isAr
+          ? 'لا توجد أخطاء حالياً. أرسل ping لـ Google و Bing لتسريع إعادة الفهرسة.'
+          : 'No errors detected. Ping Google and Bing to accelerate re-indexing.',
+        actionLabel: isAr ? 'إعلام محركات البحث' : 'Ping search engines',
+        action: () => pingMutation.mutate(),
+        actionPending: pingMutation.isPending,
+      });
+    }
+
+    return recs;
+  }, [data, robotsRows, latest, errorCount, spaCount, isAr, runAndSave, pingMutation]);
+
+  const criticalCount = recommendations.filter((r) => r.severity === 'critical').length;
+  const warningCount = recommendations.filter((r) => r.severity === 'warning').length;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -262,6 +385,82 @@ export default function AdminSitemapStatus() {
           onClear={() => { setStatusFilter('all'); setSearch(''); }}
           clearLabel={isAr ? 'مسح' : 'Clear'}
         />
+
+        {/* Recommendations / Auto-fix */}
+        <Card className={criticalCount ? 'border-destructive/40' : warningCount ? 'border-warning/40' : ''}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 flex-wrap">
+              <Lightbulb className="h-5 w-5 text-warning" />
+              {isAr ? 'التوصيات والإصلاح التلقائي' : 'Recommendations & auto-fix'}
+              {criticalCount > 0 && (
+                <Badge variant="destructive" className="tech-content">
+                  {criticalCount} {isAr ? 'حرج' : 'critical'}
+                </Badge>
+              )}
+              {warningCount > 0 && (
+                <Badge variant="secondary" className="tech-content bg-warning/15 text-warning border-warning/30">
+                  {warningCount} {isAr ? 'تحذير' : 'warning'}
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {isLoading && <Skeleton className="h-24 w-full" />}
+            {!isLoading && recommendations.length === 0 && (
+              <div className="flex items-center gap-3 text-sm text-muted-foreground py-6 justify-center">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+                {isAr ? 'لا توجد توصيات — كل النقاط تعمل بشكل مثالي.' : 'No recommendations — all endpoints are perfect.'}
+              </div>
+            )}
+            {!isLoading && recommendations.map((rec) => {
+              const sevTone =
+                rec.severity === 'critical'
+                  ? 'border-destructive/40 bg-destructive/5'
+                  : rec.severity === 'warning'
+                  ? 'border-warning/40 bg-warning/5'
+                  : 'border-primary/30 bg-primary/5';
+              const SevIcon =
+                rec.severity === 'critical' ? AlertTriangle : rec.severity === 'warning' ? Wrench : Zap;
+              const sevColor =
+                rec.severity === 'critical' ? 'text-destructive' : rec.severity === 'warning' ? 'text-warning' : 'text-primary';
+              return (
+                <div key={rec.id} className={`border rounded-2xl p-4 ${sevTone}`}>
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                      <SevIcon className={`h-5 w-5 mt-0.5 shrink-0 ${sevColor}`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold">{rec.title}</div>
+                        <p className="text-sm text-muted-foreground mt-1">{rec.detail}</p>
+                        {rec.affected && rec.affected.length > 0 && (
+                          <ul className="mt-2 text-xs text-muted-foreground tech-content space-y-0.5 list-disc ms-5">
+                            {rec.affected.slice(0, 5).map((a) => (
+                              <li key={a} className="break-all">{a}</li>
+                            ))}
+                            {rec.affected.length > 5 && (
+                              <li className="opacity-70">+{rec.affected.length - 5} {isAr ? 'أخرى' : 'more'}</li>
+                            )}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                    {rec.action && rec.actionLabel && (
+                      <Button
+                        size="sm"
+                        variant={rec.severity === 'critical' ? 'default' : 'outline'}
+                        onClick={rec.action}
+                        disabled={rec.actionPending}
+                        className="gap-2 shrink-0"
+                      >
+                        <Wrench className={`h-3.5 w-3.5 ${rec.actionPending ? 'animate-pulse' : ''}`} />
+                        {rec.actionLabel}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
