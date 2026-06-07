@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { FolderTree, AlertTriangle, Database, Activity } from 'lucide-react';
+import { FolderTree, AlertTriangle, Activity, Plus, Download, LayoutList, TreePine } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -12,6 +13,7 @@ import {
   getTaxonomyCategories,
   getTaxonomyRelations,
   getTaxonomyTypes,
+  updateTaxonomyCategory,
   updateTaxonomySortOrder,
 } from '../services';
 import {
@@ -19,13 +21,15 @@ import {
   getTaxonomyUsageCounts,
 } from '../usage-services';
 import { buildTaxonomyTree, evaluateTaxonomyQuality, normalizeTaxonomyLabel, toCsv } from '../utils';
-import type { TaxonomyCategory, TaxonomyViewMode } from '../types';
+import type { TaxonomyCategory } from '../types';
 
 import { TaxonomySummaryCards } from './TaxonomySummaryCards';
-import { TaxonomyFilters, defaultTaxonomyFilters, type TaxonomyFilterState } from './TaxonomyFilters';
+import { defaultTaxonomyFilters, type TaxonomyFilterState } from './TaxonomyFilters';
+import { TaxonomySearchBar } from './TaxonomySearchBar';
+import { TaxonomyTypeChips, classifyTaxonomyType, type TaxonomyGroupKey } from './TaxonomyTypeChips';
+import { TaxonomyCategoryList } from './TaxonomyCategoryList';
+import { TaxonomyCategoryDetails } from './TaxonomyCategoryDetails';
 import { TaxonomyTreeView } from './TaxonomyTreeView';
-import { TaxonomyTableView } from './TaxonomyTableView';
-import { TaxonomyCardView } from './TaxonomyCardView';
 import { TaxonomyEditorPanel } from './TaxonomyEditorPanel';
 import { TaxonomyQualityPanel } from './TaxonomyQualityPanel';
 import { TaxonomyFallbackReportCard } from './TaxonomyFallbackReportCard';
@@ -50,9 +54,12 @@ export const TaxonomyAdminPage: React.FC = () => {
   const relsQ = useQuery({ queryKey: QK.rels, queryFn: getTaxonomyRelations });
 
   const [filters, setFilters] = useState<TaxonomyFilterState>(defaultTaxonomyFilters);
-  const [view, setView] = useState<TaxonomyViewMode>('tree');
+  const [group, setGroup] = useState<TaxonomyGroupKey>('all');
+  const [view, setView] = useState<'list' | 'tree'>('list');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [presetParentId, setPresetParentId] = useState<string | null>(null);
 
   const types = typesQ.data ?? [];
   const categories = catsQ.data ?? [];
@@ -73,6 +80,11 @@ export const TaxonomyAdminPage: React.FC = () => {
   });
   const usage = usageQ.data;
 
+  const groupByTypeId = useMemo(
+    () => new Map(types.map((t) => [t.id, classifyTaxonomyType(t.code)] as const)),
+    [types],
+  );
+
   const filtered = useMemo<TaxonomyCategory[]>(() => {
     const q = normalizeTaxonomyLabel(filters.query);
     const aliasNorm = new Map<string, string[]>();
@@ -83,6 +95,7 @@ export const TaxonomyAdminPage: React.FC = () => {
       aliasNorm.set(a.category_id, arr);
     });
     return categories.filter((c) => {
+      if (group !== 'all' && groupByTypeId.get(c.taxonomy_type_id) !== group) return false;
       if (filters.typeId !== 'all' && c.taxonomy_type_id !== filters.typeId) return false;
       if (filters.status === 'active' && (!c.is_active || c.is_archived)) return false;
       if (filters.status === 'hidden' && (c.is_active || c.is_archived)) return false;
@@ -100,7 +113,19 @@ export const TaxonomyAdminPage: React.FC = () => {
       }
       return true;
     });
-  }, [categories, filters, aliases]);
+  }, [categories, filters, aliases, group, groupByTypeId]);
+
+  // direct child counts (used by the list)
+  const childrenCount = useMemo(() => {
+    const m = new Map<string, number>();
+    categories.forEach((c) => { if (c.parent_id) m.set(c.parent_id, (m.get(c.parent_id) ?? 0) + 1); });
+    return m;
+  }, [categories]);
+
+  // ensure selection stays valid
+  const selectedCategory = selectedId ? categories.find((c) => c.id === selectedId) ?? null : null;
+  const visibleSelected =
+    selectedCategory && filtered.some((c) => c.id === selectedCategory.id) ? selectedCategory : null;
 
   const trees = useMemo(() => {
     const map = new Map<string, ReturnType<typeof buildTaxonomyTree>>();
@@ -128,9 +153,10 @@ export const TaxonomyAdminPage: React.FC = () => {
 
   const editingCategory = editId ? categories.find((c) => c.id === editId) ?? null : null;
 
-  const handleEdit = (id: string) => { setEditId(id); setEditorOpen(true); };
-  const handleNew = () => { setEditId(null); setEditorOpen(true); };
-  const handleClose = () => { setEditorOpen(false); setEditId(null); };
+  const handleEdit = (id: string) => { setEditId(id); setPresetParentId(null); setEditorOpen(true); };
+  const handleNew = () => { setEditId(null); setPresetParentId(null); setEditorOpen(true); };
+  const handleAddChild = (parentId: string) => { setEditId(null); setPresetParentId(parentId); setEditorOpen(true); };
+  const handleClose = () => { setEditorOpen(false); setEditId(null); setPresetParentId(null); };
   const refetchAll = () => {
     qc.invalidateQueries({ queryKey: ['taxonomy'] });
   };
@@ -156,8 +182,25 @@ export const TaxonomyAdminPage: React.FC = () => {
 
   const handleArchive = async (id: string) => {
     const { archiveTaxonomyCategory } = await import('../services');
+    const cat = categories.find((c) => c.id === id);
+    const usedBiz = (usage?.businesses.get(id) ?? 0) + (usage?.showcase.get(id) ?? 0);
+    if (usedBiz > 0) {
+      const ok = window.confirm(isRTL
+        ? `هذا التصنيف مستخدم في ${usedBiz} منشآت/أعمال. أرشفته قد تؤثر على الظهور والفلترة. هل تريد المتابعة؟`
+        : `This category is used in ${usedBiz} businesses/works. Archiving may affect visibility and filtering. Continue?`);
+      if (!ok) return;
+    }
+    if (!cat) return;
     try { await archiveTaxonomyCategory(id); toast.success(isRTL ? 'تمت الأرشفة' : 'Archived'); refetchAll(); }
     catch (e) { toast.error(e instanceof Error ? e.message : String(e)); }
+  };
+
+  const handleToggleActive = async (id: string, next: boolean) => {
+    try {
+      await updateTaxonomyCategory(id, { is_active: next });
+      toast.success(next ? (isRTL ? 'تم التفعيل' : 'Activated') : (isRTL ? 'تم الإخفاء' : 'Hidden'));
+      refetchAll();
+    } catch (e) { toast.error(e instanceof Error ? e.message : String(e)); }
   };
 
   const handleExportCsv = () => {
@@ -215,13 +258,26 @@ export const TaxonomyAdminPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-screen-2xl mx-auto px-4 md:px-6 py-6 space-y-5">
-        <header className="space-y-1">
-          <div className="inline-flex items-center gap-2 text-primary">
-            <Database className="w-5 h-5" />
-            <span className="text-xs font-semibold tracking-wide uppercase">{isRTL ? 'لوحة الأدمن' : 'Admin'}</span>
+        {/* Calm header */}
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div className="space-y-1 min-w-0">
+            <h1 className="font-heading font-extrabold text-2xl md:text-3xl">
+              {isRTL ? 'مركز التصنيفات' : 'Taxonomy center'}
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-2xl">
+              {isRTL
+                ? 'أدر أنواع الجهات، الأنشطة، الخدمات، المنتجات، العقود، الدفعات، والكلمات البحثية من مكان واحد.'
+                : 'Manage entity types, activities, services, products, contracts, payments, and search keywords in one place.'}
+            </p>
           </div>
-          <h1 className="font-heading font-extrabold text-2xl md:text-3xl">{isRTL ? 'مركز التصنيفات والقوائم المرجعية' : 'Taxonomy & Reference Data Center'}</h1>
-          <p className="text-sm text-muted-foreground max-w-3xl">{isRTL ? 'إدارة مركزية للتصنيفات، الأنشطة، المنتجات، العقود، الدفعات، الكلمات البحثية، والروابط داخل منصة قطاعات.' : 'Central management for classifications, activities, products, contracts, payments, search terms, and relations across Qitaat.'}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" className="h-10 rounded-xl gap-1.5" onClick={handleExportCsv}>
+              <Download className="w-4 h-4" /> {isRTL ? 'تصدير CSV' : 'Export CSV'}
+            </Button>
+            <Button className="h-10 rounded-xl gap-1.5" onClick={handleNew}>
+              <Plus className="w-4 h-4" /> {isRTL ? 'إضافة تصنيف' : 'New category'}
+            </Button>
+          </div>
         </header>
 
         {loading ? (
@@ -232,33 +288,69 @@ export const TaxonomyAdminPage: React.FC = () => {
           </div>
         ) : (
           <>
-            <TaxonomySummaryCards types={types} categories={categories} aliases={aliases} />
+            <TaxonomySummaryCards categories={categories} issuesCount={issues.length} />
 
             <Tabs defaultValue="manage" className="w-full">
               <TabsList className="rounded-xl">
-                <TabsTrigger value="manage" className="rounded-lg gap-1.5"><FolderTree className="w-3.5 h-3.5" />{isRTL ? 'إدارة' : 'Manage'}</TabsTrigger>
+                <TabsTrigger value="manage" className="rounded-lg gap-1.5"><FolderTree className="w-3.5 h-3.5" />{isRTL ? 'التصنيفات' : 'Categories'}</TabsTrigger>
                 <TabsTrigger value="quality" className="rounded-lg gap-1.5"><AlertTriangle className="w-3.5 h-3.5" />{isRTL ? 'مراجعة الجودة' : 'Quality'} <span className="text-[10px] tech-content opacity-70">({issues.length})</span></TabsTrigger>
                 <TabsTrigger value="usage" className="rounded-lg gap-1.5"><Activity className="w-3.5 h-3.5" />{isRTL ? 'الاستخدام' : 'Usage'}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="manage" className="space-y-4 mt-4">
-                <TaxonomyFilters
-                  types={types}
-                  value={filters}
-                  onChange={setFilters}
-                  view={view}
-                  onViewChange={setView}
-                  onExportCsv={handleExportCsv}
-                  onNew={handleNew}
-                />
-                {view === 'tree' && (
+                <TaxonomySearchBar value={filters} onChange={setFilters} />
+                <TaxonomyTypeChips value={group} onChange={setGroup} types={types} categories={categories} />
+
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs text-muted-foreground">
+                    {isRTL ? `${filtered.length} تصنيف` : `${filtered.length} categories`}
+                  </div>
+                  <div className="inline-flex rounded-xl border border-border bg-muted/30 p-0.5 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setView('list')}
+                      className={`px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-colors ${view==='list' ? 'bg-background shadow-sm font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                      <LayoutList className="w-3.5 h-3.5" /> {isRTL ? 'قائمة' : 'List'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setView('tree')}
+                      className={`px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-colors ${view==='tree' ? 'bg-background shadow-sm font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                      <TreePine className="w-3.5 h-3.5" /> {isRTL ? 'شجرة' : 'Tree'}
+                    </button>
+                  </div>
+                </div>
+
+                {view === 'list' ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,360px)_1fr] gap-4">
+                    <div className="max-h-[72vh] overflow-y-auto pe-1">
+                      <TaxonomyCategoryList
+                        rows={filtered}
+                        types={types}
+                        childrenCount={childrenCount}
+                        selectedId={visibleSelected?.id ?? null}
+                        onSelect={setSelectedId}
+                      />
+                    </div>
+                    <div>
+                      <TaxonomyCategoryDetails
+                        category={visibleSelected}
+                        types={types}
+                        categories={categories}
+                        usage={usage}
+                        onEdit={handleEdit}
+                        onAddChild={handleAddChild}
+                        onArchive={handleArchive}
+                        onToggleActive={handleToggleActive}
+                        onMove={handleMove}
+                        onSelect={setSelectedId}
+                      />
+                    </div>
+                  </div>
+                ) : (
                   <TaxonomyTreeView types={types} trees={trees} onEdit={handleEdit} onMove={handleMove} onArchive={handleArchive} />
-                )}
-                {view === 'table' && (
-                  <TaxonomyTableView rows={filtered} types={types} categories={categories} onEdit={handleEdit} onArchive={handleArchive} />
-                )}
-                {view === 'cards' && (
-                  <TaxonomyCardView rows={filtered} types={types} onEdit={handleEdit} onArchive={handleArchive} />
                 )}
               </TabsContent>
 
@@ -306,6 +398,7 @@ export const TaxonomyAdminPage: React.FC = () => {
       <TaxonomyEditorPanel
         open={editorOpen}
         category={editingCategory}
+        presetParentId={presetParentId}
         types={types}
         categories={categories}
         aliases={aliases}

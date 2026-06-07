@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { X, Save, Archive, Trash2, RefreshCw } from 'lucide-react';
+import { X, Save, Archive, Trash2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import type { TaxonomyAlias, TaxonomyCategory, TaxonomyCategoryInput, TaxonomyRelation, TaxonomyType } from '../types';
 import {
@@ -59,6 +60,7 @@ const emptyInput = (): TaxonomyCategoryInput => ({
 interface Props {
   open: boolean;
   category: TaxonomyCategory | null;
+  presetParentId?: string | null;
   types: TaxonomyType[];
   categories: TaxonomyCategory[];
   aliases: TaxonomyAlias[];
@@ -68,13 +70,15 @@ interface Props {
 }
 
 export const TaxonomyEditorPanel: React.FC<Props> = ({
-  open, category, types, categories, aliases, relations, onClose, onSaved,
+  open, category, presetParentId, types, categories, aliases, relations, onClose, onSaved,
 }) => {
   const { isRTL } = useLanguage();
   const [form, setForm] = useState<TaxonomyCategoryInput>(emptyInput());
   const [kwAr, setKwAr] = useState('');
   const [kwEn, setKwEn] = useState('');
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<'basics' | 'visibility' | 'seo' | 'aliases' | 'relations' | 'advanced'>('basics');
+  const [initialSlug, setInitialSlug] = useState<string>('');
 
   useEffect(() => {
     if (category) {
@@ -85,13 +89,23 @@ export const TaxonomyEditorPanel: React.FC<Props> = ({
         keywords_en: category.keywords_en ?? [],
         metadata: (category.metadata as Record<string, unknown>) ?? {},
       });
+      setInitialSlug(category.slug);
     } else {
       const def = emptyInput();
       def.taxonomy_type_id = types[0]?.id ?? '';
+      if (presetParentId) {
+        const parent = categories.find((c) => c.id === presetParentId);
+        if (parent) {
+          def.taxonomy_type_id = parent.taxonomy_type_id;
+          def.parent_id = parent.id;
+        }
+      }
       setForm(def);
+      setInitialSlug('');
     }
     setKwAr(''); setKwEn('');
-  }, [category, types, open]);
+    setTab('basics');
+  }, [category, types, open, presetParentId, categories]);
 
   const slugValidation = useMemo(() => validateTaxonomySlug(form.slug), [form.slug]);
 
@@ -162,6 +176,8 @@ export const TaxonomyEditorPanel: React.FC<Props> = ({
 
   if (!open) return null;
 
+  const slugChanged = Boolean(category && initialSlug && form.slug !== initialSlug);
+
   const FlagRow = ({ k, label }: { k: keyof TaxonomyCategoryInput; label: string }) => (
     <div className="flex items-center justify-between py-1.5">
       <Label className="text-xs">{label}</Label>
@@ -176,15 +192,27 @@ export const TaxonomyEditorPanel: React.FC<Props> = ({
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-5 py-3 flex items-center justify-between">
           <div>
             <div className="font-heading font-bold">{category ? (isRTL ? 'تعديل تصنيف' : 'Edit category') : (isRTL ? 'تصنيف جديد' : 'New category')}</div>
-            {category && <div className="text-xs text-muted-foreground tech-content">{category.id}</div>}
+            {category && <div className="text-[10px] text-muted-foreground tech-content">{category.id}</div>}
           </div>
           <Button size="icon" variant="ghost" onClick={onClose}><X className="w-4 h-4" /></Button>
         </div>
 
-        <div className="p-5 space-y-6">
-          {/* Basic */}
-          <section className="space-y-3">
-            <h3 className="font-heading font-bold text-sm text-muted-foreground">{isRTL ? 'البيانات الأساسية' : 'Basics'}</h3>
+        <div className="p-5 space-y-5">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+            <TabsList className="rounded-xl flex-wrap h-auto">
+              <TabsTrigger value="basics" className="rounded-lg text-xs">{isRTL ? 'البيانات الأساسية' : 'Basics'}</TabsTrigger>
+              <TabsTrigger value="visibility" className="rounded-lg text-xs">{isRTL ? 'الظهور والحالة' : 'Visibility'}</TabsTrigger>
+              <TabsTrigger value="seo" className="rounded-lg text-xs">{isRTL ? 'SEO والكلمات' : 'SEO'}</TabsTrigger>
+              {category && (
+                <>
+                  <TabsTrigger value="aliases" className="rounded-lg text-xs">{isRTL ? 'المرادفات' : 'Aliases'}</TabsTrigger>
+                  <TabsTrigger value="relations" className="rounded-lg text-xs">{isRTL ? 'العلاقات' : 'Relations'}</TabsTrigger>
+                </>
+              )}
+              <TabsTrigger value="advanced" className="rounded-lg text-xs">{isRTL ? 'إعدادات متقدمة' : 'Advanced'}</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="basics" className="space-y-3 mt-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">{isRTL ? 'النوع' : 'Type'}</Label>
@@ -194,7 +222,7 @@ export const TaxonomyEditorPanel: React.FC<Props> = ({
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">{isRTL ? 'الأب' : 'Parent'}</Label>
+                <Label className="text-xs">{isRTL ? 'التصنيف الأب' : 'Parent category'}</Label>
                 <Select value={form.parent_id ?? 'none'} onValueChange={(v) => set('parent_id', v === 'none' ? null : v)}>
                   <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -213,11 +241,19 @@ export const TaxonomyEditorPanel: React.FC<Props> = ({
               </div>
               <div className="space-y-1 col-span-2">
                 <Label className="text-xs flex items-center justify-between">
-                  <span className="tech-content">slug *</span>
+                  <span>{isRTL ? 'الرابط المختصر' : 'Short link'} <span className="text-muted-foreground tech-content">(slug) *</span></span>
                   <button type="button" onClick={handleAutoSlug} className="text-primary hover:underline inline-flex items-center gap-1"><RefreshCw className="w-3 h-3" /> {isRTL ? 'توليد' : 'auto'}</button>
                 </Label>
                 <Input dir="ltr" value={form.slug} onChange={(e) => set('slug', e.target.value)} className="h-10 rounded-xl tech-content" />
                 {!slugValidation.valid && form.slug && <div className="text-xs text-destructive">{isRTL ? 'slug غير صالح — استخدم أحرف صغيرة وأرقام وشرطات فقط.' : 'Invalid slug — lowercase, digits, hyphens only.'}</div>}
+                {slugChanged && slugValidation.valid && (
+                  <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5 flex items-start gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                    <span>{isRTL
+                      ? 'تغيير الرابط المختصر قد يؤثر على الروابط أو صفحات SEO المرتبطة بهذا التصنيف.'
+                      : 'Changing the short link may affect URLs or SEO pages linked to this category.'}</span>
+                  </div>
+                )}
               </div>
               <div className="space-y-1 col-span-2">
                 <Label className="text-xs">{isRTL ? 'الوصف المختصر (عربي)' : 'Short description (AR)'}</Label>
@@ -248,23 +284,21 @@ export const TaxonomyEditorPanel: React.FC<Props> = ({
                 <Input type="number" value={form.sort_order} onChange={(e) => set('sort_order', Number(e.target.value) || 0)} className="h-10 rounded-xl tech-content" />
               </div>
             </div>
-          </section>
+            </TabsContent>
 
-          {/* Status */}
-          <section className="space-y-2">
-            <h3 className="font-heading font-bold text-sm text-muted-foreground">{isRTL ? 'الحالة' : 'Status'}</h3>
-            <div className="grid grid-cols-2 gap-x-6 rounded-xl border border-border bg-muted/20 p-3">
-              <FlagRow k="is_active" label={isRTL ? 'نشط' : 'Active'} />
-              <FlagRow k="is_public" label={isRTL ? 'عام' : 'Public'} />
-              <FlagRow k="is_searchable" label={isRTL ? 'قابل للبحث' : 'Searchable'} />
-              <FlagRow k="is_featured" label={isRTL ? 'مميز' : 'Featured'} />
-              <FlagRow k="is_archived" label={isRTL ? 'مؤرشف' : 'Archived'} />
-            </div>
-          </section>
-
-          {/* Visibility */}
-          <section className="space-y-2">
-            <h3 className="font-heading font-bold text-sm text-muted-foreground">{isRTL ? 'أماكن الظهور' : 'Visibility'}</h3>
+            <TabsContent value="visibility" className="space-y-3 mt-4">
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold text-muted-foreground">{isRTL ? 'الحالة' : 'Status'}</h3>
+                <div className="grid grid-cols-2 gap-x-6 rounded-xl border border-border bg-muted/20 p-3">
+                  <FlagRow k="is_active" label={isRTL ? 'نشط' : 'Active'} />
+                  <FlagRow k="is_public" label={isRTL ? 'عام' : 'Public'} />
+                  <FlagRow k="is_searchable" label={isRTL ? 'قابل للبحث' : 'Searchable'} />
+                  <FlagRow k="is_featured" label={isRTL ? 'مميز' : 'Featured'} />
+                  <FlagRow k="is_archived" label={isRTL ? 'مؤرشف' : 'Archived'} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold text-muted-foreground">{isRTL ? 'أماكن الظهور' : 'Visibility'}</h3>
             <div className="grid grid-cols-2 gap-x-6 rounded-xl border border-border bg-muted/20 p-3">
               <FlagRow k="show_in_registration" label={isRTL ? 'في التسجيل' : 'In registration'} />
               <FlagRow k="show_in_search" label={isRTL ? 'في البحث' : 'In search'} />
@@ -275,11 +309,10 @@ export const TaxonomyEditorPanel: React.FC<Props> = ({
               <FlagRow k="show_in_quotes" label={isRTL ? 'في عروض الأسعار' : 'In quotes'} />
               <FlagRow k="show_in_admin_only" label={isRTL ? 'في الأدمن فقط' : 'Admin only'} />
             </div>
-          </section>
+              </div>
+            </TabsContent>
 
-          {/* SEO */}
-          <section className="space-y-2">
-            <h3 className="font-heading font-bold text-sm text-muted-foreground">SEO</h3>
+            <TabsContent value="seo" className="space-y-3 mt-4">
             <div className="grid grid-cols-1 gap-3">
               <Input dir="auto" placeholder={isRTL ? 'عنوان SEO عربي' : 'SEO title AR'} value={form.seo_title_ar ?? ''} onChange={(e) => set('seo_title_ar', e.target.value || null)} className="h-10 rounded-xl" />
               <Textarea dir="auto" placeholder={isRTL ? 'وصف SEO عربي' : 'SEO description AR'} value={form.seo_description_ar ?? ''} onChange={(e) => set('seo_description_ar', e.target.value || null)} className="rounded-xl" rows={2} />
@@ -311,23 +344,21 @@ export const TaxonomyEditorPanel: React.FC<Props> = ({
                 </div>
               </div>
             </div>
-          </section>
+            </TabsContent>
 
-          {category && (
-            <>
-              <section className="space-y-2">
-                <h3 className="font-heading font-bold text-sm text-muted-foreground">{isRTL ? 'المرادفات' : 'Aliases'}</h3>
+            {category && (
+              <TabsContent value="aliases" className="mt-4">
                 <TaxonomyAliasesEditor categoryId={category.id} aliases={aliases} onChanged={onSaved} />
-              </section>
-              <section className="space-y-2">
-                <h3 className="font-heading font-bold text-sm text-muted-foreground">{isRTL ? 'العلاقات' : 'Relations'}</h3>
+              </TabsContent>
+            )}
+            {category && (
+              <TabsContent value="relations" className="mt-4">
                 <TaxonomyRelationsEditor categoryId={category.id} categories={categories} relations={relations} onChanged={onSaved} />
-              </section>
-            </>
-          )}
+              </TabsContent>
+            )}
 
-          <section className="space-y-2">
-            <h3 className="font-heading font-bold text-sm text-muted-foreground">Metadata (JSON)</h3>
+            <TabsContent value="advanced" className="space-y-2 mt-4">
+              <Label className="text-xs">{isRTL ? 'إعدادات متقدمة (JSON)' : 'Advanced (JSON metadata)'}</Label>
             <Textarea
               dir="ltr"
               className="rounded-xl tech-content text-xs"
@@ -338,7 +369,8 @@ export const TaxonomyEditorPanel: React.FC<Props> = ({
                 catch { /* keep typing — validation on save */ }
               }}
             />
-          </section>
+            </TabsContent>
+          </Tabs>
         </div>
 
         <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t border-border px-5 py-3 flex items-center gap-2">
