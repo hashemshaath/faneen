@@ -18,10 +18,8 @@
  */
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  LEGACY_SECTOR_TO_TAXONOMY_SLUG,
-  getTaxonomyBusinessIdsForCategory,
-} from '@/modules/taxonomy';
+import { LEGACY_SECTOR_TO_TAXONOMY_SLUG } from '@/modules/taxonomy';
+import { getTaxonomyBusinessIdsForCategory } from '@/modules/taxonomy/search-integration';
 
 export interface SectorTaxonomyCategory {
   id: string;
