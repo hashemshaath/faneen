@@ -31,6 +31,7 @@ import {
 } from '../migration-services';
 import { getTaxonomyCategories } from '../services';
 import type { TaxonomyCategory } from '../types';
+import { TaxonomyAdoptionCard } from './TaxonomyAdoptionCard';
 
 const STATUS_LABELS: Record<LegacyMappingStatus, { ar: string; en: string; tone: string }> = {
   mapped:       { ar: 'مربوط',       en: 'Mapped',       tone: 'bg-emerald-500/15 text-emerald-700' },
@@ -192,6 +193,9 @@ export const TaxonomyMigrationPanel: React.FC = () => {
           <RefreshCw className="w-3.5 h-3.5" />{isRTL ? 'تحديث' : 'Refresh'}
         </Button>
       </div>
+
+      {/* Adoption monitor — added to track new businesses without taxonomy */}
+      <TaxonomyAdoptionCard />
 
       {/* Inventory */}
       <Card>
