@@ -15296,6 +15296,266 @@ export type Database = {
         }
         Relationships: []
       }
+      taxonomy_aliases: {
+        Row: {
+          alias_ar: string
+          alias_en: string | null
+          category_id: string
+          created_at: string
+          id: string
+          normalized_alias: string | null
+          source: string
+        }
+        Insert: {
+          alias_ar: string
+          alias_en?: string | null
+          category_id: string
+          created_at?: string
+          id?: string
+          normalized_alias?: string | null
+          source?: string
+        }
+        Update: {
+          alias_ar?: string
+          alias_en?: string | null
+          category_id?: string
+          created_at?: string
+          id?: string
+          normalized_alias?: string | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxonomy_aliases_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taxonomy_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          is_archived: boolean
+          is_featured: boolean
+          is_public: boolean
+          is_searchable: boolean
+          keywords_ar: string[]
+          keywords_en: string[]
+          metadata: Json
+          name_ar: string
+          name_en: string | null
+          parent_id: string | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
+          short_description_ar: string | null
+          short_description_en: string | null
+          show_in_admin_only: boolean
+          show_in_contracts: boolean
+          show_in_products: boolean
+          show_in_quotes: boolean
+          show_in_registration: boolean
+          show_in_search: boolean
+          show_in_seo: boolean
+          show_in_showcase: boolean
+          slug: string
+          sort_order: number
+          taxonomy_type_id: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          is_archived?: boolean
+          is_featured?: boolean
+          is_public?: boolean
+          is_searchable?: boolean
+          keywords_ar?: string[]
+          keywords_en?: string[]
+          metadata?: Json
+          name_ar: string
+          name_en?: string | null
+          parent_id?: string | null
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
+          short_description_ar?: string | null
+          short_description_en?: string | null
+          show_in_admin_only?: boolean
+          show_in_contracts?: boolean
+          show_in_products?: boolean
+          show_in_quotes?: boolean
+          show_in_registration?: boolean
+          show_in_search?: boolean
+          show_in_seo?: boolean
+          show_in_showcase?: boolean
+          slug: string
+          sort_order?: number
+          taxonomy_type_id: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          is_archived?: boolean
+          is_featured?: boolean
+          is_public?: boolean
+          is_searchable?: boolean
+          keywords_ar?: string[]
+          keywords_en?: string[]
+          metadata?: Json
+          name_ar?: string
+          name_en?: string | null
+          parent_id?: string | null
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
+          short_description_ar?: string | null
+          short_description_en?: string | null
+          show_in_admin_only?: boolean
+          show_in_contracts?: boolean
+          show_in_products?: boolean
+          show_in_quotes?: boolean
+          show_in_registration?: boolean
+          show_in_search?: boolean
+          show_in_seo?: boolean
+          show_in_showcase?: boolean
+          slug?: string
+          sort_order?: number
+          taxonomy_type_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxonomy_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxonomy_categories_taxonomy_type_id_fkey"
+            columns: ["taxonomy_type_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taxonomy_category_relations: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          related_category_id: string
+          relation_type: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          related_category_id: string
+          relation_type: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          related_category_id?: string
+          relation_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxonomy_category_relations_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxonomy_category_relations_related_category_id_fkey"
+            columns: ["related_category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taxonomy_types: {
+        Row: {
+          allows_children: boolean
+          allows_multiple_selection: boolean
+          code: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          is_active: boolean
+          is_hierarchical: boolean
+          metadata: Json
+          name_ar: string
+          name_en: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          allows_children?: boolean
+          allows_multiple_selection?: boolean
+          code: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          is_hierarchical?: boolean
+          metadata?: Json
+          name_ar: string
+          name_en?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          allows_children?: boolean
+          allows_multiple_selection?: boolean
+          code?: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          is_hierarchical?: boolean
+          metadata?: Json
+          name_ar?: string
+          name_en?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_favorite_businesses: {
         Row: {
           business_id: string
