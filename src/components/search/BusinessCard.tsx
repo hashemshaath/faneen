@@ -143,17 +143,11 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
   const visibleTags = serviceTags.slice(0, 3);
   const remainingTags = Math.max(0, serviceTags.length - visibleTags.length);
 
-  // Service-category diversity — count distinct non-null category_id values
-  // among active services. Only meaningful when > 1 (provider spans multiple
-  // service categories).
-  const distinctServiceCategoryCount = (() => {
-    const set = new Set<string>();
-    for (const s of services) {
-      const cid = (s as { category_id?: string | null }).category_id;
-      if (typeof cid === 'string' && cid.length > 0) set.add(cid);
-    }
-    return set.size;
-  })();
+  // Phase 18c — Service-category diversity now derives from the modern
+  // taxonomy (`business_service_taxonomy_categories`) surfaced via
+  // `taxonomyDisplay.serviceLabels`. The legacy `business_services.category_id`
+  // column is no longer consulted here.
+  const distinctServiceCategoryCount = tx?.serviceLabels.length ?? 0;
   const diversityCount = distinctServiceCategoryCount > 1 ? distinctServiceCategoryCount : 0;
 
   // Reusable compact category badge (icon + name). Renders nothing when the
