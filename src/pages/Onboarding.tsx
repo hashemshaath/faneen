@@ -348,6 +348,15 @@ const Onboarding = () => {
                   : 'Business created, but the classification could not be saved. You can update it later from the business edit page.',
               );
             }
+          } else if (businessId && taxonomyStatus !== 'ok') {
+            // Phase 2.1-b — Taxonomy never loaded; we no longer fall back to
+            // writing legacy `sectors`/`sub_services`. Let the user know they
+            // can classify later from the dashboard.
+            toast.info(
+              isRTL
+                ? 'تم إنشاء المنشأة، ويمكن تحديث التصنيف لاحقًا من لوحة التحكم.'
+                : 'Business created. You can update the classification later from your dashboard.',
+            );
           }
         } catch { /* non-blocking */ }
       }
