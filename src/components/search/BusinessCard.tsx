@@ -52,8 +52,7 @@ const getPlaceholderGradient = (name: string) => {
 
 export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: BusinessCardProps) => {
   const { language, isRTL } = useLanguage();
-  const auth = (() => { try { return useAuth(); } catch { return null; } })();
-  const isAdmin = Boolean(auth?.isAdmin);
+  const { isAdmin } = useAuth();
   const [pressed, setPressed] = useState(false);
   const Arrow = isRTL ? ChevronLeft : ChevronRight;
   const { isFavorite, toggleFavorite } = useBusinessFavorites();
