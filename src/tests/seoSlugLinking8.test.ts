@@ -27,34 +27,20 @@ function extractLinkTargets(src: string): string[] {
   return out;
 }
 
-describe('SEO-8 ProjectDetail slug-guarded sector deep links', () => {
+describe('SEO-8 ProjectDetail public-link safety (taxonomy-only)', () => {
+  // Phase 17 — ProjectDetail no longer fetches the legacy `categories` row
+  // (getCategoryById was deleted). Category display is taxonomy-only via
+  // `project_taxonomy_categories`. The slug-guarded sector deep links from
+  // SEO-8 were removed with the legacy fallback; only the private-link
+  // hygiene guard remains.
   const src = read('src/pages/ProjectDetail.tsx');
 
-  it('imports the curated sector/city slug sources', () => {
-    expect(src).toContain("from '@/lib/sector-keywords'");
-    expect(src).toContain('detectSectorFromCategorySlug');
-    expect(src).toContain("from '@/lib/sa-cities'");
-    expect(src).toContain('SA_CITIES');
-  });
-
-  it('fetches the category slug (not just names) via getCategoryById', () => {
-    expect(src).toMatch(/getCategoryById<[^>]*slug[^>]*>/);
-    expect(src).toMatch(/select:\s*'slug,\s*name_ar,\s*name_en'/);
-  });
-
-  it('derives sectorSlug from category.slug and citySlug from SA_CITIES', () => {
-    expect(src).toMatch(/sectorSlug\s*=\s*detectSectorFromCategorySlug\(category\?\.slug/);
-    expect(src).toMatch(/citySlug[\s\S]{0,200}SA_CITIES\.find/);
-  });
-
-  it('renders /sectors/:slug and /sectors/:slug/:city only when slugs exist', () => {
-    // Both links are wrapped in `{sectorSlug && ...}` / `{sectorSlug && citySlug && ...}`
-    expect(src).toMatch(/\{sectorSlug\s*&&[\s\S]{0,300}to=\{`\/sectors\/\$\{sectorSlug\}`\}/);
-    expect(src).toMatch(/\{sectorSlug\s*&&\s*citySlug\s*&&[\s\S]{0,400}to=\{`\/sectors\/\$\{sectorSlug\}\/\$\{citySlug\}`\}/);
+  it('does not call the removed getCategoryById service', () => {
+    expect(src).not.toContain('getCategoryById');
+    expect(src).not.toMatch(/from\(['"]categories['"]\)/);
   });
 
   it('does not invent slugs from names', () => {
-    // Guard against the obvious mistakes — never use raw names to build URLs.
     expect(src).not.toMatch(/sectors\/\$\{[^}]*name_ar[^}]*\}/);
     expect(src).not.toMatch(/sectors\/\$\{[^}]*name_en[^}]*\}/);
   });
