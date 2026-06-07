@@ -646,7 +646,14 @@ const Onboarding = () => {
     const onlyDigits = (v: string, max: number) => v.replace(/\D/g, '').slice(0, max);
     const allValid =
       !!businessName.trim() && !!businessNameEn.trim() && !!usernameOk &&
-      unifiedValid && emailValid && !!regionId && sectors.length > 0 && crValid;
+      unifiedValid && emailValid && !!regionId && crValid &&
+      // Phase 13.c — taxonomy is primary when loaded; legacy sectors are
+      // accepted as a fallback (or when taxonomy failed/still loading) so
+      // we never harden users out of registration.
+      (taxonomyStatus === 'ok'
+        ? (!!taxonomy.entityTypeCategoryId && !!taxonomy.primaryActivityCategoryId)
+          || sectors.length > 0
+        : sectors.length > 0);
 
     const onContinue = () => {
       if (!allValid) {
