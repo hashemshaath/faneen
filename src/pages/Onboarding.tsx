@@ -283,8 +283,11 @@ const Onboarding = () => {
       });
 
       if (accountType === 'business' && businessName && username) {
+        // Phase 2.1-b — Onboarding is taxonomy-only. Legacy `sectors` /
+        // `sub_services` are NO LONGER written when creating a business.
+        // The legacy state (and draft fields) are retained for reading old
+        // drafts only — they must not be passed to createBusiness here.
         await authService.createBusiness(user!.id, businessName, username, {
-          sectors, sub_services: subServices,
           recipientEmail: user?.email || undefined,
           entity_type: 'company',
           capabilities: {
