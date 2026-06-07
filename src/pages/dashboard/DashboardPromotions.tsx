@@ -37,6 +37,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { MembershipUsageWarning } from '@/components/membership/MembershipUsageWarning';
 import { promotionCatalog, promotionDemoSeed, type PromotionTemplate } from '@/components/dashboard/promotions-catalog';
+import { PageHeader } from '@/components/shared';
 
 type PromotionType = 'ad' | 'offer' | 'video';
 type FilterMode = 'all' | 'active' | 'expired' | 'inactive';
@@ -513,18 +514,13 @@ const DashboardPromotions = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* ═══ Header ═══ */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
-              <Megaphone className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-heading font-bold text-xl">{rtl ? 'الإعلانات والعروض' : 'Promotions & Offers'}</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">{rtl ? `${stats.total} عرض · ${stats.active} نشط · ${stats.totalViews} مشاهدة` : `${stats.total} promotions · ${stats.active} active · ${stats.totalViews} views`}</p>
-            </div>
-          </div>
-          <div className="flex gap-2 flex-wrap">
+        <PageHeader
+          icon={Megaphone}
+          tone="primary"
+          eyebrow={rtl ? 'التسويق' : 'Marketing'}
+          title={rtl ? 'الإعلانات والعروض' : 'Promotions & Offers'}
+          subtitle={rtl ? `${stats.total} عرض · ${stats.active} نشط · ${stats.totalViews} مشاهدة` : `${stats.total} promotions · ${stats.active} active · ${stats.totalViews} views`}
+          actions={<>
             {businessUsername && (
               <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" asChild>
                 <a href={`/${businessUsername}#promotions`} target="_blank" rel="noopener noreferrer">
@@ -558,8 +554,8 @@ const DashboardPromotions = () => {
                 <Plus className="w-3.5 h-3.5 me-1.5" />{rtl ? 'إضافة عرض' : 'Add Promotion'}
               </Button>
             </PermissionHint>
-          </div>
-        </div>
+          </>}
+        />
 
         <MembershipUsageWarning userId={user?.id} businessId={businessId} metric="promotions" />
 
