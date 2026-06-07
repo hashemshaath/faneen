@@ -31,6 +31,7 @@ interface EndpointResult {
   contentType: string;
   isXml: boolean;
   isSpaFallback: boolean;
+  headerXmlMismatch?: boolean;
   urlCount: number;
   lastmod: string | null;
   error?: string;
@@ -49,7 +50,11 @@ async function checkUrl(label: string, url: string): Promise<EndpointResult> {
     const res = await fetch(url, { cache: "no-store", redirect: "follow" });
     const contentType = res.headers.get("content-type") ?? "";
     const text = await res.text();
-    const isXml = /xml/i.test(contentType) && text.trimStart().startsWith("<?xml");
+    // Trust the body, not the header. Supabase Functions gateway sometimes
+    // rewrites Content-Type to text/plain even when the body is valid XML.
+    const startsWithXml = text.trimStart().startsWith("<?xml");
+    const headerSaysXml = /xml/i.test(contentType);
+    const isXml = startsWithXml; // body-based truth
     const isSpaFallback = !isXml && (/<!doctype html>/i.test(text) || /<html/i.test(text));
     const urlMatches = text.match(/<url>/g) ?? text.match(/<sitemap>/g) ?? [];
     const lastmodMatch = text.match(/<lastmod>([^<]+)<\/lastmod>/);
@@ -58,13 +63,15 @@ async function checkUrl(label: string, url: string): Promise<EndpointResult> {
     return {
       label, url, status: res.status, ok,
       contentType, isXml, isSpaFallback,
+      headerXmlMismatch: startsWithXml && !headerSaysXml,
       urlCount: urlMatches.length,
       lastmod: lastmodMatch?.[1] ?? null,
     };
   } catch (e) {
     return {
       label, url, status: 0, ok: false, contentType: "",
-      isXml: false, isSpaFallback: false, urlCount: 0, lastmod: null,
+      isXml: false, isSpaFallback: false, headerXmlMismatch: false,
+      urlCount: 0, lastmod: null,
       error: e instanceof Error ? e.message : "Unknown error",
     };
   }

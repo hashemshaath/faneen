@@ -30,6 +30,7 @@ interface CheckResult {
   contentType: string;
   isXml: boolean;
   isSpaFallback: boolean;
+  headerXmlMismatch?: boolean;
   urlCount: number;
   lastmod: string | null;
   error?: string;
@@ -42,13 +43,20 @@ async function checkUrl(url: string): Promise<CheckResult> {
     const res = await fetch(url, { cache: 'no-store' });
     const contentType = res.headers.get('content-type') ?? '';
     const text = await res.text();
-    const isXml = /xml/i.test(contentType) && text.trimStart().startsWith('<?xml');
-    const isSpaFallback = /<!doctype html>/i.test(text) || /<html/i.test(text);
+    // Body-based truth: gateways occasionally rewrite Content-Type.
+    const startsWithXml = text.trimStart().startsWith('<?xml');
+    const headerSaysXml = /xml/i.test(contentType);
+    const isXml = startsWithXml;
+    const isSpaFallback = !isXml && (/<!doctype html>/i.test(text) || /<html/i.test(text));
     const urlMatches = text.match(/<url>/g) ?? text.match(/<sitemap>/g) ?? [];
     const lastmodMatch = text.match(/<lastmod>([^<]+)<\/lastmod>/);
+    const isRobots = url.endsWith('/robots.txt');
     return {
-      url, ok: res.ok && isXml && !isSpaFallback, status: res.status,
+      url,
+      ok: res.ok && (isRobots ? !isSpaFallback : isXml && !isSpaFallback),
+      status: res.status,
       contentType, isXml, isSpaFallback,
+      headerXmlMismatch: startsWithXml && !headerSaysXml,
       urlCount: urlMatches.length,
       lastmod: lastmodMatch?.[1] ?? null,
       fetchedAt,
@@ -56,7 +64,7 @@ async function checkUrl(url: string): Promise<CheckResult> {
   } catch (e) {
     return {
       url, ok: false, status: 0, contentType: '', isXml: false, isSpaFallback: false,
-      urlCount: 0, lastmod: null,
+      headerXmlMismatch: false, urlCount: 0, lastmod: null,
       error: e instanceof Error ? e.message : 'Unknown error',
       fetchedAt,
     };
@@ -90,7 +98,7 @@ export default function AdminSitemapStatus() {
             triggeredBy: 'dashboard-fallback',
             dryRun: true,
           }) as { data: { results?: unknown[] } | null };
-          const serverResults = (serverData?.results ?? []) as Array<{ url: string; status: number; ok: boolean; isXml: boolean; isSpaFallback: boolean; urlCount: number; lastmod: string | null; contentType: string; error?: string }>;
+          const serverResults = (serverData?.results ?? []) as Array<{ url: string; status: number; ok: boolean; isXml: boolean; isSpaFallback: boolean; headerXmlMismatch?: boolean; urlCount: number; lastmod: string | null; contentType: string; error?: string }>;
           return results.map((row) => {
             if (row.result.status !== 0) return row;
             const s = serverResults.find((sr) => sr.url === row.url);
@@ -104,6 +112,7 @@ export default function AdminSitemapStatus() {
                 contentType: s.contentType ?? '',
                 isXml: s.isXml,
                 isSpaFallback: s.isSpaFallback,
+                headerXmlMismatch: s.headerXmlMismatch,
                 urlCount: s.urlCount ?? 0,
                 lastmod: s.lastmod ?? null,
                 error: s.error,
@@ -282,6 +291,19 @@ export default function AdminSitemapStatus() {
           ? 'هذه الأنواع تُرجع XML صحيح لكن بدون روابط — تأكد من وجود بيانات منشورة في الجداول المرتبطة.'
           : 'These types return valid XML but contain no URLs — verify the underlying tables have published rows.',
         affected: emptyTypes.map((r) => r.label),
+      });
+    }
+
+    const headerIssues = rows.filter((r) => r.result.headerXmlMismatch);
+    if (headerIssues.length) {
+      recs.push({
+        id: 'header-mismatch',
+        severity: 'warning',
+        title: isAr ? 'Content-Type غير مطابق للمحتوى' : 'Content-Type does not match body',
+        detail: isAr
+          ? 'النقاط تُعيد XML سليم لكن الـ Header يقول text/plain. Google يتسامح مع هذا غالباً لكن الأفضل أن يكون application/xml. ربما تُعيد بوابة Supabase Functions كتابة الـ header — استخدم رابط النطاق https://qitaat.com/sitemap.xml كمصدر أساسي في Google Search Console.'
+          : 'Endpoints return valid XML but the header is text/plain. Google usually tolerates this but application/xml is preferred. The Supabase Functions gateway may rewrite the header — submit https://qitaat.com/sitemap.xml in Google Search Console as the canonical sitemap URL.',
+        affected: headerIssues.map((r) => `${r.url} → ${r.result.contentType || 'unknown'}`),
       });
     }
 
@@ -502,8 +524,13 @@ export default function AdminSitemapStatus() {
                         </Badge>
                       )}
                       {r.isSpaFallback && <Badge variant="destructive">{isAr ? 'SPA HTML!' : 'SPA HTML!'}</Badge>}
-                      {!r.isXml && r.url.endsWith('.xml') === false && r.url.includes('functions/v1/sitemap') && (
+                      {!r.isXml && !row.url.endsWith('/robots.txt') && (
                         <Badge variant="destructive">{isAr ? 'ليس XML' : 'Not XML'}</Badge>
+                      )}
+                      {r.headerXmlMismatch && (
+                        <Badge variant="secondary" className="bg-warning/15 text-warning border-warning/30 tech-content">
+                          {isAr ? 'Header غير دقيق' : 'Header mismatch'}
+                        </Badge>
                       )}
                       <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => copyUrl(row.url)} aria-label={isAr ? 'نسخ الرابط' : 'Copy URL'}>
                         <Copy className="h-3.5 w-3.5" />
