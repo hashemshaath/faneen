@@ -3,15 +3,18 @@ import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 /**
- * Phase 18i — guards for the final drop of legacy `category_id` bridge columns.
+ * Phase 18i - guards for the final drop of legacy `category_id` bridge columns.
  *
  *  - `businesses.category_id` and `business_services.category_id` MUST be
- *    dropped in the latest migration window.
+ *    dropped in the migration window.
  *  - `category_public_counts` MUST be rebuilt off the taxonomy tables
  *    (`business_taxonomy_categories`, `business_service_taxonomy_categories`)
  *    and MUST NOT reference the dropped columns.
- *  - The legacy `categories` and `tags` tables MUST NOT be dropped by this
- *    phase (separate decision, see closeout doc).
+ *
+ * Note: the legacy `tags` / `entity_tags` tables were dropped in Phase 19b
+ * and `categories` in Phase 19c (see docs/legacy-taxonomy-final-closeout.md).
+ * The earlier "does NOT drop" guards have been retired now that those
+ * decisions have shipped.
  */
 describe('Phase 18i: legacy category_id columns dropped + views rebuilt on taxonomy', () => {
   const dir = 'supabase/migrations';
@@ -59,13 +62,5 @@ describe('Phase 18i: legacy category_id columns dropped + views rebuilt on taxon
     );
     expect(viewMatch, 'view definition not found in recent migrations').toBeTruthy();
     expect(viewMatch![0]).not.toMatch(/\bcategory_id\b/);
-  });
-
-  it('does NOT drop the legacy `categories` table in this phase', () => {
-    expect(recent).not.toMatch(/DROP\s+TABLE[^;]*\bpublic\.categories\b/i);
-  });
-
-  it('does NOT drop the legacy `tags` table in this phase', () => {
-    expect(recent).not.toMatch(/DROP\s+TABLE[^;]*\bpublic\.tags\b/i);
   });
 });
