@@ -768,23 +768,47 @@ const Onboarding = () => {
               </p>
             </div>
 
-            {/* Sectors */}
-            <div className="space-y-2">
-              <Label className="text-xs">
-                {isRTL ? 'مجالات العمل' : 'Business sectors'} <span className="text-destructive ms-1">*</span>
-              </Label>
-              <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
-                <SectorPicker selectedSectors={sectors} selectedSubServices={subServices}
-                  onSectorsChange={setSectors} onSubServicesChange={setSubServices} maxSectors={5} />
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                {isRTL ? 'اختر القطاع/القطاعات التي يعمل فيها نشاطك (حتى 5).'
-                       : 'Pick the sectors your business operates in (up to 5).'}
-              </p>
-            </div>
+            {/* Phase 13.c — central taxonomy is the primary classification UI. */}
+            <OnboardingTaxonomyStep
+              value={taxonomy}
+              onChange={setTaxonomy}
+              onLoadStatusChange={setTaxonomyStatus}
+            />
 
-            {/* Phase 11 — central taxonomy (non-blocking, optional). */}
-            <OnboardingTaxonomyStep value={taxonomy} onChange={setTaxonomy} />
+            {/* Legacy SectorPicker:
+                - taxonomy ok → collapsed under a disclosure (fallback only)
+                - taxonomy loading/error → kept inline as the working fallback */}
+            {taxonomyStatus === 'ok' ? (
+              <details className="rounded-xl border border-border/60 bg-muted/5 p-3 group">
+                <summary className="cursor-pointer text-xs font-medium text-muted-foreground flex items-center gap-2">
+                  {isRTL ? 'التصنيف القديم (اختياري — للاستخدام عند الحاجة)'
+                         : 'Legacy classification (optional — use only if needed)'}
+                </summary>
+                <div className="pt-3 space-y-2">
+                  <SectorPicker selectedSectors={sectors} selectedSubServices={subServices}
+                    onSectorsChange={setSectors} onSubServicesChange={setSubServices} maxSectors={5} />
+                  <p className="text-[11px] text-muted-foreground">
+                    {isRTL
+                      ? 'يُفضّل الاعتماد على التصنيف الجديد بالأعلى. هذه القائمة تبقى للتوافق فقط.'
+                      : 'Prefer the new classification above. This list is kept for backward compatibility only.'}
+                  </p>
+                </div>
+              </details>
+            ) : (
+              <div className="space-y-2">
+                <Label className="text-xs">
+                  {isRTL ? 'مجالات العمل' : 'Business sectors'} <span className="text-destructive ms-1">*</span>
+                </Label>
+                <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                  <SectorPicker selectedSectors={sectors} selectedSubServices={subServices}
+                    onSectorsChange={setSectors} onSubServicesChange={setSubServices} maxSectors={5} />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {isRTL ? 'اختر القطاع/القطاعات التي يعمل فيها نشاطك (حتى 5).'
+                         : 'Pick the sectors your business operates in (up to 5).'}
+                </p>
+              </div>
+            )}
 
             <Button onClick={onContinue} disabled={!allValid || loading}
               className="w-full" variant="hero">
