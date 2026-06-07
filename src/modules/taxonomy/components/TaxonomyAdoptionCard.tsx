@@ -1,11 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, AlertTriangle, Activity } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Activity, Plus, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { BusinessTaxonomySection } from './BusinessTaxonomySection';
 
 interface AdoptionData {
   total: number;
@@ -46,6 +49,8 @@ async function fetchAdoption(): Promise<AdoptionData> {
 
 export const TaxonomyAdoptionCard: React.FC = () => {
   const { isRTL } = useLanguage();
+  const qc = useQueryClient();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ['taxonomy', 'adoption'],
     queryFn: fetchAdoption,
@@ -53,6 +58,15 @@ export const TaxonomyAdoptionCard: React.FC = () => {
   });
 
   const fullyAdopted = data ? data.missing === 0 && data.total > 0 : false;
+
+  const handleSaved = async (id: string) => {
+    setExpandedId(null);
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ['taxonomy', 'adoption'] }),
+      qc.invalidateQueries({ queryKey: ['taxonomy', 'inventory'] }),
+      qc.invalidateQueries({ queryKey: ['tx:business-links', id] }),
+    ]);
+  };
 
   return (
     <Card>
@@ -120,14 +134,49 @@ export const TaxonomyAdoptionCard: React.FC = () => {
                     </thead>
                     <tbody>
                       {data.recentMissing.map((b) => (
-                        <tr key={b.id} className="border-b border-border/40">
-                          <td className="py-1 px-2">
-                            {(isRTL ? b.name_ar : b.name_en) ?? b.name_ar ?? b.name_en ?? b.id}
-                          </td>
-                          <td className="py-1 px-2 tech-content text-muted-foreground">
-                            {new Date(b.created_at).toLocaleDateString(isRTL ? 'ar' : 'en')}
-                          </td>
-                        </tr>
+                        <>
+                          <tr key={b.id} className="border-b border-border/40">
+                            <td className="py-1 px-2">
+                              {(isRTL ? b.name_ar : b.name_en) ?? b.name_ar ?? b.name_en ?? b.id}
+                            </td>
+                            <td className="py-1 px-2 tech-content text-muted-foreground">
+                              {new Date(b.created_at).toLocaleDateString(isRTL ? 'ar' : 'en')}
+                            </td>
+                            <td className="py-1 px-2 text-end">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant={expandedId === b.id ? 'outline' : 'secondary'}
+                                className="h-7 gap-1 text-[11px]"
+                                onClick={() =>
+                                  setExpandedId((prev) => (prev === b.id ? null : b.id))
+                                }
+                              >
+                                {expandedId === b.id ? (
+                                  <>
+                                    <X className="w-3 h-3" />
+                                    {isRTL ? 'إغلاق' : 'Close'}
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus className="w-3 h-3" />
+                                    {isRTL ? 'إضافة تصنيف' : 'Add taxonomy'}
+                                  </>
+                                )}
+                              </Button>
+                            </td>
+                          </tr>
+                          {expandedId === b.id && (
+                            <tr key={`${b.id}-editor`} className="border-b border-border/40 bg-muted/20">
+                              <td colSpan={3} className="p-3">
+                                <BusinessTaxonomySection
+                                  businessId={b.id}
+                                  onSaved={() => handleSaved(b.id)}
+                                />
+                              </td>
+                            </tr>
+                          )}
+                        </>
                       ))}
                     </tbody>
                   </table>
