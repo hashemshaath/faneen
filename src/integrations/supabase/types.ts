@@ -3202,6 +3202,48 @@ export type Database = {
           },
         ]
       }
+      business_service_taxonomy_categories: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          role: string
+          service_id: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          role?: string
+          service_id: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          service_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_service_taxonomy_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_taxonomy_categories_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "business_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_services: {
         Row: {
           admin_note: string | null

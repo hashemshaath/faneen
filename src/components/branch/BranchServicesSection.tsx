@@ -16,10 +16,12 @@ interface ServiceCard {
   name_en: string | null;
   price_from: number | null;
   currency_code: string;
-  category_id: string | null;
+  // Legacy column kept on type for back-compat; no longer used for filtering.
+  category_id?: string | null;
 }
 
-interface CategoryRow { id: string; name_ar: string; name_en: string | null; }
+interface TaxonomyOption { id: string; name_ar: string; name_en: string | null; }
+interface ServiceTaxonomyLink { service_id: string; category_id: string; }
 
 interface Props {
   branchId: string;
@@ -33,32 +35,51 @@ export const BranchServicesSection: React.FC<Props> = ({ branchId, businessId, s
   const [query, setQuery] = useState<string>('');
   const [quoteFor, setQuoteFor] = useState<ServiceCard | null>(null);
 
-  const catIds = useMemo(
-    () => Array.from(new Set(services.map(s => s.category_id).filter((x): x is string => !!x))),
-    [services],
-  );
+  const serviceIds = useMemo(() => services.map((s) => s.id), [services]);
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ['branch-service-categories', catIds.join('|')],
-    enabled: catIds.length > 0,
+  // Taxonomy-only: read links from the new join table, then resolve labels
+  // from taxonomy_categories. The legacy `categories` table is no longer used.
+  const { data: taxonomyData = { links: [], options: [] } } = useQuery({
+    queryKey: ['branch-service-taxonomy', serviceIds.join('|')],
+    enabled: serviceIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('categories')
+      const { data: linkRows } = await supabase
+        .from('business_service_taxonomy_categories')
+        .select('service_id, category_id')
+        .in('service_id', serviceIds);
+      const links = (linkRows ?? []) as ServiceTaxonomyLink[];
+      const catIds = Array.from(new Set(links.map((l) => l.category_id)));
+      if (catIds.length === 0) return { links, options: [] as TaxonomyOption[] };
+      const { data: catRows } = await supabase
+        .from('taxonomy_categories')
         .select('id, name_ar, name_en')
         .in('id', catIds);
-      return (data ?? []) as CategoryRow[];
+      return { links, options: (catRows ?? []) as TaxonomyOption[] };
     },
   });
+
+  const linksByService = useMemo(() => {
+    const m = new Map<string, Set<string>>();
+    for (const l of taxonomyData.links) {
+      if (!m.has(l.service_id)) m.set(l.service_id, new Set());
+      m.get(l.service_id)!.add(l.category_id);
+    }
+    return m;
+  }, [taxonomyData.links]);
+  const categories = taxonomyData.options;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return services.filter(s => {
-      if (category !== 'all' && s.category_id !== category) return false;
+      if (category !== 'all') {
+        const linked = linksByService.get(s.id);
+        if (!linked || !linked.has(category)) return false;
+      }
       if (!q) return true;
       const hay = `${s.name_ar} ${s.name_en ?? ''}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [services, category, query]);
+  }, [services, category, query, linksByService]);
 
   if (services.length === 0) return null;
 
