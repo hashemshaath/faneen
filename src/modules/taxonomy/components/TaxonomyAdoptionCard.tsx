@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -134,8 +134,8 @@ export const TaxonomyAdoptionCard: React.FC = () => {
                     </thead>
                     <tbody>
                       {data.recentMissing.map((b) => (
-                        <>
-                          <tr key={b.id} className="border-b border-border/40">
+                        <Fragment key={b.id}>
+                          <tr className="border-b border-border/40">
                             <td className="py-1 px-2">
                               {(isRTL ? b.name_ar : b.name_en) ?? b.name_ar ?? b.name_en ?? b.id}
                             </td>
@@ -167,7 +167,7 @@ export const TaxonomyAdoptionCard: React.FC = () => {
                             </td>
                           </tr>
                           {expandedId === b.id && (
-                            <tr key={`${b.id}-editor`} className="border-b border-border/40 bg-muted/20">
+                            <tr className="border-b border-border/40 bg-muted/20">
                               <td colSpan={3} className="p-3">
                                 <BusinessTaxonomySection
                                   businessId={b.id}
@@ -176,7 +176,7 @@ export const TaxonomyAdoptionCard: React.FC = () => {
                               </td>
                             </tr>
                           )}
-                        </>
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>
