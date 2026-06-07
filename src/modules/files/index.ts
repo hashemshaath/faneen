@@ -11,6 +11,12 @@ export type {
   UploadProjectImageResult,
   ProjectImageKind,
 } from './domain/projects';
+export { uploadBusinessImage } from './domain/businesses';
+export type {
+  UploadBusinessImageParams,
+  UploadBusinessImageResult,
+  BusinessImageKind,
+} from './domain/businesses';
 export { uploadBlogContentImage, getBlogContentImageUrl, listBlogImages } from './domain/blogMedia';
 export type { UploadBlogContentImageParams } from './domain/blogMedia';
 export * from './services/private';
