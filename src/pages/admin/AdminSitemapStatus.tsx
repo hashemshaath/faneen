@@ -98,7 +98,7 @@ export default function AdminSitemapStatus() {
             triggeredBy: 'dashboard-fallback',
             dryRun: true,
           }) as { data: { results?: unknown[] } | null };
-          const serverResults = (serverData?.results ?? []) as Array<{ url: string; status: number; ok: boolean; isXml: boolean; isSpaFallback: boolean; urlCount: number; lastmod: string | null; contentType: string; error?: string }>;
+          const serverResults = (serverData?.results ?? []) as Array<{ url: string; status: number; ok: boolean; isXml: boolean; isSpaFallback: boolean; headerXmlMismatch?: boolean; urlCount: number; lastmod: string | null; contentType: string; error?: string }>;
           return results.map((row) => {
             if (row.result.status !== 0) return row;
             const s = serverResults.find((sr) => sr.url === row.url);
@@ -112,6 +112,7 @@ export default function AdminSitemapStatus() {
                 contentType: s.contentType ?? '',
                 isXml: s.isXml,
                 isSpaFallback: s.isSpaFallback,
+                headerXmlMismatch: s.headerXmlMismatch,
                 urlCount: s.urlCount ?? 0,
                 lastmod: s.lastmod ?? null,
                 error: s.error,
