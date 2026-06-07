@@ -235,7 +235,9 @@ const DashboardBusinessCompletion: React.FC = () => {
       if (!user) return null;
       const { data } = await getOwnerBusiness<BusinessRow>({
         userId: user.id,
-        select: 'id, ref_id, username, approval_status, onboarding_completion, approval_notes, name_ar, name_en, logo_url, description_ar, short_description_ar, phone, mobile, email, city_id, region, address, latitude, longitude, sectors, sub_services, national_id, unified_number, updated_at',
+      // Phase 18f — `sectors`/`sub_services` no longer selected; taxonomy
+      // presence is fetched separately via `useBusinessTaxonomyPresence`.
+      select: 'id, ref_id, username, approval_status, onboarding_completion, approval_notes, name_ar, name_en, logo_url, description_ar, short_description_ar, phone, mobile, email, city_id, region, address, latitude, longitude, national_id, unified_number, updated_at',
         orderBy: { column: 'created_at', ascending: false },
         limit: 1,
       });
@@ -244,7 +246,11 @@ const DashboardBusinessCompletion: React.FC = () => {
     staleTime: 30_000,
   });
 
-  const groups = useMemo(() => (business ? buildGroups(business) : []), [business]);
+  const taxonomyPresence = useBusinessTaxonomyPresence(business?.id);
+  const groups = useMemo(
+    () => (business ? buildGroups(business, taxonomyPresence) : []),
+    [business, taxonomyPresence],
+  );
   const allFields = useMemo(() => groups.flatMap((g) => g.fields), [groups]);
   const completed = allFields.filter((f) => f.done).length;
   const totalSteps = allFields.length;
