@@ -12,6 +12,7 @@ import {
   resolveLegacySectorToTaxonomy as resolveLegacySlug,
   LEGACY_SECTOR_TO_TAXONOMY_SLUG,
 } from './legacy-mapping';
+import { getRuntimeLegacyMapCached } from './migration-services';
 import {
   getBusinessTaxonomyCategories,
   type BusinessTaxonomyLink,
@@ -36,11 +37,15 @@ export async function resolveCategoryBySlugOrAlias(
   const raw = input.trim();
   const norm = normalize(raw);
 
-  // 1) Direct slug match (taxonomy slug or legacy slug routed through map).
-  const candidateSlugs = Array.from(new Set([
-    raw, norm,
-    LEGACY_SECTOR_TO_TAXONOMY_SLUG[norm] ?? '',
-  ].filter(Boolean)));
+  // 1) Direct slug match — runtime registry first, static fallback always.
+  let mapped = LEGACY_SECTOR_TO_TAXONOMY_SLUG[norm] ?? '';
+  try {
+    const runtime = await getRuntimeLegacyMapCached();
+    if (runtime[norm]) mapped = runtime[norm];
+  } catch {
+    /* keep static fallback */
+  }
+  const candidateSlugs = Array.from(new Set([raw, norm, mapped].filter(Boolean)));
 
   const { data: bySlug } = await supabase
     .from('taxonomy_categories')
