@@ -18,7 +18,7 @@ import {
   updateProviderLeadByRef,
   type ProviderLeadEditableData,
 } from '@/modules/providers';
-import { listActiveCategories } from '@/modules/categories';
+import { supabase } from '@/integrations/supabase/client';
 import type { ProviderLeadBranchInput, ProviderLeadChannel } from '@/modules/providers/types';
 import {
   Field, SectionHeader, SpecialtiesPicker, TagInput,
@@ -54,11 +54,30 @@ const ProviderJoinEdit: React.FC = () => {
   const [saved, setSaved] = useState(false);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
 
+  // Taxonomy-only: same source as ProviderJoin, filtered to entries flagged
+  // for provider registration. Legacy `categories` is no longer consulted.
   useEffect(() => {
     let alive = true;
-    listActiveCategories<CategoryOption>({ select: 'id, name_ar, name_en' }).then(({ data }) => {
-      if (alive && data) setCategories(data);
-    });
+    supabase
+      .from('taxonomy_categories')
+      .select('id, name_ar, name_en')
+      .eq('is_active', true)
+      .eq('is_public', true)
+      .eq('is_archived', false)
+      .eq('show_in_registration', true)
+      .order('sort_order', { ascending: true })
+      .order('name_ar', { ascending: true })
+      .then(({ data }) => {
+        if (alive && data) {
+          setCategories(
+            data.map((c) => ({
+              id: c.id,
+              name_ar: c.name_ar,
+              name_en: c.name_en ?? c.name_ar,
+            })),
+          );
+        }
+      });
     return () => { alive = false; };
   }, []);
 
