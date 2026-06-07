@@ -8,7 +8,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listDistinctContractBusinessIds } from '@/modules/contracts';
 import type { Database } from '@/integrations/supabase/types';
-import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
 import {
   updateBusinessById,
@@ -386,13 +385,10 @@ const AdminBusinesses = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusParam, businesses]);
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      const { data } = await listActiveCategories<Database['public']['Tables']['categories']['Row']>({ select: '*' });
-      return data || [];
-    },
-  });
+  // Phase 5: Legacy `categories` list removed from admin UI.
+  // Business classification is managed taxonomy-only via BusinessTaxonomySection.
+  // `businesses.category_id` is kept in DB and types for backward reads only —
+  // never written from this admin screen anymore.
 
   const { data: countries = [] } = useQuery({
     queryKey: ['countries'],
@@ -580,7 +576,9 @@ const AdminBusinesses = () => {
         additional_number: editForm.additional_number || null, region: editForm.region || null,
         district: editForm.district || null, street_name: editForm.street_name || null,
         building_number: editForm.building_number || null, latitude: editForm.latitude || null,
-        longitude: editForm.longitude || null, category_id: editForm.category_id || null,
+        longitude: editForm.longitude || null,
+        // Phase 5: category_id intentionally NOT written from admin edit.
+        // Classification is managed via BusinessTaxonomySection (taxonomy-only).
         country_id: editForm.country_id || null, city_id: editForm.city_id || null,
         logo_url: editForm.logo_url || null, cover_url: editForm.cover_url || null,
         seo_title_ar: editForm.seo_title_ar || null, seo_title_en: editForm.seo_title_en || null,
@@ -722,7 +720,9 @@ const AdminBusinesses = () => {
         name_en: createForm.name_en?.trim() || null,
         phone: phoneE164 || null,
         email: createForm.email?.trim() || null,
-        category_id: createForm.category_id || null,
+        // Phase 5: category_id intentionally NOT written from admin create.
+        // Owner can set taxonomy from BusinessTaxonomySection in edit view.
+        category_id: null,
         city_id: createForm.city_id || null,
         region: region ? region.name_ar : null,
         region_en: region ? region.name_en : null,
@@ -1293,7 +1293,6 @@ const AdminBusinesses = () => {
   const filteredCities = editForm.country_id
     ? cities.filter((c) => c.country_id === editForm.country_id)
     : cities;
-  const editCategoryName = categories.find((c) => c.id === editForm.category_id);
   const editCityName = cities.find((c) => c.id === editForm.city_id);
 
   /* ─── Saved Views (per-admin localStorage) ─── */
@@ -1772,14 +1771,11 @@ const AdminBusinesses = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">{isRTL ? 'نشاط/قطاع المنشأة' : 'Entity sector / activity'}</Label>
-                  <Select value={createForm.category_id} onValueChange={(v) => setCField('category_id', v)}>
-                    <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder={isRTL ? 'اختر القطاع' : 'Select sector'} /></SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      {categories.map((c: any) => (
-                        <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="h-10 rounded-xl border border-dashed border-border bg-muted/30 px-3 flex items-center text-[11px] text-muted-foreground">
+                    {isRTL
+                      ? 'غير مصنّف — يمكن إضافة التصنيف بعد الإنشاء من تبويب التحرير (التصنيفات المركزية).'
+                      : 'Unclassified — taxonomy can be added after creation from the edit tab (Central Taxonomy).'}
+                  </div>
                 </div>
               </div>
 
@@ -1997,20 +1993,11 @@ const AdminBusinesses = () => {
                       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
                     }}
                   />
-                  <details className="rounded-xl border border-border/50 bg-muted/20 p-3">
-                    <summary className="cursor-pointer select-none text-xs font-medium text-muted-foreground hover:text-foreground">
-                      {isRTL ? 'التصنيف القديم (احتياطي فقط)' : 'Legacy category (fallback only)'}
-                    </summary>
-                    <div className="mt-3 space-y-1.5">
-                      <Label className="text-xs">{isRTL ? 'التصنيف القديم' : 'Legacy category'}</Label>
-                      <Select value={editForm.category_id} onValueChange={v => setField('category_id', v)}>
-                        <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
-                        <SelectContent>
-                          {categories.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </details>
+                  {/*
+                    Phase 5: Legacy category picker removed from admin UI.
+                    Classification is now taxonomy-only via BusinessTaxonomySection above.
+                    `businesses.category_id` is retained in the DB for backward reads only.
+                  */}
                   <Separator />
                   <div className="p-3 rounded-xl bg-muted/30 border border-border/30 text-[10px] space-y-1 text-muted-foreground font-mono">
                     {/* Primary reference — official platform identifier */}
@@ -2229,8 +2216,8 @@ const AdminBusinesses = () => {
                     customDescriptionEn={editForm.seo_description_en}
                     nameAr={editForm.name_ar}
                     nameEn={editForm.name_en}
-                    activityAr={editCategoryName?.name_ar ?? null}
-                    activityEn={editCategoryName?.name_en ?? null}
+                    activityAr={null}
+                    activityEn={null}
                     cityAr={editCityName?.name_ar ?? null}
                     cityEn={editCityName?.name_en ?? null}
                     rawDescriptionAr={editForm.description_ar}
