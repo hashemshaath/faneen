@@ -9,6 +9,8 @@ import {
 import {
   Star, ShieldCheck, SlidersHorizontal, RotateCcw, ChevronRight, ChevronLeft, MapPin, ArrowUpDown, Tag, Wallet, ChevronDown, Layers,
 } from 'lucide-react';
+import { Map as MapIcon } from 'lucide-react';
+import { SA_REGIONS } from '@/data/sa-regions';
 // Phase 2.5 — Search UI is taxonomy-only. The legacy `CategoryTree` and
 // `TagsFilter` components are intentionally NOT imported here anymore; they
 // remain in the codebase (not deleted) for potential admin/internal reuse.
@@ -51,6 +53,7 @@ export const SearchFilters = ({
     filters.priceMin > 0,
     filters.priceMax > 0,
     filters.serviceCategoryId !== 'all',
+    filters.regionId !== 'all',
   ].filter(Boolean).length;
 
   const selectedCategoryLabel = selectedTaxonomyCat
@@ -63,6 +66,7 @@ export const SearchFilters = ({
             : categories!.find(c => c.id === filters.categoryId || c.slug === filters.categoryId)!.name_en)
         : '');
   const selectedCity = cities?.find(c => c.id === filters.cityId);
+  const selectedRegion = SA_REGIONS.find((r) => r.id === filters.regionId);
   const selectedServiceCategory = categories?.find(c => c.id === filters.serviceCategoryId || c.slug === filters.serviceCategoryId);
   const sortLabels: Record<SearchFilterValues['sortBy'], { ar: string; en: string }> = {
     relevance: { ar: 'الأكثر صلة', en: 'Relevance' },
