@@ -20,6 +20,17 @@ export interface OnboardingDraft {
   subServices?: string[];
   city?: string;
   description?: string;
+  /**
+   * Phase 11 — central taxonomy selections made during onboarding.
+   * Optional and back-compat: drafts without this field keep working
+   * (legacy `sectors`/`subServices` remain the source of truth until
+   * the business is created and taxonomy is persisted).
+   */
+  taxonomy?: {
+    entityTypeCategoryId: string | null;
+    primaryActivityCategoryId: string | null;
+    secondaryActivityCategoryIds: string[];
+  };
   /** ISO timestamp set by save(). */
   updatedAt?: string;
 }
