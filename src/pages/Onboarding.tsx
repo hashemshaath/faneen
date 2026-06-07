@@ -39,6 +39,12 @@ import {
   getOwnerBusiness, updateBusinessById, getBusinessIdByRefOrLegacyRef,
 } from '@/modules/businesses';
 import { EntityVerificationStatusBadge } from '@/components/entities/EntityVerificationStatusBadge';
+import {
+  OnboardingTaxonomyStep,
+  EMPTY_ONBOARDING_TAXONOMY,
+  type OnboardingTaxonomyValue,
+} from '@/modules/taxonomy';
+import { setBusinessTaxonomyCategories } from '@/modules/taxonomy/business-services';
 
 // ──────────────────────────────────────────────────────────────────────────
 // New simplified flow (2026-05-29):
@@ -96,6 +102,10 @@ const Onboarding = () => {
   const [sectors, setSectors] = useState<SectorId[]>([]);
   const [subServices, setSubServices] = useState<string[]>([]);
 
+  // Phase 11 — central taxonomy selections (collected before business exists,
+  // persisted via RPC after creation; non-blocking on failure).
+  const [taxonomy, setTaxonomy] = useState<OnboardingTaxonomyValue>(EMPTY_ONBOARDING_TAXONOMY);
+
   // Documents
   const [logoUrl, setLogoUrl] = useState<string>('');
   const [logoUploading, setLogoUploading] = useState(false);
@@ -121,10 +131,11 @@ const Onboarding = () => {
       step, accountType, fullName, phone, countryCode,
       businessName, username, description: '',
       sectors, subServices,
+      taxonomy,
     });
     if (user?.id) void syncDraftToServer(user.id);
   }, [step, accountType, fullName, phone, countryCode, businessName, username,
-      sectors, subServices, draftLoaded, user?.id]);
+      sectors, subServices, taxonomy, draftLoaded, user?.id]);
 
   // Track step views + persist progress
   useEffect(() => {
@@ -197,6 +208,15 @@ const Onboarding = () => {
       if (d.username) setUsername(d.username);
       if (d.sectors?.length) setSectors(d.sectors as SectorId[]);
       if (d.subServices?.length) setSubServices(d.subServices);
+      if (d.taxonomy && typeof d.taxonomy === 'object') {
+        setTaxonomy({
+          entityTypeCategoryId: d.taxonomy.entityTypeCategoryId ?? null,
+          primaryActivityCategoryId: d.taxonomy.primaryActivityCategoryId ?? null,
+          secondaryActivityCategoryIds: Array.isArray(d.taxonomy.secondaryActivityCategoryIds)
+            ? d.taxonomy.secondaryActivityCategoryIds
+            : [],
+        });
+      }
       if (d.step && STEP_ORDER.includes(d.step as OnboardingStep)) {
         const draftStep = d.step as OnboardingStep;
         const isBusinessOnly = draftStep === 'business-details' || draftStep === 'documents';
