@@ -8,7 +8,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listDistinctContractBusinessIds } from '@/modules/contracts';
 import type { Database } from '@/integrations/supabase/types';
-import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
 import {
   updateBusinessById,
@@ -386,13 +385,10 @@ const AdminBusinesses = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusParam, businesses]);
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      const { data } = await listActiveCategories<Database['public']['Tables']['categories']['Row']>({ select: '*' });
-      return data || [];
-    },
-  });
+  // Phase 5: Legacy `categories` list removed from admin UI.
+  // Business classification is managed taxonomy-only via BusinessTaxonomySection.
+  // `businesses.category_id` is kept in DB and types for backward reads only —
+  // never written from this admin screen anymore.
 
   const { data: countries = [] } = useQuery({
     queryKey: ['countries'],
@@ -580,7 +576,9 @@ const AdminBusinesses = () => {
         additional_number: editForm.additional_number || null, region: editForm.region || null,
         district: editForm.district || null, street_name: editForm.street_name || null,
         building_number: editForm.building_number || null, latitude: editForm.latitude || null,
-        longitude: editForm.longitude || null, category_id: editForm.category_id || null,
+        longitude: editForm.longitude || null,
+        // Phase 5: category_id intentionally NOT written from admin edit.
+        // Classification is managed via BusinessTaxonomySection (taxonomy-only).
         country_id: editForm.country_id || null, city_id: editForm.city_id || null,
         logo_url: editForm.logo_url || null, cover_url: editForm.cover_url || null,
         seo_title_ar: editForm.seo_title_ar || null, seo_title_en: editForm.seo_title_en || null,
@@ -722,7 +720,9 @@ const AdminBusinesses = () => {
         name_en: createForm.name_en?.trim() || null,
         phone: phoneE164 || null,
         email: createForm.email?.trim() || null,
-        category_id: createForm.category_id || null,
+        // Phase 5: category_id intentionally NOT written from admin create.
+        // Owner can set taxonomy from BusinessTaxonomySection in edit view.
+        category_id: null,
         city_id: createForm.city_id || null,
         region: region ? region.name_ar : null,
         region_en: region ? region.name_en : null,
@@ -1293,7 +1293,6 @@ const AdminBusinesses = () => {
   const filteredCities = editForm.country_id
     ? cities.filter((c) => c.country_id === editForm.country_id)
     : cities;
-  const editCategoryName = categories.find((c) => c.id === editForm.category_id);
   const editCityName = cities.find((c) => c.id === editForm.city_id);
 
   /* ─── Saved Views (per-admin localStorage) ─── */
