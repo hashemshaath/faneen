@@ -79,7 +79,7 @@ const Projects = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('*, businesses(username, name_ar, name_en, logo_url)')
+        .select('*, businesses(username, name_ar, name_en, logo_url), cover_image_asset:image_assets!projects_cover_image_asset_id_fkey(variants)')
         .eq('status', 'published')
         .order('created_at', { ascending: false });
       if (error) throw error;
