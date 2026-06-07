@@ -1,4 +1,5 @@
 /**
+import { PageHeader } from '@/components/shared';
  * BUSINESS-OPERATIONS-INTELLIGENCE-1 — Executive Operations Center.
  *
  * Pure presentational page composed of existing analytics helpers and
