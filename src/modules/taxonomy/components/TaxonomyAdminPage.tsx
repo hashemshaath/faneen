@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { FolderTree, AlertTriangle, Database } from 'lucide-react';
+import { FolderTree, AlertTriangle, Database, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -14,6 +14,10 @@ import {
   getTaxonomyTypes,
   updateTaxonomySortOrder,
 } from '../services';
+import {
+  getTaxonomyFallbackReport,
+  getTaxonomyUsageCounts,
+} from '../usage-services';
 import { buildTaxonomyTree, evaluateTaxonomyQuality, normalizeTaxonomyLabel, toCsv } from '../utils';
 import type { TaxonomyCategory, TaxonomyViewMode } from '../types';
 
@@ -24,12 +28,15 @@ import { TaxonomyTableView } from './TaxonomyTableView';
 import { TaxonomyCardView } from './TaxonomyCardView';
 import { TaxonomyEditorPanel } from './TaxonomyEditorPanel';
 import { TaxonomyQualityPanel } from './TaxonomyQualityPanel';
+import { TaxonomyFallbackReportCard } from './TaxonomyFallbackReportCard';
 
 const QK = {
   types: ['taxonomy', 'types'] as const,
   cats: ['taxonomy', 'categories'] as const,
   aliases: ['taxonomy', 'aliases'] as const,
   rels: ['taxonomy', 'relations'] as const,
+  usage: ['taxonomy', 'usage'] as const,
+  fallback: ['taxonomy', 'fallback-report'] as const,
 };
 
 export const TaxonomyAdminPage: React.FC = () => {
@@ -51,6 +58,20 @@ export const TaxonomyAdminPage: React.FC = () => {
   const categories = catsQ.data ?? [];
   const aliases = aliasesQ.data ?? [];
   const relations = relsQ.data ?? [];
+
+  // Usage indicators — batched (one SELECT per source), safe-fail to empty maps.
+  const usageQ = useQuery({
+    queryKey: [...QK.usage, categories.length],
+    queryFn: () => getTaxonomyUsageCounts(categories),
+    enabled: categories.length > 0,
+    staleTime: 60_000,
+  });
+  const fallbackQ = useQuery({
+    queryKey: QK.fallback,
+    queryFn: getTaxonomyFallbackReport,
+    staleTime: 60_000,
+  });
+  const usage = usageQ.data;
 
   const filtered = useMemo<TaxonomyCategory[]>(() => {
     const q = normalizeTaxonomyLabel(filters.query);
@@ -217,6 +238,7 @@ export const TaxonomyAdminPage: React.FC = () => {
               <TabsList className="rounded-xl">
                 <TabsTrigger value="manage" className="rounded-lg gap-1.5"><FolderTree className="w-3.5 h-3.5" />{isRTL ? 'إدارة' : 'Manage'}</TabsTrigger>
                 <TabsTrigger value="quality" className="rounded-lg gap-1.5"><AlertTriangle className="w-3.5 h-3.5" />{isRTL ? 'مراجعة الجودة' : 'Quality'} <span className="text-[10px] tech-content opacity-70">({issues.length})</span></TabsTrigger>
+                <TabsTrigger value="usage" className="rounded-lg gap-1.5"><Activity className="w-3.5 h-3.5" />{isRTL ? 'الاستخدام' : 'Usage'}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="manage" className="space-y-4 mt-4">
@@ -242,6 +264,39 @@ export const TaxonomyAdminPage: React.FC = () => {
 
               <TabsContent value="quality" className="mt-4">
                 <TaxonomyQualityPanel issues={issues} onOpen={handleEdit} />
+              </TabsContent>
+
+              <TabsContent value="usage" className="mt-4 space-y-4">
+                <TaxonomyFallbackReportCard report={fallbackQ.data} loading={fallbackQ.isLoading} />
+                {usage && (
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="text-sm font-heading font-bold mb-3">
+                      {isRTL ? 'أكثر التصنيفات استخدامًا (المنشآت)' : 'Most-used categories (businesses)'}
+                    </div>
+                    <ul className="text-xs space-y-1">
+                      {Array.from(usage.businesses.entries())
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 15)
+                        .map(([id, n]) => {
+                          const c = categories.find((x) => x.id === id);
+                          if (!c) return null;
+                          return (
+                            <li key={id} className="flex justify-between gap-2 border-b border-border/50 py-1">
+                              <button
+                                type="button"
+                                onClick={() => handleEdit(id)}
+                                className="truncate text-start hover:text-primary"
+                                dir="auto"
+                              >
+                                {c.name_ar} <span className="opacity-60 tech-content">/{c.slug}</span>
+                              </button>
+                              <span className="tech-content font-bold">{n}</span>
+                            </li>
+                          );
+                        })}
+                    </ul>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </>
