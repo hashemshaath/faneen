@@ -13,13 +13,16 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { AlertTriangle, CheckCircle2, RefreshCw, Database, ArrowRightLeft, Eye } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, RefreshCw, Database, ArrowRightLeft, Eye, PlayCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   getTaxonomyInventory,
   listLegacyMappings,
   updateLegacyMapping,
   previewTaxonomyBackfill,
+  applyTaxonomyBackfill,
+  clearRuntimeLegacyMapCache,
+  type BackfillApplyResult,
   type LegacyMappingRow,
   type LegacyMappingStatus,
 } from '../migration-services';
@@ -47,6 +50,9 @@ export const TaxonomyMigrationPanel: React.FC = () => {
   const { isRTL } = useLanguage();
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<'all' | LegacyMappingStatus>('all');
+  const [applying, setApplying] = useState(false);
+  const [confirmingApply, setConfirmingApply] = useState(false);
+  const [lastApplyResult, setLastApplyResult] = useState<BackfillApplyResult | null>(null);
 
   const inventoryQ = useQuery({
     queryKey: ['taxonomy', 'inventory'],
@@ -100,6 +106,32 @@ export const TaxonomyMigrationPanel: React.FC = () => {
 
   const inv = inventoryQ.data;
   const preview = previewQ.data;
+
+  const canApply = Boolean(
+    preview &&
+      ((preview.businesses_resolvable ?? 0) > 0 ||
+        (preview.showcase_resolvable ?? 0) > 0),
+  );
+
+  const handleApply = async () => {
+    setApplying(true);
+    try {
+      const result = await applyTaxonomyBackfill();
+      setLastApplyResult(result);
+      clearRuntimeLegacyMapCache();
+      toast.success(
+        isRTL
+          ? `تم الربط: ${result.businesses_linked} منشأة و ${result.showcase_linked} عمل`
+          : `Linked ${result.businesses_linked} businesses & ${result.showcase_linked} showcase items`,
+      );
+      await refreshAll();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setApplying(false);
+      setConfirmingApply(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -165,18 +197,111 @@ export const TaxonomyMigrationPanel: React.FC = () => {
           {previewQ.isLoading || !preview ? (
             <Skeleton className="h-20" />
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              <Stat label={isRTL ? 'منشآت قابلة للربط تلقائيًا' : 'Auto-resolvable businesses'} value={preview.businesses_resolvable} tone="text-emerald-600" />
-              <Stat label={isRTL ? 'منشآت بلا taxonomy' : 'Businesses w/o taxonomy'} value={preview.businesses_with_legacy_no_taxonomy} />
-              <Stat label={isRTL ? 'خدمات على تصنيف قديم' : 'Services (legacy cat)'} value={preview.business_services_with_legacy_category} />
-              <Stat label={isRTL ? 'Showcase بلا taxonomy' : 'Showcase w/o taxonomy'} value={preview.showcase_without_taxonomy} />
-            </div>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <Stat label={isRTL ? 'منشآت قابلة للربط' : 'Resolvable businesses'} value={preview.businesses_resolvable} tone="text-emerald-600" />
+                <Stat label={isRTL ? 'منشآت مرتبطة بالفعل' : 'Already linked'} value={preview.businesses_already_linked ?? 0} />
+                <Stat label={isRTL ? 'منشآت بلا taxonomy' : 'Businesses w/o taxonomy'} value={preview.businesses_with_legacy_no_taxonomy} />
+                <Stat label={isRTL ? 'Showcase قابل للربط' : 'Showcase resolvable'} value={preview.showcase_resolvable ?? 0} tone="text-emerald-600" />
+                <Stat label={isRTL ? 'Showcase بلا taxonomy' : 'Showcase w/o taxonomy'} value={preview.showcase_without_taxonomy} />
+                <Stat label={isRTL ? 'خدمات على تصنيف قديم' : 'Services (legacy cat)'} value={preview.business_services_with_legacy_category} />
+                <Stat label={isRTL ? 'mapping جاهز' : 'Mappings ready'} value={preview.mappings_ready ?? 0} tone="text-emerald-600" />
+                <Stat label={isRTL ? 'يحتاج مراجعة' : 'Needs review'} value={preview.mappings_pending_review} tone="text-orange-600" />
+              </div>
+
+              {preview.sample && preview.sample.length > 0 && (
+                <div className="mt-4 rounded-xl border border-border/60 overflow-hidden">
+                  <div className="px-3 py-2 text-[11px] text-muted-foreground bg-muted/40">
+                    {isRTL ? `أول ${preview.sample.length} عنصر سيتم ربطه` : `First ${preview.sample.length} records to be linked`}
+                  </div>
+                  <div className="overflow-x-auto max-h-56">
+                    <table className="w-full text-[11px]">
+                      <thead className="text-muted-foreground sticky top-0 bg-card">
+                        <tr className="border-b border-border/60">
+                          <th className="text-start py-1.5 px-2">{isRTL ? 'النوع' : 'Type'}</th>
+                          <th className="text-start py-1.5 px-2">{isRTL ? 'المصدر' : 'Source'}</th>
+                          <th className="text-start py-1.5 px-2">{isRTL ? 'القيمة القديمة' : 'Legacy'}</th>
+                          <th className="text-start py-1.5 px-2">{isRTL ? 'التصنيف الجديد' : 'Target'}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {preview.sample.map((s, i) => (
+                          <tr key={`${s.record_type}-${s.record_id}-${i}`} className="border-b border-border/40">
+                            <td className="py-1 px-2 tech-content">{s.record_type}</td>
+                            <td className="py-1 px-2 tech-content text-muted-foreground">{s.source}</td>
+                            <td className="py-1 px-2 tech-content">{s.legacy_value ?? '—'}</td>
+                            <td className="py-1 px-2">
+                              {isRTL ? (s.target_name_ar ?? s.target_slug) : s.target_slug}
+                              <span className="opacity-50 tech-content ms-1">{s.target_slug}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-[12px] leading-relaxed">
+                <p className="text-amber-700 dark:text-amber-400 flex items-start gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  {isRTL
+                    ? 'سيتم ربط البيانات القديمة بالتصنيفات المركزية دون حذف أي بيانات قديمة. سيتم تخطّي العناصر التي تحتاج مراجعة أو المرتبطة مسبقًا.'
+                    : 'Legacy data will be linked to central taxonomy without deleting anything. Items pending review or already linked will be skipped.'}
+                </p>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {!confirmingApply ? (
+                  <Button
+                    size="sm"
+                    onClick={() => setConfirmingApply(true)}
+                    disabled={!canApply || applying}
+                    className="gap-1.5"
+                  >
+                    <PlayCircle className="w-3.5 h-3.5" />
+                    {isRTL ? 'تطبيق الربط الآمن' : 'Apply safe backfill'}
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={handleApply}
+                      disabled={applying}
+                      className="gap-1.5"
+                    >
+                      {applying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                      {isRTL ? 'تأكيد التطبيق' : 'Confirm apply'}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setConfirmingApply(false)} disabled={applying}>
+                      {isRTL ? 'إلغاء' : 'Cancel'}
+                    </Button>
+                  </>
+                )}
+                {!canApply && (
+                  <span className="text-[11px] text-muted-foreground">
+                    {isRTL ? 'لا توجد عناصر قابلة للتطبيق حاليًا' : 'No items eligible for backfill right now'}
+                  </span>
+                )}
+              </div>
+
+              {lastApplyResult && (
+                <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-[12px]">
+                  <div className="font-medium text-emerald-700 dark:text-emerald-400 mb-1 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    {isRTL ? 'تم تطبيق الربط الآمن بنجاح' : 'Safe backfill applied successfully'}
+                  </div>
+                  <ul className="space-y-0.5 text-muted-foreground tech-content">
+                    <li>businesses_linked: {lastApplyResult.businesses_linked}</li>
+                    <li>showcase_linked: {lastApplyResult.showcase_linked}</li>
+                    <li>skipped_existing: {lastApplyResult.skipped_existing}</li>
+                    <li>skipped_needs_review: {lastApplyResult.skipped_needs_review}</li>
+                  </ul>
+                </div>
+              )}
+            </>
           )}
-          <p className="text-[11px] text-muted-foreground mt-3">
-            {isRTL
-              ? 'هذه معاينة فقط — لا يتم تنفيذ أي تعديل. زر التطبيق سيُضاف عند اعتماد الخطة.'
-              : 'Read-only preview — no data is modified. Apply action will be added once the plan is approved.'}
-          </p>
         </CardContent>
       </Card>
 
