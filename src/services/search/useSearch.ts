@@ -308,6 +308,14 @@ export const filterAndSort = (
   entityTags: any[] | undefined,
   language: string,
   categories?: CategoryLite[],
+  /**
+   * Phase 7 — optional set of business ids the central taxonomy mapped to
+   * the current filter context. When provided, the category filter is
+   * broadened to ALSO include these ids (union with the legacy match) so
+   * taxonomy-linked providers surface even if their legacy `category_id`
+   * is missing or mismatched. Pure augmentation — never narrows results.
+   */
+  taxonomyBusinessIds?: Set<string>,
 ) => {
   let results = [...businesses];
 
@@ -325,8 +333,12 @@ export const filterAndSort = (
         fuzzyScore(b.description_en || '', q),
       ) * 0.5;
       const total = Math.max(nameScore, descScore);
-      if (total > 0) scores.set(b.id, total);
-      return total > 0;
+      // Taxonomy-resolved query: keep providers that matched the taxonomy
+      // even when their text fields don't fuzzy-match the raw query.
+      const taxBoost = taxonomyBusinessIds?.has(b.id) ? 1 : 0;
+      const effective = Math.max(total, taxBoost);
+      if (effective > 0) scores.set(b.id, effective);
+      return effective > 0;
     });
   }
 
@@ -336,12 +348,18 @@ export const filterAndSort = (
     const resolved = resolveCategory(filters.categoryId, categories);
     if (resolved && categories) {
       const allowed = expandCategoryIds(resolved, categories);
-      results = results.filter((b) => allowed.has(b.category_id));
+      results = results.filter((b) =>
+        allowed.has(b.category_id) || (taxonomyBusinessIds?.has(b.id) ?? false),
+      );
     } else {
       // Legacy fallback: categories tree not loaded yet — match by id or
       // embedded slug so legacy URLs still work during hydration.
       const v = filters.categoryId;
-      results = results.filter((b) => b.category_id === v || (b as any).categories?.slug === v);
+      results = results.filter((b) =>
+        b.category_id === v ||
+        (b as { categories?: { slug?: string } }).categories?.slug === v ||
+        (taxonomyBusinessIds?.has(b.id) ?? false),
+      );
     }
   }
 

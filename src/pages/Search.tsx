@@ -27,6 +27,7 @@ import {
 import { detectSectorFromQuery, getSectorMeta, ALL_SECTORS } from '@/lib/sector-keywords';
 import { findCityKeywords, getCityKeywordsString, mergeKeywords } from '@/lib/city-keywords';
 import { track } from '@/lib/analytics-events';
+import { useSearchTaxonomyContext } from '@/modules/taxonomy/search-integration';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -81,6 +82,32 @@ const SearchPage = () => {
     priceMax: Number(searchParams.get('price_max')) || 0,
     serviceCategoryId: searchParams.get('serviceCategory') || 'all',
   });
+
+  // Phase 7 — Taxonomy-first augmentation. Resolves URL params (category /
+  // sector / service / q) to a central taxonomy category and pulls the set
+  // of business ids linked to it (incl. direct children). The legacy
+  // filtering path stays untouched; these ids are unioned in below.
+  const { data: taxonomyCtx } = useSearchTaxonomyContext({
+    q: debouncedQuery,
+    sector: searchParams.get('sector'),
+    category: filters.categoryId !== 'all' ? filters.categoryId : null,
+    service: filters.serviceCategoryId !== 'all' ? filters.serviceCategoryId : null,
+  });
+  const taxonomyBusinessIds = taxonomyCtx?.taxonomyBusinessIds;
+
+  React.useEffect(() => {
+    if (import.meta.env.DEV && taxonomyCtx) {
+      // eslint-disable-next-line no-console
+      console.debug('[taxonomy-search]', {
+        q: debouncedQuery,
+        sector: searchParams.get('sector'),
+        category: filters.categoryId,
+        resolvedCategory: taxonomyCtx.resolvedCategory?.slug ?? null,
+        taxonomyMatches: taxonomyCtx.taxonomyBusinessIds.size,
+        legacyFallbackUsed: taxonomyCtx.shouldUseLegacyFallback,
+      });
+    }
+  }, [taxonomyCtx, debouncedQuery, searchParams, filters.categoryId]);
 
   // Resolve the selected city (from filter or URL) into a localized name and
   // a dedicated keyword bag so meta keywords reflect the user's geo choice.
@@ -204,7 +231,16 @@ const SearchPage = () => {
 
   const filtered = useMemo(() => {
     if (!businesses) return [];
-    let res = filterAndSort(businesses, debouncedQuery, filters, selectedTags, entityTags, language, categories);
+    let res = filterAndSort(
+      businesses,
+      debouncedQuery,
+      filters,
+      selectedTags,
+      entityTags,
+      language,
+      categories,
+      taxonomyBusinessIds,
+    );
     if (favoritesOnly) {
       try {
         const raw = localStorage.getItem('qitaat_fav_businesses_v1');
@@ -216,7 +252,7 @@ const SearchPage = () => {
       }
     }
     return res;
-  }, [businesses, debouncedQuery, filters, language, selectedTags, entityTags, favoritesOnly, categories]);
+  }, [businesses, debouncedQuery, filters, language, selectedTags, entityTags, favoritesOnly, categories, taxonomyBusinessIds]);
 
   // Defer the heavy filtered list so typing/filter clicks stay responsive.
   const deferredFiltered = useDeferredValue(filtered);
