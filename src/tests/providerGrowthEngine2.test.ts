@@ -123,7 +123,7 @@ describe('PROVIDER-GROWTH-ENGINE-2 — Admin UI', () => {
       logo_url: null, cover_url: null, phone: '+966', email: 'a@b.com', website: null,
       city: null, city_id: null, address: null, latitude: null, longitude: null,
       is_active: true, is_verified: false, approval_status: 'draft', updated_at: null,
-      category_id: null, sectors: [], sub_services: [], brands_count: 0, gallery_count: 0,
+      sectors: [], sub_services: [], brands_count: 0, gallery_count: 0,
     };
     it('missing_logo filter matches rows without a logo', () => {
       const i1 = buildProviderInsight({ ...base, id: 'a', logo_url: null });
