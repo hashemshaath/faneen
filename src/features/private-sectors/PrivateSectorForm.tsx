@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
 import { PS_BRAND_TYPE_META, PrivateSector, PrivateSectorBrandType } from './types';
-import { Save, X, Search as SearchIcon, Globe2, MapPin, Tag } from 'lucide-react';
+import { Save, X, Search as SearchIcon, Globe2, MapPin } from 'lucide-react';
 import { listActiveCities } from '@/modules/locations';
 import { useQuery } from '@tanstack/react-query';
 
