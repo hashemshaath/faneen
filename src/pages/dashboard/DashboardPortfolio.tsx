@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
+import { PageHeader } from '@/components/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -494,30 +495,27 @@ const DashboardPortfolio = () => {
   return (
     <DashboardLayout>
       <div className="space-y-5">
-        {/* ═══ Header ═══ */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
-              <Layers className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-heading font-bold text-xl">{isRTL ? 'معرض الأعمال' : 'Portfolio Gallery'}</h1>
-              <p className="text-xs text-muted-foreground">{isRTL ? `${stats.total} عمل · ${stats.featured} مميز` : `${stats.total} works · ${stats.featured} featured`}</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            {items.length > 0 && (
-              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportCSV}>
-                <Download className="w-3.5 h-3.5 me-1" />{isRTL ? 'تصدير' : 'Export'}
-              </Button>
-            )}
-            <PermissionHint permission="documents.upload">
-              <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
-                <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة عمل' : 'Add Work'}
-              </Button>
-            </PermissionHint>
-          </div>
-        </div>
+        <PageHeader
+          icon={Layers}
+          tone="primary"
+          eyebrow={isRTL ? 'المعرض' : 'Gallery'}
+          title={isRTL ? 'معرض الأعمال' : 'Portfolio Gallery'}
+          subtitle={isRTL ? `${stats.total} عمل · ${stats.featured} مميز` : `${stats.total} works · ${stats.featured} featured`}
+          actions={
+            <>
+              {items.length > 0 && (
+                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportCSV}>
+                  <Download className="w-3.5 h-3.5 me-1" />{isRTL ? 'تصدير' : 'Export'}
+                </Button>
+              )}
+              <PermissionHint permission="documents.upload">
+                <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
+                  <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة عمل' : 'Add Work'}
+                </Button>
+              </PermissionHint>
+            </>
+          }
+        />
 
         <MembershipUsageWarning userId={user?.id} businessId={businessId} metric="portfolio" />
 

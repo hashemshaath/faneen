@@ -7,6 +7,7 @@ import { Loader2, Plus, Pencil, X, Check, AlertCircle, ExternalLink, Wrench, Spa
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { PageHeader } from '@/components/shared';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { useMembershipVisibility } from '@/hooks/useMembershipVisibility';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -482,35 +483,33 @@ const DashboardServices: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        {/* Header */}
-        <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">
-              {isRTL ? 'خدماتي' : 'My Services'}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground max-w-xl">
-              {isRTL
-                ? 'الخدمات هنا مرتبطة بما اخترته في صفحة بيانات المنشأة. لإضافة أو إزالة خدمة من الكتالوج عدّل القطاعات والخدمات الفرعية.'
-                : 'These services mirror what you picked in your business profile. To add or remove catalog items edit your sectors & sub-services.'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline" className="rounded-xl">
-              <Link to="/dashboard/business-edit?tab=sectors">
-                <Pencil className="h-4 w-4 me-2" />
-                {isRTL ? 'تعديل القطاعات والخدمات' : 'Edit sectors & services'}
-              </Link>
-            </Button>
-            <Button variant="outline" onClick={() => setPickerOpen((v) => !v)} className="rounded-xl">
-              <ListPlus className="h-4 w-4 me-2" />
-              {isRTL ? 'إضافة من الكتالوج' : 'Pick from catalog'}
-            </Button>
-            <Button onClick={() => setReqOpen((v) => !v)} className="rounded-xl">
-              <Plus className="h-4 w-4 me-2" />
-              {isRTL ? 'طلب إضافة خدمة جديدة' : 'Request a new service'}
-            </Button>
-          </div>
-        </header>
+        <PageHeader
+          icon={Wrench}
+          tone="primary"
+          eyebrow={isRTL ? 'الكتالوج' : 'Catalog'}
+          title={isRTL ? 'خدماتي' : 'My Services'}
+          subtitle={isRTL
+            ? 'الخدمات هنا مرتبطة بما اخترته في صفحة بيانات المنشأة.'
+            : 'These services mirror what you picked in your business profile.'}
+          actions={
+            <>
+              <Button asChild variant="outline" className="rounded-xl">
+                <Link to="/dashboard/business-edit?tab=sectors">
+                  <Pencil className="h-4 w-4 me-2" />
+                  {isRTL ? 'تعديل القطاعات والخدمات' : 'Edit sectors & services'}
+                </Link>
+              </Button>
+              <Button variant="outline" onClick={() => setPickerOpen((v) => !v)} className="rounded-xl">
+                <ListPlus className="h-4 w-4 me-2" />
+                {isRTL ? 'إضافة من الكتالوج' : 'Pick from catalog'}
+              </Button>
+              <Button onClick={() => setReqOpen((v) => !v)} className="rounded-xl">
+                <Plus className="h-4 w-4 me-2" />
+                {isRTL ? 'طلب إضافة خدمة جديدة' : 'Request a new service'}
+              </Button>
+            </>
+          }
+        />
 
         {/* Stats */}
         <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
