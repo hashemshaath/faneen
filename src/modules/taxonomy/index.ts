@@ -10,6 +10,9 @@ export * as taxonomyBusinessServices from './business-services';
 // Phase 8 — project linking
 export * as taxonomyProjectServices from './project-services';
 
+// Phase 14 — contract / template linking
+export * as taxonomyContractServices from './contract-services';
+
 // Phase 11 — onboarding integration
 export {
   default as OnboardingTaxonomyStep,

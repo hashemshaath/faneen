@@ -5993,6 +5993,58 @@ export type Database = {
           },
         ]
       }
+      contract_taxonomy_categories: {
+        Row: {
+          category_id: string
+          contract_id: string | null
+          created_at: string
+          id: string
+          is_primary: boolean
+          role: string
+          template_id: string | null
+        }
+        Insert: {
+          category_id: string
+          contract_id?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          role?: string
+          template_id?: string | null
+        }
+        Update: {
+          category_id?: string
+          contract_id?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          role?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_taxonomy_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_taxonomy_categories_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_taxonomy_categories_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_template_attachments: {
         Row: {
           created_at: string
@@ -20713,6 +20765,15 @@ export type Database = {
       set_contract_execution_site: {
         Args: { _contract_id: string; _site_id: string }
         Returns: Json
+      }
+      set_contract_taxonomy_categories: {
+        Args: {
+          p_contract_id: string
+          p_primary_category_id: string
+          p_secondary_category_ids?: string[]
+          p_template_id: string
+        }
+        Returns: undefined
       }
       set_contract_template: {
         Args: {

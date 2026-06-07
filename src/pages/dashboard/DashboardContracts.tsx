@@ -166,7 +166,6 @@ interface PublishedTemplateOption {
   category: string;
   name_ar: string;
   name_en: string | null;
-  service_category_id: string | null;
   pricing_methods: string[];
   required_field_count: number;
 }
@@ -378,7 +377,9 @@ const DashboardContracts = () => {
         // CT7B: provider-facing read — must use safe public view, not the
         // base table (which is now admin-only at the RLS layer).
         .from('contract_template_versions_public')
-        .select('id, version_number, status, template_id, contract_templates!inner(id, slug, category, name_ar, name_en, service_category_id, is_active)')
+        // Phase 14: classification is taxonomy-only. Legacy
+        // `contract_templates.service_category_id` is no longer read here.
+        .select('id, version_number, status, template_id, contract_templates!inner(id, slug, category, name_ar, name_en, is_active)')
         .eq('status', 'published')
         .order('version_number', { ascending: false });
       if (error) throw error;
@@ -408,7 +409,6 @@ const DashboardContracts = () => {
           category: v.contract_templates?.category ?? 'general',
           name_ar: v.contract_templates?.name_ar ?? '',
           name_en: v.contract_templates?.name_en ?? null,
-          service_category_id: v.contract_templates?.service_category_id ?? null,
           pricing_methods: rulesByVer.get(v.id) ?? [],
           required_field_count: fieldsByVer.get(v.id) ?? 0,
         }));

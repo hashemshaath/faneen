@@ -58,7 +58,9 @@ const AdminContractTemplatesInner: React.FC = () => {
     queryKey: ['ct-templates'],
     queryFn: async () => {
       const { data, error } = await listActiveContractTemplates({
-        select: 'id,slug,name_ar,name_en,category,service_category_id,default_locale,current_version_id,is_active,archived_at,updated_at',
+        // Phase 14: classification is taxonomy-only. Legacy
+        // `service_category_id` is no longer read here.
+        select: 'id,slug,name_ar,name_en,category,default_locale,current_version_id,is_active,archived_at,updated_at',
         orderBy: { column: 'updated_at', ascending: false },
         activeOnly: false,
       });

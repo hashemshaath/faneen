@@ -4,7 +4,6 @@ export interface CTTemplate {
   name_ar: string;
   name_en: string | null;
   category: string;
-  service_category_id: string | null;
   default_locale: string;
   current_version_id: string | null;
   is_active: boolean;

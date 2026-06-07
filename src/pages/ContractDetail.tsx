@@ -37,6 +37,10 @@ import { approveAmendment, rejectAmendment, cancelAmendment, applyAmendment } fr
 import { acceptContract, recalcContractTotal as recalcContractTotalService } from '@/modules/contracts/services/mutations';
 import { getContractSourceLeadSummary } from '@/modules/contracts/services/leadRpcs';
 import {
+  getContractTaxonomyCategories,
+  type ContractTaxonomyLink,
+} from '@/modules/taxonomy/contract-services';
+import {
   listContractMilestones,
   createContractMilestone,
   listContractNotes,
@@ -484,7 +488,6 @@ const ContractDetail = () => {
   const contractAny = contract as unknown as {
     template_version_id?: string | null;
     pricing_method?: string | null;
-    service_category_id?: string | null;
   } | null | undefined;
   const templateVersionId = contractAny?.template_version_id ?? null;
   const { data: templateMeta } = useQuery({
@@ -499,6 +502,30 @@ const ContractDetail = () => {
       return data;
     },
     enabled: !!templateVersionId,
+  });
+
+  // Phase 14: taxonomy-only classification for the contract. The legacy
+  // `service_category_id` column is no longer read by the UI.
+  const { data: contractTaxonomyLinks = [] } = useQuery<ContractTaxonomyLink[]>({
+    queryKey: ['contract-taxonomy', id],
+    queryFn: () => getContractTaxonomyCategories(id!),
+    enabled: !!id,
+  });
+  const primaryTaxonomyCategoryId = contractTaxonomyLinks.find(
+    (l) => l.role === 'service' && l.is_primary,
+  )?.category_id ?? contractTaxonomyLinks[0]?.category_id ?? null;
+  const { data: contractTaxonomyCategory } = useQuery<{ name_ar: string; name_en: string | null } | null>({
+    queryKey: ['contract-taxonomy-cat', primaryTaxonomyCategoryId],
+    queryFn: async () => {
+      if (!primaryTaxonomyCategoryId) return null;
+      const { data } = await supabase
+        .from('taxonomy_categories')
+        .select('name_ar, name_en')
+        .eq('id', primaryTaxonomyCategoryId)
+        .maybeSingle();
+      return (data as { name_ar: string; name_en: string | null } | null) ?? null;
+    },
+    enabled: !!primaryTaxonomyCategoryId,
   });
 
   const acceptMutation = useMutation({
@@ -1848,6 +1875,17 @@ const ContractDetail = () => {
             <Badge variant="secondary" className="text-[10px]">v{(templateMeta as any).version_number}</Badge>
             {(templateMeta as any).contract_templates?.category && (
               <Badge variant="outline" className="text-[10px]">{(templateMeta as any).contract_templates.category}</Badge>
+            )}
+            {contractTaxonomyCategory ? (
+              <Badge variant="outline" className="text-[10px]">
+                {isRTL
+                  ? contractTaxonomyCategory.name_ar
+                  : (contractTaxonomyCategory.name_en || contractTaxonomyCategory.name_ar)}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                {isRTL ? 'غير مصنّف' : 'Uncategorized'}
+              </Badge>
             )}
             {contractAny?.pricing_method && (
               <Badge variant="outline" className="text-[10px] gap-1"><Hash className="w-2.5 h-2.5" />{contractAny.pricing_method}</Badge>
