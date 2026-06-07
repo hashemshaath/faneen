@@ -54,9 +54,11 @@ describe('PageHeader (shared)', () => {
       renders += 1;
       return <span data-testid="probe">{renders}</span>;
     };
+    // Hoisted children & actions ⇒ stable references across re-renders.
+    const stableActions = <Probe />;
     const Page = ({ n }: { n: number }) => (
       <>
-        <PageHeader icon={Award} title="Stable" actions={<Probe />} />
+        <PageHeader icon={Award} title="Stable" actions={stableActions} />
         <span data-testid="external">{n}</span>
       </>
     );
