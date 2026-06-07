@@ -158,6 +158,7 @@ describe('BusinessCard service-category diversity pill', () => {
   // `business_services.category_id` column.
   const tx = (serviceLabels: string[]) => ({
     primaryLabel: null,
+    primarySlug: null,
     secondaryLabels: [],
     serviceLabels,
     hasModernTaxonomy: true,
