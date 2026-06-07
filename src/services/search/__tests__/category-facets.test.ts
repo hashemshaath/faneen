@@ -15,26 +15,30 @@ const categories: CategoryLite[] = [
   { id: 'cat-mirrors', slug: 'mirrors', parent_id: 'cat-glass' },
 ];
 
+// Phase 18a — fixtures no longer set `category_id` on the business or on
+// nested business_services rows. Category / service-category resolution is
+// performed upstream (taxonomyBusinessIds / serviceCategoryBusinessIds) and
+// passed into filterAndSort as Sets.
 const businesses = [
   {
     id: 'b1', name_ar: 'A', name_en: 'A', rating_avg: 5, created_at: '2025-01-01',
-    category_id: 'cat-alu', is_verified: true,
-    business_services: [{ is_active: true, category_id: 'cat-alu-win' }],
+    is_verified: true,
+    business_services: [{ id: 's1', is_active: true }],
   },
   {
     id: 'b2', name_ar: 'B', name_en: 'B', rating_avg: 4, created_at: '2025-01-01',
-    category_id: 'cat-alu-door', is_verified: false,
-    business_services: [{ is_active: true, category_id: 'cat-alu-door' }],
+    is_verified: false,
+    business_services: [{ id: 's2', is_active: true }],
   },
   {
     id: 'b3', name_ar: 'C', name_en: 'C', rating_avg: 3, created_at: '2025-01-01',
-    category_id: 'cat-glass', is_verified: false,
-    business_services: [{ is_active: true, category_id: 'cat-mirrors' }],
+    is_verified: false,
+    business_services: [{ id: 's3', is_active: true }],
   },
   {
     id: 'b4', name_ar: 'D', name_en: 'D', rating_avg: 2, created_at: '2025-01-01',
-    category_id: 'cat-glass', is_verified: false,
-    business_services: [{ is_active: true, category_id: null }],
+    is_verified: false,
+    business_services: [{ id: 's4', is_active: true }],
   },
 ];
 
@@ -63,64 +67,58 @@ describe('expandCategoryIds', () => {
   });
 });
 
-describe('filterAndSort — category & service facet', () => {
-  it('parent category includes providers from child categories', () => {
+describe('filterAndSort — taxonomy-first category & service facet (Phase 18a)', () => {
+  it('category filter uses taxonomyBusinessIds as the sole source', () => {
     const res = filterAndSort(
       businesses, '', { ...defaultFilters, categoryId: 'cat-alu' }, [], [], 'ar', categories,
+      new Set<string>(['b1', 'b2']),
     );
     expect(res.map((b) => b.id).sort()).toEqual(['b1', 'b2']);
   });
 
-  it('parent category accepts slug input', () => {
+  it('category filter narrows to zero when no taxonomy ids resolve', () => {
     const res = filterAndSort(
       businesses, '', { ...defaultFilters, categoryId: 'aluminum' }, [], [], 'ar', categories,
+      // No taxonomyBusinessIds → legacy column is NOT consulted, so empty.
+      undefined,
     );
-    expect(res.map((b) => b.id).sort()).toEqual(['b1', 'b2']);
+    expect(res).toEqual([]);
   });
 
-  it('child category does not return parent or sibling categories', () => {
+  it('category filter does NOT consult legacy businesses.category_id', () => {
+    // Even fixtures with a stale `category_id` matching the filter value
+    // must be excluded unless they appear in taxonomyBusinessIds.
+    const stale = [{ ...businesses[0], category_id: 'cat-alu' }];
     const res = filterAndSort(
-      businesses, '', { ...defaultFilters, categoryId: 'cat-alu-door' }, [], [], 'ar', categories,
+      stale, '', { ...defaultFilters, categoryId: 'cat-alu' }, [], [], 'ar', categories,
+      new Set<string>(),
     );
-    expect(res.map((b) => b.id)).toEqual(['b2']);
+    expect(res).toEqual([]);
   });
 
-  it('serviceCategoryId returns providers with matching active service', () => {
+  it('serviceCategoryId uses serviceCategoryBusinessIds as the sole source', () => {
     const res = filterAndSort(
-      businesses, '', { ...defaultFilters, serviceCategoryId: 'cat-mirrors' }, [], [], 'ar', categories,
+      businesses, '', { ...defaultFilters, serviceCategoryId: 'cat-mirrors' },
+      [], [], 'ar', categories,
+      undefined,
+      new Set<string>(['b3']),
     );
     expect(res.map((b) => b.id)).toEqual(['b3']);
   });
 
-  it('serviceCategoryId parent rolls up to child services', () => {
+  it('serviceCategoryId does NOT read business_services.category_id', () => {
+    // Fixtures with stale nested `category_id` on services must NOT leak
+    // through when serviceCategoryBusinessIds is empty.
+    const stale = [{
+      ...businesses[0],
+      business_services: [{ id: 's1', is_active: true, category_id: 'cat-mirrors' }],
+    }];
     const res = filterAndSort(
-      businesses, '', { ...defaultFilters, serviceCategoryId: 'aluminum' }, [], [], 'ar', categories,
+      stale, '', { ...defaultFilters, serviceCategoryId: 'cat-mirrors' },
+      [], [], 'ar', categories,
+      undefined,
+      new Set<string>(),
     );
-    expect(res.map((b) => b.id).sort()).toEqual(['b1', 'b2']);
-  });
-
-  it('serviceCategoryId ignores services with NULL category_id', () => {
-    const res = filterAndSort(
-      businesses, '', { ...defaultFilters, serviceCategoryId: 'cat-glass' }, [], [], 'ar', categories,
-    );
-    // b4 has NULL service category and must be excluded; b3 matches via mirrors child.
-    expect(res.map((b) => b.id)).toEqual(['b3']);
-  });
-
-  it('phase 6: without categories tree, slug-only filter relies on taxonomyBusinessIds (no embedded fallback)', () => {
-    // Embedded `categories(...)` relation was removed in Phase 6, so the
-    // slug fallback no longer exists. Slug URLs are resolved either by the
-    // taxonomy tree (when loaded) or by `taxonomyBusinessIds` from upstream.
-    const withEmbedded = [{ ...businesses[0], categories: { slug: 'aluminum' } }];
-    const noTaxonomy = filterAndSort(
-      withEmbedded, '', { ...defaultFilters, categoryId: 'aluminum' }, [], [], 'ar', undefined,
-    );
-    expect(noTaxonomy.map((b) => b.id)).toEqual([]);
-
-    const withTaxonomy = filterAndSort(
-      withEmbedded, '', { ...defaultFilters, categoryId: 'aluminum' }, [], [], 'ar', undefined,
-      new Set<string>(['b1']),
-    );
-    expect(withTaxonomy.map((b) => b.id)).toEqual(['b1']);
+    expect(res).toEqual([]);
   });
 });

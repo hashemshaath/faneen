@@ -124,7 +124,12 @@ describe('filterAndSort', () => {
 
   it('filters by category', () => {
     const filters: SearchFilterValues = { ...defaultFilters, categoryId: 'cat-1' };
-    const result = filterAndSort(businesses, '', filters, [], [], 'ar');
+    // Phase 18a — category filter is taxonomy-only; pass the resolved
+    // business-id set (formerly inferred from legacy businesses.category_id).
+    const taxonomyIds = new Set(
+      businesses.filter((b) => b.category_id === 'cat-1').map((b) => b.id),
+    );
+    const result = filterAndSort(businesses, '', filters, [], [], 'ar', undefined, taxonomyIds);
     expect(result).toHaveLength(2);
   });
 
@@ -187,7 +192,10 @@ describe('filterAndSort', () => {
 
   it('combines multiple filters', () => {
     const filters: SearchFilterValues = { ...defaultFilters, categoryId: 'cat-1', minRating: 5, verifiedOnly: true };
-    const result = filterAndSort(businesses, '', filters, [], [], 'ar');
+    const taxonomyIds = new Set(
+      businesses.filter((b) => b.category_id === 'cat-1').map((b) => b.id),
+    );
+    const result = filterAndSort(businesses, '', filters, [], [], 'ar', undefined, taxonomyIds);
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('1');
   });

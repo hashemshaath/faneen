@@ -214,29 +214,25 @@ export const useBusinesses = () =>
     queryKey: ['businesses-all-with-services'],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
-      // PERF-1D.1 — explicit parent select on `businesses_public` to drop
-      // 11 columns that no search consumer reads (Search.tsx, BusinessCard,
-      // SearchMap, SearchInsightsBar, RecentlyViewedStrip, filterAndSort,
-      // JSON-LD). Kept fields are all verified used by at least one of:
-      // links/keys (id, username), display/sort/fuzzy (name_*, description_*,
-      // rating_*, created_at), filters (category_id, city_id, is_verified,
-      // membership_tier), map markers (latitude, longitude), or card chrome
-      // (logo_url, cover_url, website). Triple-gate, ordering, limit, and
-      // embedded relation filters are unchanged.
+      // Phase 18a — taxonomy-first parent select. The legacy
+      // `businesses.category_id` column is no longer read by search; all
+      // category resolution now goes through `business_taxonomy_categories`
+      // (provider-level) and `business_service_taxonomy_categories`
+      // (service-level), threaded into `filterAndSort` from upstream.
+      // Allow-list kept tight (links/keys, display/sort/fuzzy, filters,
+      // map markers, card chrome); triple-gate, ordering and limit unchanged.
       const PARENT_SELECT =
         'id, username, name_ar, name_en, description_ar, description_en, ' +
         'logo_url, cover_url, website, ' +
         'rating_avg, rating_count, is_verified, membership_tier, ' +
-        'category_id, city_id, latitude, longitude, created_at';
-      // Phase 6: legacy embedded `categories(...)` relation removed from the
-      // select. The category slug fallback in `filterAndSort` is no longer
-      // needed because the taxonomy tree (loaded by `useCategories`) now
-      // resolves slugs centrally. `businesses.category_id` is still read as
-      // a plain uuid for backward filtering only.
+        'city_id, latitude, longitude, created_at';
+      // Phase 18a: `business_services.category_id` is also removed from the
+      // embedded select. Service-level taxonomy is resolved via
+      // `business_service_taxonomy_categories` (see `useServiceCategoryBusinessIds`).
       const { data } = await supabase
         .from('businesses_public')
         .select(
-          `${PARENT_SELECT}, cities(id, name_ar, name_en), business_services(name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status, category_id), promotions(id, end_date)`,
+          `${PARENT_SELECT}, cities(id, name_ar, name_en), business_services(id, name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status), promotions(id, end_date)`,
         )
         .eq('is_active', true)
         // SERVICE-ACTIVATION-GOVERNANCE-3 — eligibility gate on nested
@@ -265,6 +261,72 @@ export const useEntityTags = () =>
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
+  });
+
+/**
+ * Phase 18a — taxonomy-only resolver for the service-category facet.
+ *
+ * Given a UUID-or-slug filter value, resolves it against the taxonomy tree
+ * (expanding parent → direct children), then walks
+ * `business_service_taxonomy_categories → business_services` to produce the
+ * set of business ids that have at least one ACTIVE service linked to any
+ * of the allowed taxonomy categories.
+ *
+ * No reads from `business_services.category_id` or the legacy `categories`
+ * table. Returns an empty set when the filter is "all" or unresolved so the
+ * downstream filter narrows to zero rather than silently bypassing.
+ */
+export const useServiceCategoryBusinessIds = (
+  serviceCategoryId: string,
+  categories: CategoryLite[] | undefined,
+) =>
+  useQuery({
+    queryKey: [
+      'search:service-category-business-ids',
+      serviceCategoryId,
+      // Stable cache key — only depends on parent→child topology, not the
+      // full category payload.
+      (categories ?? []).map((c) => `${c.id}:${c.parent_id ?? ''}`).join(','),
+    ],
+    enabled: Boolean(serviceCategoryId) && serviceCategoryId !== 'all',
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    queryFn: async (): Promise<Set<string>> => {
+      const resolved = resolveCategory(serviceCategoryId, categories);
+      const allowedIds: string[] = resolved && categories
+        ? [...expandCategoryIds(resolved, categories)]
+        : [serviceCategoryId];
+      if (allowedIds.length === 0) return new Set<string>();
+
+      // One PostgREST round-trip: pull links + their service's business_id
+      // + activation gate columns. Empty/inactive services are filtered out
+      // client-side so we don't need a separate query.
+      const { data, error } = await supabase
+        .from('business_service_taxonomy_categories')
+        .select(
+          'service_id, category_id, business_services!inner(business_id, is_active, provider_status, admin_status)',
+        )
+        .in('category_id', allowedIds);
+      if (error) return new Set<string>();
+
+      const out = new Set<string>();
+      for (const row of (data ?? []) as Array<{
+        business_services: {
+          business_id: string | null;
+          is_active: boolean | null;
+          provider_status: string | null;
+          admin_status: string | null;
+        } | null;
+      }>) {
+        const svc = row.business_services;
+        if (!svc || !svc.business_id) continue;
+        if (svc.is_active !== true) continue;
+        if (svc.provider_status !== 'active') continue;
+        if (svc.admin_status !== 'allowed') continue;
+        out.add(svc.business_id);
+      }
+      return out;
+    },
   });
 
 // ─── Filter + Sort Logic ──────────────────────────────
@@ -337,13 +399,21 @@ export const filterAndSort = (
   language: string,
   categories?: CategoryLite[],
   /**
-   * Phase 7 — optional set of business ids the central taxonomy mapped to
-   * the current filter context. When provided, the category filter is
-   * broadened to ALSO include these ids (union with the legacy match) so
-   * taxonomy-linked providers surface even if their legacy `category_id`
-   * is missing or mismatched. Pure augmentation — never narrows results.
+   * Phase 18a — set of business ids that the central taxonomy mapped to
+   * the active category filter (resolved upstream by
+   * `useSearchTaxonomyContext`). This is now the SOLE source for the
+   * provider-level category filter; legacy `businesses.category_id` is
+   * no longer read.
    */
   taxonomyBusinessIds?: Set<string>,
+  /**
+   * Phase 18a — set of business ids that have at least one active service
+   * linked to the active `serviceCategoryId` filter via
+   * `business_service_taxonomy_categories` (resolved upstream by
+   * `useServiceCategoryBusinessIds`). Sole source for the service-category
+   * facet; legacy `business_services.category_id` is no longer read.
+   */
+  serviceCategoryBusinessIds?: Set<string>,
 ) => {
   let results = [...businesses];
 
@@ -370,39 +440,24 @@ export const filterAndSort = (
     });
   }
 
-  // Provider category filter — accept either UUID id or slug, and roll parents
-  // down to include all child categories.
+  // Provider category filter — Phase 18a: taxonomy-only.
+  // `taxonomyBusinessIds` is resolved upstream from `business_taxonomy_categories`
+  // (including parent → direct children rollup). Legacy `b.category_id` is
+  // no longer consulted. When no taxonomy ids resolved (e.g. unmapped slug),
+  // the filter intentionally returns an empty set rather than falling back
+  // to legacy columns.
   if (filters.categoryId !== 'all') {
-    const resolved = resolveCategory(filters.categoryId, categories);
-    if (resolved && categories) {
-      const allowed = expandCategoryIds(resolved, categories);
-      results = results.filter((b) =>
-        allowed.has(b.category_id) || (taxonomyBusinessIds?.has(b.id) ?? false),
-      );
-    } else {
-      // Phase 6: taxonomy tree not loaded yet — match by raw uuid only.
-      // The legacy embedded `categories(...).slug` fallback was removed with
-      // the relation; slug-based URLs now resolve via the taxonomy tree
-      // (useCategories) once it hydrates, plus taxonomyBusinessIds upstream.
-      const v = filters.categoryId;
-      results = results.filter((b) =>
-        b.category_id === v || (taxonomyBusinessIds?.has(b.id) ?? false),
-      );
-    }
+    const allowedBiz = taxonomyBusinessIds ?? new Set<string>();
+    results = results.filter((b) => allowedBiz.has(b.id));
   }
 
-  // Service-category facet — provider has ≥1 active service whose
-  // business_services.category_id matches (rollup to children when parent).
+  // Service-category facet — Phase 18a: taxonomy-only.
+  // `serviceCategoryBusinessIds` is resolved upstream from
+  // `business_service_taxonomy_categories` (with parent rollup). Legacy
+  // `business_services.category_id` is no longer read.
   if (filters.serviceCategoryId && filters.serviceCategoryId !== 'all') {
-    const resolved = resolveCategory(filters.serviceCategoryId, categories);
-    const allowed = resolved && categories ? expandCategoryIds(resolved, categories) : new Set<string>([filters.serviceCategoryId]);
-    results = results.filter((b) => {
-      const services = (b as any).business_services;
-      if (!Array.isArray(services) || services.length === 0) return false;
-      return services.some((s: { is_active?: boolean; category_id?: string | null }) =>
-        s.is_active && s.category_id && allowed.has(s.category_id),
-      );
-    });
+    const allowedBiz = serviceCategoryBusinessIds ?? new Set<string>();
+    results = results.filter((b) => allowedBiz.has(b.id));
   }
 
   // City filter

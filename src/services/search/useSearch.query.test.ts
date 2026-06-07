@@ -79,7 +79,7 @@ describe('useBusinesses Supabase query', () => {
       'id', 'username', 'name_ar', 'name_en', 'description_ar', 'description_en',
       'logo_url', 'cover_url', 'website',
       'rating_avg', 'rating_count', 'is_verified', 'membership_tier',
-      'category_id', 'city_id', 'latitude', 'longitude', 'created_at',
+      'city_id', 'latitude', 'longitude', 'created_at',
     ]) {
       expect(selectArg).toContain(col);
     }
@@ -92,9 +92,16 @@ describe('useBusinesses Supabase query', () => {
     ]) {
       expect(selectArg).not.toMatch(new RegExp(`\\b${col}\\b`));
     }
+    // Phase 18a — taxonomy-first: parent `category_id` MUST NOT appear in
+    // the parent select anymore.
+    expect(selectArg).not.toMatch(/(^|[ ,])category_id(,|$)/);
     expect(selectArg).toContain(
-      'business_services(name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status, category_id)',
+      'business_services(id, name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status)',
     );
+    // Phase 18a — embedded `business_services.category_id` MUST NOT be
+    // requested. Service-category facet is resolved via
+    // business_service_taxonomy_categories (see useServiceCategoryBusinessIds).
+    expect(selectArg).not.toMatch(/business_services\([^)]*category_id/);
     expect(selectArg).toContain('promotions(id, end_date)');
     // Phase 6: embedded legacy `categories(...)` relation removed.
     expect(selectArg).not.toMatch(/\bcategories\(/);
