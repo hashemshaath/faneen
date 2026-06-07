@@ -99,7 +99,7 @@ describe('filterAndSort — taxonomy-first category & service facet (Phase 18a)'
   it('serviceCategoryId uses serviceCategoryBusinessIds as the sole source', () => {
     const res = filterAndSort(
       businesses, '', { ...defaultFilters, serviceCategoryId: 'cat-mirrors' },
-      [], [], 'ar', categories,
+      'ar', categories,
       undefined,
       new Set<string>(['b3']),
     );
@@ -115,7 +115,7 @@ describe('filterAndSort — taxonomy-first category & service facet (Phase 18a)'
     }];
     const res = filterAndSort(
       stale, '', { ...defaultFilters, serviceCategoryId: 'cat-mirrors' },
-      [], [], 'ar', categories,
+      'ar', categories,
       undefined,
       new Set<string>(),
     );
