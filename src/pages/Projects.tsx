@@ -5,6 +5,7 @@ import { buildBreadcrumbList, SITE_URL } from '@/lib/seo/structured-data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { ResponsiveImage } from '@/modules/files/components/ResponsiveImage';
 import { listActiveCities } from '@/modules/locations';
 import {
   getProjectTaxonomyPickerCategories,
