@@ -28,13 +28,18 @@ describe('R4B public read wrappers preserve verbatim query shape', () => {
     expect(src).toContain('return (data ?? [])');
   });
 
-  it('listPublicBusinessesByCategory: exact select + category_id filter + order + default limit 50', () => {
+  it('listPublicBusinessesByCategory: taxonomy join + businesses_public + order + default limit 50', () => {
     const src = read('src/modules/businesses/services/public/listPublicBusinessesByCategory.ts');
+    // Phase 18i — legacy `businesses.category_id` dropped; the wrapper now
+    // resolves business ids via the taxonomy bridge first, then reads the
+    // public projection.
+    expect(src).toContain("from('business_taxonomy_categories')");
     expect(src).toContain("from('businesses_public')");
     expect(src).toContain(
       'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, cities(name_ar, name_en)',
     );
     expect(src).toContain(".eq('category_id', categoryId)");
+    expect(src).toContain(".in('id', businessIds)");
     expect(src).toContain(".order('rating_avg', { ascending: false })");
     expect(src).toContain('limit = 50');
   });
