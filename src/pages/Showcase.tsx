@@ -17,6 +17,7 @@ import {
   getShowcaseTaxonomyCategories,
 } from "@/modules/taxonomy/showcase-services";
 import { LEGACY_SECTOR_TO_TAXONOMY_SLUG } from "@/modules/taxonomy/legacy-mapping";
+import { ResponsiveImage } from "@/modules/files/components/ResponsiveImage";
 
 interface ShowcaseRow {
   id: string;
@@ -29,6 +30,7 @@ interface ShowcaseRow {
   image_url: string;
   link_url: string | null;
   taxonomy_category_id: string | null;
+  image_asset?: { variants: unknown } | null;
   business: {
     id: string;
     name_ar: string | null;
@@ -72,7 +74,7 @@ const Showcase = () => {
       let q = supabase
         .from("showcase_submissions")
         .select(
-          "id, business_id, kind, title_ar, title_en, description_ar, description_en, image_url, link_url, taxonomy_category_id, business:businesses!inner(id, name_ar, name_en, username, logo_url, is_verified)",
+          "id, business_id, kind, title_ar, title_en, description_ar, description_en, image_url, link_url, taxonomy_category_id, image_asset:image_assets(variants), business:businesses!inner(id, name_ar, name_en, username, logo_url, is_verified)",
         )
         .eq("status", "approved")
         // SEO-10A — enforce verified+active+published+non-demo on the joined
