@@ -18631,6 +18631,7 @@ export type Database = {
         Returns: Json
       }
       amendment_safe_hash: { Args: { _amendment_id: string }; Returns: string }
+      apply_business_secondary_taxonomy_backfill: { Args: never; Returns: Json }
       apply_contract_amendment: {
         Args: { _amendment_id: string }
         Returns: {
@@ -20159,6 +20160,10 @@ export type Database = {
       }
       prepare_contract_prefill_from_lead: {
         Args: { _lead_id: string }
+        Returns: Json
+      }
+      preview_business_secondary_taxonomy_backfill: {
+        Args: never
         Returns: Json
       }
       preview_taxonomy_backfill: { Args: never; Returns: Json }
