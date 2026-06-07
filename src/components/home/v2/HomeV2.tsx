@@ -18,6 +18,24 @@ import heroSlide2 from '@/assets/home/hero-slide-2.webp';
 import heroSlide3 from '@/assets/home/hero-slide-3.webp';
 import heroSlide4 from '@/assets/home/hero-slide-4.webp';
 
+// Inject the LCP hero preload at module-evaluation time (before React even
+// commits its first paint). Previously this lived inside a useEffect, which
+// only ran AFTER the first render. With <link rel="preload"> set this early,
+// the browser starts fetching the hero image in parallel with the JS that
+// instantiates the HeroV2 component. Idempotent — guarded by a stable id.
+if (typeof document !== 'undefined') {
+  const PRELOAD_ID = 'qitaat-hero-lcp-preload';
+  if (!document.getElementById(PRELOAD_ID)) {
+    const link = document.createElement('link');
+    link.id = PRELOAD_ID;
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = heroSlide1;
+    link.setAttribute('fetchpriority', 'high');
+    document.head.appendChild(link);
+  }
+}
+
 /**
  * HomeV2 hosts the eager, above-the-fold HeroV2 component (LCP image owner).
  * All other home sections were split into ./sections/* during PERF-1C so they
