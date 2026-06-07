@@ -22,7 +22,10 @@ import {
   previewTaxonomyBackfill,
   applyTaxonomyBackfill,
   clearRuntimeLegacyMapCache,
+  previewBusinessSecondaryBackfill,
+  applyBusinessSecondaryBackfill,
   type BackfillApplyResult,
+  type SecondaryBackfillApplyResult,
   type LegacyMappingRow,
   type LegacyMappingStatus,
 } from '../migration-services';
@@ -53,6 +56,9 @@ export const TaxonomyMigrationPanel: React.FC = () => {
   const [applying, setApplying] = useState(false);
   const [confirmingApply, setConfirmingApply] = useState(false);
   const [lastApplyResult, setLastApplyResult] = useState<BackfillApplyResult | null>(null);
+  const [applyingSecondary, setApplyingSecondary] = useState(false);
+  const [confirmingSecondary, setConfirmingSecondary] = useState(false);
+  const [lastSecondaryResult, setLastSecondaryResult] = useState<SecondaryBackfillApplyResult | null>(null);
 
   const inventoryQ = useQuery({
     queryKey: ['taxonomy', 'inventory'],
@@ -72,6 +78,12 @@ export const TaxonomyMigrationPanel: React.FC = () => {
   const previewQ = useQuery({
     queryKey: ['taxonomy', 'backfill-preview'],
     queryFn: previewTaxonomyBackfill,
+    staleTime: 60_000,
+    retry: 1,
+  });
+  const secondaryQ = useQuery({
+    queryKey: ['taxonomy', 'secondary-backfill-preview'],
+    queryFn: previewBusinessSecondaryBackfill,
     staleTime: 60_000,
     retry: 1,
   });
@@ -101,6 +113,7 @@ export const TaxonomyMigrationPanel: React.FC = () => {
       qc.invalidateQueries({ queryKey: ['taxonomy', 'inventory'] }),
       qc.invalidateQueries({ queryKey: ['taxonomy', 'legacy-mappings'] }),
       qc.invalidateQueries({ queryKey: ['taxonomy', 'backfill-preview'] }),
+      qc.invalidateQueries({ queryKey: ['taxonomy', 'secondary-backfill-preview'] }),
     ]);
   };
 
@@ -132,6 +145,29 @@ export const TaxonomyMigrationPanel: React.FC = () => {
       setConfirmingApply(false);
     }
   };
+
+  const handleApplySecondary = async () => {
+    setApplyingSecondary(true);
+    try {
+      const r = await applyBusinessSecondaryBackfill();
+      setLastSecondaryResult(r);
+      clearRuntimeLegacyMapCache();
+      toast.success(
+        isRTL
+          ? `تم ربط ${r.secondary_linked} تخصص فرعي`
+          : `Linked ${r.secondary_linked} secondary activities`,
+      );
+      await refreshAll();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setApplyingSecondary(false);
+      setConfirmingSecondary(false);
+    }
+  };
+
+  const secondary = secondaryQ.data;
+  const canApplySecondary = Boolean(secondary && secondary.totals.secondary_resolvable > 0);
 
   return (
     <div className="space-y-4">
