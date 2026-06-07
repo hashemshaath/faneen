@@ -314,6 +314,33 @@ const Onboarding = () => {
               isVerified: (bizRow as { is_verified?: boolean | null }).is_verified ?? null,
             });
           }
+
+          // Phase 11 — persist central taxonomy selections (non-blocking).
+          // Failure here must NOT fail the onboarding flow; the user can
+          // update the classification later from the dashboard.
+          if (businessId && (
+            taxonomy.entityTypeCategoryId ||
+            taxonomy.primaryActivityCategoryId ||
+            taxonomy.secondaryActivityCategoryIds.length > 0
+          )) {
+            try {
+              await setBusinessTaxonomyCategories(businessId, {
+                entityTypeCategoryId: taxonomy.entityTypeCategoryId,
+                primaryActivityCategoryId: taxonomy.primaryActivityCategoryId,
+                secondaryActivityCategoryIds: taxonomy.secondaryActivityCategoryIds,
+              });
+            } catch (taxErr) {
+              if (import.meta.env.DEV) {
+                // eslint-disable-next-line no-console
+                console.warn('[onboarding] taxonomy persist failed', taxErr);
+              }
+              toast.warning(
+                isRTL
+                  ? 'تم إنشاء المنشأة، لكن تعذر حفظ التصنيف. يمكنك تحديثه لاحقًا من صفحة تعديل المنشأة.'
+                  : 'Business created, but the classification could not be saved. You can update it later from the business edit page.',
+              );
+            }
+          }
         } catch { /* non-blocking */ }
       }
 
