@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { getNotificationMeta, isUrgentNotification, typeFilterLabels } from '@/components/notifications/notification-types';
 import { resolveNotificationTitle } from '@/i18n/notificationLabels';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { PageHeader } from '@/components/shared';
 
 /* ── Notification Item (memo) ── */
 const NotificationItem = React.memo(({ notification, isRTL, language, onRead, onDelete, onNavigate }: {
@@ -245,24 +246,19 @@ const DashboardNotifications = () => {
   return (
     <DashboardLayout>
       <div className="space-y-4">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-              <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
-              {isRTL ? 'الإشعارات' : 'Notifications'}
-            </h1>
-            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
-              {isRTL ? 'متابعة جميع التنبيهات والتحديثات الفورية' : 'Track all alerts and realtime updates'}
-            </p>
-          </div>
-          {unreadCount > 0 && (
+        <PageHeader
+          icon={Bell}
+          tone="accent"
+          eyebrow={isRTL ? 'التنبيهات' : 'Alerts'}
+          title={isRTL ? 'الإشعارات' : 'Notifications'}
+          subtitle={isRTL ? 'متابعة جميع التنبيهات والتحديثات الفورية' : 'Track all alerts and realtime updates'}
+          actions={unreadCount > 0 ? (
             <Button variant="default" size="sm" className="gap-1.5 text-xs" onClick={() => markAllRead.mutate()}>
               <CheckCheck className="w-3.5 h-3.5" />
               {isRTL ? `قراءة الكل (${unreadCount})` : `Mark all read (${unreadCount})`}
             </Button>
-          )}
-        </div>
+          ) : undefined}
+        />
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">

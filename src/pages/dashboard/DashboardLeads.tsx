@@ -30,6 +30,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PageHeader } from '@/components/shared';
 
 const FILTERS: Array<{ key: 'all' | LeadStatus; ar: string; en: string }> = [
   { key: 'all',        ar: 'الكل',           en: 'All' },
@@ -402,17 +403,14 @@ const DashboardLeads: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-5">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-              <Inbox className="h-5 w-5" />
-              {isRTL ? 'طلبات الخدمة' : 'Service Requests'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isRTL ? 'استقبل وأدر طلبات العملاء لمنشآتك' : 'Receive and manage customer requests for your businesses'}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
+        <PageHeader
+          icon={Inbox}
+          tone="primary"
+          eyebrow={isRTL ? 'الواردات' : 'Inbox'}
+          title={isRTL ? 'طلبات الخدمة' : 'Service Requests'}
+          subtitle={isRTL ? 'استقبل وأدر طلبات العملاء لمنشآتك' : 'Receive and manage customer requests for your businesses'}
+          actions={
+            <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1.5">
@@ -447,8 +445,9 @@ const DashboardLeads: React.FC = () => {
               <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
               <span>{isRTL ? 'تحديث' : 'Refresh'}</span>
             </Button>
-          </div>
-        </header>
+            </>
+          }
+        />
 
         {/* KPI strip — real-data only, hidden until we know there are managed businesses. */}
         {ids.length > 0 && (
