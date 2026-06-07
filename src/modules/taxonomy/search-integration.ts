@@ -316,7 +316,7 @@ interface RawLinkRow {
     slug: string;
     name_ar: string;
     name_en: string | null;
-    type_id: string | null;
+    taxonomy_type_id: string | null;
   } | null;
 }
 
@@ -385,7 +385,7 @@ export function useBusinessTaxonomyDisplayBatch(
       const { data, error } = await supabase
         .from('business_taxonomy_categories')
         .select(
-          'business_id, category_id, role, is_primary, taxonomy_categories!inner(id, slug, name_ar, name_en, type_id)',
+          'business_id, category_id, role, is_primary, taxonomy_categories!inner(id, slug, name_ar, name_en, taxonomy_type_id)',
         )
         .in('business_id', ids);
       if (error) throw error;
