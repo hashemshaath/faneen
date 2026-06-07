@@ -7,6 +7,13 @@ export * as taxonomyUtils from './utils';
 export { default as BusinessTaxonomySection } from './components/BusinessTaxonomySection';
 export * as taxonomyBusinessServices from './business-services';
 
+// Phase 11 — onboarding integration
+export {
+  default as OnboardingTaxonomyStep,
+  EMPTY_ONBOARDING_TAXONOMY,
+} from './components/OnboardingTaxonomyStep';
+export type { OnboardingTaxonomyValue } from './components/OnboardingTaxonomyStep';
+
 // Phase 4 — resolution layer + legacy mapping
 export * as taxonomyResolution from './resolution';
 export * from './legacy-mapping';
