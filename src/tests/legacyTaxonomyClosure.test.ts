@@ -70,6 +70,17 @@ function isAllowed(path: string): boolean {
   );
 }
 
+/**
+ * Strip line and block comments so the guard only scans executable code.
+ * (Mentions in JSDoc/comments are allowed - reviewers need to discuss the
+ * legacy in context without tripping CI.)
+ */
+function stripComments(src: string): string {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+}
+
 describe('legacy taxonomy closure guard', () => {
   const files = ROOTS.flatMap((r) => walk(r)).filter((f) => !isAllowed(f));
 
@@ -77,7 +88,7 @@ describe('legacy taxonomy closure guard', () => {
     it(`no runtime file references: ${label}`, () => {
       const offenders: string[] = [];
       for (const file of files) {
-        const src = readFileSync(file, 'utf8');
+        const src = stripComments(readFileSync(file, 'utf8'));
         if (regex.test(src)) offenders.push(relative(process.cwd(), file));
       }
       expect(offenders, `Forbidden reference reintroduced: ${label}`).toEqual([]);
