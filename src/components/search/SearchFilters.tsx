@@ -13,6 +13,7 @@ import { CategoryTree } from './CategoryTree';
 import { TagsFilter } from './TagsFilter';
 import type { SearchFilterValues } from '@/services/search/useSearch';
 import { useCategoryCounts } from '@/services/categories/useCategoryCounts';
+import { useSearchableTaxonomyCategories } from '@/modules/taxonomy/search-integration';
 export type { SearchFilterValues };
 
 interface SearchFiltersProps {
@@ -115,6 +116,10 @@ export const SearchFilters = ({
               label={t('search.category')}
               summary={selectedCategory ? (language === 'ar' ? selectedCategory.name_ar : selectedCategory.name_en) : ''}
             >
+              <TaxonomyCategoryChips
+                value={filters.categoryId}
+                onChange={(v) => onFilterChange('categoryId', v)}
+              />
               <CategoryTree
                 categories={(categories || []) as any}
                 selectedId={filters.categoryId}
