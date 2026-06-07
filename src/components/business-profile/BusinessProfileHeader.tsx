@@ -113,7 +113,13 @@ export const BusinessProfileHeader = ({
     business.short_description_en || business.description_en,
   );
   const cityName = getLocalizedValue(language, business.cities?.name_ar, business.cities?.name_en);
-  const categoryName = getLocalizedValue(language, business.categories?.name_ar, business.categories?.name_en);
+  // Phase 2.3 — Public UI is taxonomy-only. The legacy `business.categories`
+  // name is intentionally not used for display. When no modern taxonomy is
+  // available we show a localized "Unclassified" label.
+  const taxonomy = useBusinessTaxonomyDisplay(business.id, language);
+  const categoryName = taxonomy.hasModernTaxonomy && taxonomy.primaryLabel
+    ? taxonomy.primaryLabel
+    : (language === "ar" ? "غير مصنّف" : "Unclassified");
   const memberDate = new Date(business.created_at).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US", {
     year: "numeric",
     month: "long",
