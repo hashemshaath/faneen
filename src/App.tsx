@@ -383,6 +383,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/branches" element={<ProtectedRoute><DashboardBranches /></ProtectedRoute>} />
           <Route path="/dashboard/entities" element={<Navigate to="/dashboard/business-edit?tab=entities" replace />} />
           <Route path="/dashboard/entities/:id" element={<ProtectedRoute><DashboardEntityDetail /></ProtectedRoute>} />
+          <Route path="/dashboard/credentials" element={<Navigate to="/dashboard/business-edit?tab=credentials" replace />} />
           <Route path="/dashboard/communication-preferences" element={<ProtectedRoute><DashboardCommunicationPreferences /></ProtectedRoute>} />
 
           <Route path="/dashboard/services" element={<ProtectedRoute requireProvider><DashboardServices /></ProtectedRoute>} />
