@@ -371,7 +371,6 @@ const ProjectDetail = () => {
         <RelatedProjects
           projectId={id!}
           businessId={project.business_id}
-          categoryId={project.category_id}
           cityId={project.city_id}
           taxonomyCategoryIds={taxonomyCategoryIds}
         />
