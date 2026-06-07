@@ -484,7 +484,6 @@ const ContractDetail = () => {
   const contractAny = contract as unknown as {
     template_version_id?: string | null;
     pricing_method?: string | null;
-    service_category_id?: string | null;
   } | null | undefined;
   const templateVersionId = contractAny?.template_version_id ?? null;
   const { data: templateMeta } = useQuery({
