@@ -33,3 +33,13 @@ export * from './legacy-mapping';
 
 // Phase 8 — unification / migration registry
 export * as taxonomyMigration from './migration-services';
+
+// Phase 18d — taxonomy presence (readiness/growth)
+export * as taxonomyPresence from './presence';
+export {
+  useBusinessTaxonomyPresence,
+  useBusinessTaxonomyPresenceBatch,
+  buildPresenceMap,
+  EMPTY_TAXONOMY_PRESENCE,
+} from './presence';
+export type { BusinessTaxonomyPresence } from './presence';
