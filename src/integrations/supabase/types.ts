@@ -3564,6 +3564,58 @@ export type Database = {
           },
         ]
       }
+      business_taxonomy_categories: {
+        Row: {
+          business_id: string
+          category_id: string
+          created_at: string
+          id: string
+          is_primary: boolean
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          category_id: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          category_id?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          role?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_taxonomy_categories_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_taxonomy_categories_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_taxonomy_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_team_members: {
         Row: {
           business_staff_id: string
@@ -20490,6 +20542,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_business_taxonomy_categories: {
+        Args: {
+          p_business_id: string
+          p_entity_type_category_id: string
+          p_primary_activity_category_id: string
+          p_secondary_activity_category_ids: string[]
+        }
+        Returns: Json
       }
       set_client_site_visibility: {
         Args: { _site_id: string; _visibility: string }
