@@ -22,11 +22,19 @@ describe('F-3 storage migration (showcase + blog)', () => {
     expect(src).toContain("from '@/modules/files'");
   });
 
-  it('preserves showcase path format `${userId}/${ts}.${ext}` and options', () => {
+  it('Phase 2: showcase uses pipeline-nested paths + 1-year immutable cache', () => {
     const src = read('src/modules/files/domain/showcase.ts');
-    expect(src).toContain('${userId}/${Date.now()}.${ext}');
-    expect(src).toContain("cacheControl: '3600'");
+    // Phase 2 layout: `${userId}/${ts}/${variant.key}.webp` (pipeline variants)
+    // with a legacy fallback `${userId}/${ts}.webp` when the pipeline fails.
+    expect(src).toContain('${userId}/${ts}');
+    expect(src).toContain('${folder}/${variant.key}.webp');
+    expect(src).toContain('${userId}/${ts}.webp');
+    // Long-lived immutable cache (paths are timestamped per variant).
+    expect(src).toContain("cacheControl: '31536000, immutable'");
     expect(src).toContain('upsert: false');
+    // Pipeline integration markers.
+    expect(src).toContain('processImage');
+    expect(src).toContain('image_assets');
   });
 
   it('preserves blog list options { limit: 100, sortBy created_at desc }', () => {
