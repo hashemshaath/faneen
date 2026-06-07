@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getOwnerBusiness } from '@/modules/businesses';
+import { PageHeader } from '@/components/shared';
 import { listActiveCities } from '@/modules/locations';
 import {
   getProjectTaxonomyPickerCategories,
@@ -477,28 +478,25 @@ const DashboardProjects = () => {
   return (
     <DashboardLayout>
       <div className="space-y-5">
-        {/* ═══ Header ═══ */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
-              <FolderOpen className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-heading font-bold text-xl">{isRTL ? 'المشاريع المنجزة' : 'Completed Projects'}</h1>
-              <p className="text-xs text-muted-foreground">{isRTL ? `${stats.total} مشروع · ${stats.published} منشور` : `${stats.total} projects · ${stats.published} published`}</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            {projects.length > 0 && (
-              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportCSV}>
-                <Download className="w-3.5 h-3.5 me-1" />{isRTL ? 'تصدير' : 'Export'}
+        <PageHeader
+          icon={FolderOpen}
+          tone="primary"
+          eyebrow={isRTL ? 'الأعمال' : 'Work'}
+          title={isRTL ? 'المشاريع المنجزة' : 'Completed Projects'}
+          subtitle={isRTL ? `${stats.total} مشروع · ${stats.published} منشور` : `${stats.total} projects · ${stats.published} published`}
+          actions={
+            <>
+              {projects.length > 0 && (
+                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportCSV}>
+                  <Download className="w-3.5 h-3.5 me-1" />{isRTL ? 'تصدير' : 'Export'}
+                </Button>
+              )}
+              <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
+                <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة مشروع' : 'Add Project'}
               </Button>
-            )}
-            <Button variant="hero" size="sm" className="h-8 text-xs" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
-              <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة مشروع' : 'Add Project'}
-            </Button>
-          </div>
-        </div>
+            </>
+          }
+        />
 
         {/* ═══ Stats ═══ */}
         {projects.length > 0 && (
