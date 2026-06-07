@@ -212,12 +212,14 @@ const SearchPage = () => {
       categoryId: 'category', cityId: 'city', minRating: 'rating',
       verifiedOnly: 'verified', sortBy: 'sort', priceMin: 'price_min', priceMax: 'price_max',
       serviceCategoryId: 'serviceCategory',
+      regionId: 'region',
     };
     const paramKey = paramMap[key];
     const defaultVals: Record<string, any> = {
       categoryId: 'all', cityId: 'all', minRating: 0,
       verifiedOnly: false, sortBy: 'rating', priceMin: 0, priceMax: 0,
       serviceCategoryId: 'all',
+      regionId: 'all',
     };
     if (value === defaultVals[key]) params.delete(paramKey); else params.set(paramKey, String(value));
     setSearchParams(params, { replace: true });
@@ -227,7 +229,7 @@ const SearchPage = () => {
     handleFilterChange('categoryId', filters.categoryId === id ? 'all' : id);
   }, [filters.categoryId, handleFilterChange]);
 
-  const hasActiveFilters = filters.categoryId !== 'all' || filters.cityId !== 'all' || filters.minRating > 0 || filters.verifiedOnly || filters.priceMin > 0 || filters.priceMax > 0 || filters.serviceCategoryId !== 'all';
+  const hasActiveFilters = filters.categoryId !== 'all' || filters.cityId !== 'all' || filters.minRating > 0 || filters.verifiedOnly || filters.priceMin > 0 || filters.priceMax > 0 || filters.serviceCategoryId !== 'all' || filters.regionId !== 'all';
 
   const clearFilters = useCallback(() => {
     setFilters({ ...defaultFilters });
