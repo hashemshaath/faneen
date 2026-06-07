@@ -9,8 +9,9 @@ import {
 import {
   Star, ShieldCheck, SlidersHorizontal, RotateCcw, ChevronRight, ChevronLeft, MapPin, ArrowUpDown, Tag, Wallet, ChevronDown, Layers,
 } from 'lucide-react';
-import { CategoryTree } from './CategoryTree';
-import { TagsFilter } from './TagsFilter';
+// Phase 2.5 — Search UI is taxonomy-only. The legacy `CategoryTree` and
+// `TagsFilter` components are intentionally NOT imported here anymore; they
+// remain in the codebase (not deleted) for potential admin/internal reuse.
 import type { SearchFilterValues } from '@/services/search/useSearch';
 import { useCategoryCounts } from '@/services/categories/useCategoryCounts';
 import { useSearchableTaxonomyCategories } from '@/modules/taxonomy/search-integration';
@@ -37,6 +38,15 @@ export const SearchFilters = ({
 }: SearchFiltersProps) => {
   const { t, language, isRTL } = useLanguage();
 
+  // Phase 2.5 — Resolve the active category label from taxonomy first; the
+  // legacy `categories` prop is kept only as a silent fallback so existing
+  // ?sector=… deep links still display a readable summary while the new
+  // chips drive ?category=slug.
+  const { data: taxonomyCats } = useSearchableTaxonomyCategories();
+  const selectedTaxonomyCat = taxonomyCats?.find(
+    (c) => c.slug === filters.categoryId || c.id === filters.categoryId,
+  );
+
   const activeCount = [
     filters.categoryId !== 'all',
     filters.cityId !== 'all',
@@ -45,9 +55,17 @@ export const SearchFilters = ({
     filters.priceMin > 0,
     filters.priceMax > 0,
     filters.serviceCategoryId !== 'all',
-  ].filter(Boolean).length + selectedTags.length;
+  ].filter(Boolean).length;
 
-  const selectedCategory = categories?.find(c => c.id === filters.categoryId);
+  const selectedCategoryLabel = selectedTaxonomyCat
+    ? (language === 'ar'
+        ? selectedTaxonomyCat.name_ar
+        : (selectedTaxonomyCat.name_en || selectedTaxonomyCat.name_ar))
+    : (categories?.find(c => c.id === filters.categoryId || c.slug === filters.categoryId)
+        ? (language === 'ar'
+            ? categories!.find(c => c.id === filters.categoryId || c.slug === filters.categoryId)!.name_ar
+            : categories!.find(c => c.id === filters.categoryId || c.slug === filters.categoryId)!.name_en)
+        : '');
   const selectedCity = cities?.find(c => c.id === filters.cityId);
   const selectedServiceCategory = categories?.find(c => c.id === filters.serviceCategoryId || c.slug === filters.serviceCategoryId);
   const sortLabels: Record<SearchFilterValues['sortBy'], { ar: string; en: string }> = {
@@ -113,17 +131,12 @@ export const SearchFilters = ({
             {/* Category */}
             <FilterCard
               icon={Tag}
-              label={t('search.category')}
-              summary={selectedCategory ? (language === 'ar' ? selectedCategory.name_ar : selectedCategory.name_en) : ''}
+              label={isRTL ? 'اختر النشاط أو الخدمة' : 'Pick an activity or service'}
+              summary={selectedCategoryLabel}
             >
-              <TaxonomyCategoryChips
+              <TaxonomyCategoryFilter
                 value={filters.categoryId}
                 onChange={(v) => onFilterChange('categoryId', v)}
-              />
-              <CategoryTree
-                categories={(categories || []) as any}
-                selectedId={filters.categoryId}
-                onSelect={v => onFilterChange('categoryId', v)}
               />
             </FilterCard>
 
@@ -255,13 +268,10 @@ export const SearchFilters = ({
             </FilterCard>
 
             {/* Tags */}
-            {onToggleTag && onClearTags && (
-              <TagsFilter
-                selectedTags={selectedTags}
-                onToggleTag={onToggleTag}
-                onClearTags={onClearTags}
-              />
-            )}
+            {/* Phase 2.5 — Legacy TagsFilter is intentionally hidden in the
+                search UI. The `selectedTags` / `onToggleTag` / `onClearTags`
+                props remain in the component signature for backwards
+                compatibility with the parent page but are not rendered. */}
           </div>
         )}
       </div>
@@ -364,11 +374,12 @@ const PriceRangeInputs = ({
   );
 };
 
-/* Phase 10 — Public taxonomy chips. Source of truth = taxonomy_categories
-   where show_in_search=true. Renders the first 8 featured/sorted categories
-   inline as chips with a "more" expander. Falls back silently to the legacy
-   CategoryTree below when the query fails or returns empty. */
-const TaxonomyCategoryChips = ({
+/* Phase 2.5 — Taxonomy-only category filter. Source of truth =
+   taxonomy_categories where show_in_search=true. Renders the categories as
+   chips with a search input and a "more" expander. Replaces the legacy
+   CategoryTree entirely in the search UI. Handles loading / empty / error
+   states with a light inline message — never falls back to legacy UI. */
+const TaxonomyCategoryFilter = ({
   value,
   onChange,
 }: {
@@ -376,21 +387,65 @@ const TaxonomyCategoryChips = ({
   onChange: (v: string) => void;
 }) => {
   const { language, isRTL } = useLanguage();
-  const { data: taxonomy, isLoading } = useSearchableTaxonomyCategories();
+  const { data: taxonomy, isLoading, isError } = useSearchableTaxonomyCategories();
   const [showAll, setShowAll] = useState(false);
+  const [query, setQuery] = useState('');
 
-  if (isLoading || !taxonomy || taxonomy.length === 0) return null;
+  if (isLoading) {
+    return (
+      <div className="flex flex-wrap gap-1.5 py-1" aria-busy>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <span key={i} className="h-6 w-16 rounded-full bg-muted/60 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (isError || !taxonomy || taxonomy.length === 0) {
+    return (
+      <p className="text-[11px] text-muted-foreground bg-muted/30 border border-border/50 rounded-lg p-2.5 leading-relaxed">
+        {isRTL
+          ? 'تعذر تحميل التصنيفات حاليًا. يمكنك البحث بالكلمة أو المدينة.'
+          : 'Could not load classifications right now. You can still search by keyword or city.'}
+      </p>
+    );
+  }
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? taxonomy.filter((c) =>
+        (c.name_ar || '').toLowerCase().includes(q) ||
+        (c.name_en || '').toLowerCase().includes(q) ||
+        (c.slug || '').toLowerCase().includes(q),
+      )
+    : taxonomy;
 
   const COLLAPSED = 8;
-  const visible = showAll ? taxonomy : taxonomy.slice(0, COLLAPSED);
-  const more = taxonomy.length - visible.length;
+  const visible = showAll || q ? filtered : filtered.slice(0, COLLAPSED);
+  const more = filtered.length - visible.length;
 
   return (
-    <div className="mb-3 pb-3 border-b border-border/40">
-      <div className="text-[11px] font-heading font-bold text-muted-foreground uppercase tracking-wide mb-2">
-        {isRTL ? 'الأنشطة الرئيسية' : 'Main activities'}
-      </div>
+    <div>
+      <Input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={isRTL ? 'ابحث عن نشاط، تخصص أو خدمة...' : 'Search for an activity, specialty or service...'}
+        className="mb-2 h-9 rounded-xl text-xs bg-background border-border/60"
+        dir="auto"
+      />
       <div className="flex flex-wrap gap-1.5">
+        <button
+          type="button"
+          onClick={() => onChange('all')}
+          aria-pressed={value === 'all'}
+          className={`px-2.5 py-1 rounded-full text-[11px] font-body transition-colors border ${
+            value === 'all'
+              ? 'bg-accent text-accent-foreground border-accent shadow-sm'
+              : 'bg-background text-foreground/80 border-border/60 hover:border-accent/40 hover:text-accent'
+          }`}
+        >
+          {isRTL ? 'الكل' : 'All'}
+        </button>
         {visible.map((c) => {
           const active = value === c.slug || value === c.id;
           const label = language === 'ar' ? c.name_ar : (c.name_en || c.name_ar);
@@ -419,6 +474,11 @@ const TaxonomyCategoryChips = ({
           >
             {isRTL ? `+${more} المزيد` : `+${more} more`}
           </button>
+        )}
+        {q && filtered.length === 0 && (
+          <span className="text-[11px] text-muted-foreground py-1">
+            {isRTL ? 'لا توجد نتائج' : 'No results'}
+          </span>
         )}
       </div>
     </div>
