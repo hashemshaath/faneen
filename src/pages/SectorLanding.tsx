@@ -25,20 +25,7 @@ import { SA_CITIES } from '@/lib/sa-cities';
 import { SectorFAQ } from '@/components/sector/SectorFAQ';
 import { getSectorFaqs } from '@/lib/sector-faqs';
 import { useSectorPageviewTracking } from '@/hooks/useSectorPageviewTracking';
-import { LEGACY_SECTOR_TO_TAXONOMY_SLUG } from '@/modules/taxonomy';
-
-/**
- * Maps a sector slug → list of category slugs that should be included
- * when listing providers for that sector. Categories live in
- * `public.categories` and are the source of truth used by `/search`.
- */
-const SECTOR_TO_CATEGORY_SLUGS: Record<SectorSlug, string[]> = {
-  aluminum: ['aluminum'],
-  iron: ['iron-steel'],
-  glass: ['glass'],
-  wood: ['wood-cabinets'],
-  cabinets: ['wood-cabinets'],
-};
+import { useSectorTaxonomy } from '@/hooks/useSectorTaxonomy';
 
 const PAGE_SIZE = 24;
 
@@ -53,7 +40,6 @@ type BizRow = {
   is_verified: boolean | null;
   city_id: string | null;
   cities: { id: string; name_ar: string; name_en: string | null } | null;
-  category_id: string;
 };
 
 const SectorLanding: React.FC = () => {
