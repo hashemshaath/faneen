@@ -1876,6 +1876,17 @@ const ContractDetail = () => {
             {(templateMeta as any).contract_templates?.category && (
               <Badge variant="outline" className="text-[10px]">{(templateMeta as any).contract_templates.category}</Badge>
             )}
+            {contractTaxonomyCategory ? (
+              <Badge variant="outline" className="text-[10px]">
+                {isRTL
+                  ? contractTaxonomyCategory.name_ar
+                  : (contractTaxonomyCategory.name_en || contractTaxonomyCategory.name_ar)}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                {isRTL ? 'غير مصنّف' : 'Uncategorized'}
+              </Badge>
+            )}
             {contractAny?.pricing_method && (
               <Badge variant="outline" className="text-[10px] gap-1"><Hash className="w-2.5 h-2.5" />{contractAny.pricing_method}</Badge>
             )}
