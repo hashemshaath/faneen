@@ -330,19 +330,34 @@ const DashboardProjects = () => {
         project_cost: form.project_cost ? Number(form.project_cost) : null,
         duration_days: form.duration_days ? Number(form.duration_days) : null,
         completion_date: form.completion_date || null, status: form.status,
-        category_id: form.category_id || null, city_id: form.city_id || null,
+        // Phase 8: classification now comes from `project_taxonomy_categories`.
+        // We deliberately leave `category_id` untouched (null on insert) — the
+        // legacy column is preserved in DB for read-only fallback only.
+        category_id: null as string | null,
+        city_id: form.city_id || null,
         is_featured: form.is_featured, currency_code: form.currency_code,
       };
+      const taxonomyId = form.taxonomy_category_id || null;
       if (editId) {
         const { error } = await supabase.from('projects').update(payload).eq('id', editId);
         if (error) throw error;
+        await setProjectTaxonomyCategories(editId, { primaryCategoryId: taxonomyId });
       } else {
         (payload as any).sort_order = projects.length;
-        const { error } = await supabase.from('projects').insert(payload as any);
+        const { data: inserted, error } = await supabase
+          .from('projects').insert(payload as any).select('id').single();
         if (error) throw error;
+        if (inserted?.id) {
+          await setProjectTaxonomyCategories(inserted.id, { primaryCategoryId: taxonomyId });
+        }
       }
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); closeForm(); toast.success(editId ? (isRTL ? 'تم التحديث' : 'Updated') : (isRTL ? 'تم الإضافة' : 'Added')); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-project-taxonomy'] });
+      closeForm();
+      toast.success(editId ? (isRTL ? 'تم التحديث' : 'Updated') : (isRTL ? 'تم الإضافة' : 'Added'));
+    },
     onError: (err: Error) => toast.error(err.message),
   });
 
@@ -377,21 +392,26 @@ const DashboardProjects = () => {
   const closeForm = useCallback(() => { setShowForm(false); setEditId(null); setForm(emptyForm); }, [emptyForm]);
   const scrollToForm = useCallback(() => { requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }, []);
 
-  const openEdit = useCallback((p) => {
+  const openEdit = useCallback(async (p) => {
+    const links = await getProjectTaxonomyCategories(p.id);
+    const primary = links.find((l) => l.role === 'primary_activity');
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', description_ar: p.description_ar || '',
       description_en: p.description_en || '', cover_image_url: p.cover_image_url || '',
       client_name: p.client_name || '', project_cost: p.project_cost?.toString() || '',
       duration_days: p.duration_days?.toString() || '', completion_date: p.completion_date || '',
-      status: p.status, category_id: p.category_id || '', city_id: p.city_id || '',
+      status: p.status, city_id: p.city_id || '',
       is_featured: p.is_featured || false, currency_code: p.currency_code || 'SAR',
+      taxonomy_category_id: primary?.category_id || '',
     });
     setEditId(p.id);
     setShowForm(true);
     scrollToForm();
   }, [scrollToForm]);
 
-  const duplicateProject = useCallback((p) => {
+  const duplicateProject = useCallback(async (p) => {
+    const links = await getProjectTaxonomyCategories(p.id);
+    const primary = links.find((l) => l.role === 'primary_activity');
     setEditId(null);
     setForm({
       title_ar: p.title_ar + (isRTL ? ' (نسخة)' : ' (copy)'),
@@ -400,8 +420,9 @@ const DashboardProjects = () => {
       cover_image_url: p.cover_image_url || '', client_name: p.client_name || '',
       project_cost: p.project_cost?.toString() || '', duration_days: p.duration_days?.toString() || '',
       completion_date: p.completion_date || '', status: 'draft',
-      category_id: p.category_id || '', city_id: p.city_id || '',
+      city_id: p.city_id || '',
       is_featured: false, currency_code: p.currency_code || 'SAR',
+      taxonomy_category_id: primary?.category_id || '',
     });
     setShowForm(true);
     scrollToForm();
