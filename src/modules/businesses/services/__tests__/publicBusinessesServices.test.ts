@@ -229,37 +229,44 @@ describe('P-21 public/SEO businesses read migration', () => {
     expect(src).not.toMatch(/\.from\(["']businesses["']\)/);
   });
 
-  it('SectorLanding uses listPublicBusinessesForSector with category_id in + is_active eq + rating order + limit 500', () => {
+  it('SectorLanding is taxonomy-first: filters businesses by id in taxonomyBusinessIds + is_active + rating order + limit 500', () => {
     const src = read('src/pages/SectorLanding.tsx');
     expect(src).toMatch(/listPublicBusinessesForSector\(\{/);
     expect(src).toContain(
-      "'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, category_id, cities(id, name_ar, name_en)'",
+      "'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, cities(id, name_ar, name_en)'",
     );
-    expect(src).toContain("{ column: 'category_id', op: 'in', value: categoryIds }");
+    expect(src).toContain("{ column: 'id', op: 'in', value: taxonomyBusinessIds }");
     expect(src).toContain("{ column: 'is_active', op: 'eq', value: true }");
     expect(src).toContain("orderBy: { column: 'rating_avg', ascending: false }");
     expect(src).toContain('limit: 500');
     expect(src).not.toMatch(/supabase\s*\.\s*from\(['"]businesses['"]\)/);
+    // Legacy categories table is no longer queried by sector pages.
+    expect(src).not.toMatch(/\.from\(['"]categories['"]\)/);
+    expect(src).toContain("useSectorTaxonomy");
   });
 
-  it('SectorCity preserves category_id in + city_id eq + is_active + limit 200', () => {
+  it('SectorCity is taxonomy-first: filters by id in taxonomyBusinessIds + city_id eq + is_active + limit 200', () => {
     const src = read('src/pages/SectorCity.tsx');
     expect(src).toMatch(/listPublicBusinessesForSector\(\{/);
-    expect(src).toContain("{ column: 'category_id', op: 'in', value: categoryIds }");
+    expect(src).toContain("{ column: 'id', op: 'in', value: taxonomyBusinessIds }");
     expect(src).toContain("{ column: 'city_id', op: 'eq', value: cityRow!.id }");
     expect(src).toContain("{ column: 'is_active', op: 'eq', value: true }");
     expect(src).toContain('limit: 200');
     expect(src).not.toMatch(/supabase\s*\.\s*from\(['"]businesses['"]\)/);
+    expect(src).not.toMatch(/\.from\(['"]categories['"]\)/);
+    expect(src).toContain("useSectorTaxonomy");
   });
 
-  it('SectorBrief preserves category_id in + city_id in + is_active + limit 300', () => {
+  it('SectorBrief is taxonomy-first: filters by id in taxonomyBusinessIds + city_id in + is_active + limit 300', () => {
     const src = read('src/pages/SectorBrief.tsx');
     expect(src).toMatch(/listPublicBusinessesForSector\(\{/);
-    expect(src).toContain("{ column: 'category_id', op: 'in', value: categoryIds }");
+    expect(src).toContain("{ column: 'id', op: 'in', value: taxonomyBusinessIds }");
     expect(src).toContain("{ column: 'city_id', op: 'in', value: cityIds }");
     expect(src).toContain("{ column: 'is_active', op: 'eq', value: true }");
     expect(src).toContain('limit: 300');
     expect(src).not.toMatch(/supabase\s*\.\s*from\(['"]businesses['"]\)/);
+    expect(src).not.toMatch(/\.from\(['"]categories['"]\)/);
+    expect(src).toContain("useSectorTaxonomy");
   });
 
   it('SectorDistributorsPanel uses listBusinessesByIds + getBusinessByRefId; no direct businesses reads', () => {

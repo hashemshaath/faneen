@@ -26,14 +26,7 @@ import { getCityBySlug, SA_CITIES } from '@/lib/sa-cities';
 import { SERVICES_CATALOG, UNIT_LABEL } from '@/lib/services-catalog';
 import { getSectorFaqs } from '@/lib/sector-faqs';
 import { useSectorPageviewTracking } from '@/hooks/useSectorPageviewTracking';
-
-const SECTOR_TO_CATEGORY_SLUGS: Record<SectorSlug, string[]> = {
-  aluminum: ['aluminum'],
-  iron: ['iron-steel'],
-  glass: ['glass'],
-  wood: ['wood-cabinets'],
-  cabinets: ['wood-cabinets'],
-};
+import { useSectorTaxonomy } from '@/hooks/useSectorTaxonomy';
 
 type BizRow = {
   id: string;
@@ -45,7 +38,6 @@ type BizRow = {
   rating_count: number | null;
   is_verified: boolean | null;
   city_id: string | null;
-  category_id: string;
   short_description_ar: string | null;
   short_description_en: string | null;
   membership_tier: string | null;
@@ -87,29 +79,19 @@ const SectorCity: React.FC = () => {
     },
   });
 
-  const categorySlugs = sector ? SECTOR_TO_CATEGORY_SLUGS[sector.slug] : [];
-  const { data: categories = [] } = useQuery({
-    queryKey: ['sector-city-cats', categorySlugs.join(',')],
-    enabled: categorySlugs.length > 0,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('categories')
-        .select('id, slug')
-        .in('slug', categorySlugs);
-      return data ?? [];
-    },
-  });
-  const categoryIds = useMemo(() => categories.map((c) => c.id), [categories]);
+  // Phase 15 — taxonomy-first: resolve providers via
+  // `business_taxonomy_categories`; legacy `categories.category_id` is gone.
+  const { taxonomyCategory, businessIds: taxonomyBusinessIds } = useSectorTaxonomy(sectorSlug);
 
   const { data: businesses = [], isLoading } = useQuery({
-    queryKey: ['sector-city-biz', sectorSlug, cityRow?.id, categoryIds],
-    enabled: categoryIds.length > 0 && !!cityRow?.id,
+    queryKey: ['sector-city-biz', sectorSlug, cityRow?.id, taxonomyBusinessIds],
+    enabled: taxonomyBusinessIds.length > 0 && !!cityRow?.id,
     queryFn: async () => {
       const { data } = await listPublicBusinessesForSector({
         select:
-          'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, category_id, short_description_ar, short_description_en, membership_tier, mobile, phone, cities(id, name_ar, name_en)',
+          'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, short_description_ar, short_description_en, membership_tier, mobile, phone, cities(id, name_ar, name_en)',
         filters: [
-          { column: 'category_id', op: 'in', value: categoryIds },
+          { column: 'id', op: 'in', value: taxonomyBusinessIds },
           { column: 'city_id', op: 'eq', value: cityRow!.id },
           { column: 'is_active', op: 'eq', value: true },
         ],
@@ -149,7 +131,30 @@ const SectorCity: React.FC = () => {
   const top10 = useMemo(() => filtered.slice(0, 10), [filtered]);
   const rest = useMemo(() => filtered.slice(10), [filtered]);
 
-  const meta = sector ? getSectorMeta(sector.slug, isRTL) : null;
+  const baseMeta = sector ? getSectorMeta(sector.slug, isRTL) : null;
+  // Phase 15 — overlay central taxonomy values when SEO-visible. Falls back
+  // to the legacy SECTOR_KEYWORDS dictionary when no taxonomy is found.
+  const meta = useMemo(() => {
+    if (!baseMeta) return baseMeta;
+    const tx = taxonomyCategory;
+    if (!tx || !tx.show_in_seo) return baseMeta;
+    const taxName = isRTL
+      ? (tx.seo_title_ar || tx.name_ar || baseMeta.name)
+      : (tx.seo_title_en || tx.name_en || baseMeta.name);
+    const taxDesc = isRTL
+      ? (tx.seo_description_ar || tx.short_description_ar || baseMeta.description)
+      : (tx.seo_description_en || tx.short_description_en || baseMeta.description);
+    const taxKeywordsArr = (isRTL ? tx.keywords_ar : tx.keywords_en) ?? null;
+    const taxKeywords = taxKeywordsArr && taxKeywordsArr.length > 0
+      ? taxKeywordsArr.join(', ')
+      : null;
+    return {
+      ...baseMeta,
+      name: taxName ?? baseMeta.name,
+      description: taxDesc ?? baseMeta.description,
+      keywords: taxKeywords ?? baseMeta.keywords,
+    };
+  }, [baseMeta, taxonomyCategory, isRTL]);
   const cityName = city ? (isRTL ? city.nameAr : city.nameEn) : '';
   const cityIn = city ? (isRTL ? (city.inAr || `في ${city.nameAr}`) : `in ${city.nameEn}`) : '';
 

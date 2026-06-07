@@ -25,20 +25,7 @@ import { SA_CITIES } from '@/lib/sa-cities';
 import { SectorFAQ } from '@/components/sector/SectorFAQ';
 import { getSectorFaqs } from '@/lib/sector-faqs';
 import { useSectorPageviewTracking } from '@/hooks/useSectorPageviewTracking';
-import { LEGACY_SECTOR_TO_TAXONOMY_SLUG } from '@/modules/taxonomy';
-
-/**
- * Maps a sector slug → list of category slugs that should be included
- * when listing providers for that sector. Categories live in
- * `public.categories` and are the source of truth used by `/search`.
- */
-const SECTOR_TO_CATEGORY_SLUGS: Record<SectorSlug, string[]> = {
-  aluminum: ['aluminum'],
-  iron: ['iron-steel'],
-  glass: ['glass'],
-  wood: ['wood-cabinets'],
-  cabinets: ['wood-cabinets'],
-};
+import { useSectorTaxonomy } from '@/hooks/useSectorTaxonomy';
 
 const PAGE_SIZE = 24;
 
@@ -53,7 +40,6 @@ type BizRow = {
   is_verified: boolean | null;
   city_id: string | null;
   cities: { id: string; name_ar: string; name_en: string | null } | null;
-  category_id: string;
 };
 
 const SectorLanding: React.FC = () => {
@@ -106,30 +92,22 @@ const SectorLanding: React.FC = () => {
   const clearAllFilters = () =>
     setSearchParams(new URLSearchParams(), { replace: true });
 
-  // Resolve the category ids for this sector (one or more rows in `categories`).
-  const categorySlugs = sector ? SECTOR_TO_CATEGORY_SLUGS[sector.slug] : [];
-  const { data: categories = [] } = useQuery({
-    queryKey: ['sector-categories', categorySlugs.join(',')],
-    enabled: categorySlugs.length > 0,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('categories')
-        .select('id, slug, name_ar, name_en')
-        .in('slug', categorySlugs);
-      return data ?? [];
-    },
-  });
-  const categoryIds = useMemo(() => categories.map((c) => c.id), [categories]);
+  // Phase 15 — taxonomy-first: resolve businesses via
+  // `business_taxonomy_categories` instead of the legacy `categories` join.
+  const {
+    taxonomyCategory,
+    businessIds: taxonomyBusinessIds,
+  } = useSectorTaxonomy(sectorSlug);
 
   const { data: businesses = [], isLoading } = useQuery({
-    queryKey: ['sector-businesses', sectorSlug, categoryIds],
-    enabled: categoryIds.length > 0,
+    queryKey: ['sector-businesses', sectorSlug, taxonomyBusinessIds],
+    enabled: taxonomyBusinessIds.length > 0,
     queryFn: async () => {
       const { data } = await listPublicBusinessesForSector({
         select:
-          'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, category_id, cities(id, name_ar, name_en)',
+          'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, cities(id, name_ar, name_en)',
         filters: [
-          { column: 'category_id', op: 'in', value: categoryIds },
+          { column: 'id', op: 'in', value: taxonomyBusinessIds },
           { column: 'is_active', op: 'eq', value: true },
         ],
         orderBy: { column: 'rating_avg', ascending: false },
@@ -204,32 +182,9 @@ const SectorLanding: React.FC = () => {
   // ── SEO ────────────────────────────────────────────────────────────────
   const baseMeta = sector ? getSectorMeta(sector.slug, isRTL) : null;
 
-  // Phase 4 — taxonomy-first SEO override.
-  // Try to find a central taxonomy category that matches this legacy sector
-  // slug (directly or via the legacy mapping). When found and SEO-visible,
-  // its localized name/description/keywords win; otherwise the legacy
-  // SECTOR_KEYWORDS dictionary stays the source of truth so nothing breaks.
-  const taxonomySlugCandidate = sectorSlug
-    ? (LEGACY_SECTOR_TO_TAXONOMY_SLUG[String(sectorSlug).toLowerCase()] ?? sectorSlug)
-    : null;
-  const { data: taxonomyCategory } = useQuery({
-    queryKey: ['sector-taxonomy', taxonomySlugCandidate],
-    enabled: !!taxonomySlugCandidate,
-    staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('taxonomy_categories')
-        .select('slug, name_ar, name_en, short_description_ar, short_description_en, seo_title_ar, seo_title_en, seo_description_ar, seo_description_en, keywords_ar, keywords_en, show_in_seo, is_public, is_active, is_archived')
-        .eq('slug', taxonomySlugCandidate as string)
-        .eq('is_active', true)
-        .eq('is_public', true)
-        .eq('is_archived', false)
-        .maybeSingle();
-      return data ?? null;
-    },
-  });
-
-  // Merge taxonomy values (when SEO-visible) over the legacy meta. Returns a
+  // Phase 15 — Merge taxonomy values (when SEO-visible) over the legacy
+  // SECTOR_KEYWORDS meta. SECTORS_SEO / SECTOR_KEYWORDS stay as fallback.
+  // Returns a
   // plain object compatible with the existing meta shape used below.
   const meta = useMemo(() => {
     if (!baseMeta) return baseMeta;
@@ -584,7 +539,7 @@ const SectorLanding: React.FC = () => {
                 ? `/sectors/${sector.slug}/${known.slug}`
                 : (() => {
                     const params = new URLSearchParams();
-                    if (categoryIds[0]) params.set('category', categoryIds[0]);
+                    if (taxonomyCategory?.id) params.set('category', taxonomyCategory.id);
                     params.set('city', c.id);
                     return `/search?${params.toString()}`;
                   })();
@@ -623,7 +578,6 @@ const SectorLanding: React.FC = () => {
       <SectorProjectExamples
         sectorName={meta.name}
         sectorSlug={sector.slug}
-        categoryIds={categoryIds}
         cityId={cityId === 'all' ? null : cityId}
         cityName={selectedCityName}
       />
