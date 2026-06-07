@@ -8,7 +8,6 @@ export {
   useCategories,
   useCities,
   useBusinesses,
-  useEntityTags,
   useServiceCategoryBusinessIds,
   filterAndSort,
   defaultFilters,

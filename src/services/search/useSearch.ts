@@ -387,8 +387,6 @@ export const filterAndSort = (
   businesses: any[],
   query: string,
   filters: SearchFilterValues,
-  selectedTags: string[],
-  entityTags: any[] | undefined,
   language: string,
   categories?: CategoryLite[],
   /**
@@ -459,14 +457,6 @@ export const filterAndSort = (
   if (filters.minRating > 0) results = results.filter(b => Number(b.rating_avg) >= filters.minRating);
   // Verified filter
   if (filters.verifiedOnly) results = results.filter(b => b.is_verified);
-
-  // Tags filter
-  if (selectedTags.length > 0 && entityTags) {
-    const bizIdsWithTags = new Set(
-      entityTags.filter(et => selectedTags.includes(et.tag_id)).map(et => et.entity_id)
-    );
-    results = results.filter(b => bizIdsWithTags.has(b.id));
-  }
 
   // Price filter
   if (filters.priceMin > 0 || filters.priceMax > 0) {
