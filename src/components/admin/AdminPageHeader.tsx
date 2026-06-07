@@ -30,12 +30,12 @@ interface AdminPageHeaderProps {
 }
 
 const TONE_MAP: Record<NonNullable<AdminPageHeaderProps['tone']>, string> = {
-  primary: 'from-primary/20 to-primary/5 text-primary',
-  accent: 'from-accent/25 to-accent/5 text-accent-foreground',
-  success: 'from-success/20 to-success/5 text-success',
-  info: 'from-info/20 to-info/5 text-info',
-  warning: 'from-warning/20 to-warning/5 text-warning',
-  destructive: 'from-destructive/20 to-destructive/5 text-destructive',
+  primary: 'from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/20',
+  accent: 'from-accent to-accent/80 text-accent-foreground shadow-lg shadow-accent/20',
+  success: 'from-success to-success/80 text-success-foreground shadow-lg shadow-success/20',
+  info: 'from-info to-info/80 text-info-foreground shadow-lg shadow-info/20',
+  warning: 'from-warning to-warning/80 text-warning-foreground shadow-lg shadow-warning/20',
+  destructive: 'from-destructive to-destructive/80 text-destructive-foreground shadow-lg shadow-destructive/20',
 };
 
 /**
@@ -56,16 +56,15 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
   return (
     <section
       aria-label={title}
-      className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-card via-card to-muted/30 p-4 md:p-6 shadow-[var(--elev-1)]"
+      className="relative overflow-hidden rounded-3xl border border-border/60 bg-card/80 backdrop-blur-sm p-4 md:p-5 shadow-sm"
     >
-      <div className="pointer-events-none absolute -top-24 -end-24 h-56 w-56 rounded-full bg-gradient-to-br from-accent/15 to-transparent blur-3xl" />
       <div className="relative flex flex-col gap-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="flex items-start gap-3 min-w-0">
             <div
-              className={`shrink-0 h-11 w-11 md:h-12 md:w-12 rounded-2xl bg-gradient-to-br ${TONE_MAP[tone]} flex items-center justify-center shadow-sm ring-1 ring-border/30`}
+              className={`shrink-0 h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-gradient-to-br ${TONE_MAP[tone]} flex items-center justify-center`}
             >
-              <Icon className="h-5 w-5 md:h-6 md:w-6" />
+              <Icon className="h-6 w-6 md:h-7 md:w-7" />
             </div>
             <div className="min-w-0">
               {eyebrow && (
@@ -73,11 +72,11 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
                   {eyebrow}
                 </p>
               )}
-              <h1 className="font-heading font-bold text-xl md:text-2xl leading-tight text-foreground">
+              <h1 className="font-heading font-bold text-lg md:text-2xl leading-tight text-foreground">
                 {title}
               </h1>
               {subtitle && (
-                <p className="mt-1 text-sm text-muted-foreground font-body">
+                <p className="mt-1 text-xs md:text-sm text-muted-foreground font-body">
                   {subtitle}
                 </p>
               )}
