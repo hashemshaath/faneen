@@ -37,6 +37,10 @@ import { approveAmendment, rejectAmendment, cancelAmendment, applyAmendment } fr
 import { acceptContract, recalcContractTotal as recalcContractTotalService } from '@/modules/contracts/services/mutations';
 import { getContractSourceLeadSummary } from '@/modules/contracts/services/leadRpcs';
 import {
+  getContractTaxonomyCategories,
+  type ContractTaxonomyLink,
+} from '@/modules/taxonomy/contract-services';
+import {
   listContractMilestones,
   createContractMilestone,
   listContractNotes,
