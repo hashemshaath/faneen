@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Star, MapPin } from "lucide-react";
-import { VerifiedBadge } from "@/components/shared/VerifiedBadge";
+import { VerifiedBadge } from "@/components/common/VerifiedBadge";
 
 interface SimilarBusinessesProps {
   currentBusinessId: string;
