@@ -159,6 +159,32 @@ export const SearchFilters = ({
 
             {/* City */}
             <FilterCard
+              icon={MapIcon}
+              label={isRTL ? 'المنطقة الإدارية' : 'Administrative region'}
+              summary={selectedRegion ? (language === 'ar' ? selectedRegion.name_ar : selectedRegion.name_en) : ''}
+            >
+              <Select
+                value={filters.regionId}
+                onValueChange={(v) => {
+                  onFilterChange('regionId', v);
+                  // Reset city when region changes so old city doesn't conflict.
+                  if (filters.cityId !== 'all') onFilterChange('cityId', 'all');
+                }}
+              >
+                <SelectTrigger className="w-full rounded-xl h-10 text-sm bg-background border-border/60 hover:border-accent/40 transition-colors">
+                  <SelectValue placeholder={isRTL ? 'كل المناطق' : 'All regions'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'كل المناطق' : 'All regions'}</SelectItem>
+                  {SA_REGIONS.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>{language === 'ar' ? r.name_ar : r.name_en}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterCard>
+
+            {/* City */}
+            <FilterCard
               icon={MapPin}
               label={t('search.city')}
               summary={selectedCity ? (language === 'ar' ? selectedCity.name_ar : selectedCity.name_en) : ''}
