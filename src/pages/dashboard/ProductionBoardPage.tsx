@@ -481,7 +481,7 @@ export default function ProductionBoardPage() {
           eyebrow={isRTL ? 'الإنتاج' : 'Production'}
           title={tx.title}
           subtitle={tx.subtitle}
-          actions={
+          actions={<>
             <div className="hidden sm:inline-flex rounded-xl border border-border/40 overflow-hidden" role="group" aria-label={tx.density}>
               <button
                 type="button"
@@ -532,8 +532,8 @@ export default function ProductionBoardPage() {
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
               {tx.refresh}
             </Button>
-          </div>
-        </header>
+          </>}
+        />
 
         {/* Metrics */}
         <section
