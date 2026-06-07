@@ -14,7 +14,7 @@
  */
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useSearchParams } from 'react-router-dom';
 import { LanguageProvider } from '@/i18n/LanguageContext';
 
@@ -160,8 +160,14 @@ describe('Dashboard Hubs — PageHeader + TabbedShell integration', () => {
       expect(lastParams.get('tab')).toBeNull();
 
       // (4) Switching tabs mirrors to `?tab=<key>` — routing/state untouched.
-      fireEvent.click(second);
-      expect(lastParams.get('tab')).toBe(secondTabKey);
+      // Radix TabsTrigger listens on pointer events; also wrap in act() so
+      // React Router's setSearchParams effect flushes before assertion.
+      act(() => {
+        fireEvent.pointerDown(second, { button: 0, pointerType: 'mouse' });
+        fireEvent.mouseDown(second, { button: 0 });
+        fireEvent.click(second);
+      });
+      await waitFor(() => expect(lastParams.get('tab')).toBe(secondTabKey));
     },
   );
 });
