@@ -131,7 +131,30 @@ const SectorCity: React.FC = () => {
   const top10 = useMemo(() => filtered.slice(0, 10), [filtered]);
   const rest = useMemo(() => filtered.slice(10), [filtered]);
 
-  const meta = sector ? getSectorMeta(sector.slug, isRTL) : null;
+  const baseMeta = sector ? getSectorMeta(sector.slug, isRTL) : null;
+  // Phase 15 — overlay central taxonomy values when SEO-visible. Falls back
+  // to the legacy SECTOR_KEYWORDS dictionary when no taxonomy is found.
+  const meta = useMemo(() => {
+    if (!baseMeta) return baseMeta;
+    const tx = taxonomyCategory;
+    if (!tx || !tx.show_in_seo) return baseMeta;
+    const taxName = isRTL
+      ? (tx.seo_title_ar || tx.name_ar || baseMeta.name)
+      : (tx.seo_title_en || tx.name_en || baseMeta.name);
+    const taxDesc = isRTL
+      ? (tx.seo_description_ar || tx.short_description_ar || baseMeta.description)
+      : (tx.seo_description_en || tx.short_description_en || baseMeta.description);
+    const taxKeywordsArr = (isRTL ? tx.keywords_ar : tx.keywords_en) ?? null;
+    const taxKeywords = taxKeywordsArr && taxKeywordsArr.length > 0
+      ? taxKeywordsArr.join(', ')
+      : null;
+    return {
+      ...baseMeta,
+      name: taxName ?? baseMeta.name,
+      description: taxDesc ?? baseMeta.description,
+      keywords: taxKeywords ?? baseMeta.keywords,
+    };
+  }, [baseMeta, taxonomyCategory, isRTL]);
   const cityName = city ? (isRTL ? city.nameAr : city.nameEn) : '';
   const cityIn = city ? (isRTL ? (city.inAr || `في ${city.nameAr}`) : `in ${city.nameEn}`) : '';
 
