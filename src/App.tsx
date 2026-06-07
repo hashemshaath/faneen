@@ -20,8 +20,7 @@ import { ThemeApplier } from "@/components/ThemeApplier";
 import { BrandFaviconApplier } from "@/components/BrandFaviconApplier";
 import { lazyRetry } from "@/lib/lazyRetry";
 const Index = lazyRetry(() => import("./pages/Index"));
-const ConsentBanner = lazyRetry(() => import("./components/consent/ConsentBanner"));
-const BuildVersionWatcher = lazyRetry(() => import("./components/BuildVersionWatcher"));
+const DeferredAppOverlays = lazyRetry(() => import("./components/DeferredAppOverlays"));
 
 const Auth = lazyRetry(() => import("./pages/Auth"));
 const HelpCenterHome = lazyRetry(() => import("./pages/help/HelpCenterHome"));
@@ -31,7 +30,9 @@ const ReportIssuePage = lazyRetry(() => import("./pages/help/ReportIssuePage"));
 const FeatureRequestPage = lazyRetry(() => import("./pages/help/FeatureRequestPage"));
 const AdminHelpCenter = lazyRetry(() => import("./pages/admin/AdminHelpCenter"));
 const DashboardHelpCenter = lazyRetry(() => import("./pages/dashboard/DashboardHelpCenter"));
-const HelpLauncherFloating = lazyRetry(() => import("./components/help/HelpLauncherFloating"));
+// HelpLauncherFloating, ConsentBanner, and BuildVersionWatcher are now
+// rendered exclusively via <DeferredAppOverlays>, which holds them off the
+// critical path until window load + requestIdleCallback.
 const PublicSiteScan = lazyRetry(() => import("./pages/PublicSiteScan"));
 const PublicBarcodeResolve = lazyRetry(() => import("./pages/PublicBarcodeResolve"));
 const ReferenceResolver = lazyRetry(() => import("./pages/ReferenceResolver"));
