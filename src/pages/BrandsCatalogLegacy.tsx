@@ -15,7 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Building2, MapPin, Tag, Layers } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { listPublicSectors } from '@/features/private-sectors/service';
-import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
 import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
 
@@ -26,7 +25,6 @@ const BrandsCatalog: React.FC = () => {
   const [search, setSearch] = useState('');
   const [parent, setParent] = useState<string>(ALL);
   const [cityId, setCityId] = useState<string>(ALL);
-  const [categoryId, setCategoryId] = useState<string>(ALL);
 
   useEffect(() => {
     document.title = isRTL ? 'العلامات والقطاعات الخاصة | قِطاعات' : 'Private Brands & Sectors | Qitaat';
@@ -43,20 +41,16 @@ const BrandsCatalog: React.FC = () => {
       return data ?? [];
     },
   });
-  const { data: categories = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string; slug: string }>>({
-    queryKey: ['brands-categories'],
-    queryFn: async () => {
-      const { data } = await listActiveCategories<{ id: string; name_ar: string; name_en: string; slug: string }>({ select: 'id, name_ar, name_en, slug' });
-      return data ?? [];
-    },
-  });
+  // Phase 7: legacy `categories` filter removed from the public brands
+  // catalog. Brand classification will be re-introduced via the central
+  // taxonomy in a later phase. `private_sectors.category_id` is preserved
+  // in the DB for backward reads only.
 
   const { data: brands = [], isLoading } = useQuery({
-    queryKey: ['public-private-sectors', parent, cityId, categoryId, search],
+    queryKey: ['public-private-sectors', parent, cityId, search],
     queryFn: () => listPublicSectors({
       parent_sector: parent === ALL ? undefined : parent,
       city_id: cityId === ALL ? undefined : cityId,
-      category_id: categoryId === ALL ? undefined : categoryId,
       search: search.trim() || undefined,
     }),
   });
@@ -98,26 +92,15 @@ const BrandsCatalog: React.FC = () => {
                 ))}
               </SelectContent>
             </Select>
-            <div className="grid grid-cols-2 gap-2 md:col-span-1">
-              <Select value={cityId} onValueChange={setCityId}>
-                <SelectTrigger className="h-11"><SelectValue placeholder={isRTL ? 'المدينة' : 'City'} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>{isRTL ? 'كل المدن' : 'All cities'}</SelectItem>
-                  {cities.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger className="h-11"><SelectValue placeholder={isRTL ? 'الفئة' : 'Category'} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>{isRTL ? 'كل الفئات' : 'All categories'}</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={cityId} onValueChange={setCityId}>
+              <SelectTrigger className="h-11"><SelectValue placeholder={isRTL ? 'المدينة' : 'City'} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>{isRTL ? 'كل المدن' : 'All cities'}</SelectItem>
+                {cities.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </CardContent>
         </Card>
 
