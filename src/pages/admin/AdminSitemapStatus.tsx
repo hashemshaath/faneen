@@ -42,13 +42,20 @@ async function checkUrl(url: string): Promise<CheckResult> {
     const res = await fetch(url, { cache: 'no-store' });
     const contentType = res.headers.get('content-type') ?? '';
     const text = await res.text();
-    const isXml = /xml/i.test(contentType) && text.trimStart().startsWith('<?xml');
-    const isSpaFallback = /<!doctype html>/i.test(text) || /<html/i.test(text);
+    // Body-based truth: gateways occasionally rewrite Content-Type.
+    const startsWithXml = text.trimStart().startsWith('<?xml');
+    const headerSaysXml = /xml/i.test(contentType);
+    const isXml = startsWithXml;
+    const isSpaFallback = !isXml && (/<!doctype html>/i.test(text) || /<html/i.test(text));
     const urlMatches = text.match(/<url>/g) ?? text.match(/<sitemap>/g) ?? [];
     const lastmodMatch = text.match(/<lastmod>([^<]+)<\/lastmod>/);
+    const isRobots = url.endsWith('/robots.txt');
     return {
-      url, ok: res.ok && isXml && !isSpaFallback, status: res.status,
+      url,
+      ok: res.ok && (isRobots ? !isSpaFallback : isXml && !isSpaFallback),
+      status: res.status,
       contentType, isXml, isSpaFallback,
+      headerXmlMismatch: startsWithXml && !headerSaysXml,
       urlCount: urlMatches.length,
       lastmod: lastmodMatch?.[1] ?? null,
       fetchedAt,
@@ -56,7 +63,7 @@ async function checkUrl(url: string): Promise<CheckResult> {
   } catch (e) {
     return {
       url, ok: false, status: 0, contentType: '', isXml: false, isSpaFallback: false,
-      urlCount: 0, lastmod: null,
+      headerXmlMismatch: false, urlCount: 0, lastmod: null,
       error: e instanceof Error ? e.message : 'Unknown error',
       fetchedAt,
     };
