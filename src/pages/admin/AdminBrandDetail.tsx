@@ -255,11 +255,17 @@ const AdminBrandDetail: React.FC = () => {
       sku: newProduct.sku.trim() || null,
       description_ar: newProduct.description_ar.trim() || null,
       image_url: newProduct.image_url || null,
+      image_asset_id: newProduct.image_asset_id || null,
+      image_variants: newProduct.image_variants ?? {},
       status: 'approved',
     }),
     onSuccess: () => {
       toast.success(isRTL ? 'تمت إضافة المنتج' : 'Product added');
-      setNewProduct({ name_ar: '', name_en: '', model_number: '', sku: '', description_ar: '', image_url: '' });
+      setNewProduct({
+        name_ar: '', name_en: '', model_number: '', sku: '',
+        description_ar: '', image_url: '',
+        image_asset_id: '', image_variants: {},
+      });
       invalidateProducts();
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
@@ -273,6 +279,8 @@ const AdminBrandDetail: React.FC = () => {
       sku: editProduct.sku.trim() || null,
       description_ar: editProduct.description_ar.trim() || null,
       image_url: editProduct.image_url || null,
+      image_asset_id: editProduct.image_asset_id || null,
+      image_variants: editProduct.image_variants ?? {},
     }),
     onSuccess: () => {
       toast.success(isRTL ? 'تم التحديث' : 'Updated');
@@ -750,6 +758,8 @@ const AdminBrandDetail: React.FC = () => {
                           name_ar: p.name_ar, name_en: p.name_en ?? '',
                           model_number: p.model_number ?? '', sku: p.sku ?? '',
                           description_ar: p.description_ar ?? '', image_url: p.image_url ?? '',
+                          image_asset_id: p.image_asset_id ?? '',
+                          image_variants: p.image_variants ?? {},
                         });
                       }}><Edit3 className="w-3 h-3 me-1" />{isRTL ? 'تعديل' : 'Edit'}</Button>
                       <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive"
