@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +12,66 @@ import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilde
 import { SECTORS_SEO_LIST } from '@/lib/sectors-seo';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 
+interface SectorCard {
+  slug: string;
+  shortName: string;
+  cardDescription: string;
+}
+
+/**
+ * Taxonomy-first sector list with strict legacy fallback.
+ * Reads sector-type categories from `taxonomy_categories`; if the query fails
+ * or returns empty, the original `SECTORS_SEO_LIST` is used unchanged so all
+ * legacy URLs (/sectors/aluminum, /sectors/steel, …) keep working.
+ */
+function useSectorCards(): SectorCard[] {
+  const { data } = useQuery({
+    queryKey: ['sectors-hub', 'taxonomy'],
+    queryFn: async (): Promise<SectorCard[] | null> => {
+      const { data: rows, error } = await supabase
+        .from('taxonomy_categories')
+        .select('slug,name_ar,short_description_ar,is_featured,sort_order,is_active,is_public,is_archived,show_in_seo,show_in_search,parent_id')
+        .eq('is_active', true)
+        .eq('is_public', true)
+        .eq('is_archived', false)
+        .is('parent_id', null)
+        .order('is_featured', { ascending: false })
+        .order('sort_order', { ascending: true })
+        .order('name_ar', { ascending: true });
+      if (error) return null;
+      const usable = (rows ?? []).filter((r) => r.show_in_seo || r.show_in_search);
+      if (usable.length === 0) return null;
+      // Only keep slugs that exist in SECTORS_SEO_LIST so existing routes don't 404.
+      const legalSlugs = new Set(SECTORS_SEO_LIST.map((s) => s.slug));
+      const filtered = usable.filter((r) => legalSlugs.has(r.slug));
+      if (filtered.length === 0) return null;
+      return filtered.map((r) => {
+        const legacy = SECTORS_SEO_LIST.find((s) => s.slug === r.slug);
+        return {
+          slug: r.slug,
+          shortName: r.name_ar || legacy?.shortName || r.slug,
+          cardDescription: r.short_description_ar || legacy?.cardDescription || '',
+        };
+      });
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  return useMemo(
+    () =>
+      data && data.length > 0
+        ? data
+        : SECTORS_SEO_LIST.map((s) => ({
+            slug: s.slug,
+            shortName: s.shortName,
+            cardDescription: s.cardDescription,
+          })),
+    [data],
+  );
+}
+
 const SectorsHub: React.FC = () => {
+  const sectorCards = useSectorCards();
   usePageMeta({
     title: buildSeoTitle({ kind: 'category', lang: 'ar', name: 'القطاعات' }),
     description: buildSeoDescription({ kind: 'category', lang: 'ar', name: 'القطاعات', customDescription: 'استكشف قطاعات الخدمات في منصة قطاعات، وابحث عن مزودي خدمات الألمنيوم، الحديد، الخشب، الزجاج، الستانلس ستيل، والتصنيع والتركيب في السعودية.' }),
@@ -111,7 +172,7 @@ const SectorsHub: React.FC = () => {
         <section aria-labelledby="sectors-h">
           <h2 id="sectors-h" className="sr-only">القطاعات المتاحة</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {SECTORS_SEO_LIST.map((s) => (
+            {sectorCards.map((s) => (
               <Card key={s.slug} className="hover-lift h-full">
                 <CardContent className="p-5 flex flex-col h-full">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3">
