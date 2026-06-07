@@ -296,10 +296,15 @@ const ProjectDetail = () => {
                 {project.is_featured && (
                   <Badge className="bg-accent text-accent-foreground text-[10px] sm:text-xs">{isRTL ? 'مميز' : 'Featured'}</Badge>
                 )}
-                {category && (
+                {displayCategory ? (
                   <Badge variant="secondary" className="text-[10px] sm:text-xs gap-1">
                     <Tag className="w-3 h-3" />
-                    {language === 'ar' ? category.name_ar : category.name_en}
+                    {language === 'ar' ? displayCategory.name_ar : (displayCategory.name_en || displayCategory.name_ar)}
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-[10px] sm:text-xs gap-1 border-primary-foreground/20 text-primary-foreground/60">
+                    <Tag className="w-3 h-3" />
+                    {isRTL ? 'غير مصنّف' : 'Uncategorized'}
                   </Badge>
                 )}
                 {city && (
@@ -370,7 +375,7 @@ const ProjectDetail = () => {
           </div>
 
           {/* Sidebar */}
-          <ProjectSidebar project={project} category={category} city={city} />
+          <ProjectSidebar project={project} category={displayCategory} city={city} />
         </div>
 
         {/* Related Projects */}
@@ -379,6 +384,7 @@ const ProjectDetail = () => {
           businessId={project.business_id}
           categoryId={project.category_id}
           cityId={project.city_id}
+          taxonomyCategoryIds={taxonomyCategoryIds}
         />
 
         {/* Explore more — hub/spoke depth (SEO-7). Static, public-safe. */}
