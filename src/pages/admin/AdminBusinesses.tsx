@@ -1989,8 +1989,6 @@ const AdminBusinesses = () => {
                   </div>
                   <BusinessTaxonomySection
                     businessId={editingBiz.id}
-                    legacySectors={Array.isArray(editingBiz.sectors) ? editingBiz.sectors : null}
-                    legacySubServices={Array.isArray(editingBiz.sub_services) ? editingBiz.sub_services : null}
                     onSaved={() => {
                       queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
                     }}
