@@ -44,9 +44,16 @@ export const EMPTY_ONBOARDING_TAXONOMY: OnboardingTaxonomyValue = {
   secondaryActivityCategoryIds: [],
 };
 
+export type OnboardingTaxonomyLoadStatus = 'loading' | 'ok' | 'error';
+
 interface Props {
   value: OnboardingTaxonomyValue;
   onChange: (next: OnboardingTaxonomyValue) => void;
+  /**
+   * Optional: notify parent of taxonomy load lifecycle so it can switch
+   * the legacy SectorPicker between primary and fallback presentation.
+   */
+  onLoadStatusChange?: (status: OnboardingTaxonomyLoadStatus) => void;
 }
 
 const t = (rtl: boolean, ar: string, en: string) => (rtl ? ar : en);
@@ -56,7 +63,9 @@ function name(cat: TaxonomyCategory, isRTL: boolean): string {
   return cat.name_en || cat.name_ar || cat.slug;
 }
 
-export const OnboardingTaxonomyStep: React.FC<Props> = ({ value, onChange }) => {
+export const OnboardingTaxonomyStep: React.FC<Props> = ({
+  value, onChange, onLoadStatusChange,
+}) => {
   const { isRTL } = useLanguage();
 
   const entityTypesQ = useQuery({
@@ -106,6 +115,13 @@ export const OnboardingTaxonomyStep: React.FC<Props> = ({ value, onChange }) => 
 
   const loadError = entityTypesQ.isError || primariesQ.isError;
   const isLoading = entityTypesQ.isLoading || primariesQ.isLoading;
+
+  useEffect(() => {
+    if (!onLoadStatusChange) return;
+    if (loadError) onLoadStatusChange('error');
+    else if (isLoading) onLoadStatusChange('loading');
+    else onLoadStatusChange('ok');
+  }, [loadError, isLoading, onLoadStatusChange]);
 
   const toggleSecondary = (id: string) => {
     const exists = value.secondaryActivityCategoryIds.includes(id);
