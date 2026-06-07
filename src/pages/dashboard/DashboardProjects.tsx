@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload, MultiImageUpload } from '@/components/ui/image-upload';
+import { ResponsiveImage } from '@/modules/files/components/ResponsiveImage';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent,
@@ -201,7 +202,8 @@ const DashboardProjects = () => {
 
   const emptyForm = useMemo(() => ({
     title_ar: '', title_en: '', description_ar: '', description_en: '',
-    cover_image_url: '', client_name: '', project_cost: '',
+    cover_image_url: '', cover_image_asset_id: '' as string | null | '',
+    client_name: '', project_cost: '',
     duration_days: '', completion_date: '', status: 'published',
     city_id: '', is_featured: false, currency_code: 'SAR',
     taxonomy_category_id: '',
@@ -248,7 +250,7 @@ const DashboardProjects = () => {
     queryKey: ['dashboard-projects', businessId],
     queryFn: async () => {
       const { data, error } = await supabase.from('projects')
-        .select('*, cities(name_ar, name_en)')
+        .select('*, cities(name_ar, name_en), cover_image_asset:image_assets!projects_cover_image_asset_id_fkey(variants)')
         .eq('business_id', businessId!)
         .order('is_featured', { ascending: false })
         .order('sort_order');
@@ -282,7 +284,11 @@ const DashboardProjects = () => {
   const { data: galleryImages = [] } = useQuery({
     queryKey: ['project-images', galleryProjectId],
     queryFn: async () => {
-      const { data } = await supabase.from('project_images').select('*').eq('project_id', galleryProjectId!).order('sort_order');
+      const { data } = await supabase
+        .from('project_images')
+        .select('*, image_asset:image_assets!project_images_image_asset_id_fkey(variants)')
+        .eq('project_id', galleryProjectId!)
+        .order('sort_order');
       return data ?? [];
     },
     enabled: !!galleryProjectId,
@@ -328,6 +334,7 @@ const DashboardProjects = () => {
         business_id: businessId!, title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
         description_ar: form.description_ar.trim() || null, description_en: form.description_en.trim() || null,
         cover_image_url: form.cover_image_url || null, client_name: form.client_name.trim() || null,
+        cover_image_asset_id: form.cover_image_asset_id || null,
         project_cost: form.project_cost ? Number(form.project_cost) : null,
         duration_days: form.duration_days ? Number(form.duration_days) : null,
         completion_date: form.completion_date || null, status: form.status,
@@ -398,6 +405,7 @@ const DashboardProjects = () => {
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', description_ar: p.description_ar || '',
       description_en: p.description_en || '', cover_image_url: p.cover_image_url || '',
+      cover_image_asset_id: p.cover_image_asset_id || '',
       client_name: p.client_name || '', project_cost: p.project_cost?.toString() || '',
       duration_days: p.duration_days?.toString() || '', completion_date: p.completion_date || '',
       status: p.status, city_id: p.city_id || '',
@@ -418,6 +426,9 @@ const DashboardProjects = () => {
       title_en: p.title_en ? p.title_en + ' (copy)' : '',
       description_ar: p.description_ar || '', description_en: p.description_en || '',
       cover_image_url: p.cover_image_url || '', client_name: p.client_name || '',
+      // Duplicate intentionally references the same image asset row; on
+      // re-upload the form captures a fresh `image_asset_id`.
+      cover_image_asset_id: p.cover_image_asset_id || '',
       project_cost: p.project_cost?.toString() || '', duration_days: p.duration_days?.toString() || '',
       completion_date: p.completion_date || '', status: 'draft',
       city_id: p.city_id || '',
