@@ -235,11 +235,14 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
               </Badge>
             )}
           </div>
-          {catName && (
+          {hasTaxonomy ? (
+            <TaxonomyBadges size="sm" />
+          ) : catName && (
             <div className="mt-0.5">
               <CategoryBadge size="sm" />
             </div>
           )}
+          <UpdateTaxonomyHint />
           {desc && <p className="text-xs text-muted-foreground font-body mt-0.5 line-clamp-1">{desc}</p>}
           {visibleTags.length > 0 && (
             <div className="flex flex-wrap items-center gap-1 mt-1.5">
