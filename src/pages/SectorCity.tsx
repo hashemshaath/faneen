@@ -26,14 +26,7 @@ import { getCityBySlug, SA_CITIES } from '@/lib/sa-cities';
 import { SERVICES_CATALOG, UNIT_LABEL } from '@/lib/services-catalog';
 import { getSectorFaqs } from '@/lib/sector-faqs';
 import { useSectorPageviewTracking } from '@/hooks/useSectorPageviewTracking';
-
-const SECTOR_TO_CATEGORY_SLUGS: Record<SectorSlug, string[]> = {
-  aluminum: ['aluminum'],
-  iron: ['iron-steel'],
-  glass: ['glass'],
-  wood: ['wood-cabinets'],
-  cabinets: ['wood-cabinets'],
-};
+import { useSectorTaxonomy } from '@/hooks/useSectorTaxonomy';
 
 type BizRow = {
   id: string;
@@ -45,7 +38,6 @@ type BizRow = {
   rating_count: number | null;
   is_verified: boolean | null;
   city_id: string | null;
-  category_id: string;
   short_description_ar: string | null;
   short_description_en: string | null;
   membership_tier: string | null;
@@ -87,29 +79,19 @@ const SectorCity: React.FC = () => {
     },
   });
 
-  const categorySlugs = sector ? SECTOR_TO_CATEGORY_SLUGS[sector.slug] : [];
-  const { data: categories = [] } = useQuery({
-    queryKey: ['sector-city-cats', categorySlugs.join(',')],
-    enabled: categorySlugs.length > 0,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('categories')
-        .select('id, slug')
-        .in('slug', categorySlugs);
-      return data ?? [];
-    },
-  });
-  const categoryIds = useMemo(() => categories.map((c) => c.id), [categories]);
+  // Phase 15 — taxonomy-first: resolve providers via
+  // `business_taxonomy_categories`; legacy `categories.category_id` is gone.
+  const { taxonomyCategory, businessIds: taxonomyBusinessIds } = useSectorTaxonomy(sectorSlug);
 
   const { data: businesses = [], isLoading } = useQuery({
-    queryKey: ['sector-city-biz', sectorSlug, cityRow?.id, categoryIds],
-    enabled: categoryIds.length > 0 && !!cityRow?.id,
+    queryKey: ['sector-city-biz', sectorSlug, cityRow?.id, taxonomyBusinessIds],
+    enabled: taxonomyBusinessIds.length > 0 && !!cityRow?.id,
     queryFn: async () => {
       const { data } = await listPublicBusinessesForSector({
         select:
-          'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, category_id, short_description_ar, short_description_en, membership_tier, mobile, phone, cities(id, name_ar, name_en)',
+          'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, short_description_ar, short_description_en, membership_tier, mobile, phone, cities(id, name_ar, name_en)',
         filters: [
-          { column: 'category_id', op: 'in', value: categoryIds },
+          { column: 'id', op: 'in', value: taxonomyBusinessIds },
           { column: 'city_id', op: 'eq', value: cityRow!.id },
           { column: 'is_active', op: 'eq', value: true },
         ],
