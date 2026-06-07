@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { PageHeader } from '@/components/shared';
 import { useQuery } from '@tanstack/react-query';
 import { listProviderLeads, type ProviderLeadRow } from '@/modules/leads/services/list';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,12 +32,13 @@ const ProviderLeads: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-5 max-w-5xl">
-        <header>
-          <h1 className="font-heading font-bold text-xl sm:text-2xl">فرص عروض الأسعار</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            طلبات جديدة تم توجيهها لك بناءً على قطاعك ومدينة خدمتك.
-          </p>
-        </header>
+        <PageHeader
+          icon={Sparkles}
+          tone="primary"
+          eyebrow="الفرص"
+          title="فرص عروض الأسعار"
+          subtitle="طلبات جديدة تم توجيهها لك بناءً على قطاعك ومدينة خدمتك."
+        />
 
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <Sparkles className="h-5 w-5 text-primary shrink-0" />

@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { PageHeader } from '@/components/shared';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { getOwnerBusiness } from '@/modules/businesses';
@@ -642,25 +643,18 @@ export default function DashboardSites() {
   return (
     <DashboardLayout>
       <div className="space-y-5">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
-              <MapPin className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-heading font-bold text-xl">{isRTL ? 'عناوين المواقع' : 'Site Addresses'}</h1>
-              <p className="text-xs text-muted-foreground">
-                {isRTL ? `${stats.total} موقع · ${stats.linked} عقد مرتبط` : `${stats.total} sites · ${stats.linked} linked contracts`}
-              </p>
-            </div>
-          </div>
-          {businessId && (
+        <PageHeader
+          icon={MapPin}
+          tone="primary"
+          eyebrow={isRTL ? 'المواقع' : 'Sites'}
+          title={isRTL ? 'عناوين المواقع' : 'Site Addresses'}
+          subtitle={isRTL ? `${stats.total} موقع · ${stats.linked} عقد مرتبط` : `${stats.total} sites · ${stats.linked} linked contracts`}
+          actions={businessId ? (
             <Button variant="hero" size="sm" className="h-8 text-xs" onClick={openCreate}>
               <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة موقع' : 'Add Site'}
             </Button>
-          )}
-        </div>
+          ) : undefined}
+        />
 
         {/* Stats */}
         {sites.length > 0 && (
