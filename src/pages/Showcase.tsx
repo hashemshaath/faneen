@@ -263,10 +263,11 @@ const Showcase = () => {
                     title={name}
                   >
                     <div className="aspect-[4/3] bg-muted/30 flex items-center justify-center p-4">
-                      <img
-                        src={row.image_url}
+                      <ResponsiveImage
+                        originalUrl={row.image_url}
+                        variants={row.image_asset?.variants}
                         alt={name}
-                        loading="lazy"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
                         className="max-h-full max-w-full object-contain group-hover:scale-105 transition"
                       />
                     </div>
@@ -308,10 +309,11 @@ const Showcase = () => {
                 return (
                   <article key={row.id} className="group rounded-xl border border-border/60 bg-card overflow-hidden hover-lift">
                     <div className="aspect-[16/11] bg-muted/30 overflow-hidden">
-                      <img
-                        src={row.image_url}
+                      <ResponsiveImage
+                        originalUrl={row.image_url}
+                        variants={row.image_asset?.variants}
                         alt={title || name}
-                        loading="lazy"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="w-full h-full object-cover group-hover:scale-[1.03] transition"
                       />
                     </div>
