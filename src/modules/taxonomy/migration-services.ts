@@ -48,7 +48,6 @@ export async function getTaxonomyInventory(): Promise<TaxonomyInventorySnapshot>
   const [
     taxonomyCategories,
     legacyCategories,
-    legacyTags,
     businessesTotal,
     servicesWithLegacyCategory,
     showcaseTotal,
@@ -57,13 +56,16 @@ export async function getTaxonomyInventory(): Promise<TaxonomyInventorySnapshot>
   ] = await Promise.all([
     supabase.from('taxonomy_categories').select('*', { count: 'exact', head: true }).eq('is_archived', false).then((r) => c(r.count)),
     supabase.from('categories').select('*', { count: 'exact', head: true }).then((r) => c(r.count)),
-    supabase.from('tags').select('*', { count: 'exact', head: true }).then((r) => c(r.count)),
     supabase.from('businesses').select('*', { count: 'exact', head: true }).then((r) => c(r.count)),
     supabase.from('business_services').select('*', { count: 'exact', head: true }).not('category_id', 'is', null).then((r) => c(r.count)),
     supabase.from('showcase_submissions').select('*', { count: 'exact', head: true }).then((r) => c(r.count)),
     supabase.from('showcase_submissions').select('*', { count: 'exact', head: true }).is('taxonomy_category_id', null).then((r) => c(r.count)),
     supabase.from('taxonomy_legacy_mappings').select('mapping_status'),
   ]);
+
+  // Phase 19b — legacy `tags` table dropped; surface 0 to keep the
+  // inventory shape stable for any UI still consuming this snapshot.
+  const legacyTags = 0;
 
   // Distinct business_ids with a taxonomy link (cheap aggregate).
   const { data: linked } = await supabase
