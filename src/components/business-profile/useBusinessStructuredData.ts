@@ -60,10 +60,33 @@ interface ReviewLite {
   profiles?: { full_name?: string | null } | null;
 }
 
+interface CertificationLite {
+  id?: string;
+  name_ar?: string | null;
+  name_en?: string | null;
+  issuer_ar?: string | null;
+  issuer_en?: string | null;
+  credential_number?: string | null;
+  credential_url?: string | null;
+  issued_at?: string | null;
+  expires_at?: string | null;
+}
+
+interface AwardLite {
+  id?: string;
+  title_ar?: string | null;
+  title_en?: string | null;
+  issuer_ar?: string | null;
+  issuer_en?: string | null;
+  awarded_year?: number | null;
+}
+
 interface Args {
   business: BusinessWithJoins | null | undefined;
   services: ServiceLite[];
   reviews: ReviewLite[];
+  certifications?: CertificationLite[];
+  awards?: AwardLite[];
   categoryName: string;
   cityName: string;
   language: string;
@@ -84,6 +107,8 @@ export const useBusinessStructuredData = ({
   business,
   services,
   reviews,
+  certifications = [],
+  awards = [],
   categoryName,
   cityName,
   language,
@@ -156,6 +181,45 @@ export const useBusinessStructuredData = ({
           : undefined,
     };
 
+    // schema.org `hasCredential` — EducationalOccupationalCredential[]
+    if (certifications.length > 0) {
+      localBusiness.hasCredential = certifications.slice(0, 10).map((c) => {
+        const name =
+          (language === "ar" ? c.name_ar : c.name_en || c.name_ar) || c.name_ar || "";
+        const issuerName =
+          (language === "ar" ? c.issuer_ar : c.issuer_en || c.issuer_ar) || c.issuer_ar || "";
+        const entry: Record<string, unknown> = {
+          "@type": "EducationalOccupationalCredential",
+          name,
+          credentialCategory: "certification",
+          ...(issuerName
+            ? { recognizedBy: { "@type": "Organization", name: issuerName } }
+            : {}),
+        };
+        const url = sanitizeUrl(c.credential_url, false);
+        if (url) entry.url = url;
+        if (c.credential_number) entry.identifier = c.credential_number;
+        if (c.issued_at) entry.dateCreated = c.issued_at;
+        if (c.expires_at) entry.expires = c.expires_at;
+        return entry;
+      });
+    }
+
+    // schema.org `award` — string[] (concise, year-tagged)
+    if (awards.length > 0) {
+      localBusiness.award = awards
+        .slice(0, 10)
+        .map((a) => {
+          const title =
+            (language === "ar" ? a.title_ar : a.title_en || a.title_ar) || a.title_ar || "";
+          const issuer =
+            (language === "ar" ? a.issuer_ar : a.issuer_en || a.issuer_ar) || a.issuer_ar || "";
+          const parts = [a.awarded_year, title, issuer ? `— ${issuer}` : ""].filter(Boolean);
+          return parts.join(" ").trim();
+        })
+        .filter(Boolean);
+    }
+
     const breadcrumb = buildBreadcrumbList([
       ...(categoryName
         ? [
@@ -215,5 +279,5 @@ export const useBusinessStructuredData = ({
       ...serviceEntities,
       ...reviewEntities,
     ];
-  }, [business, services, reviews, categoryName, cityName, language, businessName]);
+  }, [business, services, reviews, certifications, awards, categoryName, cityName, language, businessName]);
 };
