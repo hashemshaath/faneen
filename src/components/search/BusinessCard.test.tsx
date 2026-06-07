@@ -49,6 +49,7 @@ const renderCard = (
   viewMode: 'grid' | 'list' = 'grid',
   taxonomyDisplay?: {
     primaryLabel: string | null;
+    primarySlug: string | null;
     secondaryLabels: string[];
     serviceLabels: string[];
     hasModernTaxonomy: boolean;
