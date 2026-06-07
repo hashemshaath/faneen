@@ -80,7 +80,13 @@ const SortableProjectCard = React.memo(({
           </button>
           <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer border border-border/30" onClick={() => p.cover_image_url && onPreview(p.cover_image_url)}>
             {p.cover_image_url ? (
-              <img src={p.cover_image_url} alt={p.title_ar} className="w-full h-full object-cover" loading="lazy" />
+              <ResponsiveImage
+                originalUrl={p.cover_image_url}
+                variants={p.cover_image_asset?.variants}
+                alt={p.title_ar}
+                sizes="48px"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center"><FolderOpen className="w-5 h-5 text-muted-foreground/30" /></div>
             )}
@@ -125,7 +131,13 @@ const SortableProjectCard = React.memo(({
       <div className={`relative rounded-xl border bg-card overflow-hidden h-full group transition-all duration-200 hover:shadow-lg hover:border-primary/30 ${isSelected ? 'ring-2 ring-primary border-primary/40' : 'border-border/50'}`}>
         <div className="aspect-[16/11] bg-muted relative overflow-hidden">
           {p.cover_image_url ? (
-            <img src={p.cover_image_url} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+            <ResponsiveImage
+              originalUrl={p.cover_image_url}
+              variants={p.cover_image_asset?.variants}
+              alt={title}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center"><FolderOpen className="w-10 h-10 text-muted-foreground/20" /></div>
           )}
