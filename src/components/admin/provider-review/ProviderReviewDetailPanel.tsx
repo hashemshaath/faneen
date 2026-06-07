@@ -240,7 +240,7 @@ export const ProviderReviewDetailPanel: React.FC<Props> = ({
           }}
         />
 
-        <PublishReadinessPanel business={selected} isRTL={isRTL} />
+        <PublishReadinessPanel business={enrichedSelected} isRTL={isRTL} />
 
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" onClick={() => onApprovalChange('under_review')} disabled={approvalPending} className="gap-1">
