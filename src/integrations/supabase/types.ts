@@ -20392,6 +20392,7 @@ export type Database = {
         Args: never
         Returns: Json
       }
+      preview_image_optimization_backfill: { Args: never; Returns: Json }
       preview_taxonomy_backfill: { Args: never; Returns: Json }
       private_sector_make_slug: {
         Args: { _name: string; _ref: string }
