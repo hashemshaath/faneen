@@ -540,13 +540,7 @@ const AppRoutes = () => (
         </Routes>
       </Suspense>
       <Suspense fallback={null}>
-        <ConsentBanner />
-      </Suspense>
-      <Suspense fallback={null}>
-        <BuildVersionWatcher />
-      </Suspense>
-      <Suspense fallback={null}>
-        <HelpLauncherFloating />
+        <DeferredAppOverlays />
       </Suspense>
     </AppDirectionShell>
   </BrowserRouter>
