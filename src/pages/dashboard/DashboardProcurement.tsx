@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Loader2, Plus, RefreshCw, ShoppingCart } from "lucide-react";
+import { PageHeader } from "@/components/shared";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
