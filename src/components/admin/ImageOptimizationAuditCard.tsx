@@ -8,16 +8,22 @@
  * backfill is intentionally deferred to a later phase.
  */
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ImageIcon, AlertTriangle } from 'lucide-react';
+import { ImageIcon, AlertTriangle, Wand2, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { useLanguage } from '@/i18n/LanguageContext';
 import {
   loadImageOptimizationAudit,
   type ImageAuditCounts,
 } from '@/modules/files/services/imageOptimizationAudit';
+import {
+  backfillBusinessImagesOnce,
+  type BackfillResult,
+} from '@/modules/files/services/backfillBusinessImages';
 
 const COUNT_LABELS: Record<
   keyof Omit<ImageAuditCounts, 'total_legacy'>,
@@ -34,11 +40,46 @@ const COUNT_LABELS: Record<
 
 export const ImageOptimizationAuditCard: React.FC = () => {
   const { isRTL } = useLanguage();
+  const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin-image-optimization-audit'],
     queryFn: loadImageOptimizationAudit,
     staleTime: 5 * 60 * 1000,
   });
+
+  const [lastResult, setLastResult] = React.useState<BackfillResult | null>(null);
+
+  const backfill = useMutation({
+    mutationFn: backfillBusinessImagesOnce,
+    onSuccess: (res) => {
+      setLastResult(res);
+      const ok = res.succeeded;
+      const fail = res.failed;
+      if (fail === 0 && ok > 0) {
+        toast.success(
+          isRTL ? `تم تحسين ${ok} صورة` : `Optimized ${ok} image(s)`,
+        );
+      } else if (ok > 0) {
+        toast.warning(
+          isRTL
+            ? `تم تحسين ${ok}، فشل ${fail}`
+            : `Optimized ${ok}, failed ${fail}`,
+        );
+      } else {
+        toast.error(
+          isRTL ? `فشل تحسين ${fail} صورة` : `Failed to optimize ${fail}`,
+        );
+      }
+      qc.invalidateQueries({ queryKey: ['admin-image-optimization-audit'] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : String(err));
+    },
+  });
+
+  const businessLegacyTotal =
+    (data?.counts.business_logos_legacy ?? 0) +
+    (data?.counts.business_covers_legacy ?? 0);
 
   return (
     <Card>
@@ -139,6 +180,60 @@ export const ImageOptimizationAuditCard: React.FC = () => {
                 ? 'الخطة المستقبلية: تشغيل backfill بدفعات 25–50 صورة، idempotent، يتخطّى الصور التي تمتلك asset مسبقاً، يسجّل الإخفاقات، ولا يحذف الأصول الأصلية.'
                 : 'Planned backfill: batches of 25–50, idempotent, skips rows that already have an asset, logs failures, never deletes the original image.'}
             </p>
+
+            {businessLegacyTotal > 0 && (
+              <div className="border rounded-xl p-3 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/40 flex flex-col gap-2">
+                <div className="text-xs font-semibold">
+                  {isRTL
+                    ? `تحسين صور المنشآت المتبقية (${businessLegacyTotal})`
+                    : `Optimize remaining business images (${businessLegacyTotal})`}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {isRTL
+                    ? 'يعالج شعارات وأغلفة المنشآت فقط. لا يُحذف الأصل، عملية idempotent، تعمل في المتصفح.'
+                    : 'Processes business logos & covers only. Original URL is preserved, idempotent, runs in your browser.'}
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="self-start"
+                  disabled={backfill.isPending}
+                  onClick={() => backfill.mutate()}
+                >
+                  {backfill.isPending ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 me-1 animate-spin" />
+                      {isRTL ? 'جاري المعالجة…' : 'Processing…'}
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-3.5 h-3.5 me-1" />
+                      {isRTL ? 'تحسين الآن' : 'Optimize now'}
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {lastResult && (
+              <div className="text-[10px] text-muted-foreground border rounded-xl p-2.5">
+                <div>
+                  {isRTL
+                    ? `آخر تشغيل: تمت معالجة ${lastResult.processed}، نجح ${lastResult.succeeded}، فشل ${lastResult.failed}.`
+                    : `Last run: processed ${lastResult.processed}, succeeded ${lastResult.succeeded}, failed ${lastResult.failed}.`}
+                </div>
+                {lastResult.failures.length > 0 && (
+                  <ul className="mt-1 list-disc ps-4 space-y-0.5">
+                    {lastResult.failures.slice(0, 5).map((f, i) => (
+                      <li key={i} className="tech-content">
+                        {f.kind} · {f.business_id.slice(0, 8)}… · {f.reason}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
             <p className="text-[10px] text-muted-foreground/70">
               {isRTL ? 'آخر تحديث:' : 'Generated at:'}{' '}
               <span className="tech-content">{data.generated_at}</span>

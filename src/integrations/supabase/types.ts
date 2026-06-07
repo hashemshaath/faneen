@@ -18857,6 +18857,15 @@ export type Database = {
         Returns: Json
       }
       amendment_safe_hash: { Args: { _amendment_id: string }; Returns: string }
+      apply_business_image_backfill: {
+        Args: {
+          p_business_id: string
+          p_image_asset_id: string
+          p_kind: string
+          p_variants: Json
+        }
+        Returns: undefined
+      }
       apply_business_secondary_taxonomy_backfill: { Args: never; Returns: Json }
       apply_contract_amendment: {
         Args: { _amendment_id: string }
@@ -20077,6 +20086,15 @@ export type Database = {
           full_name: string
           role: string
           user_id: string
+        }[]
+      }
+      list_business_image_backfill_candidates: {
+        Args: never
+        Returns: {
+          business_id: string
+          image_url: string
+          kind: string
+          owner_user_id: string
         }[]
       }
       list_business_public_rfqs: {
