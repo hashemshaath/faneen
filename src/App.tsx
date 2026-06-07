@@ -247,7 +247,8 @@ const AdminSeoHub = lazyRetry(() => import("./pages/admin/AdminSeoHub"));
 const AdminProviderReviewHub = lazyRetry(() => import("./pages/admin/AdminProviderReviewHub"));
 const AdminContractsHub = lazyRetry(() => import("./pages/admin/AdminContractsHub"));
 const AdminMembershipsHub = lazyRetry(() => import("./pages/admin/AdminMembershipsHub"));
-const AdminTaxonomyHub = lazyRetry(() => import("./pages/admin/AdminTaxonomyHub"));
+// AdminTaxonomyHub retired — legacy /admin/categories and /admin/tags now render
+// AdminLegacyTaxonomyReplaced. TODO(legacy-sunset): delete the file once verified.
 const AdminSystemSettingsHub = lazyRetry(() => import("./pages/admin/AdminSystemSettingsHub"));
 // Taxonomy & Reference Data Center — Phase 2.
 const AdminTaxonomyCenter = lazyRetry(() => import("./pages/admin/AdminTaxonomyCenter"));
