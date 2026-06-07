@@ -333,6 +333,8 @@ export interface SearchFilterValues {
   priceMax: number;
   /** Filter providers having at least one active service in this category. Accepts UUID or slug; resolved via the categories tree passed to filterAndSort. */
   serviceCategoryId: string;
+  /** SA administrative region id (see `src/data/sa-regions.ts`). 'all' disables the facet. */
+  regionId: string;
 }
 
 export const defaultFilters: SearchFilterValues = {
@@ -344,6 +346,7 @@ export const defaultFilters: SearchFilterValues = {
   priceMin: 0,
   priceMax: 0,
   serviceCategoryId: 'all',
+  regionId: 'all',
 };
 
 /** Minimal category shape used for slug/UUID resolution and parent rollup. */
