@@ -15,7 +15,6 @@ import { useBi } from "@/components/common/Bilingual";
 import { Building2, ExternalLink, Sparkles, MessageSquare, Layers, ShieldCheck } from "lucide-react";
 import {
   getShowcaseTaxonomyCategories,
-  getLegacySectorDisplayName,
 } from "@/modules/taxonomy/showcase-services";
 import { LEGACY_SECTOR_TO_TAXONOMY_SLUG } from "@/modules/taxonomy/legacy-mapping";
 
@@ -40,15 +39,6 @@ interface ShowcaseRow {
     is_verified: boolean | null;
   } | null;
 }
-
-const SECTORS = [
-  { slug: "all",       ar: "الكل",       en: "All" },
-  { slug: "aluminum",  ar: "ألمنيوم",    en: "Aluminum" },
-  { slug: "iron",      ar: "حديد",       en: "Iron" },
-  { slug: "wood",      ar: "خشب",        en: "Wood" },
-  { slug: "glass",     ar: "زجاج",       en: "Glass" },
-  { slug: "stainless", ar: "ستانلس ستيل", en: "Stainless" },
-];
 
 const Showcase = () => {
   const bi = useBi();
@@ -311,7 +301,7 @@ const Showcase = () => {
                       {(() => {
                         const label = row.taxonomy_category_id
                           ? taxonomyById.get(row.taxonomy_category_id)?.display_ar
-                          : getLegacySectorDisplayName(row.sector_slug);
+                          : bi("غير مصنّف", "Unclassified");
                         if (!label) return null;
                         return (
                           <p className="text-[11px] text-muted-foreground" dir="auto">{label}</p>
