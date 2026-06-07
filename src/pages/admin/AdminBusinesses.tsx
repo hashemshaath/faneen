@@ -335,7 +335,7 @@ const AdminBusinesses = () => {
   const [isPending, startTransition] = useTransition();
   const [verifyConfirm, setVerifyConfirm] = useState<{ id: string; name: string; value: boolean } | null>(null);
 
-  const setField = useCallback((key: string, value: string | number | boolean | null) => {
+  const setField = useCallback((key: string, value: unknown) => {
     setEditForm((f) => ({ ...f, [key]: value }));
   }, []);
 
@@ -582,6 +582,11 @@ const AdminBusinesses = () => {
         // Classification is managed via BusinessTaxonomySection (taxonomy-only).
         country_id: editForm.country_id || null, city_id: editForm.city_id || null,
         logo_url: editForm.logo_url || null, cover_url: editForm.cover_url || null,
+        // Phase 2.2 image-pipeline link columns (admin edit). Null-safe.
+        logo_image_asset_id: (editForm as any).logo_image_asset_id || null,
+        cover_image_asset_id: (editForm as any).cover_image_asset_id || null,
+        logo_image_variants: (editForm as any).logo_image_variants || null,
+        cover_image_variants: (editForm as any).cover_image_variants || null,
         seo_title_ar: editForm.seo_title_ar || null, seo_title_en: editForm.seo_title_en || null,
         seo_description_ar: editForm.seo_description_ar || null, seo_description_en: editForm.seo_description_en || null,
         seo_keywords: String(editForm.seo_keywords || '').split(',').map(k => k.trim()).filter(Boolean),
@@ -1185,6 +1190,10 @@ const AdminBusinesses = () => {
       address: biz.address || '',
       country_id: biz.country_id || '', city_id: biz.city_id || '',
       logo_url: biz.logo_url || '', cover_url: biz.cover_url || '',
+      logo_image_asset_id: (biz as any).logo_image_asset_id || null,
+      cover_image_asset_id: (biz as any).cover_image_asset_id || null,
+      logo_image_variants: (biz as any).logo_image_variants || null,
+      cover_image_variants: (biz as any).cover_image_variants || null,
       seo_title_ar: biz.seo_title_ar || '', seo_title_en: biz.seo_title_en || '',
       seo_description_ar: biz.seo_description_ar || '', seo_description_en: biz.seo_description_en || '',
       seo_keywords: Array.isArray(biz.seo_keywords) ? biz.seo_keywords.join(', ') : '',
@@ -2168,13 +2177,35 @@ const AdminBusinesses = () => {
                     <div>
                       <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'الشعار' : 'Logo'}</Label>
                       <ImageUpload bucket="business-assets" value={editForm.logo_url}
-                        onChange={(url) => setField('logo_url', url)} onRemove={() => setField('logo_url', '')}
+                        onChange={(url) => setField('logo_url', url)}
+                        onRemove={() => {
+                          setField('logo_url', '');
+                          setField('logo_image_asset_id', null);
+                          setField('logo_image_variants', null);
+                        }}
+                        pipeline="business"
+                        businessKind="logo"
+                        onUploadedMeta={(meta) => {
+                          setField('logo_image_asset_id', meta.imageAssetId ?? null);
+                          setField('logo_image_variants', meta.variants ?? null);
+                        }}
                         aspectRatio="square" placeholder={isRTL ? 'رفع الشعار' : 'Upload logo'} />
                     </div>
                     <div>
                       <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
                       <ImageUpload bucket="business-assets" value={editForm.cover_url}
-                        onChange={(url) => setField('cover_url', url)} onRemove={() => setField('cover_url', '')}
+                        onChange={(url) => setField('cover_url', url)}
+                        onRemove={() => {
+                          setField('cover_url', '');
+                          setField('cover_image_asset_id', null);
+                          setField('cover_image_variants', null);
+                        }}
+                        pipeline="business"
+                        businessKind="cover"
+                        onUploadedMeta={(meta) => {
+                          setField('cover_image_asset_id', meta.imageAssetId ?? null);
+                          setField('cover_image_variants', meta.variants ?? null);
+                        }}
                         placeholder={isRTL ? 'رفع صورة الغلاف' : 'Upload cover'} />
                     </div>
                   </div>
@@ -2718,7 +2749,7 @@ const AdminBusinesses = () => {
                         <TableCell className="py-2.5">
                           <div className="flex items-center gap-2.5">
                             <Avatar className="w-8 h-8 border border-border/50">
-                              <AvatarImage src={biz.logo_url || undefined} />
+                              <AvatarImage src={(biz as any).logo_image_variants?.thumbnail || (biz as any).logo_image_variants?.card || biz.logo_url || undefined} />
                               <AvatarFallback className="bg-primary/5 text-primary font-bold text-[10px]">{biz.name_ar?.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
@@ -2812,7 +2843,7 @@ const AdminBusinesses = () => {
                         </button>
                         <div className="relative shrink-0">
                           <Avatar className="w-11 h-11 sm:w-12 sm:h-12 ring-2 ring-border/10">
-                            <AvatarImage src={biz.logo_url || undefined} />
+                            <AvatarImage src={(biz as any).logo_image_variants?.thumbnail || (biz as any).logo_image_variants?.card || biz.logo_url || undefined} />
                             <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
                               {biz.name_ar?.charAt(0)}
                             </AvatarFallback>

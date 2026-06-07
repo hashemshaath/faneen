@@ -18,6 +18,11 @@ export interface BusinessRow {
   name_en: string | null;
   logo_url: string | null;
   cover_url: string | null;
+  /** Phase 2.2 image-pipeline link columns. */
+  logo_image_asset_id?: string | null;
+  cover_image_asset_id?: string | null;
+  logo_image_variants?: Record<string, string> | null;
+  cover_image_variants?: Record<string, string> | null;
   description_ar: string | null;
   description_en: string | null;
   short_description_ar: string | null;

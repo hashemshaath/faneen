@@ -24,16 +24,21 @@ import type {
   UploadProjectImageResult,
   ProjectImageKind,
 } from '@/modules/files';
+import { uploadBusinessImage } from '@/modules/files';
+import type { BusinessImageKind } from '@/modules/files';
 
 /**
- * Phase 2.1: opt-in central image pipeline (Showcase + Projects only).
- * When `pipeline === "project"` ImageUpload/MultiImageUpload route via
- * `uploadProjectImage`, generate thumbnail/card/medium/hero variants,
- * record an `image_assets` row, and surface `imageAssetId`/`variants`
- * via the `onUploadedMeta` callback. Default (`undefined`) preserves
+ * Phase 2.1 + 2.2: opt-in central image pipeline.
+ *   - `pipeline === "project"` routes via `uploadProjectImage`
+ *     (kinds: cover/gallery, bucket: project-images).
+ *   - `pipeline === "business"` routes via `uploadBusinessImage`
+ *     (kinds: logo/cover, bucket: business-assets).
+ * Both generate thumbnail/card/medium/hero variants, record an
+ * `image_assets` row, and surface `imageAssetId`/`variants` via the
+ * `onUploadedMeta` callback. Leaving `pipeline` undefined preserves
  * the legacy single-rendition path for every other caller.
  */
-export type ImagePipelineMode = 'project';
+export type ImagePipelineMode = 'project' | 'business';
 
 export interface UploadedImageMeta {
   url: string;
@@ -54,10 +59,12 @@ interface ImageUploadProps {
   aspectRatio?: 'video' | 'square' | 'auto';
   placeholder?: string;
   compact?: boolean;
-  /** Opt-in central pipeline. Currently only `"project"` is wired. */
+  /** Opt-in central pipeline. Supported: `"project"`, `"business"`. */
   pipeline?: ImagePipelineMode;
   /** Project image kind when `pipeline === "project"`. Defaults to `cover`. */
   projectKind?: ProjectImageKind;
+  /** Business image kind when `pipeline === "business"`. Defaults to `logo`. */
+  businessKind?: BusinessImageKind;
   /** Receives full upload metadata when the pipeline is enabled. */
   onUploadedMeta?: (meta: UploadedImageMeta) => void;
 }
@@ -79,6 +86,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   compact = false,
   pipeline,
   projectKind = 'cover',
+  businessKind = 'logo',
   onUploadedMeta,
 }) => {
   const { user } = useAuth();
@@ -135,6 +143,35 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           fallback: res.fallback,
         });
         toast.success(tx.uploadOk);
+        return;
+      }
+
+      // ─── Pipeline path (Phase 2.2) — Business logo/cover ───
+      if (pipeline === 'business' && user) {
+        const res = await uploadBusinessImage({
+          userId: user.id,
+          file,
+          kind: businessKind,
+        });
+        if (res.error || !res.publicUrl) {
+          throw res.error ?? new Error(tx.uploadFail);
+        }
+        onChange(res.publicUrl);
+        onUploadedMeta?.({
+          url: res.publicUrl,
+          imageAssetId: res.imageAssetId,
+          variants: res.variants,
+          fallback: res.fallback,
+        });
+        if (res.fallback) {
+          toast.warning(
+            isRTL
+              ? 'تم رفع الصورة بدون تحسين كامل'
+              : 'Uploaded without full optimization',
+          );
+        } else {
+          toast.success(tx.uploadOk);
+        }
         return;
       }
 

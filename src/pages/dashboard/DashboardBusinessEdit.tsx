@@ -255,6 +255,13 @@ const DashboardBusinessEdit: React.FC = () => {
         name_ar: trim(form.name_ar), name_en: trim(form.name_en),
         username: trim(form.username),
         logo_url: form.logo_url || null, cover_url: form.cover_url || null,
+        // Phase 2.2 image pipeline — persist asset link + denormalized variants
+        // when present. Null-safe: legacy uploads (no pipeline) leave these
+        // columns untouched so old behavior is preserved.
+        logo_image_asset_id: form.logo_image_asset_id ?? null,
+        cover_image_asset_id: form.cover_image_asset_id ?? null,
+        logo_image_variants: form.logo_image_variants ?? null,
+        cover_image_variants: form.cover_image_variants ?? null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         short_description_ar: form.short_description_ar || null, short_description_en: form.short_description_en || null,
         phone: form.phone || null, mobile: form.mobile || null,
@@ -548,7 +555,25 @@ const DashboardBusinessEdit: React.FC = () => {
                 <ImageUpload bucket="business-assets" folder={`logos/${form.id}`}
                   value={form.logo_url ?? undefined}
                   onChange={(url) => update('logo_url', url)}
-                  onRemove={() => update('logo_url', null)}
+                  onRemove={() => {
+                    setForm((prev) => prev ? {
+                      ...prev,
+                      logo_url: null,
+                      logo_image_asset_id: null,
+                      logo_image_variants: null,
+                    } : prev);
+                    setDirty(true);
+                  }}
+                  pipeline="business"
+                  businessKind="logo"
+                  onUploadedMeta={(meta) => {
+                    setForm((prev) => prev ? {
+                      ...prev,
+                      logo_image_asset_id: meta.imageAssetId ?? null,
+                      logo_image_variants: (meta.variants as Record<string, string> | undefined) ?? null,
+                    } : prev);
+                    setDirty(true);
+                  }}
                   aspectRatio="square" className="mt-1"
                   placeholder={t(isRTL, 'ارفع شعار المنشأة', 'Upload business logo')} />
                 <FieldHint>
@@ -562,7 +587,25 @@ const DashboardBusinessEdit: React.FC = () => {
                 <ImageUpload bucket="business-assets" folder={`covers/${form.id}`}
                   value={form.cover_url ?? undefined}
                   onChange={(url) => update('cover_url', url)}
-                  onRemove={() => update('cover_url', null)}
+                  onRemove={() => {
+                    setForm((prev) => prev ? {
+                      ...prev,
+                      cover_url: null,
+                      cover_image_asset_id: null,
+                      cover_image_variants: null,
+                    } : prev);
+                    setDirty(true);
+                  }}
+                  pipeline="business"
+                  businessKind="cover"
+                  onUploadedMeta={(meta) => {
+                    setForm((prev) => prev ? {
+                      ...prev,
+                      cover_image_asset_id: meta.imageAssetId ?? null,
+                      cover_image_variants: (meta.variants as Record<string, string> | undefined) ?? null,
+                    } : prev);
+                    setDirty(true);
+                  }}
                   aspectRatio="video" className="mt-1"
                   placeholder={t(isRTL, 'ارفع صورة الغلاف', 'Upload cover image')} />
                 <FieldHint>
