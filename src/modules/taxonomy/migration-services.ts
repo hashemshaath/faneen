@@ -47,21 +47,23 @@ export async function getTaxonomyInventory(): Promise<TaxonomyInventorySnapshot>
   const c = async (n: number | null | undefined) => n ?? 0;
   const [
     taxonomyCategories,
-    legacyCategories,
     businessesTotal,
-    servicesWithLegacyCategory,
     showcaseTotal,
     showcaseWithoutTaxonomy,
     mappingRows,
   ] = await Promise.all([
     supabase.from('taxonomy_categories').select('*', { count: 'exact', head: true }).eq('is_archived', false).then((r) => c(r.count)),
-    supabase.from('categories').select('*', { count: 'exact', head: true }).then((r) => c(r.count)),
     supabase.from('businesses').select('*', { count: 'exact', head: true }).then((r) => c(r.count)),
-    supabase.from('business_services').select('*', { count: 'exact', head: true }).not('category_id', 'is', null).then((r) => c(r.count)),
     supabase.from('showcase_submissions').select('*', { count: 'exact', head: true }).then((r) => c(r.count)),
     supabase.from('showcase_submissions').select('*', { count: 'exact', head: true }).is('taxonomy_category_id', null).then((r) => c(r.count)),
     supabase.from('taxonomy_legacy_mappings').select('mapping_status'),
   ]);
+
+  // Phase 19c — legacy `public.categories` table dropped and
+  // `business_services.category_id` removed in Phase 18i/18h. Surface
+  // zeros to keep the inventory snapshot shape stable for callers.
+  const legacyCategories = 0;
+  const servicesWithLegacyCategory = 0;
 
   // Phase 19b — legacy `tags` table dropped; surface 0 to keep the
   // inventory shape stable for any UI still consuming this snapshot.
