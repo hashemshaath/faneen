@@ -40,6 +40,13 @@ type BranchWithJoins = BranchRow & {
 };
 
 export type BusinessWithJoins = BusinessRow & {
+  /**
+   * Phase 12 — the legacy `categories(...)` join is no longer fetched on
+   * the public business profile query. Field is preserved on the type as
+   * `null` so existing null-safe consumers (sector breadcrumb links built
+   * from `business.categories?.slug`) continue to compile and degrade
+   * gracefully. Business category DISPLAY is taxonomy-only now.
+   */
   categories: CategoryRow | null;
   cities: CityRow | null;
   countries: CountryRow | null;
