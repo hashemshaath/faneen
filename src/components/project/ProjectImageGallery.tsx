@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { ImageIcon, ZoomIn, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ResponsiveImage } from '@/modules/files/components/ResponsiveImage';
 
-interface GalleryImage {
+export interface GalleryImage {
   id: string;
   image_url: string;
   caption_ar: string | null;
   caption_en: string | null;
+  /** Optional variants map from `image_assets.variants` (Phase 2.1). */
+  variants?: unknown;
 }
 
 interface Props {
@@ -45,7 +48,14 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
           onClick={() => openLightbox(0)}
         >
           <div className="media-16-9 md:aspect-[2/1]">
-          <img src={images[0].image_url} alt={title || 'Project image'} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="eager" decoding="async" fetchPriority="high"/>
+          <ResponsiveImage
+            originalUrl={images[0].image_url}
+            variants={images[0].variants}
+            alt={title || 'Project image'}
+            sizes="(max-width: 768px) 100vw, 66vw"
+            priority
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
           </div>
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-full p-3">
@@ -64,7 +74,13 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
           <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
             {images.slice(1, 7).map((img, idx) => (
               <button key={img.id} onClick={() => openLightbox(idx + 1)} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
-                <img src={img.image_url} alt={`${title} - ${idx + 2}`} className="w-full h-full object-cover transition-transform group-hover:scale-110" loading="lazy" decoding="async"/>
+                <ResponsiveImage
+                  originalUrl={img.image_url}
+                  variants={img.variants}
+                  alt={`${title} - ${idx + 2}`}
+                  sizes="(max-width: 640px) 25vw, 16vw"
+                  className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                />
                 {idx === 5 && images.length > 7 && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg">+{images.length - 7}</div>
                 )}
@@ -86,7 +102,14 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
             <X className="w-5 h-5" aria-hidden="true" />
           </Button>
           <div className="flex-1 flex items-center justify-center p-4 relative">
-            <img src={images[currentImageIndex]?.image_url} alt={images[currentImageIndex]?.caption_ar || images[currentImageIndex]?.caption_en || `${title} - ${currentImageIndex + 1}`} className="max-w-full max-h-full object-contain rounded-lg" loading="lazy" decoding="async"/>
+            <ResponsiveImage
+              originalUrl={images[currentImageIndex]?.image_url}
+              variants={images[currentImageIndex]?.variants}
+              alt={images[currentImageIndex]?.caption_ar || images[currentImageIndex]?.caption_en || `${title} - ${currentImageIndex + 1}`}
+              sizes="100vw"
+              priority
+              className="max-w-full max-h-full object-contain rounded-lg"
+            />
             {images.length > 1 && (
               <>
                 <Button
@@ -122,7 +145,13 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
             <div className="flex gap-1.5 overflow-x-auto px-4 pb-4 justify-center">
               {images.map((img, idx) => (
                 <button key={img.id} onClick={() => setCurrentImageIndex(idx)} className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? 'border-accent ring-1 ring-accent' : 'border-transparent opacity-50 hover:opacity-80'}`}>
-                  <img src={img.image_url} alt={img.caption_ar || img.caption_en || `${title} - ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
+                  <ResponsiveImage
+                    originalUrl={img.image_url}
+                    variants={img.variants}
+                    alt={img.caption_ar || img.caption_en || `${title} - ${idx + 1}`}
+                    sizes="56px"
+                    className="w-full h-full object-cover"
+                  />
                 </button>
               ))}
             </div>
