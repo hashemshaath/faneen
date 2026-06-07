@@ -19,6 +19,7 @@ import { ImagePlus, ShieldAlert, ShieldCheck, Clock, X, Trash2, Upload } from "l
 import {
   getShowcaseTaxonomyCategories,
 } from "@/modules/taxonomy/showcase-services";
+import { ResponsiveImage } from "@/modules/files/components/ResponsiveImage";
 
 interface Business {
   id: string;
@@ -42,6 +43,8 @@ interface Submission {
   status: "pending" | "approved" | "rejected";
   rejected_reason: string | null;
   created_at: string;
+  image_asset_id: string | null;
+  image_asset?: { variants: unknown } | null;
 }
 
 const StatusPill: React.FC<{ status: Submission["status"] }> = ({ status }) => {
@@ -110,11 +113,11 @@ const DashboardShowcase: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("showcase_submissions")
-        .select("*")
+        .select("*, image_asset:image_assets(variants)")
         .eq("business_id", businessQuery.data!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Submission[];
+      return (data ?? []) as unknown as Submission[];
     },
   });
 
@@ -128,11 +131,14 @@ const DashboardShowcase: React.FC = () => {
 
       setUploading(true);
       try {
-        const { publicUrl, error: upErr } = await uploadShowcaseImage({
+        const { publicUrl, imageAssetId, fallback, error: upErr } = await uploadShowcaseImage({
           userId: user.id,
           file: form.file,
         });
         if (upErr) throw upErr;
+        if (fallback) {
+          toast.warning("تم رفع الصورة الأصلية فقط — تعذّر توليد النسخ المُحسّنة.");
+        }
 
         const { error } = await supabase.from("showcase_submissions").insert([
           {
@@ -148,6 +154,7 @@ const DashboardShowcase: React.FC = () => {
             // backward reads of older rows only.
             taxonomy_category_id: form.taxonomy_category_id || null,
             image_url: publicUrl,
+            image_asset_id: imageAssetId ?? null,
           },
         ]);
         if (error) throw error;
@@ -346,7 +353,13 @@ const DashboardShowcase: React.FC = () => {
                 {submissionsQuery.data!.map((row) => (
                   <div key={row.id} className="rounded-xl border border-border/60 overflow-hidden bg-card">
                     <div className="aspect-[16/11] bg-muted/30">
-                      <img src={row.image_url} alt={row.title_ar || ""} className="w-full h-full object-cover" loading="lazy" />
+                      <ResponsiveImage
+                        originalUrl={row.image_url}
+                        variants={row.image_asset?.variants}
+                        alt={row.title_ar || ""}
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="p-3 space-y-2">
                       <div className="flex items-center justify-between gap-2">
