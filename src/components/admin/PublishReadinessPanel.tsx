@@ -15,6 +15,14 @@ export type ReadinessBusiness = {
   logo_url: string | null;
   sectors: string[] | null;
   sub_services: string[] | null;
+  /**
+   * Phase 18d — taxonomy-first presence signals. When provided, these
+   * override the legacy `sectors` / `sub_services` arrays for the
+   * `sectors` / `services` checklist items. Populated by callers from
+   * `business_taxonomy_categories` via `useBusinessTaxonomyPresence`.
+   */
+  taxonomy_primary_present?: boolean | null;
+  taxonomy_service_count?: number | null;
   email: string | null;
   phone: string | null;
   approval_status: string | null;
@@ -42,12 +50,22 @@ export type ReadinessItem = {
 };
 
 export function computeReadiness(b: ReadinessBusiness): ReadinessItem[] {
+  // Phase 18d — prefer taxonomy fields when supplied; fall back to legacy
+  // arrays so existing callers and unit tests keep working.
+  const hasSectors =
+    typeof b.taxonomy_primary_present === 'boolean'
+      ? b.taxonomy_primary_present
+      : !!(b.sectors && b.sectors.length > 0);
+  const hasServices =
+    typeof b.taxonomy_service_count === 'number'
+      ? b.taxonomy_service_count > 0
+      : !!(b.sub_services && b.sub_services.length > 0);
   return [
     { key: 'name', required: true, ok: !!(b.name_ar || b.name_en), ar: 'اسم المنشأة', en: 'Business name' },
     { key: 'username', required: true, ok: !!b.username && b.username_status === 'approved', ar: 'اسم المستخدم المعتمد', en: 'Approved username' },
     { key: 'logo', required: false, ok: !!b.logo_url, ar: 'الشعار', en: 'Logo' },
-    { key: 'sectors', required: true, ok: !!(b.sectors && b.sectors.length > 0), ar: 'القطاعات', en: 'Sectors' },
-    { key: 'services', required: false, ok: !!(b.sub_services && b.sub_services.length > 0), ar: 'الخدمات الفرعية', en: 'Sub-services' },
+    { key: 'sectors', required: true, ok: hasSectors, ar: 'القطاعات', en: 'Sectors' },
+    { key: 'services', required: false, ok: hasServices, ar: 'الخدمات الفرعية', en: 'Sub-services' },
     { key: 'contact', required: true, ok: !!(b.email || b.phone), ar: 'وسيلة تواصل', en: 'Contact method' },
     { key: 'is_active', required: true, ok: b.is_active !== false, ar: 'الحساب مفعّل', en: 'Account active' },
     { key: 'not_demo', required: true, ok: b.is_demo !== true, ar: 'ليس حساباً تجريبياً', en: 'Not a demo account' },
