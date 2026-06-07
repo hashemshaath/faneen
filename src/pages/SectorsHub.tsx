@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Send, Building2, Layers, MessageSquare, Compass, Wrench, Tag, FileText, ShieldCheck } from 'lucide-react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
-import { SECTORS_SEO_LIST } from '@/lib/sectors-seo';
+import { SECTORS_SEO_LIST, type SeoSectorSlug } from '@/lib/sectors-seo';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 
 interface SectorCard {
@@ -42,11 +42,11 @@ function useSectorCards(): SectorCard[] {
       const usable = (rows ?? []).filter((r) => r.show_in_seo || r.show_in_search);
       if (usable.length === 0) return null;
       // Only keep slugs that exist in SECTORS_SEO_LIST so existing routes don't 404.
-      const legalSlugs = new Set(SECTORS_SEO_LIST.map((s) => s.slug));
+      const legalSlugs = new Set<string>(SECTORS_SEO_LIST.map((s) => s.slug));
       const filtered = usable.filter((r) => legalSlugs.has(r.slug));
       if (filtered.length === 0) return null;
       return filtered.map((r) => {
-        const legacy = SECTORS_SEO_LIST.find((s) => s.slug === r.slug);
+        const legacy = SECTORS_SEO_LIST.find((s) => s.slug === (r.slug as SeoSectorSlug));
         return {
           slug: r.slug,
           shortName: r.name_ar || legacy?.shortName || r.slug,
