@@ -73,7 +73,7 @@ const Showcase = () => {
       let q = supabase
         .from("showcase_submissions")
         .select(
-          "id, business_id, kind, title_ar, title_en, description_ar, description_en, image_url, link_url, sector_slug, taxonomy_category_id, business:businesses!inner(id, name_ar, name_en, username, logo_url, is_verified)",
+          "id, business_id, kind, title_ar, title_en, description_ar, description_en, image_url, link_url, taxonomy_category_id, business:businesses!inner(id, name_ar, name_en, username, logo_url, is_verified)",
         )
         .eq("status", "approved")
         // SEO-10A — enforce verified+active+published+non-demo on the joined
@@ -86,20 +86,16 @@ const Showcase = () => {
         .order("created_at", { ascending: false })
         .limit(120);
       if (sector !== "all") {
-        // Taxonomy-first filter: resolve `sector` to a taxonomy id when possible,
-        // then OR over `taxonomy_category_id` plus the matching legacy slugs so
-        // unmigrated rows still surface for the same filter chip.
+        // Phase 19 — taxonomy-only filter. Legacy `sector_slug` was dropped
+        // from `showcase_submissions`; resolve the chip's legacy slug to a
+        // taxonomy id and filter on `taxonomy_category_id` only.
         const taxonomySlug = LEGACY_SECTOR_TO_TAXONOMY_SLUG[sector] ?? sector;
         const tax = taxonomyBySlug.get(taxonomySlug);
-        const legacySlugs = Object.entries(LEGACY_SECTOR_TO_TAXONOMY_SLUG)
-          .filter(([, target]) => target === taxonomySlug)
-          .map(([legacy]) => legacy);
-        const slugSet = new Set<string>([sector, ...legacySlugs]);
         if (tax) {
-          const slugList = Array.from(slugSet).map((s) => `"${s}"`).join(',');
-          q = q.or(`taxonomy_category_id.eq.${tax.id},sector_slug.in.(${slugList})`);
+          q = q.eq('taxonomy_category_id', tax.id);
         } else {
-          q = q.in('sector_slug', Array.from(slugSet));
+          // Unknown sector chip → no matching taxonomy → empty result set.
+          q = q.eq('taxonomy_category_id', '00000000-0000-0000-0000-000000000000');
         }
       }
       const { data, error } = await q;
