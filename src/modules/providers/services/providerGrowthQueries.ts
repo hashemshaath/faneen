@@ -6,6 +6,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import { listAdminBusinesses } from '@/modules/businesses';
+import { buildPresenceMap } from '@/modules/taxonomy/presence';
 import {
   computeProviderReadinessScore,
   type ReadinessInput,
@@ -60,12 +61,14 @@ export interface GrowthBusinessRow {
   is_verified: boolean;
   approval_status: string | null;
   updated_at: string | null;
-  category_id: string | null;
   // derived counts (best-effort; 0 when not surfaced by the base read)
   sectors: string[];
   sub_services: string[];
   brands_count: number;
   gallery_count: number;
+  // Phase 18f — authoritative taxonomy presence for readiness/quality scoring.
+  taxonomy_primary_present?: boolean;
+  taxonomy_service_count?: number;
 }
 
 export interface ProviderGrowthInsight {
@@ -108,15 +111,32 @@ export async function loadProviderGrowthBusinesses(opts: { limit?: number } = {}
 }> {
   const { data, error } = await listAdminBusinesses<Record<string, unknown>>({
     select:
-      'id, ref_id, name_ar, name_en, username, logo_url, cover_url, phone, email, website, city_id, address, latitude, longitude, is_active, is_verified, approval_status, updated_at, category_id, website',
+      // Phase 18f — `category_id` removed; taxonomy presence is fetched in a
+      // separate batch from `business_taxonomy_categories` below.
+      'id, ref_id, name_ar, name_en, username, logo_url, cover_url, phone, email, website, city_id, address, latitude, longitude, is_active, is_verified, approval_status, updated_at, website',
     orderBy: { column: 'updated_at', ascending: false },
     limit: opts.limit ?? 500,
   });
   if (error) return { rows: [], error: error as Error };
 
+  // Phase 18f — fetch real taxonomy presence (primary + service counts) for
+  // every loaded business in a single batch. Replaces the previous fake
+  // `sectors = [category_id]` shim with authoritative taxonomy data.
+  const ids = (data ?? []).map((r) => r.id as string).filter(Boolean);
+  let presence = new Map<string, { hasPrimary: boolean; secondaryCount: number; serviceCount: number }>();
+  if (ids.length > 0) {
+    const { data: txRows } = await supabase
+      .from('business_taxonomy_categories')
+      .select('business_id, role, is_primary')
+      .in('business_id', ids);
+    presence = buildPresenceMap((txRows ?? []) as Array<{ business_id: string; role: string | null; is_primary: boolean | null }>);
+  }
+
   const rows: GrowthBusinessRow[] = (data ?? []).map((r) => {
     const id = r.id as string;
-    const categoryId = (r.category_id as string | null) ?? null;
+    const tx = presence.get(id);
+    const hasPrimary = tx?.hasPrimary === true;
+    const serviceCount = tx?.serviceCount ?? 0;
     return {
       id,
       ref_id: (r.ref_id as string | null) ?? null,
@@ -137,11 +157,15 @@ export async function loadProviderGrowthBusinesses(opts: { limit?: number } = {}
       is_verified: r.is_verified === true,
       approval_status: (r.approval_status as string | null) ?? null,
       updated_at: (r.updated_at as string | null) ?? null,
-      category_id: categoryId,
-      sectors: categoryId ? [categoryId] : [],
-      sub_services: [],
+      // Synthetic arrays preserve the legacy shape that downstream UI
+      // widgets read via `.length`, but they are now backed by real
+      // taxonomy presence instead of the legacy `category_id` column.
+      sectors: hasPrimary ? ['primary'] : [],
+      sub_services: serviceCount > 0 ? Array.from({ length: serviceCount }, (_, i) => `svc-${i}`) : [],
       brands_count: 0,
       gallery_count: 0,
+      taxonomy_primary_present: hasPrimary,
+      taxonomy_service_count: serviceCount,
     };
   });
   return { rows, error: null };
