@@ -20,6 +20,7 @@ import {
   LEGACY_SECTOR_TO_TAXONOMY_SLUG,
   resolveLegacySectorToTaxonomy,
 } from './legacy-mapping';
+import { getRuntimeLegacyMapCached } from './migration-services';
 
 export interface SearchTaxonomyParams {
   q?: string | null;
@@ -42,11 +43,21 @@ function norm(v: string | null | undefined): string {
   return (v ?? '').trim().toLowerCase();
 }
 
-/** Collect all candidate slugs from a raw input (input + legacy map projection). */
-function collectCandidateSlugs(input: string): string[] {
+/**
+ * Collect all candidate slugs from a raw input. Prefers the runtime
+ * `taxonomy_legacy_mappings` registry; static map is always merged as
+ * a safety fallback so tests and offline flows never regress.
+ */
+async function collectCandidateSlugs(input: string): Promise<string[]> {
   const raw = input.trim();
   const n = norm(raw);
-  const mapped = LEGACY_SECTOR_TO_TAXONOMY_SLUG[n];
+  let mapped = LEGACY_SECTOR_TO_TAXONOMY_SLUG[n];
+  try {
+    const runtime = await getRuntimeLegacyMapCached();
+    if (runtime[n]) mapped = runtime[n];
+  } catch {
+    /* static fallback already applied */
+  }
   return Array.from(new Set([raw, n, mapped].filter(Boolean) as string[]));
 }
 
@@ -64,8 +75,8 @@ export async function resolveSearchCategory(
   const raw = input.trim();
   if (!raw) return null;
 
-  // 1) slug / legacy mapping
-  const slugs = collectCandidateSlugs(raw);
+  // 1) slug / legacy mapping (runtime override + static fallback)
+  const slugs = await collectCandidateSlugs(raw);
   const { data: bySlug } = await supabase
     .from('taxonomy_categories')
     .select('*')

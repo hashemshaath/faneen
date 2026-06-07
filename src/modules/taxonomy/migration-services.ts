@@ -159,11 +159,22 @@ export async function deleteLegacyMapping(id: string): Promise<void> {
 export interface BackfillPreview {
   businesses_with_legacy_no_taxonomy: number;
   businesses_resolvable: number;
+  businesses_already_linked?: number;
   business_services_with_legacy_category: number;
   showcase_without_taxonomy: number;
+  showcase_resolvable?: number;
   quote_requests_with_legacy_sector: number;
   mappings_pending_review: number;
   mappings_total: number;
+  mappings_ready?: number;
+  sample?: Array<{
+    record_type: 'business' | 'showcase';
+    record_id: string;
+    legacy_value: string | null;
+    source: string;
+    target_slug: string;
+    target_name_ar: string | null;
+  }>;
   generated_at: string;
 }
 
@@ -171,6 +182,49 @@ export async function previewTaxonomyBackfill(): Promise<BackfillPreview> {
   const { data, error } = await supabase.rpc('preview_taxonomy_backfill');
   if (error) throw error;
   return data as unknown as BackfillPreview;
+}
+
+export interface BackfillApplyResult {
+  businesses_linked: number;
+  showcase_linked: number;
+  skipped_existing: number;
+  skipped_needs_review: number;
+  errors: unknown[];
+  applied_at: string;
+}
+
+/**
+ * Admin-only. Executes the safe backfill RPC. The RPC itself enforces the
+ * admin check and only acts on `mapped` registry rows; it never overwrites
+ * existing taxonomy links or deletes legacy data.
+ */
+export async function applyTaxonomyBackfill(): Promise<BackfillApplyResult> {
+  const { data, error } = await supabase.rpc('apply_taxonomy_backfill');
+  if (error) throw error;
+  return data as unknown as BackfillApplyResult;
+}
+
+// --- Runtime legacy map cache ------------------------------------------------
+// Cached for 60s to avoid hitting the registry on every search/resolve call.
+// Falls back to the static map on any failure.
+
+let _runtimeMapCache: { value: Record<string, string>; expires: number } | null = null;
+const RUNTIME_MAP_TTL_MS = 60_000;
+
+export async function getRuntimeLegacyMapCached(
+  opts: { force?: boolean } = {},
+): Promise<Record<string, string>> {
+  const now = Date.now();
+  if (!opts.force && _runtimeMapCache && _runtimeMapCache.expires > now) {
+    return _runtimeMapCache.value;
+  }
+  const value = await getRuntimeLegacyMap();
+  _runtimeMapCache = { value, expires: now + RUNTIME_MAP_TTL_MS };
+  return value;
+}
+
+export function clearRuntimeLegacyMapCache(): void {
+  _runtimeMapCache = null;
 }
 
 /**

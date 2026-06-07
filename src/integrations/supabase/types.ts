@@ -18675,6 +18675,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      apply_taxonomy_backfill: { Args: never; Returns: Json }
       approve_brand_addition_request: {
         Args: { p_admin_note?: string; p_request_id: string }
         Returns: {
