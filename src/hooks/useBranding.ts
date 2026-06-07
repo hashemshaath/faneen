@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useMemo } from 'react';
+import { usePlatformSettingsCore } from '@/hooks/usePlatformSettingsCore';
 // Bundle the default brand assets so they are served from the hashed
 // /assets/* directory (long-cache immutable). Admin-uploaded URLs from
 // platform_settings still take precedence at runtime.
@@ -58,19 +58,12 @@ function applySettings(rows: Array<{ setting_key: string; setting_value: string 
 }
 
 export function useBranding() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['branding-config'],
-    queryFn: async (): Promise<BrandingConfig> => {
-      const { data: rows, error } = await supabase
-        .from('platform_settings')
-        .select('setting_key, setting_value')
-        .eq('category', 'branding');
-      if (error) return DEFAULT_BRANDING;
-      return applySettings(rows ?? []);
-    },
-    staleTime: 10 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
-    placeholderData: DEFAULT_BRANDING,
-  });
-  return { branding: data ?? DEFAULT_BRANDING, isLoading };
+  // Single shared query (see usePlatformSettingsCore) — selects only the
+  // `branding` rows so this hook re-renders independently of theme changes.
+  const { data, isLoading } = usePlatformSettingsCore();
+  const branding = useMemo(() => {
+    const rows = (data ?? []).filter((r) => r.category === 'branding');
+    return applySettings(rows);
+  }, [data]);
+  return { branding, isLoading };
 }

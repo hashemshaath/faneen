@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useMemo } from 'react';
+import { usePlatformSettingsCore } from '@/hooks/usePlatformSettingsCore';
 import {
   BRAND_COLORS,
   BRAND_THEME,
@@ -93,42 +93,29 @@ export const BRAND_THEME_FIELD_BY_KEY: Record<string, keyof BrandColorTokens> = 
 );
 
 export function useThemeColors() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['theme-colors'],
-    queryFn: async (): Promise<{ theme: ThemeColors; overrides: BrandThemeOverrides }> => {
-      const { data: rows, error } = await supabase
-        .from('platform_settings')
-        .select('setting_key, setting_value')
-        .eq('category', 'theme');
-      if (error) return { theme: DEFAULT_THEME, overrides: {} };
-
-      // Decode the full brand palette (16+ fields) into a sanitized
-      // BrandThemeOverrides — invalid/forbidden values are silently dropped.
-      const overrides: BrandThemeOverrides = {};
-      for (const r of rows ?? []) {
-        const field = BRAND_THEME_FIELD_BY_KEY[r.setting_key];
-        if (!field || !r.setting_value) continue;
-        const v = r.setting_value.trim();
-        if (!validateHexColor(v) || isForbiddenBrandColor(v)) continue;
-        overrides[field] = v;
-      }
-
-      // Project the full overrides onto the legacy ThemeColors shape so
-      // existing consumers (`AdminBranding` legacy imports) keep working.
-      const theme: ThemeColors = {
-        primary:       overrides.primary       ?? DEFAULT_THEME.primary,
-        primaryDark:   overrides.primaryDark   ?? DEFAULT_THEME.primaryDark,
-        secondary:     overrides.secondary     ?? DEFAULT_THEME.secondary,
-        secondaryDark: overrides.secondaryDark ?? DEFAULT_THEME.secondaryDark,
-        accent:        overrides.accent        ?? DEFAULT_THEME.accent,
-        navy:          overrides.dark          ?? DEFAULT_THEME.navy,
-      };
-      return { theme, overrides };
-    },
-    staleTime: 10 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
-    placeholderData: { theme: DEFAULT_THEME, overrides: {} },
-  });
+  // Single shared query (see usePlatformSettingsCore) — we filter the
+  // `theme` rows locally so this hook never duplicates the network call.
+  const { data: rawRows, isLoading } = usePlatformSettingsCore();
+  const data = useMemo(() => {
+    const rows = (rawRows ?? []).filter((r) => r.category === 'theme');
+    const overrides: BrandThemeOverrides = {};
+    for (const r of rows) {
+      const field = BRAND_THEME_FIELD_BY_KEY[r.setting_key];
+      if (!field || !r.setting_value) continue;
+      const v = r.setting_value.trim();
+      if (!validateHexColor(v) || isForbiddenBrandColor(v)) continue;
+      overrides[field] = v;
+    }
+    const theme: ThemeColors = {
+      primary:       overrides.primary       ?? DEFAULT_THEME.primary,
+      primaryDark:   overrides.primaryDark   ?? DEFAULT_THEME.primaryDark,
+      secondary:     overrides.secondary     ?? DEFAULT_THEME.secondary,
+      secondaryDark: overrides.secondaryDark ?? DEFAULT_THEME.secondaryDark,
+      accent:        overrides.accent        ?? DEFAULT_THEME.accent,
+      navy:          overrides.dark          ?? DEFAULT_THEME.navy,
+    };
+    return { theme, overrides };
+  }, [rawRows]);
   return {
     theme: data?.theme ?? DEFAULT_THEME,
     overrides: data?.overrides ?? {},
