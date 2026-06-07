@@ -330,10 +330,9 @@ const DashboardProjects = () => {
         project_cost: form.project_cost ? Number(form.project_cost) : null,
         duration_days: form.duration_days ? Number(form.duration_days) : null,
         completion_date: form.completion_date || null, status: form.status,
-        // Phase 8: classification now comes from `project_taxonomy_categories`.
-        // We deliberately leave `category_id` untouched (null on insert) — the
-        // legacy column is preserved in DB for read-only fallback only.
-        category_id: null as string | null,
+        // Phase 13: classification is taxonomy-only. We never write
+        // `projects.category_id` from the dashboard. The legacy column is
+        // preserved in DB but is no longer touched by any UI.
         city_id: form.city_id || null,
         is_featured: form.is_featured, currency_code: form.currency_code,
       };
