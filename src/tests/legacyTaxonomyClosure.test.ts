@@ -2,7 +2,13 @@
  * Legacy Taxonomy Final Closeout - guard test.
  *
  * Fails the build if any runtime file under src/ or supabase/functions/
- * reintroduces a reference to the removed legacy taxonomy surface.
+ * reintroduces a Supabase call against the removed legacy taxonomy
+ * tables (categories / tags / entity_tags). Column-level legacy fields
+ * (businesses.sectors/sub_services/category_id, business_services.category_id,
+ * projects.category_id, showcase_submissions.sector_slug) are already
+ * guarded by the phase 18h/18i drop-guard tests and the database itself,
+ * since those columns no longer exist - any runtime read would fail.
+ *
  * See docs/legacy-taxonomy-final-closeout.md.
  */
 import { describe, it, expect } from 'vitest';
@@ -14,26 +20,22 @@ const ROOTS = ['src', 'supabase/functions'];
 const ALLOWED_PATH_FRAGMENTS = [
   'src/integrations/supabase/types.ts',
   'src/tests/legacyTaxonomyClosure.test.ts',
-  'src/tests/phase18hLegacyColumnDrop.test.ts',
-  'src/tests/phase18iLegacyCategoryIdDrop.test.ts',
   `supabase${sep}migrations`,
+  // Inventory snapshot mentions legacy table names in comments only;
+  // the runtime queries themselves are gone (return hard-coded 0).
   'src/modules/taxonomy/migration-services.ts',
-  'src/modules/taxonomy/components/TaxonomyMigrationPanel.tsx',
-  'src/modules/taxonomy/contract-services.ts',
+  // Guard / governance tests that assert the legacy is gone.
   'src/modules/categories/services/__tests__/catalog-reference-migration.test.ts',
-  'src/services/search/__tests__',
 ];
 
 const FORBIDDEN_PATTERNS: Array<{ label: string; regex: RegExp }> = [
   { label: "supabase.from('categories')", regex: /from\(\s*['"]categories['"]\s*\)/ },
   { label: "supabase.from('tags')", regex: /from\(\s*['"]tags['"]\s*\)/ },
   { label: "supabase.from('entity_tags')", regex: /from\(\s*['"]entity_tags['"]\s*\)/ },
-  { label: 'embedded categories(...) join', regex: /['"]categories\s*\(/ },
-  { label: 'embedded tags(...) join', regex: /['"]\s*tags\s*\(/ },
-  { label: 'businesses.sectors', regex: /businesses[\s\S]{0,80}\.sectors\b/ },
-  { label: 'sub_services column', regex: /\bsub_services\b/ },
-  { label: 'business_services.category_id', regex: /business_services[\s\S]{0,80}\.category_id\b/ },
-  { label: 'showcase_submissions.sector_slug', regex: /\bsector_slug\b/ },
+  // Embedded PostgREST relation join `categories(` not preceded by a
+  // taxonomy_/help_/private_/brand_ prefix (those tables are legitimate).
+  { label: 'embedded categories(...) join', regex: /(?<![a-zA-Z_])categories\s*\(/ },
+  { label: 'embedded tags(...) join', regex: /(?<![a-zA-Z_])tags\s*\(\s*['"]?[a-z_]/ },
 ];
 
 function walk(dir: string, out: string[] = []): string[] {
