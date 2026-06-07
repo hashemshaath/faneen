@@ -5,11 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, FileText, Play, History, Shield, Mail } from 'lucide-react';
+import {
+  CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, FileText, Play,
+  History, Shield, Mail, Activity, Link2, Copy, Download, Send, Globe2,
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { auditSitemapStatus } from '@/modules/seo';
+import { auditSitemapStatus, pingSearchEngines } from '@/modules/seo';
 import { toast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { PageHeader, MetricCard, FiltersBar, StatusBadge } from '@/components/shared';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -64,6 +68,8 @@ export default function AdminSitemapStatus() {
   const isAr = language === 'ar';
   const qc = useQueryClient();
   const [expandedRun, setExpandedRun] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'healthy' | 'errors' | 'spa'>('all');
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['sitemap-status'],
@@ -119,6 +125,25 @@ export default function AdminSitemapStatus() {
     .reduce((s, r) => s + r.result.urlCount, 0);
   const errorCount = (data ?? []).filter((r) => !r.result.ok).length;
   const okCount = (data ?? []).filter((r) => r.result.ok).length;
+  const spaCount = (data ?? []).filter((r) => r.result.isSpaFallback).length;
+  const healthScore = data && data.length
+    ? Math.round((okCount / data.length) * 100)
+    : 0;
+
+  const filteredRows = useMemo(() => {
+    const rows = data ?? [];
+    return rows.filter((row) => {
+      const r = row.result;
+      if (statusFilter === 'healthy' && !r.ok) return false;
+      if (statusFilter === 'errors' && r.ok) return false;
+      if (statusFilter === 'spa' && !r.isSpaFallback) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        if (!row.url.toLowerCase().includes(q) && !row.label.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+  }, [data, statusFilter, search]);
 
   const history = useQuery({
     queryKey: ['sitemap-audit-history'],
@@ -153,53 +178,113 @@ export default function AdminSitemapStatus() {
   const latest = history.data?.[0];
   const robotsRows = (latest?.robots_check as Array<{ path: string; expected: string; actual: string; matched: string | null; ok: boolean }> | undefined) ?? [];
 
+  const pingMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await pingSearchEngines({ source: 'manual' });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: isAr ? 'تم إرسال التنبيه لمحركات البحث' : 'Search engines pinged' });
+    },
+    onError: (e: unknown) => {
+      toast({ title: isAr ? 'فشل إرسال التنبيه' : 'Ping failed', description: e instanceof Error ? e.message : '', variant: 'destructive' });
+    },
+  });
+
+  const copyUrl = (url: string) => {
+    navigator.clipboard?.writeText(url).then(() => {
+      toast({ title: isAr ? 'تم نسخ الرابط' : 'URL copied' });
+    }).catch(() => undefined);
+  };
+
+  const exportJson = () => {
+    const payload = { generatedAt: new Date().toISOString(), totalUrls, okCount, errorCount, results: data ?? [] };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `sitemap-status-${new Date().toISOString().slice(0,10)}.json`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold">{isAr ? 'حالة فهرسة Sitemap' : 'Sitemap Indexing Status'}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isAr ? 'فحص مباشر لـ XML والروابط واكتشاف SPA fallback' : 'Live XML check, link counts, and SPA fallback detection'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button onClick={() => refetch()} disabled={isFetching} variant="outline" className="gap-2">
-              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-              {isAr ? 'تحديث' : 'Refresh'}
-            </Button>
-            <Button onClick={() => runAndSave.mutate()} disabled={runAndSave.isPending} className="gap-2">
-              <Play className={`h-4 w-4 ${runAndSave.isPending ? 'animate-pulse' : ''}`} />
-              {isAr ? 'تشغيل وحفظ فحص' : 'Run & save audit'}
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          icon={Globe2}
+          eyebrow={isAr ? 'مركز الفهرسة' : 'Indexing center'}
+          title={isAr ? 'حالة فهرسة Sitemap' : 'Sitemap Indexing Status'}
+          subtitle={isAr ? 'فحص مباشر لـ XML والروابط، اكتشاف SPA fallback، وتنبيه محركات البحث.' : 'Live XML check, link counts, SPA fallback detection, and search engine pinging.'}
+          tone={errorCount ? 'warning' : 'success'}
+          actions={
+            <>
+              <Button onClick={exportJson} disabled={!data?.length} variant="outline" size="sm" className="gap-2">
+                <Download className="h-4 w-4" />
+                {isAr ? 'تصدير JSON' : 'Export JSON'}
+              </Button>
+              <Button onClick={() => pingMutation.mutate()} disabled={pingMutation.isPending} variant="outline" size="sm" className="gap-2">
+                <Send className={`h-4 w-4 ${pingMutation.isPending ? 'animate-pulse' : ''}`} />
+                {isAr ? 'إعلام محركات البحث' : 'Ping search engines'}
+              </Button>
+              <Button onClick={() => refetch()} disabled={isFetching} variant="outline" size="sm" className="gap-2">
+                <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                {isAr ? 'تحديث' : 'Refresh'}
+              </Button>
+              <Button onClick={() => runAndSave.mutate()} disabled={runAndSave.isPending} size="sm" className="gap-2">
+                <Play className={`h-4 w-4 ${runAndSave.isPending ? 'animate-pulse' : ''}`} />
+                {isAr ? 'تشغيل وحفظ' : 'Run & save'}
+              </Button>
+            </>
+          }
+          kpiSlot={
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <MetricCard label={isAr ? 'إجمالي الروابط' : 'Total URLs'} value={isLoading ? '—' : totalUrls} icon={Link2} tone="primary" hint={isAr ? 'داخل جميع sitemaps' : 'across all sitemaps'} />
+              <MetricCard label={isAr ? 'مسارات سليمة' : 'Healthy'} value={isLoading ? '—' : okCount} icon={CheckCircle2} tone="success" hint={`${healthScore}% ${isAr ? 'صحة' : 'health'}`} />
+              <MetricCard label={isAr ? 'أخطاء' : 'Errors'} value={isLoading ? '—' : errorCount} icon={AlertTriangle} tone={errorCount ? 'destructive' : 'muted'} />
+              <MetricCard label={isAr ? 'SPA fallback' : 'SPA fallback'} value={isLoading ? '—' : spaCount} icon={Activity} tone={spaCount ? 'warning' : 'muted'} hint={isAr ? 'يجب أن يكون 0' : 'should be 0'} />
+            </div>
+          }
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{isAr ? 'إجمالي روابط فهرسة' : 'Total indexable URLs'}</CardTitle></CardHeader>
-            <CardContent><div className="text-3xl font-bold tech-content">{isLoading ? '—' : totalUrls}</div></CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{isAr ? 'مسارات سليمة' : 'Healthy endpoints'}</CardTitle></CardHeader>
-            <CardContent><div className="text-3xl font-bold text-success dark:text-success tech-content">{isLoading ? '—' : okCount}</div></CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{isAr ? 'أخطاء / تحذيرات' : 'Errors / warnings'}</CardTitle></CardHeader>
-            <CardContent><div className={`text-3xl font-bold tech-content ${errorCount ? 'text-destructive dark:text-destructive' : 'text-muted-foreground'}`}>{isLoading ? '—' : errorCount}</div></CardContent>
-          </Card>
-        </div>
+        <FiltersBar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder={isAr ? 'ابحث برابط أو اسم نقطة…' : 'Search by URL or endpoint…'}
+          pills={[
+            { key: 'all',     label: isAr ? 'الكل' : 'All',         count: data?.length ?? 0, tone: 'default' },
+            { key: 'healthy', label: isAr ? 'سليمة' : 'Healthy',    count: okCount,           tone: 'success' },
+            { key: 'errors',  label: isAr ? 'أخطاء' : 'Errors',     count: errorCount,        tone: 'destructive' },
+            { key: 'spa',     label: 'SPA fallback',                count: spaCount,          tone: 'warning' },
+          ]}
+          activePill={statusFilter}
+          onPillSelect={(k) => setStatusFilter(k as typeof statusFilter)}
+          canClear={statusFilter !== 'all' || !!search}
+          onClear={() => { setStatusFilter('all'); setSearch(''); }}
+          clearLabel={isAr ? 'مسح' : 'Clear'}
+        />
 
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" />{isAr ? 'تفاصيل الفحص' : 'Endpoint details'}</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              {isAr ? 'تفاصيل الفحص' : 'Endpoint details'}
+              <Badge variant="secondary" className="ms-2 tech-content">{filteredRows.length}/{data?.length ?? 0}</Badge>
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-3">
             {isLoading && Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
-            {!isLoading && data?.map((row) => {
+            {!isLoading && filteredRows.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                {isAr ? 'لا توجد نتائج مطابقة للفلتر الحالي.' : 'No endpoints match the current filter.'}
+              </p>
+            )}
+            {!isLoading && filteredRows.map((row) => {
               const r = row.result;
               const Icon = r.ok ? CheckCircle2 : (r.status === 0 || r.isSpaFallback) ? XCircle : AlertTriangle;
-              const colorCls = r.ok ? 'text-success dark:text-success' : 'text-destructive dark:text-destructive';
+              const colorCls = r.ok ? 'text-success' : 'text-destructive';
+              const tone: 'success' | 'destructive' | 'warning' = r.ok ? 'success' : r.isSpaFallback ? 'warning' : 'destructive';
               return (
-                <div key={row.url} className="border rounded-xl p-4 hover-lift">
+                <div key={row.url} className={`border rounded-2xl p-4 hover-lift transition-colors ${r.ok ? 'bg-card' : r.isSpaFallback ? 'bg-warning/5 border-warning/30' : 'bg-destructive/5 border-destructive/30'}`}>
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
                       <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${colorCls}`} />
@@ -211,7 +296,7 @@ export default function AdminSitemapStatus() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant={r.ok ? 'default' : 'destructive'} className="tech-content">{r.status || 'ERR'}</Badge>
+                      <StatusBadge tone={tone} label={String(r.status || 'ERR')} />
                       {r.urlCount > 0 && (
                         <Badge variant="secondary" className="tech-content">
                           {r.urlCount} {isAr ? 'رابط' : 'urls'}
@@ -221,6 +306,9 @@ export default function AdminSitemapStatus() {
                       {!r.isXml && r.url.endsWith('.xml') === false && r.url.includes('functions/v1/sitemap') && (
                         <Badge variant="destructive">{isAr ? 'ليس XML' : 'Not XML'}</Badge>
                       )}
+                      <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => copyUrl(row.url)} aria-label={isAr ? 'نسخ الرابط' : 'Copy URL'}>
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </div>
                   <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-muted-foreground tech-content">
