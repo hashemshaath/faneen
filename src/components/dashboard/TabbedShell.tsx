@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -58,6 +58,14 @@ const TabbedShellInner: React.FC<TabbedShellProps> = ({ icon: Icon, title, descr
   const raw = params.get('tab');
   const active = raw && validKeys.includes(raw) ? raw : defaultKey;
 
+  // Localized title/subtitle — memoized so PageHeader (React.memo) skips
+  // re-rendering on unrelated parent updates (e.g. tab switches).
+  const headerTitle = useMemo(() => (isRTL ? title.ar : title.en), [isRTL, title]);
+  const headerSubtitle = useMemo(
+    () => (description ? (isRTL ? description.ar : description.en) : undefined),
+    [isRTL, description],
+  );
+
   // Memoize lazy components so they aren't re-created on each render.
   const lazyMap = useMemo(() => {
     const m: Record<string, React.LazyExoticComponent<React.ComponentType<unknown>>> = {};
@@ -65,23 +73,21 @@ const TabbedShellInner: React.FC<TabbedShellProps> = ({ icon: Icon, title, descr
     return m;
   }, [tabs]);
 
-  const onChange = (v: string) => {
-    const next = new URLSearchParams(params);
-    if (v === defaultKey) next.delete('tab');
-    else next.set('tab', v);
-    setParams(next, { replace: true });
-  };
+  const onChange = useCallback(
+    (v: string) => {
+      const next = new URLSearchParams(params);
+      if (v === defaultKey) next.delete('tab');
+      else next.set('tab', v);
+      setParams(next, { replace: true });
+    },
+    [params, defaultKey, setParams],
+  );
 
   return (
     <DashboardLayout>
       <EmbeddedPageContext.Provider value={true}>
         <div className="space-y-4 max-w-7xl mx-auto">
-          <PageHeader
-            icon={Icon}
-            title={isRTL ? title.ar : title.en}
-            subtitle={description ? (isRTL ? description.ar : description.en) : undefined}
-            tone="primary"
-          />
+          <PageHeader icon={Icon} title={headerTitle} subtitle={headerSubtitle} tone="primary" />
 
           <Tabs value={active} onValueChange={onChange} className="space-y-4">
             <TabsList className="flex flex-wrap h-auto justify-start gap-1 overflow-x-auto">
