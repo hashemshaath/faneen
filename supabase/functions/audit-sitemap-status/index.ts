@@ -31,6 +31,7 @@ interface EndpointResult {
   contentType: string;
   isXml: boolean;
   isSpaFallback: boolean;
+  headerXmlMismatch?: boolean;
   urlCount: number;
   lastmod: string | null;
   error?: string;
