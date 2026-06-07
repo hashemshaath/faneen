@@ -450,16 +450,38 @@ const DashboardProjects = () => {
     reorderMut.mutate(reordered.map((item, i: number) => ({ id: item.id, sort_order: i })));
   }, [filteredProjects, businessId, queryClient, reorderMut]);
 
+  /**
+   * Gallery sync. We receive (a) the full list of URLs after a
+   * MultiImageUpload mutation, and (b) optional pipeline metadata for
+   * the *newly* uploaded ones via `pendingMetas` (kept in a ref). We
+   * delete-and-reinsert all rows so the DB matches the on-screen order,
+   * carrying `image_asset_id` for any URL that maps to a known meta.
+   */
+  const pendingMetasRef = React.useRef<Map<string, string>>(new Map());
   const handleGalleryChange = useCallback(async (urls: string[]) => {
     if (!galleryProjectId) return;
+    // Preserve image_asset_id for URLs that already exist on disk by
+    // looking them up on the current galleryImages query data.
+    const existingByUrl = new Map<string, string | null>(
+      galleryImages.map((g) => [g.image_url as string, (g as { image_asset_id?: string | null }).image_asset_id ?? null]),
+    );
     await supabase.from('project_images').delete().eq('project_id', galleryProjectId);
     if (urls.length > 0) {
-      const rows = urls.map((url, i) => ({ project_id: galleryProjectId, image_url: url, sort_order: i }));
+      const rows = urls.map((url, i) => ({
+        project_id: galleryProjectId,
+        image_url: url,
+        sort_order: i,
+        image_asset_id:
+          pendingMetasRef.current.get(url) ??
+          existingByUrl.get(url) ??
+          null,
+      }));
       const { error } = await supabase.from('project_images').insert(rows);
       if (error) { toast.error(error.message); return; }
     }
+    pendingMetasRef.current.clear();
     queryClient.invalidateQueries({ queryKey: ['project-images', galleryProjectId] });
-  }, [galleryProjectId, queryClient]);
+  }, [galleryProjectId, queryClient, galleryImages]);
 
   const toggleSelect = useCallback((id: string) => setSelectedIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; }), []);
   const toggleSelectAll = useCallback(() => {
@@ -620,7 +642,17 @@ const DashboardProjects = () => {
                 {/* Cover Image */}
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
-                  <ImageUpload bucket="project-images" value={form.cover_image_url} onChange={url => setForm(f => ({ ...f, cover_image_url: url }))} onRemove={() => setForm(f => ({ ...f, cover_image_url: '' }))} compact placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'} />
+                  <ImageUpload
+                    bucket="project-images"
+                    pipeline="project"
+                    projectKind="cover"
+                    value={form.cover_image_url}
+                    onChange={url => setForm(f => ({ ...f, cover_image_url: url }))}
+                    onUploadedMeta={(meta) => setForm(f => ({ ...f, cover_image_asset_id: meta.imageAssetId ?? '' }))}
+                    onRemove={() => setForm(f => ({ ...f, cover_image_url: '', cover_image_asset_id: '' }))}
+                    compact
+                    placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'}
+                  />
                 </div>
 
                 {/* Descriptions */}
@@ -707,7 +739,21 @@ const DashboardProjects = () => {
               {galleryProject && <p className="text-xs text-muted-foreground">{language === 'ar' ? galleryProject.title_ar : (galleryProject.title_en || galleryProject.title_ar)}</p>}
             </CardHeader>
             <CardContent className="pb-5">
-              <MultiImageUpload bucket="project-images" images={galleryImages.map((img) => img.image_url)} onChange={handleGalleryChange} folder="gallery" maxImages={20} maxSizeMB={5} />
+              <MultiImageUpload
+                bucket="project-images"
+                pipeline="project"
+                projectKind="gallery"
+                images={galleryImages.map((img) => img.image_url)}
+                onChange={handleGalleryChange}
+                onUploadedMeta={(metas) => {
+                  for (const m of metas) {
+                    if (m.imageAssetId) pendingMetasRef.current.set(m.url, m.imageAssetId);
+                  }
+                }}
+                folder="gallery"
+                maxImages={20}
+                maxSizeMB={5}
+              />
               <p className="text-[10px] text-muted-foreground mt-2">{isRTL ? `${galleryImages.length} / 20 صورة` : `${galleryImages.length} / 20 images`}</p>
             </CardContent>
           </Card>
