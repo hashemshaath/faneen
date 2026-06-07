@@ -109,26 +109,30 @@ describe('BusinessCard badges & service tags', () => {
 });
 
 /**
- * Primary category badge — replaces the bare category text. Must render when
- * `business.categories` is present, and must render nothing otherwise.
+ * Phase 2.3 — Public UI is taxonomy-only. The legacy `business.categories`
+ * name must NEVER render. When no modern taxonomy is present the card shows
+ * a localized "Unclassified" badge instead.
  */
-describe('BusinessCard primary category badge', () => {
-  it('renders the category name when business.categories is set (Arabic)', () => {
+describe('BusinessCard primary category badge (taxonomy-only)', () => {
+  it('does NOT render the legacy categories.name_ar even when present (Arabic)', () => {
     renderCard(baseBiz);
-    expect(screen.getAllByText('ألمنيوم').length).toBeGreaterThan(0);
+    expect(screen.queryByText('ألمنيوم')).toBeNull();
+    expect(screen.getAllByText('غير مصنّف').length).toBeGreaterThan(0);
   });
 
-  it('renders the English category name when language is English', () => {
+  it('does NOT render the legacy categories.name_en even when present (English)', () => {
     setLanguage('en');
     renderCard(baseBiz);
-    expect(screen.getAllByText('Aluminum').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Aluminum')).toBeNull();
+    expect(screen.getAllByText('Unclassified').length).toBeGreaterThan(0);
   });
 
-  it('renders no category text when business.categories is missing', () => {
+  it('renders the "Unclassified" fallback badge when business.categories is missing', () => {
     const { categories: _omit, ...without } = baseBiz;
     renderCard(without);
     expect(screen.queryByText('ألمنيوم')).toBeNull();
     expect(screen.queryByText('Aluminum')).toBeNull();
+    expect(screen.getAllByText('غير مصنّف').length).toBeGreaterThan(0);
   });
 });
 

@@ -165,14 +165,14 @@ const BusinessProfile = () => {
 
   const businessName = business ? getLocalizedValue(language, business.name_ar, business.name_en) : '';
   const businessDesc = business ? (getLocalizedValue(language, business.description_ar, business.description_en) || getLocalizedValue(language, business.short_description_ar, business.short_description_en) || '') : '';
-  // Phase 13.a — taxonomy-first display label with legacy fallback.
-  const legacyCategoryName = business?.categories
-    ? getLocalizedValue(language, business.categories.name_ar, business.categories.name_en)
-    : '';
+  // Phase 2.3 — Public UI is taxonomy-only. The legacy `business.categories`
+  // name is intentionally NOT used for display, SEO title/desc, keywords or
+  // breadcrumb link text. The legacy join may still arrive from upstream
+  // queries (for the route `slug` used in internal links) but is never
+  // surfaced as a label.
   const taxonomyDisplay = useBusinessTaxonomyDisplay(business?.id, language);
   const categoryName =
-    (taxonomyDisplay.hasModernTaxonomy && taxonomyDisplay.primaryLabel) ||
-    legacyCategoryName;
+    (taxonomyDisplay.hasModernTaxonomy && taxonomyDisplay.primaryLabel) || '';
   const cityName = business?.cities ? getLocalizedValue(language, business.cities.name_ar, business.cities.name_en) : '';
 
   // business_profile_view — fires once per profile load (slug-based).
@@ -609,7 +609,7 @@ const BusinessProfile = () => {
                 {isRTL ? 'روابط مفيدة' : 'Useful links'}
               </h2>
               <ul className="flex flex-wrap gap-2 text-sm">
-                {(business.categories as { slug?: string } | null)?.slug && (
+                {categoryName && (business.categories as { slug?: string } | null)?.slug && (
                   <li>
                     <Link
                       to={`/sectors/${(business.categories as { slug?: string }).slug}`}
@@ -619,7 +619,7 @@ const BusinessProfile = () => {
                     </Link>
                   </li>
                 )}
-                {(business.categories as { slug?: string } | null)?.slug &&
+                {categoryName && (business.categories as { slug?: string } | null)?.slug &&
                   (business.cities as { slug?: string } | null)?.slug && (
                     <li>
                       <Link

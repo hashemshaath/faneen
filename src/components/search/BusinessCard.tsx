@@ -74,7 +74,11 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
   const name = language === 'ar' ? b.name_ar : (b.name_en || b.name_ar);
   const desc = language === 'ar' ? b.description_ar : (b.description_en || b.description_ar);
   const cityName = b.cities ? (language === 'ar' ? (b.cities as any).name_ar : (b.cities as any).name_en) : '';
-  const catName = b.categories ? (language === 'ar' ? (b.categories as any).name_ar : (b.categories as any).name_en) : '';
+  // Phase 2.3 — Public UI is taxonomy-only. The legacy `business.categories`
+  // name is intentionally NOT read for display (the join may still arrive
+  // from upstream queries but is ignored here). When no modern taxonomy is
+  // available we fall back to a localized "Unclassified" badge instead.
+  const catName = '';
   const tier = tierConfig[b.membership_tier];
   const serviceCount = Array.isArray((b as any).business_services) ? (b as any).business_services.filter((s) => s.is_active).length : 0;
   const rating = Number(b.rating_avg) || 0;
@@ -154,6 +158,8 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
 
   // Reusable compact category badge (icon + name). Renders nothing when the
   // provider has no linked category (e.g. the 5 QA-NULL services).
+  // Phase 2.3 — kept in the file (NOT deleted) but no longer referenced from
+  // public rendering. Retained for potential admin-only reuse.
   const CategoryBadge = ({ size = 'md' }: { size?: 'sm' | 'md' }) =>
     catName ? (
       <span
@@ -166,6 +172,19 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
         <span className="truncate max-w-[120px]">{catName}</span>
       </span>
     ) : null;
+
+  // Phase 2.3 — "Unclassified" public fallback badge.
+  const UnclassifiedBadge = ({ size = 'md' }: { size?: 'sm' | 'md' }) => (
+    <span
+      className={`inline-flex items-center gap-1 rounded-md bg-muted/60 text-muted-foreground border border-border/50 font-body ${
+        size === 'sm' ? 'px-1.5 py-0 text-[10px]' : 'px-2 py-0.5 text-[10px] sm:text-[11px]'
+      }`}
+      title={isRTL ? 'غير مصنّف' : 'Unclassified'}
+    >
+      <Layers className="w-2.5 h-2.5 shrink-0 opacity-60" />
+      <span className="truncate">{isRTL ? 'غير مصنّف' : 'Unclassified'}</span>
+    </span>
+  );
 
   // Reusable "+N service categories" diversity pill.
   const DiversityPill = ({ hideOnXs = false }: { hideOnXs?: boolean }) =>
@@ -237,9 +256,9 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
           </div>
           {hasTaxonomy ? (
             <TaxonomyBadges size="sm" />
-          ) : catName && (
+          ) : (
             <div className="mt-0.5">
-              <CategoryBadge size="sm" />
+              <UnclassifiedBadge size="sm" />
             </div>
           )}
           <UpdateTaxonomyHint />
@@ -334,9 +353,9 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
         </div>
         {hasTaxonomy ? (
           <TaxonomyBadges />
-        ) : catName && (
+        ) : (
           <div className="mt-0.5">
-            <CategoryBadge />
+            <UnclassifiedBadge />
           </div>
         )}
         <UpdateTaxonomyHint />

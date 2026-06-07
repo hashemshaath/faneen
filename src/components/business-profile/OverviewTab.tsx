@@ -68,15 +68,13 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
     business.description_en || business.short_description_en,
   );
   const cityName = getLocalizedValue(language, business.cities?.name_ar, business.cities?.name_en);
-  const legacyCategoryName = getLocalizedValue(
-    language,
-    business.categories?.name_ar,
-    business.categories?.name_en,
-  );
-  // Phase 13.a — taxonomy-first display with legacy fallback.
+  // Phase 2.3 — Public UI is taxonomy-only. We no longer fall back to
+  // `business.categories.name_*` for display; when no modern taxonomy is
+  // present we show a localized "Unclassified" label.
   const taxonomy = useBusinessTaxonomyDisplay(business.id, language);
   const categoryName =
-    (taxonomy.hasModernTaxonomy && taxonomy.primaryLabel) || legacyCategoryName;
+    (taxonomy.hasModernTaxonomy && taxonomy.primaryLabel) ||
+    bi("غير مصنّف", "Unclassified");
   const taxonomyChips = taxonomy.hasModernTaxonomy
     ? [...taxonomy.secondaryLabels, ...taxonomy.serviceLabels].slice(0, 4)
     : [];
@@ -135,7 +133,7 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
               {bi("التصنيف", "Sector")}
             </dt>
             <dd className="mt-0.5 truncate font-heading text-sm font-semibold text-foreground sm:text-base">
-              {categoryName || "—"}
+              {categoryName}
             </dd>
           </div>
           <div className="rounded-xl bg-muted/40 px-3 py-2 dark:bg-muted/15">

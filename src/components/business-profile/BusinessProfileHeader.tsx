@@ -23,6 +23,7 @@ import { VerificationStatusBadge } from "@/components/common/VerificationStatusB
 import { useAuth } from "@/contexts/AuthContext";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { BusinessIdentityStrip } from "@/components/business/BusinessIdentityStrip";
+import { useBusinessTaxonomyDisplay } from "@/modules/taxonomy/search-integration";
 
 export const Stars = ({ rating, size = "w-4 h-4" }: { rating: number; size?: string }) => (
   <div className="flex items-center gap-0.5">
@@ -113,7 +114,13 @@ export const BusinessProfileHeader = ({
     business.short_description_en || business.description_en,
   );
   const cityName = getLocalizedValue(language, business.cities?.name_ar, business.cities?.name_en);
-  const categoryName = getLocalizedValue(language, business.categories?.name_ar, business.categories?.name_en);
+  // Phase 2.3 — Public UI is taxonomy-only. The legacy `business.categories`
+  // name is intentionally not used for display. When no modern taxonomy is
+  // available we show a localized "Unclassified" label.
+  const taxonomy = useBusinessTaxonomyDisplay(business.id, language);
+  const categoryName = taxonomy.hasModernTaxonomy && taxonomy.primaryLabel
+    ? taxonomy.primaryLabel
+    : (language === "ar" ? "غير مصنّف" : "Unclassified");
   const memberDate = new Date(business.created_at).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US", {
     year: "numeric",
     month: "long",
