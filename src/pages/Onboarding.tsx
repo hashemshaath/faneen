@@ -39,6 +39,12 @@ import {
   getOwnerBusiness, updateBusinessById, getBusinessIdByRefOrLegacyRef,
 } from '@/modules/businesses';
 import { EntityVerificationStatusBadge } from '@/components/entities/EntityVerificationStatusBadge';
+import {
+  OnboardingTaxonomyStep,
+  EMPTY_ONBOARDING_TAXONOMY,
+  type OnboardingTaxonomyValue,
+} from '@/modules/taxonomy';
+import { setBusinessTaxonomyCategories } from '@/modules/taxonomy/business-services';
 
 // ──────────────────────────────────────────────────────────────────────────
 // New simplified flow (2026-05-29):
@@ -96,6 +102,10 @@ const Onboarding = () => {
   const [sectors, setSectors] = useState<SectorId[]>([]);
   const [subServices, setSubServices] = useState<string[]>([]);
 
+  // Phase 11 — central taxonomy selections (collected before business exists,
+  // persisted via RPC after creation; non-blocking on failure).
+  const [taxonomy, setTaxonomy] = useState<OnboardingTaxonomyValue>(EMPTY_ONBOARDING_TAXONOMY);
+
   // Documents
   const [logoUrl, setLogoUrl] = useState<string>('');
   const [logoUploading, setLogoUploading] = useState(false);
@@ -121,10 +131,11 @@ const Onboarding = () => {
       step, accountType, fullName, phone, countryCode,
       businessName, username, description: '',
       sectors, subServices,
+      taxonomy,
     });
     if (user?.id) void syncDraftToServer(user.id);
   }, [step, accountType, fullName, phone, countryCode, businessName, username,
-      sectors, subServices, draftLoaded, user?.id]);
+      sectors, subServices, taxonomy, draftLoaded, user?.id]);
 
   // Track step views + persist progress
   useEffect(() => {
@@ -197,6 +208,15 @@ const Onboarding = () => {
       if (d.username) setUsername(d.username);
       if (d.sectors?.length) setSectors(d.sectors as SectorId[]);
       if (d.subServices?.length) setSubServices(d.subServices);
+      if (d.taxonomy && typeof d.taxonomy === 'object') {
+        setTaxonomy({
+          entityTypeCategoryId: d.taxonomy.entityTypeCategoryId ?? null,
+          primaryActivityCategoryId: d.taxonomy.primaryActivityCategoryId ?? null,
+          secondaryActivityCategoryIds: Array.isArray(d.taxonomy.secondaryActivityCategoryIds)
+            ? d.taxonomy.secondaryActivityCategoryIds
+            : [],
+        });
+      }
       if (d.step && STEP_ORDER.includes(d.step as OnboardingStep)) {
         const draftStep = d.step as OnboardingStep;
         const isBusinessOnly = draftStep === 'business-details' || draftStep === 'documents';
@@ -293,6 +313,33 @@ const Onboarding = () => {
               approvalStatus: (bizRow as { approval_status?: string | null }).approval_status ?? null,
               isVerified: (bizRow as { is_verified?: boolean | null }).is_verified ?? null,
             });
+          }
+
+          // Phase 11 — persist central taxonomy selections (non-blocking).
+          // Failure here must NOT fail the onboarding flow; the user can
+          // update the classification later from the dashboard.
+          if (businessId && (
+            taxonomy.entityTypeCategoryId ||
+            taxonomy.primaryActivityCategoryId ||
+            taxonomy.secondaryActivityCategoryIds.length > 0
+          )) {
+            try {
+              await setBusinessTaxonomyCategories(businessId, {
+                entityTypeCategoryId: taxonomy.entityTypeCategoryId,
+                primaryActivityCategoryId: taxonomy.primaryActivityCategoryId,
+                secondaryActivityCategoryIds: taxonomy.secondaryActivityCategoryIds,
+              });
+            } catch (taxErr) {
+              if (import.meta.env.DEV) {
+                // eslint-disable-next-line no-console
+                console.warn('[onboarding] taxonomy persist failed', taxErr);
+              }
+              toast.warning(
+                isRTL
+                  ? 'تم إنشاء المنشأة، لكن تعذر حفظ التصنيف. يمكنك تحديثه لاحقًا من صفحة تعديل المنشأة.'
+                  : 'Business created, but the classification could not be saved. You can update it later from the business edit page.',
+              );
+            }
           }
         } catch { /* non-blocking */ }
       }
@@ -723,6 +770,9 @@ const Onboarding = () => {
                        : 'Pick the sectors your business operates in (up to 5).'}
               </p>
             </div>
+
+            {/* Phase 11 — central taxonomy (non-blocking, optional). */}
+            <OnboardingTaxonomyStep value={taxonomy} onChange={setTaxonomy} />
 
             <Button onClick={onContinue} disabled={!allValid || loading}
               className="w-full" variant="hero">
