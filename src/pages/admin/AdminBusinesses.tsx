@@ -103,6 +103,7 @@ import { useAdminSavedViews } from '@/hooks/useAdminSavedViews';
 import { BusinessFiltersToolbar } from '@/components/admin/businesses/BusinessFiltersToolbar';
 import { BusinessBulkActionBar } from '@/components/admin/businesses/BusinessBulkActionBar';
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
+import { BusinessTaxonomySection } from '@/modules/taxonomy';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -1988,15 +1989,28 @@ const AdminBusinesses = () => {
                     </div>
                     <Input value={editForm.name_en} onChange={e => setField('name_en', e.target.value)} dir="ltr" />
                   </div>
-                  <div>
-                    <Label className="text-xs">{isRTL ? 'التصنيف' : 'Category'}</Label>
-                    <Select value={editForm.category_id} onValueChange={v => setField('category_id', v)}>
-                      <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
-                      <SelectContent>
-                        {categories.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <BusinessTaxonomySection
+                    businessId={editingBiz.id}
+                    legacySectors={Array.isArray(editingBiz.sectors) ? editingBiz.sectors : null}
+                    legacySubServices={Array.isArray(editingBiz.sub_services) ? editingBiz.sub_services : null}
+                    onSaved={() => {
+                      queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+                    }}
+                  />
+                  <details className="rounded-xl border border-border/50 bg-muted/20 p-3">
+                    <summary className="cursor-pointer select-none text-xs font-medium text-muted-foreground hover:text-foreground">
+                      {isRTL ? 'التصنيف القديم (احتياطي فقط)' : 'Legacy category (fallback only)'}
+                    </summary>
+                    <div className="mt-3 space-y-1.5">
+                      <Label className="text-xs">{isRTL ? 'التصنيف القديم' : 'Legacy category'}</Label>
+                      <Select value={editForm.category_id} onValueChange={v => setField('category_id', v)}>
+                        <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
+                        <SelectContent>
+                          {categories.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </details>
                   <Separator />
                   <div className="p-3 rounded-xl bg-muted/30 border border-border/30 text-[10px] space-y-1 text-muted-foreground font-mono">
                     {/* Primary reference — official platform identifier */}
