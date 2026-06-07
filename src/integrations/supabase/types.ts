@@ -2111,13 +2111,6 @@ export type Database = {
             referencedRelation: "businesses_public"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "brand_product_requests_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
         ]
       }
       brand_products: {
@@ -2215,13 +2208,6 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brand_products_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
@@ -4024,74 +4010,6 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      categories: {
-        Row: {
-          created_at: string
-          description_ar: string | null
-          description_en: string | null
-          featured_keywords: string[] | null
-          icon: string | null
-          id: string
-          is_active: boolean
-          name_ar: string
-          name_en: string
-          parent_id: string | null
-          seo_description_ar: string | null
-          seo_description_en: string | null
-          seo_title_ar: string | null
-          seo_title_en: string | null
-          slug: string
-          sort_order: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description_ar?: string | null
-          description_en?: string | null
-          featured_keywords?: string[] | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean
-          name_ar: string
-          name_en: string
-          parent_id?: string | null
-          seo_description_ar?: string | null
-          seo_description_en?: string | null
-          seo_title_ar?: string | null
-          seo_title_en?: string | null
-          slug: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description_ar?: string | null
-          description_en?: string | null
-          featured_keywords?: string[] | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean
-          name_ar?: string
-          name_en?: string
-          parent_id?: string | null
-          seo_description_ar?: string | null
-          seo_description_en?: string | null
-          seo_title_ar?: string | null
-          seo_title_en?: string | null
-          slug?: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "categories_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
@@ -6596,13 +6514,6 @@ export type Database = {
             referencedRelation: "contract_template_versions_public"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "contract_templates_service_category_id_fkey"
-            columns: ["service_category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
         ]
       }
       contract_versions: {
@@ -6867,13 +6778,6 @@ export type Database = {
             columns: ["pricing_method"]
             isOneToOne: false
             referencedRelation: "contract_measurement_methods"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contracts_service_category_id_fkey"
-            columns: ["service_category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
           {
@@ -11537,13 +11441,6 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "private_sectors_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
           {
@@ -17598,13 +17495,6 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "private_sectors_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
           {
