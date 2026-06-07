@@ -12,6 +12,7 @@ import { Bookmark, BookmarkX, Calendar, Eye, BookOpen, Search, X } from 'lucide-
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { PageHeader } from '@/components/shared';
 
 const categoryLabels: Record<string, { ar: string; en: string }> = {
   general: { ar: 'عام', en: 'General' },
@@ -84,17 +85,13 @@ const DashboardBookmarks = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-heading font-bold text-2xl flex items-center gap-2">
-              <Bookmark className="w-6 h-6 text-accent" />
-              {isRTL ? 'المقالات المحفوظة' : 'Saved Articles'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isRTL ? `${bookmarks.length} مقال محفوظ` : `${bookmarks.length} saved articles`}
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          icon={Bookmark}
+          tone="accent"
+          eyebrow={isRTL ? 'المكتبة' : 'Library'}
+          title={isRTL ? 'المقالات المحفوظة' : 'Saved Articles'}
+          subtitle={isRTL ? `${bookmarks.length} مقال محفوظ` : `${bookmarks.length} saved articles`}
+        />
 
         {/* Search & Filter Bar */}
         {bookmarks.length > 0 && (
