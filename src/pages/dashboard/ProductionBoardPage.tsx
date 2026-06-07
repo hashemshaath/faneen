@@ -43,6 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { PageHeader } from "@/components/shared";
 import { KpiStrip } from "@/components/dashboard/KpiCard";
 import { DiagnosticsCard } from "@/components/dashboard/DiagnosticsCard";
 import { HealthBadge } from "@/components/health/HealthBadge";
