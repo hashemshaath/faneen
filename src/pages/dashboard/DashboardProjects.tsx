@@ -47,7 +47,7 @@ type StatusFilter = 'all' | 'published' | 'draft' | 'featured';
 
 /* ── Sortable Project Card ── */
 const SortableProjectCard = React.memo(({
-  project: p, rtl, language, viewMode, isSelected,
+  project: p, rtl, language, viewMode, isSelected, taxonomyName,
   onEdit, onGallery, onDelete, onToggleFeatured, onDuplicate, onPreview, onSelect,
 }: {
   project: any; rtl: boolean; language: string; viewMode: ViewMode; isSelected: boolean;
@@ -58,7 +58,7 @@ const SortableProjectCard = React.memo(({
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : undefined };
-  const catName = arguments[0].taxonomyName ?? null;
+  const catName = taxonomyName ?? (rtl ? 'غير مصنّف' : 'Uncategorized');
   const cityName = p.cities ? (language === 'ar' ? p.cities.name_ar : p.cities.name_en) : null;
   const title = language === 'ar' ? p.title_ar : (p.title_en || p.title_ar);
   const desc = language === 'ar' ? p.description_ar : (p.description_en || p.description_ar);
