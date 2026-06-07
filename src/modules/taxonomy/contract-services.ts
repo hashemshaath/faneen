@@ -110,15 +110,17 @@ export async function previewServiceCategoryTaxonomyMapping(
   // Fall back to the admin-managed legacy mapping table.
   const { data: mapping } = await supabase
     .from('taxonomy_legacy_mappings')
-    .select('taxonomy_slug')
-    .eq('legacy_key', legacySlug.toLowerCase())
+    .select('taxonomy_category_id')
+    .eq('legacy_source', 'categories')
+    .eq('legacy_slug', legacySlug)
+    .eq('mapping_status', 'mapped')
     .maybeSingle();
-  const mappedSlug = (mapping as { taxonomy_slug?: string | null } | null)?.taxonomy_slug ?? null;
-  if (!mappedSlug) return null;
+  const mappedId = (mapping as { taxonomy_category_id?: string | null } | null)?.taxonomy_category_id ?? null;
+  if (!mappedId) return null;
   const { data: mapped } = await supabase
     .from('taxonomy_categories')
     .select('*')
-    .eq('slug', mappedSlug)
+    .eq('id', mappedId)
     .eq('is_active', true)
     .maybeSingle();
   return mapped ? { category: mapped as TaxonomyCategory, via: 'legacy-map' } : null;
