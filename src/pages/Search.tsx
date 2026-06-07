@@ -79,6 +79,7 @@ const SearchPage = () => {
     priceMin: Number(searchParams.get('price_min')) || 0,
     priceMax: Number(searchParams.get('price_max')) || 0,
     serviceCategoryId: searchParams.get('serviceCategory') || 'all',
+    regionId: searchParams.get('region') || 'all',
   });
 
   // Phase 7 — Taxonomy-first augmentation. Resolves URL params (category /
@@ -412,6 +413,7 @@ const SearchPage = () => {
       priceMin: Number(sp.get('price_min')) || 0,
       priceMax: Number(sp.get('price_max')) || 0,
       serviceCategoryId: sp.get('serviceCategory') || 'all',
+      regionId: sp.get('region') || 'all',
     };
     setFilters(next);
     setQuery(sp.get('q') || '');
