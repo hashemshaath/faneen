@@ -511,8 +511,13 @@ export default function AdminSitemapStatus() {
                         </Badge>
                       )}
                       {r.isSpaFallback && <Badge variant="destructive">{isAr ? 'SPA HTML!' : 'SPA HTML!'}</Badge>}
-                      {!r.isXml && r.url.endsWith('.xml') === false && r.url.includes('functions/v1/sitemap') && (
+                      {!r.isXml && !row.url.endsWith('/robots.txt') && (
                         <Badge variant="destructive">{isAr ? 'ليس XML' : 'Not XML'}</Badge>
+                      )}
+                      {r.headerXmlMismatch && (
+                        <Badge variant="secondary" className="bg-warning/15 text-warning border-warning/30 tech-content">
+                          {isAr ? 'Header غير دقيق' : 'Header mismatch'}
+                        </Badge>
                       )}
                       <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => copyUrl(row.url)} aria-label={isAr ? 'نسخ الرابط' : 'Copy URL'}>
                         <Copy className="h-3.5 w-3.5" />
