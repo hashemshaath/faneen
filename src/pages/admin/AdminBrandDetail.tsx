@@ -755,7 +755,6 @@ const AdminBrandDetail: React.FC = () => {
                         variants={p.image_variants ?? null}
                         originalUrl={p.image_url}
                         alt={p.name_ar}
-                        preferredVariant="card"
                         sizes="(max-width: 768px) 100vw, 320px"
                         className="w-full h-28 object-cover rounded-lg border bg-background mb-2"
                       />
