@@ -276,16 +276,13 @@ const DashboardSettings = () => {
   return (
     <DashboardLayout>
       <div className="space-y-4 max-w-4xl">
-        {/* Header */}
-        <div>
-          <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-            <Settings2 className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
-            {isRTL ? 'الإعدادات' : 'Settings'}
-          </h1>
-          <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
-            {isRTL ? 'إدارة حسابك ومظهرك وأمانك' : 'Manage your account, appearance, and security'}
-          </p>
-        </div>
+        <PageHeader
+          icon={Settings2}
+          tone="accent"
+          eyebrow={isRTL ? 'الحساب' : 'Account'}
+          title={isRTL ? 'الإعدادات' : 'Settings'}
+          subtitle={isRTL ? 'إدارة حسابك ومظهرك وأمانك' : 'Manage your account, appearance, and security'}
+        />
 
         {/* Tab Navigation */}
         <div className="overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0">

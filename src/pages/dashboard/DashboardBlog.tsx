@@ -545,26 +545,19 @@ const DashboardBlog = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* ─── Header ─── */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center shadow-sm">
-                <BookOpen className="w-5 h-5 text-primary" />
-              </div>
-              {isRTL ? 'إدارة المدونة' : 'Blog Management'}
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              {isRTL ? 'إنشاء وإدارة وتحسين المقالات لمحركات البحث' : 'Create, manage & optimize articles for SEO'}
-            </p>
-          </div>
-          {!showForm && (
+        <PageHeader
+          icon={BookOpen}
+          tone="primary"
+          eyebrow={isRTL ? 'المحتوى' : 'Content'}
+          title={isRTL ? 'إدارة المدونة' : 'Blog Management'}
+          subtitle={isRTL ? 'إنشاء وإدارة وتحسين المقالات لمحركات البحث' : 'Create, manage & optimize articles for SEO'}
+          actions={!showForm ? (
             <Button onClick={() => { resetForm(); setShowForm(true); }} className="gap-2 rounded-xl h-10 px-5">
               <Plus className="w-4 h-4" />
               {isRTL ? 'مقال جديد' : 'New Article'}
             </Button>
-          )}
-        </div>
+          ) : undefined}
+        />
 
         {/* ─── Stats ─── */}
         {!showForm && (

@@ -156,23 +156,18 @@ const DashboardWarranties = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="font-heading font-bold text-2xl flex items-center gap-2">
-              <Shield className="w-6 h-6 text-primary" />
-              {isRTL ? 'إدارة الضمانات' : 'Warranty Management'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isRTL ? 'إدارة ومتابعة ضمانات العقود والخدمات' : 'Manage and track contract and service warranties'}
-            </p>
-          </div>
-          {!showForm && (
+        <PageHeader
+          icon={Shield}
+          tone="primary"
+          eyebrow={isRTL ? 'الضمانات' : 'Warranty'}
+          title={isRTL ? 'إدارة الضمانات' : 'Warranty Management'}
+          subtitle={isRTL ? 'إدارة ومتابعة ضمانات العقود والخدمات' : 'Manage and track contract and service warranties'}
+          actions={!showForm ? (
             <Button variant="default" onClick={() => { closeForm(); setShowForm(true); }} className="shrink-0">
               <Plus className="w-4 h-4 me-2" />{isRTL ? 'إضافة ضمان' : 'Add Warranty'}
             </Button>
-          )}
-        </div>
+          ) : undefined}
+        />
 
         {/* Stats */}
         {warranties.length > 0 && (
