@@ -24,6 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { BusinessIdentityStrip } from "@/components/business/BusinessIdentityStrip";
 import { useBusinessTaxonomyDisplay } from "@/modules/taxonomy/search-integration";
+import { ResponsiveImage } from "@/modules/files";
 
 export const Stars = ({ rating, size = "w-4 h-4" }: { rating: number; size?: string }) => (
   <div className="flex items-center gap-0.5">
@@ -156,7 +157,14 @@ export const BusinessProfileHeader = ({
     <header className="relative">
       <div className="relative h-28 overflow-hidden bg-primary sm:h-52 md:h-72">
         {business.cover_url ? (
-          <img src={business.cover_url} alt={name} className="h-full w-full object-cover" loading="eager" />
+          <ResponsiveImage
+            originalUrl={business.cover_url}
+            variants={business.cover_image_variants}
+            alt={name}
+            sizes="100vw"
+            priority
+            className="h-full w-full object-cover"
+          />
         ) : (
           <>
             <div
@@ -177,7 +185,13 @@ export const BusinessProfileHeader = ({
           <div className="flex flex-row items-start gap-3 sm:gap-6">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-accent/20 bg-background shadow-lg dark:border-accent/30 sm:h-28 sm:w-28 sm:rounded-3xl">
               {business.logo_url ? (
-                <img src={business.logo_url} alt={name} className="h-full w-full object-cover" loading="lazy" decoding="async"/>
+                <ResponsiveImage
+                  originalUrl={business.logo_url}
+                  variants={business.logo_image_variants}
+                  alt={name}
+                  sizes="(max-width: 640px) 64px, 112px"
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <span className="font-heading text-2xl font-black text-accent sm:text-4xl">
                   {name.charAt(0) || "ق"}
