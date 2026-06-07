@@ -1,5 +1,4 @@
 import React from 'react';
-import { useLanguage } from '@/i18n/LanguageContext';
 
 export interface AdminPageHeaderCrumb {
   label: string;
@@ -43,7 +42,7 @@ const TONE_MAP: Record<NonNullable<AdminPageHeaderProps['tone']>, string> = {
  * Provides a consistent gradient header card with breadcrumbs, title,
  * subtitle, action buttons and an optional KPI/extras slot. RTL-aware.
  */
-export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
+const AdminPageHeaderImpl: React.FC<AdminPageHeaderProps> = ({
   title,
   subtitle,
   icon: Icon,
@@ -52,7 +51,6 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
   kpiSlot,
   tone = 'accent',
 }) => {
-  useLanguage(); // keep hook stable for RTL-aware children that read context
   return (
     <section
       aria-label={title}
@@ -91,5 +89,16 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
     </section>
   );
 };
+
+/**
+ * `AdminPageHeader` is referentially-stable when its props don't change.
+ * Wrapped in `React.memo` so it doesn't re-render on every parent update
+ * (TabbedShell, tab switches, route param changes). Direction comes from
+ * logical CSS, so the header no longer needs to subscribe to the
+ * LanguageContext — that subscription previously forced a re-render
+ * across every language toggle for *all* admin/dashboard pages.
+ */
+export const AdminPageHeader = React.memo(AdminPageHeaderImpl);
+AdminPageHeader.displayName = 'AdminPageHeader';
 
 export default AdminPageHeader;
