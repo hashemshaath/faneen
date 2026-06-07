@@ -9,8 +9,9 @@ import {
 import {
   Star, ShieldCheck, SlidersHorizontal, RotateCcw, ChevronRight, ChevronLeft, MapPin, ArrowUpDown, Tag, Wallet, ChevronDown, Layers,
 } from 'lucide-react';
-import { CategoryTree } from './CategoryTree';
-import { TagsFilter } from './TagsFilter';
+// Phase 2.5 — Search UI is taxonomy-only. The legacy `CategoryTree` and
+// `TagsFilter` components are intentionally NOT imported here anymore; they
+// remain in the codebase (not deleted) for potential admin/internal reuse.
 import type { SearchFilterValues } from '@/services/search/useSearch';
 import { useCategoryCounts } from '@/services/categories/useCategoryCounts';
 import { useSearchableTaxonomyCategories } from '@/modules/taxonomy/search-integration';
@@ -37,6 +38,15 @@ export const SearchFilters = ({
 }: SearchFiltersProps) => {
   const { t, language, isRTL } = useLanguage();
 
+  // Phase 2.5 — Resolve the active category label from taxonomy first; the
+  // legacy `categories` prop is kept only as a silent fallback so existing
+  // ?sector=… deep links still display a readable summary while the new
+  // chips drive ?category=slug.
+  const { data: taxonomyCats } = useSearchableTaxonomyCategories();
+  const selectedTaxonomyCat = taxonomyCats?.find(
+    (c) => c.slug === filters.categoryId || c.id === filters.categoryId,
+  );
+
   const activeCount = [
     filters.categoryId !== 'all',
     filters.cityId !== 'all',
@@ -45,9 +55,17 @@ export const SearchFilters = ({
     filters.priceMin > 0,
     filters.priceMax > 0,
     filters.serviceCategoryId !== 'all',
-  ].filter(Boolean).length + selectedTags.length;
+  ].filter(Boolean).length;
 
-  const selectedCategory = categories?.find(c => c.id === filters.categoryId);
+  const selectedCategoryLabel = selectedTaxonomyCat
+    ? (language === 'ar'
+        ? selectedTaxonomyCat.name_ar
+        : (selectedTaxonomyCat.name_en || selectedTaxonomyCat.name_ar))
+    : (categories?.find(c => c.id === filters.categoryId || c.slug === filters.categoryId)
+        ? (language === 'ar'
+            ? categories!.find(c => c.id === filters.categoryId || c.slug === filters.categoryId)!.name_ar
+            : categories!.find(c => c.id === filters.categoryId || c.slug === filters.categoryId)!.name_en)
+        : '');
   const selectedCity = cities?.find(c => c.id === filters.cityId);
   const selectedServiceCategory = categories?.find(c => c.id === filters.serviceCategoryId || c.slug === filters.serviceCategoryId);
   const sortLabels: Record<SearchFilterValues['sortBy'], { ar: string; en: string }> = {
@@ -113,17 +131,12 @@ export const SearchFilters = ({
             {/* Category */}
             <FilterCard
               icon={Tag}
-              label={t('search.category')}
-              summary={selectedCategory ? (language === 'ar' ? selectedCategory.name_ar : selectedCategory.name_en) : ''}
+              label={isRTL ? 'اختر النشاط أو الخدمة' : 'Pick an activity or service'}
+              summary={selectedCategoryLabel}
             >
-              <TaxonomyCategoryChips
+              <TaxonomyCategoryFilter
                 value={filters.categoryId}
                 onChange={(v) => onFilterChange('categoryId', v)}
-              />
-              <CategoryTree
-                categories={(categories || []) as any}
-                selectedId={filters.categoryId}
-                onSelect={v => onFilterChange('categoryId', v)}
               />
             </FilterCard>
 
@@ -255,13 +268,10 @@ export const SearchFilters = ({
             </FilterCard>
 
             {/* Tags */}
-            {onToggleTag && onClearTags && (
-              <TagsFilter
-                selectedTags={selectedTags}
-                onToggleTag={onToggleTag}
-                onClearTags={onClearTags}
-              />
-            )}
+            {/* Phase 2.5 — Legacy TagsFilter is intentionally hidden in the
+                search UI. The `selectedTags` / `onToggleTag` / `onClearTags`
+                props remain in the component signature for backwards
+                compatibility with the parent page but are not rendered. */}
           </div>
         )}
       </div>
