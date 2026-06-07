@@ -175,17 +175,9 @@ export const HeroV2 = () => {
     return () => mq.removeEventListener?.('change', apply);
   }, []);
 
-  // Preload the LCP hero image at the document level (highest priority).
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = heroSlide1;
-    link.setAttribute('fetchpriority', 'high');
-    document.head.appendChild(link);
-    return () => { document.head.removeChild(link); };
-  }, []);
+  // (LCP preload moved to module-evaluation time — see top of file. We do
+  // NOT remove it on unmount because the preloaded resource is consumed by
+  // the <img> below within the same render cycle.)
 
   // Mount the active slide + warm-prefetch the next one (low priority).
   useEffect(() => {
