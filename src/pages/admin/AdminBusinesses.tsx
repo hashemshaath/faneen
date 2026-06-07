@@ -335,7 +335,7 @@ const AdminBusinesses = () => {
   const [isPending, startTransition] = useTransition();
   const [verifyConfirm, setVerifyConfirm] = useState<{ id: string; name: string; value: boolean } | null>(null);
 
-  const setField = useCallback((key: string, value: string | number | boolean | null) => {
+  const setField = useCallback((key: string, value: unknown) => {
     setEditForm((f) => ({ ...f, [key]: value }));
   }, []);
 
