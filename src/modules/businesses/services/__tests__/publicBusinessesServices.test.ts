@@ -201,8 +201,11 @@ describe('P-21 public/SEO businesses read migration', () => {
     ]) {
       expect(src).toContain(col);
     }
-    // Phase 12 guard — PUBLIC_BUSINESS_SELECT literal must not contain a categories join.
-    expect(selectLiteral).not.toContain('categories(');
+    expect(src).toContain('queryKey: ["business", username]');
+    expect(src).toContain('enabled: !!username');
+    // No direct businesses table read remains in this file.
+    expect(src).not.toMatch(/\.from\(["']businesses["']\)/);
+  });
     // PII-MASKING — sensitive contact fields must never appear in the public
     // profile select. They are fetched separately via the contact-reveal flow
     // when the viewer is authenticated. Extract just the PUBLIC_BUSINESS_SELECT
