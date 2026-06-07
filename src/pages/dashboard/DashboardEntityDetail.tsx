@@ -162,17 +162,22 @@ const DashboardEntityDetail: React.FC = () => {
     enabled: !!id,
   });
 
+  // Phase 16 — entity category display is taxonomy-first.
   const { data: category } = useQuery({
-    queryKey: ['entity-category', biz?.category_id],
+    queryKey: ['entity-taxonomy-primary', id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('categories')
-        .select('id, name_ar, name_en, icon')
-        .eq('id', biz!.category_id!)
-        .maybeSingle();
-      return data as CategoryRow | null;
+      if (!id) return null;
+      const labels = await (await import('@/modules/taxonomy/business-services')).getPrimaryTaxonomyLabelsForBusinesses([id]);
+      const lbl = labels[id];
+      if (!lbl) return null;
+      return {
+        id: lbl.category_id,
+        name_ar: lbl.name_ar,
+        name_en: lbl.name_en,
+        icon: lbl.icon,
+      } as CategoryRow;
     },
-    enabled: !!biz?.category_id,
+    enabled: !!id,
   });
 
   const { data: branches } = useQuery({
@@ -308,7 +313,7 @@ const DashboardEntityDetail: React.FC = () => {
       { key: 'username', ok: !!biz?.username, label: pickBi(isRTL, 'اسم المستخدم', 'Username') },
       { key: 'email', ok: !!biz?.email, label: pickBi(isRTL, 'البريد', 'Email') },
       { key: 'phone', ok: !!biz?.phone, label: pickBi(isRTL, 'الهاتف', 'Phone') },
-      { key: 'category', ok: !!biz?.category_id, label: pickBi(isRTL, 'التصنيف', 'Category') },
+      { key: 'category', ok: !!category, label: pickBi(isRTL, 'التصنيف', 'Category') },
       { key: 'verified', ok: !!biz?.is_verified, label: pickBi(isRTL, 'التوثيق', 'Verified') },
       { key: 'branch', ok: (branches ?? []).length > 0, label: pickBi(isRTL, 'فرع واحد على الأقل', 'At least one branch') },
       { key: 'team', ok: (staff ?? []).length > 0, label: pickBi(isRTL, 'عضو فريق', 'Team member') },

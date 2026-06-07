@@ -235,8 +235,11 @@ export const authService = {
         name_ar: sanitizedName,
         ...(extras?.name_en ? { name_en: sanitizeInput(extras.name_en) } : {}),
         username: sanitizedUsername,
-        sectors: extras?.sectors ?? [],
-        sub_services: extras?.sub_services ?? [],
+        // Phase 16 — `sectors` / `sub_services` are legacy columns; the
+        // canonical activity classification now lives in
+        // `business_taxonomy_categories` and is written via
+        // `set_business_taxonomy_categories` from the onboarding flow.
+        // The legacy columns remain in DB for read-only historical access.
         description_ar: extras?.description_ar ? sanitizeInput(extras.description_ar) : null,
         approval_status: 'draft',
         username_status: 'pending',

@@ -3,9 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 /**
  * Canonical wrapper for the ContractDetail business join used by both the
  * visible contract header and the PDF export. Preserves `.maybeSingle()`
- * semantics and the exact `categories(name_ar, name_en)` join.
+ * semantics. Phase 16: legacy `categories(...)` join removed; category
+ * labels are resolved via the taxonomy module on the consumer side.
  */
-const DEFAULT_SELECT = '*, categories(name_ar, name_en)';
+const DEFAULT_SELECT = '*';
 
 export interface GetBusinessForContractOptions {
   select?: string;

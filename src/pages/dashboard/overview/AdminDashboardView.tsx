@@ -68,7 +68,8 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
           select: 'id, status, total_amount, created_at',
           count: { mode: 'exact' },
         }),
-        supabase.from('categories').select('id', { count: 'exact', head: true }),
+        // Phase 16 — count from the central taxonomy instead of legacy `categories`.
+        supabase.from('taxonomy_categories').select('id', { count: 'exact', head: true }).eq('is_active', true).eq('is_archived', false),
         countConversationsTotal(),
         countActiveMembershipSubscriptions(),
         countByRole(),

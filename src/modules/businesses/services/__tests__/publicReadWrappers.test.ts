@@ -19,7 +19,7 @@ describe('R4B public read wrappers preserve verbatim query shape', () => {
     const src = read('src/modules/businesses/services/public/listTopPublicProviders.ts');
     expect(src).toContain("from('businesses_public')");
     expect(src).toContain(
-      'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, membership_tier, is_verified, category_id, categories(name_ar, name_en), cities(name_ar, name_en)',
+      'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, membership_tier, is_verified, cities(name_ar, name_en)',
     );
     expect(src).toContain(".eq('is_active', true)");
     expect(src).toContain(".gt('rating_count', 0)");

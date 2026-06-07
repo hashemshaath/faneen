@@ -6,6 +6,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { listCompareBusinesses, listBusinessesByIds } from '@/modules/businesses';
+import { getPrimaryTaxonomyLabelsForBusinesses, type PrimaryTaxonomyLabel } from '@/modules/taxonomy/business-services';
 
 // Loose row shapes for the Compare picker + detail view. These mirror the
 // fields previously inferred from the Supabase typed `from('businesses')`
@@ -20,7 +21,6 @@ type CompareBizRow = {
   logo_url: string | null;
   rating_avg: number | null;
   rating_count: number | null;
-  categories: CompareJoinedName;
   cities: CompareJoinedName;
 };
 type CompareService = {
@@ -124,7 +124,7 @@ const Compare = () => {
         select:
           'id, username, name_ar, name_en, logo_url, ' +
           'rating_avg, rating_count, is_verified, membership_tier, ' +
-          'categories(name_ar, name_en), cities(name_ar, name_en), ' +
+          'cities(name_ar, name_en), ' +
           'business_services(name_ar, name_en, price_from, price_to, currency_code), ' +
           'provider_installment_settings(is_enabled, max_installments)',
         // SERVICE-ACTIVATION-GOVERNANCE-FINAL — only embed eligible
@@ -140,6 +140,24 @@ const Compare = () => {
     },
     enabled: selectedIds.length > 0,
   });
+
+  // Phase 16 — resolve taxonomy display labels for the picker + detail rows.
+  const { data: taxonomyLabels = {} } = useQuery<Record<string, PrimaryTaxonomyLabel>>({
+    queryKey: ['compare-taxonomy-labels', selectedIds, allBusinesses.map((b) => b.id).sort().join(',')],
+    queryFn: async () => {
+      const ids = Array.from(new Set([...selectedIds, ...allBusinesses.map((b) => b.id)]));
+      if (!ids.length) return {};
+      return await getPrimaryTaxonomyLabelsForBusinesses(ids);
+    },
+    enabled: selectedIds.length > 0 || allBusinesses.length > 0,
+  });
+
+  const labelFor = (bizId: string): string => {
+    const lbl = taxonomyLabels[bizId];
+    if (!lbl) return isRTL ? 'غير مصنّف' : 'Uncategorized';
+    const name = isRTL ? lbl.name_ar : lbl.name_en;
+    return name || (isRTL ? 'غير مصنّف' : 'Uncategorized');
+  };
 
   const { data: reviewsMap = {} } = useQuery({
     queryKey: ['compare-reviews', selectedIds],
@@ -226,7 +244,7 @@ const Compare = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{isRTL ? b.name_ar : (b.name_en || b.name_ar)}</p>
-                      <p className="text-xs text-muted-foreground">{(b as Record<string, unknown> & { categories?: { name_ar?: string } }).categories?.name_ar}</p>
+                      <p className="text-xs text-muted-foreground">{labelFor(b.id)}</p>
                     </div>
                     <div className="flex items-center gap-1 text-xs"><Star className="ic-2xs fill-gold text-gold" />{Number(b.rating_avg).toFixed(1)}</div>
                     <Plus className="ic-sm text-muted-foreground" />
@@ -338,7 +356,7 @@ const Compare = () => {
                   name: isRTL ? b.name_ar : (b.name_en || b.name_ar),
                   rating: Number(b.rating_avg).toFixed(1),
                   ratingCount: b.rating_count,
-                  category: b.categories ? (isRTL ? b.categories.name_ar : b.categories.name_en) : '-',
+                  category: labelFor(b.id),
                   location: b.cities ? (isRTL ? b.cities.name_ar : b.cities.name_en) : '-',
                   tier: b.membership_tier,
                   installments: b.provider_installment_settings?.[0]?.is_enabled
@@ -410,7 +428,7 @@ const Compare = () => {
                   <td className="sticky start-0 bg-background p-3 font-medium text-sm">{isRTL ? 'التخصص' : 'Category'}</td>
                   {selectedBusinesses.map((b) => (
                     <td key={b.id} className="p-3 text-center text-sm">
-                      {b.categories ? (isRTL ? b.categories.name_ar : b.categories.name_en) : '-'}
+                      {labelFor(b.id)}
                     </td>
                   ))}
                 </tr>

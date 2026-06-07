@@ -15,18 +15,11 @@ const read = (p: string) => readFileSync(resolve(process.cwd(), p), 'utf-8');
 const readIfExists = (p: string): string | null =>
   existsSync(resolve(process.cwd(), p)) ? read(p) : null;
 
-const CATEGORIES_MIGRATED: Array<{ path: string; service: string; key: string }> = [
-  { path: 'src/components/home/HeroSection.tsx', service: 'listActiveCategories', key: "['nav-categories']" },
-  { path: 'src/pages/Categories.tsx', service: 'listActiveCategories', key: "['categories-page']" },
-  { path: 'src/pages/Projects.tsx', service: 'listActiveCategories', key: "['categories']" },
-  // BrandsCatalog.tsx was rewritten under BRANDS-GOVERNANCE-3 to use
-  // sectors instead of categories. Entry intentionally removed.
-  { path: 'src/pages/ProjectDetail.tsx', service: 'getCategoryById', key: "['category', project?.category_id]" },
-  { path: 'src/services/search/useSearch.ts', service: 'listActiveCategories', key: "['categories']" },
-  { path: 'src/features/private-sectors/PrivateSectorForm.tsx', service: 'listActiveCategories', key: "['categories-active']" },
-  { path: 'src/pages/dashboard/DashboardProjects.tsx', service: 'listActiveCategories', key: "['categories-list']" },
-  { path: 'src/pages/admin/AdminBusinesses.tsx', service: 'listActiveCategories', key: "['categories']" },
-];
+// Phase 16 — `listActiveCategories` was deleted (zero runtime callers).
+// ProjectDetail.tsx was previously migrated to taxonomy-only display and
+// no longer calls `getCategoryById` from the runtime path. The per-file
+// migration list is now empty; the static guarantees below still apply.
+const CATEGORIES_MIGRATED: Array<{ path: string; service: string; key: string }> = [];
 
 const CITIES_MIGRATED: Array<{ path: string; service: string; key: string }> = [
   { path: 'src/components/home/HeroSection.tsx', service: 'listActiveCities', key: "['nav-cities']" },
@@ -40,6 +33,9 @@ const CITIES_MIGRATED: Array<{ path: string; service: string; key: string }> = [
 ];
 
 describe('P-2 categories reference migration', () => {
+  it('legacy listActiveCategories wrapper was deleted in Phase 16', () => {
+    expect(existsSync(resolve(process.cwd(), 'src/modules/categories/services/listActiveCategories.ts'))).toBe(false);
+  });
   for (const { path, service, key } of CATEGORIES_MIGRATED) {
     it(`${path} no longer calls supabase.from('categories')`, () => {
       const src = readIfExists(path);
@@ -79,8 +75,9 @@ describe('P-2 out-of-scope guardrail (must NOT be touched)', () => {
     const src = read('src/pages/dashboard/DashboardBusinessEdit.tsx');
     expect(src).not.toMatch(/supabase\.from\(['"]cities['"]\)/);
   });
-  it('AdminCategories CRUD remains direct in this phase', () => {
-    const src = read('src/pages/admin/AdminCategories.tsx');
-    expect(src).toMatch(/supabase\.from\(['"]categories['"]\)/);
+  it('AdminCategories legacy CRUD page was deleted in Phase 16', () => {
+    // The legacy admin categories CRUD page is gone; the official taxonomy
+    // center under /admin/taxonomy is the source of truth now.
+    expect(existsSync(resolve(process.cwd(), 'src/pages/admin/AdminCategories.tsx'))).toBe(false);
   });
 });
