@@ -2125,7 +2125,9 @@ export type Database = {
           description_en: string | null
           gallery: Json
           id: string
+          image_asset_id: string | null
           image_url: string | null
+          image_variants: Json
           is_featured: boolean
           is_verified: boolean
           metadata: Json
@@ -2152,7 +2154,9 @@ export type Database = {
           description_en?: string | null
           gallery?: Json
           id?: string
+          image_asset_id?: string | null
           image_url?: string | null
+          image_variants?: Json
           is_featured?: boolean
           is_verified?: boolean
           metadata?: Json
@@ -2179,7 +2183,9 @@ export type Database = {
           description_en?: string | null
           gallery?: Json
           id?: string
+          image_asset_id?: string | null
           image_url?: string | null
+          image_variants?: Json
           is_featured?: boolean
           is_verified?: boolean
           metadata?: Json
@@ -2208,6 +2214,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_products_image_asset_id_fkey"
+            columns: ["image_asset_id"]
+            isOneToOne: false
+            referencedRelation: "image_assets"
             referencedColumns: ["id"]
           },
         ]
@@ -3401,6 +3414,9 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           id: string
+          image_asset_id: string | null
+          image_url: string | null
+          image_variants: Json
           is_active: boolean
           is_demo: boolean
           is_featured: boolean
@@ -3431,6 +3447,9 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           id?: string
+          image_asset_id?: string | null
+          image_url?: string | null
+          image_variants?: Json
           is_active?: boolean
           is_demo?: boolean
           is_featured?: boolean
@@ -3461,6 +3480,9 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           id?: string
+          image_asset_id?: string | null
+          image_url?: string | null
+          image_variants?: Json
           is_active?: boolean
           is_demo?: boolean
           is_featured?: boolean
@@ -3495,6 +3517,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_services_image_asset_id_fkey"
+            columns: ["image_asset_id"]
+            isOneToOne: false
+            referencedRelation: "image_assets"
             referencedColumns: ["id"]
           },
         ]

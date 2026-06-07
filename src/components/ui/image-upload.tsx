@@ -26,19 +26,20 @@ import type {
 } from '@/modules/files';
 import { uploadBusinessImage } from '@/modules/files';
 import type { BusinessImageKind } from '@/modules/files';
+import { uploadServiceImage, uploadProductImage } from '@/modules/files';
 
 /**
- * Phase 2.1 + 2.2: opt-in central image pipeline.
- *   - `pipeline === "project"` routes via `uploadProjectImage`
- *     (kinds: cover/gallery, bucket: project-images).
- *   - `pipeline === "business"` routes via `uploadBusinessImage`
- *     (kinds: logo/cover, bucket: business-assets).
- * Both generate thumbnail/card/medium/hero variants, record an
+ * Phase 2.1 + 2.2 + 2.3: opt-in central image pipeline.
+ *   - `pipeline === "project"`  → `uploadProjectImage`  (bucket: project-images)
+ *   - `pipeline === "business"` → `uploadBusinessImage` (bucket: business-assets)
+ *   - `pipeline === "service"`  → `uploadServiceImage`  (bucket: business-assets)
+ *   - `pipeline === "product"`  → `uploadProductImage`  (bucket: business-assets)
+ * All generate thumbnail/card/medium/hero variants, record an
  * `image_assets` row, and surface `imageAssetId`/`variants` via the
  * `onUploadedMeta` callback. Leaving `pipeline` undefined preserves
  * the legacy single-rendition path for every other caller.
  */
-export type ImagePipelineMode = 'project' | 'business';
+export type ImagePipelineMode = 'project' | 'business' | 'service' | 'product';
 
 export interface UploadedImageMeta {
   url: string;
@@ -153,6 +154,32 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           file,
           kind: businessKind,
         });
+        if (res.error || !res.publicUrl) {
+          throw res.error ?? new Error(tx.uploadFail);
+        }
+        onChange(res.publicUrl);
+        onUploadedMeta?.({
+          url: res.publicUrl,
+          imageAssetId: res.imageAssetId,
+          variants: res.variants,
+          fallback: res.fallback,
+        });
+        if (res.fallback) {
+          toast.warning(
+            isRTL
+              ? 'تم رفع الصورة بدون تحسين كامل'
+              : 'Uploaded without full optimization',
+          );
+        } else {
+          toast.success(tx.uploadOk);
+        }
+        return;
+      }
+
+      // ─── Pipeline path (Phase 2.3) — Service / Product ───
+      if ((pipeline === 'service' || pipeline === 'product') && user) {
+        const fn = pipeline === 'service' ? uploadServiceImage : uploadProductImage;
+        const res = await fn({ userId: user.id, file });
         if (res.error || !res.publicUrl) {
           throw res.error ?? new Error(tx.uploadFail);
         }

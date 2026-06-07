@@ -17,6 +17,12 @@ export type {
   UploadBusinessImageResult,
   BusinessImageKind,
 } from './domain/businesses';
+export { uploadServiceImage, uploadProductImage } from './domain/catalog';
+export type {
+  UploadCatalogImageParams,
+  UploadCatalogImageResult,
+  CatalogImageKind,
+} from './domain/catalog';
 export { uploadBlogContentImage, getBlogContentImageUrl, listBlogImages } from './domain/blogMedia';
 export type { UploadBlogContentImageParams } from './domain/blogMedia';
 export * from './services/private';

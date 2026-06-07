@@ -61,12 +61,10 @@ describe('Phase 2.2 — Business image pipeline integration', () => {
     expect(header).toContain('priority');
   });
 
-  it('Phase 2.2 is scoped to businesses — services/products/articles untouched', () => {
+  it('Phase 2.2 is scoped to businesses — articles untouched', () => {
     const idx = read('src/modules/files/index.ts');
     expect(idx).toContain('uploadBusinessImage');
-    // Service / product / article upload helpers are intentionally absent.
-    expect(idx).not.toMatch(/uploadServiceImage\b/);
-    expect(idx).not.toMatch(/uploadProductImage\b/);
+    // Article upload helper still intentionally absent (Phase 2.4+).
     expect(idx).not.toMatch(/uploadArticleImage\b/);
   });
 });

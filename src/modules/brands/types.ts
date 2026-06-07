@@ -44,6 +44,8 @@ export interface BrandProduct {
   description_en: string | null;
   category_id: string | null;
   image_url: string | null;
+  image_asset_id: string | null;
+  image_variants: Record<string, string>;
   gallery: Array<{ url: string; alt?: string }>;
   specs: Record<string, unknown>;
   status: BrandProductStatus;

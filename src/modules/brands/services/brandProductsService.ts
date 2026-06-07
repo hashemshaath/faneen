@@ -54,6 +54,8 @@ export interface CreateBrandProductPayload {
   description_en?: string | null;
   category_id?: string | null;
   image_url?: string | null;
+  image_asset_id?: string | null;
+  image_variants?: Record<string, string>;
   gallery?: Array<{ url: string; alt?: string }>;
   specs?: Record<string, unknown>;
   status?: BrandProductStatus;
@@ -66,6 +68,7 @@ export async function adminCreateBrandProduct(payload: CreateBrandProductPayload
     status: payload.status ?? 'approved',
     gallery: payload.gallery ?? [],
     specs: payload.specs ?? {},
+    image_variants: payload.image_variants ?? {},
     source: 'admin',
     approved_at: (payload.status ?? 'approved') === 'approved' ? new Date().toISOString() : null,
   }).select('*').single();

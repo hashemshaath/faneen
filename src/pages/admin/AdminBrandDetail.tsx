@@ -21,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ImageUpload } from '@/components/ui/image-upload';
+import { ResponsiveImage } from '@/modules/files';
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 
@@ -67,10 +68,12 @@ const AdminBrandDetail: React.FC = () => {
   const [newProduct, setNewProduct] = useState({
     name_ar: '', name_en: '', model_number: '', sku: '',
     description_ar: '', image_url: '',
+    image_asset_id: '' as string, image_variants: {} as Record<string, string>,
   });
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editProduct, setEditProduct] = useState({
     name_ar: '', name_en: '', model_number: '', sku: '', description_ar: '', image_url: '',
+    image_asset_id: '' as string, image_variants: {} as Record<string, string>,
   });
   const [rejectingReqId, setRejectingReqId] = useState<string | null>(null);
   const [reqRejectReason, setReqRejectReason] = useState('');
@@ -252,11 +255,17 @@ const AdminBrandDetail: React.FC = () => {
       sku: newProduct.sku.trim() || null,
       description_ar: newProduct.description_ar.trim() || null,
       image_url: newProduct.image_url || null,
+      image_asset_id: newProduct.image_asset_id || null,
+      image_variants: newProduct.image_variants ?? {},
       status: 'approved',
     }),
     onSuccess: () => {
       toast.success(isRTL ? 'تمت إضافة المنتج' : 'Product added');
-      setNewProduct({ name_ar: '', name_en: '', model_number: '', sku: '', description_ar: '', image_url: '' });
+      setNewProduct({
+        name_ar: '', name_en: '', model_number: '', sku: '',
+        description_ar: '', image_url: '',
+        image_asset_id: '', image_variants: {},
+      });
       invalidateProducts();
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
@@ -270,6 +279,8 @@ const AdminBrandDetail: React.FC = () => {
       sku: editProduct.sku.trim() || null,
       description_ar: editProduct.description_ar.trim() || null,
       image_url: editProduct.image_url || null,
+      image_asset_id: editProduct.image_asset_id || null,
+      image_variants: editProduct.image_variants ?? {},
     }),
     onSuccess: () => {
       toast.success(isRTL ? 'تم التحديث' : 'Updated');
@@ -693,8 +704,14 @@ const AdminBrandDetail: React.FC = () => {
               <div>
                 <Label className="text-xs mb-2 block">{isRTL ? 'صورة المنتج (تُضغط تلقائياً)' : 'Product image (auto-compressed)'}</Label>
                 <ImageUpload bucket="business-assets" value={newProduct.image_url}
+                  pipeline="product"
                   onChange={(url) => setNewProduct(p => ({ ...p, image_url: url || '' }))}
                   onRemove={() => setNewProduct(p => ({ ...p, image_url: '' }))}
+                  onUploadedMeta={(meta) => setNewProduct(p => ({
+                    ...p,
+                    image_asset_id: meta.imageAssetId ?? '',
+                    image_variants: (meta.variants ?? {}) as Record<string, string>,
+                  }))}
                   placeholder={isRTL ? 'رفع صورة' : 'Upload image'} />
               </div>
               <Button size="sm" onClick={() => createProduct.mutate()}
@@ -716,8 +733,14 @@ const AdminBrandDetail: React.FC = () => {
                     <Input dir="ltr" value={editProduct.sku} onChange={(e) => setEditProduct(s => ({ ...s, sku: e.target.value }))} placeholder="SKU" className="tech-content" />
                     <Textarea dir="auto" rows={2} value={editProduct.description_ar} onChange={(e) => setEditProduct(s => ({ ...s, description_ar: e.target.value }))} />
                     <ImageUpload bucket="business-assets" value={editProduct.image_url}
+                      pipeline="product"
                       onChange={(url) => setEditProduct(s => ({ ...s, image_url: url || '' }))}
-                      onRemove={() => setEditProduct(s => ({ ...s, image_url: '' }))} />
+                      onRemove={() => setEditProduct(s => ({ ...s, image_url: '' }))}
+                      onUploadedMeta={(meta) => setEditProduct(s => ({
+                        ...s,
+                        image_asset_id: meta.imageAssetId ?? '',
+                        image_variants: (meta.variants ?? {}) as Record<string, string>,
+                      }))} />
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => updateProduct.mutate({ productId: p.id })} disabled={updateProduct.isPending}>
                         <Save className="w-4 h-4 me-1" />{isRTL ? 'حفظ' : 'Save'}
@@ -727,8 +750,14 @@ const AdminBrandDetail: React.FC = () => {
                   </div>
                 ) : (
                   <div key={p.id} className="border rounded-xl p-3 bg-card hover-lift">
-                    {p.image_url ? (
-                      <img src={p.image_url} alt={p.name_ar} className="w-full h-28 object-cover rounded-lg border bg-background mb-2" loading="lazy" decoding="async" />
+                    {p.image_url || (p.image_variants && Object.keys(p.image_variants).length > 0) ? (
+                      <ResponsiveImage
+                        variants={p.image_variants ?? null}
+                        originalUrl={p.image_url}
+                        alt={p.name_ar}
+                        sizes="(max-width: 768px) 100vw, 320px"
+                        className="w-full h-28 object-cover rounded-lg border bg-background mb-2"
+                      />
                     ) : (
                       <div className="w-full h-28 rounded-lg bg-muted grid place-items-center text-xs text-muted-foreground mb-2"><Package className="w-6 h-6 opacity-40" /></div>
                     )}
@@ -747,6 +776,8 @@ const AdminBrandDetail: React.FC = () => {
                           name_ar: p.name_ar, name_en: p.name_en ?? '',
                           model_number: p.model_number ?? '', sku: p.sku ?? '',
                           description_ar: p.description_ar ?? '', image_url: p.image_url ?? '',
+                          image_asset_id: p.image_asset_id ?? '',
+                          image_variants: p.image_variants ?? {},
                         });
                       }}><Edit3 className="w-3 h-3 me-1" />{isRTL ? 'تعديل' : 'Edit'}</Button>
                       <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive"
