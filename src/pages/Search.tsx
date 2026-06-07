@@ -250,6 +250,15 @@ const SearchPage = () => {
       taxonomyBusinessIds,
       serviceCategoryBusinessIds,
     );
+    // Region filter — narrow by SA admin region using city → region mapping.
+    if (filters.regionId !== 'all' && cities) {
+      const cityById = new Map(cities.map((c) => [c.id, c]));
+      res = res.filter((b: { city_id?: string | null }) => {
+        const city = b.city_id ? cityById.get(b.city_id) : null;
+        if (!city) return false;
+        return findRegionForCity(city.name_ar, city.name_en) === filters.regionId;
+      });
+    }
     if (favoritesOnly) {
       try {
         const raw = localStorage.getItem('qitaat_fav_businesses_v1');
@@ -261,7 +270,7 @@ const SearchPage = () => {
       }
     }
     return res;
-  }, [businesses, debouncedQuery, filters, language, favoritesOnly, categories, taxonomyBusinessIds, serviceCategoryBusinessIds]);
+  }, [businesses, debouncedQuery, filters, language, favoritesOnly, categories, cities, taxonomyBusinessIds, serviceCategoryBusinessIds]);
 
   // Defer the heavy filtered list so typing/filter clicks stay responsive.
   const deferredFiltered = useDeferredValue(filtered);
