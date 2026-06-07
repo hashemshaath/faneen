@@ -14,6 +14,13 @@ export {
 } from './components/OnboardingTaxonomyStep';
 export type { OnboardingTaxonomyValue } from './components/OnboardingTaxonomyStep';
 
+// Phase 12 — icon registry
+export {
+  getTaxonomyIcon, isKnownTaxonomyIcon,
+  TAXONOMY_ICONS, TAXONOMY_ICON_KEYS,
+} from './icon-map';
+export type { TaxonomyIconKey } from './icon-map';
+
 // Phase 4 — resolution layer + legacy mapping
 export * as taxonomyResolution from './resolution';
 export * from './legacy-mapping';

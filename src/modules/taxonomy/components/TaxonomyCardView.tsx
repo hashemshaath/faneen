@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Edit, Archive } from 'lucide-react';
 import type { TaxonomyCategory, TaxonomyType } from '../types';
+import { getTaxonomyIcon } from '../icon-map';
 
 interface Props {
   rows: TaxonomyCategory[];
@@ -22,12 +23,18 @@ export const TaxonomyCardView: React.FC<Props> = ({ rows, types, onEdit, onArchi
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
       {rows.map((c) => {
         const t = typeById.get(c.taxonomy_type_id);
+        const Icon = getTaxonomyIcon(c.icon);
         return (
           <Card key={c.id} className="p-4 rounded-xl hover-lift flex flex-col gap-2">
             <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="font-heading font-bold text-base truncate" dir="auto">{c.name_ar}</div>
-                {c.name_en && <div className="text-xs text-muted-foreground truncate tech-content">{c.name_en}</div>}
+              <div className="flex items-start gap-2 min-w-0">
+                <span className="shrink-0 w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <Icon className="w-4.5 h-4.5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="font-heading font-bold text-base truncate" dir="auto">{c.name_ar}</div>
+                  {c.name_en && <div className="text-xs text-muted-foreground truncate tech-content">{c.name_en}</div>}
+                </div>
               </div>
               <Badge variant="outline" className="text-[10px] tech-content shrink-0">{c.slug}</Badge>
             </div>
