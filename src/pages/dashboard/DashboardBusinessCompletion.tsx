@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { CopyButton } from '@/components/ui/copy-button';
 import { useToast } from '@/hooks/use-toast';
+import { useBusinessTaxonomyPresence } from '@/modules/taxonomy/presence';
 import {
   Building2, Check, Circle, Clock, AlertTriangle, ShieldCheck, Send,
   MapPin, Phone, FileText, Layers, Image as ImageIcon, ArrowRight,
@@ -41,8 +42,6 @@ interface BusinessRow {
   address: string | null;
   latitude: number | null;
   longitude: number | null;
-  sectors: string[] | null;
-  sub_services: string[] | null;
   national_id: string | null;
   unified_number: string | null;
   updated_at?: string | null;
@@ -71,7 +70,10 @@ interface ChecklistGroup {
   fields: ChecklistField[];
 }
 
-function buildGroups(b: BusinessRow): ChecklistGroup[] {
+function buildGroups(
+  b: BusinessRow,
+  taxonomy: { hasPrimary: boolean; serviceCount: number },
+): ChecklistGroup[] {
   const link = (anchor: string) => `/dashboard/business-edit#${anchor}`;
   return [
     {
@@ -136,8 +138,10 @@ function buildGroups(b: BusinessRow): ChecklistGroup[] {
       weight: 15,
       Icon: Layers,
       fields: [
-        { key: 'sectors', label_ar: 'القطاعات', label_en: 'Sectors', done: has(b.sectors), to: link('sectors') },
-        { key: 'sub', label_ar: 'الخدمات الفرعية', label_en: 'Sub‑services', done: has(b.sub_services), to: link('sectors') },
+        // Phase 18f — taxonomy-only: legacy `sectors`/`sub_services` arrays
+        // are no longer read. Presence comes from `business_taxonomy_categories`.
+        { key: 'sectors', label_ar: 'القطاعات', label_en: 'Sectors', done: taxonomy.hasPrimary, to: link('sectors') },
+        { key: 'sub', label_ar: 'الخدمات الفرعية', label_en: 'Sub‑services', done: taxonomy.serviceCount > 0, to: link('sectors') },
       ],
     },
     {
@@ -231,7 +235,9 @@ const DashboardBusinessCompletion: React.FC = () => {
       if (!user) return null;
       const { data } = await getOwnerBusiness<BusinessRow>({
         userId: user.id,
-        select: 'id, ref_id, username, approval_status, onboarding_completion, approval_notes, name_ar, name_en, logo_url, description_ar, short_description_ar, phone, mobile, email, city_id, region, address, latitude, longitude, sectors, sub_services, national_id, unified_number, updated_at',
+      // Phase 18f — `sectors`/`sub_services` no longer selected; taxonomy
+      // presence is fetched separately via `useBusinessTaxonomyPresence`.
+      select: 'id, ref_id, username, approval_status, onboarding_completion, approval_notes, name_ar, name_en, logo_url, description_ar, short_description_ar, phone, mobile, email, city_id, region, address, latitude, longitude, national_id, unified_number, updated_at',
         orderBy: { column: 'created_at', ascending: false },
         limit: 1,
       });
@@ -240,7 +246,11 @@ const DashboardBusinessCompletion: React.FC = () => {
     staleTime: 30_000,
   });
 
-  const groups = useMemo(() => (business ? buildGroups(business) : []), [business]);
+  const taxonomyPresence = useBusinessTaxonomyPresence(business?.id);
+  const groups = useMemo(
+    () => (business ? buildGroups(business, taxonomyPresence) : []),
+    [business, taxonomyPresence],
+  );
   const allFields = useMemo(() => groups.flatMap((g) => g.fields), [groups]);
   const completed = allFields.filter((f) => f.done).length;
   const totalSteps = allFields.length;

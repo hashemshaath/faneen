@@ -56,7 +56,10 @@ export default function AdminProviderReview() {
       const filters: ListAdminBusinessesFilter[] = [];
       if (statusFilter !== 'all') filters.push({ column: 'approval_status', op: 'eq', value: statusFilter });
       const { data, error } = await listAdminBusinesses({
-        select: 'id,ref_id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,sectors,sub_services,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date,is_active,is_demo',
+        // Phase 18f — `sectors`/`sub_services` removed from select; activity
+        // classification now comes from `business_taxonomy_categories` and is
+        // rendered by ProviderReviewDetailPanel via useBusinessTaxonomyDisplay.
+        select: 'id,ref_id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date,is_active,is_demo',
         orderBy: [
           { column: 'submitted_at', ascending: false, nullsFirst: false },
           { column: 'created_at', ascending: false },
