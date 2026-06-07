@@ -1,5 +1,4 @@
 /**
-import { PageHeader } from '@/components/shared';
  * BUSINESS-OPERATIONS-INTELLIGENCE-1 — Executive Operations Center.
  *
  * Pure presentational page composed of existing analytics helpers and
@@ -13,6 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { listWorkOrdersForBusiness } from '@/modules/workOrders/services/listWorkOrdersForBusiness';
 import { listRfqs } from '@/modules/procurement/services/rfqs';
+import { PageHeader } from '@/components/shared';
+import { Activity } from 'lucide-react';
 import {
   computeProductionMetrics,
   computeRevenuePipeline,
