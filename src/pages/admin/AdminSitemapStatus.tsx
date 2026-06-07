@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, FileText, Play,
   History, Shield, Mail, Activity, Link2, Copy, Download, Send, Globe2,
+  Wrench, Lightbulb, Zap,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { auditSitemapStatus, pingSearchEngines } from '@/modules/seo';
