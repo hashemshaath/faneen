@@ -55,7 +55,7 @@ import {
   useActiveBranchPromotionsCount,
   useBranchBySlug,
 } from "@/components/business-profile/business-profile.data";
-import { useReviews } from "@/components/business-profile/business-profile.data";
+import { useReviews, useCertifications, useAwards } from "@/components/business-profile/business-profile.data";
 import { BusinessProfileTrustStrip } from "@/components/business-profile/BusinessProfileTrustStrip";
 import { BusinessProfileStickyCta } from "@/components/business-profile/BusinessProfileStickyCta";
 import { OverviewTab } from "@/components/business-profile/OverviewTab";
@@ -144,6 +144,8 @@ const BusinessProfile = () => {
   const { data: services = [] } = useServices(business?.id);
   const { data: branches = [] } = useBranches(business?.id);
   const { data: reviews = [] } = useReviews(business?.id);
+  const { data: certifications = [] } = useCertifications(business?.id);
+  const { data: awards = [] } = useAwards(business?.id);
   const { data: businessOffersCount = 0 } = useActivePromotionsCount(business?.id);
   const { data: branchOffersCount = 0 } = useActiveBranchPromotionsCount(business?.id, branch?.id);
   const activeOffersCount = branch?.id ? branchOffersCount : businessOffersCount;
@@ -229,6 +231,8 @@ const BusinessProfile = () => {
     business,
     services,
     reviews,
+    certifications,
+    awards,
     categoryName,
     cityName,
     language,

@@ -15,6 +15,8 @@ type CountryRow = Database["public"]["Tables"]["countries"]["Row"];
 type ServiceRow = Database["public"]["Tables"]["business_services"]["Row"];
 type BranchRow = Database["public"]["Tables"]["business_branches"]["Row"];
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
+type CertificationRow = Database["public"]["Tables"]["business_certifications"]["Row"];
+type AwardRow = Database["public"]["Tables"]["business_awards"]["Row"];
 
 type ProjectWithJoins = Pick<
   ProjectRow,
@@ -398,4 +400,54 @@ export const useBranchServiceIds = (branchId: string | undefined) =>
     queryKey: ["branch-service-ids", branchId],
     enabled: !!branchId,
     queryFn: async () => (await listBranchServiceIds(branchId!)).data ?? [],
+  });
+
+/**
+ * Active certifications for a business — public, RLS-gated to approved
+ * businesses only. Sorted by `display_order` then by issue date (newest first).
+ */
+export const useCertifications = (businessId: string | undefined) =>
+  useQuery({
+    queryKey: ["business-certifications", businessId],
+    enabled: !!businessId,
+    staleTime: PROFILE_STALE_MS,
+    queryFn: async (): Promise<CertificationRow[]> => {
+      const { data } = await supabase
+        .from("business_certifications")
+        .select(
+          "id, name_ar, name_en, issuer_ar, issuer_en, credential_number, credential_url, " +
+            "logo_url, proof_document_url, issued_at, expires_at, is_active, " +
+            "verified_by_admin, display_order",
+        )
+        .eq("business_id", businessId!)
+        .eq("is_active", true)
+        .order("display_order", { ascending: true })
+        .order("issued_at", { ascending: false, nullsFirst: false });
+      return ((data ?? []) as unknown) as CertificationRow[];
+    },
+  });
+
+/**
+ * Active awards for a business — public, RLS-gated to approved businesses.
+ * Sorted by year desc then display_order.
+ */
+export const useAwards = (businessId: string | undefined) =>
+  useQuery({
+    queryKey: ["business-awards", businessId],
+    enabled: !!businessId,
+    staleTime: PROFILE_STALE_MS,
+    queryFn: async (): Promise<AwardRow[]> => {
+      const { data } = await supabase
+        .from("business_awards")
+        .select(
+          "id, title_ar, title_en, issuer_ar, issuer_en, description_ar, description_en, " +
+            "awarded_year, rank, category_ar, category_en, image_url, proof_url, " +
+            "is_active, verified_by_admin, display_order",
+        )
+        .eq("business_id", businessId!)
+        .eq("is_active", true)
+        .order("awarded_year", { ascending: false })
+        .order("display_order", { ascending: true });
+      return ((data ?? []) as unknown) as AwardRow[];
+    },
   });
