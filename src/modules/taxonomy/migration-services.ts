@@ -204,6 +204,54 @@ export async function applyTaxonomyBackfill(): Promise<BackfillApplyResult> {
   return data as unknown as BackfillApplyResult;
 }
 
+// --- Secondary-activity backfill --------------------------------------------
+
+export interface SecondaryBackfillPreviewRow {
+  business_id: string;
+  name_ar: string | null;
+  sectors: string[] | null;
+  primary_slug: string | null;
+  linked_targets: string[] | null;
+  resolvable_extras: Array<{
+    legacy_value: string;
+    target_slug: string | null;
+    mapping_status: string;
+    role_suggested: string;
+  }> | null;
+  needs_review_values: string[] | null;
+}
+
+export interface SecondaryBackfillPreview {
+  totals: {
+    secondary_resolvable: number;
+    already_linked_extras: number;
+    needs_review_values: number;
+    businesses_with_legacy: number;
+  };
+  rows: SecondaryBackfillPreviewRow[];
+  generated_at: string;
+}
+
+export async function previewBusinessSecondaryBackfill(): Promise<SecondaryBackfillPreview> {
+  const { data, error } = await supabase.rpc('preview_business_secondary_taxonomy_backfill');
+  if (error) throw error;
+  return data as unknown as SecondaryBackfillPreview;
+}
+
+export interface SecondaryBackfillApplyResult {
+  secondary_linked: number;
+  skipped_existing: number;
+  skipped_needs_review: number;
+  errors: unknown[];
+  applied_at: string;
+}
+
+export async function applyBusinessSecondaryBackfill(): Promise<SecondaryBackfillApplyResult> {
+  const { data, error } = await supabase.rpc('apply_business_secondary_taxonomy_backfill');
+  if (error) throw error;
+  return data as unknown as SecondaryBackfillApplyResult;
+}
+
 // --- Runtime legacy map cache ------------------------------------------------
 // Cached for 60s to avoid hitting the registry on every search/resolve call.
 // Falls back to the static map on any failure.
