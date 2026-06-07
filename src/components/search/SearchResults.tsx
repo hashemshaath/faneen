@@ -13,6 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { lazyRetry } from '@/lib/lazyRetry';
+import type { BusinessTaxonomyDisplay } from '@/modules/taxonomy/search-integration';
 
 // Leaflet weighs ~150KB gzipped — only load it when the user actually opens
 // a map view. Grid/list searchers (the majority) never pay that cost, which
@@ -54,12 +55,14 @@ interface SearchResultsProps {
    * "no results" copy.
    */
   directoryIsEmpty?: boolean;
+  /** Phase 10 — taxonomy display fetched in batch by Search.tsx (no N+1). */
+  taxonomyDisplayMap?: Map<string, BusinessTaxonomyDisplay>;
 }
 
 export const SearchResults = ({
   businesses, isLoading, viewMode, onViewModeChange, totalCount, onClearFilters,
   currentPage, totalPages, itemsPerPage, onPageChange, didYouMean, onDidYouMeanClick,
-  sortBy, onSortChange, directoryIsEmpty,
+  sortBy, onSortChange, directoryIsEmpty, taxonomyDisplayMap,
 }: SearchResultsProps) => {
   const { t, isRTL } = useLanguage();
 
