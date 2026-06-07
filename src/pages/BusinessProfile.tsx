@@ -681,6 +681,14 @@ const BusinessProfile = () => {
               </ul>
             </div>
           </nav>
+
+          <SimilarBusinesses
+            currentBusinessId={business.id}
+            cityId={(business as { city_id?: string | null }).city_id ?? null}
+            categorySlug={(business.categories as { slug?: string } | null)?.slug || null}
+            cityName={cityName || undefined}
+            categoryName={categoryName || undefined}
+          />
         </main>
       </div>
 
