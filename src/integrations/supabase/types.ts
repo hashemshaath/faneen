@@ -3825,7 +3825,6 @@ export type Database = {
           region_en: string | null
           reviewed_at: string | null
           reviewed_by: string | null
-          sectors: string[]
           seo_description_ar: string | null
           seo_description_en: string | null
           seo_keywords: string[] | null
@@ -3836,7 +3835,6 @@ export type Database = {
           short_description_en: string | null
           street_name: string | null
           street_name_en: string | null
-          sub_services: string[]
           submitted_at: string | null
           timezone: string | null
           unified_number: string | null
@@ -3919,7 +3917,6 @@ export type Database = {
           region_en?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          sectors?: string[]
           seo_description_ar?: string | null
           seo_description_en?: string | null
           seo_keywords?: string[] | null
@@ -3930,7 +3927,6 @@ export type Database = {
           short_description_en?: string | null
           street_name?: string | null
           street_name_en?: string | null
-          sub_services?: string[]
           submitted_at?: string | null
           timezone?: string | null
           unified_number?: string | null
@@ -4013,7 +4009,6 @@ export type Database = {
           region_en?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          sectors?: string[]
           seo_description_ar?: string | null
           seo_description_en?: string | null
           seo_keywords?: string[] | null
@@ -4024,7 +4019,6 @@ export type Database = {
           short_description_en?: string | null
           street_name?: string | null
           street_name_en?: string | null
-          sub_services?: string[]
           submitted_at?: string | null
           timezone?: string | null
           unified_number?: string | null
@@ -12826,7 +12820,6 @@ export type Database = {
       projects: {
         Row: {
           business_id: string
-          category_id: string | null
           city_id: string | null
           client_name: string | null
           completion_date: string | null
@@ -12852,7 +12845,6 @@ export type Database = {
         }
         Insert: {
           business_id: string
-          category_id?: string | null
           city_id?: string | null
           client_name?: string | null
           completion_date?: string | null
@@ -12878,7 +12870,6 @@ export type Database = {
         }
         Update: {
           business_id?: string
-          category_id?: string | null
           city_id?: string | null
           client_name?: string | null
           completion_date?: string | null
@@ -12916,20 +12907,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "businesses_public"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "projects_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "projects_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "category_public_counts"
-            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "projects_city_id_fkey"
