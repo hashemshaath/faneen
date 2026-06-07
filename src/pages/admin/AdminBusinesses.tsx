@@ -2177,13 +2177,35 @@ const AdminBusinesses = () => {
                     <div>
                       <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'الشعار' : 'Logo'}</Label>
                       <ImageUpload bucket="business-assets" value={editForm.logo_url}
-                        onChange={(url) => setField('logo_url', url)} onRemove={() => setField('logo_url', '')}
+                        onChange={(url) => setField('logo_url', url)}
+                        onRemove={() => {
+                          setField('logo_url', '');
+                          setField('logo_image_asset_id', null);
+                          setField('logo_image_variants', null);
+                        }}
+                        pipeline="business"
+                        businessKind="logo"
+                        onUploadedMeta={(meta) => {
+                          setField('logo_image_asset_id', meta.imageAssetId ?? null);
+                          setField('logo_image_variants', meta.variants ?? null);
+                        }}
                         aspectRatio="square" placeholder={isRTL ? 'رفع الشعار' : 'Upload logo'} />
                     </div>
                     <div>
                       <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
                       <ImageUpload bucket="business-assets" value={editForm.cover_url}
-                        onChange={(url) => setField('cover_url', url)} onRemove={() => setField('cover_url', '')}
+                        onChange={(url) => setField('cover_url', url)}
+                        onRemove={() => {
+                          setField('cover_url', '');
+                          setField('cover_image_asset_id', null);
+                          setField('cover_image_variants', null);
+                        }}
+                        pipeline="business"
+                        businessKind="cover"
+                        onUploadedMeta={(meta) => {
+                          setField('cover_image_asset_id', meta.imageAssetId ?? null);
+                          setField('cover_image_variants', meta.variants ?? null);
+                        }}
                         placeholder={isRTL ? 'رفع صورة الغلاف' : 'Upload cover'} />
                     </div>
                   </div>
