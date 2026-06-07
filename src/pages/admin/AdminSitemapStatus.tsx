@@ -5,11 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, FileText, Play, History, Shield, Mail } from 'lucide-react';
+import {
+  CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, FileText, Play,
+  History, Shield, Mail, Activity, Link2, Copy, Download, Send, Globe2, Search,
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { auditSitemapStatus } from '@/modules/seo';
+import { auditSitemapStatus, pingSearchEngines } from '@/modules/seo';
 import { toast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { PageHeader, MetricCard, FiltersBar, StatusBadge } from '@/components/shared';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
