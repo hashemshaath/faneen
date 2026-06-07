@@ -105,6 +105,11 @@ const Onboarding = () => {
   // Phase 11 — central taxonomy selections (collected before business exists,
   // persisted via RPC after creation; non-blocking on failure).
   const [taxonomy, setTaxonomy] = useState<OnboardingTaxonomyValue>(EMPTY_ONBOARDING_TAXONOMY);
+  // Phase 13.c — taxonomy load status drives whether the legacy SectorPicker
+  // is shown inline (fallback) or collapsed under a "legacy classification"
+  // disclosure. Default to 'loading' so legacy stays visible until we know.
+  const [taxonomyStatus, setTaxonomyStatus] =
+    useState<'loading' | 'ok' | 'error'>('loading');
 
   // Documents
   const [logoUrl, setLogoUrl] = useState<string>('');
