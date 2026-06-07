@@ -17,7 +17,6 @@ import { toast } from "sonner";
 import { ImagePlus, ShieldAlert, ShieldCheck, Clock, X, Trash2, Upload } from "lucide-react";
 import {
   getShowcaseTaxonomyCategories,
-  getLegacySectorDisplayName,
 } from "@/modules/taxonomy/showcase-services";
 
 interface Business {
@@ -44,14 +43,6 @@ interface Submission {
   rejected_reason: string | null;
   created_at: string;
 }
-
-const SECTORS = [
-  { slug: "aluminum",  ar: "ألمنيوم" },
-  { slug: "iron",      ar: "حديد" },
-  { slug: "wood",      ar: "خشب" },
-  { slug: "glass",     ar: "زجاج" },
-  { slug: "stainless", ar: "ستانلس ستيل" },
-];
 
 const StatusPill: React.FC<{ status: Submission["status"] }> = ({ status }) => {
   if (status === "approved")
@@ -84,7 +75,6 @@ const DashboardShowcase: React.FC = () => {
     title_en: "",
     description_ar: "",
     link_url: "",
-    sector_slug: "",
     taxonomy_category_id: "",
     file: null as File | null,
   });
@@ -105,8 +95,8 @@ const DashboardShowcase: React.FC = () => {
     },
   });
 
-  // Taxonomy-first category picker. Falls back to the legacy SECTORS list
-  // if no `show_in_showcase=true` categories are configured yet.
+  // Taxonomy-only category picker. Legacy `sector_slug` is retained on the
+  // row schema for backward reads only and is no longer written from this UI.
   const taxonomyQuery = useQuery({
     queryKey: ["showcase-taxonomy-options"],
     queryFn: getShowcaseTaxonomyCategories,
@@ -153,7 +143,9 @@ const DashboardShowcase: React.FC = () => {
             title_en: form.title_en || null,
             description_ar: form.description_ar || null,
             link_url: form.link_url || null,
-            sector_slug: form.sector_slug || null,
+            // Legacy `sector_slug` is intentionally NOT written from the new
+            // taxonomy-only UI. The column is preserved on the table for
+            // backward reads of older rows only.
             taxonomy_category_id: form.taxonomy_category_id || null,
             image_url: publicUrl,
           },
@@ -170,7 +162,6 @@ const DashboardShowcase: React.FC = () => {
         title_en: "",
         description_ar: "",
         link_url: "",
-        sector_slug: "",
         taxonomy_category_id: "",
         file: null,
       });
@@ -262,19 +253,21 @@ const DashboardShowcase: React.FC = () => {
                 </div>
                 <div>
                   <Label className="text-xs">تصنيف العمل</Label>
-                  {taxonomyOptions.length > 0 ? (
+                  {taxonomyQuery.isLoading ? (
+                    <Skeleton className="h-10 w-full" />
+                  ) : taxonomyQuery.isError ? (
+                    <p className="text-xs text-destructive">
+                      تعذر تحميل التصنيفات حاليًا، حاول لاحقًا.
+                    </p>
+                  ) : taxonomyOptions.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      لا توجد تصنيفات متاحة حاليًا للمعرض.
+                    </p>
+                  ) : (
                     <Select
                       value={form.taxonomy_category_id}
                       onValueChange={(v) =>
-                        setForm((s) => {
-                          const opt = taxonomyOptions.find((o) => o.id === v);
-                          return {
-                            ...s,
-                            taxonomy_category_id: v,
-                            // mirror to legacy sector_slug so older readers keep working
-                            sector_slug: opt ? opt.slug : s.sector_slug,
-                          };
-                        })
+                        setForm((s) => ({ ...s, taxonomy_category_id: v }))
                       }
                     >
                       <SelectTrigger>
@@ -283,15 +276,6 @@ const DashboardShowcase: React.FC = () => {
                       <SelectContent>
                         {taxonomyOptions.map((o) => (
                           <SelectItem key={o.id} value={o.id}>{o.display_ar}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Select value={form.sector_slug} onValueChange={(v) => setForm((s) => ({ ...s, sector_slug: v }))}>
-                      <SelectTrigger><SelectValue placeholder="اختر قطاعًا" /></SelectTrigger>
-                      <SelectContent>
-                        {SECTORS.map((s) => (
-                          <SelectItem key={s.slug} value={s.slug}>{s.ar}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -371,18 +355,11 @@ const DashboardShowcase: React.FC = () => {
                         <StatusPill status={row.status} />
                       </div>
                       {row.title_ar && <p className="text-sm font-medium line-clamp-1" dir="auto">{row.title_ar}</p>}
-                      {(row.taxonomy_category_id || row.sector_slug) && (
-                        <p className="text-[11px] text-muted-foreground" dir="auto">
-                          {row.taxonomy_category_id
-                            ? (taxonomyOptions.find((o) => o.id === row.taxonomy_category_id)?.display_ar ?? '—')
-                            : (
-                              <>
-                                {getLegacySectorDisplayName(row.sector_slug)}
-                                <span className="ms-1 text-[9px] rounded bg-muted px-1.5 py-0.5">تصنيف قديم</span>
-                              </>
-                            )}
-                        </p>
-                      )}
+                      <p className="text-[11px] text-muted-foreground" dir="auto">
+                        {row.taxonomy_category_id
+                          ? (taxonomyOptions.find((o) => o.id === row.taxonomy_category_id)?.display_ar ?? 'غير مصنّف')
+                          : 'غير مصنّف'}
+                      </p>
                       {row.status === "rejected" && row.rejected_reason && (
                         <p className="text-xs text-destructive bg-destructive/10 rounded p-2" dir="auto">
                           سبب الرفض: {row.rejected_reason}
