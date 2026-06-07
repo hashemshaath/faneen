@@ -424,7 +424,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
               { icon: Newspaper, label: isRTL ? 'المدونة' : 'Blog', to: '/dashboard/blog' },
               { icon: Activity, label: isRTL ? 'السجل' : 'Activity', to: '/admin/activity-log' },
               { icon: ShieldAlert, label: isRTL ? 'النظام' : 'System', to: '/admin/system-settings' },
-              { icon: BarChart3, label: isRTL ? 'التصنيفات' : 'Categories', to: '/admin/categories' },
+              { icon: BarChart3, label: isRTL ? 'مركز التصنيفات' : 'Taxonomy Center', to: '/admin/taxonomy' },
               { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Messages', to: '/dashboard/messages' },
               { icon: Mail, label: isRTL ? 'رسائل التواصل' : 'Contact', to: '/admin/contact-messages' },
             ].map((a) => <QuickAction key={a.to} {...a} />)}
