@@ -60,6 +60,7 @@ import { BusinessProfileTrustStrip } from "@/components/business-profile/Busines
 import { BusinessProfileStickyCta } from "@/components/business-profile/BusinessProfileStickyCta";
 import { OverviewTab } from "@/components/business-profile/OverviewTab";
 import { ShareMenu } from "@/components/business-profile/ShareMenu";
+import { SimilarBusinesses } from "@/components/business-profile/SimilarBusinesses";
 import {
   canViewSection,
   useBusinessVisibility,
