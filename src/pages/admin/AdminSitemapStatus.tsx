@@ -294,6 +294,19 @@ export default function AdminSitemapStatus() {
       });
     }
 
+    const headerIssues = rows.filter((r) => r.result.headerXmlMismatch);
+    if (headerIssues.length) {
+      recs.push({
+        id: 'header-mismatch',
+        severity: 'warning',
+        title: isAr ? 'Content-Type غير مطابق للمحتوى' : 'Content-Type does not match body',
+        detail: isAr
+          ? 'النقاط تُعيد XML سليم لكن الـ Header يقول text/plain. Google يتسامح مع هذا غالباً لكن الأفضل أن يكون application/xml. ربما تُعيد بوابة Supabase Functions كتابة الـ header — استخدم رابط النطاق https://qitaat.com/sitemap.xml كمصدر أساسي في Google Search Console.'
+          : 'Endpoints return valid XML but the header is text/plain. Google usually tolerates this but application/xml is preferred. The Supabase Functions gateway may rewrite the header — submit https://qitaat.com/sitemap.xml in Google Search Console as the canonical sitemap URL.',
+        affected: headerIssues.map((r) => `${r.url} → ${r.result.contentType || 'unknown'}`),
+      });
+    }
+
     const badRobots = robotsRows.filter((r) => !r.ok);
     if (badRobots.length) {
       recs.push({
