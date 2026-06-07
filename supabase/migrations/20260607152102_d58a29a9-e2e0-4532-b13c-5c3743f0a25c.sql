@@ -1,0 +1,1 @@
+ALTER TABLE public.showcase_submissions DROP COLUMN IF EXISTS sector_slug;
