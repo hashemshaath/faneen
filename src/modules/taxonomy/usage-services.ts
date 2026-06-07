@@ -28,7 +28,7 @@ function inc(map: Map<string, number>, key: string | null | undefined, by = 1) {
 }
 
 async function safeSelect<T>(
-  fn: () => Promise<{ data: T[] | null; error: unknown }>,
+  fn: () => PromiseLike<{ data: T[] | null; error: unknown }>,
 ): Promise<T[]> {
   try {
     const { data, error } = await fn();
