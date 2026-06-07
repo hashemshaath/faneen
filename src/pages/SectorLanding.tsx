@@ -540,7 +540,7 @@ const SectorLanding: React.FC = () => {
                 ? `/sectors/${sector.slug}/${known.slug}`
                 : (() => {
                     const params = new URLSearchParams();
-                    if (categoryIds[0]) params.set('category', categoryIds[0]);
+                    if (taxonomyCategory?.id) params.set('category', taxonomyCategory.id);
                     params.set('city', c.id);
                     return `/search?${params.toString()}`;
                   })();
@@ -579,7 +579,6 @@ const SectorLanding: React.FC = () => {
       <SectorProjectExamples
         sectorName={meta.name}
         sectorSlug={sector.slug}
-        categoryIds={categoryIds}
         cityId={cityId === 'all' ? null : cityId}
         cityName={selectedCityName}
       />
