@@ -3,6 +3,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Download, ShieldCheck, Star, MapPin, Building2, Sparkles } from 'lucide-react';
 import { fmtNum } from '@/lib/format';
+import type { BusinessTaxonomyDisplay } from '@/modules/taxonomy/search-integration';
 
 type B = {
   id: string;
@@ -21,6 +22,13 @@ type B = {
 interface Props {
   businesses: B[];
   totalDirectory?: number;
+  /**
+   * Phase 13.b — taxonomy-first display map keyed by business id.
+   * When present, CSV export prefers `primaryLabel` over the legacy
+   * `categories.name_*` and adds a "specialties & services" column.
+   * Falls back to legacy fields when absent — never blocks export.
+   */
+  taxonomyDisplayMap?: Map<string, BusinessTaxonomyDisplay>;
 }
 
 /**
@@ -28,7 +36,11 @@ interface Props {
  * Results · Verified · Avg rating · Cities · With offers + Export CSV.
  * Numbers are always rendered LTR via formatNumber.
  */
-export const SearchInsightsBar: React.FC<Props> = ({ businesses, totalDirectory }) => {
+export const SearchInsightsBar: React.FC<Props> = ({
+  businesses,
+  totalDirectory,
+  taxonomyDisplayMap,
+}) => {
   const { language } = useLanguage();
   const isRTL = language === 'ar';
 
@@ -46,18 +58,34 @@ export const SearchInsightsBar: React.FC<Props> = ({ businesses, totalDirectory 
 
   const handleExport = useCallback(() => {
     if (!businesses.length) return;
-    const header = ['id', 'name_ar', 'name_en', 'username', 'rating_avg', 'reviews_count', 'is_verified', 'city', 'category'];
-    const rows = businesses.map((b) => [
-      b.id,
-      b.name_ar ?? '',
-      b.name_en ?? '',
-      b.username ?? '',
-      Number(b.rating_avg ?? 0).toFixed(2),
-      String(b.reviews_count ?? 0),
-      b.is_verified ? '1' : '0',
-      (isRTL ? b.cities?.name_ar : b.cities?.name_en) ?? b.cities?.name_ar ?? '',
-      (isRTL ? b.categories?.name_ar : b.categories?.name_en) ?? b.categories?.name_ar ?? '',
-    ]);
+    const header = [
+      'id', 'name_ar', 'name_en', 'username',
+      'rating_avg', 'reviews_count', 'is_verified',
+      'city', 'category', 'specialties_services',
+    ];
+    const rows = businesses.map((b) => {
+      const tx = taxonomyDisplayMap?.get(b.id);
+      const legacyCat =
+        (isRTL ? b.categories?.name_ar : b.categories?.name_en) ??
+        b.categories?.name_ar ?? '';
+      // Taxonomy-first; legacy fallback. Never tag as "Legacy" in public exports.
+      const categoryCell = (tx?.hasModernTaxonomy && tx.primaryLabel) || legacyCat;
+      const specialtiesCell = tx?.hasModernTaxonomy
+        ? [...tx.secondaryLabels, ...tx.serviceLabels].join('، ')
+        : '';
+      return [
+        b.id,
+        b.name_ar ?? '',
+        b.name_en ?? '',
+        b.username ?? '',
+        Number(b.rating_avg ?? 0).toFixed(2),
+        String(b.reviews_count ?? 0),
+        b.is_verified ? '1' : '0',
+        (isRTL ? b.cities?.name_ar : b.cities?.name_en) ?? b.cities?.name_ar ?? '',
+        categoryCell,
+        specialtiesCell,
+      ];
+    });
     const esc = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
     const csv = '\uFEFF' + [header, ...rows].map((r) => r.map(esc).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
@@ -69,7 +97,7 @@ export const SearchInsightsBar: React.FC<Props> = ({ businesses, totalDirectory 
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [businesses, isRTL]);
+  }, [businesses, isRTL, taxonomyDisplayMap]);
 
   if (!businesses.length) return null;
 

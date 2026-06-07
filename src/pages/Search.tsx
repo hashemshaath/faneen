@@ -496,6 +496,7 @@ const SearchPage = () => {
         <SearchInsightsBar
           businesses={deferredFiltered}
           totalDirectory={businesses?.length ?? 0}
+          taxonomyDisplayMap={taxonomyDisplayMap}
         />
 
         <RecentlyViewedStrip businesses={businesses} />
