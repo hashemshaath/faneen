@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Building2, MapPin, X, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
 import { type SeoSectorSlug } from '@/lib/sectors-seo';
+import { LEGACY_SECTOR_TO_TAXONOMY_SLUG } from '@/modules/taxonomy/legacy-mapping';
 
 /** Map SEO sector slug -> category slugs in the directory. */
 export const SECTOR_TO_CATEGORY_SLUGS: Record<SeoSectorSlug, string[]> = {
@@ -60,30 +61,56 @@ export const SectorWorksGallery: React.FC<Props> = ({
 }) => {
   const categorySlugs = sectorSlug ? SECTOR_TO_CATEGORY_SLUGS[sectorSlug] : [];
 
-  const { data: categoryIds = [] } = useQuery({
-    queryKey: ['sector-gallery-cats', categorySlugs.join(',')],
-    enabled: categorySlugs.length > 0,
+  // Phase 13: translate legacy sector → taxonomy slugs → taxonomy category
+  // ids, then resolve project ids via `project_taxonomy_categories`. We no
+  // longer hit the legacy `categories` table or `projects.category_id`.
+  const taxonomySlugs = useMemo(
+    () => Array.from(new Set(
+      categorySlugs
+        .map((s) => LEGACY_SECTOR_TO_TAXONOMY_SLUG[s] ?? null)
+        .filter((s): s is string => !!s),
+    )),
+    [categorySlugs],
+  );
+
+  const { data: taxonomyCategoryIds = [] } = useQuery({
+    queryKey: ['sector-gallery-tax-cats', taxonomySlugs.join(',')],
+    enabled: taxonomySlugs.length > 0,
     staleTime: 60 * 60 * 1000,
     queryFn: async () => {
       const { data } = await supabase
-        .from('categories')
+        .from('taxonomy_categories')
         .select('id')
-        .in('slug', categorySlugs);
+        .in('slug', taxonomySlugs)
+        .eq('is_active', true);
       return (data ?? []).map((c) => c.id as string);
     },
   });
 
+  const { data: projectIdsInSector = [] } = useQuery({
+    queryKey: ['sector-gallery-tax-projects', taxonomyCategoryIds],
+    enabled: taxonomyCategoryIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('project_taxonomy_categories')
+        .select('project_id')
+        .in('category_id', taxonomyCategoryIds)
+        .limit(500);
+      return Array.from(new Set((data ?? []).map((l) => l.project_id as string)));
+    },
+  });
+
   const { data: images = [], isLoading } = useQuery({
-    queryKey: ['sector-gallery', sectorSlug, categoryIds, limit],
-    enabled: categoryIds.length > 0,
+    queryKey: ['sector-gallery', sectorSlug, projectIdsInSector, limit],
+    enabled: projectIdsInSector.length > 0,
     queryFn: async () => {
       const { data } = await supabase
         .from('project_images')
-        // Embed projects then businesses + cities for context.
         .select(
-          'id, image_url, caption_ar, project_id, projects!inner(id, title_ar, title_en, business_id, category_id, status, is_demo, cities(name_ar, name_en), businesses!inner(username, name_ar, logo_url, is_active))',
+          'id, image_url, caption_ar, project_id, projects!inner(id, title_ar, title_en, business_id, status, is_demo, cities(name_ar, name_en), businesses!inner(username, name_ar, logo_url, is_active))',
         )
-        .in('projects.category_id', categoryIds)
+        .in('project_id', projectIdsInSector)
         .eq('projects.status', 'published')
         .eq('projects.is_demo', false)
         .eq('projects.businesses.is_active', true)

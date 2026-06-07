@@ -3,7 +3,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { getCategoryById } from '@/modules/categories';
 import {
   getProjectTaxonomyCategories,
   type ProjectTaxonomyLink,
@@ -75,19 +74,9 @@ const ProjectDetail = () => {
     });
   }, [project?.id, project?.businesses?.username]);
 
-  const { data: category } = useQuery<{ slug: string | null; name_ar: string; name_en: string } | null>({
-    queryKey: ['category-legacy', project?.category_id],
-    queryFn: async () => {
-      const { data } = await getCategoryById<{ slug: string | null; name_ar: string; name_en: string }>(
-        project!.category_id!,
-        { select: 'slug, name_ar, name_en' },
-      );
-      return data;
-    },
-    enabled: !!project?.category_id,
-  });
-
-  // Phase 8: prefer taxonomy classification when present.
+  // Phase 13: classification is taxonomy-only. The legacy
+  // `projects.category_id` column is still present in the DB but the UI
+  // never reads it — if no taxonomy link exists we render "غير مصنّف".
   const { data: taxonomyLinks = [] } = useQuery<ProjectTaxonomyLink[]>({
     queryKey: ['project-taxonomy', project?.id],
     queryFn: () => getProjectTaxonomyCategories(project!.id),
@@ -108,8 +97,8 @@ const ProjectDetail = () => {
     enabled: taxonomyLinks.length > 0,
   });
 
-  // Display category: taxonomy-first, then legacy.
-  const displayCategory = taxonomyCategory ?? category ?? null;
+  // Display category: taxonomy-only.
+  const displayCategory = taxonomyCategory ?? null;
   const taxonomyCategoryIds = useMemo(
     () => taxonomyLinks.map((l) => l.category_id),
     [taxonomyLinks],
@@ -382,7 +371,6 @@ const ProjectDetail = () => {
         <RelatedProjects
           projectId={id!}
           businessId={project.business_id}
-          categoryId={project.category_id}
           cityId={project.city_id}
           taxonomyCategoryIds={taxonomyCategoryIds}
         />
