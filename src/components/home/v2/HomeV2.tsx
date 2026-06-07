@@ -179,14 +179,42 @@ export const HeroV2 = () => {
   // NOT remove it on unmount because the preloaded resource is consumed by
   // the <img> below within the same render cycle.)
 
-  // Mount the active slide + warm-prefetch the next one (low priority).
+  // Mount the active slide immediately + warm-prefetch the next one only
+  // AFTER window load + idle. This keeps slides 2..N out of the LCP
+  // critical chain entirely (they were previously fetched right after
+  // first render, competing with hero paint).
   useEffect(() => {
     setMounted((prev) => {
+      if (prev.has(active)) return prev;
       const next = new Set(prev);
       next.add(active);
-      next.add((active + 1) % SLIDES.length);
       return next;
     });
+    const prefetchNext = () => {
+      setMounted((prev) => {
+        const ni = (active + 1) % SLIDES.length;
+        if (prev.has(ni)) return prev;
+        const next = new Set(prev);
+        next.add(ni);
+        return next;
+      });
+    };
+    type IdleWin = Window & {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+    };
+    const w = window as IdleWin;
+    const schedule = () => {
+      if (typeof w.requestIdleCallback === 'function') {
+        w.requestIdleCallback(prefetchNext, { timeout: 3000 });
+      } else {
+        window.setTimeout(prefetchNext, 1500);
+      }
+    };
+    let cancelled = false;
+    const onLoad = () => { if (!cancelled) schedule(); };
+    if (document.readyState === 'complete') onLoad();
+    else window.addEventListener('load', onLoad, { once: true });
+    return () => { cancelled = true; };
   }, [active, SLIDES.length]);
 
   // Click-outside to close autocomplete
