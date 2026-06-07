@@ -330,18 +330,23 @@ const DashboardBusinessEdit: React.FC = () => {
     } finally { setSaving(false); }
   };
 
+  // Phase 18g — taxonomy-only completion. Sectors/services come from
+  // `business_taxonomy_categories` via the presence hook, not the
+  // legacy `businesses.sectors` / `businesses.sub_services` arrays.
+  const taxonomyPresence = useBusinessTaxonomyPresence(business?.id ?? null);
   const completionPct = useMemo(() => {
     if (!form) return 0;
     const checks = [
       !!form.name_ar, !!form.logo_url, !!form.short_description_ar,
       !!form.description_ar, !!(form.phone || form.mobile), !!form.email,
       !!form.city_id, !!form.address, form.latitude != null && form.longitude != null,
-      (form.sectors?.length ?? 0) > 0, (form.sub_services?.length ?? 0) > 0,
+      taxonomyPresence.hasPrimary,
+      taxonomyPresence.serviceCount > 0,
       !!(form.national_id || form.unified_number), !!form.vat_number,
       !!form.account_manager_name,
     ];
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
-  }, [form]);
+  }, [form, taxonomyPresence.hasPrimary, taxonomyPresence.serviceCount]);
 
   // Per-tab missing/incomplete counters so the user can see at a glance
   // which sections still need attention without scrolling through everything.
@@ -362,8 +367,8 @@ const DashboardBusinessEdit: React.FC = () => {
         (!form.address ? 1 : 0) +
         (form.latitude == null || form.longitude == null ? 1 : 0),
       sectors:
-        ((form.sectors?.length ?? 0) === 0 ? 1 : 0) +
-        ((form.sub_services?.length ?? 0) === 0 ? 1 : 0),
+        (taxonomyPresence.hasPrimary ? 0 : 1) +
+        (taxonomyPresence.serviceCount > 0 ? 0 : 1),
       legal:
         (!(form.national_id || form.unified_number) ? 1 : 0) +
         (!form.vat_number ? 1 : 0),
