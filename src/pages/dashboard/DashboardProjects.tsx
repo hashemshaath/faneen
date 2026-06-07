@@ -457,7 +457,7 @@ const DashboardProjects = () => {
    * delete-and-reinsert all rows so the DB matches the on-screen order,
    * carrying `image_asset_id` for any URL that maps to a known meta.
    */
-  const pendingMetasRef = React.useRef<Map<string, string>>(new Map());
+  const pendingMetasRef = useRef<Map<string, string>>(new Map());
   const handleGalleryChange = useCallback(async (urls: string[]) => {
     if (!galleryProjectId) return;
     // Preserve image_asset_id for URLs that already exist on disk by
