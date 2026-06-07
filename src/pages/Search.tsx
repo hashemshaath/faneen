@@ -26,6 +26,7 @@ import {
 } from '@/services/search';
 import { detectSectorFromQuery, getSectorMeta, ALL_SECTORS } from '@/lib/sector-keywords';
 import { findCityKeywords, getCityKeywordsString, mergeKeywords } from '@/lib/city-keywords';
+import { SA_REGIONS, findRegionForCity } from '@/data/sa-regions';
 import { track } from '@/lib/analytics-events';
 import { useSearchTaxonomyContext, useBusinessTaxonomyDisplayBatch } from '@/modules/taxonomy/search-integration';
 
