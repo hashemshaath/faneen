@@ -203,7 +203,11 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
         const title = getLocalizedValue(language, project.title_ar, project.title_en);
         const description = getLocalizedValue(language, project.description_ar, project.description_en);
         const cityName = getLocalizedValue(language, project.cities?.name_ar, project.cities?.name_en);
-        const categoryName = getLocalizedValue(language, project.categories?.name_ar, project.categories?.name_en);
+        // Phase 18b — categoryName is resolved from project taxonomy.
+        // When a project has no taxonomy link, show a neutral fallback
+        // badge instead of hiding it entirely.
+        const taxonomyName = getLocalizedValue(language, project.categories?.name_ar, project.categories?.name_en);
+        const categoryName = taxonomyName || (isRTL ? "غير مصنّف" : "Uncategorized");
 
         return (
           <Link key={project.id} to={`/projects/${project.id}`} className="group block">
