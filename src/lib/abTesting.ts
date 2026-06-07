@@ -74,8 +74,12 @@ export function useAbVariant<T = Record<string, unknown>>(
   useEffect(() => {
     let cancelled = false;
     if (variant) return; // already cached
-    const visitorId = getOrCreateVisitorId();
-    (async () => {
+    // Defer the assignment RPC until AFTER window load + idle so it never
+    // competes with the LCP paint. The cached variant (if any) is already
+    // returned synchronously above; this is purely for first-time visitors.
+    const run = async () => {
+      if (cancelled) return;
+      const visitorId = getOrCreateVisitorId();
       try {
         const { data, error } = await supabase.rpc("ab_assign_variant", {
           p_experiment_key: experimentKey,
@@ -90,7 +94,20 @@ export function useAbVariant<T = Record<string, unknown>>(
       } catch {
         /* network errors are non-fatal */
       }
-    })();
+    };
+    type IdleWin = Window & {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+    };
+    const w = window as IdleWin;
+    const schedule = () => {
+      if (typeof w.requestIdleCallback === "function") {
+        w.requestIdleCallback(() => { void run(); }, { timeout: 4000 });
+      } else {
+        window.setTimeout(() => { void run(); }, 2500);
+      }
+    };
+    if (document.readyState === "complete") schedule();
+    else window.addEventListener("load", schedule, { once: true });
     return () => {
       cancelled = true;
     };
