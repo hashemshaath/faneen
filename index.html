@@ -145,7 +145,12 @@
         if (!prod && !override) return;
       } catch(e) { return; }
       function loadGtm(){
+        // Defensive de-dup: skip if ANY gtm.js script is already on the page,
+        // not just our own ID. (Previously, a parallel runtime injector used
+        // a different element id, so this check missed it and both loaders
+        // fired — Lighthouse flagged it as duplicate gtm.js.)
         if (d.getElementById('gtm-loader-html')) return;
+        if (d.querySelector('script[src*="googletagmanager.com/gtm.js"]')) return;
         w[l]=w[l]||[];w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});
         var f=d.getElementsByTagName(s)[0],
             j=d.createElement(s),

@@ -4,7 +4,6 @@ import App from "./App.tsx";
 import "./index.css";
 import { startWebVitals } from "./utils/reportWebVitals";
 import { installDiagnostics } from "./lib/diagnostics";
-import { initGtm } from "./lib/gtm";
 import { startConsentWatchdog } from "./lib/consent-watchdog";
 import { captureAttribution } from "./lib/analytics-attribution";
 
@@ -14,8 +13,13 @@ validateEnv();
 // unhandled rejections). Exposed at /diagnostics for developers.
 installDiagnostics();
 
-// Bootstrap Google Tag Manager + Consent Mode v2 (no-op without VITE_GTM_ID).
-initGtm();
+// NOTE: Google Tag Manager is bootstrapped exclusively from the inline
+// snippet in index.html (production-host gated, deferred until load+idle).
+// We intentionally do NOT call initGtm() from JS to avoid duplicate gtm.js
+// injection (the inline HTML loader and the runtime injector each used
+// different element IDs, so neither saw the other and BOTH added the
+// container script). Consent Mode v2 defaults + stored-consent replay are
+// also handled inline in index.html before GTM loads.
 
 // Self-healing consent watchdog: detects "stuck-denied" state and re-pushes
 // the user's stored decision. Boots after initGtm() so the dataLayer exists.
@@ -69,6 +73,24 @@ if (isPreviewHost || isInIframe) {
   navigator.serviceWorker?.getRegistrations().then((regs) => {
     regs.forEach((r) => r.unregister());
   });
+} else if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  // Manual service-worker registration, deferred until after `load` + idle.
+  // vite-plugin-pwa has `injectRegister: null`, so this is the ONLY place
+  // /sw.js is registered. Keeping it out of the critical path means it
+  // never competes with the LCP paint or blocks first interaction.
+  const registerSW = () => {
+    const idle: (cb: () => void) => void =
+      typeof (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback === "function"
+        ? (cb) => (window as Window & { requestIdleCallback: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback(cb, { timeout: 4000 })
+        : (cb) => window.setTimeout(cb, 2500);
+    idle(() => {
+      navigator.serviceWorker.register("/sw.js").catch(() => {
+        /* SW registration is best-effort; never break the app */
+      });
+    });
+  };
+  if (document.readyState === "complete") registerSW();
+  else window.addEventListener("load", registerSW, { once: true });
 }
 
 // RUM: collect Core Web Vitals from real visitors (skip Lovable preview to
