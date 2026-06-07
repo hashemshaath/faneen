@@ -154,8 +154,8 @@ export const TaxonomyMigrationPanel: React.FC = () => {
       clearRuntimeLegacyMapCache();
       toast.success(
         isRTL
-          ? `تم ربط ${r.secondary_linked} تخصص فرعي`
-          : `Linked ${r.secondary_linked} secondary activities`,
+          ? `تم ربط ${r.secondary_linked} تخصص فرعي و ${r.services_linked ?? 0} خدمة`
+          : `Linked ${r.secondary_linked} secondary and ${r.services_linked ?? 0} services`,
       );
       await refreshAll();
     } catch (e) {
@@ -167,7 +167,11 @@ export const TaxonomyMigrationPanel: React.FC = () => {
   };
 
   const secondary = secondaryQ.data;
-  const canApplySecondary = Boolean(secondary && secondary.totals.secondary_resolvable > 0);
+  const canApplySecondary = Boolean(
+    secondary &&
+      (secondary.totals.secondary_resolvable > 0 ||
+        (secondary.totals.services_resolvable ?? 0) > 0),
+  );
 
   return (
     <div className="space-y-4">
@@ -360,8 +364,9 @@ export const TaxonomyMigrationPanel: React.FC = () => {
             <Skeleton className="h-20" />
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <Stat label={isRTL ? 'قابل للربط' : 'Resolvable'} value={secondary.totals.secondary_resolvable} tone="text-emerald-600" />
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                <Stat label={isRTL ? 'تخصصات قابلة' : 'Secondary resolvable'} value={secondary.totals.secondary_resolvable} tone="text-emerald-600" />
+                <Stat label={isRTL ? 'خدمات قابلة' : 'Services resolvable'} value={secondary.totals.services_resolvable ?? 0} tone="text-emerald-600" />
                 <Stat label={isRTL ? 'مرتبط مسبقًا' : 'Already linked'} value={secondary.totals.already_linked_extras} />
                 <Stat label={isRTL ? 'يحتاج مراجعة' : 'Needs review'} value={secondary.totals.needs_review_values} tone="text-orange-600" />
                 <Stat label={isRTL ? 'منشآت بقطاع قديم' : 'Businesses w/ legacy'} value={secondary.totals.businesses_with_legacy} />
@@ -390,8 +395,8 @@ export const TaxonomyMigrationPanel: React.FC = () => {
                               ) : (
                                 <div className="flex flex-wrap gap-1">
                                   {(r.resolvable_extras ?? []).map((x, i) => (
-                                    <Badge key={`${x.legacy_value}-${i}`} className="bg-emerald-500/10 text-emerald-700 border-0 tech-content text-[10px]">
-                                      {x.legacy_value} → {x.target_slug}
+                                    <Badge key={`${x.legacy_value}-${i}`} className={`border-0 tech-content text-[10px] ${x.role_suggested === 'service' ? 'bg-sky-500/10 text-sky-700' : 'bg-emerald-500/10 text-emerald-700'}`}>
+                                      {x.legacy_value} → {x.target_slug} <span className="opacity-70">[{x.role_suggested}]</span>
                                     </Badge>
                                   ))}
                                 </div>
@@ -455,6 +460,7 @@ export const TaxonomyMigrationPanel: React.FC = () => {
                   </div>
                   <ul className="space-y-0.5 text-muted-foreground tech-content">
                     <li>secondary_linked: {lastSecondaryResult.secondary_linked}</li>
+                    <li>services_linked: {lastSecondaryResult.services_linked ?? 0}</li>
                     <li>skipped_existing: {lastSecondaryResult.skipped_existing}</li>
                     <li>skipped_needs_review: {lastSecondaryResult.skipped_needs_review}</li>
                   </ul>
