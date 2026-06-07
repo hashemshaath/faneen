@@ -258,7 +258,7 @@ export const SearchResults = ({
           <div className="lg:w-1/2 space-y-3 max-h-[600px] overflow-y-auto pe-1 no-scrollbar">
             {businesses.map((b, i) => (
               <div key={b.id} className="animate-card-slide-up" style={{ animationDelay: `${i * 40}ms` }}>
-                <BusinessCard business={b} viewMode="list" />
+                <BusinessCard business={b} viewMode="list" taxonomyDisplay={taxonomyDisplayMap?.get(b.id)} />
               </div>
             ))}
           </div>
@@ -277,7 +277,7 @@ export const SearchResults = ({
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5' : 'space-y-3'}>
             {businesses.map((b, i) => (
               <div key={b.id} className="animate-card-slide-up" style={{ animationDelay: `${i * 30}ms` }}>
-                <BusinessCard business={b} viewMode={viewMode} />
+                <BusinessCard business={b} viewMode={viewMode} taxonomyDisplay={taxonomyDisplayMap?.get(b.id)} />
               </div>
             ))}
           </div>
