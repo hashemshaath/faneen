@@ -224,6 +224,7 @@ export interface SecondaryBackfillPreviewRow {
 export interface SecondaryBackfillPreview {
   totals: {
     secondary_resolvable: number;
+    services_resolvable: number;
     already_linked_extras: number;
     needs_review_values: number;
     businesses_with_legacy: number;
@@ -240,6 +241,7 @@ export async function previewBusinessSecondaryBackfill(): Promise<SecondaryBackf
 
 export interface SecondaryBackfillApplyResult {
   secondary_linked: number;
+  services_linked: number;
   skipped_existing: number;
   skipped_needs_review: number;
   errors: unknown[];
