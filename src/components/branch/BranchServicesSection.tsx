@@ -16,8 +16,6 @@ interface ServiceCard {
   name_en: string | null;
   price_from: number | null;
   currency_code: string;
-  // Legacy column kept on type for back-compat; no longer used for filtering.
-  category_id?: string | null;
 }
 
 interface TaxonomyOption { id: string; name_ar: string; name_en: string | null; }

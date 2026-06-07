@@ -140,7 +140,10 @@ export const SearchFilters = ({
               />
             </FilterCard>
 
-            {/* Service Category — facet driven by business_services.category_id */}
+            {/* Service Category — facet driven by the taxonomy join
+                (`business_service_taxonomy_categories`) via the
+                `category_public_counts` view. Legacy
+                `business_services.category_id` is no longer read. */}
             <FilterCard
               icon={Layers}
               label={isRTL ? 'نوع الخدمة' : 'Service category'}

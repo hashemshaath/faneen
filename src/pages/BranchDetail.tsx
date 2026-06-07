@@ -81,7 +81,7 @@ interface BusinessLite {
   logo_url: string | null;
 }
 
-interface ServiceCard { id: string; name_ar: string; name_en: string | null; price_from: number | null; currency_code: string; category_id: string | null }
+interface ServiceCard { id: string; name_ar: string; name_en: string | null; price_from: number | null; currency_code: string }
 interface PromotionCard { id: string; title_ar: string; title_en: string | null; image_url: string | null; offer_price: number | null; original_price: number | null; currency_code: string }
 
 const BranchDetail: React.FC = () => {
@@ -196,7 +196,9 @@ const BranchDetail: React.FC = () => {
       // If branch has explicit links → show only those. Else show all active business services.
       const { data } = await listServicesByBusiness<ServiceCard>({
         businessId: branch!.business_id,
-        select: 'id, name_ar, name_en, price_from, currency_code, is_active, category_id',
+        // Phase 18c — `category_id` removed from select; service-category
+        // facets are sourced from `business_service_taxonomy_categories`.
+        select: 'id, name_ar, name_en, price_from, currency_code, is_active',
         activeOnly: true,
       });
       const all = (data ?? []) as ServiceCard[];
