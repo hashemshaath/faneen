@@ -704,8 +704,14 @@ const AdminBrandDetail: React.FC = () => {
               <div>
                 <Label className="text-xs mb-2 block">{isRTL ? 'صورة المنتج (تُضغط تلقائياً)' : 'Product image (auto-compressed)'}</Label>
                 <ImageUpload bucket="business-assets" value={newProduct.image_url}
+                  pipeline="product"
                   onChange={(url) => setNewProduct(p => ({ ...p, image_url: url || '' }))}
                   onRemove={() => setNewProduct(p => ({ ...p, image_url: '' }))}
+                  onUploadedMeta={(meta) => setNewProduct(p => ({
+                    ...p,
+                    image_asset_id: meta.imageAssetId ?? '',
+                    image_variants: (meta.variants ?? {}) as Record<string, string>,
+                  }))}
                   placeholder={isRTL ? 'رفع صورة' : 'Upload image'} />
               </div>
               <Button size="sm" onClick={() => createProduct.mutate()}
@@ -727,8 +733,14 @@ const AdminBrandDetail: React.FC = () => {
                     <Input dir="ltr" value={editProduct.sku} onChange={(e) => setEditProduct(s => ({ ...s, sku: e.target.value }))} placeholder="SKU" className="tech-content" />
                     <Textarea dir="auto" rows={2} value={editProduct.description_ar} onChange={(e) => setEditProduct(s => ({ ...s, description_ar: e.target.value }))} />
                     <ImageUpload bucket="business-assets" value={editProduct.image_url}
+                      pipeline="product"
                       onChange={(url) => setEditProduct(s => ({ ...s, image_url: url || '' }))}
-                      onRemove={() => setEditProduct(s => ({ ...s, image_url: '' }))} />
+                      onRemove={() => setEditProduct(s => ({ ...s, image_url: '' }))}
+                      onUploadedMeta={(meta) => setEditProduct(s => ({
+                        ...s,
+                        image_asset_id: meta.imageAssetId ?? '',
+                        image_variants: (meta.variants ?? {}) as Record<string, string>,
+                      }))} />
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => updateProduct.mutate({ productId: p.id })} disabled={updateProduct.isPending}>
                         <Save className="w-4 h-4 me-1" />{isRTL ? 'حفظ' : 'Save'}
@@ -738,8 +750,15 @@ const AdminBrandDetail: React.FC = () => {
                   </div>
                 ) : (
                   <div key={p.id} className="border rounded-xl p-3 bg-card hover-lift">
-                    {p.image_url ? (
-                      <img src={p.image_url} alt={p.name_ar} className="w-full h-28 object-cover rounded-lg border bg-background mb-2" loading="lazy" decoding="async" />
+                    {p.image_url || (p.image_variants && Object.keys(p.image_variants).length > 0) ? (
+                      <ResponsiveImage
+                        variants={p.image_variants ?? null}
+                        originalUrl={p.image_url}
+                        alt={p.name_ar}
+                        preferredVariant="card"
+                        sizes="(max-width: 768px) 100vw, 320px"
+                        className="w-full h-28 object-cover rounded-lg border bg-background mb-2"
+                      />
                     ) : (
                       <div className="w-full h-28 rounded-lg bg-muted grid place-items-center text-xs text-muted-foreground mb-2"><Package className="w-6 h-6 opacity-40" /></div>
                     )}
