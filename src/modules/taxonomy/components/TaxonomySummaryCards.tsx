@@ -1,23 +1,8 @@
 import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/i18n/LanguageContext';
-import {
-  Database,
-  FolderTree,
-  CheckCircle2,
-  EyeOff,
-  Archive,
-  FileText,
-  SearchIcon,
-  Copy,
-} from 'lucide-react';
+import { Database, FolderTree, CheckCircle2, EyeOff, Archive, FileText, Search, Copy } from 'lucide-react';
 import type { TaxonomyCategory, TaxonomyType } from '../types';
 import { detectTaxonomyDuplicates } from '../utils';
-
-interface Props {
-  types: TaxonomyType[];
-  categories: TaxonomyCategory[];
-  aliases: { alias_ar: string }[] & { length: number };
-}
 
 export const TaxonomySummaryCards: React.FC<{
   types: TaxonomyType[];
@@ -43,7 +28,7 @@ export const TaxonomySummaryCards: React.FC<{
     { label: isRTL ? 'المخفية' : 'Hidden', value: hidden, icon: EyeOff, tone: 'text-amber-600' },
     { label: isRTL ? 'المؤرشفة' : 'Archived', value: archived, icon: Archive, tone: 'text-muted-foreground' },
     { label: isRTL ? 'بدون وصف' : 'Missing description', value: missingDesc, icon: FileText, tone: 'text-amber-600' },
-    { label: isRTL ? 'بدون SEO' : 'Missing SEO', value: missingSeo, icon: SearchIcon, tone: 'text-amber-600' },
+    { label: isRTL ? 'بدون SEO' : 'Missing SEO', value: missingSeo, icon: Search, tone: 'text-amber-600' },
     { label: isRTL ? 'احتمالات تكرار' : 'Possible duplicates', value: dupCount, icon: Copy, tone: 'text-destructive' },
   ];
 
@@ -61,6 +46,3 @@ export const TaxonomySummaryCards: React.FC<{
     </div>
   );
 };
-
-// Unused props alias kept for clarity (lint quiet).
-export type TaxonomySummaryCardsProps = Props;
