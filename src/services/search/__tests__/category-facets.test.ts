@@ -107,11 +107,20 @@ describe('filterAndSort — category & service facet', () => {
     expect(res.map((b) => b.id)).toEqual(['b3']);
   });
 
-  it('legacy categoryId works without categories tree (slug fallback via embedded categories)', () => {
+  it('phase 6: without categories tree, slug-only filter relies on taxonomyBusinessIds (no embedded fallback)', () => {
+    // Embedded `categories(...)` relation was removed in Phase 6, so the
+    // slug fallback no longer exists. Slug URLs are resolved either by the
+    // taxonomy tree (when loaded) or by `taxonomyBusinessIds` from upstream.
     const withEmbedded = [{ ...businesses[0], categories: { slug: 'aluminum' } }];
-    const res = filterAndSort(
+    const noTaxonomy = filterAndSort(
       withEmbedded, '', { ...defaultFilters, categoryId: 'aluminum' }, [], [], 'ar', undefined,
     );
-    expect(res.map((b) => b.id)).toEqual(['b1']);
+    expect(noTaxonomy.map((b) => b.id)).toEqual([]);
+
+    const withTaxonomy = filterAndSort(
+      withEmbedded, '', { ...defaultFilters, categoryId: 'aluminum' }, [], [], 'ar', undefined,
+      new Set<string>(['b1']),
+    );
+    expect(withTaxonomy.map((b) => b.id)).toEqual(['b1']);
   });
 });

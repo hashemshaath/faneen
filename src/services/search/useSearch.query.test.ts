@@ -96,7 +96,8 @@ describe('useBusinesses Supabase query', () => {
       'business_services(name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status, category_id)',
     );
     expect(selectArg).toContain('promotions(id, end_date)');
-    expect(selectArg).toContain('categories(id, name_ar, name_en, slug, icon, parent_id)');
+    // Phase 6: embedded legacy `categories(...)` relation removed.
+    expect(selectArg).not.toMatch(/\bcategories\(/);
     // No greedy "promotions(*)" or "business_services(*)" patterns
     expect(selectArg).not.toMatch(/promotions\(\*\)/);
     expect(selectArg).not.toMatch(/business_services\(\*\)/);

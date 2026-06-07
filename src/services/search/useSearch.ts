@@ -2,7 +2,6 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
-import { listActiveCategories } from '@/modules/categories';
 import { listActiveCities } from '@/modules/locations';
 
 const HISTORY_KEY = 'qitaat_search_history';
@@ -164,11 +163,35 @@ export const getDidYouMean = (
 };
 
 // ─── Data Hooks ────────────────────────────────────────
+/**
+ * Phase 6 — taxonomy-only category tree for search.
+ *
+ * The legacy `categories` table is no longer queried from search. Instead we
+ * pull `taxonomy_categories` (active + public + non-archived) and project them
+ * into the same `{ id, slug, name_ar, name_en, parent_id, icon }` shape that
+ * `filterAndSort` / Search.tsx already expect. This keeps:
+ *   - `/search?category=<slug>` working (resolved via slug match)
+ *   - `/search?sector=<legacy>` working (mapped to a taxonomy slug upstream
+ *     in Search.tsx via LEGACY_SECTOR_TO_TAXONOMY_SLUG, then resolved here)
+ *   - parent → child rollup, since taxonomy_categories carries `parent_id`
+ *
+ * Legacy `categories` table is intentionally NOT deleted; it just is no
+ * longer read by the search layer.
+ */
 export const useCategories = () =>
   useQuery({
-    queryKey: ['categories'],
+    queryKey: ['search:taxonomy-categories'],
     queryFn: async () => {
-      const { data } = await listActiveCategories<Database['public']['Tables']['categories']['Row']>({ select: '*' });
+      const { data, error } = await supabase
+        .from('taxonomy_categories')
+        .select('id, slug, name_ar, name_en, parent_id, icon')
+        .eq('is_active', true)
+        .eq('is_public', true)
+        .eq('is_archived', false);
+      if (error) {
+        // Soft-fail: search must keep working even if taxonomy load fails.
+        return [];
+      }
       return data ?? [];
     },
     staleTime: 5 * 60 * 1000,
@@ -205,10 +228,15 @@ export const useBusinesses = () =>
         'logo_url, cover_url, website, ' +
         'rating_avg, rating_count, is_verified, membership_tier, ' +
         'category_id, city_id, latitude, longitude, created_at';
+      // Phase 6: legacy embedded `categories(...)` relation removed from the
+      // select. The category slug fallback in `filterAndSort` is no longer
+      // needed because the taxonomy tree (loaded by `useCategories`) now
+      // resolves slugs centrally. `businesses.category_id` is still read as
+      // a plain uuid for backward filtering only.
       const { data } = await supabase
         .from('businesses_public')
         .select(
-          `${PARENT_SELECT}, categories(id, name_ar, name_en, slug, icon, parent_id), cities(id, name_ar, name_en), business_services(name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status, category_id), promotions(id, end_date)`,
+          `${PARENT_SELECT}, cities(id, name_ar, name_en), business_services(name_ar, name_en, price_from, price_to, is_active, provider_status, admin_status, category_id), promotions(id, end_date)`,
         )
         .eq('is_active', true)
         // SERVICE-ACTIVATION-GOVERNANCE-3 — eligibility gate on nested
@@ -352,13 +380,13 @@ export const filterAndSort = (
         allowed.has(b.category_id) || (taxonomyBusinessIds?.has(b.id) ?? false),
       );
     } else {
-      // Legacy fallback: categories tree not loaded yet — match by id or
-      // embedded slug so legacy URLs still work during hydration.
+      // Phase 6: taxonomy tree not loaded yet — match by raw uuid only.
+      // The legacy embedded `categories(...).slug` fallback was removed with
+      // the relation; slug-based URLs now resolve via the taxonomy tree
+      // (useCategories) once it hydrates, plus taxonomyBusinessIds upstream.
       const v = filters.categoryId;
       results = results.filter((b) =>
-        b.category_id === v ||
-        (b as { categories?: { slug?: string } }).categories?.slug === v ||
-        (taxonomyBusinessIds?.has(b.id) ?? false),
+        b.category_id === v || (taxonomyBusinessIds?.has(b.id) ?? false),
       );
     }
   }
