@@ -54,7 +54,9 @@ export type BusinessWithJoins = BusinessRow & {
    * `business.categories?.slug`) continue to compile and degrade
    * gracefully. Business category DISPLAY is taxonomy-only now.
    */
-  categories: null;
+  /** Always `null` at runtime — see Phase 12 / 18b note above. Typed as a
+   *  nullable shape so existing optional-chain callers compile. */
+  categories: { slug?: string | null; name_ar?: string | null; name_en?: string | null } | null;
   cities: CityRow | null;
   countries: CountryRow | null;
 };
@@ -185,7 +187,7 @@ export const useProjects = (businessId: string | undefined) =>
         .order("is_featured", { ascending: false })
         .order("created_at", { ascending: false });
 
-      const rows = (data ?? []) as Array<Omit<ProjectWithJoins, "categories">>;
+      const rows = (data ?? []) as unknown as Array<Omit<ProjectWithJoins, "categories">>;
       if (rows.length === 0) return [] as ProjectWithJoins[];
 
       const projectIds = rows.map((r) => r.id);
@@ -204,7 +206,7 @@ export const useProjects = (businessId: string | undefined) =>
         taxonomy_categories: { name_ar: string | null; name_en: string | null } | null;
       };
       const byProject = new Map<string, { name_ar: string | null; name_en: string | null }>();
-      for (const t of (taxRows ?? []) as TaxRow[]) {
+      for (const t of ((taxRows ?? []) as unknown as TaxRow[])) {
         if (byProject.has(t.project_id)) continue; // first match wins (primary preferred via sort below)
         if (!t.taxonomy_categories) continue;
         byProject.set(t.project_id, t.taxonomy_categories);
