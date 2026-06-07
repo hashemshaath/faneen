@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Award, Sparkles } from 'lucide-react';
 import { getLoyaltySummary, listLoyaltyEntries, LEVEL_THRESHOLDS, nextLevel, type LoyaltyLevel } from '@/modules/loyalty/services';
+import { PageHeader } from '@/components/shared';
 
 const LEVEL_LABEL: Record<LoyaltyLevel, { ar: string; en: string; color: string }> = {
   bronze: { ar: 'برونزي', en: 'Bronze', color: 'bg-amber-700' },
@@ -42,21 +43,19 @@ const DashboardLoyalty: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Award className="w-6 h-6 text-primary" />
-            {isRTL ? 'نقاط الولاء' : 'Loyalty Points'}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isRTL ? 'اكسب نقاطًا مع كل تفاعل وارتقِ في المستويات' : 'Earn points with every interaction and climb levels'}
-          </p>
-        </div>
+      <div className="space-y-5">
+        <PageHeader
+          icon={Award}
+          tone="primary"
+          eyebrow={isRTL ? 'المكافآت' : 'Rewards'}
+          title={isRTL ? 'نقاط الولاء' : 'Loyalty Points'}
+          subtitle={isRTL ? 'اكسب نقاطًا مع كل تفاعل وارتقِ في المستويات.' : 'Earn points with every interaction and climb levels.'}
+        />
 
         {isLoading || !summary ? (
-          <Skeleton className="h-40 rounded-xl" />
+          <Skeleton className="h-40 rounded-3xl" />
         ) : (
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden rounded-3xl border-border/60 shadow-sm">
             <CardContent className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
