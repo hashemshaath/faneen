@@ -15,6 +15,8 @@ type CountryRow = Database["public"]["Tables"]["countries"]["Row"];
 type ServiceRow = Database["public"]["Tables"]["business_services"]["Row"];
 type BranchRow = Database["public"]["Tables"]["business_branches"]["Row"];
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
+type CertificationRow = Database["public"]["Tables"]["business_certifications"]["Row"];
+type AwardRow = Database["public"]["Tables"]["business_awards"]["Row"];
 
 type ProjectWithJoins = Pick<
   ProjectRow,
