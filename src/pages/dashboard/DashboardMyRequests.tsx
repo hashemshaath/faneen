@@ -26,6 +26,7 @@ import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
 import { trackEvent } from '@/lib/analytics-events';
 import { ReferenceBadge } from '@/components/reference/ReferenceBadge';
 import { ReferenceLinkCopy } from '@/components/reference/ReferenceLinkCopy';
+import { PageHeader } from '@/components/shared';
 
 interface MyLeadRow {
   id: string;
@@ -182,15 +183,13 @@ const DashboardMyRequests: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-5">
-        <header>
-          <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-            <Inbox className="h-5 w-5" />
-            {isRTL ? 'طلباتي' : 'My Requests'}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isRTL ? 'تابع حالة طلبات الخدمة التي أرسلتها للمنشآت' : 'Track the status of the service requests you sent to providers'}
-          </p>
-        </header>
+        <PageHeader
+          icon={Inbox}
+          tone="primary"
+          eyebrow={isRTL ? 'الطلبات' : 'Requests'}
+          title={isRTL ? 'طلباتي' : 'My Requests'}
+          subtitle={isRTL ? 'تابع حالة طلبات الخدمة التي أرسلتها للمنشآت' : 'Track the status of the service requests you sent to providers'}
+        />
 
         {isLoading && (
           <div className="space-y-3">

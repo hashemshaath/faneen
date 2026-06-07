@@ -28,6 +28,7 @@ import {
   readBookingStatusSafe,
 } from '@/modules/bookings/services/emitBookingAudit';
 import { Label } from '@/components/ui/label';
+import { PageHeader } from '@/components/shared';
 import { Input } from '@/components/ui/input';
 import {
   CalendarClock, Clock, CheckCircle2, XCircle, AlertCircle, User,
@@ -247,27 +248,21 @@ const DashboardBookings = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="font-heading text-xl font-bold text-foreground sm:text-2xl">
-              <CalendarClock className="inline-block w-6 h-6 me-2 text-accent" />
-              {isRTL ? 'حجز المواعيد' : 'Bookings'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isProvider
-                ? (isRTL ? 'إدارة مواعيد العملاء وأوقات العمل' : 'Manage client appointments and working hours')
-                : (isRTL ? 'تتبع حجوزاتك لدى مزودي الخدمات' : 'Track your bookings with service providers')
-              }
-            </p>
-          </div>
-          {isProvider && (
+        <PageHeader
+          icon={CalendarClock}
+          tone="accent"
+          eyebrow={isRTL ? 'المواعيد' : 'Schedule'}
+          title={isRTL ? 'حجز المواعيد' : 'Bookings'}
+          subtitle={isProvider
+            ? (isRTL ? 'إدارة مواعيد العملاء وأوقات العمل' : 'Manage client appointments and working hours')
+            : (isRTL ? 'تتبع حجوزاتك لدى مزودي الخدمات' : 'Track your bookings with service providers')}
+          actions={isProvider ? (
             <Button variant="outline" className="gap-2" onClick={() => setAvailabilityDialog(true)}>
               <Settings2 className="w-4 h-4" />
               {isRTL ? 'أوقات العمل' : 'Working Hours'}
             </Button>
-          )}
-        </div>
+          ) : undefined}
+        />
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

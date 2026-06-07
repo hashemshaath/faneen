@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { PageHeader } from '@/components/shared';
 
 interface ReviewWithRelations {
   id: string;
@@ -333,16 +334,13 @@ const DashboardReviews = () => {
   return (
     <DashboardLayout>
       <div className="space-y-5">
-        {/* Header */}
-        <div>
-          <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-            {isRTL ? 'التقييمات والمراجعات' : 'Reviews & Ratings'}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            {isRTL ? 'تابع تقييمات عملائك المرتبطة بالمشاريع والتقييمات العامة' : 'Track project-linked and general customer reviews'}
-          </p>
-        </div>
+        <PageHeader
+          icon={Sparkles}
+          tone="primary"
+          eyebrow={isRTL ? 'الجودة' : 'Quality'}
+          title={isRTL ? 'التقييمات والمراجعات' : 'Reviews & Ratings'}
+          subtitle={isRTL ? 'تابع تقييمات عملائك المرتبطة بالمشاريع والتقييمات العامة' : 'Track project-linked and general customer reviews'}
+        />
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
