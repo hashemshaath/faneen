@@ -426,7 +426,7 @@ const RenderMenu: React.FC<{
             asChild
             tooltip={collapsed ? label : undefined}
             isActive={isActive}
-            className="min-h-9 sm:min-h-9"
+            className="group/qit-nav h-11 min-h-[44px] rounded-xl px-3 gap-2.5"
           >
             <NavLink
               to={item.url}
@@ -434,18 +434,22 @@ const RenderMenu: React.FC<{
               aria-label={label}
               aria-current={isActive ? 'page' : undefined}
               className={
-                'relative rounded-lg transition-colors outline-none ' +
+                'relative rounded-xl transition-all duration-200 outline-none flex items-center w-full ' +
                 'focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-0 ' +
                 (isActive
-                  ? 'bg-primary/12 text-primary font-semibold dark:bg-primary/18 dark:text-primary-foreground ' +
-                    'before:absolute before:inset-y-1 before:start-0 before:w-[3px] before:rounded-full before:bg-primary'
-                  : 'text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground')
+                  ? 'bg-gradient-to-r from-primary/15 to-primary/[0.04] text-primary font-semibold shadow-sm ring-1 ring-primary/20 ' +
+                    'dark:from-primary/25 dark:to-primary/5 dark:text-primary-foreground ' +
+                    'before:absolute before:inset-y-1.5 before:start-0 before:w-[3px] before:rounded-full before:bg-primary'
+                  : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground')
               }
               activeClassName=""
               onClick={closeMobile}
             >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="ms-2 truncate">{label}</span>}
+              <item.icon className={
+                'h-4 w-4 shrink-0 transition-transform duration-200 group-hover/qit-nav:scale-110 ' +
+                (isActive ? 'text-primary' : 'text-muted-foreground group-hover/qit-nav:text-foreground')
+              } />
+              {!collapsed && <span className="ms-2 truncate text-[13px]">{label}</span>}
               {!collapsed && badgeLabel ? <BadgePill tone={item.badge?.tone}>{badgeLabel}</BadgePill> : null}
             </NavLink>
           </SidebarMenuButton>
