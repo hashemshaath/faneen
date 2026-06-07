@@ -458,6 +458,14 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
           </div>
         </section>
       )}
+
+      {/* Verified credentials — certifications & awards. Renders nothing
+          when both lists are empty (component handles its own guard). */}
+      {(certifications.length > 0 || awards.length > 0) && (
+        <div className="lg:col-span-3">
+          <CredentialsSection certifications={certifications} awards={awards} />
+        </div>
+      )}
     </div>
   );
 };
