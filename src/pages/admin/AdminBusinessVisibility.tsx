@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { searchAdminBusinessesLite } from "@/modules/businesses/services/searchAdminBusinessesLite";
 import { BusinessVisibilityEditor } from "@/components/business-profile/BusinessVisibilityEditor";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { AdminFiltersBar } from "@/components/admin/AdminFiltersBar";
 
 interface BusinessLite {
   id: string;
@@ -41,37 +43,27 @@ const AdminBusinessVisibility = () => {
   );
 
   return (
-    <div className="container-app py-6" dir={isRTL ? "rtl" : "ltr"}>
-      <header className="mb-5 flex items-start gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-700 dark:text-amber-300">
-          <ShieldAlert className="h-6 w-6" />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-foreground">
-            {isRTL ? "إعدادات ظهور البروفايلات (أدمن)" : "Profile visibility (Admin)"}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {isRTL
-              ? "تعديل وقفل أي قسم في أي بروفايل جهة. الأقسام المقفلة لا يستطيع المالك تعديلها."
-              : "Override and lock any section of any business profile. Locked sections cannot be edited by owners."}
-          </p>
-        </div>
-      </header>
+    <div className="container-app py-6 space-y-5" dir={isRTL ? "rtl" : "ltr"}>
+      <AdminPageHeader
+        icon={ShieldAlert}
+        tone="warning"
+        title={isRTL ? "إعدادات ظهور البروفايلات" : "Profile visibility"}
+        subtitle={
+          isRTL
+            ? "تعديل وقفل أي قسم في أي بروفايل جهة. الأقسام المقفلة لا يستطيع المالك تعديلها."
+            : "Override and lock any section of any business profile. Locked sections cannot be edited by owners."
+        }
+        eyebrow={isRTL ? "أدمن" : "Admin"}
+      />
 
       <div className="grid gap-5 lg:grid-cols-[320px,1fr]">
-        <aside className="rounded-2xl border border-border/40 bg-card/60 p-3 dark:bg-card/30">
-          <div className="relative mb-2">
-            <Search className="pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground start-3" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={isRTL ? "ابحث بالاسم أو المعرف" : "Search by name or ref"}
-              className="h-10 w-full rounded-lg border border-border/60 bg-background pe-3 ps-9 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-              dir="auto"
-            />
-          </div>
-
-          <div className="max-h-[60vh] space-y-1 overflow-y-auto pr-1">
+        <aside className="space-y-3">
+          <AdminFiltersBar
+            searchValue={query}
+            onSearchChange={setQuery}
+            searchPlaceholder={isRTL ? "ابحث بالاسم أو المعرف" : "Search by name or ref"}
+          />
+          <div className="max-h-[60vh] space-y-1 overflow-y-auto rounded-3xl border border-border/60 bg-card/60 p-2 dark:bg-card/30">
             {!rows && [1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
             {rows?.length === 0 && (
               <p className="py-6 text-center text-xs text-muted-foreground">
@@ -85,7 +77,7 @@ const AdminBusinessVisibility = () => {
                   key={b.id}
                   type="button"
                   onClick={() => setSelectedId(b.id)}
-                  className={`flex w-full flex-col gap-0.5 rounded-lg px-3 py-2 text-start transition-colors ${
+                  className={`flex w-full flex-col gap-0.5 rounded-xl px-3 py-2 text-start transition-colors ${
                     active
                       ? "bg-primary/10 text-primary"
                       : "hover:bg-muted/40 text-foreground"
@@ -107,12 +99,12 @@ const AdminBusinessVisibility = () => {
 
         <section>
           {!selected ? (
-            <div className="rounded-2xl border border-dashed border-border/40 bg-card/30 p-12 text-center text-sm text-muted-foreground">
+            <div className="rounded-3xl border border-dashed border-border/60 bg-card/30 p-12 text-center text-sm text-muted-foreground">
               {isRTL ? "اختر جهة من القائمة" : "Pick a business from the list"}
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-border/40 bg-card/60 p-4 dark:bg-card/30">
+              <div className="rounded-3xl border border-border/60 bg-card/60 p-4 dark:bg-card/30 shadow-sm">
                 <h2 className="text-base font-semibold">
                   {language === "ar"
                     ? selected.name_ar || selected.name_en || selected.username
