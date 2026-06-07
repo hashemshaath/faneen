@@ -37,7 +37,6 @@ interface Submission {
   description_en: string | null;
   image_url: string;
   link_url: string | null;
-  sector_slug: string | null;
   taxonomy_category_id: string | null;
   status: "pending" | "approved" | "rejected";
   rejected_reason: string | null;
