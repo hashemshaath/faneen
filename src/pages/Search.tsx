@@ -63,33 +63,6 @@ const SearchPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams.get('q')]);
   const debouncedQuery = useDebouncedValue(query, 300);
-
-  // Phase 7 — Taxonomy-first augmentation. Resolves URL params (category /
-  // sector / service / q) to a central taxonomy category and pulls the set
-  // of business ids linked to it (incl. direct children). The legacy
-  // filtering path stays untouched; these ids are unioned in below.
-  const { data: taxonomyCtx } = useSearchTaxonomyContext({
-    q: debouncedQuery,
-    sector: searchParams.get('sector'),
-    category: filters.categoryId !== 'all' ? filters.categoryId : null,
-    service: filters.serviceCategoryId !== 'all' ? filters.serviceCategoryId : null,
-  });
-  const taxonomyBusinessIds = taxonomyCtx?.taxonomyBusinessIds;
-
-  React.useEffect(() => {
-    if (import.meta.env.DEV && taxonomyCtx) {
-      // eslint-disable-next-line no-console
-      console.debug('[taxonomy-search]', {
-        q: debouncedQuery,
-        sector: searchParams.get('sector'),
-        category: filters.categoryId,
-        resolvedCategory: taxonomyCtx.resolvedCategory?.slug ?? null,
-        taxonomyMatches: taxonomyCtx.taxonomyBusinessIds.size,
-        legacyFallbackUsed: taxonomyCtx.shouldUseLegacyFallback,
-      });
-    }
-  }, [taxonomyCtx, debouncedQuery, searchParams, filters.categoryId]);
-
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   // Collapsed by default on mobile to avoid covering results; desktop CSS keeps the sidebar visible.
   const [showFilters, setShowFilters] = useState(() =>
