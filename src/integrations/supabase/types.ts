@@ -8540,6 +8540,54 @@ export type Database = {
           },
         ]
       }
+      image_assets: {
+        Row: {
+          alt: string | null
+          bucket: string
+          created_at: string
+          format: string | null
+          id: string
+          optimized_total_size: number | null
+          original_height: number | null
+          original_path: string
+          original_size: number | null
+          original_width: number | null
+          owner_user_id: string | null
+          updated_at: string
+          variants: Json
+        }
+        Insert: {
+          alt?: string | null
+          bucket: string
+          created_at?: string
+          format?: string | null
+          id?: string
+          optimized_total_size?: number | null
+          original_height?: number | null
+          original_path: string
+          original_size?: number | null
+          original_width?: number | null
+          owner_user_id?: string | null
+          updated_at?: string
+          variants?: Json
+        }
+        Update: {
+          alt?: string | null
+          bucket?: string
+          created_at?: string
+          format?: string | null
+          id?: string
+          optimized_total_size?: number | null
+          original_height?: number | null
+          original_path?: string
+          original_size?: number | null
+          original_width?: number | null
+          owner_user_id?: string | null
+          updated_at?: string
+          variants?: Json
+        }
+        Relationships: []
+      }
       images: {
         Row: {
           created_at: string
@@ -14702,6 +14750,7 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           id: string
+          image_asset_id: string | null
           image_url: string
           kind: string
           link_url: string | null
@@ -14721,6 +14770,7 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           id?: string
+          image_asset_id?: string | null
           image_url: string
           kind: string
           link_url?: string | null
@@ -14740,6 +14790,7 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           id?: string
+          image_asset_id?: string | null
           image_url?: string
           kind?: string
           link_url?: string | null
@@ -14766,6 +14817,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showcase_submissions_image_asset_id_fkey"
+            columns: ["image_asset_id"]
+            isOneToOne: false
+            referencedRelation: "image_assets"
             referencedColumns: ["id"]
           },
           {

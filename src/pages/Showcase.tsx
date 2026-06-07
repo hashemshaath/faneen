@@ -17,6 +17,7 @@ import {
   getShowcaseTaxonomyCategories,
 } from "@/modules/taxonomy/showcase-services";
 import { LEGACY_SECTOR_TO_TAXONOMY_SLUG } from "@/modules/taxonomy/legacy-mapping";
+import { ResponsiveImage } from "@/modules/files/components/ResponsiveImage";
 
 interface ShowcaseRow {
   id: string;
@@ -29,6 +30,7 @@ interface ShowcaseRow {
   image_url: string;
   link_url: string | null;
   taxonomy_category_id: string | null;
+  image_asset?: { variants: unknown } | null;
   business: {
     id: string;
     name_ar: string | null;
@@ -72,7 +74,7 @@ const Showcase = () => {
       let q = supabase
         .from("showcase_submissions")
         .select(
-          "id, business_id, kind, title_ar, title_en, description_ar, description_en, image_url, link_url, taxonomy_category_id, business:businesses!inner(id, name_ar, name_en, username, logo_url, is_verified)",
+          "id, business_id, kind, title_ar, title_en, description_ar, description_en, image_url, link_url, taxonomy_category_id, image_asset:image_assets(variants), business:businesses!inner(id, name_ar, name_en, username, logo_url, is_verified)",
         )
         .eq("status", "approved")
         // SEO-10A — enforce verified+active+published+non-demo on the joined
@@ -261,10 +263,11 @@ const Showcase = () => {
                     title={name}
                   >
                     <div className="aspect-[4/3] bg-muted/30 flex items-center justify-center p-4">
-                      <img
-                        src={row.image_url}
+                      <ResponsiveImage
+                        originalUrl={row.image_url}
+                        variants={row.image_asset?.variants}
                         alt={name}
-                        loading="lazy"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
                         className="max-h-full max-w-full object-contain group-hover:scale-105 transition"
                       />
                     </div>
@@ -306,10 +309,11 @@ const Showcase = () => {
                 return (
                   <article key={row.id} className="group rounded-xl border border-border/60 bg-card overflow-hidden hover-lift">
                     <div className="aspect-[16/11] bg-muted/30 overflow-hidden">
-                      <img
-                        src={row.image_url}
+                      <ResponsiveImage
+                        originalUrl={row.image_url}
+                        variants={row.image_asset?.variants}
                         alt={title || name}
-                        loading="lazy"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="w-full h-full object-cover group-hover:scale-[1.03] transition"
                       />
                     </div>

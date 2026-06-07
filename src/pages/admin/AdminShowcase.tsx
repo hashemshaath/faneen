@@ -15,6 +15,7 @@ import { useQuery as useRq } from "@tanstack/react-query";
 import {
   getShowcaseTaxonomyCategories,
 } from "@/modules/taxonomy/showcase-services";
+import { ResponsiveImage } from "@/modules/files/components/ResponsiveImage";
 
 interface Row {
   id: string;
@@ -29,6 +30,7 @@ interface Row {
   status: "pending" | "approved" | "rejected";
   rejected_reason: string | null;
   created_at: string;
+  image_asset?: { variants: unknown } | null;
   business: {
     id: string;
     name_ar: string | null;
@@ -53,7 +55,7 @@ const AdminShowcase: React.FC = () => {
       const { data, error } = await supabase
         .from("showcase_submissions")
         .select(
-          "id, business_id, kind, title_ar, title_en, image_url, link_url, sector_slug, taxonomy_category_id, status, rejected_reason, created_at, business:businesses(id, name_ar, name_en, is_verified, username)",
+          "id, business_id, kind, title_ar, title_en, image_url, link_url, sector_slug, taxonomy_category_id, status, rejected_reason, created_at, image_asset:image_assets(variants), business:businesses(id, name_ar, name_en, is_verified, username)",
         )
         .eq("status", tab)
         .order("created_at", { ascending: false })
@@ -193,7 +195,13 @@ const AdminShowcase: React.FC = () => {
               return (
                 <Card key={row.id}>
                   <div className="aspect-[16/11] bg-muted/30 overflow-hidden">
-                    <img src={row.image_url} alt={row.title_ar || name} className="w-full h-full object-cover" loading="lazy" />
+                    <ResponsiveImage
+                      originalUrl={row.image_url}
+                      variants={row.image_asset?.variants}
+                      alt={row.title_ar || name}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <CardContent className="p-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
