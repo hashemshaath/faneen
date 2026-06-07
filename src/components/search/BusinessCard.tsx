@@ -10,6 +10,7 @@ import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
 import { useRecentlyViewedBusinesses } from '@/hooks/useRecentlyViewedBusinesses';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { BusinessIdentityStrip } from '@/components/business/BusinessIdentityStrip';
+import { ResponsiveImage } from '@/modules/files';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import type { BusinessTaxonomyDisplay } from '@/modules/taxonomy/search-integration';
@@ -226,7 +227,13 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
         {/* Logo */}
         <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/20 dark:border-border/10 group-hover:border-accent/20 transition-all ${b.logo_url ? '' : `bg-gradient-to-br ${getPlaceholderGradient(name)}`}`}>
           {b.logo_url ? (
-            <img src={b.logo_url} alt={name} className="w-full h-full object-cover" loading="lazy" />
+            <ResponsiveImage
+              originalUrl={b.logo_url}
+              variants={b.logo_image_variants}
+              alt={name}
+              sizes="64px"
+              className="w-full h-full object-cover"
+            />
           ) : (
             <span className="text-xl font-heading font-bold text-accent/60">{initial}</span>
           )}
@@ -315,7 +322,13 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
       {/* Cover area */}
       <div className="relative h-24 sm:h-28 bg-gradient-to-br from-accent/8 via-muted/40 to-accent/5 dark:from-accent/5 dark:via-muted/20 dark:to-accent/8 overflow-hidden">
         {b.cover_url ? (
-          <img src={b.cover_url} alt={language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)} className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700" loading="lazy" />
+          <ResponsiveImage
+            originalUrl={b.cover_url}
+            variants={b.cover_image_variants}
+            alt={language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700"
+          />
         ) : (
           <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%)', backgroundSize: '12px 12px' }} />
         )}
@@ -332,7 +345,13 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
       <div className="px-4 sm:px-5 -mt-9 sm:-mt-10 relative z-10">
         <div className={`w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-[3px] border-card shadow-lg flex items-center justify-center overflow-hidden group-hover:shadow-xl transition-shadow ${b.logo_url ? 'bg-card' : `bg-gradient-to-br ${getPlaceholderGradient(name)}`}`}>
           {b.logo_url ? (
-            <img src={b.logo_url} alt={name} className="w-full h-full object-cover" loading="lazy" />
+            <ResponsiveImage
+              originalUrl={b.logo_url}
+              variants={b.logo_image_variants}
+              alt={name}
+              sizes="72px"
+              className="w-full h-full object-cover"
+            />
           ) : (
             <span className="text-2xl font-heading font-bold text-accent/50">{initial}</span>
           )}
