@@ -113,13 +113,16 @@ const DashboardServices: React.FC = () => {
     queryFn: async () => {
       if (!user) return null;
       if (activeOwnerEntityId) {
-        const { data } = await listBusinessesByIds<{ id: string; username: string | null; sectors: string[]; sub_services: string[] }>(
-          { ids: [activeOwnerEntityId], select: 'id, username, sectors, sub_services' },
+        // Phase 18d — `sectors` / `sub_services` are no longer read here.
+        // The selected sub-services and active sectors are derived from
+        // `business_services` rows below (`source_sub_service_id`).
+        const { data } = await listBusinessesByIds<{ id: string; username: string | null }>(
+          { ids: [activeOwnerEntityId], select: 'id, username' },
         );
         return (data ?? [])[0] ?? null;
       }
-      const { data } = await getOwnerBusiness<{ id: string; username: string | null; sectors: string[]; sub_services: string[] }>(
-        { userId: user.id, select: 'id, username, sectors, sub_services' },
+      const { data } = await getOwnerBusiness<{ id: string; username: string | null }>(
+        { userId: user.id, select: 'id, username' },
       );
       return data;
     },
@@ -128,8 +131,6 @@ const DashboardServices: React.FC = () => {
   });
 
   const businessId = business?.id ?? null;
-  const subServiceIds: string[] = useMemo(() => business?.sub_services ?? [], [business]);
-  const businessSectors: string[] = useMemo(() => (business as { sectors?: string[] } | null)?.sectors ?? [], [business]);
 
   const { data: services = [], isLoading: loadingSvc } = useQuery({
     queryKey: ['business-services-sync', businessId],
