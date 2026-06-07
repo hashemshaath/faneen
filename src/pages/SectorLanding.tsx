@@ -241,12 +241,15 @@ const SectorLanding: React.FC = () => {
     const taxDesc = isRTL
       ? (tx.seo_description_ar || tx.short_description_ar || baseMeta.description)
       : (tx.seo_description_en || tx.short_description_en || baseMeta.description);
-    const taxKeywords = (isRTL ? tx.keywords_ar : tx.keywords_en) ?? null;
+    const taxKeywordsArr = (isRTL ? tx.keywords_ar : tx.keywords_en) ?? null;
+    const taxKeywords = taxKeywordsArr && taxKeywordsArr.length > 0
+      ? taxKeywordsArr.join(', ')
+      : null;
     return {
       ...baseMeta,
       name: taxName ?? baseMeta.name,
       description: taxDesc ?? baseMeta.description,
-      keywords: (taxKeywords && taxKeywords.length > 0 ? taxKeywords : baseMeta.keywords),
+      keywords: taxKeywords ?? baseMeta.keywords,
     };
   }, [baseMeta, taxonomyCategory, isRTL]);
   const lang = isRTL ? 'ar' as const : 'en' as const;
