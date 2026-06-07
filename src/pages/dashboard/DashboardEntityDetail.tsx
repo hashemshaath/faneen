@@ -52,7 +52,6 @@ interface BizDetail {
   is_verified: boolean | null;
   membership_tier: string | null;
   approval_status: string | null;
-  category_id: string | null;
   entity_type: string | null;
   description_ar?: string | null;
   description_en?: string | null;
@@ -129,7 +128,7 @@ const DashboardEntityDetail: React.FC = () => {
       const res = await getAdminBusinessById<BizDetail>({
         id,
         select:
-          'id, user_id, ref_id, legacy_ref_id, name_ar, name_en, username, email, phone, is_active, is_verified, membership_tier, approval_status, category_id, entity_type, description_ar, description_en',
+          'id, user_id, ref_id, legacy_ref_id, name_ar, name_en, username, email, phone, is_active, is_verified, membership_tier, approval_status, entity_type, description_ar, description_en',
       });
       if (res.error) throw res.error;
       return res.data;

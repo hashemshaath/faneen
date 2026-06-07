@@ -301,7 +301,6 @@ const AdminBusinesses = () => {
     phone_cc: '+966',
     phone_national: '',
     email: '',
-    category_id: '',
     city_id: '',
     region_id: '' as SaRegionId | '',
     // Registry / official identifiers
@@ -722,9 +721,8 @@ const AdminBusinesses = () => {
         name_en: createForm.name_en?.trim() || null,
         phone: phoneE164 || null,
         email: createForm.email?.trim() || null,
-        // Phase 5: category_id intentionally NOT written from admin create.
-        // Owner can set taxonomy from BusinessTaxonomySection in edit view.
-        category_id: null,
+        // Phase 18i: legacy `category_id` column dropped. Classification is
+        // managed taxonomy-only via BusinessTaxonomySection in edit view.
         city_id: createForm.city_id || null,
         region: region ? region.name_ar : null,
         region_en: region ? region.name_en : null,
@@ -1184,7 +1182,7 @@ const AdminBusinesses = () => {
       short_description_ar: biz.short_description_ar || '', short_description_en: biz.short_description_en || '',
       description_ar: biz.description_ar || '', description_en: biz.description_en || '',
       phone: biz.phone || '', email: biz.email || '', website: biz.website || '',
-      address: biz.address || '', category_id: biz.category_id || '',
+      address: biz.address || '',
       country_id: biz.country_id || '', city_id: biz.city_id || '',
       logo_url: biz.logo_url || '', cover_url: biz.cover_url || '',
       seo_title_ar: biz.seo_title_ar || '', seo_title_en: biz.seo_title_en || '',
@@ -1994,9 +1992,8 @@ const AdminBusinesses = () => {
                     }}
                   />
                   {/*
-                    Phase 5: Legacy category picker removed from admin UI.
-                    Classification is now taxonomy-only via BusinessTaxonomySection above.
-                    `businesses.category_id` is retained in the DB for backward reads only.
+                    Phase 18i: Legacy `businesses.category_id` column dropped.
+                    Classification is taxonomy-only via BusinessTaxonomySection above.
                   */}
                   <Separator />
                   <div className="p-3 rounded-xl bg-muted/30 border border-border/30 text-[10px] space-y-1 text-muted-foreground font-mono">
