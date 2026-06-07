@@ -14675,7 +14675,6 @@ export type Database = {
           rejected_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
-          sector_slug: string | null
           status: string
           submitted_by: string | null
           taxonomy_category_id: string | null
@@ -14695,7 +14694,6 @@ export type Database = {
           rejected_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          sector_slug?: string | null
           status?: string
           submitted_by?: string | null
           taxonomy_category_id?: string | null
@@ -14715,7 +14713,6 @@ export type Database = {
           rejected_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          sector_slug?: string | null
           status?: string
           submitted_by?: string | null
           taxonomy_category_id?: string | null
