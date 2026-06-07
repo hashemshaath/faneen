@@ -97,7 +97,6 @@ const SectorLanding: React.FC = () => {
   const {
     taxonomyCategory,
     businessIds: taxonomyBusinessIds,
-    hasEmptyTaxonomy,
   } = useSectorTaxonomy(sectorSlug);
 
   const { data: businesses = [], isLoading } = useQuery({
