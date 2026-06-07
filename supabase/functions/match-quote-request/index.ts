@@ -19,6 +19,31 @@ const SECTOR_ALIASES: Record<string, string[]> = {
   other: [],
 };
 
+// Phase 4 — legacy sector → taxonomy slug.
+// KEEP IN SYNC with src/modules/taxonomy/legacy-mapping.ts.
+const LEGACY_SECTOR_TO_TAXONOMY_SLUG: Record<string, string> = {
+  aluminum: 'aluminum-glass-facades',
+  glass: 'aluminum-glass-facades',
+  aluminum_glass: 'aluminum-glass-facades',
+  storefronts: 'aluminum-glass-facades',
+  steel: 'steel-metal-works',
+  iron: 'steel-metal-works',
+  'iron-steel': 'steel-metal-works',
+  wood: 'wood-carpentry',
+  cabinets: 'wood-carpentry',
+  stainless: 'stainless-steel-fabrication',
+  'stainless-steel': 'stainless-steel-fabrication',
+  stainless_steel: 'stainless-steel-fabrication',
+  fabrication: 'contracting-finishing',
+  'fabrication-installation': 'contracting-finishing',
+  finishing: 'contracting-finishing',
+  'project-fitout': 'contracting-finishing',
+  construction: 'construction-building',
+  materials: 'building-materials-supply',
+  equipment: 'heavy-equipment-rental',
+  maintenance: 'operations-maintenance',
+};
+
 interface MatchInput { quote_request_id: string; limit?: number }
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -126,6 +151,53 @@ Deno.serve(async (req) => {
 
   const aliases = SECTOR_ALIASES[quote.sector] ?? [quote.sector];
 
+  // Phase 4 — resolve quote sector to a taxonomy category (best-effort).
+  // Failures are non-fatal: legacy scoring continues as before.
+  let taxonomyCategoryId: string | null = null;
+  let taxonomyCategorySlug: string | null = null;
+  let taxonomyChildIds = new Set<string>();
+  let taxonomyLinksByBiz = new Map<string, { category_id: string; role: string }[]>();
+  try {
+    const normalizedSector = String(quote.sector ?? '').trim().toLowerCase();
+    const targetSlug = LEGACY_SECTOR_TO_TAXONOMY_SLUG[normalizedSector] ?? normalizedSector;
+    if (targetSlug) {
+      const { data: catRow } = await admin
+        .from('taxonomy_categories')
+        .select('id, slug')
+        .eq('slug', targetSlug)
+        .eq('is_active', true)
+        .eq('is_public', true)
+        .eq('is_archived', false)
+        .maybeSingle();
+      if (catRow) {
+        taxonomyCategoryId = catRow.id as string;
+        taxonomyCategorySlug = catRow.slug as string;
+        const { data: childRows } = await admin
+          .from('taxonomy_categories')
+          .select('id')
+          .eq('parent_id', taxonomyCategoryId)
+          .eq('is_active', true)
+          .eq('is_archived', false);
+        for (const r of childRows ?? []) taxonomyChildIds.add(r.id as string);
+      }
+    }
+    if (providerIds.length && taxonomyCategoryId) {
+      const idsToCheck = [taxonomyCategoryId, ...Array.from(taxonomyChildIds)];
+      const { data: links } = await admin
+        .from('business_taxonomy_categories')
+        .select('business_id, category_id, role')
+        .in('business_id', providerIds)
+        .in('category_id', idsToCheck);
+      for (const l of links ?? []) {
+        const list = taxonomyLinksByBiz.get(l.business_id as string) ?? [];
+        list.push({ category_id: l.category_id as string, role: l.role as string });
+        taxonomyLinksByBiz.set(l.business_id as string, list);
+      }
+    }
+  } catch (_e) {
+    // Swallow — taxonomy scoring is purely additive.
+  }
+
   type Scored = { id: string; user_id: string | null; score: number; reasons: string[] };
   const scored: Scored[] = [];
 
@@ -133,11 +205,21 @@ Deno.serve(async (req) => {
     const reasons: string[] = [];
     let score = 0;
 
-    // Sector (required)
+    // Sector (required) — passes if either legacy or taxonomy matches.
     const sectorList: string[] = Array.isArray(p.sectors) ? p.sectors : [];
-    const sectorMatch = sectorList.some((s) => aliases.includes(s)) || sectorList.includes(quote.sector);
-    if (!sectorMatch) continue; // hard filter
-    score += 50; reasons.push('نفس القطاع');
+    const legacySectorMatch =
+      sectorList.some((s) => aliases.includes(s)) || sectorList.includes(quote.sector);
+    const txLinks = taxonomyLinksByBiz.get(p.id) ?? [];
+    const txPrimaryMatch = txLinks.some((l) =>
+      l.role === 'primary_activity' && l.category_id === taxonomyCategoryId);
+    const txSecondaryMatch = txLinks.some((l) =>
+      l.role === 'secondary_activity' &&
+      (l.category_id === taxonomyCategoryId || taxonomyChildIds.has(l.category_id)));
+    const taxonomyMatch = txPrimaryMatch || txSecondaryMatch;
+    if (!legacySectorMatch && !taxonomyMatch) continue; // hard filter
+    if (txPrimaryMatch) { score += 60; reasons.push('نفس النشاط الرئيسي'); }
+    if (txSecondaryMatch) { score += 70; reasons.push('نفس التخصص'); }
+    if (legacySectorMatch) { score += 50; reasons.push('تطابق من التصنيف القديم'); }
 
     // Service areas city match
     const areas = areasByBiz.get(p.id) ?? [];
@@ -308,6 +390,8 @@ Deno.serve(async (req) => {
     avg_score: avgScore,
     reason_counts: reasonCounts,
     quote_request_id: quoteId,
+    taxonomy_matched: taxonomyCategoryId !== null,
+    matched_category_slug: taxonomyCategorySlug,
     message: `تم توجيه الطلب إلى ${newLeads.length} مزودين`,
   });
 });
