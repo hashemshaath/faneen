@@ -64,3 +64,23 @@ Tones: `success | warning | info | destructive | primary | accent | muted`.
 
 Both propagate to every admin page that already uses them — no per-page
 changes required.
+
+## Dashboard parity (users & providers)
+
+The same primitives are exposed for user/provider dashboard pages via
+`@/components/shared` so the entire app uses one visual language:
+
+```tsx
+import { PageHeader, MetricCard, FiltersBar, StatusBadge } from '@/components/shared';
+```
+
+| Shared name   | Source                          | Notes                                              |
+| ------------- | ------------------------------- | -------------------------------------------------- |
+| `PageHeader`  | `admin/AdminPageHeader`         | Identical visual; works inside `DashboardLayout`.  |
+| `MetricCard`  | `admin/AdminKpiCard`            | Renamed to avoid clash with legacy `KpiCard` strip.|
+| `FiltersBar`  | `admin/AdminFiltersBar`         | Search + status pills + right slot.                |
+| `StatusBadge` | `admin/AdminStatusBadge`        | Dot + chip; tones map to semantic tokens.          |
+
+The older `src/components/dashboard/KpiCard.tsx` (compact strip) stays
+as-is for backwards compatibility. New dashboard surfaces should prefer
+`MetricCard` from `@/components/shared` for hero KPI tiles.
