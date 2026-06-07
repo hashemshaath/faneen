@@ -25,6 +25,7 @@ import { SA_CITIES } from '@/lib/sa-cities';
 import { SectorFAQ } from '@/components/sector/SectorFAQ';
 import { getSectorFaqs } from '@/lib/sector-faqs';
 import { useSectorPageviewTracking } from '@/hooks/useSectorPageviewTracking';
+import { LEGACY_SECTOR_TO_TAXONOMY_SLUG } from '@/modules/taxonomy';
 
 /**
  * Maps a sector slug → list of category slugs that should be included
@@ -201,7 +202,56 @@ const SectorLanding: React.FC = () => {
     : null;
 
   // ── SEO ────────────────────────────────────────────────────────────────
-  const meta = sector ? getSectorMeta(sector.slug, isRTL) : null;
+  const baseMeta = sector ? getSectorMeta(sector.slug, isRTL) : null;
+
+  // Phase 4 — taxonomy-first SEO override.
+  // Try to find a central taxonomy category that matches this legacy sector
+  // slug (directly or via the legacy mapping). When found and SEO-visible,
+  // its localized name/description/keywords win; otherwise the legacy
+  // SECTOR_KEYWORDS dictionary stays the source of truth so nothing breaks.
+  const taxonomySlugCandidate = sectorSlug
+    ? (LEGACY_SECTOR_TO_TAXONOMY_SLUG[String(sectorSlug).toLowerCase()] ?? sectorSlug)
+    : null;
+  const { data: taxonomyCategory } = useQuery({
+    queryKey: ['sector-taxonomy', taxonomySlugCandidate],
+    enabled: !!taxonomySlugCandidate,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('taxonomy_categories')
+        .select('slug, name_ar, name_en, short_description_ar, short_description_en, seo_title_ar, seo_title_en, seo_description_ar, seo_description_en, keywords_ar, keywords_en, show_in_seo, is_public, is_active, is_archived')
+        .eq('slug', taxonomySlugCandidate as string)
+        .eq('is_active', true)
+        .eq('is_public', true)
+        .eq('is_archived', false)
+        .maybeSingle();
+      return data ?? null;
+    },
+  });
+
+  // Merge taxonomy values (when SEO-visible) over the legacy meta. Returns a
+  // plain object compatible with the existing meta shape used below.
+  const meta = useMemo(() => {
+    if (!baseMeta) return baseMeta;
+    const tx = taxonomyCategory;
+    if (!tx || !tx.show_in_seo) return baseMeta;
+    const taxName = isRTL
+      ? (tx.seo_title_ar || tx.name_ar || baseMeta.name)
+      : (tx.seo_title_en || tx.name_en || baseMeta.name);
+    const taxDesc = isRTL
+      ? (tx.seo_description_ar || tx.short_description_ar || baseMeta.description)
+      : (tx.seo_description_en || tx.short_description_en || baseMeta.description);
+    const taxKeywordsArr = (isRTL ? tx.keywords_ar : tx.keywords_en) ?? null;
+    const taxKeywords = taxKeywordsArr && taxKeywordsArr.length > 0
+      ? taxKeywordsArr.join(', ')
+      : null;
+    return {
+      ...baseMeta,
+      name: taxName ?? baseMeta.name,
+      description: taxDesc ?? baseMeta.description,
+      keywords: taxKeywords ?? baseMeta.keywords,
+    };
+  }, [baseMeta, taxonomyCategory, isRTL]);
   const lang = isRTL ? 'ar' as const : 'en' as const;
   usePageMeta({
     title: buildSeoTitle({ kind: 'category', lang, name: meta?.name, city: selectedCityName || undefined }),

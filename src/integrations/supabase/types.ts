@@ -14613,6 +14613,7 @@ export type Database = {
           sector_slug: string | null
           status: string
           submitted_by: string | null
+          taxonomy_category_id: string | null
           title_ar: string | null
           title_en: string | null
           updated_at: string
@@ -14632,6 +14633,7 @@ export type Database = {
           sector_slug?: string | null
           status?: string
           submitted_by?: string | null
+          taxonomy_category_id?: string | null
           title_ar?: string | null
           title_en?: string | null
           updated_at?: string
@@ -14651,6 +14653,7 @@ export type Database = {
           sector_slug?: string | null
           status?: string
           submitted_by?: string | null
+          taxonomy_category_id?: string | null
           title_ar?: string | null
           title_en?: string | null
           updated_at?: string
@@ -14668,6 +14671,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showcase_submissions_taxonomy_category_id_fkey"
+            columns: ["taxonomy_category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
             referencedColumns: ["id"]
           },
         ]
