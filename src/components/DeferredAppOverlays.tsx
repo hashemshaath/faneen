@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState, lazy } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { lazyRetry } from "@/lib/lazyRetry";
 
 const ConsentBanner = lazyRetry(() => import("./consent/ConsentBanner"));
