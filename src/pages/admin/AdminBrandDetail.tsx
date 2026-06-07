@@ -21,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ImageUpload } from '@/components/ui/image-upload';
+import { ResponsiveImage } from '@/modules/files';
 import { SEOPreviewCard } from '@/components/seo/SEOPreviewCard';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 
@@ -67,10 +68,12 @@ const AdminBrandDetail: React.FC = () => {
   const [newProduct, setNewProduct] = useState({
     name_ar: '', name_en: '', model_number: '', sku: '',
     description_ar: '', image_url: '',
+    image_asset_id: '' as string, image_variants: {} as Record<string, string>,
   });
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editProduct, setEditProduct] = useState({
     name_ar: '', name_en: '', model_number: '', sku: '', description_ar: '', image_url: '',
+    image_asset_id: '' as string, image_variants: {} as Record<string, string>,
   });
   const [rejectingReqId, setRejectingReqId] = useState<string | null>(null);
   const [reqRejectReason, setReqRejectReason] = useState('');
