@@ -504,6 +504,30 @@ const ContractDetail = () => {
     enabled: !!templateVersionId,
   });
 
+  // Phase 14: taxonomy-only classification for the contract. The legacy
+  // `service_category_id` column is no longer read by the UI.
+  const { data: contractTaxonomyLinks = [] } = useQuery<ContractTaxonomyLink[]>({
+    queryKey: ['contract-taxonomy', id],
+    queryFn: () => getContractTaxonomyCategories(id!),
+    enabled: !!id,
+  });
+  const primaryTaxonomyCategoryId = contractTaxonomyLinks.find(
+    (l) => l.role === 'service' && l.is_primary,
+  )?.category_id ?? contractTaxonomyLinks[0]?.category_id ?? null;
+  const { data: contractTaxonomyCategory } = useQuery<{ name_ar: string; name_en: string | null } | null>({
+    queryKey: ['contract-taxonomy-cat', primaryTaxonomyCategoryId],
+    queryFn: async () => {
+      if (!primaryTaxonomyCategoryId) return null;
+      const { data } = await supabase
+        .from('taxonomy_categories')
+        .select('name_ar, name_en')
+        .eq('id', primaryTaxonomyCategoryId)
+        .maybeSingle();
+      return (data as { name_ar: string; name_en: string | null } | null) ?? null;
+    },
+    enabled: !!primaryTaxonomyCategoryId,
+  });
+
   const acceptMutation = useMutation({
     mutationFn: async () => {
       // C6.4a — go through SECURITY DEFINER RPC instead of direct table update.
