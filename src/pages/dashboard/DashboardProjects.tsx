@@ -202,7 +202,8 @@ const DashboardProjects = () => {
     title_ar: '', title_en: '', description_ar: '', description_en: '',
     cover_image_url: '', client_name: '', project_cost: '',
     duration_days: '', completion_date: '', status: 'published',
-    category_id: '', city_id: '', is_featured: false, currency_code: 'SAR',
+    city_id: '', is_featured: false, currency_code: 'SAR',
+    taxonomy_category_id: '',
   }), []);
   const [form, setForm] = useState(emptyForm);
 
@@ -225,12 +226,9 @@ const DashboardProjects = () => {
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: categories = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string; parent_id: string | null }>>({
-    queryKey: ['categories-list'],
-    queryFn: async () => {
-      const { data } = await listActiveCategories<{ id: string; name_ar: string; name_en: string; parent_id: string | null }>({ select: 'id, name_ar, name_en, parent_id' });
-      return data ?? [];
-    },
+  const { data: pickerCategories = [] } = useQuery<TaxonomyCategory[]>({
+    queryKey: ['project-taxonomy-picker'],
+    queryFn: getProjectTaxonomyPickerCategories,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -249,7 +247,7 @@ const DashboardProjects = () => {
     queryKey: ['dashboard-projects', businessId],
     queryFn: async () => {
       const { data, error } = await supabase.from('projects')
-        .select('*, categories(name_ar, name_en), cities(name_ar, name_en)')
+        .select('*, cities(name_ar, name_en)')
         .eq('business_id', businessId!)
         .order('is_featured', { ascending: false })
         .order('sort_order');
@@ -259,6 +257,26 @@ const DashboardProjects = () => {
     enabled: !!businessId,
     staleTime: 3 * 60 * 1000,
   });
+
+  const projectIds = useMemo(() => projects.map((p) => p.id), [projects]);
+  const { data: taxonomyLinks = [] } = useQuery({
+    queryKey: ['dashboard-project-taxonomy', businessId, projectIds.length],
+    queryFn: () => getProjectTaxonomyCategoriesByProjects(projectIds),
+    enabled: projectIds.length > 0,
+    staleTime: 3 * 60 * 1000,
+  });
+
+  // projectId → primary TaxonomyCategory (first primary_activity link).
+  const primaryByProject = useMemo(() => {
+    const byId = new Map(pickerCategories.map((c) => [c.id, c]));
+    const map = new Map<string, TaxonomyCategory | null>();
+    for (const link of taxonomyLinks) {
+      if (link.role !== 'primary_activity') continue;
+      const cat = byId.get(link.category_id);
+      if (cat && !map.has(link.project_id)) map.set(link.project_id, cat);
+    }
+    return map;
+  }, [taxonomyLinks, pickerCategories]);
 
   const { data: galleryImages = [] } = useQuery({
     queryKey: ['project-images', galleryProjectId],
@@ -281,15 +299,20 @@ const DashboardProjects = () => {
     return { total, published, draft, featured, totalCost, completeness };
   }, [projects]);
 
-  const usedCategoryIds = useMemo(() => [...new Set(projects.map((p) => p.category_id).filter(Boolean))], [projects]);
-  const usedCategories = categories.filter((c) => usedCategoryIds.includes(c.id));
+  const usedCategories = useMemo(() => {
+    const ids = new Set<string>();
+    primaryByProject.forEach((c) => { if (c) ids.add(c.id); });
+    return pickerCategories.filter((c) => ids.has(c.id));
+  }, [primaryByProject, pickerCategories]);
 
   const filteredProjects = useMemo(() => {
     let result = [...projects];
     if (statusFilter === 'published') result = result.filter((p) => p.status === 'published');
     else if (statusFilter === 'draft') result = result.filter((p) => p.status === 'draft');
     else if (statusFilter === 'featured') result = result.filter((p) => p.is_featured);
-    if (categoryFilter !== 'all') result = result.filter((p) => p.category_id === categoryFilter);
+    if (categoryFilter !== 'all') {
+      result = result.filter((p) => primaryByProject.get(p.id)?.id === categoryFilter);
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((p) => p.title_ar.toLowerCase().includes(q) || (p.title_en || '').toLowerCase().includes(q) || (p.client_name || '').toLowerCase().includes(q));
