@@ -2,6 +2,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import { X, RotateCcw } from 'lucide-react';
 import type { SearchFilterValues } from '@/services/search/useSearch';
+import { SA_REGIONS } from '@/data/sa-regions';
 
 interface ActiveFilterChipsProps {
   filters: SearchFilterValues;
@@ -54,6 +55,15 @@ export const ActiveFilterChips = ({
       key: 'city',
       label: city ? (language === 'ar' ? city.name_ar : city.name_en) : filters.cityId,
       onRemove: () => onFilterChange('cityId', 'all'),
+    });
+  }
+
+  if (filters.regionId && filters.regionId !== 'all') {
+    const region = SA_REGIONS.find((r) => r.id === filters.regionId);
+    chips.push({
+      key: 'region',
+      label: region ? (language === 'ar' ? region.name_ar : region.name_en) : filters.regionId,
+      onRemove: () => onFilterChange('regionId', 'all'),
     });
   }
 
