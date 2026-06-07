@@ -533,6 +533,7 @@ const SearchPage = () => {
             sortBy={filters.sortBy}
             onSortChange={(s) => handleFilterChange('sortBy', s)}
             directoryIsEmpty={!isLoading && (businesses?.length ?? 0) === 0}
+            taxonomyDisplayMap={taxonomyDisplayMap}
           />
         </div>
       </div>
