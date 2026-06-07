@@ -15567,6 +15567,59 @@ export type Database = {
           },
         ]
       }
+      taxonomy_legacy_mappings: {
+        Row: {
+          confidence: string
+          created_at: string
+          id: string
+          legacy_id: string | null
+          legacy_name_ar: string | null
+          legacy_name_en: string | null
+          legacy_slug: string | null
+          legacy_source: string
+          mapping_status: string
+          notes: string | null
+          taxonomy_category_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          confidence?: string
+          created_at?: string
+          id?: string
+          legacy_id?: string | null
+          legacy_name_ar?: string | null
+          legacy_name_en?: string | null
+          legacy_slug?: string | null
+          legacy_source: string
+          mapping_status?: string
+          notes?: string | null
+          taxonomy_category_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          confidence?: string
+          created_at?: string
+          id?: string
+          legacy_id?: string | null
+          legacy_name_ar?: string | null
+          legacy_name_en?: string | null
+          legacy_slug?: string | null
+          legacy_source?: string
+          mapping_status?: string
+          notes?: string | null
+          taxonomy_category_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxonomy_legacy_mappings_taxonomy_category_id_fkey"
+            columns: ["taxonomy_category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       taxonomy_types: {
         Row: {
           allows_children: boolean
@@ -20107,6 +20160,7 @@ export type Database = {
         Args: { _lead_id: string }
         Returns: Json
       }
+      preview_taxonomy_backfill: { Args: never; Returns: Json }
       private_sector_make_slug: {
         Args: { _name: string; _ref: string }
         Returns: string
