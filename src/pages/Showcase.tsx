@@ -28,7 +28,6 @@ interface ShowcaseRow {
   description_en: string | null;
   image_url: string;
   link_url: string | null;
-  sector_slug: string | null;
   taxonomy_category_id: string | null;
   business: {
     id: string;
