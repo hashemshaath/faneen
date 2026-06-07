@@ -15,6 +15,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { toast } from "sonner";
 import { ImagePlus, ShieldAlert, ShieldCheck, Clock, X, Trash2, Upload } from "lucide-react";
+import {
+  getShowcaseTaxonomyCategories,
+  getLegacySectorDisplayName,
+} from "@/modules/taxonomy/showcase-services";
 
 interface Business {
   id: string;
@@ -35,6 +39,7 @@ interface Submission {
   image_url: string;
   link_url: string | null;
   sector_slug: string | null;
+  taxonomy_category_id: string | null;
   status: "pending" | "approved" | "rejected";
   rejected_reason: string | null;
   created_at: string;
@@ -80,6 +85,7 @@ const DashboardShowcase: React.FC = () => {
     description_ar: "",
     link_url: "",
     sector_slug: "",
+    taxonomy_category_id: "",
     file: null as File | null,
   });
   const [uploading, setUploading] = useState(false);
@@ -98,6 +104,15 @@ const DashboardShowcase: React.FC = () => {
       return data as Business | null;
     },
   });
+
+  // Taxonomy-first category picker. Falls back to the legacy SECTORS list
+  // if no `show_in_showcase=true` categories are configured yet.
+  const taxonomyQuery = useQuery({
+    queryKey: ["showcase-taxonomy-options"],
+    queryFn: getShowcaseTaxonomyCategories,
+    staleTime: 5 * 60_000,
+  });
+  const taxonomyOptions = taxonomyQuery.data ?? [];
 
   const submissionsQuery = useQuery({
     queryKey: ["showcase-mine", businessQuery.data?.id],
@@ -139,6 +154,7 @@ const DashboardShowcase: React.FC = () => {
             description_ar: form.description_ar || null,
             link_url: form.link_url || null,
             sector_slug: form.sector_slug || null,
+            taxonomy_category_id: form.taxonomy_category_id || null,
             image_url: publicUrl,
           },
         ]);
@@ -155,6 +171,7 @@ const DashboardShowcase: React.FC = () => {
         description_ar: "",
         link_url: "",
         sector_slug: "",
+        taxonomy_category_id: "",
         file: null,
       });
       void qc.invalidateQueries({ queryKey: ["showcase-mine"] });
@@ -244,15 +261,44 @@ const DashboardShowcase: React.FC = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-xs">القطاع</Label>
-                  <Select value={form.sector_slug} onValueChange={(v) => setForm((s) => ({ ...s, sector_slug: v }))}>
-                    <SelectTrigger><SelectValue placeholder="اختر قطاعًا" /></SelectTrigger>
-                    <SelectContent>
-                      {SECTORS.map((s) => (
-                        <SelectItem key={s.slug} value={s.slug}>{s.ar}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-xs">تصنيف العمل</Label>
+                  {taxonomyOptions.length > 0 ? (
+                    <Select
+                      value={form.taxonomy_category_id}
+                      onValueChange={(v) =>
+                        setForm((s) => {
+                          const opt = taxonomyOptions.find((o) => o.id === v);
+                          return {
+                            ...s,
+                            taxonomy_category_id: v,
+                            // mirror to legacy sector_slug so older readers keep working
+                            sector_slug: opt ? opt.slug : s.sector_slug,
+                          };
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر التصنيف الأقرب للعمل" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {taxonomyOptions.map((o) => (
+                          <SelectItem key={o.id} value={o.id}>{o.display_ar}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Select value={form.sector_slug} onValueChange={(v) => setForm((s) => ({ ...s, sector_slug: v }))}>
+                      <SelectTrigger><SelectValue placeholder="اختر قطاعًا" /></SelectTrigger>
+                      <SelectContent>
+                        {SECTORS.map((s) => (
+                          <SelectItem key={s.slug} value={s.slug}>{s.ar}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    اختيار التصنيف يساعد على ظهور العمل في المكان المناسب داخل معرض قِطاعات.
+                  </p>
                 </div>
                 <div>
                   <Label className="text-xs">الصورة (≤ 5MB)</Label>
@@ -325,6 +371,18 @@ const DashboardShowcase: React.FC = () => {
                         <StatusPill status={row.status} />
                       </div>
                       {row.title_ar && <p className="text-sm font-medium line-clamp-1" dir="auto">{row.title_ar}</p>}
+                      {(row.taxonomy_category_id || row.sector_slug) && (
+                        <p className="text-[11px] text-muted-foreground" dir="auto">
+                          {row.taxonomy_category_id
+                            ? (taxonomyOptions.find((o) => o.id === row.taxonomy_category_id)?.display_ar ?? '—')
+                            : (
+                              <>
+                                {getLegacySectorDisplayName(row.sector_slug)}
+                                <span className="ms-1 text-[9px] rounded bg-muted px-1.5 py-0.5">تصنيف قديم</span>
+                              </>
+                            )}
+                        </p>
+                      )}
                       {row.status === "rejected" && row.rejected_reason && (
                         <p className="text-xs text-destructive bg-destructive/10 rounded p-2" dir="auto">
                           سبب الرفض: {row.rejected_reason}

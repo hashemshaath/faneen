@@ -10,6 +10,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { toast } from "sonner";
 import { Check, X, ShieldCheck, ShieldAlert, ImageIcon } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery as useRq } from "@tanstack/react-query";
+import {
+  getShowcaseTaxonomyCategories,
+  getLegacySectorDisplayName,
+} from "@/modules/taxonomy/showcase-services";
 
 interface Row {
   id: string;
@@ -20,6 +26,7 @@ interface Row {
   image_url: string;
   link_url: string | null;
   sector_slug: string | null;
+  taxonomy_category_id: string | null;
   status: "pending" | "approved" | "rejected";
   rejected_reason: string | null;
   created_at: string;
@@ -47,7 +54,7 @@ const AdminShowcase: React.FC = () => {
       const { data, error } = await supabase
         .from("showcase_submissions")
         .select(
-          "id, business_id, kind, title_ar, title_en, image_url, link_url, sector_slug, status, rejected_reason, created_at, business:businesses(id, name_ar, name_en, is_verified, username)",
+          "id, business_id, kind, title_ar, title_en, image_url, link_url, sector_slug, taxonomy_category_id, status, rejected_reason, created_at, business:businesses(id, name_ar, name_en, is_verified, username)",
         )
         .eq("status", tab)
         .order("created_at", { ascending: false })
@@ -55,6 +62,33 @@ const AdminShowcase: React.FC = () => {
       if (error) throw error;
       return (data ?? []) as unknown as Row[];
     },
+  });
+
+  const taxonomyOptionsQ = useRq({
+    queryKey: ["showcase-taxonomy-options"],
+    queryFn: getShowcaseTaxonomyCategories,
+    staleTime: 5 * 60_000,
+  });
+  const taxonomyOptions = taxonomyOptionsQ.data ?? [];
+
+  const setCategory = useMutation({
+    mutationFn: async ({ id, categoryId }: { id: string; categoryId: string | null }) => {
+      const opt = categoryId ? taxonomyOptions.find((o) => o.id === categoryId) ?? null : null;
+      const { error } = await supabase
+        .from("showcase_submissions")
+        .update({
+          taxonomy_category_id: categoryId,
+          // mirror to legacy column so older readers keep working
+          ...(opt ? { sector_slug: opt.slug } : {}),
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["admin-showcase"] });
+      toast.success("تم تحديث التصنيف");
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "فشل تحديث التصنيف"),
   });
 
   const counts = useQuery({
@@ -151,6 +185,19 @@ const AdminShowcase: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {query.data!.map((row) => {
               const name = row.business?.name_ar || row.business?.name_en || "—";
+              const linked = row.taxonomy_category_id
+                ? taxonomyOptions.find((o) => o.id === row.taxonomy_category_id) ?? null
+                : null;
+              const linkStatusLabel = linked
+                ? "مرتبط بتصنيف مركزي"
+                : row.sector_slug
+                  ? "تصنيف قديم"
+                  : "بدون تصنيف";
+              const linkStatusClass = linked
+                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                : row.sector_slug
+                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                  : "bg-muted text-muted-foreground";
               return (
                 <Card key={row.id}>
                   <div className="aspect-[16/11] bg-muted/30 overflow-hidden">
@@ -158,9 +205,17 @@ const AdminShowcase: React.FC = () => {
                   </div>
                   <CardContent className="p-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-muted-foreground">{row.kind === "logo" ? "شعار" : "عمل"} · {row.sector_slug || "—"}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {row.kind === "logo" ? "شعار" : "عمل"}
+                        {linked
+                          ? ` · ${linked.display_ar}`
+                          : row.sector_slug
+                            ? ` · ${getLegacySectorDisplayName(row.sector_slug)}`
+                            : ""}
+                      </span>
                       <span className="text-[10px] text-muted-foreground">{new Date(row.created_at).toLocaleDateString("ar-SA")}</span>
                     </div>
+                    <span className={`inline-flex items-center text-[10px] rounded-full px-2 py-0.5 ${linkStatusClass}`}>{linkStatusLabel}</span>
                     {row.title_ar && <p className="text-sm font-medium line-clamp-1" dir="auto">{row.title_ar}</p>}
                     <div className="flex items-center gap-1.5 text-xs">
                       {row.business?.is_verified ? (
@@ -174,6 +229,33 @@ const AdminShowcase: React.FC = () => {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground truncate" dir="auto">{name}{row.business?.username ? ` · @${row.business.username}` : ""}</p>
+
+                    {/* Inline taxonomy editor — admin can re-classify without leaving the card. */}
+                    {taxonomyOptions.length > 0 && (
+                      <div className="space-y-1">
+                        <Select
+                          value={row.taxonomy_category_id ?? ""}
+                          onValueChange={(v) =>
+                            setCategory.mutate({ id: row.id, categoryId: v || null })
+                          }
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="اختر تصنيفًا مركزيًا" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {taxonomyOptions.map((o) => (
+                              <SelectItem key={o.id} value={o.id}>{o.display_ar}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {!linked && row.status === "approved" && (
+                          <p className="text-[10px] text-amber-700 dark:text-amber-300">
+                            يفضل ربط العمل بتصنيف مركزي لتحسين الظهور والفلترة.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     {row.status === "rejected" && row.rejected_reason && (
                       <p className="text-xs text-destructive bg-destructive/10 rounded p-2">سبب: {row.rejected_reason}</p>
                     )}
