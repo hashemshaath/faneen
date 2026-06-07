@@ -784,17 +784,14 @@ const DashboardBusinessEdit: React.FC = () => {
 
           <TabsContent value="sectors" className="space-y-6 mt-4">
             {/*
-              Phase 2.1 — Taxonomy-only UI. The central taxonomy section is
-              the sole classifier shown to users. The legacy SectorPicker is
-              hidden from this screen (state is still read for display inside
-              BusinessTaxonomySection's legacy preview, but never written from
-              here).
+              Phase 18g — Taxonomy-only UI. The central taxonomy section is
+              the sole classifier shown to users. Legacy `businesses.sectors`
+              / `businesses.sub_services` are no longer read or written from
+              this screen.
             */}
             {business?.id && (
               <BusinessTaxonomySection
                 businessId={business.id}
-                legacySectors={form.sectors ?? null}
-                legacySubServices={form.sub_services ?? null}
               />
             )}
 
