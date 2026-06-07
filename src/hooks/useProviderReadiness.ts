@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getOwnerBusiness } from '@/modules/businesses';
+import { supabase } from '@/integrations/supabase/client';
 
 type ReadinessBusiness = {
   id: string;
@@ -9,7 +10,6 @@ type ReadinessBusiness = {
   logo_url: string | null;
   description_ar: string | null;
   short_description_ar: string | null;
-  category_id: string | null;
   city_id: string | null;
   phone: string | null;
   mobile: string | null;
@@ -42,11 +42,22 @@ export function useProviderReadiness(userId: string | undefined) {
       const { data } = await getOwnerBusiness<ReadinessBusiness>({
         userId: userId!,
         select:
-          'id, name_ar, username, logo_url, description_ar, short_description_ar, category_id, city_id, phone, mobile, email, address, approval_status, approval_notes, onboarding_completion, username_status, is_active',
+          'id, name_ar, username, logo_url, description_ar, short_description_ar, city_id, phone, mobile, email, address, approval_status, approval_notes, onboarding_completion, username_status, is_active',
         orderBy: { column: 'created_at', ascending: true },
         limit: 1,
       });
-      return data;
+      if (!data) return null;
+      // Phase 12 — readiness "sector/category" criterion is taxonomy-only:
+      // we no longer check legacy `businesses.category_id`. A provider is
+      // considered classified when they have at least one
+      // `business_taxonomy_categories` row with role = 'primary_activity'.
+      const { data: txRows } = await supabase
+        .from('business_taxonomy_categories')
+        .select('id')
+        .eq('business_id', data.id)
+        .eq('role', 'primary_activity')
+        .limit(1);
+      return { ...data, hasPrimaryActivity: (txRows?.length ?? 0) > 0 };
     },
   });
 
@@ -59,7 +70,7 @@ export function useProviderReadiness(userId: string | undefined) {
       items.push({ key: 'logo', ar: 'الشعار', en: 'Logo', href: '/dashboard/business-edit#logo' });
     if (!(business.description_ar || business.short_description_ar))
       items.push({ key: 'desc', ar: 'وصف النشاط', en: 'Description', href: '/dashboard/business-edit#description' });
-    if (!business.category_id)
+    if (!business.hasPrimaryActivity)
       items.push({ key: 'category', ar: 'القطاع', en: 'Sector', href: '/dashboard/business-edit#sectors' });
     if (!business.city_id)
       items.push({ key: 'city', ar: 'المدينة', en: 'City', href: '/dashboard/business-edit#city' });
