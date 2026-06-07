@@ -156,6 +156,23 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
           </div>
         </dl>
 
+        {taxonomyChips.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] text-muted-foreground sm:text-[11px]">
+              {bi("التخصصات والخدمات", "Specialties & services")}:
+            </span>
+            {taxonomyChips.map((label) => (
+              <Badge
+                key={label}
+                variant="secondary"
+                className="px-2 py-0.5 text-[10px] sm:text-[11px] font-normal"
+              >
+                {label}
+              </Badge>
+            ))}
+          </div>
+        )}
+
         {business.website && (
           <a
             href={business.website}
