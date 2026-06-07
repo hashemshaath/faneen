@@ -44,14 +44,7 @@ export interface TaxonomyInventorySnapshot {
  * head-only HEAD requests so this stays cheap even on large tables.
  */
 export async function getTaxonomyInventory(): Promise<TaxonomyInventorySnapshot> {
-  const headCount = async (table: string, build?: (q: ReturnType<typeof supabase.from>) => unknown) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let q: any = (supabase.from as any)(table).select('*', { count: 'exact', head: true });
-    if (build) q = build(q);
-    const { count } = await q;
-    return count ?? 0;
-  };
-
+  const c = async (n: number | null | undefined) => n ?? 0;
   const [
     taxonomyCategories,
     legacyCategories,
@@ -62,16 +55,14 @@ export async function getTaxonomyInventory(): Promise<TaxonomyInventorySnapshot>
     showcaseWithoutTaxonomy,
     mappingRows,
   ] = await Promise.all([
-    headCount('taxonomy_categories', (q) => q.eq('is_archived', false)),
-    headCount('categories'),
-    headCount('tags'),
-    headCount('businesses'),
-    headCount('business_services', (q) => q.not('category_id', 'is', null)),
-    headCount('showcase_submissions'),
-    headCount('showcase_submissions', (q) => q.is('taxonomy_category_id', null)),
-    supabase
-      .from('taxonomy_legacy_mappings')
-      .select('mapping_status'),
+    supabase.from('taxonomy_categories').select('*', { count: 'exact', head: true }).eq('is_archived', false).then((r) => c(r.count)),
+    supabase.from('categories').select('*', { count: 'exact', head: true }).then((r) => c(r.count)),
+    supabase.from('tags').select('*', { count: 'exact', head: true }).then((r) => c(r.count)),
+    supabase.from('businesses').select('*', { count: 'exact', head: true }).then((r) => c(r.count)),
+    supabase.from('business_services').select('*', { count: 'exact', head: true }).not('category_id', 'is', null).then((r) => c(r.count)),
+    supabase.from('showcase_submissions').select('*', { count: 'exact', head: true }).then((r) => c(r.count)),
+    supabase.from('showcase_submissions').select('*', { count: 'exact', head: true }).is('taxonomy_category_id', null).then((r) => c(r.count)),
+    supabase.from('taxonomy_legacy_mappings').select('mapping_status'),
   ]);
 
   // Distinct business_ids with a taxonomy link (cheap aggregate).
@@ -83,10 +74,12 @@ export async function getTaxonomyInventory(): Promise<TaxonomyInventorySnapshot>
   const businessesWithLegacyOnly = Math.max(0, businessesTotal - businessesWithTaxonomy);
 
   // Quote requests with a non-empty legacy sector value.
-  const quoteRequestsWithLegacySector = await headCount(
-    'quote_requests',
-    (q) => q.not('sector', 'is', null).neq('sector', ''),
-  );
+  const { count: qrCount } = await supabase
+    .from('quote_requests')
+    .select('*', { count: 'exact', head: true })
+    .not('sector', 'is', null)
+    .neq('sector', '');
+  const quoteRequestsWithLegacySector = qrCount ?? 0;
 
   // Mapping status breakdown.
   let mappingsMapped = 0, mappingsPending = 0, mappingsNeedsReview = 0;
