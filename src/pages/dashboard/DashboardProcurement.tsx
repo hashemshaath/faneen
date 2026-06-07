@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Loader2, Plus, RefreshCw, ShoppingCart } from "lucide-react";
+import { PageHeader } from "@/components/shared";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
@@ -105,19 +106,19 @@ export default function DashboardProcurement() {
 
   return (
     <div className="container mx-auto py-10 space-y-6" dir={isRTL ? "rtl" : "ltr"}>
-      <header className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <ShoppingCart className="h-6 w-6 text-primary" aria-hidden />
-          <div>
-            <h1 className="text-2xl font-semibold">{tx.title}</h1>
-            <p className="text-sm text-muted-foreground">{tx.subtitle}</p>
-          </div>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          <span className="ms-2">{tx.refresh}</span>
-        </Button>
-      </header>
+      <PageHeader
+        icon={ShoppingCart}
+        tone="primary"
+        eyebrow={isRTL ? 'المشتريات' : 'Procurement'}
+        title={tx.title}
+        subtitle={tx.subtitle}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            <span className="ms-2">{tx.refresh}</span>
+          </Button>
+        }
+      />
 
       <Card>
         <CardHeader>

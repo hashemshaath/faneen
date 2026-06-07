@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -214,16 +215,13 @@ const DashboardAccountDiagnostics: React.FC = () => {
         )}
 
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Activity className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-heading font-bold text-xl">{rtl ? 'تشخيص الحساب' : 'Account Diagnostics'}</h1>
-              <p className="text-xs text-muted-foreground">{rtl ? 'حالة الصلاحيات والجلسة وإصدار البناء' : 'Roles, session, and build identity'}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+          <PageHeader
+            icon={Activity}
+            tone="primary"
+            eyebrow={rtl ? 'التشخيص' : 'Diagnostics'}
+            title={rtl ? 'تشخيص الحساب' : 'Account Diagnostics'}
+            subtitle={rtl ? 'حالة الصلاحيات والجلسة وإصدار البناء' : 'Roles, session, and build identity'}
+            actions={<>
             <Button variant="outline" size="sm" className="rounded-xl" onClick={copyJson}>
               {copied ? <Check className="w-3.5 h-3.5 me-1.5" /> : <Copy className="w-3.5 h-3.5 me-1.5" />}
               {copied ? (rtl ? 'تم النسخ' : 'Copied') : (rtl ? 'نسخ JSON' : 'Copy JSON')}
@@ -234,7 +232,8 @@ const DashboardAccountDiagnostics: React.FC = () => {
             <Button variant="outline" size="sm" className="rounded-xl" onClick={refresh} disabled={refreshing}>
               <RefreshCw className={`w-3.5 h-3.5 me-1.5 ${refreshing ? 'animate-spin' : ''}`} />{rtl ? 'تحديث' : 'Refresh'}
             </Button>
-          </div>
+            </>}
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

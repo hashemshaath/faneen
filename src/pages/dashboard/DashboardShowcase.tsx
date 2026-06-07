@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { PageHeader } from "@/components/shared";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -188,14 +189,13 @@ const DashboardShowcase: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6 max-w-5xl mx-auto">
-        <header>
-          <h1 className="text-xl md:text-2xl font-semibold flex items-center gap-2">
-            <ImagePlus className="w-6 h-6 text-primary" /> أعمالي وشعار منشأتي
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            ارفع شعارك أو أمثلة أعمال. يُراجَع المحتوى يدويًا قبل النشر، ولا يظهر علنًا إلا بعد توثيق منشأتك.
-          </p>
-        </header>
+        <PageHeader
+          icon={ImagePlus}
+          tone="primary"
+          eyebrow="المعرض"
+          title="أعمالي وشعار منشأتي"
+          subtitle="ارفع شعارك أو أمثلة أعمال. يُراجَع المحتوى يدويًا قبل النشر، ولا يظهر علنًا إلا بعد توثيق منشأتك."
+        />
 
         {!businessQuery.isLoading && !business && (
           <Card>

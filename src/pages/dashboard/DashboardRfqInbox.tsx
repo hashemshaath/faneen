@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { PageHeader } from '@/components/shared';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -212,15 +213,13 @@ const DashboardRfqInbox: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Inbox className="w-6 h-6 text-primary" />
-            {isRTL ? 'صندوق طلبات الأسعار' : 'RFQ Inbox'}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isRTL ? 'تصفح الطلبات المفتوحة وأرسل عرضك' : 'Browse open requests and submit your quote'}
-          </p>
-        </div>
+        <PageHeader
+          icon={Inbox}
+          tone="primary"
+          eyebrow={isRTL ? 'الفرص' : 'Opportunities'}
+          title={isRTL ? 'صندوق طلبات الأسعار' : 'RFQ Inbox'}
+          subtitle={isRTL ? 'تصفح الطلبات المفتوحة وأرسل عرضك' : 'Browse open requests and submit your quote'}
+        />
 
         <Card>
           <CardContent className="p-4 grid grid-cols-1 md:grid-cols-5 gap-3">

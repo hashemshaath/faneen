@@ -7,6 +7,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { PageHeader } from '@/components/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,15 +31,13 @@ const DashboardHelpCenter: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-4 max-w-5xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-        <header className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-primary/10 grid place-items-center text-primary">
-            <LifeBuoy className="size-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">{isRTL ? 'مركز المساعدة' : 'Help Center'}</h1>
-            <p className="text-xs text-muted-foreground">{isRTL ? 'مقالاتك، بلاغاتك، وطلباتك' : 'Articles, your issues and requests'}</p>
-          </div>
-        </header>
+        <PageHeader
+          icon={LifeBuoy}
+          tone="info"
+          eyebrow={isRTL ? 'الدعم' : 'Support'}
+          title={isRTL ? 'مركز المساعدة' : 'Help Center'}
+          subtitle={isRTL ? 'مقالاتك، بلاغاتك، وطلباتك' : 'Articles, your issues and requests'}
+        />
 
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" className="rounded-xl"><Link to="/help"><BookOpen className="w-4 h-4 me-2" />{isRTL ? 'تصفّح المساعدة' : 'Browse help'}</Link></Button>

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { PageHeader } from "@/components/shared";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -187,17 +188,15 @@ const DashboardCommunicationPreferences: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Bell className="h-6 w-6 text-primary" />
-            {isRTL ? "تفضيلات التواصل" : "Communication preferences"}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isRTL
-              ? "تحكّم في القنوات وأنواع الإشعارات التي تتلقاها. ستحترم رسائل البريد هذه التفضيلات تلقائياً."
-              : "Control which channels and categories you receive. Outgoing emails respect these settings automatically."}
-          </p>
-        </div>
+        <PageHeader
+          icon={Bell}
+          tone="accent"
+          eyebrow={isRTL ? 'الإعدادات' : 'Settings'}
+          title={isRTL ? 'تفضيلات التواصل' : 'Communication preferences'}
+          subtitle={isRTL
+            ? 'تحكّم في القنوات وأنواع الإشعارات التي تتلقاها. ستحترم رسائل البريد هذه التفضيلات تلقائياً.'
+            : 'Control which channels and categories you receive. Outgoing emails respect these settings automatically.'}
+        />
 
         {isLoading && (
           <div className="space-y-3" aria-busy="true" aria-live="polite">

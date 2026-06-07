@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { PageHeader } from '@/components/shared';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -58,21 +59,19 @@ const DashboardRfq: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <FileText className="w-6 h-6 text-primary" />
-              {isRTL ? 'طلبات عروض الأسعار' : 'Requests for Quotes'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isRTL ? 'أنشئ طلبات تجميعية واستقبل عروضًا من المزودين' : 'Create bulk requests and receive quotes from providers'}
-            </p>
-          </div>
-          <Button onClick={() => setShowForm(v => !v)} className="h-12 rounded-xl">
-            <Plus className="w-4 h-4 me-2" />
-            {isRTL ? 'طلب جديد' : 'New RFQ'}
-          </Button>
-        </div>
+        <PageHeader
+          icon={FileText}
+          tone="primary"
+          eyebrow={isRTL ? 'المشتريات' : 'Procurement'}
+          title={isRTL ? 'طلبات عروض الأسعار' : 'Requests for Quotes'}
+          subtitle={isRTL ? 'أنشئ طلبات تجميعية واستقبل عروضًا من المزودين' : 'Create bulk requests and receive quotes from providers'}
+          actions={
+            <Button onClick={() => setShowForm(v => !v)} className="h-12 rounded-xl">
+              <Plus className="w-4 h-4 me-2" />
+              {isRTL ? 'طلب جديد' : 'New RFQ'}
+            </Button>
+          }
+        />
 
         {showForm && (
           <Card>

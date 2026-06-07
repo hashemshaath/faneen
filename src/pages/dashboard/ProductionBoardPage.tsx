@@ -43,6 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { PageHeader } from "@/components/shared";
 import { KpiStrip } from "@/components/dashboard/KpiCard";
 import { DiagnosticsCard } from "@/components/dashboard/DiagnosticsCard";
 import { HealthBadge } from "@/components/health/HealthBadge";
@@ -475,16 +476,13 @@ export default function ProductionBoardPage() {
   return (
     <DashboardLayout>
       <div className="space-y-5">
-        {/* Header */}
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="font-heading font-bold text-2xl flex items-center gap-2">
-              <Factory className="w-5 h-5 text-primary" />
-              {tx.title}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">{tx.subtitle}</p>
-          </div>
-          <div className="flex items-center gap-2">
+        <PageHeader
+          icon={Factory}
+          tone="primary"
+          eyebrow={isRTL ? 'الإنتاج' : 'Production'}
+          title={tx.title}
+          subtitle={tx.subtitle}
+          actions={<>
             <div className="hidden sm:inline-flex rounded-xl border border-border/40 overflow-hidden" role="group" aria-label={tx.density}>
               <button
                 type="button"
@@ -535,8 +533,8 @@ export default function ProductionBoardPage() {
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
               {tx.refresh}
             </Button>
-          </div>
-        </header>
+          </>}
+        />
 
         {/* Metrics */}
         <section
