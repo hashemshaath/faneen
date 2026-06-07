@@ -372,11 +372,12 @@ const Projects = () => {
                   <Card className="overflow-hidden border-border/50 dark:border-border/30 hover:border-accent/40 transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 dark:hover:shadow-accent/10 group cursor-pointer h-full hover:-translate-y-1.5 dark:bg-card/80">
                     <div className="aspect-video bg-muted relative overflow-hidden">
                       {p.cover_image_url ? (
-                        <img
-                          src={p.cover_image_url}
+                        <ResponsiveImage
+                          originalUrl={p.cover_image_url}
+                          variants={(p as { cover_image_asset?: { variants?: unknown } }).cover_image_asset?.variants}
                           alt={p.title_ar}
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50 dark:from-muted/80 dark:to-accent/5">
