@@ -9,11 +9,12 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, History } from 'lucide-react';
 import { MembershipLifecycleJobsPanel } from '@/components/admin/MembershipLifecycleJobsPanel';
 import { Link } from 'react-router-dom';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminStatusBadge, type AdminStatusTone } from '@/components/admin/AdminStatusBadge';
 
 interface EventRow {
   id: string;
@@ -29,11 +30,11 @@ interface EventRow {
   created_at: string;
 }
 
-const ACTION_TONE: Record<string, string> = {
-  cancel_at_period_end: 'bg-destructive/10 text-destructive border-destructive/30',
-  resume_renewal: 'bg-success/10 text-success border-success/30',
-  downgrade_target_changed: 'bg-info/10 text-info border-info/30',
-  expired_downgraded: 'bg-warning/10 text-warning border-warning/30',
+const ACTION_TONE: Record<string, AdminStatusTone> = {
+  cancel_at_period_end: 'destructive',
+  resume_renewal: 'success',
+  downgrade_target_changed: 'info',
+  expired_downgraded: 'warning',
 };
 
 const AdminMembershipEvents = () => {
@@ -83,16 +84,17 @@ const AdminMembershipEvents = () => {
 
   return (
     <DashboardLayout>
-    <div className="container px-4 py-6 max-w-6xl space-y-6">
+    <div className="container px-4 py-6 max-w-6xl space-y-5">
+      <AdminPageHeader
+        icon={History}
+        tone="info"
+        eyebrow={isRTL ? 'العضويات' : 'Memberships'}
+        title={isRTL ? 'سجل أحداث الاشتراكات' : 'Subscription Events'}
+        subtitle={isRTL ? 'إلغاء، استئناف، تغيير الباقة، وانتهاء الاشتراكات.' : 'Cancel, resume, plan change, and subscription expiry.'}
+      />
       <MembershipLifecycleJobsPanel />
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <History className="w-5 h-5" />
-            {isRTL ? 'سجل أحداث الاشتراكات (إلغاء/استئناف/انتهاء)' : 'Subscription events (cancel/resume/expiry)'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <Card className="rounded-3xl border-border/60 shadow-sm">
+        <CardContent className="p-3 md:p-4">
           {isLoading ? (
             <div className="py-10 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
           ) : (
@@ -112,7 +114,7 @@ const AdminMembershipEvents = () => {
                   <TableRow key={r.id}>
                     <TableCell className="tech-content text-xs">{new Date(r.created_at).toLocaleString()}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={ACTION_TONE[r.action] || ''}>{r.action}</Badge>
+                      <AdminStatusBadge label={r.action} tone={ACTION_TONE[r.action] ?? 'muted'} />
                     </TableCell>
                     <TableCell className="tech-content text-xs">{r.from_tier || '—'}</TableCell>
                     <TableCell className="tech-content text-xs">{r.to_tier || '—'}</TableCell>
