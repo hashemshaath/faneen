@@ -6,6 +6,7 @@ import { buildSeoTitle, buildSeoDescription } from "@/modules/seo/seoTitleBuilde
 import {
   CalendarClock,
   ClipboardList,
+  FileSignature,
   FolderOpen,
   GitBranch,
   Image as ImageIcon,
@@ -478,6 +479,16 @@ const BusinessProfile = () => {
             >
               <CalendarClock className="ic-sm" />
               {language === "ar" ? "حجز موعد" : "Book appointment"}
+            </Button>
+            <Button
+              variant="default"
+              size="app"
+              className="gap-2"
+              onClick={() => setActiveTab("rfq")}
+              aria-label={language === "ar" ? "طلب عقد" : "Request a contract"}
+            >
+              <FileSignature className="ic-sm" />
+              {language === "ar" ? "طلب عقد" : "Request contract"}
             </Button>
           </div>
 
