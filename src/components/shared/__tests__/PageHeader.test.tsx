@@ -47,4 +47,27 @@ describe('PageHeader (shared)', () => {
     expect(screen.getByRole('heading', { name: 'X page' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'go-y' })).toHaveAttribute('href', '/y');
   });
+
+  it('is memoized — same props do not trigger a re-render of the header subtree', () => {
+    let renders = 0;
+    const Probe = () => {
+      renders += 1;
+      return <span data-testid="probe">{renders}</span>;
+    };
+    // Hoisted children & actions ⇒ stable references across re-renders.
+    const stableActions = <Probe />;
+    const Page = ({ n }: { n: number }) => (
+      <>
+        <PageHeader icon={Award} title="Stable" actions={stableActions} />
+        <span data-testid="external">{n}</span>
+      </>
+    );
+    const { rerender } = render(wrap(<Page n={1} />));
+    expect(renders).toBe(1);
+    // Parent re-renders with the same PageHeader props ⇒ React.memo keeps
+    // the header subtree (including <Probe />) from re-running.
+    rerender(wrap(<Page n={2} />));
+    expect(screen.getByTestId('external').textContent).toBe('2');
+    expect(renders).toBe(1);
+  });
 });
