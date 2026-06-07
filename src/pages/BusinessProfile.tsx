@@ -33,6 +33,7 @@ import {
   createConversation,
   insertMessage,
 } from "@/modules/messaging";
+import { useBusinessTaxonomyDisplay } from "@/modules/taxonomy/search-integration";
 import {
   BusinessProfileHeader,
   BusinessProfileTopBar,
@@ -164,7 +165,14 @@ const BusinessProfile = () => {
 
   const businessName = business ? getLocalizedValue(language, business.name_ar, business.name_en) : '';
   const businessDesc = business ? (getLocalizedValue(language, business.description_ar, business.description_en) || getLocalizedValue(language, business.short_description_ar, business.short_description_en) || '') : '';
-  const categoryName = business?.categories ? getLocalizedValue(language, business.categories.name_ar, business.categories.name_en) : '';
+  // Phase 13.a — taxonomy-first display label with legacy fallback.
+  const legacyCategoryName = business?.categories
+    ? getLocalizedValue(language, business.categories.name_ar, business.categories.name_en)
+    : '';
+  const taxonomyDisplay = useBusinessTaxonomyDisplay(business?.id, language);
+  const categoryName =
+    (taxonomyDisplay.hasModernTaxonomy && taxonomyDisplay.primaryLabel) ||
+    legacyCategoryName;
   const cityName = business?.cities ? getLocalizedValue(language, business.cities.name_ar, business.cities.name_en) : '';
 
   // business_profile_view — fires once per profile load (slug-based).

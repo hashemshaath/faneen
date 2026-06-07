@@ -393,3 +393,19 @@ export function useBusinessTaxonomyDisplayBatch(
     },
   });
 }
+
+/**
+ * Phase 13.a — Single-business taxonomy display hook. Thin wrapper around
+ * the batch hook so individual profile/detail pages share the same cache
+ * key family ('business-taxonomy-display-batch') as the search list.
+ * Display-only; legacy `businesses.categories` remains untouched.
+ */
+export function useBusinessTaxonomyDisplay(
+  businessId: string | null | undefined,
+  language: 'ar' | 'en',
+): BusinessTaxonomyDisplay {
+  const ids = businessId ? [businessId] : [];
+  const { data } = useBusinessTaxonomyDisplayBatch(ids, language);
+  if (!businessId || !data) return EMPTY_TAXONOMY_DISPLAY;
+  return data.get(businessId) ?? EMPTY_TAXONOMY_DISPLAY;
+}
