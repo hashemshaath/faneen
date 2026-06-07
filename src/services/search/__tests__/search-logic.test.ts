@@ -180,16 +180,6 @@ describe('filterAndSort', () => {
     expect(result[0].id).toBe('1');
   });
 
-  it('filters by tags', () => {
-    const tags = [
-      { entity_id: '1', tag_id: 'tag-a' },
-      { entity_id: '2', tag_id: 'tag-b' },
-    ];
-    const result = filterAndSort(businesses, '', defaultFilters, ['tag-a'], tags, 'ar');
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe('1');
-  });
-
   it('combines multiple filters', () => {
     const filters: SearchFilterValues = { ...defaultFilters, categoryId: 'cat-1', minRating: 5, verifiedOnly: true };
     const taxonomyIds = new Set(

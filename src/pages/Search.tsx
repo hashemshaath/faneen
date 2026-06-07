@@ -17,7 +17,6 @@ import {
   useCategories,
   useCities,
   useBusinesses,
-  useEntityTags,
   useServiceCategoryBusinessIds,
   filterAndSort,
   getDidYouMean,
@@ -55,7 +54,6 @@ const SearchPage = () => {
   const { data: categories } = useCategories();
   const { data: cities } = useCities();
   const { data: businesses, isLoading } = useBusinesses();
-  const { data: entityTags } = useEntityTags();
 
   const [query, setQuery] = useState(searchParams.get('q') || '');
   React.useEffect(() => {
@@ -70,7 +68,6 @@ const SearchPage = () => {
     typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : true
   );
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [favoritesOnly, setFavoritesOnly] = useState<boolean>(searchParams.get('fav') === '1');
 
   const [filters, setFilters] = useState<SearchFilterValues>({
@@ -245,8 +242,6 @@ const SearchPage = () => {
       businesses,
       debouncedQuery,
       filters,
-      selectedTags,
-      entityTags,
       language,
       categories,
       taxonomyBusinessIds,
@@ -263,7 +258,7 @@ const SearchPage = () => {
       }
     }
     return res;
-  }, [businesses, debouncedQuery, filters, language, selectedTags, entityTags, favoritesOnly, categories, taxonomyBusinessIds, serviceCategoryBusinessIds]);
+  }, [businesses, debouncedQuery, filters, language, favoritesOnly, categories, taxonomyBusinessIds, serviceCategoryBusinessIds]);
 
   // Defer the heavy filtered list so typing/filter clicks stay responsive.
   const deferredFiltered = useDeferredValue(filtered);
@@ -280,7 +275,7 @@ const SearchPage = () => {
       filters.verifiedOnly,
       filters.priceMin > 0,
       filters.priceMax > 0,
-    ].filter(Boolean).length + selectedTags.length;
+    ].filter(Boolean).length;
     track.search({
       results_count: filtered.length,
       filters_count: activeFilters,
@@ -288,7 +283,7 @@ const SearchPage = () => {
       city: cityMeta?.name,
     });
     // Only re-fire when the debounced query or result count meaningfully changes.
-  }, [debouncedQuery, filtered.length, detectedSector, cityMeta?.name, filters, selectedTags.length]);
+  }, [debouncedQuery, filtered.length, detectedSector, cityMeta?.name, filters]);
 
   // Consolidated JSON-LD: BreadcrumbList + WebSite/SearchAction + ItemList of
   // the top providers (when results exist). All keywords carry sector context
@@ -369,7 +364,7 @@ const SearchPage = () => {
   );
   const { data: taxonomyDisplayMap } = useBusinessTaxonomyDisplayBatch(visibleBusinessIds, lang);
 
-  const showChips = hasActiveFilters || query.trim() || selectedTags.length > 0;
+  const showChips = hasActiveFilters || query.trim();
 
   // Build a clean querystring representation of the current search (sorted keys for stable equality)
   const currentQs = useMemo(() => {
@@ -384,11 +379,10 @@ const SearchPage = () => {
     if (filters.priceMax > 0) params.set('price_max', String(filters.priceMax));
     if (filters.serviceCategoryId && filters.serviceCategoryId !== 'all') params.set('serviceCategory', filters.serviceCategoryId);
     if (favoritesOnly) params.set('fav', '1');
-    if (selectedTags.length > 0) params.set('tags', selectedTags.join(','));
     // Stable order
     const sorted = [...params.entries()].sort(([a], [b]) => a.localeCompare(b));
     return new URLSearchParams(sorted).toString();
-  }, [query, filters, favoritesOnly, selectedTags]);
+  }, [query, filters, favoritesOnly]);
 
   // Friendly auto-name: "ألمنيوم — الرياض — 4★" / "ألومنيوم — Riyadh — Verified"
   const suggestedName = useMemo(() => {
@@ -423,8 +417,6 @@ const SearchPage = () => {
     setFilters(next);
     setQuery(sp.get('q') || '');
     setFavoritesOnly(sp.get('fav') === '1');
-    const tags = sp.get('tags');
-    setSelectedTags(tags ? tags.split(',').filter(Boolean) : []);
     setCurrentPage(1);
     setSearchParams(sp, { replace: false });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -444,13 +436,13 @@ const SearchPage = () => {
           input.focus();
           input.select();
         }
-      } else if (e.key === 'Escape' && !typing && (hasActiveFilters || query.trim() || selectedTags.length > 0)) {
+      } else if (e.key === 'Escape' && !typing && (hasActiveFilters || query.trim())) {
         clearFilters();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [hasActiveFilters, query, selectedTags.length, clearFilters]);
+  }, [hasActiveFilters, query, clearFilters]);
 
   return (
     <div className="min-h-screen bg-background">
