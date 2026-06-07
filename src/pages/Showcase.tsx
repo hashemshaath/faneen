@@ -13,6 +13,11 @@ import { useMultiJsonLd } from "@/hooks/usePageMeta";
 import { buildBreadcrumbList, SITE_URL } from "@/lib/seo/structured-data";
 import { useBi } from "@/components/common/Bilingual";
 import { Building2, ExternalLink, Sparkles, MessageSquare, Layers, ShieldCheck } from "lucide-react";
+import {
+  getShowcaseTaxonomyCategories,
+  getLegacySectorDisplayName,
+} from "@/modules/taxonomy/showcase-services";
+import { LEGACY_SECTOR_TO_TAXONOMY_SLUG } from "@/modules/taxonomy/legacy-mapping";
 
 interface ShowcaseRow {
   id: string;
@@ -25,6 +30,7 @@ interface ShowcaseRow {
   image_url: string;
   link_url: string | null;
   sector_slug: string | null;
+  taxonomy_category_id: string | null;
   business: {
     id: string;
     name_ar: string | null;
@@ -48,6 +54,22 @@ const Showcase = () => {
   const bi = useBi();
   const [sector, setSector] = useState<string>("all");
 
+  /** Taxonomy categories flagged for showcase, used to drive the filter row. */
+  const taxonomyOptionsQ = useQuery({
+    queryKey: ["showcase-taxonomy-options"],
+    queryFn: getShowcaseTaxonomyCategories,
+    staleTime: 5 * 60_000,
+  });
+  const taxonomyOptions = taxonomyOptionsQ.data ?? [];
+  const taxonomyById = useMemo(
+    () => new Map(taxonomyOptions.map((o) => [o.id, o] as const)),
+    [taxonomyOptions],
+  );
+  const taxonomyBySlug = useMemo(
+    () => new Map(taxonomyOptions.map((o) => [o.slug, o] as const)),
+    [taxonomyOptions],
+  );
+
   usePageMeta({
     title: "أعمال وشعارات المزودين | قِطاعات",
     description:
@@ -56,12 +78,12 @@ const Showcase = () => {
   });
 
   const query = useQuery({
-    queryKey: ["showcase-public", sector],
+    queryKey: ["showcase-public", sector, taxonomyOptions.length],
     queryFn: async () => {
       let q = supabase
         .from("showcase_submissions")
         .select(
-          "id, business_id, kind, title_ar, title_en, description_ar, description_en, image_url, link_url, sector_slug, business:businesses!inner(id, name_ar, name_en, username, logo_url, is_verified)",
+          "id, business_id, kind, title_ar, title_en, description_ar, description_en, image_url, link_url, sector_slug, taxonomy_category_id, business:businesses!inner(id, name_ar, name_en, username, logo_url, is_verified)",
         )
         .eq("status", "approved")
         // SEO-10A — enforce verified+active+published+non-demo on the joined
@@ -73,11 +95,28 @@ const Showcase = () => {
         .eq("business.is_demo", false)
         .order("created_at", { ascending: false })
         .limit(120);
-      if (sector !== "all") q = q.eq("sector_slug", sector);
+      if (sector !== "all") {
+        // Taxonomy-first filter: resolve `sector` to a taxonomy id when possible,
+        // then OR over `taxonomy_category_id` plus the matching legacy slugs so
+        // unmigrated rows still surface for the same filter chip.
+        const taxonomySlug = LEGACY_SECTOR_TO_TAXONOMY_SLUG[sector] ?? sector;
+        const tax = taxonomyBySlug.get(taxonomySlug);
+        const legacySlugs = Object.entries(LEGACY_SECTOR_TO_TAXONOMY_SLUG)
+          .filter(([, target]) => target === taxonomySlug)
+          .map(([legacy]) => legacy);
+        const slugSet = new Set<string>([sector, ...legacySlugs]);
+        if (tax) {
+          const slugList = Array.from(slugSet).map((s) => `"${s}"`).join(',');
+          q = q.or(`taxonomy_category_id.eq.${tax.id},sector_slug.in.(${slugList})`);
+        } else {
+          q = q.in('sector_slug', Array.from(slugSet));
+        }
+      }
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as ShowcaseRow[];
     },
+    enabled: !taxonomyOptionsQ.isLoading,
   });
 
   const logos = useMemo(
@@ -269,6 +308,15 @@ const Showcase = () => {
                     <div className="p-4 space-y-2">
                       {title && <h3 className="font-medium text-sm line-clamp-1" dir="auto">{title}</h3>}
                       {desc && <p className="text-xs text-muted-foreground line-clamp-2" dir="auto">{desc}</p>}
+                      {(() => {
+                        const label = row.taxonomy_category_id
+                          ? taxonomyById.get(row.taxonomy_category_id)?.display_ar
+                          : getLegacySectorDisplayName(row.sector_slug);
+                        if (!label) return null;
+                        return (
+                          <p className="text-[11px] text-muted-foreground" dir="auto">{label}</p>
+                        );
+                      })()}
                       <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40">
                         <Link to={href} className="flex items-center gap-2 text-xs hover:text-primary min-w-0">
                           {row.business?.logo_url ? (
