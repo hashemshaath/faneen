@@ -56,7 +56,7 @@ describe('listBusinessesByIds', () => {
     const sel =
       'id, username, name_ar, name_en, logo_url, ' +
       'rating_avg, rating_count, is_verified, membership_tier, ' +
-      'categories(name_ar, name_en), cities(name_ar, name_en), ' +
+      'cities(name_ar, name_en), ' +
       'business_services(name_ar, name_en, price_from, price_to, currency_code), ' +
       'provider_installment_settings(is_enabled, max_installments)';
     await listBusinessesByIds({ ids: ['x'], select: sel });
@@ -81,12 +81,12 @@ describe('countActiveBusinesses', () => {
 });
 
 describe('listCompareBusinesses', () => {
-  it('preserves exact select, is_active filter, and rating_avg desc order', async () => {
+  it('preserves exact select (taxonomy-first, no legacy categories join), is_active filter, and rating_avg desc order', async () => {
     await listCompareBusinesses();
     expect(fromMock).toHaveBeenCalledWith('businesses');
     expect(builder.select).toHaveBeenCalledWith(
       'id, name_ar, name_en, username, logo_url, rating_avg, rating_count, ' +
-      'categories(name_ar, name_en), cities(name_ar, name_en)',
+      'cities(name_ar, name_en)',
     );
     expect(builder.eq).toHaveBeenCalledWith('is_active', true);
     expect(builder.order).toHaveBeenCalledWith('rating_avg', { ascending: false });
@@ -94,11 +94,11 @@ describe('listCompareBusinesses', () => {
 });
 
 describe('getBusinessForContract', () => {
-  it('uses maybeSingle with categories join select', async () => {
+  it('uses maybeSingle with parent-only select (no legacy categories join)', async () => {
     builder = makeBuilder({ data: { id: 'b1' }, error: null });
     const r = await getBusinessForContract('b1');
     expect(fromMock).toHaveBeenCalledWith('businesses');
-    expect(builder.select).toHaveBeenCalledWith('*, categories(name_ar, name_en)');
+    expect(builder.select).toHaveBeenCalledWith('*');
     expect(builder.eq).toHaveBeenCalledWith('id', 'b1');
     expect(builder.maybeSingle).toHaveBeenCalled();
     expect(r.data).toEqual({ id: 'b1' });

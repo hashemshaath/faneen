@@ -106,6 +106,68 @@ export async function getBusinessTaxonomyCategories(
 }
 
 /**
+ * Phase 16 — display helper. Resolve the primary taxonomy display label
+ * (name_ar/name_en) for a set of businesses by joining
+ * `business_taxonomy_categories` ↦ `taxonomy_categories`. The "primary"
+ * label is picked in this priority order:
+ *   1. row with `is_primary = true`
+ *   2. row with `role = 'primary_activity'`
+ *   3. row with `role = 'entity_type'`
+ *   4. first remaining row
+ *
+ * Returns a map keyed by business id. Businesses with no taxonomy links
+ * are simply absent from the map (callers display "غير مصنّف" fallback).
+ * Never throws — taxonomy display is best-effort.
+ */
+export interface PrimaryTaxonomyLabel {
+  category_id: string;
+  name_ar: string | null;
+  name_en: string | null;
+  slug: string | null;
+  icon: string | null;
+}
+export async function getPrimaryTaxonomyLabelsForBusinesses(
+  businessIds: string[],
+): Promise<Record<string, PrimaryTaxonomyLabel>> {
+  if (!businessIds.length) return {};
+  const { data } = await supabase
+    .from('business_taxonomy_categories')
+    .select(
+      'business_id, category_id, role, is_primary, taxonomy_categories(name_ar, name_en, slug, icon)',
+    )
+    .in('business_id', businessIds);
+  if (!data) return {};
+  type Row = {
+    business_id: string;
+    category_id: string;
+    role: string | null;
+    is_primary: boolean | null;
+    taxonomy_categories: { name_ar: string | null; name_en: string | null; slug: string | null; icon: string | null } | null;
+  };
+  const grouped: Record<string, Row[]> = {};
+  for (const r of data as unknown as Row[]) {
+    (grouped[r.business_id] ??= []).push(r);
+  }
+  const out: Record<string, PrimaryTaxonomyLabel> = {};
+  for (const [bid, rows] of Object.entries(grouped)) {
+    const pick =
+      rows.find((r) => r.is_primary === true) ??
+      rows.find((r) => r.role === 'primary_activity') ??
+      rows.find((r) => r.role === 'entity_type') ??
+      rows[0];
+    if (!pick) continue;
+    out[bid] = {
+      category_id: pick.category_id,
+      name_ar: pick.taxonomy_categories?.name_ar ?? null,
+      name_en: pick.taxonomy_categories?.name_en ?? null,
+      slug: pick.taxonomy_categories?.slug ?? null,
+      icon: pick.taxonomy_categories?.icon ?? null,
+    };
+  }
+  return out;
+}
+
+/**
  * Atomically replace entity_type / primary_activity / secondary_activity links
  * for a business. Uses the server-side RPC so validation + RLS are enforced.
  */

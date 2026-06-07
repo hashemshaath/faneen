@@ -27,7 +27,9 @@ const MIGRATED: Migrated[] = [
   {
     path: 'src/hooks/useProviderReadiness.ts',
     select:
-      "'id, name_ar, username, logo_url, description_ar, short_description_ar, category_id, city_id, phone, mobile, email, address, approval_status, approval_notes, onboarding_completion, username_status, is_active'",
+      // Phase 12 — legacy `category_id` removed; classification is checked
+      // via `business_taxonomy_categories` (primary_activity) instead.
+      "'id, name_ar, username, logo_url, description_ar, short_description_ar, city_id, phone, mobile, email, address, approval_status, approval_notes, onboarding_completion, username_status, is_active'",
     queryKey: "['provider-readiness', userId]",
     enabled: '!!userId',
   },

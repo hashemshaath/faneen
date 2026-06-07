@@ -280,7 +280,6 @@ const DashboardBusinessEdit: React.FC = () => {
         account_manager_phone: form.account_manager_phone || null,
         account_manager_email: form.account_manager_email || null,
         account_manager_position: form.account_manager_position || null,
-        sectors: form.sectors ?? [],
       };
       const { error: updateError } = await updateBusinessById({ id: form.id, values: payload });
       if (updateError) throw updateError;

@@ -134,8 +134,11 @@ describe('migration regression: authService createBusiness', () => {
     expect(src).toMatch(/user_id:\s*userId/);
     expect(src).toMatch(/name_ar:\s*sanitizedName/);
     expect(src).toMatch(/username:\s*sanitizedUsername/);
-    expect(src).toMatch(/sectors:\s*extras\?\.sectors\s*\?\?\s*\[\]/);
-    expect(src).toMatch(/sub_services:\s*extras\?\.sub_services\s*\?\?\s*\[\]/);
+    // Phase 16 — legacy `sectors` / `sub_services` columns are no longer
+    // written from createBusiness; classification lives in
+    // `business_taxonomy_categories` via the dedicated RPC.
+    expect(src).not.toMatch(/sectors:\s*extras\?\.sectors/);
+    expect(src).not.toMatch(/sub_services:\s*extras\?\.sub_services/);
     expect(src).toMatch(/description_ar:\s*extras\?\.description_ar\s*\?/);
     expect(src).toMatch(/approval_status:\s*'draft'/);
     expect(src).toMatch(/username_status:\s*'pending'/);
