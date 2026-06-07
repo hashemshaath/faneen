@@ -23,6 +23,7 @@ import { VerificationStatusBadge } from "@/components/common/VerificationStatusB
 import { useAuth } from "@/contexts/AuthContext";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { BusinessIdentityStrip } from "@/components/business/BusinessIdentityStrip";
+import { useBusinessTaxonomyDisplay } from "@/modules/taxonomy/search-integration";
 
 export const Stars = ({ rating, size = "w-4 h-4" }: { rating: number; size?: string }) => (
   <div className="flex items-center gap-0.5">
