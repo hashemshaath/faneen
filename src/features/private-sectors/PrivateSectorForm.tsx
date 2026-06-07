@@ -12,8 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
 import { PS_BRAND_TYPE_META, PrivateSector, PrivateSectorBrandType } from './types';
-import { Save, X, Search as SearchIcon, Globe2, MapPin, Tag } from 'lucide-react';
-import { listActiveCategories } from '@/modules/categories';
+import { Save, X, Search as SearchIcon, Globe2, MapPin } from 'lucide-react';
 import { listActiveCities } from '@/modules/locations';
 import { useQuery } from '@tanstack/react-query';
 
@@ -50,13 +49,10 @@ export const PrivateSectorForm: React.FC<Props> = ({ initial, onCancel, onSubmit
       return data ?? [];
     },
   });
-  const { data: categories = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string; slug: string }>>({
-    queryKey: ['categories-active'],
-    queryFn: async () => {
-      const { data } = await listActiveCategories<{ id: string; name_ar: string; name_en: string; slug: string }>({ select: 'id, name_ar, name_en, slug' });
-      return data ?? [];
-    },
-  });
+  // Phase 7: legacy `categories` dropdown removed from this form.
+  // `private_sectors.category_id` is preserved on existing rows for backward
+  // reads only and is no longer written from this UI. Future classification
+  // will go through the central taxonomy.
 
   const set = <K extends keyof PrivateSector>(k: K, v: PrivateSector[K] | null | undefined) =>
     setForm((f) => ({ ...f, [k]: v as never }));
@@ -159,18 +155,10 @@ export const PrivateSectorForm: React.FC<Props> = ({ initial, onCancel, onSubmit
               </SelectContent>
             </Select>
           </div>
-          <div>
-            <Label className="flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" />{isRTL ? 'الفئة' : 'Category'}</Label>
-            <Select value={form.category_id ?? '__none__'} onValueChange={(v) => set('category_id', v === '__none__' ? null : v)}>
-              <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر فئة' : 'Select category'} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">{isRTL ? 'بدون' : 'None'}</SelectItem>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/*
+            Phase 7: legacy category select removed. Classification will be
+            re-added via central taxonomy in a later phase.
+          */}
 
           <div className="md:col-span-2 mt-2">
             <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground mb-2">
