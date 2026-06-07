@@ -21,6 +21,14 @@ export interface GrowthBusiness {
   short_description_en?: string | null;
   sectors?: string[] | null;
   sub_services?: string[] | null;
+  /**
+   * Phase 18d — preferred taxonomy-based presence signals.
+   * When provided, these OVERRIDE the legacy `sectors` / `sub_services`
+   * arrays for the `sectors` / `services` factors. Callers populate them
+   * from `business_taxonomy_categories` via `useBusinessTaxonomyPresence`.
+   */
+  taxonomy_primary_present?: boolean | null;
+  taxonomy_service_count?: number | null;
   email?: string | null;
   phone?: string | null;
   city?: string | null;
@@ -69,6 +77,25 @@ export interface ProviderFunnel {
   largestDropOffStage: FunnelStage | null;
 }
 
+/**
+ * Phase 18d — prefer taxonomy presence when callers supply it; fall back
+ * to the legacy arrays only when the new fields are undefined. This keeps
+ * back-compat with older callers that have not yet been wired to the
+ * `business_taxonomy_categories` source of truth.
+ */
+function hasSectorsTaxonomyFirst(b: GrowthBusiness): boolean {
+  if (typeof b.taxonomy_primary_present === 'boolean') {
+    return b.taxonomy_primary_present;
+  }
+  return (b.sectors?.length ?? 0) > 0;
+}
+function serviceCountTaxonomyFirst(b: GrowthBusiness): number {
+  if (typeof b.taxonomy_service_count === 'number') {
+    return b.taxonomy_service_count;
+  }
+  return b.sub_services?.length ?? 0;
+}
+
 function safeRate(numerator: number, denominator: number): number {
   if (denominator <= 0) return 0;
   return Math.max(0, Math.min(1, numerator / denominator));
@@ -89,7 +116,7 @@ export function computeProviderFunnel(businesses: GrowthBusiness[]): ProviderFun
     counts.registered += 1;
     const completion = b.onboarding_completion ?? 0;
     if (completion > 0 || b.name_ar || b.name_en) counts.onboarding_started += 1;
-    if (completion >= 80 || (b.name_ar && (b.sectors?.length ?? 0) > 0 && (b.email || b.phone))) {
+    if (completion >= 80 || (b.name_ar && hasSectorsTaxonomyFirst(b) && (b.email || b.phone))) {
       counts.profile_completed += 1;
     }
     if (b.username && b.username_status === 'approved') counts.username_approved += 1;
@@ -187,7 +214,7 @@ function evalFactor(key: string, b: GrowthBusiness): boolean {
   switch (key) {
     case 'name':         return Boolean(b.name_ar || b.name_en);
     case 'username':     return Boolean(b.username && b.username_status === 'approved');
-    case 'sectors':      return (b.sectors?.length ?? 0) > 0;
+    case 'sectors':      return hasSectorsTaxonomyFirst(b);
     case 'contact':      return Boolean(b.email || b.phone);
     case 'logo':         return Boolean(b.logo_url);
     case 'description':  return Boolean(
@@ -196,7 +223,7 @@ function evalFactor(key: string, b: GrowthBusiness): boolean {
       (b.short_description_ar && b.short_description_ar.length >= 40) ||
       (b.short_description_en && b.short_description_en.length >= 40),
     );
-    case 'services':     return (b.sub_services?.length ?? 0) > 0;
+    case 'services':     return serviceCountTaxonomyFirst(b) > 0;
     case 'city':         return Boolean(b.city || b.city_id);
     case 'published':    return b.approval_status === 'published' && b.is_active !== false && b.is_demo !== true;
     case 'banner':       return Boolean(b.banner_url);
@@ -266,8 +293,8 @@ export function computeDirectoryQuality(rows: GrowthBusiness[]): DirectoryQualit
     if (b.verified === true) verified += 1;
     if (b.logo_url) logo += 1;
     if (evalFactor('description', b)) desc += 1;
-    if ((b.sectors?.length ?? 0) > 0) sectors += 1;
-    if ((b.sub_services?.length ?? 0) > 0) services += 1;
+    if (hasSectorsTaxonomyFirst(b)) sectors += 1;
+    if (serviceCountTaxonomyFirst(b) > 0) services += 1;
     if (b.email || b.phone) contact += 1;
     scoreSum += computeProviderProfileScore(b).score;
   }
@@ -349,13 +376,14 @@ export function computeProviderSeoScore(b: GrowthBusiness): ProviderSeo {
   else if (desc.length >= 40) { pts += 8; recs.push({ key: 'description-longer', ar: 'وسّع الوصف لـ 120 حرفًا فأكثر لتحسين الظهور.', en: 'Expand description to 120+ chars for better discoverability.', helpSlug: 'profile-description' }); }
   else issues.push({ key: 'description', ar: 'الوصف غير كافٍ لمحركات البحث.', en: 'Description is too short for search engines.', helpSlug: 'profile-description' });
 
-  // Sectors keywords (10)
-  if ((b.sectors?.length ?? 0) >= 1) pts += 10;
+  // Sectors keywords (10) — taxonomy-first; legacy fallback for un-wired callers.
+  if (hasSectorsTaxonomyFirst(b)) pts += 10;
   else issues.push({ key: 'sectors', ar: 'أضف القطاعات لتظهر في نتائج التصنيف.', en: 'Add sectors so you appear in category results.', helpSlug: 'sectors-and-services' });
 
-  // Services keywords (10)
-  if ((b.sub_services?.length ?? 0) >= 2) pts += 10;
-  else if ((b.sub_services?.length ?? 0) === 1) { pts += 5; recs.push({ key: 'services-more', ar: 'أضف خدمات إضافية لتغطي كلمات بحث أوسع.', en: 'Add more sub-services to cover wider search terms.', helpSlug: 'sectors-and-services' }); }
+  // Services keywords (10) — taxonomy-first; legacy fallback for un-wired callers.
+  const svcCount = serviceCountTaxonomyFirst(b);
+  if (svcCount >= 2) pts += 10;
+  else if (svcCount === 1) { pts += 5; recs.push({ key: 'services-more', ar: 'أضف خدمات إضافية لتغطي كلمات بحث أوسع.', en: 'Add more sub-services to cover wider search terms.', helpSlug: 'sectors-and-services' }); }
   else issues.push({ key: 'services', ar: 'لا توجد خدمات فرعية — تفقد فرص بحث مهمة.', en: 'No sub-services — missing important search opportunities.', helpSlug: 'sectors-and-services' });
 
   // City/location (10)

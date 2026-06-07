@@ -19,6 +19,10 @@ import {
   type GrowthBusiness,
   type FunnelStage,
 } from '@/modules/growth/providerGrowth';
+import {
+  useBusinessTaxonomyPresenceBatch,
+  EMPTY_TAXONOMY_PRESENCE,
+} from '@/modules/taxonomy/presence';
 
 export interface AdminGrowthProvider extends GrowthBusiness {
   id: string;
@@ -46,24 +50,46 @@ const stageLabel = (s: FunnelStage, isRTL: boolean): string => {
 export const AdminProviderGrowthPanel: React.FC<Props> = ({ providers, onSelectProvider }) => {
   const { isRTL } = useLanguage();
 
-  const funnel = useMemo(() => computeProviderFunnel(providers), [providers]);
-  const quality = useMemo(() => computeDirectoryQuality(providers), [providers]);
+  // Phase 18d — taxonomy-first presence: stop reading
+  // `businesses.sectors` / `businesses.sub_services` from each row. The
+  // presence map is sourced from `business_taxonomy_categories` and
+  // merged into the rows passed to the pure growth helpers below.
+  const ids = useMemo(() => providers.map((p) => p.id).filter(Boolean), [providers]);
+  const { data: presenceMap } = useBusinessTaxonomyPresenceBatch(ids);
+
+  const enrichedProviders = useMemo<AdminGrowthProvider[]>(() => {
+    return providers.map((p) => {
+      const pres = presenceMap?.get(p.id) ?? EMPTY_TAXONOMY_PRESENCE;
+      return {
+        ...p,
+        sectors: null,
+        sub_services: null,
+        taxonomy_primary_present: pres.hasPrimary,
+        taxonomy_service_count: pres.serviceCount,
+      };
+    });
+  }, [providers, presenceMap]);
+
+  const funnel = useMemo(() => computeProviderFunnel(enrichedProviders), [enrichedProviders]);
+  const quality = useMemo(() => computeDirectoryQuality(enrichedProviders), [enrichedProviders]);
 
   const queues = useMemo(() => {
-    const scored = providers.map((p) => ({ p, score: computeProviderProfileScore(p).score }));
+    const scored = enrichedProviders.map((p) => ({ p, score: computeProviderProfileScore(p).score }));
     return {
-      drafts: providers.filter((p) => (p.approval_status ?? 'draft') === 'draft').slice(0, 6),
-      readyToPublish: providers.filter((p) => {
+      drafts: enrichedProviders.filter((p) => (p.approval_status ?? 'draft') === 'draft').slice(0, 6),
+      readyToPublish: enrichedProviders.filter((p) => {
         if (p.approval_status === 'published') return false;
         const s = computeProviderProfileScore(p);
         return s.missingRequired.length === 0;
       }).slice(0, 6),
-      usernamePending: providers.filter((p) => p.username && p.username_status !== 'approved').slice(0, 6),
-      missingLogos: providers.filter((p) => !p.logo_url).slice(0, 6),
-      missingServices: providers.filter((p) => (p.sub_services?.length ?? 0) === 0).slice(0, 6),
+      usernamePending: enrichedProviders.filter((p) => p.username && p.username_status !== 'approved').slice(0, 6),
+      missingLogos: enrichedProviders.filter((p) => !p.logo_url).slice(0, 6),
+      // Phase 18d — taxonomy-first: provider is "missing services" when
+      // their taxonomy service link count is zero.
+      missingServices: enrichedProviders.filter((p) => (p.taxonomy_service_count ?? 0) === 0).slice(0, 6),
       lowScore: scored.filter((x) => x.score < 50).map((x) => x.p).slice(0, 6),
     };
-  }, [providers]);
+  }, [enrichedProviders]);
 
   return (
     <Card data-testid="admin-provider-growth-panel" className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 via-background to-background">

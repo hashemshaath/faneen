@@ -14,8 +14,9 @@ import { maskEmail, maskPhone } from '@/lib/masking';
 import { ReferenceTag } from '@/components/reference/ReferenceTag';
 import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
 import { PublishReadinessPanel } from '@/components/admin/PublishReadinessPanel';
-import { getSectorById, type SectorId } from '@/data/onboarding-sectors';
 import { STATUSES, TONE, type ApprovalStatus, type ProviderRow, type UsernameStatus } from './types';
+import { useBusinessTaxonomyDisplay } from '@/modules/taxonomy/search-integration';
+import { useBusinessTaxonomyPresence } from '@/modules/taxonomy/presence';
 
 interface Props {
   selected: ProviderRow | null;
@@ -30,27 +31,15 @@ interface Props {
   onUsernameChange: (status: UsernameStatus) => void;
 }
 
-function renderSectors(ids: string[] | null, language: 'ar' | 'en') {
-  if (!ids || !ids.length) return null;
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {ids.map((id) => {
-        const s = getSectorById(id as SectorId);
-        return (
-          <Badge key={id} variant="outline" className="gap-1 text-[11px]">
-            <Tag className="h-3 w-3" />
-            {s ? (language === 'ar' ? s.name_ar : s.name_en) : id}
-          </Badge>
-        );
-      })}
-    </div>
-  );
-}
-
 export const ProviderReviewDetailPanel: React.FC<Props> = ({
   selected, notes, setNotes, language, isRTL, isSuperAdmin,
   approvalPending, usernamePending, onApprovalChange, onUsernameChange,
 }) => {
+  // Phase 18d — taxonomy-first display. Replaces the previous reads of
+  // `selected.sectors` / `selected.sub_services`. When no taxonomy links
+  // exist we surface a "needs taxonomy link" hint instead of legacy data.
+  const taxonomyDisplay = useBusinessTaxonomyDisplay(selected?.id ?? null, language);
+  const taxonomyPresence = useBusinessTaxonomyPresence(selected?.id ?? null);
   if (!selected) {
     return (
       <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center text-sm text-muted-foreground">
@@ -59,6 +48,15 @@ export const ProviderReviewDetailPanel: React.FC<Props> = ({
       </CardContent>
     );
   }
+  const enrichedSelected = {
+    ...selected,
+    // Strip legacy arrays so the embedded PublishReadinessPanel uses
+    // the taxonomy-first signals below.
+    sectors: null,
+    sub_services: null,
+    taxonomy_primary_present: taxonomyPresence.hasPrimary,
+    taxonomy_service_count: taxonomyPresence.serviceCount,
+  };
 
   return (
     <>
@@ -156,16 +154,41 @@ export const ProviderReviewDetailPanel: React.FC<Props> = ({
         </div>
 
         <div className="space-y-2">
-          <div className="text-xs font-semibold text-muted-foreground">{isRTL ? 'القطاعات' : 'Sectors'}</div>
-          {renderSectors(selected.sectors, language) ?? (<p className="text-xs text-muted-foreground">—</p>)}
+          <div className="text-xs font-semibold text-muted-foreground">{isRTL ? 'النشاط الرئيسي' : 'Primary activity'}</div>
+          {taxonomyDisplay.primaryLabel ? (
+            <div className="flex flex-wrap gap-1.5">
+              <Badge variant="outline" className="gap-1 text-[11px]">
+                <Tag className="h-3 w-3" />
+                {taxonomyDisplay.primaryLabel}
+              </Badge>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {isRTL ? 'غير مصنّف — يحتاج ربط تصنيف' : 'Unclassified — needs taxonomy link'}
+            </p>
+          )}
         </div>
 
-        {selected.sub_services && selected.sub_services.length > 0 && (
+        {taxonomyDisplay.secondaryLabels.length > 0 && (
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-muted-foreground">{isRTL ? 'الخدمات الفرعية' : 'Sub-services'}</div>
+            <div className="text-xs font-semibold text-muted-foreground">{isRTL ? 'تصنيفات إضافية' : 'Secondary categories'}</div>
             <div className="flex flex-wrap gap-1.5">
-              {selected.sub_services.map((s) => (
-                <Badge key={s} variant="secondary" className="text-[11px]">{s}</Badge>
+              {taxonomyDisplay.secondaryLabels.map((label) => (
+                <Badge key={label} variant="outline" className="gap-1 text-[11px]">
+                  <Tag className="h-3 w-3" />
+                  {label}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {taxonomyDisplay.serviceLabels.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-muted-foreground">{isRTL ? 'تخصصات الخدمات' : 'Service categories'}</div>
+            <div className="flex flex-wrap gap-1.5">
+              {taxonomyDisplay.serviceLabels.map((label) => (
+                <Badge key={label} variant="secondary" className="text-[11px]">{label}</Badge>
               ))}
             </div>
           </div>
@@ -217,7 +240,7 @@ export const ProviderReviewDetailPanel: React.FC<Props> = ({
           }}
         />
 
-        <PublishReadinessPanel business={selected} isRTL={isRTL} />
+        <PublishReadinessPanel business={enrichedSelected} isRTL={isRTL} />
 
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" onClick={() => onApprovalChange('under_review')} disabled={approvalPending} className="gap-1">
