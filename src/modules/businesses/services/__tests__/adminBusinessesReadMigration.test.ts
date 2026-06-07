@@ -66,13 +66,8 @@ describe('P-20 admin businesses read migration', () => {
     expect(src).not.toMatch(/supabase\.from\(['"]businesses['"]\)/);
   });
 
-  it('AdminCategories uses listAdminBusinesses for category_id aggregation', () => {
-    const src = read('src/pages/admin/AdminCategories.tsx');
-    expect(src).toContain("queryKey: ['admin-category-business-counts']");
-    expect(src).toMatch(/listAdminBusinesses<\{ category_id: string \| null \}>\(/);
-    expect(src).toContain("select: 'category_id'");
-    expect(src).not.toMatch(/supabase\.from\(['"]businesses['"]\)/);
-  });
+  // AdminCategories was deleted in the legacy-taxonomy sunset; its
+  // listAdminBusinesses regression lock was removed with it.
 
   it('AdminClientSitesMonitoring uses listBusinessesByIds with exact select', () => {
     const src = read('src/pages/admin/AdminClientSitesMonitoring.tsx');
