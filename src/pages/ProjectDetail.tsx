@@ -4,6 +4,11 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getCategoryById } from '@/modules/categories';
+import {
+  getProjectTaxonomyCategories,
+  type ProjectTaxonomyLink,
+} from '@/modules/taxonomy/project-services';
+import { supabase as _sb } from '@/integrations/supabase/client';
 import { getCityById } from '@/modules/locations';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useContentTracking } from '@/hooks/useContentTracking';
@@ -71,7 +76,7 @@ const ProjectDetail = () => {
   }, [project?.id, project?.businesses?.username]);
 
   const { data: category } = useQuery<{ slug: string | null; name_ar: string; name_en: string } | null>({
-    queryKey: ['category', project?.category_id],
+    queryKey: ['category-legacy', project?.category_id],
     queryFn: async () => {
       const { data } = await getCategoryById<{ slug: string | null; name_ar: string; name_en: string }>(
         project!.category_id!,
@@ -82,11 +87,39 @@ const ProjectDetail = () => {
     enabled: !!project?.category_id,
   });
 
+  // Phase 8: prefer taxonomy classification when present.
+  const { data: taxonomyLinks = [] } = useQuery<ProjectTaxonomyLink[]>({
+    queryKey: ['project-taxonomy', project?.id],
+    queryFn: () => getProjectTaxonomyCategories(project!.id),
+    enabled: !!project?.id,
+  });
+  const { data: taxonomyCategory } = useQuery<{ slug: string | null; name_ar: string; name_en: string } | null>({
+    queryKey: ['project-taxonomy-cat', taxonomyLinks[0]?.category_id],
+    queryFn: async () => {
+      const id = taxonomyLinks.find((l) => l.role === 'primary_activity')?.category_id;
+      if (!id) return null;
+      const { data } = await _sb
+        .from('taxonomy_categories')
+        .select('slug, name_ar, name_en')
+        .eq('id', id)
+        .maybeSingle();
+      return (data as { slug: string | null; name_ar: string; name_en: string } | null) ?? null;
+    },
+    enabled: taxonomyLinks.length > 0,
+  });
+
+  // Display category: taxonomy-first, then legacy.
+  const displayCategory = taxonomyCategory ?? category ?? null;
+  const taxonomyCategoryIds = useMemo(
+    () => taxonomyLinks.map((l) => l.category_id),
+    [taxonomyLinks],
+  );
+
   const projectTitle = project ? (language === 'ar' ? project.title_ar : (project.title_en || project.title_ar)) : '';
   const projectDesc = project ? (language === 'ar' ? project.description_ar : (project.description_en || project.description_ar)) : '';
 
   const projectLang: 'ar' | 'en' = language === 'ar' ? 'ar' : 'en';
-  const projectCategoryName = category ? (language === 'ar' ? category.name_ar : (category.name_en || category.name_ar)) : '';
+  const projectCategoryName = displayCategory ? (language === 'ar' ? displayCategory.name_ar : (displayCategory.name_en || displayCategory.name_ar)) : '';
   const projectSeoTitle = projectTitle
     ? buildSeoTitle({ kind: 'project', lang: projectLang, name: projectTitle, category: projectCategoryName })
     : (isRTL ? 'تفاصيل المشروع' : 'Project Details');
@@ -155,7 +188,7 @@ const ProjectDetail = () => {
   // sector slug comes from the curated CATEGORY_SLUG_TO_SECTOR map; city
   // slug comes from the static SA_CITIES table matched by name_en. We never
   // invent slugs and never link if a slug is missing.
-  const sectorSlug = detectSectorFromCategorySlug(category?.slug ?? null);
+  const sectorSlug = detectSectorFromCategorySlug(displayCategory?.slug ?? null);
   const citySlug = city?.name_en
     ? (SA_CITIES.find((c) => c.nameEn.toLowerCase() === city.name_en.toLowerCase())?.slug ?? null)
     : null;
