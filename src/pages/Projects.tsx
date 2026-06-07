@@ -5,6 +5,7 @@ import { buildBreadcrumbList, SITE_URL } from '@/lib/seo/structured-data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { ResponsiveImage } from '@/modules/files/components/ResponsiveImage';
 import { listActiveCities } from '@/modules/locations';
 import {
   getProjectTaxonomyPickerCategories,
@@ -79,7 +80,7 @@ const Projects = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('*, businesses(username, name_ar, name_en, logo_url)')
+        .select('*, businesses(username, name_ar, name_en, logo_url), cover_image_asset:image_assets!projects_cover_image_asset_id_fkey(variants)')
         .eq('status', 'published')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -372,11 +373,12 @@ const Projects = () => {
                   <Card className="overflow-hidden border-border/50 dark:border-border/30 hover:border-accent/40 transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 dark:hover:shadow-accent/10 group cursor-pointer h-full hover:-translate-y-1.5 dark:bg-card/80">
                     <div className="aspect-video bg-muted relative overflow-hidden">
                       {p.cover_image_url ? (
-                        <img
-                          src={p.cover_image_url}
+                        <ResponsiveImage
+                          originalUrl={p.cover_image_url}
+                          variants={(p as { cover_image_asset?: { variants?: unknown } }).cover_image_asset?.variants}
                           alt={p.title_ar}
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50 dark:from-muted/80 dark:to-accent/5">

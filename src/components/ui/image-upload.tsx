@@ -19,6 +19,28 @@ import {
   removePublicImage,
   extractPublicStoragePath,
 } from '@/modules/files';
+import { uploadProjectImage } from '@/modules/files';
+import type {
+  UploadProjectImageResult,
+  ProjectImageKind,
+} from '@/modules/files';
+
+/**
+ * Phase 2.1: opt-in central image pipeline (Showcase + Projects only).
+ * When `pipeline === "project"` ImageUpload/MultiImageUpload route via
+ * `uploadProjectImage`, generate thumbnail/card/medium/hero variants,
+ * record an `image_assets` row, and surface `imageAssetId`/`variants`
+ * via the `onUploadedMeta` callback. Default (`undefined`) preserves
+ * the legacy single-rendition path for every other caller.
+ */
+export type ImagePipelineMode = 'project';
+
+export interface UploadedImageMeta {
+  url: string;
+  imageAssetId?: string;
+  variants?: UploadProjectImageResult['variants'];
+  fallback?: boolean;
+}
 
 interface ImageUploadProps {
   bucket: string;
@@ -32,6 +54,12 @@ interface ImageUploadProps {
   aspectRatio?: 'video' | 'square' | 'auto';
   placeholder?: string;
   compact?: boolean;
+  /** Opt-in central pipeline. Currently only `"project"` is wired. */
+  pipeline?: ImagePipelineMode;
+  /** Project image kind when `pipeline === "project"`. Defaults to `cover`. */
+  projectKind?: ProjectImageKind;
+  /** Receives full upload metadata when the pipeline is enabled. */
+  onUploadedMeta?: (meta: UploadedImageMeta) => void;
 }
 
 // Per-bucket upload constraints now canonical in @/modules/files
@@ -49,6 +77,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   aspectRatio = 'video',
   placeholder,
   compact = false,
+  pipeline,
+  projectKind = 'cover',
+  onUploadedMeta,
 }) => {
   const { user } = useAuth();
   const { isRTL } = useLanguage();
@@ -86,6 +117,27 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
     setUploading(true);
     try {
+      // ─── Pipeline path (Phase 2.1) — Project only ───
+      if (pipeline === 'project' && user) {
+        const res = await uploadProjectImage({
+          userId: user.id,
+          file,
+          kind: projectKind,
+        });
+        if (res.error || !res.publicUrl) {
+          throw res.error ?? new Error(tx.uploadFail);
+        }
+        onChange(res.publicUrl);
+        onUploadedMeta?.({
+          url: res.publicUrl,
+          imageAssetId: res.imageAssetId,
+          variants: res.variants,
+          fallback: res.fallback,
+        });
+        toast.success(tx.uploadOk);
+        return;
+      }
+
       const compressed = await compressImage(file);
       const ext = compressed.name.split('.').pop() || 'jpg';
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
@@ -267,6 +319,10 @@ interface MultiImageUploadProps {
   maxImages?: number;
   maxSizeMB?: number;
   className?: string;
+  pipeline?: ImagePipelineMode;
+  projectKind?: ProjectImageKind;
+  /** Receives metadata (one per successfully uploaded file) when the pipeline is enabled. */
+  onUploadedMeta?: (metas: UploadedImageMeta[]) => void;
 }
 
 export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
@@ -277,6 +333,9 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
   maxImages = 10,
   maxSizeMB = 5,
   className,
+  pipeline,
+  projectKind = 'gallery',
+  onUploadedMeta,
 }) => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
@@ -298,6 +357,7 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
 
     setUploading(true);
     const newUrls: string[] = [];
+    const newMetas: UploadedImageMeta[] = [];
 
     try {
       for (const file of toUpload) {
@@ -307,6 +367,31 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         });
         if (!check.ok) {
           toast.error(getImageRejectionMessage(check.reason ?? 'unsupported_type', true));
+          continue;
+        }
+
+        // ─── Pipeline path (Phase 2.1) — Project only ───
+        if (pipeline === 'project' && user) {
+          const res = await uploadProjectImage({
+            userId: user.id,
+            file,
+            kind: projectKind,
+          });
+          if (res.error || !res.publicUrl) {
+            logUploadFailure(
+              { bucket, size: file.size, mime: file.type },
+              res.error,
+              { silentToast: true },
+            );
+            continue;
+          }
+          newUrls.push(res.publicUrl);
+          newMetas.push({
+            url: res.publicUrl,
+            imageAssetId: res.imageAssetId,
+            variants: res.variants,
+            fallback: res.fallback,
+          });
           continue;
         }
 
@@ -336,6 +421,9 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
 
       if (newUrls.length > 0) {
         onChange([...images, ...newUrls]);
+        if (newMetas.length > 0) {
+          onUploadedMeta?.(newMetas);
+        }
         toast.success(`تم رفع ${newUrls.length} صورة`);
       }
     } catch (err: unknown) {

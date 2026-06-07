@@ -5,6 +5,12 @@ export { uploadAvatar } from './domain/avatar';
 export type { UploadAvatarParams, UploadAvatarResult } from './domain/avatar';
 export { uploadShowcaseImage } from './domain/showcase';
 export type { UploadShowcaseImageParams, UploadShowcaseImageResult } from './domain/showcase';
+export { uploadProjectImage } from './domain/projects';
+export type {
+  UploadProjectImageParams,
+  UploadProjectImageResult,
+  ProjectImageKind,
+} from './domain/projects';
 export { uploadBlogContentImage, getBlogContentImageUrl, listBlogImages } from './domain/blogMedia';
 export type { UploadBlogContentImageParams } from './domain/blogMedia';
 export * from './services/private';

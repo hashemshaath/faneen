@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload, MultiImageUpload } from '@/components/ui/image-upload';
+import { ResponsiveImage } from '@/modules/files/components/ResponsiveImage';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent,
@@ -79,7 +80,13 @@ const SortableProjectCard = React.memo(({
           </button>
           <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer border border-border/30" onClick={() => p.cover_image_url && onPreview(p.cover_image_url)}>
             {p.cover_image_url ? (
-              <img src={p.cover_image_url} alt={p.title_ar} className="w-full h-full object-cover" loading="lazy" />
+              <ResponsiveImage
+                originalUrl={p.cover_image_url}
+                variants={p.cover_image_asset?.variants}
+                alt={p.title_ar}
+                sizes="48px"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center"><FolderOpen className="w-5 h-5 text-muted-foreground/30" /></div>
             )}
@@ -124,7 +131,13 @@ const SortableProjectCard = React.memo(({
       <div className={`relative rounded-xl border bg-card overflow-hidden h-full group transition-all duration-200 hover:shadow-lg hover:border-primary/30 ${isSelected ? 'ring-2 ring-primary border-primary/40' : 'border-border/50'}`}>
         <div className="aspect-[16/11] bg-muted relative overflow-hidden">
           {p.cover_image_url ? (
-            <img src={p.cover_image_url} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+            <ResponsiveImage
+              originalUrl={p.cover_image_url}
+              variants={p.cover_image_asset?.variants}
+              alt={title}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center"><FolderOpen className="w-10 h-10 text-muted-foreground/20" /></div>
           )}
@@ -201,7 +214,8 @@ const DashboardProjects = () => {
 
   const emptyForm = useMemo(() => ({
     title_ar: '', title_en: '', description_ar: '', description_en: '',
-    cover_image_url: '', client_name: '', project_cost: '',
+    cover_image_url: '', cover_image_asset_id: '' as string | null | '',
+    client_name: '', project_cost: '',
     duration_days: '', completion_date: '', status: 'published',
     city_id: '', is_featured: false, currency_code: 'SAR',
     taxonomy_category_id: '',
@@ -248,7 +262,7 @@ const DashboardProjects = () => {
     queryKey: ['dashboard-projects', businessId],
     queryFn: async () => {
       const { data, error } = await supabase.from('projects')
-        .select('*, cities(name_ar, name_en)')
+        .select('*, cities(name_ar, name_en), cover_image_asset:image_assets!projects_cover_image_asset_id_fkey(variants)')
         .eq('business_id', businessId!)
         .order('is_featured', { ascending: false })
         .order('sort_order');
@@ -282,7 +296,11 @@ const DashboardProjects = () => {
   const { data: galleryImages = [] } = useQuery({
     queryKey: ['project-images', galleryProjectId],
     queryFn: async () => {
-      const { data } = await supabase.from('project_images').select('*').eq('project_id', galleryProjectId!).order('sort_order');
+      const { data } = await supabase
+        .from('project_images')
+        .select('*, image_asset:image_assets!project_images_image_asset_id_fkey(variants)')
+        .eq('project_id', galleryProjectId!)
+        .order('sort_order');
       return data ?? [];
     },
     enabled: !!galleryProjectId,
@@ -328,6 +346,7 @@ const DashboardProjects = () => {
         business_id: businessId!, title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
         description_ar: form.description_ar.trim() || null, description_en: form.description_en.trim() || null,
         cover_image_url: form.cover_image_url || null, client_name: form.client_name.trim() || null,
+        cover_image_asset_id: form.cover_image_asset_id || null,
         project_cost: form.project_cost ? Number(form.project_cost) : null,
         duration_days: form.duration_days ? Number(form.duration_days) : null,
         completion_date: form.completion_date || null, status: form.status,
@@ -398,6 +417,7 @@ const DashboardProjects = () => {
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', description_ar: p.description_ar || '',
       description_en: p.description_en || '', cover_image_url: p.cover_image_url || '',
+      cover_image_asset_id: p.cover_image_asset_id || '',
       client_name: p.client_name || '', project_cost: p.project_cost?.toString() || '',
       duration_days: p.duration_days?.toString() || '', completion_date: p.completion_date || '',
       status: p.status, city_id: p.city_id || '',
@@ -418,6 +438,9 @@ const DashboardProjects = () => {
       title_en: p.title_en ? p.title_en + ' (copy)' : '',
       description_ar: p.description_ar || '', description_en: p.description_en || '',
       cover_image_url: p.cover_image_url || '', client_name: p.client_name || '',
+      // Duplicate intentionally references the same image asset row; on
+      // re-upload the form captures a fresh `image_asset_id`.
+      cover_image_asset_id: p.cover_image_asset_id || '',
       project_cost: p.project_cost?.toString() || '', duration_days: p.duration_days?.toString() || '',
       completion_date: p.completion_date || '', status: 'draft',
       city_id: p.city_id || '',
@@ -439,16 +462,38 @@ const DashboardProjects = () => {
     reorderMut.mutate(reordered.map((item, i: number) => ({ id: item.id, sort_order: i })));
   }, [filteredProjects, businessId, queryClient, reorderMut]);
 
+  /**
+   * Gallery sync. We receive (a) the full list of URLs after a
+   * MultiImageUpload mutation, and (b) optional pipeline metadata for
+   * the *newly* uploaded ones via `pendingMetas` (kept in a ref). We
+   * delete-and-reinsert all rows so the DB matches the on-screen order,
+   * carrying `image_asset_id` for any URL that maps to a known meta.
+   */
+  const pendingMetasRef = useRef<Map<string, string>>(new Map());
   const handleGalleryChange = useCallback(async (urls: string[]) => {
     if (!galleryProjectId) return;
+    // Preserve image_asset_id for URLs that already exist on disk by
+    // looking them up on the current galleryImages query data.
+    const existingByUrl = new Map<string, string | null>(
+      galleryImages.map((g) => [g.image_url as string, (g as { image_asset_id?: string | null }).image_asset_id ?? null]),
+    );
     await supabase.from('project_images').delete().eq('project_id', galleryProjectId);
     if (urls.length > 0) {
-      const rows = urls.map((url, i) => ({ project_id: galleryProjectId, image_url: url, sort_order: i }));
+      const rows = urls.map((url, i) => ({
+        project_id: galleryProjectId,
+        image_url: url,
+        sort_order: i,
+        image_asset_id:
+          pendingMetasRef.current.get(url) ??
+          existingByUrl.get(url) ??
+          null,
+      }));
       const { error } = await supabase.from('project_images').insert(rows);
       if (error) { toast.error(error.message); return; }
     }
+    pendingMetasRef.current.clear();
     queryClient.invalidateQueries({ queryKey: ['project-images', galleryProjectId] });
-  }, [galleryProjectId, queryClient]);
+  }, [galleryProjectId, queryClient, galleryImages]);
 
   const toggleSelect = useCallback((id: string) => setSelectedIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; }), []);
   const toggleSelectAll = useCallback(() => {
@@ -609,7 +654,17 @@ const DashboardProjects = () => {
                 {/* Cover Image */}
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
-                  <ImageUpload bucket="project-images" value={form.cover_image_url} onChange={url => setForm(f => ({ ...f, cover_image_url: url }))} onRemove={() => setForm(f => ({ ...f, cover_image_url: '' }))} compact placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'} />
+                  <ImageUpload
+                    bucket="project-images"
+                    pipeline="project"
+                    projectKind="cover"
+                    value={form.cover_image_url}
+                    onChange={url => setForm(f => ({ ...f, cover_image_url: url }))}
+                    onUploadedMeta={(meta) => setForm(f => ({ ...f, cover_image_asset_id: meta.imageAssetId ?? '' }))}
+                    onRemove={() => setForm(f => ({ ...f, cover_image_url: '', cover_image_asset_id: '' }))}
+                    compact
+                    placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'}
+                  />
                 </div>
 
                 {/* Descriptions */}
@@ -696,7 +751,21 @@ const DashboardProjects = () => {
               {galleryProject && <p className="text-xs text-muted-foreground">{language === 'ar' ? galleryProject.title_ar : (galleryProject.title_en || galleryProject.title_ar)}</p>}
             </CardHeader>
             <CardContent className="pb-5">
-              <MultiImageUpload bucket="project-images" images={galleryImages.map((img) => img.image_url)} onChange={handleGalleryChange} folder="gallery" maxImages={20} maxSizeMB={5} />
+              <MultiImageUpload
+                bucket="project-images"
+                pipeline="project"
+                projectKind="gallery"
+                images={galleryImages.map((img) => img.image_url)}
+                onChange={handleGalleryChange}
+                onUploadedMeta={(metas) => {
+                  for (const m of metas) {
+                    if (m.imageAssetId) pendingMetasRef.current.set(m.url, m.imageAssetId);
+                  }
+                }}
+                folder="gallery"
+                maxImages={20}
+                maxSizeMB={5}
+              />
               <p className="text-[10px] text-muted-foreground mt-2">{isRTL ? `${galleryImages.length} / 20 صورة` : `${galleryImages.length} / 20 images`}</p>
             </CardContent>
           </Card>
