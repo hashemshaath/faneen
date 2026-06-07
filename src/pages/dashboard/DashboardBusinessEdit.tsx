@@ -255,6 +255,13 @@ const DashboardBusinessEdit: React.FC = () => {
         name_ar: trim(form.name_ar), name_en: trim(form.name_en),
         username: trim(form.username),
         logo_url: form.logo_url || null, cover_url: form.cover_url || null,
+        // Phase 2.2 image pipeline — persist asset link + denormalized variants
+        // when present. Null-safe: legacy uploads (no pipeline) leave these
+        // columns untouched so old behavior is preserved.
+        logo_image_asset_id: form.logo_image_asset_id ?? null,
+        cover_image_asset_id: form.cover_image_asset_id ?? null,
+        logo_image_variants: form.logo_image_variants ?? null,
+        cover_image_variants: form.cover_image_variants ?? null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         short_description_ar: form.short_description_ar || null, short_description_en: form.short_description_en || null,
         phone: form.phone || null, mobile: form.mobile || null,
