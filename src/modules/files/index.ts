@@ -16,3 +16,20 @@ export {
 export type { UploadCrDocumentParams, UploadCrDocumentResult } from './domain/crDocuments';
 export { uploadBrandAsset } from './domain/branding';
 export type { UploadBrandAssetParams, UploadBrandAssetResult } from './domain/branding';
+
+// Phase 2 image pipeline — currently used by Showcase only.
+// TODO: generalize to projects, business logos, services, products, articles
+// + backfill existing rows into `image_assets`.
+export {
+  processImage,
+  isVariantUrls,
+} from './services/image-pipeline';
+export type {
+  PipelineResult,
+  PipelineFailure,
+  VariantFile,
+  VariantKey,
+  VariantUrls,
+} from './services/image-pipeline';
+export { ResponsiveImage } from './components/ResponsiveImage';
+export type { ResponsiveImageProps } from './components/ResponsiveImage';
