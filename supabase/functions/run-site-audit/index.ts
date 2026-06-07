@@ -65,9 +65,21 @@ async function runPageSpeed(
     if (apiKey) params.set("key", apiKey);
 
     const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${params}`;
-    const res = await fetch(apiUrl);
-    if (!res.ok) {
-      base.error = `pagespeed_http_${res.status}`;
+    // Retry with exponential backoff on 429/5xx (helps when no API key).
+    let res: Response | null = null;
+    let lastStatus = 0;
+    const maxAttempts = apiKey ? 2 : 5;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      res = await fetch(apiUrl);
+      lastStatus = res.status;
+      if (res.ok) break;
+      if (res.status !== 429 && res.status < 500) break;
+      // backoff: 2s, 5s, 10s, 20s
+      const waitMs = Math.min(20000, 2000 * Math.pow(2, attempt));
+      await new Promise((r) => setTimeout(r, waitMs));
+    }
+    if (!res || !res.ok) {
+      base.error = `pagespeed_http_${lastStatus}`;
       return base;
     }
     const data = await res.json();
