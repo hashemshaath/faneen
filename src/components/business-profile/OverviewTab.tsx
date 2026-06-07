@@ -25,6 +25,8 @@ import {
   useServices,
   type BusinessWithJoins,
 } from "./business-profile.data";
+import { useBusinessTaxonomyDisplay } from "@/modules/taxonomy/search-integration";
+import { Badge } from "@/components/ui/badge";
 
 interface OverviewTabProps {
   business: BusinessWithJoins;
@@ -66,11 +68,18 @@ export const OverviewTab = ({ business, onJumpToTab }: OverviewTabProps) => {
     business.description_en || business.short_description_en,
   );
   const cityName = getLocalizedValue(language, business.cities?.name_ar, business.cities?.name_en);
-  const categoryName = getLocalizedValue(
+  const legacyCategoryName = getLocalizedValue(
     language,
     business.categories?.name_ar,
     business.categories?.name_en,
   );
+  // Phase 13.a — taxonomy-first display with legacy fallback.
+  const taxonomy = useBusinessTaxonomyDisplay(business.id, language);
+  const categoryName =
+    (taxonomy.hasModernTaxonomy && taxonomy.primaryLabel) || legacyCategoryName;
+  const taxonomyChips = taxonomy.hasModernTaxonomy
+    ? [...taxonomy.secondaryLabels, ...taxonomy.serviceLabels].slice(0, 4)
+    : [];
   const memberYear = new Date(business.created_at).getFullYear();
   const yearsActive = Math.max(1, new Date().getFullYear() - memberYear + 1);
 
