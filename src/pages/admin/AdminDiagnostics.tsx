@@ -20,6 +20,7 @@ import {
 import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminKpiCard } from '@/components/admin/AdminKpiCard';
+import { ImageOptimizationAuditCard } from '@/components/admin/ImageOptimizationAuditCard';
 
 const KIND_TONE: Record<string, string> = {
   name_swapped: 'bg-warning/10 text-warning border-warning/30',
@@ -118,6 +119,9 @@ const AdminDiagnostics: React.FC = () => {
             </div>
           }
         />
+
+        {/* Phase 2.4 — Image Optimization Audit (read-only). */}
+        <ImageOptimizationAuditCard />
 
         <Tabs defaultValue="alerts">
           <TabsList>
