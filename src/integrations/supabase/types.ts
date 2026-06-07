@@ -2363,6 +2363,93 @@ export type Database = {
           },
         ]
       }
+      business_awards: {
+        Row: {
+          awarded_year: number
+          business_id: string
+          category_ar: string | null
+          category_en: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          display_order: number
+          id: string
+          image_url: string | null
+          is_active: boolean
+          issuer_ar: string
+          issuer_en: string | null
+          proof_url: string | null
+          rank: Database["public"]["Enums"]["award_rank"] | null
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+          verified_by_admin: boolean
+        }
+        Insert: {
+          awarded_year: number
+          business_id: string
+          category_ar?: string | null
+          category_en?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          display_order?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          issuer_ar: string
+          issuer_en?: string | null
+          proof_url?: string | null
+          rank?: Database["public"]["Enums"]["award_rank"] | null
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_by_admin?: boolean
+        }
+        Update: {
+          awarded_year?: number
+          business_id?: string
+          category_ar?: string | null
+          category_en?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          display_order?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          issuer_ar?: string
+          issuer_en?: string | null
+          proof_url?: string | null
+          rank?: Database["public"]["Enums"]["award_rank"] | null
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_by_admin?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_awards_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_awards_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_badge_status: {
         Row: {
           business_id: string
@@ -2679,6 +2766,87 @@ export type Database = {
             columns: ["sales_manager_staff_id"]
             isOneToOne: false
             referencedRelation: "business_staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_certifications: {
+        Row: {
+          business_id: string
+          created_at: string
+          credential_number: string | null
+          credential_url: string | null
+          display_order: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          issued_at: string | null
+          issuer_ar: string
+          issuer_en: string | null
+          logo_url: string | null
+          name_ar: string
+          name_en: string | null
+          proof_document_url: string | null
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+          verified_by_admin: boolean
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          credential_number?: string | null
+          credential_url?: string | null
+          display_order?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          issued_at?: string | null
+          issuer_ar: string
+          issuer_en?: string | null
+          logo_url?: string | null
+          name_ar: string
+          name_en?: string | null
+          proof_document_url?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_by_admin?: boolean
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          credential_number?: string | null
+          credential_url?: string | null
+          display_order?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          issued_at?: string | null
+          issuer_ar?: string
+          issuer_en?: string | null
+          logo_url?: string | null
+          name_ar?: string
+          name_en?: string | null
+          proof_document_url?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_by_admin?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_certifications_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_certifications_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
             referencedColumns: ["id"]
           },
         ]
@@ -20882,6 +21050,12 @@ export type Database = {
       account_type: "individual" | "business" | "company" | "admin"
       admin_enrichment_status: "draft" | "reviewed" | "applied" | "discarded"
       app_role: "admin" | "moderator" | "user" | "super_admin"
+      award_rank:
+        | "winner"
+        | "runner_up"
+        | "third_place"
+        | "finalist"
+        | "honorable_mention"
       booking_status:
         | "pending"
         | "confirmed"
@@ -21145,6 +21319,13 @@ export const Constants = {
       account_type: ["individual", "business", "company", "admin"],
       admin_enrichment_status: ["draft", "reviewed", "applied", "discarded"],
       app_role: ["admin", "moderator", "user", "super_admin"],
+      award_rank: [
+        "winner",
+        "runner_up",
+        "third_place",
+        "finalist",
+        "honorable_mention",
+      ],
       booking_status: [
         "pending",
         "confirmed",
