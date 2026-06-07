@@ -339,23 +339,18 @@ const ProviderServiceAreas: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-5 max-w-5xl">
-        {/* Header */}
-        <header className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-primary" /> مناطق الخدمة
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-              اختر الدول والمناطق والمدن والأحياء التي تغطيها منشأتك. يمكنك تحديد دولة كاملة، أو مدينة كاملة،
-              أو تحديد الكل واستثناء أحياء بعينها.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+        <PageHeader
+          icon={MapPin}
+          tone="primary"
+          eyebrow="التغطية"
+          title="مناطق الخدمة"
+          subtitle="اختر الدول والمناطق والمدن والأحياء التي تغطيها منشأتك. يمكنك تحديد دولة كاملة، أو مدينة كاملة، أو تحديد الكل واستثناء أحياء بعينها."
+          actions={<>
             <Badge variant="secondary" className="rounded-full">{totalCities} مدينة</Badge>
             <Badge variant="secondary" className="rounded-full">{fullCities} كاملة</Badge>
             <Badge variant="secondary" className="rounded-full">{totalDistricts} حي</Badge>
-          </div>
-        </header>
+          </>}
+        />
 
         {/* Business + Country pickers */}
         <Card><CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
