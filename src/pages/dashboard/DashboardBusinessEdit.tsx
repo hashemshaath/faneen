@@ -373,7 +373,7 @@ const DashboardBusinessEdit: React.FC = () => {
         (!(form.national_id || form.unified_number) ? 1 : 0) +
         (!form.vat_number ? 1 : 0),
     };
-  }, [form]);
+  }, [form, taxonomyPresence.hasPrimary, taxonomyPresence.serviceCount]);
 
   // WORKSPACE-RBAC-6E — shadow parity check (observability only, no enforcement).
   // Hook must run unconditionally before any early returns below.
