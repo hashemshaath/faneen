@@ -20,7 +20,7 @@ import {
 } from '@/lib/sector-keywords';
 import { track } from '@/lib/analytics-events';
 import { useCategoryCounts } from '@/services/categories/useCategoryCounts';
-import { listActiveCategories } from '@/modules/categories';
+import { supabase } from '@/integrations/supabase/client';
 import { listPublicBusinessesByCategory } from '@/modules/businesses';
 
 type CategoryRow = {
@@ -53,8 +53,21 @@ const Categories = () => {
   const { data: categories = [], isLoading } = useQuery<CategoryRow[]>({
     queryKey: ['categories-page'],
     queryFn: async () => {
-      const { data } = await listActiveCategories<CategoryRow>({ select: '*' });
-      return data ?? [];
+      // Taxonomy-only listing: read from taxonomy_categories filtered to
+      // public, active, search-visible entries. Legacy `categories` table
+      // is no longer queried from this page.
+      // NOTE: counts via `useCategoryCounts` are still keyed by legacy
+      // category id/slug; counts will only render where slugs align.
+      const { data } = await supabase
+        .from('taxonomy_categories')
+        .select('id, slug, name_ar, name_en, description_ar, description_en')
+        .eq('is_active', true)
+        .eq('is_public', true)
+        .eq('is_archived', false)
+        .eq('show_in_search', true)
+        .order('sort_order', { ascending: true })
+        .order('name_ar', { ascending: true });
+      return (data ?? []) as CategoryRow[];
     },
   });
 

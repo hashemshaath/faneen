@@ -18,7 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { listActiveCategories } from '@/modules/categories';
+// Phase 4: category hints now come from `taxonomy_categories` directly.
+import { supabase } from '@/integrations/supabase/client';
 
 import {
   adminListBrands, adminApproveBrand, adminRejectBrand, adminArchiveBrand,
@@ -92,12 +93,16 @@ const AdminBrands: React.FC = () => {
   const categoriesQuery = useQuery({
     queryKey: ['admin-brand-category-reference'],
     queryFn: async () => {
-      const { data, error } = await listActiveCategories<CategoryLite>({
-        select: 'id, name_ar, name_en, slug, parent_id',
-        order: 'sort_order',
-      });
+      // Taxonomy-only source — replaces the legacy `categories` query.
+      const { data, error } = await supabase
+        .from('taxonomy_categories')
+        .select('id, name_ar, name_en, slug, parent_id')
+        .eq('is_active', true)
+        .eq('is_public', true)
+        .eq('is_archived', false)
+        .order('sort_order', { ascending: true });
       if (error) throw error instanceof Error ? error : new Error(String(error));
-      return data ?? [];
+      return (data ?? []) as CategoryLite[];
     },
     staleTime: 5 * 60_000,
   });
