@@ -11,10 +11,14 @@ import { useRecentlyViewedBusinesses } from '@/hooks/useRecentlyViewedBusinesses
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { BusinessIdentityStrip } from '@/components/business/BusinessIdentityStrip';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import type { BusinessTaxonomyDisplay } from '@/modules/taxonomy/search-integration';
 
 interface BusinessCardProps {
   business: any;
   viewMode: 'grid' | 'list';
+  /** Phase 10 — optional taxonomy display fetched in batch by the parent. */
+  taxonomyDisplay?: BusinessTaxonomyDisplay;
 }
 
 const tierConfig: Record<string, { label: string; labelAr: string; color: string; icon: string }> = {
@@ -46,8 +50,9 @@ const getPlaceholderGradient = (name: string) => {
   return gradients[hash % gradients.length];
 };
 
-export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) => {
+export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: BusinessCardProps) => {
   const { language, isRTL } = useLanguage();
+  const { isAdmin } = useAuth();
   const [pressed, setPressed] = useState(false);
   const Arrow = isRTL ? ChevronLeft : ChevronRight;
   const { isFavorite, toggleFavorite } = useBusinessFavorites();
@@ -75,6 +80,54 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
   const rating = Number(b.rating_avg) || 0;
   const initial = name?.charAt(0) || 'ف';
   const hasBnpl = Array.isArray((b as any).business_bnpl_providers) && (b as any).business_bnpl_providers.length > 0;
+
+  // Phase 10 — taxonomy display (taxonomy-first, legacy fallback).
+  const tx = taxonomyDisplay;
+  const hasTaxonomy = !!(tx?.hasModernTaxonomy && (tx.primaryLabel || tx.secondaryLabels.length || tx.serviceLabels.length));
+  const taxonomyChips = hasTaxonomy
+    ? [...tx!.secondaryLabels, ...tx!.serviceLabels].slice(0, 3)
+    : [];
+
+  // "Update taxonomy" hint — strictly visible to admins only. Never shown to
+  // public visitors. Owner-level visibility is handled elsewhere (dashboard).
+  const showUpdateHint = isAdmin && !hasTaxonomy;
+
+  const TaxonomyBadges = ({ size = 'md' }: { size?: 'sm' | 'md' }) => {
+    if (!hasTaxonomy) return null;
+    const pad = size === 'sm' ? 'px-1.5 py-0 text-[10px]' : 'px-2 py-0.5 text-[10px] sm:text-[11px]';
+    return (
+      <div className="flex flex-wrap items-center gap-1 mt-1">
+        {tx?.primaryLabel && (
+          <span
+            className={`inline-flex items-center gap-1 rounded-md bg-accent/12 text-accent border border-accent/25 font-body font-semibold ${pad}`}
+            title={tx.primaryLabel}
+          >
+            <Layers className="w-2.5 h-2.5 shrink-0" />
+            <span className="truncate max-w-[140px]">{tx.primaryLabel}</span>
+          </span>
+        )}
+        {taxonomyChips.map((label, i) => (
+          <span
+            key={`${label}-${i}`}
+            className={`inline-flex items-center rounded-md bg-primary/5 text-primary border border-primary/15 font-body ${pad}`}
+            title={label}
+          >
+            <span className="truncate max-w-[120px]">{label}</span>
+          </span>
+        ))}
+      </div>
+    );
+  };
+
+  const UpdateTaxonomyHint = () =>
+    showUpdateHint ? (
+      <div
+        className="mt-2 text-[10px] font-body text-warning bg-warning/10 border border-warning/30 rounded-md px-2 py-1"
+        title={isRTL ? 'مرئي للمسؤولين فقط' : 'Visible to admins only'}
+      >
+        {isRTL ? 'حدّث تصنيف هذه المنشأة لتحسين ظهورها' : 'Update this business taxonomy to improve discoverability'}
+      </div>
+    ) : null;
 
   // Service tag chips (saqf-style) — show top 3 active service names + remainder count.
   const services: Array<Record<string, unknown>> = Array.isArray((b as any).business_services)
@@ -182,11 +235,14 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
               </Badge>
             )}
           </div>
-          {catName && (
+          {hasTaxonomy ? (
+            <TaxonomyBadges size="sm" />
+          ) : catName && (
             <div className="mt-0.5">
               <CategoryBadge size="sm" />
             </div>
           )}
+          <UpdateTaxonomyHint />
           {desc && <p className="text-xs text-muted-foreground font-body mt-0.5 line-clamp-1">{desc}</p>}
           {visibleTags.length > 0 && (
             <div className="flex flex-wrap items-center gap-1 mt-1.5">
@@ -276,11 +332,14 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
           <h3 className="font-heading font-bold text-sm sm:text-[15px] text-foreground group-hover:text-accent transition-colors truncate">{name}</h3>
           {b.is_verified && <VerifiedBadge size="sm" iconOnly />}
         </div>
-        {catName && (
+        {hasTaxonomy ? (
+          <TaxonomyBadges />
+        ) : catName && (
           <div className="mt-0.5">
             <CategoryBadge />
           </div>
         )}
+        <UpdateTaxonomyHint />
 
         {/* saqf-style status badges */}
         {(b.is_verified || hasOffer) && (

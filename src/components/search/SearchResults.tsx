@@ -13,6 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { lazyRetry } from '@/lib/lazyRetry';
+import type { BusinessTaxonomyDisplay } from '@/modules/taxonomy/search-integration';
 
 // Leaflet weighs ~150KB gzipped — only load it when the user actually opens
 // a map view. Grid/list searchers (the majority) never pay that cost, which
@@ -54,12 +55,14 @@ interface SearchResultsProps {
    * "no results" copy.
    */
   directoryIsEmpty?: boolean;
+  /** Phase 10 — taxonomy display fetched in batch by Search.tsx (no N+1). */
+  taxonomyDisplayMap?: Map<string, BusinessTaxonomyDisplay>;
 }
 
 export const SearchResults = ({
   businesses, isLoading, viewMode, onViewModeChange, totalCount, onClearFilters,
   currentPage, totalPages, itemsPerPage, onPageChange, didYouMean, onDidYouMeanClick,
-  sortBy, onSortChange, directoryIsEmpty,
+  sortBy, onSortChange, directoryIsEmpty, taxonomyDisplayMap,
 }: SearchResultsProps) => {
   const { t, isRTL } = useLanguage();
 
@@ -255,7 +258,7 @@ export const SearchResults = ({
           <div className="lg:w-1/2 space-y-3 max-h-[600px] overflow-y-auto pe-1 no-scrollbar">
             {businesses.map((b, i) => (
               <div key={b.id} className="animate-card-slide-up" style={{ animationDelay: `${i * 40}ms` }}>
-                <BusinessCard business={b} viewMode="list" />
+                <BusinessCard business={b} viewMode="list" taxonomyDisplay={taxonomyDisplayMap?.get(b.id)} />
               </div>
             ))}
           </div>
@@ -274,7 +277,7 @@ export const SearchResults = ({
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5' : 'space-y-3'}>
             {businesses.map((b, i) => (
               <div key={b.id} className="animate-card-slide-up" style={{ animationDelay: `${i * 30}ms` }}>
-                <BusinessCard business={b} viewMode={viewMode} />
+                <BusinessCard business={b} viewMode={viewMode} taxonomyDisplay={taxonomyDisplayMap?.get(b.id)} />
               </div>
             ))}
           </div>

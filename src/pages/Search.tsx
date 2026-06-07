@@ -27,7 +27,7 @@ import {
 import { detectSectorFromQuery, getSectorMeta, ALL_SECTORS } from '@/lib/sector-keywords';
 import { findCityKeywords, getCityKeywordsString, mergeKeywords } from '@/lib/city-keywords';
 import { track } from '@/lib/analytics-events';
-import { useSearchTaxonomyContext } from '@/modules/taxonomy/search-integration';
+import { useSearchTaxonomyContext, useBusinessTaxonomyDisplayBatch } from '@/modules/taxonomy/search-integration';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -350,6 +350,14 @@ const SearchPage = () => {
     window.scrollTo({ top: 400, behavior: 'smooth' });
   }, []);
 
+  // Phase 10 — batch-fetch taxonomy display for the currently visible cards
+  // (single round-trip, cached). No N+1.
+  const visibleBusinessIds = useMemo(
+    () => (paginatedResults ?? []).map((b: { id: string }) => b.id),
+    [paginatedResults],
+  );
+  const { data: taxonomyDisplayMap } = useBusinessTaxonomyDisplayBatch(visibleBusinessIds, lang);
+
   const showChips = hasActiveFilters || query.trim() || selectedTags.length > 0;
 
   // Build a clean querystring representation of the current search (sorted keys for stable equality)
@@ -525,6 +533,7 @@ const SearchPage = () => {
             sortBy={filters.sortBy}
             onSortChange={(s) => handleFilterChange('sortBy', s)}
             directoryIsEmpty={!isLoading && (businesses?.length ?? 0) === 0}
+            taxonomyDisplayMap={taxonomyDisplayMap}
           />
         </div>
       </div>

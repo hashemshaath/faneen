@@ -13,6 +13,7 @@ import { CategoryTree } from './CategoryTree';
 import { TagsFilter } from './TagsFilter';
 import type { SearchFilterValues } from '@/services/search/useSearch';
 import { useCategoryCounts } from '@/services/categories/useCategoryCounts';
+import { useSearchableTaxonomyCategories } from '@/modules/taxonomy/search-integration';
 export type { SearchFilterValues };
 
 interface SearchFiltersProps {
@@ -115,6 +116,10 @@ export const SearchFilters = ({
               label={t('search.category')}
               summary={selectedCategory ? (language === 'ar' ? selectedCategory.name_ar : selectedCategory.name_en) : ''}
             >
+              <TaxonomyCategoryChips
+                value={filters.categoryId}
+                onChange={(v) => onFilterChange('categoryId', v)}
+              />
               <CategoryTree
                 categories={(categories || []) as any}
                 selectedId={filters.categoryId}
@@ -355,6 +360,67 @@ const PriceRangeInputs = ({
         onChange={e => { setLocalMax(e.target.value); schedule(localMin, e.target.value); }}
         className="flex-1 rounded-xl text-sm h-10 bg-background border-border/60 hover:border-accent/40 focus-visible:border-accent tech-content text-center"
       />
+    </div>
+  );
+};
+
+/* Phase 10 — Public taxonomy chips. Source of truth = taxonomy_categories
+   where show_in_search=true. Renders the first 8 featured/sorted categories
+   inline as chips with a "more" expander. Falls back silently to the legacy
+   CategoryTree below when the query fails or returns empty. */
+const TaxonomyCategoryChips = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) => {
+  const { language, isRTL } = useLanguage();
+  const { data: taxonomy, isLoading } = useSearchableTaxonomyCategories();
+  const [showAll, setShowAll] = useState(false);
+
+  if (isLoading || !taxonomy || taxonomy.length === 0) return null;
+
+  const COLLAPSED = 8;
+  const visible = showAll ? taxonomy : taxonomy.slice(0, COLLAPSED);
+  const more = taxonomy.length - visible.length;
+
+  return (
+    <div className="mb-3 pb-3 border-b border-border/40">
+      <div className="text-[11px] font-heading font-bold text-muted-foreground uppercase tracking-wide mb-2">
+        {isRTL ? 'الأنشطة الرئيسية' : 'Main activities'}
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {visible.map((c) => {
+          const active = value === c.slug || value === c.id;
+          const label = language === 'ar' ? c.name_ar : (c.name_en || c.name_ar);
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => onChange(active ? 'all' : c.slug)}
+              aria-pressed={active}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-body transition-colors border ${
+                active
+                  ? 'bg-accent text-accent-foreground border-accent shadow-sm'
+                  : 'bg-background text-foreground/80 border-border/60 hover:border-accent/40 hover:text-accent'
+              }`}
+              title={label}
+            >
+              {label}
+            </button>
+          );
+        })}
+        {more > 0 && !showAll && (
+          <button
+            type="button"
+            onClick={() => setShowAll(true)}
+            className="px-2.5 py-1 rounded-full text-[11px] font-body bg-muted/40 text-muted-foreground border border-border/60 hover:text-foreground"
+          >
+            {isRTL ? `+${more} المزيد` : `+${more} more`}
+          </button>
+        )}
+      </div>
     </div>
   );
 };

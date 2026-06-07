@@ -285,3 +285,111 @@ export function useSearchableTaxonomyCategories() {
     gcTime: 30 * 60 * 1000,
   });
 }
+
+// ────────────────────────────────────────────────────────────────
+// Phase 10 — Bulk taxonomy display for business cards (no N+1).
+// ────────────────────────────────────────────────────────────────
+
+export interface BusinessTaxonomyDisplay {
+  primaryLabel: string | null;
+  primarySlug: string | null;
+  secondaryLabels: string[];
+  serviceLabels: string[];
+  hasModernTaxonomy: boolean;
+}
+
+export const EMPTY_TAXONOMY_DISPLAY: BusinessTaxonomyDisplay = {
+  primaryLabel: null,
+  primarySlug: null,
+  secondaryLabels: [],
+  serviceLabels: [],
+  hasModernTaxonomy: false,
+};
+
+interface RawLinkRow {
+  business_id: string;
+  category_id: string;
+  role: string | null;
+  is_primary: boolean | null;
+  taxonomy_categories: {
+    id: string;
+    slug: string;
+    name_ar: string;
+    name_en: string | null;
+    type_id: string | null;
+  } | null;
+}
+
+function pickLabel(
+  cat: { name_ar: string; name_en: string | null } | null,
+  language: 'ar' | 'en',
+): string | null {
+  if (!cat) return null;
+  if (language === 'ar') return cat.name_ar?.trim() || cat.name_en?.trim() || null;
+  return cat.name_en?.trim() || cat.name_ar?.trim() || null;
+}
+
+/**
+ * Build the display map from a list of joined rows. Pure — easy to test
+ * and reuse from other batched callers (e.g. SSR or showcase later).
+ */
+export function formatBusinessTaxonomyDisplayMap(
+  rows: RawLinkRow[],
+  language: 'ar' | 'en',
+): Map<string, BusinessTaxonomyDisplay> {
+  const out = new Map<string, BusinessTaxonomyDisplay>();
+  for (const row of rows) {
+    const label = pickLabel(row.taxonomy_categories, language);
+    if (!label) continue;
+    const existing = out.get(row.business_id) ?? {
+      primaryLabel: null,
+      primarySlug: null,
+      secondaryLabels: [] as string[],
+      serviceLabels: [] as string[],
+      hasModernTaxonomy: true,
+    };
+    const isPrimary =
+      row.is_primary === true || row.role === 'primary_activity' || row.role === 'entity_type';
+    if (isPrimary && !existing.primaryLabel) {
+      existing.primaryLabel = label;
+      existing.primarySlug = row.taxonomy_categories?.slug ?? null;
+    } else if (row.role === 'service') {
+      if (!existing.serviceLabels.includes(label)) existing.serviceLabels.push(label);
+    } else {
+      if (!existing.secondaryLabels.includes(label)) existing.secondaryLabels.push(label);
+    }
+    existing.hasModernTaxonomy = true;
+    out.set(row.business_id, existing);
+  }
+  return out;
+}
+
+/**
+ * Batched, cached fetch of taxonomy display info for a set of business IDs.
+ * Two queries total (links + categories joined in one go via PostgREST embed),
+ * regardless of N. Returns a Map keyed by business_id.
+ */
+export function useBusinessTaxonomyDisplayBatch(
+  businessIds: string[],
+  language: 'ar' | 'en',
+) {
+  const sortedKey = [...new Set(businessIds.filter(Boolean))].sort().join(',');
+  return useQuery<Map<string, BusinessTaxonomyDisplay>>({
+    queryKey: ['business-taxonomy-display-batch', language, sortedKey],
+    enabled: sortedKey.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    queryFn: async () => {
+      const ids = sortedKey.split(',').filter(Boolean);
+      if (ids.length === 0) return new Map();
+      const { data, error } = await supabase
+        .from('business_taxonomy_categories')
+        .select(
+          'business_id, category_id, role, is_primary, taxonomy_categories!inner(id, slug, name_ar, name_en, type_id)',
+        )
+        .in('business_id', ids);
+      if (error) throw error;
+      return formatBusinessTaxonomyDisplayMap((data ?? []) as unknown as RawLinkRow[], language);
+    },
+  });
+}
