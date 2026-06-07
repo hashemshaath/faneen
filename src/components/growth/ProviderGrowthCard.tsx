@@ -20,6 +20,7 @@ import {
   type GrowthBusiness,
 } from '@/modules/growth/providerGrowth';
 import { computePublicVisibility } from '@/components/admin/PublishReadinessPanel';
+import { useBusinessTaxonomyPresence } from '@/modules/taxonomy/presence';
 
 interface Props {
   business: GrowthBusiness;
@@ -33,16 +34,30 @@ const levelTone: Record<'weak' | 'good' | 'excellent', string> = {
 
 export const ProviderGrowthCard: React.FC<Props> = ({ business }) => {
   const { isRTL } = useLanguage();
-  const profile = computeProviderProfileScore(business);
-  const seo = computeProviderSeoScore(business);
+  // Phase 18d — readiness/scoring no longer reads legacy
+  // `businesses.sectors` / `businesses.sub_services`. Presence is sourced
+  // from `business_taxonomy_categories` via the taxonomy hook and merged
+  // into the input passed to the pure scoring helpers.
+  const presence = useBusinessTaxonomyPresence(business.id ?? null);
+  const enriched: GrowthBusiness = {
+    ...business,
+    sectors: null,
+    sub_services: null,
+    taxonomy_primary_present: presence.hasPrimary,
+    taxonomy_service_count: presence.serviceCount,
+  };
+  const profile = computeProviderProfileScore(enriched);
+  const seo = computeProviderSeoScore(enriched);
   const visibility = computePublicVisibility({
     name_ar: business.name_ar ?? null,
     name_en: business.name_en ?? null,
     username: business.username ?? null,
     username_status: business.username_status ?? null,
     logo_url: business.logo_url ?? null,
-    sectors: business.sectors ?? null,
-    sub_services: business.sub_services ?? null,
+    sectors: null,
+    sub_services: null,
+    taxonomy_primary_present: presence.hasPrimary,
+    taxonomy_service_count: presence.serviceCount,
     email: business.email ?? null,
     phone: business.phone ?? null,
     approval_status: business.approval_status ?? null,
