@@ -11,10 +11,14 @@ import { useRecentlyViewedBusinesses } from '@/hooks/useRecentlyViewedBusinesses
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { BusinessIdentityStrip } from '@/components/business/BusinessIdentityStrip';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import type { BusinessTaxonomyDisplay } from '@/modules/taxonomy/search-integration';
 
 interface BusinessCardProps {
   business: any;
   viewMode: 'grid' | 'list';
+  /** Phase 10 — optional taxonomy display fetched in batch by the parent. */
+  taxonomyDisplay?: BusinessTaxonomyDisplay;
 }
 
 const tierConfig: Record<string, { label: string; labelAr: string; color: string; icon: string }> = {
@@ -46,8 +50,10 @@ const getPlaceholderGradient = (name: string) => {
   return gradients[hash % gradients.length];
 };
 
-export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) => {
+export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: BusinessCardProps) => {
   const { language, isRTL } = useLanguage();
+  const auth = (() => { try { return useAuth(); } catch { return null; } })();
+  const isAdmin = Boolean(auth?.isAdmin);
   const [pressed, setPressed] = useState(false);
   const Arrow = isRTL ? ChevronLeft : ChevronRight;
   const { isFavorite, toggleFavorite } = useBusinessFavorites();
