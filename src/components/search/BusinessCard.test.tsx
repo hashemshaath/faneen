@@ -44,10 +44,19 @@ const baseBiz = {
   promotions: [],
 };
 
-const renderCard = (b: Record<string, unknown>, viewMode: 'grid' | 'list' = 'grid') =>
+const renderCard = (
+  b: Record<string, unknown>,
+  viewMode: 'grid' | 'list' = 'grid',
+  taxonomyDisplay?: {
+    primaryLabel: string | null;
+    secondaryLabels: string[];
+    serviceLabels: string[];
+    hasModernTaxonomy: boolean;
+  },
+) =>
   render(
     <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <BusinessCard business={b} viewMode={viewMode} />
+      <BusinessCard business={b} viewMode={viewMode} taxonomyDisplay={taxonomyDisplay} />
     </MemoryRouter>,
   );
 
@@ -144,61 +153,48 @@ describe('BusinessCard service-category diversity pill', () => {
   const arMatcher = /\+\d+\s*تخصصات/;
   const enMatcher = /\+\d+\s+service categories/i;
 
-  it('does not render when all active services share a single category_id', () => {
-    renderCard({
-      ...baseBiz,
-      business_services: [
-        { name_ar: 'تركيب', is_active: true, category_id: 'cat-1' },
-        { name_ar: 'صيانة', is_active: true, category_id: 'cat-1' },
-        { name_ar: 'تصميم', is_active: true, category_id: 'cat-1' },
-      ],
-    });
+  // Phase 18c — diversity is now derived from
+  // `taxonomyDisplay.serviceLabels` (taxonomy join), NOT from the legacy
+  // `business_services.category_id` column.
+  const tx = (serviceLabels: string[]) => ({
+    primaryLabel: null,
+    secondaryLabels: [],
+    serviceLabels,
+    hasModernTaxonomy: true,
+  });
+
+  it('does not render when only one service taxonomy label exists', () => {
+    renderCard(baseBiz, 'grid', tx(['Aluminum']));
     expect(screen.queryByText(arMatcher)).toBeNull();
   });
 
-  it('does not render when only one active service has a non-null category_id', () => {
-    renderCard({
-      ...baseBiz,
-      business_services: [
-        { name_ar: 'تركيب', is_active: true, category_id: 'cat-1' },
-        { name_ar: 'صيانة', is_active: true, category_id: null },
-      ],
-    });
+  it('does not render when no taxonomyDisplay is provided', () => {
+    renderCard(baseBiz);
     expect(screen.queryByText(arMatcher)).toBeNull();
   });
 
-  it('renders +2 تخصصات when active services span 2 distinct category_ids', () => {
+  it('renders +2 تخصصات when serviceLabels has 2 distinct entries', () => {
+    renderCard(baseBiz, 'grid', tx(['Aluminum', 'Glass']));
+    expect(screen.getAllByText(arMatcher).length).toBeGreaterThan(0);
+  });
+
+  it('does NOT consult legacy business_services.category_id', () => {
     renderCard({
       ...baseBiz,
       business_services: [
         { name_ar: 'تركيب', is_active: true, category_id: 'cat-a' },
         { name_ar: 'صيانة', is_active: true, category_id: 'cat-b' },
+        { name_ar: 'تصميم', is_active: true, category_id: 'cat-c' },
       ],
     });
-    expect(screen.getAllByText(arMatcher).length).toBeGreaterThan(0);
-  });
-
-  it('ignores inactive services when computing distinct category_id count', () => {
-    renderCard({
-      ...baseBiz,
-      business_services: [
-        { name_ar: 'تركيب', is_active: true, category_id: 'cat-a' },
-        { name_ar: 'معطلة', is_active: false, category_id: 'cat-b' },
-      ],
-    });
+    // No taxonomyDisplay → pill must NOT appear even though stale
+    // category_id values are present on nested service rows.
     expect(screen.queryByText(arMatcher)).toBeNull();
   });
 
   it('renders English label when language is English', () => {
     setLanguage('en');
-    renderCard({
-      ...baseBiz,
-      business_services: [
-        { name_ar: 'A', name_en: 'A', is_active: true, category_id: 'cat-a' },
-        { name_ar: 'B', name_en: 'B', is_active: true, category_id: 'cat-b' },
-        { name_ar: 'C', name_en: 'C', is_active: true, category_id: 'cat-c' },
-      ],
-    });
+    renderCard(baseBiz, 'grid', tx(['Aluminum', 'Glass', 'Steel']));
     expect(screen.getAllByText(enMatcher).length).toBeGreaterThan(0);
   });
 });
