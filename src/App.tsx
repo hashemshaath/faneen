@@ -246,6 +246,8 @@ const AdminContractsHub = lazyRetry(() => import("./pages/admin/AdminContractsHu
 const AdminMembershipsHub = lazyRetry(() => import("./pages/admin/AdminMembershipsHub"));
 const AdminTaxonomyHub = lazyRetry(() => import("./pages/admin/AdminTaxonomyHub"));
 const AdminSystemSettingsHub = lazyRetry(() => import("./pages/admin/AdminSystemSettingsHub"));
+// Taxonomy & Reference Data Center — Phase 2.
+const AdminTaxonomyCenter = lazyRetry(() => import("./pages/admin/AdminTaxonomyCenter"));
 
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
@@ -429,6 +431,7 @@ const AppRoutes = () => (
           {/* NAVIGATION-CONSOLIDATION-1 group 15 — Taxonomy hub. */}
           <Route path="/admin/categories" element={<ProtectedRoute requireAdmin><AdminTaxonomyHub /></ProtectedRoute>} />
           <Route path="/admin/tags" element={<ProtectedRoute requireAdmin><Navigate to="/admin/categories?tab=tags" replace /></ProtectedRoute>} />
+          <Route path="/admin/taxonomy" element={<ProtectedRoute requireAdmin><AdminTaxonomyCenter /></ProtectedRoute>} />
           <Route path="/admin/businesses" element={<ProtectedRoute requireAdmin><AdminBusinesses /></ProtectedRoute>} />
           <Route path="/admin/ownership-transfer-requests" element={<ProtectedRoute requireAdmin><AdminOwnershipTransferRequests /></ProtectedRoute>} />
           <Route path="/claim/:businessId" element={<ClaimBusiness />} />
