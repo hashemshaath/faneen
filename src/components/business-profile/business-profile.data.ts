@@ -10,7 +10,6 @@ import {
 import type { Database } from "@/integrations/supabase/types";
 
 type BusinessRow = Database["public"]["Tables"]["businesses"]["Row"];
-type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
 type CityRow = Database["public"]["Tables"]["cities"]["Row"];
 type CountryRow = Database["public"]["Tables"]["countries"]["Row"];
 type ServiceRow = Database["public"]["Tables"]["business_services"]["Row"];
@@ -30,7 +29,15 @@ type ProjectWithJoins = Pick<
   | "project_cost"
   | "currency_code"
 > & {
-  categories: Pick<CategoryRow, "name_ar" | "name_en"> | null;
+  /**
+   * Phase 18b — taxonomy-only. The legacy `categories(...)` join on
+   * `projects.category_id` has been removed from the runtime query.
+   * This field is now synthesized from `project_taxonomy_categories`
+   * (joined with `taxonomy_categories`) so existing consumers — which
+   * read `project.categories?.name_ar/name_en` — keep working without
+   * touching the legacy `categories` table.
+   */
+  categories: { name_ar: string | null; name_en: string | null } | null;
   cities: Pick<CityRow, "name_ar" | "name_en"> | null;
 };
 
@@ -41,13 +48,13 @@ type BranchWithJoins = BranchRow & {
 
 export type BusinessWithJoins = BusinessRow & {
   /**
-   * Phase 12 — the legacy `categories(...)` join is no longer fetched on
-   * the public business profile query. Field is preserved on the type as
-   * `null` so existing null-safe consumers (sector breadcrumb links built
-   * from `business.categories?.slug`) continue to compile and degrade
+   * Phase 12 / 18b — the legacy `categories(...)` join is no longer
+   * fetched. Field is preserved as `null` so existing null-safe
+   * consumers (sector breadcrumb links built from
+   * `business.categories?.slug`) continue to compile and degrade
    * gracefully. Business category DISPLAY is taxonomy-only now.
    */
-  categories: CategoryRow | null;
+  categories: null;
   cities: CityRow | null;
   countries: CountryRow | null;
 };
@@ -159,23 +166,54 @@ export const useProjects = (businessId: string | undefined) =>
   useQuery({
     queryKey: ["business-projects", businessId],
     queryFn: async () => {
+      // Phase 18b — taxonomy-only project listing. The legacy
+      // `categories(name_ar, name_en)` join on `projects.category_id`
+      // has been removed; project category labels are resolved from
+      // `project_taxonomy_categories → taxonomy_categories` and attached
+      // to each row so existing UI (`project.categories?.name_*`) keeps
+      // working. When no taxonomy link exists, the UI renders the
+      // "غير مصنّف" / "Uncategorized" fallback badge.
       const { data } = await supabase
         .from("projects")
-        // PERF-1D.3 — explicit parent select; joins were already trimmed.
-        // Fields cover everything ProjectsTab renders (cover, title, description,
-        // featured badge, duration, cost + currency, city/category labels).
         .select(
           "id, title_ar, title_en, description_ar, description_en, " +
           "cover_image_url, is_featured, duration_days, project_cost, currency_code, " +
-          "categories(name_ar, name_en), cities(name_ar, name_en)"
+          "cities(name_ar, name_en)"
         )
         .eq("business_id", businessId!)
         .eq("status", "published")
         .order("is_featured", { ascending: false })
-        .order("created_at", { ascending: false })
-        .returns<ProjectWithJoins[]>();
+        .order("created_at", { ascending: false });
 
-      return data ?? [];
+      const rows = (data ?? []) as Array<Omit<ProjectWithJoins, "categories">>;
+      if (rows.length === 0) return [] as ProjectWithJoins[];
+
+      const projectIds = rows.map((r) => r.id);
+      const { data: taxRows } = await supabase
+        .from("project_taxonomy_categories")
+        .select(
+          "project_id, role, sort_order, " +
+          "taxonomy_categories(name_ar, name_en)"
+        )
+        .in("project_id", projectIds);
+
+      type TaxRow = {
+        project_id: string;
+        role: string | null;
+        sort_order: number | null;
+        taxonomy_categories: { name_ar: string | null; name_en: string | null } | null;
+      };
+      const byProject = new Map<string, { name_ar: string | null; name_en: string | null }>();
+      for (const t of (taxRows ?? []) as TaxRow[]) {
+        if (byProject.has(t.project_id)) continue; // first match wins (primary preferred via sort below)
+        if (!t.taxonomy_categories) continue;
+        byProject.set(t.project_id, t.taxonomy_categories);
+      }
+
+      return rows.map((r) => ({
+        ...r,
+        categories: byProject.get(r.id) ?? null,
+      })) as ProjectWithJoins[];
     },
     enabled: !!businessId,
     staleTime: PROFILE_STALE_MS,
