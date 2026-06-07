@@ -107,22 +107,20 @@ const DashboardEntities: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <header className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-primary" />
-              {pickBi(isRTL, 'حسابات الكيانات', 'Entities')}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isAdmin
-                ? pickBi(isRTL, 'إدارة جميع كيانات المنصة', 'Manage all platform entities')
-                : pickBi(isRTL, 'الكيانات التي تملكها أو تعمل بها', 'Entities you own or work in')}
-            </p>
-          </div>
-          <Badge variant="outline" className="tech-content">
-            {(filtered?.length ?? 0)} / {(data?.length ?? 0)}
-          </Badge>
-        </header>
+        <PageHeader
+          icon={Building2}
+          tone="primary"
+          eyebrow={pickBi(isRTL, 'الكيانات', 'Entities')}
+          title={pickBi(isRTL, 'حسابات الكيانات', 'Entities')}
+          subtitle={isAdmin
+            ? pickBi(isRTL, 'إدارة جميع كيانات المنصة', 'Manage all platform entities')
+            : pickBi(isRTL, 'الكيانات التي تملكها أو تعمل بها', 'Entities you own or work in')}
+          actions={
+            <Badge variant="outline" className="tech-content">
+              {(filtered?.length ?? 0)} / {(data?.length ?? 0)}
+            </Badge>
+          }
+        />
 
         <Card className="p-4">
           <div className="grid gap-3 md:grid-cols-[1fr_180px_180px]">

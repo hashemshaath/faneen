@@ -134,33 +134,29 @@ export default function DashboardWorkOrdersOverview() {
             { labelEn: tx.crumbOverview, labelAr: tx.crumbOverview },
           ]}
         />
-        <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-          <div>
-            <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-              <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-accent" aria-hidden="true" />
-              {tx.title}
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              {tx.subtitle}
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5 w-full sm:w-auto">
+        <PageHeader
+          icon={Activity}
+          tone="accent"
+          eyebrow={isRTL ? 'العمليات' : 'Operations'}
+          title={tx.title}
+          subtitle={tx.subtitle}
+          actions={<>
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
               <Link to="/dashboard/work-orders">
                 <ClipboardList className="w-3.5 h-3.5" />
                 {tx.openBoard}
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </Link>
             </Button>
-            <Button asChild variant="ghost" size="sm" className="rounded-xl gap-1.5 w-full sm:w-auto">
+            <Button asChild variant="ghost" size="sm" className="rounded-xl gap-1.5">
               <Link to="/dashboard/operations/feed">
                 <Activity className="w-3.5 h-3.5" />
                 {tx.openFeed}
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </Link>
             </Button>
-          </div>
-        </header>
+          </>}
+        />
 
         {!businessId ? (
           <Card className="border-dashed border-2 border-border/60">

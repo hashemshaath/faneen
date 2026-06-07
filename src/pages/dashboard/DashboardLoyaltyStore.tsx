@@ -69,21 +69,19 @@ const DashboardLoyaltyStore: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Gift className="w-6 h-6 text-primary" />
-              <Bi ar="متجر المكافآت" en="Reward Store" />
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              <Bi ar="استبدل نقاطك بخصومات ومزايا" en="Redeem your points for discounts and perks" />
-            </p>
-          </div>
-          <Card className="px-5 py-3 bg-primary/5 border-primary/20">
-            <div className="text-xs text-muted-foreground"><Bi ar="رصيد النقاط" en="Points balance" /></div>
-            <div className="text-2xl font-bold tech-content">{balance.toLocaleString()}</div>
-          </Card>
-        </div>
+        <PageHeader
+          icon={Gift}
+          tone="accent"
+          eyebrow={isRTL ? 'الولاء' : 'Loyalty'}
+          title={isRTL ? 'متجر المكافآت' : 'Reward Store'}
+          subtitle={isRTL ? 'استبدل نقاطك بخصومات ومزايا' : 'Redeem your points for discounts and perks'}
+          actions={
+            <Card className="px-5 py-3 bg-primary/5 border-primary/20">
+              <div className="text-xs text-muted-foreground"><Bi ar="رصيد النقاط" en="Points balance" /></div>
+              <div className="text-2xl font-bold tech-content">{balance.toLocaleString()}</div>
+            </Card>
+          }
+        />
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

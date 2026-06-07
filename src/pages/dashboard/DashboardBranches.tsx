@@ -289,23 +289,21 @@ const DashboardBranches: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <header className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-primary" />
-              {t(isRTL, 'إدارة الفروع', 'Branches')}
-            </h1>
-            <p className="text-sm text-muted-foreground max-w-2xl">
-              {t(isRTL,
-                'أنشئ وأدر فروع منشأتك. اختر الفرع الرئيسي، عيّن مدير مبيعات لكل فرع، واربط منتجاتك وعروضك بالفروع المناسبة.',
-                'Create and manage branches of your business. Pick a main branch, assign a sales manager per branch, and link services and offers to specific branches.')}
-            </p>
-          </div>
-          <Button onClick={() => setCreating(c => !c)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            {t(isRTL, 'إضافة فرع', 'Add branch')}
-          </Button>
-        </header>
+        <PageHeader
+          icon={Building2}
+          tone="primary"
+          eyebrow={t(isRTL, 'الفروع', 'Branches')}
+          title={t(isRTL, 'إدارة الفروع', 'Branches')}
+          subtitle={t(isRTL,
+            'أنشئ وأدر فروع منشأتك. اختر الفرع الرئيسي، عيّن مدير مبيعات لكل فرع، واربط منتجاتك وعروضك بالفروع المناسبة.',
+            'Create and manage branches of your business. Pick a main branch, assign a sales manager per branch, and link services and offers to specific branches.')}
+          actions={
+            <Button onClick={() => setCreating(c => !c)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              {t(isRTL, 'إضافة فرع', 'Add branch')}
+            </Button>
+          }
+        />
 
         {creating && (
           <Card className="border-primary/40">

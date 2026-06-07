@@ -185,27 +185,23 @@ export default function DashboardTeamAccess() {
   return (
     <DashboardLayout>
       <div className="p-4 md:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <header className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <ShieldCheck className="h-6 w-6 text-primary" />
-              {isRTL ? 'صلاحيات وصول الموظفين للأنظمة' : 'Staff System Access'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isRTL
-                ? 'تحكم في الأنظمة والأقسام الظاهرة لكل موظف ضمن نطاق ما هو مسموح به لنشاطك التجاري.'
-                : 'Control which modules each staff member can see, within the bounds your business already allows.'}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900 px-3 py-2 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2 max-w-md">
-            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-            <span>
-              {isRTL
-                ? 'يمكنك فقط إخفاء الأنظمة المتاحة لنشاطك التجاري. لا يمكنك منح وصول لنظام معطّل من قبل الإدارة.'
-                : 'You can only hide modules already enabled for your business. You cannot grant access to a module disabled by the admin.'}
-            </span>
-          </div>
-        </header>
+        <PageHeader
+          icon={ShieldCheck}
+          tone="primary"
+          eyebrow={isRTL ? 'الصلاحيات' : 'Permissions'}
+          title={isRTL ? 'صلاحيات وصول الموظفين للأنظمة' : 'Staff System Access'}
+          subtitle={isRTL
+            ? 'تحكم في الأنظمة والأقسام الظاهرة لكل موظف ضمن نطاق ما هو مسموح به لنشاطك التجاري.'
+            : 'Control which modules each staff member can see, within the bounds your business already allows.'}
+        />
+        <div className="rounded-lg border bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900 px-3 py-2 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+          <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+          <span>
+            {isRTL
+              ? 'يمكنك فقط إخفاء الأنظمة المتاحة لنشاطك التجاري. لا يمكنك منح وصول لنظام معطّل من قبل الإدارة.'
+              : 'You can only hide modules already enabled for your business. You cannot grant access to a module disabled by the admin.'}
+          </span>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
           {/* Staff picker */}
