@@ -39,3 +39,35 @@ Two follow-up phases remain, in priority order:
 2. **Phase 19c — SEO/Edge categories cutover**: rewrite `sitemap`, `admin-enrichment-enhance`, and `run-site-audit` against `taxonomy_categories`, then drop `public.categories`.
 
 `quote_requests.sector` and `SECTORS_SEO/SECTOR_KEYWORDS` remain as accepted long-term shims unless a separate explicit cleanup is requested.
+
+---
+
+## Phase 19b — Search Tags removal (executed)
+
+**Decision**: removal, not backfill. The `TagsFilter` UI was retired in Phase 2.5; only a dormant `?tags=…` deep-link pathway remained in `Search.tsx` / `useSearch.ts` / `filterAndSort` / `ActiveFilterChips` / `SearchFilters`. Backfilling 15 rows into `taxonomy_categories(type='search_tag')` would have created dead data with no consumer.
+
+### Code changes
+- `src/services/search/useSearch.ts` — removed `useEntityTags` hook and the `selectedTags` / `entityTags` parameters from `filterAndSort`.
+- `src/services/search/index.ts` — dropped `useEntityTags` from the public re-exports.
+- `src/pages/Search.tsx` — removed `selectedTags` state, the `?tags=` URL serialise/parse, the Escape-key dependency, and the related child props.
+- `src/components/search/SearchFilters.tsx` — dropped `selectedTags` / `onToggleTag` / `onClearTags` props.
+- `src/components/search/ActiveFilterChips.tsx` — dropped `selectedTags` / `onClearTag` props and the per-tag chip rendering.
+- `src/modules/taxonomy/migration-services.ts` — stopped querying `public.tags`; `legacyTags` is now a constant `0` so the inventory snapshot shape is preserved.
+- `src/services/search/__tests__/search-logic.test.ts` and `category-facets.test.ts` — updated `filterAndSort` callsites and removed the obsolete "filters by tags" case.
+- `src/tests/phase18hLegacyColumnDrop.test.ts` — relaxed the drop-table guard to allow `tags` / `entity_tags`; `categories` remains protected.
+
+### Migration
+```sql
+DROP TABLE IF EXISTS public.entity_tags CASCADE;
+DROP TABLE IF EXISTS public.tags CASCADE;
+```
+
+### Report
+- ✅ `tags` and `entity_tags` dropped.
+- ✅ Search still works — taxonomy category + service-category facets unchanged.
+- ✅ No RLS, Edge Function, or Storage policy touched.
+- ✅ TypeScript clean.
+- ❎ Backfill into taxonomy `search_tag` skipped — no UI consumer would exist.
+
+### What remains
+Only the `categories` table is still a legacy bridge, pinned by 3 edge functions (`sitemap`, `admin-enrichment-enhance`, `run-site-audit`). Removing it requires a separate Edge cutover phase (Phase 19c) and is out of scope here.
