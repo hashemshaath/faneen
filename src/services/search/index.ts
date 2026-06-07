@@ -9,6 +9,7 @@ export {
   useCities,
   useBusinesses,
   useEntityTags,
+  useServiceCategoryBusinessIds,
   filterAndSort,
   defaultFilters,
   type SearchFilterValues,

@@ -18,6 +18,7 @@ import {
   useCities,
   useBusinesses,
   useEntityTags,
+  useServiceCategoryBusinessIds,
   filterAndSort,
   getDidYouMean,
   addToSearchHistory,
@@ -94,6 +95,15 @@ const SearchPage = () => {
     service: filters.serviceCategoryId !== 'all' ? filters.serviceCategoryId : null,
   });
   const taxonomyBusinessIds = taxonomyCtx?.taxonomyBusinessIds;
+
+  // Phase 18a — taxonomy-only resolver for the service-category facet.
+  // Resolves `filters.serviceCategoryId` (UUID or slug) against the central
+  // taxonomy tree and returns the set of business ids with ≥1 active
+  // service linked via `business_service_taxonomy_categories`.
+  const { data: serviceCategoryBusinessIds } = useServiceCategoryBusinessIds(
+    filters.serviceCategoryId,
+    categories,
+  );
 
   React.useEffect(() => {
     if (import.meta.env.DEV && taxonomyCtx) {
@@ -240,6 +250,7 @@ const SearchPage = () => {
       language,
       categories,
       taxonomyBusinessIds,
+      serviceCategoryBusinessIds,
     );
     if (favoritesOnly) {
       try {
@@ -252,7 +263,7 @@ const SearchPage = () => {
       }
     }
     return res;
-  }, [businesses, debouncedQuery, filters, language, selectedTags, entityTags, favoritesOnly, categories, taxonomyBusinessIds]);
+  }, [businesses, debouncedQuery, filters, language, selectedTags, entityTags, favoritesOnly, categories, taxonomyBusinessIds, serviceCategoryBusinessIds]);
 
   // Defer the heavy filtered list so typing/filter clicks stay responsive.
   const deferredFiltered = useDeferredValue(filtered);
