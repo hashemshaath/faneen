@@ -173,6 +173,26 @@ const DashboardServices: React.FC = () => {
     return m;
   }, [services]);
 
+  // Phase 18d — derive the catalog-selection set and the active-sector set
+  // from `business_services` rows themselves (their `source_sub_service_id`
+  // link). The legacy `businesses.sub_services` / `businesses.sectors`
+  // columns are no longer read here.
+  const subServiceIds: string[] = useMemo(() => {
+    const ids = new Set<string>();
+    services.forEach((s) => { if (s.source_sub_service_id) ids.add(s.source_sub_service_id); });
+    return Array.from(ids);
+  }, [services]);
+
+  const businessSectors: string[] = useMemo(() => {
+    const sectors = new Set<string>();
+    services.forEach((s) => {
+      if (!s.source_sub_service_id) return;
+      const catalog = findSubServiceById(s.source_sub_service_id);
+      if (catalog?.sector_id) sectors.add(catalog.sector_id);
+    });
+    return Array.from(sectors);
+  }, [services]);
+
   // ── SERVICE-ACTIVATION-GOVERNANCE-1: current tier + plan cap ──
   const { data: subscription } = useQuery({
     queryKey: ['my-membership-subscription', user?.id],
