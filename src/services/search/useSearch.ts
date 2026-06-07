@@ -263,6 +263,72 @@ export const useEntityTags = () =>
     gcTime: 30 * 60 * 1000,
   });
 
+/**
+ * Phase 18a — taxonomy-only resolver for the service-category facet.
+ *
+ * Given a UUID-or-slug filter value, resolves it against the taxonomy tree
+ * (expanding parent → direct children), then walks
+ * `business_service_taxonomy_categories → business_services` to produce the
+ * set of business ids that have at least one ACTIVE service linked to any
+ * of the allowed taxonomy categories.
+ *
+ * No reads from `business_services.category_id` or the legacy `categories`
+ * table. Returns an empty set when the filter is "all" or unresolved so the
+ * downstream filter narrows to zero rather than silently bypassing.
+ */
+export const useServiceCategoryBusinessIds = (
+  serviceCategoryId: string,
+  categories: CategoryLite[] | undefined,
+) =>
+  useQuery({
+    queryKey: [
+      'search:service-category-business-ids',
+      serviceCategoryId,
+      // Stable cache key — only depends on parent→child topology, not the
+      // full category payload.
+      (categories ?? []).map((c) => `${c.id}:${c.parent_id ?? ''}`).join(','),
+    ],
+    enabled: Boolean(serviceCategoryId) && serviceCategoryId !== 'all',
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    queryFn: async (): Promise<Set<string>> => {
+      const resolved = resolveCategory(serviceCategoryId, categories);
+      const allowedIds: string[] = resolved && categories
+        ? [...expandCategoryIds(resolved, categories)]
+        : [serviceCategoryId];
+      if (allowedIds.length === 0) return new Set<string>();
+
+      // One PostgREST round-trip: pull links + their service's business_id
+      // + activation gate columns. Empty/inactive services are filtered out
+      // client-side so we don't need a separate query.
+      const { data, error } = await supabase
+        .from('business_service_taxonomy_categories')
+        .select(
+          'service_id, category_id, business_services!inner(business_id, is_active, provider_status, admin_status)',
+        )
+        .in('category_id', allowedIds);
+      if (error) return new Set<string>();
+
+      const out = new Set<string>();
+      for (const row of (data ?? []) as Array<{
+        business_services: {
+          business_id: string | null;
+          is_active: boolean | null;
+          provider_status: string | null;
+          admin_status: string | null;
+        } | null;
+      }>) {
+        const svc = row.business_services;
+        if (!svc || !svc.business_id) continue;
+        if (svc.is_active !== true) continue;
+        if (svc.provider_status !== 'active') continue;
+        if (svc.admin_status !== 'allowed') continue;
+        out.add(svc.business_id);
+      }
+      return out;
+    },
+  });
+
 // ─── Filter + Sort Logic ──────────────────────────────
 export interface SearchFilterValues {
   categoryId: string;
