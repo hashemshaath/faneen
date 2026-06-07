@@ -325,6 +325,8 @@ Deno.serve(async (req) => {
       });
       if (ins.error) console.error("perf insert error:", ins.error);
       perfRows.push({ url: perf.url, performance_score: perf.performance_score });
+      // Space requests to avoid PageSpeed per-minute quota (esp. without API key).
+      await new Promise((r) => setTimeout(r, 1500));
     }
 
     return new Response(
