@@ -650,10 +650,12 @@ const Onboarding = () => {
       // Phase 13.c — taxonomy is primary when loaded; legacy sectors are
       // accepted as a fallback (or when taxonomy failed/still loading) so
       // we never harden users out of registration.
+      // Phase 2.1 — Taxonomy-only UI. When taxonomy is loaded, require
+      // entity type + primary activity. When taxonomy is loading/failed we
+      // never block the user (legacy SectorPicker is no longer shown).
       (taxonomyStatus === 'ok'
         ? (!!taxonomy.entityTypeCategoryId && !!taxonomy.primaryActivityCategoryId)
-          || sectors.length > 0
-        : sectors.length > 0);
+        : true);
 
     const onContinue = () => {
       if (!allValid) {
@@ -775,37 +777,17 @@ const Onboarding = () => {
               onLoadStatusChange={setTaxonomyStatus}
             />
 
-            {/* Legacy SectorPicker:
-                - taxonomy ok → collapsed under a disclosure (fallback only)
-                - taxonomy loading/error → kept inline as the working fallback */}
-            {taxonomyStatus === 'ok' ? (
-              <details className="rounded-xl border border-border/60 bg-muted/5 p-3 group">
-                <summary className="cursor-pointer text-xs font-medium text-muted-foreground flex items-center gap-2">
-                  {isRTL ? 'التصنيف القديم (اختياري — للاستخدام عند الحاجة)'
-                         : 'Legacy classification (optional — use only if needed)'}
-                </summary>
-                <div className="pt-3 space-y-2">
-                  <SectorPicker selectedSectors={sectors} selectedSubServices={subServices}
-                    onSectorsChange={setSectors} onSubServicesChange={setSubServices} maxSectors={5} />
-                  <p className="text-[11px] text-muted-foreground">
-                    {isRTL
-                      ? 'يُفضّل الاعتماد على التصنيف الجديد بالأعلى. هذه القائمة تبقى للتوافق فقط.'
-                      : 'Prefer the new classification above. This list is kept for backward compatibility only.'}
-                  </p>
-                </div>
-              </details>
-            ) : (
-              <div className="space-y-2">
-                <Label className="text-xs">
-                  {isRTL ? 'مجالات العمل' : 'Business sectors'} <span className="text-destructive ms-1">*</span>
-                </Label>
-                <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
-                  <SectorPicker selectedSectors={sectors} selectedSubServices={subServices}
-                    onSectorsChange={setSectors} onSubServicesChange={setSubServices} maxSectors={5} />
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  {isRTL ? 'اختر القطاع/القطاعات التي يعمل فيها نشاطك (حتى 5).'
-                         : 'Pick the sectors your business operates in (up to 5).'}
+            {/* Phase 2.1 — Taxonomy-only UI. Legacy SectorPicker is no longer
+                shown to users in either branch. If the taxonomy fails to load,
+                we show a soft notice and let the user continue and update later.
+                The legacy `sectors` / `subServices` state is preserved as an
+                internal fallback (draft restore, non-blocking persistence). */}
+            {taxonomyStatus !== 'ok' && taxonomyStatus !== 'loading' && (
+              <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                <p className="text-xs text-muted-foreground">
+                  {isRTL
+                    ? 'تعذّر تحميل التصنيفات الحديثة. يمكنك إكمال التسجيل وتحديث التصنيف لاحقًا من لوحة التحكم.'
+                    : 'Could not load the latest classifications. You can complete registration and update them later from your dashboard.'}
                 </p>
               </div>
             )}

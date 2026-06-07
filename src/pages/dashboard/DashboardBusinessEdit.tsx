@@ -797,9 +797,11 @@ const DashboardBusinessEdit: React.FC = () => {
 
           <TabsContent value="sectors" className="space-y-6 mt-4">
             {/*
-              Phase 13.d — Taxonomy-first. The central taxonomy section is now
-              the primary classifier; the legacy SectorPicker remains as a
-              collapsed fallback until search/matching/showcase fully migrate.
+              Phase 2.1 — Taxonomy-only UI. The central taxonomy section is
+              the sole classifier shown to users. The legacy SectorPicker is
+              hidden from this screen (state is still read for display inside
+              BusinessTaxonomySection's legacy preview, but never written from
+              here).
             */}
             {business?.id && (
               <BusinessTaxonomySection
@@ -809,38 +811,7 @@ const DashboardBusinessEdit: React.FC = () => {
               />
             )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle className={sectionTitle}>
-                  <Layers className="w-4 h-4 text-muted-foreground" />
-                  {t(isRTL, 'التصنيف القديم (اختياري)', 'Legacy classification (optional)')}
-                </CardTitle>
-                <CardDescription>
-                  {t(
-                    isRTL,
-                    'يُستخدم كاحتياطي للبحث والمطابقة حتى اكتمال الهجرة. التصنيف الأساسي أعلاه.',
-                    'Used as a fallback for search & matching until migration completes. Use the primary classifier above.',
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <details>
-                  <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground select-none">
-                    {t(isRTL, 'عرض التصنيف القديم', 'Show legacy classification')}
-                  </summary>
-                  <div className="mt-4">
-                    <SectorPicker
-                      selectedSectors={(form.sectors ?? []) as SectorId[]}
-                      selectedSubServices={form.sub_services ?? []}
-                      onSectorsChange={(s) => update('sectors', s)}
-                      onSubServicesChange={(s) => update('sub_services', s)}
-                    />
-                  </div>
-                </details>
-              </CardContent>
-            </Card>
-
-        {/* Legal */}
+            {/* Legal */}
           </TabsContent>
 
           <TabsContent value="legal" className="space-y-6 mt-4">
