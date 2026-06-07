@@ -54,6 +54,11 @@ const Projects = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
 
+  // TODO(phase-13.b): switch this filter source to `taxonomy_categories` once a
+  // `project_taxonomy_categories` link table (or explicit project→taxonomy mapping)
+  // exists. The filter currently matches `projects.category_id` (UUID), so we
+  // cannot swap the source list without losing filter semantics. Keeping legacy
+  // `listActiveCategories` until project taxonomy migration ships.
   const { data: categories = [] } = useQuery<Array<{ id: string; name_ar: string; name_en: string }>>({
     queryKey: ['categories'],
     queryFn: async () => {
