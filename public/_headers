@@ -14,14 +14,10 @@
 /pwa-512.png
   Cache-Control: public, max-age=2592000
 
-# Boot scripts — short cache so updates roll out quickly
-/preload-hero.js
-  Cache-Control: public, max-age=3600, must-revalidate
-
-/registerSW.js
-  Cache-Control: public, max-age=3600, must-revalidate
-
-# Service worker must always revalidate
+# Service worker must always revalidate. Note: /registerSW.js and
+# /preload-hero.js were removed (SW is now registered from src/main.tsx
+# after load+idle, hero preload is injected by HomeV2.tsx) — their old
+# entries were pruned from this file to avoid stale references.
 /sw.js
   Cache-Control: public, max-age=0, must-revalidate
 

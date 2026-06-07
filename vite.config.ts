@@ -61,6 +61,11 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
+      // Do NOT auto-inject /registerSW.js into index.html. We register the
+      // service worker manually from src/main.tsx after `load` + idle so it
+      // never blocks the LCP paint (Lighthouse was flagging the auto-injected
+      // registerSW.js as render-blocking on the home page).
+      injectRegister: null,
       devOptions: {
         enabled: false,
       },

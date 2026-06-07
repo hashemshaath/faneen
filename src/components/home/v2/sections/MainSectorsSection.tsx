@@ -43,6 +43,8 @@ const SectorCard = ({ s, idx }: { s: SectorItem; idx: number }) => {
           height={800}
           loading="lazy"
           decoding="async"
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          {...{ fetchpriority: 'low' }}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none" />
