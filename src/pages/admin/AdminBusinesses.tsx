@@ -582,6 +582,11 @@ const AdminBusinesses = () => {
         // Classification is managed via BusinessTaxonomySection (taxonomy-only).
         country_id: editForm.country_id || null, city_id: editForm.city_id || null,
         logo_url: editForm.logo_url || null, cover_url: editForm.cover_url || null,
+        // Phase 2.2 image-pipeline link columns (admin edit). Null-safe.
+        logo_image_asset_id: (editForm as any).logo_image_asset_id || null,
+        cover_image_asset_id: (editForm as any).cover_image_asset_id || null,
+        logo_image_variants: (editForm as any).logo_image_variants || null,
+        cover_image_variants: (editForm as any).cover_image_variants || null,
         seo_title_ar: editForm.seo_title_ar || null, seo_title_en: editForm.seo_title_en || null,
         seo_description_ar: editForm.seo_description_ar || null, seo_description_en: editForm.seo_description_en || null,
         seo_keywords: String(editForm.seo_keywords || '').split(',').map(k => k.trim()).filter(Boolean),
