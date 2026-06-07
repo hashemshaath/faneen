@@ -16,12 +16,14 @@ import { SECTORS_SEO, type SeoSectorSlug } from '@/lib/sectors-seo';
 import { SA_CITIES } from '@/lib/sa-cities';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 import { SectorWorksGallery, SECTOR_TO_CATEGORY_SLUGS as GALLERY_SECTOR_MAP } from '@/components/sectors/SectorWorksGallery';
+import { useSectorTaxonomy } from '@/hooks/useSectorTaxonomy';
 
 // Featured cities surfaced on the brief landing (top markets).
 const FEATURED_CITY_SLUGS = ['riyadh', 'jeddah', 'dammam', 'khobar', 'makkah', 'madinah'];
 
-// Map SEO sector slug -> category slugs in the directory.
-const SECTOR_TO_CATEGORY_SLUGS = GALLERY_SECTOR_MAP;
+// Kept (re-exported) for legacy callers; sector pages themselves resolve
+// providers via `business_taxonomy_categories` now (Phase 15).
+void GALLERY_SECTOR_MAP;
 
 type ProviderRow = {
   id: string;
@@ -81,20 +83,8 @@ const SectorBrief: React.FC = () => {
     [],
   );
 
-  const categorySlugs = sector ? SECTOR_TO_CATEGORY_SLUGS[sector.slug] : [];
-
-  const { data: categoryIds = [] } = useQuery({
-    queryKey: ['sector-brief-cats', categorySlugs.join(',')],
-    enabled: categorySlugs.length > 0,
-    staleTime: 60 * 60 * 1000,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('categories')
-        .select('id, slug')
-        .in('slug', categorySlugs);
-      return (data ?? []).map((c) => c.id as string);
-    },
-  });
+  // Phase 15 — taxonomy-first provider resolution.
+  const { businessIds: taxonomyBusinessIds } = useSectorTaxonomy(sector?.slug ?? null);
 
   const cityNameEns = useMemo(() => featuredCities.map((c) => c.nameEn), [featuredCities]);
 
@@ -122,14 +112,14 @@ const SectorBrief: React.FC = () => {
   const cityIds = useMemo(() => cityRows.map((c) => (c as { id: string }).id), [cityRows]);
 
   const { data: providers = [], isLoading } = useQuery({
-    queryKey: ['sector-brief-providers', categoryIds, cityIds],
-    enabled: categoryIds.length > 0 && cityIds.length > 0,
+    queryKey: ['sector-brief-providers', taxonomyBusinessIds, cityIds],
+    enabled: taxonomyBusinessIds.length > 0 && cityIds.length > 0,
     queryFn: async () => {
       const { data } = await listPublicBusinessesForSector({
         select:
           'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, membership_tier, cities(id, name_ar, name_en)',
         filters: [
-          { column: 'category_id', op: 'in', value: categoryIds },
+          { column: 'id', op: 'in', value: taxonomyBusinessIds },
           { column: 'city_id', op: 'in', value: cityIds },
           { column: 'is_active', op: 'eq', value: true },
         ],
