@@ -11,6 +11,22 @@ import type {
   TaxonomyRelation,
   TaxonomyType,
 } from './types';
+import type { Database } from '@/integrations/supabase/types';
+
+type CategoryInsert = Database['public']['Tables']['taxonomy_categories']['Insert'];
+type CategoryUpdate = Database['public']['Tables']['taxonomy_categories']['Update'];
+
+function toInsertRow(input: TaxonomyCategoryInput): CategoryInsert {
+  const { metadata, ...rest } = input;
+  return { ...rest, metadata: metadata as CategoryInsert['metadata'] };
+}
+
+function toUpdateRow(patch: Partial<TaxonomyCategoryInput>): CategoryUpdate {
+  const { metadata, ...rest } = patch;
+  const out: CategoryUpdate = { ...rest };
+  if (metadata !== undefined) out.metadata = metadata as CategoryUpdate['metadata'];
+  return out;
+}
 
 function unwrap<T>(data: T | null, error: unknown, ctx: string): T {
   if (error) {
@@ -58,7 +74,7 @@ export async function createTaxonomyCategory(
 ): Promise<TaxonomyCategory> {
   const { data, error } = await supabase
     .from('taxonomy_categories')
-    .insert(input)
+    .insert(toInsertRow(input))
     .select('*')
     .single();
   return unwrap(data, error, 'createTaxonomyCategory');
@@ -70,7 +86,7 @@ export async function updateTaxonomyCategory(
 ): Promise<TaxonomyCategory> {
   const { data, error } = await supabase
     .from('taxonomy_categories')
-    .update(patch)
+    .update(toUpdateRow(patch))
     .eq('id', id)
     .select('*')
     .single();
