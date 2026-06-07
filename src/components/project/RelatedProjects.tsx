@@ -12,9 +12,13 @@ interface Props {
   businessId: string;
   categoryId: string | null;
   cityId: string | null;
+  /** Phase 8: taxonomy category ids attached to this project. When
+   * provided, "Similar projects" prefers matching via the taxonomy link
+   * table and silently falls back to legacy `category_id` otherwise. */
+  taxonomyCategoryIds?: string[];
 }
 
-export const RelatedProjects = ({ projectId, businessId, categoryId, cityId }: Props) => {
+export const RelatedProjects = ({ projectId, businessId, categoryId, cityId, taxonomyCategoryIds = [] }: Props) => {
   const { isRTL, language } = useLanguage();
 
   // Same business projects
@@ -34,14 +38,37 @@ export const RelatedProjects = ({ projectId, businessId, categoryId, cityId }: P
     enabled: !!businessId,
   });
 
-  // Same category projects (from other businesses)
+  // Same category projects (from other businesses). Phase 8: prefer
+  // taxonomy link table, fall back to legacy `category_id`.
   const { data: sameCategoryProjects = [], isLoading: loadingCat } = useQuery({
-    queryKey: ['related-same-cat', categoryId, projectId],
+    queryKey: ['related-same-cat', taxonomyCategoryIds.join(','), categoryId, projectId],
     queryFn: async () => {
+      // Try taxonomy first.
+      if (taxonomyCategoryIds.length > 0) {
+        const { data: links } = await supabase
+          .from('project_taxonomy_categories')
+          .select('project_id')
+          .in('category_id', taxonomyCategoryIds)
+          .neq('project_id', projectId)
+          .limit(50);
+        const ids = Array.from(new Set((links || []).map((l) => l.project_id)));
+        if (ids.length > 0) {
+          const { data } = await supabase
+            .from('projects')
+            .select('id, title_ar, title_en, cover_image_url, completion_date, business_id, businesses(name_ar, name_en, logo_url, username), city_id, cities(name_ar, name_en)')
+            .in('id', ids)
+            .eq('status', 'published')
+            .neq('business_id', businessId)
+            .order('created_at', { ascending: false })
+            .limit(4);
+          if (data && data.length > 0) return data;
+        }
+      }
+      if (!categoryId) return [];
       const { data } = await supabase
         .from('projects')
         .select('id, title_ar, title_en, cover_image_url, completion_date, business_id, businesses(name_ar, name_en, logo_url, username), city_id, cities(name_ar, name_en)')
-        .eq('category_id', categoryId!)
+        .eq('category_id', categoryId)
         .eq('status', 'published')
         .neq('id', projectId)
         .neq('business_id', businessId)
@@ -49,7 +76,7 @@ export const RelatedProjects = ({ projectId, businessId, categoryId, cityId }: P
         .limit(4);
       return data || [];
     },
-    enabled: !!categoryId,
+    enabled: taxonomyCategoryIds.length > 0 || !!categoryId,
   });
 
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
