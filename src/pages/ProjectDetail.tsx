@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ProjectImageGallery } from '@/components/project/ProjectImageGallery';
+import type { GalleryImage } from '@/components/project/ProjectImageGallery';
 import { ProjectSidebar } from '@/components/project/ProjectSidebar';
 import { RelatedProjects } from '@/components/project/RelatedProjects';
 import {
@@ -39,7 +40,7 @@ const ProjectDetail = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('*, businesses(username, name_ar, name_en, logo_url, description_ar, description_en, short_description_ar, short_description_en, phone, email, website, is_verified)')
+        .select('*, businesses(username, name_ar, name_en, logo_url, description_ar, description_en, short_description_ar, short_description_en, phone, email, website, is_verified), cover_image_asset:image_assets!projects_cover_image_asset_id_fkey(variants)')
         .eq('id', id!)
         .eq('status', 'published')
         .single();
@@ -54,7 +55,7 @@ const ProjectDetail = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_images')
-        .select('*')
+        .select('*, image_asset:image_assets!project_images_image_asset_id_fkey(variants)')
         .eq('project_id', id!)
         .order('sort_order');
       if (error) throw error;
@@ -182,12 +183,27 @@ const ProjectDetail = () => {
     ? (SA_CITIES.find((c) => c.nameEn.toLowerCase() === city.name_en.toLowerCase())?.slug ?? null)
     : null;
 
-  const allImages = project
+  const allImages: GalleryImage[] = project
     ? [
         ...(project.cover_image_url
-          ? [{ id: 'cover', image_url: project.cover_image_url, caption_ar: null, caption_en: null }]
+          ? [{
+              id: 'cover',
+              image_url: project.cover_image_url,
+              caption_ar: null,
+              caption_en: null,
+              variants:
+                (project as { cover_image_asset?: { variants?: unknown } })
+                  .cover_image_asset?.variants ?? null,
+            }]
           : []),
-        ...projectImages,
+        ...projectImages.map((img) => ({
+          id: img.id,
+          image_url: img.image_url,
+          caption_ar: img.caption_ar,
+          caption_en: img.caption_en,
+          variants:
+            (img as { image_asset?: { variants?: unknown } }).image_asset?.variants ?? null,
+        })),
       ]
     : [];
 
