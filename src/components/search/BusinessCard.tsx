@@ -81,6 +81,54 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
   const initial = name?.charAt(0) || 'ف';
   const hasBnpl = Array.isArray((b as any).business_bnpl_providers) && (b as any).business_bnpl_providers.length > 0;
 
+  // Phase 10 — taxonomy display (taxonomy-first, legacy fallback).
+  const tx = taxonomyDisplay;
+  const hasTaxonomy = !!(tx?.hasModernTaxonomy && (tx.primaryLabel || tx.secondaryLabels.length || tx.serviceLabels.length));
+  const taxonomyChips = hasTaxonomy
+    ? [...tx!.secondaryLabels, ...tx!.serviceLabels].slice(0, 3)
+    : [];
+
+  // "Update taxonomy" hint — strictly visible to admins only. Never shown to
+  // public visitors. Owner-level visibility is handled elsewhere (dashboard).
+  const showUpdateHint = isAdmin && !hasTaxonomy;
+
+  const TaxonomyBadges = ({ size = 'md' }: { size?: 'sm' | 'md' }) => {
+    if (!hasTaxonomy) return null;
+    const pad = size === 'sm' ? 'px-1.5 py-0 text-[10px]' : 'px-2 py-0.5 text-[10px] sm:text-[11px]';
+    return (
+      <div className="flex flex-wrap items-center gap-1 mt-1">
+        {tx?.primaryLabel && (
+          <span
+            className={`inline-flex items-center gap-1 rounded-md bg-accent/12 text-accent border border-accent/25 font-body font-semibold ${pad}`}
+            title={tx.primaryLabel}
+          >
+            <Layers className="w-2.5 h-2.5 shrink-0" />
+            <span className="truncate max-w-[140px]">{tx.primaryLabel}</span>
+          </span>
+        )}
+        {taxonomyChips.map((label, i) => (
+          <span
+            key={`${label}-${i}`}
+            className={`inline-flex items-center rounded-md bg-primary/5 text-primary border border-primary/15 font-body ${pad}`}
+            title={label}
+          >
+            <span className="truncate max-w-[120px]">{label}</span>
+          </span>
+        ))}
+      </div>
+    );
+  };
+
+  const UpdateTaxonomyHint = () =>
+    showUpdateHint ? (
+      <div
+        className="mt-2 text-[10px] font-body text-warning bg-warning/10 border border-warning/30 rounded-md px-2 py-1"
+        title={isRTL ? 'مرئي للمسؤولين فقط' : 'Visible to admins only'}
+      >
+        {isRTL ? 'حدّث تصنيف هذه المنشأة لتحسين ظهورها' : 'Update this business taxonomy to improve discoverability'}
+      </div>
+    ) : null;
+
   // Service tag chips (saqf-style) — show top 3 active service names + remainder count.
   const services: Array<Record<string, unknown>> = Array.isArray((b as any).business_services)
     ? (b as any).business_services.filter((s: Record<string, unknown>) => s.is_active)
