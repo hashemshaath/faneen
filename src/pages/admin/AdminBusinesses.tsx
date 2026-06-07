@@ -181,10 +181,12 @@ const reverseGeocode = async (lat: number, lng: number) => {
 
 /* ─── CSV Export ─── */
 const exportCSV = (businesses: any[], language: string) => {
-  const headers = ['Ref ID', 'Name (AR)', 'Name (EN)', 'Username', 'Phone', 'Email', 'Category', 'Tier', 'Verified', 'Active', 'Rating', 'Created'];
+  // Phase 18f — legacy `category_id` removed from CSV. Activity classification
+  // now lives in `business_taxonomy_categories` and is admin-managed inline.
+  const headers = ['Ref ID', 'Name (AR)', 'Name (EN)', 'Username', 'Phone', 'Email', 'Tier', 'Verified', 'Active', 'Rating', 'Created'];
   const rows = businesses.map((b: any) => [
     b.ref_id, b.name_ar, b.name_en || '', `@${b.username}`, b.phone || '', b.email || '',
-    b.category_id || '', b.membership_tier, b.is_verified ? 'Yes' : 'No', b.is_active ? 'Yes' : 'No',
+    b.membership_tier, b.is_verified ? 'Yes' : 'No', b.is_active ? 'Yes' : 'No',
     `${b.rating_avg} (${b.rating_count})`, new Date(b.created_at).toLocaleDateString(),
   ]);
   const csv = [headers, ...rows].map(r => r.map((c: any) => `"${c}"`).join(',')).join('\n');
