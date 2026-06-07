@@ -423,7 +423,7 @@ export const useCertifications = (businessId: string | undefined) =>
         .eq("is_active", true)
         .order("display_order", { ascending: true })
         .order("issued_at", { ascending: false, nullsFirst: false });
-      return (data ?? []) as CertificationRow[];
+      return ((data ?? []) as unknown) as CertificationRow[];
     },
   });
 
@@ -448,6 +448,6 @@ export const useAwards = (businessId: string | undefined) =>
         .eq("is_active", true)
         .order("awarded_year", { ascending: false })
         .order("display_order", { ascending: true });
-      return (data ?? []) as AwardRow[];
+      return ((data ?? []) as unknown) as AwardRow[];
     },
   });
