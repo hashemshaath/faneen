@@ -18,6 +18,24 @@ import heroSlide2 from '@/assets/home/hero-slide-2.webp';
 import heroSlide3 from '@/assets/home/hero-slide-3.webp';
 import heroSlide4 from '@/assets/home/hero-slide-4.webp';
 
+// Inject the LCP hero preload at module-evaluation time (before React even
+// commits its first paint). Previously this lived inside a useEffect, which
+// only ran AFTER the first render. With <link rel="preload"> set this early,
+// the browser starts fetching the hero image in parallel with the JS that
+// instantiates the HeroV2 component. Idempotent — guarded by a stable id.
+if (typeof document !== 'undefined') {
+  const PRELOAD_ID = 'qitaat-hero-lcp-preload';
+  if (!document.getElementById(PRELOAD_ID)) {
+    const link = document.createElement('link');
+    link.id = PRELOAD_ID;
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = heroSlide1;
+    link.setAttribute('fetchpriority', 'high');
+    document.head.appendChild(link);
+  }
+}
+
 /**
  * HomeV2 hosts the eager, above-the-fold HeroV2 component (LCP image owner).
  * All other home sections were split into ./sections/* during PERF-1C so they
@@ -157,26 +175,46 @@ export const HeroV2 = () => {
     return () => mq.removeEventListener?.('change', apply);
   }, []);
 
-  // Preload the LCP hero image at the document level (highest priority).
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = heroSlide1;
-    link.setAttribute('fetchpriority', 'high');
-    document.head.appendChild(link);
-    return () => { document.head.removeChild(link); };
-  }, []);
+  // (LCP preload moved to module-evaluation time — see top of file. We do
+  // NOT remove it on unmount because the preloaded resource is consumed by
+  // the <img> below within the same render cycle.)
 
-  // Mount the active slide + warm-prefetch the next one (low priority).
+  // Mount the active slide immediately + warm-prefetch the next one only
+  // AFTER window load + idle. This keeps slides 2..N out of the LCP
+  // critical chain entirely (they were previously fetched right after
+  // first render, competing with hero paint).
   useEffect(() => {
     setMounted((prev) => {
+      if (prev.has(active)) return prev;
       const next = new Set(prev);
       next.add(active);
-      next.add((active + 1) % SLIDES.length);
       return next;
     });
+    const prefetchNext = () => {
+      setMounted((prev) => {
+        const ni = (active + 1) % SLIDES.length;
+        if (prev.has(ni)) return prev;
+        const next = new Set(prev);
+        next.add(ni);
+        return next;
+      });
+    };
+    type IdleWin = Window & {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+    };
+    const w = window as IdleWin;
+    const schedule = () => {
+      if (typeof w.requestIdleCallback === 'function') {
+        w.requestIdleCallback(prefetchNext, { timeout: 3000 });
+      } else {
+        window.setTimeout(prefetchNext, 1500);
+      }
+    };
+    let cancelled = false;
+    const onLoad = () => { if (!cancelled) schedule(); };
+    if (document.readyState === 'complete') onLoad();
+    else window.addEventListener('load', onLoad, { once: true });
+    return () => { cancelled = true; };
   }, [active, SLIDES.length]);
 
   // Click-outside to close autocomplete
