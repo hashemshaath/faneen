@@ -20,6 +20,7 @@ import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { PageHeader } from "@/components/shared";
 import {
   listWorkOrdersForBusiness,
   createWorkOrder,
@@ -173,26 +174,26 @@ export default function DashboardWorkOrders() {
   return (
     <DashboardLayout>
     <main dir={isRTL ? "rtl" : "ltr"} className="container max-w-7xl py-6 space-y-6">
-      <header className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <ClipboardList className="w-6 h-6 text-primary" />
-            {tx.title}
-          </h1>
-          <p className="text-sm text-muted-foreground">{tx.subtitle}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button asChild variant="outline" className="rounded-xl">
-            <Link to="/dashboard/work-orders/board">
-              <Factory className="w-4 h-4 me-2" />
-              {isRTL ? "لوحة الإنتاج" : "Production Board"}
-            </Link>
-          </Button>
-          <Button onClick={() => setShowCreate(true)} className="rounded-xl">
-            <Plus className="w-4 h-4 me-2" /> {tx.create}
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        icon={ClipboardList}
+        tone="primary"
+        eyebrow={isRTL ? "العمليات" : "Operations"}
+        title={tx.title}
+        subtitle={tx.subtitle}
+        actions={
+          <>
+            <Button asChild variant="outline" className="rounded-xl">
+              <Link to="/dashboard/work-orders/board">
+                <Factory className="w-4 h-4 me-2" />
+                {isRTL ? "لوحة الإنتاج" : "Production Board"}
+              </Link>
+            </Button>
+            <Button onClick={() => setShowCreate(true)} className="rounded-xl">
+              <Plus className="w-4 h-4 me-2" /> {tx.create}
+            </Button>
+          </>
+        }
+      />
 
       <div className="w-full sm:max-w-md">
         <WorkOrderSearchInput businessId={businessId} isRTL={isRTL} />
