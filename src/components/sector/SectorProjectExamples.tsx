@@ -7,12 +7,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Briefcase, MapPin, Calendar, Building2, ArrowLeft, ArrowRight } from 'lucide-react';
 import { SA_CITIES } from '@/lib/sa-cities';
 import type { SectorSlug } from '@/lib/sector-keywords';
+import { LEGACY_SECTOR_TO_TAXONOMY_SLUG } from '@/modules/taxonomy/legacy-mapping';
 
 interface Props {
   sectorName: string;
-  /** Sector slug — used to deep-link the "more in sector" CTA. */
+  /** Sector slug — used to deep-link the "more in sector" CTA and to
+   * resolve the taxonomy category used for project filtering. */
   sectorSlug?: SectorSlug;
-  categoryIds: string[];
+  /** Legacy `categories.id` list — accepted for backward compatibility
+   * with existing callers but no longer used to filter projects. Filtering
+   * is taxonomy-only and driven by `sectorSlug`. */
+  categoryIds?: string[];
   /** Optional city filter — when set, only projects in this city are shown. */
   cityId?: string | null;
   /** Optional city display name — used in the heading and CTA labels. */
@@ -26,18 +31,43 @@ interface Props {
  *   - business name → /:username (provider profile)
  *   - city → /sectors/:slug/:city when slug is known, else /search?city=…
  */
-export const SectorProjectExamples: React.FC<Props> = ({ sectorName, sectorSlug, categoryIds, cityId, cityName }) => {
+export const SectorProjectExamples: React.FC<Props> = ({ sectorName, sectorSlug, cityId, cityName }) => {
   const { isRTL, language } = useLanguage();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
 
-  const { data: projects = [], isLoading } = useQuery({
-    queryKey: ['sector-projects', categoryIds, cityId ?? 'all'],
-    enabled: categoryIds.length > 0,
+  // Phase 13: resolve the sector slug to taxonomy category ids, then look
+  // up projects via `project_taxonomy_categories` (never `projects.category_id`).
+  const taxonomySlug = sectorSlug ? LEGACY_SECTOR_TO_TAXONOMY_SLUG[sectorSlug] ?? null : null;
+
+  const { data: taxonomyCategoryIds = [] } = useQuery({
+    queryKey: ['sector-projects-tax-cat', taxonomySlug],
+    enabled: !!taxonomySlug,
+    staleTime: 60 * 60 * 1000,
     queryFn: async () => {
+      const { data } = await supabase
+        .from('taxonomy_categories')
+        .select('id')
+        .eq('slug', taxonomySlug!)
+        .eq('is_active', true);
+      return (data ?? []).map((c) => c.id as string);
+    },
+  });
+
+  const { data: projects = [], isLoading } = useQuery({
+    queryKey: ['sector-projects-tax', taxonomyCategoryIds, cityId ?? 'all'],
+    enabled: taxonomyCategoryIds.length > 0,
+    queryFn: async () => {
+      const { data: links } = await supabase
+        .from('project_taxonomy_categories')
+        .select('project_id')
+        .in('category_id', taxonomyCategoryIds)
+        .limit(200);
+      const ids = Array.from(new Set((links ?? []).map((l) => l.project_id)));
+      if (ids.length === 0) return [];
       let q = supabase
         .from('projects')
         .select('id, title_ar, title_en, cover_image_url, completion_date, business_id, city_id, cities(name_ar, name_en), businesses(username, name_ar, name_en)')
-        .in('category_id', categoryIds)
+        .in('id', ids)
         .eq('status', 'published');
       if (cityId) q = q.eq('city_id', cityId);
       const { data } = await q
