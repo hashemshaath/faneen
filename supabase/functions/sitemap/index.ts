@@ -192,7 +192,15 @@ Deno.serve(async (req) => {
         }
       }
     } else if (type === "categories") {
-      const { data, error } = await supabase.from("categories").select("id, slug, created_at, updated_at").eq("is_active", true);
+      // Phase 19c: source category sitemap entries from the unified taxonomy.
+      // Only include public, active, non-archived nodes flagged for SEO.
+      const { data, error } = await supabase
+        .from("taxonomy_categories")
+        .select("id, slug, created_at, updated_at")
+        .eq("is_active", true)
+        .eq("is_public", true)
+        .eq("is_archived", false)
+        .or("show_in_seo.eq.true,show_in_search.eq.true");
       if (error) console.error("categories sitemap error:", error.message);
       if (data) {
         for (const c of data) {

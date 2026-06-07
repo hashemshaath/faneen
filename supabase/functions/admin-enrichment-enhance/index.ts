@@ -67,9 +67,12 @@ Deno.serve(async (req) => {
     if (serviceKey) {
       const svc = createClient(supabaseUrl, serviceKey);
       const { data } = await svc
-        .from("categories")
+        .from("taxonomy_categories")
         .select("slug, name_ar, name_en, parent_id")
         .eq("is_active", true)
+        .eq("is_public", true)
+        .eq("is_archived", false)
+        .or("show_in_seo.eq.true,show_in_search.eq.true")
         .is("parent_id", null);
       if (Array.isArray(data)) {
         categoryOptions = (data as Array<{ slug: string; name_ar: string; name_en: string }>).map((r) => ({

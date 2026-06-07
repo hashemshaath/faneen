@@ -85,43 +85,14 @@ export async function getContractTaxonomyPickerCategories(): Promise<TaxonomyCat
  * Preview-only backfill helper: given a legacy `service_category_id`,
  * return the taxonomy category it would map to via
  * `taxonomy_legacy_mappings`. Does NOT write anything.
+ *
+ * Phase 19c: the legacy `public.categories` table has been dropped, so
+ * we can no longer resolve a legacy id → slug. This helper is now a
+ * no-op kept only to preserve the public export signature; it always
+ * returns `null`. There are no remaining runtime callers.
  */
 export async function previewServiceCategoryTaxonomyMapping(
-  legacyCategoryId: string,
+  _legacyCategoryId: string,
 ): Promise<{ category: TaxonomyCategory; via: 'slug-match' | 'legacy-map' } | null> {
-  // Resolve the legacy category slug first.
-  const { data: legacy } = await supabase
-    .from('categories')
-    .select('slug')
-    .eq('id', legacyCategoryId)
-    .maybeSingle();
-  const legacySlug = (legacy as { slug?: string | null } | null)?.slug ?? null;
-  if (!legacySlug) return null;
-
-  // Try a direct slug match in taxonomy_categories first.
-  const { data: direct } = await supabase
-    .from('taxonomy_categories')
-    .select('*')
-    .eq('slug', legacySlug)
-    .eq('is_active', true)
-    .maybeSingle();
-  if (direct) return { category: direct as TaxonomyCategory, via: 'slug-match' };
-
-  // Fall back to the admin-managed legacy mapping table.
-  const { data: mapping } = await supabase
-    .from('taxonomy_legacy_mappings')
-    .select('taxonomy_category_id')
-    .eq('legacy_source', 'categories')
-    .eq('legacy_slug', legacySlug)
-    .eq('mapping_status', 'mapped')
-    .maybeSingle();
-  const mappedId = (mapping as { taxonomy_category_id?: string | null } | null)?.taxonomy_category_id ?? null;
-  if (!mappedId) return null;
-  const { data: mapped } = await supabase
-    .from('taxonomy_categories')
-    .select('*')
-    .eq('id', mappedId)
-    .eq('is_active', true)
-    .maybeSingle();
-  return mapped ? { category: mapped as TaxonomyCategory, via: 'legacy-map' } : null;
+  return null;
 }
