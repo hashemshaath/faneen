@@ -33,6 +33,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { SectorPicker } from '@/components/onboarding/SectorPicker';
 import type { SectorId } from '@/data/onboarding-sectors';
+import { BusinessTaxonomySection } from '@/modules/taxonomy';
 import { PhoneField, parsePhoneValue, toE164 } from '@/components/forms/PhoneField';
 
 import type { BusinessRow } from '@/components/dashboard/business-edit/types';
@@ -810,6 +811,21 @@ const DashboardBusinessEdit: React.FC = () => {
             />
           </CardContent>
         </Card>
+
+        {/*
+          Phase 3 — Central taxonomy section. Additive; legacy SectorPicker
+          above stays the source of truth for search/matching/showcase until
+          Phase 4 migrates those readers.
+          TODO(phase-5): remove legacy `sectors` / `sub_services` fields once
+          taxonomy migration is complete and verified across surfaces.
+        */}
+        {business?.id && (
+          <BusinessTaxonomySection
+            businessId={business.id}
+            legacySectors={form.sectors ?? null}
+            legacySubServices={form.sub_services ?? null}
+          />
+        )}
 
         {/* Legal */}
           </TabsContent>
