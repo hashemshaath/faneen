@@ -6,18 +6,16 @@ import type { SearchFilterValues } from '@/services/search/useSearch';
 interface ActiveFilterChipsProps {
   filters: SearchFilterValues;
   query: string;
-  selectedTags: string[];
   categories?: { id: string; name_ar: string; name_en: string }[];
   cities?: { id: string; name_ar: string; name_en: string }[];
   onFilterChange: <K extends keyof SearchFilterValues>(key: K, value: SearchFilterValues[K]) => void;
   onQueryChange: (q: string) => void;
-  onClearTag: (tagId: string) => void;
   onClearAll: () => void;
 }
 
 export const ActiveFilterChips = ({
-  filters, query, selectedTags, categories, cities,
-  onFilterChange, onQueryChange, onClearTag, onClearAll,
+  filters, query, categories, cities,
+  onFilterChange, onQueryChange, onClearAll,
 }: ActiveFilterChipsProps) => {
   const { language, isRTL } = useLanguage();
 
@@ -87,14 +85,6 @@ export const ActiveFilterChips = ({
       onRemove: () => { onFilterChange('priceMin', 0); onFilterChange('priceMax', 0); },
     });
   }
-
-  selectedTags.forEach(tagId => {
-    chips.push({
-      key: `tag-${tagId}`,
-      label: `#${tagId.slice(0, 6)}`,
-      onRemove: () => onClearTag(tagId),
-    });
-  });
 
   if (chips.length === 0) return null;
 

@@ -232,7 +232,6 @@ const SearchPage = () => {
     setFilters({ ...defaultFilters });
     setQuery('');
     setCurrentPage(1);
-    setSelectedTags([]);
     setSearchParams({}, { replace: true });
   }, [setSearchParams]);
 
@@ -475,15 +474,10 @@ const SearchPage = () => {
           <ActiveFilterChips
             filters={filters}
             query={query}
-            selectedTags={selectedTags}
             categories={categories}
             cities={cities}
             onFilterChange={handleFilterChange}
             onQueryChange={handleQueryChange}
-            onClearTag={(tagId) => {
-              setSelectedTags(prev => prev.filter(t => t !== tagId));
-              setCurrentPage(1);
-            }}
             onClearAll={clearFilters}
           />
         )}
@@ -514,12 +508,6 @@ const SearchPage = () => {
             hasActiveFilters={hasActiveFilters}
             showFilters={showFilters}
             onToggleFilters={() => setShowFilters(!showFilters)}
-            selectedTags={selectedTags}
-            onToggleTag={(tagId) => {
-              setSelectedTags(prev => prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]);
-              setCurrentPage(1);
-            }}
-            onClearTags={() => { setSelectedTags([]); setCurrentPage(1); }}
           />
           <SearchResults
             businesses={paginatedResults}
