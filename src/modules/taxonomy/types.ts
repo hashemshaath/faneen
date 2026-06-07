@@ -53,6 +53,8 @@ export type TaxonomyQualityIssueCode =
   | 'too_long_name'
   | 'hidden_but_used'
   | 'archived_but_visible'
+  | 'missing_icon'
+  | 'missing_keywords'
   | 'outside_core_scope';
 
 export interface TaxonomyQualityIssue {
