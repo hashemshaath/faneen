@@ -332,11 +332,14 @@ export const BusinessCard = memo(({ business: b, viewMode, taxonomyDisplay }: Bu
           <h3 className="font-heading font-bold text-sm sm:text-[15px] text-foreground group-hover:text-accent transition-colors truncate">{name}</h3>
           {b.is_verified && <VerifiedBadge size="sm" iconOnly />}
         </div>
-        {catName && (
+        {hasTaxonomy ? (
+          <TaxonomyBadges />
+        ) : catName && (
           <div className="mt-0.5">
             <CategoryBadge />
           </div>
         )}
+        <UpdateTaxonomyHint />
 
         {/* saqf-style status badges */}
         {(b.is_verified || hasOffer) && (
