@@ -63,9 +63,12 @@ export const tierConfig: Record<string, { label: string; labelAr: string; color:
 // SEO meta, contact mutation, preview banner, lead-context data attrs) or by the
 // BusinessProfileHeader / BusinessProfileTabs (contact + branches/services/reviews tabs).
 // Joined relations are trimmed to the fields actually consumed:
-//   categories — name_ar/_en for label, slug for breadcrumb + lead-context
 //   cities     — name_ar/_en for label, slug for lead-context
 //   countries  — name_ar/_en for label, code for PostalAddress.addressCountry
+// Phase 12 — legacy `categories(...)` join intentionally removed. Business
+// category display is taxonomy-only (BusinessTaxonomySection consumes the
+// modern taxonomy tables). Null-safe consumers of `business.categories?.slug`
+// (sector breadcrumbs / lead-context) tolerate the missing field.
 const PUBLIC_BUSINESS_SELECT =
   // PII-MASKING — reads route through `businesses_public`, which exposes only
   // non-sensitive columns. Sensitive contact fields (phone, mobile, email,
@@ -89,7 +92,6 @@ const PUBLIC_BUSINESS_SELECT =
   // geo (Contact tab map + JSON-LD GeoCoordinates)
   'latitude, longitude, ' +
   // trimmed joins (FK columns exposed by the view enable PostgREST embedding)
-  'categories(name_ar, name_en, slug), ' +
   'cities(name_ar, name_en), ' +
   'countries(name_ar, name_en, code)';
 
