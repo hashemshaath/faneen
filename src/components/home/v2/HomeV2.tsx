@@ -494,6 +494,7 @@ export const HeroV2 = () => {
                   height={1080}
                   loading={i === 0 ? 'eager' : 'lazy'}
                   decoding="async"
+                  sizes="100vw"
                   {...{ fetchpriority: i === 0 ? 'high' : 'low' }}
                   className={`absolute inset-0 w-full h-full object-cover ease-out ${
                     reducedMotion ? '' : 'transition-opacity duration-[1100ms]'
