@@ -197,6 +197,14 @@ export function evaluateTaxonomyQuality(
     if (!c.short_description_ar && !c.short_description_en) {
       push('missing_short_description', c, 'لا يوجد وصف مختصر.', 'Missing short description.');
     }
+    if (!c.icon || c.icon.trim() === '') {
+      push('missing_icon', c, 'لا توجد أيقونة معرّفة.', 'No icon assigned.');
+    }
+    const arKeywords = Array.isArray(c.keywords_ar) ? c.keywords_ar.length : 0;
+    const enKeywords = Array.isArray(c.keywords_en) ? c.keywords_en.length : 0;
+    if (arKeywords === 0 && enKeywords === 0) {
+      push('missing_keywords', c, 'لا توجد كلمات مفتاحية.', 'No keywords set.');
+    }
     if (c.show_in_seo && !c.seo_title_ar && !c.seo_title_en) {
       push('missing_seo_title', c, 'مطلوب عنوان SEO.', 'SEO title is required.');
     }
