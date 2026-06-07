@@ -194,13 +194,15 @@ describe('P-21 public/SEO businesses read migration', () => {
       // from the public view; only the safe address subset is exposed.
       'address, region, district, street_name',
       'latitude, longitude',
-      'categories(name_ar, name_en, slug)',
-      // cities has no `slug` column in this schema; embed name_ar/_en only.
+      // Phase 12 — legacy categories(...) join intentionally removed.
+      // Business category display is taxonomy-only.
       'cities(name_ar, name_en)',
       'countries(name_ar, name_en, code)',
     ]) {
       expect(src).toContain(col);
     }
+    // Phase 12 guard — PUBLIC_BUSINESS_SELECT must not contain a categories join.
+    expect(src).not.toContain('categories(');
     // PII-MASKING — sensitive contact fields must never appear in the public
     // profile select. They are fetched separately via the contact-reveal flow
     // when the viewer is authenticated. Extract just the PUBLIC_BUSINESS_SELECT
