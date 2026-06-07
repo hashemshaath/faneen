@@ -2118,13 +2118,6 @@ export type Database = {
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "brand_product_requests_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "category_public_counts"
-            referencedColumns: ["category_id"]
-          },
         ]
       }
       brand_products: {
@@ -2230,13 +2223,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brand_products_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "category_public_counts"
-            referencedColumns: ["category_id"]
           },
         ]
       }
@@ -3232,6 +3218,13 @@ export type Database = {
             foreignKeyName: "business_service_taxonomy_categories_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "business_service_taxonomy_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
             referencedRelation: "taxonomy_categories"
             referencedColumns: ["id"]
           },
@@ -3249,7 +3242,6 @@ export type Database = {
           admin_note: string | null
           admin_status: string
           business_id: string
-          category_id: string | null
           created_at: string
           currency_code: string
           description_ar: string | null
@@ -3280,7 +3272,6 @@ export type Database = {
           admin_note?: string | null
           admin_status?: string
           business_id: string
-          category_id?: string | null
           created_at?: string
           currency_code?: string
           description_ar?: string | null
@@ -3311,7 +3302,6 @@ export type Database = {
           admin_note?: string | null
           admin_status?: string
           business_id?: string
-          category_id?: string | null
           created_at?: string
           currency_code?: string
           description_ar?: string | null
@@ -3352,20 +3342,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "businesses_public"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_services_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_services_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "category_public_counts"
-            referencedColumns: ["category_id"]
           },
         ]
       }
@@ -3653,6 +3629,13 @@ export type Database = {
             foreignKeyName: "business_taxonomy_categories_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "business_taxonomy_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
             referencedRelation: "taxonomy_categories"
             referencedColumns: ["id"]
           },
@@ -3768,7 +3751,6 @@ export type Database = {
           building_number: string | null
           business_number: number
           capabilities: Json
-          category_id: string | null
           city_id: string | null
           contact_person: string | null
           country_code: string | null
@@ -3860,7 +3842,6 @@ export type Database = {
           building_number?: string | null
           business_number?: number
           capabilities?: Json
-          category_id?: string | null
           city_id?: string | null
           contact_person?: string | null
           country_code?: string | null
@@ -3952,7 +3933,6 @@ export type Database = {
           building_number?: string | null
           business_number?: number
           capabilities?: Json
-          category_id?: string | null
           city_id?: string | null
           contact_person?: string | null
           country_code?: string | null
@@ -4032,20 +4012,6 @@ export type Database = {
           website?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "businesses_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "businesses_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "category_public_counts"
-            referencedColumns: ["category_id"]
-          },
           {
             foreignKeyName: "businesses_city_id_fkey"
             columns: ["city_id"]
@@ -4127,13 +4093,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "categories_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "category_public_counts"
-            referencedColumns: ["category_id"]
           },
         ]
       }
@@ -6020,6 +5979,13 @@ export type Database = {
             foreignKeyName: "contract_taxonomy_categories_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "contract_taxonomy_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
             referencedRelation: "taxonomy_categories"
             referencedColumns: ["id"]
           },
@@ -6637,13 +6603,6 @@ export type Database = {
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "contract_templates_service_category_id_fkey"
-            columns: ["service_category_id"]
-            isOneToOne: false
-            referencedRelation: "category_public_counts"
-            referencedColumns: ["category_id"]
-          },
         ]
       }
       contract_versions: {
@@ -6916,13 +6875,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contracts_service_category_id_fkey"
-            columns: ["service_category_id"]
-            isOneToOne: false
-            referencedRelation: "category_public_counts"
-            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "contracts_source_lead_id_fkey"
@@ -11627,13 +11579,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "private_sectors_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "category_public_counts"
-            referencedColumns: ["category_id"]
-          },
-          {
             foreignKeyName: "private_sectors_city_id_fkey"
             columns: ["city_id"]
             isOneToOne: false
@@ -12801,6 +12746,13 @@ export type Database = {
           role?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "project_taxonomy_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
           {
             foreignKeyName: "project_taxonomy_categories_category_id_fkey"
             columns: ["category_id"]
@@ -14790,6 +14742,13 @@ export type Database = {
             foreignKeyName: "showcase_submissions_taxonomy_category_id_fkey"
             columns: ["taxonomy_category_id"]
             isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "showcase_submissions_taxonomy_category_id_fkey"
+            columns: ["taxonomy_category_id"]
+            isOneToOne: false
             referencedRelation: "taxonomy_categories"
             referencedColumns: ["id"]
           },
@@ -15504,6 +15463,13 @@ export type Database = {
             foreignKeyName: "taxonomy_aliases_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "taxonomy_aliases_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
             referencedRelation: "taxonomy_categories"
             referencedColumns: ["id"]
           },
@@ -15626,6 +15592,13 @@ export type Database = {
             foreignKeyName: "taxonomy_categories_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "taxonomy_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
             referencedRelation: "taxonomy_categories"
             referencedColumns: ["id"]
           },
@@ -15668,8 +15641,22 @@ export type Database = {
             foreignKeyName: "taxonomy_category_relations_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "taxonomy_category_relations_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
             referencedRelation: "taxonomy_categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxonomy_category_relations_related_category_id_fkey"
+            columns: ["related_category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "taxonomy_category_relations_related_category_id_fkey"
@@ -15724,6 +15711,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "taxonomy_legacy_mappings_taxonomy_category_id_fkey"
+            columns: ["taxonomy_category_id"]
+            isOneToOne: false
+            referencedRelation: "category_public_counts"
+            referencedColumns: ["category_id"]
+          },
           {
             foreignKeyName: "taxonomy_legacy_mappings_taxonomy_category_id_fkey"
             columns: ["taxonomy_category_id"]
@@ -17321,7 +17315,6 @@ export type Database = {
             | Database["public"]["Enums"]["business_approval_status"]
             | null
           business_number: number | null
-          category_id: string | null
           city_id: string | null
           country_id: string | null
           cover_url: string | null
@@ -17356,7 +17349,6 @@ export type Database = {
             | Database["public"]["Enums"]["business_approval_status"]
             | null
           business_number?: number | null
-          category_id?: string | null
           city_id?: string | null
           country_id?: string | null
           cover_url?: string | null
@@ -17393,7 +17385,6 @@ export type Database = {
             | Database["public"]["Enums"]["business_approval_status"]
             | null
           business_number?: number | null
-          category_id?: string | null
           city_id?: string | null
           country_id?: string | null
           cover_url?: string | null
@@ -17426,20 +17417,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "businesses_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "businesses_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "category_public_counts"
-            referencedColumns: ["category_id"]
-          },
-          {
             foreignKeyName: "businesses_city_id_fkey"
             columns: ["city_id"]
             isOneToOne: false
@@ -17468,18 +17445,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "categories_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "categories_parent_id_fkey"
+            foreignKeyName: "taxonomy_categories_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "category_public_counts"
             referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "taxonomy_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -17703,13 +17680,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "private_sectors_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "category_public_counts"
-            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "private_sectors_city_id_fkey"

@@ -39,7 +39,6 @@ interface BusinessPayload {
   name_en?: string | null;
   phone?: string | null;
   email?: string | null;
-  category_id?: string | null;
   city_id?: string | null;
   region?: string | null;
   region_en?: string | null;
@@ -298,7 +297,6 @@ Deno.serve(async (req) => {
       name_en: business.name_en ?? null,
       phone: business.phone ?? null,
       email: business.email ?? ownerEmailResolved ?? null,
-      category_id: business.category_id ?? null,
       city_id: business.city_id ?? null,
       region: business.region ?? null,
       region_en: business.region_en ?? null,
