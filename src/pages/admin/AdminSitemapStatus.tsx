@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, FileText, Play,
-  History, Shield, Mail, Activity, Link2, Copy, Download, Send, Globe2, Search,
+  History, Shield, Mail, Activity, Link2, Copy, Download, Send, Globe2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { auditSitemapStatus, pingSearchEngines } from '@/modules/seo';
