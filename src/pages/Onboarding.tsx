@@ -771,6 +771,9 @@ const Onboarding = () => {
               </p>
             </div>
 
+            {/* Phase 11 — central taxonomy (non-blocking, optional). */}
+            <OnboardingTaxonomyStep value={taxonomy} onChange={setTaxonomy} />
+
             <Button onClick={onContinue} disabled={!allValid || loading}
               className="w-full" variant="hero">
               {isRTL ? 'متابعة لتسجيل مدير الحساب' : 'Continue to account manager'}
