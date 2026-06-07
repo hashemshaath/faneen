@@ -3909,6 +3909,8 @@ export type Database = {
           contact_person: string | null
           country_code: string | null
           country_id: string | null
+          cover_image_asset_id: string | null
+          cover_image_variants: Json | null
           cover_url: string | null
           cr_document_mime: string | null
           cr_document_path: string | null
@@ -3941,6 +3943,8 @@ export type Database = {
           last_active_at: string | null
           latitude: number | null
           legacy_ref_id: string | null
+          logo_image_asset_id: string | null
+          logo_image_variants: Json | null
           logo_url: string | null
           longitude: number | null
           membership_tier: Database["public"]["Enums"]["membership_tier"]
@@ -4000,6 +4004,8 @@ export type Database = {
           contact_person?: string | null
           country_code?: string | null
           country_id?: string | null
+          cover_image_asset_id?: string | null
+          cover_image_variants?: Json | null
           cover_url?: string | null
           cr_document_mime?: string | null
           cr_document_path?: string | null
@@ -4032,6 +4038,8 @@ export type Database = {
           last_active_at?: string | null
           latitude?: number | null
           legacy_ref_id?: string | null
+          logo_image_asset_id?: string | null
+          logo_image_variants?: Json | null
           logo_url?: string | null
           longitude?: number | null
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
@@ -4091,6 +4099,8 @@ export type Database = {
           contact_person?: string | null
           country_code?: string | null
           country_id?: string | null
+          cover_image_asset_id?: string | null
+          cover_image_variants?: Json | null
           cover_url?: string | null
           cr_document_mime?: string | null
           cr_document_path?: string | null
@@ -4123,6 +4133,8 @@ export type Database = {
           last_active_at?: string | null
           latitude?: number | null
           legacy_ref_id?: string | null
+          logo_image_asset_id?: string | null
+          logo_image_variants?: Json | null
           logo_url?: string | null
           longitude?: number | null
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
@@ -4178,6 +4190,20 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "businesses_cover_image_asset_id_fkey"
+            columns: ["cover_image_asset_id"]
+            isOneToOne: false
+            referencedRelation: "image_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "businesses_logo_image_asset_id_fkey"
+            columns: ["logo_image_asset_id"]
+            isOneToOne: false
+            referencedRelation: "image_assets"
             referencedColumns: ["id"]
           },
         ]
@@ -17386,6 +17412,8 @@ export type Database = {
           business_number: number | null
           city_id: string | null
           country_id: string | null
+          cover_image_asset_id: string | null
+          cover_image_variants: Json | null
           cover_url: string | null
           created_at: string | null
           description_ar: string | null
@@ -17395,6 +17423,8 @@ export type Database = {
           is_active: boolean | null
           is_verified: boolean | null
           latitude: number | null
+          logo_image_asset_id: string | null
+          logo_image_variants: Json | null
           logo_url: string | null
           longitude: number | null
           membership_tier: Database["public"]["Enums"]["membership_tier"] | null
@@ -17420,6 +17450,8 @@ export type Database = {
           business_number?: number | null
           city_id?: string | null
           country_id?: string | null
+          cover_image_asset_id?: string | null
+          cover_image_variants?: Json | null
           cover_url?: string | null
           created_at?: string | null
           description_ar?: string | null
@@ -17429,6 +17461,8 @@ export type Database = {
           is_active?: boolean | null
           is_verified?: boolean | null
           latitude?: number | null
+          logo_image_asset_id?: string | null
+          logo_image_variants?: Json | null
           logo_url?: string | null
           longitude?: number | null
           membership_tier?:
@@ -17456,6 +17490,8 @@ export type Database = {
           business_number?: number | null
           city_id?: string | null
           country_id?: string | null
+          cover_image_asset_id?: string | null
+          cover_image_variants?: Json | null
           cover_url?: string | null
           created_at?: string | null
           description_ar?: string | null
@@ -17465,6 +17501,8 @@ export type Database = {
           is_active?: boolean | null
           is_verified?: boolean | null
           latitude?: number | null
+          logo_image_asset_id?: string | null
+          logo_image_variants?: Json | null
           logo_url?: string | null
           longitude?: number | null
           membership_tier?:
@@ -17497,6 +17535,20 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "businesses_cover_image_asset_id_fkey"
+            columns: ["cover_image_asset_id"]
+            isOneToOne: false
+            referencedRelation: "image_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "businesses_logo_image_asset_id_fkey"
+            columns: ["logo_image_asset_id"]
+            isOneToOne: false
+            referencedRelation: "image_assets"
             referencedColumns: ["id"]
           },
         ]
