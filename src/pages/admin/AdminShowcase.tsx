@@ -14,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery as useRq } from "@tanstack/react-query";
 import {
   getShowcaseTaxonomyCategories,
-  getLegacySectorDisplayName,
 } from "@/modules/taxonomy/showcase-services";
 
 interface Row {
@@ -73,13 +72,12 @@ const AdminShowcase: React.FC = () => {
 
   const setCategory = useMutation({
     mutationFn: async ({ id, categoryId }: { id: string; categoryId: string | null }) => {
-      const opt = categoryId ? taxonomyOptions.find((o) => o.id === categoryId) ?? null : null;
       const { error } = await supabase
         .from("showcase_submissions")
         .update({
           taxonomy_category_id: categoryId,
-          // mirror to legacy column so older readers keep working
-          ...(opt ? { sector_slug: opt.slug } : {}),
+          // Legacy `sector_slug` is intentionally NOT written from the new
+          // taxonomy-only admin UI; preserved on table for backward reads.
         })
         .eq("id", id);
       if (error) throw error;
@@ -188,16 +186,10 @@ const AdminShowcase: React.FC = () => {
               const linked = row.taxonomy_category_id
                 ? taxonomyOptions.find((o) => o.id === row.taxonomy_category_id) ?? null
                 : null;
-              const linkStatusLabel = linked
-                ? "مرتبط بتصنيف مركزي"
-                : row.sector_slug
-                  ? "تصنيف قديم"
-                  : "بدون تصنيف";
+              const linkStatusLabel = linked ? "مرتبط بتصنيف" : "يحتاج ربط تصنيف";
               const linkStatusClass = linked
                 ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                : row.sector_slug
-                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                  : "bg-muted text-muted-foreground";
+                : "bg-amber-500/10 text-amber-700 dark:text-amber-300";
               return (
                 <Card key={row.id}>
                   <div className="aspect-[16/11] bg-muted/30 overflow-hidden">
@@ -207,11 +199,7 @@ const AdminShowcase: React.FC = () => {
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs text-muted-foreground">
                         {row.kind === "logo" ? "شعار" : "عمل"}
-                        {linked
-                          ? ` · ${linked.display_ar}`
-                          : row.sector_slug
-                            ? ` · ${getLegacySectorDisplayName(row.sector_slug)}`
-                            : ""}
+                        {linked ? ` · ${linked.display_ar}` : " · غير مصنّف"}
                       </span>
                       <span className="text-[10px] text-muted-foreground">{new Date(row.created_at).toLocaleDateString("ar-SA")}</span>
                     </div>
