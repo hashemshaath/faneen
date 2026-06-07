@@ -12769,6 +12769,7 @@ export type Database = {
           caption_en: string | null
           created_at: string
           id: string
+          image_asset_id: string | null
           image_url: string
           project_id: string
           sort_order: number
@@ -12778,6 +12779,7 @@ export type Database = {
           caption_en?: string | null
           created_at?: string
           id?: string
+          image_asset_id?: string | null
           image_url: string
           project_id: string
           sort_order?: number
@@ -12787,11 +12789,19 @@ export type Database = {
           caption_en?: string | null
           created_at?: string
           id?: string
+          image_asset_id?: string | null
           image_url?: string
           project_id?: string
           sort_order?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "project_images_image_asset_id_fkey"
+            columns: ["image_asset_id"]
+            isOneToOne: false
+            referencedRelation: "image_assets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "project_images_project_id_fkey"
             columns: ["project_id"]
@@ -12856,6 +12866,7 @@ export type Database = {
           city_id: string | null
           client_name: string | null
           completion_date: string | null
+          cover_image_asset_id: string | null
           cover_image_url: string | null
           created_at: string
           currency_code: string
@@ -12881,6 +12892,7 @@ export type Database = {
           city_id?: string | null
           client_name?: string | null
           completion_date?: string | null
+          cover_image_asset_id?: string | null
           cover_image_url?: string | null
           created_at?: string
           currency_code?: string
@@ -12906,6 +12918,7 @@ export type Database = {
           city_id?: string | null
           client_name?: string | null
           completion_date?: string | null
+          cover_image_asset_id?: string | null
           cover_image_url?: string | null
           created_at?: string
           currency_code?: string
@@ -12946,6 +12959,13 @@ export type Database = {
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_cover_image_asset_id_fkey"
+            columns: ["cover_image_asset_id"]
+            isOneToOne: false
+            referencedRelation: "image_assets"
             referencedColumns: ["id"]
           },
         ]
