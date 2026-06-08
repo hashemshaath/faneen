@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Boxes, Wrench, ShieldAlert, Package, Info, Search, Hash, Trash2, ChevronDown, ChevronUp, ImageOff, Filter, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, Plus, Boxes, Wrench, ShieldAlert, Package, Info, Search, Hash, Trash2, ChevronDown, ChevronUp, ImageOff, Filter, X, AlertCircle, LayoutGrid, List, ArrowUpDown, Sparkles, Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -40,6 +40,8 @@ const DashboardAssets: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'with_units' | 'without_units' | 'needs_attention'>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'name' | 'most_units' | 'least_units'>('recent');
+  const [view, setView] = useState<'grid' | 'list'>('grid');
 
   const refresh = useCallback(async (bizId: string) => {
     const [its, cats, asts] = await Promise.all([
@@ -82,7 +84,7 @@ const DashboardAssets: React.FC = () => {
 
   const visibleItems = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return items.filter(it => {
+    const filtered = items.filter(it => {
       if (categoryFilter !== 'all' && it.category_id !== categoryFilter) return false;
       const units = unitsByItem.get(it.id) ?? [];
       if (statusFilter === 'with_units' && units.length === 0) return false;
@@ -94,7 +96,16 @@ const DashboardAssets: React.FC = () => {
       if (!q) return true;
       return [it.name_ar, it.name_en, it.ref_id, it.brand].some(v => (v ?? '').toLowerCase().includes(q));
     });
-  }, [items, categoryFilter, query, statusFilter, unitsByItem]);
+    const sorted = [...filtered];
+    if (sortBy === 'name') {
+      sorted.sort((a, b) => (a.name_ar || '').localeCompare(b.name_ar || ''));
+    } else if (sortBy === 'most_units') {
+      sorted.sort((a, b) => (unitsByItem.get(b.id)?.length ?? 0) - (unitsByItem.get(a.id)?.length ?? 0));
+    } else if (sortBy === 'least_units') {
+      sorted.sort((a, b) => (unitsByItem.get(a.id)?.length ?? 0) - (unitsByItem.get(b.id)?.length ?? 0));
+    }
+    return sorted;
+  }, [items, categoryFilter, query, statusFilter, unitsByItem, sortBy]);
 
   const selectedAsset = useMemo(
     () => assets.find(a => a.id === selectedAssetId) ?? null,
@@ -121,6 +132,9 @@ const DashboardAssets: React.FC = () => {
   const activeCategories = categories.filter(c => visibleCategoryIds.has(c.id));
   const itemsWithUnits = items.filter(it => (unitsByItem.get(it.id)?.length ?? 0) > 0).length;
   const attentionUnits = assets.filter(a => a.status === 'maintenance' || a.status === 'inspection').length;
+  const availableUnits = assets.filter(a => a.status === 'available').length;
+  const rentedUnits = assets.filter(a => a.status === 'rented' || a.status === 'reserved').length;
+  const coverage = items.length === 0 ? 0 : Math.round((itemsWithUnits / items.length) * 100);
   const hasActiveFilter = categoryFilter !== 'all' || statusFilter !== 'all' || query.trim().length > 0;
   const clearFilters = () => { setCategoryFilter('all'); setStatusFilter('all'); setQuery(''); };
 
@@ -141,10 +155,44 @@ const DashboardAssets: React.FC = () => {
         />
 
         <AssetsIntroBanner />
+
+        {/* Premium KPI hero strip */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiTile
+            icon={Package}
+            tone="primary"
+            label={bi('أصناف مُفعّلة','Activated items')}
+            value={items.length}
+            hint={bi(`${itemsWithUnits} منها بها وحدات`, `${itemsWithUnits} have units`)}
+          />
+          <KpiTile
+            icon={Boxes}
+            tone="sky"
+            label={bi('إجمالي الوحدات','Total units')}
+            value={totalUnits}
+            hint={bi(`${availableUnits} متاحة • ${rentedUnits} مؤجَّرة`, `${availableUnits} avail · ${rentedUnits} rented`)}
+          />
+          <KpiTile
+            icon={Activity}
+            tone="emerald"
+            label={bi('تغطية الأرقام التسلسلية','Serial coverage')}
+            value={`${coverage}%`}
+            hint={bi('الأصناف التي أُضيفت وحداتها','Items with at least one unit')}
+            progress={coverage}
+          />
+          <KpiTile
+            icon={AlertCircle}
+            tone={attentionUnits > 0 ? 'rose' : 'muted'}
+            label={bi('تحتاج انتباه','Need attention')}
+            value={attentionUnits}
+            hint={bi('قيد الصيانة أو الفحص','In maintenance or inspection')}
+          />
+        </div>
+
         <AssetOpsCard />
 
-        {/* Category pills */}
-        <Card className="p-3 md:p-4 space-y-3">
+        {/* Sticky filter & toolbar */}
+        <Card className="sticky top-[68px] z-20 p-3 md:p-4 space-y-3 backdrop-blur supports-[backdrop-filter]:bg-card/85">
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground me-1">
               <Filter className="size-3.5" />
@@ -193,36 +241,57 @@ const DashboardAssets: React.FC = () => {
               );
             })}
           </div>
-          <div className="relative">
-            <Search className={`size-4 absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} text-muted-foreground`} />
-            <Input
-              dir="auto"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder={bi('ابحث باسم الصنف أو الماركة أو المعرف…','Search by item, brand or ref…')}
-              className={isRTL ? 'pr-9' : 'pl-9'}
-            />
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className={`size-4 absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} text-muted-foreground`} />
+              <Input
+                dir="auto"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder={bi('ابحث باسم الصنف أو الماركة أو المعرف…','Search by item, brand or ref…')}
+                className={isRTL ? 'pr-9' : 'pl-9'}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={sortBy} onValueChange={v => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger className="w-[170px] gap-1.5">
+                  <ArrowUpDown className="size-3.5 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">{bi('الأحدث','Recent')}</SelectItem>
+                  <SelectItem value="name">{bi('الاسم','Name')}</SelectItem>
+                  <SelectItem value="most_units">{bi('الأكثر وحدات','Most units')}</SelectItem>
+                  <SelectItem value="least_units">{bi('الأقل وحدات','Fewest units')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="inline-flex rounded-lg border p-0.5 bg-background">
+                <button
+                  onClick={() => setView('grid')}
+                  aria-label="grid"
+                  className={`p-1.5 rounded-md transition ${view === 'grid' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <LayoutGrid className="size-4" />
+                </button>
+                <button
+                  onClick={() => setView('list')}
+                  aria-label="list"
+                  className={`p-1.5 rounded-md transition ${view === 'list' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <List className="size-4" />
+                </button>
+              </div>
+            </div>
           </div>
         </Card>
 
-        {/* Items grid */}
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-semibold">
-            <Bi ar="أصنافك المُفعّلة" en="Your activated items" />{' '}
-            <span className="text-muted-foreground text-sm tech-content">({visibleItems.length})</span>
+        {/* Items header */}
+        <div className="flex items-center justify-between gap-3 px-0.5">
+          <h2 className="font-semibold flex items-center gap-2">
+            <Sparkles className="size-4 text-primary" />
+            <Bi ar="أصنافك المُفعّلة" en="Your activated items" />
+            <span className="text-muted-foreground text-sm tech-content">({visibleItems.length}/{items.length})</span>
           </h2>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-emerald-600" />
-              <span className="tech-content"><Bi ar={`${totalUnits} وحدة`} en={`${totalUnits} units`} /></span>
-            </span>
-            {attentionUnits > 0 && (
-              <span className="inline-flex items-center gap-1.5">
-                <AlertCircle className="size-3.5 text-rose-600" />
-                <span className="tech-content"><Bi ar={`${attentionUnits} تحتاج انتباه`} en={`${attentionUnits} need attention`} /></span>
-              </span>
-            )}
-          </div>
         </div>
 
         {items.length === 0 ? (
@@ -245,7 +314,10 @@ const DashboardAssets: React.FC = () => {
             </Button>
           </Card>
         ) : (
-          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+          <div className={view === 'grid'
+            ? 'grid sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4'
+            : 'flex flex-col gap-2'
+          }>
             {visibleItems.map(it => (
               <RentalItemCard
                 key={it.id}
@@ -253,6 +325,7 @@ const DashboardAssets: React.FC = () => {
                 category={categories.find(c => c.id === it.category_id) ?? null}
                 units={unitsByItem.get(it.id) ?? []}
                 expanded={expandedItemId === it.id}
+                view={view}
                 onToggle={() => { setExpandedItemId(p => p === it.id ? null : it.id); setSelectedAssetId(null); }}
                 onSelectAsset={setSelectedAssetId}
                 onChanged={() => refresh(businessId)}
@@ -277,14 +350,62 @@ const RentalItemCard: React.FC<{
   units: Asset[];
   expanded: boolean;
   businessId: string;
+  view?: 'grid' | 'list';
   onToggle: () => void;
   onSelectAsset: (id: string) => void;
   onChanged: () => void | Promise<void>;
-}> = ({ item, category, units, expanded, businessId, onToggle, onSelectAsset, onChanged }) => {
+}> = ({ item, category, units, expanded, businessId, view = 'grid', onToggle, onSelectAsset, onChanged }) => {
   const { isRTL } = useLanguage();
   const cover = item.cover_image_url || item.images?.[0] || null;
   const name = isRTL ? item.name_ar : (item.name_en || item.name_ar);
   const catName = category ? (isRTL ? category.name_ar : category.name_en) : null;
+  const breakdown = {
+    available: units.filter(u => u.status === 'available').length,
+    rented:    units.filter(u => u.status === 'rented' || u.status === 'reserved').length,
+    attention: units.filter(u => u.status === 'maintenance' || u.status === 'inspection').length,
+    retired:   units.filter(u => u.status === 'retired').length,
+  };
+
+  if (view === 'list') {
+    return (
+      <Card className="overflow-hidden hover-lift">
+        <button onClick={onToggle} className="w-full flex items-stretch gap-3 text-start">
+          <div className="relative w-24 sm:w-32 shrink-0 bg-muted">
+            {cover ? (
+              <img src={cover} alt={name} loading="lazy" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                <ImageOff className="size-6" />
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0 py-2.5 pe-3 space-y-1.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="font-medium leading-tight line-clamp-1">{name}</div>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-muted tech-content shrink-0">
+                {units.length} <Bi ar="وحدة" en="units" />
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+              {catName && <span className="px-1.5 py-0.5 rounded-md bg-muted">{catName}</span>}
+              <span className="tech-content">{item.ref_id}</span>
+              {item.brand && <span>· {item.brand}</span>}
+            </div>
+            <UnitsBreakdown b={breakdown} />
+          </div>
+          <div className="flex items-center pe-2">
+            {expanded ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
+          </div>
+        </button>
+        {expanded && (
+          <div className="border-t p-3 space-y-3 bg-muted/30">
+            <UnitsList units={units} onSelect={onSelectAsset} onChanged={onChanged} />
+            <AddUnitsForm item={item} businessId={businessId} onAdded={onChanged} existingCount={units.length} />
+          </div>
+        )}
+      </Card>
+    );
+  }
 
   return (
     <Card className="overflow-hidden hover-lift">
@@ -300,6 +421,11 @@ const RentalItemCard: React.FC<{
           <span className="absolute top-2 end-2 px-2 py-0.5 rounded-full text-[11px] font-medium bg-background/90 backdrop-blur border tech-content">
             {units.length} <Bi ar="وحدة" en="units" />
           </span>
+          {units.length === 0 && (
+            <span className="absolute bottom-2 start-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/95 text-white shadow-sm">
+              <Plus className="size-3" /><Bi ar="أضف وحدات" en="Add units" />
+            </span>
+          )}
         </div>
         <div className="p-3 space-y-1.5">
           <div className="flex items-start justify-between gap-2">
@@ -311,6 +437,7 @@ const RentalItemCard: React.FC<{
             <span className="tech-content">{item.ref_id}</span>
             {item.brand && <span>· {item.brand}</span>}
           </div>
+          {units.length > 0 && <UnitsBreakdown b={breakdown} />}
         </div>
       </button>
 
@@ -321,6 +448,62 @@ const RentalItemCard: React.FC<{
         </div>
       )}
     </Card>
+  );
+};
+
+/* ---------- Small KPI tile for the hero strip ---------- */
+const KPI_TONES: Record<string, { ring: string; icon: string; chip: string; bar: string }> = {
+  primary: { ring: 'border-primary/25', icon: 'bg-primary/10 text-primary',          chip: 'text-primary',          bar: 'bg-primary' },
+  sky:     { ring: 'border-sky-500/25', icon: 'bg-sky-500/10 text-sky-600 dark:text-sky-300', chip: 'text-sky-700 dark:text-sky-300', bar: 'bg-sky-500' },
+  emerald: { ring: 'border-emerald-500/25', icon: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300', chip: 'text-emerald-700 dark:text-emerald-300', bar: 'bg-emerald-500' },
+  rose:    { ring: 'border-rose-500/30', icon: 'bg-rose-500/10 text-rose-600 dark:text-rose-300', chip: 'text-rose-700 dark:text-rose-300', bar: 'bg-rose-500' },
+  muted:   { ring: 'border-border/60', icon: 'bg-muted text-muted-foreground', chip: 'text-muted-foreground', bar: 'bg-muted-foreground/40' },
+};
+const KpiTile: React.FC<{
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number | string;
+  hint?: string;
+  tone?: keyof typeof KPI_TONES;
+  progress?: number;
+}> = ({ icon: Icon, label, value, hint, tone = 'primary', progress }) => {
+  const t = KPI_TONES[tone];
+  return (
+    <Card className={`p-3.5 hover-lift ${t.ring}`}>
+      <div className="flex items-start gap-3">
+        <div className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${t.icon}`}>
+          <Icon className="size-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground line-clamp-1">{label}</div>
+          <div className={`text-2xl font-semibold leading-tight tech-content ${t.chip}`}>{value}</div>
+          {hint && <div className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5 tech-content">{hint}</div>}
+        </div>
+      </div>
+      {typeof progress === 'number' && (
+        <div className="mt-2.5 h-1.5 w-full rounded-full bg-muted overflow-hidden">
+          <div className={`h-full ${t.bar} transition-all`} style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
+        </div>
+      )}
+    </Card>
+  );
+};
+
+/* ---------- Units status breakdown chips on each item card ---------- */
+const UnitsBreakdown: React.FC<{ b: { available: number; rented: number; attention: number; retired: number } }> = ({ b }) => {
+  if (b.available + b.rented + b.attention + b.retired === 0) return null;
+  const pill = (cls: string, n: number, ar: string, en: string) => n > 0 && (
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10.5px] font-medium ${cls}`}>
+      <span className="tech-content">{n}</span><Bi ar={ar} en={en} />
+    </span>
+  );
+  return (
+    <div className="flex flex-wrap items-center gap-1 pt-0.5">
+      {pill('bg-emerald-500/12 text-emerald-700 dark:text-emerald-300', b.available, 'متاح', 'avail')}
+      {pill('bg-sky-500/12 text-sky-700 dark:text-sky-300',             b.rented,    'مؤجَّر', 'rented')}
+      {pill('bg-amber-500/15 text-amber-700 dark:text-amber-300',       b.attention, 'انتباه', 'attn')}
+      {pill('bg-muted text-muted-foreground',                            b.retired,   'مُستبعد', 'retired')}
+    </div>
   );
 };
 
