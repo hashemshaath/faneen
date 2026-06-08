@@ -21,9 +21,56 @@ import { RentalDayCounter } from '@/modules/rentals/components/RentalDayCounter'
 import { RentalExtensionPanel } from '@/modules/rentals/components/RentalExtensionPanel';
 import { RentalOrderAssetLinks } from '@/modules/assets';
 import { RentalImageUploader } from '@/modules/rentals/components/RentalImageUploader';
+import { ImageUploader, type UploadedImageRow } from '@/components/common/ImageUploader';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+
+/** Preset chips appended to free-text terms fields. */
+const USAGE_PRESETS = [
+  { ar: 'الاستخدام داخل الموقع فقط', en: 'On-site use only' },
+  { ar: 'يلزم وجود فني مؤهل للتشغيل', en: 'Qualified operator required' },
+  { ar: 'يُمنع الاستخدام تحت المطر', en: 'No outdoor use in rain' },
+  { ar: 'يلزم وقود من المستأجر', en: 'Fuel provided by renter' },
+  { ar: 'صيانة دورية على المستأجر', en: 'Renter handles routine maintenance' },
+];
+const LATE_PRESETS = [
+  { ar: 'رسوم تأخير يومية بنفس سعر الإيجار', en: 'Daily late fee equals rental rate' },
+  { ar: 'فترة سماح ٢٤ ساعة', en: '24-hour grace period' },
+  { ar: 'إشعار خطي قبل التمديد', en: 'Written notice required before extension' },
+];
+const PENALTY_PRESETS = [
+  { ar: 'خصم من مبلغ التأمين عند التلف', en: 'Damages deducted from deposit' },
+  { ar: 'استبدال القطع المفقودة بسعر السوق', en: 'Lost parts replaced at market price' },
+  { ar: 'غرامة سوء الاستخدام ٢٠٪ من قيمة العقد', en: 'Misuse penalty 20% of contract value' },
+];
+
+const CONDITION_OPTIONS = [
+  { value: 'new',      ar: 'جديد',        en: 'New' },
+  { value: 'like_new', ar: 'كالجديد',     en: 'Like new' },
+  { value: 'good',     ar: 'جيد',         en: 'Good' },
+  { value: 'medium',   ar: 'متوسط',       en: 'Medium' },
+  { value: 'used',     ar: 'مستعمل',      en: 'Used' },
+] as const;
+
+const COUNTRY_OPTIONS = [
+  { value: 'SA', ar: 'السعودية', en: 'Saudi Arabia' },
+  { value: 'AE', ar: 'الإمارات', en: 'UAE' },
+  { value: 'CN', ar: 'الصين',    en: 'China' },
+  { value: 'DE', ar: 'ألمانيا',  en: 'Germany' },
+  { value: 'US', ar: 'أمريكا',   en: 'USA' },
+  { value: 'JP', ar: 'اليابان',  en: 'Japan' },
+  { value: 'KR', ar: 'كوريا',    en: 'South Korea' },
+  { value: 'IT', ar: 'إيطاليا',  en: 'Italy' },
+  { value: 'TR', ar: 'تركيا',    en: 'Turkey' },
+  { value: 'IN', ar: 'الهند',    en: 'India' },
+  { value: 'GB', ar: 'بريطانيا', en: 'UK' },
+  { value: 'FR', ar: 'فرنسا',    en: 'France' },
+  { value: 'other', ar: 'أخرى',  en: 'Other' },
+];
+
+const ELECTRICAL_KEYWORDS = ['كهرب','مولد','محول','شاحن','بطار','مضخ','electric','power','generator','ups','charger','battery','pump','motor'];
 
 interface CatalogPick {
   id: string;
