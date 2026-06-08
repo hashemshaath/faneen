@@ -22,6 +22,8 @@ export interface ResponsiveImageProps
   originalUrl?: string | null;
   /** Variant URL map. If absent or invalid, falls back to `originalUrl`. */
   variants?: VariantUrls | unknown;
+  /** Optional parallel AVIF variant map. Wired into <picture> when present. */
+  avifVariants?: VariantUrls | unknown;
   /** Required for a11y. */
   alt: string;
   /** `sizes` attribute; defaults to a sensible card width. */
@@ -59,6 +61,7 @@ function pickFallbackSrc(v: VariantUrls): string | undefined {
 export function ResponsiveImage({
   originalUrl,
   variants,
+  avifVariants,
   alt,
   sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
   priority = false,
@@ -72,12 +75,15 @@ export function ResponsiveImage({
 
   if (!src) return null;
 
-  return (
+  const validAvif = isVariantUrls(avifVariants) ? avifVariants : undefined;
+  const avifSrcSet = validAvif ? buildSrcSet(validAvif) : undefined;
+
+  const img = (
     <img
       {...rest}
       src={src}
-      srcSet={srcSet}
-      sizes={srcSet ? sizes : undefined}
+      srcSet={!avifSrcSet ? srcSet : undefined}
+      sizes={srcSet || avifSrcSet ? sizes : undefined}
       alt={alt}
       loading={priority ? 'eager' : 'lazy'}
       decoding={priority ? 'sync' : 'async'}
@@ -86,6 +92,20 @@ export function ResponsiveImage({
       {...({ fetchpriority: priority ? 'high' : 'low' } as unknown as Record<string, string>)}
       className={className}
     />
+  );
+
+  if (!avifSrcSet && !srcSet) return img;
+
+  return (
+    <picture>
+      {avifSrcSet && (
+        <source type="image/avif" srcSet={avifSrcSet} sizes={sizes} />
+      )}
+      {srcSet && (
+        <source type="image/webp" srcSet={srcSet} sizes={sizes} />
+      )}
+      {img}
+    </picture>
   );
 }
 

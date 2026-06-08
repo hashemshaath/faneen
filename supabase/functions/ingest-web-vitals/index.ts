@@ -37,7 +37,7 @@ function buildCorsHeaders(req: Request): Record<string, string> {
   };
 }
 
-const ALLOWED_METRICS = new Set(["LCP", "CLS", "INP", "FCP", "TTFB"]);
+const ALLOWED_METRICS = new Set(["LCP", "CLS", "INP", "FCP", "TTFB", "IMG"]);
 const ALLOWED_RATINGS = new Set(["good", "needs-improvement", "poor"]);
 
 interface VitalEvent {
@@ -48,6 +48,9 @@ interface VitalEvent {
   user_agent?: string;
   connection_type?: string;
   device_type?: string;
+  route_key?: string;
+  image_count?: number;
+  lcp_url?: string;
 }
 
 function sanitize(events: unknown): VitalEvent[] {
@@ -76,6 +79,14 @@ function sanitize(events: unknown): VitalEvent[] {
           typeof e.connection_type === "string" ? e.connection_type.slice(0, 50) : undefined,
         device_type:
           typeof e.device_type === "string" ? e.device_type.slice(0, 50) : undefined,
+        route_key:
+          typeof e.route_key === "string" ? e.route_key.slice(0, 64) : undefined,
+        image_count:
+          typeof e.image_count === "number" && Number.isFinite(e.image_count)
+            ? Math.max(0, Math.min(10_000, Math.round(e.image_count)))
+            : undefined,
+        lcp_url:
+          typeof e.lcp_url === "string" ? e.lcp_url.slice(0, 500) : undefined,
       };
     })
     .filter((x): x is VitalEvent => x !== null)

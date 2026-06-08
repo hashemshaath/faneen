@@ -26,12 +26,14 @@ import { useSeoPage } from '@/modules/seo/useSeoPage';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
 import { listApprovedBrands, listSectorsLite } from '@/modules/brands';
 import ResponsiveImage from '@/modules/files/components/ResponsiveImage';
+import { useImagePerfTracking } from '@/hooks/useImagePerfTracking';
 
 const ALL = '__all__';
 const SITE = 'https://qitaat.com';
 
 const BrandsCatalog: React.FC = () => {
   const { isRTL } = useLanguage();
+  useImagePerfTracking('catalog_brands');
   const [q, setQ] = useState('');
   const [sectorId, setSectorId] = useState<string>(ALL);
   const [country, setCountry] = useState<string>(ALL);

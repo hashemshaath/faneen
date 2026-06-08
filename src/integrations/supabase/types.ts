@@ -16068,10 +16068,13 @@ export type Database = {
           created_at: string
           device_type: string | null
           id: string
+          image_count: number | null
+          lcp_url: string | null
           metric_name: string
           metric_rating: string | null
           metric_value: number
           page_path: string
+          route_key: string | null
           user_agent: string | null
         }
         Insert: {
@@ -16079,10 +16082,13 @@ export type Database = {
           created_at?: string
           device_type?: string | null
           id?: string
+          image_count?: number | null
+          lcp_url?: string | null
           metric_name: string
           metric_rating?: string | null
           metric_value: number
           page_path: string
+          route_key?: string | null
           user_agent?: string | null
         }
         Update: {
@@ -16090,10 +16096,13 @@ export type Database = {
           created_at?: string
           device_type?: string | null
           id?: string
+          image_count?: number | null
+          lcp_url?: string | null
           metric_name?: string
           metric_rating?: string | null
           metric_value?: number
           page_path?: string
+          route_key?: string | null
           user_agent?: string | null
         }
         Relationships: []

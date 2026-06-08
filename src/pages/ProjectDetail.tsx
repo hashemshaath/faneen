@@ -25,6 +25,7 @@ import {
   ShieldCheck, MessageSquare
 } from 'lucide-react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { useImagePerfTracking } from '@/hooks/useImagePerfTracking';
 import { buildSeoTitle, buildSeoDescription } from '@/modules/seo/seoTitleBuilder';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { track } from '@/lib/analytics-events';
@@ -35,6 +36,7 @@ import ResponsiveImage from '@/modules/files/components/ResponsiveImage';
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { isRTL, language } = useLanguage();
+  useImagePerfTracking('project_detail');
 
   const { data: project, isLoading } = useQuery({
     queryKey: ['project-detail', id],
@@ -130,6 +132,7 @@ const ProjectDetail = () => {
         title: projectTitle,
         subtitle: projectDesc?.slice(0, 160) || undefined,
       }),
+    ogImageAlt: projectTitle || (isRTL ? 'تفاصيل المشروع' : 'Project'),
     ogType: 'article',
     canonical: id ? `https://qitaat.com/projects/${id}` : undefined,
     ogTitle: projectTitle || undefined,

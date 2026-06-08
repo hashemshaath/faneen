@@ -3,6 +3,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
+import { useImagePerfTracking } from "@/hooks/useImagePerfTracking";
 import { LazyOnView } from "@/components/LazyOnView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { lazyRetry } from "@/lib/lazyRetry";
@@ -36,6 +37,7 @@ const SectionFallback = ({ minH = 360 }: { minH?: number }) => (
 );
 
 const Index = () => {
+  useImagePerfTracking('home');
   usePageMeta({
     title: 'قطاعات | مزودو خدمات الألمنيوم والحديد والخشب والزجاج في السعودية',
     description:
