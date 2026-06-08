@@ -5,6 +5,7 @@
  */
 import React from 'react';
 import { RentalOpsQueueCard } from '@/modules/rentals';
+import { RentalAssetOpsCard } from '@/modules/assets';
 import { Bi } from '@/components/common/Bilingual';
 
 const AdminOperationsRentals: React.FC = () => (
@@ -16,6 +17,7 @@ const AdminOperationsRentals: React.FC = () => (
       />
     </div>
     <RentalOpsQueueCard />
+    <RentalAssetOpsCard />
   </div>
 );
 
