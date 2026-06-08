@@ -1,5 +1,5 @@
 import React from 'react';
-import { AssetOpsCard } from '@/modules/assets';
+import { AssetOpsCard, RentalAssetPolishOpsCard } from '@/modules/assets';
 import { Bi } from '@/components/common/Bilingual';
 
 const AdminOperationsAssets: React.FC = () => (
@@ -11,6 +11,7 @@ const AdminOperationsAssets: React.FC = () => (
       />
     </div>
     <AssetOpsCard />
+    <RentalAssetPolishOpsCard />
   </div>
 );
 
