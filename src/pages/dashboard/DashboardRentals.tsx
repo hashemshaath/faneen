@@ -948,6 +948,7 @@ const OrdersPanel: React.FC<{
 }> = ({ orders, items, onChanged }) => {
   const { isRTL } = useLanguage();
   const [openId, setOpenId] = useState<string | null>(null);
+  void isRTL; void openId;
   if (orders.length === 0) {
     return <Card className="p-8 text-center text-muted-foreground"><Bi ar="لا توجد طلبات في هذه الفئة." en="No orders in this bucket." /></Card>;
   }
