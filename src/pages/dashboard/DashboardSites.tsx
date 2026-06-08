@@ -616,6 +616,7 @@ export default function DashboardSites() {
       title_deed_date:                s.title_deed_date || '',
       owner_name:                     s.owner_name || '',
       owner_id_number:                s.owner_id_number || '',
+      tax_number:                     (s as ClientSite & { tax_number?: string | null }).tax_number || '',
       land_use_type:                  s.land_use_type || '',
       plot_number:                    s.plot_number || '',
       block_number:                   s.block_number || '',
