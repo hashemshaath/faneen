@@ -366,18 +366,44 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
     }
     setSubmitting(true);
     const specs: Record<string, string> = {};
+    const electricalErrors: string[] = [];
+    const numericCheck = (label: string, raw: string) => {
+      if (!raw) return;
+      // Allow plain number; for power_hp allow trailing unit like "10 kVA"
+      const numeric = parseFloat(raw);
+      if (Number.isNaN(numeric) || numeric < 0) electricalErrors.push(label);
+    };
+    numericCheck(bi('الجهد','Voltage'), form.voltage);
+    numericCheck(bi('التيار','Current'), form.current_amp);
+    numericCheck(bi('الواط','Wattage'), form.wattage);
     if (form.voltage)     specs.voltage = form.voltage;
     if (form.current_amp) specs.current_amp = form.current_amp;
     if (form.wattage)     specs.wattage = form.wattage;
     if (form.power_hp)    specs.power_hp = form.power_hp;
+    if (electricalErrors.length) {
+      setSubmitting(false);
+      toast.error(bi('قيمة غير صحيحة في: ','Invalid numeric value in: ') + electricalErrors.join(', '));
+      return;
+    }
+    const priceNum = Number(form.base_price);
+    if (!Number.isFinite(priceNum) || priceNum < 0) {
+      setSubmitting(false);
+      toast.error(bi('السعر غير صحيح','Invalid price'));
+      return;
+    }
     const allImages = [coverUrl, ...galleryUrls].filter((u): u is string => Boolean(u));
+    if (allImages.length > 6) {
+      setSubmitting(false);
+      toast.error(bi('الحد الأقصى صورة غلاف + ٥ صور إضافية','Limit: 1 cover + 5 additional images'));
+      return;
+    }
     const { error } = await RentalItems.createItem({
       provider_business_id: businessId,
       category_id: form.category_id,
       name_ar: form.name_ar,
       name_en: form.name_en || undefined,
       unit: form.unit,
-      base_price: Number(form.base_price) || 0,
+      base_price: priceNum,
       min_duration: Number(form.min_duration) || 1,
       deposit_amount: Number(form.deposit_amount) || 0,
       usage_terms: form.usage_terms || undefined,
