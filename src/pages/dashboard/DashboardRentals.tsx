@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
@@ -160,6 +160,19 @@ const DashboardRentals: React.FC = () => {
   const expiringOrders = useMemo(() => orders.filter(o => o.status === 'expiring_soon'), [orders]);
   const overdueOrders = useMemo(() => orders.filter(o => o.status === 'expired'), [orders]);
 
+  // Stable refresh callbacks — avoid recreating closures on every render.
+  const refreshItems = useCallback(async () => {
+    if (!businessId) return;
+    const r = await RentalItems.listProviderItems(businessId);
+    setItems(r.data ?? []);
+  }, [businessId]);
+
+  const refreshOrders = useCallback(async () => {
+    if (!businessId) return;
+    const r = await RentalOrders.listOrdersForProvider(businessId);
+    setOrders(r.data ?? []);
+  }, [businessId]);
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -217,27 +230,18 @@ const DashboardRentals: React.FC = () => {
               businessId={businessId}
               categories={categories}
               items={items}
-              onChange={async () => {
-                const r = await RentalItems.listProviderItems(businessId);
-                setItems(r.data ?? []);
-              }}
+              onChange={refreshItems}
               />
             </div>
           </TabsContent>
           <TabsContent value="active" className="mt-4">
-            <OrdersPanel orders={activeOrders} items={items} onChanged={async () => {
-              const r = await RentalOrders.listOrdersForProvider(businessId); setOrders(r.data ?? []);
-            }} />
+            <OrdersPanel orders={activeOrders} items={items} onChanged={refreshOrders} />
           </TabsContent>
           <TabsContent value="expiring" className="mt-4">
-            <OrdersPanel orders={expiringOrders} items={items} onChanged={async () => {
-              const r = await RentalOrders.listOrdersForProvider(businessId); setOrders(r.data ?? []);
-            }} />
+            <OrdersPanel orders={expiringOrders} items={items} onChanged={refreshOrders} />
           </TabsContent>
           <TabsContent value="overdue" className="mt-4">
-            <OrdersPanel orders={overdueOrders} items={items} onChanged={async () => {
-              const r = await RentalOrders.listOrdersForProvider(businessId); setOrders(r.data ?? []);
-            }} />
+            <OrdersPanel orders={overdueOrders} items={items} onChanged={refreshOrders} />
           </TabsContent>
         </Tabs>
       </div>
