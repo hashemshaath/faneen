@@ -52,6 +52,7 @@ export async function updateOrderStatus(id: string, status: RentalOrderStatus): 
 
 export async function logOrderEvent(rentalOrderId: string, eventType: string, payload: Record<string, unknown> = {}): Promise<ServiceResult<true>> {
   const { error } = await supabase
-    .from('rental_order_events').insert({ rental_order_id: rentalOrderId, event_type: eventType, payload });
+    .from('rental_order_events')
+    .insert({ rental_order_id: rentalOrderId, event_type: eventType, payload: payload as never });
   return { data: error ? null : true, error: error as Error | null };
 }
