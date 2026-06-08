@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
@@ -277,13 +278,13 @@ const RentalsIntroBanner: React.FC<{ itemsCount: number }> = ({ itemsCount }) =>
             />
           </p>
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            <a
-              href="/dashboard/assets"
+            <Link
+              to="/dashboard/assets"
               className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4"
             >
               <Boxes className="size-3.5" />
               <Bi ar="الانتقال إلى الأصول والمعدات" en="Go to Assets & Equipment" />
-            </a>
+            </Link>
             <span className="text-muted-foreground/40">•</span>
             <a
               href="/rentals"
