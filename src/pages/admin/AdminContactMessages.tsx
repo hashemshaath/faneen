@@ -201,13 +201,24 @@ const AdminContactMessages = () => {
   const { data: messages = [], isLoading, refetch, isFetching } = useQuery({
     queryKey: ['admin-contact-messages'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contact_messages')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(500);
+      const COLS = 'id, user_id, name, email, subject, message, status, created_at, updated_at, priority, starred, replied_at, replied_by, assigned_to, assigned_at, assigned_by, work_state, work_state_updated_at, ticket_number, closed_at, closed_by, ai_priority, ai_category, ai_summary, ai_suggested_reply, ai_processed_at, ai_confidence';
+      const [{ data, error }, notesRes] = await Promise.all([
+        supabase
+          .from('contact_messages')
+          .select(COLS)
+          .order('created_at', { ascending: false })
+          .limit(500),
+        supabase.rpc('admin_get_contact_message_internal_notes'),
+      ]);
       if (error) throw error;
-      return (data || []) as ContactMessage[];
+      const noteMap = new Map<string, string | null>(
+        (((notesRes as { data: Array<{ id: string; internal_notes: string | null }> | null }).data) ?? [])
+          .map((n) => [n.id, n.internal_notes ?? null]),
+      );
+      return ((data || []) as Omit<ContactMessage, 'internal_notes'>[]).map((m) => ({
+        ...m,
+        internal_notes: noteMap.get(m.id) ?? null,
+      })) as ContactMessage[];
     },
   });
 

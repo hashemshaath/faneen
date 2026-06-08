@@ -120,7 +120,7 @@ const AdminOwnershipTransferRequests: React.FC = () => {
     try {
       let q = supabase
         .from('business_ownership_transfer_requests')
-        .select('id, business_id, requester_user_id, status, message, admin_note, reviewed_by, reviewed_at, created_at, updated_at, requester_name, requester_phone, requester_email, commercial_registration, proof_files, source')
+        .select('id, business_id, requester_user_id, status, message, reviewed_by, reviewed_at, created_at, updated_at, requester_name, requester_phone, requester_email, commercial_registration, proof_files, source')
         .order('created_at', { ascending: false })
         .limit(200);
       if (filter !== 'all') q = q.eq('status', filter);
@@ -129,17 +129,23 @@ const AdminOwnershipTransferRequests: React.FC = () => {
       const list = (reqs ?? []) as RequestRow[];
       const bizIds = Array.from(new Set(list.map((r) => r.business_id)));
       const userIds = Array.from(new Set(list.map((r) => r.requester_user_id)));
-      const [biz, profs] = await Promise.all([
+      const [biz, profs, notesRes] = await Promise.all([
         bizIds.length
           ? supabase.from('businesses').select('id, name_ar, name_en, username, ref_id, placeholder_owner').in('id', bizIds)
           : Promise.resolve({ data: [] as RequestRow['business'][] }),
         userIds.length
           ? supabase.from('profiles').select('user_id, full_name, full_name_ar, email, ref_id').in('user_id', userIds)
           : Promise.resolve({ data: [] as RequestRow['requester'][] }),
+        supabase.rpc('admin_get_botr_admin_notes'),
       ]);
       const bizMap = new Map<string, RequestRow['business']>((biz.data ?? []).map((b) => [(b as { id: string }).id, b as RequestRow['business']]));
       const profMap = new Map<string, RequestRow['requester']>((profs.data ?? []).map((p) => [(p as { user_id: string }).user_id, p as RequestRow['requester']]));
-      setRows(list.map((r) => ({ ...r, business: bizMap.get(r.business_id) ?? null, requester: profMap.get(r.requester_user_id) ?? null })));
+      const noteMap = new Map<string, string | null>(
+        (((notesRes as { data: Array<{ id: string; admin_note: string | null }> | null }).data) ?? []).map(
+          (n) => [n.id, n.admin_note ?? null],
+        ),
+      );
+      setRows(list.map((r) => ({ ...r, admin_note: noteMap.get(r.id) ?? null, business: bizMap.get(r.business_id) ?? null, requester: profMap.get(r.requester_user_id) ?? null })));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
     } finally {
