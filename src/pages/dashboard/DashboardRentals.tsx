@@ -355,32 +355,75 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
 
           {mode === 'pick' && (
             <div className="space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                <Input
-                  dir="auto"
-                  placeholder={bi('ابحث بالاسم أو الماركة أو الموديل…','Search by name, brand or model…')}
-                  value={catalogQuery}
-                  onChange={e => setCatalogQuery(e.target.value)}
-                  className="md:col-span-2"
-                />
-                <Select value={catalogFilterCat} onValueChange={setCatalogFilterCat}>
-                  <SelectTrigger><SelectValue placeholder={bi('كل التصنيفات','All categories')} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{bi('كل التصنيفات','All categories')}</SelectItem>
-                    {categories.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              {catalogLoading ? (
-                <div className="flex items-center justify-center py-10"><Loader2 className="size-5 animate-spin" /></div>
-              ) : filteredCatalog.length === 0 ? (
+              {/* Step 1: choose category first */}
+              {!catalogFilterCat ? (
+                <div className="space-y-3">
+                  <div className="text-sm font-semibold"><Bi ar="١. اختر التصنيف أولًا" en="1. Choose a category first" /></div>
+                  {catalogLoading ? (
+                    <div className="flex items-center justify-center py-10"><Loader2 className="size-5 animate-spin" /></div>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {categories.map(c => {
+                        const count = catalog.filter(it => it.category_id === c.id).length;
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => setCatalogFilterCat(c.id)}
+                            className="text-start p-3 rounded-xl border border-border hover-lift hover:border-primary transition"
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                                <Package className="size-5" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="font-medium truncate text-sm">{isRTL ? c.name_ar : c.name_en}</div>
+                                <div className="text-xs text-muted-foreground tech-content">{count} {bi('عنصر','items')}</div>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Breadcrumb + back */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="text-sm">
+                      <button type="button" onClick={() => { setCatalogFilterCat(''); setCatalogQuery(''); }} className="text-primary hover:underline">
+                        <Bi ar="التصنيفات" en="Categories" />
+                      </button>
+                      <span className="mx-2 text-muted-foreground">›</span>
+                      <span className="font-medium">
+                        {(() => {
+                          const c = categories.find(x => x.id === catalogFilterCat);
+                          return c ? (isRTL ? c.name_ar : c.name_en) : '';
+                        })()}
+                      </span>
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={() => { setCatalogFilterCat(''); setCatalogQuery(''); }}>
+                      <Bi ar="تغيير التصنيف" en="Change category" />
+                    </Button>
+                  </div>
+                  <div className="text-sm font-semibold"><Bi ar="٢. اختر المعدة من القائمة" en="2. Pick equipment" /></div>
+                  <Input
+                    dir="auto"
+                    placeholder={bi('ابحث داخل هذا التصنيف…','Search within this category…')}
+                    value={catalogQuery}
+                    onChange={e => setCatalogQuery(e.target.value)}
+                  />
+                  {catalogLoading ? (
+                    <div className="flex items-center justify-center py-10"><Loader2 className="size-5 animate-spin" /></div>
+                  ) : filteredCatalog.length === 0 ? (
                 <Card className="p-6 text-center text-sm text-muted-foreground space-y-3">
                   <div><Bi ar="لم نجد معدة مطابقة في الكتالوج." en="No matching equipment in the catalog." /></div>
                   <Button size="sm" variant="outline" onClick={() => setMode('request')}>
                     <Sparkles className="size-4 me-1" /><Bi ar="اطلب إضافتها للكتالوج" en="Request to add it" />
                   </Button>
                 </Card>
-              ) : (
+                  ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-96 overflow-auto">
                   {filteredCatalog.map(c => (
                     <button
@@ -408,10 +451,12 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
                     </button>
                   ))}
                 </div>
+                  )}
+                  <div className="text-xs text-muted-foreground">
+                    <Bi ar="اختر معدة لتعبئة الحقول تلقائيًا، يمكنك تعديل السعر والشروط قبل الحفظ." en="Pick an item to auto-fill fields. You can edit price & terms before saving." />
+                  </div>
+                </div>
               )}
-              <div className="text-xs text-muted-foreground">
-                <Bi ar="اختر معدة لتعبئة الحقول تلقائيًا، يمكنك تعديل السعر والشروط قبل الحفظ." en="Pick to auto-fill fields. You can edit price & terms before saving." />
-              </div>
             </div>
           )}
 
