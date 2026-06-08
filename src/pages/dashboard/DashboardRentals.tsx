@@ -1060,6 +1060,135 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
 
 /* ---------- Orders panel ---------- */
 
+/* ---------- Items toolbar + empty state (professional, mobile-first) ---------- */
+
+const ITEM_STATUS_FILTERS: ReadonlyArray<{ value: 'all' | RentalItem['status']; ar: string; en: string; tone?: string }> = [
+  { value: 'all',            ar: 'الكل',         en: 'All' },
+  { value: 'approved',       ar: 'منشورة',       en: 'Published',     tone: 'data-[active=true]:bg-emerald-500/15 data-[active=true]:text-emerald-700 dark:data-[active=true]:text-emerald-300' },
+  { value: 'pending_review', ar: 'قيد المراجعة', en: 'Pending',       tone: 'data-[active=true]:bg-amber-500/15 data-[active=true]:text-amber-700 dark:data-[active=true]:text-amber-300' },
+  { value: 'rejected',       ar: 'مرفوضة',       en: 'Rejected',      tone: 'data-[active=true]:bg-red-500/15 data-[active=true]:text-red-700 dark:data-[active=true]:text-red-300' },
+  { value: 'draft',          ar: 'مسودة',        en: 'Draft' },
+  { value: 'archived',       ar: 'مؤرشفة',       en: 'Archived' },
+];
+
+const ItemsToolbar: React.FC<{
+  total: number;
+  adding: boolean;
+  onToggleAdd: () => void;
+  query: string;
+  onQueryChange: (v: string) => void;
+  statusFilter: 'all' | RentalItem['status'];
+  onStatusChange: (v: 'all' | RentalItem['status']) => void;
+}> = ({ total, adding, onToggleAdd, query, onQueryChange, statusFilter, onStatusChange }) => {
+  const bi = useBi();
+  return (
+    <Card className="p-3 md:p-4 border-border/60">
+      <div className="flex flex-col gap-3">
+        {/* Row 1: title + counter + CTA */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex items-center gap-2">
+            <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Package className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold truncate">
+                <Bi ar="أصناف التأجير" en="Rental items" />
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                <span className="tech-content">{total}</span>{' '}
+                <Bi ar="صنف مرتبط بمنشأتك" en="items linked to your business" />
+              </div>
+            </div>
+          </div>
+          <Button
+            onClick={onToggleAdd}
+            variant={adding ? 'outline' : 'default'}
+            className="hover-lift shrink-0 h-10 px-3 md:px-4"
+          >
+            {adding ? <X className="size-4 me-1" /> : <Plus className="size-4 me-1" />}
+            <span className="hidden xs:inline">
+              <Bi ar={adding ? 'إلغاء الإضافة' : 'إضافة صنف'} en={adding ? 'Cancel' : 'Add item'} />
+            </span>
+            <span className="xs:hidden">
+              <Bi ar={adding ? 'إلغاء' : 'إضافة'} en={adding ? 'Cancel' : 'Add'} />
+            </span>
+          </Button>
+        </div>
+
+        {total > 0 && (
+          <>
+            {/* Row 2: search */}
+            <div className="relative">
+              <Search className="size-4 absolute top-1/2 -translate-y-1/2 start-3 text-muted-foreground pointer-events-none" />
+              <Input
+                dir="auto"
+                value={query}
+                onChange={e => onQueryChange(e.target.value)}
+                placeholder={bi('ابحث بالاسم، الماركة، أو المعرّف…', 'Search by name, brand, or ID…')}
+                className="ps-9 h-10"
+              />
+            </div>
+
+            {/* Row 3: status pills */}
+            <div className="flex flex-wrap gap-1.5 -mx-0.5">
+              {ITEM_STATUS_FILTERS.map(f => {
+                const active = statusFilter === f.value;
+                return (
+                  <button
+                    key={f.value}
+                    type="button"
+                    data-active={active}
+                    onClick={() => onStatusChange(f.value)}
+                    className={`px-2.5 h-7 rounded-full text-[11.5px] font-medium border transition ${
+                      active
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : `border-border bg-background hover:bg-muted ${f.tone ?? ''}`
+                    }`}
+                  >
+                    <Bi ar={f.ar} en={f.en} />
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    </Card>
+  );
+};
+
+const ItemsEmptyState: React.FC<{ onAdd: () => void }> = ({ onAdd }) => (
+  <Card className="p-8 md:p-10 text-center border-dashed bg-gradient-to-br from-primary/[0.04] to-transparent">
+    <div className="mx-auto size-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3">
+      <Package className="size-7" />
+    </div>
+    <h3 className="text-base md:text-lg font-semibold mb-1.5">
+      <Bi ar="ابدأ بإضافة أول صنف للتأجير" en="Add your first rental item" />
+    </h3>
+    <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+      <Bi
+        ar="اختر من كتالوج المعدات الجاهز، أو أدخل البيانات يدويًا. سنراجع الصنف ثم ينشر للعملاء مباشرة."
+        en="Pick from the ready equipment catalog or enter details manually. We review then publish to customers."
+      />
+    </p>
+    <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+      <Button onClick={onAdd} className="hover-lift h-10">
+        <Plus className="size-4 me-1" />
+        <Bi ar="إضافة صنف الآن" en="Add item now" />
+      </Button>
+      <a
+        href="/rentals"
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-1.5 px-3 h-10 rounded-md text-sm font-medium text-primary hover:bg-primary/5"
+      >
+        <BookOpen className="size-4" />
+        <Bi ar="استكشف الكتالوج العام" en="Browse public catalog" />
+      </a>
+    </div>
+  </Card>
+);
+
 /* ---------- Items grid (with inline image manager) ---------- */
 const ItemsGrid: React.FC<{
   items: RentalItem[];
