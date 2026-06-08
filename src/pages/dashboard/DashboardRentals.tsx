@@ -1071,7 +1071,19 @@ const RentalItemEditForm: React.FC<{
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label className="text-xs"><Bi ar="اسم المعدة بالعربية *" en="Name (Arabic) *" /></Label>
-          <Input dir="auto" value={form.name_ar} onChange={e => setForm({ ...form, name_ar: e.target.value })} />
+          <Input
+            dir="auto"
+            value={form.name_ar}
+            readOnly
+            className="bg-muted cursor-not-allowed"
+            title={bi('الاسم العربي ثابت من الكتالوج الرسمي. أضف ملاحظة أدناه.','Arabic name is locked from the official catalog. Add a note below.')}
+          />
+          <p className="text-[11px] text-muted-foreground">
+            <Bi
+              ar="لا يمكن لمزود الخدمة تعديل الاسم العربي. استخدم ملاحظة المزود أدناه."
+              en="Providers cannot edit the Arabic name. Use the provider note below."
+            />
+          </p>
         </div>
         <div className="space-y-1">
           <Label className="text-xs"><Bi ar="الاسم بالإنجليزية" en="Name (English)" /></Label>
@@ -1095,6 +1107,19 @@ const RentalItemEditForm: React.FC<{
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="space-y-1">
+        <Label className="text-xs">
+          <Bi ar="ملاحظة مزود الخدمة (اختياري)" en="Provider note (optional)" />
+        </Label>
+        <Textarea
+          dir="auto"
+          rows={2}
+          placeholder={bi('أي توضيح بشأن المعدة دون تغيير الاسم الرسمي','Any clarification about the equipment without changing the official name')}
+          value={form.provider_note}
+          onChange={e => setForm({ ...form, provider_note: e.target.value })}
+        />
       </div>
 
       <div className="rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
