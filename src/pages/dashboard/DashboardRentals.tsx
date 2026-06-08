@@ -326,6 +326,12 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
       return;
     }
     setSubmitting(true);
+    const specs: Record<string, string> = {};
+    if (form.voltage)     specs.voltage = form.voltage;
+    if (form.current_amp) specs.current_amp = form.current_amp;
+    if (form.wattage)     specs.wattage = form.wattage;
+    if (form.power_hp)    specs.power_hp = form.power_hp;
+    const allImages = [coverUrl, ...galleryUrls].filter((u): u is string => Boolean(u));
     const { error } = await RentalItems.createItem({
       provider_business_id: businessId,
       category_id: form.category_id,
@@ -338,14 +344,20 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
       usage_terms: form.usage_terms || undefined,
       late_terms: form.late_terms || undefined,
       penalty_terms: form.penalty_terms || undefined,
-      images: imageUrl ? [imageUrl] : undefined,
+      images: allImages.length ? allImages : undefined,
+      cover_image_url: coverUrl ?? undefined,
+      brand: form.brand || undefined,
+      country_of_manufacture: form.country_of_manufacture || undefined,
+      condition: form.condition || undefined,
+      specs: Object.keys(specs).length ? specs : undefined,
     });
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
     toast.success(bi('تم إنشاء العنصر وبانتظار المراجعة','Item created — pending review'));
     setAdding(false);
     setSelectedCatalogId(null);
-    setImageUrl(null);
+    setCoverUrl(null);
+    setGalleryUrls([]);
     setMode('pick');
     setForm(f => ({ ...f, name_ar: '', name_en: '', base_price: '0' }));
     await onChange();
