@@ -10,7 +10,7 @@ import {
   updateConsent,
   type ConsentState,
 } from "@/lib/gtm";
-import { ShieldCheck, Settings2, Check, X } from "lucide-react";
+import { ShieldCheck, Settings2 } from "lucide-react";
 
 /**
  * Lightweight bilingual Consent Mode v2 banner.
@@ -25,11 +25,11 @@ const COPY = {
   ar: {
     title: "نحترم خصوصيتك",
     body:
-      "نستخدم ملفات تعريف الارتباط لتحسين تجربتك وقياس الأداء. يمكنك القبول، أو الرفض، أو إدارة التفضيلات.",
-    accept: "قبول الكل",
-    reject: "رفض غير الضروري",
-    manage: "إدارة التفضيلات",
-    save: "حفظ التفضيلات",
+      "نستخدم الكوكيز لتحسين تجربتك.",
+    accept: "قبول",
+    reject: "رفض",
+    manage: "تفضيلات",
+    save: "حفظ",
     analytics: "إحصاءات الاستخدام",
     ads: "تخصيص الإعلانات",
     essential: "ضرورية (دائمًا مفعّلة)",
@@ -38,11 +38,11 @@ const COPY = {
   en: {
     title: "We respect your privacy",
     body:
-      "We use cookies to improve your experience and measure performance. You can accept, reject, or manage preferences.",
-    accept: "Accept all",
-    reject: "Reject non-essential",
-    manage: "Manage preferences",
-    save: "Save preferences",
+      "We use cookies to improve your experience.",
+    accept: "Accept",
+    reject: "Reject",
+    manage: "Preferences",
+    save: "Save",
     analytics: "Usage analytics",
     ads: "Ad personalization",
     essential: "Essential (always on)",
@@ -137,74 +137,67 @@ export const ConsentBanner = () => {
       role="dialog"
       aria-modal="false"
       aria-label={t.title}
-      className="fixed inset-x-0 bottom-0 z-[60] px-3 sm:px-4 pointer-events-none"
-      style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      className="fixed inset-x-0 bottom-0 z-[60] px-2 sm:px-3 pointer-events-none"
+      style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="mx-auto max-w-3xl pointer-events-auto rounded-2xl border border-border bg-background/95 backdrop-blur-md shadow-elegant p-4 sm:p-5">
-        <div className="flex items-start gap-3">
-          <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <ShieldCheck className="h-5 w-5" aria-hidden />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-sm sm:text-base font-semibold text-foreground">{t.title}</h2>
-            <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              {t.body}
-            </p>
-
-            {showManage && (
-              <div className="mt-3 space-y-2 rounded-xl border border-border bg-muted/30 p-3">
-                <label className="flex items-center justify-between gap-3 text-xs sm:text-sm">
-                  <span className="text-foreground/80">{t.essential}</span>
-                  <input type="checkbox" checked disabled className="h-4 w-4 accent-primary" aria-label={t.essential} />
-                </label>
-                <label className="flex items-center justify-between gap-3 text-xs sm:text-sm cursor-pointer">
-                  <span className="text-foreground/80">{t.analytics}</span>
-                  <input
-                    type="checkbox"
-                    checked={analytics}
-                    onChange={(e) => setAnalytics(e.target.checked)}
-                    className="h-4 w-4 accent-primary"
-                    aria-label={t.analytics}
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-3 text-xs sm:text-sm cursor-pointer">
-                  <span className="text-foreground/80">{t.ads}</span>
-                  <input
-                    type="checkbox"
-                    checked={ads}
-                    onChange={(e) => setAds(e.target.checked)}
-                    className="h-4 w-4 accent-primary"
-                    aria-label={t.ads}
-                  />
-                </label>
-              </div>
-            )}
-
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button size="sm" onClick={acceptAll} className="gap-1.5 min-h-[40px]">
-                <Check className="h-4 w-4" /> {t.accept}
-              </Button>
-              <Button size="sm" variant="outline" onClick={rejectNonEssential} className="gap-1.5 min-h-[40px]">
-                <X className="h-4 w-4" /> {t.reject}
-              </Button>
-              {!showManage ? (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShowManage(true)}
-                  className="gap-1.5 min-h-[40px] text-muted-foreground"
-                >
-                  <Settings2 className="h-4 w-4" /> {t.manage}
-                </Button>
-              ) : (
-                <Button size="sm" variant="secondary" onClick={saveCustom} className="min-h-[40px]">
-                  {t.save}
-                </Button>
-              )}
-            </div>
+      <div className="mx-auto max-w-xl pointer-events-auto rounded-xl border border-border bg-background/95 backdrop-blur-md shadow-md px-3 py-2">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+          <p className="flex-1 min-w-0 text-xs text-muted-foreground truncate">
+            <span className="font-medium text-foreground">{t.title}.</span> {t.body}
+          </p>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button size="sm" onClick={acceptAll} className="h-7 px-2.5 text-xs">
+              {t.accept}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={rejectNonEssential} className="h-7 px-2 text-xs text-muted-foreground">
+              {t.reject}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowManage((v) => !v)}
+              className="h-7 w-7 p-0 text-muted-foreground"
+              aria-label={t.manage}
+            >
+              <Settings2 className="h-3.5 w-3.5" />
+            </Button>
           </div>
         </div>
+        {showManage && (
+          <div className="mt-2 space-y-1.5 rounded-lg border border-border bg-muted/30 p-2">
+            <label className="flex items-center justify-between gap-3 text-xs">
+              <span className="text-foreground/80">{t.essential}</span>
+              <input type="checkbox" checked disabled className="h-4 w-4 accent-primary" aria-label={t.essential} />
+            </label>
+            <label className="flex items-center justify-between gap-3 text-xs cursor-pointer">
+              <span className="text-foreground/80">{t.analytics}</span>
+              <input
+                type="checkbox"
+                checked={analytics}
+                onChange={(e) => setAnalytics(e.target.checked)}
+                className="h-4 w-4 accent-primary"
+                aria-label={t.analytics}
+              />
+            </label>
+            <label className="flex items-center justify-between gap-3 text-xs cursor-pointer">
+              <span className="text-foreground/80">{t.ads}</span>
+              <input
+                type="checkbox"
+                checked={ads}
+                onChange={(e) => setAds(e.target.checked)}
+                className="h-4 w-4 accent-primary"
+                aria-label={t.ads}
+              />
+            </label>
+            <div className="flex justify-end">
+              <Button size="sm" variant="secondary" onClick={saveCustom} className="h-7 px-3 text-xs">
+                {t.save}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
