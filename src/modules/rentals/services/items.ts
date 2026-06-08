@@ -38,6 +38,7 @@ export interface CreateItemInput {
   name_ar: string;
   name_en?: string;
   description_ar?: string;
+  description_en?: string;
   unit: RentalItem['unit'];
   base_price: number;
   min_duration?: number;
@@ -47,19 +48,24 @@ export interface CreateItemInput {
   penalty_terms?: string;
   city_id?: string | null;
   images?: string[];
+  cover_image_url?: string | null;
+  brand?: string | null;
+  country_of_manufacture?: string | null;
+  condition?: 'new' | 'like_new' | 'good' | 'medium' | 'used' | null;
+  specs?: Record<string, unknown>;
 }
 
 export async function createItem(input: CreateItemInput): Promise<ServiceResult<RentalItem>> {
   const { data, error } = await supabase
     .from('rental_items')
-    .insert({ ...input, status: 'pending_review', is_published: false })
+    .insert({ ...input, status: 'pending_review', is_published: false } as never)
     .select('*').single();
   return { data: data as RentalItem | null, error: error as Error | null };
 }
 
 export async function updateItem(id: string, patch: Partial<CreateItemInput> & { availability_status?: string }): Promise<ServiceResult<RentalItem>> {
   const { data, error } = await supabase
-    .from('rental_items').update(patch).eq('id', id).select('*').single();
+    .from('rental_items').update(patch as never).eq('id', id).select('*').single();
   return { data: data as RentalItem | null, error: error as Error | null };
 }
 

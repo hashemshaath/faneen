@@ -15217,8 +15217,12 @@ export type Database = {
         Row: {
           availability_status: string
           base_price: number
+          brand: string | null
           category_id: string
           city_id: string | null
+          condition: string | null
+          country_of_manufacture: string | null
+          cover_image_url: string | null
           created_at: string
           created_by: string
           currency: string
@@ -15241,6 +15245,7 @@ export type Database = {
           seo_slug: string | null
           service_areas: Json
           sort_order: number
+          specs: Json
           status: Database["public"]["Enums"]["rental_item_status"]
           taxonomy_category_id: string | null
           unit: Database["public"]["Enums"]["rental_unit"]
@@ -15251,8 +15256,12 @@ export type Database = {
         Insert: {
           availability_status?: string
           base_price?: number
+          brand?: string | null
           category_id: string
           city_id?: string | null
+          condition?: string | null
+          country_of_manufacture?: string | null
+          cover_image_url?: string | null
           created_at?: string
           created_by?: string
           currency?: string
@@ -15275,6 +15284,7 @@ export type Database = {
           seo_slug?: string | null
           service_areas?: Json
           sort_order?: number
+          specs?: Json
           status?: Database["public"]["Enums"]["rental_item_status"]
           taxonomy_category_id?: string | null
           unit?: Database["public"]["Enums"]["rental_unit"]
@@ -15285,8 +15295,12 @@ export type Database = {
         Update: {
           availability_status?: string
           base_price?: number
+          brand?: string | null
           category_id?: string
           city_id?: string | null
+          condition?: string | null
+          country_of_manufacture?: string | null
+          cover_image_url?: string | null
           created_at?: string
           created_by?: string
           currency?: string
@@ -15309,6 +15323,7 @@ export type Database = {
           seo_slug?: string | null
           service_areas?: Json
           sort_order?: number
+          specs?: Json
           status?: Database["public"]["Enums"]["rental_item_status"]
           taxonomy_category_id?: string | null
           unit?: Database["public"]["Enums"]["rental_unit"]
