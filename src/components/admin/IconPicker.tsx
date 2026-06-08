@@ -15,7 +15,7 @@ const CURATED: string[] = [
   'HardHat', 'ShieldCheck', 'Shield', 'TriangleAlert', 'Flame', 'Zap', 'Plug',
   'BatteryCharging', 'Lightbulb', 'Fuel', 'Container', 'Forklift', 'Truck',
   'TruckElectric', 'Tractor', 'Construction', 'Building2', 'Factory', 'Warehouse',
-  'Crane', 'Cable', 'CircuitBoard', 'Cpu', 'Cable as CableIcon', 'KeyRound',
+  'Cable', 'CircuitBoard', 'Cpu', 'KeyRound',
   'Lock', 'Unlock', 'Ruler', 'Scissors', 'Paintbrush', 'PaintBucket', 'Pipette',
   'Magnet', 'Compass', 'Gauge', 'Thermometer', 'Wind', 'Snowflake', 'Droplets',
   'Recycle', 'Leaf', 'TreePine', 'Mountain', 'Boxes', 'Package', 'PackageCheck',
