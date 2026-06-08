@@ -14848,6 +14848,95 @@ export type Database = {
         }
         Relationships: []
       }
+      rental_catalog_addition_requests: {
+        Row: {
+          brand: string | null
+          category_id: string | null
+          created_at: string
+          created_catalog_id: string | null
+          currency: string | null
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          image_url: string | null
+          model: string | null
+          name_ar: string
+          name_en: string | null
+          notes: string | null
+          proposed_category_name_ar: string | null
+          proposed_category_name_en: string | null
+          requester_business_id: string | null
+          requester_user_id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          suggested_price: number | null
+          suggested_unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_catalog_id?: string | null
+          currency?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          image_url?: string | null
+          model?: string | null
+          name_ar: string
+          name_en?: string | null
+          notes?: string | null
+          proposed_category_name_ar?: string | null
+          proposed_category_name_en?: string | null
+          requester_business_id?: string | null
+          requester_user_id: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_price?: number | null
+          suggested_unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_catalog_id?: string | null
+          currency?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          image_url?: string | null
+          model?: string | null
+          name_ar?: string
+          name_en?: string | null
+          notes?: string | null
+          proposed_category_name_ar?: string | null
+          proposed_category_name_en?: string | null
+          requester_business_id?: string | null
+          requester_user_id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_price?: number | null
+          suggested_unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_catalog_addition_requests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "rental_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rental_categories: {
         Row: {
           created_at: string
