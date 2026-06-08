@@ -259,7 +259,7 @@ const issueOf = (code: string, field: string, tab: FormTab, override?: Partial<F
 export default function DashboardSites() {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const formRef = useRef<HTMLDivElement>(null);
