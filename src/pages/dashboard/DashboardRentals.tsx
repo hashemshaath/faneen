@@ -259,27 +259,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
           <Bi ar="لا توجد عناصر تأجير بعد." en="No rental items yet." />
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {items.map(it => {
-            const cat = categories.find(c => c.id === it.category_id);
-            const stat = ITEM_STATUS_LABELS[it.status];
-            return (
-              <Card key={it.id} className="p-4 hover-lift">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="font-medium">{isRTL ? it.name_ar : (it.name_en || it.name_ar)}</div>
-                  <span className="text-xs tech-content text-muted-foreground">{it.ref_id}</span>
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {cat ? (isRTL ? cat.name_ar : cat.name_en) : '—'}
-                </div>
-                <div className="mt-3 flex items-center justify-between text-sm">
-                  <span className="tech-content">{it.base_price} {it.currency} / {RENTAL_UNITS.find(u => u.value === it.unit)?.[isRTL ? 'ar' : 'en']}</span>
-                  <span className="text-xs px-2 py-1 rounded-full bg-muted">{isRTL ? stat.ar : stat.en}</span>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+        <ItemsGrid items={items} categories={categories} businessId={businessId} onChange={onChange} />
       )}
     </div>
   );
