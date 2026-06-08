@@ -19,7 +19,7 @@ import {
   MAINTENANCE_STATUS_LABELS, INSPECTION_FREQUENCY_LABELS,
 } from '@/modules/assets';
 import type { Asset, AssetMaintenance, AssetInspection, AssetInspectionFrequency } from '@/modules/assets';
-import { RentalItemsApi, RentalCategoriesApi } from '@/modules/rentals';
+import { RentalItems as RentalItemsApi, RentalCategories as RentalCategoriesApi } from '@/modules/rentals';
 import type { RentalItem, RentalCategory } from '@/modules/rentals';
 
 /** Provider asset hub — units of activated rental items, with serial numbers, maintenance & inspections. */
