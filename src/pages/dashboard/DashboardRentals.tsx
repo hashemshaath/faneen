@@ -18,6 +18,8 @@ import {
 import type { RentalCategory, RentalItem, RentalOrder, RentalUnit } from '@/modules/rentals';
 import { RentalStatusBadge } from '@/modules/rentals/components/RentalStatusBadge';
 import { RentalDayCounter } from '@/modules/rentals/components/RentalDayCounter';
+import { RentalExtensionPanel } from '@/modules/rentals/components/RentalExtensionPanel';
+import { RentalImageUploader } from '@/modules/rentals/components/RentalImageUploader';
 import { toast } from 'sonner';
 
 /** Provider rentals dashboard — items + orders + extensions in one shell. */
