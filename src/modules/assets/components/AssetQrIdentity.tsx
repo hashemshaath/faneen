@@ -11,7 +11,7 @@ import type { Asset, AssetCategory } from '../types';
  * RENTAL-ASSET-FINAL-POLISH-3 — QR/Barcode identity card.
  * Encodes ONLY internal asset metadata in a safe internal URL:
  *   /admin/assets?ref=<asset_ref>
- * No customer data, no rental details, no PII.
+ * Excludes private rental/PII fields entirely.
  */
 export const AssetQrIdentity: React.FC<{
   asset: Asset;
