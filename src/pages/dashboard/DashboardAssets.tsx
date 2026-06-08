@@ -118,6 +118,9 @@ const DashboardAssets: React.FC = () => {
                     </div>
                     <AssetStatusBadge status={a.status} />
                   </div>
+                  <div className="mt-3">
+                    <AssetRentalPanel assetId={a.id} />
+                  </div>
                 </Card>
               </button>
             ))}
