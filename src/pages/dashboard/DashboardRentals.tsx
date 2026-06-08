@@ -633,12 +633,23 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
               </div>
               <div className="space-y-1">
                 <Label className="text-xs"><Bi ar="التصنيف *" en="Category *" /></Label>
-                <Select value={form.category_id} onValueChange={v => setForm({ ...form, category_id: v })}>
-                  <SelectTrigger><SelectValue placeholder={bi('اختر التصنيف','Choose category')} /></SelectTrigger>
-                  <SelectContent>
-                    {categories.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                {(() => {
+                  const cat = categories.find(c => c.id === form.category_id);
+                  return (
+                    <div
+                      className="h-10 flex items-center px-3 rounded-md border bg-muted text-sm text-muted-foreground cursor-not-allowed"
+                      title={bi('التصنيف مثبّت من اختيارك في الخطوة السابقة','Category is locked from your earlier selection')}
+                    >
+                      {cat ? (isRTL ? cat.name_ar : (cat.name_en || cat.name_ar)) : bi('—','—')}
+                    </div>
+                  );
+                })()}
+                <p className="text-[11px] text-muted-foreground">
+                  <Bi
+                    ar="التصنيف ثابت بناءً على اختيارك في الخطوة السابقة."
+                    en="Category is fixed based on your earlier selection."
+                  />
+                </p>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs"><Bi ar="وحدة التأجير" en="Rental unit" /></Label>
