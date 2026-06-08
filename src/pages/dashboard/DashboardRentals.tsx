@@ -650,6 +650,24 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
                 </Select>
               </div>
             </div>
+            <div className="space-y-1">
+              <Label className="text-xs">
+                <Bi ar="ملاحظة مزود الخدمة على الاسم (اختياري)" en="Provider note on the name (optional)" />
+              </Label>
+              <Textarea
+                dir="auto"
+                rows={2}
+                placeholder={bi('مثال: نفس الجهاز ولكن باللون الأصفر / موديل ٢٠٢٤','e.g. Same equipment but yellow / 2024 model')}
+                value={form.provider_note}
+                onChange={e => setForm({ ...form, provider_note: e.target.value })}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                <Bi
+                  ar="استخدم هذه الخانة لإضافة أي توضيح بشأن المعدة بدون تغيير اسمها الرسمي."
+                  en="Use this field to clarify details without changing the official name."
+                />
+              </p>
+            </div>
           </div>
 
           <div className="space-y-2">
