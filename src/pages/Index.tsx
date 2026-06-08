@@ -238,52 +238,52 @@ const Index = () => {
 
         {/* 3. Featured sectors (acts as featured-providers entry point) */}
         <LazyOnView minHeight={520} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><MainSectorsSection /></Suspense>
+          <Suspense fallback={<SectionFallback variant="grid" minH={520} />}><MainSectorsSection /></Suspense>
         </LazyOnView>
 
         {/* 4. Platform capabilities — exposes brands/services/showcase/projects/compare */}
         <LazyOnView minHeight={520} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><PlatformFeaturesSection /></Suspense>
+          <Suspense fallback={<SectionFallback variant="grid" minH={520} />}><PlatformFeaturesSection /></Suspense>
         </LazyOnView>
 
         {/* 5. How it works */}
         <LazyOnView minHeight={460} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><HowItWorksV2 /></Suspense>
+          <Suspense fallback={<SectionFallback variant="grid" minH={460} />}><HowItWorksV2 /></Suspense>
         </LazyOnView>
 
         {/* 5. Why Qitaat */}
         <LazyOnView minHeight={460} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><SolutionSection /></Suspense>
+          <Suspense fallback={<SectionFallback variant="split" minH={460} />}><SolutionSection /></Suspense>
         </LazyOnView>
 
         {/* 6. Who it's for */}
         <LazyOnView minHeight={420} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><WhoIsItForSection /></Suspense>
+          <Suspense fallback={<SectionFallback variant="grid" minH={420} />}><WhoIsItForSection /></Suspense>
         </LazyOnView>
 
         {/* 7. Trust / verification */}
         <LazyOnView minHeight={460} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><TrustSection /></Suspense>
+          <Suspense fallback={<SectionFallback variant="grid" minH={460} />}><TrustSection /></Suspense>
         </LazyOnView>
 
         {/* 8. Provider CTA */}
         <LazyOnView minHeight={420} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><ForProvidersSection /></Suspense>
+          <Suspense fallback={<SectionFallback variant="split" minH={420} />}><ForProvidersSection /></Suspense>
         </LazyOnView>
 
         {/* 9. Customer CTA */}
         <LazyOnView minHeight={420} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><ForClientsSection /></Suspense>
+          <Suspense fallback={<SectionFallback variant="split" minH={420} />}><ForClientsSection /></Suspense>
         </LazyOnView>
 
         {/* 10. FAQ */}
         <LazyOnView minHeight={460} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><FAQSection /></Suspense>
+          <Suspense fallback={<SectionFallback variant="grid" minH={460} />}><FAQSection /></Suspense>
         </LazyOnView>
 
         {/* 11. Final CTA */}
         <LazyOnView minHeight={360} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><FinalCTASection /></Suspense>
+          <Suspense fallback={<SectionFallback variant="centered" minH={360} />}><FinalCTASection /></Suspense>
         </LazyOnView>
       </main>
       <Footer />
