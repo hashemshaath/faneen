@@ -675,6 +675,40 @@ const KpiCard: React.FC<{ icon: React.ComponentType<{ className?: string }>; lab
   </CardContent></Card>
 );
 
+const QuickAction: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void }> = ({ icon: Icon, label, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="group flex items-center gap-2.5 rounded-xl border border-border/60 bg-background px-3 py-2.5 text-start text-sm font-medium hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm transition-all hover-lift"
+  >
+    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
+      <Icon className="h-4 w-4" />
+    </span>
+    <span className="min-w-0 truncate">{label}</span>
+  </button>
+);
+
+const TONE_CLASSES: Record<string, string> = {
+  primary: 'text-primary',
+  amber: 'text-amber-600 dark:text-amber-400',
+  blue: 'text-blue-600 dark:text-blue-400',
+  emerald: 'text-emerald-600 dark:text-emerald-400',
+};
+
+const SummaryStat: React.FC<{ label: string; value: number; sub?: string | null; tone?: keyof typeof TONE_CLASSES | string; onClick?: () => void }> = ({ label, value, sub, tone = 'primary', onClick }) => {
+  const Tag: React.ElementType = onClick ? 'button' : 'div';
+  return (
+    <Tag
+      onClick={onClick}
+      className={`text-start rounded-xl border border-border/40 bg-card/60 p-3 ${onClick ? 'hover:border-primary/40 hover:bg-primary/5 transition cursor-pointer' : ''}`}
+    >
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className={`mt-1 text-2xl font-bold tech-content ${TONE_CLASSES[tone] || TONE_CLASSES.primary}`}>{value}</div>
+      {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
+    </Tag>
+  );
+};
+
 interface ListItem { key: string; href: string; title: string; ref: string | null; status: string | null; meta: string | null; date: string }
 
 const STATUS_COLORS: Record<string, string> = {
