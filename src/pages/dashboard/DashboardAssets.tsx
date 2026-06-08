@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Boxes, Wrench, ShieldAlert, Package, Info, Search, Hash, Trash2, ChevronDown, ChevronUp, ImageOff, Filter, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, Plus, Boxes, Wrench, ShieldAlert, Package, Info, Search, Hash, Trash2, ChevronDown, ChevronUp, ImageOff, Filter, X, CheckCircle2, AlertCircle, LayoutGrid, List, ArrowUpDown, Sparkles, ExternalLink, Activity, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -40,6 +40,8 @@ const DashboardAssets: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'with_units' | 'without_units' | 'needs_attention'>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'name' | 'most_units' | 'least_units'>('recent');
+  const [view, setView] = useState<'grid' | 'list'>('grid');
 
   const refresh = useCallback(async (bizId: string) => {
     const [its, cats, asts] = await Promise.all([
@@ -82,7 +84,7 @@ const DashboardAssets: React.FC = () => {
 
   const visibleItems = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return items.filter(it => {
+    const filtered = items.filter(it => {
       if (categoryFilter !== 'all' && it.category_id !== categoryFilter) return false;
       const units = unitsByItem.get(it.id) ?? [];
       if (statusFilter === 'with_units' && units.length === 0) return false;
@@ -94,7 +96,16 @@ const DashboardAssets: React.FC = () => {
       if (!q) return true;
       return [it.name_ar, it.name_en, it.ref_id, it.brand].some(v => (v ?? '').toLowerCase().includes(q));
     });
-  }, [items, categoryFilter, query, statusFilter, unitsByItem]);
+    const sorted = [...filtered];
+    if (sortBy === 'name') {
+      sorted.sort((a, b) => (a.name_ar || '').localeCompare(b.name_ar || ''));
+    } else if (sortBy === 'most_units') {
+      sorted.sort((a, b) => (unitsByItem.get(b.id)?.length ?? 0) - (unitsByItem.get(a.id)?.length ?? 0));
+    } else if (sortBy === 'least_units') {
+      sorted.sort((a, b) => (unitsByItem.get(a.id)?.length ?? 0) - (unitsByItem.get(b.id)?.length ?? 0));
+    }
+    return sorted;
+  }, [items, categoryFilter, query, statusFilter, unitsByItem, sortBy]);
 
   const selectedAsset = useMemo(
     () => assets.find(a => a.id === selectedAssetId) ?? null,
@@ -121,6 +132,9 @@ const DashboardAssets: React.FC = () => {
   const activeCategories = categories.filter(c => visibleCategoryIds.has(c.id));
   const itemsWithUnits = items.filter(it => (unitsByItem.get(it.id)?.length ?? 0) > 0).length;
   const attentionUnits = assets.filter(a => a.status === 'maintenance' || a.status === 'inspection').length;
+  const availableUnits = assets.filter(a => a.status === 'available').length;
+  const rentedUnits = assets.filter(a => a.status === 'rented' || a.status === 'reserved').length;
+  const coverage = items.length === 0 ? 0 : Math.round((itemsWithUnits / items.length) * 100);
   const hasActiveFilter = categoryFilter !== 'all' || statusFilter !== 'all' || query.trim().length > 0;
   const clearFilters = () => { setCategoryFilter('all'); setStatusFilter('all'); setQuery(''); };
 
@@ -141,10 +155,44 @@ const DashboardAssets: React.FC = () => {
         />
 
         <AssetsIntroBanner />
+
+        {/* Premium KPI hero strip */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiTile
+            icon={Package}
+            tone="primary"
+            label={bi('أصناف مُفعّلة','Activated items')}
+            value={items.length}
+            hint={bi(`${itemsWithUnits} منها بها وحدات`, `${itemsWithUnits} have units`)}
+          />
+          <KpiTile
+            icon={Boxes}
+            tone="sky"
+            label={bi('إجمالي الوحدات','Total units')}
+            value={totalUnits}
+            hint={bi(`${availableUnits} متاحة • ${rentedUnits} مؤجَّرة`, `${availableUnits} avail · ${rentedUnits} rented`)}
+          />
+          <KpiTile
+            icon={Activity}
+            tone="emerald"
+            label={bi('تغطية الأرقام التسلسلية','Serial coverage')}
+            value={`${coverage}%`}
+            hint={bi('الأصناف التي أُضيفت وحداتها','Items with at least one unit')}
+            progress={coverage}
+          />
+          <KpiTile
+            icon={AlertCircle}
+            tone={attentionUnits > 0 ? 'rose' : 'muted'}
+            label={bi('تحتاج انتباه','Need attention')}
+            value={attentionUnits}
+            hint={bi('قيد الصيانة أو الفحص','In maintenance or inspection')}
+          />
+        </div>
+
         <AssetOpsCard />
 
-        {/* Category pills */}
-        <Card className="p-3 md:p-4 space-y-3">
+        {/* Sticky filter & toolbar */}
+        <Card className="sticky top-[68px] z-20 p-3 md:p-4 space-y-3 backdrop-blur supports-[backdrop-filter]:bg-card/85">
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground me-1">
               <Filter className="size-3.5" />
@@ -193,36 +241,57 @@ const DashboardAssets: React.FC = () => {
               );
             })}
           </div>
-          <div className="relative">
-            <Search className={`size-4 absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} text-muted-foreground`} />
-            <Input
-              dir="auto"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder={bi('ابحث باسم الصنف أو الماركة أو المعرف…','Search by item, brand or ref…')}
-              className={isRTL ? 'pr-9' : 'pl-9'}
-            />
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className={`size-4 absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} text-muted-foreground`} />
+              <Input
+                dir="auto"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder={bi('ابحث باسم الصنف أو الماركة أو المعرف…','Search by item, brand or ref…')}
+                className={isRTL ? 'pr-9' : 'pl-9'}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={sortBy} onValueChange={v => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger className="w-[170px] gap-1.5">
+                  <ArrowUpDown className="size-3.5 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">{bi('الأحدث','Recent')}</SelectItem>
+                  <SelectItem value="name">{bi('الاسم','Name')}</SelectItem>
+                  <SelectItem value="most_units">{bi('الأكثر وحدات','Most units')}</SelectItem>
+                  <SelectItem value="least_units">{bi('الأقل وحدات','Fewest units')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="inline-flex rounded-lg border p-0.5 bg-background">
+                <button
+                  onClick={() => setView('grid')}
+                  aria-label="grid"
+                  className={`p-1.5 rounded-md transition ${view === 'grid' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <LayoutGrid className="size-4" />
+                </button>
+                <button
+                  onClick={() => setView('list')}
+                  aria-label="list"
+                  className={`p-1.5 rounded-md transition ${view === 'list' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <List className="size-4" />
+                </button>
+              </div>
+            </div>
           </div>
         </Card>
 
-        {/* Items grid */}
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-semibold">
-            <Bi ar="أصنافك المُفعّلة" en="Your activated items" />{' '}
-            <span className="text-muted-foreground text-sm tech-content">({visibleItems.length})</span>
+        {/* Items header */}
+        <div className="flex items-center justify-between gap-3 px-0.5">
+          <h2 className="font-semibold flex items-center gap-2">
+            <Sparkles className="size-4 text-primary" />
+            <Bi ar="أصنافك المُفعّلة" en="Your activated items" />
+            <span className="text-muted-foreground text-sm tech-content">({visibleItems.length}/{items.length})</span>
           </h2>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-emerald-600" />
-              <span className="tech-content"><Bi ar={`${totalUnits} وحدة`} en={`${totalUnits} units`} /></span>
-            </span>
-            {attentionUnits > 0 && (
-              <span className="inline-flex items-center gap-1.5">
-                <AlertCircle className="size-3.5 text-rose-600" />
-                <span className="tech-content"><Bi ar={`${attentionUnits} تحتاج انتباه`} en={`${attentionUnits} need attention`} /></span>
-              </span>
-            )}
-          </div>
         </div>
 
         {items.length === 0 ? (
@@ -245,7 +314,10 @@ const DashboardAssets: React.FC = () => {
             </Button>
           </Card>
         ) : (
-          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+          <div className={view === 'grid'
+            ? 'grid sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4'
+            : 'flex flex-col gap-2'
+          }>
             {visibleItems.map(it => (
               <RentalItemCard
                 key={it.id}
@@ -253,6 +325,7 @@ const DashboardAssets: React.FC = () => {
                 category={categories.find(c => c.id === it.category_id) ?? null}
                 units={unitsByItem.get(it.id) ?? []}
                 expanded={expandedItemId === it.id}
+                view={view}
                 onToggle={() => { setExpandedItemId(p => p === it.id ? null : it.id); setSelectedAssetId(null); }}
                 onSelectAsset={setSelectedAssetId}
                 onChanged={() => refresh(businessId)}
