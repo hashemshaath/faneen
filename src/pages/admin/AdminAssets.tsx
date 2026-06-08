@@ -6,7 +6,7 @@ import { Bi, useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card } from '@/components/ui/card';
 import { Loader2, Boxes } from 'lucide-react';
-import { AssetsApi, AssetStatusBadge, AssetOpsCard } from '@/modules/assets';
+import { AssetsApi, AssetStatusBadge, AssetOpsCard, RentalAssetOpsCard, AssetRentalPanel } from '@/modules/assets';
 import type { Asset } from '@/modules/assets';
 
 /** Admin asset hub — operational oversight across all providers. Never public. */
@@ -34,6 +34,7 @@ const AdminAssets: React.FC = () => {
           subtitle={bi('نظرة موحدة على أساطيل المعدات: الحالة، الصيانة، الفحوصات، والاستغلال.','Unified view: fleet status, maintenance, inspections, utilization.')}
         />
         <AssetOpsCard />
+        <RentalAssetOpsCard />
 
         <Card className="p-4">
           <div className="font-semibold mb-3"><Bi ar="آخر الأصول" en="Recent assets" /></div>
@@ -44,12 +45,15 @@ const AdminAssets: React.FC = () => {
           ) : (
             <div className="divide-y">
               {assets.map(a => (
-                <div key={a.id} className="flex items-center justify-between gap-3 py-2">
-                  <div>
-                    <div className="text-sm font-medium">{isRTL ? a.name_ar : (a.name_en || a.name_ar)}</div>
-                    <div className="text-xs text-muted-foreground tech-content">{a.ref_id}{a.serial_number ? ` · ${a.serial_number}` : ''}</div>
+                <div key={a.id} className="py-3 space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-medium">{isRTL ? a.name_ar : (a.name_en || a.name_ar)}</div>
+                      <div className="text-xs text-muted-foreground tech-content">{a.ref_id}{a.serial_number ? ` · ${a.serial_number}` : ''}</div>
+                    </div>
+                    <AssetStatusBadge status={a.status} />
                   </div>
-                  <AssetStatusBadge status={a.status} />
+                  <AssetRentalPanel assetId={a.id} />
                 </div>
               ))}
             </div>
