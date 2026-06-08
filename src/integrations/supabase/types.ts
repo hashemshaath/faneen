@@ -20034,6 +20034,10 @@ export type Database = {
         }
         Returns: Json
       }
+      asset_utilization_summary: {
+        Args: { _asset_id: string; _window_days?: number }
+        Returns: Json
+      }
       assets_ops_counts: { Args: never; Returns: Json }
       assets_roll_status: { Args: never; Returns: Json }
       barcode_entity_prefix: { Args: { _entity_type: string }; Returns: string }
@@ -21653,6 +21657,7 @@ export type Database = {
         Returns: undefined
       }
       rental_asset_ops_counts: { Args: never; Returns: Json }
+      rental_asset_polish_counts: { Args: never; Returns: Json }
       rental_items_missing_data: { Args: never; Returns: Json }
       rental_orders_roll_status: { Args: never; Returns: Json }
       request_client_site_access: {

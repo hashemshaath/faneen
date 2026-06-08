@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import {
   AssetCategoriesApi, AssetsApi, AssetMaintenanceApi, AssetInspectionsApi,
   AssetStatusBadge, AssetOpsCard, AssetRentalPanel,
+  AssetUtilizationSummary, AssetQrIdentity, AssetMaintenanceAlerts,
   MAINTENANCE_STATUS_LABELS, INSPECTION_FREQUENCY_LABELS,
 } from '@/modules/assets';
 import type { Asset, AssetCategory, AssetMaintenance, AssetInspection, AssetInspectionFrequency } from '@/modules/assets';
@@ -257,6 +258,9 @@ const AssetDetail: React.FC<{ asset: Asset; onChanged: () => void | Promise<void
           </Select>
         </div>
       </div>
+      <AssetMaintenanceAlerts asset={asset} />
+      <AssetUtilizationSummary assetId={asset.id} />
+      <AssetQrIdentity asset={asset} />
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>

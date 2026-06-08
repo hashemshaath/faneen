@@ -6,7 +6,12 @@ import { Bi, useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card } from '@/components/ui/card';
 import { Loader2, Boxes } from 'lucide-react';
-import { AssetsApi, AssetStatusBadge, AssetOpsCard, RentalAssetOpsCard, AssetRentalPanel, AssetOverridePanel } from '@/modules/assets';
+import {
+  AssetsApi, AssetStatusBadge, AssetOpsCard, RentalAssetOpsCard,
+  AssetRentalPanel, AssetOverridePanel,
+  AssetUtilizationSummary, AssetQrIdentity, AssetMaintenanceAlerts,
+  RentalAssetPolishOpsCard,
+} from '@/modules/assets';
 import type { Asset } from '@/modules/assets';
 
 /** Admin asset hub — operational oversight across all providers. Never public. */
@@ -35,6 +40,7 @@ const AdminAssets: React.FC = () => {
         />
         <AssetOpsCard />
         <RentalAssetOpsCard />
+        <RentalAssetPolishOpsCard />
 
         <Card className="p-4">
           <div className="font-semibold mb-3"><Bi ar="آخر الأصول" en="Recent assets" /></div>
@@ -53,7 +59,10 @@ const AdminAssets: React.FC = () => {
                     </div>
                     <AssetStatusBadge status={a.status} />
                   </div>
+                  <AssetMaintenanceAlerts asset={a} />
                   <AssetRentalPanel assetId={a.id} />
+                  <AssetUtilizationSummary assetId={a.id} />
+                  <AssetQrIdentity asset={a} />
                   <AssetOverridePanel assetId={a.id} currentStatus={a.status} />
                 </div>
               ))}
