@@ -117,22 +117,24 @@ export const CatalogManager: React.FC = () => {
 
   const assignToProvider = async (r: CatalogRow) => {
     if (!assignBiz) { toast.error(bi('اختر المزود', 'Select a provider')); return; }
+    if (!r.category_id) { toast.error(bi('تصنيف الصنف غير محدد', 'Category missing')); return; }
     const { data: u } = await supabase.auth.getUser();
+    if (!u.user?.id) { toast.error(bi('يجب تسجيل الدخول', 'Login required')); return; }
     const payload = {
       provider_business_id: assignBiz,
       category_id: r.category_id,
-      taxonomy_category_id: r.taxonomy_category_id,
+      taxonomy_category_id: r.taxonomy_category_id ?? undefined,
       name_ar: r.name_ar,
-      name_en: r.name_en,
+      name_en: r.name_en ?? undefined,
       base_price: r.estimated_daily_price ?? 0,
       currency: r.currency ?? 'SAR',
       deposit_amount: r.estimated_deposit ?? 0,
       unit: 'day',
       status: 'pending_review',
       is_published: false,
-      created_by: u.user?.id,
+      created_by: u.user.id,
     };
-    const { error } = await supabase.from('rental_items').insert(payload);
+    const { error } = await supabase.from('rental_items').insert([payload]);
     if (error) { toast.error(error.message); return; }
     toast.success(bi('تم الإسناد للمزود', 'Assigned to provider'));
     setAssignFor(null); setAssignBiz('');
