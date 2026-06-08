@@ -422,29 +422,78 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
               <Bi ar="تم تعبئة الحقول من الكتالوج. يمكنك التعديل ثم الحفظ." en="Fields pre-filled from catalog. Edit then save." />
             </div>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Input dir="auto" placeholder={bi('الاسم بالعربية','Name (Arabic)')} value={form.name_ar} onChange={e => setForm({ ...form, name_ar: e.target.value })} />
-            <Input dir="auto" placeholder={bi('الاسم بالإنجليزية (اختياري)','Name (English)')} value={form.name_en} onChange={e => setForm({ ...form, name_en: e.target.value })} />
-            <Select value={form.category_id} onValueChange={v => setForm({ ...form, category_id: v })}>
-              <SelectTrigger><SelectValue placeholder={bi('التصنيف','Category')} /></SelectTrigger>
-              <SelectContent>
-                {categories.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={form.unit} onValueChange={v => setForm({ ...form, unit: v as RentalUnit })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {RENTAL_UNITS.map(u => <SelectItem key={u.value} value={u.value}>{isRTL ? u.ar : u.en}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Input type="number" inputMode="decimal" placeholder={bi('السعر','Price')} value={form.base_price} onChange={e => setForm({ ...form, base_price: e.target.value })} className="tech-content" />
-            <Input type="number" inputMode="numeric" placeholder={bi('الحد الأدنى للمدة','Min duration')} value={form.min_duration} onChange={e => setForm({ ...form, min_duration: e.target.value })} className="tech-content" />
-            <Input type="number" inputMode="decimal" placeholder={bi('التأمين','Deposit')} value={form.deposit_amount} onChange={e => setForm({ ...form, deposit_amount: e.target.value })} className="tech-content" />
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              <Bi ar="البيانات الأساسية" en="Basic info" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="اسم المعدة بالعربية *" en="Name (Arabic) *" /></Label>
+                <Input dir="auto" placeholder={bi('مثال: مولد كهرباء 10 ك.و.أ','e.g. Generator 10 kVA')} value={form.name_ar} onChange={e => setForm({ ...form, name_ar: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="الاسم بالإنجليزية (اختياري)" en="Name (English, optional)" /></Label>
+                <Input dir="auto" value={form.name_en} onChange={e => setForm({ ...form, name_en: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="التصنيف *" en="Category *" /></Label>
+                <Select value={form.category_id} onValueChange={v => setForm({ ...form, category_id: v })}>
+                  <SelectTrigger><SelectValue placeholder={bi('اختر التصنيف','Choose category')} /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : c.name_en}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="وحدة التأجير" en="Rental unit" /></Label>
+                <Select value={form.unit} onValueChange={v => setForm({ ...form, unit: v as RentalUnit })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {RENTAL_UNITS.map(u => <SelectItem key={u.value} value={u.value}>{isRTL ? u.ar : u.en}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Input dir="auto" placeholder={bi('شروط الاستخدام','Usage terms')} value={form.usage_terms} onChange={e => setForm({ ...form, usage_terms: e.target.value })} />
-            <Input dir="auto" placeholder={bi('شروط التأخير','Late terms')} value={form.late_terms} onChange={e => setForm({ ...form, late_terms: e.target.value })} />
-            <Input dir="auto" placeholder={bi('الشروط الجزائية','Penalty terms')} value={form.penalty_terms} onChange={e => setForm({ ...form, penalty_terms: e.target.value })} />
+
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              <Bi ar="التسعير" en="Pricing" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="السعر للوحدة" en="Price per unit" /></Label>
+                <Input type="number" inputMode="decimal" value={form.base_price} onChange={e => setForm({ ...form, base_price: e.target.value })} className="tech-content" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="الحد الأدنى للمدة" en="Minimum duration" /></Label>
+                <Input type="number" inputMode="numeric" value={form.min_duration} onChange={e => setForm({ ...form, min_duration: e.target.value })} className="tech-content" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="مبلغ التأمين" en="Deposit amount" /></Label>
+                <Input type="number" inputMode="decimal" value={form.deposit_amount} onChange={e => setForm({ ...form, deposit_amount: e.target.value })} className="tech-content" />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              <Bi ar="الشروط والأحكام" en="Terms & conditions" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="شروط الاستخدام" en="Usage terms" /></Label>
+                <Input dir="auto" value={form.usage_terms} onChange={e => setForm({ ...form, usage_terms: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="شروط التأخير" en="Late terms" /></Label>
+                <Input dir="auto" value={form.late_terms} onChange={e => setForm({ ...form, late_terms: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs"><Bi ar="الشروط الجزائية" en="Penalty terms" /></Label>
+                <Input dir="auto" value={form.penalty_terms} onChange={e => setForm({ ...form, penalty_terms: e.target.value })} />
+              </div>
+            </div>
           </div>
           <div className="flex justify-end">
             <Button onClick={submit} disabled={submitting} className="hover-lift">
