@@ -405,7 +405,9 @@ export default function DashboardSites() {
       out.push(issueOf('INVALID_LICENSE_DATES', 'municipal_license_expiry_date', 'government'));
     }
     return out;
-  }, [businessId, editing, form, naf]);
+    // `businessId` / `editing` aren't read here — personal-mode binding
+    // is decided inside the save mutation, not during validation.
+  }, [form, naf]);
 
   const saveMut = useMutation({
     mutationFn: async () => {
