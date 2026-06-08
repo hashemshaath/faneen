@@ -562,8 +562,14 @@ const AddUnitsForm: React.FC<{
   onAdded: () => void | Promise<void>;
 }> = ({ item, businessId, existingCount, onAdded }) => {
   const bi = useBi();
+  type Mode = 'none' | 'auto' | 'manual';
+  const [mode, setMode] = useState<Mode>('manual');
   const [count, setCount] = useState(1);
   const [serials, setSerials] = useState<string[]>(['']);
+  const [prefix, setPrefix] = useState(() => (item.ref_id?.replace(/[^A-Z0-9]/gi, '').slice(0, 6).toUpperCase() || 'SN'));
+  const [startAt, setStartAt] = useState(existingCount + 1);
+  const [pad, setPad] = useState(3);
+  const [bulk, setBulk] = useState('');
   const [saving, setSaving] = useState(false);
 
   const setCountSafe = (n: number) => {
@@ -576,12 +582,50 @@ const AddUnitsForm: React.FC<{
     });
   };
 
+  // Effective serials based on mode
+  const effectiveSerials = useMemo<string[]>(() => {
+    if (mode === 'none') return Array.from({ length: count }, () => '');
+    if (mode === 'auto') {
+      return Array.from({ length: count }, (_, i) => {
+        const n = String(startAt + i).padStart(Math.max(1, Math.min(8, pad)), '0');
+        return `${prefix}-${n}`;
+      });
+    }
+    return serials.map(s => s.trim());
+  }, [mode, count, serials, prefix, startAt, pad]);
+
+  // Duplicate detection (within batch, ignoring empties)
+  const duplicateSet = useMemo(() => {
+    const seen = new Map<string, number>();
+    const dups = new Set<string>();
+    effectiveSerials.forEach(s => {
+      if (!s) return;
+      const k = s.toLowerCase();
+      seen.set(k, (seen.get(k) ?? 0) + 1);
+      if ((seen.get(k) ?? 0) > 1) dups.add(k);
+    });
+    return dups;
+  }, [effectiveSerials]);
+
+  const applyBulk = () => {
+    const lines = bulk.split(/[\n,;\t]+/).map(s => s.trim()).filter(Boolean).slice(0, 50);
+    if (!lines.length) return;
+    setMode('manual');
+    setCount(lines.length);
+    setSerials(lines);
+    setBulk('');
+    toast.success(bi(`تمت قراءة ${lines.length} رقم تسلسلي`, `Imported ${lines.length} serials`));
+  };
+
   const submit = async () => {
-    const cleaned = serials.map(s => s.trim());
+    if (duplicateSet.size > 0) {
+      toast.error(bi('يوجد أرقام تسلسلية مكررة','Duplicate serial numbers detected'));
+      return;
+    }
     setSaving(true);
     let created = 0;
     let failed = 0;
-    for (const sn of cleaned) {
+    for (const sn of effectiveSerials) {
       const { data: asset, error } = await AssetsApi.createAsset({
         owner_business_id: businessId,
         name_ar: item.name_ar,
@@ -598,52 +642,197 @@ const AddUnitsForm: React.FC<{
     setSaving(false);
     if (created) toast.success(bi(`تمت إضافة ${created} وحدة`, `${created} units added`));
     if (failed) toast.error(bi(`فشلت إضافة ${failed} وحدة`, `${failed} units failed`));
-    setSerials(['']); setCount(1);
+    setSerials(['']); setCount(1); setStartAt(existingCount + 1 + created);
     await onAdded();
   };
 
+  const filledCount = effectiveSerials.filter(Boolean).length;
+
+  const ModeBtn: React.FC<{ id: Mode; icon: React.ReactNode; ar: string; en: string }> = ({ id, icon, ar, en }) => {
+    const active = mode === id;
+    return (
+      <button
+        type="button"
+        onClick={() => setMode(id)}
+        className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition ${
+          active
+            ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+            : 'bg-background hover:bg-muted border-border text-foreground'
+        }`}
+      >
+        {icon}<Bi ar={ar} en={en} />
+      </button>
+    );
+  };
+
   return (
-    <div className="rounded-xl border bg-background p-3 space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Plus className="size-4 text-primary" />
-        <Bi ar="إضافة وحدات لهذا الصنف" en="Add units for this item" />
+    <div className="rounded-2xl border bg-gradient-to-b from-background to-muted/30 p-3.5 space-y-3.5">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <span className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+            <Plus className="size-4" />
+          </span>
+          <Bi ar="إضافة وحدات لهذا الصنف" en="Add units for this item" />
+        </div>
+        <span className="text-[10.5px] text-muted-foreground tech-content">
+          <Bi ar={`الموجود: ${existingCount}`} en={`Current: ${existingCount}`} />
+        </span>
       </div>
+
       <p className="text-[11px] text-muted-foreground leading-relaxed">
         <Bi
-          ar="الاسم والتصنيف مأخوذان من الصنف في مركز التأجير. أدخل عدد القطع ثم الأرقام التسلسلية (اختيارية)."
-          en="Name & category are inherited from the rental item. Set the quantity, then enter serial numbers (optional)."
+          ar="الاسم والتصنيف مأخوذان من الصنف في مركز التأجير — فقط أضف الكمية والأرقام التسلسلية."
+          en="Name & category are inherited from the rental item — just set the quantity and serials."
         />
       </p>
-      <div className="flex items-end gap-2">
-        <div className="w-32">
-          <label className="text-[11px] text-muted-foreground"><Bi ar="عدد القطع" en="Quantity" /></label>
+
+      {/* Quantity stepper */}
+      <div className="flex items-center justify-between gap-3 rounded-xl border bg-background p-2.5">
+        <div className="text-xs font-medium text-muted-foreground">
+          <Bi ar="عدد القطع" en="Quantity" />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setCountSafe(count - 1)} aria-label="minus">
+            <Minus className="size-3.5" />
+          </Button>
           <Input
             type="number" min={1} max={50} value={count}
             onChange={e => setCountSafe(Number(e.target.value))}
-            className="tech-content h-10"
+            className="tech-content h-8 w-16 text-center font-semibold"
+          />
+          <Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setCountSafe(count + 1)} aria-label="plus">
+            <Plus className="size-3.5" />
+          </Button>
+          <div className="hidden sm:flex items-center gap-1 ms-2">
+            {[5, 10, 20].map(n => (
+              <button key={n} type="button" onClick={() => setCountSafe(n)}
+                className="px-2 h-7 rounded-md text-[11px] border bg-background hover:bg-muted tech-content">
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Mode selector */}
+      <div className="flex items-stretch gap-1.5">
+        <ModeBtn id="manual" icon={<Hash className="size-3.5" />} ar="إدخال يدوي" en="Manual" />
+        <ModeBtn id="auto" icon={<Wand2 className="size-3.5" />} ar="توليد تلقائي" en="Auto-generate" />
+        <ModeBtn id="none" icon={<X className="size-3.5" />} ar="بدون أرقام" en="No serials" />
+      </div>
+
+      {/* Mode-specific UI */}
+      {mode === 'auto' && (
+        <div className="rounded-xl border bg-background p-3 space-y-2.5">
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="text-[11px] text-muted-foreground"><Bi ar="بادئة" en="Prefix" /></label>
+              <Input dir="ltr" value={prefix} onChange={e => setPrefix(e.target.value.toUpperCase().slice(0, 10))}
+                className="tech-content h-9 uppercase" placeholder="SN" />
+            </div>
+            <div>
+              <label className="text-[11px] text-muted-foreground"><Bi ar="يبدأ من" en="Start at" /></label>
+              <Input type="number" min={1} value={startAt}
+                onChange={e => setStartAt(Math.max(1, Number(e.target.value) || 1))}
+                className="tech-content h-9" />
+            </div>
+            <div>
+              <label className="text-[11px] text-muted-foreground"><Bi ar="أصفار" en="Padding" /></label>
+              <Input type="number" min={1} max={8} value={pad}
+                onChange={e => setPad(Math.max(1, Math.min(8, Number(e.target.value) || 1)))}
+                className="tech-content h-9" />
+            </div>
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            <Bi ar="معاينة:" en="Preview:" />{' '}
+            <span className="tech-content text-foreground font-medium">
+              {effectiveSerials.slice(0, 3).join('  •  ')}{effectiveSerials.length > 3 ? '  …' : ''}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {mode === 'manual' && (
+        <div className="space-y-2">
+          <div className="grid sm:grid-cols-2 gap-2">
+            {serials.map((s, i) => {
+              const dup = s.trim() && duplicateSet.has(s.trim().toLowerCase());
+              return (
+                <div key={i} className="relative">
+                  <span className="absolute top-1/2 -translate-y-1/2 start-2 text-[10px] font-medium text-muted-foreground tech-content">
+                    #{i + 1}
+                  </span>
+                  <Hash className="size-3.5 absolute top-1/2 -translate-y-1/2 start-7 text-muted-foreground" />
+                  <Input
+                    dir="ltr"
+                    value={s}
+                    onChange={e => setSerials(prev => prev.map((v, idx) => idx === i ? e.target.value : v))}
+                    placeholder={`SN-${String(existingCount + i + 1).padStart(3, '0')}`}
+                    className={`tech-content ps-12 h-10 ${dup ? 'border-rose-500 focus-visible:ring-rose-500' : ''}`}
+                  />
+                  {s.trim() && !dup && (
+                    <CheckCircle2 className="size-3.5 absolute top-1/2 -translate-y-1/2 end-2.5 text-emerald-500" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Bulk paste */}
+          <details className="rounded-lg border bg-background">
+            <summary className="flex items-center gap-2 cursor-pointer select-none p-2.5 text-xs font-medium text-muted-foreground hover:text-foreground">
+              <ClipboardPaste className="size-3.5" />
+              <Bi ar="لصق دفعة (سطر لكل رقم)" en="Bulk paste (one per line)" />
+            </summary>
+            <div className="p-2.5 pt-0 space-y-2">
+              <textarea
+                dir="ltr"
+                value={bulk}
+                onChange={e => setBulk(e.target.value)}
+                rows={3}
+                placeholder={'SN-001\nSN-002\nSN-003'}
+                className="tech-content w-full rounded-md border bg-background p-2 text-sm font-mono"
+              />
+              <div className="flex justify-end">
+                <Button type="button" size="sm" variant="outline" onClick={applyBulk} disabled={!bulk.trim()} className="gap-1.5">
+                  <ClipboardPaste className="size-3.5" />
+                  <Bi ar="استيراد" en="Import" />
+                </Button>
+              </div>
+            </div>
+          </details>
+        </div>
+      )}
+
+      {mode === 'none' && (
+        <div className="rounded-xl border border-dashed bg-background/60 p-3 text-[11.5px] text-muted-foreground text-center">
+          <Bi
+            ar="سيتم إنشاء وحدات بدون أرقام تسلسلية — يمكنك إضافتها لاحقًا من إدارة كل وحدة."
+            en="Units will be created without serials — you can add them later from each unit."
           />
         </div>
-        <div className="text-[11px] text-muted-foreground pb-2.5">
-          <Bi ar={`الموجود حاليًا: ${existingCount}`} en={`Currently: ${existingCount}`} />
+      )}
+
+      {/* Summary + submit */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t">
+        <div className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted tech-content">
+            <Boxes className="size-3" />{count}
+          </span>
+          {mode !== 'none' && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 tech-content">
+              <CheckCircle2 className="size-3" />{filledCount}/{count}
+            </span>
+          )}
+          {duplicateSet.size > 0 && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300">
+              <AlertCircle className="size-3" />
+              <Bi ar="مكرر" en="duplicates" />
+            </span>
+          )}
         </div>
-      </div>
-      <div className="grid sm:grid-cols-2 gap-2">
-        {serials.map((s, i) => (
-          <div key={i} className="relative">
-            <Hash className="size-3.5 absolute top-1/2 -translate-y-1/2 start-2.5 text-muted-foreground" />
-            <Input
-              dir="ltr"
-              value={s}
-              onChange={e => setSerials(prev => prev.map((v, idx) => idx === i ? e.target.value : v))}
-              placeholder={`SN-${i + 1}`}
-              className="tech-content ps-8 h-10"
-            />
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-end">
-        <Button onClick={submit} disabled={saving} className="gap-2">
-          {saving && <Loader2 className="size-4 animate-spin" />}
+        <Button onClick={submit} disabled={saving || duplicateSet.size > 0} className="gap-2" size="sm">
+          {saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
           <Bi ar={`حفظ ${count} وحدة`} en={`Save ${count} units`} />
         </Button>
       </div>
