@@ -186,7 +186,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
   const [catalog, setCatalog] = useState<CatalogPick[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogQuery, setCatalogQuery] = useState('');
-  const [catalogFilterCat, setCatalogFilterCat] = useState<string>('all');
+  const [catalogFilterCat, setCatalogFilterCat] = useState<string>('');
   const [selectedCatalogId, setSelectedCatalogId] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -240,7 +240,7 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
   const filteredCatalog = useMemo(() => {
     const q = catalogQuery.trim().toLowerCase();
     return catalog.filter(c => {
-      if (catalogFilterCat !== 'all' && c.category_id !== catalogFilterCat) return false;
+      if (!catalogFilterCat || c.category_id !== catalogFilterCat) return false;
       if (!q) return true;
       return (
         c.name_ar?.toLowerCase().includes(q) ||
