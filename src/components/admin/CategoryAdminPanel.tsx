@@ -220,7 +220,7 @@ export const CategoryAdminPanel: React.FC<Props> = ({ categoryTable, itemTable, 
   const load = async () => {
     setLoading(true);
     const { data } = await supabase.from(categoryTable).select('id,ref_id,slug,name_ar,name_en,icon,sort_order,is_active').order('sort_order');
-    setCats((data as CategoryRow[] | null) ?? []);
+    setCats((data as unknown as CategoryRow[] | null) ?? []);
     setLoading(false);
   };
 
@@ -232,7 +232,7 @@ export const CategoryAdminPanel: React.FC<Props> = ({ categoryTable, itemTable, 
       ? 'id,name_ar,name_en,category_id,sort_order,is_active,image_url'
       : 'id,name_ar,name_en,category_id,sort_order,is_active,images';
     const { data } = await supabase.from(itemTable).select(selectCols).eq('category_id', catId).order('sort_order');
-    setItemsByCat(prev => ({ ...prev, [catId]: (data as ItemRow[] | null) ?? [] }));
+    setItemsByCat(prev => ({ ...prev, [catId]: (data as unknown as ItemRow[] | null) ?? [] }));
     setItemsLoading(prev => { const n = new Set(prev); n.delete(catId); return n; });
   };
 
