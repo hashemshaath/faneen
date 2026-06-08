@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Package, CalendarClock, AlertTriangle, RefreshCw, Search, Sparkles, Info, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X } from 'lucide-react';
+import { Loader2, Plus, Package, CalendarClock, AlertTriangle, Search, Sparkles, ImagePlus, ClipboardCheck, Rocket, Lightbulb, BookOpen, ShieldCheck, Boxes, Pencil, Tag, Timer, ImageOff, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   RentalCategories, RentalItems, RentalOrders,
@@ -160,6 +160,19 @@ const DashboardRentals: React.FC = () => {
   const expiringOrders = useMemo(() => orders.filter(o => o.status === 'expiring_soon'), [orders]);
   const overdueOrders = useMemo(() => orders.filter(o => o.status === 'expired'), [orders]);
 
+  // Stable refresh callbacks — avoid recreating closures on every render.
+  const refreshItems = useCallback(async () => {
+    if (!businessId) return;
+    const r = await RentalItems.listProviderItems(businessId);
+    setItems(r.data ?? []);
+  }, [businessId]);
+
+  const refreshOrders = useCallback(async () => {
+    if (!businessId) return;
+    const r = await RentalOrders.listOrdersForProvider(businessId);
+    setOrders(r.data ?? []);
+  }, [businessId]);
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -217,52 +230,24 @@ const DashboardRentals: React.FC = () => {
               businessId={businessId}
               categories={categories}
               items={items}
-              onChange={async () => {
-                const r = await RentalItems.listProviderItems(businessId);
-                setItems(r.data ?? []);
-              }}
+              onChange={refreshItems}
               />
             </div>
           </TabsContent>
           <TabsContent value="active" className="mt-4">
-            <OrdersPanel orders={activeOrders} items={items} onChanged={async () => {
-              const r = await RentalOrders.listOrdersForProvider(businessId); setOrders(r.data ?? []);
-            }} />
+            <OrdersPanel orders={activeOrders} items={items} onChanged={refreshOrders} />
           </TabsContent>
           <TabsContent value="expiring" className="mt-4">
-            <OrdersPanel orders={expiringOrders} items={items} onChanged={async () => {
-              const r = await RentalOrders.listOrdersForProvider(businessId); setOrders(r.data ?? []);
-            }} />
+            <OrdersPanel orders={expiringOrders} items={items} onChanged={refreshOrders} />
           </TabsContent>
           <TabsContent value="overdue" className="mt-4">
-            <OrdersPanel orders={overdueOrders} items={items} onChanged={async () => {
-              const r = await RentalOrders.listOrdersForProvider(businessId); setOrders(r.data ?? []);
-            }} />
+            <OrdersPanel orders={overdueOrders} items={items} onChanged={refreshOrders} />
           </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
   );
 };
-
-const TONE_BG: Record<string, string> = {
-  primary: 'bg-primary/10 text-primary',
-  emerald: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-  amber: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
-  red: 'bg-red-500/10 text-red-700 dark:text-red-300',
-};
-
-const StatTile: React.FC<{ icon: React.ComponentType<{ className?: string }>; value: number; ar: string; en: string; tone: keyof typeof TONE_BG }> = ({ icon: Icon, value, ar, en, tone }) => (
-  <Card className="p-4 hover-lift">
-    <div className="flex items-center gap-3">
-      <div className={`size-10 rounded-xl flex items-center justify-center ${TONE_BG[tone]}`}><Icon className="size-5" /></div>
-      <div>
-        <div className="text-2xl font-semibold tech-content">{value}</div>
-        <div className="text-xs text-muted-foreground"><Bi ar={ar} en={en} /></div>
-      </div>
-    </div>
-  </Card>
-);
 
 /* ---------- Intro banner + tips strip (RENTALS UX polish) ---------- */
 
@@ -414,6 +399,22 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
   // List toolbar state (search + status filter)
   const [listQuery, setListQuery] = useState('');
   const [listStatus, setListStatus] = useState<'all' | RentalItem['status']>('all');
+
+  // Memoized filter — avoids re-walking items on every keystroke/render.
+  const filteredItems = useMemo(() => {
+    const q = listQuery.trim().toLowerCase();
+    if (!q && listStatus === 'all') return items;
+    return items.filter(it => {
+      if (listStatus !== 'all' && it.status !== listStatus) return false;
+      if (!q) return true;
+      return (
+        it.name_ar?.toLowerCase().includes(q) ||
+        (it.name_en ?? '').toLowerCase().includes(q) ||
+        (it.brand ?? '').toLowerCase().includes(q) ||
+        it.ref_id?.toLowerCase().includes(q)
+      );
+    });
+  }, [items, listQuery, listStatus]);
 
   useEffect(() => {
     if (!form.category_id && categories[0]) setForm(f => ({ ...f, category_id: categories[0].id }));
@@ -1030,29 +1031,13 @@ const ItemsPanel: React.FC<ItemsPanelProps> = ({ businessId, categories, items, 
 
       {items.length === 0 ? (
         <ItemsEmptyState onAdd={() => setAdding(true)} />
+      ) : filteredItems.length === 0 ? (
+        <Card className="p-8 text-center text-muted-foreground border-dashed">
+          <Search className="size-6 mx-auto mb-2 opacity-60" />
+          <Bi ar="لا توجد أصناف مطابقة للبحث/التصفية." en="No items match your search/filter." />
+        </Card>
       ) : (
-        (() => {
-          const q = listQuery.trim().toLowerCase();
-          const filtered = items.filter(it => {
-            if (listStatus !== 'all' && it.status !== listStatus) return false;
-            if (!q) return true;
-            return (
-              it.name_ar?.toLowerCase().includes(q) ||
-              (it.name_en ?? '').toLowerCase().includes(q) ||
-              (it.brand ?? '').toLowerCase().includes(q) ||
-              it.ref_id?.toLowerCase().includes(q)
-            );
-          });
-          if (filtered.length === 0) {
-            return (
-              <Card className="p-8 text-center text-muted-foreground border-dashed">
-                <Search className="size-6 mx-auto mb-2 opacity-60" />
-                <Bi ar="لا توجد أصناف مطابقة للبحث/التصفية." en="No items match your search/filter." />
-              </Card>
-            );
-          }
-          return <ItemsGrid items={filtered} categories={categories} businessId={businessId} onChange={onChange} />;
-        })()
+        <ItemsGrid items={filteredItems} categories={categories} businessId={businessId} onChange={onChange} />
       )}
     </div>
   );

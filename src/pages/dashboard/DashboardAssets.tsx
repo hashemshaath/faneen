@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Boxes, Wrench, ShieldAlert, X } from 'lucide-react';
+import { Loader2, Plus, Boxes, Wrench, ShieldAlert, X, Package, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -80,6 +80,8 @@ const DashboardAssets: React.FC = () => {
           title={bi('إدارة الأصول','Asset Management')}
           subtitle={bi('أسطول المعدات: الحالة، الصيانة، الفحوصات، الاستغلال والربط بالتأجير.','Fleet: status, maintenance, inspections, utilization & rental linkage.')}
         />
+
+        <AssetsIntroBanner />
 
         <AssetOpsCard />
 
@@ -387,3 +389,37 @@ const InspectionForm: React.FC<{ assetId: string; onCreated: () => void }> = ({ 
 };
 
 export default DashboardAssets;
+
+/* ---------- Intro banner: clarifies Assets vs Rentals ---------- */
+const AssetsIntroBanner: React.FC = () => (
+  <Card className="relative overflow-hidden border-primary/15 bg-gradient-to-br from-primary/[0.06] via-background to-sky-500/[0.05] p-5 md:p-6">
+    <div className="absolute -top-10 -end-10 size-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" aria-hidden />
+    <div className="relative flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
+      <div className="size-12 rounded-2xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
+        <Boxes className="size-6" />
+      </div>
+      <div className="flex-1 min-w-0 space-y-2">
+        <h2 className="text-lg md:text-xl font-semibold">
+          <Bi ar="إدارة الأصول والمعدات (داخلي)" en="Assets & Equipment (internal)" />
+        </h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          <Bi
+            ar="هذا سجل داخلي لما تملكه فعليًا — الأرقام التسلسلية، الصيانة، الفحوصات، والاستغلال. لا يظهر للعملاء. لنشر معداتك للإيجار استخدم مركز التأجير."
+            en="Internal ledger of what you actually own — serials, maintenance, inspections and utilization. Not visible to customers. To publish equipment for rent use the Rentals Center."
+          />
+        </p>
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <a href="/dashboard/rentals" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4">
+            <Package className="size-3.5" />
+            <Bi ar="الانتقال إلى مركز التأجير" en="Go to Rentals Center" />
+          </a>
+          <span className="text-muted-foreground/40">•</span>
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Info className="size-3" />
+            <Bi ar="الأصل ≠ صنف تأجير — كل صنف تأجير هو أصل، لكن ليس كل أصل للإيجار." en="Asset ≠ rental item — every rental item is an asset, but not every asset is for rent." />
+          </span>
+        </div>
+      </div>
+    </div>
+  </Card>
+);
