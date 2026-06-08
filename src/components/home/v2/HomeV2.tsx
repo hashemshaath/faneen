@@ -17,6 +17,29 @@ import heroSlide1 from '@/assets/home/hero-slide-1.webp';
 import heroSlide2 from '@/assets/home/hero-slide-2.webp';
 import heroSlide3 from '@/assets/home/hero-slide-3.webp';
 import heroSlide4 from '@/assets/home/hero-slide-4.webp';
+// Responsive hero variants (768/1280/1920). Without an explicit srcset the
+// browser always pulled the full 1920×1080 source even on a 412px mobile
+// viewport, which dominated LCP. Each slide builds its srcset from the
+// hashed variants below.
+import heroSlide1_768 from '@/assets/home/hero-slide-1-768.webp';
+import heroSlide1_1280 from '@/assets/home/hero-slide-1-1280.webp';
+import heroSlide1_1920 from '@/assets/home/hero-slide-1-1920.webp';
+import heroSlide2_768 from '@/assets/home/hero-slide-2-768.webp';
+import heroSlide2_1280 from '@/assets/home/hero-slide-2-1280.webp';
+import heroSlide2_1920 from '@/assets/home/hero-slide-2-1920.webp';
+import heroSlide3_768 from '@/assets/home/hero-slide-3-768.webp';
+import heroSlide3_1280 from '@/assets/home/hero-slide-3-1280.webp';
+import heroSlide3_1920 from '@/assets/home/hero-slide-3-1920.webp';
+import heroSlide4_768 from '@/assets/home/hero-slide-4-768.webp';
+import heroSlide4_1280 from '@/assets/home/hero-slide-4-1280.webp';
+
+const HERO_SRCSETS: Record<string, string> = {
+  [heroSlide1]: `${heroSlide1_768} 768w, ${heroSlide1_1280} 1280w, ${heroSlide1_1920} 1920w`,
+  [heroSlide2]: `${heroSlide2_768} 768w, ${heroSlide2_1280} 1280w, ${heroSlide2_1920} 1920w`,
+  [heroSlide3]: `${heroSlide3_768} 768w, ${heroSlide3_1280} 1280w, ${heroSlide3_1920} 1920w`,
+  [heroSlide4]: `${heroSlide4_768} 768w, ${heroSlide4_1280} 1280w, ${heroSlide4} 1600w`,
+};
+const HERO_SIZES = '100vw';
 
 // Inject the LCP hero preload at module-evaluation time (before React even
 // commits its first paint). Previously this lived inside a useEffect, which
@@ -31,6 +54,12 @@ if (typeof document !== 'undefined') {
     link.rel = 'preload';
     link.as = 'image';
     link.href = heroSlide1;
+    // Responsive preload: let the browser pick the right hero variant for
+    // the actual viewport (mobile pulls 768w ≈ 25KB instead of the full
+    // 1920w ≈ 87KB). imagesrcset/imagesizes are the documented hint pair
+    // for <link rel="preload" as="image">.
+    link.setAttribute('imagesrcset', HERO_SRCSETS[heroSlide1]);
+    link.setAttribute('imagesizes', HERO_SIZES);
     link.setAttribute('fetchpriority', 'high');
     document.head.appendChild(link);
   }
@@ -527,12 +556,13 @@ export const HeroV2 = () => {
                 <img
                   key={i}
                   src={s.img}
+                  srcSet={HERO_SRCSETS[s.img]}
                   alt=""
                   width={1920}
                   height={1080}
                   loading={i === 0 ? 'eager' : 'lazy'}
                   decoding="async"
-                  sizes="100vw"
+                  sizes={HERO_SIZES}
                   {...{ fetchpriority: i === 0 ? 'high' : 'low' }}
                   className={`absolute inset-0 w-full h-full object-cover ease-out ${
                     reducedMotion ? '' : 'transition-opacity duration-[1100ms]'
@@ -937,9 +967,16 @@ export const HeroV2 = () => {
             <div className="mt-3 h-[3px] w-full bg-white/15 rounded-full overflow-hidden">
               <div
                 key={`bar-${active}-${paused}`}
-                className="h-full bg-secondary"
+                className="h-full w-full bg-secondary origin-[var(--bar-origin)]"
                 style={{
+                  // Animate transform: scaleX instead of width — composited
+                  // on the GPU so it doesn't trigger layout/paint on every
+                  // frame (Lighthouse flagged the previous width animation
+                  // as non-composited).
+                  ['--bar-origin' as never]: isRTL ? 'right' : 'left',
+                  transformOrigin: isRTL ? 'right' : 'left',
                   animation: paused || reducedRef.current ? 'none' : 'qitaat-hero-progress 6s linear forwards',
+                  transform: 'scaleX(0)',
                 }}
               />
             </div>
@@ -947,7 +984,10 @@ export const HeroV2 = () => {
         </div>
 
       <style>{`
-        @keyframes qitaat-hero-progress { from { width: 0% } to { width: 100% } }
+        @keyframes qitaat-hero-progress {
+          from { transform: scaleX(0); }
+          to   { transform: scaleX(1); }
+        }
         @keyframes qitaat-hero-kenburns {
           from { transform: scale(1.05) translate3d(0,0,0); }
           to   { transform: scale(1.14) translate3d(-1%, -1%, 0); }
