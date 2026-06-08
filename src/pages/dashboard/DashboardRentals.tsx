@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Package, CalendarClock, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Loader2, Plus, Package, CalendarClock, AlertTriangle, RefreshCw, Search, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   RentalCategories, RentalItems, RentalOrders,
@@ -22,6 +22,22 @@ import { RentalExtensionPanel } from '@/modules/rentals/components/RentalExtensi
 import { RentalOrderAssetLinks } from '@/modules/assets';
 import { RentalImageUploader } from '@/modules/rentals/components/RentalImageUploader';
 import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+
+interface CatalogPick {
+  id: string;
+  name_ar: string;
+  name_en: string | null;
+  brand: string | null;
+  model: string | null;
+  category_id: string | null;
+  estimated_daily_price: number | null;
+  currency: string | null;
+  image_url: string | null;
+  description_ar: string | null;
+  description_en: string | null;
+}
 
 /** Provider rentals dashboard — items + orders + extensions in one shell. */
 const DashboardRentals: React.FC = () => {
