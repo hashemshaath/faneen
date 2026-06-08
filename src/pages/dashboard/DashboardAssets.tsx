@@ -258,6 +258,9 @@ const AssetDetail: React.FC<{ asset: Asset; onChanged: () => void | Promise<void
           </Select>
         </div>
       </div>
+      <AssetMaintenanceAlerts asset={asset} />
+      <AssetUtilizationSummary assetId={asset.id} />
+      <AssetQrIdentity asset={asset} />
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
