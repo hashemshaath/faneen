@@ -26,6 +26,10 @@ import {
   GripVertical, ChevronDown, ChevronUp, Eye, EyeOff, Pencil, Save, X, Plus,
   Image as ImageIcon, Loader2, Trash2, Package,
 } from 'lucide-react';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { IconPicker, RenderIcon } from '@/components/admin/IconPicker';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 /* ------- types ------- */
 type CategoryTable = 'rental_categories' | 'asset_categories';
@@ -35,6 +39,9 @@ interface CategoryRow {
   id: string; ref_id?: string | null; slug: string;
   name_ar: string; name_en: string | null; icon: string | null;
   sort_order: number; is_active: boolean;
+  default_image_url?: string | null;
+  description_ar?: string | null;
+  description_en?: string | null;
 }
 interface ItemRow {
   id: string; name_ar: string; name_en: string | null;
