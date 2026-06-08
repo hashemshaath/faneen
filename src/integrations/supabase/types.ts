@@ -14918,6 +14918,7 @@ export type Database = {
           estimated_weekly_price: number | null
           fuel_capacity_l: number | null
           fuel_type: string | null
+          icon: string | null
           id: string
           image_url: string | null
           is_active: boolean
@@ -14963,6 +14964,7 @@ export type Database = {
           estimated_weekly_price?: number | null
           fuel_capacity_l?: number | null
           fuel_type?: string | null
+          icon?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -15008,6 +15010,7 @@ export type Database = {
           estimated_weekly_price?: number | null
           fuel_capacity_l?: number | null
           fuel_type?: string | null
+          icon?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
