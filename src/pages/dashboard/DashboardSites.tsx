@@ -113,7 +113,7 @@ const emptyForm = {
   access_notes: '', is_default: false,
   municipal_license_no: '', municipal_license_issue_date: '', municipal_license_expiry_date: '',
   title_deed_no: '', title_deed_date: '',
-  owner_name: '', owner_id_number: '', land_use_type: '',
+  owner_name: '', owner_id_number: '', tax_number: '', land_use_type: '',
   plot_number: '', block_number: '', plan_number: '', government_notes: '',
 };
 
@@ -341,7 +341,10 @@ export default function DashboardSites() {
       if (!user) return [];
       let q = supabase.from('client_sites').select('*').order('is_default', { ascending: false }).order('created_at', { ascending: false });
       if (!showArchived) q = q.is('archived_at', null);
+      // Provider with a linked business → only their business sites.
+      // Individual users (no business) → RLS already restricts to client_user_id = auth.uid().
       if (businessId) q = q.eq('business_id', businessId);
+      else q = q.eq('client_user_id', user.id);
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as ClientSite[];
@@ -378,7 +381,6 @@ export default function DashboardSites() {
    */
   const validate = useCallback((): FormIssue[] => {
     const out: FormIssue[] = [];
-    if (!businessId && !editing) out.push(issueOf('BUSINESS_ID_REQUIRED', 'label', 'general'));
     if (!form.label.trim()) out.push(issueOf('LABEL_REQUIRED', 'label', 'general'));
     if (!naf.city_id) out.push(issueOf('CITY_REQUIRED', 'city', 'address'));
     const composedAr = (naf.address && naf.address.trim()) || buildAddressLine(naf, 'ar');
@@ -407,7 +409,7 @@ export default function DashboardSites() {
 
   const saveMut = useMutation({
     mutationFn: async () => {
-      if (!businessId && !editing) throw new Error(isRTL ? 'لا توجد منشأة مرتبطة' : 'No business linked');
+      if (!user) throw new Error(isRTL ? 'يجب تسجيل الدخول' : 'Sign-in required');
       // Compose the canonical address line from the National Address fields,
       // unless the user explicitly typed a custom Arabic line (address_manual).
       const composedAr = (naf.address && naf.address.trim()) || buildAddressLine(naf, 'ar');
@@ -421,7 +423,9 @@ export default function DashboardSites() {
       const rawShort = (naf.short_address ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
       const validShort = /^[A-Z]{4}[0-9]{4}$/.test(rawShort) ? rawShort : null;
       const payload = {
-        business_id: editing?.business_id ?? businessId,
+        // Personal mode: bind to caller; business mode: bind to business.
+        business_id: editing?.business_id ?? (businessId ?? null),
+        client_user_id: editing?.client_user_id ?? (businessId ? null : user.id),
         label: form.label.trim(),
         site_name: form.site_name.trim() || null,
         site_type: form.site_type,
@@ -455,6 +459,7 @@ export default function DashboardSites() {
         title_deed_date:                form.title_deed_date || null,
         owner_name:                     form.owner_name.trim() || null,
         owner_id_number:                form.owner_id_number.trim() || null,
+        tax_number:                     form.tax_number.trim() || null,
         land_use_type:                  form.land_use_type.trim() || null,
         plot_number:                    form.plot_number.trim() || null,
         block_number:                   form.block_number.trim() || null,
@@ -465,7 +470,7 @@ export default function DashboardSites() {
         // The update RPC rejects immutable / system-managed fields with
         // FORBIDDEN_FIELD. Strip them from the patch so editing doesn't fail.
         const IMMUTABLE = [
-          'business_id', 'created_by', 'archived_at', 'site_ref',
+          'business_id', 'client_user_id', 'created_by', 'archived_at', 'site_ref',
           'qr_token_hash', 'qr_enabled', 'qr_revoked_at',
           'last_scanned_at', 'scan_count',
         ] as const;
@@ -611,6 +616,7 @@ export default function DashboardSites() {
       title_deed_date:                s.title_deed_date || '',
       owner_name:                     s.owner_name || '',
       owner_id_number:                s.owner_id_number || '',
+      tax_number:                     (s as ClientSite & { tax_number?: string | null }).tax_number || '',
       land_use_type:                  s.land_use_type || '',
       plot_number:                    s.plot_number || '',
       block_number:                   s.block_number || '',
@@ -649,7 +655,7 @@ export default function DashboardSites() {
           eyebrow={isRTL ? 'المواقع' : 'Sites'}
           title={isRTL ? 'عناوين المواقع' : 'Site Addresses'}
           subtitle={isRTL ? `${stats.total} موقع · ${stats.linked} عقد مرتبط` : `${stats.total} sites · ${stats.linked} linked contracts`}
-          actions={businessId ? (
+          actions={user ? (
             <Button variant="hero" size="sm" className="h-8 text-xs" onClick={openCreate}>
               <Plus className="w-3.5 h-3.5 me-1" />{isRTL ? 'إضافة موقع' : 'Add Site'}
             </Button>
@@ -679,10 +685,12 @@ export default function DashboardSites() {
         )}
 
         {!businessId && !isLoading && (
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-300/40 bg-amber-50/50 dark:bg-amber-950/20">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            <p className="text-xs">
-              {isRTL ? 'تظهر لك هنا المواقع المرتبطة بحسابك فقط. لإضافة مواقع جديدة، يلزم ربط منشأة بحسابك.' : 'Showing sites linked to your account only. Link a business to add new sites.'}
+          <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5">
+            <Info className="w-4 h-4 text-primary shrink-0" />
+            <p className="text-xs leading-relaxed">
+              {isRTL
+                ? 'وضع شخصي: مواقعك مربوطة بحسابك ورقم هويتك. يمكنك إضافة الرقم الضريبي اختيارياً لربطه بالفواتير والعقود.'
+                : 'Personal mode: your sites are linked to your account and ID. Tax number is optional and used on invoices/contracts.'}
             </p>
           </div>
         )}
@@ -909,6 +917,18 @@ export default function DashboardSites() {
                         <div className="space-y-1.5">
                           <Label className="text-xs font-medium">{isRTL ? 'رقم هوية المالك' : 'Owner ID Number'}</Label>
                           <Input dir="ltr" value={form.owner_id_number} onChange={e => setForm(p => ({ ...p, owner_id_number: e.target.value }))} className="h-9 tech-content" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">
+                            {isRTL ? 'الرقم الضريبي (اختياري)' : 'Tax Number (optional)'}
+                          </Label>
+                          <Input
+                            dir="ltr"
+                            value={form.tax_number}
+                            onChange={e => setForm(p => ({ ...p, tax_number: e.target.value }))}
+                            placeholder={isRTL ? 'يستخدم في الفواتير عند توفره' : 'Used on invoices when available'}
+                            className="h-9 tech-content"
+                          />
                         </div>
                       </div>
                     </div>
