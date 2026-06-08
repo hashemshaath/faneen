@@ -21,12 +21,23 @@ export default defineConfig(({ mode }) => ({
     target: 'es2022',
     cssMinify: true,
     chunkSizeWarningLimit: 500,
+    // Modern bundle target — disable the modulepreload polyfill so the
+    // tiny `__vitePreload` helper isn't hoisted into a random vendor chunk
+    // (it was landing in vendor-pdf, which forced the entry to statically
+    // depend on vendor-pdf and pulled vendor-pdf into the home page's
+    // modulepreload list).
+    modulePreload: { polyfill: false },
     rollupOptions: {
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-query': ['@tanstack/react-query'],
           'vendor-supabase': ['@supabase/supabase-js'],
+          // Tiny utilities used by virtually every component. Pinning them
+          // into their own leaf chunk prevents Rollup from hoisting them
+          // into vendor-charts (which would otherwise pull recharts onto
+          // the home page's modulepreload list).
+          'vendor-utils': ['clsx', 'tailwind-merge', 'class-variance-authority'],
           'vendor-ui': [
             '@radix-ui/react-dialog',
             '@radix-ui/react-dropdown-menu',
