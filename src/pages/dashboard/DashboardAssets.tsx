@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Loader2, Plus, Boxes, Wrench, ShieldAlert, X } from 'lucide-react';
+import { Loader2, Plus, Boxes, Wrench, ShieldAlert, X, Package, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -80,6 +80,8 @@ const DashboardAssets: React.FC = () => {
           title={bi('إدارة الأصول','Asset Management')}
           subtitle={bi('أسطول المعدات: الحالة، الصيانة، الفحوصات، الاستغلال والربط بالتأجير.','Fleet: status, maintenance, inspections, utilization & rental linkage.')}
         />
+
+        <AssetsIntroBanner />
 
         <AssetOpsCard />
 
